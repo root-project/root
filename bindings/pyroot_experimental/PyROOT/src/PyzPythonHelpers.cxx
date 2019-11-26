@@ -19,7 +19,11 @@ PyROOT extension module.
 
 #include "CPyCppyy.h"
 #include "CPPInstance.h"
+#include "CPPOverload.h"
+#include "PyStrings.h"
+
 #include "PyROOTPythonize.h"
+
 #include "RConfig.h"
 #include "TInterpreter.h"
 
@@ -36,10 +40,10 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
 {
    // Get name of data-type
    PyObject *pydtype = PyTuple_GetItem(args, 0);
-   std::string dtype = CPyCppyy_PyUnicode_AsString(pydtype);
+   std::string dtype = CPyCppyy_PyText_AsString(pydtype);
 
    // Call interpreter to get size of data-type using `sizeof`
-   long size;
+   long size = 0;
    std::stringstream code;
    code << "*((long*)" << &size << ") = (long)sizeof(" << dtype << ")";
    gInterpreter->Calc(code.str().c_str());
@@ -50,14 +54,15 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Get pointer to the data of a vector
+/// \brief Get pointer to the data of an object
 /// \param[in] self Always null, since this is a module function.
-/// \param[in] args[0] Data-type of the C++ object as Python string
-/// \param[in] args[1] Python representation of the C++ object.
+/// \param[in] args[0] Python representation of the C++ object.
+/// \param[in] args[1] Data-type of the C++ object as Python string
+/// \param[in] args[2] Method to be called on the C++ object to get the data pointer as Python string
 ///
-/// This function returns the pointer to the data of a vector as an Python
-/// integer.
-PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
+/// This function returns the pointer to the data of an object as an Python
+/// integer retrieved by the given method.
+PyObject *PyROOT::GetDataPointer(PyObject * /*self*/, PyObject *args)
 {
    // Get pointer of C++ object
    PyObject *pyobj = PyTuple_GetItem(args, 0);
@@ -66,32 +71,113 @@ PyObject *PyROOT::GetVectorDataPointer(PyObject * /*self*/, PyObject *args)
 
    // Get name of C++ object as string
    PyObject *pycppname = PyTuple_GetItem(args, 1);
-   std::string cppname = CPyCppyy_PyUnicode_AsString(pycppname);
+   std::string cppname = CPyCppyy_PyText_AsString(pycppname);
 
-   // Call interpreter to get pointer to data (using `data` method)
-   long pointer;
+   // Get name of method to be called to get the data pointer
+   PyObject *pymethodname = PyTuple_GetItem(args, 2);
+   std::string methodname = CPyCppyy_PyText_AsString(pymethodname);
+
+   // Call interpreter to get pointer to data
+   unsigned long long pointer = 0;
    std::stringstream code;
-   code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<" << cppname << "*>(" << cppobj
-        << ")->data())";
+   code << "*((long*)" << &pointer << ") = reinterpret_cast<long>(reinterpret_cast<"
+        << cppname << "*>(" << cppobj << ")->" << methodname << "())";
    gInterpreter->Calc(code.str().c_str());
 
    // Return pointer as integer
-   PyObject *pypointer = PyInt_FromLong(pointer);
+   PyObject *pypointer = PyLong_FromUnsignedLongLong(pointer);
    return pypointer;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Get endianess of the system
 /// \param[in] self Always null, since this is a module function.
+/// \param[in] args Pointer to an empty Python tuple.
 /// \param[out] Endianess as Python string
 ///
 /// This function returns endianess of the system as a Python integer. The
 /// return value is either '<' or '>' for little or big endian, respectively.
-PyObject *PyROOT::GetEndianess(PyObject * /* self */)
+PyObject *PyROOT::GetEndianess(PyObject * /* self */, PyObject * /* args */)
 {
 #ifdef R__BYTESWAP
-   return CPyCppyy_PyUnicode_FromString("<");
+   return CPyCppyy_PyText_FromString("<");
 #else
-   return CPyCppyy_PyUnicode_FromString(">");
+   return CPyCppyy_PyText_FromString(">");
 #endif
+}
+
+using namespace CPyCppyy;
+
+// Helper to add base class methods to the derived class one
+static bool AddUsingToClass(PyObject *pyclass, const char *method)
+{
+   CPPOverload *derivedMethod = (CPPOverload *)PyObject_GetAttrString(pyclass, const_cast<char *>(method));
+   if (!CPPOverload_Check(derivedMethod)) {
+      Py_XDECREF(derivedMethod);
+      return false;
+   }
+
+   PyObject *mro = PyObject_GetAttr(pyclass, PyStrings::gMRO);
+   if (!mro || !PyTuple_Check(mro)) {
+      Py_XDECREF(mro);
+      Py_DECREF(derivedMethod);
+      return false;
+   }
+
+   CPPOverload *baseMethod = nullptr;
+   for (int i = 1; i < PyTuple_GET_SIZE(mro); ++i) {
+      baseMethod = (CPPOverload *)PyObject_GetAttrString(PyTuple_GET_ITEM(mro, i), const_cast<char *>(method));
+
+      if (!baseMethod) {
+         PyErr_Clear();
+         continue;
+      }
+
+      if (CPPOverload_Check(baseMethod))
+         break;
+
+      Py_DECREF(baseMethod);
+      baseMethod = nullptr;
+   }
+
+   Py_DECREF(mro);
+
+   if (!CPPOverload_Check(baseMethod)) {
+      Py_XDECREF(baseMethod);
+      Py_DECREF(derivedMethod);
+      return false;
+   }
+
+   for (PyCallable *pc : baseMethod->fMethodInfo->fMethods) {
+      derivedMethod->AdoptMethod(pc->Clone());
+   }
+
+   Py_DECREF(baseMethod);
+   Py_DECREF(derivedMethod);
+
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Add base class overloads of a given method to a derived class
+/// \param[in] self Always null, since this is a module function.
+/// \param[in] args[0] Derived class.
+/// \param[in] args[1] Name of the method whose base class overloads to
+///                    inject in the derived class.
+///
+/// This function adds base class overloads to a derived class for a given
+/// method. This covers the 'using' case, which is not supported by default
+/// by the bindings.
+PyObject *PyROOT::AddUsingToClass(PyObject * /* self */, PyObject *args)
+{
+   // Get derived class to pythonize
+   PyObject *pyclass = PyTuple_GetItem(args, 0);
+
+   // Get method name where to add overloads
+   PyObject *pyname = PyTuple_GetItem(args, 1);
+   auto cppname = CPyCppyy_PyText_AsString(pyname);
+
+   AddUsingToClass(pyclass, cppname);
+
+   Py_RETURN_NONE;
 }

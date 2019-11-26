@@ -11,13 +11,12 @@
 ## \author Danilo Piparo, Andre Vieira Silva
 
 import ROOT
-from math import sqrt
 
 filename = ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df017_vecOpsHEP.root"
 treename = "myDataset"
-RDF = ROOT.ROOT.RDataFrame
 
-def WithPyROOT():
+def WithPyROOT(filename):
+    from math import sqrt
     f = ROOT.TFile(filename)
     h = ROOT.TH1F("pt", "pt", 16, 0, 4)
     for event in f.myDataset:
@@ -26,8 +25,8 @@ def WithPyROOT():
                h.Fill(sqrt(px*px + py*py))
     h.DrawCopy()
 
-def WithRDataFrameVecOpsJit():
-    f = RDF(treename, filename)
+def WithRDataFrameVecOpsJit(treename, filename):
+    f = ROOT.ROOT.RDataFrame(treename, filename)
     h = f.Define("good_pt", "sqrt(px*px + py*py)[E>100]")\
          .Histo1D(("pt", "pt", 16, 0, 4), "good_pt")
     h.DrawCopy()
@@ -37,6 +36,6 @@ def WithRDataFrameVecOpsJit():
 c = ROOT.TCanvas()
 c.Divide(2,1)
 c.cd(1)
-WithPyROOT()
+WithPyROOT(filename)
 c.cd(2)
-WithRDataFrameVecOpsJit()
+WithRDataFrameVecOpsJit(treename, filename)

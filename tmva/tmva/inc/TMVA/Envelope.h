@@ -18,7 +18,10 @@
 #include <TROOT.h>
 #include <TStopwatch.h>
 
+#ifndef _MSC_VER
 #include <TProcPool.h>
+#endif
+
 #include <TStopwatch.h>
 
 #include <TMVA/OptionMap.h>
@@ -50,7 +53,9 @@ namespace TMVA {
          Bool_t fVerbose;                         //! flag for extra information
          TString fTransformations;                //! List of transformations to test
          Bool_t fSilentFile;                      //! if true dont produce file output
+#ifndef _MSC_VER
          TProcPool fWorkers;                      //! procpool object
+#endif
          UInt_t fJobs;                            //! number of jobs to run some high level algorithm in parallel
          TStopwatch fTimer;                       //! timer to measute the time.
 

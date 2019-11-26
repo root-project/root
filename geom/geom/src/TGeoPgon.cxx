@@ -557,9 +557,9 @@ Int_t TGeoPgon::GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_
       while (phi < fPhi1) phi += 360.;
       istart = Int_t((phi - fPhi1) / divphi);
       if (istart > fNedges - 1) istart = -1;
-      iphi[0] = istart;
-      sphi[0] = stepmax;
-      return 1;
+      iphi[1] = istart;
+      sphi[1] = stepmax;
+      return 2;
    }
    Int_t incsec = Int_t(TMath::Sign(1., point[0] * dir[1] - point[1] * dir[0]));
    Int_t ist;

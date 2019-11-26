@@ -23,7 +23,6 @@ __author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
 import os, sys, types
 import cppyy
 
-
 ## there's no version_info in 1.5.2
 if sys.version[0:3] < '2.2':
    raise ImportError( 'Python Version 2.2 or above is required.' )
@@ -369,6 +368,7 @@ def _TTreeAsMatrix(self, columns=None, exclude=None, dtype="double", return_labe
     else:
         return reshaped_matrix_np
 
+
 # RDataFrame.AsNumpy feature
 def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     """Read-out the RDataFrame as a collection of numpy arrays.
@@ -394,9 +394,10 @@ def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     Returns:
         dict: Dict with column names as keys and 1D numpy arrays with content as values
     """
-    # Import numpy lazily
+    # Import numpy and numpy.array derived class lazily
     try:
         import numpy
+        from _rdf_utils import ndarray
     except:
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
@@ -417,19 +418,6 @@ def _RDataFrameAsNumpy(df, columns=None, exclude=None):
     for column in columns:
         column_type = df_rnode.GetColumnType(column)
         result_ptrs[column] = _root.ROOT.Internal.RDF.RDataFrameTake(column_type)(df_rnode, column)
-
-    # This wrapper class inherits from numpy.ndarray and enables us to attach
-    # the result pointer of the Take action to the object.
-    class ndarray(numpy.ndarray):
-        def __new__(cls, numpy_array, result_ptr):
-            obj = numpy.asarray(numpy_array).view(cls)
-            obj.result_ptr = result_ptr
-            obj.__class__.__name__ = "numpy.array"
-            return obj
-
-        def __array_finalize__(self, obj):
-            if obj is None: return
-            self.result_ptr = getattr(obj, "result_ptr", None)
 
     # Convert the C++ vectors to numpy arrays
     py_arrays = {}
@@ -820,8 +808,10 @@ class ModuleFacade( types.ModuleType ):
     # This can be removed once autoloading on selected variables is available
     # If we have a pcm for the library, we don't have to explicitly load this as
     # modules have an autoloading support.
-      if not _root.gInterpreter.HasPCMForLibrary("libMathCore"):
-         _root.gSystem.Load( "libMathCore" )
+    # FIXME: Modules should support loading of gRandom, we are temporary
+    # reenabling the workaround to silence tutorial-pyroot-DynamicSlice-py
+      #if not _root.gInterpreter.HasPCMForLibrary("libMathCore"):
+      _root.gSystem.Load( "libMathCore" )
 
 sys.modules[ __name__ ] = ModuleFacade( sys.modules[ __name__ ] )
 del ModuleFacade

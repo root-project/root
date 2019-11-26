@@ -1483,7 +1483,7 @@ void TClingCallFunc::exec(void *address, void *ret)
       if (num_args < GetMinRequiredArguments()) {
          ::Error("TClingCallFunc::exec",
                "Not enough arguments provided for %s (%d instead of the minimum %d)",
-               fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
+               fMethod->Name(),
                num_args, (int)GetMinRequiredArguments());
          return;
       }
@@ -1492,7 +1492,7 @@ void TClingCallFunc::exec(void *address, void *ret)
           && !dyn_cast<CXXConstructorDecl>(FD)) {
          ::Error("TClingCallFunc::exec",
                "The method %s is called without an object.",
-               fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())));
+               fMethod->Name());
          return;
       }
       vh_ary.reserve(num_args);

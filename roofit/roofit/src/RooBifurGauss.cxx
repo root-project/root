@@ -22,14 +22,16 @@ Bifurcated Gaussian p.d.f with different widths on left and right
 side of maximum value
 **/
 
-
-#include "Riostream.h"
-#include "TMath.h"
-#include <math.h>
-
 #include "RooBifurGauss.h"
+
 #include "RooAbsReal.h"
 #include "RooMath.h"
+#include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
+
+#include "TMath.h"
+
+#include <cmath>
 
 using namespace std;
 
@@ -76,6 +78,59 @@ Double_t RooBifurGauss::evaluate() const {
 
   return exp(coef*arg*arg);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+//Author: Emmanouil Michalainas, CERN 20 AUGUST 2019  
+
+template<class Tx, class Tm, class Tsl, class Tsr>
+void compute(  size_t batchSize,
+               double * __restrict output,
+               Tx X, Tm M, Tsl SL, Tsr SR)
+{
+  for (size_t i=0; i<batchSize; i++) {
+    const double arg = X[i]-M[i];
+    output[i] = arg / ((arg < 0.0)*SL[i] + (arg >= 0.0)*SR[i]);
+  }
+  
+  for (size_t i=0; i<batchSize; i++) {
+    if (X[i]-M[i]>1e-30 || X[i]-M[i]<-1e-30) {
+      output[i] = _rf_fast_exp(-0.5*output[i]*output[i]);
+    }
+    else {
+      output[i] = 1.0;
+    }
+  }
+}
+};
+
+RooSpan<double> RooBifurGauss::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+
+  EvaluateInfo info = getInfo( {&x, &mean, &sigmaL, &sigmaR}, begin, batchSize );
+  if (info.nBatches == 0) {
+    return {};
+  }
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(),
+    BracketAdapter<double> (mean),
+    BracketAdapter<double> (sigmaL),
+    BracketAdapter<double> (sigmaR));
+  }
+  else {
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigmaL,sigmaL.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigmaR,sigmaR.getValBatch(begin,info.size)));
+  }
+  return output;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -192,6 +192,12 @@ TProfile2D::TProfile2D(const TProfile2D &profile) : TH2D()
    ((TProfile2D&)profile).Copy(*this);
 }
 
+TProfile2D &TProfile2D::operator=(const TProfile2D &profile)
+{
+   ((TProfile2D &)profile).Copy(*this);
+   return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Performs the operation: `this = this + c1*f1` .
 

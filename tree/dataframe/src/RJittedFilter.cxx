@@ -105,7 +105,7 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
 {
    if (fConcreteFilter == nullptr) {
       // No event loop performed yet, but the JITTING must be performed.
-      GetLoopManagerUnchecked()->BuildJittedNodes();
+      GetLoopManagerUnchecked()->Jit();
    }
    fConcreteFilter->AddFilterName(filters);
 }

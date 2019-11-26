@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -37,7 +37,7 @@ Float_t REX::REveProjection::fgEpsSqr = 0.000025f;
 REveProjection::REveProjection() :
    fType          (kPT_Unknown),
    fGeoMode       (kGM_Unknown),
-   fName          (0),
+   fName          (),
    fCenter        (),
    fDisplaceOrigin (kFALSE),
    fUsePreScale   (kFALSE),
@@ -137,7 +137,7 @@ void REveProjection::PreScaleVariable(Int_t dim, Float_t& v)
          v    = -v;
          invp = kTRUE;
       }
-      vPreScale_i i = fPreScales[dim].begin();
+      auto i = fPreScales[dim].begin();
       while (v > i->fMax)
          ++i;
       v = i->fOffset + (v - i->fMin)*i->fScale;

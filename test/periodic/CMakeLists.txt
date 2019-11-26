@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 cmake_minimum_required(VERSION 3.4 FATAL_ERROR)
 project(periodic)
 
@@ -9,6 +15,7 @@ file(GLOB headers RELATIVE ${CMAKE_SOURCE_DIR} *.h)
 list(REMOVE_ITEM headers NdbLinkDef.h)
 
 include(${ROOT_USE_FILE})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 ROOT_GENERATE_DICTIONARY(G__NdbDict ${headers} LINKDEF NdbLinkDef.h)
 
 #---Create a shared library with geneated dictionary

@@ -126,7 +126,7 @@ bool BasicMinimizer::SetFixedVariable(unsigned int ivar , const std::string & na
 bool BasicMinimizer::SetVariableValue(unsigned int ivar, double val) {
    // set variable value in minimizer
    // no change to transformation or variable status
-   if (ivar > fValues.size() ) return false;
+   if (ivar >= fValues.size() ) return false;
    fValues[ivar] = val;
    return true;
 }
@@ -182,14 +182,14 @@ bool BasicMinimizer::SetVariableLimits(unsigned int ivar, double lower, double u
 
 bool BasicMinimizer::FixVariable(unsigned int ivar) {
    // fix variable
-   if (ivar > fVarTypes.size() ) return false;
+   if (ivar >= fVarTypes.size() ) return false;
    fVarTypes[ivar] = kFix;
    return true;
 }
 
 bool BasicMinimizer::ReleaseVariable(unsigned int ivar) {
    // fix variable
-   if (ivar > fVarTypes.size() ) return false;
+   if (ivar >= fVarTypes.size() ) return false;
    if (fBounds.count(ivar) == 0)  {
       fVarTypes[ivar] = kDefault;
       return true;
@@ -205,12 +205,12 @@ bool BasicMinimizer::ReleaseVariable(unsigned int ivar) {
 }
 
 bool BasicMinimizer::IsFixedVariable(unsigned int ivar) const {
-   if (ivar > fVarTypes.size() ) return false;
+   if (ivar >= fVarTypes.size() ) return false;
    return (fVarTypes[ivar] == kFix ) ;
 }
 
 bool BasicMinimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const {
-   if (ivar > fValues.size() ) return false;
+   if (ivar >= fValues.size() ) return false;
    assert(fValues.size() == fNames.size() && fValues.size() == fVarTypes.size() );
    varObj.Set(fNames[ivar],fValues[ivar],fSteps[ivar]);
    std::map< unsigned int , std::pair< double, double> >::const_iterator itr = fBounds.find(ivar);
@@ -226,7 +226,7 @@ bool BasicMinimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::Parameter
 }
 
 std::string BasicMinimizer::VariableName(unsigned int ivar) const {
-   if (ivar > fNames.size() ) return "";
+   if (ivar >= fNames.size() ) return "";
    return fNames[ivar];
 }
 

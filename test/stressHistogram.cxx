@@ -3230,7 +3230,7 @@ bool testMerge1D()
 bool testMerge1DMixedWeights()
 {
    // Tests the merge method for 1D Histograms
-   // simpel merge but histogram to merge is not weighted 
+   // simpel merge but histogram to merge is not weighted
 
    TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, minRange, maxRange);
    TH1D* h2 = new TH1D("h2", "h2-Title", numberOfBins, minRange, maxRange);
@@ -6494,7 +6494,7 @@ bool testH3Integral()
 // test histogram buffer
 bool testH1Buffer() {
 
-   int iret = 0;
+   bool iret = false;
 
    TH1D * h1 = new TH1D("h1","h1",30,-3,3);
    TH1D * h2 = new TH1D("h2","h2",30,-3,3);
@@ -6598,8 +6598,8 @@ bool testH1Buffer() {
    }
    iret |= itest;
 
-
-   iret |= equals("testh1buffer",h1,h2,cmpOptStats,eps);
+   itest = equals("testh1buffer",h1,h2,cmpOptStats,eps);
+   iret |= itest;
 
    std::cout.precision(pr);
 
@@ -6615,7 +6615,7 @@ bool testH1Buffer() {
 // test histogram buffer with weights
 bool testH1BufferWeights() {
 
-   int iret = 0;
+   bool iret = false;
 
    TH1D * h1 = new TH1D("h1","h1",30,-5,5);
    TH1D * h2 = new TH1D("h2","h2",30,-5,5);
@@ -6664,7 +6664,8 @@ bool testH1BufferWeights() {
    iret |= itest;
 
 
-   iret |= equals("testh1bufferweight",h1,h2,cmpOptStats,eps);
+   itest = equals("testh1bufferweight",h1,h2,cmpOptStats,eps);
+   iret |= itest;
 
    std::cout.precision(15);
 
@@ -6678,7 +6679,7 @@ bool testH1BufferWeights() {
 
 bool testH2Buffer() {
 
-   int iret = 0;
+   bool iret = false;
 
    TH2D * h1 = new TH2D("h1","h1",10,-5,5,10,-5,5);
    TH2D * h2 = new TH2D("h2","h2",10,-5,5,10,-5,5);
@@ -6709,7 +6710,8 @@ bool testH2Buffer() {
    h1->Fill(x,y,w);
    h2->Fill(x,y,w);
 
-   iret |= equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
+   itest = equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
+   iret |= itest;
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H2:\t" << (iret?"FAILED":"OK") << std::endl;
@@ -6718,9 +6720,10 @@ bool testH2Buffer() {
 
    return iret;
 }
+
 bool testH3Buffer() {
 
-   int iret = 0;
+   bool iret = false;
 
    TH3D * h1 = new TH3D("h1","h1",4,-5,5,4,-5,5,4,-5,5);
    TH3D * h2 = new TH3D("h2","h2",4,-5,5,4,-5,5,4,-5,5);
@@ -6755,7 +6758,8 @@ bool testH3Buffer() {
       h2->Fill(x,y,z,w);
    }
 
-   iret |= equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
+   itest = equals("testh2buffer",h1,h2,cmpOptStats,1.E-15);
+   iret |= itest;
 
    if ( defaultEqualOptions & cmpOptPrint )
       std::cout << "Buffer H3:\t" << (iret?"FAILED":"OK") << std::endl;

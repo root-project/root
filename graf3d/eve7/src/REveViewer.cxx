@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,6 +11,7 @@
 
 #include <ROOT/REveViewer.hxx>
 
+#include <ROOT/REveUtil.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveManager.hxx>
@@ -32,10 +33,10 @@ Eve representation of a GL view. In a gist, it's a camera + a list of scenes.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveViewer::REveViewer(const char* n, const char* t) :
-   REveElementList(n, t)
+REveViewer::REveViewer(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
-   // SetChildClass(REveSceneInfo::Class());
+   // SetChildClass(TClass::GetClass<REveSceneInfo>());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,13 +57,12 @@ void REveViewer::Redraw(Bool_t /*resetCameras*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add 'scene' to the list of scenes.
 
-void REveViewer::AddScene(REveScene* scene)
+void REveViewer::AddScene(REveScene *scene)
 {
    static const REveException eh("REveViewer::AddScene ");
 
-   for (auto i = BeginChildren(); i != EndChildren(); ++i)
-   {
-      auto sinfo = dynamic_cast<REveSceneInfo*>(*i);
+   for (auto &c: RefChildren()) {
+      auto sinfo = dynamic_cast<REveSceneInfo*>(c);
 
       if (sinfo && sinfo->GetScene() == scene)
       {
@@ -70,7 +70,7 @@ void REveViewer::AddScene(REveScene* scene)
       }
    }
 
-   REveSceneInfo* si = new REveSceneInfo(this, scene);
+   auto si = new REveSceneInfo(this, scene);
    AddElement(si);
 }
 
@@ -97,38 +97,6 @@ void REveViewer::RemoveElementsLocal()
    // XXXXX Notify clients !!! Or will this be automatic?
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Object to be edited when this is selected, returns the TGLViewer.
-/// Virtual from REveElement.
-
-TObject* REveViewer::GetEditorObject(const REveException& /*eh*/) const
-{
-   // if (!fGLViewer)
-   //    throw(eh + "fGLViewer not set.");
-   // return fGLViewer;
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Receive a pasted object. REveViewer only accepts objects of
-/// class REveScene.
-/// Virtual from REveElement.
-
-Bool_t REveViewer::HandleElementPaste(REveElement* el)
-{
-   static const REveException eh("REveViewer::HandleElementPaste ");
-
-   REveScene* scene = dynamic_cast<REveScene*>(el);
-   if (scene != 0) {
-      AddScene(scene);
-      return kTRUE;
-   } else {
-      Warning(eh.Data(), "class REveViewer only accepts REveScene paste argument.");
-      return kFALSE;
-   }
-}
-
 
 /** \class REveViewerList
 \ingroup REve
@@ -137,16 +105,16 @@ List of Viewers providing common operations on REveViewer collections.
 
 ////////////////////////////////////////////////////////////////////////////////
 
-REveViewerList::REveViewerList(const char* n, const char* t) :
-   REveElementList(n, t),
-   fShowTooltip   (kTRUE),
+REveViewerList::REveViewerList(const std::string &n, const std::string &t) :
+   REveElement  (n, t),
+   fShowTooltip (kTRUE),
 
    fBrightness(0),
    fUseLightColorSet(kFALSE)
 {
    // Constructor.
 
-   SetChildClass(REveViewer::Class());
+   SetChildClass(TClass::GetClass<REveViewer>());
    Connect();
 }
 
@@ -165,8 +133,7 @@ REveViewerList::~REveViewerList()
 
 void REveViewerList::AddElement(REveElement* el)
 {
-   REveElementList::AddElement(el);
-   el->IncParentIgnoreCnt();
+   REveElement::AddElement(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +144,7 @@ void REveViewerList::RemoveElementLocal(REveElement* el)
    // This was needed as viewer was in EveWindowManager hierarchy, too.
    // el->DecParentIgnoreCnt();
 
-   REveElementList::RemoveElementLocal(el);
+   REveElement::RemoveElementLocal(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,12 +154,12 @@ void REveViewerList::RemoveElementsLocal()
 {
    // This was needed as viewer was in EveWindowManager hierarchy, too.
    // el->DecParentIgnoreCnt();
-   // for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   // for (auto &c: fChildren)
    // {
-   //    (*i)->DecParentIgnoreCnt();
+   //    c->DecParentIgnoreCnt();
    // }
 
-   REveElementList::RemoveElementsLocal();
+   REveElement::RemoveElementsLocal();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,9 +215,8 @@ void REveViewerList::Disconnect()
 
 void REveViewerList::RepaintChangedViewers(Bool_t /*resetCameras*/, Bool_t /*dropLogicals*/)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   //for (auto &c: fChildren)  {
+      // TGLViewer* glv = ((REveViewer*)c)->GetGLViewer();
       // if (glv->IsChanged())
       // {
       //    if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
@@ -260,7 +226,7 @@ void REveViewerList::RepaintChangedViewers(Bool_t /*resetCameras*/, Bool_t /*dro
 
       //    if (dropLogicals) glv->SetSmartRefresh(kTRUE);
       // }
-   }
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,9 +234,8 @@ void REveViewerList::RepaintChangedViewers(Bool_t /*resetCameras*/, Bool_t /*dro
 
 void REveViewerList::RepaintAllViewers(Bool_t /*resetCameras*/, Bool_t /*dropLogicals*/)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   // for (auto &c: fChildren) {
+      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
 
       // if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
       // if (dropLogicals) glv->SetSmartRefresh(kFALSE);
@@ -278,7 +243,7 @@ void REveViewerList::RepaintAllViewers(Bool_t /*resetCameras*/, Bool_t /*dropLog
       // glv->RequestDraw(TGLRnrCtx::kLODHigh);
 
       // if (dropLogicals) glv->SetSmartRefresh(kTRUE);
-   }
+   // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,11 +251,10 @@ void REveViewerList::RepaintAllViewers(Bool_t /*resetCameras*/, Bool_t /*dropLog
 
 void REveViewerList::DeleteAnnotations()
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   // for (auto &c: fChildren) {
+      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
       // glv->DeleteOverlayAnnotations();
-   }
+  // }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,14 +263,9 @@ void REveViewerList::DeleteAnnotations()
 
 void REveViewerList::SceneDestructing(REveScene* scene)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      REveViewer* viewer = (REveViewer*) *i;
-      List_i j = viewer->BeginChildren();
-      while (j != viewer->EndChildren())
-      {
-         REveSceneInfo* sinfo = (REveSceneInfo*) *j;
-         ++j;
+   for (auto &viewer: fChildren) {
+      for (auto &j: viewer->RefChildren()) {
+         REveSceneInfo* sinfo = (REveSceneInfo *) j;
          if (sinfo->GetScene() == scene)
             viewer->RemoveElement(sinfo);
       }
@@ -348,11 +307,11 @@ void REveViewerList::HandleTooltip()
 ///
 /// Highlight is always in single-selection mode.
 
-void REveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
+void REveViewerList::OnMouseOver(TObject *, UInt_t /*state*/)
 {
-   REveElement *el = dynamic_cast<REveElement*>(obj);
-   if (el && !el->IsPickable())
-      el = 0;
+   // REveElement *el = dynamic_cast<REveElement*>(obj);
+   // if (el && !el->IsPickable())
+   //   el = nullptr;
 
    // void *qsender = gTQSender;
    // REX::gEve->GetHighlight()->UserPickedElement(el, kFALSE);
@@ -470,14 +429,13 @@ void REveViewerList::SetColorBrightness(Float_t b)
 void REveViewerList::SwitchColorSet()
 {
    fUseLightColorSet = ! fUseLightColorSet;
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      // TGLViewer* glv = ((REveViewer*)*i)->GetGLViewer();
+   // for (auto &c: fChildren) {
+      // TGLViewer* glv = ((REveViewer *)c)->GetGLViewer();
       // if ( fUseLightColorSet)
       //    glv->UseLightColorSet();
       // else
       //    glv->UseDarkColorSet();
 
       // glv->RequestDraw(TGLRnrCtx::kLODHigh);
-   }
+   // }
 }

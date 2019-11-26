@@ -15,26 +15,34 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// RooFormulaVar is a generic implementation of a real valued object
-// which takes a RooArgList of servers and a C++ expression string defining how
-// its value should be calculated from the given list of servers.
-// RooFormulaVar uses a RooFormula object to perform the expression evaluation.
-//
-// If RooAbsPdf objects are supplied to RooFormulaVar as servers, their
-// raw (unnormalized) values will be evaluated. Use RooGenericPdf, which
-// constructs generic PDF functions, to access their properly normalized
-// values.
-//
-// The string expression can be any valid TFormula expression referring to the
-// listed servers either by name or by their ordinal list position:
-//
-//   RooFormulaVar("gen","x*y",RooArgList(x,y))  or
-//   RooFormulaVar("gen","@0*@1",RooArgList(x,y)) 
-//
-// The latter form, while slightly less readable, is more versatile because it
-// doesn't hardcode any of the variable names it expects
-//
+/// \class RooFormulaVar
+///
+/// A RooFormulaVar is a generic implementation of a real-valued object,
+/// which takes a RooArgList of servers and a C++ expression string defining how
+/// its value should be calculated from the given list of servers.
+/// RooFormulaVar uses a RooFormula object to perform the expression evaluation.
+///
+/// If RooAbsPdf objects are supplied to RooFormulaVar as servers, their
+/// raw (unnormalized) values will be evaluated. Use RooGenericPdf, which
+/// constructs generic PDF functions, to access their properly normalized
+/// values.
+///
+/// The string expression can be any valid TFormula expression referring to the
+/// listed servers either by name or by their ordinal list position. These three are
+/// equivalent:
+/// ```
+///   RooFormulaVar("gen", "x*y", RooArgList(x,y))       // reference by name
+///   RooFormulaVar("gen", "@0*@1", RooArgList(x,y))     // reference by ordinal with @
+///   RooFormulaVar("gen", "x[0]*x[1]", RooArgList(x,y)) // TFormula-builtin reference by ordinal
+/// ```
+/// Note that `x[i]` is an expression reserved for TFormula. All variable references
+/// are automatically converted to the TFormula-native format. If a variable with
+/// the name `x` is given, the RooFormula interprets `x[i]` as a list position,
+/// but `x` without brackets as the name of a RooFit object.
+///
+/// The last two versions, while slightly less readable, are more versatile because
+/// the names of the arguments are not hard coded.
+///
 
 
 #include "RooFit.h"
@@ -56,31 +64,50 @@ ClassImp(RooFormulaVar);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with formula expression and list of input variables
-
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents) : 
+/// Constructor with formula expression and list of input variables.
+/// \param[in] name Name of the formula.
+/// \param[in] title Title of the formula.
+/// \param[in] formula Expression to be evaluated.
+/// \param[in] dependents Variables that should be passed to the formula.
+/// \param[in] checkVariables Check that all variables from `dependents` are used in the expression.
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents,
+    bool checkVariables) :
   RooAbsReal(name,title), 
   _actualVars("actualVars","Variables used by formula expression",this),
-  _formula(0), _formExpr(inFormula)
+  _formExpr(inFormula)
 {  
   _actualVars.add(dependents) ; 
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.getSize()==0) {
+    _value = traceEval(0);
+  } else {
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
+    _formExpr = _formula->formulaString().c_str();
+  }
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with formula expression, title and list of input variables
-
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
+/// Constructor with formula expression, title and list of input variables.
+/// \param[in] name Name of the formula.
+/// \param[in] title Formula expression. Will also be used as the title.
+/// \param[in] dependents Variables that should be passed to the formula.
+/// \param[in] checkVariables Check that all variables from `dependents` are used in the expression.
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents,
+    bool checkVariables) :
   RooAbsReal(name,title),
   _actualVars("actualVars","Variables used by formula expression",this),
-  _formula(0), _formExpr(title)
+  _formExpr(title)
 {  
   _actualVars.add(dependents) ; 
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.getSize()==0) {
+    _value = traceEval(0);
+  } else {
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
+    _formExpr = _formula->formulaString().c_str();
+  }
 }
 
 
@@ -91,31 +118,27 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
 RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) : 
   RooAbsReal(other, name), 
   _actualVars("actualVars",this,other._actualVars),
-  _formula(0), _formExpr(other._formExpr)
+  _formExpr(other._formExpr)
 {
+  if (other._formula && other._formula->ok()) {
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars));
+    _formExpr = _formula->formulaString().c_str();
+  }
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFormulaVar::~RooFormulaVar() 
-{
-  if (_formula) delete _formula ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return reference to internal RooFormula object
-
+/// Return reference to internal RooFormula object.
 RooFormula& RooFormulaVar::formula() const
 {
   if (!_formula) {
-    _formula = new RooFormula(GetName(),_formExpr,_actualVars) ;    
+    // After being read from file, the formula object might not exist, yet:
+    auto theFormula = new RooFormula(GetName(), _formExpr, _actualVars);
+    const_cast<std::unique_ptr<RooFormula>&>(this->_formula).reset(theFormula);
+    const_cast<TString&>(_formExpr) = _formula->formulaString().c_str();
   }
-  return *_formula ;
+
+  return *_formula;
 }
 
 
@@ -125,19 +148,8 @@ RooFormula& RooFormulaVar::formula() const
 
 Double_t RooFormulaVar::evaluate() const
 {
-  return formula().eval(_lastNSet) ;
+  return formula().eval(_lastNSet);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if given value is valid
-
-Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const 
-{
-  return kTRUE ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +157,10 @@ Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) con
 
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
-  return formula().changeDependents(newServerList,mustReplaceAll,nameChange) ;
+  bool success = formula().changeDependents(newServerList,mustReplaceAll,nameChange);
+
+  _formExpr = formula().GetTitle();
+  return success;
 }
 
 
@@ -206,16 +221,16 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 
 std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  RooFIter iter = _actualVars.fwdIterator() ;
-  RooAbsReal* func ;
-  while((func=(RooAbsReal*)iter.next())) {
-    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;      
-    if (binb) {
-      return binb ;
+  for (const auto par : _actualVars) {
+    auto func = static_cast<const RooAbsReal*>(par);
+    list<Double_t>* binb = nullptr;
+
+    if (func && (binb = func->binBoundaries(obs,xlo,xhi)) ) {
+      return binb;
     }
   }
   
-  return 0 ;  
+  return nullptr;
 }
 
 
@@ -225,16 +240,16 @@ std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_
 
 std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  RooFIter iter = _actualVars.fwdIterator() ;
-  RooAbsReal* func ;
-  while((func=(RooAbsReal*)iter.next())) {
-    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;      
-    if (hint) {
-      return hint ;
+  for (const auto par : _actualVars) {
+    auto func = dynamic_cast<const RooAbsReal*>(par);
+    list<Double_t>* hint = nullptr;
+
+    if (func && (hint = func->plotSamplingHint(obs,xlo,xhi)) ) {
+      return hint;
     }
   }
-  
-  return 0 ;
+
+  return nullptr;
 }
 
 
@@ -253,9 +268,7 @@ Double_t RooFormulaVar::defaultErrorLevel() const
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;
 
-  TIterator* iter = _actualVars.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : _actualVars) {
     if (dynamic_cast<RooNLLVar*>(arg)) {
       nllArg = (RooAbsReal*)arg ;
     }
@@ -263,7 +276,6 @@ Double_t RooFormulaVar::defaultErrorLevel() const
       chi2Arg = (RooAbsReal*)arg ;
     }
   }
-  delete iter ;
 
   if (nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() 

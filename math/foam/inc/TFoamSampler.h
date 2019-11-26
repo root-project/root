@@ -36,15 +36,6 @@ class TRandom;
 class TF1;
 class TFoam;
 
-
-//_______________________________________________________________________________
-/**
-   TFoamSampler class
-   class implementing  the ROOT::Math::DistSampler interface using FOAM
-   for sampling arbitrary distributions.
-
-
-*/
 class TFoamSampler : public ROOT::Math::DistSampler {
 
 public:
@@ -75,7 +66,7 @@ public:
    bool Init(const char * = "");
 
    /**
-      initialize the generators with the fiven options
+      initialize the generators with the given options
    */
    bool Init(const ROOT::Math::DistSamplerOptions & opt );
 
@@ -120,7 +111,6 @@ protected:
 
 private:
 
-   // private member
 //    bool                              fOneDim;      // flag to indicate if the function is 1 dimension
 //    bool                              fHasMode;     // flag to indicate if a mode is set
 //    bool                              fHasArea;     // flag to indicate if a area is set

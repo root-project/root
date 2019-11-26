@@ -1,24 +1,18 @@
-#!/usr/bin/env python
-
-#
-# A pyROOT script demonstrating
-# an example of writing a HistFactory
-# model using python
-#
-# This example was written to match
-# the example.xml analysis in
-# $ROOTSYS/tutorials/histfactory/
-#
-# Written by George Lewis
-#
-
+## \file
+## \ingroup tutorial_histfactory
+## A ROOT script demonstrating  an example of writing a HistFactory model using Python.
+##
+## \macro_code
+## \macro_output
+##
+## \author George Lewis
 
 def main():
 
     try:
         import ROOT
     except:
-        print "It seems that pyROOT isn't properly configured"
+        print("It seems that pyROOT isn't properly configured")
         return
 
     """

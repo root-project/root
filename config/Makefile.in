@@ -74,9 +74,6 @@ WINRTDEBUG     := @winrtdebug@
 CTORSINITARRAY := @ctorsinitarray@
 CXXMKDEPFLAGS  := @cxxmkdepflags@
 
-GLBPATCHFLAGS  := @glbpatchcflags@
-EXTRA_AUTHFLAGS:= @krb5extracflags@ @glbextracflags@ @sslextracflags@
-
 BINDIR         := @bindir@
 LIBDIR         := @libdir@
 INCDIR         := @incdir@
@@ -89,16 +86,13 @@ MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
 ICONPATH       := @iconpath@
 DOCDIR         := @docdir@
-TESTDIR        := @testdir@
 TUTDIR         := @tutdir@
-ACLOCALDIR     := @aclocaldir@
 
 BUILDX11       := @buildx11@
 X11INCDIR      := $(filter-out /usr/include, @x11incdir@)
 X11LIBDIR      := @x11libdir@
 XPMLIBDIR      := @xpmlibdir@
 XPMLIB         := @xpmlib@
-XFTLIB         := @enable_xft@
 
 BUILDCOCOA     := @buildcocoa@
 MACOSXVERS     := @macosxvers@
@@ -110,8 +104,6 @@ CXX11          := @c++11@
 CXX14          := @c++14@
 CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
-
-EXPLICITLINK   := @explicitlink@
 
 ENABLETHREAD   := @enable_thread@
 OSTHREADFLAG   := @threadflag@
@@ -153,11 +145,6 @@ BUILTINGL2PS   := @builtingl2ps@
 GL2PSLIBDIR    := @gl2pslibdir@
 GL2PSLIB       := @gl2pslib@
 GL2PSINCDIR    := $(filter-out /usr/include, @gl2psincdir@)
-
-BUILDLDAP      := @buildldap@
-LDAPLIBDIR     := @ldaplibdir@
-LDAPCLILIB     := @ldaplib@
-LDAPINCDIR     := $(filter-out /usr/include, @ldapincdir@)
 
 BUILDMYSQL     := @buildmysql@
 MYSQLLIBDIR    := @mysqllibdir@
@@ -255,6 +242,12 @@ CFITSIOLIBDIR  := @cfitsiolibdir@
 CFITSIOLIB     := @cfitsiolib@
 CFITSIOINCDIR  := $(filter-out /usr/include, @cfitsioincdir@)
 
+BUILDGVIZ      := @buildgviz@
+GRAPHVIZLIBDIR := @gvizlibdir@
+GRAPHVIZLIB    := @gvizlib@
+GRAPHVIZINCDIR := $(filter-out /usr/include, @gvizincdir@)
+GRAPHVIZCFLAGS := @gvizcflags@
+
 BUILDPYTHON    := @buildpython@
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
@@ -285,17 +278,6 @@ BUILDXRDCLT    := @buildxrdclt@
 
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
-
-BUILDKRB5      := @buildkrb5@
-KRB5LIB        := @krb5lib@
-KRB5LIBDIR     := @krb5libdir@
-KRB5INCDIR     := $(filter-out /usr/include, @krb5incdir@)
-KRB5INIT       := @krb5init@
-
-COMERRLIB      := @comerrlib@
-COMERRLIBDIR   := @comerrlibdir@
-
-RESOLVLIB      := @resolvlib@
 
 BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
@@ -349,9 +331,9 @@ BUILDTABLE     := @buildtable@
 BUILDTMVA      := @buildtmva@
 
 BUILDHTTP      := @buildhttp@
-USEFASCGI      := @usefastcgi@
+USEFASTCGI     := @usefastcgi@
 FASTCGIINCDIR  := @fastcgiincdir@
-ifeq ($(USEFASCGI), no)
+ifeq ($(USEFASTCGI), no)
 FASTCGIFLAGS   := -DHTTP_WITHOUT_FASTCGI
 endif
 

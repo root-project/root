@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT roofitcore package
 # @author Pere Mato, CERN
@@ -210,7 +216,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSuperCategory.h
     RooTable.h
     RooTFoamBinding.h
-    RooThreshEntry.h
     RooThresholdCategory.h
     RooTObjWrap.h
     RooTrace.h
@@ -224,6 +229,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWorkspaceHandle.h
     RooXYChi2Var.h
     RooHelpers.h
+    RooSpan.h
+    BatchData.h
+    RooVDTHeaders.h
+    RooWrapperPdf.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -429,7 +438,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSuperCategory.cxx
     src/RooTable.cxx
     src/RooTFoamBinding.cxx
-    src/RooThreshEntry.cxx
     src/RooThresholdCategory.cxx
     src/RooTObjWrap.cxx
     src/RooTrace.cxx
@@ -442,7 +450,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooWorkspace.cxx
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
-  DICTIONARY_OPTIONS
+    src/BatchData.cxx
+    src/RooWrapperPdf.cxx
+    DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
     Core
@@ -455,5 +465,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     MathCore
     Foam
 )
+
+if(vdt AND NOT builtin_vdt)
+  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

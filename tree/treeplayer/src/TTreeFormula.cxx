@@ -14,12 +14,12 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TBranchObject.h"
-#include "TFunction.h"
+#include "TBranchElement.h"
 #include "TClonesArray.h"
 #include "TLeafB.h"
 #include "TLeafC.h"
+#include "TLeafElement.h"
 #include "TLeafObject.h"
-#include "TDataMember.h"
 #include "TMethodCall.h"
 #include "TCutG.h"
 #include "TRandom.h"
@@ -27,8 +27,6 @@
 #include "TDataType.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TBranchElement.h"
-#include "TLeafElement.h"
 #include "TArrayI.h"
 #include "TAxis.h"
 #include "TError.h"
@@ -41,7 +39,6 @@
 #include "TTreeFormulaManager.h"
 #include "TFormLeafInfo.h"
 #include "TMethod.h"
-#include "TBaseClass.h"
 #include "TFormLeafInfoReference.h"
 
 #include "TEntryList.h"
@@ -2606,7 +2603,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
       // Check for an alias.
       const char *aliasValue = fTree->GetAlias(left);
-      if (aliasValue && strcspn(aliasValue,"[]+*/-%&!=<>|")==strlen(aliasValue)) {
+      if (aliasValue && strcspn(aliasValue,"()[]+*/-%&!=<>|")==strlen(aliasValue)) {
          // First check whether we are using this alias recursively (this would
          // lead to an infinite recursion).
          if (find(aliasUsed.begin(),
@@ -2844,7 +2841,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
          }
 
 
-         if (strcspn(aliasValue,"+*/-%&!=<>|")!=strlen(aliasValue)) {
+         if (strcspn(aliasValue,"()+*/-%&!=<>|")!=strlen(aliasValue)) {
             // If the alias contains an operator, we need to use a nested formula
             // (since DefinedVariable must only add one entry to the operation's list).
 
@@ -2967,14 +2964,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    TCutG *gcut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(name.Data());
    if (gcut) {
       if (gcut->GetObjectX()) {
-         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectX(); gcut->SetObjectX(0);
-         }
+         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class()))
+            gcut->SetObjectX(nullptr);
       }
       if (gcut->GetObjectY()) {
-         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectY(); gcut->SetObjectY(0);
-         }
+         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class()))
+            gcut->SetObjectY(nullptr);
       }
 
       Int_t code = fNcodes;
@@ -3979,6 +3974,10 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+            if (fDidBooleanOptimization) {
+               fx->ResetLoading();
+               fy->ResetLoading();
+            }
             T xcut = fx->EvalInstance<T>(instance);
             T ycut = fy->EvalInstance<T>(instance);
             return gcut->IsInside(xcut,ycut);
@@ -3986,6 +3985,9 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
          case -1: {
             TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+            if (fDidBooleanOptimization) {
+               fx->ResetLoading();
+            }
             return fx->EvalInstance<T>(instance);
          }
          default: return 0;
@@ -4240,6 +4242,10 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
                   TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+                  if (fDidBooleanOptimization) {
+                     fx->ResetLoading();
+                     fy->ResetLoading();
+                  }
                   T xcut = fx->EvalInstance<T>(instance);
                   T ycut = fy->EvalInstance<T>(instance);
                   tab[pos++] = gcut->IsInside(xcut,ycut);
@@ -4248,6 +4254,9 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                case -1: {
                   TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+                  if (fDidBooleanOptimization) {
+                     fx->ResetLoading();
+                  }
                   tab[pos++] = fx->EvalInstance<T>(instance);
                   continue;
                }
@@ -4945,6 +4954,16 @@ void TTreeFormula::ResetLoading()
          f->ResetLoading();
       }
    }
+   for (int i=0; i<fExternalCuts.GetSize(); i++) {
+      auto c = dynamic_cast<TCutG*>(fExternalCuts.At(i));
+      if (c) {
+         ((TTreeFormula *)(c->GetObjectX()))->ResetLoading();
+         ((TTreeFormula *)(c->GetObjectY()))->ResetLoading();
+      }
+   }
+   fRealInstanceCache.fInstanceCache = 0;
+   fRealInstanceCache.fLocalIndexCache = 0;
+   fRealInstanceCache.fVirtAccumCache = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

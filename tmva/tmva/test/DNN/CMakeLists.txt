@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building TMVA/DNN tests.
 # @author Simon Pfreundschuh
@@ -7,15 +13,17 @@ set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 ROOT_ADD_TEST_SUBDIRECTORY(CNN)
-ROOT_ADD_TEST_SUBDIRECTORY(DAE)
 ROOT_ADD_TEST_SUBDIRECTORY(RNN)
+
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 
-  include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+  include_directories(${ROOT_INCLUDE_DIRS}  ${CUDA_INCLUDE_DIRS})
 
 
-  SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+  #if using CUDA_ADD_EXECUTABLE CUDA_LIBRARIES are added automatically
+  SET(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES})
+
 
   # DNN - Activation Functions Cuda
   CUDA_ADD_EXECUTABLE(testActivationFunctionsCuda TestActivationFunctionsCuda.cxx)
@@ -38,9 +46,14 @@ if (CUDA_FOUND AND tmva-gpu)
   ROOT_ADD_TEST(TMVA-DNN-BackpropagationCuda COMMAND testBackpropagationCuda)
 
   # DNN - Backpropagation DL Cuda
-  ROOT_EXECUTABLE(testBackpropagationDLCuda TestBackpropagationDLCuda.cxx LIBRARIES ${Libraries})
+  CUDA_ADD_EXECUTABLE(testBackpropagationDLCuda TestBackpropagationDLCuda.cxx )
   TARGET_LINK_LIBRARIES(testBackpropagationDLCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DLCuda COMMAND testBackpropagationDLCuda)
+
+  # DNN - Batch normalization Cuda
+  CUDA_ADD_EXECUTABLE(testBatchNormalizationCuda TestBatchNormalizationCuda.cxx )
+  TARGET_LINK_LIBRARIES(testBatchNormalizationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cuda COMMAND testBatchNormalizationCuda)
 
   # DNN - Minimization Cuda
   CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx)
@@ -92,6 +105,10 @@ if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
   ROOT_EXECUTABLE(testBackpropagationDLCpu TestBackpropagationDLCpu.cxx
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL-Cpu COMMAND testBackpropagationDLCpu)
+
+    # DNN - Batch normalization
+  ROOT_EXECUTABLE(testBatchNormalizationCpu TestBatchNormalizationCpu.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cpu COMMAND testBatchNormalizationCpu)
 
   # DNN - DataLoader CPU
   ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
@@ -159,6 +176,10 @@ endif ()
   # DNN - Backpropagation DL
   ROOT_EXECUTABLE(testBackpropagationDL TestBackpropagationDL.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL COMMAND testBackpropagationDL)
+
+  # DNN - Batch normalization
+  ROOT_EXECUTABLE(testBatchNormalization TestBatchNormalization.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization COMMAND testBatchNormalization)
 
   # DNN - DataLoader
   ROOT_EXECUTABLE(testDataLoader TestDataLoader.cxx LIBRARIES ${Libraries})

@@ -18,17 +18,21 @@
 /** \class RooAbsPdf
     \ingroup Roofitcore
 
+## RooAbsPdf, the base class of all PDFs
+
 RooAbsPdf is the abstract interface for all probability density
-functions The class provides hybrid analytical/numerical
+functions. The class provides hybrid analytical/numerical
 normalization for its implementations, error tracing and a MC
 generator interface.
 
+### A Minimal PDF Implementation
+
 A minimal implementation of a PDF class derived from RooAbsPdf
-should overload the evaluate() function. This functions should
-return PDFs value.
+should override the `evaluate()` function. This function should
+return the PDF's value (which does not need to be normalised).
 
 
-### Normalization/Integration
+#### Normalization/Integration
 
 Although the normalization of a PDF is an integral part of a
 probability density function, normalization is treated separately
@@ -38,16 +42,17 @@ if any of its variables are functions instead of variables. In
 such cases the normalization of the composite may not be simply the
 integral over the dependents of the top level PDF as these are
 functions with potentially non-trivial Jacobian terms themselves.
-Therefore 
-
-**--> No explicit attempt should be made to normalize 
-    the functions output in evaluate().** 
+\note Therefore, no explicit attempt should be made to normalize the
+function output in evaluate(). In particular, normalisation constants
+can be omitted to speed up the function evaluations, and included later
+in the integration of the PDF (see below), which is called rarely in
+comparison to the `evaluate()` function.
 
 In addition, RooAbsPdf objects do not have a static concept of what
 variables are parameters and what variables are dependents (which
 need to be integrated over for a correct PDF normalization). 
-Instead the choice of normalization is always specified each time a
-normalized values is requested from the PDF via the getVal()
+Instead, the choice of normalization is always specified each time a
+normalized value is requested from the PDF via the getVal()
 method.
 
 RooAbsPdf manages the entire normalization logic of each PDF with
@@ -58,28 +63,32 @@ PDFs can advertise one or more (partial) analytical integrals of
 their function, and these will be used by RooRealIntegral, if it
 determines that this is safe (i.e. no hidden Jacobian terms,
 multiplication with other PDFs that have one or more dependents in
-commen etc)
+commen etc).
 
+#### Implementing analytical integrals
 To implement analytical integrals, two functions must be implemented. First,
 
-``Int_t getAnalyticalIntegral(const RooArgSet& integSet, RooArgSet& anaIntSet)``
-
-advertises the analytical integrals that are supported. 'integSet'
+```
+Int_t getAnalyticalIntegral(const RooArgSet& integSet, RooArgSet& anaIntSet)
+```
+should return the analytical integrals that are supported. `integSet`
 is the set of dependents for which integration is requested. The
 function should copy the subset of dependents it can analytically
-integrate to anaIntSet and return a unique identification code for
+integrate to `anaIntSet`, and return a unique identification code for
 this integration configuration.  If no integration can be
-performed, zero should be returned.  Second,
+performed, zero should be returned. Second,
 
-``Double_t analyticalIntegral(Int_t code)``
+```
+Double_t analyticalIntegral(Int_t code)
+```
 
-Implements the actual analytical integral(s) advertised by
-getAnalyticalIntegral.  This functions will only be called with
-codes returned by getAnalyticalIntegral, except code zero.
+implements the actual analytical integral(s) advertised by
+`getAnalyticalIntegral()`.  This function will only be called with
+codes returned by `getAnalyticalIntegral()`, except code zero.
 
-The integration range for real each dependent to be integrated can
-be obtained from the dependents' proxy functions min() and
-max(). Never call these proxy functions for any proxy not known to
+The integration range for each dependent to be integrated can
+be obtained from the dependent's proxy functions `min()` and
+`max()`. Never call these proxy functions for any proxy not known to
 be a dependent via the integration code.  Doing so may be
 ill-defined, e.g. in case the proxy holds a function, and will
 trigger an assert. Integrated category dependents should always be
@@ -89,42 +98,46 @@ summed over all of their states.
 
 ### Direct generation of observables
 
-Any PDF dependent can be generated with the accept/reject method,
-but for certain PDFs more efficient methods may be implemented. To
+Distributions for any PDF can be generated with the accept/reject method,
+but for certain PDFs, more efficient methods may be implemented. To
 implement direct generation of one or more observables, two
 functions need to be implemented, similar to those for analytical
 integrals:
 
-``Int_t getGenerator(const RooArgSet& generateVars, RooArgSet& directVars)`` and
-``void generateEvent(Int_t code)``
+```
+Int_t getGenerator(const RooArgSet& generateVars, RooArgSet& directVars)
+```
+and
+```
+void generateEvent(Int_t code)
+```
 
-The first function advertises observables that can be generated,
+The first function advertises observables, for which distributions can be generated,
 similar to the way analytical integrals are advertised. The second
-function implements the generator for the advertised observables
+function implements the actual generator for the advertised observables.
 
-The generated dependent values should be store in the proxy
-objects. For this the assignment operator can be used (i.e. xProxy
-= 3.0 ). Never call assign to any proxy not known to be a dependent
+The generated dependent values should be stored in the proxy
+objects. For this, the assignment operator can be used (i.e. `xProxy
+= 3.0` ). Never call assign to any proxy not known to be a dependent
 via the generation code.  Doing so may be ill-defined, e.g. in case
-the proxy holds a function, and will trigger an assert
+the proxy holds a function, and will trigger an assert.
 
 
+### Batched function evaluations (Advanced usage)
+
+To speed up computations with large numbers of data events in unbinned fits,
+it is beneficial to override `evaluateBatch()`. Like this, large batches of
+computations can be done, without having to call `evaluate()` for each single data event.
+`evaluateBatch()` should execute the same computation as `evaluate()`, but it
+may choose an implementation that is capable of SIMD computations.
+If evaluateBatch is not implemented, the classic and slower `evaluate()` will be
+called for each data event.
 */
+
+#include "RooAbsPdf.h"
 
 #include "RooFit.h"
 #include "RooMsgService.h" 
-
-#include "TClass.h"
-#include "Riostream.h"
-#include "TMath.h"
-#include "TObjString.h"
-#include "TPaveText.h"
-#include "TList.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TMatrixD.h"
-#include "TMatrixDSym.h"
-#include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooArgProxy.h"
@@ -157,7 +170,22 @@ the proxy holds a function, and will trigger an assert
 #include "RooMinimizer.h"
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
+
+#include "RooHelpers.h"
+#include "RooVDTHeaders.h"
+
+#include "TClass.h"
+#include "Riostream.h"
+#include "TMath.h"
+#include "TObjString.h"
+#include "TPaveText.h"
+#include "TList.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
 #include "Math/CholeskyDecomp.h"
+
 #include <string>
 
 using namespace std;
@@ -168,7 +196,6 @@ ClassImp(RooAbsPdf::GenSpec);
 ;
 
 Int_t RooAbsPdf::_verboseEval = 0;
-Bool_t RooAbsPdf::_evalError = kFALSE ;
 TString RooAbsPdf::_normRangeOverride ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -241,22 +268,17 @@ RooAbsPdf::~RooAbsPdf()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current value, normalized by integrating over
-/// the observables in 'nset'. If 'nset' is 0, the unnormalized value
-/// is returned. All elements of 'nset' must be lvalues
+/// the observables in `nset`. If `nset` is 0, the unnormalized value
+/// is returned. All elements of `nset` must be lvalues.
 ///
 /// Unnormalized values are not cached.
-/// Doing so would be complicated as _norm->getVal() could
+/// Doing so would be complicated as `_norm->getVal()` could
 /// spoil the cache and interfere with returning the cached
 /// return value. Since unnormalized calls are typically
 /// done in integration calls, there is no performance hit.
 
 Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 {
-  // Fast-track processing of clean-cache objects
-  //   if (_operMode==AClean) {
-  //     cout << "RooAbsPdf::getValV(" << this << "," << GetName() << ") CLEAN  value = " << _value << endl ;
-  //     return _value ;
-  //   }
 
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!nset) {
@@ -267,7 +289,6 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     Bool_t error = traceEvalPdf(val) ;
 
     if (error) {
-//       raiseEvalError() ;
       return 0 ;
     }
     return val ;
@@ -290,27 +311,100 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     // Evaluate denominator
     Double_t normVal(_norm->getVal()) ;
     
-    if (normVal<=0.) {
+    if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
+      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes.
       error=kTRUE ;
-      logEvalError("p.d.f normalization integral is zero or negative") ;  
+      std::stringstream msg;
+      msg << "p.d.f normalization integral is zero or negative: " << normVal;
+      logEvalError(msg.str().c_str());
     }
 
     // Raise global error flag if problems occur
-    if (error) {
-//       raiseEvalError() ;
+    if (error || (rawVal == 0. && normVal == 0.)) {
       _value = 0 ;
     } else {
       _value = rawVal / normVal ;
-//       cout << "RooAbsPdf::getValV(" << GetName() << ") writing _value = " << rawVal << "/" << normVal << " = " << _value << endl ;
     }
 
-    clearValueAndShapeDirty() ; //setValueDirty(kFALSE) ;
+    clearValueAndShapeDirty();
   } 
 
   return _value ;
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute batch of values for given range, and normalise by integrating over
+/// the observables in `nset`. If `nset` is `nullptr`, unnormalized values
+/// are returned. All elements of `nset` must be lvalues.
+///
+/// \param[in] begin Begin of the batch.
+/// \param[in] maxSize Size of the requested range. May come out smaller.
+/// \param[in] normSet   If not nullptr, normalise results by integrating over
+/// the variables in this set. The normalisation is only computed once, and applied
+/// to the full batch.
+///
+RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxSize,
+    const RooArgSet* normSet) const
+{
+  // Some PDFs do preprocessing here:
+  getValV(normSet);
+
+  if (_allBatchesDirty || _operMode == ADirty) {
+    _batchData.markDirty();
+    _allBatchesDirty = false;
+  }
+
+  // Special handling of case without normalization set (used in numeric integration of pdfs)
+  if (!normSet) {
+    RooArgSet* tmp = _normSet ;
+    _normSet = nullptr;
+    auto outputs = evaluateBatch(begin, maxSize);
+    maxSize = outputs.size();
+    _normSet = tmp;
+
+    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
+
+    return outputs;
+  }
+
+
+  // Process change in last data set used
+  Bool_t nsetChanged(kFALSE) ;
+  if (normSet != _normSet || _norm == nullptr) {
+    nsetChanged = syncNormalization(normSet) ;
+  }
+
+  // TODO wait if batch is computing?
+  if (_batchData.status(begin, maxSize) <= BatchHelpers::BatchData::kDirty
+      || nsetChanged || _norm->isValueDirty()) {
+
+    auto outputs = evaluateBatch(begin, maxSize);
+    maxSize = outputs.size();
+
+    // Evaluate denominator
+    const double normVal = _norm->getVal();
+
+    if (normVal < 0.
+        || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
+      logEvalError(Form("p.d.f normalization integral is zero or negative."
+          "\n\tInt(%s) = %f", GetName(), normVal));
+    }
+
+    if (normVal != 1. && normVal > 0.) {
+      const double invNorm = 1./normVal;
+      for (double& val : outputs) { //CHECK_VECTORISE
+        val *= invNorm;
+      }
+    }
+
+    _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
+  }
+
+  const auto ret = _batchData.getBatch(begin, maxSize);
+
+  return ret;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
@@ -370,7 +464,6 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the integral of this PDF over all observables listed in 'nset'. 
 
@@ -424,14 +517,14 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Verify that the normalization integral cached with this PDF
-/// is valid for given set of normalization observables
+/// is valid for given set of normalization observables.
 ///
 /// If not, the cached normalization integral (if any) is deleted
-/// and a new integral is constructed for use with 'nset'
-/// Elements in 'nset' can be discrete and real, but must be lvalues
+/// and a new integral is constructed for use with 'nset'.
+/// Elements in 'nset' can be discrete and real, but must be lvalues.
 ///
 /// For functions that declare to be self-normalized by overloading the
-/// selfNormalized() function, a unit normalization is always constructed
+/// selfNormalized() function, a unit normalization is always constructed.
 
 Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const
 {
@@ -463,7 +556,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
     ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
   }
   
-  RooArgSet* depList = getObservables(nset) ;
+  std::unique_ptr<RooArgSet> depList(getObservables(nset));
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
@@ -523,7 +616,6 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   
 //   cout << "making new object " << _norm->GetName() << endl ;
 
-  delete depList ;
   return kTRUE ;
 }
 
@@ -613,36 +705,113 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   }
 
   if(prob < 0) {
-
     logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
 
-    return 0;
+    return std::numeric_limits<double>::quiet_NaN();
   }
-  if(prob == 0) {
 
+  if(prob == 0) {
     logEvalError("getLogVal() top-level p.d.f evaluates to zero") ;
 
-    return log((double)0);
+    return -std::numeric_limits<double>::infinity();
   }
 
   if (TMath::IsNaN(prob)) {
     logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
 
-    return log((double)0);
-    
+    return -std::numeric_limits<double>::infinity();
   }
+
   return log(prob);
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Check for infinity or NaN.
+/// \param[in] inputs Array to check
+/// \return True if either infinity or NaN were found.
+namespace {
+template<class T>
+bool checkInfNaNNeg(const T& inputs) {
+  // check for a math error or negative value
+  bool inf = false;
+  bool nan = false;
+  bool neg = false;
+
+  for (double val : inputs) { //CHECK_VECTORISE
+    inf |= !std::isfinite(val);
+    nan |= TMath::IsNaN(val); // Works also during fast math
+    neg |= val < 0;
+  }
+
+  return inf || nan || neg;
+}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returned the extended likelihood term (Nexpect - Nobserved*log(NExpected)
-/// of this PDF for the given number of observed events
+/// Scan through outputs and fix+log all nans and negative values.
+/// \param[in/out] outputs Array to be scanned & fixed.
+/// \param[in] begin Begin of event range. Only needed to print the correct event number
+/// where the error occurred.
+void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const {
+  for (unsigned int i=0; i<outputs.size(); ++i) {
+    const double value = outputs[i];
+    if (TMath::IsNaN(outputs[i])) {
+      logEvalError(Form("p.d.f value of (%s) is Not-a-Number (%f) for entry %zu",
+          GetName(), value, begin+i));
+    } else if (!std::isfinite(outputs[i])){
+      logEvalError(Form("p.d.f value of (%s) is (%f) for entry %zu",
+          GetName(), value, begin+i));
+    } else if (outputs[i] < 0.) {
+      logEvalError(Form("p.d.f value of (%s) is less than zero (%f) for entry %zu",
+          GetName(), value, begin+i));
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the log-likelihoods for all events in the requested batch.
+/// The arguments are passed over to getValBatch().
+/// \param[in] begin Start of the batch.
+/// \param[in] size  Maximum size of the batch. Depending on data layout and memory, the batch
+/// may come back smaller.
+/// \return    Returns a batch of doubles that contains the log probabilities.
+RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t maxSize,
+    const RooArgSet* normSet) const
+{
+  auto pdfValues = getValBatch(begin, maxSize, normSet);
+
+  if (checkInfNaNNeg(pdfValues)) {
+    logBatchComputationErrors(pdfValues, begin);
+  }
+
+  auto output = _batchData.makeWritableBatchUnInit(begin, pdfValues.size());
+
+  for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
+    const double prob = pdfValues[i];
+
+    double theLog = _rf_fast_log(prob);
+
+    if (prob < 0) {
+      theLog = std::numeric_limits<double>::quiet_NaN();
+    } else if (prob == 0 || TMath::IsNaN(prob)) {
+      theLog = -std::numeric_limits<double>::infinity();
+    }
+
+    output[i] = theLog;
+  }
+
+  return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the extended likelihood term (\f$ N_\mathrm{expect} - N_\mathrm{observed} \cdot \log(N_\mathrm{expect} \f$) 
+/// of this PDF for the given number of observed events.
 ///
-/// For successfull operation the PDF implementation must indicate
-/// it is extendable by overloading canBeExtended() and must
-/// implemented the expectedEvents() function.
+/// For successful operation, the PDF implementation must indicate that
+/// it is extendable by overloading `canBeExtended()`, and must
+/// implement the `expectedEvents()` function.
 
 Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const 
 {
@@ -738,20 +907,26 @@ Double_t RooAbsPdf::extendedTerm(Double_t observed, const RooArgSet* nset) const
 ///   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
 ///                     30 dataset entries, for which strategy 2 is followed.
 ///   </table>
+/// <tr><td> `BatchMode(bool on)`              <td> Batch evaluation mode. See createNLL().
 /// <tr><td> `Optimize(Bool_t flag)`           <td> Activate constant term optimization (on by default)
 /// <tr><td> `SplitRange(Bool_t flag)`         <td> Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed to
-///                                               by rangeName_{indexState} where indexState is the state of the master index category of the simultaneous fit
-/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms, only apply constraints to
-///                                                        given subset of parameters
-/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood
+///                                               be `rangeName_indexState`, where `indexState` is the state of the master index category of the simultaneous fit.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
+///     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
+/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
 /// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
-///                                                        If none are specified the constrained parameters are used
+///                                                        If none are specified the constrained parameters are used.
 /// <tr><td> `GlobalObservablesTag(const char* tagName)` <td> Define the set of normalization observables to be used for the constraint terms by
-///                                                         a string attribute associated with pdf observables that match the given tagName 
+///                                                         a string attribute associated with pdf observables that match the given tagName.
 /// <tr><td> `Verbose(Bool_t flag)`           <td> Controls RooFit informational messages in likelihood construction
 /// <tr><td> `CloneData(Bool flag)`           <td> Use clone of dataset in NLL (default is true)
 /// <tr><td> `Offset(Bool_t)`                 <td> Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
-///                                              This can improve numeric stability in simultaneously fits with components with large likelihood values
+///                                              This can improve numeric stability in simultaneous fits with components with large likelihood values
 /// </table>
 /// 
 /// 
@@ -795,15 +970,16 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("interleave","NumCPU",1,0) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("optConst","Optimize",0,0) ;
-  pc.defineInt("cloneData","CloneData",2,0) ;
+  pc.defineInt("cloneData","CloneData", 0, 2);
   pc.defineSet("projDepSet","ProjectedObservables",0,0) ;
   pc.defineSet("cPars","Constrain",0,0) ;
   pc.defineSet("glObs","GlobalObservables",0,0) ;
-  pc.defineInt("constrAll","Constrained",0,0) ;
+//  pc.defineInt("constrAll","Constrained",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
+  pc.defineInt("BatchMode", "BatchMode", 0, 0);
   pc.defineMutex("Range","RangeWithName") ;
-  pc.defineMutex("Constrain","Constrained") ;
+//  pc.defineMutex("Constrain","Constrained") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
     
   // Process and check varargs 
@@ -879,9 +1055,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
    
     // Create range with name 'fit' with above limits on all observables
     RooArgSet* obs = getObservables(&data) ;
-    TIterator* iter = obs->createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (auto arg : *obs) {
       RooRealVar* rrv =  dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) rrv->setRange("fit",rangeLo,rangeHi) ;
     }
@@ -903,21 +1077,22 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     // Simple case: default range, or single restricted range
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
-    nll = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,verbose,splitr,cloneData) ;
-
+    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",
+        *this,data,projDeps,ext,rangeName,addCoefRangeName,numcpu,interl,
+        verbose,splitr,cloneData);
+    theNLL->batchMode(pc.getInt("BatchMode"));
+    nll = theNLL;
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
-    const size_t bufSize = strlen(rangeName)+1;
-    char* buf = new char[bufSize] ;
-    strlcpy(buf,rangeName,bufSize) ;
-    char* token = strtok(buf,",") ;
-    while(token) {
-      RooAbsReal* nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token),"-log(likelihood)",*this,data,projDeps,ext,token,addCoefRangeName,numcpu,interl,verbose,splitr,cloneData) ;
+    auto tokens = RooHelpers::tokenise(rangeName, ",");
+    for (const auto& token : tokens) {
+      auto nllComp = new RooNLLVar(Form("%s_%s",baseName.c_str(),token.c_str()),"-log(likelihood)",
+          *this,data,projDeps,ext,token.c_str(),addCoefRangeName,numcpu,interl,
+          verbose,splitr,cloneData);
+      nllComp->batchMode(pc.getInt("BatchMode"));
       nllList.add(*nllComp) ;
-      token = strtok(0,",") ;
     }
-    delete[] buf ;
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,kTRUE) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -960,7 +1135,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   RooAbsReal* nllCons(0) ;
   if (allConstraints.getSize()>0 && cPars) {   
 
-    coutI(Minimization) << " Including the following contraint terms in minimization: " << allConstraints << endl ;
+    coutI(Minimization) << " Including the following constraint terms in minimization: " << allConstraints << endl ;
     if (glObs) {
       coutI(Minimization) << "The following global observables have been defined: " << *glObs << endl ;
     }
@@ -1010,7 +1185,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
 /// <tr><td> `Range(Double_t lo, Double_t hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 /// <tr><td> `SumCoefRange(const char* name)`  <td>  Set the range in which to interpret the coefficients of RooAddPdf components 
-/// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on num CPUs
+/// <tr><td> `NumCPU(int num, int strat)`      <td> Parallelize NLL calculation on `num` CPUs
 ///   <table>
 ///   <tr><th> Strategy   <th> Effect
 ///   <tr><td> 0 = RooFit::BulkPartition (Default) <td> Divide events in N equal chunks 
@@ -1027,14 +1202,25 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                     30 dataset entries, for which strategy 2 is followed.
 ///   </table>
 /// <tr><td> `SplitRange(Bool_t flag)`          <td>  Use separate fit ranges in a simultaneous fit. Actual range name for each subsample is assumed
-///                                                 to by rangeName_{indexState} where indexState is the state of the master index category of the simultaneous fit
-/// <tr><td> `Constrained()`                    <td>  Apply all constrained contained in the p.d.f. in the likelihood 
-/// <tr><td> `Constrain(const RooArgSet&pars)`  <td>  Apply constraints to listed parameters in likelihood using internal constrains in p.d.f
-/// <tr><td> `GlobalObservables(const RooArgSet&)`  <td>  Define the set of normalization observables to be used for the constraint terms.
-///                                                     If none are specified the constrained parameters are used
-/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td>  Include given external constraints to likelihood
+///                                                 to by `rangeName_indexState` where indexState is the state of the master index category of the simultaneous fit.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
+/// <tr><td> `Constrain(const RooArgSet&pars)`          <td> For p.d.f.s that contain internal parameter constraint terms (that is usually product PDFs, where one
+///     term of the product depends on parameters but not on the observable(s),), only apply constraints to the given subset of parameters.
+/// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
+/// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
+///                                                        If none are specified the constrained parameters are used.
 /// <tr><td> `Offset(Bool_t)`                           <td>  Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
 ///                                                         This can improve numeric stability in simultaneously fits with components with large likelihood values
+/// <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
+///                                                          uses faster math functions and possibly auto vectorisation (this depends on the compiler flags).
+///                                                          Depending on hardware capabilities, the compiler flags and whether a batch evaluation function was
+///                                                          implemented for the PDFs of the model, likelihood computations are 2x to 10x faster.
+///                                                          The relative difference of the single log-likelihoods w.r.t. the legacy mode is usually better than 1.E-12,
+///                                                          and fit parameters usually agree to better than 1.E-6.
 ///
 /// <tr><th><th> Options to control flow of fit procedure
 /// <tr><td> `Minimizer(type,algo)`   <td>  Choose minimization package and algorithm to use. Default is MINUIT/MIGRAD through the RooMinimizer interface,
@@ -1059,21 +1245,40 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 ///                                                \attention Use of this option excludes use of any of the new style steering options.
 ///
 /// <tr><td> `SumW2Error(Bool_t flag)`         <td>  Apply correction to errors and covariance matrix.
-///                                               This uses sum-of-weights covariance matrix
-///                                               to obtain correct error for weighted likelihood fits. If this option is activated the
-///                                               corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where V is the original
-///                                               covariance matrix and C is the inverse of the covariance matrix calculated using the
-///                                               weights squared
+///       This uses two covariance matrices, one with the weights, the other with squared weights,
+///       to obtain the correct errors for weighted likelihood fits. If this option is activated, the
+///       corrected covariance matrix is calculated as \f$ V_\mathrm{corr} = V C^{-1} V \f$, where \f$ V \f$ is the original
+///       covariance matrix and \f$ C \f$ is the inverse of the covariance matrix calculated using the
+///       squared weights. This allows to switch between two interpretations of errors:
+///       <table>
+///       <tr><th> SumW2Error <th> Interpretation
+///       <tr><td> true       <td> The errors reflect the uncertainty of the Monte Carlo simulation.
+///                                Use this if you want to know how much accuracy you can get from the available Monte Carlo statistics.
+///
+///                                **Example**: Simulation with 1000 events, the average weight is 0.1.
+///                                The errors are as big as if one fitted to 1000 events.
+///       <tr><td> false      <td> The errors reflect the errors of a dataset, which is as big as the sum of weights.
+///                                Use this if you want to know what statistical errors you would get if you had a dataset with as many
+///                                events as the (weighted) Monte Carlo simulation represents.
+///
+///                                **Example** (Data as above):
+///                                The errors are as big as if one fitted to 100 events.
+///       </table>
+///
+/// <tr><td> `PrefitDataFraction(double fraction)`
+///                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
+///                                                  by finding good starting values for the parameters for the actual fit.
+///                                                  \warning Prefitting may give bad results when used in binned analysis.
 ///
 /// <tr><th><th> Options to control informational output
-/// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
-/// <tr><td> `Timer(Bool_t flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default
-/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 through 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
+/// <tr><td> `Verbose(Bool_t flag)`            <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit).
+/// <tr><td> `Timer(Bool_t flag)`              <td>  Time CPU and wall clock consumption of fit steps, off by default.
+/// <tr><td> `PrintLevel(Int_t level)`         <td>  Set Minuit print level (-1 to 3, default is 1). At -1 all RooFit informational messages are suppressed as well.
 ///                                                  See RooMinimizer::PrintLevel for the meaning of the levels.
 /// <tr><td> `Warnings(Bool_t flag)`           <td>  Enable or disable MINUIT warnings (enabled by default)
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
-///                                                a positive value will print details of each error up to numErr messages per p.d.f component.
+///                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
 /// </table>
 /// 
 
@@ -1101,13 +1306,15 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const Ro
 
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList) 
 {
-
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood") ;
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
+      "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
+      "CloneData,GlobalObservables,GlobalObservablesTag,OffsetLikelihood,BatchMode");
 
+  pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineString("fitOpt","FitOptions",0,"") ;
   pc.defineInt("optConst","Optimize",0,2) ;
   pc.defineInt("verbose","Verbose",0,0) ;
@@ -1147,6 +1354,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   // Decode command line arguments
+  Double_t prefit = pc.getDouble("prefit");
   const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t verbose  = pc.getInt("verbose") ;
@@ -1174,17 +1382,17 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Warn user that a SumW2Error() argument should be provided if weighted data is offered
   if (weightedData && doSumW2==-1) {
-    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is request of what appears to be weighted data. " << endl
-                          << "       While the estimated values of the parameters will always be calculated taking the weights into account, " << endl 
-			  << "       there are multiple ways to estimate the errors on these parameter values. You are advised to make an " << endl 
-			  << "       explicit choice on the error calculation: " << endl
-			  << "           - Either provide SumW2Error(kTRUE), to calculate a sum-of-weights corrected HESSE error matrix " << endl
-			  << "             (error will be proportional to the number of events)" << endl 
-			  << "           - Or provide SumW2Error(kFALSE), to return errors from original HESSE error matrix" << endl 
-			  << "             (which will be proportional to the sum of the weights)" << endl 
-			  << "       If you want the errors to reflect the information contained in the provided dataset, choose kTRUE. " << endl
-			  << "       If you want the errors to reflect the precision you would be able to obtain with an unweighted dataset " << endl 
-			  << "       with 'sum-of-weights' events, choose kFALSE." << endl ;
+    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is requested of what appears to be weighted data.\n"
+                          << "       While the estimated values of the parameters will always be calculated taking the weights into account,\n"
+			  << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an'n"
+			  << "       explicit choice for the error calculation:\n"
+			  << "           - Either provide SumW2Error(true), to calculate a sum-of-weights-corrected HESSE error matrix\n"
+			  << "             (error will be proportional to the number of events in MC).\n"
+			  << "           - Or provide SumW2Error(false), to return errors from original HESSE error matrix\n"
+			  << "             (which will be proportional to the sum of the weights, i.e., a dataset with <sum of weights> events).\n"
+			  << "       If you want the errors to reflect the information contained in the provided simulation, choose true.\n"
+			  << "       If you want the errors to reflect the precision you would be able to obtain with an unweighted dataset\n"
+			  << "       with <sum of weights> events, choose false." << endl ;
   }
 
 
@@ -1193,6 +1401,41 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: sum-of-weights correction does not apply to MINOS errors" << endl ;
   }
     
+  if (prefit != 0)  {
+    size_t nEvents = static_cast<size_t>(prefit*data.numEntries());
+    if (prefit > 0.5 || nEvents < 100)  {
+      oocoutW(this,InputArguments) << "PrefitDataFraction should be in suitable range."
+      << "With the current PrefitDataFraction=" << prefit 
+      << ", the number of events would be " << nEvents<< " out of " 
+      << data.numEntries() << ". Skipping prefit..." << endl;
+    }
+    else {
+      size_t step = data.numEntries()/nEvents;
+      RooArgSet tinyVars(*data.get());
+      RooRealVar weight("weight","weight",1);
+      
+      if (data.isWeighted()) tinyVars.add(weight);
+         
+      RooDataSet tiny("tiny", "tiny", tinyVars,
+          data.isWeighted() ? RooFit::WeightVar(weight) : RooCmdArg());
+ 
+      for (int i=0; i<data.numEntries(); i+=step)
+      {
+        const RooArgSet *event = data.get(i);
+        tiny.add(*event, data.weight());
+      }
+      RooLinkedList tinyCmdList(cmdList) ;
+      pc.filterCmdList(tinyCmdList,"Prefit,Hesse,Minos,Verbose,Save,Timer");
+      RooCmdArg hesse_option = RooFit::Hesse(false);
+      RooCmdArg print_option = RooFit::PrintLevel(-1);
+      
+      tinyCmdList.Add(&hesse_option);
+      tinyCmdList.Add(&print_option);
+      
+      fitTo(tiny,tinyCmdList);
+    }
+  }
+  
   RooAbsReal* nll = createNLL(data,nllCmdList) ;  
   RooFitResult *ret = 0 ;    
 
@@ -1507,7 +1750,12 @@ RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdLi
 /// <tr><td> `NumCPU()`     <td>  Activate parallel processing feature
 /// <tr><td> `Range()`      <td>  Fit only selected region
 /// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components 
-/// <tr><td> `SplitRange()`   <td>  Fit range is split by index catory of simultaneous PDF
+/// <tr><td> `SplitRange()`   <td>  Fit ranges used in different categories get named after the category.
+/// Using `Range("range"), SplitRange()` as switches, different ranges could be set like this:
+/// ```
+/// myVariable.setRange("range_pi0", 135, 210);
+/// myVariable.setRange("range_gamma", 50, 210);
+/// ```
 /// <tr><td> `ConditionalObservables()` <td>  Define projected observables 
 /// </table>
 
@@ -1679,7 +1927,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
   }
 
   RooAbsGenContext *context(0) ;
-  if ( (autoBinned & isBinnedDistribution(vars)) || ( binnedTag && strlen(binnedTag) && (getAttribute(binnedTag)||string(binnedTag)=="*"))) {
+  if ( (autoBinned && isBinnedDistribution(vars)) || ( binnedTag && strlen(binnedTag) && (getAttribute(binnedTag)||string(binnedTag)=="*"))) {
     context = binnedGenContext(vars,verbose) ;
   } else {
     context= genContext(vars,0,0,verbose);
@@ -1694,7 +1942,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// Generate the specified number of events or expectedEvents() if not specified.
 /// \param[in] whatVars Choose variables in which to generate events. Variables not listed here will remain
 /// constant and not be used for event generation.
-/// \param[in] argxx Optional RooCmdArg() to change behaviour of generate
+/// \param[in] argxx Optional RooCmdArg() to change behaviour of generate().
 /// \return RooDataSet *, owned by caller.
 ///
 /// Any variables of this PDF that are not in whatVars will use their
@@ -1706,12 +1954,15 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// <tr><td> `Name(const char* name)`            <td> Name of the output dataset
 /// <tr><td> `Verbose(Bool_t flag)`              <td> Print informational messages during event generation
 /// <tr><td> `NumEvent(int nevt)`                <td> Generate specified number of events
-/// <tr><td> `Extended()`                        <td> The actual number of events generated will be sampled from a Poisson distribution with mu=nevt.
-///                                                 For use with extended maximum likelihood fits
+/// <tr><td> `Extended()`                        <td> If no number of events to be generated is given,
+/// use expected number of events from extended likelihood term.
+/// This evidently only works for extended PDFs.
 /// <tr><td> `GenBinned(const char* tag)`        <td> Use binned generation for all component pdfs that have 'setAttribute(tag)' set
 /// <tr><td> `AutoBinned(Bool_t flag)`           <td> Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of
 ///                                                 RooHistPdfs etc)
-///                                                 \note Datasets that are generated in binned mode are returned as weighted unbinned datasets
+/// \note Datasets that are generated in binned mode are returned as weighted unbinned datasets. This means that
+/// for each bin, there will be one event in the dataset with a weight corresponding to the (possibly randomised) bin content.
+///
 ///
 /// <tr><td> `AllBinned()`                       <td> As above, but for all components.
 ///       \note The notion of components is only meaningful for simultaneous PDFs
@@ -1749,6 +2000,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   pc.defineDouble("nEventsD","NumEventsD",0,-1.) ;
   pc.defineString("binnedTag","GenBinned",0,"") ;
   pc.defineMutex("GenBinned","ProtoData") ;
+  pc.defineMutex("Extended", "NumEvents");
     
   // Process and check varargs 
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
@@ -1779,11 +2031,6 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
   if (extended) {
      if (nEvents == 0) nEvents = expectedEvents(&whatVars);
-     //  nEvents = RooRandom::randomGenerator()->Poisson(nEvents==0 ? expectedEvents(&whatVars) : nEvents  ) ;
-    // // If Poisson fluctuation results in zero events, stop here
-    // if (nEvents==0) {
-    //   return new RooDataSet("emptyData","emptyData",whatVars) ;
-    // }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is " 
 			  << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
@@ -1894,11 +2141,21 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a new dataset containing the specified variables with
-/// events sampled from our distribution. Generate the specified
-/// number of events or else try to use expectedEvents() if nEvents <= 0.
-/// Any variables of this PDF that are not in whatVars will use their
-/// current values and be treated as fixed parameters. Returns zero
-/// in case of an error. The caller takes ownership of the returned
+/// events sampled from our distribution.
+///
+/// \param[in] whatVars Generate a dataset with the variables (and categories) in this set.
+/// Any variables of this PDF that are not in `whatVars` will use their
+/// current values and be treated as fixed parameters.
+/// \param[in] nEvents Generate the specified number of events or else try to use
+/// expectedEvents() if nEvents <= 0 (default).
+/// \param[in] verbose Show which generator strategies are being used.
+/// \param[in] autoBinned If original distribution is binned, return bin centers and randomise weights
+/// instead of generating single events.
+/// \param[in] binnedTag
+/// \param[in] expectedData Call setExpectedData on the genContext.
+/// \param[in] extended Randomise number of events generated according to Poisson(nEvents). Only useful
+/// if PDF is extended.
+/// \return New dataset. Returns zero in case of an error. The caller takes ownership of the returned
 /// dataset.
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, Double_t nEvents, Bool_t verbose, Bool_t autoBinned, const char* binnedTag, Bool_t expectedData, Bool_t extended) const 
@@ -1965,8 +2222,11 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate a new dataset with values of the whatVars variables
-/// sampled from our distribution. Use the specified existing dataset
+/// Generate a new dataset using a prototype dataset as a model,
+/// with values of the variables in `whatVars` sampled from our distribution.
+///
+/// \param[in] whatVars Generate for these variables.
+/// \param[in] prototype Use this dataset
 /// as a prototype: the new dataset will contain the same number of
 /// events as the prototype (by default), and any prototype variables not in
 /// whatVars will be copied into the new dataset for each generated
@@ -1974,8 +2234,13 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 /// number of events to generate that will override the default. The result is a
 /// copy of the prototype dataset with only variables in whatVars
 /// randomized. Variables in whatVars that are not in the prototype
-/// will be added as new columns to the generated dataset.  Returns
-/// zero in case of an error. The caller takes ownership of the
+/// will be added as new columns to the generated dataset.
+/// \param[in] nEvents Number of events to generate. Defaults to 0, which means number
+/// of event in prototype dataset.
+/// \param[in] verbose Show which generator strategies are being used.
+/// \param[in] randProtoOrder Randomise order of retrieval of events from proto dataset.
+/// \param[in] resampleProto Resample from the proto dataset.
+/// \return The new dataset. Returns zero in case of an error. The caller takes ownership of the
 /// returned dataset.
 
 RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
@@ -2060,7 +2325,7 @@ void RooAbsPdf::initGenerator(Int_t /*code*/)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface for generation of anan event using the algorithm
+/// Interface for generation of an event using the algorithm
 /// corresponding to the specified code. The meaning of each code is
 /// defined by the getGenerator() implementation. The default
 /// implementation does nothing.
@@ -2084,16 +2349,13 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
   if (!findServer(arg.GetName())) return kFALSE ;
 
   // There must be no other dependency routes
-  TIterator* sIter = serverIterator() ;
-  const RooAbsArg *server = 0;
-  while((server=(const RooAbsArg*)sIter->Next())) {
+  for (const auto server : _serverList) {
     if(server == &arg) continue;
     if(server->dependsOn(arg)) {
-      delete sIter ;
       return kFALSE ;
     }
   }
-  delete sIter ;
+
   return kTRUE ;
 }
 
@@ -2309,6 +2571,34 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
   return generate(whatVars,nEvents) ;
 }
 
+namespace {
+void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
+  //Sort from left to right
+  std::sort(ranges.begin(), ranges.end());
+
+  for (auto it = ranges.begin(); it != ranges.end(); ++it) {
+    double& startL = it->first;
+    double& endL   = it->second;
+
+    for (auto innerIt = it+1; innerIt != ranges.end(); ++innerIt) {
+      const double startR = innerIt->first;
+      const double endR   = innerIt->second;
+
+      if (startL <= startR && startR <= endL) {
+        //Overlapping ranges, extend left one
+        endL = std::max(endL, endR);
+        *innerIt = make_pair(0., 0.);
+      }
+    }
+  }
+
+  auto newEnd = std::remove_if(ranges.begin(), ranges.end(),
+      [](const std::pair<double,double>& input){
+          return input.first == input.second;
+      });
+  ranges.erase(newEnd, ranges.end());
+}
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2320,9 +2610,12 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 /// show a projected curve integrated over all variables that were present in the shown
 /// dataset except for the one on the x-axis. The normalization of the curve will also
 /// be adjusted to the event count of the plotted dataset. An informational message
-/// will be printed for each projection step that is performed
+/// will be printed for each projection step that is performed.
 ///
-/// This function takes the following named arguments
+/// This function takes the following named arguments (for more arguments, see also
+/// RooAbsReal::plotOn(RooPlot*,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
+/// const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
+/// const RooCmdArg&) const )
 ///
 /// 
 /// <table>
@@ -2339,14 +2632,16 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 ///               observables in dataset 'd' for projection through data averaging
 /// <tr><td> `ProjectionRange(const char* rn)`  <td>  Override default range of projection integrals to a different
 ///               range specified by given range name. This technique allows you to project a finite width slice in a real-valued observable
-/// <tr><td> `NormRange(const char* name)`      <td>  Calculate curve normalization w.r.t. only in specified ranges.
-///               \note A Range() by default implies a NormRange() on the same range, but this option allows
-///               to override the default, or specify a normalization ranges when the full curve is to be drawn
+/// <tr><td> `NormRange(const char* name)`      <td>  Calculate curve normalization w.r.t. specified range[s].
+///               \note A Range() by default sets a NormRange() on the same range, but this option allows
+///               to override the default, or specify normalization ranges when the full curve is to be drawn.
 ///
 ///
 /// <tr><th><th> Misc content control
 /// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td>  Adjust normalization by given scale factor.
-///               Interpretation of number depends on code: Relative: relative adjustment factor, NumEvent: scale to match given number of events.
+///               Interpretation of number depends on code:
+///                 `RooAbsReal::Relative`: relative adjustment factor
+///                 `RooAbsReal::NumEvent`: scale to match given number of events.
 /// <tr><td> `Name(const chat* name)`           <td>  Give curve specified name in frame. Useful if curve is to be referenced later
 /// <tr><td> `Asymmetry(const RooCategory& c)`  <td>  Show the asymmetry of the PDF in given two-state category
 ///               \f$ \frac{F(+)-F(-)}{F(+)+F(-)} \f$ rather than the PDF projection. Category must have two
@@ -2355,6 +2650,9 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 ///               Mostly useful when plotting -log(L) or \f$ \chi^2 \f$ distributions
 /// <tr><td> `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)`  <td>  Add constructed projection to
 ///               already existing curve with given name and relative weight factors
+/// <tr><td> `Components(const char* names)`  <td>  When plotting sums of PDFs, plot only the named components (*e.g.* only
+///                                                 the signal of a signal+background model).
+/// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th><th> Plotting control 
 /// <tr><td> `LineStyle(Int_t style)`           <td>  Select line style by ROOT line style code, default is solid
@@ -2363,19 +2661,19 @@ RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvent
 /// <tr><td> `FillStyle(Int_t style)`           <td>  Select fill style, default is not filled. If a filled style is selected,
 ///                                                 also use VLines() to add vertical downward lines at end of curve to ensure proper closure
 /// <tr><td> `FillColor(Int_t color)`           <td>  Select fill color by ROOT color code
-/// <tr><td> `Range(const char* name)`          <td>  Only draw curve in range defined by given name
+/// <tr><td> `Range(const char* name)`          <td>  Only draw curve in range defined by given name. Multiple comma-separated ranges can be given.
 /// <tr><td> `Range(double lo, double hi)`      <td>  Only draw curve in specified range
 /// <tr><td> `VLines()`                         <td>  Add vertical lines to y=0 at end points of curve
-/// <tr><td> `Precision(Double_t eps)`          <td>  Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. Higher precision will
-///                                                 result in more and more densely spaced curve points A negative precision value will disable
-///                                                 adaptive point spacing and restrict sampling to the grid point of points defined by the binning
-///                                                 of the plotted observabled (recommended for expensive functions such as profile likelihoods)
+/// <tr><td> `Precision(Double_t eps)`          <td>  Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. A higher precision will
+///    result in more and more densely spaced curve points. A negative precision value will disable
+///    adaptive point spacing and restrict sampling to the grid point of points defined by the binning
+///    of the plotted observable (recommended for expensive functions such as profile likelihoods)
 /// <tr><td> `Invisible(Bool_t flag)`           <td>  Add curve to frame, but do not display. Useful in combination AddTo()
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE)`
-///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma'
+///                                  <td> Visualize the uncertainty on the parameters, as given in fitres, at 'Z' sigma.
 ///
 /// <tr><td> `VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE)`
-///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma'
+///                                  <td> Visualize the uncertainty on the subset of parameters 'param', as given in fitres, at 'Z' sigma.
 /// </table>
 
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
@@ -2475,82 +2773,111 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
       Bool_t hasCustomRange(kFALSE), adjustNorm(kFALSE) ;
 
-      list<pair<Double_t,Double_t> > rangeLim ;
+      std::vector<pair<Double_t,Double_t> > rangeLim;
 
       // Retrieve plot range to be able to adjust normalization to data
       if (pc.hasProcessed("Range")) {
 
-	Double_t rangeLo = pc.getDouble("rangeLo") ;
-	Double_t rangeHi = pc.getDouble("rangeHi") ;
-	rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
-	adjustNorm = pc.getInt("rangeAdjustNorm") ;
-	hasCustomRange = kTRUE ;
+        Double_t rangeLo = pc.getDouble("rangeLo") ;
+        Double_t rangeHi = pc.getDouble("rangeHi") ;
+        rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
+        adjustNorm = pc.getInt("rangeAdjustNorm") ;
+        hasCustomRange = kTRUE ;
 
-	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range [" 
-			<< rangeLo << "," << rangeHi << "]" ;
-	if (!pc.hasProcessed("NormRange")) {	  
-	  ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " given range" << endl ;
-	} else {
-	  ccoutI(Plotting) << endl ;
-	}
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range ["
+            << rangeLo << "," << rangeHi << "]" ;
+        if (!pc.hasProcessed("NormRange")) {
+          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
+        } else {
+          ccoutI(Plotting) << endl ;
+        }
 
-	nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
+        nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
 
       } else if (pc.hasProcessed("RangeWithName")) {    
+        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName",0,true), ",")) {
+          if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
+            coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
+                << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
+            continue;
+          }
+          const double rangeLo = frame->getPlotVar()->getMin(rangeNameToken.c_str());
+          const double rangeHi = frame->getPlotVar()->getMax(rangeNameToken.c_str());
+          rangeLim.push_back(make_pair(rangeLo,rangeHi));
+        }
+        adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
+        hasCustomRange = kTRUE ;
 
-	char tmp[1024] ;
-	strlcpy(tmp,pc.getString("rangeName",0,kTRUE),1024) ;
-	char* rangeNameToken = strtok(tmp,",") ;
-	while(rangeNameToken) {
-	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
-	  Double_t rangeHi = frame->getPlotVar()->getMax(rangeNameToken) ;
-	  rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
-	  rangeNameToken = strtok(0,",") ;
-	}
-	adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
-	hasCustomRange = kTRUE ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName",0,kTRUE) << "'" ;
+        if (!pc.hasProcessed("NormRange")) {
+          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
+        } else {
+          ccoutI(Plotting) << endl ;
+        }
 
-	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName",0,kTRUE) << "'" ;
-	if (!pc.hasProcessed("NormRange")) {	  
-	  ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " given range" << endl ;
-	} else {
-	  ccoutI(Plotting) << endl ;
-	}
-
-	nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
+        nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
       } 
-      // Specification of a normalization range override those in a regular ranage
+      // Specification of a normalization range override those in a regular range
       if (pc.hasProcessed("NormRange")) {    
-	char tmp[1024] ;
-	strlcpy(tmp,pc.getString("normRangeName",0,kTRUE),1024) ;
-	char* rangeNameToken = strtok(tmp,",") ;
-	rangeLim.clear() ;
-	while(rangeNameToken) {
-	  Double_t rangeLo = frame->getPlotVar()->getMin(rangeNameToken) ;
-	  Double_t rangeHi = frame->getPlotVar()->getMax(rangeNameToken) ;
-	  rangeLim.push_back(make_pair(rangeLo,rangeHi)) ;
-	  rangeNameToken = strtok(0,",") ;
-	}
-	adjustNorm = kTRUE ;
-	hasCustomRange = kTRUE ;	
-	coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName",0,kTRUE) << "'" << endl ;
+        rangeLim.clear();
+        for (const auto& rangeNameToken : RooHelpers::tokenise(pc.getString("normRangeName",0,true), ",")) {
+          if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
+            coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
+                << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
+            continue;
+          }
+          const double rangeLo = frame->getPlotVar()->getMin(rangeNameToken.c_str());
+          const double rangeHi = frame->getPlotVar()->getMax(rangeNameToken.c_str());
+          rangeLim.push_back(make_pair(rangeLo,rangeHi));
+        }
+        adjustNorm = kTRUE ;
+        hasCustomRange = kTRUE ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName",0,kTRUE) << "'" << endl ;
 
-	nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
+        nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
 
       }
 
-      if (hasCustomRange && adjustNorm) {	
+      if (hasCustomRange && adjustNorm) {
+        const std::size_t oldSize = rangeLim.size();
+        removeRangeOverlap(rangeLim);
 
-	Double_t rangeNevt(0) ;
-	list<pair<Double_t,Double_t> >::iterator riter = rangeLim.begin() ;
-	for (;riter!=rangeLim.end() ; ++riter) {
-	  Double_t nevt= frame->getFitRangeNEvt(riter->first,riter->second) ;
-	  rangeNevt += nevt ;
-	}
-	scaleFactor *= rangeNevt/nExpected ;
+        if (oldSize != rangeLim.size()) {
+          // User gave overlapping ranges. This leads to double-counting events and integrals, and must
+          // therefore be avoided.
+          coutE(Plotting) << "Requested ranges overlap. For correct plotting, new ranges "
+              "will be defined." << std::endl;
+          auto plotVar = dynamic_cast<RooRealVar*>(frame->getPlotVar());
+          assert(plotVar);
+          std::string rangesNoOverlap;
+          for (auto it = rangeLim.begin(); it != rangeLim.end(); ++it) {
+            std::stringstream rangeName;
+            rangeName << "Remove_overlap_range_" << it - rangeLim.begin();
+            plotVar->setRange(rangeName.str().c_str(), it->first, it->second);
+            if (!rangesNoOverlap.empty())
+              rangesNoOverlap += ",";
+            rangesNoOverlap += rangeName.str();
+          }
+
+          auto rangeArg = static_cast<RooCmdArg*>(cmdList.FindObject("RangeWithName"));
+          if (rangeArg)
+            rangeArg->setString(0, rangesNoOverlap.c_str());
+          else {
+            plotRange = new RooCmdArg(RooFit::Range(rangesNoOverlap.c_str()));
+            cmdList.Add(plotRange);
+          }
+        }
+
+        Double_t rangeNevt(0) ;
+        for (const auto& riter : rangeLim) {
+          Double_t nevt= frame->getFitRangeNEvt(riter.first, riter.second);
+          rangeNevt += nevt ;
+        }
+
+        scaleFactor *= rangeNevt/nExpected ;
 
       } else {
-	scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+        scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
       }
     } else if (stype==RelativeExpected) {
       scaleFactor *= nExpected ; 
@@ -2574,14 +2901,11 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     branchNodeServerList(&branchNodeSet) ;
     
     // Discard any non-RooAbsReal nodes
-    TIterator* iter = branchNodeSet.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (const auto arg : branchNodeSet) {
       if (!dynamic_cast<RooAbsReal*>(arg)) {
-	branchNodeSet.remove(*arg) ;
+        branchNodeSet.remove(*arg) ;
       }
     }
-    delete iter ;
     
     // Obtain direct selection
     RooArgSet* dirSelNodes ;
@@ -2627,22 +2951,21 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 }
 
 
-
-
 //_____________________________________________________________________________
+/// Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
+/// the scale factor for a PDF can be interpreted in three different ways. The interpretation
+/// is controlled by ScaleType
+/// ```
+///  Relative  -  Scale factor is applied on top of PDF normalization scale factor
+///  NumEvent  -  Scale factor is interpreted as a number of events. The surface area
+///               under the PDF curve will match that of a histogram containing the specified
+///               number of event
+///  Raw       -  Scale factor is applied to the raw (projected) probability density.
+///               Not too useful, option provided for completeness.
+/// ```
 // coverity[PASS_BY_VALUE]
 RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 {
-  // Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
-  // the scale factor for a PDF can be interpreted in three different ways. The interpretation
-  // is controlled by ScaleType
-  //
-  //  Relative  -  Scale factor is applied on top of PDF normalization scale factor 
-  //  NumEvent  -  Scale factor is interpreted as a number of events. The surface area
-  //               under the PDF curve will match that of a histogram containing the specified
-  //               number of event
-  //  Raw       -  Scale factor is applied to the raw (projected) probability density.
-  //               Not too useful, option provided for completeness.
 
   // Sanity checks
   if (plotSanityChecks(frame)) return frame ;
@@ -2695,7 +3018,8 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 ///   | `AutoPrecision(int n)` |  Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
 /// <tr><td> `Label(const chat* label)`           <td>  Add header label to parameter box
 /// <tr><td> `Layout(Double_t xmin, Double_t xmax, Double_t ymax)` <td>  Specify relative position of left/right side of box and top of box.
-///                                                                    Position of bottom of box is calculated automatically from number lines in box
+///                                                                      Coordinates are given as position on the pad between 0 and 1.
+///                                                                      The lower end of the box is calculated automatically from the number of lines in the box.
 /// </table>
 ///
 ///
@@ -2797,7 +3121,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 ///
 /// Optional label will be inserted as first line of the text box. Use 'sigDigits'
 /// to modify the default number of significant digits printed. The 'xmin,xmax,ymax'
-/// values specify the inital relative position of the text box in the plot frame  
+/// values specify the initial relative position of the text box in the plot frame
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, Bool_t showConstants, const char *label,
 			    Int_t sigDigits, Option_t *options, Double_t xmin,
@@ -2961,7 +3285,7 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an object that represents the integral of the function over one or more observables listed in iset
+/// Create an object that represents the integral of the function over one or more observables listed in `iset`.
 /// The actual integration calculation is only performed when the return object is evaluated. The name
 /// of the integral object is automatically constructed from the name of the input function, the variables
 /// it integrates and the range integrates over
@@ -3045,61 +3369,26 @@ RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nse
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This helper function finds and collects all constraints terms of all coponent p.d.f.s
-/// and returns a RooArgSet with all those terms
+/// This helper function finds and collects all constraints terms of all component p.d.f.s
+/// and returns a RooArgSet with all those terms.
 
 RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const 
 {
   RooArgSet* ret = new RooArgSet("AllConstraints") ;
 
-  RooArgSet* comps = getComponents() ;
-  TIterator* iter = comps->createIterator() ;
-  RooAbsArg *arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
+  std::unique_ptr<RooArgSet> comps(getComponents());
+  for (const auto arg : *comps) {
+    auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
     if (pdf && !ret->find(pdf->GetName())) {
-      RooArgSet* compRet = pdf->getConstraints(observables,constrainedParams,stripDisconnected) ; 
+      std::unique_ptr<RooArgSet> compRet(pdf->getConstraints(observables,constrainedParams,stripDisconnected));
       if (compRet) {
-	ret->add(*compRet,kFALSE) ;
-	delete compRet ;
+        ret->add(*compRet,kFALSE) ;
       }
     }
   }
-  delete iter ;
-  delete comps ;
 
   return ret ;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clear the evaluation error flag
-
-void RooAbsPdf::clearEvalError() 
-{ 
-  _evalError = kFALSE ; 
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the evaluation error flag
-
-Bool_t RooAbsPdf::evalError() 
-{ 
-  return _evalError ; 
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Raise the evaluation error flag
-
-void RooAbsPdf::raiseEvalError() 
-{ 
-  _evalError = kTRUE ; 
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

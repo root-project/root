@@ -39,6 +39,7 @@ protected:
   RooRealProxy sigma ;
   
   Double_t evaluate() const ;
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
   
 private:
   

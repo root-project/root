@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -37,11 +37,7 @@ namespace REX = ROOT::Experimental;
 /// Constructor.
 
 REveProjectionManager::REveProjectionManager(REveProjection::EPType_e type):
-   REveElementList("REveProjectionManager",""),
-   TAttBBox(),
-   fProjection  (nullptr),
-   fCurrentDepth(0),
-   fImportEmpty (kFALSE)
+   REveElement("REveProjectionManager","")
 {
    for (Int_t i = 0; i < REveProjection::kPT_End; ++i)
       fProjections[i] = nullptr;
@@ -59,7 +55,7 @@ REveProjectionManager::~REveProjectionManager()
    for (Int_t i = 0; i < REveProjection::kPT_End; ++i) {
       delete fProjections[i];
    }
-   while (!fDependentEls.empty()) {
+   while ( ! fDependentEls.empty()) {
       fDependentEls.front()->Destroy();
    }
 }
@@ -144,32 +140,21 @@ void REveProjectionManager::SetCenter(Float_t x, Float_t y, Float_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// React to element being pasted or dnd-ed.
-/// Return true if redraw is needed (virtual method).
-
-Bool_t REveProjectionManager::HandleElementPaste(REveElement* el)
-{
-   List_t::size_type n_children  = fChildren.size();
-   ImportElements(el);
-   return n_children != fChildren.size();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Returns true if element el should be imported.
 ///
 /// Behaviour depends on the value of the fImportEmpty member:
 ///   false - el or any of its children must be projectable (default);
 ///   true  - always import.
 
-Bool_t REveProjectionManager::ShouldImport(REveElement* el)
+Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 {
    if (fImportEmpty)
       return kTRUE;
 
-   if (el->IsA() != REveElementList::Class() && el->IsA()->InheritsFrom(REveProjectable::Class()))
+   if (el->IsA()->InheritsFrom(TClass::GetClass<REveProjectable>()))
       return kTRUE;
-   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
-      if (ShouldImport(*i))
+   for (auto &c: el->RefChildren())
+      if (ShouldImport(c))
          return kTRUE;
    return kFALSE;
 }
@@ -178,18 +163,27 @@ Bool_t REveProjectionManager::ShouldImport(REveElement* el)
 /// Update dependent elements' bounding box and mark scenes
 /// containing element root or its children as requiring a repaint.
 
-void REveProjectionManager::UpdateDependentElsAndScenes(REveElement* root)
+void REveProjectionManager::UpdateDependentElsAndScenes(REveElement */*root*/)
 {
-   for (List_i i=fDependentEls.begin(); i!=fDependentEls.end(); ++i)
-   {
-      TAttBBox* bbox = dynamic_cast<TAttBBox*>(*i);
+   for (auto &d: fDependentEls) {
+      TAttBBox* bbox = dynamic_cast<TAttBBox *>(d);
       if (bbox)
          bbox->ComputeBBox();
    }
 
+   static int warn_count = 0;
+   if (++warn_count <= 5)
+      Warning("REveProjectionManager::UpdateDependentElsAndScenes",
+              "Figure out if scene stamping is still needed.");
+   /*
    List_t scenes;
-   root->CollectSceneParentsFromChildren(scenes, 0);
+   root->CollectScenes(scenes);
+   if (root == this)
+      for (auto &n : fNieces)
+         n->CollectScenes(scenes);
+
    REX::gEve->ScenesChanged(scenes);
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,21 +214,21 @@ REveElement* REveProjectionManager::ImportElementsRecurse(REveElement* el,
       }
       else
       {
-         new_el = new REveElementList;
+         new_el = new REveElement;
       }
-      new_el->SetElementName (Form("%s [P]", el->GetElementName()));
-      new_el->SetElementTitle(Form("Projected replica.\n%s", el->GetElementTitle()));
+      new_el->SetName (Form("%s [P]", el->GetCName()));
+      new_el->SetTitle(Form("Projected replica.\n%s", el->GetCTitle()));
       new_el->SetRnrSelf     (el->GetRnrSelf());
       new_el->SetRnrChildren (el->GetRnrChildren());
       new_el->SetPickable    (el->IsPickable());
+
       parent->AddElement(new_el);
 
       REveCompound *cmpnd    = dynamic_cast<REveCompound*>(el);
       REveCompound *cmpnd_pr = dynamic_cast<REveCompound*>(new_el);
-      for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
-      {
-         REveElement* child_pr = ImportElementsRecurse(*i, new_el);
-         if (cmpnd && (*i)->GetCompound() == cmpnd)
+      for (auto &c: el->RefChildren()) {
+         REveElement *child_pr = ImportElementsRecurse(c, new_el);
+         if (cmpnd && c->GetCompound() == cmpnd)
             child_pr->SetCompound(cmpnd_pr);
       }
    }
@@ -268,7 +262,7 @@ REveElement* REveProjectionManager::ImportElements(REveElement* el,
       UpdateDependentElsAndScenes(new_el);
 
       if (ext_list)
-         AddElement(new_el);
+         AddNiece(new_el);
    }
    return new_el;
 }
@@ -318,20 +312,17 @@ REveElement* REveProjectionManager::SubImportElements(REveElement* el,
 Int_t REveProjectionManager::SubImportChildren(REveElement* el, REveElement* proj_parent)
 {
    List_t new_els;
-   for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
-   {
-      REveElement* new_el = ImportElementsRecurse(*i, proj_parent);
+   for (auto &c: el->RefChildren()) {
+      auto new_el = ImportElementsRecurse(c, proj_parent);
       if (new_el)
          new_els.push_back(new_el);
    }
 
-   if ( ! new_els.empty())
+   if (!new_els.empty())
    {
       AssertBBox();
-      for (List_i i = new_els.begin(); i != new_els.end(); ++i)
-      {
-         ProjectChildrenRecurse(*i);
-      }
+      for (auto &nel: new_els)
+         ProjectChildrenRecurse(nel);
       AssertBBoxExtents(0.1);
       StampTransBBox();
 
@@ -358,11 +349,10 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
          BBoxCheckPoint(b[0], b[2], b[4]);
          BBoxCheckPoint(b[1], b[3], b[5]);
       }
-      el->ElementChanged(kFALSE);
+      el->StampObjProps();
    }
 
-   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
-      ProjectChildrenRecurse(*i);
+   for (auto &c : el->RefChildren())  ProjectChildrenRecurse(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,8 +362,11 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
 void REveProjectionManager::ProjectChildren()
 {
    BBoxInit();
-   for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
-      ProjectChildrenRecurse(*i);
+
+   for (auto &c : fChildren)  ProjectChildrenRecurse(c);
+
+   for (auto &n : fNieces)    ProjectChildrenRecurse(n);
+
    AssertBBoxExtents(0.1);
    StampTransBBox();
 
@@ -391,7 +384,8 @@ void REveProjectionManager::ComputeBBox()
 {
    static const REveException eH("REveProjectionManager::ComputeBBox ");
 
-   if (HasChildren() == kFALSE) {
+   if ( ! HasChildren() && ! HasNieces())
+   {
       BBoxZero();
       return;
    }

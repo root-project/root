@@ -968,7 +968,7 @@ itself remains fully opaque.
 
 The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 The following macro gives an example of transparency usage:
 
 Begin_Macro(source)
@@ -1067,6 +1067,12 @@ TColor::~TColor()
 TColor::TColor(const TColor &color) : TNamed(color)
 {
    ((TColor&)color).Copy(*this);
+}
+
+TColor &TColor::operator=(const TColor &color)
+{
+   ((TColor &)color).Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

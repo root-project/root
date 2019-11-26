@@ -124,8 +124,8 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a function which returns binewise-values
-/// This class contains N RooRealVar's, one for each
+/// Create a function which returns bin-wise values.
+/// This class contains N RooRealVars, one for each
 /// bin from the given RooRealVar.
 ///
 /// The value of the function in the ith bin is 
@@ -133,8 +133,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
 ///
 /// F(i) = gamma_i * nominal(i)
 ///
-/// Where the nominal values are simply fixed
-/// numbers (default = 1.0 for all i)
+/// Where the nominal values are taken from the histogram.
 ParamHistFunc::ParamHistFunc(const char* name, const char* title, 
 			     const RooArgList& vars, const RooArgList& paramSet,
 			     const TH1* Hist ) :
@@ -214,7 +213,7 @@ ParamHistFunc::~ParamHistFunc()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the index of the gamma parameter associated
-/// with the current bin
+/// with the current bin.
 /// This number is the "RooDataSet" style index
 /// and it must be because it uses the RooDataSet method directly
 /// This is intended to be fed into the getParameter(Int_t) method:
@@ -460,9 +459,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   RooArgList params = ParamHistFunc::createParamSet( w, Prefix, vars );
 
-  RooFIter paramIter = params.fwdIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*) paramIter.next())) {
+  for (auto comp : params) {
     
     RooRealVar* var = (RooRealVar*) comp;
 
@@ -493,7 +490,7 @@ RooArgList ParamHistFunc::createParamSet(const std::string& Prefix, Int_t numBin
 
   if( gamma_max <= gamma_min ) {
 
-    std::cout << "Warming: gamma_min <= gamma_max: Using default values (0, 10)" << std::endl;
+    std::cout << "Warning: gamma_min <= gamma_max: Using default values (0, 10)" << std::endl;
 
     gamma_min = 0.0;
     gamma_max = 10.0;
@@ -756,12 +753,9 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
-						Double_t /*xhi*/) const
+std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, 
+						Double_t xhi) const
 {
-  return 0;
-
-  /*
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
@@ -769,7 +763,7 @@ std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, 
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
   Double_t* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  std::list<Double_t>* hint = new std::list<Double_t> ;
 
   // Widen range slighty
   xlo = xlo - 0.01*(xhi-xlo) ;
@@ -785,9 +779,7 @@ std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, 
       hint->push_back(boundaries[i]+delta) ;
     }
   }
-
   return hint ;
-  */
 }
 
 
@@ -796,12 +788,9 @@ std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, 
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
-						  Double_t /*xhi*/) const 
+std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, 
+						  Double_t xhi) const 
 {
-  return 0;
-
-  /*
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
@@ -809,7 +798,7 @@ std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Dou
   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
   Double_t* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  std::list<Double_t>* hint = new std::list<Double_t> ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
@@ -820,5 +809,4 @@ std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Dou
   }
 
   return hint ;
-  */
 }

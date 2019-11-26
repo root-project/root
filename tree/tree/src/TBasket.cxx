@@ -491,8 +491,12 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // the basket was not compressed.
    TBuffer* readBufferRef;
    if (R__unlikely(fBranch->GetCompressionLevel()==0)) {
+      // Initialize the buffer to hold the uncompressed data.
+      fBufferRef = R__InitializeReadBasketBuffer(fBufferRef, len, file);
       readBufferRef = fBufferRef;
    } else {
+      // Initialize the buffer to hold the compressed data.
+      fCompressedBufferRef = R__InitializeReadBasketBuffer(fCompressedBufferRef, len, file);
       readBufferRef = fCompressedBufferRef;
    }
 
@@ -500,8 +504,6 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
    // and we will re-add the new size later on.
    fBranch->GetTree()->IncrementTotalBuffers(-fBufferSize);
 
-   // Initialize the buffer to hold the compressed data.
-   readBufferRef = R__InitializeReadBasketBuffer(readBufferRef, len, file);
    if (!readBufferRef) {
       Error("ReadBasketBuffers", "Unable to allocate buffer.");
       return 1;
@@ -698,6 +700,26 @@ Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
    fKeylen = keylen;
    return fNbytes;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Disown all references to the internal buffer - some other object likely now
+/// owns it.
+///
+/// This TBasket is now useless and invalid until it is told to adopt a buffer.
+void TBasket::DisownBuffer()
+{
+   fBufferRef = NULL;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt a buffer from an external entity
+void TBasket::AdoptBuffer(TBuffer *user_buffer)
+{
+   delete fBufferRef;
+   fBufferRef = user_buffer;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the basket to the starting state. i.e. as it was after calling

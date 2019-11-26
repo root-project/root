@@ -13,8 +13,10 @@
 #include "CPPInstance.h"
 #include "ProxyWrappers.h"
 #include "PyROOTPythonize.h"
-#include "RConfig.h"
 #include "TInterpreter.h"
+#include "PyzCppHelpers.hxx"
+
+#include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Adopt memory of a Python object with array interface using an RVec
@@ -31,23 +33,14 @@ PyObject *PyROOT::AsRVec(PyObject * /*self*/, PyObject * obj)
    }
 
    // Get array interface of object
-   auto pyinterface = PyObject_GetAttrString(obj, "__array_interface__");
-   if (!pyinterface) {
-      PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__ does not exist.");
+   auto pyinterface = GetArrayInterface(obj);
+   if (pyinterface == NULL)
       return NULL;
-   }
-   if (!PyDict_Check(pyinterface)) {
-      PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__ is not a dictionary.");
-      return NULL;
-   }
 
    // Get the data-pointer
-   auto pydata = PyDict_GetItemString(pyinterface, "data");
-   if (!pydata) {
-      PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__['data'] does not exist.");
+   const auto data = GetDataPointerFromArrayInterface(pyinterface);
+   if (data == 0)
       return NULL;
-   }
-   long data = PyLong_AsLong(PyTuple_GetItem(pydata, 0));
 
    // Get the size of the contiguous memory
    auto pyshape = PyDict_GetItemString(pyinterface, "shape");
@@ -61,50 +54,17 @@ PyObject *PyROOT::AsRVec(PyObject * /*self*/, PyObject * obj)
       size *= PyLong_AsLong(PyTuple_GetItem(pyshape, i));
    }
 
-   // Get the typestring
-   auto pytypestr = PyDict_GetItemString(pyinterface, "typestr");
-   if (!pytypestr) {
-      PyErr_SetString(PyExc_RuntimeError, "Object not convertible: __array_interface__['typestr'] does not exist.");
+   // Get the typestring and properties thereof
+   const auto typestr = GetTypestrFromArrayInterface(pyinterface);
+   if (typestr.compare("") == 0)
       return NULL;
-   }
-   std::string typestr = CPyCppyy_PyUnicode_AsString(pytypestr);
-   const auto length = typestr.length();
-   if(length != 3) {
-      PyErr_SetString(PyExc_RuntimeError,
-              ("Object not convertible: __array_interface__['typestr'] returned '" + typestr + "' with invalid length unequal 3.").c_str());
+   if (!CheckEndianessFromTypestr(typestr))
       return NULL;
-   }
 
-   // Verify correct endianess
-   const auto endianess = typestr.substr(1, 2);
-#ifdef R__BYTESWAP
-   const auto byteswap = "<";
-#else
-   const auto byteswap = ">";
-#endif
-   if (!endianess.compare(byteswap)) {
-      PyErr_SetString(PyExc_RuntimeError, "Object not convertible: Endianess of __array_interface__['typestr'] does not match endianess of ROOT.");
+   const auto dtype = typestr.substr(1, typestr.size());
+   std::string cppdtype = GetCppTypeFromNumpyType(dtype);
+   if (cppdtype.compare("") == 0)
       return NULL;
-   }
-
-   const auto dtype = typestr.substr(1, length);
-   std::string cppdtype;
-   if (dtype == "i4") {
-      cppdtype = "int";
-   } else if (dtype == "u4") {
-      cppdtype = "unsigned int";
-   } else if (dtype == "i8") {
-      cppdtype = "long";
-   } else if (dtype == "u8") {
-      cppdtype = "unsigned long";
-   } else if (dtype == "f4") {
-      cppdtype = "float";
-   } else if (dtype == "f8") {
-      cppdtype = "double";
-   } else {
-      PyErr_SetString(PyExc_RuntimeError, ("Object not convertible: Python object has unknown data-type '" + dtype + "'.").c_str());
-      return NULL;
-   }
 
    // Construct an RVec of the correct data-type
    const std::string klassname = "ROOT::VecOps::RVec<" + cppdtype + ">";

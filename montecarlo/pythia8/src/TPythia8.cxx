@@ -88,7 +88,7 @@ TPythia8*  TPythia8::fgInstance = 0;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-TPythia8::TPythia8():
+TPythia8::TPythia8(bool printBanner /*= true*/):
     TGenerator("TPythia8", "TPythia8"),
     fPythia(0),
     fNumberOfParticles(0)
@@ -99,13 +99,14 @@ TPythia8::TPythia8():
    delete fParticles; // was allocated as TObjArray in TGenerator
 
    fParticles = new TClonesArray("TParticle",50);
-   fPythia    = new Pythia8::Pythia();
+   // If only we could skip stating the default of the first parameter...:
+   fPythia    = new Pythia8::Pythia("../share/Pythia8/xmldoc", printBanner);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with an xmlDir (eg "../xmldoc"
 
-TPythia8::TPythia8(const char *xmlDir):
+TPythia8::TPythia8(const char *xmlDir, bool printBanner /*= true*/):
     TGenerator("TPythia8", "TPythia8"),
     fPythia(0),
     fNumberOfParticles(0)
@@ -116,7 +117,7 @@ TPythia8::TPythia8(const char *xmlDir):
    delete fParticles; // was allocated as TObjArray in TGenerator
 
    fParticles = new TClonesArray("TParticle",50);
-   fPythia    = new Pythia8::Pythia(xmlDir);
+   fPythia    = new Pythia8::Pythia(xmlDir, printBanner);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -382,7 +382,7 @@ double VavilovFast::Pdf (double x) const
       double s = 1 + fHC[7]*h[9];
       for (k=2; k<=6; k++)
          s += fHC[k]*h[k+1];
-      if (s>0) v = fHC[8]*std::exp(-0.5*xx*xx);
+      if (s>0) v = fHC[8]*s*std::exp(-0.5*xx*xx);
    }
    else if (fItype == 2) {
       double xx = x*x;
@@ -502,7 +502,7 @@ double VavilovFast::Quantile (double z) const {
          for (int k = 2; k <= 6; ++k) {
            y += fHC[k]*h[k+1];
          }
-         if (y > 0) fu = fHC[8]*std::exp(-0.5*x*x);
+         if (y > 0) fu = fHC[8]*y*std::exp(-0.5*x*x);
       }
       else if (fItype == 2) {
          double x = rlam*rlam;

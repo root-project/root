@@ -18,10 +18,15 @@
 ## \author Enric Tejedor
 
 import ROOT
+import os
 
 # Let's first create a RDF that will read from the CSV file.
 # The types of the columns will be automatically inferred.
-fileName = "df014_CsvDataSource_MuRun2010B.csv"
+fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
+fileName = "df014_CsvDataSource_MuRun2010B_py.csv"
+if not os.path.isfile(fileName):
+    ROOT.TFile.Cp(fileNameUrl, fileName)
+
 MakeCsvDataFrame = ROOT.ROOT.RDF.MakeCsvDataFrame
 tdf = MakeCsvDataFrame(fileName)
 

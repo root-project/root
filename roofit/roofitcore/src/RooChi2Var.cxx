@@ -15,17 +15,17 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
+/**
+// \class RooChi2Var 
 // Class RooChi2Var implements a simple chi^2 calculation from a binned dataset
-// and a PDF. The chi^2 is calculated as 
-//
-//             / (f_PDF * N_tot/ V_bin) - N_bin \+2
-//  Sum[bins] |  ------------------------------ |
-//             \         err_bin                /
-//
+// and a PDF. It calculates
+\f[
+  \chi^2 = \sum_{[\mathrm{bins}]}  \left( \frac{(f_\mathrm{PDF} \cdot N_\mathrm{tot} / V_\mathrm{bin}) - N_\mathrm{bin}}{\mathrm{err}_\mathrm{bin}} \right)^2
+\f]
 // If no user-defined errors are defined for the dataset, poisson errors
 // are used. In extended PDF mode, N_tot is substituted with N_expected.
 //
+*/
 
 #include "RooFit.h"
 
@@ -51,6 +51,22 @@ RooArgSet RooChi2Var::_emptySet ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
+///  RooChi2Var constructor. Optional arguments are:
+///  \param[in] name Name of the PDF 
+///  \param[in] title Title for plotting etc.
+///  \param[in] func  Function
+///  \param[in] hdata Data histogram
+///  \param[in] argX Optional arguments according to table below.
+///  <table>
+///  <tr><th> Argument  <th> Effect
+///  <tr><td>
+///  DataError()  <td> Choose between Poisson errors and Sum-of-weights errors
+///  <tr><td>
+///  NumCPU()     <td> Activate parallel processing feature
+///  <tr><td>
+///  Range()      <td> Fit only selected region
+///  <tr><td>
+///  Verbose()    <td> Verbose output of GOF framework
 
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
@@ -63,12 +79,6 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 			 RooFit::Interleave,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 0)
-  //  RooChi2Var constructor. Optional arguments taken
-  //
-  //  DataError()  -- Choose between Poisson errors and Sum-of-weights errors
-  //  NumCPU()     -- Activate parallel processing feature
-  //  Range()      -- Fit only selected region
-  //  Verbose()    -- Verbose output of GOF framework
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  
@@ -95,6 +105,31 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 
 
 ////////////////////////////////////////////////////////////////////////////////
+///  RooChi2Var constructor. Optional arguments taken
+///  
+///  \param[in] name Name of the PDF 
+///  \param[in] title Title for plotting etc.
+///  \param[in] pdf  PDF to fit
+///  \param[in] hdata Data histogram
+///  \param[in] argX Optional arguments according to table below.
+///  <table>
+///  <tr><th> Argument  <th> Effect
+///  <tr><td>
+///  Extended()   <td> Include extended term in calculation
+///  <tr><td>
+///  DataError()  <td> Choose between Poisson errors and Sum-of-weights errors
+///  <tr><td>
+///  NumCPU()     <td> Activate parallel processing feature
+///  <tr><td>
+///  Range()      <td> Fit only selected region
+///  <tr><td>
+///  SumCoefRange() <td> Set the range in which to interpret the coefficients of RooAddPdf components 
+///  <tr><td>
+///  SplitRange() <td> Fit range is split by index catory of simultaneous PDF
+///  <tr><td>
+///  ConditionalObservables() <td> Define projected observables 
+///  <tr><td>
+///  Verbose()    <td> Verbose output of GOF framework
 
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& hdata,
 		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
@@ -109,16 +144,6 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 			 RooFit::Interleave,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
-  //  RooChi2Var constructor. Optional arguments taken
-  //
-  //  Extended()   -- Include extended term in calculation
-  //  DataError()  -- Choose between Poisson errors and Sum-of-weights errors
-  //  NumCPU()     -- Activate parallel processing feature
-  //  Range()      -- Fit only selected region
-  //  SumCoefRange() -- Set the range in which to interpret the coefficients of RooAddPdf components 
-  //  SplitRange() -- Fit range is split by index catory of simultaneous PDF
-  //  ConditionalObservables() -- Define projected observables 
-  //  Verbose()    -- Verbose output of GOF framework
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
@@ -215,13 +240,12 @@ RooChi2Var::~RooChi2Var()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
 
-Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const 
+Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
   // Throughout the calculation, we use Kahan's algorithm for summing to
   // prevent loss of precision - this is a factor four more expensive than
   // straight addition, but since evaluating the PDF is usually much more
   // expensive than that, we tolerate the additional cost...
-  Int_t i ;
   Double_t result(0), carry(0);
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, kFALSE) ;
@@ -237,7 +261,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t 
 
   // Loop over bins of dataset
   RooDataHist* hdata = (RooDataHist*) _dataClone ;
-  for (i=firstEvent ; i<lastEvent ; i+=stepSize) {
+  for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
     
     // get the data values for this event
     hdata->get(i);

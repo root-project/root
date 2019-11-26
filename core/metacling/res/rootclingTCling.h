@@ -16,18 +16,18 @@ namespace cling {
    class Interpreter;
 }
 
-#ifndef R__DLLEXPORT
+#ifndef R__DLLIMPORT
 // I.e. we are imported.
 # if _WIN32
-#  define R__DLLEXPORT __declspec(dllimport)
+#  define R__DLLIMPORT __declspec(dllimport)
 # else
-#  define R__DLLEXPORT __attribute__ ((visibility ("default")))
+#  define R__DLLIMPORT __attribute__ ((visibility ("default")))
 # endif
 #endif
 
 extern "C" {
-   R__DLLEXPORT const char ** *TROOT__GetExtraInterpreterArgs();
-   R__DLLEXPORT const char *TROOT__GetIncludeDir();
-   R__DLLEXPORT const char *TROOT__GetEtcDir();
-   R__DLLEXPORT cling::Interpreter *TCling__GetInterpreter();
+   R__DLLIMPORT const char ** *TROOT__GetExtraInterpreterArgs();
+   R__DLLIMPORT const char *TROOT__GetIncludeDir();
+   R__DLLIMPORT const char *TROOT__GetEtcDir();
+   R__DLLIMPORT cling::Interpreter *TCling__GetInterpreter();
 }

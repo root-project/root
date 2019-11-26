@@ -30,13 +30,13 @@ ClassImp(TEnum);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for TEnum class.
-/// It take the name of the TEnum type, specification if it is global
-/// and interpreter info.
+/// It takes the name of the TEnum type, interpreter info and surrounding class
+/// the enum it is not globalat namespace scope.
 /// Constant List is owner if enum not on global scope (thus constants not
 /// in TROOT::GetListOfGlobals).
 
-TEnum::TEnum(const char *name, void *info, TClass *cls)
-   : fInfo(info), fClass(cls)
+TEnum::TEnum(const char *name, DeclId_t declid, TClass *cls)
+   : fInfo(nullptr), fClass(cls)
 {
    SetName(name);
    if (cls) {
@@ -53,6 +53,8 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
    else { // it is in the global scope
       fQualName = GetName();
    }
+
+   Update(declid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +62,7 @@ TEnum::TEnum(const char *name, void *info, TClass *cls)
 
 TEnum::~TEnum()
 {
+   gInterpreter->ClassInfo_Delete(fInfo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,9 +83,8 @@ Bool_t TEnum::IsValid()
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetEnum(fClass, fName);
-      if (newId) {
+      if (newId)
          Update(newId);
-      }
       return newId != 0;
    }
    return fInfo != 0;
@@ -93,14 +95,47 @@ Bool_t TEnum::IsValid()
 
 Long_t TEnum::Property() const
 {
-   return kIsEnum;
+   return kIsEnum | (TestBit(kBitIsScopedEnum) ? kIsScopedEnum : 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the unterlying integer type of the enum:
+///     enum E { kOne }; //  ==> int
+///     enum F: long; //  ==> long
+/// Returns kNumDataTypes if the enum is unknown / invalid.
+
+EDataType TEnum::GetUnderlyingType() const
+{
+   if (fInfo)
+      return gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
+   return kNumDataTypes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+TDictionary::DeclId_t TEnum::GetDeclId() const
+{
+   if (fInfo)
+      return gInterpreter->GetDeclId(fInfo);
+
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TEnum::Update(DeclId_t id)
 {
-   fInfo = (void *)id;
+   if (fInfo)
+      gInterpreter->ClassInfo_Delete(fInfo);
+   if (!id) {
+      fInfo = nullptr;
+      return;
+   }
+
+   fInfo = gInterpreter->ClassInfo_Factory(id);
+
+   if (fInfo)
+      SetBit(kBitIsScopedEnum, gInterpreter->ClassInfo_IsScopedEnum(fInfo));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +202,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       if (sa_local == (kALoadAndInterpLookup)) {
          auto scope = TClass::GetClass(scopeName, true);
          TEnum *en = nullptr;
-         if (scope) en = findEnumInList(scope->GetListOfEnums(), enName, sa_local);
+         if (scope) en = findEnumInList(scope->GetListOfEnums(kFALSE), enName, sa_local);
          return en;
       }
 

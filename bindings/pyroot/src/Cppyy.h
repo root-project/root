@@ -1,6 +1,9 @@
 #ifndef PYROOT_CPPYY_H
 #define PYROOT_CPPYY_H
 
+// ROOT
+#include "TEnum.h"
+
 // Standard
 #include <string>
 #include <vector>
@@ -13,6 +16,7 @@ namespace Cppyy {
    typedef TCppScope_t TCppType_t;
    typedef void*       TCppObject_t;
    typedef ptrdiff_t   TCppMethod_t;
+   typedef void*       TCppEnum_t;
 
    typedef Long_t      TCppIndex_t;
    typedef void* (*TCppMethPtrGetter_t)( TCppObject_t );
@@ -21,6 +25,8 @@ namespace Cppyy {
    TCppIndex_t GetNumScopes( TCppScope_t parent );
    std::string GetScopeName( TCppScope_t parent, TCppIndex_t iscope );
    std::string ResolveName( const std::string& cppitem_name );
+   std::string ResolveEnum(const TEnum* en);
+   std::string ResolveEnum(const std::string& enum_type);
    TCppScope_t GetScope( const std::string& scope_name );
    std::string GetName( const std::string& scope_name );
    TCppType_t  GetTemplate( const std::string& template_name );
@@ -85,7 +91,7 @@ namespace Cppyy {
 // method/function reflection information ------------------------------------
    TCppIndex_t  GetNumMethods( TCppScope_t scope );
    TCppIndex_t  GetMethodIndexAt( TCppScope_t scope, TCppIndex_t imeth );
-   std::vector< TCppMethod_t > GetMethodsFromName( TCppScope_t scope, const std::string& name );
+   std::vector< TCppMethod_t > GetMethodsFromName( TCppScope_t scope, const std::string& name, bool alsoInBases = false);
 
    TCppMethod_t GetMethod( TCppScope_t scope, TCppIndex_t imeth );
 
@@ -99,6 +105,8 @@ namespace Cppyy {
    std::string GetMethodSignature( TCppScope_t scope, TCppIndex_t imeth );
    Bool_t      IsConstMethod( TCppMethod_t );
 
+   bool        ExistsMethodTemplate(TCppScope_t scope, const std::string& name);
+   TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string& name, const std::string& proto);
    Bool_t      IsMethodTemplate( TCppMethod_t );
    TCppIndex_t GetMethodNumTemplateArgs( TCppScope_t scope, TCppIndex_t imeth );
    std::string GetMethodTemplateArgName( TCppScope_t scope, TCppIndex_t imeth, TCppIndex_t iarg );
@@ -124,6 +132,12 @@ namespace Cppyy {
    Bool_t IsConstData( TCppScope_t scope, TCppIndex_t idata );
    Bool_t IsEnumData( TCppScope_t scope, TCppIndex_t idata );
    Int_t  GetDimensionSize( TCppScope_t scope, TCppIndex_t idata, int dimension );
+
+// enum properties -----------------------------------------------------------
+   TCppEnum_t  GetEnum(TCppScope_t scope, const std::string& enum_name);
+   TCppIndex_t GetNumEnumData(TCppEnum_t);
+   std::string GetEnumDataName(TCppEnum_t, TCppIndex_t idata);
+   long long   GetEnumDataValue(TCppEnum_t, TCppIndex_t idata);
 
 } // namespace Cppyy
 

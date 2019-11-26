@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # - Locate Unuran library
 # Defines:
 #
@@ -18,6 +24,6 @@ endif()
 # handle the QUIETLY and REQUIRED arguments and set UNURAN_FOUND to TRUE if
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(UNURAN DEFAULT_MSG UNURAN_LIBRARY UNURAN_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Unuran DEFAULT_MSG UNURAN_LIBRARY UNURAN_INCLUDE_DIR)
 
 mark_as_advanced(UNURAN_FOUND UNURAN_INCLUDE_DIR UNURAN_LIBRARY)

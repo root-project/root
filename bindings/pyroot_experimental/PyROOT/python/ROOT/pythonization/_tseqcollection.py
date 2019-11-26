@@ -70,6 +70,15 @@ def _getitem_pyz(self, idx):
 
     return res
 
+def _remove_at(self, idx):
+    # Parameters:
+    # - self: collection to remove the item from
+    # - idx: index of the item, always positive
+    lnk = self.FirstLink()
+    for i in range(idx):
+        lnk = lnk.Next()
+    return self.Remove(lnk)
+
 def _setitem_pyz(self, idx, val):
     # Parameters:
     # - self: collection where to set item/s
@@ -97,10 +106,20 @@ def _setitem_pyz(self, idx, val):
             except StopIteration:
                 # No more indices in range, just append
                 self.append(elem)
+
+        # If range is longer than the number of elements in val,
+        # we need to remove the remaining elements of the range
+        try:
+            for i in it:
+                del self[i]
+        except StopIteration:
+            # No more indices in range, we are done
+            pass
+
     # Number
     else:
         idx = _check_index(self, idx)
-        self.RemoveAt(idx)
+        _remove_at(self, idx)
         self.AddAt(val, idx)
 
 def _delitem_pyz(self, idx):
@@ -119,11 +138,11 @@ def _delitem_pyz(self, idx):
             rg = reversed(rg)
 
         for i in rg:
-            self.RemoveAt(i)
+            _remove_at(self, i)
     # Number
     else:
         idx = _check_index(self, idx)
-        self.RemoveAt(idx)
+        _remove_at(self, idx)
 
 # Python-list-like methods
 
@@ -177,7 +196,7 @@ def _pop_pyz(self, *args):
     if idx < 0 or idx >= lcol:
         raise IndexError('pop index out of range')
 
-    return self.RemoveAt(idx)
+    return _remove_at(self, idx)
 
 def _reverse_pyz(self):
     # Parameters:

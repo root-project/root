@@ -37,15 +37,20 @@ class CPPScope {
 public:
     enum EFlags {
         kNone            = 0x0,
-        kIsDispatcher    = 0x0001,
+        kIsNamespace     = 0x0001,
         kIsMeta          = 0x0002,
-        kIsPython        = 0x0004 };
+        kIsSmart         = 0x0004,
+        kIsPython        = 0x0008,
+        kIsInComplete    = 0x0010 };
 
 public:
     PyHeapTypeObject  fType;
     Cppyy::TCppType_t fCppType;
     int               fFlags;
-    CppToPyMap_t*     fCppObjects;
+    union {
+        CppToPyMap_t*           fCppObjects;     // classes only
+        std::vector<PyObject*>* fUsing;          // namespaces only
+    } fImp;
     char*             fModuleName;
 
 private:
@@ -53,6 +58,13 @@ private:
 };
 
 typedef CPPScope CPPClass;
+
+class CPPSmartClass : public CPPClass {
+public:
+    Cppyy::TCppType_t   fUnderlyingType;
+    Cppyy::TCppMethod_t fDereferencer;
+};
+
 
 //- metatype type and type verification --------------------------------------
 extern PyTypeObject CPPScope_Type;
@@ -77,10 +89,10 @@ inline CPPScope* CPPScopeMeta_New(Cppyy::TCppScope_t klass, PyObject* args)
     if (!pymeta) return pymeta;
 
 // set the klass id, for instances and Python-side derived classes to pick up
-    pymeta->fCppType    = klass;
-    pymeta->fFlags      = CPPScope::kIsMeta;
-    pymeta->fCppObjects = nullptr;
-    pymeta->fModuleName = nullptr;
+    pymeta->fCppType         = klass;
+    pymeta->fFlags           = CPPScope::kIsMeta;
+    pymeta->fImp.fCppObjects = nullptr;
+    pymeta->fModuleName      = nullptr;
 
     return pymeta;
 }

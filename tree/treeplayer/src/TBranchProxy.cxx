@@ -19,8 +19,6 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TBranchElement.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
-#include "TRealData.h"
-#include "TDataMember.h"
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
@@ -112,7 +110,9 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* br
 /// the "path" to branch.
 static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, const char* fullBranchName)
 {
-   if (directorTree == branch->GetTree())
+   // ROOT-10046: Here we need to ask for the tree with GetTree otherwise, if directorTree
+   // is a chain, this check is bogus and a bug can occour (ROOT-10046)
+   if (directorTree->GetTree() == branch->GetTree())
       return branch->GetName();
 
    // Friend case:
@@ -254,7 +254,16 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       // This does not allow (yet) to precede the branch name with
       // its mother's name
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
-      if (!fBranch) return false;
+      if (!fBranch) {
+         // FIXME
+         // While fixing ROOT-10019, this error was added to give to the user an even better experience
+         // in presence of a problem.
+         // It is not easy to distinguish the cases where this error is "expected"
+         // For now we do not print anything - see conversation here: https://github.com/root-project/root/pull/3746
+         //auto treeName = fDirector->GetTree()->GetName();
+         //::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.\n",fBranchName.Data(), treeName));
+         return false;
+      }
 
       {
          // Calculate fBranchCount for a leaf.

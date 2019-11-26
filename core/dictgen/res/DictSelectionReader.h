@@ -234,8 +234,10 @@ ROOT::Selection::NS::C.
  * [...]
  *
  **/
-class DictSelectionReader
-      : public clang::RecursiveASTVisitor<DictSelectionReader> {
+namespace ROOT {
+namespace Internal {
+
+class DictSelectionReader : public clang::RecursiveASTVisitor<DictSelectionReader> {
 public:
    /// Take the selection rules as input (for consistency w/ other selector
    /// interfaces)
@@ -302,5 +304,7 @@ private:
    bool fIsFirstPass; ///< Keep trance of the number of passes through the AST
    ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt; /// < The reference to the normalized context
 };
+}
+}
 
 #endif

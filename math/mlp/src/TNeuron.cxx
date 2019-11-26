@@ -9,26 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//
-// TNeuron
-//
-// This class decribes an elementary neuron, which is the basic
-// element for a Neural Network.
-// A network is built connecting neurons by synapses.
-// There are different types of neurons: linear (a+bx),
-// sigmoid (1/(1+exp(-x)), tanh or gaussian.
-// An external function can also be used, together with its derivative.
-// In a Multi Layer Perceptron, the input layer is made of
-// inactive neurons (returning the normalized input) and output neurons
-// are linear. Hidden neurons may be anything, the default being sigmoids.
-//
-// This implementation contains several methods to compute the value,
-// the derivative, the DeDw, ...
-// Values are stored in local buffers. The SetNewEvent() method is
-// there to inform buffered values are outdated.
-//
-///////////////////////////////////////////////////////////////////////////
+/** \class TNeuron
+
+This class describes an elementary neuron, which is the basic
+element for a Neural Network.
+A network is built connecting neurons by synapses.
+There are different types of neurons: linear (a+bx),
+sigmoid (1/(1+exp(-x)), tanh or gaussian.
+An external function can also be used, together with its derivative.
+In a Multi Layer Perceptron, the input layer is made of
+inactive neurons (returning the normalized input) and output neurons
+are linear. Hidden neurons may be anything, the default being sigmoids.
+
+This implementation contains several methods to compute the value,
+the derivative, the DeDw, ...
+Values are stored in local buffers. The SetNewEvent() method is
+there to inform buffered values are outdated.
+
+*/
 
 #include "TSynapse.h"
 #include "TNeuron.h"

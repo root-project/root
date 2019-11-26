@@ -25,6 +25,13 @@ namespace VecTestEnumNS {
 }
 
 
+//- adverse effect of implicit conversion on vector<string>
+int vectest_ol1(const std::vector<std::string>&);
+int vectest_ol1(std::string);
+int vectest_ol2(std::string);
+int vectest_ol2(const std::vector<std::string>&);
+
+
 //- class with lots of std::[w]string handling
 template<typename S>
 class stringy_class {
@@ -61,6 +68,80 @@ public:
 namespace {
     stl_like_class<int> stlc_1;
 }
+
+
+//- similar, but now the iterators don't work b/c they don't compile
+template<class value_type, size_t sz>
+class stl_like_class2 {
+protected:
+    value_type fData[sz];
+
+public:
+    static const size_t size() { return sz; }
+    value_type& operator[](ptrdiff_t i) { return fData[i]; }
+};
+
+template<class value_type, size_t sz>
+class stl_like_class3 : public stl_like_class2<value_type, sz> {
+    using stl_like_class2<value_type, sz>::fData;
+public:
+    size_t size() { return sz; }
+    value_type& begin() { return fData; }
+    value_type& end() { return fData + sz; }
+};
+
+class stl_like_class4 {
+public:
+    struct iterator {
+       iterator(int p) : pos(p) {}
+       int operator++() { ++pos; return pos; }
+       bool operator!=(const iterator& other) { return pos != other.pos; }
+       int operator*() { return pos; }
+       int pos;
+    };
+    iterator begin() { return iterator{0}; }
+    iterator end() { return iterator{10}; }
+};
+
+class stl_like_class5 {
+public:
+    struct iterator {
+        iterator(int p) : pos(p) {}
+        int operator++(int) { int val = pos; ++pos; return val; }
+        bool operator!=(const iterator& other) { return pos != other.pos; }
+        int operator*() { return pos; }
+        int pos;
+    };
+    iterator begin() { return iterator{0}; }
+    iterator end() { return iterator{10}; }
+};
+
+class stl_like_class6 {
+public:
+    struct some_name {
+        some_name(int p) : pos(p) {}
+        int operator++() { ++pos; return pos; }
+        bool operator!=(const some_name& other) { return pos != other.pos; }
+        int operator*() { return pos; }
+        int pos;
+    };
+    some_name begin() { return some_name{0}; }
+    some_name end() { return some_name{10}; }
+};
+
+struct some_name7 {
+    some_name7(int p) : pos(p) {}
+    int operator++() { ++pos; return pos; }
+    bool operator!=(const some_name7& other) { return pos != other.pos; }
+    int operator*() { return pos; }
+    int pos;
+};
+
+class stl_like_class7 {
+public:
+    some_name7 begin() { return some_name7{0}; }
+    some_name7 end() { return some_name7{10}; }
+};
 
 
 //- helpers for testing array

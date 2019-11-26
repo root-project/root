@@ -71,9 +71,6 @@ sys.modules[ __name__ ].libPyROOT = _backend
 if not _builtin_cppyy:
    _backend.SetMemoryPolicy( _backend.kMemoryStrict )
 
-#--- Enable Autoloading ignoring possible error for the time being
-try:    _backend.gInterpreter.EnableAutoLoading()
-except: pass
 
 ### -----------------------------------------------------------------------------
 ### -- metaclass helper from six ------------------------------------------------

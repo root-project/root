@@ -11,13 +11,12 @@
 /// \date 2018-10-10
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
-/// \author Olivier couet
+/// \author Olivier Couet
 
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
 #include "ROOT/RBox.hxx"
 #include <ROOT/RPadPos.hxx>
-#include "TMath.h"
 
 void box()
 {
@@ -26,39 +25,32 @@ void box()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
 
-   auto OptsBox1 = canvas->Draw(RBox({0.1_normal, 0.3_normal}, {0.3_normal,0.6_normal}));
-   RColor Color1(1., 0., 0.);
-   RColor Color2(0., 0., 1.);
+   auto Box1 = canvas->Draw<RBox>(RPadPos(0.1_normal, 0.3_normal), RPadPos(0.3_normal,0.6_normal));
+   RColor Color1(255, 0, 0, 0.5); // 50% opaque
+   RColor Color2(0, 0, 255, 0.3); // 30% opaque
 
-   OptsBox1->SetLineColor(Color1);
-   OptsBox1->SetLineWidth(5);
-   OptsBox1->SetLineColorAlpha(.5);
-   OptsBox1->SetFillColor(Color2);
-   OptsBox1->SetFillColorAlpha(.3);
+   Box1->AttrBox().AttrBorder().SetColor(Color1).SetWidth(5);
+   Box1->AttrBox().AttrFill().SetColor(RColor::kRed);
 
-   auto OptsBox2 = canvas->Draw(RBox({0.4_normal, 0.2_normal}, {0.6_normal,0.7_normal}));
-   OptsBox2->SetLineColor(Color2);
-   OptsBox2->SetFillStyle(0);
-   OptsBox2->SetLineStyle(2);
-   OptsBox2->SetLineWidth(3);
+   auto Box2 = canvas->Draw<RBox>(RPadPos(0.4_normal, 0.2_normal), RPadPos(0.6_normal,0.7_normal));
+   Box2->AttrBox().AttrBorder().SetColor(Color2).SetStyle(2).SetWidth(3);
+   Box2->AttrBox().AttrFill().SetColor(RColor::kGreen);
 
-   auto OptsBox3 = canvas->Draw(RBox({0.7_normal, 0.4_normal}, {0.9_normal,0.6_normal}));
-   OptsBox3->SetFillStyle(0);
-   OptsBox3->SetRoundWidth(50);
-   OptsBox3->SetRoundHeight(50);
-   OptsBox3->SetLineWidth(3);
+   auto Box3 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.4_normal), RPadPos(0.9_normal,0.6_normal));
+   Box3->AttrBox().AttrBorder().SetWidth(3);
+   Box3->AttrBox().AttrFill().SetColor(RColor::kBlue);
 
-   auto OptsBox4 = canvas->Draw(RBox({0.7_normal, 0.7_normal}, {0.9_normal,0.9_normal}));
-   OptsBox4->SetFillStyle(0);
-   OptsBox4->SetRoundWidth(50);
-   OptsBox4->SetRoundHeight(25);
-   OptsBox4->SetLineWidth(3);
+   auto Box4 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.7_normal), RPadPos(0.9_normal,0.9_normal));
+   //OptsBox4->SetFillStyle(0);
+   //OptsBox4->SetRoundWidth(50);
+   //OptsBox4->SetRoundHeight(25);
+   Box4->AttrBox().AttrBorder().SetWidth(3);
 
-   auto OptsBox5 = canvas->Draw(RBox({0.7_normal, 0.1_normal}, {0.9_normal,0.3_normal}));
-   OptsBox5->SetFillStyle(0);
-   OptsBox5->SetRoundWidth(25);
-   OptsBox5->SetRoundHeight(50);
-   OptsBox5->SetLineWidth(3);
+   auto Box5 = canvas->Draw<RBox>(RPadPos(0.7_normal, 0.1_normal), RPadPos(0.9_normal,0.3_normal));
+   //OptsBox5->SetFillStyle(0);
+   //OptsBox5->SetRoundWidth(25);
+   //OptsBox5->SetRoundHeight(50);
+   Box5->AttrBox().AttrBorder().SetWidth(3);
 
    canvas->Show();
 }

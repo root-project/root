@@ -119,8 +119,6 @@ RooAbsData::RooAbsData()
   claimVars(this) ;
   _dstore = 0 ;
   storageType = defaultStorageType;
-  _iterator = _vars.createIterator() ;
-  _cacheIter = _cachedVars.createIterator() ;
 
   RooTrace::create(this) ;
 }
@@ -163,9 +161,6 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
    }
    delete iter;
 
-   _iterator = _vars.createIterator();
-   _cacheIter = _cachedVars.createIterator();
-
    RooTrace::create(this);
 }
 
@@ -182,16 +177,9 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _vars.addClone(other._vars) ;
 
   // reconnect any parameterized ranges to internal dataset observables
-  TIterator* iter = _vars.createIterator() ;
-  RooAbsArg* var ;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
+  for (const auto var : _vars) {
     var->attachDataSet(*this) ;
   }
-  delete iter ;
-
-
-  _iterator= _vars.createIterator();
-  _cacheIter = _cachedVars.createIterator() ;
 
 
   if (other._ownedComponents.size()>0) {
@@ -199,15 +187,11 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
     // copy owned components here
 
     map<string,RooAbsDataStore*> smap ;
-    for (std::map<std::string,RooAbsData*>::const_iterator itero =other._ownedComponents.begin() ; itero!=other._ownedComponents.end() ; ++itero ) {
-      RooAbsData* dclone = (RooAbsData*) itero->second->Clone() ;
-      _ownedComponents[itero->first] = dclone ;
-      smap[itero->first] = dclone->store() ;
+    for (auto& itero : other._ownedComponents) {
+      RooAbsData* dclone = (RooAbsData*) itero.second->Clone();
+      _ownedComponents[itero.first] = dclone;
+      smap[itero.first] = dclone->store();
     }
-
-//     if (!dynamic_cast<const RooCompositeDataStore*>(other.store())) {
-//       cout << "Huh, have owned components, but store is not composite?" << endl ;
-//     }
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
     _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
@@ -223,6 +207,45 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   RooTrace::create(this) ;
 }
 
+RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
+  TNamed::operator=(other);
+  RooPrintable::operator=(other);
+
+  claimVars(this);
+  _vars.Clear();
+  _vars.addClone(other._vars);
+
+  // reconnect any parameterized ranges to internal dataset observables
+  for (const auto var : _vars) {
+    var->attachDataSet(*this) ;
+  }
+
+
+  if (other._ownedComponents.size()>0) {
+
+    // copy owned components here
+
+    map<string,RooAbsDataStore*> smap ;
+    for (auto& itero : other._ownedComponents) {
+      RooAbsData* dclone = (RooAbsData*) itero.second->Clone();
+      _ownedComponents[itero.first] = dclone;
+      smap[itero.first] = dclone->store();
+    }
+
+    RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
+    _dstore = new RooCompositeDataStore(GetName(), GetTitle(), _vars, *idx, smap);
+    storageType = RooAbsData::Composite;
+
+  } else {
+
+    // Convert to vector store if default is vector
+    _dstore = other._dstore->clone(_vars);
+    storageType = other.storageType;
+  }
+
+  return *this;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
@@ -236,8 +259,6 @@ RooAbsData::~RooAbsData()
 
   // delete owned contents.
   delete _dstore ;
-  delete _iterator ;
-  delete _cacheIter ;
 
   // Delete owned dataset components
   for(map<std::string,RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
@@ -468,19 +489,16 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
 {
   // Make sure varSubset doesn't contain any variable not in this dataset
   RooArgSet varSubset2(varSubset) ;
-  TIterator* iter = varSubset.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : varSubset) {
     if (!_vars.find(arg->GetName())) {
       coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable "
              << arg->GetName() << " not in dataset, ignored" << endl ;
       varSubset2.remove(*arg) ;
     }
   }
-  delete iter ;
 
   if (cut && strlen(cut)>0) {
-    RooFormulaVar cutVar(cut,cut,*get()) ;
+    RooFormulaVar cutVar(cut, cut, *get(), false);
     return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
   }
   return reduceEng(varSubset2,0,0,0,2000000000,kFALSE) ;
@@ -859,9 +877,9 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, Double_t offset, co
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  RooFormula* select = 0 ;
+  std::unique_ptr<RooFormula> select;
   if (cutSpec) {
-    select = new RooFormula("select",cutSpec,*get()) ;
+    select.reset(new RooFormula("select",cutSpec,*get()));
   }
 
 
@@ -1301,8 +1319,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
       RooAbsArg *clone= plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
       assert(0 != clone);
       if(!clone->dependsOn(_vars)) {
-   coutW(InputArguments) << ClassName() << "::" << GetName()
-        << ":fillHistogram: WARNING: data does not contain variable: " << realVar->GetName() << endl;
+        coutE(InputArguments) << ClassName() << "::" << GetName()
+            << ":fillHistogram: Data does not contain the variable '" << realVar->GetName() << "'." << endl;
+        return nullptr;
       }
       else {
    clone->recursiveRedirectServers(_vars);
@@ -1315,12 +1334,11 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Create selection formula if selection cuts are specified
-  RooFormula* select = 0;
-  if(0 != cuts && strlen(cuts)) {
-    select=new RooFormula(cuts,cuts,_vars);
+  std::unique_ptr<RooFormula> select;
+  if (cuts != nullptr && strlen(cuts) > 0) {
+    select.reset(new RooFormula(cuts, cuts, _vars, false));
     if (!select || !select->ok()) {
       coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << endl;
-      delete select;
       return 0 ;
     }
   }
@@ -1386,21 +1404,19 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     // Apply range based selection criteria
     Bool_t selectByRange = kTRUE ;
     if (cutRange) {
-      _iterator->Reset() ;
-      RooAbsArg* arg ;
-      while((arg=(RooAbsArg*)_iterator->Next())) {
-   Bool_t selectThisArg = kFALSE ;
-   UInt_t icut ;
-   for (icut=0 ; icut<cutVec.size() ; icut++) {
-     if (arg->inRange(cutVec[icut].c_str())) {
-       selectThisArg = kTRUE ;
-       break ;
-     }
-   }
-   if (!selectThisArg) {
-     selectByRange = kFALSE ;
-     break ;
-   }
+      for (const auto arg : _vars) {
+        Bool_t selectThisArg = kFALSE ;
+        UInt_t icut ;
+        for (icut=0 ; icut<cutVec.size() ; icut++) {
+          if (arg->inRange(cutVec[icut].c_str())) {
+            selectThisArg = kTRUE ;
+            break ;
+          }
+        }
+        if (!selectThisArg) {
+          selectByRange = kFALSE ;
+          break ;
+        }
       }
     }
 
@@ -1449,8 +1465,6 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     //cout << "RooTreeData::fillHistogram() bin = " << bin << " weight() = " << weight() << " we = " << we << endl ;
 
   }
-
-  if(0 != select) delete select;
 
   return hist;
 }
@@ -1571,6 +1585,17 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 ///     not the first one added to the frame. By default only the 1st dataset
 ///     added to a frame will update the normalization information
 /// <tr><td> `Rescale(Double_t f)`   <td> Rescale drawn histogram by given factor
+/// <tr><td> `CutRange(const char*)` <td> Apply cuts to dataset.
+/// \note This often requires passing the normalisation when plotting the PDF because RooFit does not save
+/// how many events were being plotted (it will only work for cutting slices out of uniformly distributed variables).
+/// ```
+///  data->plotOn(frame01, CutRange("SB1"));
+///  const double nData = data->sumEntries("", "SB1");
+///  // Make clear that the target normalisation is nData. The enumerator NumEvent
+///  // is needed to switch between relative and absolute scaling.
+///  model.plotOn(frame01, Normalization(nData, RooAbsReal::NumEvent),
+///    ProjectionRange("SB1"));
+/// ```
 ///
 /// <tr><th> <th> Histogram drawing options
 /// <tr><td> `DrawOption(const char* opt)`   <td> Select ROOT draw option for resulting TGraph object

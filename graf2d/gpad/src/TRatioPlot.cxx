@@ -10,37 +10,19 @@
  *************************************************************************/
 
 #include "TRatioPlot.h"
-
 #include "TROOT.h"
-
-#include "TClassRef.h"
-
-#include "TVirtualPad.h"
-
 #include "TBrowser.h"
-
 #include "TH1.h"
-
 #include "TF1.h"
-
 #include "TPad.h"
-
 #include "TString.h"
-
 #include "TMath.h"
-
 #include "TGraphAsymmErrors.h"
-
 #include "TGraphErrors.h"
-
 #include "TGaxis.h"
-
 #include "TLine.h"
-
 #include "TVirtualFitter.h"
-
 #include "TFitResult.h"
-
 #include "THStack.h"
 
 #include <iostream>

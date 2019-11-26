@@ -29,8 +29,6 @@ ARCH=$9
 shift
 ROOTBUILD=$9
 shift
-EXPLICITLINK=$9
-shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include
@@ -39,11 +37,7 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
-if [ "$EXPLICITLINK" = "yes" ]; then
-   EXPLLINKLIBS="\$LinkedLibs"
-else
-   EXPLLINKLIBS="\$DepLibs"
-fi
+EXPLLINKLIBS="\$LinkedLibs"
 
 if [ "$ARCH" = "macosx" ] || [ "$ARCH" = "macosx64" ] || \
    [ "$ARCH" = "macosxicc" ]; then

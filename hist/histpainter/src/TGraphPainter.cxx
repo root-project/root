@@ -169,7 +169,7 @@ Begin_Macro(source)
       x[i] = i*0.1;
       y[i] = 10*sin(x[i]+0.2)-6;
    }
-   gr = new TGraph(n,x,y);
+   auto gr = new TGraph(n,x,y);
    gr->SetFillColor(38);
    c47->cd(1); gr->Draw("AB");
    c47->cd(2); gr->Draw("AB1");
@@ -238,7 +238,7 @@ Begin_Macro(source)
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
-   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   auto ge = new TGraphErrors(5, x, y, ex, ey);
    ge->Draw("ap");
 }
 End_Macro
@@ -252,10 +252,10 @@ Begin_Macro(source)
    float err_x[] = {0,0,0};
    float err_y[] = {5,5,5};
    float y[]     = {1,4,9};
-   TGraphErrors tg(3,x,y,err_x,err_y);
+   auto tg = new TGraphErrors(3,x,y,err_x,err_y);
    c48->Divide(2,1);
-   c48->cd(1); gPad->DrawFrame(0,0,4,8); tg.Draw("PC");
-   c48->cd(2); gPad->DrawFrame(0,0,4,8); tg.Draw("0PC");
+   c48->cd(1); gPad->DrawFrame(0,0,4,8); tg->Draw("PC");
+   c48->cd(2); gPad->DrawFrame(0,0,4,8); tg->Draw("0PC");
 }
 End_Macro
 
@@ -268,7 +268,7 @@ Begin_Macro(source)
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
-   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   auto ge = new TGraphErrors(5, x, y, ex, ey);
    ge->SetFillColor(4);
    ge->SetFillStyle(3010);
    ge->Draw("a3");
@@ -288,7 +288,7 @@ Begin_Macro(source)
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
-   TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
+   auto ge = new TGraphErrors(5, x, y, ex, ey);
    ge->SetFillColor(6);
    ge->SetFillStyle(3005);
    ge->Draw("a4");
@@ -319,25 +319,25 @@ Begin_Macro(source)
    // Now draw data set (1)
 
    // We first have to draw it only with the stat errors
-   TGraphErrors *graph1 = new TGraphErrors(5, x, py1, zero, ey_stat1);
+   auto graph1 = new TGraphErrors(5, x, py1, zero, ey_stat1);
    graph1->SetMarkerStyle(20);
    graph1->Draw("P");
 
    // Now we have to somehow depict the sys errors
 
-   TGraphErrors *graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
+   auto graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
    graph1_sys->Draw("[]");
 
    // Now draw data set (2)
 
    // We first have to draw it only with the stat errors
-   TGraphErrors *graph2 = new TGraphErrors(5, x, y2, zero, ey_stat2);
+   auto graph2 = new TGraphErrors(5, x, y2, zero, ey_stat2);
    graph2->SetMarkerStyle(24);
    graph2->Draw("P");
 
    // Now we have to somehow depict the sys errors
 
-   TGraphErrors *graph2_sys = new TGraphErrors(5, x, y2, zero, ey_sys2);
+   auto graph2_sys = new TGraphErrors(5, x, y2, zero, ey_sys2);
    graph2_sys->Draw("[]");
 }
 End_Macro
@@ -356,7 +356,7 @@ Begin_Macro(source)
    double aexh[] = {0.5, 0.4, 0.3, 0.2, 0.1};
    double aeyl[] = {1, 0.5, 1, 0.5, 1};
    double aeyh[] = {0.5, 1, 0.5, 1, 0.5};
-   TGraphAsymmErrors* gae = new TGraphAsymmErrors(5, ax, ay, aexl, aexh, aeyl, aeyh);
+   auto gae = new TGraphAsymmErrors(5, ax, ay, aexl, aexh, aeyl, aeyh);
    gae->SetFillColor(2);
    gae->SetFillStyle(3001);
    gae->Draw("a2");
@@ -384,7 +384,7 @@ Begin_Macro(source)
    Double_t eyld[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
    Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
    Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
-   TGraphBentErrors *gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
+   auto gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
    gr->SetTitle("TGraphBentErrors Example");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
@@ -462,7 +462,7 @@ The drawing options for the polar graphs are the following:
 Begin_Macro(source)
 {
    auto c46 = new TCanvas("c46","c46",500,500);
-   TGraphPolar * grP1 = new TGraphPolar();
+   auto grP1 = new TGraphPolar();
    grP1->SetTitle("TGraphPolar example");
 
    grP1->SetPoint(0, (1*TMath::Pi())/4., 0.05);
@@ -520,9 +520,9 @@ values from top to bottom. The following example illustrate how to use these opt
 
 Begin_Macro(source)
 {
-   auto *c = new TCanvas();
+   auto c = new TCanvas();
    c->Divide(2,1);
-   auto *g = new TGraphErrors();
+   auto g = new TGraphErrors();
    g->SetTitle("Simple Graph");
 
    g->SetPoint(0,-4,-3);
@@ -570,7 +570,7 @@ Begin_Macro(source)
    Int_t n = 10000;
    Double_t dx = (xmax-xmin)/n;
    Double_t x = xmin;
-   TGraph*g2 = new TGraph();
+   auto g2 = new TGraph();
    for (Int_t i=0; i<n; i++) {
       g2->SetPoint(i, x, g->Eval(x));
       x = x + dx;
@@ -673,9 +673,8 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
    }
    if (!opt && gPad->GetLogy()) {
       for (i=0;i<npoints;i++) {
-         //if (gyworkl[i] > 0)
-         gyworkl[i] = TMath::Log10(gyworkl[i]);
-         //else                gyworkl[i] = gPad->GetY1();
+         if (gyworkl[i] > 0) gyworkl[i] = TMath::Log10(gyworkl[i]);
+         else                gyworkl[i] = gPad->GetY1();
       }
    }
 }
@@ -3946,6 +3945,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    Bool_t lrx = opt.Contains("rx");
    Bool_t lry = opt.Contains("ry");
+   Bool_t axis = opt.Contains("a");
+   opt.ReplaceAll("a", "");
 
    Double_t LOX = theHist->GetXaxis()->GetLabelOffset();
    Double_t TLX = theHist->GetXaxis()->GetTickLength();
@@ -3954,7 +3955,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    Int_t XACOL  = theHist->GetXaxis()->GetAxisColor();
    Int_t YACOL  = theHist->GetYaxis()->GetAxisColor();
 
-   if (opt.Contains("a")) {
+   if (axis) {
       if (lrx) {
          theHist->GetXaxis()->SetTickLength(0.);
          theHist->GetXaxis()->SetLabelOffset(999.);
@@ -3966,50 +3967,58 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
       theHist->Paint("0");
-      opt.ReplaceAll("a", "");
    }
 
    Int_t     N  = theGraph->GetN();
    Double_t *X  = theGraph->GetX();
    Double_t *Y  = theGraph->GetY();
-   Double_t XA1 = theGraph->GetXaxis()->GetXmin();
-   Double_t XA2 = theGraph->GetXaxis()->GetXmax();
-   Double_t YA1 = theGraph->GetYaxis()->GetXmin();
-   Double_t YA2 = theGraph->GetYaxis()->GetXmax();
+   Double_t XA1, XA2, YA1, YA2;
+   if (axis) {
+      XA1 = theGraph->GetXaxis()->GetXmin();
+      XA2 = theGraph->GetXaxis()->GetXmax();
+      YA1 = theGraph->GetYaxis()->GetXmin();
+      YA2 = theGraph->GetYaxis()->GetXmax();
+   } else {
+      XA1 = gPad->GetUxmin();
+      XA2 = gPad->GetUxmax();
+      YA1 = gPad->GetUymin();
+      YA2 = gPad->GetUymax();
+   }
    Double_t dX  = XA1+XA2;
    Double_t dY  = YA1+YA2;
+
    std::vector<Double_t> newX(N);
    std::vector<Double_t> newY(N);
 
    if (lrx) {
       opt.ReplaceAll("rx", "");
+      if (axis) {
+         Double_t GL = 0.;
+         theHist->GetXaxis()->SetTickLength(0.);
+         theHist->GetXaxis()->SetLabelOffset(999.);
 
-      Double_t GL = 0.;
-      theHist->GetXaxis()->SetTickLength(0.);
-      theHist->GetXaxis()->SetLabelOffset(999.);
-
-      // Redraw the new X axis
-      gPad->Update();
-      TString optax = "-SDH";
-      if (gPad->GetGridx()) {
-         GL = (YA2-YA1)/(gPad->GetY2() - gPad->GetY1());
-         optax.Append("W");
+         // Redraw the new X axis
+         gPad->Update();
+         TString optax = "-SDH";
+         if (gPad->GetGridx()) {
+            GL = (YA2 - YA1) / (gPad->GetY2() - gPad->GetY1());
+            optax.Append("W");
+         }
+         auto *theNewAxis = new TGaxis(gPad->GetUxmax(),
+                                       gPad->GetUymin(),
+                                       gPad->GetUxmin(),
+                                       gPad->GetUymin(),
+                                       theGraph->GetXaxis()->GetXmin(),
+                                       theGraph->GetXaxis()->GetXmax(),
+                                       theHist->GetNdivisions("X"),
+                                       optax.Data(), -GL);
+         theNewAxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
+         theNewAxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
+         theNewAxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
+         theNewAxis->SetTickLength(TLX);
+         theNewAxis->SetLabelOffset(LOX - theGraph->GetXaxis()->GetLabelSize());
+         theNewAxis->Paint();
       }
-      TGaxis *theNewAxis = new TGaxis(gPad->GetUxmax(),
-                                      gPad->GetUymin(),
-                                      gPad->GetUxmin(),
-                                      gPad->GetUymin(),
-                                      theGraph->GetXaxis()->GetXmin(),
-                                      theGraph->GetXaxis()->GetXmax(),
-                                      theHist->GetNdivisions("X"),
-                                      optax.Data(), -GL);
-      theNewAxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
-      theNewAxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
-      theNewAxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
-      theNewAxis->SetTickLength(TLX);
-      theNewAxis->SetLabelOffset(LOX-theGraph->GetXaxis()->GetLabelSize());
-      theNewAxis->Paint();
-
       // Reverse X coordinates
       for (Int_t i=0; i<N; i++) newX[i] = dX-X[i];
    } else {
@@ -4018,31 +4027,31 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    if (lry) {
       opt.ReplaceAll("ry", "");
-      Double_t GL = 0.;
+      if (axis) {
+         Double_t GL = 0.;
+         // Redraw the new Y axis
+         gPad->Update();
+         TString optax = "-SDH";
 
-      // Redraw the new Y axis
-      gPad->Update();
-      TString optax = "-SDH";
-
-      if (gPad->GetGridy()) {
-         GL = (XA2-XA1)/(gPad->GetX2() - gPad->GetX1());
-         optax.Append("W");
+         if (gPad->GetGridy()) {
+            GL = (XA2 - XA1) / (gPad->GetX2() - gPad->GetX1());
+            optax.Append("W");
+         }
+         auto *theNewAxis = new TGaxis(gPad->GetUxmin(),
+                                       gPad->GetUymax(),
+                                       gPad->GetUxmin(),
+                                       gPad->GetUymin(),
+                                       theGraph->GetYaxis()->GetXmin(),
+                                       theGraph->GetYaxis()->GetXmax(),
+                                       theHist->GetNdivisions("Y"),
+                                       optax.Data(), GL);
+         theNewAxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
+         theNewAxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
+         theNewAxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
+         theNewAxis->SetTickLength(-TLY);
+         theNewAxis->SetLabelOffset(LOY-TLY);
+         theNewAxis->Paint();
       }
-      TGaxis *theNewAxis = new TGaxis(gPad->GetUxmin(),
-                                   gPad->GetUymax(),
-                                   gPad->GetUxmin(),
-                                   gPad->GetUymin(),
-                                   theGraph->GetYaxis()->GetXmin(),
-                                   theGraph->GetYaxis()->GetXmax(),
-                                   theHist->GetNdivisions("Y"),
-                                   optax.Data(), GL);
-      theNewAxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
-      theNewAxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
-      theNewAxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
-      theNewAxis->SetTickLength(-TLY);
-      theNewAxis->SetLabelOffset(LOY-TLY);
-      theNewAxis->Paint();
-
       // Reverse Y coordinates
       for (Int_t i=0; i<N; i++) newY[i] = dY-Y[i];
    } else {

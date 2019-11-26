@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 project(LZ4 C)
 
 find_package(xxHash REQUIRED)
@@ -10,7 +16,6 @@ set(LZ4_PUBLIC_HEADERS
 
 set(LZ4_PRIVATE_HEADERS
   lz4frame_static.h
-  lz4opt.h
 )
 
 set(LZ4_SOURCES

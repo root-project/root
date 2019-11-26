@@ -2,6 +2,8 @@
 #include "TInterpreter.h"
 #include "TSystem.h"
 
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Path.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -112,7 +114,6 @@ TEST_F(TClingTests, GetEnumWithSameVariableName)
    ASSERT_TRUE(en != nullptr);
 }
 
-#ifndef R__USE_CXXMODULES
 // Check if we can get the source code of function definitions.
 TEST_F(TClingTests, MakeInterpreterValue)
 {
@@ -121,4 +122,104 @@ TEST_F(TClingTests, MakeInterpreterValue)
    gInterpreter->Evaluate("my_func_to_print", *v);
    ASSERT_THAT(v->ToString(), testing::HasSubstr("void my_func_to_print"));
 }
+
+static std::string MakeLibNamePlatformIndependent(llvm::StringRef libName)
+{
+   if (libName.empty())
+      return {};
+   EXPECT_TRUE(libName.startswith("lib"));
+   EXPECT_TRUE(llvm::sys::path::has_extension(libName));
+   libName.consume_front("lib");
+   // Remove the extension.
+   return libName.substr(0, libName.find_first_of('.')).str();
+}
+
+// Check if the heavily used interface in TCling::AutoLoad returns consistent
+// results.
+TEST_F(TClingTests, GetClassSharedLibs)
+{
+   // Shortens the invocation.
+   auto GetLibs = [](const char *cls) -> const char * {
+      return gInterpreter->GetClassSharedLibs(cls);
+   };
+
+   llvm::StringRef lib = GetLibs("TLorentzVector");
+   ASSERT_STREQ("Physics", MakeLibNamePlatformIndependent(lib).c_str());
+
+   // FIXME: This should return GenVector. The default args of the LorentzVector
+   // are shadowed by Vector4Dfwd.h.
+   lib = GetLibs("ROOT::Math::LorentzVector");
+   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+
+   lib = GetLibs("ROOT::Math::PxPyPzE4D<float>");
+   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+
+   // FIXME: We should probably resolve again to GenVector as it contains the
+   // template pattern.
+   lib = GetLibs("ROOT::Math::PxPyPzE4D<int>");
+   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
+
+   lib = GetLibs("vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >");
+   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+
+   lib = GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > ");
+#ifdef R__USE_CXXMODULES
+   ASSERT_STREQ("GenVector", MakeLibNamePlatformIndependent(lib).c_str());
+#else
+   // FIXME: This is another bug in the non-modules functionality. Note the
+   // trailing space...
+   ASSERT_STREQ("", MakeLibNamePlatformIndependent(lib).c_str());
 #endif
+
+   // FIXME: Another bug in non-modules:
+   // GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >")
+   //    != GetLibs("ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float>>")
+   // note the missing space.
+}
+
+static std::string MakeDepLibsPlatformIndependent(llvm::StringRef libs) {
+   llvm::SmallVector<llvm::StringRef, 32> splitLibs;
+   libs.trim().split(splitLibs, ' ');
+   assert(!splitLibs.empty());
+   std::string result = MakeLibNamePlatformIndependent(splitLibs[0]) + ' ';
+   splitLibs.erase(splitLibs.begin());
+
+   std::sort(splitLibs.begin(), splitLibs.end());
+   for (llvm::StringRef lib : splitLibs)
+      result += MakeLibNamePlatformIndependent(lib.trim()) + ' ';
+
+   return llvm::StringRef(result).rtrim();
+}
+
+// Check the interface computing the dependencies of a given library.
+TEST_F(TClingTests, GetSharedLibDeps)
+{
+   // Shortens the invocation.
+   auto GetLibDeps = [](const char *lib) -> const char* {
+      return gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/true);
+   };
+
+   std::string SeenDeps
+      = MakeDepLibsPlatformIndependent(GetLibDeps("libGenVector.so"));
+#ifdef R__MACOSX
+   ASSERT_TRUE(llvm::StringRef(SeenDeps).startswith("GenVector New"));
+#else
+   // Depends only on libCore.so but libCore.so is loaded and thus missing.
+   ASSERT_STREQ("GenVector", SeenDeps.c_str());
+#endif
+
+   SeenDeps = MakeDepLibsPlatformIndependent(GetLibDeps("libTreePlayer.so"));
+   llvm::StringRef SeenDepsRef = SeenDeps;
+
+   // Depending on the configuration we expect:
+   // TreePlayer Gpad Graf Graf3d Hist [Imt] [MathCore] MultiProc Net [New] Tree [tbb]..
+   // FIXME: We should add a generic gtest regex matcher and use a regex here.
+   ASSERT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
+   ASSERT_TRUE(SeenDepsRef.contains("MultiProc Net"));
+   ASSERT_TRUE(SeenDepsRef.contains("Tree"));
+
+   EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")),
+                     "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library ''\n");
+   EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")),
+                     "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library '   '\n");
+}

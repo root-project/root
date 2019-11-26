@@ -146,3 +146,65 @@ TEST(TTreeReaderArray, BoolCollections)
 
    gSystem->Unlink(fileName);
 }
+
+TEST(TTreeReaderArray, Double32_t)
+{
+   TTree t("t", "t");
+
+   int n;
+   Double32_t arr[64];
+   t.Branch("n", &n);
+   t.Branch("arr", arr, "arr[n]/d[0,0,10]");
+   t.Branch("arr2", arr, "arr2[n]/D");
+   std::vector<int> sizes{20, 30};
+   float globalIndex = 1.f;
+   for (auto ievt : {0, 1}) {
+      n = sizes[ievt];
+      for (auto inumb = 0; inumb < n; ++inumb) {
+         arr[inumb] = 1024 * globalIndex++;
+      }
+      t.Fill();
+   }
+   TTreeReader r(&t);
+   TTreeReaderArray<double> arrra(r, "arr");
+   TTreeReaderArray<double> arr2ra(r, "arr2");
+   while (r.Next()) {
+      const auto arr_size = arrra.GetSize();
+      EXPECT_EQ(arr_size, arr2ra.GetSize()) << "The size of the collections differ!";
+      for (auto i = 0U; i < arr_size; ++i) {
+         EXPECT_DOUBLE_EQ(arrra[i], arr2ra[i]) << "The content of the element at index " << i
+                                               << " in the collections differs!";
+      }
+   }
+}
+
+TEST(TTreeReaderArray, Float16_t)
+{
+   TTree t("t", "t");
+
+   int n;
+   Float16_t arr[64];
+   t.Branch("n", &n);
+   t.Branch("arr", arr, "arr[n]/f[0,0,10]");
+   t.Branch("arr2", arr, "arr2[n]/F");
+   std::vector<int> sizes{20, 30};
+   float globalIndex = 1.f;
+   for (auto ievt : {0, 1}) {
+      n = sizes[ievt];
+      for (auto inumb = 0; inumb < n; ++inumb) {
+         arr[inumb] = 1024 * globalIndex++;
+      }
+      t.Fill();
+   }
+   TTreeReader r(&t);
+   TTreeReaderArray<float> arrra(r, "arr");
+   TTreeReaderArray<float> arr2ra(r, "arr2");
+   while (r.Next()) {
+      const auto arr_size = arrra.GetSize();
+      EXPECT_EQ(arr_size, arr2ra.GetSize()) << "The size of the collections differ!";
+      for (auto i = 0U; i < arr_size; ++i) {
+         EXPECT_FLOAT_EQ(arrra[i], arr2ra[i]) << "The content of the element at index " << i
+                                              << " in the collections differs!";
+      }
+   }
+}

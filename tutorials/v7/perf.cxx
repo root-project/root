@@ -17,7 +17,7 @@
  *************************************************************************/
 
 #include "ROOT/RHist.hxx"
-#include "ROOT/TFit.hxx"
+#include "ROOT/RFit.hxx"
 #include "ROOT/RHistBufferedFill.hxx"
 
 #include <chrono>

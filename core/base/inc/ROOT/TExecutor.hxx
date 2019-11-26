@@ -131,8 +131,7 @@ template<class subc> template<class F, class T, class Cond>
 auto TExecutor<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    std::vector<T> vargs(std::move(args));
-   const auto &reslist = Map(func, vargs);
-   return reslist;
+   return Map(func, vargs);
 }
 
 //////////////////////////////////////////////////////////////////////////

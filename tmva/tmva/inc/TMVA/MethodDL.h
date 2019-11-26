@@ -66,6 +66,7 @@ struct TTrainingSettings {
    size_t maxEpochs; 
    DNN::ERegularization regularization;
    DNN::EOptimizer optimizer;
+   TString optimizerName; 
    Double_t learningRate;
    Double_t momentum;
    Double_t weightDecay;
@@ -133,6 +134,12 @@ private:
    void ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                           std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
                           TString delim);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseBatchNormLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                          std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                          TString delim);
+
 
    template <typename Architecture_t, typename Layer_t>
    void ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,

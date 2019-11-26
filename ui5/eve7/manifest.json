@@ -1,0 +1,61 @@
+{
+    "sap.app": {
+        "id": "rootui5.eve7"
+    },
+    "sap.ui5": {
+        "rootView": {
+            "viewName": "rootui5.eve7.view.MainMain",
+            "type": "XML",
+            "async": true,
+            "id": "Eve7"
+        },
+        "resources": {
+            "css": [
+                {
+                  "uri": "css/eve.css"
+                }
+              ]
+        },
+        "dependencies": {
+            "libs": {
+                "sap.ui.core": {},
+                "sap.ui.commons": {},
+                "sap.ui.layout": {},
+                "sap.m": {},
+                "sap.uxap": {},
+                "sap.ui.table": {}
+            }
+        },
+        "routing": {
+            "config": {
+                "routerClass": "sap.m.routing.Router",
+                "viewType": "XML",
+                "async": true,
+                "viewPath": "rootui5.eve7.view",
+                "controlAggregation": "pages",
+                "controlId": "myApp"
+            },
+            "routes": [{
+                "name": "Default",
+                "pattern": "",
+                "target": ["Main"]
+            }, {
+                "name": "View",
+                "pattern": "view/:viewName:",
+                "target": ["GL"]
+            }],
+            "targets": {
+                "Main": {
+                    "transition": "slide",
+                    "clearAggregation": false,
+                    "viewName": "Main"
+                },
+                "GL": {
+                    "transition": "slide",
+                    "clearAggregation": false,
+                    "viewName": "GL"
+                }
+            }
+        }
+    }
+}

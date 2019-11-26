@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -43,7 +43,7 @@ namespace REX = ROOT::Experimental;
 Standard utility functions for Eve.
 */
 
-TObjArray* REX::REveUtil::fgDefaultColors = 0;
+TObjArray* REX::REveUtil::fgDefaultColors = nullptr;
 
 namespace
 {
@@ -215,7 +215,7 @@ void REveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       return;
    }
 
-   TObjArray   *colors = (TObjArray*) gROOT->GetListOfColors();
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
 
    if (fgDefaultColors == 0)
    {
@@ -235,8 +235,8 @@ void REveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       TColor* cdef = (TColor*) fgDefaultColors->At(i);
       if (cdef)
       {
-         TColor* croot = (TColor*)  colors->At(i);
-         if (croot == 0)
+         TColor* croot = (TColor*) colors->At(i);
+         if (!croot)
          {
             croot = new TColor(*cdef);
             colors->AddAt(croot, i);
@@ -264,7 +264,7 @@ void REveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       }
    }
 
-   if (full_redraw && REX::gEve != 0)
+   if (full_redraw && REX::gEve)
       REX::gEve->FullRedraw3D();
 }
 
@@ -329,38 +329,6 @@ Float_t REveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t 
 
    return 0;
 }
-
-
-/** \class REveException
-\ingroup REve
-Exception class thrown by Eve classes and macros.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool REX::operator==(const TString& t, const std::string& s)
-{ return (s == t.Data()); }
-
-bool REX::operator==(const std::string&  s, const TString& t)
-{ return (s == t.Data()); }
-
-// Exc
-
-REveException::REveException(const std::string& s) : TString(s.c_str())
-{
-   // Constructor.
-}
-
-// Exc + ops
-
-REveException REX::operator+(const REveException &s1, const std::string &s2)
-{ REveException r(s1); r += s2; return r; }
-
-REveException REX::operator+(const REveException &s1, const TString &s2)
-{ REveException r(s1); r += s2; return r; }
-
-REveException REX::operator+(const REveException &s1,  const char *s2)
-{ REveException r(s1); r += s2; return r; }
 
 
 /** \class REveGeoManagerHolder
@@ -468,18 +436,15 @@ void REveRefBackPtr::IncRefCount(REveElement* re)
 ////////////////////////////////////////////////////////////////////////////////
 /// Decrease reference count and remove re from the list of back-references.
 
-void REveRefBackPtr::DecRefCount(REveElement* re)
+void REveRefBackPtr::DecRefCount(REveElement *re)
 {
-   static const REveException eh("REveRefBackPtr::DecRefCount ");
-
-   RefMap_i i = fBackRefs.find(re);
+   auto i = fBackRefs.find(re);
    if (i != fBackRefs.end()) {
       if (--(i->second) <= 0)
          fBackRefs.erase(i);
       REveRefCnt::DecRefCount();
    } else {
-      Warning(eh, "render element '%s' not found in back-refs.",
-                  re->GetObject(eh)->GetName());
+      Warning("REveRefBackPtr::DecRefCount", "element '%s' not found in back-refs.", re->GetCName());
    }
 }
 
@@ -488,10 +453,6 @@ void REveRefBackPtr::DecRefCount(REveElement* re)
 
 void REveRefBackPtr::StampBackPtrElements(UChar_t stamps)
 {
-   RefMap_i i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      i->first->AddStamp(stamps);
-      ++i;
-   }
+   for (auto &i: fBackRefs)
+      i.first->AddStamp(stamps);
 }

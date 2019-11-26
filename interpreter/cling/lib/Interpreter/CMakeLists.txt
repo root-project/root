@@ -72,7 +72,9 @@ add_cling_library(clingInterpreter OBJECT
   ClingPragmas.cpp
   DeclCollector.cpp
   DeclExtractor.cpp
+  DefinitionShadower.cpp
   DeclUnloader.cpp
+  DeviceKernelInliner.cpp
   DynamicLibraryManager.cpp
   DynamicLookup.cpp
   DynamicExprInfo.cpp
@@ -152,13 +154,13 @@ if (UNIX)
           elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             execute_process(
               COMMAND echo ${_cling_cxx_path}
-              COMMAND grep "/${_name}\" -cc1"
+              COMMAND grep "/${_name}.*\" -cc1"
               OUTPUT_VARIABLE _cling_clng_path)
 
             if(NOT _cling_clng_path)
               execute_process(
                 COMMAND echo ${_cling_cxx_path}
-                COMMAND grep "/clang\" -cc1"
+                COMMAND grep "/clang.*\" -cc1"
                 OUTPUT_VARIABLE _cling_clng_path)
             endif()
 
@@ -252,8 +254,7 @@ if (UNIX)
 
     execute_process(
       COMMAND echo ${CLING_CXX_HEADERS}
-      COMMAND awk "/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}"
-      COMMAND grep -E "(c|g)\\+\\+"
+      COMMAND sed -n -e /^.include/,\$\{ -e /^\\\ \\\/.*++/p -e \}
       OUTPUT_VARIABLE CLING_CXX_HEADERS)
 
     stripNewLine("${CLING_CXX_HEADERS}" CLING_CXX_HEADERS)

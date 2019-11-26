@@ -544,6 +544,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             SetTitle(branchname);
             leaf->SetName(branchname);
             leaf->SetTitle(branchname);
+            leaf->SetRange(kTRUE);
             Unroll(name, clOfClones, clOfClones, pointer, basketsize, splitlevel+splitSTLP, 31);
             BuildTitle(name);
             SetReadLeavesPtr();
@@ -595,6 +596,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                SetTitle(branchname);
                leaf->SetName(branchname);
                leaf->SetTitle(branchname);
+               leaf->SetRange(kTRUE);
                // Create sub branches for each data member of an STL container.
                Unroll(name, valueClass, valueClass, pointer, basketsize, splitlevel+splitSTLP, 41);
                BuildTitle(name);
@@ -1994,8 +1996,43 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
       if (nextel->CannotSplit() || nextel->IsTransient() || nextel->GetOffset() == TStreamerInfo::kMissing)
          continue;
 
+      if (!be && nextel->IsBase()) {
+        // We could be in the case of a branch created from a Folder or
+        // a top level branch with a non-trailing dot in its name (case inadvertently confused with the folder case).
+        // In those case, the name of the base class is *not* used to create the corresponding branch.
+        TString subprefix(prefix);
+        if (subprefix.Length() && subprefix[subprefix.Length()-1] == '.')
+           subprefix.Remove(subprefix.Length()-1);
+
+        be = (TBranchElement*)branches.FindObject(subprefix);
+        if (be) {
+           // There is at least 'one' base class branch all with the same name, so let's find the
+           // right one.
+           TClass *expectedClass = nullptr;
+           EDataType expectedType;
+           if (0 != be->GetExpectedType(expectedClass,expectedType)
+               || expectedClass != nextel->GetClassPointer())
+           {
+              be = nullptr;
+              Int_t nbranches = branches.GetEntriesFast();
+              for (Int_t bi = 0; bi < nbranches; ++bi) {
+                 TBranchElement* branch = (TBranchElement*) branches[bi];
+                 if (subprefix != branch->GetName())
+                    continue;
+                 if (0 == branch->GetExpectedType(expectedClass,expectedType)
+                     && expectedClass == nextel->GetClassPointer())
+                 {
+                    be = branch;
+                    break;
+                 }
+              }
+           } // else we have already found the right branch.
+        }
+      }
+
       TClass *elementClass = nextel->GetClassPointer();
       if (elementClass && (!be || be->GetType() == -2)) {
+         // Recurse on sub-objects.
          TStreamerInfo *nextinfo = nullptr;
 
          // nextinfo_version = ....
@@ -2356,7 +2393,7 @@ void TBranchElement::InitInfo()
 
             TString prefix(GetName());
             if (prefix[prefix.Length()-1] != '.') {
-               if (fType == 3 || fType == 4) {
+               if (fType == 3 || fType == 4 || prefix.Index('.') != TString::kNPOS) {
                   prefix += ".";
                } else {
                   prefix = "";

@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT tree/treeplayer package
 # @author Pere Mato CERN, Danilo Piparo CERN
@@ -18,6 +24,8 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   HEADERS
+    ROOT/TTreeReaderFast.hxx
+    ROOT/TTreeReaderValueFast.hxx
     TBranchProxyClassDescriptor.h
     TBranchProxyDescriptor.h
     TBranchProxyDirector.h
@@ -74,8 +82,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
     src/TTreeProxyGenerator.cxx
     src/TTreeReaderArray.cxx
     src/TTreeReader.cxx
+    src/TTreeReaderFast.cxx
     src/TTreeReaderGenerator.cxx
     src/TTreeReaderValue.cxx
+    src/TTreeReaderValueFast.cxx
     src/TTreeTableInterface.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM

@@ -1,0 +1,34 @@
+/* this is style for IconTabBar header - by default is uses too large space for header */
+
+.sapMITBHead {
+	margin: 0 !important;
+}
+
+.sapMPanelHdr {
+	font-size: 1rem !important;
+	height: 1.8rem !important;
+	line-height: 1.8rem !important;
+}
+
+.sapMPanelExpandableIcon {
+	font-size: 0.9rem !important;
+}
+
+.sapUiLargeMarginBottom {
+	margin-bottom: 1.3rem !important;
+}
+
+.sapUiFormResGridCont {
+	padding-bottom: 0.5rem !important;
+}
+
+.sapUiFormResGrid>div {
+	padding: 0.2rem !important;
+}
+
+.sapMText {
+	padding: 0.5rem !important;
+}
+/*.sapUiFormEdit {
+	line-height: 0.5rem !important;
+}*/

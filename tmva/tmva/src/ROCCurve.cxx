@@ -155,7 +155,7 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points
       auto weight = std::get<1>(ev);
       auto isSignal = std::get<2>(ev);
 
-      true_negatives_sum += weight * (not isSignal);
+      true_negatives_sum += weight * (!isSignal);
       true_negatives.push_back(true_negatives_sum);
    }
 
@@ -219,7 +219,7 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points
 
 Double_t TMVA::ROCCurve::GetEffSForEffB(Double_t effB, const UInt_t num_points)
 {
-   assert(0.0 <= effB and effB <= 1.0);
+   assert(0.0 <= effB && effB <= 1.0);
 
    auto effS_vec = ComputeSensitivity(num_points);
    auto effB_vec = ComputeSpecificity(num_points);

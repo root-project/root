@@ -72,7 +72,7 @@ then creating the TGTable using this interface.
 <br><br>
 A simple macro to use a TGTable with a TGSimpleTableInterface:
 End_Html
-Begin_Macro(source, gui)
+~~~
 {
    Int_t i = 0, j = 0;
    UInt_t nrows = 6, ncolumns = 5;
@@ -111,13 +111,13 @@ Begin_Macro(source, gui)
 
    return mainframe;
 }
-End_Macro
+~~~
 Begin_Html
 
 It is also possible to visualise data from a tree. A simple macro
 showing the use of a TTreeTableInterface follows.
 End_Html
-Begin_Macro(source, gui)
+~~~
 {
    // Open a root file.
    TFile *file = new TFile("$ROOTSYS/tutorials/hsimple.root");
@@ -153,7 +153,7 @@ Begin_Macro(source, gui)
 
    return mainframe;
 }
-End_Macro
+~~~
 */
 
 // const TGGC *TGTable::fgDefaultSelectGC = 0;

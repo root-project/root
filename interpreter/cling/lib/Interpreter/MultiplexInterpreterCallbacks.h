@@ -41,6 +41,12 @@ namespace cling {
                                Imported);
     }
 
+    void EnteredSubmodule(clang::Module* M, clang::SourceLocation ImportLoc,
+                          bool ForPragma) override {
+      for (auto&& cb : m_Callbacks)
+        cb->EnteredSubmodule(M, ImportLoc, ForPragma);
+    }
+
     bool FileNotFound(llvm::StringRef FileName,
                       llvm::SmallVectorImpl<char>& RecoveryPath) override {
       bool result = false;
@@ -96,6 +102,12 @@ namespace cling {
         for (auto&& cb : m_Callbacks) {
            cb->TransactionRollback(T);
         }
+     }
+
+     void DefinitionShadowed(const clang::NamedDecl* D) override {
+       for (auto&& cb : m_Callbacks) {
+         cb->DefinitionShadowed(D);
+       }
      }
 
      void DeclDeserialized(const clang::Decl* D) override {

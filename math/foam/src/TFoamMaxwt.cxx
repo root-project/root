@@ -1,19 +1,15 @@
 // @(#)root/foam:$Id$
 // Author: S. Jadach <mailto:Stanislaw.jadach@ifj.edu.pl>, P.Sawicki <mailto:Pawel.Sawicki@ifj.edu.pl>
 
-//____________________________________________________________________________
-//
-// Class  TFoamMaxwt
-// =================
-// Small auxiliary class for controlling MC weight.
-// It provides certain measure of the "maximum weight"
-// depending on small user-parameter "epsilon".
-// It creates and uses 2 histograms of the TH1D class.
-// User defines no. of bins nBin,  nBin=1000 is  recommended
-// wmax defines weight range (1,wmax), it is adjusted "manually"
-//
-//____________________________________________________________________________
+/** \class TFoamMaxwt
 
+Small auxiliary class for controlling MC weight.
+It provides certain measure of the "maximum weight"
+depending on small user-parameter "epsilon".
+It creates and uses 2 histograms of the TH1D class.
+User defines no. of bins nBin,  nBin=1000 is  recommended
+wmax defines weight range (1,wmax), it is adjusted "manually"
+*/
 
 #include "Riostream.h"
 #include "TH1.h"
@@ -162,18 +158,14 @@ void TFoamMaxwt::GetMCeff(Double_t eps, Double_t &MCeff, Double_t &wtLim)
    if(ibX == (fnBin+1) ) {
       wtLim = 1.0e200;
       MCeff   = 0.0;
-      std::cout<< "+++++ wtLim undefined. Higher uper limit in histogram"<<std::endl;
+      std::cout<< "+++++ wtLim undefined. Higher upper limit in histogram"<<std::endl;
    } else if( ibX == 1) {
       wtLim = 0.0;
       MCeff   =-1.0;
-      std::cout<< "+++++ wtLim undefined. Lower uper limit or more bins "<<std::endl;
+      std::cout<< "+++++ wtLim undefined. Lower upper limit or more bins "<<std::endl;
    } else {
       wtLim= (ibX)*fwmax/fnBin; // We over-estimate wtLim, under-estimate MCeff
       MCeff  = aveWt/wtLim;
    }
 }
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//      End of    Class  TFoamMaxwt                                          //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+

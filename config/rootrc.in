@@ -89,7 +89,7 @@ Root.ErrorIgnoreLevel:   Print
 # Settings for X11 behaviour.
 X11.Sync:                no
 X11.FindBestVisual:      yes
-X11.UseXft:              no
+X11.UseXft:              yes
 X11.XInitThread:         yes
 
 # Settings for Cocoa backend.
@@ -257,6 +257,10 @@ Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
+# THttpServer specific settings 
+# location of JavaScript ROOT sources
+#HttpServ.JSRootPath:        @jsrootdir@
+
 # WebGui specific settings (defaults are shown)
 # fixed http port number for server, 0 - not fixed, -1 - disabled completely
 WebGui.HttpPort:            0
@@ -277,6 +281,9 @@ WebGui.Chrome:             @chromeexe@
 WebGui.Firefox:            @firefoxexe@
 # http port number for headless (batch) chrome on Windows
 WebGui.HeadlessPort:        9222
+# location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ... 
+#WebGui.RootUi5Path:        @openui5dir@
+
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
@@ -437,15 +444,12 @@ ACLiC.Linkdef:          _linkdef
 
 # Default login name (if not defined is taken from $(HOME)).
 #UsrPwd.Login:           qwerty
-#Krb5.Login:             qwerty@LOCAL.DOM.AIN
 
 # To be prompted for login information.
 #UsrPwd.LoginPrompt:     yes
-#Krb5.LoginPrompt:       yes
 
 # To reuse established security context.
 UsrPwd.ReUse:         yes
-Krb5.ReUse:           no
 
 # Duration validity of the security context.
 # Format:  <hours>:<minutes>  (default 24:00)

@@ -1,12 +1,12 @@
 /// \file osr_handler.h
-/// \ingroup CanvasPainter ROOT7
+/// \ingroup WebGui
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,19 +18,24 @@
 
 #include "base_handler.h"
 
+#include "include/cef_version.h"
+
 /// Class used to handle off-screen application and should emulate some render requests
 
 class OsrHandler : public BaseHandler, public CefRenderHandler {
 public:
-   explicit OsrHandler(THttpServer *serv = 0);
-   ~OsrHandler();
+   explicit OsrHandler(THttpServer *serv = nullptr);
 
    // CefClient methods:
    virtual CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE { return this; }
 
    // CefRenderHandler methods.
    virtual bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
+#if CEF_COMMIT_NUMBER > 1894
+   virtual void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
+#else
    virtual bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;
+#endif
    virtual bool GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY, int &screenX,
                                int &screenY) OVERRIDE;
    virtual bool GetScreenInfo(CefRefPtr<CefBrowser> browser, CefScreenInfo &screen_info) OVERRIDE;

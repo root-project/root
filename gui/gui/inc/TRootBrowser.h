@@ -173,6 +173,7 @@ public:
 
    virtual void      ShowCloseTab(Bool_t show) { fShowCloseTab = show; }
    virtual Bool_t    IsCloseTabShown() const { return fShowCloseTab; }
+   Bool_t            IsWebGUI();
 
    // overridden from TGMainFrame
    virtual void      ReallyDelete();

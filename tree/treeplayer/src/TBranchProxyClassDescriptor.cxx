@@ -342,11 +342,11 @@ namespace Internal {
 
          // This is guarantee to return a non zero value due to the if (fListOfBaseProxies.GetSize())
          desc = (TBranchProxyDescriptor*)nextbase();
-         fprintf(hf,"\n%-*s%-*s(director, parent, membername)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
+         fprintf(hf,"\n%-*s%-*s(director, parent, membername, top, mid)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
          wroteFirst = true;
 
          while ( (desc = (TBranchProxyDescriptor*)nextbase()) ) {
-            fprintf(hf,",\n%-*s%-*s(director, parent, membername)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
+            fprintf(hf,",\n%-*s%-*s(director, parent, membername, top, mid)",  offset+6, " ", fMaxDatamemberType,desc->GetTypeName());
          }
 
       }
@@ -354,7 +354,7 @@ namespace Internal {
       wroteFirst = true;
 
       if ( true ||  IsLoaded() || IsClones() || IsSTL() ) {
-         fprintf(hf,"%s\n%-*s      %-*s(director, parent, membername)",
+         fprintf(hf,"%s\n%-*s      %-*s(director, parent, membername, top, mid)",
                  ",",offset," ",fMaxDatamemberType,"obj");
       }
 

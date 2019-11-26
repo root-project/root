@@ -120,7 +120,7 @@ namespace TClassEdit {
    class TInterpreterLookupHelper {
    public:
       TInterpreterLookupHelper() { }
-      virtual ~TInterpreterLookupHelper() { }
+      virtual ~TInterpreterLookupHelper();
 
       virtual bool ExistingTypeCheck(const std::string & /*tname*/,
                                      std::string & /*result*/) = 0;
@@ -129,7 +129,9 @@ namespace TClassEdit {
                                                    const std::string & /*nameLong*/) = 0;
       virtual bool IsDeclaredScope(const std::string & /*base*/, bool & /*isInlined*/) = 0;
       virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string & /*tname*/,
-                                                              std::string & /*result*/) = 0;
+                                                              std::string & /*result*/,
+                                                              bool /* dropstd */ = true) = 0;
+      virtual void ShuttingDownSignal() = 0;
    };
 
    struct TSplitType {

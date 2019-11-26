@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,11 +18,13 @@
 namespace ROOT {
 namespace Experimental {
 
-/******************************************************************************/
-// REveSelectorToEventList
-/******************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////
+/// REveSelectorToEventList
+/// TSelector that stores entry numbers of matching TTree entries into an event-list.
+/////////////////////////////////////////////////////////////////////////////////
 
-class REveSelectorToEventList : public TSelectorDraw {
+class REveSelectorToEventList : public TSelectorDraw
+{
    REveSelectorToEventList(const REveSelectorToEventList &);            // Not implemented
    REveSelectorToEventList &operator=(const REveSelectorToEventList &); // Not implemented
 
@@ -32,6 +34,7 @@ protected:
 
 public:
    REveSelectorToEventList(TEventList *evl, const char *sel);
+   virtual ~REveSelectorToEventList() {}
 
    virtual Int_t Version() const { return 1; }
    virtual Bool_t Process(Long64_t entry);
@@ -39,13 +42,15 @@ public:
    ClassDef(REveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
-/******************************************************************************/
-// REvePointSelectorConsumer, REvePointSelector
-/******************************************************************************/
+/////////////////////////////////////////////////////////////////////////////////
+/// REvePointSelectorConsumer
+/// Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
+/////////////////////////////////////////////////////////////////////////////////
 
 class REvePointSelector;
 
-class REvePointSelectorConsumer {
+class REvePointSelectorConsumer
+{
 public:
    enum ETreeVarType_e { kTVT_XYZ, kTVT_RPhiZ };
 
@@ -61,11 +66,15 @@ public:
 
    ETreeVarType_e GetSourceCS() const { return fSourceCS; }
    void SetSourceCS(ETreeVarType_e cs) { fSourceCS = cs; }
-
-   ClassDef(REvePointSelectorConsumer, 1); // Virtual base for classes that can be filled from TTree data via the REvePointSelector class.
 };
 
-class REvePointSelector : public TSelectorDraw {
+/////////////////////////////////////////////////////////////////////////////////
+/// REvePointSelector
+/// TSelector for direct extraction of point-like data from a Tree.
+/////////////////////////////////////////////////////////////////////////////////
+
+class REvePointSelector : public TSelectorDraw
+{
    REvePointSelector(const REvePointSelector &);            // Not implemented
    REvePointSelector &operator=(const REvePointSelector &); // Not implemented
 

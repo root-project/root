@@ -14,6 +14,9 @@
 #include <iostream>
 #include <sstream>
 
+namespace ROOT {
+namespace Internal {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 DictSelectionReader::DictSelectionReader(cling::Interpreter &interp, SelectionRules &selectionRules,
@@ -411,4 +414,7 @@ inline void DictSelectionReader::GetPointeeType(std::string &typeName)
           typeName[typeName.size() - 1] == '&') {
       typeName = typeName.substr(0, typeName.size() - 1);
    }
+}
+
+}
 }

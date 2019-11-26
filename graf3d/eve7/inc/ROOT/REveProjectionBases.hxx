@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -34,30 +34,29 @@ class REveProjectionManager;
 //                                                            //
 ////////////////////////////////////////////////////////////////
 
-class REveProjectable {
+class REveProjectable
+{
 private:
-   REveProjectable(const REveProjectable &);            // Not implemented
    REveProjectable &operator=(const REveProjectable &); // Not implemented
 
 public:
    typedef std::list<REveProjected *> ProjList_t;
-   typedef std::list<REveProjected *>::iterator ProjList_i;
 
 protected:
    ProjList_t fProjectedList; // references to projected instances.
 
 public:
    REveProjectable();
+   REveProjectable(const REveProjectable &);
    virtual ~REveProjectable();
 
    virtual TClass *ProjectedClass(const REveProjection *p) const = 0;
 
    virtual Bool_t HasProjecteds() const { return !fProjectedList.empty(); }
 
-   ProjList_i BeginProjecteds() { return fProjectedList.begin(); }
-   ProjList_i EndProjecteds() { return fProjectedList.end(); }
+   ProjList_t &RefProjecteds()   { return fProjectedList;         }
 
-   virtual void AddProjected(REveProjected *p) { fProjectedList.push_back(p); }
+   virtual void AddProjected(REveProjected *p) { fProjectedList.emplace_back(p); }
    virtual void RemoveProjected(REveProjected *p) { fProjectedList.remove(p); }
 
    virtual void AnnihilateProjecteds();
@@ -69,8 +68,6 @@ public:
    virtual void PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children);
    virtual void PropagateMainColor(Color_t color, Color_t old_color);
    virtual void PropagateMainTransparency(Char_t t, Char_t old_t);
-
-   ClassDef(REveProjectable, 0); // Abstract base class for classes that can be transformed with non-linear projections.
 };
 
 ////////////////////////////////////////////////////////////////
@@ -109,9 +106,6 @@ public:
    virtual REveElement *GetProjectedAsElement();
 
    virtual void SetDepth(Float_t d);
-
-   ClassDef(REveProjected,
-            0); // Abstract base class for classes that hold results of a non-linear projection transformation.
 };
 
 } // namespace Experimental

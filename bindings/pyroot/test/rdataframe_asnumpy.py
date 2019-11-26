@@ -1,6 +1,7 @@
 import unittest
 import ROOT
 import numpy as np
+import pickle
 
 
 class RDataFrameAsNumpy(unittest.TestCase):
@@ -193,6 +194,29 @@ class RDataFrameAsNumpy(unittest.TestCase):
         ref = np.array([0, 1])
         self.assertTrue(all(x == ref))
         self.assertTrue(hasattr(x, "result_ptr"))
+
+    def test_empty_array(self):
+        df = ROOT.RDataFrame(1).Define("x", "std::vector<float>()")
+        npy = df.AsNumpy(["x"])
+        self.assertEqual(npy["x"].size, 1)
+        self.assertTrue(npy["x"][0].empty())
+
+    def test_empty_selection(self):
+        df = ROOT.RDataFrame(10).Define("x", "1.0").Filter("x<0")
+        npy = df.AsNumpy(["x"])
+        self.assertEqual(npy["x"].size, 0)
+
+    def test_pickle(self):
+        """
+        Testing pickling of returned numpy array
+        """
+        df = ROOT.RDataFrame(10).Define("x", "1.0")
+        npy = df.AsNumpy(["x"])
+        arr = npy["x"]
+
+        pickle.dump(arr, open("rdataframe_asnumpy.pickle", "wb"))
+        arr2 = pickle.load(open("rdataframe_asnumpy.pickle", "rb"))
+        self.assertTrue(all(arr == arr2))
 
 
 if __name__ == '__main__':

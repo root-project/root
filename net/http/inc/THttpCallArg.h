@@ -25,6 +25,7 @@ class THttpWSEngine;
 class THttpWSHandler;
 
 class THttpCallArg : public TObject {
+
    friend class THttpServer;
    friend class THttpWSEngine;
    friend class THttpWSHandler;
@@ -60,19 +61,20 @@ protected:
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
+   /** Method used to modify content of web page used by web socket handler */
+   virtual void CheckWSPageContent(THttpWSHandler *) {}
+
 private:
    std::shared_ptr<THttpWSEngine> fWSEngine; ///<!  web-socket engine, which supplied to run created web socket
 
-   std::string  fContent;  ///!< content - text or binary
+   std::string  fContent;  ///<! content - text or binary
    std::string  fPostData; ///<! data received with post request - text - or binary
 
    void AssignWSId();
    std::shared_ptr<THttpWSEngine> TakeWSEngine();
 
-   void ReplaceAllinContent(const std::string &from, const std::string &to);
-
 public:
-   explicit THttpCallArg() = default;
+   explicit THttpCallArg() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    virtual ~THttpCallArg();
 
    // these methods used to set http request arguments
@@ -197,6 +199,7 @@ public:
 
    void SetContent(const char *cont);
    void SetContent(std::string &&cont);
+   void ReplaceAllinContent(const std::string &from, const std::string &to, bool once = false);
 
    Bool_t CompressWithGzip();
 

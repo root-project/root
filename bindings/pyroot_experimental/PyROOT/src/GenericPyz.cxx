@@ -9,6 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Python.h"
+
 #include "CPyCppyy.h"
 #include "PyROOTPythonize.h"
 #include "CPPInstance.h"
@@ -16,14 +18,16 @@
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
 
+#include <sstream>
+
 using namespace CPyCppyy;
 
-std::string GetCppName(CPPInstance *self)
+std::string GetCppName(const CPPInstance *self)
 {
    return Cppyy::GetScopedFinalName(self->ObjectIsA());
 }
 
-PyObject *ClingPrintValue(CPPInstance *self)
+PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
 {
    const std::string className = GetCppName(self);
    auto printResult = gInterpreter->ToString(className.c_str(), self->GetObject());
@@ -34,7 +38,7 @@ PyObject *ClingPrintValue(CPPInstance *self)
       Py_DECREF(method);
       return res;
    } else {
-      return CPyCppyy_PyUnicode_FromString(printResult.c_str());
+      return CPyCppyy_PyText_FromString(printResult.c_str());
    }
 }
 

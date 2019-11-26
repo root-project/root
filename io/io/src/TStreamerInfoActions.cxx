@@ -3077,11 +3077,10 @@ void TStreamerInfo::Compile()
       // try to group consecutive members of the same type
       if (!TestBit(kCannotOptimize)
           && (keep >= 0)
-          && (element->GetType() >=0)
+          && (element->GetType() > 0)
           && (element->GetType() < 10)
           && (fComp[fNdata].fType == fComp[fNdata].fNewType)
           && (fComp[keep].fMethod == 0)
-          && (element->GetType() > 0)
           && (element->GetArrayDim() == 0)
           && (fComp[keep].fType < kObject)
           && (fComp[keep].fType != kCharStar) /* do not optimize char* */

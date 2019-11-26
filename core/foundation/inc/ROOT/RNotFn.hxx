@@ -16,8 +16,12 @@
 
 #include <functional>
 
-// Backport if not_fn is not available
-#ifndef __cpp_lib_not_fn
+// Backport if not_fn is not available.
+// libc++ does not define __cpp_lib_not_fn.
+// Assume we have not_fn if libc++ is compiled with C++14 and up.
+#if !defined(__cpp_lib_not_fn) && !(defined(_LIBCPP_VERSION) && __cplusplus > 201103L)
+
+#define R__NOTFN_BACKPORT
 
 #include <type_traits> // std::decay
 #include <utility>     // std::forward, std::declval

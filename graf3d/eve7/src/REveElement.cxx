@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveUtil.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveTrans.hxx>
@@ -39,71 +40,17 @@ namespace REX = ROOT::Experimental;
 \ingroup REve
 Base class for REveUtil visualization elements, providing hierarchy
 management, rendering control and list-tree item management.
+
+Class of acceptable children can be limited by setting the
+fChildClass member.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-REveElement::REveElement() :
-   fParents             (),
-   fChildren            (),
-   fCompound            (0),
-   fVizModel            (0),
-   fVizTag              (),
-   fNumChildren         (0),
-   fParentIgnoreCnt     (0),
-   fDenyDestroy         (0),
-   fDestroyOnZeroRefCnt (kTRUE),
-   fRnrSelf             (kTRUE),
-   fRnrChildren         (kTRUE),
-   fCanEditMainColor    (kFALSE),
-   fCanEditMainTransparency(kFALSE),
-   fCanEditMainTrans    (kFALSE),
-   fMainTransparency    (0),
-   fMainColorPtr        (0),
-   fMainTrans           (),
-   fSource              (),
-   fPickable            (kFALSE),
-   fSelected            (kFALSE),
-   fHighlighted         (kFALSE),
-   fImpliedSelected     (0),
-   fImpliedHighlighted  (0),
-   fCSCBits             (0),
-   fChangeBits          (0),
-   fDestructing         (kNone)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveElement::REveElement(Color_t &main_color) :
-   fParents             (),
-   fChildren            (),
-   fCompound            (nullptr),
-   fVizModel            (nullptr),
-   fVizTag              (),
-   fNumChildren         (0),
-   fParentIgnoreCnt     (0),
-   fDenyDestroy         (0),
-   fDestroyOnZeroRefCnt (kTRUE),
-   fRnrSelf             (kTRUE),
-   fRnrChildren         (kTRUE),
-   fCanEditMainColor    (kFALSE),
-   fCanEditMainTransparency(kFALSE),
-   fCanEditMainTrans    (kFALSE),
-   fMainTransparency    (0),
-   fMainColorPtr        (&main_color),
-   fMainTrans           (),
-   fSource              (),
-   fPickable            (kFALSE),
-   fSelected            (kFALSE),
-   fHighlighted         (kFALSE),
-   fImpliedSelected     (0),
-   fImpliedHighlighted  (0),
-   fCSCBits             (0),
-   fChangeBits          (0),
-   fDestructing         (kNone)
+REveElement::REveElement(const std::string& name, const std::string& title) :
+   fName                (name),
+   fTitle               (title)
 {
 }
 
@@ -114,21 +61,17 @@ REveElement::REveElement(Color_t &main_color) :
 ///   REveElement* CloneElementRecurse(Int_t level)
 ///   void         CloneChildrenRecurse(REveElement* dest, Int_t level)
 /// ~~~
-/// 'TRef fSource' is copied but 'void* UserData' is NOT.
+/// 'void* UserData' is NOT copied.
 /// If the element is projectable, its projections are NOT copied.
 ///
 /// Not implemented for most sub-classes, let us know.
 /// Note that sub-classes of REveProjected are NOT and will NOT be copyable.
 
 REveElement::REveElement(const REveElement& e) :
-   fParents             (),
-   fChildren            (),
-   fCompound            (nullptr),
-   fVizModel            (nullptr),
+   fName                (e.fName),
+   fTitle               (e.fTitle),
+   fChildClass          (e.fChildClass),
    fVizTag              (e.fVizTag),
-   fNumChildren         (0),
-   fParentIgnoreCnt     (0),
-   fDenyDestroy         (0),
    fDestroyOnZeroRefCnt (e.fDestroyOnZeroRefCnt),
    fRnrSelf             (e.fRnrSelf),
    fRnrChildren         (e.fRnrChildren),
@@ -136,17 +79,8 @@ REveElement::REveElement(const REveElement& e) :
    fCanEditMainTransparency(e.fCanEditMainTransparency),
    fCanEditMainTrans    (e.fCanEditMainTrans),
    fMainTransparency    (e.fMainTransparency),
-   fMainColorPtr        (nullptr),
-   fMainTrans           (),
-   fSource              (e.fSource),
    fPickable            (e.fPickable),
-   fSelected            (kFALSE),
-   fHighlighted         (kFALSE),
-   fImpliedSelected     (0),
-   fImpliedHighlighted  (0),
-   fCSCBits             (e.fCSCBits),
-   fChangeBits          (0),
-   fDestructing         (kNone)
+   fCSCBits             (e.fCSCBits)
 {
    SetVizModel(e.fVizModel);
    // FIXME: from Sergey: one have to use other way to referencing main color
@@ -168,15 +102,20 @@ REveElement::~REveElement()
       fDestructing = kStandard;
       RemoveElementsInternal();
 
-      for (auto &p : fParents)
+      if (fMother) {
+        fMother->RemoveElementLocal(this);
+        fMother->fChildren.remove(this);
+      }
+
+      if (fScene) {
+         fScene->SceneElementRemoved( fElementId);
+      }
+
+      for (auto &au : fAunts)
       {
-         p->RemoveElementLocal(this);
-         p->fChildren.remove(this);
-         --(p->fNumChildren);
+         au->RemoveNieceInternal(this);
       }
    }
-
-   fParents.clear();
 }
 
 ElementId_t REveElement::get_mother_id() const
@@ -200,11 +139,15 @@ void REveElement::assign_element_id_recurisvely()
 
 void REveElement::assign_scene_recursively(REveScene* s)
 {
-   assert(fScene == 0);
+   assert(fScene == nullptr);
+
    fScene = s;
 
-   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges()) {
-       s->SceneElementAdded(this);
+   // XXX MT -- Why do we have fDestructing here? Can this really happen?
+   //           If yes, shouldn't we block it in AddElement() already?
+   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
+   {
+      StampElementAdded();
    }
    for (auto &c : fChildren)
       c->assign_scene_recursively(s);
@@ -218,9 +161,9 @@ void REveElement::assign_scene_recursively(REveScene* s)
 
 void REveElement::PreDeleteElement()
 {
-   if (fElementId != 0) {
+   if (fElementId != 0)
+   {
       REX::gEve->PreDeleteElement(this);
-      if (fScene->IsAcceptingChanges()) fScene->SceneElementRemoved( fElementId);
    }
 }
 
@@ -255,90 +198,42 @@ REveElement* REveElement::CloneElementRecurse(Int_t level) const
 
 void REveElement::CloneChildrenRecurse(REveElement* dest, Int_t level) const
 {
-   for (List_ci i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      dest->AddElement((*i)->CloneElementRecurse(level));
-   }
+   for (auto &c: fChildren)
+      dest->AddElement(c->CloneElementRecurse(level));
 }
 
 
 //==============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for retrieving name of the element.
-/// Here we attempt to cast the assigned object into TNamed and call
-/// GetName() there.
+/// Set name of an element.
 
-const char* REveElement::GetElementName() const
+void REveElement::SetName(const std::string& name)
 {
-   static const REveException eh("REveElement::GetElementName ");
-
-   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
-   return named ? named->GetName() : "<no-name>";
+   fName = name;
+   NameTitleChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for retrieving title of the render-element.
-/// Here we attempt to cast the assigned object into TNamed and call
-/// GetTitle() there.
+/// Set title of an element.
 
-const char*  REveElement::GetElementTitle() const
+void REveElement::SetTitle(const std::string& title)
 {
-   static const REveException eh("REveElement::GetElementTitle ");
-
-   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
-   return named ? named->GetTitle() : "<no-title>";
+   fTitle = title;
+   NameTitleChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for setting of name of an element.
-/// Here we attempt to cast the assigned object into TNamed and call
-/// SetName() there.
-/// If you override this call NameTitleChanged() from there.
-
-void REveElement::SetElementName(const char* name)
-{
-   static const REveException eh("REveElement::SetElementName ");
-
-   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
-   if (named) {
-      named->SetName(name);
-      NameTitleChanged();
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for setting of title of an element.
-/// Here we attempt to cast the assigned object into TNamed and call
-/// SetTitle() there.
-/// If you override this call NameTitleChanged() from there.
-
-void REveElement::SetElementTitle(const char* title)
-{
-   static const REveException eh("REveElement::SetElementTitle ");
-
-   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
-   if (named) {
-      named->SetTitle(title);
-      NameTitleChanged();
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual function for setting of name and title of render element.
+/// Set name and title of an element.
 /// Here we attempt to cast the assigned object into TNamed and call
 /// SetNameTitle() there.
 /// If you override this call NameTitleChanged() from there.
 
-void REveElement::SetElementNameTitle(const char* name, const char* title)
+void REveElement::SetNameTitle(const std::string& name, const std::string& title)
 {
-   static const REveException eh("REveElement::SetElementNameTitle ");
-
-   TNamed* named = dynamic_cast<TNamed*>(GetObject(eh));
-   if (named) {
-      named->SetNameTitle(name, title);
-      NameTitleChanged();
-   }
+   fName  = name;
+   fTitle = title;
+   NameTitleChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,10 +243,8 @@ void REveElement::SetElementNameTitle(const char* name, const char* title)
 
 void REveElement::NameTitleChanged()
 {
-   // Nothing to do - list-tree-items take this info directly.
+   // Should send out some message. Need a new stamp type?
 }
-
-//******************************************************************************
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set visualization-parameter model element.
@@ -361,15 +254,7 @@ void REveElement::NameTitleChanged()
 
 void REveElement::SetVizModel(REveElement* model)
 {
-   if (fVizModel) {
-      --fParentIgnoreCnt;
-      fVizModel->RemoveElement(this);
-   }
    fVizModel = model;
-   if (fVizModel) {
-      fVizModel->AddElement(this);
-      ++fParentIgnoreCnt;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -378,7 +263,7 @@ void REveElement::SetVizModel(REveElement* model)
 /// If the tag is not found in VizDB, the old model-element is kept
 /// and false is returned.
 
-Bool_t REveElement::FindVizModel()
+Bool_t REveElement::SetVizModelByTag()
 {
    REveElement* model = REX::gEve->FindVizDBEntry(fVizTag);
    if (model)
@@ -395,7 +280,7 @@ Bool_t REveElement::FindVizModel()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the VizTag, find model-element from the VizDB and copy
 /// visualization-parameters from it. If the model is not found and
-/// fallback_tag is non-null, its search is attempted as well.
+/// fallback_tag is non-null, search for it is attempted as well.
 /// For example: ApplyVizTag("TPC Clusters", "Clusters");
 ///
 /// If the model-element can not be found a warning is printed and
@@ -403,23 +288,25 @@ Bool_t REveElement::FindVizModel()
 
 Bool_t REveElement::ApplyVizTag(const TString& tag, const TString& fallback_tag)
 {
-   SetVizTag(tag);
-   if (FindVizModel())
+   REveElement* model;
+
+   if ((model = REX::gEve->FindVizDBEntry(tag)) != nullptr)
    {
-      CopyVizParamsFromDB();
-      return kTRUE;
+      SetVizTag(tag);
    }
-   if ( ! fallback_tag.IsNull())
+   else if ( ! fallback_tag.IsNull() && (model = REX::gEve->FindVizDBEntry(fallback_tag)) != nullptr)
    {
       SetVizTag(fallback_tag);
-      if (FindVizModel())
-      {
-         CopyVizParamsFromDB();
-         return kTRUE;
-      }
+   }
+
+   if (model)
+   {
+      SetVizModel(model);
+      CopyVizParamsFromDB();
+      return true;
    }
    Warning("REveElement::ApplyVizTag", "entry for tag '%s' not found in VizDB.", tag.Data());
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -442,19 +329,18 @@ void REveElement::PropagateVizParamsToProjecteds()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Propagate visualization parameters from element el (defaulting
-/// to this) to all elements (children).
+/// to this) to all children.
 ///
 /// The primary use of this is for model-elements from
 /// visualization-parameter database.
 
-void REveElement::PropagateVizParamsToElements(REveElement* el)
+void REveElement::PropagateVizParamsToChildren(REveElement* el)
 {
-   if (el == 0)
-      el = this;
+   if (!el) el = this;
 
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c : fChildren)
    {
-      (*i)->CopyVizParams(el);
+      c->CopyVizParams(el);
    }
 }
 
@@ -462,15 +348,13 @@ void REveElement::PropagateVizParamsToElements(REveElement* el)
 /// Copy visualization parameters from element el.
 /// This method needs to be overriden by any class that introduces
 /// new parameters.
-/// Color is copied in sub-classes which define it.
-/// See, for example, REvePointSet::CopyVizParams(),
-/// REveLine::CopyVizParams() and REveTrack::CopyVizParams().
 
 void REveElement::CopyVizParams(const REveElement* el)
 {
    fCanEditMainColor        = el->fCanEditMainColor;
    fCanEditMainTransparency = el->fCanEditMainTransparency;
    fMainTransparency        = el->fMainTransparency;
+   if (fMainColorPtr == & fDefaultColor) fDefaultColor = el->GetMainColor();
 
    AddStamp(kCBColorSelection | kCBObjProps);
 }
@@ -503,7 +387,7 @@ void REveElement::SaveVizParams(std::ostream& out, const TString& tag, const TSt
    static const REveException eh("REveElement::GetObject ");
 
    TString t = "   ";
-   TString cls(GetObject(eh)->ClassName());
+   TString cls(IsA()->GetName());
 
    out << "\n";
 
@@ -529,8 +413,8 @@ void REveElement::WriteVizParams(std::ostream& out, const TString& var)
 {
    TString t = "   " + var + "->";
 
-   out << t << "SetElementName(\""  << GetElementName()  << "\");\n";
-   out << t << "SetElementTitle(\"" << GetElementTitle() << "\");\n";
+   out << t << "SetElementName(\""  << fName  << "\");\n";
+   out << t << "SetElementTitle(\"" << fTitle << "\");\n";
    out << t << "SetEditMainColor("  << fCanEditMainColor << ");\n";
    out << t << "SetEditMainTransparency(" << fCanEditMainTransparency << ");\n";
    out << t << "SetMainTransparency("     << fMainTransparency << ");\n";
@@ -539,7 +423,7 @@ void REveElement::WriteVizParams(std::ostream& out, const TString& var)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set visual parameters for this object for given tag.
 
-void REveElement::VizDB_Apply(const char* tag)
+void REveElement::VizDB_Apply(const std::string& tag)
 {
    if (ApplyVizTag(tag))
    {
@@ -575,8 +459,12 @@ void REveElement::VizDB_UpdateModel(Bool_t update)
       fVizModel->CopyVizParams(this);
       if (update)
       {
-         fVizModel->PropagateVizParamsToElements(fVizModel);
-         REX::gEve->Redraw3D();
+         // XXX Back references from vizdb templates have been removed in Eve7.
+         // XXX We could traverse all scenes and elementes and reset those that
+         // XXX have a matching fVizModel. Or something.
+         Error("VizDB_UpdateModel", "update from vizdb -> elements not implemented.");
+         // fVizModel->PropagateVizParamsToElements(fVizModel);
+         // REX::gEve->Redraw3D();
       }
    }
    else
@@ -590,13 +478,13 @@ void REveElement::VizDB_UpdateModel(Bool_t update)
 /// If replace is true an existing element with the same tag will be replaced.
 /// If update is true, existing client of tag will be updated.
 
-void REveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
+void REveElement::VizDB_Insert(const std::string& tag, Bool_t replace, Bool_t update)
 {
    static const REveException eh("REveElement::GetObject ");
 
-   TClass* cls = GetObject(eh)->IsA();
+   TClass* cls     = IsA();
    REveElement* el = reinterpret_cast<REveElement*>(cls->New());
-   if (el == 0) {
+   if (!el) {
       Error("VizDB_Insert", "Creation of replica failed.");
       return;
    }
@@ -607,63 +495,28 @@ void REveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the master element - that is:
-/// - master of projectable, if this is a projected;
-/// - master of compound, if fCompound is set;
-/// - master of first compound parent, if kSCBTakeAnyParentAsMaster bit is set;
-/// If non of the above is true, *this* is returned.
-
-REveElement* REveElement::GetMaster()
-{
-   REveProjected* proj = dynamic_cast<REveProjected*>(this);
-   if (proj)
-   {
-      return dynamic_cast<REveElement*>(proj->GetProjectable())->GetMaster();
-   }
-   if (fCompound)
-   {
-      return fCompound->GetMaster();
-   }
-   if (TestCSCBits(kCSCBTakeAnyParentAsMaster))
-   {
-      for (List_i i = fParents.begin(); i != fParents.end(); ++i)
-         if (dynamic_cast<REveCompound*>(*i))
-            return (*i)->GetMaster();
-   }
-   return this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add el into the list parents.
+/// Add el into the list aunts.
 ///
-/// Adding parent is subordinate to adding an element.
+/// Adding aunt is subordinate to adding a niece.
 /// This is an internal function.
 
-void REveElement::AddParent(REveElement* el)
+void REveElement::AddAunt(REveAunt *au)
 {
-   assert(el != 0);
+   assert(au != nullptr);
 
-   if (fParents.empty())
-   {
-      fMother = el;
-   }
-   fParents.push_back(el);
+   fAunts.emplace_back(au);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove el from the list of parents.
-/// Removing parent is subordinate to removing an element.
+/// Remove el from the list of aunts.
+/// Removing aunt is subordinate to removing a niece.
 /// This is an internal function.
 
-void REveElement::RemoveParent(REveElement* el)
+void REveElement::RemoveAunt(REveAunt *au)
 {
-   static const REveException eh("REveElement::RemoveParent ");
+   assert(au != nullptr);
 
-   assert(el != 0);
-
-   if (el == fMother) fMother = 0;
-   fParents.remove(el);
-   CheckReferenceCount(eh);
+   fAunts.remove(au);
 }
 
 /******************************************************************************/
@@ -672,187 +525,38 @@ void REveElement::RemoveParent(REveElement* el)
 /// Check external references to this and eventually auto-destruct
 /// the render-element.
 
-void REveElement::CheckReferenceCount(const REveException& eh)
+void REveElement::CheckReferenceCount(const std::string& from)
 {
    if (fDestructing != kNone)
       return;
 
-   if (NumParents() <= fParentIgnoreCnt &&
-       fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
+   if (fMother == nullptr && fDestroyOnZeroRefCnt && fDenyDestroy <= 0)
    {
-      if (REX::gEve && REX::gEve->GetUseOrphanage())
-      {
-         if (gDebug > 0)
-            Info(eh, "moving to orphanage '%s' on zero reference count.", GetElementName());
+      if (gDebug > 0)
+         Info("REveElement::CheckReferenceCount", "(called from %s) auto-destructing '%s' on zero reference count.",
+              from.c_str(), GetCName());
 
-         PreDeleteElement();
-         REX::gEve->GetOrphanage()->AddElement(this);
-      }
-      else
-      {
-         if (gDebug > 0)
-            Info(eh, "auto-destructing '%s' on zero reference count.", GetElementName());
-
-         PreDeleteElement();
-         delete this;
-      }
+      PreDeleteElement();
+      delete this;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Collect all parents of class REveScene. This is needed to
-/// automatically detect which scenes need to be updated.
-///
-/// Overriden in REveScene to include itself and return.
+/// Return class for this element
 
-void REveElement::CollectSceneParents(List_t& scenes)
+TClass *REveElement::IsA() const
 {
-   for (List_i p=fParents.begin(); p!=fParents.end(); ++p)
-      (*p)->CollectSceneParents(scenes);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Collect scene-parents from all children. This is needed to
-/// automatically detect which scenes need to be updated during/after
-/// a full sub-tree update.
-/// Argument parent specifies parent in traversed hierarchy for which we can
-/// skip the upwards search.
-
-void REveElement::CollectSceneParentsFromChildren(List_t&      scenes,
-                                                  REveElement* parent)
-{
-   for (List_i p=fParents.begin(); p!=fParents.end(); ++p)
-   {
-      if (*p != parent) (*p)->CollectSceneParents(scenes);
-   }
-
-   for (List_i c=fChildren.begin(); c!=fChildren.end(); ++c)
-   {
-      (*c)->CollectSceneParentsFromChildren(scenes, this);
-   }
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get a TObject associated with this render-element.
-/// Most cases uses double-inheritance from REveElement and TObject
-/// so we just do a dynamic cast here.
-/// If some REveElement descendant implements a different scheme,
-/// this virtual method should be overriden accordingly.
-
-TObject* REveElement::GetObject(const REveException& eh) const
-{
-   const TObject* obj = dynamic_cast<const TObject*>(this);
-   if (obj == 0)
-      throw eh + "not a TObject.";
-   return const_cast<TObject*>(obj);
+   return TClass::GetClass(typeid(*this), kTRUE, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Export render-element to CINT with variable name var_name.
 
-void REveElement::ExportToCINT(char* var_name)
+void REveElement::ExportToCINT(const char *var_name)
 {
    const char* cname = IsA()->GetName();
    gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)this));
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Call Dump() on source object.
-/// Throws an exception if it is not set.
-
-void REveElement::DumpSourceObject() const
-{
-   static const REveException eh("REveElement::DumpSourceObject ");
-
-   TObject *so = GetSourceObject();
-   if (!so)
-      throw eh + "source-object not set.";
-
-   so->Dump();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Call Print() on source object.
-/// Throws an exception if it is not set.
-
-void REveElement::PrintSourceObject() const
-{
-   static const REveException eh("REveElement::PrintSourceObject ");
-
-   TObject *so = GetSourceObject();
-   if (!so)
-      throw eh + "source-object not set.";
-
-   so->Print();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Export source object to CINT with given name for the variable.
-/// Throws an exception if it is not set.
-
-void REveElement::ExportSourceObjectToCINT(char* var_name) const
-{
-   static const REveException eh("REveElement::ExportSourceObjectToCINT ");
-
-   TObject *so = GetSourceObject();
-   if (!so)
-      throw eh + "source-object not set.";
-
-   const char* cname = so->IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)so));
-}
-
-/*
-////////////////////////////////////////////////////////////////////////////////
-/// Paint self and/or children into currently active pad.
-
-void REveElement::PadPaint(Option_t* option)
-{
-   static const REveException eh("REveElement::PadPaint ");
-
-   TObject* obj = 0;
-   if (GetRnrSelf() && (obj = GetRenderObject(eh)))
-      obj->Paint(option);
-
-
-   if (GetRnrChildren()) {
-      for (List_i i=BeginChildren(); i!=EndChildren(); ++i) {
-         (*i)->PadPaint(option);
-      }
-   }
-}
-*/
-
- /*
-////////////////////////////////////////////////////////////////////////////////
-/// Paint object -- a generic implementation for EVE elements.
-/// This supports direct rendering using a dedicated GL class.
-/// Override TObject::Paint() in sub-classes if different behaviour
-/// is required.
-
-void REveElement::PaintStandard(TObject* id)
-{
-   static const REveException eh("REveElement::PaintStandard ");
-
-   TBuffer3D buff(TBuffer3DTypes::kGeneric);
-
-   // Section kCore
-   buff.fID           = id;
-   buff.fColor        = GetMainColor();
-   buff.fTransparency = GetMainTransparency();
-   if (HasMainTrans())  RefMainTrans().SetBuffer3D(buff);
-
-   buff.SetSectionsValid(TBuffer3D::kCore);
-
-   Int_t reqSections = gPad->GetViewer3D()->AddObject(buff);
-   if (reqSections != TBuffer3D::kNone)
-   {
-      Warning(eh, "IsA='%s'. Viewer3D requires more sections (%d). Only direct-rendering supported.",
-              id->ClassName(), reqSections);
-   }
-}
- */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set render state of this element, i.e. if it will be published
@@ -952,10 +656,19 @@ void REveElement::PropagateRnrStateToProjecteds()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set up element to use built-in main color and set flags allowing editing
+/// of main color and transparency.
+
+void REveElement::SetupDefaultColorAndTransparency(Color_t col, Bool_t can_edit_color, Bool_t can_edit_transparency)
+{
+   fMainColorPtr = & fDefaultColor;
+   fDefaultColor = col;
+   fCanEditMainColor = can_edit_color;
+   fCanEditMainTransparency = can_edit_transparency;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set main color of the element.
-///
-///
-/// List-tree-items are updated.
 
 void REveElement::SetMainColor(Color_t color)
 {
@@ -1111,48 +824,49 @@ void REveElement::SetTransMatrix(const TGeoMatrix& mat)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if el can be added to this element.
 ///
-/// In the base-class version we only make sure the new child is not
-/// equal to this.
+/// Here we make sure the new child is not equal to this and, if fChildClass
+/// is set, that it is inherited from it.
 
 Bool_t REveElement::AcceptElement(REveElement* el)
 {
-   return el != this;
+   if (el == this)
+      return kFALSE;
+   if (fChildClass && ! el->IsA()->InheritsFrom(fChildClass))
+      return kFALSE;
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add el to the list of children.
 
-void REveElement::AddElement(REveElement* el)
+void REveElement::AddElement(REveElement *el)
 {
    static const REveException eh("REveElement::AddElement ");
 
-   assert(el != 0);
+   if (!el)                  throw eh + "called with nullptr argument.";
+   if ( ! AcceptElement(el)) throw eh + Form("parent '%s' rejects '%s'.", GetCName(), el->GetCName());
+   if (el->fElementId)       throw eh + "element already has an id.";
+   // if (el->fScene)           throw eh + "element already has a Scene.";
+   if (el->fMother)          throw eh + "element already has a Mother.";
 
-   if ( ! AcceptElement(el))
-      throw eh + Form("parent '%s' rejects '%s'.",
-                      GetElementName(), el->GetElementName());
+   // XXX Implement reparent --> MoveElement() ????
+   //     Actually, better to do new = old.Clone(), RemoveElement(old), AddElement(new);
+   //     Or do magick with Inc/DecDenyDestroy().
+   //     PITA with existing children !!!! Need to re-scene them.
 
-   if (el->fElementId == 0 && fElementId != 0)
-   {
-      el->assign_element_id_recurisvely();
-   }
-   if (el->fScene == 0 && fScene != 0)
-   {
-      el->assign_scene_recursively(fScene);
-   }
-   if (el->fMother == 0)
-   {
-      el->fMother = this;
-   }
+   if (fElementId)             el->assign_element_id_recurisvely();
+   if (fScene && ! el->fScene) el->assign_scene_recursively(fScene);
 
-   el->AddParent(this);
-   fChildren.push_back(el); ++fNumChildren;
+   el->fMother = this;
+
+   fChildren.emplace_back(el);
 
    // XXXX This should be element added. Also, should be different for
    // "full (re)construction". Scenes should manage that and have
    // state like: none - constructing - clearing - nominal - updating.
-   // I recon this means n element should have a ptr to its scene.
-   // XXXXElementChanged();
+   // I recon this means an element should have a ptr to its scene.
+   //
+   // ElementChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1160,13 +874,25 @@ void REveElement::AddElement(REveElement* el)
 
 void REveElement::RemoveElement(REveElement* el)
 {
-   assert(el != 0);
+   static const REveException eh("REveElement::RemoveElement ");
+
+   if (!el)                 throw eh + "called with nullptr argument.";
+   if (el->fMother != this) throw eh + "this element is not mother of el.";
 
    RemoveElementLocal(el);
-   el->RemoveParent(this);
-   fChildren.remove(el); --fNumChildren;
-   // XXXX This should be element removed. Also, think about recursion, deletion etc.
-   // XXXXElementChanged();
+
+   el->fScene->SceneElementRemoved(fElementId);
+   el->fMother = nullptr;
+   el->fScene  = nullptr;
+
+   el->CheckReferenceCount();
+
+   fChildren.remove(el);
+
+   // XXXX This should be ElementRemoved(). Also, think about recursion, deletion etc.
+   // Also, this seems to be done above, in the call to fScene.
+   //
+   // ElementChanged();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,16 +917,18 @@ void REveElement::RemoveElementLocal(REveElement* /*el*/)
 
 void REveElement::RemoveElementsInternal()
 {
-   // for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
-   // {
-   //    DestroyListSubTree(i->fTree, i->fItem);
-   // }
    RemoveElementsLocal();
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+
+   for (auto &c : fChildren)
    {
-      (*i)->RemoveParent(this);
+      c->fScene->SceneElementRemoved(c->fElementId);
+      c->fMother = nullptr;
+      c->fScene  = nullptr;
+
+      c->CheckReferenceCount();
    }
-   fChildren.clear(); fNumChildren = 0;
+
+   fChildren.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1219,7 +947,7 @@ void REveElement::RemoveElements()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform additional local removal of all elements.
-/// See comment to RemoveElementlocal(REveElement*).
+/// See comment to RemoveElementLocal(REveElement*).
 
 void REveElement::RemoveElementsLocal()
 {
@@ -1242,13 +970,13 @@ void REveElement::ProjectChild(REveElement* el, Bool_t same_depth)
    REveProjectable* pable = dynamic_cast<REveProjectable*>(this);
    if (pable && HasChild(el))
    {
-      for (REveProjectable::ProjList_i i = pable->BeginProjecteds(); i != pable->EndProjecteds(); ++i)
+      for (auto &pp: pable->RefProjecteds())
       {
-         REveProjectionManager *pmgr = (*i)->GetManager();
+         auto pmgr = pp->GetManager();
          Float_t cd = pmgr->GetCurrentDepth();
-         if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
+         if (same_depth) pmgr->SetCurrentDepth(pp->GetDepth());
 
-         pmgr->SubImportElements(el, (*i)->GetProjectedAsElement());
+         pmgr->SubImportElements(el, pp->GetProjectedAsElement());
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }
@@ -1272,13 +1000,13 @@ void REveElement::ProjectAllChildren(Bool_t same_depth)
    REveProjectable* pable = dynamic_cast<REveProjectable*>(this);
    if (pable)
    {
-      for (REveProjectable::ProjList_i i = pable->BeginProjecteds(); i != pable->EndProjecteds(); ++i)
+      for (auto &pp: pable->RefProjecteds())
       {
-         REveProjectionManager *pmgr = (*i)->GetManager();
+         REveProjectionManager *pmgr = pp->GetManager();
          Float_t cd = pmgr->GetCurrentDepth();
-         if (same_depth) pmgr->SetCurrentDepth((*i)->GetDepth());
+         if (same_depth) pmgr->SetCurrentDepth(pp->GetDepth());
 
-         pmgr->SubImportChildren(this, (*i)->GetProjectedAsElement());
+         pmgr->SubImportChildren(this, pp->GetProjectedAsElement());
 
          if (same_depth) pmgr->SetCurrentDepth(cd);
       }
@@ -1297,38 +1025,38 @@ Bool_t REveElement::HasChild(REveElement* el)
 /// Find the first child with given name.  If cls is specified (non
 /// 0), it is also checked.
 ///
-/// Returns 0 if not found.
+/// Returns nullptr if not found.
 
-REveElement* REveElement::FindChild(const TString&  name, const TClass* cls)
+REveElement *REveElement::FindChild(const TString&  name, const TClass* cls)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      if (name.CompareTo((*i)->GetElementName()) == 0)
+      if (name.CompareTo(c->GetCName()) == 0)
       {
-         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
-            return *i;
+         if (!cls || c->IsA()->InheritsFrom(cls))
+            return c;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find the first child whose name matches regexp. If cls is
 /// specified (non 0), it is also checked.
 ///
-/// Returns 0 if not found.
+/// Returns nullptr if not found.
 
-REveElement* REveElement::FindChild(TPRegexp& regexp, const TClass* cls)
+REveElement* REveElement::FindChild(TPRegexp &regexp, const TClass *cls)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      if (regexp.MatchB((*i)->GetElementName()))
+      if (regexp.MatchB(c->GetName()))
       {
-         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
-            return *i;
+         if (!cls || c->IsA()->InheritsFrom(cls))
+            return c;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1341,13 +1069,13 @@ Int_t REveElement::FindChildren(List_t& matches,
                                 const TString& name, const TClass* cls)
 {
    Int_t count = 0;
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      if (name.CompareTo((*i)->GetElementName()) == 0)
+      if (name.CompareTo(c->GetCName()) == 0)
       {
-         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
+         if (!cls || c->IsA()->InheritsFrom(cls))
          {
-            matches.push_back(*i);
+            matches.push_back(c);
             ++count;
          }
       }
@@ -1361,17 +1089,17 @@ Int_t REveElement::FindChildren(List_t& matches,
 ///
 /// Returns number of elements added to the list.
 
-Int_t REveElement::FindChildren(List_t& matches,
-                                TPRegexp& regexp, const TClass* cls)
+Int_t REveElement::FindChildren(List_t &matches,
+                                TPRegexp &regexp, const TClass *cls)
 {
    Int_t count = 0;
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c : fChildren)
    {
-      if (regexp.MatchB((*i)->GetElementName()))
+      if (regexp.MatchB(c->GetCName()))
       {
-         if (!cls || (cls && (*i)->IsA()->InheritsFrom(cls)))
+         if (!cls || c->IsA()->InheritsFrom(cls))
          {
-            matches.push_back(*i);
+            matches.push_back(c);
             ++count;
          }
       }
@@ -1384,7 +1112,7 @@ Int_t REveElement::FindChildren(List_t& matches,
 
 REveElement* REveElement::FirstChild() const
 {
-   return HasChildren() ? fChildren.front() : 0;
+   return HasChildren() ? fChildren.front() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1392,7 +1120,7 @@ REveElement* REveElement::FirstChild() const
 
 REveElement* REveElement::LastChild () const
 {
-   return HasChildren() ? fChildren.back() : 0;
+   return HasChildren() ? fChildren.back() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1401,10 +1129,8 @@ REveElement* REveElement::LastChild () const
 
 void REveElement::EnableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      (*i)->SetRnrSelfChildren(rnr_self, rnr_children);
-   }
+   for (auto &c: fChildren)
+      c->SetRnrSelfChildren(rnr_self, rnr_children);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1416,10 +1142,8 @@ void REveElement::EnableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 
 void REveElement::DisableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      (*i)->SetRnrSelfChildren(rnr_self, rnr_children);
-   }
+   for (auto &c: fChildren)
+      c->SetRnrSelfChildren(rnr_self, rnr_children);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1427,28 +1151,17 @@ void REveElement::DisableListElements(Bool_t rnr_self,  Bool_t rnr_children)
 
 void REveElement::AnnihilateRecursively()
 {
-   static const REveException eh("REveElement::AnnihilateRecursively ");
-
    // projected  were already destroyed in REveElement::Anihilate(), now only clear its list
    REveProjectable* pable = dynamic_cast<REveProjectable*>(this);
    if (pable && pable->HasProjecteds())
-   {
       pable->ClearProjectedList();
-   }
 
    // same as REveElement::RemoveElementsInternal(), except parents are ignored
-   // for (sLTI_i i=fItems.begin(); i!=fItems.end(); ++i)
-   // {
-   //    DestroyListSubTree(i->fTree, i->fItem);
-   // }
    RemoveElementsLocal();
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
-   {
-      (*i)->AnnihilateRecursively();
-   }
+   for (auto &c : fChildren)
+      c->AnnihilateRecursively();
 
    fChildren.clear();
-   fNumChildren = 0;
 
    fDestructing = kAnnihilate;
    PreDeleteElement();
@@ -1466,13 +1179,6 @@ void REveElement::Annihilate()
 {
    static const REveException eh("REveElement::Annihilate ");
 
-   if (fParents.size() > 1)
-   {
-      Warning(eh, "More than one parent for '%s': %d. Refusing to delete.",
-              GetElementName(), (Int_t) fParents.size());
-      return;
-   }
-
    fDestructing = kAnnihilate;
 
    // recursive annihilation of projecteds
@@ -1483,14 +1189,17 @@ void REveElement::Annihilate()
    }
 
    // detach from the parent
-   while (!fParents.empty())
+   if (fMother)
    {
-      fParents.front()->RemoveElement(this);
+      fMother->RemoveElement(this);
    }
+
+   // XXXX wont the above already start off the destruction cascade ?????
 
    AnnihilateRecursively();
 
-   REX::gEve->Redraw3D();
+   // XXXX ????? Annihilate flag ???? Is it different than regular remove ????
+   // REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1500,11 +1209,9 @@ void REveElement::AnnihilateElements()
 {
    while (!fChildren.empty())
    {
-      REveElement* c = fChildren.front();
+      auto c = fChildren.front();
       c->Annihilate();
    }
-
-   fNumChildren = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1518,8 +1225,8 @@ void REveElement::Destroy()
    static const REveException eh("REveElement::Destroy ");
 
    if (fDenyDestroy > 0)
-      throw eh + TString::Format("element '%s' (%s*) 0x%lx is protected against destruction.",
-                                 GetElementName(), IsA()->GetName(), (ULong_t)this);
+      throw eh + TString::Format("element '%s' (%s*) %p is protected against destruction.",
+                                 GetCName(), IsA()->GetName(), this);
 
    PreDeleteElement();
    delete this;
@@ -1531,15 +1238,13 @@ void REveElement::Destroy()
 
 void REveElement::DestroyOrWarn()
 {
-   static const REveException eh("REveElement::DestroyOrWarn ");
-
    try
    {
       Destroy();
    }
-   catch (REveException& exc)
+   catch (REveException &exc)
    {
-      Warning(eh, "%s", exc.Data());
+      ::Warning("REveElement::DestroyOrWarn", "Error while destroy element %p : %s", this, exc.what());
    }
 }
 
@@ -1548,25 +1253,23 @@ void REveElement::DestroyOrWarn()
 
 void REveElement::DestroyElements()
 {
-   static const REveException eh("REveElement::DestroyElements ");
-
    while (HasChildren())
    {
-      REveElement* c = fChildren.front();
+      auto c = fChildren.front();
       if (c->fDenyDestroy <= 0)
       {
          try {
             c->Destroy();
          }
-         catch (REveException& exc) {
-            Warning(eh, "element destruction failed: '%s'.", exc.Data());
+         catch (REveException &exc) {
+            ::Warning("REveElement::DestroyElements", "element destruction failed: '%s'.", exc.what());
             RemoveElement(c);
          }
       }
       else
       {
          if (gDebug > 0)
-            Info(eh, "element '%s' is protected agains destruction, removing locally.", c->GetElementName());
+           ::Info("REveElement::DestroyElements", "element '%s' is protected against destruction, removing locally.", c->GetCName());
          RemoveElement(c);
       }
    }
@@ -1623,173 +1326,40 @@ void REveElement::DecDenyDestroy()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get number of parents that should be ignored in doing
-/// reference-counting.
-///
-/// For example, this is used when subscribing an element to a
-/// visualization-database model object.
-
-Int_t REveElement::GetParentIgnoreCnt() const
-{
-   return fParentIgnoreCnt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increase number of parents ignored in reference-counting.
-
-void REveElement::IncParentIgnoreCnt()
-{
-   ++fParentIgnoreCnt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Decrease number of parents ignored in reference-counting.
-
-void REveElement::DecParentIgnoreCnt()
-{
-   if (--fParentIgnoreCnt <= 0)
-      CheckReferenceCount("REveElement::DecParentIgnoreCnt ");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// React to element being pasted or dnd-ed.
-/// Return true if redraw is needed.
-
-Bool_t REveElement::HandleElementPaste(REveElement* el)
-{
-   REX::gEve->AddElement(el, this);
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Call this after an element has been changed so that the state
-/// can be propagated around the framework.
-
-void REveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
-{
-   REX::gEve->ElementChanged(this, update_scenes, redraw);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set pickable state on the element and all its children.
 
 void REveElement::SetPickableRecursively(Bool_t p)
 {
    fPickable = p;
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
+      c->SetPickableRecursively(p);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the master element - that is:
+/// - master of projectable, if this is a projected;
+/// - master of compound, if fCompound is set;
+/// - master of mother, if kSCBTakeMotherAsMaster bit is set;
+/// If non of the above is true, *this* is returned.
+
+REveElement *REveElement::GetSelectionMaster()
+{
+   if (fSelectionMaster) return fSelectionMaster;
+
+   REveProjected* proj = dynamic_cast<REveProjected*>(this);
+   if (proj)
    {
-      (*i)->SetPickableRecursively(p);
+      return dynamic_cast<REveElement*>(proj->GetProjectable())->GetSelectionMaster();
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns element to be selected on click.
-/// If value is zero the selected object will follow rules in
-/// REveSelection.
-
-REveElement* REveElement::ForwardSelection()
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns element to be displayed in GUI editor on click.
-/// If value is zero the displayed object will follow rules in
-/// REveSelection.
-
-REveElement* REveElement::ForwardEdit()
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set element's selection state. Stamp appropriately.
-
-void REveElement::SelectElement(Bool_t state)
-{
-   if (fSelected != state) {
-      fSelected = state;
-      if (!fSelected && fImpliedSelected == 0)
-         UnSelected();
-      fParentIgnoreCnt += (fSelected) ? 1 : -1;
-      StampColorSelection();
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increase element's implied-selection count. Stamp appropriately.
-
-void REveElement::IncImpliedSelected()
-{
-   if (fImpliedSelected++ == 0)
-      StampColorSelection();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Decrease element's implied-selection count. Stamp appropriately.
-
-void REveElement::DecImpliedSelected()
-{
-   if (--fImpliedSelected == 0)
+   if (fCompound)
    {
-      if (!fSelected)
-         UnSelected();
-      StampColorSelection();
+      return fCompound->GetSelectionMaster();
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual function called when both fSelected is false and
-/// fImpliedSelected is 0.
-/// Nothing is done in this base-class version
-
-void REveElement::UnSelected()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set element's highlight state. Stamp appropriately.
-
-void REveElement::HighlightElement(Bool_t state)
-{
-   if (fHighlighted != state) {
-      fHighlighted = state;
-      if (!fHighlighted && fImpliedHighlighted == 0)
-         UnHighlighted();
-      fParentIgnoreCnt += (fHighlighted) ? 1 : -1;
-      StampColorSelection();
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increase element's implied-highlight count. Stamp appropriately.
-
-void REveElement::IncImpliedHighlighted()
-{
-   if (fImpliedHighlighted++ == 0)
-      StampColorSelection();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Decrease element's implied-highlight count. Stamp appropriately.
-
-void REveElement::DecImpliedHighlighted()
-{
-   if (--fImpliedHighlighted == 0)
+   if (TestCSCBits(kCSCBTakeMotherAsMaster) && fMother)
    {
-      if (!fHighlighted)
-         UnHighlighted();
-      StampColorSelection();
+      return fMother->GetSelectionMaster();
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual function called when both fHighlighted is false and
-/// fImpliedHighlighted is 0.
-/// Nothing is done in this base-class version
-
-void REveElement::UnHighlighted()
-{
+   return this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1802,27 +1372,11 @@ void REveElement::UnHighlighted()
 /// Note that this also takes care of projections of REveCompound
 /// class, which is also a projectable.
 
-void REveElement::FillImpliedSelectedSet(Set_t& impSelSet)
+void REveElement::FillImpliedSelectedSet(Set_t &impSelSet)
 {
    REveProjectable* p = dynamic_cast<REveProjectable*>(this);
    if (p)
-   {
       p->AddProjectedsToSet(impSelSet);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get selection level, needed for rendering selection and
-/// highlight feedback.
-/// This should go to TAtt3D.
-
-UChar_t REveElement::GetSelectedLevel() const
-{
-   if (fSelected)               return 1;
-   if (fImpliedSelected > 0)    return 2;
-   if (fHighlighted)            return 3;
-   if (fImpliedHighlighted > 0) return 4;
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1835,11 +1389,21 @@ UChar_t REveElement::GetSelectedLevel() const
 
 void REveElement::RecheckImpliedSelections()
 {
-   if (fSelected || fImpliedSelected)
-      REX::gEve->GetSelection()->RecheckImpliedSetForElement(this);
+   // XXXX MT 2019-01 --- RecheckImpliedSelections
+   //
+   // With removal of selection state from this class there might be some
+   // corner cases requiring checking of implied-selected state in
+   // selection/highlight objects.
+   //
+   // This could be done as part of begin / end changes on the EveManager level.
+   //
+   // See also those functions in TEveSelection.
 
-   if (fHighlighted || fImpliedHighlighted)
-      REX::gEve->GetHighlight()->RecheckImpliedSetForElement(this);
+   // if (fSelected || fImpliedSelected)
+   //    REX::gEve->GetSelection()->RecheckImpliedSetForElement(this);
+
+   // if (fHighlighted || fImpliedHighlighted)
+   //    REX::gEve->GetHighlight()->RecheckImpliedSetForElement(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1850,11 +1414,17 @@ void REveElement::RecheckImpliedSelections()
 
 void REveElement::AddStamp(UChar_t bits)
 {
-  if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
+   if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
    {
-      printf("%s AddStamp %d + (%d) -> %d \n", GetElementName(), fChangeBits, bits, fChangeBits|bits);
+      if (gDebug > 0)
+         ::Info(Form("%s::AddStamp", GetCName()), "%d + (%d) -> %d", fChangeBits, bits, fChangeBits | bits);
+
+      if (fChangeBits == 0)
+      {
+         fScene->SceneElementChanged(this);
+      }
+
       fChangeBits |= bits;
-      fScene->SceneElementChanged(this);
    }
 }
 
@@ -1874,239 +1444,56 @@ void REveElement::BuildRenderData()
 /// Convert Bool_t to string - kTRUE or kFALSE.
 /// Needed in WriteVizParams().
 
-const char* REveElement::ToString(Bool_t b)
+const std::string& REveElement::ToString(Bool_t b)
 {
-   return b ? "kTRUE" : "kFALSE";
-}
+   static const std::string true_str ("kTRUE");
+   static const std::string false_str("kFALSE");
 
-/** \class REveElementObjectPtr
-\ingroup REve
-REveElement with external TObject as a holder of visualization data.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveElementObjectPtr::REveElementObjectPtr(TObject* obj, Bool_t own) :
-   REveElement (),
-   TObject     (),
-   fObject     (obj),
-   fOwnObject  (own)
-{
+   return b ? true_str : false_str;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveElementObjectPtr::REveElementObjectPtr(TObject* obj, Color_t& mainColor, Bool_t own) :
-   REveElement (mainColor),
-   TObject     (),
-   fObject     (obj),
-   fOwnObject  (own)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-/// If object pointed to is owned it is cloned.
-/// It is assumed that the main-color has its origin in the TObject pointed to so
-/// it is fixed here accordingly.
-
-REveElementObjectPtr::REveElementObjectPtr(const REveElementObjectPtr& e) :
-   REveElement (e),
-   TObject     (e),
-   fObject     (0),
-   fOwnObject  (e.fOwnObject)
-{
-   if (fOwnObject && e.fObject)
-   {
-      fObject = e.fObject->Clone();
-      SetMainColorPtr((Color_t*)((const char*) fObject + ((const char*) e.GetMainColorPtr() - (const char*) e.fObject)));
-   }
-   else
-   {
-      SetMainColorPtr(e.GetMainColorPtr());
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone the element via copy constructor.
-/// Virtual from REveElement.
-
-REveElementObjectPtr* REveElementObjectPtr::CloneElement() const
-{
-   return new REveElementObjectPtr(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return external object.
-/// Virtual from REveElement.
-
-TObject* REveElementObjectPtr::GetObject(const REveException& eh) const
-{
-   if (fObject == 0)
-      throw eh + "fObject not set.";
-   return fObject;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Export external object to CINT with variable name var_name.
-/// Virtual from REveElement.
-
-void REveElementObjectPtr::ExportToCINT(char* var_name)
-{
-   static const REveException eh("REveElementObjectPtr::ExportToCINT ");
-
-   TObject* obj = GetObject(eh);
-   const char* cname = obj->IsA()->GetName();
-   gROOT->ProcessLine(Form("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)obj));
-}
-
-//==============================================================================
-// Write core json. If rnr_offset negative, render data will not be written
-//==============================================================================
+/// Write core json. If rnr_offset is negative, render data shall not be
+/// written.
+/// Returns number of bytes written into binary render data.
 
 Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    j["_typename"]  = IsA()->GetName();
-   j["fName"]      = GetElementName();
-   j["fTitle"]     = GetElementTitle();
+   j["fName"]      = fName;
+   j["fTitle"]     = fTitle;
    j["fElementId"] = GetElementId();
    j["fMotherId"]  = get_mother_id();
    j["fSceneId"]   = get_scene_id();
-   j["fMasterId"]  = GetMaster()->GetElementId();
+   j["fMasterId"]  = GetSelectionMaster()->GetElementId();
 
    j["fRnrSelf"]     = GetRnrSelf();
    j["fRnrChildren"] = GetRnrChildren();
 
    j["fMainColor"]        = GetMainColor();
    j["fMainTransparency"] = GetMainTransparency();
+   j["fPickable"]         = fPickable;
 
-   if (rnr_offset >=0) {
+   Int_t ret = 0;
+
+   if (rnr_offset >= 0) {
       BuildRenderData();
-      if (fRenderData.get())
-      {
+
+      if (fRenderData) {
          nlohmann::json rd = {};
 
          rd["rnr_offset"] = rnr_offset;
-         rd["rnr_func"]   = fRenderData->GetRnrFunc();
-         rd["vert_size"]  = fRenderData->SizeV();
-         rd["norm_size"]  = fRenderData->SizeN();
+         rd["rnr_func"] = fRenderData->GetRnrFunc();
+         rd["vert_size"] = fRenderData->SizeV();
+         rd["norm_size"] = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
          rd["trans_size"] = fRenderData->SizeT();
 
          j["render_data"] = rd;
 
-         return fRenderData->GetBinarySize();
-      }
-      else
-      {
-         return 0;
+         ret = fRenderData->GetBinarySize();
       }
    }
-   else {
-      return 0;
-   }
-}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-REveElementObjectPtr::~REveElementObjectPtr()
-{
-   if (fOwnObject)
-      delete fObject;
-}
-
-/** \class  REveElementList
-\ingroup REve
-A list of EveElements.
-
-Class of acceptable children can be limited by setting the
-fChildClass member.
-
-!!! should have two ctors (like in REveElement), one with Color_t&
-and set fDoColor automatically, based on which ctor is called.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveElementList::REveElementList(const char* n, const char* t, Bool_t doColor, Bool_t doTransparency) :
-   REveElement(),
-   TNamed(n, t),
-   REveProjectable(),
-   fColor(0),
-   fChildClass(nullptr)
-{
-   if (doColor) {
-      fCanEditMainColor = kTRUE;
-      SetMainColorPtr(&fColor);
-   }
-   if (doTransparency)
-   {
-      fCanEditMainTransparency = kTRUE;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-REveElementList::REveElementList(const REveElementList& e) :
-   REveElement (e),
-   TNamed      (e),
-   REveProjectable(),
-   fColor      (e.fColor),
-   fChildClass (e.fChildClass)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clone the element via copy constructor.
-/// Virtual from REveElement.
-
-REveElementList* REveElementList::CloneElement() const
-{
-   return new REveElementList(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if REveElement el is inherited from fChildClass.
-/// Virtual from REveElement.
-
-Bool_t REveElementList::AcceptElement(REveElement* el)
-{
-   if (fChildClass && ! el->IsA()->InheritsFrom(fChildClass))
-      return kFALSE;
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual from REveProjectable, returns REveCompoundProjected class.
-
-TClass* REveElementList::ProjectedClass(const REveProjection*) const
-{
-   return REveElementListProjected::Class();
-}
-
-/** \class REveElementListProjected
-\ingroup REve
-A projected element list -- required for proper propagation
-of render state to projected views.
-*/
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveElementListProjected::REveElementListProjected() :
-   REveElementList("REveElementListProjected")
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// This is abstract method from base-class REveProjected.
-/// No implementation.
-
-void REveElementListProjected::UpdateProjection()
-{
+   return ret;
 }

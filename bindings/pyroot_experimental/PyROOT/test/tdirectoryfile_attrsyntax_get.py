@@ -49,5 +49,18 @@ class TDirectoryFileReadWrite(unittest.TestCase):
         self.checkHisto(self.dir0.Get("dir1/h1"))
         self.checkHisto(self.dir0.Get("dir1/dir2/h2"))
 
+    def test_caching_getattr(self):
+        # check that __dict__ of self.dir_caching is initially empty
+        self.assertFalse(self.dir0.__dict__)
+        self.dir0.h
+        # check that after call is not empty anymore
+        self.assertTrue(self.dir0.__dict__)
+        # check that __dict__ has only one entry
+        self.assertEqual(len(self.dir0.__dict__), 1)
+        # check that the value in __dict__ is actually the object
+        # inside the directory
+        self.assertEqual(self.dir0.__dict__['h'], self.dir0.h)
+
+
 if __name__ == '__main__':
     unittest.main()

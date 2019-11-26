@@ -20,6 +20,7 @@ void vo005_Combinations()
 
    // To get the indices, which result in all combinations, you can call the
    // following helper.
+   // Note that you can also pass the size of the vectors directly.
    auto idx = Combinations(v1, v2);
 
    // Next, the respective elements can be taken via the computed indices.

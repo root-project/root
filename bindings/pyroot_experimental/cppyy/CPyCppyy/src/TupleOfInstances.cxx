@@ -19,6 +19,9 @@ static PyObject* ia_iternext(ia_iterobject* ia) {
     if (ia->ia_len != -1 && ia->ia_pos >= ia->ia_len) {
         ia->ia_pos = 0;      // debatable, but since the iterator is cached, this
         return nullptr;      //   allows for multiple conversions to e.g. a tuple
+    } else if (ia->ia_stride == 0 && ia->ia_pos != 0) {
+        PyErr_SetString(PyExc_ReferenceError, "no stride available for indexing");
+        return nullptr;
     }
     PyObject* result = CPyCppyy::BindCppObjectNoCast(
         (char*)ia->ia_array_start + ia->ia_pos*ia->ia_stride, ia->ia_klass);
@@ -84,7 +87,7 @@ PyTypeObject InstanceArrayIter_Type = {
 
 //= support for C-style arrays of objects ====================================
 PyObject* TupleOfInstances_New(
-    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, long ndims, long* dims)
+    Cppyy::TCppObject_t address, Cppyy::TCppType_t klass, dim_t ndims, dims_t dims)
 {
 // recursively set up tuples of instances on all dimensions
     if (ndims == -1 /* unknown shape */ || dims[0] == -1 /* unknown size */) {
@@ -98,7 +101,7 @@ PyObject* TupleOfInstances_New(
         ia->ia_len         = -1;
         ia->ia_stride      = Cppyy::SizeOf(klass);
 
-         PyObject_GC_Track(ia);
+        PyObject_GC_Track(ia);
         return (PyObject*)ia;
     } else if (1 < ndims) {
     // not the innermost dimension, descend one level
@@ -117,6 +120,12 @@ PyObject* TupleOfInstances_New(
     // innermost dimension: construct tuple
         int nelems = (int)dims[0];
         size_t block_size = Cppyy::SizeOf(klass);
+        if (block_size == 0) {
+            PyErr_Format(PyExc_TypeError,
+                "can not determine size of type \"%s\" for array indexing",
+                Cppyy::GetScopedFinalName(klass).c_str());
+            return nullptr;
+        }
 
     // TODO: the extra copy is inefficient, but it appears that the only way to
     // initialize a subclass of a tuple is through a sequence

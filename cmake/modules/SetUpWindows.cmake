@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 set(ROOT_PLATFORM win32)
 
 #----Check the compiler that is used-----------------------------------------------------
@@ -14,16 +20,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   # Select flags.
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
   set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-Ofast -DNDEBUG")
   set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-  set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3")
-  set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -ftest-coverage -fprofile-arcs")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
   set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-Ofast -DNDEBUG")
   set(CMAKE_C_FLAGS_DEBUG            "-g")
-  set(CMAKE_C_FLAGS_DEBUGFULL        "-g3 -fno-inline")
-  set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
 
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS}")
@@ -55,11 +55,9 @@ elseif(MSVC)
   #---Select compiler flags----------------------------------------------------------------
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -Z7")
   set(CMAKE_CXX_FLAGS_RELEASE        "-O2")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O2")
   set(CMAKE_CXX_FLAGS_DEBUG          "-Od -Z7")
   set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -Z7")
   set(CMAKE_C_FLAGS_RELEASE          "-O2")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-O2")
   set(CMAKE_C_FLAGS_DEBUG            "-Od -Z7")
 
   #---Set Linker flags----------------------------------------------------------------------
@@ -75,5 +73,3 @@ elseif(MSVC)
 else()
   message(FATAL_ERROR "There is no setup for compiler '${CMAKE_CXX_COMPILER}' on this Windows system up to now. Stop cmake at this point.")
 endif()
-
-

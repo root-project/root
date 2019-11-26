@@ -13,7 +13,6 @@
 #define ROOT_TParallelCoordRange
 
 #include "TNamed.h"
-
 #include "TAttLine.h"
 
 class TParallelCoordVar;
@@ -43,8 +42,8 @@ private:
 
 public:
    TParallelCoordRange();
-   ~TParallelCoordRange();
    TParallelCoordRange(TParallelCoordVar *var, Double_t min=0, Double_t max=0, TParallelCoordSelect* sel=NULL);
+   virtual ~TParallelCoordRange();
 
    virtual void BringOnTop() ;// *MENU*
    virtual void Delete(const Option_t* options=""); // *MENU*

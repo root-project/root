@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 // PATH_MAX
 #ifdef __APPLE__
@@ -43,7 +44,8 @@ namespace {
     // MRU cache wasn't worth the extra CPU cycles.
     static thread_local std::array<const void*, 8> lines;
     static thread_local unsigned mostRecent;
-    int FD;
+    size_t page_size;
+    size_t page_mask;
 
     // Concurrent writes to the same cache element can result in invalid cache
     // elements, causing pointer address not being available in the cache even
@@ -56,29 +58,35 @@ namespace {
     }
 
   public:
-    PointerCheck() : FD(::open("/dev/random", O_WRONLY)) {
-      if (FD == -1) ::perror("open('/dev/random')");
-    }
-    ~PointerCheck() {
-      if (FD != -1) ::close(FD);
+    PointerCheck() : page_size(::sysconf(_SC_PAGESIZE)), page_mask(~(page_size - 1))
+    {
+       assert(IsPowerOfTwo(page_size));
     }
 
     bool operator () (const void* P) {
-      if (FD == -1)
-        return false;
       // std::find is considerably slower, do manual search instead.
       if (P == lines[0] || P == lines[1] || P == lines[2] || P == lines[3]
           || P == lines[4] || P == lines[5] || P == lines[6] || P == lines[7])
         return true;
 
-      // There is a POSIX way of finding whether an address
-      // can be accessed for reading.
-      if (::write(FD, P, 1/*byte*/) != 1) {
-        assert(errno == EFAULT && "unexpected write error at address");
+      // Address of page containing P, assuming page_size is a power of 2
+      void *base = (void *)(((const size_t)P) & page_mask);
+
+      // P is invalid only when msync returns -1 and sets errno to ENOMEM
+      if (::msync(base, page_size, MS_ASYNC) != 0) {
+        assert(errno == ENOMEM && "Unexpected error in call to msync()");
         return false;
       }
+
       push(P);
       return true;
+    }
+  private:
+    bool IsPowerOfTwo(size_t n) {
+       /* While n is even and larger than 1, divide by 2 */
+       while (((n & 1) == 0) && n > 1)
+         n >>= 1;
+       return n == 1;
     }
   };
   thread_local std::array<const void*, 8> PointerCheck::lines = {};

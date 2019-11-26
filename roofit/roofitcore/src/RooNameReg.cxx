@@ -28,7 +28,6 @@ fast searches and comparisons.
 #include "RooNameReg.h"
 
 #include "RooFit.h"
-#include "RooSentinel.h"
 #include "ROOT/RMakeUnique.hxx"
 #include <iostream>
 using namespace std ;
@@ -54,16 +53,6 @@ RooNameReg& RooNameReg::instance()
   static RooNameReg instance;
   return instance;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Cleanup function called by atexit() handler installed by RooSentinel
-/// to delete global objects on heap at end of program
-
-void RooNameReg::cleanup()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

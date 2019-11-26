@@ -39,26 +39,17 @@ using namespace clang;
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
+   : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fTitle("")
 {
    Init(name);
 }
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
                                      const clang::TypedefNameDecl *TdefD)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(TdefD),
-     fTitle("")
+   : TClingDeclInfo(TdefD), fInterp(interp), fFirstTime(true), fDescend(false), fTitle("")
 {
    // Initialize with a clang::TypedefDecl.
    // fIter is invalid; cannot call Next().
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get the current typedef declaration.
-
-const clang::Decl *TClingTypedefInfo::GetDecl() const
-{
-   return fDecl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,18 +97,12 @@ void TClingTypedefInfo::Init(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if the current iterator position is valid.
-
-bool TClingTypedefInfo::IsValid() const
-{
-   return fDecl;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Increment the iterator, return true if new position is valid.
 
 int TClingTypedefInfo::InternalNext()
 {
+   fNameCache.clear(); // invalidate the cache.
+
    if (!*fIter) {
       // Iterator is already invalid.
       if (fFirstTime && fDecl) {
@@ -296,18 +281,18 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the name of the current typedef.
 
-const char *TClingTypedefInfo::Name() const
+const char *TClingTypedefInfo::Name()
 {
    if (!IsValid()) {
       return "(unknown)";
    }
-   // Note: This must be static because we return a pointer to the internals.
-   TTHREAD_TLS_DECL( std::string, fullname);
-   fullname.clear();
-   const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
-   const clang::ASTContext &ctxt = fDecl->getASTContext();
-   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fullname,ctxt.getTypedefType(td),*fInterp);
-   return fullname.c_str();
+   if (!fNameCache.empty())
+     return fNameCache.c_str();
+
+   const clang::TypedefNameDecl *td = llvm::cast<clang::TypedefNameDecl>(fDecl);
+   const clang::ASTContext &ctxt = td->getASTContext();
+   ROOT::TMetaUtils::GetFullyQualifiedTypeName(fNameCache, ctxt.getTypedefType(td), *fInterp);
+   return fNameCache.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

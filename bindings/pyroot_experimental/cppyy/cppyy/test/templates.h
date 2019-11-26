@@ -1,12 +1,33 @@
+#ifndef CPPYY_TEST_TEMPLATES_H
+#define CPPYY_TEST_TEMPLATES_H
+
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <vector>
+
+#ifndef WIN32
+#include <cxxabi.h>
+inline std::string demangle_it(const char* name, const char* errmsg) {
+    int status;
+    std::string res = abi::__cxa_demangle(name, 0, 0, &status);
+    if (status != 0) throw std::runtime_error(errmsg);
+    return res;
+}
+#else
+inline std::string demangle_it(const char* name, const char*) {
+    return name;        // typeinfo's name() is already demangled
+}
+#endif
 
 
 //===========================================================================
 class MyTemplatedMethodClass {         // template methods
 public:
-    long get_size();      // to get around bug in genreflex
+    template<class A> long get_size(A&);
+    template<class A> long get_size(const A&);
+
+    long get_size();
     template<class B> long get_size();
 
     long get_char_size();
@@ -20,6 +41,16 @@ public:
 private:
     double m_data[3];
 };
+
+template<class A>
+long MyTemplatedMethodClass::get_size(A&) {
+    return sizeof(A);
+}
+
+template<class A>
+long MyTemplatedMethodClass::get_size(const A&) {
+    return sizeof(A)+1;
+}
 
 template<class B>
 inline long MyTemplatedMethodClass::get_size() {
@@ -63,7 +94,7 @@ struct SomeResult {
 };
 
 template <class I, typename O = float>
-SomeResult<O> global_get_some_result(const std::vector<I>& carrier) {
+SomeResult<O> global_get_some_result(const I& carrier) {
     SomeResult<O> r{};
     r.m_retval = O(carrier[0]);
     return r;
@@ -171,17 +202,17 @@ public:
 // templated typedefs
 namespace TemplatedTypedefs {
 
-template<typename IN, typename OUT, size_t _vsize = 4>
+template<typename TYPE_IN, typename TYPE_OUT, size_t _vsize = 4>
 struct BaseWithEnumAndTypedefs {
     enum { vsize = _vsize };
-    typedef IN in_type;
-    typedef OUT out_type;
+    typedef TYPE_IN in_type;
+    typedef TYPE_OUT out_type;
 };
 
-template <typename IN, typename OUT, size_t _vsize = 4>
-struct DerivedWithUsing : public BaseWithEnumAndTypedefs<IN, OUT, _vsize>
+template <typename TYPE_IN, typename TYPE_OUT, size_t _vsize = 4>
+struct DerivedWithUsing : public BaseWithEnumAndTypedefs<TYPE_IN, TYPE_OUT, _vsize>
 {
-    typedef BaseWithEnumAndTypedefs<IN, OUT, _vsize> base_type;
+    typedef BaseWithEnumAndTypedefs<TYPE_IN, TYPE_OUT, _vsize> base_type;
     using base_type::vsize;
     using typename base_type::in_type;
     typedef typename base_type::in_type in_type_tt;
@@ -212,3 +243,215 @@ struct Derived : public Base {
 //===========================================================================
 // 'using' of templates
 template<typename T> using DA_vector = std::vector<T>;
+
+#if __cplusplus > 201402L
+namespace using_problem {
+
+template <typename T, size_t SZ>
+struct vector {
+    vector() : m_val(SZ) {}
+    T m_val;
+};
+
+template <typename T, size_t ... sizes>
+struct matryoshka {
+    typedef T type;
+};
+
+template <typename T, size_t SZ, size_t ... sizes>
+struct matryoshka<T, SZ, sizes ... > {
+    typedef vector<typename matryoshka<T, sizes ...>::type, SZ> type;
+};
+
+template <typename T, size_t ... sizes>
+using make_vector = typename matryoshka<T, sizes ...>::type;
+    typedef make_vector<int, 2, 3> iiv_t;
+};
+#endif
+
+namespace using_problem {
+
+template<typename T>
+class Base {
+public:
+    template<typename R>
+    R get1(T t) { return t + R{5}; }
+    T get2() { return T{5}; }
+    template<typename R>
+    R get3(T t) { return t + R{5}; }
+    T get3() { return T{5}; }
+};
+
+template<typename T>
+class Derived : public Base<T> {
+public:
+    typedef Base<T> _Mybase;
+    using _Mybase::get1;
+    using _Mybase::get2;
+    using _Mybase::get3;
+};
+
+} // namespace using_problem
+
+
+//===========================================================================
+// template with r-value
+namespace T_WithRValue {
+
+template<typename T>
+bool is_valid(T&& new_value) {
+    return new_value != T{};
+}
+
+} // namespace T_WithRValue
+
+
+//===========================================================================
+// variadic templates
+namespace some_variadic {
+
+#ifdef WIN32
+extern __declspec(dllimport) std::string gTypeName;
+#else
+extern std::string gTypeName;
+#endif
+
+template <typename ... Args>
+class A {
+public:
+    A() {
+        gTypeName = demangle_it(typeid(A<Args...>).name(), "A::A");
+    }
+    A(const A&) = default;
+    A(A&&) = default;
+    A& operator=(const A&) = default;
+    A& operator=(A&&) = default;
+
+    template <typename ... FArgs>
+    void a(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&A<Args...>::a<FArgs...>).name(), "A::a-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    T a_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&A<Args...>::a_T<T, FArgs...>).name(), "A::a_T-2");
+        return T{};
+    }
+
+    template <typename ... FArgs>
+    static void sa(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(A<Args...>).name(), "A::sa-1");
+        gTypeName += "::";
+        gTypeName += demangle_it(typeid(A<Args...>::sa<FArgs...>).name(), "A::sa-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    static T sa_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(A<Args...>).name(), "A::sa_T-1");
+        gTypeName +=  "::";
+        gTypeName += demangle_it(typeid(A<Args...>::sa_T<T, FArgs...>).name(), "A::sa_T-2");
+        return T{};
+    }
+};
+
+class B {
+public:
+    B() {
+        gTypeName = demangle_it(typeid(B).name(), "B::B");
+    }
+    B(const B&) = default;
+    B(B&&) = default;
+    B& operator=(const B&) = default;
+    B& operator=(B&&) = default;
+
+    template <typename ... FArgs>
+    void b(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&B::b<FArgs...>).name(), "B::b-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    T b_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(&B::b_T<T, FArgs...>).name(), "B::b_T-2");
+        return T{};
+    }
+
+    template <typename ... FArgs>
+    static void sb(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(B).name(), "B::sb-1");
+        gTypeName += "::";
+        gTypeName +=  demangle_it(typeid(B::sb<FArgs...>).name(), "B::sb-2");
+    }
+
+    template <typename T, typename ... FArgs>
+    static T sb_T(FArgs&&... args) {
+        gTypeName = demangle_it(typeid(B).name(), "B::sb_T-1");
+        gTypeName += "::";
+        gTypeName += demangle_it(typeid(B::sb_T<T, FArgs...>).name(), "B::sb_T-2");
+        return T{};
+    }
+};
+
+template <typename ... Args>
+void fn(Args&&... args) {
+    gTypeName = demangle_it(typeid(fn<Args...>).name(), "fn");
+}
+
+template <typename T, typename ... Args>
+T fn_T(Args&&... args) {
+    gTypeName = demangle_it(typeid(fn<Args...>).name(), "fn_T");
+    return T{};
+}
+
+} // namespace some_variadic
+
+
+//===========================================================================
+// template with empty body
+namespace T_WithEmptyBody {
+
+#ifdef WIN32
+extern __declspec(dllimport) std::string side_effect;
+#else
+extern std::string side_effect;
+#endif
+
+template<typename T>
+void some_empty();
+
+} // namespace T_WithEmptyBody
+
+
+//===========================================================================
+// template with catch-all (void*, void**)overloads
+namespace T_WithGreedyOverloads {
+
+class SomeClass {
+    double fD;
+};
+
+class WithGreedy1 {
+public:
+    template<class T>
+    int get_size(T*) { return (int)sizeof(T); }
+    int get_size(void*, bool force=false) { return -1; }
+};
+
+class WithGreedy2 {
+public:
+    template<class T>
+    int get_size(T*) { return (int)sizeof(T); }
+    int get_size(void**, bool force=false) { return -1; }
+};
+
+class DoesNotExist;
+
+class WithGreedy3 {
+public:
+    template<class T>
+    int get_size(T*) { return (int)sizeof(T); }
+    int get_size(DoesNotExist*, bool force=false) { return -1; }
+};
+
+} // namespace T_WithGreedyOverloads
+
+#endif // !CPPYY_TEST_TEMPLATES_H

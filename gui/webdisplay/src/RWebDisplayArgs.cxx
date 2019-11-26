@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RWebDisplayArgs.hxx>
+#include <ROOT/RConfig.hxx>
 
 #include "TROOT.h"
 
@@ -33,6 +34,7 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs()
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor - browser kind specified as std::string
+/// See SetBrowserKind() method for description of allowed parameters
 
 ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 {
@@ -41,6 +43,7 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor - browser kind specified as const char *
+/// See SetBrowserKind() method for description of allowed parameters
 
 ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 {
@@ -48,9 +51,29 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-/// Set browser kind using string argument
+/// Constructor - specify window width and height
 
-void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y, const std::string &browser)
+{
+   SetSize(width, height);
+   SetPos(x, y);
+   SetBrowserKind(browser);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Set browser kind as string argument
+/// Recognized values:
+///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
+///  firefox - use Mozilla Firefox browser, supports headless mode from v57
+///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
+///  browser - default system web-browser, no batch mode
+///   safari - Safari browser on Mac
+///      cef - Chromium Embeded Framework, local display, local communication
+///      qt5 - Qt5 WebEngine, local display, local communication
+///    local - either cef or qt5
+///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
+
+ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
    std::string kind = _kind;
 
@@ -71,12 +94,16 @@ void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kin
       SetBrowserKind(kFirefox);
    else if ((kind == "chrome") || (kind == "chromium"))
       SetBrowserKind(kChrome);
-   else if (kind == "cef")
+   else if ((kind == "cef") || (kind == "cef3"))
       SetBrowserKind(kCEF);
-   else if (kind == "qt5")
+   else if ((kind == "qt") || (kind == "qt5"))
       SetBrowserKind(kQt5);
+   else if ((kind == "embed") || (kind == "embedded"))
+      SetBrowserKind(kEmbedded);
    else
       SetCustomExec(kind);
+
+   return *this;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -92,25 +119,73 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
       case kQt5: return "qt5";
       case kLocal: return "local";
       case kStandard: return "default";
-      case kCustom: return "custom";
+      case kEmbedded: return "embed";
+      case kCustom:
+          auto pos = fExec.find(" ");
+          return (pos == std::string::npos) ? fExec : fExec.substr(0,pos);
    }
 
    return "";
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Append string to url options
+/// Add "&" as separator if any options already exsists
+
+void ROOT::Experimental::RWebDisplayArgs::AppendUrlOpt(const std::string &opt)
+{
+   if (opt.empty()) return;
+
+   if (!fUrlOpt.empty())
+      fUrlOpt.append("&");
+
+   fUrlOpt.append(opt);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Returns full url, which is combined from URL and extra URL options
+/// Takes into account "#" symbol in url - options are inserted before that symbol
 
 std::string ROOT::Experimental::RWebDisplayArgs::GetFullUrl() const
 {
    std::string url = GetUrl(), urlopt = GetUrlOpt();
    if (url.empty() || urlopt.empty()) return url;
 
+   auto rpos = url.find("#");
+   if (rpos == std::string::npos) rpos = url.length();
+
    if (url.find("?") != std::string::npos)
-      url.append("&");
+      url.insert(rpos, "&");
    else
-      url.append("?");
-   url.append(urlopt);
+      url.insert(rpos, "?");
+   url.insert(rpos+1, urlopt);
 
    return url;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Configure custom web browser
+/// Either just name of browser which can be used like "opera"
+/// or full execution string which must includes $url like "/usr/bin/opera $url"
+
+void ROOT::Experimental::RWebDisplayArgs::SetCustomExec(const std::string &exec)
+{
+   SetBrowserKind(kCustom);
+   fExec = exec;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// returns custom executable to start web browser
+
+std::string ROOT::Experimental::RWebDisplayArgs::GetCustomExec() const
+{
+   if (GetBrowserKind() != kCustom)
+      return "";
+
+#ifdef R__MACOSX
+   if ((fExec == "safari") || (fExec == "Safari"))
+      return "open -a Safari";
+#endif
+
+   return fExec;
 }

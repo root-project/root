@@ -280,9 +280,13 @@ void stressGraphics(Int_t verbose = 0)
    gErrorIgnoreLevel = 0;
 
    // Read the reference file "stressGraphics.ref"
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+   FILE *sg = fopen("stressGraphics_builtinzlib.ref","r");
+#else
    FILE *sg = fopen("stressGraphics.ref","r");
+#endif
    if (!sg) {
-      printf("Could not open stressGraphics.ref\n");
+      printf("Could not open stressGraphics.ref/stressGraphics_builtinzlib.ref\n");
       return;
    }
    char line[160];
@@ -1583,7 +1587,7 @@ void tgaxis5()
          char buf[256];
          if (offset[i] < t[i]) {
             sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
-                    stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
+                    stime(t+i).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;

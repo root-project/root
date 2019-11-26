@@ -124,7 +124,7 @@ static bool InstallNbFiles(string source, string dest)
 /// Creates the Jupyter notebook configuration file that sets the
 /// necessary environment.
 
-static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
+static bool CreateJupyterConfig(string dest, string rootbin, string rootlib, string rootdata)
 {
    string jupyconfig = dest + pathsep + JUPYTER_CONFIG;
    ofstream out(jupyconfig, ios::trunc);
@@ -133,18 +133,20 @@ static bool CreateJupyterConfig(string dest, string rootbin, string rootlib)
       out << "rootbin = '" << rootbin << "'" << endl;
       out << "rootlib = '" << rootlib << "'" << endl;
 #ifdef WIN32
+      string jsrootsys = rootdata + "\\js\\";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s\\bin' % (rootbin,rootbin) + ':' + '%s' % rootlib + ':' + os.getenv('PATH', '')" << endl;
 #else
+      string jsrootsys = rootdata + "/js/";
       out << "os.environ['PYTHONPATH']      = '%s' % rootlib + ':' + os.getenv('PYTHONPATH', '')" << endl;
       out << "os.environ['PATH']            = '%s:%s/bin' % (rootbin,rootbin) + ':' + os.getenv('PATH', '')" << endl;
       out << "os.environ['LD_LIBRARY_PATH'] = '%s' % rootlib + ':' + os.getenv('LD_LIBRARY_PATH', '')" << endl;
 #endif
-      out << "c.NotebookApp.ip = '*'" << endl;
+      out << "c.NotebookApp.extra_static_paths = ['" << jsrootsys << "']" << endl;
       out.close();
       return true;
    }
-   else { 
+   else {
       fprintf(stderr,
               "Error installing notebook configuration files -- cannot create IPython config file at %s\n",
               jupyconfig.c_str());
@@ -174,11 +176,12 @@ static bool CreateStamp(string dest)
 ////////////////////////////////////////////////////////////////////////////////
 /// Spawn a Jupyter notebook customised by ROOT.
 
-int main()
+int main(int argc, char **argv)
 {
    string rootbin(TROOT::GetBinDir().Data());
    string rootlib(TROOT::GetLibDir().Data());
    string rootetc(TROOT::GetEtcDir().Data());
+   string rootdata(TROOT::GetDataDir().Data());
 
    // If needed, install ROOT notebook files in the user's home directory
 #ifdef WIN32
@@ -192,7 +195,7 @@ int main()
       string source(rootetc + pathsep + NB_CONF_DIR);
       string dest(homedir + pathsep + ROOTNB_DIR);
       bool res = InstallNbFiles(source, dest) &&
-                 CreateJupyterConfig(dest, rootbin, rootlib) &&
+                 CreateJupyterConfig(dest, rootbin, rootlib, rootdata) &&
                  CreateStamp(dest);
       if (!res) return 1;
    }
@@ -205,8 +208,15 @@ int main()
    putenv((char *)jupyconfdir.c_str());
    putenv((char *)jupypathdir.c_str());
 
+   char **jargv = new char* [argc + 2];
+   jargv[0] = (char *) JUPYTER_CMD;
+   jargv[1] = (char *) NB_OPT;
+   for (int n=1;n<argc;++n)
+      jargv[n+1] = argv[n];
+   jargv[argc+1] = nullptr;
+
    // Execute IPython notebook
-   execlp(JUPYTER_CMD, JUPYTER_CMD, NB_OPT, NULL);
+   execvp(JUPYTER_CMD, jargv);
 
    // Exec failed
    fprintf(stderr,

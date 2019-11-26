@@ -95,6 +95,7 @@ std::string RCsvDS::AsString()
 TRegexp RCsvDS::intRegex("^[-+]?[0-9]+$");
 TRegexp RCsvDS::doubleRegex1("^[-+]?[0-9]+\\.[0-9]*$");
 TRegexp RCsvDS::doubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
+TRegexp RCsvDS::doubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eEdDqQ][-+]?[0-9]+$");
 TRegexp RCsvDS::trueRegex("^true$");
 TRegexp RCsvDS::falseRegex("^false$");
 
@@ -199,7 +200,9 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
 
    if (intRegex.Index(col, &dummy) != -1) {
       type = 'l'; // Long64_t
-   } else if (doubleRegex1.Index(col, &dummy) != -1 || doubleRegex2.Index(col, &dummy) != -1) {
+   } else if (doubleRegex1.Index(col, &dummy) != -1 ||
+              doubleRegex2.Index(col, &dummy) != -1 ||
+              doubleRegex3.Index(col, &dummy) != -1) {
       type = 'd'; // double
    } else if (trueRegex.Index(col, &dummy) != -1 || falseRegex.Index(col, &dummy) != -1) {
       type = 'b'; // bool
@@ -264,7 +267,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
 
    // Read the headers if present
    if (fReadHeaders) {
-      if (std::getline(fStream, line)) {
+      if (std::getline(fStream, line) && !line.empty()) {
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
@@ -274,7 +277,11 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
    }
 
    fDataPos = fStream.tellg();
-   if (std::getline(fStream, line)) {
+   bool eof = false;
+   do {
+      eof = !std::getline(fStream, line);
+   } while (line.empty());
+   if (!eof) {
       auto columns = ParseColumns(line);
 
       // Generate headers if not present
@@ -285,8 +292,12 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       // Infer types of columns with first record
       InferColTypes(columns);
 
-      // rewind one line
+      // rewind
       fStream.seekg(fDataPos);
+   } else {
+      std::string msg = "Could not infer column types of CSV file ";
+      msg += fileName;
+      throw std::runtime_error(msg);
    }
 }
 
@@ -348,9 +359,19 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
    FreeRecords();
 
    std::string line;
-   while ((-1LL == fLinesChunkSize || 0 != linesToRead--) && std::getline(fStream, line)) {
+   while ((-1LL == fLinesChunkSize || 0 != linesToRead) && std::getline(fStream, line)) {
+      if (line.empty()) continue; // skip empty lines
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
+      --linesToRead;
+   }
+
+   if (gDebug > 0) {
+      if (fLinesChunkSize == -1LL) {
+         Info("GetEntryRanges", "Attempted to read entire CSV file into memory, %lu lines read", fRecords.size());
+      } else {
+         Info("GetEntryRanges", "Attempted to read chunk of %lld lines of CSV file into memory, %lu lines read", fLinesChunkSize, fRecords.size());
+      }
    }
 
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;

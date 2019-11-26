@@ -60,8 +60,7 @@ int df007_snapshot()
 
    // Open the new file and list the columns of the tree
    TFile f1(outFileName);
-   TTree *t;
-   f1.GetObject(treeName, t);
+   auto t = f1.Get<TTree>(treeName);
    std::cout << "These are the columns b1, b1_square and b2_vector:" << std::endl;
    for (auto branch : *t->GetListOfBranches()) {
       std::cout << "Branch: " << branch->GetName() << std::endl;
@@ -75,7 +74,7 @@ int df007_snapshot()
 
    // Open the new file and list the columns of the tree
    TFile f2(outFileNameAllColumns);
-   f2.GetObject(treeName, t);
+   t = f2.Get<TTree>(treeName);
    std::cout << "These are all the columns available to this tdf:" << std::endl;
    for (auto branch : *t->GetListOfBranches()) {
       std::cout << "Branch: " << branch->GetName() << std::endl;

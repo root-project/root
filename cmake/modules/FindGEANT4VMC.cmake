@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # - Try to find GEANT4VMC
 # Once done this will define
 #
@@ -94,4 +100,3 @@ if (GEANT4VMC_FOUND)
   SET(LD_LIBRARY_PATH ${LD_LIBRARY_PATH} ${GEANT4VMC_LIBRARY_DIR}
       ${VGM_LIBRARY_DIR})
 endif (GEANT4VMC_FOUND)
-

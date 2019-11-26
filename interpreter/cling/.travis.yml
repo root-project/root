@@ -45,12 +45,16 @@ matrix:
     # run across all platforms. By interleaving OS X, the hope is to get in the
     # queue faster while not blocking Linux builds from occuring.
     - os: linux
+      dist: trusty
       env: COMPILER=g++-4.8 CCOMPILER=gcc-4.8 NIGHTLY_CRON_SYNC=1
       compiler: gcc-4.8
 
     - os: osx
       env: COMPILER=clang++ CCOMPILER=clang
-      osx_image: xcode8.3
+      osx_image: xcode11
+      before_install:
+        - curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci;
+          source ./macports-ci install
       compiler: clang
 
     - os: linux
@@ -71,10 +75,14 @@ matrix:
 
     - os: osx
       env: COMPILER=g++-7 CCOMPILER=gcc-7
-      osx_image: xcode8.3
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages: gcc@7
+          update: true
       before_install:
-        - brew cask uninstall oclint
-        - brew install gcc@7
+          - curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci;
+            source ./macports-ci install
       compiler: gcc-7
 
     - os: linux
@@ -96,15 +104,16 @@ matrix:
     - os: osx
       env: COMPILER=clang++ CCOMPILER=clang
       osx_image: xcode9.3
+      before_install:
+        - curl -LO https://raw.githubusercontent.com/GiovanniBussi/macports-ci/master/macports-ci;
+          source ./macports-ci install
       compiler: clang
 
     - os: linux
-      env: CXXLIB=libstdc++ COMPILER=clang++-5.0 CCOMPILER=clang-5.0
+      env: CXXLIB=libstdc++ COMPILER=clang++ CCOMPILER=clang
       addons:
         apt:
-          sources: llvm-toolchain-trusty-5.0
-          packages: clang-5.0
-      compiler: clang-5.0
+      compiler: clang
 
 #  allow_failures:
 #    # clang-3.5 crashes compiling clang-3.9 with libc++-3.9
@@ -130,6 +139,8 @@ install:
       export CLING_BUILD_FLAGS="$CLING_BUILD_FLAGS -DCXX_EXTENSIONS=OFF"
     fi
   fi
+  # Only care about cling warnings.
+  export CLING_BUILD_FLAGS="$CLING_BUILD_FLAGS -DLLVM_ENABLE_WARNINGS=OFF -DCLING_ENABLE_WARNINGS=ON"
   echo "travis_fold:""end:install"
 
   # Containers need to timeout before the buildscript exits
@@ -175,7 +186,8 @@ script:
   if [ -z $TRAVIS_TAG ]; then
     TIMEOUTEXE=`which timeout`;
     if [ "x" = "x$TIMEOUTEXE" ] ; then TIMEOUTEXE=gtimeout; fi
-    $TIMEOUTEXE -s SIGTERM $TIMEOUT tools/packaging/cpt.py \
+    $TIMEOUTEXE -s SIGTERM $TIMEOUT tools/packaging/cpt.py -y \
+      --check-requirements \
       --current-dev=tar \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \
@@ -183,7 +195,8 @@ script:
       --with-cmake-flags="$CLING_BUILD_FLAGS" \
       --skip-cleanup
   else
-    tools/packaging/cpt.py \
+    tools/packaging/cpt.py -y \
+      --check-requirements \
       --tarball-tag=$([[ $TRAVIS_TAG = cling-nightlies ]] && echo "master" || echo "$TRAVIS_TAG") \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \

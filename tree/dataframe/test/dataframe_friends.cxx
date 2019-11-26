@@ -50,7 +50,7 @@ protected:
 TEST_F(RDFAndFriends, FriendByFile)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -63,9 +63,9 @@ TEST_F(RDFAndFriends, FriendByFile)
 TEST_F(RDFAndFriends, FriendByPointer)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    TFile f2(kFile2);
-   TTree *t2 = static_cast<TTree *>(f2.Get("t2"));
+   auto t2 = f2.Get<TTree>("t2");
    t1->AddFriend(t2);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -78,7 +78,7 @@ TEST_F(RDFAndFriends, FriendByPointer)
 TEST_F(RDFAndFriends, FriendArrayByFile)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t3", kFile3);
    ROOT::RDataFrame d(*t1);
 
@@ -97,9 +97,9 @@ TEST_F(RDFAndFriends, FriendArrayByFile)
 TEST_F(RDFAndFriends, FriendArrayByPointer)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    TFile f3(kFile3);
-   TTree *t3 = static_cast<TTree *>(f3.Get("t3"));
+   auto t3 = f3.Get<TTree>("t3");
    t1->AddFriend(t3);
    ROOT::RDataFrame d(*t1);
 
@@ -118,7 +118,7 @@ TEST_F(RDFAndFriends, FriendArrayByPointer)
 TEST_F(RDFAndFriends, QualifiedBranchName)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -131,7 +131,7 @@ TEST_F(RDFAndFriends, QualifiedBranchName)
 TEST_F(RDFAndFriends, FromDefine)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
 
@@ -142,7 +142,7 @@ TEST_F(RDFAndFriends, FromDefine)
 TEST_F(RDFAndFriends, FromJittedDefine)
 {
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile2);
    ROOT::RDataFrame d(*t1);
 
@@ -158,7 +158,7 @@ TEST_F(RDFAndFriends, FriendMT)
    ROOT::EnableImplicitMT(4u);
 
    TFile f1(kFile4);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    t1->AddFriend("t2", kFile5);
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -173,9 +173,9 @@ TEST_F(RDFAndFriends, FriendAliasMT)
 {
    ROOT::EnableImplicitMT(4u);
    TFile f1(kFile1);
-   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   auto t1 = f1.Get<TTree>("t");
    TFile f2(kFile4);
-   TTree *t2 = static_cast<TTree *>(f2.Get("t"));
+   auto t2 = f2.Get<TTree>("t");
    t1->AddFriend(t2, "myfriend");
    ROOT::RDataFrame d(*t1);
    auto x = d.Min<int>("x");
@@ -209,6 +209,75 @@ TEST_F(RDFAndFriends, FriendChainMT)
    EXPECT_EQ(*x, 1);
    EXPECT_EQ(*y, 5);
    ROOT::DisableImplicitMT();
+}
+
+// ROOT-9559
+void FillIndexedFriend(const char *mainfile, const char *auxfile)
+{
+   // Start by creating main Tree
+   TFile f(mainfile, "RECREATE");
+   TTree mainTree("mainTree", "mainTree");
+   int idx;
+   mainTree.Branch("idx", &idx);
+   float x;
+   mainTree.Branch("x", &x);
+
+   idx = 1;
+   x = 0.5;
+   mainTree.Fill();
+   idx = 1;
+   x = 2;
+   mainTree.Fill();
+   idx = 1;
+   x = 5;
+   mainTree.Fill();
+   idx = 2;
+   x = 1;
+   mainTree.Fill();
+   idx = 2;
+   x = 8;
+   mainTree.Fill();
+   mainTree.Write();
+   f.Close();
+
+   // And aux tree
+   TFile f2(auxfile, "RECREATE");
+   TTree auxTree("auxTree", "auxTree");
+   auxTree.Branch("idx", &idx);
+   float y;
+   auxTree.Branch("y", &y);
+   idx = 1;
+   y = 5;
+   auxTree.Fill();
+   idx = 2;
+   y = 7;
+   auxTree.Fill();
+   auxTree.Write();
+   f2.Close();
+}
+
+TEST(RDFAndFriendsNoFixture, IndexedFriend)
+{
+   auto mainFile = "IndexedFriend_main.root";
+   auto auxFile = "IndexedFriend_aux.root";
+   FillIndexedFriend(mainFile, auxFile);
+
+   TChain mainChain("mainTree", "mainTree");
+   mainChain.Add(mainFile);
+   TChain auxChain("auxTree", "auxTree");
+   auxChain.Add(auxFile);
+
+   auxChain.BuildIndex("idx");
+   mainChain.AddFriend(&auxChain);
+
+   auto op = [&](){
+      auto df = ROOT::RDataFrame(mainChain);
+      *df.Min<int>("x");
+   };
+   EXPECT_ANY_THROW(op());
+
+   gSystem->Unlink(mainFile);
+   gSystem->Unlink(auxFile);
 }
 
 #endif // R__USE_IMT

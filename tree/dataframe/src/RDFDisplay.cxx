@@ -2,6 +2,7 @@
 #include "TInterpreter.h"
 
 #include <iomanip>
+#include <limits>
 
 namespace ROOT {
 namespace Internal {
@@ -89,12 +90,23 @@ bool RDisplayElement::IsEmpty() const
 } // namespace Internal
 
 namespace RDF {
+
+void RDisplay::EnsureCurrentColumnWidth(size_t w)
+{
+   // If the current element is wider than the widest element found, update the width
+   if (fWidths[fCurrentColumn] < w) {
+      if (w > std::numeric_limits<unsigned short>::max()) {
+         w = std::numeric_limits<unsigned short>::max();
+      }
+      fWidths[fCurrentColumn] = (unsigned short) w;
+   }
+}
+
 void RDisplay::AddToRow(const std::string &stringEle)
 {
    // If the current element is wider than the widest element found, update the width
-   if (fWidths[fCurrentColumn] < stringEle.length()) {
-      fWidths[fCurrentColumn] = stringEle.length();
-   }
+   EnsureCurrentColumnWidth(stringEle.length());
+
    // Save the element...
    fTable[fCurrentRow][fCurrentColumn] = DElement_t(stringEle);
 
@@ -113,18 +125,14 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
       auto element = DElement_t(stringEle);
 
       // Update the width if this element is the biggest found
-      if (fWidths[fCurrentColumn] < stringEle.length()) {
-         fWidths[fCurrentColumn] = stringEle.length();
-      }
+      EnsureCurrentColumnWidth(stringEle.length());
 
       if (index == 0 || index == collectionSize - 1) {
          // Do nothing, by default DisplayElement is printed
       } else if (index == 1) {
          element.SetDots();
          // Be sure the "..." fit
-         if (fWidths[fCurrentColumn] < 3) {
-            fWidths[fCurrentColumn] = 3;
-         }
+         EnsureCurrentColumnWidth(3);
       } else {
          // In the Print(), after the dots, all element will just be ignored except the last one.
          element.SetIgnore();
@@ -153,16 +161,6 @@ void RDisplay::MovePosition()
       fCurrentColumn = 0;
       fNextRow = fCurrentRow + 1;
       fTable.push_back(std::vector<DElement_t>(fNColumns));
-   }
-}
-
-void RDisplay::CallInterpreter(const std::string &code)
-{
-   TInterpreter::EErrorCode errorCode;
-   gInterpreter->Calc(code.c_str(), &errorCode);
-   if (TInterpreter::EErrorCode::kNoError != errorCode) {
-      std::string msg = "Cannot jit during Display call. Interpreter error code is " + std::to_string(errorCode) + ".";
-      throw std::runtime_error(msg);
    }
 }
 

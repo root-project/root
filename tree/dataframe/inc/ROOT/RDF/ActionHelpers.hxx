@@ -198,15 +198,39 @@ public:
    void Exec(unsigned int slot, const T &vs, const W &ws)
    {
       auto &thisBuf = fBuffers[slot];
+
       for (auto &v : vs) {
          UpdateMinMax(slot, v);
-         thisBuf.emplace_back(v); // TODO: Can be optimised in case T == BufEl_t
+         thisBuf.emplace_back(v);
       }
 
       auto &thisWBuf = fWBuffers[slot];
       for (auto &w : ws) {
          thisWBuf.emplace_back(w); // TODO: Can be optimised in case T == BufEl_t
       }
+   }
+
+   template <typename T, typename W,
+             typename std::enable_if<IsContainer<T>::value && !IsContainer<W>::value, int>::type = 0>
+   void Exec(unsigned int slot, const T &vs, const W w)
+   {
+      auto &thisBuf = fBuffers[slot];
+      for (auto &v : vs) {
+         UpdateMinMax(slot, v);
+         thisBuf.emplace_back(v); // TODO: Can be optimised in case T == BufEl_t
+      }
+
+      auto &thisWBuf = fWBuffers[slot];
+      thisWBuf.insert(thisWBuf.end(), vs.size(), w);
+   }
+
+   // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
+   template <typename T, typename W,
+             typename std::enable_if<IsContainer<W>::value && !IsContainer<T>::value, int>::type = 0>
+   void Exec(unsigned int, const T &, const W &)
+   {
+      throw std::runtime_error(
+        "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
    }
 
    Hist_t &PartialUpdate(unsigned int);
@@ -244,7 +268,9 @@ public:
       // Initialise all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
-         fObjects[i]->SetDirectory(nullptr);
+         if (auto objAsHist = dynamic_cast<TH1*>(fObjects[i])) {
+            objAsHist->SetDirectory(nullptr);
+         }
       }
    }
 
@@ -279,6 +305,15 @@ public:
       }
    }
 
+   // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
+   template <typename X0, typename X1,
+             typename std::enable_if<IsContainer<X1>::value && !IsContainer<X0>::value, int>::type = 0>
+   void Exec(unsigned int , const X0 &, const X1 &)
+   {
+      throw std::runtime_error(
+        "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
+   }
+
    template <typename X0, typename X1,
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
@@ -292,6 +327,16 @@ public:
       auto x1sIt = std::begin(x1s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++) {
          thisSlotH->Fill(*x0sIt, *x1sIt); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+
+   template <typename X0, typename W,
+             typename std::enable_if<IsContainer<X0>::value && !IsContainer<W>::value, int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const W w)
+   {
+      auto thisSlotH = fObjects[slot];
+      for (auto &&x : x0s) {
+         thisSlotH->Fill(x, w);
       }
    }
 
@@ -312,6 +357,24 @@ public:
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt); // TODO: Can be optimised in case T == vector<double>
       }
    }
+
+   template <typename X0, typename X1, typename W,
+             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && !IsContainer<W>::value,
+                                     int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const W w)
+   {
+      auto thisSlotH = fObjects[slot];
+      if (x0s.size() != x1s.size()) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+      }
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      for (; x0sIt != x0sEnd; x0sIt++, x1sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt, w); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+
    template <typename X0, typename X1, typename X2, typename X3,
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
                                         IsContainer<X3>::value,
@@ -329,6 +392,25 @@ public:
       auto x3sIt = std::begin(x3s);
       for (; x0sIt != x0sEnd; x0sIt++, x1sIt++, x2sIt++, x3sIt++) {
          thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, *x3sIt); // TODO: Can be optimised in case T == vector<double>
+      }
+   }
+
+   template <typename X0, typename X1, typename X2, typename W,
+             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
+                                        !IsContainer<W>::value,
+                                     int>::type = 0>
+   void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const W w)
+   {
+      auto thisSlotH = fObjects[slot];
+      if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
+         throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
+      }
+      auto x0sIt = std::begin(x0s);
+      const auto x0sEnd = std::end(x0s);
+      auto x1sIt = std::begin(x1s);
+      auto x2sIt = std::begin(x2s);
+      for (; x0sIt != x0sEnd; x0sIt++, x1sIt++, x2sIt++) {
+         thisSlotH->Fill(*x0sIt, *x1sIt, *x2sIt, w);
       }
    }
 
@@ -1217,6 +1299,8 @@ public:
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
       fOutputTrees[slot] =
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+      // TODO can be removed when RDF supports interleaved TBB task execution properly, see ROOT-10269
+      fOutputTrees[slot]->SetImplicitMT(false);
       if (fOptions.fAutoFlush)
          fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
@@ -1267,6 +1351,7 @@ public:
       // With this code, we set the value of the pointer in the output branch anew when needed.
       // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
+      (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {(fBranches[slot][S] && fBranchAddresses[slot][S] != GetData(values)
                          ? fBranches[slot][S]->SetAddress(GetData(values)),
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
@@ -1290,6 +1375,7 @@ public:
    template <std::size_t... S>
    void UpdateBoolArrays(unsigned int slot, BranchTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
+      (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {
          (UpdateBoolArray(fBoolArrays[slot], values, fOutputBranchNames[S], *fOutputTrees[slot]), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9

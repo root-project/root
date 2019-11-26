@@ -593,9 +593,6 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
       }
    }
 
-   if (strncmp(clname, "auto_ptr<", strlen("auto_ptr<")) == 0) {
-      AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", clname), inclist);
-   }
    return ninc;
 }
 
@@ -650,20 +647,32 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
 /// The 'name' is modified to return the change in the name,
 /// if any.
 
+static constexpr int str_length(const char* str)
+{
+    return *str ? 1 + str_length(str + 1) : 0;
+}
+
 TString TMakeProject::UpdateAssociativeToVector(const char *name)
 {
    TString newname( name );
 
-   if (strchr(name,'<')!=0) {
+   constexpr auto auto_ptr_len = str_length("auto_ptr<");
+   if (strncmp(name, "auto_ptr<", auto_ptr_len) == 0) {
+      newname = "unique_ptr<";
+      newname += (name + auto_ptr_len);
+   } else if (strchr(name,'<')!=0) {
       std::vector<std::string> inside;
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
-      if (nestedLoc) --narg;
+
       Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0]));
 
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
+
+      if (nestedLoc) narg = nestedLoc;
+
       // Remove default allocator if any.
       static const char* allocPrefix = "std::allocator<";
       static const unsigned int allocPrefixLen (strlen(allocPrefix));

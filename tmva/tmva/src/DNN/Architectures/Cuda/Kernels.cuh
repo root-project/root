@@ -813,8 +813,14 @@ __global__ void CrossEntropy(AFloat * result,
    if ((i < m) && (j < n)) {
        AFloat norm = 1 / ((AFloat) (m * n));
        AFloat sig  = 1.0 / (1.0 + exp(-output[index]));
-       AFloat ce   = Y[index] * log(sig) + (1.0 - Y[index]) * log(1.0 - sig);
-       sdata[tid]  = -weights[i] * norm * ce;
+       if (Y[index] == 0)
+          sdata[tid] = -weights[i] * norm * log(1.0 - sig);
+       else if (Y[index] == 1.0)
+          sdata[tid] = -weights[i] * norm * log(sig);
+       else {
+          AFloat ce  = Y[index] * log(sig) + (1.0 - Y[index]) * log(1.0 - sig);
+          sdata[tid] = -weights[i] * norm * ce;
+       }
    } else {
        sdata[tid] = 0.0;
    }

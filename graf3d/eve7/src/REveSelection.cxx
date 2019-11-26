@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Author: Matevz Tadel 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,6 +15,9 @@
 #include <ROOT/REveManager.hxx>
 
 #include "TClass.h"
+#include "TColor.h"
+
+#include "json.hpp"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -28,15 +31,55 @@ selection type (select/highlight).
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveSelection::REveSelection(const char* n, const char* t) :
-   REveElementList(n, t),
-   fPickToSelect  (kPS_Projectable),
-   fActive        (kTRUE),
-   fIsMaster      (kTRUE)
+REveSelection::REveSelection(const std::string& n, const std::string& t,
+                             Color_t col_visible, Color_t col_hidden) :
+   REveElement       (n, t),
+   fVisibleEdgeColor (col_visible),
+   fHiddenEdgeColor  (col_hidden),
+   fActive           (kTRUE),
+   fIsMaster         (kTRUE)
 {
-   fSelElement       = &REveElement::SelectElement;
-   fIncImpSelElement = &REveElement::IncImpliedSelected;
-   fDecImpSelElement = &REveElement::DecImpliedSelected;
+   // Managing complete selection state on element level.
+   //
+   // Method pointers for propagation of selected / implied selected state
+   // to elements. This has to be done differently now -- and kept within
+   // REveSelection.
+   //
+   // Also, see REveManager::PreDeleteElement. We might need some sort of
+   // implied-selected-count after all (global, for all selections,
+   // highlights) ... and traverse all selections if the element gets zapped.
+   // Yup, we have it ...
+   // XXXX but ... we can also go up to master and check there directly !!!!!
+
+   AddPickToSelect(kPS_Master);
+   AddPickToSelect(kPS_PableCompound);
+   AddPickToSelect(kPS_Element);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+REveSelection::~REveSelection()
+{
+   DeactivateSelection();
+   RemoveNieces();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set visible highlight color
+
+void REveSelection::SetVisibleEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b)
+{
+   fVisibleEdgeColor = TColor::GetColor(r, g, b);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set hidden highlight color
+void REveSelection::SetHiddenEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b)
+{
+   fHiddenEdgeColor = TColor::GetColor(r, g, b);
+   StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,121 +91,132 @@ void REveSelection::SetHighlightMode()
    // REveElement that are used to mark elements as (un)selected and
    // implied-(un)selected.
 
-   fPickToSelect = kPS_Projectable;
    fIsMaster     = kFALSE;
-
-   fSelElement       = &REveElement::HighlightElement;
-   fIncImpSelElement = &REveElement::IncImpliedHighlighted;
-   fDecImpSelElement = &REveElement::DecImpliedHighlighted;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Select element indicated by the entry and fill its
 /// implied-selected set.
 
-void REveSelection::DoElementSelect(REveSelection::SelMap_i entry)
+void REveSelection::DoElementSelect(SelMap_i &entry)
 {
-   REveElement *el  = entry->first;
-   Set_t       &set = entry->second;
+   Set_t &imp_set = entry->second.f_implied;
 
-   (el->*fSelElement)(kTRUE);
-   el->FillImpliedSelectedSet(set);
-   for (Set_i i = set.begin(); i != set.end(); ++i)
-      ((*i)->*fIncImpSelElement)();
+   entry->first->FillImpliedSelectedSet(imp_set);
+
+   auto i = imp_set.begin();
+   while (i != imp_set.end())
+   {
+      if ((*i)->GetElementId() == 0)
+      {
+         if (gDebug > 0)
+         {
+            Info("REveSelection::DoElementSelect",
+                 "Element '%s' [%s] with 0 id detected and removed.",
+                 (*i)->GetCName(), (*i)->IsA()->GetName());
+         }
+         auto j = i++;
+         imp_set.erase(j);
+      }
+      else
+      {
+         (*i)->IncImpliedSelected();
+         ++i;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deselect element indicated by the entry and clear its
 /// implied-selected set.
 
-void REveSelection::DoElementUnselect(REveSelection::SelMap_i entry)
+void REveSelection::DoElementUnselect(SelMap_i &entry)
 {
-   REveElement *el  = entry->first;
-   Set_t       &set = entry->second;
+   Set_t &imp_set = entry->second.f_implied;
 
-   for (Set_i i = set.begin(); i != set.end(); ++i)
-      ((*i)->*fDecImpSelElement)();
-   set.clear();
-   (el->*fSelElement)(kFALSE);
+   for (auto &imp_el: imp_set) imp_el->DecImpliedSelected();
+
+   imp_set.clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if elemenet el is selected (not implied selected).
+
+bool REveSelection::HasNiece(REveElement *el) const
+{
+   return fMap.find(el) != fMap.end();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if any elements are selected.
+
+bool REveSelection::HasNieces() const
+{
+   return ! fMap.empty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Pre-addition check. Deny addition if el is already selected.
-/// Virtual from REveElement.
+/// Virtual from REveAunt.
 
-Bool_t REveSelection::AcceptElement(REveElement* el)
+bool REveSelection::AcceptNiece(REveElement* el)
 {
-   return el != this && fImpliedSelected.find(el) == fImpliedSelected.end() &&
-          el->IsA()->InheritsFrom(REveSelection::Class()) == kFALSE;
+   return el != this && fMap.find(el) == fMap.end() &&
+          el->IsA()->InheritsFrom(TClass::GetClass<REveSelection>()) == kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add an element into selection, virtual from REveElement.
+/// Add an element into selection, virtual from REveAunt
 
-void REveSelection::AddElement(REveElement* el)
+void REveSelection::AddNieceInternal(REveElement* el)
 {
-   REveElementList::AddElement(el);
-
-   SelMap_i i = fImpliedSelected.insert(std::make_pair(el, Set_t())).first;
-   if (fActive)
-   {
-      DoElementSelect(i);
+   auto res = fMap.emplace(el, Record(el));
+   if (fActive) {
+      DoElementSelect(res.first);
+      SelectionAdded(el);
    }
-   SelectionAdded(el);
+   StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add an element into selection, virtual from REveElement.
-/// Overriden here just so that a signal can be emitted.
+/// Virtual from REveAunt.
 
-void REveSelection::RemoveElement(REveElement* el)
+void REveSelection::RemoveNieceInternal(REveElement* el)
 {
-   REveElementList::RemoveElement(el);
-   SelectionRemoved(el);
-}
+   auto i = fMap.find(el);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual from REveElement.
-
-void REveSelection::RemoveElementLocal(REveElement* el)
-{
-   SelMap_i i = fImpliedSelected.find(el);
-
-   if (i != fImpliedSelected.end())
+   if (i != fMap.end())
    {
       if (fActive)
       {
          DoElementUnselect(i);
+         SelectionRemoved(el);
       }
-      fImpliedSelected.erase(i);
+      fMap.erase(i);
+      StampObjPropsPreChk();
    }
    else
    {
-      Warning("REveSelection::RemoveElementLocal", "element not found in map.");
+      Warning("REveSelection::RemoveNieceLocal", "element not found in map.");
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add an element into selection, virtual from REveElement.
+/// Add an element into selection, virtual from REveAunt.
 /// Overriden here just so that a signal can be emitted.
 
-void REveSelection::RemoveElements()
+void REveSelection::RemoveNieces()
 {
-   REveElementList::RemoveElements();
-   SelectionCleared();
-}
+   if (IsEmpty()) return;
 
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual from REveElement.
-
-void REveSelection::RemoveElementsLocal()
-{
-   if (fActive)
+   for (auto i = fMap.begin(); i != fMap.end(); ++i)
    {
-      for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
-         DoElementUnselect(i);
+      i->first->RemoveAunt(this);
+      if (fActive) DoElementUnselect(i);
    }
-   fImpliedSelected.clear();
+   fMap.clear();
+   if (fActive) SelectionCleared();
+   StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,14 +226,21 @@ void REveSelection::RemoveElementsLocal()
 /// REveManager::PreDeleteElement() and should not be called
 /// directly.
 
-void REveSelection::RemoveImpliedSelected(REveElement* el)
+void REveSelection::RemoveImpliedSelected(REveElement *el)
 {
-   for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
+   bool changed = false;
+
+   for (auto &i : fMap)
    {
-      Set_i j = i->second.find(el);
-      if (j != i->second.end())
-         i->second.erase(j);
+      auto j = i.second.f_implied.find(el);
+      if (j != i.second.f_implied.end())
+      {
+         i.second.f_implied.erase(j);
+         changed = true;
+      }
    }
+
+   if (changed) StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,38 +248,44 @@ void REveSelection::RemoveImpliedSelected(REveElement* el)
 /// Add new elements to implied-selected set and increase their
 /// implied-selected count.
 
-void REveSelection::RecheckImpliedSet(SelMap_i smi)
+void REveSelection::RecheckImpliedSet(SelMap_i &smi)
 {
+   bool  changed = false;
    Set_t set;
    smi->first->FillImpliedSelectedSet(set);
-   for (Set_i i = set.begin(); i != set.end(); ++i)
+   for (auto &i: set)
    {
-      if (smi->second.find(*i) == smi->second.end())
+      if (smi->second.f_implied.find(i) == smi->second.f_implied.end())
       {
-         smi->second.insert(*i);
-         ((*i)->*fIncImpSelElement)();
+         smi->second.f_implied.insert(i);
+         i->IncImpliedSelected();
+         changed = true;
       }
    }
+
+   if (changed) StampObjPropsPreChk();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If given element is selected or implied-selected with this
-/// selection and recheck implied-set for given selection entry.
+/// If given element is selected or implied-selected within this
+/// selection then recheck implied-set for given selection entry.
 
-void REveSelection::RecheckImpliedSetForElement(REveElement* el)
+void REveSelection::RecheckImpliedSetForElement(REveElement *el)
 {
    // Top-level selected.
    {
-      SelMap_i i = fImpliedSelected.find(el);
-      if (i != fImpliedSelected.end())
+      auto i = fMap.find(el);
+      if (i != fMap.end())
          RecheckImpliedSet(i);
    }
 
-   // Implied selected, need to loop over all.
+   // Implied selected (we can not tell if by this selection or some other),
+   // then we need to loop over all.
+   if (el->GetImpliedSelected() > 0)
    {
-      for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++ i)
+      for (auto i = fMap.begin(); i != fMap.end(); ++i)
       {
-         if (i->second.find(el) != i->second.end())
+         if (i->second.f_implied.find(el) != i->second.f_implied.end())
             RecheckImpliedSet(i);
       }
    }
@@ -252,7 +319,7 @@ void REveSelection::SelectionCleared()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Called when secondary selection changed internally.
+/// Emit SelectionRepeated signal.
 
 void REveSelection::SelectionRepeated(REveElement* /*el*/)
 {
@@ -265,9 +332,13 @@ void REveSelection::SelectionRepeated(REveElement* /*el*/)
 
 void REveSelection::ActivateSelection()
 {
-   for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
-      DoElementSelect(i);
+   if (fActive) return;
+
    fActive = kTRUE;
+   for (auto i = fMap.begin(); i != fMap.end(); ++i) {
+      DoElementSelect(i);
+      SelectionAdded(i->first);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,9 +346,13 @@ void REveSelection::ActivateSelection()
 
 void REveSelection::DeactivateSelection()
 {
-   fActive = kFALSE;
-   for (SelMap_i i = fImpliedSelected.begin(); i != fImpliedSelected.end(); ++i)
+   if (!fActive) return;
+
+   for (auto i = fMap.begin(); i != fMap.end(); ++i) {
       DoElementUnselect(i);
+   }
+   SelectionCleared();
+   fActive = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -290,53 +365,54 @@ REveElement* REveSelection::MapPickedToSelected(REveElement* el)
    if (el == nullptr)
       return nullptr;
 
-   if (el->ForwardSelection())
+   for (int pick_to_select : fPickToSelect)
    {
-      return el->ForwardSelection();
+      switch (pick_to_select)
+      {
+         case kPS_Ignore:
+         {
+            return nullptr;
+         }
+         case kPS_Element:
+         {
+            return el;
+         }
+         case kPS_Projectable:
+         {
+            REveProjected* pted = dynamic_cast<REveProjected*>(el);
+            if (pted)
+               return dynamic_cast<REveElement*>(pted->GetProjectable());
+            break;
+         }
+         case kPS_Compound:
+         {
+            REveElement* cmpnd = el->GetCompound();
+            if (cmpnd)
+               return cmpnd;
+            break;
+         }
+         case kPS_PableCompound:
+         {
+            REveProjected* pted = dynamic_cast<REveProjected*>(el);
+            if (pted)
+               el = dynamic_cast<REveElement*>(pted->GetProjectable());
+            REveElement* cmpnd = el->GetCompound();
+            if (cmpnd)
+               return cmpnd;
+            if (pted)
+               return el;
+            break;
+         }
+         case kPS_Master:
+         {
+            REveElement* mstr = el->GetSelectionMaster();
+            if (mstr)
+               return mstr;
+            break;
+         }
+      }
    }
 
-   switch (fPickToSelect)
-   {
-      case kPS_Ignore:
-      {
-         return nullptr;
-      }
-      case kPS_Element:
-      {
-         return el;
-      }
-      case kPS_Projectable:
-      {
-         REveProjected* pted = dynamic_cast<REveProjected*>(el);
-         if (pted)
-            return dynamic_cast<REveElement*>(pted->GetProjectable());
-         return el;
-      }
-      case kPS_Compound:
-      {
-         REveElement* cmpnd = el->GetCompound();
-         if (cmpnd)
-            return cmpnd;
-         return el;
-      }
-      case kPS_PableCompound:
-      {
-         REveProjected* pted = dynamic_cast<REveProjected*>(el);
-         if (pted)
-            el = dynamic_cast<REveElement*>(pted->GetProjectable());
-         REveElement* cmpnd = el->GetCompound();
-         if (cmpnd)
-            return cmpnd;
-         return el;
-      }
-      case kPS_Master:
-      {
-         REveElement* mstr = el->GetMaster();
-         if (mstr)
-            return mstr;
-         return el;
-      }
-   }
    return el;
 }
 
@@ -345,52 +421,233 @@ REveElement* REveSelection::MapPickedToSelected(REveElement* el)
 /// the user is requiring a multiple selection (usually this is
 /// associated with control-key being pressed at the time of pick
 /// event).
+/// XXXX Old interface, not used in EVE-7.
 
 void REveSelection::UserPickedElement(REveElement* el, Bool_t multi)
 {
-   REveElement *edit_el = el ? el->ForwardEdit() : 0;
-
    el = MapPickedToSelected(el);
 
-   if (el || HasChildren())
+   if (el || NotEmpty())
    {
-      if (!multi)
-         RemoveElements();
+      if ( ! multi)
+         RemoveNieces();
       if (el)
       {
-         if (HasChild(el))
-             RemoveElement(el);
+         if (HasNiece(el))
+             RemoveNiece(el);
          else
-            AddElement(el);
+            AddNiece(el);
       }
-      if (fIsMaster)
-         REX::gEve->ElementSelect(edit_el ? edit_el : el);
-      REX::gEve->Redraw3D();
+      StampObjProps();
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Called when secondary selection becomes empty.
+/// Called when element selection is repeated.
+/// XXXX Old interface, not used in EVE-7.
 
 void REveSelection::UserRePickedElement(REveElement* el)
 {
    el = MapPickedToSelected(el);
-   if (el && HasChild(el))
+   if (el && HasNiece(el))
    {
       SelectionRepeated(el);
-      REX::gEve->Redraw3D();
+      StampObjProps();
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Called when secondary selection becomes empty.
+/// Called when an element is unselected.
+/// XXXX Old interface, not used in EVE-7.
 
 void REveSelection::UserUnPickedElement(REveElement* el)
 {
    el = MapPickedToSelected(el);
-   if (el)
+   if (el && HasNiece(el))
    {
-      RemoveElement(el);
-      REX::gEve->Redraw3D();
+      RemoveNiece(el);
+      StampObjProps();
    }
+}
+
+//==============================================================================
+
+void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+{
+   static const REveException eh("REveSelection::NewElementPicked ");
+
+   REveElement *pel = nullptr, *el = nullptr;
+
+   if (id > 0)
+   {
+     pel = REX::gEve->FindElementById(id);
+
+     if ( ! pel) throw eh + "picked element id=" + id + " not found.";
+
+     el = MapPickedToSelected(pel);
+   }
+
+   if (gDebug > 0) {
+      std::string debug_secondary;
+      if (secondary) {
+         debug_secondary = " {";
+         for (auto si : secondary_idcs) {
+            debug_secondary.append(" ");
+            debug_secondary.append(std::to_string(si));
+         }
+         debug_secondary.append(" }");
+      }
+      ::Info("REveSelection::NewElementPicked", "%p -> %p, multi: %d, secondary: %d  %s", pel, el, multi, secondary, debug_secondary.c_str());
+   }
+
+   Record *rec = find_record(el);
+
+   bool changed = true;
+
+   if (multi)
+   {
+      if (el)
+      {
+         if (rec)
+         {
+            if (secondary || rec->is_secondary()) // ??? should actually be && ???
+            {
+               // XXXX union or difference:
+               // - if all secondary_idcs are already in the record, toggle
+               //   - if final result is empty set, remove element from selection
+               // - otherwise union
+            }
+            else
+            {
+               RemoveNiece(el);
+            }
+         }
+         else
+         {
+            AddNiece(el);
+         }
+      }
+      else
+      {
+         // Multiple selection with 0 element ... do nothing, I think.
+         changed = false;
+      }
+   }
+   else // single selection (not multi)
+   {
+      if (el)
+      {
+         if (rec)
+         {
+            if (secondary)
+            {
+               // Could check rec->is_secondary() and compare indices.
+               // if sets are identical, issue SelectionRepeated()
+               // else modify record for the new one, issue Repeated
+
+               rec->f_is_sec   = true;
+               rec->f_sec_idcs = secondary_idcs;
+            }
+            else
+            {
+               RemoveNiece(el);
+            }
+         }
+         else
+         {
+            if (HasNieces()) RemoveNieces();
+            AddNiece(el);
+            if (secondary)
+            {
+               rec = find_record(el);
+               rec->f_is_sec   = true;
+               rec->f_sec_idcs = secondary_idcs;
+            }
+         }
+      }
+      else // Single selection with zero element --> clear selection.
+      {
+         if (HasNieces())
+           RemoveNieces();
+         else
+           changed = false;
+      }
+   }
+
+   if (changed)
+     StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear selection if not empty.
+
+void REveSelection::ClearSelection()
+{
+   if (HasNieces())
+   {
+      RemoveNieces();
+      StampObjProps();
+   }
+}
+
+//==============================================================================
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove pointers to el from implied selected sets.
+
+int REveSelection::RemoveImpliedSelectedReferencesTo(REveElement *el)
+{
+   int count = 0;
+
+   for (auto &i : fMap)
+   {
+      auto j = i.second.f_implied.find(el);
+
+      if (j != i.second.f_implied.end())
+      {
+         i.second.f_implied.erase(j);
+         el->DecImpliedSelected();
+         ++count;
+      }
+   }
+
+   return count;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write core json. If rnr_offset negative, render data will not be written
+
+Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
+{
+   REveElement::WriteCoreJson(j, -1);
+
+   j["fVisibleEdgeColor"] = fVisibleEdgeColor;
+   j["fHiddenEdgeColor"]  = fHiddenEdgeColor;
+
+   nlohmann::json sel_list = nlohmann::json::array();
+
+   for (auto &i : fMap)
+   {
+      nlohmann::json rec = {}, imp = nlohmann::json::array(), sec = nlohmann::json::array();
+
+      rec["primary"] = i.first->GetElementId();
+
+      // XXX if not empty ???
+      for (auto &imp_el : i.second.f_implied) imp.push_back(imp_el->GetElementId());
+      rec["implied"]  = imp;
+
+      // XXX if not empty / f_is_sec is false ???
+      for (auto &sec_id : i.second.f_sec_idcs) sec.push_back(sec_id);
+      rec["sec_idcs"] = sec;
+
+      sel_list.push_back(rec);
+   }
+
+   j["sel_list"] = sel_list;
+
+   j["UT_PostStream"] = "UT_Selection_Refresh_State"; // XXXX to be canonized
+
+   // std::cout << j.dump(4) << std::endl;
+
+   return 0;
 }

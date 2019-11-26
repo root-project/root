@@ -61,7 +61,6 @@ messages to all workers, it collects results, etc.
 #include "TEventList.h"
 #include "TFile.h"
 #include "TFileInfo.h"
-#include "TFunction.h"
 #include "TFTP.h"
 #include "THashList.h"
 #include "TInterpreter.h"
@@ -69,8 +68,6 @@ messages to all workers, it collects results, etc.
 #include "TMap.h"
 #include "TMath.h"
 #include "TMessage.h"
-#include "TMethodArg.h"
-#include "TMethodCall.h"
 #include "TMonitor.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -3422,12 +3419,12 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
       case kPROOF_OUTPUTLIST:
          {
             // We start measuring the merging time
-            fPlayer->SetMerging();
 
             PDB(kGlobal,2)
                Info("HandleInputMessage","%s: kPROOF_OUTPUTLIST: enter", sl->GetOrdinal());
             TList *out = 0;
             if (fPlayer) {
+               fPlayer->SetMerging();
                if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
                   out = (TList *) mess->ReadObject(TList::Class());
                } else {

@@ -23,6 +23,7 @@
 #include <string.h>
 #include <utility>
 #include <sstream>
+#include <tuple>
 
 // FIXME: Should refer to PyROOT::TParameter in the code.
 #ifdef R__CXXMODULES
@@ -548,14 +549,35 @@ Bool_t PyROOT::TULongLongConverter::ToMemory( PyObject* value, void* address )
 ////////////////////////////////////////////////////////////////////////////////
 /// construct a new string and copy it in new memory
 
+static std::tuple<const char*,Py_ssize_t> getStringAndSizeCString(PyObject* pyobject) {
+#if PY_VERSION_HEX >= 0x03030000
+   // Support non-ASCII strings (get the right length in bytes)
+   Py_ssize_t size = 0;
+   auto charArr = PyROOT_PyUnicode_AsStringAndSize(pyobject, &size);
+#else
+   auto size = PyROOT_PyUnicode_GET_SIZE(pyobject);
+   auto charArr = PyROOT_PyUnicode_AsStringChecked(pyobject);
+#endif
+   return std::tuple<const char*,Py_ssize_t>(charArr, size);
+}
+
 Bool_t PyROOT::TCStringConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
 {
-   const char* s = PyROOT_PyUnicode_AsStringChecked( pyobject );
-   if ( PyErr_Occurred() )
+   if (PyROOT_PyUnicode_Check(pyobject)
+#if PY_VERSION_HEX < 0x03000000
+       || PyUnicode_Check(pyobject)
+#endif
+   ) {
+      auto strAndSize = getStringAndSizeCString(pyobject);
+      fBuffer = std::string(std::get<0>(strAndSize), std::get<1>(strAndSize));
+   } else if (PyBytes_Check(pyobject)) {
+      auto s = PyBytes_AsString(pyobject);                                    \
+      auto size = PyBytes_GET_SIZE(pyobject);
+      fBuffer = std::string(s, size);
+   } else {
       return kFALSE;
-
-   fBuffer = std::string( s, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
+   }
 
 // verify (too long string will cause truncation, no crash)
    if ( fMaxSize < (UInt_t)fBuffer.size() )
@@ -846,6 +868,19 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg(
 
 
 //- converters for special cases ----------------------------------------------
+
+static std::tuple<const char*,Py_ssize_t> getStringAndSizeSTLString(PyObject* pyobject) {
+#if PY_VERSION_HEX >= 0x03030000
+   // Support non-ASCII strings (get the right length in bytes)
+   Py_ssize_t size = 0;
+   auto charArr = PyROOT_PyUnicode_AsStringAndSize(pyobject, &size);
+#else
+   auto size = PyROOT_PyUnicode_GET_SIZE(pyobject);
+   auto charArr = PyROOT_PyUnicode_AsString(pyobject);
+#endif
+   return std::tuple<const char*,Py_ssize_t>(charArr, size);
+}
+
 #define PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( name, type, F1, F2 )  \
 PyROOT::T##name##Converter::T##name##Converter( Bool_t keepControl ) :        \
       TCppObjectConverter( Cppyy::GetScope( #type ), keepControl ) {}         \
@@ -854,8 +889,17 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter& para, TCallContext* ctxt )              \
 {                                                                             \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
-      fBuffer = type( PyROOT_PyUnicode_AsString( pyobject ),                  \
-                      PyROOT_PyUnicode_GET_SIZE( pyobject ) );                \
+      auto strAndSize = getStringAndSizeSTLString(pyobject);                  \
+      fBuffer = type(std::get<0>(strAndSize), std::get<1>(strAndSize));       \
+      para.fValue.fVoidp = &fBuffer;                                          \
+      para.fTypeCode = 'V';                                                   \
+      return kTRUE;                                                           \
+   }                                                                          \
+                                                                              \
+   if (PyBytes_Check(pyobject)) {                                             \
+      auto s = PyBytes_AsString(pyobject);                                    \
+      auto size = PyBytes_GET_SIZE(pyobject);                                 \
+      fBuffer = type(s, size);                                                \
       para.fValue.fVoidp = &fBuffer;                                          \
       para.fTypeCode = 'V';                                                   \
       return kTRUE;                                                           \
@@ -1456,7 +1500,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    TConverter* result = 0;
    if ( Cppyy::TCppScope_t klass = Cppyy::GetScope( realType ) ) {
       if ( Cppyy::IsSmartPtr( realType ) ) {
-         const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->" );
+	const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->", /*bases?*/ true );
          if ( ! methods.empty() ) {
             Cppyy::TCppType_t rawPtrType = Cppyy::GetScope(
                TClassEdit::ShortType( Cppyy::GetMethodResultType( methods[0] ).c_str(), 1 ) );
@@ -1495,11 +1539,13 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
           result = new TValueCppObjectConverter( klass, kTRUE );
       }
    } else if ( Cppyy::IsEnum( realType ) ) {
-   // special case (Cling): represent enums as unsigned integers
-      if ( cpd == "&" )
-         h = isConst ? gConvFactories.find( "const long&" ) : gConvFactories.find( "long&" );
-      else
-         h = gConvFactories.find( "UInt_t" );
+      // Get underlying type of enum
+      std::string et(TClassEdit::ResolveTypedef(Cppyy::ResolveEnum(realType).c_str()));
+      if (cpd == "&") {
+         auto reft = et + "&";
+         h = isConst ? gConvFactories.find("const " + reft) : gConvFactories.find(reft);
+      } else
+         h = gConvFactories.find(et);
    } else if ( realType.find( "(*)" ) != std::string::npos ||
              ( realType.find( "::*)" ) != std::string::npos ) ) {
    // this is a function function pointer
@@ -1629,7 +1675,6 @@ namespace {
       NFp_t( "const int&",                &CreateConstIntRefConverter        ),
       NFp_t( "unsigned int",              &CreateUIntConverter               ),
       NFp_t( "const unsigned int&",       &CreateConstUIntRefConverter       ),
-      NFp_t( "UInt_t", /* enum */         &CreateIntConverter /* yes: Int */ ),
       NFp_t( "long",                      &CreateLongConverter               ),
       NFp_t( "long&",                     &CreateLongRefConverter            ),
       NFp_t( "const long&",               &CreateConstLongRefConverter       ),

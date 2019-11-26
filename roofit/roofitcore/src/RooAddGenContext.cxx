@@ -24,7 +24,7 @@ generator context specific for RooAddPdf PDFs. The strategy
 of RooAddGenContext is to defer generation of each component
 to a dedicated generator context for that component and to
 randomly choose one of those context to generate an event,
-with a probability proportional to its associated coefficient
+with a probability proportional to its associated coefficient.
 **/
 
 
@@ -79,7 +79,13 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
   for (const auto arg : model._pdfList) {
-    auto pdf = static_cast<const RooAbsPdf *>(arg);
+    auto pdf = dynamic_cast<const RooAbsPdf *>(arg);
+    if (!pdf) {
+      coutF(Generation) << "Cannot generate events from an object that is not a PDF.\n\t"
+          << "The offending object is a " << arg->IsA()->GetName() << " named '" << arg->GetName() << "'." << std::endl;
+      throw std::invalid_argument("Trying to generate events from on object that is not a PDF.");
+    }
+
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.push_back(cx) ;
   }  

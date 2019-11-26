@@ -41,6 +41,9 @@ public:
          Int_t bordersize=4 ,Option_t *option="br");
    TPave(const TPave &pave);
    virtual ~TPave();
+
+   TPave &operator=(const TPave &src);
+
    void  Copy(TObject &pave) const;
    virtual void  ConvertNDCtoPad();
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);

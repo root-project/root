@@ -17,6 +17,7 @@ typedef long double          LongDouble_t;
 namespace Cppyy {
     typedef size_t      TCppScope_t;
     typedef TCppScope_t TCppType_t;
+    typedef void*       TCppEnum_t;
     typedef void*       TCppObject_t;
     typedef intptr_t    TCppMethod_t;
 
@@ -117,11 +118,17 @@ namespace Cppyy {
     RPY_EXPORTED
     void GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames);
 
+// namespace reflection information ------------------------------------------
+    RPY_EXPORTED
+    std::vector<TCppScope_t> GetUsingNamespaces(TCppScope_t);
+
 // class reflection information ----------------------------------------------
     RPY_EXPORTED
     std::string GetFinalName(TCppType_t type);
     RPY_EXPORTED
     std::string GetScopedFinalName(TCppType_t type);
+    RPY_EXPORTED
+    bool        HasVirtualDestructor(TCppType_t type);
     RPY_EXPORTED
     bool        HasComplexHierarchy(TCppType_t type);
     RPY_EXPORTED
@@ -131,7 +138,9 @@ namespace Cppyy {
     RPY_EXPORTED
     bool        IsSubtype(TCppType_t derived, TCppType_t base);
     RPY_EXPORTED
-    bool        GetSmartPtrInfo(const std::string&, TCppType_t& raw, TCppMethod_t& deref);
+    bool        IsSmartPtr(TCppType_t type);
+    RPY_EXPORTED
+    bool        GetSmartPtrInfo(const std::string&, TCppType_t* raw, TCppMethod_t* deref);
     RPY_EXPORTED
     void        AddSmartPtrType(const std::string&);
 
@@ -168,7 +177,7 @@ namespace Cppyy {
     RPY_EXPORTED
     std::string GetMethodArgDefault(TCppMethod_t, TCppIndex_t iarg);
     RPY_EXPORTED
-    std::string GetMethodSignature(TCppMethod_t, bool show_formalargs);
+    std::string GetMethodSignature(TCppMethod_t, bool show_formalargs, TCppIndex_t maxargs = (TCppIndex_t)-1);
     RPY_EXPORTED
     std::string GetMethodPrototype(TCppScope_t scope, TCppMethod_t, bool show_formalargs);
     RPY_EXPORTED
@@ -179,6 +188,8 @@ namespace Cppyy {
     RPY_EXPORTED
     std::string GetTemplatedMethodName(TCppScope_t scope, TCppIndex_t imeth);
     RPY_EXPORTED
+    bool        IsTemplatedConstructor(TCppScope_t scope, TCppIndex_t imeth);
+    RPY_EXPORTED
     bool        ExistsMethodTemplate(TCppScope_t scope, const std::string& name);
     RPY_EXPORTED
     bool        IsMethodTemplate(TCppScope_t scope, TCppIndex_t imeth);
@@ -188,7 +199,7 @@ namespace Cppyy {
 
     RPY_EXPORTED
     TCppIndex_t  GetGlobalOperator(
-        TCppType_t scope, TCppType_t lc, TCppScope_t rc, const std::string& op);
+        TCppType_t scope, const std::string& lc, const std::string& rc, const std::string& op);
 
 // method properties ---------------------------------------------------------
     RPY_EXPORTED
@@ -224,13 +235,16 @@ namespace Cppyy {
     RPY_EXPORTED
     int  GetDimensionSize(TCppScope_t scope, TCppIndex_t idata, int dimension);
 
-} // namespace Cppyy
+// enum properties -----------------------------------------------------------
+    RPY_EXPORTED
+    TCppEnum_t  GetEnum(TCppScope_t scope, const std::string& enum_name);
+    RPY_EXPORTED
+    TCppIndex_t GetNumEnumData(TCppEnum_t);
+    RPY_EXPORTED
+    std::string GetEnumDataName(TCppEnum_t, TCppIndex_t idata);
+    RPY_EXPORTED
+    long long   GetEnumDataValue(TCppEnum_t, TCppIndex_t idata);
 
-extern "C" {
-    RPY_EXPORTED
-    void cppyy_set_converter_creator(void* (*)(const char*, long*));
-    RPY_EXPORTED
-    void* cppyy_create_converter(const char* type_name, long* dims);
-}
+} // namespace Cppyy
 
 #endif // !CPYCPPYY_CPPYY_H

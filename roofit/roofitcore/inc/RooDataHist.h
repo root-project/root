@@ -16,16 +16,16 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
-#include <map>
-#include <vector>
-#include <string>
-#include <utility>
-
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 #include "RooNameSet.h"
 #include "RooCacheManager.h"
+
+#include <map>
+#include <vector>
+#include <string>
+#include <utility>
 
 class TObject ;
 class RooAbsArg;
@@ -50,10 +50,12 @@ public:
   //RooDataHist(const char *name, const char *title, const RooArgList& vars, Double_t initWgt=1.0) ;
   RooDataHist(const char *name, const char *title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
 	      const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
-
+  RooDataHist& operator=(const RooDataHist&) = delete;
 
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
-  virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
+  virtual TObject* Clone(const char* newname="") const {
+    return new RooDataHist(*this, newname && newname[0] != '\0' ? newname : GetName());
+  }
   virtual ~RooDataHist() ;
 
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet*vars=0, const char* /*wgtVarName*/=0) const {
@@ -88,6 +90,14 @@ public:
     return kTRUE ;     
   }
   virtual Bool_t isNonPoissonWeighted() const ;
+
+  virtual RooSpan<const double> getWeightBatch(std::size_t, std::size_t) const {
+    //TODO
+    std::cerr << "Retrieving weights in batches not yet implemented for RooDataHist." << std::endl;
+    assert(false);
+
+    return {};
+  }
 
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;
@@ -158,17 +168,17 @@ protected:
 
   virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) ;
 
-  virtual Double_t get_wgt(const Int_t &idx) const { return _wgt[idx]; }
-  virtual Double_t get_errLo(const Int_t &idx) const { return _errLo[idx]; }
-  virtual Double_t get_errHi(const Int_t &idx) const { return _errHi[idx]; }
-  virtual Double_t get_sumw2(const Int_t &idx) const { return _sumw2[idx]; }
+  Double_t get_wgt(const Int_t &idx) const { return _wgt[idx]; }
+  Double_t get_errLo(const Int_t &idx) const { return _errLo[idx]; }
+  Double_t get_errHi(const Int_t &idx) const { return _errHi[idx]; }
+  Double_t get_sumw2(const Int_t &idx) const { return _sumw2[idx]; }
 
-  virtual Double_t get_curWeight() const { return _curWeight; }
-  virtual Double_t get_curWgtErrLo() const { return _curWgtErrLo; }
-  virtual Double_t get_curWgtErrHi() const { return _curWgtErrHi; }
-  virtual Double_t get_curSumW2() const { return _curSumW2; }
+  Double_t get_curWeight() const { return _curWeight; }
+  Double_t get_curWgtErrLo() const { return _curWgtErrLo; }
+  Double_t get_curWgtErrHi() const { return _curWgtErrHi; }
+  Double_t get_curSumW2() const { return _curSumW2; }
 
-  virtual Int_t get_curIndex() const { return _curIndex; }
+  Int_t get_curIndex() const { return _curIndex; }
 
   Int_t       _arrSize ; //  Size of the weight array
   std::vector<Int_t> _idxMult ; // Multiplier jump table for index calculation
@@ -180,15 +190,14 @@ protected:
   Double_t*      _binv ; //[_arrSize] Bin volume array  
 
   RooArgSet  _realVars ; // Real dimensions of the dataset 
-  TIterator* _realIter ; //! Iterator over realVars
   Bool_t*    _binValid ; //! Valid bins with current range definition
  
-  mutable Double_t _curWeight ; // Weight associated with the current coordinate
-  mutable Double_t _curWgtErrLo ; // Error on weight associated with the current coordinate
-  mutable Double_t _curWgtErrHi ; // Error on weight associated with the current coordinate
-  mutable Double_t _curSumW2 ; // Current sum of weights^2
-  mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
-  mutable Int_t    _curIndex ; // Current index
+  mutable Double_t _curWeight{0.}; // Weight associated with the current coordinate
+  mutable Double_t _curWgtErrLo{0.}; // Error on weight associated with the current coordinate
+  mutable Double_t _curWgtErrHi{0.}; // Error on weight associated with the current coordinate
+  mutable Double_t _curSumW2{0.}; // Current sum of weights^2
+  mutable Double_t _curVolume{0.}; // Volume of bin enclosing current coordinate
+  mutable Int_t    _curIndex{0}; // Current index
 
   mutable std::vector<Double_t>* _pbinv ; //! Partial bin volume array
   mutable RooCacheManager<std::vector<Double_t> > _pbinvCacheMgr ; //! Cache manager for arrays of partial bin volumes
@@ -196,8 +205,8 @@ protected:
   std::vector<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
   mutable std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
 
-  mutable Int_t _cache_sum_valid ; //! Is cache sum valid
-  mutable Double_t _cache_sum ; //! Cache for sum of entries ;
+  mutable Int_t _cache_sum_valid{0}; //! Is cache sum valid
+  mutable Double_t _cache_sum{0.}; //! Cache for sum of entries ;
 
 
 private:

@@ -19,15 +19,15 @@
 \class RooSuperCategory
 \ingroup Roofitcore
 
-RooSuperCategory consolidates several RooAbsCategoryLValue objects into
+RooSuperCategory can join several RooAbsCategoryLValue objects into
 a single category. The states of the super category consist of all the permutations
 of the input categories. The super category is an lvalue and requires that
-all input categories are lvalues as well as modification
+all input categories are lvalues as well. This is because a modification
 of its state will back propagate into a modification of its input categories.
-To define a consolidated category of multiple non-lvalye categories
-use class RooMultiCategory
-RooSuperCategory state are automatically defined and updated whenever an input
-category modifies its list of states
+To define a joined category of multiple non-lvalue categories,
+use the class RooMultiCategory.
+RooSuperCategory states are automatically defined and updated whenever an input
+category modifies its list of states.
 **/
 
 #include "RooFit.h"
@@ -69,7 +69,6 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
     _catSet.add(*arg) ;
   }
   delete iter ;
-  _catIter = _catSet.createIterator() ;
   
   updateIndexList() ;
 }
@@ -82,7 +81,6 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
 RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *name) :
   RooAbsCategoryLValue(other,name), _catSet("input",this,other._catSet)
 {
-  _catIter = _catSet.createIterator() ;
   updateIndexList() ;
   setIndex(other.getIndex()) ;
 }
@@ -94,7 +92,7 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 
 RooSuperCategory::~RooSuperCategory() 
 {
-  delete _catIter ;
+
 }
 
 
@@ -137,13 +135,13 @@ void RooSuperCategory::updateIndexList()
 
 TString RooSuperCategory::currentLabel() const
 {
-  _catIter->Reset() ;
 
   // Construct composite label name
   TString label ;
-  RooAbsCategory* cat ;
   Bool_t first(kTRUE) ;
-  while((cat=(RooAbsCategory*) _catIter->Next())) {
+  for (const auto c : _catSet) {
+    auto cat = static_cast<RooAbsCategory*>(c);
+
     label.Append(first?"{":";") ;
     label.Append(cat->getLabel()) ;      
     first=kFALSE ;
@@ -209,14 +207,13 @@ Bool_t RooSuperCategory::setType(const RooCatType* type, Bool_t /*printError*/)
   char buf[1024] ;
   strlcpy(buf,type->GetName(),1024) ;
 
-  RooAbsCategoryLValue* arg ;
   Bool_t error(kFALSE) ;
 
   // Parse composite label and set label of components to their values  
   char* ptr=buf+1 ;
   char* token = ptr ;
-  _catIter->Reset() ;
-  while ((arg=(RooAbsCategoryLValue*)_catIter->Next())) {
+  for (const auto c : _catSet) {
+    auto arg = static_cast<RooAbsCategoryLValue*>(c);
 
     // Delimit name token for this category
     if (*ptr=='{') {
@@ -290,9 +287,8 @@ void RooSuperCategory::writeToStream(ostream& os, Bool_t compact) const
 
 Bool_t RooSuperCategory::inRange(const char* rangeName) const 
 {
-  _catIter->Reset() ;
-  RooAbsCategoryLValue* cat ;
-  while((cat = (RooAbsCategoryLValue*)_catIter->Next())) {
+  for (const auto c : _catSet) {
+    auto cat = static_cast<RooAbsCategoryLValue*>(c);
     if (!cat->inRange(rangeName)) {
       return kFALSE ;
     }
@@ -308,9 +304,8 @@ Bool_t RooSuperCategory::inRange(const char* rangeName) const
 
 Bool_t RooSuperCategory::hasRange(const char* rangeName) const 
 {
-  _catIter->Reset() ;
-  RooAbsCategoryLValue* cat ;
-  while((cat = (RooAbsCategoryLValue*)_catIter->Next())) {
+  for (const auto c : _catSet) {
+    auto cat = static_cast<RooAbsCategoryLValue*>(c);
     if (cat->hasRange(rangeName)) return kTRUE ;
   }
 

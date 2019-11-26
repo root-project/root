@@ -91,7 +91,8 @@ THttpWSHandler::~THttpWSHandler()
       eng->fDisabled = true;
       if (eng->fHasSendThrd) {
          eng->fHasSendThrd = false;
-         eng->fCond.notify_all();
+         if (eng->fWaiting)
+            eng->fCond.notify_all();
          eng->fSendThrd.join();
       }
       eng->ClearHandle(kTRUE); // terminate connection before starting destructor
@@ -172,7 +173,8 @@ void THttpWSHandler::RemoveEngine(std::shared_ptr<THttpWSEngine> &engine, Bool_t
 
    if (engine->fHasSendThrd) {
       engine->fHasSendThrd = false;
-      engine->fCond.notify_all();
+      if (engine->fWaiting)
+         engine->fCond.notify_all();
       engine->fSendThrd.join();
    }
 }
@@ -259,12 +261,6 @@ void THttpWSHandler::CloseWS(UInt_t wsid)
 
 Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 {
-   if (engine->fHasSendThrd) {
-      // all data are prepared - just notify thread
-      engine->fCond.notify_all();
-      return 1;
-   }
-
    if (IsSyncMode() || !engine->SupportSendThrd()) {
       // this is case of longpoll engine, no extra thread is required for it
       if (engine->CanSendDirectly())
@@ -298,8 +294,12 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
       while (!IsDisabled() && !engine->fDisabled) {
          PerformSend(engine);
          if (IsDisabled() || engine->fDisabled) break;
-         std::unique_lock<std::mutex> lk(engine->fCondMutex);
-         engine->fCond.wait(lk);
+         std::unique_lock<std::mutex> lk(engine->fMutex);
+         if (engine->fKind == THttpWSEngine::kNone) {
+            engine->fWaiting = true;
+            engine->fCond.wait(lk);
+            engine->fWaiting = false;
+         }
       }
    });
 
@@ -317,15 +317,15 @@ Int_t THttpWSHandler::RunSendingThrd(std::shared_ptr<THttpWSEngine> engine)
 Int_t THttpWSHandler::PerformSend(std::shared_ptr<THttpWSEngine> engine)
 {
    {
-      std::lock_guard<std::mutex> grd(engine->fDataMutex);
+      std::lock_guard<std::mutex> grd(engine->fMutex);
 
       // no need to do something - operation was processed already by somebody else
       if (engine->fKind == THttpWSEngine::kNone)
          return 0;
 
-      if (engine->fDoingSend)
+      if (engine->fSending)
          return 1;
-      engine->fDoingSend = true;
+      engine->fSending = true;
    }
 
    if (IsDisabled() || engine->fDisabled)
@@ -349,8 +349,8 @@ Int_t THttpWSHandler::PerformSend(std::shared_ptr<THttpWSEngine> engine)
    engine->fHdr.clear();
 
    {
-      std::lock_guard<std::mutex> grd(engine->fDataMutex);
-      engine->fDoingSend = false;
+      std::lock_guard<std::mutex> grd(engine->fMutex);
+      engine->fSending = false;
       engine->fKind = THttpWSEngine::kNone;
    }
 
@@ -386,20 +386,28 @@ Int_t THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
       return CompleteSend(engine);
    }
 
+   bool notify = false;
+
    // now we indicate that there is data and any thread can access it
    {
-      std::lock_guard<std::mutex> grd(engine->fDataMutex);
+      std::lock_guard<std::mutex> grd(engine->fMutex);
 
       if (engine->fKind != THttpWSEngine::kNone) {
          Error("SendWS", "Data kind is not empty - something screwed up");
          return -1;
       }
 
+      notify = engine->fWaiting;
+
+      engine->fKind = THttpWSEngine::kData;
+
       engine->fData.resize(len);
       std::copy((const char *)buf, (const char *)buf + len, engine->fData.begin());
+   }
 
-      engine->fDoingSend = false;
-      engine->fKind = THttpWSEngine::kData;
+   if (engine->fHasSendThrd) {
+      if (notify) engine->fCond.notify_all();
+      return 1;
    }
 
    return RunSendingThrd(engine);
@@ -422,21 +430,29 @@ Int_t THttpWSHandler::SendHeaderWS(UInt_t wsid, const char *hdr, const void *buf
       return CompleteSend(engine);
    }
 
+   bool notify = false;
+
    // now we indicate that there is data and any thread can access it
    {
-      std::lock_guard<std::mutex> grd(engine->fDataMutex);
+      std::lock_guard<std::mutex> grd(engine->fMutex);
 
       if (engine->fKind != THttpWSEngine::kNone) {
          Error("SendWS", "Data kind is not empty - something screwed up");
          return -1;
       }
 
+      notify = engine->fWaiting;
+
+      engine->fKind = THttpWSEngine::kHeader;
+
       engine->fHdr = hdr;
       engine->fData.resize(len);
       std::copy((const char *)buf, (const char *)buf + len, engine->fData.begin());
+   }
 
-      engine->fDoingSend = false;
-      engine->fKind = THttpWSEngine::kHeader;
+   if (engine->fHasSendThrd) {
+      if (notify) engine->fCond.notify_all();
+      return 1;
    }
 
    return RunSendingThrd(engine);
@@ -458,19 +474,26 @@ Int_t THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
       return CompleteSend(engine);
    }
 
+   bool notify = false;
+
    // now we indicate that there is data and any thread can access it
    {
-      std::lock_guard<std::mutex> grd(engine->fDataMutex);
+      std::lock_guard<std::mutex> grd(engine->fMutex);
 
       if (engine->fKind != THttpWSEngine::kNone) {
          Error("SendWS", "Data kind is not empty - something screwed up");
          return -1;
       }
 
-      engine->fData = str;
+      notify = engine->fWaiting;
 
-      engine->fDoingSend = false;
       engine->fKind = THttpWSEngine::kText;
+      engine->fData = str;
+   }
+
+   if (engine->fHasSendThrd) {
+      if (notify) engine->fCond.notify_all();
+      return 1;
    }
 
    return RunSendingThrd(engine);

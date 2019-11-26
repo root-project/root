@@ -1,6 +1,8 @@
 #include "ROOT/RNotFn.hxx"
 
-#ifndef __cpp_lib_not_fn
+// libc++ does not define __cpp_lib_not_fn.
+// Assume we have not_fn if
+#if defined(R__NOTFN_BACKPORT)
 
 #include "gtest/gtest.h"
 

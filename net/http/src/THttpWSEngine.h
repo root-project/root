@@ -33,12 +33,12 @@ private:
 
    std::thread fSendThrd;    ///<! dedicated thread for all send operations
    bool fHasSendThrd{false}; ///<! if thread was started one have to call join method for it
-   std::mutex fCondMutex;    ///<! mutex used to access condition
-   std::condition_variable fCond; ///<! condition used to sync with sending thread
 
-   std::mutex fDataMutex;                              ///<! protects data submitted for send operation
+   std::mutex fMutex;                                  ///<! protects all data behind
+   std::condition_variable fCond;                      ///<! condition used to sync with sending thread
+   bool fWaiting{false};                               ///<! if condition wait is called
+   bool fSending{false};                               ///<! performing send operation in other thread
    enum { kNone, kData, kHeader, kText } fKind{kNone}; ///<! kind of operation
-   bool fDoingSend{false};                             ///<! doing send operation in other thread
    std::string fData;                                  ///<! data (binary or text)
    std::string fHdr;                                   ///<! header
 

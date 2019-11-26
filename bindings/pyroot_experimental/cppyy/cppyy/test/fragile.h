@@ -1,3 +1,6 @@
+#include <cstdint>
+
+
 namespace fragile {
 
 class no_such_class;
@@ -31,7 +34,7 @@ public:
 };
 
 
-static const int dummy_location = 0xdead;
+static const uintptr_t dummy_location = 0xdead;
 
 class E {
 public:
@@ -120,5 +123,11 @@ class O {
 public:
    virtual int abstract() = 0;
 };
+
+class OpaqueType;
+typedef OpaqueType* OpaqueHandle_t;
+
+int create_handle(OpaqueHandle_t* handle);
+int destroy_handle(OpaqueHandle_t handle, intptr_t addr);
 
 } // namespace fragile

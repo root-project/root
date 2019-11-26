@@ -1,12 +1,17 @@
 #include <gtest/gtest.h>
+#include <Math/LorentzVector.h>
+#include <Math/PtEtaPhiM4D.h>
+#include <Math/Vector4Dfwd.h>
 #include <ROOT/RVec.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TFile.h>
 #include <TInterpreter.h>
 #include <TTree.h>
 #include <TSystem.h>
+#include <TLorentzVector.h>
 #include <vector>
 #include <sstream>
+#include <cmath>
 
 using namespace ROOT::VecOps;
 
@@ -106,7 +111,6 @@ TEST(VecOps, MoveCtor)
 {
    ROOT::VecOps::RVec<int> v1{1, 2, 3};
    ROOT::VecOps::RVec<int> v2(std::move(v1));
-   EXPECT_EQ(v1.size(), 0u);
    EXPECT_EQ(v2.size(), 3u);
 }
 
@@ -592,20 +596,42 @@ TEST(VecOps, SimpleStatOps)
    ROOT::VecOps::RVec<double> v1 {42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
+   ASSERT_DOUBLE_EQ(Max(v1), 42.);
+   ASSERT_DOUBLE_EQ(Min(v1), 42.);
+   ASSERT_DOUBLE_EQ(ArgMax(v1), 0);
+   ASSERT_DOUBLE_EQ(ArgMin(v1), 0);
    ASSERT_DOUBLE_EQ(StdDev(v1), 0.);
    ASSERT_DOUBLE_EQ(Var(v1), 0.);
 
    ROOT::VecOps::RVec<double> v2 {1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
+   ASSERT_DOUBLE_EQ(Max(v2), 3.);
+   ASSERT_DOUBLE_EQ(Min(v2), 1.);
+   ASSERT_DOUBLE_EQ(ArgMax(v2), 2);
+   ASSERT_DOUBLE_EQ(ArgMin(v2), 0);
    ASSERT_DOUBLE_EQ(Var(v2), 1.);
    ASSERT_DOUBLE_EQ(StdDev(v2), 1.);
 
    ROOT::VecOps::RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
+   ASSERT_DOUBLE_EQ(Max(v3), 32.);
+   ASSERT_DOUBLE_EQ(Min(v3), 10.);
+   ASSERT_DOUBLE_EQ(ArgMax(v3), 2);
+   ASSERT_DOUBLE_EQ(ArgMin(v3), 0);
    ASSERT_DOUBLE_EQ(Var(v3), 121.33333333333337);
    ASSERT_DOUBLE_EQ(StdDev(v3), 11.015141094572206);
+
+   ROOT::VecOps::RVec<int> v4 {2, 3, 1};
+   ASSERT_DOUBLE_EQ(Sum(v4), 6.);
+   ASSERT_DOUBLE_EQ(Mean(v4), 2.);
+   ASSERT_DOUBLE_EQ(Max(v4), 3);
+   ASSERT_DOUBLE_EQ(Min(v4), 1);
+   ASSERT_DOUBLE_EQ(ArgMax(v4), 1);
+   ASSERT_DOUBLE_EQ(ArgMin(v4), 2);
+   ASSERT_DOUBLE_EQ(Var(v4), 1.);
+   ASSERT_DOUBLE_EQ(StdDev(v4), 1.);
 }
 
 TEST(VecOps, Any)
@@ -742,6 +768,14 @@ TEST(VecOps, CombinationsTwoVectors)
    RVec<int> ref{-4, -5, -8, -10, -12, -15};
    CheckEqual(v3, ref);
 
+   // Test overload with size as input
+   auto idx3 = Combinations(v1.size(), v2.size());
+   auto c3 = Take(v1, idx3[0]);
+   auto c4 = Take(v2, idx3[1]);
+   auto v4 = c3 * c4;
+
+   CheckEqual(v4, ref);
+
    // Corner-case: One collection is empty
    RVec<int> empty_int{};
    auto idx2 = Combinations(v1, empty_int);
@@ -750,7 +784,7 @@ TEST(VecOps, CombinationsTwoVectors)
    CheckEqual(idx2[1], empty_size);
 }
 
-TEST(VecOps, UnqiueCombinationsSingleVector)
+TEST(VecOps, UniqueCombinationsSingleVector)
 {
    // Doubles: x + y
    ROOT::VecOps::RVec<int> v1{1, 2, 3};
@@ -859,3 +893,178 @@ TEST(VecOps, Where)
    RVec<float> ref4{1, -1, 1, -1};
    CheckEqual(v6, ref4);
 }
+
+TEST(VecOps, AtWithFallback)
+{
+   ROOT::VecOps::RVec<float> v({1.f, 2.f, 3.f});
+   EXPECT_FLOAT_EQ(v.at(7, 99.f), 99.f);
+}
+
+TEST(VecOps, Concatenate)
+{
+   RVec<float> rvf {0.f, 1.f, 2.f};
+   RVec<int> rvi {7, 8, 9};
+   const auto res = Concatenate(rvf, rvi);
+   const RVec<float> ref { 0.00000f, 1.00000f, 2.00000f, 7.00000f, 8.00000f, 9.00000f };
+   CheckEqual(res, ref);
+}
+
+TEST(VecOps, DeltaPhi)
+{
+   // Two scalars (radians)
+   // NOTE: These tests include the checks of the poundary effects
+   const float c1 = M_PI;
+   EXPECT_EQ(DeltaPhi(0.f, 2.f), 2.f);
+   EXPECT_EQ(DeltaPhi(1.f, 0.f), -1.f);
+   EXPECT_EQ(DeltaPhi(-0.5f, 0.5f), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 2.f * c1 - 1.f), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 4.f * c1 - 1.f), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -2.f * c1 + 1.f), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -4.f * c1 + 1.f), 1.f);
+
+   // Two scalars (degrees)
+   const float c2 = 180.f;
+   EXPECT_EQ(DeltaPhi(0.f, 2.f, c2), 2.f);
+   EXPECT_EQ(DeltaPhi(1.f, 0.f, c2), -1.f);
+   EXPECT_EQ(DeltaPhi(-0.5f, 0.5f, c2), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 2.f * c2 - 1.f, c2), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, 4.f * c2 - 1.f, c2), -1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -2.f * c2 + 1.f, c2), 1.f);
+   EXPECT_EQ(DeltaPhi(0.f, -4.f * c2 + 1.f, c2), 1.f);
+
+   // Two vectors
+   RVec<float> v1 = {0.f, 1.f, -0.5f, 0.f, 0.f, 0.f, 0.f};
+   RVec<float> v2 = {2.f, 0.f, 0.5f, 2.f * c1 - 1.f, 4.f * c1 - 1.f, -2.f * c1 + 1.f, -4.f * c1 + 1.f};
+   auto dphi1 = DeltaPhi(v1, v2);
+   RVec<float> r1 = {2.f, -1.f, 1.f, -1.f, -1.f, 1.f, 1.f};
+   CheckEqual(dphi1, r1);
+
+   auto dphi2 = DeltaPhi(v2, v1);
+   auto r2 = r1 * -1.f;
+   CheckEqual(dphi2, r2);
+
+   // Check against TLorentzVector
+   for (std::size_t i = 0; i < v1.size(); i++) {
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(1.f, 1.f, v1[i], 1.f);
+      p2.SetPtEtaPhiM(1.f, 1.f, v2[i], 1.f);
+      EXPECT_NEAR(float(p2.DeltaPhi(p1)), dphi1[i], 1e-6);
+   }
+
+   // Vector and scalar
+   RVec<float> v3 = {0.f, 1.f, c1, c1 + 1.f, 2.f * c1, 2.f * c1 + 1.f, -1.f, -c1, -c1 + 1.f, -2.f * c1, -2.f * c1 + 1.f};
+   float v4 = 1.f;
+   auto dphi3 = DeltaPhi(v3, v4);
+   RVec<float> r3 = {1.f, 0.f, 1.f - c1, c1, 1.f, 0.f, 2.f, -c1 + 1.f, c1, 1.f, 0.f};
+   CheckEqual(dphi3, r3);
+
+   auto dphi4 = DeltaPhi(v4, v3);
+   auto r4 = -1.f * r3;
+   CheckEqual(dphi4, r4);
+}
+
+TEST(VecOps, InvariantMass)
+{
+   // Dummy particle collections
+   RVec<double> mass1 = {50,  50,  50,   50,   100};
+   RVec<double> pt1 =   {0,   5,   5,    10,   10};
+   RVec<double> eta1 =  {0.0, 0.0, -1.0, 0.5,  2.5};
+   RVec<double> phi1 =  {0.0, 0.0, 0.0,  -0.5, -2.4};
+
+   RVec<double> mass2 = {40,  40,  40,  40,  30};
+   RVec<double> pt2 =   {0,   5,   5,   10,  2};
+   RVec<double> eta2 =  {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<double> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
+
+   // Compute invariant mass of two particle system using both collections
+   const auto invMass = InvariantMasses(pt1, eta1, phi1, mass1, pt2, eta2, phi2, mass2);
+
+   for(size_t i=0; i<mass1.size(); i++) {
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(pt1[i], eta1[i], phi1[i], mass1[i]);
+      p2.SetPtEtaPhiM(pt2[i], eta2[i], phi2[i], mass2[i]);
+      // NOTE: The accuracy of the optimized trigonometric functions is relatively
+      // low and the test start to fail with an accuracy of 1e-5.
+      EXPECT_NEAR((p1 + p2).M(), invMass[i], 1e-4);
+   }
+
+   // Compute invariant mass of multiple-particle system using a single collection
+   const auto invMass2 = InvariantMass(pt1, eta1, phi1, mass1);
+
+   TLorentzVector p3;
+   p3.SetPtEtaPhiM(pt1[0], eta1[0], phi1[0], mass1[0]);
+   for(size_t i=1; i<mass1.size(); i++) {
+      TLorentzVector p4;
+      p4.SetPtEtaPhiM(pt1[i], eta1[i], phi1[i], mass1[i]);
+      p3 += p4;
+   }
+
+   EXPECT_NEAR(p3.M(), invMass2, 1e-4);
+
+   const auto invMass3 = InvariantMass(pt2, eta2, phi2, mass2);
+
+   TLorentzVector p5;
+   p5.SetPtEtaPhiM(pt2[0], eta2[0], phi2[0], mass2[0]);
+   for(size_t i=1; i<mass2.size(); i++) {
+      TLorentzVector p6;
+      p6.SetPtEtaPhiM(pt2[i], eta2[i], phi2[i], mass2[i]);
+      p5 += p6;
+   }
+
+   EXPECT_NEAR(p5.M(), invMass3, 1e-4);
+}
+
+TEST(VecOps, DeltaR)
+{
+   RVec<double> eta1 =  {0.1, -1.0, -1.0, 0.5,  -2.5};
+   RVec<double> eta2 =  {0.0, 0.0, 0.5, 2.4, 1.2};
+   RVec<double> phi1 =  {1.0, 5.0, -1.0,  -0.5, -2.4};
+   RVec<double> phi2 =  {0.0, 3.0, 6.0, 1.5, 1.4};
+
+   auto dr = DeltaR(eta1, eta2, phi1, phi2);
+   auto dr2 = DeltaR(eta2, eta1, phi2, phi1);
+
+   for (std::size_t i = 0; i < eta1.size(); i++) {
+      // Check against TLorentzVector
+      TLorentzVector p1, p2;
+      p1.SetPtEtaPhiM(1.f, eta1[i], phi1[i], 1.f);
+      p2.SetPtEtaPhiM(1.f, eta2[i], phi2[i], 1.f);
+      auto dr3 = p2.DeltaR(p1);
+      EXPECT_NEAR(dr3, dr[i], 1e-6);
+      EXPECT_NEAR(dr3, dr2[i], 1e-6);
+
+      // Check scalar implementation
+      auto dr4 = DeltaR(eta1[i], eta2[i], phi1[i], phi2[i]);
+      EXPECT_NEAR(dr3, dr4, 1e-6);
+   }
+}
+
+TEST(VecOps, Map)
+{
+   RVec<float> a({1.f, 2.f, 3.f});
+   RVec<float> b({4.f, 5.f, 6.f});
+   RVec<float> c({7.f, 8.f, 9.f});
+
+   auto mod = [](float x, int y, double z) { return sqrt(x * x + y * y + z * z); };
+
+   auto res = Map(a, c, c, mod);
+
+   ROOT::VecOps::RVec<double> ref{9.9498743710661994, 11.489125293076057, 13.076696830622021};
+   CheckEqual(res, ref);
+}
+
+TEST(VecOps, Construct)
+{
+   RVec<float> pts {15.5f, 34.32f, 12.95f};
+   RVec<float> etas {.3f, 2.2f, 1.32f};
+   RVec<float> phis {.1f, 3.02f, 2.2f};
+   RVec<float> masses {105.65f, 105.65f, 105.65f};
+   auto fourVects = Construct<ROOT::Math::PtEtaPhiMVector>(pts, etas, phis, masses);
+   const ROOT::Math::PtEtaPhiMVector ref0 {15.5f, .3f, .1f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector ref1 {34.32f, 2.2f, 3.02f, 105.65f};
+   const ROOT::Math::PtEtaPhiMVector ref2 {12.95f, 1.32f, 2.2f, 105.65f};
+   EXPECT_TRUE(fourVects[0] == ref0);
+   EXPECT_TRUE(fourVects[1] == ref1);
+   EXPECT_TRUE(fourVects[2] == ref2);
+}
+

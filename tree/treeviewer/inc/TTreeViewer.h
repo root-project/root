@@ -22,12 +22,10 @@
 
 #include "TTree.h"
 
-class TTreeViewer;
 class TTVLVContainer;
 class TTVLVEntry;
 class TTVSession;
 class TGSelectBox;
-class TTree;
 class TBranch;
 class TContextMenu;
 class TList;

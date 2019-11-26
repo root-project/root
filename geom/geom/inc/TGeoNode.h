@@ -48,8 +48,11 @@ protected:
    TGeoExtension    *fUserExtension = nullptr; //! Transient user-defined extension to volumes
    TGeoExtension    *fFWExtension = nullptr;   //! Transient framework-defined extension to volumes
 
-   TGeoNode(const TGeoNode&);
-   TGeoNode& operator=(const TGeoNode&);
+   void              CopyOverlaps(Int_t *ovlp, Int_t novlp);
+
+private:
+   TGeoNode(const TGeoNode&);    // not implemented
+   TGeoNode& operator=(const TGeoNode&);  // not implemented
 
 public:
    enum {
@@ -151,9 +154,8 @@ class TGeoNodeMatrix : public TGeoNode
 private:
    TGeoMatrix       *fMatrix = nullptr; // transf. matrix of fNode in fMother system
 
-protected:
-   TGeoNodeMatrix(const TGeoNodeMatrix& gnm);
-   TGeoNodeMatrix& operator=(const TGeoNodeMatrix& gnm);
+   TGeoNodeMatrix(const TGeoNodeMatrix& gnm); // not implemented
+   TGeoNodeMatrix& operator=(const TGeoNodeMatrix& gnm); // not implemented
 
 public:
    // constructors
@@ -185,9 +187,8 @@ private:
    Int_t             fIndex = 0;         // index of this node in the division
    TGeoPatternFinder *fFinder = nullptr; // finder for this node
 
-protected:
-   TGeoNodeOffset(const TGeoNodeOffset&);
-   TGeoNodeOffset& operator=(const TGeoNodeOffset&);
+   TGeoNodeOffset(const TGeoNodeOffset&);  // not implemented
+   TGeoNodeOffset& operator=(const TGeoNodeOffset&); // not implemented
 
 public:
    // constructors
@@ -268,6 +269,7 @@ public:
    TGeoIterator   &operator=(const TGeoIterator &iter);
    TGeoNode       *operator()();
    TGeoNode       *Next();
+   void            Up() { if (fLevel > 0) fLevel--; }
 
    const TGeoMatrix *GetCurrentMatrix() const;
    Int_t           GetIndex(Int_t i) const {return ((i<=fLevel)?fArray[i]:-1);}

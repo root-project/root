@@ -45,7 +45,7 @@ public:
     // Return state name
     return _label[0] ? _label : 0 ;
   }
-  virtual void SetName(const Text_t* name) ;
+  void SetName(const Text_t* name) ;
 
   inline RooCatType& operator=(const RooCatType& other) { 
     // Assignment operator from other RooCatType
@@ -61,19 +61,19 @@ public:
     _value = other._value ; 
   } 
 
-  inline Bool_t operator==(const RooCatType& other) {
+  inline Bool_t operator==(const RooCatType& other) const {
     // Equality operator with other RooCatType
     return (_value==other._value) ;
   }
 
-  inline Bool_t operator==(Int_t index) { 
+  inline Bool_t operator==(Int_t index) const {
     // Return true if index value matches integer
     return (_value==index) ; 
   }
 
-  Bool_t operator==(const char* label) { 
+  Bool_t operator==(const char* label) const {
     // Return true if state name matchins string    
-    return !strcmp(_label,label) ; 
+    return label && !strcmp(_label,label) ;
   }
 
   inline Int_t getVal() const { 

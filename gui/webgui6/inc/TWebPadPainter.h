@@ -1,7 +1,7 @@
 // Author:  Sergey Linev, GSI  10/04/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,11 +20,7 @@
 
 #include "TWebPainting.h"
 
-#include <memory>
-
-class TVirtualPad;
 class TWebCanvas;
-class TPoint;
 
 /*
 TWebPadPainter tries to support old Paint methods of the ROOT classes.
@@ -45,7 +41,7 @@ protected:
 
 public:
 
-   TWebPadPainter() = default;
+   TWebPadPainter() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    void SetPainting(TWebPainting *p) { fPainting = p; }
 

@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -26,10 +26,15 @@ namespace REX = ROOT::Experimental;
 Projected copy of a REveTrack.
 */
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
 
-REveTrackProjected::REveTrackProjected() : REveTrack(), fOrigPnts(0) {}
+REveTrackProjected::~REveTrackProjected()
+{
+   if (fOrigPnts) {
+      delete [] fOrigPnts;
+      fOrigPnts = nullptr;
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This is virtual method from base-class REveProjected.
@@ -51,16 +56,14 @@ void REveTrackProjected::SetDepthLocal(Float_t d)
 {
    SetDepthCommon(d, this, fBBox);
 
-   Int_t    n = Size();
-   Float_t *p = GetP() + 2;
-   for (Int_t i = 0; i < n; ++i, p+=3)
+   for (Int_t i = 0; i < fSize; ++i)
    {
-      *p = fDepth;
+      fPoints[i].fZ = fDepth;
    }
 
-   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   for (auto &pm: fPathMarks)
    {
-      pm->fV.fZ = fDepth;
+      pm.fV.fZ = fDepth;
    }
 }
 
@@ -82,18 +85,18 @@ Int_t REveTrackProjected::GetBreakPointIdx(Int_t start)
 {
    REveProjection *projection = fManager->GetProjection();
 
-   Int_t val = fLastPoint;
+   Int_t val = fSize - 1;
 
    if (projection->HasSeveralSubSpaces())
    {
       REveVector v1, v2;
-      if (Size() > 1)
+      if (fSize > 1)
       {
          Int_t i = start;
-         while(i < fLastPoint)
+         while (i < fSize - 1)
          {
-            GetPoint(i,   v1.fX, v1.fY, v1.fZ);
-            GetPoint(i+1, v2.fX, v2.fY, v2.fZ);
+            v1 = RefPoint(i);
+            v2 = RefPoint(i+1);
             if(projection->AcceptSegment(v1, v2, fPropagator->GetDelta()) == kFALSE)
             {
                val = i;
@@ -121,7 +124,7 @@ void REveTrackProjected::MakeTrack(Bool_t recurse)
 
    fPathMarks.clear();
    SetPathMarks(*otrack);
-   if (GetLockPoints() || otrack->Size() > 0)
+   if (GetLockPoints() || otrack->GetSize() > 0)
    {
       ClonePoints(*otrack);
       fLastPMIdx = otrack->GetLastPMIdx();
@@ -130,7 +133,7 @@ void REveTrackProjected::MakeTrack(Bool_t recurse)
    {
       REveTrack::MakeTrack(recurse);
    }
-   if (Size() == 0) return; // All points can be outside of MaxR / MaxZ limits.
+   if (fSize == 0) return; // All points can be outside of MaxR / MaxZ limits.
 
    // Break segments additionally if required by the projection.
    ReduceSegmentLengths(projection->GetMaxTrackStep());
@@ -142,26 +145,24 @@ void REveTrackProjected::MakeTrack(Bool_t recurse)
    // XXXX points/directions needs to be transferred.
 
    // Project points, store originals (needed for break-points).
-   Float_t *p = GetP();
-   fOrigPnts  = new REveVector[Size()];
-   for (Int_t i = 0; i < Size(); ++i, p+=3)
+   Float_t *p = & fPoints[0].fX;
+   fOrigPnts  = new REveVector[fSize];
+   for (Int_t i = 0; i < fSize; ++i, p+=3)
    {
       if (trans) trans->MultiplyIP(p);
       fOrigPnts[i].Set(p);
       projection->ProjectPointfv(p, fDepth);
    }
 
-   Float_t x, y, z;
-   Int_t   bL = 0, bR = GetBreakPointIdx(0);
+   Int_t bL = 0, bR = GetBreakPointIdx(0);
    std::vector<REveVector> vvec;
    while (kTRUE)
    {
-      for (Int_t i=bL; i<=bR; i++)
+      for (Int_t i = bL; i <= bR; i++)
       {
-         GetPoint(i, x, y, z);
-         vvec.push_back(REveVector(x, y, z));
+         vvec.push_back( RefPoint(i) );
       }
-      if (bR == fLastPoint)
+      if (bR == fSize - 1)
          break;
 
       REveVector vL = fOrigPnts[bR];
@@ -201,19 +202,20 @@ void REveTrackProjected::MakeTrack(Bool_t recurse)
    }
 
    Reset((Int_t)vvec.size());
-   for (std::vector<REveVector>::iterator i=vvec.begin(); i!=vvec.end(); ++i)
+   for (auto &i: vvec)
    {
       if (fix_y)
-         SetNextPoint((*i).fX, TMath::Sign((*i).fY, sign_y), (*i).fZ);
+         SetNextPoint(i.fX, TMath::Sign(i.fY, sign_y), i.fZ);
       else
-         SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
+         SetNextPoint(i.fX, i.fY, i.fZ);
    }
-   delete [] fOrigPnts; fOrigPnts = 0;
+   delete [] fOrigPnts;
+   fOrigPnts = nullptr;
 
    // Project path-marks
-   for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)
+   for (auto &pm: fPathMarks)
    {
-      projection->ProjectPointdv(trans, pm->fV.Arr(), pm->fV.Arr(), fDepth);
+      projection->ProjectPointdv(trans, pm.fV.Arr(), pm.fV.Arr(), fDepth);
    }
 }
 
@@ -222,23 +224,22 @@ void REveTrackProjected::MakeTrack(Bool_t recurse)
 
 void REveTrackProjected::PrintLineSegments()
 {
-   printf("%s LineSegments:\n", GetName());
+   printf("%s LineSegments:\n", GetCName());
+
    Int_t start = 0;
    Int_t segment = 0;
-   REveVector sVec;
-   REveVector bPnt;
-   for (std::vector<Int_t>::iterator bpi = fBreakPoints.begin();
-        bpi != fBreakPoints.end(); ++bpi)
-   {
-      Int_t size = *bpi - start;
 
-      GetPoint(start, sVec.fX, sVec.fY, sVec.fZ);
-      GetPoint((*bpi)-1, bPnt.fX, bPnt.fY, bPnt.fZ);
+   for (auto &bpi: fBreakPoints)
+   {
+      Int_t size = bpi - start;
+
+      const REveVector &sVec = RefPoint(start);
+      const REveVector &bPnt = RefPoint(bpi-1);
       printf("seg %d size %d start %d ::(%f, %f, %f) (%f, %f, %f)\n",
              segment, size, start, sVec.fX, sVec.fY, sVec.fZ,
              bPnt.fX, bPnt.fY, bPnt.fZ);
       start   += size;
-      segment ++;
+      segment++;
    }
 }
 
@@ -300,22 +301,19 @@ void REveTrackListProjected::SetDepth(Float_t d)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set depth of all children of el inheriting from REveTrackProjected.
 
-void REveTrackListProjected::SetDepth(Float_t d, REveElement* el)
+void REveTrackListProjected::SetDepth(Float_t d, REveElement *el)
 {
-   REveTrackProjected* ptrack;
-   for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
-   {
-      ptrack = dynamic_cast<REveTrackProjected*>(*i);
+   for (auto &c: el->RefChildren()) {
+      auto ptrack = dynamic_cast<REveTrackProjected *>(c);
       if (ptrack)
          ptrack->SetDepth(d);
       if (fRecurse)
-         SetDepth(d, *i);
+         SetDepth(d, c);
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates client rendering info
+/// Creates client representation.
 
 Int_t REveTrackProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
@@ -326,12 +324,15 @@ Int_t REveTrackProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Creates client rendering info.
 
 void REveTrackProjected::BuildRenderData()
 {
    REveTrack::BuildRenderData();
 
-   fRenderData->Reserve(0, 0, fBreakPoints.size());
-
-   fRenderData->PushI(&fBreakPoints[0], fBreakPoints.size());
+   if (fRenderData && !fBreakPoints.empty()) {
+      fRenderData->Reserve(0, 0, fBreakPoints.size());
+      fRenderData->PushI(fBreakPoints);
+   }
 }

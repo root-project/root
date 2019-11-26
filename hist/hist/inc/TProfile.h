@@ -81,6 +81,7 @@ public:
    TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Option_t *option="");
    TProfile(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins, Double_t ylow,Double_t yup, Option_t *option="");
    TProfile(const TProfile &profile);
+   TProfile &operator=(const TProfile &profile);
    virtual ~TProfile();
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
@@ -133,7 +134,7 @@ public:
    virtual void     SetErrorOption(Option_t *option=""); // *MENU*
    virtual void     Sumw2(Bool_t flag = kTRUE);
 
-   ClassDef(TProfile,6)  //Profile histogram class
+   ClassDef(TProfile,7)  //Profile histogram class
 };
 
 #endif

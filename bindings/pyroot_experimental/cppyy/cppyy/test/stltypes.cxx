@@ -2,6 +2,7 @@
 
 
 //- explicit instantiations of used comparisons
+#if defined __clang__ || defined(__GNUC__) || defined(__GNUG__)
 #if defined __clang__
 namespace std {
 #define ns_prefix std::
@@ -14,6 +15,14 @@ template bool ns_prefix operator==(const std::vector<int>::iterator&,
 template bool ns_prefix operator!=(const std::vector<int>::iterator&,
                          const std::vector<int>::iterator&);
 }
+#endif
+
+
+//- adverse effect of implicit conversion on vector<string>
+int vectest_ol1(const std::vector<std::string>&) { return 1; }
+int vectest_ol1(std::string) { return 2; }
+int vectest_ol2(std::string) { return 2; }
+int vectest_ol2(const std::vector<std::string>&) { return 1; }
 
 
 //- helpers for testing array

@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel 2007
+// @(#)root/eve7:$Id$
+// Author: Matevz Tadel 2007, 1018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -24,7 +24,15 @@ namespace Experimental {
 
 class REveGeoShapeExtract;
 
-class REveGeoShape : public REveShape {
+// ==========================================================================================
+// REveGeoShape
+// Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted
+// TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
+// ==========================================================================================
+
+class REveGeoShape : public REveShape,
+                     public REveProjectable
+{
 private:
    REveGeoShape(const REveGeoShape &);            // Not implemented
    REveGeoShape &operator=(const REveGeoShape &); // Not implemented
@@ -42,24 +50,18 @@ protected:
    TGeoShape *MakePolyShape();
 
 public:
-   REveGeoShape(const char *name = "REveGeoShape", const char *title = nullptr);
+   REveGeoShape(const std::string &name = "REveGeoShape", const std::string &title = "");
    virtual ~REveGeoShape();
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
-   void BuildRenderData();                                   // override;
-
-   virtual TObject *GetObject(const REveException &) const
-   {
-      const TObject *obj = this;
-      return const_cast<TObject *>(obj);
-   }
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 
    Int_t GetNSegments() const { return fNSegments; }
    TGeoShape *GetShape() const { return fShape; }
    void SetNSegments(Int_t s);
    void SetShape(TGeoShape *s);
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    void SaveExtract(const char *file, const char *name);
    void WriteExtract(const char *name);
@@ -68,16 +70,17 @@ public:
 
    // GeoProjectable
    virtual std::unique_ptr<TBuffer3D> MakeBuffer3D();
-   virtual TClass *ProjectedClass(const REveProjection *p) const;
+   TClass *ProjectedClass(const REveProjection *p) const override;
 
    static TGeoManager *GetGeoManager();
    static TGeoHMatrix *GetGeoHMatrixIdentity();
-
-   ClassDef(REveGeoShape, 0); // Wrapper for TGeoShape with absolute positioning and color attributes allowing display of extracted
-                              // TGeoShape's (without an active TGeoManager) and simplified geometries (needed for NLT projections).
 };
 
 //------------------------------------------------------------------------------
+
+// ==========================================================================================
+// REveGeoShapeProjected
+// ==========================================================================================
 
 class REveGeoShapeProjected : public REveShape, public REveProjected {
 private:
@@ -87,19 +90,17 @@ private:
 protected:
    std::unique_ptr<TBuffer3D> fBuff;    //! 3d buffer
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REveGeoShapeProjected();
    virtual ~REveGeoShapeProjected();
 
-   virtual void SetProjection(REveProjectionManager *proj, REveProjectable *model);
-   virtual void UpdateProjection();
-   virtual REveElement *GetProjectedAsElement() { return this; }
+   void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
+   void UpdateProjection() override;
+   REveElement *GetProjectedAsElement() override { return this; }
 
-   virtual void ComputeBBox();
-
-   ClassDef(REveGeoShapeProjected, 0);
+   void ComputeBBox() override;
 };
 
 } // namespace Experimental

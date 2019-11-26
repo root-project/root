@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # @author Danilo Piparo CERN, Enrico Guiraud CERN
 
 #### C++ TESTS ####
@@ -43,6 +49,6 @@ ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(datasource_lazy datasource_lazy.cxx LIBRARIES ROOTDataFrame)
 
 #### PYTHON TESTS ####
-ROOT_ADD_PYUNITTEST(dataframe_misc dataframe_misc.py ${PYTESTS_WILLFAIL})
-ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe_histograms.py ${PYTESTS_WILLFAIL})
-ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py ${PYTESTS_WILLFAIL})
+ROOT_ADD_PYUNITTEST(dataframe_misc dataframe_misc.py)
+ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe_histograms.py)
+ROOT_ADD_PYUNITTEST(dataframe_cache dataframe_cache.py ENVIRONMENT EXP_PYROOT=${pyroot_experimental})

@@ -32,7 +32,6 @@ private:
 
 public:
    TObjString(const char *s = "") : fString(s) { }
-   TObjString(const TObjString &s) : TObject(), fString(s.fString) { }
    ~TObjString();
    Int_t       Compare(const TObject *obj) const;
    TString     CopyString() const { return fString; }

@@ -38,7 +38,7 @@ class TSecContext : public TObject {
 friend class TRootSecContext;
 
 private:
-   void        *fContext;             // Krb5: ptr to specific sec context
+   void        *fContext;             // ptr to specific sec context
    TList       *fCleanup;             // Points to list with info for remote cleanup
    TDatime      fExpDate;             // Expiring date (one sec precision)
    TString      fHost;                // Remote host name

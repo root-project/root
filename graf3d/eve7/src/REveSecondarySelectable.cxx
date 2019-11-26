@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Author: Matevz Tadel 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -29,21 +29,13 @@ and clear corresponding selection-set from there.
 
 To support tooltips for sub-elements, implement:
 ~~~ {.cpp}
-    virtual TString REveElement::GetHighlightTooltip();
+    virtual std::string REveElement::GetHighlightTooltip() const;
 ~~~
 and return tooltip for the entry in the fHighlightedSet.
 There should always be a single entry there.
 See EveDigitSet for an example.
 */
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-REveSecondarySelectable::REveSecondarySelectable() :
-   fAlwaysSecSelect(kFALSE)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process secondary GL selection and populate selected set accordingly.

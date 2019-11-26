@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve
+/// \ingroup tutorial_eve7
 /// Combinatorial Solid Geometry example
 ///
 /// Stripped down to demonstrate EVE shape-extracts.
@@ -23,8 +23,6 @@
 #include <ROOT/REveGeoShapeExtract.hxx>
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
-
-R__LOAD_LIBRARY(libGeom);
 
 namespace REX = ROOT::Experimental;
 
@@ -65,8 +63,7 @@ void csgdemo ()
    tr2->RegisterYourself();
    tr3->RegisterYourself();
 
-   TGeoCompositeShape *cs = new TGeoCompositeShape
-      ("mir", "(sph * box) + (sph1:tr - box1:tr1)");
+   auto cs = new TGeoCompositeShape("mir", "(sph * box) + (sph1:tr - box1:tr1)");
 
    TGeoVolume *vol = new TGeoVolume("COMP4", cs);
    vol->SetLineColor(kMagenta);
@@ -84,12 +81,13 @@ void csgdemo ()
    auto node = gGeoManager->GetTopNode();
    auto geo_cshape = dynamic_cast<TGeoCompositeShape*>(node->GetDaughter(0)->GetVolume()->GetShape());
 
-   if ( ! geo_cshape) throw std::runtime_error("The first vshape is not a CSG shape.");
+   if (!geo_cshape) throw std::runtime_error("The first vshape is not a CSG shape.");
 
    bool poly_first = false;
    if (poly_first)
    {
-      eve_pshape = REX::REveGeoPolyShape::Construct(geo_cshape, 40);
+      eve_pshape = new REX::REveGeoPolyShape;
+      eve_pshape->BuildFromComposite(geo_cshape, 40);
 
       eve_shape = new REX::REveGeoShape("CSG_Result");
       eve_shape->SetShape(eve_pshape);

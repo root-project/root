@@ -91,6 +91,7 @@ public:
                                                 ,Int_t nbinsy,const Double_t *ybins
                                                 ,Int_t nbinsz,const Double_t *zbins,Option_t *option="");
    TProfile3D(const TProfile3D &profile);
+   TProfile3D &operator=(const TProfile3D &profile);
    virtual ~TProfile3D();
    virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
@@ -142,7 +143,7 @@ public:
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2(Bool_t flag = kTRUE);
 
-   ClassDef(TProfile3D,7)  //Profile3D histogram class
+   ClassDef(TProfile3D,8)  //Profile3D histogram class
 };
 
 #endif

@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 # CMakeLists.txt for the ROOT tutorials programs.
 # Author: Pere Mato, 25/10/2010
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
@@ -20,7 +26,7 @@ else()                       # testing using an installation
   include(${ROOT_USE_FILE})
   if(DEFINED ROOT_CONFIG_EXECUTABLE) #---If ROOT was built with the classic configure/make---
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules)
-    include(RootNewMacros)
+    include(RootMacros)
     set(ROOT_root_CMD root.exe)
   endif()
   enable_testing()
@@ -66,6 +72,23 @@ if(NOT ROOT_minuit2_FOUND)
                    tutorials/roostats/rs_bernsteinCorrection.C)
 endif()
 
+if (NOT dataframe)
+    # RDataFrame
+    list(APPEND dataframe_veto dataframe/*.C)
+    # RDataFrame tutorial in graphs
+    list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
+    # TMVA tutorials dependent on RDataFrame
+    list(APPEND dataframe_veto tmva/tmva*.C)
+endif()
+
+if(NOT ROOT_mlp_FOUND)
+   set(mlp_veto legacy/mlp/*.C)
+endif()
+
+if(NOT ROOT_spectrum_FOUND)
+   set(spectrum_veto spectrum/*.C)
+endif()
+
 if(NOT ROOT_roofit_FOUND)
   set(roofit_veto  fit/RoofitDemo.C
                    roofit/*.C roostats/*.C histfactory/*.C
@@ -82,6 +105,7 @@ if(NOT ROOT_xml_FOUND)
                 histfactory/*.C    # histfactory requires xml
                 unfold/*.C)        # unfold requires xml
 endif()
+
 
 if(NOT XROOTD_FOUND)
   set(xrootd_veto dataframe/df101_h1Analysis.C
@@ -137,6 +161,10 @@ if(NOT ROOT_opengl_FOUND)
                   gl/*.C)
 endif()
 
+if(NOT GRAPHVIZ_FOUND)
+  set(gviz_veto graphs/graphstruct.C)
+endif()
+
 if(NOT TBB_FOUND AND NOT builtin_tbb)
   set(tbb_veto  multicore/mtbb*.C)
 endif()
@@ -157,8 +185,8 @@ endif()
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
-             geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
-             gl/glViewerExercise.C gl/glViewerLOD.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
+             geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C geom/webdemo.C
+             gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
              gui/*.C
              hist/exec1.C
              hist/exec2.C
@@ -169,13 +197,14 @@ set(gui_veto fit/fitpanel_playback.C
              graphics/graph_edit_playback.C
              roostats/ModelInspector.C
              tree/tvdemo.C
-             eve/*.C)
+             eve/*.C
+             webgui/panel/server.cxx webgui/webwindow/server.cxx)
 
 if (NOT ROOT_tmva_FOUND)
-  set(tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
+  list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py)
 else()
   #---These do not need to run for TMVA
-  set(tmva_veto tmva/createData.C)
+  list(APPEND tmva_veto tmva/createData.C)
 endif()
 
 if (NOT ROOT_pythia6_FOUND)
@@ -195,22 +224,35 @@ endif()
 
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
+                 v7/browser.cxx
+                 v7/filedialog.cxx
                  v7/fitpanel.cxx
+                 v7/fitpanel6.cxx
       )
 endif()
 
+if(NOT root7)
+  set(root7_veto v7/ntuple/ntpl001_staff.C
+                 v7/ntuple/ntpl002_vector.C
+                 v7/ntuple/ntpl003_lhcbOpenData.C
+                 v7/ntuple/ntpl004_dimuon.C)
+elseif(NOT dataframe)
+  set(root7_veto v7/ntuple/ntpl004_dimuon.C)
+endif()
+
 if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C)
+  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C v7/ntuple/ntpl004_dimuon.C)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
-  htmlex.C
-  rootalias.C          # Helper macro
+  legacy/benchmarks.C
+  legacy/htmlex.C
+  legacy/rootalias.C          # Helper macro
   rootlogon.C          # Helper macro
   rootlogoff.C         # Helper macro
-  rootmarks.C          # Instrumentation. Not a standalone tutorial
-  memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
+  legacy/rootmarks.C          # Instrumentation. Not a standalone tutorial
+  legacy/memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
   multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   net/*.C
@@ -244,6 +286,7 @@ set(all_veto hsimple.C
              ${mathmore_veto}
              ${fftw3_veto}
              ${opengl_veto}
+             ${gviz_veto}
              ${r_veto}
              ${runtime_cxxmodules_veto}
              ${histfactory_veto}
@@ -254,10 +297,13 @@ set(all_veto hsimple.C
              ${root7_veto}
              ${bits32_veto}
              ${xrootd_veto}
+             ${mlp_veto}
+             ${spectrum_veto}
+             ${dataframe_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
-if(root7)
+if(root7 AND webgui)
   file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
   list(APPEND tutorials ${tutorials_v7})
 endif()
@@ -340,6 +386,8 @@ set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassi
 set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
 set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
 set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
+set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
+set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -380,7 +428,9 @@ endforeach()
 
 #---Python tutorials-----------------------------------------------------
 if(ROOT_python_FOUND)
-  find_package(PythonInterp REQUIRED)
+  if(NOT PYTHON_EXECUTABLE)
+    find_package(PythonInterp REQUIRED)
+  endif()
 
   file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
   set(pyveto pyroot/demo.py         # requires GUI
@@ -404,13 +454,25 @@ if(ROOT_python_FOUND)
     list(APPEND pyveto math/tStudent.py)
   endif()
 
+ if(NOT XROOTD_FOUND)
+   list(APPEND pyveto
+       dataframe/df102_NanoAODDimuonAnalysis.py
+       dataframe/df103_NanoAODHiggsAnalysis.py)
+ endif()
+
   list(REMOVE_ITEM pytutorials ${pyveto})
 
-  if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-    set(bits32_veto_py dataframe/*.py)
-    file(GLOB bits32_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py)
-    list(REMOVE_ITEM pytutorials ${bits32_veto_py})
+  if(NOT dataframe)
+    set(dataframe_veto_py dataframe/*.py)
+    file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
+    list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
+  endif()
+
+  find_python_module(xgboost QUIET)
+  if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)
+    list(REMOVE_ITEM pytutorials ${tmva_veto_py})
   endif()
 
   #---Python tutorials dependencies--------------------------------------
@@ -424,59 +486,6 @@ if(ROOT_python_FOUND)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
-
-  #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-dataframe-df001_introduction-py
-                 tutorial-dataframe-df002_dataModel-py
-                 tutorial-dataframe-df003_profiles-py
-                 tutorial-dataframe-df004_cutFlowReport-py
-                 tutorial-dataframe-df006_ranges-py
-                 tutorial-dataframe-df007_snapshot-py
-                 tutorial-dataframe-df008_createDataSetFromScratch-py
-                 tutorial-dataframe-df010_trivialDataSource-py
-                 tutorial-dataframe-df011_ROOTDataSource-py
-                 tutorial-dataframe-df012_DefinesAndFiltersAsStrings-py
-                 tutorial-dataframe-df014_CSVDataSource-py
-                 tutorial-dataframe-df016_vecOps-py
-                 tutorial-dataframe-df017_vecOpsHEP-py
-                 tutorial-dataframe-df019_Cache-py
-                 tutorial-dataframe-df021_createTGraph-py
-                 tutorial-dataframe-df024_Display-py
-                 tutorial-dataframe-df026_AsNumpyArrays-py
-                 tutorial-graphs-timeSeriesFromCSV-py
-                 tutorial-hist-fillrandom-py
-                 tutorial-math-Legendre-py
-                 tutorial-math-tStudent-py
-                 tutorial-pyroot-benchmarks-py
-                 tutorial-pyroot-fillrandom-py
-                 tutorial-pyroot-fit1-py
-                 tutorial-pyroot-geometry-py
-                 tutorial-pyroot-h1draw-py
-                 tutorial-pyroot-hsimple-py
-                 tutorial-pyroot-hsum-py
-                 tutorial-pyroot-na49view-py
-                 tutorial-pyroot-ntuple1-py
-                 tutorial-pyroot-pyroot002_TTreeAsMatrix-py
-                 tutorial-pyroot-ratioplot-py
-                 tutorial-pyroot-rootmarks-py
-                 tutorial-pyroot-shapes-py
-                 tutorial-pyroot-staff-py
-                 tutorial-pyroot-tornado-py
-                 tutorial-pyroot-tree-py
-                 tutorial-roofit-rf106_plotdecoration-py
-                 tutorial-roofit-rf315_projectpdf-py
-                 tutorial-roofit-rf402_datahandling-py
-                 tutorial-roofit-rf610_visualerror-py
-                 tutorial-roofit-rf707_kernelestimation-py
-                 tutorial-vecops-vo004_SortAndSelect-py
-                 tutorial-vecops-vo005_Combinations-py)
-
-  if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
-    # These tests only fail in Py3 with PyROOT experimental
-    list(APPEND pyexp_fail tutorial-pyroot-first-py)
-    list(APPEND pyexp_fail tutorial-pyroot-surfaces-py)
-    list(APPEND pyexp_fail tutorial-pyroot-zdemo-py)
-  endif()
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
@@ -507,10 +516,3 @@ if(ROOT_python_FOUND)
                 ${py_will_fail})
   endforeach()
 endif()
-
-#---Download files for tutorials---------
-set(rootsite http://root.cern.ch/files)
-set(csvtimeout 60)
-set (df014_csv df014_CsvDataSource_MuRun2010B.csv)
-file(DOWNLOAD ${rootsite}/tutorials/${df014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${df014_csv} TIMEOUT ${csvtimeout})
-

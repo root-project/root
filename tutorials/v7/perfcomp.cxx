@@ -17,7 +17,7 @@
  *************************************************************************/
 
 #include "ROOT/RHist.hxx"
-#include "ROOT/TFit.hxx"
+#include "ROOT/RFit.hxx"
 #include "ROOT/RHistBufferedFill.hxx"
 
 #include "TH2.h"
@@ -26,13 +26,13 @@
 #include <iostream>
 #include <type_traits>
 
-using namespace ROOT;
+using namespace ROOT::Experimental;
 
 long createNewII(int count)
 {
    long ret = 1;
    for (int i = 0; i < count; ++i) {
-      Experimental::RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
+      RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
       ret ^= (long)&hist;
    }
    return ret;
@@ -63,7 +63,7 @@ long createOldII(int count)
 
 long fillNewII(int count)
 {
-   Experimental::RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
+   RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
    for (int i = 0; i < count; ++i)
       hist.Fill({0.611, 0.611});
    return hist.GetNDim();
@@ -79,8 +79,8 @@ long fillOldII(int count)
 
 long fillNII(int count)
 {
-   Experimental::RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
-   std::vector<Experimental::Hist::RCoordArray<2>> v(count);
+   RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
+   std::vector<Hist::RCoordArray<2>> v(count);
    for (int i = 0; i < count; ++i)
       v[i] = {0.611, 0.611};
    hist.FillN(v);
@@ -98,8 +98,8 @@ long fillBufferedOldII(int count)
 
 long fillBufferedNewII(int count)
 {
-   Experimental::RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
-   Experimental::RHistBufferedFill<Experimental::RH2D> filler(hist);
+   RH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
+   RHistBufferedFill<RH2D> filler(hist);
    for (int i = 0; i < count; ++i)
       filler.Fill({0.611, 0.611});
    return hist.GetNDim();
@@ -111,7 +111,7 @@ long createNewEE(int count)
 {
    long ret = 1;
    for (int i = 0; i < count; ++i) {
-      Experimental::RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
+      RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
       ret ^= (long)&hist;
    }
    return ret;
@@ -129,7 +129,7 @@ long createOldEE(int count)
 
 long fillNewEE(int count)
 {
-   Experimental::RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
+   RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
    for (int i = 0; i < count; ++i)
       hist.Fill({0.611, 0.611});
    return hist.GetNDim();
@@ -145,8 +145,8 @@ long fillOldEE(int count)
 
 long fillNEE(int count)
 {
-   Experimental::RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
-   std::vector<Experimental::Hist::RCoordArray<2>> v(count);
+   RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
+   std::vector<Hist::RCoordArray<2>> v(count);
    for (int i = 0; i < count; ++i)
       v[i] = {0.611, 0.611};
    hist.FillN(v);
@@ -164,8 +164,8 @@ long fillBufferedOldEE(int count)
 
 long fillBufferedNewEE(int count)
 {
-   Experimental::RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
-   Experimental::RHistBufferedFill<Experimental::RH2D> filler(hist);
+   RH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
+   RHistBufferedFill<RH2D> filler(hist);
    for (int i = 0; i < count; ++i)
       filler.Fill({0.611, 0.611});
    return hist.GetNDim();

@@ -47,7 +47,6 @@ following categories:
 
 #include "TVirtualPad.h"
 #include "TCanvas.h"
-#include "TBaseClass.h"
 #include "TGTab.h"
 #include "TG3DLine.h"
 #include "TGComboBox.h"

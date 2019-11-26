@@ -104,7 +104,7 @@ private:
       // Here the cast to void* is a worksround while we figure out the
       // issues we have with long long types, signed and unsigned.
       RVec<T> tmp(reinterpret_cast<T *>((void *)values->raw_values()) + offset, array.value_length(entry));
-      cache.swap(tmp);
+      std::swap(cache, tmp);
       return (void *)(&cache);
    }
 
@@ -265,6 +265,7 @@ public:
       auto chunk = fChunks.at(fLastChunkPerSlot[slot]);
       assert(slot < fArrayVisitorPerSlot.size());
       fArrayVisitorPerSlot[slot].SetEntry(entry - fFirstEntryPerChunk[fLastChunkPerSlot[slot]]);
+      fLastEntryPerSlot[slot] = entry;
       auto status = chunk->Accept(fArrayVisitorPerSlot.data() + slot);
       if (!status.ok()) {
          std::string msg = "Could not get pointer for slot ";

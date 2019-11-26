@@ -37,6 +37,7 @@
 #include "TGDMLMatrix.h"
 
 #include <map>
+#include <set>
 #include <vector>
 #include <iostream>
 
@@ -73,7 +74,7 @@ public:
    //wrapper of all main methods for extraction
    void WriteGDMLfile(TGeoManager * geomanager, const char* filename = "test.gdml", TString option = "");
    // Wrapper to only selectively write one branch of the volume hierarchy to file
-   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename = "test.gdml", TString option = "");
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoNode* top_node, const char* filename = "test.gdml", TString option = "");
 
    enum ENamingType {
       kelegantButSlow = 0,
@@ -92,10 +93,13 @@ private:
       Double_t z;
    };
 
-   typedef  std::map<TString, Bool_t> NameList;
-   typedef  std::map<TString, TString> NameListS;
-   typedef  std::map<TString, Int_t> NameListI;
-   typedef  std::map<TString, Float_t> NameListF;
+   typedef  std::set<const TGeoOpticalSurface*> SurfaceList;
+   typedef  std::set<const TGeoVolume*> VolList;
+   typedef  std::set<const TGeoNode*>   NodeList;
+   typedef  std::map<TString, Bool_t>   NameList;
+   typedef  std::map<TString, TString>  NameListS;
+   typedef  std::map<TString, Int_t>    NameListI;
+   typedef  std::map<TString, Float_t>  NameListF;
    struct StructLst {
       NameList fLst;
    };     //to store pointers
@@ -109,7 +113,10 @@ private:
    StructLst *fElementList;   //list of elements
    StructLst *fAccPatt;       //list of accepted patterns for division
    StructLst *fRejShape;      //list of rejected shapes
-
+   SurfaceList fSurfaceList;  //list of optical surfaces
+   VolList     fVolumeList;   //list of volumes
+   NodeList    fNodeList;     //list of placed volumes
+  
    NameLst *fNameList; //list of names (pointer mapped)
 
    //Data members
@@ -138,14 +145,15 @@ private:
    //1. Main methods to extract everything from ROOT gGeoManager
    XMLNodePointer_t ExtractMaterials(TList* materialsLst); //result <materials>...
    TString          ExtractSolid(TGeoShape* volShape);     //adds <shape> to <solids>
-   void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...  + corresp. shape
+   void             ExtractVolumes(TGeoNode* topNode);    //result <volume> node...  + corresp. shape
    void             ExtractMatrices(TObjArray *matrices);  //adds <matrix> to <define>
+   void             ExtractConstants(TGeoManager *geom);   //adds <constant> to <define>
    void             ExtractOpticalSurfaces(TObjArray *surfaces); //adds <opticalsurface> to <solids>
    void             ExtractSkinSurfaces(TObjArray *surfaces);    //adds <skinsurface> to <structure>
    void             ExtractBorderSurfaces(TObjArray *surfaces);  //adds <bordersurface> to <structure>
 
    // Combined implementation to extract GDML information from the geometry tree
-   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, TList* materialsLst, const char* filename, TString option);
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoNode* top_node, TList* materialsLst, const char* filename, TString option);
 
    //1.1 Materials sub methods - creating Nodes
    XMLNodePointer_t CreateAtomN(Double_t atom, const char * unit = "g/mole");
@@ -206,6 +214,7 @@ private:
    XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type = "position", const char * unit = "cm");
    XMLNodePointer_t CreateRotationN(const char * name, Xyz rotation, const char * type = "rotation", const char * unit = "deg");
    XMLNodePointer_t CreateMatrixN(TGDMLMatrix const *matrix);
+   XMLNodePointer_t CreateConstantN(const char *name, Double_t value);
    TGeoCompositeShape* CreateFakeCtub(TGeoCtub * geoShape);  //create fake cut tube as intersection
 
    //check name (2nd parameter) whether it is in the list (1st parameter)
@@ -219,6 +228,19 @@ private:
    UInt_t GetFltPrecision() const { return fFltPrecision; }
    void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   //
+   // Backwards compatibility for old DD4hep version (to be removed in the future)
+   //
+   ////////////////////////////////////////////////////////////////////////////////
+public:
+   // Backwards compatibility (to be removed in the future): Wrapper to only selectively write one branch
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, const char* filename = "test.gdml", TString option = "");
+private:
+   // Backwards compatibility (to be removed in the future): Combined implementation to extract GDML information from the geometry tree
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, TList* materialsLst, const char* filename, TString option);
+   void ExtractVolumes(TGeoVolume* topVolume);    //result <volume> node...  + corresp. shape
+  
    ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };
 

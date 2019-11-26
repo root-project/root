@@ -87,7 +87,13 @@ AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y, const TCpuMatrix<
    auto f = [&dataY, &dataOutput, &dataWeights, &temp, m](UInt_t workerID) {
       AFloat y   = dataY[workerID];
       AFloat sig = 1.0 / (1.0 + exp(- dataOutput[workerID]));
-      temp[workerID] = - (y * log(sig) + (1.0 - y) * log(1.0 - sig));
+      if (y == 0) 
+         temp[workerID] = - log(1.0 - sig);
+      else if ( y == 1.)
+         temp[workerID] = - log(sig); 
+      else 
+         temp[workerID] = - (y * log(sig) + (1.0 - y) * log(1.0 - sig));
+
       temp[workerID] *= dataWeights[workerID % m];
       return 0;
    };

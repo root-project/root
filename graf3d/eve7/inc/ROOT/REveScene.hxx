@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,10 +14,10 @@
 
 #include <ROOT/REveElement.hxx>
 
+#include "TClass.h"
+
 #include <vector>
 #include <memory>
-
-#include "TClass.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -27,10 +27,11 @@ class REveManager;
 
 /******************************************************************************/
 // REveScene
+// REve representation of TGLScene.
 /******************************************************************************/
 
-class REveScene : public REveElementList {
-
+class REveScene : public REveElement
+{
    friend class REveManager;
 
 private:
@@ -38,62 +39,67 @@ private:
    REveScene &operator=(const REveScene &); // Not implemented
 
 protected:
-   struct SceneCommand {
+   struct SceneCommand
+   {
       std::string fName;
       std::string fIcon;
-      unsigned fElementId;
       std::string fElementClass;
       std::string fAction;
-      SceneCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action) :
-         fName(name), fIcon(icon), fElementId(element->GetElementId()), fElementClass(element->IsA()->GetName()), fAction(action) {}
+      ElementId_t fElementId;
+
+      SceneCommand(const std::string& name, const std::string& icon,
+                   const REveElement* element, const std::string& action) :
+         fName(name),
+         fIcon(icon),
+         fElementClass(element->IsA()->GetName()),
+         fAction(action),
+         fElementId(element->GetElementId())
+      {}
    };
 
-   Bool_t fSmartRefresh{kTRUE};
-   Bool_t fHierarchical{kFALSE};
+   Bool_t fSmartRefresh{kTRUE};            ///<!
+   Bool_t fHierarchical{kFALSE};           ///<!
 
-   Bool_t fAcceptingChanges{kFALSE};
-   Bool_t fChanged{kFALSE};
-   Set_t fChangedElements;
-   // For the following two have to rethink how the hierarchy will be handled.
+   Bool_t fAcceptingChanges{kFALSE};       ///<!
+   Bool_t fChanged{kFALSE};                ///<!
+   // Changed or/and added.
+   // XXXX can change to vector (element checks if already registered now).
+   List_t  fChangedElements;               ///<!
+   // For the following two have to re-think how the hierarchy will be handled.
    // If I remove a parent, i have to remove all the children.
    // So this has to be done right on both sides (on eve element and here).
    // I might need a set, so i can easily check if parent is in the removed / added list already.
-   Set_t fAddedElements;
-   std::vector<ElementId_t> fRemovedElements;
+   std::vector<ElementId_t> fRemovedElements; ///<!
 
-   std::vector<std::unique_ptr<REveClient>> fSubscribers;
+   std::vector<std::unique_ptr<REveClient>> fSubscribers; ///<!
 
    List_t fElsWithBinaryData;
    std::string fOutputJson;               ///<!
    std::vector<char> fOutputBinary;       ///<!
    Int_t fTotalBinarySize;                ///<!
 
-   std::vector<SceneCommand> fCommands;
+   std::vector<SceneCommand> fCommands;   ///<!
 
    // void RetransHierarchicallyRecurse(REveElement* el, const REveTrans& tp);
 
 public:
-   REveScene(const char *n = "REveScene", const char *t = "");
+   REveScene(const std::string &n = "REveScene", const std::string &t = "");
    virtual ~REveScene();
 
-   virtual void CollectSceneParents(List_t &scenes);
+   Bool_t SingleRnrState() const override { return kTRUE; }
 
-   virtual Bool_t SingleRnrState() const { return kTRUE; }
-
-   void SetHierarchical(Bool_t h) { fHierarchical = h; }
+   void   SetHierarchical(Bool_t h) { fHierarchical = h; }
    Bool_t GetHierarchical() const { return fHierarchical; }
 
-   void Changed() { fChanged = kTRUE; } // AMT ??? depricated
+   void   Changed() { fChanged = kTRUE; } // AMT ??? depricated
    Bool_t IsChanged() const;
 
    Bool_t IsAcceptingChanges() const { return fAcceptingChanges; }
    void BeginAcceptingChanges();
    void SceneElementChanged(REveElement *element);
-   void SceneElementAdded(REveElement *element);
    void SceneElementRemoved(ElementId_t id);
-
    void EndAcceptingChanges();
-   void ProcessChanges(); // should return net message or talk to gEve about it
+   void ProcessChanges();
 
    void StreamElements();
    void StreamJsonRecurse(REveElement *el, nlohmann::json &jobj);
@@ -114,22 +120,22 @@ public:
 
    void AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action)
    { fCommands.emplace_back(name, icon, element, action); }
-
-   ClassDef(REveScene, 0); // Reve representation of TGLScene.
 };
 
 /******************************************************************************/
 // REveSceneList
+// List of Scenes providing common operations on REveScene collections.
 /******************************************************************************/
 
-class REveSceneList : public REveElementList {
+class REveSceneList : public REveElement
+{
 private:
    REveSceneList(const REveSceneList &);            // Not implemented
    REveSceneList &operator=(const REveSceneList &); // Not implemented
 
 protected:
 public:
-   REveSceneList(const char *n = "REveSceneList", const char *t = "");
+   REveSceneList(const std::string& n = "REveSceneList", const std::string& t = "");
    virtual ~REveSceneList() {}
 
    void DestroyScenes();
@@ -141,8 +147,6 @@ public:
    void AcceptChanges(bool);
 
    void ProcessSceneChanges();
-
-   ClassDef(REveSceneList, 0); // List of Scenes providing common operations on REveScene collections.
 };
 
 } // namespace Experimental

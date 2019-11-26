@@ -113,18 +113,9 @@ void TXMLSetup::SetNameSpaceBase(const char *namespacebase)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// default constructor of TXMLSetup class
-
-TXMLSetup::TXMLSetup()
-   : fXmlLayout(kSpecialized), fStoreStreamerInfos(kTRUE), fUseDtd(kFALSE), fUseNamespaces(kFALSE), fRefCounter(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// creates TXMLSetup object getting values from string
 
 TXMLSetup::TXMLSetup(const char *opt)
-   : fXmlLayout(kSpecialized), fStoreStreamerInfos(kTRUE), fUseDtd(kFALSE), fUseNamespaces(kFALSE), fRefCounter(0)
 {
    ReadSetupFromStr(opt);
 }
@@ -134,15 +125,20 @@ TXMLSetup::TXMLSetup(const char *opt)
 
 TXMLSetup::TXMLSetup(const TXMLSetup &src)
    : fXmlLayout(src.fXmlLayout), fStoreStreamerInfos(src.fStoreStreamerInfos), fUseDtd(src.fUseDtd),
-     fUseNamespaces(src.fUseNamespaces), fRefCounter(0)
+     fUseNamespaces(src.fUseNamespaces)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TXMLSetup class destructor
+/// assign operator
 
-TXMLSetup::~TXMLSetup()
+TXMLSetup &TXMLSetup::operator=(const TXMLSetup &rhs)
 {
+   fXmlLayout = rhs.fXmlLayout;
+   fStoreStreamerInfos = rhs.fStoreStreamerInfos;
+   fUseDtd = rhs.fUseDtd;
+   fUseNamespaces = rhs.fUseNamespaces;
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,7 +161,7 @@ TString TXMLSetup::GetSetupAsString()
 
 Bool_t TXMLSetup::IsValidXmlSetup(const char *setupstr)
 {
-   if ((setupstr == 0) || (strlen(setupstr) != 4))
+   if (!setupstr || (strlen(setupstr) != 4))
       return kFALSE;
    TString str = setupstr;
    str.ToLower();
@@ -182,7 +178,7 @@ Bool_t TXMLSetup::IsValidXmlSetup(const char *setupstr)
 
 Bool_t TXMLSetup::ReadSetupFromStr(const char *setupstr)
 {
-   if ((setupstr == 0) || (strlen(setupstr) < 4))
+   if (!setupstr || (strlen(setupstr) < 4))
       return kFALSE;
    Int_t lay = EXMLLayout(setupstr[0] - 48);
    if (lay == kGeneralized)
@@ -271,13 +267,13 @@ TClass *TXMLSetup::XmlDefineClass(const char *xmlClassName)
       return TClass::GetClass(xmlClassName);
 
    TIter iter(gROOT->GetListOfClasses());
-   TClass *cl = 0;
-   while ((cl = (TClass *)iter()) != 0) {
+   TClass *cl = nullptr;
+   while ((cl = (TClass *)iter()) != nullptr) {
       const char *name = XmlConvertClassName(cl->GetName());
       if (strcmp(xmlClassName, name) == 0)
          return cl;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

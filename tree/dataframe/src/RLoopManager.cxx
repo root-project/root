@@ -8,6 +8,7 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TBranchElement.h"
+#include "TBranchObject.h"
 #include "TEntryList.h"
 #include "TError.h"
 #include "TInterpreter.h"
@@ -36,13 +37,13 @@ bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload does not perform any check on the duplicates.
 /// It is used for TBranch objects.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
-                std::string &friendName)
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                const std::string &friendName)
 {
 
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
-      auto friendBName = friendName + "." + branchName;
+      const auto friendBName = friendName + "." + branchName;
       if (bNamesReg.insert(friendBName).second)
          bNames.push_back(friendBName);
    }
@@ -53,8 +54,8 @@ void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::st
 
 ///////////////////////////////////////////////////////////////////////////////
 /// This overloads makes sure that the TLeaf has not been already inserted.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::string &branchName,
-                std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
 {
    const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
    if (!canAdd) {
@@ -98,17 +99,24 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
    }
 
    const auto branches = t.GetListOfBranches();
+   // Getting the branches here triggered the read of the first file of the chain if t is a chain.
+   // We check if a tree has been successfully read, otherwise we throw (see ROOT-9984) to avoid further
+   // operations
+   if (!t.GetTree()) {
+      std::string err("GetBranchNames: error in opening the tree ");
+      err += t.GetName();
+      throw std::runtime_error(err);
+   }
    if (branches) {
-      std::string prefix = "";
       for (auto b : *branches) {
          TBranch *branch = static_cast<TBranch *>(b);
-         auto branchName = std::string(branch->GetName());
+         const auto branchName = std::string(branch->GetName());
          if (branch->IsA() == TBranch::Class()) {
             // Leaf list
             auto listOfLeaves = branch->GetListOfLeaves();
             if (listOfLeaves->GetEntries() == 1) {
                auto leaf = static_cast<TLeaf *>(listOfLeaves->At(0));
-               auto leafName = std::string(leaf->GetName());
+               const auto leafName = std::string(leaf->GetName());
                if (leafName == branchName) {
                   UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
                }
@@ -116,10 +124,14 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
 
             for (auto leaf : *listOfLeaves) {
                auto castLeaf = static_cast<TLeaf *>(leaf);
-               auto leafName = std::string(leaf->GetName());
-               auto fullName = branchName + "." + leafName;
+               const auto leafName = std::string(leaf->GetName());
+               const auto fullName = branchName + "." + leafName;
                UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
             }
+         } else if (branch->IsA() == TBranchObject::Class()) {
+            // TBranchObject
+            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
+            UpdateList(bNamesReg, bNames, branchName, friendName);
          } else {
             // TBranchElement
             // Check if there is explicit or implicit dot in the name
@@ -195,6 +207,25 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    fDataSource->SetNSlots(fNSlots);
 }
 
+// ROOT-9559: we cannot handle indexed friends
+void RLoopManager::CheckIndexedFriends()
+{
+   auto friends = fTree->GetListOfFriends();
+   if (!friends)
+      return;
+   for (auto friendElObj : *friends) {
+      auto friendEl = static_cast<TFriendElement *>(friendElObj);
+      auto friendTree = friendEl->GetTree();
+      if (friendTree && friendTree->GetTreeIndex()) {
+         std::string err = fTree->GetName();
+         err += " has a friend, \"";
+         err += friendTree->GetName();
+         err += "\", which has an index. This is not supported.";
+         throw std::runtime_error(err);
+      }
+   }
+}
+
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
 {
@@ -247,6 +278,7 @@ void RLoopManager::RunEmptySource()
 void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
+   CheckIndexedFriends();
    RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
    auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList);
@@ -272,6 +304,7 @@ void RLoopManager::RunTreeProcessorMT()
 /// Run event loop over one or multiple ROOT files, in sequence.
 void RLoopManager::RunTreeReader()
 {
+   CheckIndexedFriends();
    TTreeReader r(fTree.get(), fTree->GetEntryList());
    if (0 == fTree->GetEntriesFast())
       return;
@@ -420,17 +453,27 @@ void RLoopManager::CleanUpTask(unsigned int slot)
       ptr->ClearTask(slot);
 }
 
-/// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
-void RLoopManager::BuildJittedNodes()
+/// Declare to the interpreter type aliases and other entities required by RDF jitted nodes.
+/// This method clears the `fToJitDeclare` member variable.
+void RLoopManager::JitDeclarations()
 {
-   auto error = TInterpreter::EErrorCode::kNoError;
-   gInterpreter->Calc(fToJit.c_str(), &error);
-   if (TInterpreter::EErrorCode::kNoError != error) {
-      std::string exceptionText =
-         "An error occurred while jitting. The lines above might indicate the cause of the crash\n";
-      throw std::runtime_error(exceptionText.c_str());
-   }
-   fToJit.clear();
+   if (fToJitDeclare.empty())
+      return;
+
+   RDFInternal::InterpreterDeclare(fToJitDeclare);
+   fToJitDeclare.clear();
+}
+
+/// Add RDF nodes that require just-in-time compilation to the computation graph.
+/// This method also invokes JitDeclarations() if needed, and clears the `fToJitExec` member variable.
+void RLoopManager::Jit()
+{
+   if (fToJitExec.empty())
+      return;
+
+   JitDeclarations();
+   RDFInternal::InterpreterCalc(fToJitExec, "RLoopManager::Run");
+   fToJitExec.clear();
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
@@ -458,8 +501,7 @@ unsigned int RLoopManager::GetNextID()
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void RLoopManager::Run()
 {
-   if (!fToJit.empty())
-      BuildJittedNodes();
+   Jit();
 
    InitNodes();
 

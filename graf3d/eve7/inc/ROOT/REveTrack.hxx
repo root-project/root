@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,6 +18,7 @@
 #include <ROOT/REvePathMark.hxx>
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveLine.hxx>
+#include <ROOT/REveVSDStructs.hxx>
 
 #include "TPolyMarker3D.h"
 #include "TMarker.h"
@@ -30,7 +31,10 @@ namespace Experimental {
 class REveTrackPropagator;
 class REveTrackList;
 
-// class REveMCTrack;
+////////////////////////////////////////////////////////////////////////////////
+/// REveTrack
+/// Track with given vertex, momentum and optional referece-points (path-marks) along its path.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveTrack : public REveLine
 {
@@ -42,8 +46,6 @@ private:
 
 public:
    typedef std::vector<REvePathMarkD> vPathMark_t;
-   typedef vPathMark_t::iterator vPathMark_i;
-   typedef vPathMark_t::const_iterator vPathMark_ci;
 
    // Deprecated -- to be removed.
    enum EBreakProjectedTracks_e { kBPTDefault, kBPTAlways, kBPTNever };
@@ -69,13 +71,13 @@ public:
    REveTrack();
    REveTrack(TParticle *t, Int_t label, REveTrackPropagator *prop = nullptr);
    // VSD inputs
-   // REveTrack(REveMCTrack*  t, REveTrackPropagator* prop=0);
-   // REveTrack(REveRecTrack* t, REveTrackPropagator* prop=0);
-   // REveTrack(REveRecTrackD* t, REveTrackPropagator* prop=0);
+   REveTrack(REveMCTrack*  t, REveTrackPropagator* prop=0);
+   REveTrack(REveRecTrack* t, REveTrackPropagator* prop=0);
+   REveTrack(REveRecTrackD* t, REveTrackPropagator* prop=0);
    REveTrack(const REveTrack &t);
    virtual ~REveTrack();
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    virtual void SetStdTitle();
 
@@ -123,22 +125,24 @@ public:
 
    virtual void SecSelected(REveTrack *); // *SIGNAL*
 
-   virtual void CopyVizParams(const REveElement *el);
-   virtual void WriteVizParams(std::ostream &out, const TString &var);
+   void CopyVizParams(const REveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   virtual TClass *ProjectedClass(const REveProjection *p) const;
+   TClass *ProjectedClass(const REveProjection *p) const override;
 
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset); // override
-   void BuildRenderData();                                    // override {}
-
-   ClassDef(REveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 };
 
-/******************************************************************************/
-// REveTrackList
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveTrackList
+/// A list of tracks supporting change of common attributes and selection based on track parameters.
+////////////////////////////////////////////////////////////////////////////////
 
-class REveTrackList : public REveElementList, public TAttMarker, public TAttLine
+class REveTrackList : public REveElement,
+                      public REveProjectable,
+                      public TAttMarker,
+                      public TAttLine
 {
 private:
    REveTrackList(const REveTrackList &);            // Not implemented
@@ -165,7 +169,7 @@ protected:
 
 public:
    REveTrackList(REveTrackPropagator *prop = nullptr);
-   REveTrackList(const char *name, REveTrackPropagator *prop = nullptr);
+   REveTrackList(const std::string &name, REveTrackPropagator *prop = nullptr);
    virtual ~REveTrackList();
 
    void MakeTracks(Bool_t recurse = kTRUE);
@@ -179,19 +183,19 @@ public:
 
    //--------------------------------
 
-   virtual void SetMainColor(Color_t c);
-   virtual void SetLineColor(Color_t c) { SetMainColor(c); }
+   void SetMainColor(Color_t c) override;
+   void SetLineColor(Color_t c) override { SetMainColor(c); }
    virtual void SetLineColor(Color_t c, REveElement *el);
-   virtual void SetLineWidth(Width_t w);
+   void SetLineWidth(Width_t w) override;
    virtual void SetLineWidth(Width_t w, REveElement *el);
-   virtual void SetLineStyle(Style_t s);
+   void SetLineStyle(Style_t s) override;
    virtual void SetLineStyle(Style_t s, REveElement *el);
 
-   virtual void SetMarkerColor(Color_t c);
+   void SetMarkerColor(Color_t c) override;
    virtual void SetMarkerColor(Color_t c, REveElement *el);
-   virtual void SetMarkerSize(Size_t s);
+   void SetMarkerSize(Size_t s) override;
    virtual void SetMarkerSize(Size_t s, REveElement *el);
-   virtual void SetMarkerStyle(Style_t s);
+   void SetMarkerStyle(Style_t s) override;
    virtual void SetMarkerStyle(Style_t s, REveElement *el);
 
    void SetRnrLine(Bool_t rnr);
@@ -219,12 +223,10 @@ public:
    REveTrack *FindTrackByLabel(Int_t label); // *MENU*
    REveTrack *FindTrackByIndex(Int_t index); // *MENU*
 
-   virtual void CopyVizParams(const REveElement *el);
-   virtual void WriteVizParams(std::ostream &out, const TString &var);
+   void CopyVizParams(const REveElement *el) override;
+   void WriteVizParams(std::ostream &out, const TString &var) override;
 
-   virtual TClass *ProjectedClass(const REveProjection *p) const;
-
-   ClassDef(REveTrackList, 0); // A list of tracks supporting change of common attributes and selection based on track parameters.
+   TClass *ProjectedClass(const REveProjection *p) const override;
 };
 
 } // namespace Experimental

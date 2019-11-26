@@ -59,7 +59,15 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 #
 @ROOT_INCLUDE_DIR_SETUP@
 @ROOT_LIBRARY_DIR_SETUP@
+@ROOT_BINDIR_SETUP@
 @ROOT_BINARY_DIR_SETUP@
+
+# Python version used to build ROOT
+set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING@)
+
+#----------------------------------------------------------------------------
+# Include RootMacros.cmake to get ROOT's CMake macros
+include("${_thisdir}/RootMacros.cmake")
 
 #----------------------------------------------------------------------------
 # Include the file listing all the imported targets and options
@@ -100,7 +108,7 @@ endif()
 set(ROOT_ALL_TOOLS genreflex genmap root rootcint rootcling hadd rootls rootrm rootmv rootmkdir rootcp rootdraw rootbrowse)
 foreach(_cpt ${ROOT_ALL_TOOLS})
   if(NOT ROOT_${_cpt}_CMD)
-    find_program(ROOT_${_cpt}_CMD ${_cpt} HINTS ${ROOT_BINARY_DIR})
+    find_program(ROOT_${_cpt}_CMD ${_cpt} HINTS ${ROOT_BINDIR})
     if(ROOT_${_cpt}_CMD)
       mark_as_advanced(ROOT_${_cpt}_CMD)
     endif()

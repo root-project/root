@@ -252,6 +252,7 @@ std::unique_ptr<TVirtualRWMutex::State>
 TReentrantRWLock<MutexT, RecurseCountsT>::GetStateBefore()
 {
    using State_t = TReentrantRWLockState<MutexT, RecurseCountsT>;
+
    if (!fWriter) {
       Error("TReentrantRWLock::GetStateBefore()", "Must be write locked!");
       return nullptr;
@@ -273,7 +274,14 @@ TReentrantRWLock<MutexT, RecurseCountsT>::GetStateBefore()
    // was taken, the write recursion level was `fWriteRecurse - 1`
    pState->fWriteRecurse = fRecurseCounts.fWriteRecurse - 1;
 
-   return std::move(pState);
+#if __GNUC__ < 7
+   // older version of gcc can not convert implicitly from
+   // unique_ptr of derived to unique_ptr of base
+   using BaseState_t = TVirtualRWMutex::State;
+   return std::unique_ptr<BaseState_t>(pState.release());
+#else
+   return pState;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -384,4 +392,5 @@ template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCounts>;
 
 template class TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TReentrantRWLock<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
+template class TReentrantRWLock<std::mutex, ROOT::Internal::UniqueLockRecurseCount>;
 }

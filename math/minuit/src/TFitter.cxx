@@ -20,6 +20,13 @@
 #include "TMultiGraph.h"
 #include "TMath.h"
 
+////////////////////////////////////////////////////////////////////////////////
+/// \class TFitter
+///
+/// The ROOT standard fitter based on TMinuit
+///
+////////////////////////////////////////////////////////////////////////////////
+
 // extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 // extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 // extern void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
@@ -101,13 +108,15 @@ void TFitter::FixParameter(Int_t ipar)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Computes point-by-point confidence intervals for the fitted function
+///
 ///Parameters:
-///n - number of points
-///ndim - dimensions of points
-///x - points, at which to compute the intervals, for ndim > 1
+/// - n - number of points
+/// - ndim - dimensions of points
+/// - x - points, at which to compute the intervals, for ndim > 1
 ///    should be in order: (x0,y0, x1, y1, ... xn, yn)
-///ci - computed intervals are returned in this array
-///cl - confidence level, default=0.95
+/// - ci - computed intervals are returned in this array
+/// - cl - confidence level, default=0.95
+///
 ///NOTE, that the intervals are approximate for nonlinear(in parameters) models
 
 void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
@@ -142,7 +151,7 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
          delete [] fixed;
       return;
    }
-  
+
    Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());
    Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
    Int_t igrad, ifree=0;
@@ -198,6 +207,7 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Computes confidence intervals at level cl. Default is 0.95
+///
 ///The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
 ///For Graphs, confidence intervals are computed for each point,
 ///the value of the graph at that point is set to the function value at that
@@ -209,14 +219,15 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
 ///NOTE: confidence intervals are approximate for nonlinear models!
 ///
 ///Allowed combinations:
-///Fitted object               Passed object
-///TGraph                      TGraphErrors, TH1
-///TGraphErrors, AsymmErrors   TGraphErrors, TH1
-///TH1                         TGraphErrors, TH1
-///TGraph2D                    TGraph2DErrors, TH2
-///TGraph2DErrors              TGraph2DErrors, TH2
-///TH2                         TGraph2DErrors, TH2
-///TH3                         TH3
+///
+/// - Fitted object               Passed object
+/// - TGraph                      TGraphErrors, TH1
+/// - TGraphErrors, AsymmErrors   TGraphErrors, TH1
+/// - TH1                         TGraphErrors, TH1
+/// - TGraph2D                    TGraph2DErrors, TH2
+/// - TGraph2DErrors              TGraph2DErrors, TH2
+/// - TH2                         TGraph2DErrors, TH2
+/// - TH3                         TH3
 
 void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 {
@@ -454,12 +465,14 @@ Double_t TFitter::GetParameter(Int_t ipar) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return current values for a parameter
-///   ipar     : parameter number
-///   parname  : parameter name
-///   value    : initial parameter value
-///   verr     : initial error for this parameter
-///   vlow     : lower value for the parameter
-///   vhigh    : upper value for the parameter
+///
+///  - ipar     : parameter number
+///  - parname  : parameter name
+///  - value    : initial parameter value
+///  - verr     : initial error for this parameter
+///  - vlow     : lower value for the parameter
+///  - vhigh    : upper value for the parameter
+///
 ///  WARNING! parname must be suitably dimensionned in the calling function.
 
 Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
@@ -482,11 +495,12 @@ const char *TFitter::GetParName(Int_t ipar) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return global fit parameters
-///   amin     : chisquare
-///   edm      : estimated distance to minimum
-///   errdef
-///   nvpar    : number of variable parameters
-///   nparx    : total number of parameters
+///
+///  - amin     : chisquare
+///  - edm      : estimated distance to minimum
+///  - errdef
+///  - nvpar    : number of variable parameters
+///  - nparx    : total number of parameters
 
 Int_t TFitter::GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const
 {
@@ -571,12 +585,13 @@ void TFitter::SetFitMethod(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set initial values for a parameter
-///   ipar     : parameter number
-///   parname  : parameter name
-///   value    : initial parameter value
-///   verr     : initial error for this parameter
-///   vlow     : lower value for the parameter
-///   vhigh    : upper value for the parameter
+///
+///  - ipar     : parameter number
+///  - parname  : parameter name
+///  - value    : initial parameter value
+///  - verr     : initial error for this parameter
+///  - vlow     : lower value for the parameter
+///  - vhigh    : upper value for the parameter
 
 Int_t TFitter::SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh)
 {

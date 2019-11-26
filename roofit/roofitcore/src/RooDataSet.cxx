@@ -22,6 +22,30 @@
 RooDataSet is a container class to hold unbinned data. Each data point
 in N-dimensional space is represented by a RooArgSet of RooRealVar, RooCategory 
 or RooStringVar objects.
+
+There are two storage backends:
+- RooVectorDataStore (default): std::vectors in memory. They are fast, but they
+cannot be serialised if the dataset exceeds a size of 1 Gb
+- RooTreeDataStore: Uses a TTree, which can be file backed if a file is opened
+before creating the dataset. This significantly reduces the memory pressure, as the
+baskets of the tree can be written to a file, and only the basket that's currently
+being read stays in RAM.
+  - Enable tree-backed storage similar to this:
+  ```
+  TFile outputFile("filename.root", "RECREATE");
+  RooAbsData::setDefaultStorageType(RooAbsData::Tree);
+  RooDataSet mydata(...);
+  ```
+  - Or convert an existing memory-backed data storage:
+  ```
+  RooDataSet mydata(...);
+
+  TFile outputFile("filename.root", "RECREATE");
+  mydata.convertToTreeStore();
+  ```
+
+For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
+
 **/
 
 #include "RooFit.h"
@@ -604,7 +628,9 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 /// any variable in the source dataset. For cuts involving variables
 /// other than those contained in the source data set, such as
 /// intermediate formula objects, use the equivalent constructor
-/// accepting RooFormulaVar reference as cut specification
+/// accepting RooFormulaVar reference as cut specification.
+///
+/// This constructor will internally store the data in a TTree.
 ///
 /// For most uses the RooAbsData::reduce() wrapper function, which
 /// uses this constructor, is the most convenient way to create a
@@ -645,6 +671,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// exclusively and directly on the data set dimensions, the
 /// equivalent constructor with a string based cut expression is
 /// recommended.
+///
+/// This constructor will internally store the data in a TTree.
 ///
 /// For most uses the RooAbsData::reduce() wrapper function, which
 /// uses this constructor, is the most convenient way to create a
@@ -952,9 +980,8 @@ Double_t RooDataSet::weight() const
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Return event weight of current event
+/// Return squared event weight of current event
 
 Double_t RooDataSet::weightSquared() const 
 {
@@ -962,6 +989,13 @@ Double_t RooDataSet::weightSquared() const
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return event weights of all events in range
+
+RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t last) const {
+  return _dstore->getWeightBatch(first, last);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1028,7 +1062,7 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 {
   // Setup RooFormulaVar for cutSpec if it is present
   RooFormula* select = 0 ;
-  if (cutSpec) {
+  if (cutSpec && strlen(cutSpec) > 0) {
     select = new RooFormula("select",cutSpec,*get()) ;
   }
   
@@ -1102,20 +1136,51 @@ const RooArgSet* RooDataSet::get() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
-/// Any variables present in 'data' but not in the dataset will be silently ignored
-///
+/// Any variables present in 'data' but not in the dataset will be silently ignored.
+/// \param[in] data Data point.
+/// \param[in] wgt Event weight. Defaults to 1. The current value of the weight variable is
+/// ignored.
+/// \note To obtain weighted events, a variable must be designated `WeightVar` in the constructor.
+/// \param[in] wgtError Optional weight error.
+/// \note This requires including the weight variable in the set of `StoreError` variables when constructing
+/// the dataset.
 
 void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
 {
   checkInit() ;
+
+  const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
+
   _varsNoWgt = data;
+
   if (_wgtVar) {
     _wgtVar->setVal(wgt) ;
     if (wgtError!=0.) {
       _wgtVar->setError(wgtError) ;
     }
+  } else if ((wgt != 1. || wgtError != 0.) && _errorMsgCount < 5) {
+    ccoutE(DataHandling) << "An event weight/error was passed but no weight variable was defined"
+        << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
+    ++_errorMsgCount;
   }
+
+  if (_wgtVar && _doWeightErrorCheck
+      && wgtError != 0.
+      && fabs(wgt*wgt - wgtError)/wgtError > 1.E-15 //Exception for standard wgt^2 errors, which need not be stored.
+      && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreError")) {
+    coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
+        << "', but the weight variable '" << _wgtVar->GetName()
+        << "' does not store errors. Check `StoreError` in the RooDataSet constructor." << std::endl;
+    ++_errorMsgCount;
+  }
+
   fill();
+
+  // Restore weight state
+  if (_wgtVar) {
+    _wgtVar->setVal(oldW);
+    _wgtVar->removeError();
+  }
 }
 
 
@@ -1123,19 +1188,46 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
-/// Any variables present in 'data' but not in the dataset will be silently ignored
-///
+/// Any variables present in 'data' but not in the dataset will be silently ignored.
+/// \param[in] data Data point.
+/// \param[in] wgt Event weight. The current value of the weight variable is ignored.
+/// \note To obtain weighted events, a variable must be designated `WeightVar` in the constructor.
+/// \param[in] wgtErrorLo Asymmetric weight error.
+/// \param[in] wgtErrorHi Asymmetric weight error.
+/// \note This requires including the weight variable in the set of `StoreAsymError` variables when constructing
+/// the dataset.
 
 void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weightErrorLo, Double_t weightErrorHi) 
 {
   checkInit() ;
 
+  const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
+
   _varsNoWgt = indata;
   if (_wgtVar) {
     _wgtVar->setVal(inweight) ;
     _wgtVar->setAsymError(weightErrorLo,weightErrorHi) ;
+  } else if (inweight != 1. && _errorMsgCount < 5) {
+    ccoutE(DataHandling) << "An event weight was given but no weight variable was defined"
+        << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
+    ++_errorMsgCount;
   }
+
+  if (_wgtVar && _doWeightErrorCheck
+      && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreAsymError")) {
+    coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
+        << "', but the weight variable '" << _wgtVar->GetName()
+        << "' does not store errors. Check `StoreAsymError` in the RooDataSet constructor." << std::endl;
+    ++_errorMsgCount;
+  }
+
   fill();
+
+  // Restore weight state
+  if (_wgtVar) {
+    _wgtVar->setVal(oldW);
+    _wgtVar->removeAsymError();
+  }
 }
 
 
@@ -1144,21 +1236,53 @@ void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weight
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a data point, with its coordinates specified in the 'data' argset, to the data set. 
-/// Layout and size of input argument data is ASSUMED to be the same as RooArgSet returned
-/// RooDataSet::get()
-///
+/// \attention The order and type of the input variables are **assumed** to be the same as
+/// for the RooArgSet returned by RooDataSet::get(). Input values will just be written
+/// into the internal data columns by ordinal position.
+/// \param[in] data Data point.
+/// \param[in] wgt Event weight. Defaults to 1. The current value of the weight variable is
+/// ignored.
+/// \note To obtain weighted events, a variable must be designated `WeightVar` in the constructor.
+/// \param[in] wgtError Optional weight error.
+/// \note This requires including the weight variable in the set of `StoreError` variables when constructing
+/// the dataset.
 
 void RooDataSet::addFast(const RooArgSet& data, Double_t wgt, Double_t wgtError) 
 {
   checkInit() ;
+
+  const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
+
   _varsNoWgt.assignFast(data,_dstore->dirtyProp());
   if (_wgtVar) {
     _wgtVar->setVal(wgt) ;
     if (wgtError!=0.) {
       _wgtVar->setError(wgtError) ;
     }
+  } else if (wgt != 1. && _errorMsgCount < 5) {
+    ccoutE(DataHandling) << "An event weight was given but no weight variable was defined"
+        << " in the dataset '" << GetName() << "'. The weight will be ignored." << std::endl;
+    ++_errorMsgCount;
   }
+
   fill();
+
+  if (_wgtVar && _doWeightErrorCheck
+      && wgtError != 0. && wgtError != wgt*wgt //Exception for standard weight error, which need not be stored
+      && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreError")) {
+    coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
+        << "', but the weight variable '" << _wgtVar->GetName()
+        << "' does not store errors. Check `StoreError` in the RooDataSet constructor." << std::endl;
+    ++_errorMsgCount;
+  }
+  if (_wgtVar && _doWeightErrorCheck) {
+    _doWeightErrorCheck = false;
+  }
+
+  if (_wgtVar) {
+    _wgtVar->setVal(oldW);
+    _wgtVar->removeError();
+  }
 }
 
 
@@ -1738,11 +1862,9 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   if (indexCat) {
     // Copy dynamically defined types from new data set to indexCat in original list
     RooCategory* origIndexCat = (RooCategory*) variables.find(indexCatName) ;
-    TIterator* tIter = indexCat->typeIterator() ;
-    RooCatType* type = 0;
-      while ((type=(RooCatType*)tIter->Next())) {
-	origIndexCat->defineType(type->GetName(),type->getVal()) ;
-      }
+    for (const auto type : *indexCat) {
+      origIndexCat->defineType(type->GetName(), type->getVal());
+    }
   }
   oocoutI((TObject*)0,DataHandling) << "RooDataSet::read: read " << data->numEntries()
 				    << " events (ignored " << outOfRange << " out of range events)" << endl;

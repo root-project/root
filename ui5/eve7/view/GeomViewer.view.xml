@@ -1,0 +1,271 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
+   controllerName="rootui5.eve7.controller.GeomViewer"
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:eve7="rootui5.eve7.lib"
+   xmlns:core="sap.ui.core"
+   xmlns:l="sap.ui.layout"
+   xmlns:t="sap.ui.table">
+   <SplitApp id="geomViewerApp" initialMaster="geomHierarchy"
+      initialDetail="geomDraw" orientationChange="onOrientationChange">
+      <masterPages>
+         <Page id="geomHierarchy" title="Hierarchy" showNavButton="false" enableScrolling="false"
+            showFooter="false" showSubHeader="false" showHeader="true" icon="sap-icon://action" class="sapUiStdPage">
+            <headerContent>
+               <Button icon="sap-icon://settings" type="Transparent"
+                        tooltip="Show control page" press="showControl" />
+            </headerContent>
+            <content>
+               <FlexBox height="100%" direction="Column">
+                  <Toolbar>
+                     <layoutData>
+                        <FlexItemData baseSize="35px"/>
+                     </layoutData>
+
+                     <Button icon="sap-icon://log" type="Transparent" visible="{= !${/standalone} }"
+                             tooltip="Quit ROOT session" press="onQuitRootPress" />
+                     <Button icon="sap-icon://save" type="Transparent"
+                             tooltip="Save drawing as png image" press="pressSaveButton" />
+                     <Button icon="sap-icon://synchronize" type="Transparent"
+                             tooltip="Reload geometry drawing" press="onRealoadPress" />
+                     <Button icon="sap-icon://show" type="Transparent"
+                        tooltip="Toggle with info page" press="onInfoPress" />
+                     <ToolbarSpacer />
+                     <SearchField liveChange="onSearch" />
+                  </Toolbar>
+                  <t:TreeTable id="treeTable"
+                     columnHeaderVisible="false" editable="false"
+                     enableSelectAll="false" selectionBehavior="RowOnly"
+                     selectionMode="Single" visibleRowCountMode="Auto"
+                     cellClick="onCellClick"
+                     rows="{/nodes}">
+                     <t:layoutData>
+                        <FlexItemData growFactor="1"/>
+                     </t:layoutData>
+                  </t:TreeTable>
+               </FlexBox>
+            </content>
+         </Page>
+         <Page id="geomControl" title="Control" showHeader="true" showFooter="false" showSubHeader="false" enableScrolling="true"
+                showNavButton="true" navButtonText="Back to hierarchy" navButtonPress="onPressMasterBack"
+                class="sapUiStdPage">
+            <content>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="true" visible="{/show_config}">
+                <items>
+                  <IconTabFilter text="Configuration">
+                    <VBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Visibility level" wrapping="true"/>
+                          <StepInput min="0" max="100" value="{/cfg/vislevel}" width="120px" change="configChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Maximum number of nodes"  wrapping="true"/>
+                          <StepInput min="0" max="100000" step="1000" value="{/cfg/maxnumnodes}" width="120px" change="configChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num segments"  wrapping="true"/>
+                          <StepInput min="6" max="360" step="6" value="{/cfg/nsegm}" width="120px" change="configChanged"/>
+                       </HBox>
+                       <CheckBox text="Show top volume" selected="{/cfg/showtop}" select="configChanged"/>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Server build shapes"  wrapping="true"/>
+                          <ComboBox selectedKey="{/cfg/build_shapes}" change="configChanged" width="160px">
+                             <core:Item key="0" text="none"/>
+                             <core:Item key="1" text="composite"/>
+                             <core:Item key="2" text="non-cylindirical"/>
+                             <core:Item key="3" text="all"/>
+                          </ComboBox>
+                       </HBox>
+                    </VBox>
+                  </IconTabFilter>
+
+                  <IconTabFilter text="Light">
+                    <VBox>
+                       <ComboBox selectedKey="{/light/kind}" change="lightChanged">
+                           <core:Item key="points" text="Points"/>
+                           <core:Item key="ambient" text="Ambient"/>
+                           <core:Item key="hemisphere" text="Hemisphere"/>
+                       </ComboBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center" visible="{= ${/light/kind} === &apos;points&apos;}">
+                          <CheckBox text="Top" selected="{/light/top}" select="lightChanged"/>
+                          <CheckBox text="Bottom" selected="{/light/bottom}" select="lightChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center" visible="{= ${/light/kind} === &apos;points&apos;}">
+                          <CheckBox text="Left" selected="{/light/left}" select="lightChanged"/>
+                          <CheckBox text="Right" selected="{/light/right}" select="lightChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center" visible="{= ${/light/kind} === &apos;points&apos;}">
+                          <CheckBox text="Front" selected="{/light/front}" select="lightChanged"/>
+                          <CheckBox text="Specular" selected="{/light/specular}" select="lightChanged"/>
+                       </HBox>
+                       <Slider min="0" max="3" step="0.01" value="{/light/power}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="lightChanged" liveChange="lightChanged"/>
+                    </VBox>
+                  </IconTabFilter>
+
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Information">
+                    <VBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num nodes" wrapping="true"/>
+                          <Text text="{/info/num_meshes}"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num shapes" wrapping="true"/>
+                          <Text text="{/info/num_shapes}"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Num faces" wrapping="true"/>
+                          <Text text="{/info/num_faces}"/>
+                       </HBox>
+                    </VBox>
+                  </IconTabFilter>
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Clipping">
+                    <VBox>
+                       <CheckBox text="Clip x" selected="{/clip/0/enabled}" select="clipChanged"/>
+                       <Slider min="{/clip/0/min}" max="{/clip/0/max}" value="{/clip/0/value}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderXchange" liveChange="sliderXchange"/>
+                       <CheckBox text="Clip y" selected="{/clip/1/enabled}" select="clipChanged"/>
+                       <Slider min="{/clip/1/min}" max="{/clip/1/max}" value="{/clip/1/value}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderYchange" liveChange="sliderYchange"/>
+                       <CheckBox text="Clip z" selected="{/clip/2/enabled}" select="clipChanged"/>
+                       <Slider min="{/clip/2/min}" max="{/clip/2/max}" value="{/clip/2/value}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderZchange" liveChange="sliderZchange"/>
+                       <CheckBox text="Clip intersection" selected="{/clipIntersect}" select="clipChanged"/>
+                    </VBox>
+                  </IconTabFilter>
+
+                  <IconTabFilter text="Transformation">
+                    <VBox>
+                       <Text text="Z axis:"/>
+                       <Slider min="0" max="5" step="0.01" value="{/trans_z}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderTransChange" liveChange="sliderTransChange"/>
+                       <Text text="Radial:"/>
+                       <Slider min="0" max="5" step="0.01" value="{/trans_radial}" width="100%"
+                               showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                               change="sliderTransChange" liveChange="sliderTransChange"/>
+                       <Button text="Reset" press="pressTransReset" tooltip="Reset transformation"/>
+                    </VBox>
+                  </IconTabFilter>
+
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Appearance">
+                    <VBox>
+                       <!-- CheckBox text="Highlight selection" selected="{/hightlight}" select="hightlightChanged"/-->
+                       <Text text="Transparency:"/>
+                       <Slider min="0" max="1" step="0.01" value="{/transparency}" width="100%"
+                                  showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                                  change="transparencyChange" liveChange="transparencyChange"/>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Wireframe" selected="{/wireframe}" select="wireframeChanged"/>
+                          <CheckBox text="Autorotate" selected="{/rotate}" select="autorotateChanged"/>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Axes"  wrapping="true"/>
+                          <ComboBox selectedKey="{/_axis}" change="axesChanged" width="160px">
+                             <core:Item key="0" text="none"/>
+                             <core:Item key="1" text="side"/>
+                             <core:Item key="2" text="centered"/>
+                          </ComboBox>
+                       </HBox>
+                       <Button text="Reset camera" press="cameraReset" tooltip="Set default camera position"/>
+                    </VBox>
+                  </IconTabFilter>
+
+                  <IconTabFilter text="Background">
+                    <ColorPalette colorSelect="backgroundChanged"/>
+                  </IconTabFilter>
+
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="Advanced">
+                     <VBox>
+                     <CheckBox text="Depth test" selected="{/depthTest}" select="depthTestChanged"/>
+                     <Text text="Depth method:" />
+                     <ComboBox selectedKey="{/depthMethod}"
+                               change="depthMethodChanged"
+                               items="{ path: '/depthMethodItems' }">
+                                 <core:Item key="{value}" text="{name}" />
+                     </ComboBox>
+                     <Button text="Reset" press="pressReset" tooltip="Reset advanced settings to default"/>
+                     </VBox>
+                  </IconTabFilter>
+               </items>
+            </IconTabBar>
+            <IconTabBar class="sapUiResponsiveContentPadding" expanded="false">
+                <items>
+                  <IconTabFilter text="SSAO">
+                     <VBox>
+                     <CheckBox text="Smooth Lightning (SSAO)" selected="{/ssao/enabled}" select="ssaoChanged"/>
+                     <Text text="Output:" />
+                     <ComboBox selectedKey="{/ssao/output}"
+                               change="ssaoChanged"
+                               items="{ path: '/ssao/outputItems' }">
+                                 <core:Item key="{value}" text="{name}" />
+                     </ComboBox>
+                     <Button text="Reset"/>
+                     <Text text="kernelRadius"/>
+                     <Slider id="debugId1"  min="0" max="32" value="{/ssao/kernelRadius}" width="100%"
+                             showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                             change="ssaoChanged" liveChange="ssaoChanged"/>
+                     <Text text="minDistance:"/>
+                     <Slider id="debugId2" min="0.001" max="0.02" step="0.001" value="{/ssao/minDistance}" width="100%"
+                             showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                             change="ssaoChanged" liveChange="ssaoChanged"/>
+                     <Text text="maxDistance:"/>
+                     <Slider id="debugId3" min="0.01" max="0.3" step="0.01" value="{/ssao/maxDistance}" width="100%"
+                             showAdvancedTooltip="true" showHandleTooltip="false" inputsAsTooltips="true"
+                             change="ssaoChanged" liveChange="ssaoChanged"/>
+                     </VBox>
+                  </IconTabFilter>
+               </items>
+            </IconTabBar>
+
+            </content>
+         </Page>
+
+      </masterPages>
+      <detailPages>
+         <Page id="geomDraw" title="GL drawing" showNavButton="false"
+            showFooter="false" showSubHeader="false" showHeader="true" class="sapUiStdPage">
+            <content>
+               <eve7:GeomDrawing id="geomDrawing" color="white"/>
+            </content>
+         </Page>
+         <Page id="geomInfo" title="Node information"
+                showNavButton="true" navButtonText="Back to GL view" navButtonPress="onPressDetailBack"
+            showFooter="false" showSubHeader="false" showHeader="true" class="sapUiStdPage">
+            <content>
+               <l:Splitter orientation="Vertical" width="100%" height="100%">
+                  <VBox>
+                     <layoutData><l:SplitterLayoutData size="30%"/></layoutData>
+                     <Text text="Path: {/fullpath}"/>
+                     <Text text="Node name: {/node_name}"/>
+                     <Text text="Type: {/node_type}"/>
+                     <Text text="Shape name: {/shape_name}"/>
+                     <Text text="Type: {/shape_type}"/>
+                   </VBox>
+                   <eve7:GeomDrawing id="nodeDrawing" color="white"/>
+               </l:Splitter>
+            </content>
+         </Page>
+      </detailPages>
+   </SplitApp>
+</mvc:View>

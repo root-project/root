@@ -2,6 +2,9 @@
 #define ROOT_RConfigure
 
 /* Configurations file for @architecture@ */
+
+#cmakedefine R__HAVE_CONFIG
+
 #ifdef R__HAVE_CONFIG
 #define ROOTPREFIX    "@prefix@"
 #define ROOTBINDIR    "@bindir@"
@@ -36,12 +39,13 @@
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
 #@hasstdindexsequence@ R__HAS_STD_INDEX_SEQUENCE /**/
 #@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
-#@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
+#@has_found_attribute_noinline@ R__HAS_ATTRIBUTE_NOINLINE /**/
 #@useimt@ R__USE_IMT   /**/
 #@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
 #@hascefweb@ R__HAS_CEFWEB  /**/
 #@hasqt5webengine@ R__HAS_QT5WEB  /**/
 #@hasdavix@ R__HAS_DAVIX  /**/
+#@hasdataframe@ R__HAS_DATAFRAME /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC
@@ -52,8 +56,11 @@
 #@uselz4@ R__HAS_DEFAULT_LZ4  /**/
 #@usezlib@ R__HAS_DEFAULT_ZLIB  /**/
 #@uselzma@ R__HAS_DEFAULT_LZMA  /**/
+#@usezstd@ R__HAS_DEFAULT_ZSTD  /**/
+#@usecloudflarezlib@ R__HAS_CLOUDFLARE_ZLIB /**/
 
 #@hastmvacpu@ R__HAS_TMVACPU /**/
 #@hastmvagpu@ R__HAS_TMVAGPU /**/
+
 
 #endif

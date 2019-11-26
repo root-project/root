@@ -44,12 +44,8 @@ const char *TROOT__GetEtcDir()
 extern "C"
 cling::Interpreter *TCling__GetInterpreter()
 {
-  static bool isInitialized = false;
-  gROOT; // trigger initialization
-  if (!isInitialized) {
-    gInterpreter->SetClassAutoloading(false);
-    isInitialized = true;
-  }
-  return (cling::Interpreter*) ((TCling*)gCling)->GetInterpreterImpl();
+   static auto triggerInitialization = gROOT;
+   (void)triggerInitialization;
+   return (cling::Interpreter *)((TCling *)gCling)->GetInterpreterImpl();
 }
 

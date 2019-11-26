@@ -56,6 +56,7 @@ namespace {
       if (VD->hasGlobalStorage() && !VD->getType().isConstQualified()
           && VD->getTemplateSpecializationKind() == TSK_Undeclared)
         return true;
+
     return false;
   }
 
@@ -194,11 +195,15 @@ namespace cling {
     if (DGR.isNull())
       return true;
 
+    if (!m_Consumer)
+      return true;
+
     assertHasTransaction(m_CurTransaction);
+
     Transaction::DelayCallInfo DCI(DGR, Transaction::kCCIHandleTopLevelDecl);
     m_CurTransaction->append(DCI);
-    if (!m_Consumer
-        || getTransaction()->getIssuedDiags() == Transaction::kErrors)
+
+    if (getTransaction()->getIssuedDiags() == Transaction::kErrors)
       return true;
 
     if (comesFromASTReader(DGR)) {
@@ -227,6 +232,18 @@ namespace cling {
         continue;
       }
     } else {
+
+      // FIXME: This is a temporary fix for the ROOT module preloading mechanism.
+      // When we preload modules we would like to enable a module as if we called
+      // clang::Sema::ActOnModuleImport (which does not call HandleTopLevelDecl).
+      // However, we need a valid source locations as modules are very sensitive
+      // to them. In order to have a valid source location,
+      // Interpreter::loadModule calls '#pragma clang module import "A"', which
+      // calls HandleTopLevelDecl which causes CodeGen to run the module
+      // initializers eagerly.
+      if (DGR.isSingleDecl() && isa<ImportDecl>(DGR.getSingleDecl()))
+	return true;
+
       m_Consumer->HandleTopLevelDecl(DGR);
     }
     return true;

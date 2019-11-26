@@ -55,7 +55,7 @@ namespace Internal {
       if(BranchNeedsReader(branchName, parent, isLeaf)) {
          // Ignore unknown types
          if (dataType.EqualTo("")) {
-            Warning("AddReader", "Ingored branch %s because type is unknown.", branchName.Data());
+            Warning("TTreeReaderGenerator::AddReader", "Ignored branch %s because type is unsupported.", branchName.Data());
             return;
          }
          // Loop through existing readers to check duplicate branch names
@@ -995,7 +995,7 @@ Bool_t )CODE" << fClassname << R"CODE(::Process(Long64_t entry)
    //
    // The return value is currently not used.
 
-   fReader.SetEntry(entry);
+   fReader.SetLocalEntry(entry);
 
    return kTRUE;
 }

@@ -1,0 +1,64 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
+          controllerName="rootui5.browser.controller.Browser"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:core="sap.ui.core"
+          xmlns:t="sap.ui.table"
+          xmlns:l="sap.ui.layout"
+          xmlns:u="sap.ui.unified"
+          xmlns:e="sap.ui.codeeditor">
+
+  <SplitApp id="SplitAppBrowser" initialDetail="detail" initialMaster="master" orientationChange="onOrientationChange">
+    <detailPages>
+      <Page title="Javascript ROOT Browser">
+        <TabContainer id="myTabContainer"
+                      showAddNewButton="true"
+                      addNewButtonPress="addNewButtonPressHandler"
+                      itemSelect="tabSelectItem"
+                      itemClose="tabCloseHandler" />
+      </Page>
+    </detailPages>
+    <masterPages>
+      <Page id="browserMaster" title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
+        <FlexBox height="100%" direction="Column">
+          <Toolbar>
+            <layoutData>
+               <FlexItemData baseSize="35px"/>
+            </layoutData>
+            <Button icon="sap-icon://synchronize" type="Transparent"
+                    tooltip="Refresh" press="onRealoadPress"/>
+            <Button icon="sap-icon://log" type="Transparent"
+                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
+            <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
+            <ToolbarSpacer/>
+            <SearchField liveChange="onSearch"/>
+          </Toolbar>
+          <Toolbar>
+            <layoutData>
+              <FlexItemData baseSize="25px"/>
+            </layoutData>
+            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+            </Breadcrumbs>
+          </Toolbar>
+          <t:TreeTable
+              id="treeTable"
+              columnHeaderVisible="true"
+              editable="false"
+              enableSelectAll="false"
+              selectionBehavior="RowOnly"
+              selectionMode="Single"
+              visibleRowCountMode="Auto"
+              showColumnVisibilityMenu="true"
+              rows="{/nodes}">
+              <t:layoutData>
+                 <FlexItemData growFactor="1"/>
+              </t:layoutData>
+          </t:TreeTable>
+        </FlexBox>
+      </Page>
+    </masterPages>
+  </SplitApp>
+</mvc:View>
+
+
+

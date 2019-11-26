@@ -1014,10 +1014,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Bool_t flexpo,flexne;
    char *label;
    char *chtemp;
-   char *coded;
    char chlabel[256];
    char kchtemp[256];
-   char chcoded[8];
+   char chcoded[64];
    TLine *linegrid;
    TString timeformat;
    TString typolabel;
@@ -1466,16 +1465,20 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (fAxis->TestBit(TAxis::kLabelsDown)) angle =-20;
                if (angle ==   0) textaxis->SetTextAlign(23);
                if (angle == -20) textaxis->SetTextAlign(12);
+               textaxis->SetTextAngle(angle);
                Double_t s = -3;
                if (ymin == gPad->GetUymax()) {
                   if (angle == 0) textaxis->SetTextAlign(21);
                   s = 3;
                }
+               strncpy(chtemp, fAxis->GetBinLabel(i), 255);
+               if (fNModLabs) ChangeLabelAttributes(i, fAxis->GetLabels()->GetSize()-1, textaxis, chtemp);
                textaxis->PaintLatex(fAxis->GetBinCenter(i),
                                     ymin + s*fAxis->GetLabelOffset()*(gPad->GetUymax()-gPad->GetUymin()),
-                                    angle,
+                                    textaxis->GetTextAngle(),
                                     textaxis->GetTextSize(),
-                                    fAxis->GetBinLabel(i));
+                                    chtemp);
+               if (fNModLabs) ResetLabelAttributes(textaxis);
             } else if ((!strcmp(fAxis->GetName(),"yaxis") && !gPad->TestBit(kHori))
                     || (!strcmp(fAxis->GetName(),"xaxis") &&  gPad->TestBit(kHori))) {
                Double_t s = -3;
@@ -1820,16 +1823,18 @@ L110:
                   if1++;
                   if2++;
                }
-               coded = &chcoded[0];
                if (if1 > 14) if1 = 14;
                if (if2 > 14) if2 = 14;
                if (if1 <  0) if1 = 0;
+               int len = 0;
                if (if2 > 0) {
-                  snprintf(coded,8,"%%%d.%df",if1,if2);
+                  len = snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1,if2);
                } else {
-                  snprintf(coded,8,"%%%d.%df",if1+1,1);
+                  len = snprintf(chcoded,sizeof(chcoded),"%%%d.%df",if1+1,1);
                }
-
+               // check improbable error condition, suppress gcc9 warnings
+               if ((len < 0) || (len >= (int) sizeof(chcoded)))
+                  strcpy(chcoded,"%7.3f");
             }
 
 // We draw labels
@@ -1864,7 +1869,7 @@ L110:
                if (optionM)    xlabel += 0.5*dxlabel;
 
                if (!optionText && !optionTime) {
-                  snprintf(label,256,&chcoded[0],wlabel);
+                  snprintf(label,256,chcoded,wlabel);
                   label[28] = 0;
                   wlabel += dwlabel;
 

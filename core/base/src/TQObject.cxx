@@ -1011,7 +1011,7 @@ Bool_t TQObject::Disconnect(const char *class_name,
    TClass *sender = TClass::GetClass(class_name);
 
    // sender should be TQClass (which derives from TQObject)
-   if (!sender->IsA()->InheritsFrom(TQObject::Class()))
+   if (!sender || !sender->IsA()->InheritsFrom(TQObject::Class()))
       return kFALSE;
 
    TQClass *qcl = (TQClass*)sender;   // cast TClass to TQClass

@@ -46,7 +46,7 @@ private:
    bool fPPOldFlag;
    bool fPPChanged;
 public:
-   TClingCallbacks(cling::Interpreter* interp);
+   TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen);
 
    ~TClingCallbacks();
 
@@ -92,6 +92,10 @@ public:
    // The callback is used to clear the autoparsing caches.
    //
    virtual void TransactionRollback(const cling::Transaction &T);
+
+   ///\brief A previous definition has been shadowed; invalidate TCling' stored
+   /// data about the old (global) decl.
+   virtual void DefinitionShadowed(const clang::NamedDecl *D);
 
    // Used to inform client about a new decl read by the ASTReader.
    //

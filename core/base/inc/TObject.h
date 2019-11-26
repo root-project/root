@@ -227,7 +227,7 @@ inline TObject::TObject() : fBits(kNotDeleted) // Need to leave fUniqueID unset
 {
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   if (TStorage::FilledByObjectAlloc(&fUniqueID)) fBits |= kIsOnHeap;
+   TStorage::UpdateIsOnHeap(fUniqueID, fBits);
 
    fUniqueID = 0;
 
@@ -247,10 +247,7 @@ inline TObject::TObject(const TObject &obj)
 
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   if (TStorage::FilledByObjectAlloc(&fUniqueID))
-      fBits |= kIsOnHeap;
-   else
-      fBits &= ~kIsOnHeap;
+   TStorage::UpdateIsOnHeap(fUniqueID, fBits);
 
    fBits &= ~kIsReferenced;
    fBits &= ~kCanDelete;

@@ -54,7 +54,6 @@ class RRangeBase;
 /// The head node of a RDF computation graph.
 /// This class is responsible of running the event loop.
 class RLoopManager : public RNodeBase {
-   friend class ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper;
    using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
@@ -110,7 +109,8 @@ class RLoopManager : public RNodeBase {
    const unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   std::string fToJit;        ///< code that should be jitted and executed right before the event loop
+   std::string fToJitDeclare; ///< Code that should be just-in-time declared right before the event loop
+   std::string fToJitExec;    ///< Code that should be just-in-time executed right before the event loop
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
@@ -123,6 +123,7 @@ class RLoopManager : public RNodeBase {
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
 
+   void CheckIndexedFriends();
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
@@ -144,7 +145,8 @@ public:
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
-   void BuildJittedNodes();
+   void JitDeclarations();
+   void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run();
    const ColumnNames_t &GetDefaultColumnNames() const;
@@ -160,14 +162,14 @@ public:
    void Deregister(RRangeBase *rangePtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
-   bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
-   void ToJit(const std::string &s) { fToJit.append(s); }
+   void ToJitDeclare(const std::string &s) { fToJitDeclare.append(s); }
+   void ToJitExec(const std::string &s) { fToJitExec.append(s); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);

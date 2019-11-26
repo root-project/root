@@ -107,11 +107,33 @@ public:
       fCustomColumn = customColumn;
       // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
       // and a jitted one.
-      if (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()))
-         throw std::runtime_error(
-            std::string("RColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
-            TypeID2TypeName(typeid(T)) + " but temporary column has type " +
-            TypeID2TypeName(customColumn->GetTypeId()));
+      const auto diffTypes = (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()));
+      auto inheritedType = [&](){
+         auto colTClass = TClass::GetClass(customColumn->GetTypeId());
+         return colTClass && colTClass->InheritsFrom(TClass::GetClass<T>());
+      };
+
+      if (diffTypes && !inheritedType()) {
+         const auto tName = TypeID2TypeName(typeid(T));
+         const auto colTypeName = TypeID2TypeName(customColumn->GetTypeId());
+         std::string errMsg = "RColumnValue: type specified for column \"" +
+                              customColumn->GetName() + "\" is ";
+         if (tName.empty()) {
+            errMsg += typeid(T).name();
+            errMsg += " (extracted from type info)";
+         } else {
+            errMsg += tName;
+         }
+         errMsg += " but temporary column has type ";
+         if (colTypeName.empty()) {
+            auto &id = customColumn->GetTypeId();
+            errMsg += id.name();
+            errMsg += " (extracted from type info)";
+         } else {
+            errMsg += colTypeName;
+         }
+         throw std::runtime_error(errMsg);
+      }
 
       if (customColumn->IsDataSourceColumn()) {
          fColumnKind = EColumnKind::kDataSource;
@@ -175,10 +197,10 @@ public:
                // the address returned by the GetAddress method
                auto readerArrayAddr = &readerArray.At(0);
                T rvec(readerArrayAddr, readerArraySize);
-               swap(fRVec, rvec);
+               std::swap(fRVec, rvec);
             } else {
                T emptyVec{};
-               swap(fRVec, emptyVec);
+               std::swap(fRVec, emptyVec);
             }
          } else {
             // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
@@ -195,10 +217,10 @@ public:
 #endif
             if (readerArraySize > 0) {
                T rvec(readerArray.begin(), readerArray.end());
-               swap(fRVec, rvec);
+               std::swap(fRVec, rvec);
             } else {
                T emptyVec{};
-               swap(fRVec, emptyVec);
+               std::swap(fRVec, emptyVec);
             }
          }
          return fRVec;
@@ -225,10 +247,10 @@ public:
          if (readerArraySize > 0) {
             // always perform a copy
             T rvec(readerArray.begin(), readerArray.end());
-            swap(fRVec, rvec);
+            std::swap(fRVec, rvec);
          } else {
             T emptyVec{};
-            swap(fRVec, emptyVec);
+            std::swap(fRVec, emptyVec);
          }
          return fRVec;
       } else {

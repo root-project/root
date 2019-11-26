@@ -19,9 +19,7 @@
 \class RooProduct
 \ingroup Roofitcore
 
-
-RooProduct a RooAbsReal implementation that represent the product
-of a given set of other RooAbsReal objects
+A RooProduct represents the product of a given set of RooAbsReal objects.
 
 **/
 
@@ -82,9 +80,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   _compCSet("!compCSet","Set of category product components",this),
   _cacheMgr(this,10)
 {
-  RooAbsArg* comp ;
-  RooFIter compIter = prodSet.fwdIterator();
-  while((comp = (RooAbsArg*)compIter.next())) {
+  for (auto comp : prodSet) {
     if (dynamic_cast<RooAbsReal*>(comp)) {
       _compRSet.add(*comp) ;
     } else if (dynamic_cast<RooAbsCategory*>(comp)) {

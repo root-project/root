@@ -88,13 +88,11 @@ struct R__rsa_NUMBER: rsa_NUMBER {};
 
 // Statics initialization
 TList          *TAuthenticate::fgAuthInfo = 0;
-TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "Unsupported", "Krb5",
+TString         TAuthenticate::fgAuthMeth[] = { "UsrPwd", "Unsupported", "Unsupported",
                                                 "Unsupported", "Unsupported", "Unsupported" };
 Bool_t          TAuthenticate::fgAuthReUse;
 TString         TAuthenticate::fgDefaultUser;
 TDatime         TAuthenticate::fgExpDate;
-Krb5Auth_t      TAuthenticate::fgKrb5AuthHook;
-TString         TAuthenticate::fgKrb5Principal;
 TDatime         TAuthenticate::fgLastAuthrc;    // Time of last reading of fgRootAuthrc
 TString         TAuthenticate::fgPasswd;
 TPluginHandler *TAuthenticate::fgPasswdDialog = (TPluginHandler *)(-1);
@@ -462,34 +460,8 @@ negotia:
                "unable to get user name for UsrPwd authentication");
       }
 
-   } else if (fSecurity == kKrb5) {
+   }   
 
-      if (fVersion > 0) {
-
-         // Kerberos 5 Authentication
-         if (!fgKrb5AuthHook) {
-            char *p;
-            TString lib = "libKrb5Auth";
-            if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
-               delete [] p;
-               gSystem->Load(lib);
-            }
-         }
-         if (fgKrb5AuthHook) {
-            fUser = fgDefaultUser;
-            st = (*fgKrb5AuthHook) (this, fUser, fDetails, fVersion);
-         } else {
-            Error("Authenticate",
-                  "support for kerberos5 auth locally unavailable");
-         }
-      } else {
-         if (gDebug > 0)
-            Info("Authenticate", "remote daemon does not support Kerberos authentication");
-         (void) strlcat(noSupport, noSupport[0] == '\0' ? "Krb5" : "/Krb5", sizeof(noSupport) - 1);
-      }
-
-   }
-   
    // Stop timer
    if (alarm) alarm->Stop();
 
@@ -716,10 +688,7 @@ void TAuthenticate::SetEnvironment()
 
    // Defaults
    fgDefaultUser = fgUser;
-   if (fSecurity == kKrb5)
-      fgAuthReUse = kFALSE;
-   else
-      fgAuthReUse = kTRUE;
+   fgAuthReUse = kTRUE;
    fgPromptUser = kFALSE;
 
    // Decode fDetails, is non empty ...
@@ -727,7 +696,7 @@ void TAuthenticate::SetEnvironment()
       char usdef[kMAXPATHLEN] = { 0 };
       char pt[5] = { 0 }, ru[5] = { 0 };
       Int_t hh = 0, mm = 0;
-      char us[kMAXPATHLEN] = {0}, cp[kMAXPATHLEN] = {0}, pp[kMAXPATHLEN] = {0};
+      char us[kMAXPATHLEN] = {0}, cp[kMAXPATHLEN] = {0};
       const char *ptr;
 
       TString usrPromptDef = TString(GetAuthMethod(fSecurity)) + ".LoginPrompt";
@@ -773,14 +742,6 @@ void TAuthenticate::SetEnvironment()
          if (gDebug > 2)
             Info("SetEnvironment", "details:%s, pt:%s, ru:%s, us:%s cp:%s",
                  fDetails.Data(), pt, ru, us, cp);
-      } else if (fSecurity == kKrb5) {
-         if ((ptr = strstr(fDetails, "us:")) != 0)
-            sscanf(ptr + 3, "%8191s %8191s", us, usdef);
-         if ((ptr = strstr(fDetails, "pp:")) != 0)
-            sscanf(ptr + 3, "%8191s %8191s", pp, usdef);
-         if (gDebug > 2)
-            Info("SetEnvironment", "details:%s, pt:%s, ru:%s, us:%s pp:%s",
-                 fDetails.Data(), pt, ru, us, pp);
       } else {
          if ((ptr = strstr(fDetails, "us:")) != 0)
             sscanf(ptr + 3, "%8191s %8191s", us, usdef);
@@ -794,16 +755,10 @@ void TAuthenticate::SetEnvironment()
          fgPromptUser = kTRUE;
 
       // Set ReUse flag
-      if (fSecurity == kKrb5) {
-         fgAuthReUse = kFALSE;
-         if (!strncasecmp(ru, "yes",3) || !strncmp(ru, "1",1))
-            fgAuthReUse = kTRUE;
-      } else {
-         if (!gROOT->IsProofServ()) {
-            fgAuthReUse = kTRUE;
-            if (!strncasecmp(ru, "no",2) || !strncmp(ru, "0",1))
-               fgAuthReUse = kFALSE;
-         }
+      if (!gROOT->IsProofServ()) {
+         fgAuthReUse = kTRUE;
+         if (!strncasecmp(ru, "no",2) || !strncmp(ru, "0",1))
+            fgAuthReUse = kFALSE;
       }
 
       // Set Expiring date
@@ -818,29 +773,13 @@ void TAuthenticate::SetEnvironment()
       }
       // Build UserDefaults
       usdef[0] = '\0';
-      if (fSecurity == kKrb5) {
-         // Collect info about principal, if any
-         if (strlen(pp) > 0) {
-            fgKrb5Principal = TString(pp);
-         } else {
-            // Allow specification via 'us:' key
-            if (strlen(us) > 0 && strstr(us,"@"))
-               fgKrb5Principal = TString(us);
-         }
-         // command line user specification (fUser) gets highest priority
-         if (fUser.Length()) {
-            snprintf(usdef, kMAXPATHLEN, "%s", fUser.Data());
-         } else {
-            if (strlen(us) > 0 && !strstr(us,"@"))
-               snprintf(usdef, kMAXPATHLEN, "%s", us);
-         }
+      // give highest priority to command-line specification
+      if (fUser == "") {
+         if (strlen(us) > 0) snprintf(usdef, kMAXPATHLEN, "%s", us);
       } else {
-         // give highest priority to command-line specification
-         if (fUser == "") {
-            if (strlen(us) > 0) snprintf(usdef, kMAXPATHLEN, "%s", us);
-         } else
-            snprintf(usdef, kMAXPATHLEN, "%s", fUser.Data());
+         snprintf(usdef, kMAXPATHLEN, "%s", fUser.Data());
       }
+
       if (strlen(usdef) > 0) {
          fgDefaultUser = usdef;
       } else {
@@ -1101,7 +1040,8 @@ const char *TAuthenticate::GetDefaultUser()
 
 const char *TAuthenticate::GetKrb5Principal()
 {
-   return fgKrb5Principal;
+   ::Error("Krb5Auth", "Kerberos5 is no longer supported by ROOT");
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1458,9 +1398,9 @@ void TAuthenticate::SetSecureAuthHook(SecureAuth_t func)
 /// Set kerberos5 authorization function. Automatically called when
 /// libKrb5Auth is loaded.
 
-void TAuthenticate::SetKrb5AuthHook(Krb5Auth_t func)
+void TAuthenticate::SetKrb5AuthHook(Krb5Auth_t)
 {
-   fgKrb5AuthHook = func;
+   ::Error("Krb5Auth", "Kerberos5 is no longer supported by ROOT");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2248,14 +2188,6 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
                gEnv->GetValue("UsrPwd.LoginPrompt", copt[opt]),
                gEnv->GetValue("UsrPwd.ReUse", "1"),
                gEnv->GetValue("UsrPwd.Crypt", "1"), usr);
-
-      // Kerberos
-   } else if (sec == TAuthenticate::kKrb5) {
-      if (!usr[0] || !strncmp(usr,"*",1))
-         usr = gEnv->GetValue("Krb5.Login", "");
-      snprintf(temp, kMAXPATHLEN, "pt:%s ru:%s us:%s",
-               gEnv->GetValue("Krb5.LoginPrompt", copt[opt]),
-               gEnv->GetValue("Krb5.ReUse", "0"), usr);
    }
 
    if (gDebug > 2)
@@ -3628,14 +3560,6 @@ Bool_t TAuthenticate::CheckProofAuth(Int_t cSec, TString &out)
       }
       if (rc)
          out.Form("pt:0 ru:1 us:%s",user.Data());
-   }
-
-   // Kerberos
-   if (cSec == (Int_t) TAuthenticate::kKrb5) {
-#ifdef R__KRB5
-      out.Form("pt:0 ru:0 us:%s",user.Data());
-      rc = kTRUE;
-#endif
    }
 
    if (gDebug > 3) {

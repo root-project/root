@@ -53,23 +53,18 @@ public:
 
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  static void cleanup() ;
-
   static RooFormulaVar* identity() ;
 
   virtual void changeBasis(RooFormulaVar* basis) ;
 
 protected:
 
-  static RooFormulaVar* _identity ;  // Identity basis function pointe
-
-
   friend class RooConvGenContext ;
   friend class RooAddModel ;
   RooRealProxy x ;                   // Dependent/convolution variable
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  Bool_t traceEvalHook(Double_t value) const ;
+//  Bool_t traceEvalHook(Double_t value) const ;
 
 
   friend class RooAbsAnaConvPdf ;

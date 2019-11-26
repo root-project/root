@@ -8,13 +8,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-struct _object;
-typedef _object PyObject;
+#ifndef PYROOT_PYZCPPHELPERS
+#define PYROOT_PYZCPPHELPERS
 
-class TClass;
-namespace CPyCppyy {
-   class CPPInstance;
-}
+#include "CPyCppyy.h"
+#include "CPPInstance.h"
+#include "TClass.h"
+#include "RConfig.h"
+
+#include <string>
 
 PyObject *CallPyObjMethod(PyObject *obj, const char *meth);
+PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1);
+PyObject *BoolNot(PyObject *value);
 TClass *GetTClass(const CPyCppyy::CPPInstance *pyobj);
+std::string GetCppTypeFromNumpyType(const std::string& dtype);
+PyObject *GetArrayInterface(PyObject *obj);
+unsigned long long GetDataPointerFromArrayInterface(PyObject *obj);
+std::string GetTypestrFromArrayInterface(PyObject *obj);
+unsigned int GetDatatypeSizeFromTypestr(const std::string& typestr);
+bool CheckEndianessFromTypestr(const std::string& typestr);
+
+// void* to CPPInstance conversion, returns a new reference
+PyObject *CPPInstance_FromVoidPtr(void *addr, const char *classname, Bool_t python_owns = kFALSE);
+
+#endif // PYROOT_PYZCPPHELPERS

@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -36,6 +36,13 @@ See also REveProjectionManager::ImportElements().
 /// Constructor.
 
 REveProjectable::REveProjectable()
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Does shallow copy
+
+REveProjectable::REveProjectable(const REveProjectable &)
 {
 }
 
@@ -87,9 +94,9 @@ void REveProjectable::ClearProjectedList()
 /// Add the projected elements to the set, dyn-casting them to
 /// REveElement.
 
-void REveProjectable::AddProjectedsToSet(std::set<REveElement*>& set)
+void REveProjectable::AddProjectedsToSet(std::set<REveElement*> &set)
 {
-   for (auto &&proj : fProjectedList)
+   for (auto &proj : fProjectedList)
       set.insert(proj->GetProjectedAsElement());
 }
 
@@ -98,12 +105,12 @@ void REveProjectable::AddProjectedsToSet(std::set<REveElement*>& set)
 /// Use element el as model. If el == 0 (default), this casted to
 /// REveElement is used.
 
-void REveProjectable::PropagateVizParams(REveElement* el)
+void REveProjectable::PropagateVizParams(REveElement *el)
 {
    if (el == nullptr)
       el = dynamic_cast<REveElement*>(this);
 
-   for (auto &&proj : fProjectedList)
+   for (auto &proj : fProjectedList)
       proj->GetProjectedAsElement()->CopyVizParams(el);
 }
 
@@ -114,7 +121,7 @@ void REveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 {
    for (auto &&proj : fProjectedList) {
       if (proj->GetProjectedAsElement()->SetRnrSelfChildren(rnr_self, rnr_children))
-         proj->GetProjectedAsElement()->ElementChanged();
+         proj->GetProjectedAsElement()->StampVisibility();
    }
 }
 
@@ -124,8 +131,11 @@ void REveProjectable::PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children)
 void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 {
    for (auto &&proj : fProjectedList) {
-      if (proj->GetProjectedAsElement()->GetMainColor() == old_color)
-         proj->GetProjectedAsElement()->SetMainColor(color);
+      auto p_as_el = proj->GetProjectedAsElement();
+      if (p_as_el->GetMainColor() == old_color) {
+         p_as_el->SetMainColor(color);
+         p_as_el->StampColorSelection();
+      }
    }
 }
 
@@ -136,8 +146,11 @@ void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
 void REveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
 {
    for (auto &&proj : fProjectedList) {
-      if (proj->GetProjectedAsElement()->GetMainTransparency() == old_t)
-         proj->GetProjectedAsElement()->SetMainTransparency(t);
+      auto p_as_el = proj->GetProjectedAsElement();
+      if (p_as_el->GetMainTransparency() == old_t) {
+         p_as_el->SetMainTransparency(t);
+         p_as_el->StampColorSelection();
+      }
    }
 }
 

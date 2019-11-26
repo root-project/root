@@ -1,14 +1,6 @@
 // @(#)root/fumili:$Id$
 // Author: Rene Brun   31/08/99
 
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-//  TFumili                                                            //
-//                                                                     //
-//  The FUMILI Minimization package                                    //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TFumili
 #define ROOT_TFumili
 
@@ -18,57 +10,57 @@ class TF1;
 
 class TFumili : public  TVirtualFitter {
 private:
-   Int_t fMaxParam;     //
-   Int_t fNlog;         //
-   Int_t fNfcn;         // Number of FCN calls;
-   Int_t fNED1;         // Number of experimental vectors X=(x1,x2,...xK)
-   Int_t fNED2;         // K - Length of vector X plus 2 (for chi2)
-   Int_t fNED12;        // fNED1+fNED2
-   Int_t fNpar;         //  fNpar - number of parameters
-   Int_t fNstepDec;     //  fNstepDec - maximum number of step decreasing counter
-   Int_t fNlimMul;      //  fNlimMul - after fNlimMul successful iterations permits four-fold increasing of fPL
-   Int_t fNmaxIter;     //  fNmaxIter - maximum number of iterations
-   Int_t fLastFixed;    // Last fixed parameter number
-   Int_t fENDFLG;       // End flag of fit
-   Int_t fINDFLG[5];    // internal flags;
+   Int_t fMaxParam;       ///<
+   Int_t fNlog;           ///<
+   Int_t fNfcn;           ///< Number of FCN calls;
+   Int_t fNED1;           ///< Number of experimental vectors X=(x1,x2,...xK)
+   Int_t fNED2;           ///< K - Length of vector X plus 2 (for chi2)
+   Int_t fNED12;          ///< fNED1+fNED2
+   Int_t fNpar;           ///<  fNpar - number of parameters
+   Int_t fNstepDec;       ///<  fNstepDec - maximum number of step decreasing counter
+   Int_t fNlimMul;        ///<  fNlimMul - after fNlimMul successful iterations permits four-fold increasing of fPL
+   Int_t fNmaxIter;       ///<  fNmaxIter - maximum number of iterations
+   Int_t fLastFixed;      ///< Last fixed parameter number
+   Int_t fENDFLG;         ///< End flag of fit
+   Int_t fINDFLG[5];      ///< internal flags;
 
 
-   Bool_t fGRAD;        // user calculated gradients
-   Bool_t fWARN;        // warnings
-   Bool_t fDEBUG;       // debug info
-   Bool_t fLogLike;     // LogLikelihood flag
-   Bool_t fNumericDerivatives; //
+   Bool_t fGRAD;          ///< user calculated gradients
+   Bool_t fWARN;          ///< warnings
+   Bool_t fDEBUG;         ///< debug info
+   Bool_t fLogLike;       ///< LogLikelihood flag
+   Bool_t fNumericDerivatives; ///<
 
-   Double_t *fZ0;       //[fMaxParam2] Matrix of approximate second derivatives of objective function
-                        // This matrix is diagonal and always contain only variable parameter's
-                        // derivatives
-   Double_t *fZ;        //[fMaxParam2] Invers fZ0 matrix - covariance matrix
-   Double_t *fGr;       //[fMaxParam] Gradients of objective function
-   Double_t *fParamError; //[fMaxParam] Parameter errors
-   Double_t *fSumLog;   //[fNlog]
-   Double_t *fEXDA;     //[fNED12] experimental data poInt_ter
+   Double_t *fZ0;         ///< [fMaxParam2] Matrix of approximate second derivatives of objective function
+                          ///< This matrix is diagonal and always contain only variable parameter's
+                          ///< derivatives
+   Double_t *fZ;          ///< [fMaxParam2] Invers fZ0 matrix - covariance matrix
+   Double_t *fGr;         ///< [fMaxParam] Gradients of objective function
+   Double_t *fParamError; ///< [fMaxParam] Parameter errors
+   Double_t *fSumLog;     ///< [fNlog]
+   Double_t *fEXDA;       ///< [fNED12] experimental data poInt_ter
 
    //  don't calculate parameter errors - take them from fParamError array
-   Double_t *fA;        //[fMaxParam] Fit parameter array
-   Double_t *fPL0;      //[fMaxParam] Step initial bounds
-   Double_t *fPL;       //[fMaxParam] Limits for parameters step. If <0, then parameter is fixed
+   Double_t *fA;          ///< [fMaxParam] Fit parameter array
+   Double_t *fPL0;        ///< [fMaxParam] Step initial bounds
+   Double_t *fPL;         ///< [fMaxParam] Limits for parameters step. If <0, then parameter is fixed
 
    // Defines multidimensional parallelepiped with center in param. vector
-   Double_t *fDA;       //[fMaxParam] Parameter step
-   Double_t *fAMX;      //[fMaxParam] Maximum param value
-   Double_t *fAMN;      //[fMaxParam] Minimum param value
-   Double_t *fR;        //[fMaxParam] Correlation factors
+   Double_t *fDA;         ///< [fMaxParam] Parameter step
+   Double_t *fAMX;        ///< [fMaxParam] Maximum param value
+   Double_t *fAMN;        ///< [fMaxParam] Minimum param value
+   Double_t *fR;          ///< [fMaxParam] Correlation factors
 
-   Double_t *fDF;       //[fMaxParam] // First derivatives of theoretical function
-   Double_t *fCmPar;    //[fMaxParam] parameters of commands
+   Double_t *fDF;         ///< [fMaxParam] First derivatives of theoretical function
+   Double_t *fCmPar;      ///< [fMaxParam] parameters of commands
 
-   Double_t fS;         //  fS - objective function value (return)
-   Double_t fEPS;       //  fEPS - required precision of parameters. If fEPS<0 then
-   Double_t fRP;        // Precision of fit ( machine zero on CDC 6000) quite old yeh?
-   Double_t fAKAPPA;    //
-   Double_t fGT;        // Expected function change in next iteration
-   TString *fANames;    //[fMaxParam] Parameter names
-   TString fCword;      //  Command string
+   Double_t fS;           ///<  fS - objective function value (return)
+   Double_t fEPS;         ///<  fEPS - required precision of parameters. If fEPS<0 then
+   Double_t fRP;          ///< Precision of fit ( machine zero on CDC 6000) quite old yeh?
+   Double_t fAKAPPA;      ///<
+   Double_t fGT;          ///< Expected function change in next iteration
+   TString *fANames;      ///< [fMaxParam] Parameter names
+   TString fCword;        ///<  Command string
 
 
 //  TF1 *fTFNF1;         //Pointer to theoretical function

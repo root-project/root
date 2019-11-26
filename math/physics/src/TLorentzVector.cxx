@@ -5,9 +5,24 @@
 //    Oct 20 1999: dito in Double_t operator()
 //    Jan 25 2000: implemented as (fP,fE) instead of (fX,fY,fZ,fE)
 
-
 /** \class TLorentzVector
     \ingroup Physics
+
+## Disclaimer
+TLorentzVector is a legacy class.
+It is slower and worse for serialization than the recommended superior ROOT::Math::LorentzVector.
+ROOT provides specialisations of the ROOT::Math::LorentzVector template which
+are superior from the runtime performance offered, i.e.:
+  - ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
+  - ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
+  - ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
+  - ROOT::Math::PxPyPzEVector based on px,py,pz and E (energy) coordinates in double precision
+  - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
+  - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
+
+More details about the GenVector package can be found [here](Vector.html).
+
+### Description
 TLorentzVector is a general four-vector class, which can be used
 either for the description of position and time (x,y,z,t) or momentum and
 energy (px,py,pz,E).

@@ -1,4 +1,4 @@
-// @(#)root/netxng:$Id$
+
 /*************************************************************************
  * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -57,8 +57,11 @@ public:
    TNetXNGFile() : TFile(),
       fFile(0), fUrl(0), fMode(XrdCl::OpenFlags::None), fInitCondVar(0),
       fReadvIorMax(0), fReadvIovMax(0) {}
+   TNetXNGFile(const char *url, const char *lurl, Option_t *mode , const char *title ,
+               Int_t compress , Int_t netopt , Bool_t parallelopen );
    TNetXNGFile(const char *url, Option_t *mode = "", const char *title = "",
                Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE);
+
    virtual ~TNetXNGFile();
 
    virtual void     Init(Bool_t create);

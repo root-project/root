@@ -15,18 +15,23 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-//
-// Class RooRealSumFunc implements a PDF constructed from a sum of
-// functions:
-//
-//                 Sum(i=1,n-1) coef_i * func_i(x) + [ 1 - (Sum(i=1,n-1) coef_i ] * func_n(x)
-//   pdf(x) =    ------------------------------------------------------------------------------
-//             Sum(i=1,n-1) coef_i * Int(func_i)dx + [ 1 - (Sum(i=1,n-1) coef_i ] * Int(func_n)dx
-//
-//
-// where coef_i and func_i are RooAbsReal objects, and x is the collection of dependents.
-// In the present version coef_i may not depend on x, but this limitation may be removed in the future
-//
+///
+/// Class RooRealSumFunc implements a PDF constructed from a sum of
+/// functions:
+/// ```
+///                 Sum(i=1,n-1) coef_i * func_i(x) + [ 1 - (Sum(i=1,n-1) coef_i ] * func_n(x)
+///   pdf(x) =    ------------------------------------------------------------------------------
+///             Sum(i=1,n-1) coef_i * Int(func_i)dx + [ 1 - (Sum(i=1,n-1) coef_i ] * Int(func_n)dx
+///
+/// ```
+/// where coef_i and func_i are RooAbsReal objects, and x is the collection of dependents.
+/// In the present version coef_i may not depend on x, but this limitation may be removed in the future
+///
+/// ### Difference between RooAddPdf / RooRealSum{Func|Pdf}
+/// - RooAddPdf is a PDF of PDFs, *i.e.* its components need to be normalised and non-negative.
+/// - RooRealSumPdf is a PDF of functions, *i.e.*, its components can be negative, but their sum cannot be. The normalisation
+///   is computed automatically, unless the PDF is extended (see above).
+/// - RooRealSumFunc is a sum of functions. It is neither normalised, nor need it be positive.
 
 #include "RooFit.h"
 #include "Riostream.h"

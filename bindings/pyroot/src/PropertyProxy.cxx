@@ -201,7 +201,8 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
 
    std::string fullType = Cppyy::GetDatamemberType( scope, idata );
    if ( Cppyy::IsEnumData( scope, idata ) ) {
-      fullType = "UInt_t";
+      // Get underlying type of enum
+      fullType = Cppyy::ResolveEnum(fullType);
       fProperty |= kIsEnumData;
    }
 
@@ -213,13 +214,15 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address )
+void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address, TEnum* en )
 {
+   std::string cppType = Cppyy::ResolveEnum(en);
+
    fEnclosingScope = scope;
    fName           = name;
    fOffset         = (ptrdiff_t)address;
    fProperty       = (kIsStaticData | kIsConstData | kIsEnumData /* true, but may chance */ );
-   fConverter      = CreateConverter( "UInt_t", -1 );
+   fConverter      = CreateConverter( cppType, -1 );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

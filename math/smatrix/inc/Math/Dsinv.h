@@ -36,7 +36,7 @@ namespace ROOT {
 
 /** Dsinv.
     Compute inverse of a symmetric, positive definite matrix of dimension
-    $idim$ and order $n$.
+    \f$idim\f$ and order \f$n\f$.
 
     @author T. Glebe
 */

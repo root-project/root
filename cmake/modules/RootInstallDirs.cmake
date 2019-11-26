@@ -18,9 +18,7 @@
 #  SRCDIR           - sources (DATAROOTDIR/src)
 #  FONTDIR          - fonts (DATAROOTDIR/fonts)
 #  DOCDIR           - documentation root (DATAROOTDIR/doc/PROJECT_NAME)
-#  TESTDIR          - tests (DOCDIR/test)
 #  TUTDIR           - tutorials (DOCDIR/tutorials)
-#  ACLOCALDIR       - locale-dependent data (DATAROOTDIR/aclocal)
 #  CMAKEDIR         - cmake modules (DATAROOTDIR/cmake)
 #  ELISPDIR         - lisp files (DATAROOTDIR/emacs/site-lisp)
 #
@@ -141,21 +139,30 @@ if(NOT CMAKE_INSTALL_FONTDIR)
   endif()
 endif()
 
+if(NOT CMAKE_INSTALL_JSROOTDIR)
+  set(CMAKE_INSTALL_JSROOTDIR "" CACHE PATH "js (DATADIR/js)")
+  if(gnuinstall)
+    set(CMAKE_INSTALL_JSROOTDIR "${CMAKE_INSTALL_DATADIR}/js")
+  else()
+    set(CMAKE_INSTALL_JSROOTDIR "js")
+  endif()
+endif()
+
+if(NOT CMAKE_INSTALL_OPENUI5DIR)
+  set(CMAKE_INSTALL_OPENUI5DIR "" CACHE PATH "ui5 (DATADIR/ui5)")
+  if(gnuinstall)
+    set(CMAKE_INSTALL_OPENUI5DIR "${CMAKE_INSTALL_DATADIR}/ui5")
+  else()
+    set(CMAKE_INSTALL_OPENUI5DIR "ui5")
+  endif()
+endif()
+
 if(NOT CMAKE_INSTALL_SRCDIR)
   set(CMAKE_INSTALL_SRCDIR "" CACHE PATH "sources (DATADIR/src)")
   if(gnuinstall)
     set(CMAKE_INSTALL_SRCDIR "${CMAKE_INSTALL_DATADIR}/src")
   else()
     set(CMAKE_INSTALL_SRCDIR "src")
-  endif()
-endif()
-
-if(NOT CMAKE_INSTALL_ACLOCALDIR)
-  set(CMAKE_INSTALL_ACLOCALDIR "" CACHE PATH "locale-dependent data (DATAROOTDIR/aclocal)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_ACLOCALDIR "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
-  else()
-    set(CMAKE_INSTALL_ACLOCALDIR "aclocal")
   endif()
 endif()
 
@@ -186,15 +193,6 @@ if(NOT CMAKE_INSTALL_DOCDIR)
   endif()
 endif()
 
-if(NOT CMAKE_INSTALL_TESTDIR)
-  set(CMAKE_INSTALL_TESTDIR "" CACHE PATH "root tests (DOCDIR/test)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_TESTDIR "${CMAKE_INSTALL_DOCDIR}/test")
-  else()
-    set(CMAKE_INSTALL_TESTDIR "test")
-  endif()
-endif()
-
 if(NOT CMAKE_INSTALL_TUTDIR)
   set(CMAKE_INSTALL_TUTDIR "" CACHE PATH "root tutorials (DOCDIR/tutorials)")
   if(gnuinstall)
@@ -221,9 +219,7 @@ mark_as_advanced(
   CMAKE_INSTALL_FONTDIR
   CMAKE_INSTALL_SRCDIR
   CMAKE_INSTALL_DOCDIR
-  CMAKE_INSTALL_TESTDIR
   CMAKE_INSTALL_TUTDIR
-  CMAKE_INSTALL_ACLOCALDIR
   CMAKE_INSTALL_ELISPDIR
   CMAKE_INSTALL_CMAKEDIR
   )
@@ -243,9 +239,7 @@ foreach(dir BINDIR
             FONTDIR
             SRCDIR
             DOCDIR
-            TESTDIR
             TUTDIR
-            ACLOCALDIR
             ELISPDIR
             CMAKEDIR )
   if(NOT IS_ABSOLUTE ${CMAKE_INSTALL_${dir}})

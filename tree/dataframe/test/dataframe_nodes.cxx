@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RSlotStack.hxx>
+#include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
 #include <mutex>
@@ -49,15 +50,12 @@ TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
 TEST(RDataFrameNodes, RLoopManagerJit)
 {
    ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
-   lm.ToJit("souble d = 3.14");
-   int ret(1);
-   try {
+   lm.ToJitExec("souble d = 3.14");
+   auto op = [&](){
       testing::internal::CaptureStderr();
       lm.Run();
-   } catch (const std::runtime_error &) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret) << "Bogus C++ code was jitted and nothing was detected!";
+   };
+   EXPECT_ANY_THROW(op()) << "Bogus C++ code was jitted and nothing was detected!";
 }
 
 TEST(RDataFrameNodes, DoubleEvtLoop)
@@ -85,4 +83,28 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
 
    for (auto &f : files)
       gSystem->Unlink(f.c_str());
+}
+
+// ROOT-9736
+TEST(RDataFrameNodes, InheritanceOfCustomColumns)
+{
+   ROOT::RDataFrame df(1);
+   const auto nBinsExpected = 42;
+   // Read the TH1F as a TH1
+   df.Define("b", [&]() { return TH1F("b", "b", nBinsExpected, 0, 1); })
+      .Foreach([&](TH1 &h) { EXPECT_EQ(h.GetNbinsX(), nBinsExpected);}, {"b"});
+
+   const auto ofileName = "InheritanceOfCustomColumns.root";
+
+   const auto val = 42.;
+   auto createStat = [&val]() {
+      TStatistic t;
+      t.Fill(val);
+      return t;
+   };
+
+   // Read as TObject from disk a TStatistics object
+   auto checkStat = [&val](TObject &o) { EXPECT_EQ(val, ((TStatistic *)&o)->GetMean()); };
+   ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
+   gSystem->Unlink(ofileName);
 }

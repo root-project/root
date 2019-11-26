@@ -12,6 +12,7 @@
 #include "TCollection.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TEnumConstant.h"
 #include "TError.h"
 #include "TFunction.h"
 #include "TGlobal.h"
@@ -171,6 +172,22 @@ std::string Cppyy::ResolveName( const std::string& cppitem_name )
    TDataType* dt = gROOT->GetType( tclean.c_str() );
    if ( dt ) return dt->GetFullTypeName();
    return TClassEdit::ResolveTypedef( tclean.c_str(), true );
+}
+
+std::string Cppyy::ResolveEnum(const TEnum* en)
+{
+   if (en) {
+      auto ut = en->GetUnderlyingType();
+      if (ut != EDataType::kNumDataTypes)
+         return TDataType::GetTypeName(ut);
+   }
+   // Can't get type of enum, use int as default
+   return "int";
+}
+
+std::string Cppyy::ResolveEnum(const std::string& enum_type)
+{
+   return ResolveEnum(TEnum::GetEnum(enum_type.c_str()));
 }
 
 Cppyy::TCppScope_t Cppyy::GetScope( const std::string& sname )
@@ -538,6 +555,9 @@ size_t Cppyy::GetFunctionArgTypeoffset()\
 // scope reflection information ----------------------------------------------
 Bool_t Cppyy::IsNamespace( TCppScope_t scope ) {
 // Test if this scope represents a namespace.
+   if (scope == GLOBAL_HANDLE)
+      return kTRUE;
+
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )
       return cr->Property() & kIsNamespace;
@@ -688,7 +708,7 @@ Cppyy::TCppIndex_t Cppyy::GetMethodIndexAt( TCppScope_t /* scope */, TCppIndex_t
 }
 
 std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
-      TCppScope_t scope, const std::string& name )
+      TCppScope_t scope, const std::string& name, bool alsoInBases )
 {
 // TODO: this method assumes that the call for this name is made only
 // once, and thus there is no need to store the results of the search
@@ -716,7 +736,7 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
       TClassRef& cr = type_from_handle( scope );
       if ( cr.GetClass() ) {
       // todo: handle overloads
-         TMethod* m = cr->GetMethodAny( name.c_str() );
+         TMethod* m = alsoInBases ? cr->GetMethodAllAny( name.c_str() ) : cr->GetMethodAny( name.c_str() );
          if ( m ) methods.push_back( (TCppMethod_t)m );
       }
    }
@@ -815,6 +835,33 @@ Bool_t Cppyy::IsConstMethod( TCppMethod_t method )
    return kFALSE;
 }
 
+
+bool Cppyy::ExistsMethodTemplate(TCppScope_t scope, const std::string& name)
+{
+   if (scope == (TCppScope_t)GLOBAL_HANDLE) {
+      return (bool)gROOT->GetFunctionTemplate(name.c_str());
+   } else {
+      TClassRef& cr = type_from_handle(scope);
+      if (cr.GetClass())
+         return (bool)cr->GetFunctionTemplate(name.c_str());
+   }
+
+   return false;
+}
+
+Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
+   TCppScope_t scope, const std::string& name, const std::string& proto)
+{
+   if (scope == (TCppScope_t)GLOBAL_HANDLE) {
+      return (TCppMethod_t)gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
+   } else {
+      TClassRef& cr = type_from_handle(scope);
+      if (cr.GetClass())
+         return (TCppMethod_t)cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
+   }
+
+   return (TCppMethod_t)nullptr;
+}
 
 Bool_t Cppyy::IsMethodTemplate( TCppMethod_t method )
 {
@@ -1045,4 +1092,33 @@ Int_t Cppyy::GetDimensionSize( TCppScope_t scope, TCppIndex_t idata, int dimensi
       return m->GetMaxIndex( dimension );
    }
    return (Int_t)-1;
+}
+
+// enum properties -----------------------------------------------------------
+Cppyy::TCppEnum_t Cppyy::GetEnum(TCppScope_t scope, const std::string& enum_name)
+{
+    if (scope == GLOBAL_HANDLE)
+        return (TCppEnum_t)gROOT->GetListOfEnums(kTRUE)->FindObject(enum_name.c_str());
+
+    TClassRef& cr = type_from_handle(scope);
+    if (cr.GetClass())
+        return (TCppEnum_t)cr->GetListOfEnums(kTRUE)->FindObject(enum_name.c_str());
+
+    return (TCppEnum_t)0;
+}
+
+Cppyy::TCppIndex_t Cppyy::GetNumEnumData(TCppEnum_t etype)
+{
+    return (TCppIndex_t)((TEnum*)etype)->GetConstants()->GetSize();
+}
+
+std::string Cppyy::GetEnumDataName(TCppEnum_t etype, TCppIndex_t idata)
+{
+    return ((TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata))->GetName();
+}
+
+long long Cppyy::GetEnumDataValue(TCppEnum_t etype, TCppIndex_t idata)
+{
+     TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At(idata);
+     return (long long)ecst->GetValue();
 }

@@ -145,7 +145,6 @@ End_Macro
 TGeoArb8::TGeoArb8()
 {
    fDz = 0;
-   fTwist = 0;
    for (Int_t i=0; i<8; i++) {
       fXY[i][0] = 0.0;
       fXY[i][1] = 0.0;
@@ -161,7 +160,6 @@ TGeoArb8::TGeoArb8(Double_t dz, Double_t *vertices)
          :TGeoBBox(0,0,0)
 {
    fDz = dz;
-   fTwist = 0;
    SetShapeBit(kGeoArb8);
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
@@ -186,7 +184,6 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
          :TGeoBBox(name, 0,0,0)
 {
    fDz = dz;
-   fTwist = 0;
    SetShapeBit(kGeoArb8);
    if (vertices) {
       for (Int_t i=0; i<8; i++) {
@@ -208,13 +205,13 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 
 TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
   TGeoBBox(ga8),
-  fDz(ga8.fDz),
-  fTwist(ga8.fTwist)
+  fDz(ga8.fDz)
 {
    for(Int_t i=0; i<8; i++) {
       fXY[i][0]=ga8.fXY[i][0];
       fXY[i][1]=ga8.fXY[i][1];
    }
+   CopyTwist(ga8.fTwist);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -225,7 +222,7 @@ TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8)
    if(this!=&ga8) {
       TGeoBBox::operator=(ga8);
       fDz=ga8.fDz;
-      fTwist=ga8.fTwist;
+      CopyTwist(ga8.fTwist);
       for(Int_t i=0; i<8; i++) {
          fXY[i][0]=ga8.fXY[i][0];
          fXY[i][1]=ga8.fXY[i][1];
@@ -240,6 +237,20 @@ TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8)
 TGeoArb8::~TGeoArb8()
 {
    if (fTwist) delete [] fTwist;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy twist values from source array
+
+void TGeoArb8::CopyTwist(Double_t *twist)
+{
+   if (twist) {
+      if (!fTwist) fTwist = new Double_t[4];
+      memcpy(fTwist, twist, 4*sizeof(Double_t));
+   } else if (fTwist) {
+      delete [] fTwist;
+      fTwist = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,11 +330,9 @@ void TGeoArb8::ComputeTwist()
       twist[i] = TMath::Sign(1.,twist[i]);
       twisted = kTRUE;
    }
-   if (twisted) {
-      if (fTwist) delete [] fTwist;
-      fTwist = new Double_t[4];
-      memcpy(fTwist, &twist[0], 4*sizeof(Double_t));
-   }
+
+   CopyTwist(twisted ? twist : nullptr);
+
    if (singleBottom) {
       for (i=0; i<4; i++) {
          fXY[i][0] += 1.E-8*fXY[i+4][0];
@@ -382,9 +391,7 @@ void TGeoArb8::ComputeTwist()
 
 Double_t TGeoArb8::GetTwist(Int_t iseg) const
 {
-   if (!fTwist) return 0.;
-   if (iseg<0 || iseg>3) return 0.;
-   return fTwist[iseg];
+   return (!fTwist || iseg<0 || iseg>3) ? 0. : fTwist[iseg];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1515,7 +1522,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t xnew, ynew, znew;
    Int_t i,j;
    if (point[2]<-fDz+TGeoShape::Tolerance()) {
-      if (dir[2]<=0) return TGeoShape::Big();
+      if (dir[2] < TGeoShape::Tolerance()) return TGeoShape::Big();
       in = kFALSE;
       snxt = -(fDz+point[2])/dir[2];
       xnew = point[0] + snxt*dir[0];
@@ -1527,7 +1534,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
       if (InsidePolygon(xnew,ynew,pts)) return snxt;
    } else if (point[2]>fDz-TGeoShape::Tolerance()) {
-      if (dir[2]>=0) return TGeoShape::Big();
+      if (dir[2] > -TGeoShape::Tolerance()) return TGeoShape::Big();
       in = kFALSE;
       snxt = (fDz-point[2])/dir[2];
       xnew = point[0] + snxt*dir[0];

@@ -23,18 +23,14 @@ TEST(RDFLeaves, ReadIndividualLeaves)
       t.Fill();
    }
 
-   auto res = 0;
    auto histEntries = 0;
-   try {
+   auto op = [&](){
       ROOT::RDataFrame df(t);
       df.Histo1D<float>("b.a")->Draw();
       auto h = df.Define("aa", [](Float_t bv) { return bv; }, {"b.a"}).Histo1D<float>("aa");
       histEntries = h->GetEntries();
-   } catch (std::runtime_error &e) {
-      std::cout << e.what() << '\n';
-      res = 1;
-   }
-   EXPECT_EQ(0, res);
+   };
+   EXPECT_NO_THROW(op());
    EXPECT_EQ(nEntries, histEntries);
 }
 

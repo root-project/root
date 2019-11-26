@@ -209,7 +209,7 @@ namespace textinput {
       FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
       (LPTSTR) &MsgBuf, 0, NULL);
 
-    printf("Error %d in textinput::StreamReaderWin %s: %s\n", Err, Where, MsgBuf);
+    printf("Error %d in textinput::StreamReaderWin %s: %s\n", Err, Where, (const char *)MsgBuf);
     LocalFree(MsgBuf);
   }
 

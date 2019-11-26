@@ -4,17 +4,11 @@
 #include "CPPInstance.h"
 
 
-//- public members --------------------------------------------------------------
+//- CPPFunction public members --------------------------------------------------
 PyObject* CPyCppyy::CPPFunction::PreProcessArgs(
         CPPInstance*& self, PyObject* args, PyObject*)
 {
-// no self means called as a free function; all ok
-    if (!self) {
-        Py_INCREF(args);
-        return args;
-    }
-
-// otherwise, add self as part of the function arguments (means bound member)
+// add self as part of the function arguments (means bound member)
     Py_ssize_t sz = PyTuple_GET_SIZE(args);
     PyObject* newArgs = PyTuple_New(sz+1);
     for (int i = 0; i < sz; ++i) {
@@ -33,23 +27,18 @@ PyObject* CPyCppyy::CPPFunction::PreProcessArgs(
 PyObject* CPyCppyy::CPPFunction::Call(
         CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
-    if (kwds && PyDict_Size(kwds)) {
-        PyErr_SetString(PyExc_TypeError, "keyword arguments are not yet supported");
-        return nullptr;
-    }
-
 // setup as necessary
-    if (!this->Initialize(ctxt))
+    if (!fIsInitialized && !this->Initialize(ctxt))
         return nullptr;
 
-// reorder self into args, if necessary
-    if (!(args = this->PreProcessArgs(self, args, kwds)))
-        return nullptr;
+// if function was attached to a class, self will be non-zero and should be
+// the first function argument, so reorder
+    if (self) args = this->PreProcessArgs(self, args, kwds);
 
-// translate the arguments
+// translate the arguments as normal
     bool bConvertOk = this->ConvertAndSetArgs(args, ctxt);
-    Py_DECREF(args);
+
+    if (self) Py_DECREF(args);
 
     if (bConvertOk == false)
         return nullptr;
@@ -57,3 +46,49 @@ PyObject* CPyCppyy::CPPFunction::Call(
 // execute function
     return this->Execute(nullptr, 0, ctxt);
 }
+
+
+//- CPPReverseBinary public members ---------------------------------------------
+PyObject* CPyCppyy::CPPReverseBinary::PreProcessArgs(
+        CPPInstance*& self, PyObject* args, PyObject* kwds)
+{
+    if (self) {
+    // add self as part of the function arguments (means bound member)
+        args = this->CPPFunction::PreProcessArgs(self, args, kwds);
+    }
+
+// swap the arguments
+    PyObject* tmp = PyTuple_GET_ITEM(args, 0);
+    PyTuple_SET_ITEM(args, 0, PyTuple_GET_ITEM(args, 1));
+    PyTuple_SET_ITEM(args, 1, tmp);
+
+    return args;
+}
+
+//---------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPReverseBinary::Call(
+        CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
+{
+// This Call() function is very similar to the one of CPPFunction: only
+// difference is that PreProcessArgs() is always called.
+
+// setup as necessary
+    if (!fIsInitialized && !this->Initialize(ctxt))
+        return nullptr;
+
+// if function was attached to a class, self will be non-zero and should be
+// the first function argument, further, the arguments needs swapping
+    args = this->PreProcessArgs(self, args, kwds);
+
+// translate the arguments as normal
+    bool bConvertOk = this->ConvertAndSetArgs(args, ctxt);
+
+    if (self) Py_DECREF(args);
+
+    if (bConvertOk == false)
+        return nullptr;
+
+// execute function
+    return this->Execute(nullptr, 0, ctxt);
+}
+

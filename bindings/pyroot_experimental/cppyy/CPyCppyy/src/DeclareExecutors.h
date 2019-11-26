@@ -25,6 +25,8 @@ CPPYY_DECL_EXEC(CharConstRef);
 CPPYY_DECL_EXEC(UChar);
 CPPYY_DECL_EXEC(UCharConstRef);
 CPPYY_DECL_EXEC(WChar);
+CPPYY_DECL_EXEC(Int8);
+CPPYY_DECL_EXEC(UInt8);
 CPPYY_DECL_EXEC(Short);
 CPPYY_DECL_EXEC(Int);
 CPPYY_DECL_EXEC(Long);
@@ -95,6 +97,8 @@ public:                                                                      \
 CPPYY_DECL_REFEXEC(Bool);
 CPPYY_DECL_REFEXEC(Char);
 CPPYY_DECL_REFEXEC(UChar);
+CPPYY_DECL_REFEXEC(Int8);
+CPPYY_DECL_REFEXEC(UInt8);
 CPPYY_DECL_REFEXEC(Short);
 CPPYY_DECL_REFEXEC(UShort);
 CPPYY_DECL_REFEXEC(Int);
@@ -143,44 +147,6 @@ public:
 
 protected:
     Py_ssize_t fArraySize;
-};
-
-// smart pointer executors
-class SmartPtrExecutor : public Executor {
-public:
-    SmartPtrExecutor(Cppyy::TCppType_t smart,
-            Cppyy::TCppType_t raw, Cppyy::TCppMethod_t deref)
-        : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref) {}
-
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-
-protected:
-    Cppyy::TCppType_t   fSmartPtrType;
-    Cppyy::TCppType_t   fRawPtrType;
-    Cppyy::TCppMethod_t fDereferencer;
-};
-
-class SmartPtrPtrExecutor : public SmartPtrExecutor {
-public:
-    using SmartPtrExecutor::SmartPtrExecutor;
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-};
-
-class SmartPtrRefExecutor : public RefExecutor {
-public:
-    SmartPtrRefExecutor(Cppyy::TCppType_t smart,
-            Cppyy::TCppType_t raw, Cppyy::TCppMethod_t deref)
-        : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref) {}
-
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-
-protected:
-    Cppyy::TCppType_t   fSmartPtrType;
-    Cppyy::TCppType_t   fRawPtrType;
-    Cppyy::TCppMethod_t fDereferencer;
 };
 
 } // unnamed namespace

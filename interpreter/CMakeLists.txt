@@ -86,6 +86,10 @@ else()
   set(ROOT_CLING_TARGET "all")
 endif()
 
+if(NOT "${ROOT_CLING_TARGET}" STREQUAL "all")
+  string(APPEND ROOT_CLING_TARGET ";NVPTX")
+endif()
+
 if(MSVC)
   # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
   string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -111,7 +115,6 @@ if(clingtest)
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
-  set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 endif()
 
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
@@ -131,38 +134,57 @@ if(gcctoolchain)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
 endif()
 
-#---Build type--------------------------------------------------------------------------------------
-if(NOT DEFINED LLVM_BUILD_TYPE)
-  set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")
-endif()
-if( CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT LLVM_BUILD_TYPE STREQUAL "Debug")
-  message(STATUS "Selected a 'Debug' build (CMAKE_BUILD_TYPE), be aware that the embedded LLVM will still be built as 'Release'."
-                 " Use the variable LLVM_BUILD_TYPE to control it.")
-endif()
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(LLVM_ENABLE_ASSERTIONS "YES")
-else()
-  if(LLVM_BUILD_TYPE STREQUAL "Debug")
-    set(LLVM_ENABLE_ASSERTIONS "YES")
-  else()
-    set(LLVM_ENABLE_ASSERTIONS "NO")
+if(builtin_llvm)
+  # Since debug builds of LLVM are quite large, we want to be able
+  # to control the build types of ROOT and LLVM independently. The
+  # logic below is to make that possible. LLVM is built in Release
+  # mode unless a different build type is chosen via LLVM_BUILD_TYPE.
+
+  if(NOT DEFINED LLVM_BUILD_TYPE)
+    set(LLVM_BUILD_TYPE Release CACHE STRING "Build type used for LLVM")
   endif()
-endif()
-set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
-set(BUILD_SHARED_LIBS "NO")
 
-set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
-set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
-set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
+  message(STATUS "Building LLVM in '${LLVM_BUILD_TYPE}' mode.")
 
-#---Remove the inherited include_directories()
-set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
+  if(NOT DEFINED LLVM_ENABLE_ASSERTIONS)
+    if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)"
+     OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
+      set(LLVM_ENABLE_ASSERTIONS TRUE)
+    else()
+      set(LLVM_ENABLE_ASSERTIONS FALSE)
+    endif()
+  endif()
 
-#---Disable VCS writing to prevent that we always have to rebuild when someone touched the git HEAD
-set(LLVM_APPEND_VC_REV OFF CACHE BOOL "Disabled LLVM revision dependency" FORCE)
+  # Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
+  # in that case we set the flags for all configurations to the
+  # flags of the build type assigned to LLVM_BUILD_TYPE.
+
+  if(MSVC OR XCODE)
+    string(TOUPPER ${LLVM_BUILD_TYPE} LLVM_BUILD_TYPE)
+    set(LLVM_C_FLAGS ${CMAKE_C_FLAGS_${LLVM_BUILD_TYPE}})
+    set(LLVM_CXX_FLAGS ${CMAKE_CXX_FLAGS_${LLVM_BUILD_TYPE}})
+    foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+      string(TOUPPER ${CONFIG} CONFIG)
+      set(CMAKE_C_FLAGS_${CONFIG} ${LLVM_C_FLAGS})
+      set(CMAKE_CXX_FLAGS_${CONFIG} ${LLVM_CXX_FLAGS})
+    endforeach()
+  elseif(NOT LLVM_BUILD_TYPE STREQUAL CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
+  endif()
+
+  set(BUILD_SHARED_LIBS FALSE)
+
+  set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
+  set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
+  set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
+
+  #---Remove the inherited include_directories()
+  set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
+
+  #---Disable VCS writing to prevent that we always have to rebuild when someone touched the git HEAD
+  set(LLVM_APPEND_VC_REV OFF CACHE BOOL "Disabled LLVM revision dependency" FORCE)
 
 #---Add the sub-directory excluding all the targets from all-----------------------------------------
-if(builtin_llvm)
   if(CMAKE_GENERATOR MATCHES "Xcode")
     add_subdirectory(llvm/src)
   else()
@@ -194,7 +216,8 @@ else()
       "--includedir"
       "--prefix"
       "--src-root"
-      "--cmakedir")
+      "--cmakedir"
+      "--build-mode")
     execute_process(
       COMMAND ${CONFIG_COMMAND}
       RESULT_VARIABLE HAD_ERROR
@@ -220,6 +243,9 @@ else()
   list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
   list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
   list(GET CONFIG_OUTPUT 6 LLVM_CONFIG_CMAKE_PATH)
+  list(GET CONFIG_OUTPUT 7 LLVM_BUILD_MODE)
+
+  message(STATUS "External llvm built in ${LLVM_BUILD_MODE} mode.")
 
   if(NOT MSVC_IDE)
     set(LLVM_ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}

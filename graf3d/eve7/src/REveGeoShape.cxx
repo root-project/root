@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Author: Matevz Tadel 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveUtil.hxx>
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REvePolygonSetProjected.hxx>
@@ -108,7 +109,7 @@ TGeoHMatrix *REveGeoShape::GetGeoHMatrixIdentity()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveGeoShape::REveGeoShape(const char *name, const char *title)
+REveGeoShape::REveGeoShape(const std::string &name, const std::string &title)
    : REveShape(name, title), fNSegments(0), fShape(nullptr), fCompositeShape(nullptr)
 {
    InitMainTrans();
@@ -135,13 +136,9 @@ TGeoShape* REveGeoShape::MakePolyShape()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
-Int_t REveGeoShape::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
+Int_t REveGeoShape::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
-   Int_t ret = REveShape::WriteCoreJson(j, rnr_offset);
-
-   // XXXXX Apaprently don't need this one ...
-
-   return ret;
+   return REveShape::WriteCoreJson(j, rnr_offset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -269,7 +266,7 @@ void REveGeoShape::WriteExtract(const char* name)
 REveGeoShapeExtract *REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
                                                  REveGeoShapeExtract* parent)
 {
-   REveGeoShapeExtract* she = new REveGeoShapeExtract(gsre->GetName(), gsre->GetTitle());
+   REveGeoShapeExtract* she = new REveGeoShapeExtract(gsre->GetCName(), gsre->GetCTitle());
    she->SetTrans(gsre->RefMainTrans().Array());
    {
       Int_t   ci = gsre->GetFillColor();
@@ -305,12 +302,9 @@ REveGeoShapeExtract *REveGeoShape::DumpShapeTree(REveGeoShape* gsre,
       TList* ele = new TList();
       she->SetElements(ele);
       she->GetElements()->SetOwner(true);
-      REveElement::List_i i = gsre->BeginChildren();
-      while (i != gsre->EndChildren()) {
-         REveGeoShape* l = dynamic_cast<REveGeoShape*>(*i);
-         DumpShapeTree(l, she);
-         i++;
-      }
+
+      for (auto &c: gsre->RefChildren())
+         DumpShapeTree(dynamic_cast<REveGeoShape *>(c), she);
    }
    if (parent)
       parent->GetElements()->Add(she);
@@ -327,7 +321,7 @@ REveGeoShape *REveGeoShape::ImportShapeExtract(REveGeoShapeExtract* gse,
    REveGeoManagerHolder gmgr(fgGeoManager);
    REveManager::RRedrawDisabler redrawOff(REX::gEve);
    REveGeoShape* gsre = SubImportShapeExtract(gse, parent);
-   gsre->ElementChanged();
+   gsre->StampObjProps();
    return gsre;
 }
 
@@ -357,7 +351,7 @@ REveGeoShape *REveGeoShape::SubImportShapeExtract(REveGeoShapeExtract* gse,
    {
       TIter next(gse->GetElements());
       REveGeoShapeExtract* chld;
-      while ((chld = (REveGeoShapeExtract*) next()) != 0)
+      while ((chld = (REveGeoShapeExtract*) next()) != nullptr)
          SubImportShapeExtract(chld, gsre);
    }
 
@@ -373,9 +367,9 @@ REveGeoShape *REveGeoShape::SubImportShapeExtract(REveGeoShapeExtract* gse,
 TClass *REveGeoShape::ProjectedClass(const REveProjection* p) const
 {
    if (p->Is2D())
-      return REvePolygonSetProjected::Class();
+      return TClass::GetClass<REvePolygonSetProjected>();
    else
-      return REveGeoShapeProjected::Class();
+      return TClass::GetClass<REveGeoShapeProjected>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

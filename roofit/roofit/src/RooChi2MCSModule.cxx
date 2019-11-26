@@ -17,11 +17,11 @@
 /** \class RooChi2MCSModule
     \ingroup Roofit
 
-RooChi2MCSModule is an add-on modules to RooMCStudy that
+RooChi2MCSModule is an add-on module to RooMCStudy that
 calculates the chi-squared of fitted p.d.f with respect to a binned
 version of the data. For each fit the chi-squared, the reduced chi-squared
 the number of degrees of freedom and the probability of the chi-squared
-is store in the summary dataset
+is store in the summary dataset.
 **/
 
 #include "Riostream.h"

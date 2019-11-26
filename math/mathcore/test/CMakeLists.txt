@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 project(mathcore-tests)
 find_package(ROOT REQUIRED)
 
@@ -28,7 +34,6 @@ set(TestSource
     testIntegrationMultiDim.cxx
     testAnalyticalIntegrals.cxx
     testTStatistic.cxx
-    testKahan.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx
     fit/SparseDataComparer.cxx
@@ -36,8 +41,6 @@ set(TestSource
     fit/SparseFit3.cxx
     fit/testBinnedFitExecPolicy.cxx
     fit/testLogLExecPolicy.cxx )
-
-set(testMathRandom_LABELS longtest)
 
 if(ROOT_mathmore_FOUND)
   list(APPEND TestSource stressGoFTest.cxx)
@@ -62,7 +65,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               NO_SOURCES
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h
                               LINKDEF stress/TrackMathCoreLinkDef.h
-                              DEPENDENCIES Core MathCore RIO GenVector)
+                              DEPENDENCIES Core MathCore RIO GenVector Smatrix)
 
 if(MSVC)
   add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
@@ -86,9 +89,10 @@ ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
 
 ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries} )
 
+ROOT_ADD_GTEST(testKahan testKahan.cxx
+      LIBRARIES Core MathCore)
 
 
 if(ROOT_clad_FOUND)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES MathCore)
 endif()
-

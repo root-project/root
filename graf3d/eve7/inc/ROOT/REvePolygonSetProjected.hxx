@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,14 +16,20 @@
 #include <ROOT/REveShape.hxx>
 
 #include <vector>
-#include <iterator>
 
 class TBuffer3D;
 
 namespace ROOT {
 namespace Experimental {
 
-class REvePolygonSetProjected : public REveShape, public REveProjected {
+// =========================================================================
+// REvePolygonSetProjected
+// Set of projected polygons with outline; typically produced from a TBuffer3D.
+// =========================================================================
+
+class REvePolygonSetProjected : public REveShape,
+                                public REveProjected
+{
 private:
    REvePolygonSetProjected(const REvePolygonSetProjected &);            // Not implemented
    REvePolygonSetProjected &operator=(const REvePolygonSetProjected &); // Not implemented
@@ -58,36 +64,34 @@ private:
    Float_t MakePolygonsFromBS(std::vector<Int_t> &idxMap);
 
 protected:
-   vpPolygon_t fPols;   // polygons
-   vpPolygon_t fPolsBS; // polygons build from TBuffer3D segments
-   vpPolygon_t fPolsBP; // polygons build from TBuffer3D polygons
+   vpPolygon_t fPols;   ///<! polygons
+   vpPolygon_t fPolsBS; ///<! polygons build from TBuffer3D segments
+   vpPolygon_t fPolsBP; ///<! polygons build from TBuffer3D polygons
 
-   std::vector<REveVector> fPnts; // reduced and projected points
+   std::vector<REveVector> fPnts; ///<! reduced and projected points
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
    Float_t PolygonSurfaceXY(const Polygon_t &poly) const;
 
 public:
-   REvePolygonSetProjected(const char *n = "REvePolygonSetProjected", const char *t = "");
+   REvePolygonSetProjected(const std::string &n = "REvePolygonSetProjected", const std::string &t = "");
    virtual ~REvePolygonSetProjected();
 
-   void ComputeBBox(); // override;
+   void ComputeBBox() override;
    // TClass* ProjectedClass() same as for REveShape
 
-   virtual void SetProjection(REveProjectionManager *mng, REveProjectable *model);
-   virtual void UpdateProjection();
-   virtual REveElement *GetProjectedAsElement() { return this; }
+   void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
+   void UpdateProjection() override;
+   REveElement *GetProjectedAsElement() override { return this; }
 
    void ProjectBuffer3D();
 
    virtual void DumpPolys() const;
    void DumpBuffer3D();
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
-   void BuildRenderData();                                   // override;
-
-   ClassDef(REvePolygonSetProjected, 0); // Set of projected polygons with outline; typically produced from a TBuffer3D.
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 };
 
 } // namespace Experimental

@@ -58,14 +58,26 @@ public:
 
   virtual Double_t defaultErrorLevel() const { return 0.5 ; }
 
+  void batchMode(bool on = true) {
+    _batchEvaluations = on;
+  }
+
 protected:
 
   virtual Bool_t processEmptyDataSets() const { return _extended ; }
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const;
 
   static RooArgSet _emptySet ; // Supports named argument constructor
 
+private:
+  std::tuple<double, double, double> computeBatched(
+      std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+
+  std::tuple<double, double, double> computeScalar(
+        std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
+
   Bool_t _extended ;
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  bool _batchEvaluations{false};
   Bool_t _weightSq ; // Apply weights squared?
   mutable Bool_t _first ; //!
   Double_t _offsetSaveW2; //!
@@ -74,7 +86,7 @@ protected:
   mutable std::vector<Double_t> _binw ; //!
   mutable RooRealSumPdf* _binnedPdf ; //!
    
-  ClassDef(RooNLLVar,2) // Function representing (extended) -log(L) of p.d.f and dataset
+  ClassDef(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif

@@ -39,8 +39,8 @@ element type.
 #include "TStreamerElement.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TClassTable.h"
 #include "TDataMember.h"
-#include "TMethodCall.h"
 #include "TDataType.h"
 #include "TRealData.h"
 #include "TBaseClass.h"
@@ -623,6 +623,7 @@ void TStreamerInfo::Build()
             fElements->Add(element);
             writecopy->SetBit(TStreamerElement::kWrite);
             writecopy->SetNewType( writecopy->GetType() );
+            writecopy->SetOffset( element->GetOffset() );
             // Put the write element after the read element (that does caching).
             element = writecopy;
          }
@@ -643,8 +644,12 @@ void TStreamerInfo::Build()
       } else {
          // Tell clone we should rerun BuildOld
          infoalloc->SetBit(kBuildOldUsed,false);
+         // Temporarily mark it as built to avoid the BuildCheck from removing
+         // Technically we only need to do this for the 'current' StreamerInfo
+         fIsBuilt = kTRUE;
          infoalloc->BuildCheck();
          infoalloc->BuildOld();
+         fIsBuilt = kFALSE;
          TClass *allocClass = infoalloc->GetClass();
 
          {
@@ -748,6 +753,13 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
             return;
          }
       }
+
+      if (0 == strcmp("string",fClass->GetName())) {
+         // We know we do not need any offset check for a string
+         SetBit(kCanDelete);
+         return;
+      }
+
       const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
 
@@ -1758,12 +1770,14 @@ void TStreamerInfo::BuildOld()
          if (element->IsA() == TStreamerBase::Class()) {
             TStreamerBase* base = (TStreamerBase*) element;
 #if defined(PROPER_IMPLEMEMANTION_OF_BASE_CLASS_RENAMING)
-            TClass* baseclass =  fClass->GetBaseClass( base->GetName() );
+            TClassRef baseclass =  fClass->GetBaseClass( base->GetName() );
 #else
             // Currently the base class renaming does not work, so we use the old
             // version of the code which essentially disable the next if(!baseclass ..
             // statement.
-            TClass* baseclass =  base->GetClassPointer();
+            // During the TStreamerElement's Init an emulated TClass might be replaced
+            // by one from the dictionary, we use a TClassRef to be informed of the change.
+            TClassRef baseclass =  base->GetClassPointer();
 #endif
 
             //------------------------------------------------------------------
@@ -2443,8 +2457,7 @@ void TStreamerInfo::BuildOld()
                next(); // move the cursor passed the insert object.
                writecopy->SetBit(TStreamerElement::kWrite);
                writecopy->SetNewType( writecopy->GetType() );
-               writecopy->SetBit(TStreamerElement::kCache);
-               writecopy->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
+               writecopy->SetOffset(element->GetOffset());
             }
             element->SetBit(TStreamerElement::kCache);
             element->SetNewType( element->GetType() );
@@ -3206,17 +3219,22 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
    TIter next(GetElements());
    TStreamerElement *el;
-   while ( (el=(TStreamerElement*)next()) && !fClass->GetCollectionProxy()) { // loop over bases if not a proxied collection
-      if (el->IsBase()) {
-         name = el->GetName();
-         il = name.Length();
-         for (int i=0; i<il; i++) id = id*3+name[i];
-         if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
-            TStreamerBase *base = (TStreamerBase*)el;
-            id = id*3 + base->GetBaseCheckSum();
+   // Here we skip he base classes in case this is a pair or STL collection,
+   // otherwise, on some STL implementations, it can happen that pair has
+   // base classes which are an internal implementation detail.
+   if (!fClass->GetCollectionProxy() && strncmp(fClass->GetName(), "pair<", 5)) {
+      while ( (el=(TStreamerElement*)next())) { // loop over bases
+         if (el->IsBase()) {
+            name = el->GetName();
+            il = name.Length();
+            for (int i=0; i<il; i++) id = id*3+name[i];
+            if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
+               TStreamerBase *base = (TStreamerBase*)el;
+               id = id*3 + base->GetBaseCheckSum();
+            }
          }
-      }
-   } /* End of Base Loop */
+      } /* End of Base Loop */
+   }
 
    next.Reset();
    while ( (el=(TStreamerElement*)next()) ) {
@@ -3318,6 +3336,25 @@ static void R__WriteConstructorBody(FILE *file, TIter &next)
    }
 }
 
+static constexpr int str_length(const char* str)
+{
+    return *str ? 1 + str_length(str + 1) : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the element is auto_ptr or unique_ptr
+
+static bool R__IsUniquePtr(TStreamerElement *element) {
+
+   constexpr auto auto_ptr_len = str_length("auto_ptr<");
+   constexpr auto unique_ptr_len = str_length("unique_ptr<");
+
+   const char *name = element->GetTypeNameBasic();
+
+   return ((strncmp(name, "auto_ptr<", auto_ptr_len) == 0)
+           || (strncmp(name, "unique_ptr<", unique_ptr_len) == 0));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Write down the body of the 'move' constructor.
 
@@ -3335,7 +3372,11 @@ static void R__WriteMoveConstructorBody(FILE *file, const TString &protoname, TI
          if (element->GetArrayLength() <= 1) {
             if (atstart) { fprintf(file,"   : "); atstart = kFALSE; }
             else fprintf(file,"   , ");
-            fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+            if (R__IsUniquePtr(element)) {
+               fprintf(file, "%s(const_cast<%s &>( rhs ).%s.release() )\n",element->GetName(),protoname.Data(),element->GetName());
+            } else {
+               fprintf(file, "%s(const_cast<%s &>( rhs ).%s)\n",element->GetName(),protoname.Data(),element->GetName());
+            }
          }
       }
    }
@@ -3665,6 +3706,8 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                   // nothing to do.
                   break;
             }
+         } else if (strncmp(enamebasic.Data(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+            enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);
          }
 
          lt = enamebasic.Length();
@@ -3691,6 +3734,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
       fprintf(fp,"\n   %s() {\n",protoname.Data());
       R__WriteConstructorBody(fp,next);
       fprintf(fp,"   }\n");
+      fprintf(fp,"   %s(%s && ) = default;\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   %s(const %s & rhs )\n",protoname.Data(),protoname.Data());
       R__WriteMoveConstructorBody(fp,protoname,next);
       fprintf(fp,"   }\n");
@@ -3701,6 +3745,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
    } else {
       // Generate default functions, ClassDef and trailer.
       fprintf(fp,"\n   %s();\n",protoname.Data());
+      fprintf(fp,"   %s(%s && ) = default;\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   %s(const %s & );\n",protoname.Data(),protoname.Data());
       fprintf(fp,"   virtual ~%s();\n\n",protoname.Data());
 
@@ -5258,7 +5303,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype, TStreamerElement *aEl
       case kBits:              {UInt_t    *val = (UInt_t*   )ladd; printf("%d" ,*val);  break;}
 
          // array of basic types  array[8]
-      case kOffsetL + kBool:    {Bool_t    *val = (Bool_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,val[j]); PrintCR(j,aleng,20); } break;}
+      case kOffsetL + kBool:    {Bool_t    *val = (Bool_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,(char)val[j]); PrintCR(j,aleng,20); } break;}
       case kOffsetL + kChar:    {Char_t    *val = (Char_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,val[j]); PrintCR(j,aleng,20); } break;}
       case kOffsetL + kShort:   {Short_t   *val = (Short_t*  )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng,10); } break;}
       case kOffsetL + kInt:     {Int_t     *val = (Int_t*    )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng,10); } break;}
@@ -5451,9 +5496,9 @@ void TStreamerInfo::Update(const TClass *oldcl, TClass *newcl)
 void TStreamerInfo::TCompInfo::Update(const TClass *oldcl, TClass *newcl)
 {
    if (fType != -1) {
-      if (fClass == oldcl)
+      if (fClass == oldcl || strcmp(fClassName, newcl->GetName()) == 0)
          fClass = newcl;
-      else if (fClass == 0)
+      else if (fClass == 0 && TClassTable::GetDict(fClassName))
          fClass = TClass::GetClass(fClassName);
    }
 }

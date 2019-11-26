@@ -270,17 +270,19 @@ public:
    {
       if (EndOfFile())
          return 0;
+
+      int resultsize = 0;
       if (fInp != 0) {
          fInp->get(buf, maxsize, 0);
-         maxsize = strlen(buf);
+         resultsize = strlen(buf);
       } else {
-         if (maxsize > fInpStrLen)
-            maxsize = fInpStrLen;
-         strncpy(buf, fInpStr, maxsize);
-         fInpStr += maxsize;
-         fInpStrLen -= maxsize;
+         resultsize = strlcpy(buf, fInpStr, maxsize);
+         if (resultsize >= maxsize)
+            resultsize = maxsize - 1;
+         fInpStr += resultsize;
+         fInpStrLen -= resultsize;
       }
-      return maxsize;
+      return resultsize;
    }
 
    ////////////////////////////////////////////////////////////////////////////

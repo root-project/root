@@ -1,8 +1,21 @@
 // @(#)root/core:$Id$
-// author: Lukasz Janyst <ljanyst@cern.ch>
+/// \file RConversionRuleParser.cxx
+/// \ingroup Base
+/// \author Victor Perev
+/// \author Philippe Canal
+/// \date 04/10/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
+#include "TClassEdit.h"
 
 #include <algorithm>
 #include <iostream>
@@ -661,8 +674,8 @@ namespace ROOT
       output << "      " << className << "* newObj = (" << className;
       output << "*)target;" << std::endl;
       output << "      // Supress warning message.\n";
-      output << "      " << "if (oldObj) {}\n\n";
-      output << "      " << "if (newObj) {}\n\n";
+      output << "      " << "(void)oldObj;\n\n";
+      output << "      " << "(void)newObj;\n\n";
 
       //-----------------------------------------------------------------------
       // Write the user's code
@@ -888,12 +901,15 @@ namespace ROOT
       //////////////////////////////////////////////////////////////////////////
 
       SchemaRuleClassMap_t::iterator it;
-      std::string                    targetClass = rule["targetClass"];
-      it = gReadRules.find( targetClass );
+      std::string targetClass = rule["targetClass"];
+      std::string normalizedTargetName;
+      TClassEdit::GetNormalizedName(normalizedTargetName, targetClass);
+
+      it = gReadRules.find( normalizedTargetName );
       if( it == gReadRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRules[targetClass] = lst;
+         gReadRules[normalizedTargetName] = lst;
       }
       else
          it->second.push_back( rule );
@@ -922,11 +938,13 @@ namespace ROOT
 
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
-      it = gReadRawRules.find( targetClass );
+      std::string normalizedTargetName;
+      TClassEdit::GetNormalizedName(normalizedTargetName, targetClass);
+      it = gReadRawRules.find( normalizedTargetName );
       if( it == gReadRawRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRawRules[targetClass] = lst;
+         gReadRawRules[normalizedTargetName] = lst;
       }
       else
          it->second.push_back( rule );

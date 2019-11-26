@@ -17,22 +17,20 @@
 /** \class RooCBShape
     \ingroup Roofit
 
-P.d.f implementing the Crystal Ball line shape
+PDF implementing the Crystal Ball line shape.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooCBShape.h"
+
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
+#include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
+
 #include "TMath.h"
 
-#include "TError.h"
+#include <cmath>
 
 using namespace std;
 
@@ -91,6 +89,62 @@ Double_t RooCBShape::evaluate() const {
 
     return a/TMath::Power(b - t, n);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+//Author: Emmanouil Michalainas, CERN 21 August 2019
+
+template<class Tm, class Tm0, class Tsigma, class Talpha, class Tn>
+void compute(	size_t batchSize,
+	double * __restrict output,
+	Tm M, Tm0 M0, Tsigma S, Talpha A, Tn N)
+{
+  for (size_t i=0; i<batchSize; i++) {
+    const double t = (M[i]-M0[i]) / S[i];
+    if ((A[i]>0 && t>=-A[i])   ||   (A[i]<0 && -t>=A[i])) {
+      output[i] = -0.5*t*t;
+    } else {
+      output[i] = N[i] / (N[i] -A[i]*A[i] -A[i]*t);
+      output[i] = _rf_fast_log(output[i]);
+      output[i] *= N[i];
+      output[i] -= 0.5*A[i]*A[i];
+    }
+  }
+  
+  for (size_t i=0; i<batchSize; i++) {
+    output[i] = _rf_fast_exp(output[i]);
+  }
+}
+};
+
+RooSpan<double> RooCBShape::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+
+  EvaluateInfo info = getInfo( {&m, &m0, &sigma, &alpha, &n}, begin, batchSize );
+  if (info.nBatches == 0) {
+    return {};
+  }
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto mData = m.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !mData.empty()) {
+    compute(info.size, output.data(), mData.data(),
+    BracketAdapter<double> (m0),
+    BracketAdapter<double> (sigma),
+    BracketAdapter<double> (alpha),
+    BracketAdapter<double> (n));
+  }
+  else {
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (m,m.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (m0,m0.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (sigma,sigma.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (alpha,alpha.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (n,n.getValBatch(begin,info.size)));
+  }
+  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +220,7 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
     result += term1 + term2;
   }
 
-  return result;
+  return result != 0. ? result : 1.E-300;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

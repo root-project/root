@@ -1,12 +1,18 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 include(ExternalProject)
 
 find_package(libuuid REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-set(DAVIX_VERSION "0.6.7")
-set(DAVIX_URL "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix")
-set(DAVIX_URLHASH "SHA256=1694152a20a5c5e692c4bc545b2efbacec5274fb799e60725412ebae40cced3d")
+set(DAVIX_VERSION "0.7.5")
+set(DAVIX_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources")
+set(DAVIX_URLHASH "SHA256=d920ca976846875d83af4dc50c99280bb3741fcf8351d5733453e70fa5fe6fc8")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
 
@@ -16,7 +22,7 @@ foreach(lib davix neon)
 endforeach()
 
 ExternalProject_Add(DAVIX
-  URL ${DAVIX_URL}/${DAVIX_VERSION}/davix-embedded-${DAVIX_VERSION}.tar.gz
+  URL ${DAVIX_URL}/davix-${DAVIX_VERSION}.tar.gz
   URL_HASH ${DAVIX_URLHASH}
   CMAKE_CACHE_ARGS
     -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
@@ -34,6 +40,7 @@ ExternalProject_Add(DAVIX
     -DSTATIC_LIBRARY=ON
     -DSHARED_LIBRARY=OFF
     -DENABLE_TOOLS=OFF
+    -DDAVIX_TESTS=OFF
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}

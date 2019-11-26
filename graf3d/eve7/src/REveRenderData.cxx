@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,7 +20,8 @@ using namespace ROOT::Experimental;
 /////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-REveRenderData::REveRenderData(const std::string &func, int size_vert, int size_norm, int size_idx) : fRnrFunc(func)
+REveRenderData::REveRenderData(const std::string &func, int size_vert, int size_norm, int size_idx) :
+   fRnrFunc(func)
 {
    Reserve(size_vert, size_norm, size_idx);
 }
@@ -47,7 +48,7 @@ int REveRenderData::Write(char *msg, int maxlen)
 
    int off{0};
 
-   auto append = [&, this](void *buf, int len) {
+   auto append = [&](void *buf, int len) {
       if (off + len > maxlen)
          throw eh + "output buffer does not have enough memory";
       memcpy(msg + off, buf, len);

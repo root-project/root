@@ -1,11 +1,10 @@
 #!/bin/sh
 
 # HistFactory workplace setup script
-
-ROOTETCDIR=`root -b -q -l -n -e "std::cout << TROOT::GetEtcDir() << std::endl;" | tail -1`
+ROOTETCDIR=`root-config --etcdir`
 echo "Using etcdir "$ROOTETCDIR
-ROOTTUTDIR=`root -b -q -l -n -e "std::cout << TROOT::GetTutorialDir() << std::endl;" | tail -1`
-echo "Using tutorials dir" $ROOTTUTDIR 
+ROOTTUTDIR=`root-config --tutdir`
+echo "Using tutorials dir" $ROOTTUTDIR
 
 if [ $# -eq 1 ]
 then
@@ -40,7 +39,9 @@ cp $ROOTTUTDIR/histfactory/example_DataDriven_controlRegion.xml $DIR/config/exam
 
 
 #echo "Making skeleton data files..."
-root -b -q $ROOTTUTDIR/histfactory/makeExample.C
+# There is no root binary on Mac OSX for C++ modules (root depends on Cocoa, which is still not modularized),
+# we will switch here to use root.exe as it is done for the whole ROOT.
+root.exe -b -q $ROOTTUTDIR/histfactory/makeExample.C
 mv ShapeSys.root ShapeSys2D.root StatError.root  dataDriven.root example.root $DIR/data
 
 echo "Done!"

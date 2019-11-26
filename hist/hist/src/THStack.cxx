@@ -796,12 +796,11 @@ void THStack::Paint(Option_t *choptin)
       if (h->GetYaxis()->GetXmax() > ymax) ymax = h->GetYaxis()->GetXmax();
    }
 
-   char loption[40];
-   snprintf(loption,31,"%s",opt.Data());
-   char *nostack  = strstr(loption,"nostack");
-   char *nostackb = strstr(loption,"nostackb");
-   char *candle   = strstr(loption,"candle");
-   char *violin   = strstr(loption,"violin");
+   TString loption = opt;
+   char *nostack  = (char *)strstr(loption.Data(),"nostack");
+   char *nostackb = (char *)strstr(loption.Data(),"nostackb");
+   char *candle   = (char *)strstr(loption.Data(),"candle");
+   char *violin   = (char *)strstr(loption.Data(),"violin");
 
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
@@ -830,7 +829,7 @@ void THStack::Paint(Option_t *choptin)
       TAxis *yaxis = h->GetYaxis();
       const TArrayD *xbins = xaxis->GetXbins();
       if (h->GetDimension() > 1) {
-         if (!option[0]) strlcpy(loption,"lego1",32);
+         if (loption.Length()<=0) loption.Form("%s","lego1");
          const TArrayD *ybins = yaxis->GetXbins();
          if (xbins->fN != 0 && ybins->fN != 0) {
             fHistogram = new TH2F(GetName(),GetTitle(),
@@ -895,13 +894,13 @@ void THStack::Paint(Option_t *choptin)
       }
    }
 
-   if (!lsame) fHistogram->Paint(loption);
+   if (!lsame) fHistogram->Paint(loption.Data());
 
-   if (fHistogram->GetDimension() > 1) SetDrawOption(loption);
-   if (strstr(loption,"lego")) return;
+   if (fHistogram->GetDimension() > 1) SetDrawOption(loption.Data());
+   if (loption.Index("lego")>=0) return;
 
    char noption[32];
-   strlcpy(noption,loption,32);
+   strlcpy(noption,loption.Data(),32);
    Int_t nhists = fHists->GetSize();
    if (nostack || candle || violin) {
       lnk = (TObjOptLink*)fHists->FirstLink();
@@ -910,14 +909,14 @@ void THStack::Paint(Option_t *choptin)
       Double_t bw = (1.-(2*bo))/nhists;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
-            if (nostackb) snprintf(loption,34,"%s%s b",noption,lnk->GetOption());
-            else          snprintf(loption,32,"%s%s",noption,lnk->GetOption());
+            if (nostackb) loption.Form("%s%s b",noption,lnk->GetOption());
+            else          loption.Form("%s%s",noption,lnk->GetOption());
          } else {
             TString indivOpt = lnk->GetOption();
             indivOpt.ToLower();
-            if (nostackb) snprintf(loption,38,"%ssame%s b",noption,lnk->GetOption());
-            else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) snprintf(loption,31,"%ssame",lnk->GetOption());
-            else          snprintf(loption,36,"%ssame%s",noption,lnk->GetOption());
+            if (nostackb) loption.Form("%ssame%s b",noption,lnk->GetOption());
+            else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) loption.Form("%ssame",lnk->GetOption());
+            else          loption.Form("%ssame%s",noption,lnk->GetOption());
          }
          hAti = (TH1F*)(fHists->At(i));
          if (nostackb) {
@@ -932,7 +931,7 @@ void THStack::Paint(Option_t *choptin)
             hAti->SetBarWidth(candleSpace);
             hAti->SetBarOffset(candleOffset);
          }
-         hAti->Paint(loption);
+         hAti->Paint(loption.Data());
          lnk = (TObjOptLink*)lnk->Next();
       }
    } else {
@@ -941,9 +940,9 @@ void THStack::Paint(Option_t *choptin)
       Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
-            snprintf(loption,32,"%s%s",noption,lnk->GetOption());
+            loption.Form("%s%s",noption,lnk->GetOption());
          } else {
-            snprintf(loption,36,"%ssame%s",noption,lnk->GetOption());
+            loption.Form("%ssame%s",noption,lnk->GetOption());
          }
          h1 = (TH1*)fStack->At(nhists-i-1);
          if (i>0 && lclear) {
@@ -952,18 +951,18 @@ void THStack::Paint(Option_t *choptin)
             h1fill = h1->GetFillStyle();
             h1->SetFillColor(10);
             h1->SetFillStyle(1001);
-            h1->Paint(loption);
+            h1->Paint(loption.Data());
             static TClassRef clTFrame = TClass::GetClass("TFrame",kFALSE);
             TAttFill *frameFill = (TAttFill*)clTFrame->DynamicCast(TAttFill::Class(),gPad->GetFrame());
             if (frameFill) {
                h1->SetFillColor(frameFill->GetFillColor());
                h1->SetFillStyle(frameFill->GetFillStyle());
             }
-            h1->Paint(loption);
+            h1->Paint(loption.Data());
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);
          }
-         h1->Paint(loption);
+         h1->Paint(loption.Data());
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }

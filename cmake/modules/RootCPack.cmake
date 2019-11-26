@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 #---------------------------------------------------------------------------------------------------
 #  RootCPack.cmake
 #   - basic setup for packaging ROOT using CTest
@@ -56,6 +62,8 @@ if(MSVC)
     math(EXPR VS_VERSION "${VC_MAJOR} - 5")
   elseif(MSVC_VERSION LESS 1919)
     math(EXPR VS_VERSION "${VC_MAJOR} - 4")
+  elseif(MSVC_VERSION LESS 1925)
+    math(EXPR VS_VERSION "${VC_MAJOR} - 3")
   endif()
   set(COMPILER_NAME_VERSION ".vc${VS_VERSION}")
 else()
@@ -111,7 +119,7 @@ if(WIN32)
   set(CPACK_GENERATOR "ZIP;NSIS")
   set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
 elseif(APPLE)
-  set(CPACK_GENERATOR "TGZ;PackageMaker")
+  set(CPACK_GENERATOR "TGZ;productbuild")
   set(CPACK_SOURCE_GENERATOR "TGZ;TBZ2")
 else()
   set(CPACK_GENERATOR "TGZ")
@@ -152,5 +160,3 @@ cpack_add_component(tests
     DISPLAY_NAME "ROOT Tests and Tutorials"
     DESCRIPTION "These are needed to do any test and tutorial"
      INSTALL_TYPES full developer)
-
-

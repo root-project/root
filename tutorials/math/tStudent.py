@@ -38,7 +38,12 @@ for i in range(1, 10):
                                                               3.0))
 
 # For each quantile fill with the pdf
-xx = [-1.5] + [quant.GetBinContent(i)for i in range(1, 9)] + [1.5]
+xx = []
+xx.append(-1.5)
+for i in range(1, 9):
+    xx.append(quant.GetBinContent(i))
+xx.append(1.5)
+
 pdfq = []
 for i in range(9):
     nbin = int(n * (xx[i+1] - xx[i]) / 3.0 + 1.0)

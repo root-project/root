@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,6 +18,7 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "json.hpp"
+
 #include <cassert>
 
 
@@ -38,8 +39,8 @@ calculated by multiplying the transformation matrices of all parents.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveScene::REveScene(const char* n, const char* t) :
-   REveElementList(n, t)
+REveScene::REveScene(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
    fScene = this;
 }
@@ -53,15 +54,6 @@ REveScene::~REveScene()
 
    REX::gEve->GetViewers()->SceneDestructing(this);
    REX::gEve->GetScenes()->RemoveElement(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual from REveElement; here we simply append this scene to
-/// the list.
-
-void REveScene::CollectSceneParents(List_t& scenes)
-{
-   scenes.push_back(this);
 }
 
 //------------------------------------------------------------------------------
@@ -99,21 +91,11 @@ void REveScene::SceneElementChanged(REveElement* element)
 {
    assert(fAcceptingChanges);
 
-   fChangedElements.insert(element);
+   fChangedElements.push_back(element);
 }
-
-void REveScene::SceneElementAdded(REveElement* element)
-{
-   assert(fAcceptingChanges);
-   // printf("REveScene::SceneElementAdded(\n");
-   fAddedElements.insert(element);
-}
-
 
 void REveScene::SceneElementRemoved(ElementId_t id)
 {
-   assert(fAcceptingChanges);
-
    fRemovedElements.push_back(id);
 }
 
@@ -126,7 +108,11 @@ void REveScene::EndAcceptingChanges()
 
 void REveScene::ProcessChanges()
 {
-   // should return net message or talk to gEve about it
+   if (IsChanged())
+   {
+      StreamRepresentationChanges();
+      SendChangesToSubscribers();
+   }
 }
 
 void REveScene::StreamElements()
@@ -167,7 +153,8 @@ void REveScene::StreamElements()
    fOutputBinary.resize(fTotalBinarySize);
    Int_t off = 0;
 
-   for (auto &&e : fElsWithBinaryData) {
+   for (auto &&e : fElsWithBinaryData)
+   {
       auto rd_size = e->fRenderData->Write(&fOutputBinary[off], fOutputBinary.size() - off);
       off += rd_size;
    }
@@ -202,7 +189,23 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 
    for (auto &&c : el->fChildren)
    {
-      StreamJsonRecurse(c, jarr);
+      // Stream only objects element el is a mother of.
+      //
+      // XXXX This is spooky side effect of multi-parenting.
+      //
+      // In particular screwed up for selection.
+      // Selection now streams element ids and implied selected ids
+      // and secondary-ids as part of core json.
+      //
+      // I wonder how this screws up REveProjectionManager (should
+      // we hold a map of already streamed ids?).
+      //
+      // Do uncles and aunts and figure out a clean way for backrefs.
+
+      if (c->GetMother() == el)
+      {
+         StreamJsonRecurse(c, jarr);
+      }
    }
 }
 
@@ -211,6 +214,7 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 /// Prepare data for sending element changes
 //
 ////////////////////////////////////////////////////////////////////////////////
+
 void REveScene::StreamRepresentationChanges()
 {
    fOutputJson.clear();
@@ -233,32 +237,21 @@ void REveScene::StreamRepresentationChanges()
 
    // jarr.push_back(jhdr);
 
-   for (Set_i i = fChangedElements.begin(); i != fChangedElements.end(); ++i)
+   for (auto &el: fChangedElements)
    {
-      REveElement* el = *i;
       UChar_t bits = el->GetChangeBits();
 
       nlohmann::json jobj = {};
       jobj["fElementId"] = el->GetElementId();
-      jobj["changeBit"] = bits;
-      if (bits & kCBVisibility)
-      {
-         jobj["fRnrSelf"]     = el->GetRnrSelf();
-         jobj["fRnrChildren"] = el->GetRnrChildren();
-      }
+      jobj["changeBit"]  = bits;
 
-      if (bits & kCBColorSelection)
+      if (bits & kCBElementAdded || bits & kCBObjProps)
       {
-         el->WriteCoreJson(jobj, -1);
-      }
-
-      if (bits & kCBTransBBox)
-      {
-      }
-
-      if (bits & kCBObjProps)
-      {
-         printf("total element change %s \n", el->GetElementName());
+         if (gDebug > 0 && bits & kCBElementAdded)
+         {
+            Info("REveScene::StreamRepresentationChanges", "new element change %s %d\n",
+                 el->GetCName(), bits);
+         }
 
          Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
          if (rd_size) {
@@ -267,26 +260,30 @@ void REveScene::StreamRepresentationChanges()
             fElsWithBinaryData.push_back(el);
          }
       }
+      else
+      {
+        if (bits & kCBVisibility)
+        {
+          jobj["fRnrSelf"]     = el->GetRnrSelf();
+          jobj["fRnrChildren"] = el->GetRnrChildren();
+        }
+
+        if (bits & kCBColorSelection)
+        {
+          el->WriteCoreJson(jobj, -1);
+        }
+
+        if (bits & kCBTransBBox)
+        {
+        }
+      }
 
       jarr.push_back(jobj);
 
       el->ClearStamps();
    }
 
-   for (auto el : fAddedElements) {
-      nlohmann::json jobj = {};
-      printf("scene representation change new element change %s \n", el->GetElementName());
-      Int_t rd_size = el->WriteCoreJson(jobj, fTotalBinarySize);
-      jarr.push_back(jobj);
-      if (rd_size) {
-         assert (rd_size % 4 == 0);
-         fTotalBinarySize += rd_size;
-         fElsWithBinaryData.push_back(el);
-      }
-   }
-
    fChangedElements.clear();
-   fAddedElements.clear();
    fRemovedElements.clear();
 
    // render data for total change
@@ -305,27 +302,31 @@ void REveScene::StreamRepresentationChanges()
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
 
-   printf("[%s] Stream representation changes %s ...\n", GetElementName(), fOutputJson.substr(0,30).c_str() );
+   if (gDebug > 0)
+      Info("REveScene::StreamRepresentationChanges", "class: %s  changes %s ...", GetCName(),  msg.dump(1).c_str() );
 }
 
-void
-REveScene::SendChangesToSubscribers()
+void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
-      printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
+      if (gDebug > 0)
+         printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
       client->fWebWindow->Send(client->fId, fOutputJson);
       if (fTotalBinarySize) {
-         printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
+         if (gDebug > 0)
+            printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
          client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
       }
    }
 }
 
-Bool_t
-REveScene::IsChanged() const
+Bool_t REveScene::IsChanged() const
 {
-   printf("REveScene::IsChanged %s %d\n", GetElementName(), fAddedElements.empty());
-   return ! (fChangedElements.empty() && fAddedElements.empty() && fRemovedElements.empty());
+   if (gDebug > 0)
+     ::Info("REveScene::IsChanged","%s (changed_or_added=%d, removed=%d)", GetCName(),
+          (int) fChangedElements.size(), (int) fRemovedElements.size());
+
+   return ! (fChangedElements.empty() && fRemovedElements.empty());
 }
 
 
@@ -398,10 +399,10 @@ void REveScene::RetransHierarchicallyRecurse(REveElement* el, const REveTrans& t
 
    if (el->GetRnrChildren())
    {
-      for (List_i i = el->BeginChildren(); i != el->EndChildren(); ++i)
+      for (auto &c: el->RefChildren())
       {
-         if ((*i)->GetRnrAnything())
-            RetransHierarchicallyRecurse(*i, t);
+         if (c->GetRnrAnything())
+            RetransHierarchicallyRecurse(c, t);
       }
    }
 }
@@ -416,9 +417,9 @@ void REveScene::Paint(Option_t* option)
 {
    if (GetRnrState())
    {
-      for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+      for (auto &c: fChildren)
       {
-         // (*i)->PadPaint(option);
+         // c->PadPaint(option);
       }
    }
 }
@@ -457,19 +458,19 @@ List of Scenes providing common operations on REveScene collections.
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-REveSceneList::REveSceneList(const char* n, const char* t) :
-   REveElementList(n, t)
+REveSceneList::REveSceneList(const std::string& n, const std::string& t) :
+   REveElement(n, t)
 {
-   SetChildClass(REveScene::Class());
+   SetChildClass(TClass::GetClass<REveScene>());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy all scenes and their contents.
-/// Tho object with non-zero deny-destroy will still survive.
+/// The object with non-zero deny-destroy will still survive.
 
 void REveSceneList::DestroyScenes()
 {
-   List_i i = fChildren.begin();
+   auto i = fChildren.begin();
    while (i != fChildren.end())
    {
       REveScene* s = (REveScene*) *(i++);
@@ -483,9 +484,9 @@ void REveSceneList::DestroyScenes()
 
 void REveSceneList::AcceptChanges(bool on)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      REveScene* s = (REveScene*) *i;
+      REveScene *s = (REveScene *)c;
       if (on)
          s->BeginAcceptingChanges();
       else
@@ -498,9 +499,9 @@ void REveSceneList::AcceptChanges(bool on)
 
 void REveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      REveScene* s = (REveScene*) *i;
+      REveScene* s = (REveScene*) c;
       if (s->IsChanged())
       {
          s->Repaint(dropLogicals);
@@ -513,9 +514,9 @@ void REveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 
 void REveSceneList::RepaintAllScenes(Bool_t dropLogicals)
 {
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      ((REveScene*) *i)->Repaint(dropLogicals);
+      ((REveScene *)c)->Repaint(dropLogicals);
    }
 }
 
@@ -527,9 +528,9 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
    static const REveException eh("REveSceneList::DestroyElementRenderers ");
 
    TObject* obj = element->GetRenderObject(eh);
-   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
+   for (auto &c: fChildren)
    {
-      ((REveScene*)*i)->DestroyElementRenderers(obj);
+      ((REveScene *)c)->DestroyElementRenderers(obj);
    }
 }
 
@@ -543,14 +544,11 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
 
 void REveSceneList::ProcessSceneChanges()
 {
-   printf("ProcessSceneChanges\n");
+   if (gDebug > 0)
+      ::Info("REveSceneList::ProcessSceneChanges","processing");
 
-   for (List_i sIt=fChildren.begin(); sIt!=fChildren.end(); ++sIt)
+   for (auto &el : fChildren)
    {
-      REveScene* s = (REveScene*) *sIt;
-      if (s->IsChanged()) {
-         s->StreamRepresentationChanges();
-         s->SendChangesToSubscribers();
-      }
+      ((REveScene*) el)->ProcessChanges();
    }
 }

@@ -20,6 +20,7 @@ a TStreamerInfo (i.e. using TBranchElement).
 //#include "TMethodCall.h"
 
 #include "TVirtualStreamerInfo.h"
+#include "Bytes.h"
 
 ClassImp(TLeafElement);
 
@@ -102,6 +103,48 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
 
 TLeafElement::~TLeafElement()
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Determine if this TLeafElement supports bulk IO
+TLeaf::DeserializeType
+TLeafElement::GetDeserializeType() const
+{
+   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
+      return fDeserializeTypeCache;
+
+   TClass *clptr = nullptr;
+   EDataType type = EDataType::kOther_t;
+   if (fBranch->GetExpectedType(clptr, type)) {  // Returns non-zero in case of failure
+      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
+      return DeserializeType::kDestructive;  // I don't know what it is, but we aren't going to use bulk IO.
+   }
+   fDataTypeCache.store(type, std::memory_order_release);
+   if (clptr) {  // Something that requires a dictionary to read; skip.
+      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
+      return DeserializeType::kDestructive;
+   }
+
+   if ((fType == EDataType::kChar_t) || fType == EDataType::kUChar_t || type == EDataType::kBool_t) {
+      fDeserializeTypeCache.store(DeserializeType::kZeroCopy, std::memory_order_relaxed);
+      return DeserializeType::kZeroCopy;
+   } else if ((type == EDataType::kFloat_t) || (type == EDataType::kDouble_t) ||
+              (type == EDataType::kInt_t) || (type == EDataType::kUInt_t) ||
+              (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
+      fDeserializeTypeCache.store(DeserializeType::kInPlace, std::memory_order_relaxed);
+      return DeserializeType::kInPlace;
+   }
+
+   fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
+   return DeserializeType::kDestructive;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize N events from an input buffer.
+Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
+{
+   EDataType type = fDataTypeCache.load(std::memory_order_consume);
+   return input_buf.ByteSwapBuffer(fLen*N, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

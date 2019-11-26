@@ -10,10 +10,10 @@ except ImportError:
 
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("stltypesDict.so"))
+test_dct = str(currpath.join("stltypesDict"))
 
 def setup_module(mod):
-    setup_make("stltypesDict.so")
+    setup_make("stltypes")
 
 
 class TestSTLVECTOR:
@@ -93,11 +93,11 @@ class TestSTLVECTOR:
         assert tv2 is tv3
 
         v = tv3()
-        assert hasattr(v, 'size' )
-        assert hasattr(v, 'push_back' )
-        assert hasattr(v, '__getitem__' )
-        assert hasattr(v, 'begin' )
-        assert hasattr(v, 'end' )
+        assert hasattr(v, 'size')
+        assert hasattr(v, 'push_back')
+        assert hasattr(v, '__getitem__')
+        assert hasattr(v, 'begin')
+        assert hasattr(v, 'end')
 
         for i in range(self.N):
             v.push_back(cppyy.gbl.just_a_class())
@@ -241,6 +241,99 @@ class TestSTLVECTOR:
         ve[0] = cppyy.gbl.VecTestEnumNS.EVal2
         assert ve[0] == 42
 
+    def test09_vector_of_string(self):
+        """Adverse effect of implicit conversion on vector<string>"""
+
+        import cppyy
+
+        assert cppyy.gbl.vectest_ol1("")  == 2
+        assert cppyy.gbl.vectest_ol1("a") == 2
+        assert cppyy.gbl.vectest_ol2("")  == 2
+        assert cppyy.gbl.vectest_ol2("a") == 2
+
+        raises(TypeError, cppyy.gbl.std.vector["std::string"], "abc")
+
+    def test10_vector_std_distance(self):
+        """Use of std::distance with vector"""
+
+        import cppyy
+        from cppyy.gbl import std
+
+        v = std.vector[int]([1, 2, 3])
+        assert v.size() == 3
+        assert std.distance(v.begin(), v.end()) == v.size()
+        assert std.distance[type(v).iterator](v.begin(), v.end()) == v.size()
+
+    def test11_vector_of_pair(self):
+        """Use of std::vector<std::pair>"""
+
+        import cppyy
+
+      # after the original bug report
+        cppyy.cppdef("""
+        class PairVector {
+        public:
+            std::vector<std::pair<double, double>> vector_pair(const std::vector<std::pair<double, double>>& a) {
+                return a;
+            }
+        };
+        """)
+
+        from cppyy.gbl import PairVector
+        a = PairVector()
+        ll = [[1., 2.], [2., 3.], [3., 4.], [4., 5.]]
+        v = a.vector_pair(ll)
+
+        assert len(v) == 4
+        i = 0
+        for p in v:
+            p.first  == ll[i][0]
+            p.second == ll[i][1]
+            i += 1
+        assert i == 4
+
+      # TODO: nicer error handling for the following (current: template compilation failure trying
+      # to assign a pair with <double, string> to <double, double>)
+        # ll2 = ll[:]
+        # ll2[2] = ll[2][:]
+        # ll2[2][1] = 'a'
+        # v = a.vector_pair(ll2)
+
+        ll3 = ll[:]
+        ll3[0] = 'a'
+        raises(TypeError, a.vector_pair, ll3)
+
+        ll4 = ll[:]
+        ll4[1] = 'a'
+        raises(TypeError, a.vector_pair, ll4)
+
+    def test12_vector_lifeline(self):
+        """Check lifeline setting on vectors of objects."""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace Lifeline {
+        static int count = 0;
+        template <typename T>
+        struct C {
+            C(int x) : x(x) { ++count; }
+            C(const C& c) : x(c.x) { ++count; }
+            ~C() { --count; }
+            int x;
+        };
+        auto foo() { return std::vector<C<int>>({C<int>(1337)}); }
+        }""")
+
+        assert cppyy.gbl.Lifeline.count == 0
+        assert not cppyy.gbl.Lifeline.foo()._getitem__unchecked.__set_lifeline__
+        assert cppyy.gbl.Lifeline.foo()[0].x == 1337
+        raises(IndexError, cppyy.gbl.Lifeline.foo().__getitem__, 1)
+        assert cppyy.gbl.Lifeline.foo()._getitem__unchecked.__set_lifeline__
+
+        import gc
+        gc.collect()
+        assert cppyy.gbl.Lifeline.count == 0
+
 
 class TestSTLSTRING:
     def setup_class(cls):
@@ -305,8 +398,6 @@ class TestSTLSTRING:
     def test03_string_with_null_character(self):
         """Test that strings with NULL do not get truncated"""
 
-        return # don't bother; is fixed in cling-support
-
         import cppyy
         std = cppyy.gbl.std
         stringy_class = cppyy.gbl.stringy_class["std::string"]
@@ -314,11 +405,15 @@ class TestSTLSTRING:
         t0 = "aap\0noot"
         assert t0 == "aap\0noot"
 
-        c, s = stringy_class(""), std.string(t0, len(t0))
+        c, s = stringy_class(""), std.string(t0)
 
         c.set_string1(s)
         assert t0 == c.get_string1()
         assert s == c.get_string1()
+
+        assert std.string('ab\0c')       == 'ab\0c'
+        assert repr(std.string('ab\0c')) == repr('ab\0c')
+        assert str(std.string('ab\0c'))  == 'ab\0c'
 
     def test04_array_of_strings(self):
         """Access to global arrays of strings"""
@@ -376,7 +471,7 @@ class TestSTLLIST:
             #-----
             a = tl1()
             for i in range(self.N):
-                a.push_back( i )
+                a.push_back(i)
 
             assert len(a) == self.N
             assert 11 < self.N
@@ -399,6 +494,26 @@ class TestSTLLIST:
         a = std.list(int)()
         for arg in a:
             pass
+
+    def test03_replacement_of_eq(self):
+        """A global templated function should work as a method"""
+
+        import cppyy
+
+        cppyy.cppdef("""template<class C>
+            bool cont_eq(const typename C::iterator& a, const typename C::iterator& b) {
+                return a != b;
+            }""")
+
+        a = cppyy.gbl.std.list[int]()
+        a.begin().__class__.__eq__ = cppyy.gbl.cont_eq[cppyy.gbl.std.list[int]]
+        assert not (a.begin() == a.end())
+
+        a = cppyy.gbl.std.list[float]()
+        assert a.begin() == a.end()
+        assert not cppyy.gbl.cont_eq[cppyy.gbl.std.list[float]](a.begin(), a.begin())
+        a.push_back(1)
+        assert     cppyy.gbl.cont_eq[cppyy.gbl.std.list[float]](a.begin(), a.end())
 
 
 class TestSTLMAP:
@@ -484,7 +599,34 @@ class TestSTLMAP:
 
         raises(ValueError, mul.__setitem__, 'minus two', -2)
 
-    def test05_STL_like_class_indexing_overloads(self):
+    def test05_bool_typemap(self):
+        """Test mapping of bool type typedefs"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        struct BoolTypeMapTest {
+            typedef bool BoolType;
+        };
+        """)
+
+        bt = cppyy.gbl.BoolTypeMapTest.BoolType
+
+        assert bt.__name__ == 'BoolType'
+        assert bt.__cpp_name__ == 'BoolTypeMapTest::BoolType'
+        assert bt(1)
+        assert bt(1) == True
+        assert bt(1) != False
+        assert bt(1) is True
+        assert bt() == bt(0)
+        assert not bt()
+        assert bt() == False
+        assert bt() != True
+        assert bt() is False
+        assert str(bt(1)) == 'True'
+        assert str(bt(0)) == 'False'
+
+    def test06_STL_like_class_indexing_overloads(self):
         """Test overloading of operator[] in STL like class"""
 
         import cppyy
@@ -494,18 +636,35 @@ class TestSTLMAP:
         assert a["some string" ] == 'string'
         assert a[3.1415] == 'double'
 
-    def test06_STL_like_class_iterators(self):
+    def test07_STL_like_class_iterators(self):
         """Test the iterator protocol mapping for an STL like class"""
 
         import cppyy
-        stl_like_class = cppyy.gbl.stl_like_class
 
-        a = stl_like_class(int)()
+        a = cppyy.gbl.stl_like_class(int)()
         assert len(a) == 4
         for i, j in enumerate(a):
             assert i == j
 
         assert i == len(a)-1
+
+        for cls in [cppyy.gbl.stl_like_class2, cppyy.gbl.stl_like_class3]:
+            b = cls[float, 2]()
+            b[0] = 27; b[1] = 42
+            limit = len(b)+1
+            for x in b:
+                limit -= 1
+                assert limit and "iterated too far!"
+                assert x in [27, 42]
+            assert x == 42
+            del x, b
+
+        for num in [4, 5, 6, 7]:
+            cls = getattr(cppyy.gbl, 'stl_like_class%d' % num)
+            count = 0
+            for i in cls():
+                count += 1
+            assert count == 10
 
 
 class TestSTLITERATOR:
@@ -656,3 +815,136 @@ class TestSTLDEQUE:
         x = cppyy.gbl.f()
         assert x
         del x
+
+
+class TestSTLSET:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = cppyy.gbl.N
+
+    def test01_set_iteration(self):
+        """Iterate over a set"""
+
+        import cppyy
+
+        s = cppyy.gbl.std.set[int]()
+        r = range(self.N)
+        for i in r:
+            s.insert(i)
+
+        assert len(s) == len(r)
+        assert sum(s) == sum(r)
+
+        for i in s:
+            assert i in s
+            assert i in r
+
+    def test02_set_iterators(self):
+        """Access to set iterators and their comparisons"""
+
+        import cppyy
+
+        cppyy.include("iterator")
+        s = cppyy.gbl.std.set[int]()
+
+        assert s.begin()  == s.end()
+        assert s.rbegin() == s.rend()
+
+        val = 42
+        s.insert(val)
+
+        assert len(s) == 1
+        assert s.begin().__deref__()  == val
+        assert s.rbegin().__deref__() == val
+
+        assert s.begin()  != s.end()
+        assert s.begin().__preinc__()  == s.end()
+        assert s.rbegin() != s.rend()
+        assert s.rbegin().__preinc__() == s.rend()
+
+
+class TestSTLTUPLE:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = cppyy.gbl.N
+
+    def test01_tuple_creation_and_access(self):
+        """Create tuples and access their elements"""
+
+        import cppyy
+        std = cppyy.gbl.std
+
+        t1 = std.make_tuple(1, 'a')
+        assert t1
+        assert std.get[0](t1) == 1
+        assert std.get[1](t1) == 'a'
+
+        t2 = std.make_tuple(1, 'a')
+        assert t1 == t2
+
+        t3 = std.make_tuple[int, 'char'](1, 'a')
+        assert t3
+        assert std.get[0](t3) == 1
+        assert std.get[1](t3) == 'a'
+
+        # assert t1 != t3     # fails to link (?!)
+
+        t4 = std.make_tuple(7., 1, 'b')
+        assert t4
+        assert std.get[0](t4) == 7.
+        assert std.get[1](t4) == 1
+        assert std.get[2](t4) == 'b'
+
+        v = std.vector[int](range(self.N))
+        t5 = std.make_tuple(v, False)
+        assert std.get[0](t5).size() == self.N
+        assert not std.get[1](t5)
+
+        # TODO: should be easy enough to add iterators over std::tuple?
+
+    def test02_tuple_size(self):
+        """Usage of tuple_size helper class"""
+
+        import cppyy
+        std = cppyy.gbl.std
+
+        t = std.make_tuple("aap", 42, 5.)
+        assert std.tuple_size(type(t)).value == 3
+
+    def test03_tuple_iter(self):
+        """Pack/unpack tuples"""
+
+        import cppyy, ctypes
+        std = cppyy.gbl.std
+
+        t = std.make_tuple(1, '2', 5.)
+        assert len(t) == 3
+
+        a, b, c = t
+        assert a == 1
+        assert b == '2'
+        assert c == 5.
+
+
+class TestSTLPAIR:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
+        cls.N = cppyy.gbl.N
+
+    def test01_pair_pack_unpack(self):
+        """Pack/unpack pairs"""
+
+        import cppyy
+        std = cppyy.gbl.std
+
+        p = std.make_pair(1, 2)
+        a, b = p
+
+        assert a == 1
+        assert b == 2

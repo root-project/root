@@ -3,12 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: cppyy: Automatic Python-C++ bindings
+   :keywords: Python, C++, llvm, cling, binding, bindings, automatic bindings, bindings generator, cross-language inheritance, calling C++ from Python, calling Python from C++, high performance, data science
+
 cppyy: Automatic Python-C++ bindings
 ====================================
 
 cppyy is an automatic Python-C++ bindings generator, for calling C++ from
 Python and Python from C++, designed for large scale programs in high
-performance computing that use modern C++.
+performance computing that use modern C++, fully including the latest
+standard, C++17.
 Design and performance are described in this `PyHPC paper`_, albeit that the
 CPython/cppyy performance has been vastly improved since.
 
@@ -44,7 +49,7 @@ features (more examples are in the `tutorial`_):
    Hello, the number is: 13
    >>> class PyMyClass(MyClass):
    ...     def add_int(self, i):  # python side override (CPython only)
-   ...       return self.m_data + 2*i
+   ...         return self.m_data + 2*i
    ...
    >>> cppyy.cppdef("int callback(MyClass* m, int i) { return m->add_int(i); }")
    True
@@ -119,6 +124,9 @@ development environments.
    :maxdepth: 1
 
    installation
+   examples
+   changelog
+   license
 
 .. toctree::
    :caption: Features
@@ -129,7 +137,8 @@ development environments.
    functions
    type_conversions
    python
-   features
+   lowlevel
+   misc
 
 .. toctree::
    :caption: Redistribution

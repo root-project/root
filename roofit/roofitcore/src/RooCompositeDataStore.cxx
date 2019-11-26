@@ -19,8 +19,13 @@
 \class RooCompositeDataStore
 \ingroup Roofitcore
 
-RooCompositeDataStore is the abstract base class for data collection that
-use a TTree as internal storage mechanism
+RooCompositeDataStore combines several disjunct datasets into one. This is useful for simultaneous PDFs
+that do not depend on the same observable such as a PDF depending on `x` combined with another one depending
+on `y`.
+The composite storage will store two different datasets, `{x}` and `{y}`, but they can be passed as a single
+dataset to RooFit operations. A category tag will define which dataset has to be passed to which likelihood.
+
+When iterated from start to finish, datasets will be traversed in the order of the category index.
 **/
 
 #include "RooFit.h"

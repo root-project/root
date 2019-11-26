@@ -95,17 +95,22 @@ public:
    virtual ~VGeneralLayer();
 
    /*! Initialize the weights and biases according to the given initialization method. */
-   void Initialize();
+   virtual void Initialize();
 
    /*! Computes activation of the layer for the given input. The input
     * must be in 3D tensor form with the different matrices corresponding to
     * different events in the batch.  */
-   virtual void Forward(std::vector<Matrix_t> &input, bool applyDropout = false) = 0;
+   virtual void Forward(std::vector<Matrix_t> &input, bool isTraining = false) = 0;
 
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    virtual void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
                          std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
+
+   /*! Reset some training flags after a loop on all batches
+       Some layer (e.g. batchnormalization) might need to implement the function in case some operations 
+       are needed after looping an all batches                                                 */
+   virtual void ResetTraining() {}
 
    /*! Updates the weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -122,6 +127,7 @@ public:
    /*! Updates the bias gradients, given some other weight gradients and learning rate. */
    void UpdateBiasGradients(const std::vector<Matrix_t> &biasGradients, const Scalar_t learningRate);
 
+
    /*! Copies the weights provided as an input.  */
    void CopyWeights(const std::vector<Matrix_t> &otherWeights);
 
@@ -136,6 +142,9 @@ public:
 
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent) = 0;
+
+   /*! Set Dropout probability. Reimplemented for layesrs supporting droput */
+   virtual void SetDropoutProbability(Scalar_t ) {}
 
    /*! Getters */
    size_t GetBatchSize() const { return fBatchSize; }
@@ -196,10 +205,10 @@ public:
    void SetIsTraining(bool isTraining) { fIsTraining = isTraining; }
 
    /// helper functions for XML
-   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
-   void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
+   static void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
+   static void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
 
-   void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
+   static void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
    
 };
 

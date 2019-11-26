@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -25,11 +25,13 @@ namespace Experimental {
 
 class REvePointSet;
 
-//==============================================================================
-// REveMagField
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveMagField
+/// Abstract interface to magnetic field
+////////////////////////////////////////////////////////////////////////////////
 
-class REveMagField {
+class REveMagField
+{
 protected:
    Bool_t fFieldConstant{kFALSE};
 
@@ -59,14 +61,15 @@ public:
    virtual REveVector GetField(Float_t, Float_t, Float_t) const { return REveVector(); }
    virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
 
-   // ClassDef(REveMagField, 0); // Abstract interface to magnetic field
 };
 
-//==============================================================================
-// REveMagFieldConst
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveMagFieldConst
+/// Interface to constant magnetic field.
+////////////////////////////////////////////////////////////////////////////////
 
-class REveMagFieldConst : public REveMagField {
+class REveMagFieldConst : public REveMagField
+{
 protected:
    REveVectorD fB;
 
@@ -77,15 +80,15 @@ public:
    REveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
 
    Double_t GetMaxFieldMagD() const override { return fB.Mag(); };
-
-   // ClassDef(REveMagFieldConst, 0); // Interface to constant magnetic field.
 };
 
-//==============================================================================
-// REveMagFieldDuo
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveMagFieldDuo
+/// Interface to magnetic field with two different values depending on radius.
+////////////////////////////////////////////////////////////////////////////////
 
-class REveMagFieldDuo : public REveMagField {
+class REveMagFieldDuo : public REveMagField
+{
 protected:
    REveVectorD fBIn;
    REveVectorD fBOut;
@@ -109,15 +112,16 @@ public:
       Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag();
       return b1 > b2 ? b1 : b2;
    }
-
-   // ClassDef(REveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
 };
 
-//==============================================================================
-// REveTrackPropagator
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// REveTrackPropagator
+/// Calculates path of a particle taking into account special path-marks and imposed boundaries.
+////////////////////////////////////////////////////////////////////////////////
 
-class REveTrackPropagator : public REveElementList, public REveRefBackPtr {
+class REveTrackPropagator : public REveElement,
+                            public REveRefBackPtr
+{
 public:
    enum EStepper_e { kHelix, kRungeKutta };
 
@@ -176,7 +180,7 @@ protected:
    EStepper_e fStepper;
 
    REveMagField *fMagFieldObj{nullptr};
-   Bool_t fOwnMagFiledObj;
+   Bool_t fOwnMagFiledObj{kFALSE};
 
    // Track extrapolation limits
    Double_t fMaxR; // Max radius for track extrapolation
@@ -214,60 +218,56 @@ protected:
    Helix_t fH;                            // Helix.
 
    void RebuildTracks();
-   void
-   Update(const REveVector4D &v, const REveVectorD &p, Bool_t full_update = kFALSE, Bool_t enforce_max_step = kFALSE);
+   void Update(const REveVector4D &v, const REveVectorD &p, Bool_t full_update = kFALSE, Bool_t enforce_max_step = kFALSE);
    void Step(const REveVector4D &v, const REveVectorD &p, REveVector4D &vOut, REveVectorD &pOut);
 
    Bool_t LoopToVertex(REveVectorD &v, REveVectorD &p);
    Bool_t LoopToLineSegment(const REveVectorD &s, const REveVectorD &r, REveVectorD &p);
-   void LoopToBounds(REveVectorD &p);
+   void   LoopToBounds(REveVectorD &p);
 
    Bool_t LineToVertex(REveVectorD &v);
-   void LineToBounds(REveVectorD &p);
+   void   LineToBounds(REveVectorD &p);
 
-   void StepRungeKutta(Double_t step, Double_t *vect, Double_t *vout);
+   void   StepRungeKutta(Double_t step, Double_t *vect, Double_t *vout);
 
-   Bool_t
-   HelixIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
-   Bool_t
-   LineIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
+   Bool_t HelixIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
+   Bool_t LineIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
    Bool_t PointOverVertex(const REveVector4D &v0, const REveVector4D &v, Double_t *p = 0);
 
-   void ClosestPointFromVertexToLineSegment(const REveVectorD &v, const REveVectorD &s, const REveVectorD &r,
-                                            Double_t rMagInv, REveVectorD &c);
+   void   ClosestPointFromVertexToLineSegment(const REveVectorD &v, const REveVectorD &s, const REveVectorD &r,
+                                              Double_t rMagInv, REveVectorD &c);
    Bool_t ClosestPointBetweenLines(const REveVectorD &, const REveVectorD &, const REveVectorD &, const REveVectorD &,
                                    REveVectorD &out);
 
 public:
-   REveTrackPropagator(const char *n = "REveTrackPropagator", const char *t = "", REveMagField *field = 0,
+   REveTrackPropagator(const std::string& n = "REveTrackPropagator", const std::string& t = "", REveMagField *field = nullptr,
                        Bool_t own_field = kTRUE);
    virtual ~REveTrackPropagator();
 
-   virtual void OnZeroRefCount();
+   void OnZeroRefCount() override;
 
-   virtual void CheckReferenceCount(const REveException &eh = "REveElement::CheckReferenceCount ");
+   void CheckReferenceCount(const std::string &from = "<unknown>") override;
 
-   virtual void ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE);
+   void StampAllTracks();
 
    // propagation
    void InitTrack(const REveVectorD &v, Int_t charge);
    void ResetTrack();
 
-   Int_t GetCurrentPoint() const;
+   Int_t    GetCurrentPoint() const;
    Double_t GetTrackLength(Int_t start_point = 0, Int_t end_point = -1) const;
 
-   virtual void GoToBounds(REveVectorD &p);
+   virtual void   GoToBounds(REveVectorD &p);
    virtual Bool_t GoToVertex(REveVectorD &v, REveVectorD &p);
    virtual Bool_t GoToLineSegment(const REveVectorD &s, const REveVectorD &r, REveVectorD &p);
 
    // REveVectorF wrappers
-   void InitTrack(const REveVectorF &v, Int_t charge);
-   void GoToBounds(REveVectorF &p);
+   void   InitTrack(const REveVectorF &v, Int_t charge);
+   void   GoToBounds(REveVectorF &p);
    Bool_t GoToVertex(REveVectorF &v, REveVectorF &p);
    Bool_t GoToLineSegment(const REveVectorF &s, const REveVectorF &r, REveVectorF &p);
 
-   Bool_t
-   IntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
+   Bool_t IntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
 
    void FillPointSet(REvePointSet *ps) const;
 
@@ -300,7 +300,7 @@ public:
    void SetRnrPTBMarkers(Bool_t x);
 
    REveVectorD GetMagField(Double_t x, Double_t y, Double_t z) { return fMagFieldObj->GetField(x, y, z); }
-   void PrintMagField(Double_t x, Double_t y, Double_t z) const;
+   void        PrintMagField(Double_t x, Double_t y, Double_t z) const;
 
    EStepper_e GetStepper() const { return fStepper; }
 
@@ -340,8 +340,6 @@ public:
 
    static Double_t fgEditorMaxR; // Max R that can be set in GUI editor.
    static Double_t fgEditorMaxZ; // Max Z that can be set in GUI editor.
-
-   ClassDef(REveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
 //______________________________________________________________________________

@@ -25,15 +25,18 @@ class RooArgSet ;
 class RooConstVar final : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  inline RooConstVar() { 
-    // Default constructor
-  }
+  RooConstVar() { }
   RooConstVar(const char *name, const char *title, Double_t value);
   RooConstVar(const RooConstVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooConstVar(*this,newname); }
   virtual ~RooConstVar();
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Return (constant) value.
+  virtual Double_t getValV(const RooArgSet*) const {
+    return _value;
+  }
+
   void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   virtual Bool_t isDerived() const { 
@@ -43,12 +46,11 @@ public:
 
 protected:
 
-  virtual Double_t evaluate() const { 
-    // Return value
-    return _value ; 
-  } ;
+  Double_t evaluate() const {
+    return _value;
+  }
 
-  Double_t _value ; // Constant value of self
+  Double_t _value{0.}; // Constant value of self
 
   ClassDef(RooConstVar,1) // Constant RooAbsReal value object
 };

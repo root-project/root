@@ -1,5 +1,0 @@
-<core:View
-   xmlns="sap.m"
-   xmlns:core="sap.ui.core"
-   controllerName="sap.ui.jsroot.controller.Panel">
-</core:View>

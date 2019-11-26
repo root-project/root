@@ -13,10 +13,6 @@ namespace REX = ROOT::Experimental;
 includes:      TEve*.h -> ROOT/TEve*.hxx
 include guard: ROOT_TEveVSD -> ROOT_TEveVSD_hxx
 
-ClassDef to include ROOT::Experimental::
-
-2. Remove ClassImps
-
 3. Remove Editor GL friends
 
 
@@ -32,8 +28,6 @@ Issues:
   - separate internal "links" - componds, parents, projectables/eds
   - separate hierarchy ?
   - request children separately ?
-
-* Get rid of ClassDefs ?
 
 * What does redraw do? We know which elements / scenes have changed.
   Has to be synchronized with expectations of the client.

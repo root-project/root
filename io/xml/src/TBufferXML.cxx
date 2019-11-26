@@ -42,32 +42,20 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TClassTable.h"
 #include "TDataType.h"
 #include "TExMap.h"
-#include "TMethodCall.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "RZip.h"
+#include "ROOT/RMakeUnique.hxx"
 
 ClassImp(TBufferXML);
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-TBufferXML::TBufferXML()
-   : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
-     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize/deserialize data to/from xml.
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
-TBufferXML::TBufferXML(TBuffer::EMode mode)
-   : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
-     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
+TBufferXML::TBufferXML(TBuffer::EMode mode) : TBufferText(mode)
 {
 }
 
@@ -77,8 +65,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0),
-     fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
+   : TBufferText(mode, file), TXMLSetup(*file)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
@@ -97,8 +84,6 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
 
 TBufferXML::~TBufferXML()
 {
-   while (fStack.size() > 0)
-      PopStack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,15 +267,13 @@ void *TBufferXML::XmlReadAny(XMLNodePointer_t node, void *obj, TClass **cl)
 // stored in TBuffer. For example, data for parent class(es)
 // stored in subnodes, but initial object node will be kept.
 
-class TXMLStackObj : public TObject {
+class TXMLStackObj {
 public:
-   TXMLStackObj(XMLNodePointer_t node)
-      : TObject(), fNode(node), fInfo(nullptr), fElem(nullptr), fElemNumber(0), fCompressedClassNode(kFALSE),
-        fClassNs(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE)
+   TXMLStackObj(XMLNodePointer_t node) : fNode(node)
    {
    }
 
-   virtual ~TXMLStackObj()
+   ~TXMLStackObj()
    {
       if (fIsElemOwner)
          delete fElem;
@@ -298,14 +281,14 @@ public:
 
    Bool_t IsStreamerInfo() const { return fIsStreamerInfo; }
 
-   XMLNodePointer_t fNode;
-   TStreamerInfo *fInfo;
-   TStreamerElement *fElem;
-   Int_t fElemNumber;
-   Bool_t fCompressedClassNode;
-   XMLNsPointer_t fClassNs;
-   Bool_t fIsStreamerInfo;
-   Bool_t fIsElemOwner;
+   XMLNodePointer_t fNode{nullptr};
+   TStreamerInfo *fInfo{nullptr};
+   TStreamerElement *fElem{nullptr};
+   Int_t fElemNumber{0};
+   Bool_t fCompressedClassNode{kFALSE};
+   XMLNsPointer_t fClassNs{nullptr};
+   Bool_t fIsStreamerInfo{kFALSE};
+   Bool_t fIsElemOwner{kFALSE};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,9 +301,8 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
       fXML->SkipEmpty(current);
    }
 
-   TXMLStackObj *stack = new TXMLStackObj(current);
-   fStack.push_back(stack);
-   return stack;
+   fStack.emplace_back(std::make_unique<TXMLStackObj>(current));
+   return fStack.back().get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -328,11 +310,9 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
 
 TXMLStackObj *TBufferXML::PopStack()
 {
-   if (fStack.size() > 0) {
-      delete fStack.back();
+   if (fStack.size() > 0)
       fStack.pop_back();
-   }
-   return fStack.size() > 0 ? Stack() : nullptr;
+   return fStack.size() > 0 ? fStack.back().get() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1314,6 +1294,7 @@ void TBufferXML::PerformPostProcessing()
       str = fXML->GetAttr(bitsnode, xmlio::v);
       UInt_t bits;
       sscanf(str.Data(), "%u", &bits);
+      bits = bits & ~TObject::kNotDeleted & ~TObject::kIsOnHeap;
 
       char sbuf[20];
       snprintf(sbuf, sizeof(sbuf), "%x", bits);
@@ -1389,8 +1370,9 @@ void TBufferXML::PerformPreProcessing(const TStreamerElement *elem, XMLNodePoint
       node = fXML->NewChild(elemnode, nullptr, xmlio::UInt);
       fXML->NewAttr(node, nullptr, xmlio::v, idstr);
 
-      UInt_t bits;
+      UInt_t bits = 0;
       sscanf(bitsstr.Data(), "%x", &bits);
+      bits = bits | TObject::kNotDeleted | TObject::kIsOnHeap;
       char sbuf[20];
       snprintf(sbuf, sizeof(sbuf), "%u", bits);
 

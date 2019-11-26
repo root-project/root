@@ -38,14 +38,11 @@ protected:
 
    class TLatexFormSize {
    private:
-      Double_t fWidth, fOver, fUnder;
+      Double_t fWidth{0}, fOver{0}, fUnder{0};
 
    public:
-      TLatexFormSize() : fWidth(0), fOver(0),fUnder(0) { } // constructeur par defaut
-      TLatexFormSize(Double_t x, Double_t y1, Double_t y2) : fWidth(x), fOver(y1), fUnder(y2) { } // constructeur
-      virtual ~TLatexFormSize() {} //destructeur
-      TLatexFormSize(const TLatexFormSize& form)
-         : fWidth(form.fWidth), fOver(form.fOver), fUnder(form.fUnder) { }
+      TLatexFormSize() = default;
+      TLatexFormSize(Double_t x, Double_t y1, Double_t y2) : fWidth(x), fOver(y1), fUnder(y2) { } // constructor
 
       // definition of operators + and +=
       TLatexFormSize operator+(TLatexFormSize f)

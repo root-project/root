@@ -45,8 +45,8 @@ private:
    TString fOptions;        // options/search (after ?)
    mutable TString fFileOA; //!file with option and anchor
    mutable TString fHostFQ; //!fully qualified host name
-   Int_t   fPort;           // port through which to contact remote server
-   mutable TMap *fOptionsMap; //!map containing options key/value pairs
+   Int_t   fPort{-1};       // port through which to contact remote server
+   mutable TMap *fOptionsMap{nullptr}; //!map containing options key/value pairs
 
    static TObjArray  *fgSpecialProtocols;  // list of special protocols
    static THashList  *fgHostFQDNs;         // list of resolved host FQDNs
@@ -56,8 +56,7 @@ private:
    enum EStatusBits { kUrlWithDefaultPort = BIT(14), kUrlHasDefaultPort = BIT(15) };
 
 public:
-   TUrl() : fUrl(), fProtocol(), fUser(), fPasswd(), fHost(), fFile(),
-            fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1), fOptionsMap(0) { }
+   TUrl() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
    TUrl &operator=(const TUrl &rhs);

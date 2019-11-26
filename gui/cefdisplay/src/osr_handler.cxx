@@ -1,9 +1,18 @@
 /// \file osr_handler.cxx
-/// \ingroup CanvasPainter ROOT7
+/// \ingroup WebGui
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -26,10 +35,6 @@ OsrHandler::OsrHandler(THttpServer *serv) : BaseHandler(serv)
 {
 }
 
-OsrHandler::~OsrHandler()
-{
-}
-
 bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
@@ -44,7 +49,17 @@ bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
    // return osr_delegate_->GetRootScreenRect(browser, rect);
 }
 
-bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
+#if CEF_COMMIT_NUMBER > 1894
+void OsrHandler::GetViewRect(CefRefPtr<CefBrowser> /*browser*/, CefRect &rect)
+{
+   CEF_REQUIRE_UI_THREAD();
+
+   rect.x = rect.y = 0;
+   rect.width = 800;
+   rect.height = 600;
+}
+#else
+bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> /*browser*/, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
@@ -53,10 +68,10 @@ bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
    rect.height = 600;
 
    return true;
-
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetViewRect(browser, rect);
 }
+#endif
 
 bool OsrHandler::GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY, int &screenX, int &screenY)
 {

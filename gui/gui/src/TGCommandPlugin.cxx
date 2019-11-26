@@ -62,10 +62,25 @@ TGCommandPlugin::TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h) :
                         gSystem->HomeDirectory())));
    FILE *lunin = fopen(defhist.Data(), "rt");
    if (lunin) {
+      ULong_t linecount = 0;
       char histline[256];
+      rewind(lunin);
+      while (fgets(histline, 256, lunin))
+         ++linecount;
+      rewind(lunin);
+      if (linecount > 500) {
+         linecount -= 500;
+         while(--linecount > 0)
+            if (!fgets(histline, 256, lunin))
+               break;
+      }
+      linecount = 0;
       while (fgets(histline, 256, lunin)) {
          histline[strlen(histline)-1] = 0; // remove trailing "\n"
          fComboCmd->InsertEntry(histline, 0, -1);
+         // limit the history size to 500 lines
+         if (++linecount > 500)
+            break;
       }
       fclose(lunin);
    }

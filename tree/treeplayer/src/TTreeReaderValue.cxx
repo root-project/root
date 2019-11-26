@@ -307,7 +307,7 @@ TBranch *ROOT::Internal::TTreeReaderValueBase::SearchBranchWithCompositeName(TLe
 
       while (!branch && branchName.Contains(".")){
          leafName = branchName(leafNameExpression);
-         branchName = branchName(0, fBranchName.Length() - leafName.Length());
+         branchName = branchName(0, branchName.Length() - leafName.Length());
          branch = fTreeReader->GetTree()->GetBranch(branchName);
          if (!branch) branch = fTreeReader->GetTree()->GetBranch(branchName + ".");
          nameStack.push_back(leafName.Strip(TString::kBoth, '.'));
@@ -457,7 +457,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       const char* brDataType = "{UNDETERMINED}";
       if (branchFromFullName) {
          TDictionary* brDictUnused = 0;
-         brDataType = GetBranchDataType(branchFromFullName, brDictUnused);
+         brDataType = GetBranchDataType(branchFromFullName, brDictUnused, fDict);
       }
       Error(errPrefix, "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
             GetDerivedTypeName(), fBranchName.Data(), brDataType);
@@ -537,7 +537,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    if (!myLeaf && !fHaveStaticClassOffsets) {
       // The following two lines cannot be swapped. The GetBranchDataType can
       // change the value of branchActualType
-      const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
+      const char* branchActualTypeName = GetBranchDataType(branch, branchActualType, fDict);
       if (!branchActualType) {
          Error(errPrefix, "The branch %s contains data of type %s, which does not have a dictionary.",
                fBranchName.Data(), branchActualTypeName ? branchActualTypeName : "{UNDETERMINED TYPE}");
@@ -545,7 +545,13 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
          return;
       }
 
-      if (fDict != branchActualType) {
+      // Check if the dictionaries are TClass instances and if there is inheritance
+      // because in this case, we can read the values.
+      auto dictAsClass = dynamic_cast<TClass*>(fDict);
+      auto branchActualTypeAsClass = dynamic_cast<TClass*>(branchActualType);
+      auto inheritance = dictAsClass && branchActualTypeAsClass && branchActualTypeAsClass->InheritsFrom(dictAsClass);
+
+      if (fDict != branchActualType && !inheritance) {
          TDataType *dictdt = dynamic_cast<TDataType*>(fDict);
          TDataType *actualdt = dynamic_cast<TDataType*>(branchActualType);
          bool complainAboutMismatch = true;
@@ -657,7 +663,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
 /// its type name should be returned.
 
 const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
-                                           TDictionary* &dict) const
+                                           TDictionary* &dict,
+                                           TDictionary const *curDict)
 {
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
@@ -670,10 +677,10 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
          if (dict->IsA() != TDataType::Class()) {
             // Might be a class.
-            if (dict != fDict) {
+            if (dict != curDict) {
                dict = TClass::GetClass(brElement->GetTypeName());
             }
-            if (dict != fDict) {
+            if (dict != curDict) {
                dict = brElement->GetCurrentClass();
             }
          }

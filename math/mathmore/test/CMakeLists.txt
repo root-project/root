@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 project(mathmore-tests)
 find_package(ROOT REQUIRED)
 
@@ -27,6 +33,8 @@ set(TestMathMoreSource
 
 set(testFunctor_LABELS longtest)
 set(testPermute_LABELS longtest)
+set(testRandom_LABELS longtest)
+set(testMCIntegration_LABELS longtest)
 
 if(ROOT_unuran_FOUND)
   list(APPEND Libraries Unuran)

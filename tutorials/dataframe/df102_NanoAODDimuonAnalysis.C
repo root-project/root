@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_dataframe
-/// \notebook -draw
+/// \notebook -js
 /// This tutorial illustrates how NanoAOD files can be processed with ROOT
 /// dataframes. The NanoAOD-like input files are filled with 66 mio. events
 /// from CMS OpenData containing muon candidates part of 2012 dataset
@@ -26,7 +26,7 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TLatex.h"
-#include "TLorentzVector.h"
+#include "Math/Vector4D.h"
 #include "TStyle.h"
 
 using namespace ROOT::VecOps;
@@ -46,16 +46,7 @@ void df102_NanoAODDimuonAnalysis()
    auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
 
    // Compute invariant mass of the dimuon system
-   auto compute_mass = [](RVec<float> &pt, RVec<float> &eta, RVec<float> &phi, RVec<float> &mass) {
-      // Compose four-vectors of both muons
-      TLorentzVector p1, p2;
-      p1.SetPtEtaPhiM(pt[0], eta[0], phi[0], mass[0]);
-      p2.SetPtEtaPhiM(pt[1], eta[1], phi[1], mass[1]);
-
-      // Add four-vectors to build dimuon system and return the invariant mass
-      return (p1 + p2).M();
-   };
-   auto df_mass = df_os.Define("Dimuon_mass", compute_mass, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
+   auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
 
    // Make histogram of dimuon mass spectrum
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");

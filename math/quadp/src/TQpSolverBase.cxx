@@ -40,16 +40,16 @@
  * WITH THE DEPARTMENT OF ENERGY.                                        *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSolverBase                                                          //
-//                                                                      //
-// The Solver class contains methods for monitoring and checking the    //
-// convergence status of the algorithm, methods to determine the step   //
-// length along a given direction, methods to define the starting point,//
-// and the solve method that implements the interior-point algorithm    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+/// \class TQpSolverBase
+///
+/// The Solver class contains methods for monitoring and checking the
+/// convergence status of the algorithm, methods to determine the step
+/// length along a given direction, methods to define the starting point,
+/// and the solve method that implements the interior-point algorithm
+///
+////////////////////////////////////////////////////////////////////////////////
 
 #include "TMath.h"
 #include "TQpSolverBase.h"

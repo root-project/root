@@ -364,7 +364,7 @@ void TPainter3dAlgorithms::ClearRaster()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set correspondance between function and color levels
+/// Set correspondence between function and color levels
 ///
 /// \param[in] nl   number of levels
 /// \param[in] fl   function levels
@@ -498,7 +498,7 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *, Double_t *xyz, Int_t np, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw face - 2nd option (fill in correspondance with function levels)
+/// Draw face - 2nd option (fill in correspondence with function levels)
 ///
 /// \param[in] icodes   set of codes for the line (not used in this method)
 /// \param[in] xyz   coordinates of nodes

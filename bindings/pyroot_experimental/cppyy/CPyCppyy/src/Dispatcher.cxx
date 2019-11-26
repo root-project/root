@@ -2,6 +2,9 @@
 #include "CPyCppyy.h"
 #include "Dispatcher.h"
 #include "CPPScope.h"
+#include "PyStrings.h"
+#include "ProxyWrappers.h"
+#include "TypeManip.h"
 #include "Utility.h"
 
 // Standard
@@ -9,24 +12,73 @@
 
 
 //----------------------------------------------------------------------------
+static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& mtCppName, std::ostringstream& code)
+{
+// inject implementation for an overridden method
+    using namespace CPyCppyy;
+
+// method declaration
+    std::string retType = Cppyy::GetMethodResultType(method);
+    code << "  " << retType << " " << mtCppName << "(";
+
+// build out the signature with predictable formal names
+    Cppyy::TCppIndex_t nArgs = Cppyy::GetMethodNumArgs(method);
+    std::vector<std::string> argtypes; argtypes.reserve(nArgs);
+    for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
+        argtypes.push_back(Cppyy::GetMethodArgType(method, i));
+        if (i != 0) code << ", ";
+        code << argtypes.back() << " arg" << i;
+    }
+    code << ") ";
+    if (Cppyy::IsConstMethod(method)) code << "const ";
+    code << "{\n";
+
+// start function body
+    Utility::ConstructCallbackPreamble(retType, argtypes, code);
+
+// perform actual method call
+#if PY_VERSION_HEX < 0x03000000
+    code << "    PyObject* mtPyName = PyString_FromString(\"" << mtCppName << "\");\n" // TODO: intern?
+#else
+    code << "    PyObject* mtPyName = PyUnicode_FromString(\"" << mtCppName << "\");\n"
+#endif
+            "    PyObject* pyresult = PyObject_CallMethodObjArgs((PyObject*)m_self, mtPyName";
+    for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i)
+        code << ", pyargs[" << i << "]";
+    code << ", NULL);\n    Py_DECREF(mtPyName);\n";
+
+// close
+    Utility::ConstructCallbackReturn(retType == "void", nArgs, code);
+}
+
+//----------------------------------------------------------------------------
 bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 {
 // Scan all methods in dct and where it overloads base methods in klass, create
 // dispatchers on the C++ side. Then interject the dispatcher class.
-    if (Cppyy::IsNamespace(klass->fCppType) || !PyDict_Check(dct))
+    if (Cppyy::IsNamespace(klass->fCppType) || !PyDict_Check(dct)) {
+        PyErr_Format(PyExc_TypeError,
+            "%s not an acceptable base: is namespace or has no dict", Cppyy::GetScopedFinalName(klass->fCppType).c_str());
         return false;
+    }
+
+    if (!Cppyy::HasVirtualDestructor(klass->fCppType)) {
+        PyErr_Format(PyExc_TypeError,
+            "%s not an acceptable base: no virtual destructor", Cppyy::GetScopedFinalName(klass->fCppType).c_str());
+        return false;
+    }
 
     if (!Utility::IncludePython())
         return false;
 
-    const std::string& baseName       = Cppyy::GetFinalName(klass->fCppType);
+    const std::string& baseName       = TypeManip::template_base(Cppyy::GetFinalName(klass->fCppType));
     const std::string& baseNameScoped = Cppyy::GetScopedFinalName(klass->fCppType);
 
 // once classes can be extended, should consider re-use; for now, since derived
 // python classes can differ in what they override, simply use different shims
     static int counter = 0;
     std::ostringstream osname;
-    osname << baseName << ++counter;
+    osname << "Dispatcher" << ++counter;
     const std::string& derivedName = osname.str();
 
 // generate proxy class with the relevant method dispatchers
@@ -35,72 +87,107 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
 // start class declaration
     code << "namespace __cppyy_internal {\n"
          << "class " << derivedName << " : public ::" << baseNameScoped << " {\n"
-            "  PyObject* m_self;\n"
+            "  CPyCppyy::DispatchPtr m_self;\n"
             "public:\n";
 
-// constructors are simply inherited
-    code << "  using " << baseName << "::" << baseName << ";\n";
+// add a virtual destructor for good measure
+    code << "  virtual ~" << derivedName << "() {}\n";
 
-// methods
+// methods: first collect all callables, then get overrides from base class, for
+// those that are still missing, search the hierarchy
+    PyObject* clbs = PyDict_New();
+    PyObject* items = PyDict_Items(dct);
+    for (Py_ssize_t i = 0; i < PyList_GET_SIZE(items); ++i) {
+        PyObject* value = PyTuple_GET_ITEM(PyList_GET_ITEM(items, i), 1);
+        if (PyCallable_Check(value))
+            PyDict_SetItem(clbs, PyTuple_GET_ITEM(PyList_GET_ITEM(items, i), 0), value);
+    }
+    Py_DECREF(items);
+    if (PyDict_DelItem(clbs, PyStrings::gInit) != 0)
+        PyErr_Clear();
+
+// simple case: methods from current class
+    bool has_default = false;
+    bool has_cctor = false;
+    bool has_constructors = false;
     const Cppyy::TCppIndex_t nMethods = Cppyy::GetNumMethods(klass->fCppType);
     for (Cppyy::TCppIndex_t imeth = 0; imeth < nMethods; ++imeth) {
         Cppyy::TCppMethod_t method = Cppyy::GetMethod(klass->fCppType, imeth);
 
+        if (Cppyy::IsConstructor(method)) {
+            has_constructors = true;
+            Cppyy::TCppIndex_t nreq = Cppyy::GetMethodReqArgs(method);
+            if (nreq == 0)
+                has_default = true;
+            else if (nreq == 1) {
+                if (TypeManip::clean_type(Cppyy::GetMethodArgType(method, 0), false) == baseNameScoped)
+                    has_cctor = true;
+            }
+            continue;
+        }
+
         std::string mtCppName = Cppyy::GetMethodName(method);
-        PyObject* key = CPyCppyy_PyUnicode_FromString(mtCppName.c_str());
+        PyObject* key = CPyCppyy_PyText_FromString(mtCppName.c_str());
         int contains = PyDict_Contains(dct, key);
-        Py_DECREF(key);
         if (contains == -1) PyErr_Clear();
-        if (contains != 1) continue;
-
-    // method declaration
-        std::string retType = Cppyy::GetMethodResultType(method);
-        code << "  " << retType << " " << mtCppName << "(";
-
-    // build out the signature with predictable formal names
-        Cppyy::TCppIndex_t nArgs = Cppyy::GetMethodNumArgs(method);
-        for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
-            if (i != 0) code << ", ";
-            code << Cppyy::GetMethodArgType(method, i) << " arg" << i;
+        if (contains != 1) {
+            Py_DECREF(key);
+            continue;
         }
-        code << ") {\n";
 
-    // function body (TODO: if the method throws a C++ exception, the GIL will
-    // not be released.)
-        code << "    static std::unique_ptr<CPyCppyy::Converter> retconv{(CPyCppyy::Converter*)cppyy_create_converter(\"" << retType << "\", nullptr)};\n";
-        for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
-            code << "    static std::unique_ptr<CPyCppyy::Converter> arg" << i
-                         << "conv{(CPyCppyy::Converter*)cppyy_create_converter(\"" << Cppyy::GetMethodArgType(method, i) << "\", nullptr)};\n";
-        }
-        code << "    " << retType << " ret{};\n"
-                "    PyGILState_STATE state = PyGILState_Ensure();\n";
+        InjectMethod(method, mtCppName, code);
 
-    // build argument tuple if needed
-        for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i) {
-             code << "    PyObject* pyarg" << i << " = arg" << i << "conv->FromMemory(&arg" << i << ");\n";
-        }
-#if PY_VERSION_HEX < 0x03000000
-        code << "    PyObject* mtPyName = PyString_FromString(\"" << mtCppName << "\");\n" // TODO: intern?
-#else
-        code << "    PyObject* mtPyName = PyUnicode_FromString(\"" << mtCppName << "\");\n"
-#endif
-                "    PyObject* pyresult = PyObject_CallMethodObjArgs(m_self, mtPyName";
-        for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i)
-             code << ", pyarg" << i;
-        code << ", NULL);\n    Py_DECREF(mtPyName);\n";
-
-    // handle return value
-        for (Cppyy::TCppIndex_t i = 0; i < nArgs; ++i)
-             code << "    Py_DECREF(pyarg" << i << ");\n";
-        code << "  if (pyresult) { retconv->ToMemory(pyresult, &ret); Py_DECREF(pyresult); }\n"
-                "  else { PyGILState_Release(state); throw CPyCppyy::TPyException{}; }\n"
-                "  PyGILState_Release(state);\n"
-                "  return ret;\n"
-                "  }\n";
+        if (PyDict_DelItem(clbs, key) != 0)
+            PyErr_Clear();        // happens for overloads
+        Py_DECREF(key);
     }
+
+// try to locate left-overs in base classes
+    if (PyDict_Size(clbs)) {
+        size_t nbases = Cppyy::GetNumBases(klass->fCppType);
+        for (size_t ibase = 0; ibase < nbases; ++ibase) {
+            Cppyy::TCppScope_t tbase = (Cppyy::TCppScope_t)Cppyy::GetScope( \
+                Cppyy::GetBaseName(klass->fCppType, ibase));
+
+            PyObject* keys = PyDict_Keys(clbs);
+            for (Py_ssize_t i = 0; i < PyList_GET_SIZE(keys); ++i) {
+            // TODO: should probably invert this looping; but that makes handling overloads clunky
+                PyObject* key = PyList_GET_ITEM(keys, i);
+                std::string mtCppName = CPyCppyy_PyText_AsString(key);
+                const auto& v = Cppyy::GetMethodIndicesFromName(tbase, mtCppName);
+                for (auto idx : v)
+                    InjectMethod(Cppyy::GetMethod(tbase, idx), mtCppName, code);
+                if (!v.empty()) {
+                    if (PyDict_DelItem(clbs, key) != 0) PyErr_Clear();
+                }
+             }
+             Py_DECREF(keys);
+        }
+    }
+    Py_DECREF(clbs);
+
+// constructors: most are simply inherited, for use by the Python derived class
+    code << "  using " << baseName << "::" << baseName << ";\n";
+
+// for working with C++ templates, additional constructors are needed to make
+// sure the python object is properly carried, but they can only be generated
+// if the base class supports them
+    if (has_default || !has_constructors)
+        code << "  " << derivedName << "() {}\n"
+             << "  " << derivedName << "(PyObject* pyobj) : m_self(pyobj) {}\n";
+    if (has_default || has_cctor || !has_constructors) {
+        code << "  " << derivedName << "(const " << derivedName << "& other) : ";
+        if (has_cctor)
+            code << baseName << "(other), ";
+        code << "m_self(other.m_self, this) {}\n";
+    }
+
+// destructor: default is fine
 
 // finish class declaration
     code << "};\n}";
+
+// finally, compile the code
     if (!Cppyy::Compile(code.str()))
         return false;
 
@@ -109,6 +196,12 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* dct)
     Cppyy::TCppScope_t disp = Cppyy::GetScope("__cppyy_internal::"+derivedName);
     if (!disp) return false;
     klass->fCppType = disp;
+
+// at this point, the dispatcher only lives in C++, as opposed to regular classes
+// that are part of the hierarchy in Python, so create it, which will cache it for
+// later use by e.g. the MemoryRegulator
+    PyObject* disp_proxy = CPyCppyy::CreateScopeProxy(disp);
+    Py_XDECREF(disp_proxy);
 
     return true;
 }

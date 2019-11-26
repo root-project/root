@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Author: Matevz Tadel 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,7 +19,14 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveSelection : public REveElementList {
+////////////////////////////////////////////////////////////////////////////////
+/// REveSelection
+/// Container for selected and highlighted elements.
+////////////////////////////////////////////////////////////////////////////////
+
+class REveSelection : public REveElement,
+                      public REveAunt
+{
 public:
    enum EPickToSelect   // How to convert picking events to top selected element:
    { kPS_Ignore,        // ignore picking
@@ -30,50 +37,90 @@ public:
      kPS_Master         // select master element (top-level compound)
    };
 
+   struct Record
+   {
+      REveElement    *f_primary{nullptr}; ///<! it's also implied through the map -- XXXX do i need it ????
+      Set_t           f_implied;
+      std::set<int>   f_sec_idcs;
+      bool            f_is_sec{false};   ///<! is secondary-selected -- XXXX do i need it ????
+
+      Record(REveElement *el) :
+         f_primary (el),
+         f_is_sec  (false)
+      {
+         // Apparently done in DoElementSelect
+         // el->FillImpliedSelectedSet(f_implied);
+      }
+
+      Record(REveElement *el, const std::set<int>& secondary_idcs) :
+         f_primary  (el),
+         f_sec_idcs (secondary_idcs),
+         f_is_sec   (true)
+      {
+         // Apparently done in DoElementSelect
+         // el->FillImpliedSelectedSet(f_implied);
+      }
+
+      bool is_secondary() const { return f_is_sec; }
+   };
+
+   typedef std::map<REveElement*, Record>  SelMap_t;
+   typedef SelMap_t::iterator              SelMap_i;
+
 private:
    REveSelection(const REveSelection &);            // Not implemented
    REveSelection &operator=(const REveSelection &); // Not implemented
 
 protected:
-   typedef std::map<REveElement *, Set_t> SelMap_t;
-   typedef std::map<REveElement *, Set_t>::iterator SelMap_i;
+   Color_t          fVisibleEdgeColor; ///<!
+   Color_t          fHiddenEdgeColor;  ///<!
 
-   Int_t fPickToSelect;
-   Bool_t fActive;
-   Bool_t fIsMaster;
+   std::vector<int> fPickToSelect;     ///<!
+   Bool_t           fActive{kFALSE};   ///<!
+   Bool_t           fIsMaster{kFALSE}; ///<!
 
-   SelMap_t fImpliedSelected;
+   SelMap_t         fMap;              ///<!
 
-   Select_foo fSelElement;
-   ImplySelect_foo fIncImpSelElement;
-   ImplySelect_foo fDecImpSelElement;
+   Record* find_record(REveElement *el)
+   {
+      auto i = fMap.find(el);
+      return i != fMap.end() ? & i->second : nullptr;
+   }
 
-   void DoElementSelect(SelMap_i entry);
-   void DoElementUnselect(SelMap_i entry);
+   void DoElementSelect  (SelMap_i &entry);
+   void DoElementUnselect(SelMap_i &entry);
 
-   void RecheckImpliedSet(SelMap_i smi);
+   void RecheckImpliedSet(SelMap_i &entry);
 
 public:
-   REveSelection(const char *n = "REveSelection", const char *t = "");
-   virtual ~REveSelection() {}
+   REveSelection(const std::string &n = "REveSelection", const std::string &t = "",
+                 Color_t col_visible = kViolet, Color_t col_hidden = kPink);
+   virtual ~REveSelection();
 
-   void SetHighlightMode();
+   void   SetVisibleEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
+   void   SetHiddenEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
 
-   Int_t GetPickToSelect() const { return fPickToSelect; }
-   void SetPickToSelect(Int_t ps) { fPickToSelect = ps; }
+   void   SetHighlightMode();
 
-   Bool_t GetIsMaster() const { return fIsMaster; }
-   void SetIsMaster(Bool_t m) { fIsMaster = m; }
+   const std::vector<int>& RefPickToSelect()  const { return fPickToSelect; }
+   void   ClearPickToSelect()     { fPickToSelect.clear(); }
+   void   AddPickToSelect(int ps) { fPickToSelect.push_back(ps); }
 
-   virtual Bool_t AcceptElement(REveElement *el);
+   Bool_t GetIsMaster()   const { return fIsMaster; }
+   void   SetIsMaster(Bool_t m) { fIsMaster = m; }
 
-   virtual void AddElement(REveElement *el);
-   virtual void RemoveElement(REveElement *el);
-   virtual void RemoveElementLocal(REveElement *el);
-   virtual void RemoveElements();
-   virtual void RemoveElementsLocal();
+   bool   IsEmpty()  const { return   fMap.empty(); }
+   bool   NotEmpty() const { return ! fMap.empty(); }
 
-   virtual void RemoveImpliedSelected(REveElement *el);
+   // Abstract methods of REveAunt
+   bool HasNiece(REveElement *el) const override;
+   bool HasNieces() const override;
+   bool AcceptNiece(REveElement *el) override;
+   void AddNieceInternal(REveElement *el) override;
+   void RemoveNieceInternal(REveElement *el) override;
+   void RemoveNieces() override;
+
+   void RemoveImpliedSelected(REveElement *el);
 
    void RecheckImpliedSetForElement(REveElement *el);
 
@@ -97,9 +144,15 @@ public:
    virtual void UserRePickedElement(REveElement *el);
    virtual void UserUnPickedElement(REveElement *el);
 
+   void NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs={});
+   void ClearSelection();
+
+   int  RemoveImpliedSelectedReferencesTo(REveElement *el);
+
    // ----------------------------------------------------------------
 
-   ClassDef(REveSelection, 0); // Container for selected and highlighted elements.
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+
 };
 
 } // namespace Experimental

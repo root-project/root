@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+## \file
+## \ingroup tutorial_tmva_keras
+## \notebook -nodraw
+## This tutorial shows how to do multiclass classification in TMVA with neural
+## networks trained with keras.
+##
+## \macro_code
+##
+## \date 2017
+## \author TMVA Team
 
 from ROOT import TMVA, TFile, TTree, TCut, gROOT
 from os.path import isfile

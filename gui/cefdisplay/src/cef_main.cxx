@@ -1,6 +1,21 @@
+/// \file cef_main.cxx
+/// \ingroup WebGui
+/// \author Sergey Linev <S.Linev@gsi.de>
+/// \date 2017-06-29
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
+
 // Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
+
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -41,7 +56,7 @@ private:
 // Entry point function for all processes.
 int main(int argc, char *argv[])
 {
-   // printf("Starting CEF_MAIN ARGC %d\n", argc);
+   printf("Starting CEF_MAIN ARGC %d\n", argc);
    // for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
 
 #if defined(OS_WIN)

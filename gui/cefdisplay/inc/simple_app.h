@@ -1,9 +1,24 @@
+/// \file simple_app.h
+/// \ingroup WebGui
+/// \author Sergey Linev <S.Linev@gsi.de>
+/// \date 2017-06-29
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
+
 // Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
-#define CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
+/*************************************************************************
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT_cef_simple_app
+#define ROOT_cef_simple_app
 
 #include "include/cef_app.h"
 
@@ -15,11 +30,11 @@ class THttpServer;
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
 protected:
-   std::string fCefMain;   ///<! extra executable used for additional processes
-   bool fLastBatch{false}; ///<! indicate if last started window was batch
-   std::string fFirstUrl;     ///<! first URL to open
-   bool fFirstBatch{false};   ///<! indicate batch mode
-   CefRect fFirstRect;        ///<! original width
+   std::string fCefMain;    ///<! extra executable used for additional processes
+   bool fLastBatch{false};  ///<! indicate if last started window was batch
+   std::string fFirstUrl;   ///<! first URL to open
+   bool fFirstBatch{false}; ///<! indicate batch mode
+   CefRect fFirstRect;      ///<! original width
 
    CefRefPtr<OsrHandler> fOsrHandler; ///<! batch-mode handler
    bool fUseViewes{false};            ///<! is views are used
@@ -27,7 +42,6 @@ protected:
 
 public:
    SimpleApp(const std::string &cef_main, const std::string &url = "", bool isbatch = false, int width = 0, int height = 0);
-   virtual ~SimpleApp();
 
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
@@ -55,4 +69,4 @@ private:
    DISALLOW_COPY_AND_ASSIGN(SimpleApp);
 };
 
-#endif // CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
+#endif // ROOT_cef_simple_app

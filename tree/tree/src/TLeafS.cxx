@@ -179,6 +179,14 @@ void TLeafS::ReadBasket(TBuffer &b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Deserialize input by performing byteswap as needed.
+bool TLeafS::ReadBasketFast(TBuffer& input_buf, Long64_t N)
+{
+   if (R__unlikely(fLeafCount)) {return false;}
+   return input_buf.ByteSwapBuffer(fLen*N, kShort_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read leaf elements from Basket input buffer and export buffer to
 /// TClonesArray objects.
 

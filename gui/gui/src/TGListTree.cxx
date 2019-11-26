@@ -1235,7 +1235,6 @@ void TGListTree::LineUp(Bool_t /*select*/)
    Int_t height = 0;
    if (!fCurrent) return;
 
-   TGDimension dim = GetPageDimension();
    TGPosition pos = GetPagePosition();
    const TGPicture *pic1 = fCurrent->GetPicture();
    if (pic1) height = pic1->GetHeight() + fVspacing;

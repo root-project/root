@@ -92,9 +92,9 @@ protected:
       Int_t fVirtAccumCache = 0;
    };
 
-   TTree       *fTree;            //! pointer to Tree
-   Int_t        fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
-   Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
+   TTree      *fTree;             //! pointer to Tree
+   Int_t       fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
+   Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or data member.
    Int_t       fNcodes;           //  Number of leaves referenced in formula
    Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not
    Int_t       fMultiplicity;     //  Indicator of the variability of the formula
@@ -106,7 +106,7 @@ protected:
    TObjArray   fExternalCuts;     //!  List of TCutG and TEntryList used in the formula
    TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
    TObjArray   fLeafNames;        //   List of TNamed describing leaves
-   TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaces but duplicates are zeroed out.
+   TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaves but duplicates are zeroed out.
    Bool_t      fQuickLoad;        //!  If true, branch GetEntry is only called when the entry number changes.
    Bool_t      fNeedLoading;      //!  If true, the current entry has not been loaded yet.
 
@@ -164,8 +164,8 @@ protected:
 
 private:
    // Not implemented yet
-   TTreeFormula(const TTreeFormula&);
-   TTreeFormula& operator=(const TTreeFormula&);
+   TTreeFormula(const TTreeFormula&) = delete;
+   TTreeFormula& operator=(const TTreeFormula&) = delete;
 
    template<typename T> T GetConstant(Int_t k);
 

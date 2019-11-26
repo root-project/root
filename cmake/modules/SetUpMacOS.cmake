@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 set(ROOT_ARCHITECTURE macosx)
 set(ROOT_PLATFORM macosx)
 
@@ -41,10 +47,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   endif()
   if(MACOSX_VERSION VERSION_GREATER 10.8)
     set(MACOSX_GLU_DEPRECATED ON)
-    set(MACOSX_KRB5_DEPRECATED ON)
-  endif()
-  if(MACOSX_VERSION VERSION_GREATER 10.9)
-    set(MACOSX_LDAP_DEPRECATED ON)
   endif()
 
   if (CMAKE_COMPILER_IS_GNUCXX)
@@ -63,16 +65,10 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      # Select flags.
      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
      set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
-     set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O3 -ffast-math -DNDEBUG")
      set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-     set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3")
-     set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -ftest-coverage -fprofile-arcs")
      set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
      set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
-     set(CMAKE_C_FLAGS_OPTIMIZED        "-O3 -ffast-math -DNDEBUG")
      set(CMAKE_C_FLAGS_DEBUG            "-g")
-     set(CMAKE_C_FLAGS_DEBUGFULL        "-g3")
-     set(CMAKE_C_FLAGS_PROFILE          "-g3 -ftest-coverage -fprofile-arcs")
   elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
      message(STATUS "Found LLVM compiler collection")
 
@@ -93,16 +89,10 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      # Select flags.
      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
      set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -DNDEBUG")
-     set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O3 -ffast-math -DNDEBUG")
      set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-     set(CMAKE_CXX_FLAGS_DEBUGFULL      "-g3")
-     set(CMAKE_CXX_FLAGS_PROFILE        "-g3 -ftest-coverage -fprofile-arcs")
      set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
      set(CMAKE_C_FLAGS_RELEASE          "-O2 -DNDEBUG")
-     set(CMAKE_C_FLAGS_OPTIMIZED        "-O3 -ffast-math -DNDEBUG")
      set(CMAKE_C_FLAGS_DEBUG            "-g")
-     set(CMAKE_C_FLAGS_DEBUGFULL        "-g3")
-     set(CMAKE_C_FLAGS_PROFILE          "-g3 -ftest-coverage -fprofile-arcs")
   else()
     MESSAGE(FATAL_ERROR "There is no setup for this compiler with ID=${CMAKE_CXX_COMPILER_ID} up to now. Don't know what to do. Stop cmake at this point.")
   endif()

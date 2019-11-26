@@ -120,6 +120,9 @@ void cleanup();
 
 int main(int argc, char **argv)
 {
+   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
+   TROOT::AddExtraInterpreterArgs({inclRootSys});
+
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
@@ -361,7 +364,11 @@ void stress2()
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 1.5 || comp > 2.1)
          OK = kFALSE;
 #else
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+      Long64_t lastgood = 9813;
+#else
       Long64_t lastgood = 10034;  // changes in TFormula (v12)
+#endif
       if (last < lastgood - 200 || last > lastgood + 200 || comp < 2.0 || comp > 2.4)
          OK = kFALSE;
 #endif
@@ -394,8 +401,12 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
+#ifdef R__HAS_CLOUDFLARE_ZLIB
+   constexpr Long64_t lastgood = 52027;
+#else
    constexpr Long64_t lastgood = 51886;
-   constexpr Long64_t tolerance = 100;
+#endif
+   constexpr Long64_t tolerance = 150;
 #ifdef R__HAS_DEFAULT_LZ4
       constexpr Long64_t difflastgoodlz4 = 5500;
       if (last < lastgood - tolerance || last > lastgood + difflastgoodlz4 + tolerance || comp < 1.5 || comp > 2.1)

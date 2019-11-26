@@ -23,7 +23,7 @@ Wikipedia and several sources refer to the Gamma distribution as
 G(\mu,\alpha,\beta) = \beta^\alpha \mu^{(\alpha-1)} \frac{e^{(-\beta \mu)}}{\Gamma(\alpha)}
 \f]
 
-Below is the correspondance:
+Below is the correspondence:
 
 | Wikipedia       | This Implementation      |
 |-----------------|--------------------------|
@@ -43,27 +43,23 @@ Also note, that in this case it is equivalent to
 RooPoison(N,mu) and treating the function as a PDF in mu.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooGamma.h"
+
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooMath.h"
+#include "RooHelpers.h"
+#include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
 
-#include <iostream>
 #include "TMath.h"
-
 #include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
-#include "TError.h"
-
+#include <iostream>
+#include <cmath>
 using namespace std;
 
 ClassImp(RooGamma);
@@ -79,6 +75,7 @@ RooGamma::RooGamma(const char *name, const char *title,
   beta("beta","Width",this,_beta),
   mu("mu","Para",this,_mu)
 {
+  RooHelpers::checkRangeOfParameters(this, {&_gamma, &_beta}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,9 +90,86 @@ RooGamma::RooGamma(const RooGamma& other, const char* name) :
 
 Double_t RooGamma::evaluate() const
 {
-  Double_t arg= x ;
-  Double_t ret = TMath::GammaDist(arg, gamma, mu, beta) ;
-  return ret ;
+  return TMath::GammaDist(x, gamma, mu, beta) ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+//Author: Emmanouil Michalainas, CERN 22 August 2019
+
+template<class Tx, class Tgamma, class Tbeta, class Tmu>
+void compute(	size_t batchSize,
+              double * __restrict output,
+              Tx X, Tgamma G, Tbeta B, Tmu M)
+{
+  constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+  for (size_t i=0; i<batchSize; i++) {
+    if (X[i]<M[i] || G[i] <= 0.0 || B[i] <= 0.0) {
+      output[i] = NaN;
+    }
+    if (X[i] == M[i]) {
+      output[i] = (G[i]==1.0)/B[i];
+    } 
+    else {
+      output[i] = 0.0;
+    }
+  }
+  
+  if (G.isBatch()) {
+    for (size_t i=0; i<batchSize; i++) {
+      if (output[i] == 0.0) {
+        output[i] = -std::lgamma(G[i]);
+      }
+    }
+  }
+  else {
+    double gamma = -std::lgamma(G[2019]);
+    for (size_t i=0; i<batchSize; i++) {
+      if (output[i] == 0.0) {
+        output[i] = gamma;
+      }
+    }
+  }
+  
+  for (size_t i=0; i<batchSize; i++) {
+    if (X[i] != M[i]) {
+      const double invBeta = 1/B[i];
+      double arg = (X[i]-M[i])*invBeta;
+      output[i] -= arg;
+      arg = _rf_fast_log(arg);
+      output[i] += arg*(G[i]-1);
+      output[i] = _rf_fast_exp(output[i]);
+      output[i] *= invBeta;
+    }
+  }
+}
+};
+
+RooSpan<double> RooGamma::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+
+  EvaluateInfo info = getInfo( {&x, &gamma, &beta, &mu}, begin, batchSize );
+  if (info.nBatches == 0) {
+    return {};
+  }
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto xData = x.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !xData.empty()) {
+    compute(info.size, output.data(), xData.data(),
+    BracketAdapter<double> (gamma),
+    BracketAdapter<double> (beta),
+    BracketAdapter<double> (mu));
+  }
+  else {
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (gamma,gamma.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (beta,beta.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (mu,mu.getValBatch(begin,info.size)));
+  }
+  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,3 +244,5 @@ void RooGamma::generateEvent(Int_t code)
 
   return;
 }
+
+

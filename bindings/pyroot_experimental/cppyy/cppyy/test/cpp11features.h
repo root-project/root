@@ -1,5 +1,6 @@
 #if __cplusplus >= 201103L
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -12,10 +13,24 @@ public:
 public:
     TestSharedPtr() { ++s_counter; }
     TestSharedPtr(const TestSharedPtr&) { ++s_counter; }
-    ~TestSharedPtr() { --s_counter; }
+    virtual ~TestSharedPtr() { --s_counter; }
+
+public:
+    virtual int get_value();
 };
 
 std::shared_ptr<TestSharedPtr> create_shared_ptr_instance();
+
+class DerivedTestSharedPtr : TestSharedPtr {
+public:
+    DerivedTestSharedPtr(int i) : m_int(i) {}
+    virtual int get_value();
+
+public:
+    int m_int;
+};
+
+int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p);
 
 
 //===========================================================================
@@ -67,5 +82,18 @@ public:
 private:
     std::vector<T> m_data;
 };
+
+
+//===========================================================================
+struct FNTestStruct {        // for std::function<> testing
+     FNTestStruct(int i) : t(i) {}
+     int t;
+};
+std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc();
+
+namespace FunctionNS {
+    struct FNTestStruct { FNTestStruct(int i) : t(i) {} int t; };
+    std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc();
+}
 
 #endif // c++11 and later

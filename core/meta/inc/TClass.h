@@ -392,7 +392,7 @@ public:
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
    Long_t             GetDataMemberOffset(const char *membername) const;
-   const char        *GetDeclFileName() const { return fDeclFileName; }
+   const char        *GetDeclFileName() const;
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
    ROOT::DelFunc_t    GetDelete() const;
    ROOT::DesFunc_t    GetDestructor() const;

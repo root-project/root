@@ -588,7 +588,7 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
   // Adjust coefficients for given projection
   Double_t coefSum(0) ;
   for (i=0 ; i<_pdfList.getSize() ; i++) {
-    RooAbsPdf::globalSelectComp(kTRUE) ;    
+    GlobalSelectComponentRAII compRAII(true);
 
     RooAbsReal* pp = ((RooAbsReal*)cache._projList.at(i)) ; 
     RooAbsReal* sn = ((RooAbsReal*)cache._suppProjList.at(i)) ; 
@@ -605,8 +605,6 @@ void RooAddModel::updateCoefficients(CacheElem& cache, const RooArgSet* nset) co
     }
 
     Double_t proj = pp->getVal()/sn->getVal()*(r2->getVal()/r1->getVal()) ;  
-    
-    RooAbsPdf::globalSelectComp(kFALSE) ;
 
     _coefCache[i] *= proj ;
     coefSum += _coefCache[i] ;

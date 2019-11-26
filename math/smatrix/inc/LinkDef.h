@@ -22,43 +22,253 @@
 
 //generate up to 7x7
 
-#pragma link C++ class ROOT::Math::SVector<double,2>+;
-#pragma link C++ class ROOT::Math::SVector<double,3>+;
-#pragma link C++ class ROOT::Math::SVector<double,4>+;
-#pragma link C++ class ROOT::Math::SVector<double,5>+;
-#pragma link C++ class ROOT::Math::SVector<double,6>+;
-#pragma link C++ class ROOT::Math::SVector<double,7>+;
-// #pragma link C++ class ROOT::Math::SVector<double,8>+;
-// #pragma link C++ class ROOT::Math::SVector<double,9>+;
-// #pragma link C++ class ROOT::Math::SVector<double,10>+;
+#pragma link C++ class    ROOT::Math::SVector<double,2>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,2>" \
+             targetClass="ROOT::Math::SVector<double,2>";
+#pragma read sourceClass="ROOT::Math::SVector<float,2>"      \
+             targetClass="ROOT::Math::SVector<double,2>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,2>"  \
+             targetClass="ROOT::Math::SVector<double,2>";
+
+#pragma link C++ class    ROOT::Math::SVector<double,3>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,3>" \
+             targetClass="ROOT::Math::SVector<double,3>";
+#pragma read sourceClass="ROOT::Math::SVector<float,3>"      \
+             targetClass="ROOT::Math::SVector<double,3>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,3>"  \
+             targetClass="ROOT::Math::SVector<double,3>";
+
+#pragma link C++ class    ROOT::Math::SVector<double,4>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,4>" \
+             targetClass="ROOT::Math::SVector<double,4>";
+#pragma read sourceClass="ROOT::Math::SVector<float,4>"      \
+             targetClass="ROOT::Math::SVector<double,4>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,4>"  \
+             targetClass="ROOT::Math::SVector<double,4>";
+
+#pragma link C++ class    ROOT::Math::SVector<double,5>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,5>" \
+             targetClass="ROOT::Math::SVector<double,5>";
+#pragma read sourceClass="ROOT::Math::SVector<float,5>"      \
+             targetClass="ROOT::Math::SVector<double,5>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,5>"  \
+             targetClass="ROOT::Math::SVector<double,5>";
+
+#pragma link C++ class    ROOT::Math::SVector<double,6>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,6>" \
+             targetClass="ROOT::Math::SVector<double,6>";
+#pragma read sourceClass="ROOT::Math::SVector<float,6>"      \
+             targetClass="ROOT::Math::SVector<double,6>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,6>"  \
+             targetClass="ROOT::Math::SVector<double,6>";
+
+#pragma link C++ class    ROOT::Math::SVector<double,7>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,7>" \
+             targetClass="ROOT::Math::SVector<double,7>";
+#pragma read sourceClass="ROOT::Math::SVector<float,7>"      \
+             targetClass="ROOT::Math::SVector<double,7>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,7>"  \
+             targetClass="ROOT::Math::SVector<double,7>";
+
+// #pragma link C++ class    ROOT::Math::SVector<double,8>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,8>" \
+             targetClass="ROOT::Math::SVector<double,8>";
+#pragma read sourceClass="ROOT::Math::SVector<float,8>"      \
+             targetClass="ROOT::Math::SVector<double,8>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,8>"  \
+             targetClass="ROOT::Math::SVector<double,8>";
+
+// #pragma link C++ class    ROOT::Math::SVector<double,9>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,9>" \
+             targetClass="ROOT::Math::SVector<double,9>";
+#pragma read sourceClass="ROOT::Math::SVector<float,9>"      \
+             targetClass="ROOT::Math::SVector<double,9>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,9>"  \
+             targetClass="ROOT::Math::SVector<double,9>";
+
+// #pragma link C++ class    ROOT::Math::SVector<double,10>+;
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,10>" \
+             targetClass="ROOT::Math::SVector<double,10>";
+#pragma read sourceClass="ROOT::Math::SVector<float,10>"      \
+             targetClass="ROOT::Math::SVector<double,10>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,10>"  \
+             targetClass="ROOT::Math::SVector<double,10>";
 
 
-#pragma link C++ class ROOT::Math::MatRepStd<double,2,2>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,3,3>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,4,4>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,5,5>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,6,6>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,7,7>+;
-// #pragma link C++ class ROOT::Math::MatRepStd<double,8,8>+;
-// #pragma link C++ class ROOT::Math::MatRepStd<double,9,9>+;
-// #pragma link C++ class ROOT::Math::MatRepStd<double,10,10>+;
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,2,2>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,2,2>" \
+             targetClass="ROOT::Math::MatRepStd<double,2,2>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,2,2>"      \
+             targetClass="ROOT::Math::MatRepStd<double,2,2>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,2,2>"  \
+             targetClass="ROOT::Math::MatRepStd<double,2,2>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,3,3>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,3,3>" \
+             targetClass="ROOT::Math::MatRepStd<double,3,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,3,3>"      \
+             targetClass="ROOT::Math::MatRepStd<double,3,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,3,3>"  \
+             targetClass="ROOT::Math::MatRepStd<double,3,3>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,4,4>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,4,4>" \
+             targetClass="ROOT::Math::MatRepStd<double,4,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,4,4>"      \
+             targetClass="ROOT::Math::MatRepStd<double,4,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,4,4>"  \
+             targetClass="ROOT::Math::MatRepStd<double,4,4>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,5,5>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,5,5>" \
+             targetClass="ROOT::Math::MatRepStd<double,5,5>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,5,5>"      \
+             targetClass="ROOT::Math::MatRepStd<double,5,5>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,5,5>"  \
+             targetClass="ROOT::Math::MatRepStd<double,5,5>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,6,6>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,6,6>" \
+             targetClass="ROOT::Math::MatRepStd<double,6,6>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,6,6>"      \
+             targetClass="ROOT::Math::MatRepStd<double,6,6>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,6,6>"  \
+             targetClass="ROOT::Math::MatRepStd<double,6,6>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,7,7>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,7,7>" \
+             targetClass="ROOT::Math::MatRepStd<double,7,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,7,7>"      \
+             targetClass="ROOT::Math::MatRepStd<double,7,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,7,7>"  \
+             targetClass="ROOT::Math::MatRepStd<double,7,7>";
+
+// #pragma link C++ class    ROOT::Math::MatRepStd<double,8,8>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,8,8>" \
+             targetClass="ROOT::Math::MatRepStd<double,8,8>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,8,8>"      \
+             targetClass="ROOT::Math::MatRepStd<double,8,8>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,8,8>"  \
+             targetClass="ROOT::Math::MatRepStd<double,8,8>";
+
+// #pragma link C++ class    ROOT::Math::MatRepStd<double,9,9>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,9,9>" \
+             targetClass="ROOT::Math::MatRepStd<double,9,9>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,9,9>"      \
+             targetClass="ROOT::Math::MatRepStd<double,9,9>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,9,9>"  \
+             targetClass="ROOT::Math::MatRepStd<double,9,9>";
+
+// #pragma link C++ class    ROOT::Math::MatRepStd<double,10,10>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,10,10>" \
+             targetClass="ROOT::Math::MatRepStd<double,10,10>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,10,10>"      \
+             targetClass="ROOT::Math::MatRepStd<double,10,10>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,10,10>"  \
+             targetClass="ROOT::Math::MatRepStd<double,10,10>";
 
 
 
 
-#pragma link C++ class ROOT::Math::MatRepStd<double,4,3>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,3,4>+;
-#pragma link C++ class ROOT::Math::MatRepStd<double,9,7>+;
 
-#pragma link C++ class ROOT::Math::SMatrix<double,2,2>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,3,3>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,4,4>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,5,5>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,6,6>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,7,7>+;
-// #pragma link C++ class ROOT::Math::SMatrix<double,8,8>+;
-// #pragma link C++ class ROOT::Math::SMatrix<double,9,9>+;
-// #pragma link C++ class ROOT::Math::SMatrix<double,10,10>+;
+#pragma link C++ class    ROOT::Math::MatRepStd<double,4,3>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,4,3>" \
+             targetClass="ROOT::Math::MatRepStd<double,4,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,4,3>"      \
+             targetClass="ROOT::Math::MatRepStd<double,4,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,4,3>"  \
+             targetClass="ROOT::Math::MatRepStd<double,4,3>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,3,4>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,3,4>" \
+             targetClass="ROOT::Math::MatRepStd<double,3,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,3,4>"      \
+             targetClass="ROOT::Math::MatRepStd<double,3,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,3,4>"  \
+             targetClass="ROOT::Math::MatRepStd<double,3,4>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<double,9,7>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,9,7>" \
+             targetClass="ROOT::Math::MatRepStd<double,9,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<float,9,7>"      \
+             targetClass="ROOT::Math::MatRepStd<double,9,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,9,7>"  \
+             targetClass="ROOT::Math::MatRepStd<double,9,7>";
+
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,2,2>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,2,2>" \
+             targetClass="ROOT::Math::SMatrix<double,2,2>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,2,2>"      \
+             targetClass="ROOT::Math::SMatrix<double,2,2>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,2,2>"  \
+             targetClass="ROOT::Math::SMatrix<double,2,2>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,3,3>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,3>" \
+             targetClass="ROOT::Math::SMatrix<double,3,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,3,3>"      \
+             targetClass="ROOT::Math::SMatrix<double,3,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,3,3>"  \
+             targetClass="ROOT::Math::SMatrix<double,3,3>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,4,4>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,4>" \
+             targetClass="ROOT::Math::SMatrix<double,4,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,4,4>"      \
+             targetClass="ROOT::Math::SMatrix<double,4,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,4,4>"  \
+             targetClass="ROOT::Math::SMatrix<double,4,4>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,5,5>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,5,5>" \
+             targetClass="ROOT::Math::SMatrix<double,5,5>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,5,5>"      \
+             targetClass="ROOT::Math::SMatrix<double,5,5>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,5,5>"  \
+             targetClass="ROOT::Math::SMatrix<double,5,5>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,6,6>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,6,6>" \
+             targetClass="ROOT::Math::SMatrix<double,6,6>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,6,6>"      \
+             targetClass="ROOT::Math::SMatrix<double,6,6>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,6,6>"  \
+             targetClass="ROOT::Math::SMatrix<double,6,6>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,7,7>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,7,7>" \
+             targetClass="ROOT::Math::SMatrix<double,7,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,7,7>"      \
+             targetClass="ROOT::Math::SMatrix<double,7,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,7,7>"  \
+             targetClass="ROOT::Math::SMatrix<double,7,7>";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<double,8,8>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,8,8>" \
+             targetClass="ROOT::Math::SMatrix<double,8,8>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,8,8>"      \
+             targetClass="ROOT::Math::SMatrix<double,8,8>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,8,8>"  \
+             targetClass="ROOT::Math::SMatrix<double,8,8>";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<double,9,9>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,9,9>" \
+             targetClass="ROOT::Math::SMatrix<double,9,9>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,9,9>"      \
+             targetClass="ROOT::Math::SMatrix<double,9,9>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,9,9>"  \
+             targetClass="ROOT::Math::SMatrix<double,9,9>";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<double,10,10>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,10,10>" \
+             targetClass="ROOT::Math::SMatrix<double,10,10>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,10,10>"      \
+             targetClass="ROOT::Math::SMatrix<double,10,10>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,10,10>"  \
+             targetClass="ROOT::Math::SMatrix<double,10,10>";
+
 
 #pragma link C++ class ROOT::Math::SMatrix<double,2,2>::SMatrixRow;
 #pragma link C++ class ROOT::Math::SMatrix<double,3,3>::SMatrixRow;
@@ -75,9 +285,30 @@
 #pragma link C++ class ROOT::Math::SMatrix<double,7,7>::SMatrixRow_const;
 
 
-#pragma link C++ class ROOT::Math::SMatrix<double,4,3>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,3,4>+;
-#pragma link C++ class ROOT::Math::SMatrix<double,9,7>+;
+#pragma link C++ class    ROOT::Math::SMatrix<double,4,3>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,3>" \
+             targetClass="ROOT::Math::SMatrix<double,4,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,4,3>"      \
+             targetClass="ROOT::Math::SMatrix<double,4,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,4,3>"  \
+             targetClass="ROOT::Math::SMatrix<double,4,3>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,3,4>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,4>" \
+             targetClass="ROOT::Math::SMatrix<double,3,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,3,4>"      \
+             targetClass="ROOT::Math::SMatrix<double,3,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,3,4>"  \
+             targetClass="ROOT::Math::SMatrix<double,3,4>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,9,7>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,9,7>" \
+             targetClass="ROOT::Math::SMatrix<double,9,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,9,7>"      \
+             targetClass="ROOT::Math::SMatrix<double,9,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,9,7>"  \
+             targetClass="ROOT::Math::SMatrix<double,9,7>";
+
 
 #pragma link C++ class ROOT::Math::SMatrix<double,4,3>::SMatrixRow;
 #pragma link C++ class ROOT::Math::SMatrix<double,3,4>::SMatrixRow;
@@ -88,15 +319,78 @@
 #pragma link C++ class ROOT::Math::SMatrix<double,9,7>::SMatrixRow_const;
 
 
-#pragma link C++ class ROOT::Math::MatRepSym<double,2>+;
-#pragma link C++ class ROOT::Math::MatRepSym<double,3>+;
-#pragma link C++ class ROOT::Math::MatRepSym<double,4>+;
-#pragma link C++ class ROOT::Math::MatRepSym<double,5>+;
-#pragma link C++ class ROOT::Math::MatRepSym<double,6>+;
-#pragma link C++ class ROOT::Math::MatRepSym<double,7>+;
-// #pragma link C++ class ROOT::Math::MatRepSym<double,8>+;
-// #pragma link C++ class ROOT::Math::MatRepSym<double,9>+;
-// #pragma link C++ class ROOT::Math::MatRepSym<double,10>+;
+#pragma link C++ class    ROOT::Math::MatRepSym<double,2>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,2>" \
+             targetClass="ROOT::Math::MatRepSym<double,2>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,2>"      \
+             targetClass="ROOT::Math::MatRepSym<double,2>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,2>"  \
+             targetClass="ROOT::Math::MatRepSym<double,2>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<double,3>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,3>" \
+             targetClass="ROOT::Math::MatRepSym<double,3>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,3>"      \
+             targetClass="ROOT::Math::MatRepSym<double,3>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,3>"  \
+             targetClass="ROOT::Math::MatRepSym<double,3>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<double,4>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,4>" \
+             targetClass="ROOT::Math::MatRepSym<double,4>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,4>"      \
+             targetClass="ROOT::Math::MatRepSym<double,4>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,4>"  \
+             targetClass="ROOT::Math::MatRepSym<double,4>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<double,5>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,5>" \
+             targetClass="ROOT::Math::MatRepSym<double,5>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,5>"      \
+             targetClass="ROOT::Math::MatRepSym<double,5>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,5>"  \
+             targetClass="ROOT::Math::MatRepSym<double,5>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<double,6>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,6>" \
+             targetClass="ROOT::Math::MatRepSym<double,6>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,6>"      \
+             targetClass="ROOT::Math::MatRepSym<double,6>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,6>"  \
+             targetClass="ROOT::Math::MatRepSym<double,6>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<double,7>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,7>" \
+             targetClass="ROOT::Math::MatRepSym<double,7>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,7>"      \
+             targetClass="ROOT::Math::MatRepSym<double,7>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,7>"  \
+             targetClass="ROOT::Math::MatRepSym<double,7>";
+
+// #pragma link C++ class    ROOT::Math::MatRepSym<double,8>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,8>" \
+             targetClass="ROOT::Math::MatRepSym<double,8>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,8>"      \
+             targetClass="ROOT::Math::MatRepSym<double,8>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,8>"  \
+             targetClass="ROOT::Math::MatRepSym<double,8>";
+
+// #pragma link C++ class    ROOT::Math::MatRepSym<double,9>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,9>" \
+             targetClass="ROOT::Math::MatRepSym<double,9>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,9>"      \
+             targetClass="ROOT::Math::MatRepSym<double,9>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,9>"  \
+             targetClass="ROOT::Math::MatRepSym<double,9>";
+
+// #pragma link C++ class    ROOT::Math::MatRepSym<double,10>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,10>" \
+             targetClass="ROOT::Math::MatRepSym<double,10>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<float,10>"      \
+             targetClass="ROOT::Math::MatRepSym<double,10>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,10>"  \
+             targetClass="ROOT::Math::MatRepSym<double,10>";
+
 
 #pragma link C++ struct ROOT::Math::RowOffsets<2>;
 #pragma link C++ struct ROOT::Math::RowOffsets<3>;
@@ -109,12 +403,54 @@
 // #pragma link C++ struct ROOT::Math::RowOffsets<10>;
 
 
-#pragma link C++ class ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<double,2> >+;
-#pragma link C++ class ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >+;
-#pragma link C++ class ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<double,4> >+;
-#pragma link C++ class ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >+;
-#pragma link C++ class ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >+;
-#pragma link C++ class ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> >+;
+#pragma link C++ class    ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<double,2> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<Double32_t,2> >" \
+             targetClass="ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<double,2> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<float,2> >"      \
+             targetClass="ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<double,2> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<Float16_t,2> >"  \
+             targetClass="ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<double,2> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<Double32_t,3> >" \
+             targetClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<float,3> >"      \
+             targetClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<Float16_t,3> >"  \
+             targetClass="ROOT::Math::SMatrix<double,3,3,ROOT::Math::MatRepSym<double,3> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<double,4> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<Double32_t,4> >" \
+             targetClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<double,4> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<float,4> >"      \
+             targetClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<double,4> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<Float16_t,4> >"  \
+             targetClass="ROOT::Math::SMatrix<double,4,4,ROOT::Math::MatRepSym<double,4> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<Double32_t,5> >" \
+             targetClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<float,5> >"      \
+             targetClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<Float16_t,5> >"  \
+             targetClass="ROOT::Math::SMatrix<double,5,5,ROOT::Math::MatRepSym<double,5> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<Double32_t,6> >" \
+             targetClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<float,6> >"      \
+             targetClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<Float16_t,6> >"  \
+             targetClass="ROOT::Math::SMatrix<double,6,6,ROOT::Math::MatRepSym<double,6> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<Double32_t,7> >" \
+             targetClass="ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<float,7> >"      \
+             targetClass="ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<Float16_t,7> >"  \
+             targetClass="ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> >";
+
 
 
 #pragma link C++ class ROOT::Math::SMatrix<double,2,2,ROOT::Math::MatRepSym<double,2> >::SMatrixRow;
@@ -132,9 +468,30 @@
 #pragma link C++ class ROOT::Math::SMatrix<double,7,7,ROOT::Math::MatRepSym<double,7> >::SMatrixRow_const;
 
 
-// #pragma link C++ class ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<double,8> >+;
-// #pragma link C++ class ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<double,9> >+;
-// #pragma link C++ class ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<double,10> >+;
+// #pragma link C++ class    ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<double,8> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<Double32_t,8> >" \
+             targetClass="ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<double,8> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<float,8> >"      \
+             targetClass="ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<double,8> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<Float16_t,8> >"  \
+             targetClass="ROOT::Math::SMatrix<double,8,8,ROOT::Math::MatRepSym<double,8> >";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<double,9> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<Double32_t,9> >" \
+             targetClass="ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<double,9> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<float,9> >"      \
+             targetClass="ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<double,9> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<Float16_t,9> >"  \
+             targetClass="ROOT::Math::SMatrix<double,9,9,ROOT::Math::MatRepSym<double,9> >";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<double,10> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<Double32_t,10> >" \
+             targetClass="ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<double,10> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<float,10> >"      \
+             targetClass="ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<double,10> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<Float16_t,10> >"  \
+             targetClass="ROOT::Math::SMatrix<double,10,10,ROOT::Math::MatRepSym<double,10> >";
+
 
 // typedef's for  double matrices
 #pragma link C++ typedef ROOT::Math::SMatrix2D;
@@ -155,44 +512,275 @@
 
 //now for float
 
-#pragma link C++ class ROOT::Math::SVector<float,2>+;
-#pragma link C++ class ROOT::Math::SVector<float,3>+;
-#pragma link C++ class ROOT::Math::SVector<float,4>+;
-#pragma link C++ class ROOT::Math::SVector<float,5>+;
-#pragma link C++ class ROOT::Math::SVector<float,6>+;
-#pragma link C++ class ROOT::Math::SVector<float,7>+;
-// #pragma link C++ class ROOT::Math::SVector<float,8>+;
-// #pragma link C++ class ROOT::Math::SVector<float,9>+;
-// #pragma link C++ class ROOT::Math::SVector<float,10>+;
+#pragma link C++ class    ROOT::Math::SVector<float,2>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,2>"     \
+             targetClass="ROOT::Math::SVector<float,2>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,2>" \
+             targetClass="ROOT::Math::SVector<float,2>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,2>"  \
+             targetClass="ROOT::Math::SVector<float,2>";
+
+#pragma link C++ class    ROOT::Math::SVector<float,3>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,3>"     \
+             targetClass="ROOT::Math::SVector<float,3>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,3>" \
+             targetClass="ROOT::Math::SVector<float,3>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,3>"  \
+             targetClass="ROOT::Math::SVector<float,3>";
+
+#pragma link C++ class    ROOT::Math::SVector<float,4>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,4>"     \
+             targetClass="ROOT::Math::SVector<float,4>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,4>" \
+             targetClass="ROOT::Math::SVector<float,4>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,4>"  \
+             targetClass="ROOT::Math::SVector<float,4>";
+
+#pragma link C++ class    ROOT::Math::SVector<float,5>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,5>"     \
+             targetClass="ROOT::Math::SVector<float,5>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,5>" \
+             targetClass="ROOT::Math::SVector<float,5>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,5>"  \
+             targetClass="ROOT::Math::SVector<float,5>";
+
+#pragma link C++ class    ROOT::Math::SVector<float,6>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,6>"     \
+             targetClass="ROOT::Math::SVector<float,6>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,6>" \
+             targetClass="ROOT::Math::SVector<float,6>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,6>"  \
+             targetClass="ROOT::Math::SVector<float,6>";
+
+#pragma link C++ class    ROOT::Math::SVector<float,7>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,7>"     \
+             targetClass="ROOT::Math::SVector<float,7>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,7>" \
+             targetClass="ROOT::Math::SVector<float,7>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,7>"  \
+             targetClass="ROOT::Math::SVector<float,7>";
+
+// #pragma link C++ class    ROOT::Math::SVector<float,8>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,8>"     \
+             targetClass="ROOT::Math::SVector<float,8>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,8>" \
+             targetClass="ROOT::Math::SVector<float,8>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,8>"  \
+             targetClass="ROOT::Math::SVector<float,8>";
+
+// #pragma link C++ class    ROOT::Math::SVector<float,9>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,9>"     \
+             targetClass="ROOT::Math::SVector<float,9>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,9>" \
+             targetClass="ROOT::Math::SVector<float,9>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,9>"  \
+             targetClass="ROOT::Math::SVector<float,9>";
+
+// #pragma link C++ class    ROOT::Math::SVector<float,10>+;
+#pragma read sourceClass="ROOT::Math::SVector<double,10>"     \
+             targetClass="ROOT::Math::SVector<float,10>";
+#pragma read sourceClass="ROOT::Math::SVector<Double32_t,10>" \
+             targetClass="ROOT::Math::SVector<float,10>";
+#pragma read sourceClass="ROOT::Math::SVector<Float16_t,10>"  \
+             targetClass="ROOT::Math::SVector<float,10>";
 
 
-#pragma link C++ class ROOT::Math::MatRepStd<float,2,2>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,3,3>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,4,4>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,5,5>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,6,6>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,7,7>+;
-// #pragma link C++ class ROOT::Math::MatRepStd<float,8,8>+;
-// #pragma link C++ class ROOT::Math::MatRepStd<float,9,9>+;
-// #pragma link C++ class ROOT::Math::MatRepStd<float,10,10>+;
 
-#pragma link C++ class ROOT::Math::MatRepStd<float,4,3>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,3,4>+;
-#pragma link C++ class ROOT::Math::MatRepStd<float,9,7>+;
+#pragma link C++ class    ROOT::Math::MatRepStd<float,2,2>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,2,2>"     \
+             targetClass="ROOT::Math::MatRepStd<float,2,2>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,2,2>" \
+             targetClass="ROOT::Math::MatRepStd<float,2,2>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,2,2>"  \
+             targetClass="ROOT::Math::MatRepStd<float,2,2>";
 
-#pragma link C++ class ROOT::Math::SMatrix<float,2,2>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,3,3>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,4,4>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,5,5>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,6,6>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,7,7>+;
-// #pragma link C++ class ROOT::Math::SMatrix<float,8,8>+;
-// #pragma link C++ class ROOT::Math::SMatrix<float,9,9>+;
-// #pragma link C++ class ROOT::Math::SMatrix<float,10,10>+;
+#pragma link C++ class    ROOT::Math::MatRepStd<float,3,3>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,3,3>"     \
+             targetClass="ROOT::Math::MatRepStd<float,3,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,3,3>" \
+             targetClass="ROOT::Math::MatRepStd<float,3,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,3,3>"  \
+             targetClass="ROOT::Math::MatRepStd<float,3,3>";
 
-#pragma link C++ class ROOT::Math::SMatrix<float,4,3>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,3,4>+;
-#pragma link C++ class ROOT::Math::SMatrix<float,9,7>+;
+#pragma link C++ class    ROOT::Math::MatRepStd<float,4,4>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,4,4>"     \
+             targetClass="ROOT::Math::MatRepStd<float,4,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,4,4>" \
+             targetClass="ROOT::Math::MatRepStd<float,4,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,4,4>"  \
+             targetClass="ROOT::Math::MatRepStd<float,4,4>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<float,5,5>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,5,5>"     \
+             targetClass="ROOT::Math::MatRepStd<float,5,5>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,5,5>" \
+             targetClass="ROOT::Math::MatRepStd<float,5,5>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,5,5>"  \
+             targetClass="ROOT::Math::MatRepStd<float,5,5>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<float,6,6>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,6,6>"     \
+             targetClass="ROOT::Math::MatRepStd<float,6,6>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,6,6>" \
+             targetClass="ROOT::Math::MatRepStd<float,6,6>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,6,6>"  \
+             targetClass="ROOT::Math::MatRepStd<float,6,6>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<float,7,7>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,7,7>"     \
+             targetClass="ROOT::Math::MatRepStd<float,7,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,7,7>" \
+             targetClass="ROOT::Math::MatRepStd<float,7,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,7,7>"  \
+             targetClass="ROOT::Math::MatRepStd<float,7,7>";
+
+// #pragma link C++ class    ROOT::Math::MatRepStd<float,8,8>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,8,8>"     \
+             targetClass="ROOT::Math::MatRepStd<float,8,8>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,8,8>" \
+             targetClass="ROOT::Math::MatRepStd<float,8,8>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,8,8>"  \
+             targetClass="ROOT::Math::MatRepStd<float,8,8>";
+
+// #pragma link C++ class    ROOT::Math::MatRepStd<float,9,9>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,9,9>"     \
+             targetClass="ROOT::Math::MatRepStd<float,9,9>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,9,9>" \
+             targetClass="ROOT::Math::MatRepStd<float,9,9>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,9,9>"  \
+             targetClass="ROOT::Math::MatRepStd<float,9,9>";
+
+// #pragma link C++ class    ROOT::Math::MatRepStd<float,10,10>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,10,10>"     \
+             targetClass="ROOT::Math::MatRepStd<float,10,10>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,10,10>" \
+             targetClass="ROOT::Math::MatRepStd<float,10,10>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,10,10>"  \
+             targetClass="ROOT::Math::MatRepStd<float,10,10>";
+
+
+#pragma link C++ class    ROOT::Math::MatRepStd<float,4,3>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,4,3>"     \
+             targetClass="ROOT::Math::MatRepStd<float,4,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,4,3>" \
+             targetClass="ROOT::Math::MatRepStd<float,4,3>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,4,3>"  \
+             targetClass="ROOT::Math::MatRepStd<float,4,3>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<float,3,4>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,3,4>"     \
+             targetClass="ROOT::Math::MatRepStd<float,3,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,3,4>" \
+             targetClass="ROOT::Math::MatRepStd<float,3,4>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,3,4>"  \
+             targetClass="ROOT::Math::MatRepStd<float,3,4>";
+
+#pragma link C++ class    ROOT::Math::MatRepStd<float,9,7>+;
+#pragma read sourceClass="ROOT::Math::MatRepStd<double,9,7>"     \
+             targetClass="ROOT::Math::MatRepStd<float,9,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Double32_t,9,7>" \
+             targetClass="ROOT::Math::MatRepStd<float,9,7>";
+#pragma read sourceClass="ROOT::Math::MatRepStd<Float16_t,9,7>"  \
+             targetClass="ROOT::Math::MatRepStd<float,9,7>";
+
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,2,2>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,2,2>"     \
+             targetClass="ROOT::Math::SMatrix<float,2,2>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,2,2>" \
+             targetClass="ROOT::Math::SMatrix<float,2,2>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,2,2>"  \
+             targetClass="ROOT::Math::SMatrix<float,2,2>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,3,3>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,3,3>"     \
+             targetClass="ROOT::Math::SMatrix<float,3,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,3>" \
+             targetClass="ROOT::Math::SMatrix<float,3,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,3,3>"  \
+             targetClass="ROOT::Math::SMatrix<float,3,3>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,4,4>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,4,4>"     \
+             targetClass="ROOT::Math::SMatrix<float,4,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,4>" \
+             targetClass="ROOT::Math::SMatrix<float,4,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,4,4>"  \
+             targetClass="ROOT::Math::SMatrix<float,4,4>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,5,5>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,5,5>"     \
+             targetClass="ROOT::Math::SMatrix<float,5,5>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,5,5>" \
+             targetClass="ROOT::Math::SMatrix<float,5,5>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,5,5>"  \
+             targetClass="ROOT::Math::SMatrix<float,5,5>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,6,6>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,6,6>"     \
+             targetClass="ROOT::Math::SMatrix<float,6,6>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,6,6>" \
+             targetClass="ROOT::Math::SMatrix<float,6,6>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,6,6>"  \
+             targetClass="ROOT::Math::SMatrix<float,6,6>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,7,7>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,7,7>"     \
+             targetClass="ROOT::Math::SMatrix<float,7,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,7,7>" \
+             targetClass="ROOT::Math::SMatrix<float,7,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,7,7>"  \
+             targetClass="ROOT::Math::SMatrix<float,7,7>";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<float,8,8>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,8,8>"     \
+             targetClass="ROOT::Math::SMatrix<float,8,8>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,8,8>" \
+             targetClass="ROOT::Math::SMatrix<float,8,8>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,8,8>"  \
+             targetClass="ROOT::Math::SMatrix<float,8,8>";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<float,9,9>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,9,9>"     \
+             targetClass="ROOT::Math::SMatrix<float,9,9>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,9,9>" \
+             targetClass="ROOT::Math::SMatrix<float,9,9>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,9,9>"  \
+             targetClass="ROOT::Math::SMatrix<float,9,9>";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<float,10,10>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,10,10>"     \
+             targetClass="ROOT::Math::SMatrix<float,10,10>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,10,10>" \
+             targetClass="ROOT::Math::SMatrix<float,10,10>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,10,10>"  \
+             targetClass="ROOT::Math::SMatrix<float,10,10>";
+
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,4,3>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,4,3>"     \
+             targetClass="ROOT::Math::SMatrix<float,4,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,4,3>" \
+             targetClass="ROOT::Math::SMatrix<float,4,3>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,4,3>"  \
+             targetClass="ROOT::Math::SMatrix<float,4,3>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,3,4>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,3,4>"     \
+             targetClass="ROOT::Math::SMatrix<float,3,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,3,4>" \
+             targetClass="ROOT::Math::SMatrix<float,3,4>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,3,4>"  \
+             targetClass="ROOT::Math::SMatrix<float,3,4>";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,9,7>+;
+#pragma read sourceClass="ROOT::Math::SMatrix<double,9,7>"     \
+             targetClass="ROOT::Math::SMatrix<float,9,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Double32_t,9,7>" \
+             targetClass="ROOT::Math::SMatrix<float,9,7>";
+#pragma read sourceClass="ROOT::Math::SMatrix<Float16_t,9,7>"  \
+             targetClass="ROOT::Math::SMatrix<float,9,7>";
+
 
 #pragma link C++ class ROOT::Math::SMatrix<float,2,2>::SMatrixRow;
 #pragma link C++ class ROOT::Math::SMatrix<float,3,3>::SMatrixRow;
@@ -217,15 +805,78 @@
 #pragma link C++ class ROOT::Math::SMatrix<float,9,7>::SMatrixRow_const;
 
 
-#pragma link C++ class ROOT::Math::MatRepSym<float,2>+;
-#pragma link C++ class ROOT::Math::MatRepSym<float,3>+;
-#pragma link C++ class ROOT::Math::MatRepSym<float,4>+;
-#pragma link C++ class ROOT::Math::MatRepSym<float,5>+;
-#pragma link C++ class ROOT::Math::MatRepSym<float,6>+;
-#pragma link C++ class ROOT::Math::MatRepSym<float,7>+;
-// #pragma link C++ class ROOT::Math::MatRepSym<float,8>+;
-// #pragma link C++ class ROOT::Math::MatRepSym<float,9>+;
-// #pragma link C++ class ROOT::Math::MatRepSym<float,10>+;
+#pragma link C++ class    ROOT::Math::MatRepSym<float,2>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,2>"     \
+             targetClass="ROOT::Math::MatRepSym<float,2>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,2>" \
+             targetClass="ROOT::Math::MatRepSym<float,2>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,2>"  \
+             targetClass="ROOT::Math::MatRepSym<float,2>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<float,3>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,3>"     \
+             targetClass="ROOT::Math::MatRepSym<float,3>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,3>" \
+             targetClass="ROOT::Math::MatRepSym<float,3>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,3>"  \
+             targetClass="ROOT::Math::MatRepSym<float,3>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<float,4>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,4>"     \
+             targetClass="ROOT::Math::MatRepSym<float,4>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,4>" \
+             targetClass="ROOT::Math::MatRepSym<float,4>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,4>"  \
+             targetClass="ROOT::Math::MatRepSym<float,4>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<float,5>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,5>"     \
+             targetClass="ROOT::Math::MatRepSym<float,5>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,5>" \
+             targetClass="ROOT::Math::MatRepSym<float,5>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,5>"  \
+             targetClass="ROOT::Math::MatRepSym<float,5>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<float,6>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,6>"     \
+             targetClass="ROOT::Math::MatRepSym<float,6>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,6>" \
+             targetClass="ROOT::Math::MatRepSym<float,6>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,6>"  \
+             targetClass="ROOT::Math::MatRepSym<float,6>";
+
+#pragma link C++ class    ROOT::Math::MatRepSym<float,7>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,7>"     \
+             targetClass="ROOT::Math::MatRepSym<float,7>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,7>" \
+             targetClass="ROOT::Math::MatRepSym<float,7>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,7>"  \
+             targetClass="ROOT::Math::MatRepSym<float,7>";
+
+// #pragma link C++ class    ROOT::Math::MatRepSym<float,8>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,8>"     \
+             targetClass="ROOT::Math::MatRepSym<float,8>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,8>" \
+             targetClass="ROOT::Math::MatRepSym<float,8>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,8>"  \
+             targetClass="ROOT::Math::MatRepSym<float,8>";
+
+// #pragma link C++ class    ROOT::Math::MatRepSym<float,9>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,9>"     \
+             targetClass="ROOT::Math::MatRepSym<float,9>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,9>" \
+             targetClass="ROOT::Math::MatRepSym<float,9>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,9>"  \
+             targetClass="ROOT::Math::MatRepSym<float,9>";
+
+// #pragma link C++ class    ROOT::Math::MatRepSym<float,10>+;
+#pragma read sourceClass="ROOT::Math::MatRepSym<double,10>"     \
+             targetClass="ROOT::Math::MatRepSym<float,10>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Double32_t,10>" \
+             targetClass="ROOT::Math::MatRepSym<float,10>";
+#pragma read sourceClass="ROOT::Math::MatRepSym<Float16_t,10>"  \
+             targetClass="ROOT::Math::MatRepSym<float,10>";
+
 
 #pragma link C++ struct ROOT::Math::RowOffsets<2>;
 #pragma link C++ struct ROOT::Math::RowOffsets<3>;
@@ -238,15 +889,78 @@
 // #pragma link C++ struct ROOT::Math::RowOffsets<10>;
 
 
-#pragma link C++ class ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<float,2> >+;
-#pragma link C++ class ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<float,3> >+;
-#pragma link C++ class ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<float,4> >+;
-#pragma link C++ class ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<float,5> >+;
-#pragma link C++ class ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<float,6> >+;
-#pragma link C++ class ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<float,7> >+;
-// #pragma link C++ class ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<float,8> >+;
-// #pragma link C++ class ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<float,9> >+;
-// #pragma link C++ class ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<float,10> >+;
+#pragma link C++ class    ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<float,2> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<double,2> >"     \
+             targetClass="ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<float,2> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<Double32_t,2> >" \
+             targetClass="ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<float,2> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<Float16_t,2> >"  \
+             targetClass="ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<float,2> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<float,3> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<double,3> >"     \
+             targetClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<float,3> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<Double32_t,3> >" \
+             targetClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<float,3> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<Float16_t,3> >"  \
+             targetClass="ROOT::Math::SMatrix<float,3,3,ROOT::Math::MatRepSym<float,3> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<float,4> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<double,4> >"     \
+             targetClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<float,4> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<Double32_t,4> >" \
+             targetClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<float,4> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<Float16_t,4> >"  \
+             targetClass="ROOT::Math::SMatrix<float,4,4,ROOT::Math::MatRepSym<float,4> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<float,5> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<double,5> >"     \
+             targetClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<float,5> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<Double32_t,5> >" \
+             targetClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<float,5> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<Float16_t,5> >"  \
+             targetClass="ROOT::Math::SMatrix<float,5,5,ROOT::Math::MatRepSym<float,5> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<float,6> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<double,6> >"     \
+             targetClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<float,6> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<Double32_t,6> >" \
+             targetClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<float,6> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<Float16_t,6> >"  \
+             targetClass="ROOT::Math::SMatrix<float,6,6,ROOT::Math::MatRepSym<float,6> >";
+
+#pragma link C++ class    ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<float,7> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<double,7> >"     \
+             targetClass="ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<float,7> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<Double32_t,7> >" \
+             targetClass="ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<float,7> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<Float16_t,7> >"  \
+             targetClass="ROOT::Math::SMatrix<float,7,7,ROOT::Math::MatRepSym<float,7> >";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<float,8> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<double,8> >"     \
+             targetClass="ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<float,8> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<Double32_t,8> >" \
+             targetClass="ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<float,8> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<Float16_t,8> >"  \
+             targetClass="ROOT::Math::SMatrix<float,8,8,ROOT::Math::MatRepSym<float,8> >";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<float,9> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<double,9> >"     \
+             targetClass="ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<float,9> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<Double32_t,9> >" \
+             targetClass="ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<float,9> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<Float16_t,9> >"  \
+             targetClass="ROOT::Math::SMatrix<float,9,9,ROOT::Math::MatRepSym<float,9> >";
+
+// #pragma link C++ class    ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<float,10> >+;
+#pragma read sourceClass="ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<double,10> >"     \
+             targetClass="ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<float,10> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<Double32_t,10> >" \
+             targetClass="ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<float,10> >";
+#pragma read sourceClass="ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<Float16_t,10> >"  \
+             targetClass="ROOT::Math::SMatrix<float,10,10,ROOT::Math::MatRepSym<float,10> >";
+
 
 
 #pragma link C++ class ROOT::Math::SMatrix<float,2,2,ROOT::Math::MatRepSym<float,2> >::SMatrixRow;

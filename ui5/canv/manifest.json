@@ -1,0 +1,20 @@
+{
+    "sap.app": {
+        "id": "rootui5.canv"
+    },
+    "sap.ui5": {
+        "rootView": {
+            "viewName": "rootui5.canv.view.Canvas",
+            "type": "XML",
+            "async": true,
+            "id": "RootCanvas"
+        },
+        "dependencies": {
+            "libs": {
+                "sap.ui.core": {},
+                "sap.ui.layout": {},
+                "sap.m": {}
+            }
+        }
+    }
+}

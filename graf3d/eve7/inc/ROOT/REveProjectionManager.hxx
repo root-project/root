@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,7 +19,15 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveProjectionManager : public REveElementList, public TAttBBox {
+////////////////////////////////////////////////////////////////////////////////
+/// REveProjectionManager
+/// Manager class for steering of projections and managing projected objects.
+////////////////////////////////////////////////////////////////////////////////
+
+class REveProjectionManager : public REveElement,
+                              public REveAuntAsList,
+                              public TAttBBox
+{
 private:
    REveProjectionManager(const REveProjectionManager &);            // Not implemented
    REveProjectionManager &operator=(const REveProjectionManager &); // Not implemented
@@ -27,16 +35,16 @@ private:
 protected:
    REveProjection *fProjections[REveProjection::kPT_End];
 
-   REveProjection *fProjection{nullptr}; // current projection
-   REveVector fCenter;                   // center of distortion
-   Float_t fCurrentDepth{0};             // z depth of object being projected
+   REveProjection *fProjection{nullptr};  // current projection
+   REveVector      fCenter;               // center of distortion
+   Float_t         fCurrentDepth{0.};     // z depth of object being projected
 
-   List_t fDependentEls; // elements that depend on manager and need to be destroyed with it
+   List_t fDependentEls;                  // elements that depend on manager and need to be destroyed with it
 
-   Bool_t fImportEmpty{kFALSE}; // import sub-trees with no projectable elements
+   Bool_t fImportEmpty{kFALSE};           // import sub-trees with no projectable elements
 
    virtual Bool_t ShouldImport(REveElement *el);
-   virtual void UpdateDependentElsAndScenes(REveElement *root);
+   virtual void   UpdateDependentElsAndScenes(REveElement *root);
 
 public:
    REveProjectionManager(REveProjection::EPType_e type = REveProjection::kPT_Unknown);
@@ -59,8 +67,6 @@ public:
    void SetImportEmpty(Bool_t ie) { fImportEmpty = ie; }
    Bool_t GetImportEmpty() const { return fImportEmpty; }
 
-   virtual Bool_t HandleElementPaste(REveElement *el);
-
    virtual REveElement *ImportElementsRecurse(REveElement *el, REveElement *parent);
    virtual REveElement *ImportElements(REveElement *el, REveElement *ext_list = nullptr);
 
@@ -70,9 +76,7 @@ public:
    virtual void ProjectChildren();
    virtual void ProjectChildrenRecurse(REveElement *el);
 
-   virtual void ComputeBBox();
-
-   ClassDef(REveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
+   void ComputeBBox() override;
 };
 
 } // namespace Experimental

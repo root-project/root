@@ -52,216 +52,216 @@ protected:
    InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
    // Default ctor
-   TBufferFile() = default;
+   TBufferFile() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    // TBuffer objects cannot be copied or assigned
-   TBufferFile(const TBufferFile &);       ///<  not implemented
-   void operator=(const TBufferFile &);    ///<  not implemented
+   TBufferFile(const TBufferFile &) = delete;       ///<  not implemented
+   void operator=(const TBufferFile &) = delete;    ///<  not implemented
 
    Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
-   virtual void  CheckCount(UInt_t offset);
+   void  CheckCount(UInt_t offset) override;
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
-   virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
+   void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
 public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
 
    TBufferFile(TBuffer::EMode mode);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    virtual ~TBufferFile();
 
-   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
-   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
-   virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
+   Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) override;
+   Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) override;
+   void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE) override;
 
-   virtual void       SkipVersion(const TClass *cl = 0);
-   virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
-   virtual Version_t  ReadVersionNoCheckSum(UInt_t *start = 0, UInt_t *bcnt = 0);
-   virtual Version_t  ReadVersionForMemberWise(const TClass *cl = 0);
-   virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
-   virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE);
+   void       SkipVersion(const TClass *cl = nullptr) override;
+   Version_t  ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) override;
+   Version_t  ReadVersionNoCheckSum(UInt_t *start = nullptr, UInt_t *bcnt = nullptr) override;
+   Version_t  ReadVersionForMemberWise(const TClass *cl = nullptr) override;
+   UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE) override;
+   UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE) override;
 
-   virtual void      *ReadObjectAny(const TClass* cast);
-   virtual void       SkipObjectAny();
+   void      *ReadObjectAny(const TClass* cast) override;
+   void       SkipObjectAny() override;
 
-   virtual void       IncrementLevel(TVirtualStreamerInfo* info);
-   virtual void       SetStreamerElementNumber(TStreamerElement*,Int_t) {}
-   virtual void       DecrementLevel(TVirtualStreamerInfo*);
-   TVirtualStreamerInfo  *GetInfo() {return (TVirtualStreamerInfo*)fInfo;}
-   virtual void       ClassBegin(const TClass*, Version_t = -1) {}
-   virtual void       ClassEnd(const TClass*) {}
-   virtual void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) {}
+   void       IncrementLevel(TVirtualStreamerInfo* info) override;
+   void       SetStreamerElementNumber(TStreamerElement*,Int_t) override {}
+   void       DecrementLevel(TVirtualStreamerInfo*) override;
+   TVirtualStreamerInfo  *GetInfo() override { return (TVirtualStreamerInfo*)fInfo; }
+   void       ClassBegin(const TClass*, Version_t = -1) override {}
+   void       ClassEnd(const TClass*) override {}
+   void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) override {}
 
-   virtual Int_t      ReadBuf(void *buf, Int_t max);
-   virtual void       WriteBuf(const void *buf, Int_t max);
+   Int_t      ReadBuf(void *buf, Int_t max) override;
+   void       WriteBuf(const void *buf, Int_t max) override;
 
-   virtual char      *ReadString(char *s, Int_t max);
-   virtual void       WriteString(const char *s);
+   char      *ReadString(char *s, Int_t max) override;
+   void       WriteString(const char *s) override;
 
-   virtual TClass    *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
-   virtual void       WriteClass(const TClass *cl);
+   TClass    *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) override;
+   void       WriteClass(const TClass *cl) override;
 
-   virtual TObject   *ReadObject(const TClass *cl);
+   TObject   *ReadObject(const TClass *cl) override;
 
    using TBufferIO::CheckObject;
 
    // basic types and arrays of basic types
-   virtual   void     ReadFloat16 (Float_t *f, TStreamerElement *ele=0);
-   virtual   void     WriteFloat16(Float_t *f, TStreamerElement *ele=0);
-   virtual   void     ReadDouble32 (Double_t *d, TStreamerElement *ele=0);
-   virtual   void     WriteDouble32(Double_t *d, TStreamerElement *ele=0);
-   virtual   void     ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue);
-   virtual   void     ReadWithNbits(Float_t *ptr, Int_t nbits);
-   virtual   void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
-   virtual   void     ReadWithNbits(Double_t *ptr, Int_t nbits);
+   void     ReadFloat16 (Float_t *f, TStreamerElement *ele = nullptr) override;
+   void     WriteFloat16(Float_t *f, TStreamerElement *ele = nullptr) override;
+   void     ReadDouble32 (Double_t *d, TStreamerElement *ele = nullptr) override;
+   void     WriteDouble32(Double_t *d, TStreamerElement *ele = nullptr) override;
+   void     ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue) override;
+   void     ReadWithNbits(Float_t *ptr, Int_t nbits) override;
+   void     ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue) override;
+   void     ReadWithNbits(Double_t *ptr, Int_t nbits) override;
 
-   virtual   Int_t    ReadArray(Bool_t    *&b);
-   virtual   Int_t    ReadArray(Char_t    *&c);
-   virtual   Int_t    ReadArray(UChar_t   *&c);
-   virtual   Int_t    ReadArray(Short_t   *&h);
-   virtual   Int_t    ReadArray(UShort_t  *&h);
-   virtual   Int_t    ReadArray(Int_t     *&i);
-   virtual   Int_t    ReadArray(UInt_t    *&i);
-   virtual   Int_t    ReadArray(Long_t    *&l);
-   virtual   Int_t    ReadArray(ULong_t   *&l);
-   virtual   Int_t    ReadArray(Long64_t  *&l);
-   virtual   Int_t    ReadArray(ULong64_t *&l);
-   virtual   Int_t    ReadArray(Float_t   *&f);
-   virtual   Int_t    ReadArray(Double_t  *&d);
-   virtual   Int_t    ReadArrayFloat16(Float_t  *&f, TStreamerElement *ele=0);
-   virtual   Int_t    ReadArrayDouble32(Double_t  *&d, TStreamerElement *ele=0);
+   Int_t    ReadArray(Bool_t    *&b) override;
+   Int_t    ReadArray(Char_t    *&c) override;
+   Int_t    ReadArray(UChar_t   *&c) override;
+   Int_t    ReadArray(Short_t   *&h) override;
+   Int_t    ReadArray(UShort_t  *&h) override;
+   Int_t    ReadArray(Int_t     *&i) override;
+   Int_t    ReadArray(UInt_t    *&i) override;
+   Int_t    ReadArray(Long_t    *&l) override;
+   Int_t    ReadArray(ULong_t   *&l) override;
+   Int_t    ReadArray(Long64_t  *&l) override;
+   Int_t    ReadArray(ULong64_t *&l) override;
+   Int_t    ReadArray(Float_t   *&f) override;
+   Int_t    ReadArray(Double_t  *&d) override;
+   Int_t    ReadArrayFloat16(Float_t  *&f, TStreamerElement *ele = nullptr) override;
+   Int_t    ReadArrayDouble32(Double_t  *&d, TStreamerElement *ele = nullptr) override;
 
-   virtual   Int_t    ReadStaticArray(Bool_t    *b);
-   virtual   Int_t    ReadStaticArray(Char_t    *c);
-   virtual   Int_t    ReadStaticArray(UChar_t   *c);
-   virtual   Int_t    ReadStaticArray(Short_t   *h);
-   virtual   Int_t    ReadStaticArray(UShort_t  *h);
-   virtual   Int_t    ReadStaticArray(Int_t     *i);
-   virtual   Int_t    ReadStaticArray(UInt_t    *i);
-   virtual   Int_t    ReadStaticArray(Long_t    *l);
-   virtual   Int_t    ReadStaticArray(ULong_t   *l);
-   virtual   Int_t    ReadStaticArray(Long64_t  *l);
-   virtual   Int_t    ReadStaticArray(ULong64_t *l);
-   virtual   Int_t    ReadStaticArray(Float_t   *f);
-   virtual   Int_t    ReadStaticArray(Double_t  *d);
-   virtual   Int_t    ReadStaticArrayFloat16(Float_t  *f, TStreamerElement *ele=0);
-   virtual   Int_t    ReadStaticArrayDouble32(Double_t  *d, TStreamerElement *ele=0);
+   Int_t    ReadStaticArray(Bool_t    *b) override;
+   Int_t    ReadStaticArray(Char_t    *c) override;
+   Int_t    ReadStaticArray(UChar_t   *c) override;
+   Int_t    ReadStaticArray(Short_t   *h) override;
+   Int_t    ReadStaticArray(UShort_t  *h) override;
+   Int_t    ReadStaticArray(Int_t     *i) override;
+   Int_t    ReadStaticArray(UInt_t    *i) override;
+   Int_t    ReadStaticArray(Long_t    *l) override;
+   Int_t    ReadStaticArray(ULong_t   *l) override;
+   Int_t    ReadStaticArray(Long64_t  *l) override;
+   Int_t    ReadStaticArray(ULong64_t *l) override;
+   Int_t    ReadStaticArray(Float_t   *f) override;
+   Int_t    ReadStaticArray(Double_t  *d) override;
+   Int_t    ReadStaticArrayFloat16(Float_t  *f, TStreamerElement *ele = nullptr) override;
+   Int_t    ReadStaticArrayDouble32(Double_t  *d, TStreamerElement *ele = nullptr) override;
 
-   virtual   void     ReadFastArray(Bool_t    *b, Int_t n);
-   virtual   void     ReadFastArray(Char_t    *c, Int_t n);
-   virtual   void     ReadFastArrayString(Char_t    *c, Int_t n);
-   virtual   void     ReadFastArray(UChar_t   *c, Int_t n);
-   virtual   void     ReadFastArray(Short_t   *h, Int_t n);
-   virtual   void     ReadFastArray(UShort_t  *h, Int_t n);
-   virtual   void     ReadFastArray(Int_t     *i, Int_t n);
-   virtual   void     ReadFastArray(UInt_t    *i, Int_t n);
-   virtual   void     ReadFastArray(Long_t    *l, Int_t n);
-   virtual   void     ReadFastArray(ULong_t   *l, Int_t n);
-   virtual   void     ReadFastArray(Long64_t  *l, Int_t n);
-   virtual   void     ReadFastArray(ULong64_t *l, Int_t n);
-   virtual   void     ReadFastArray(Float_t   *f, Int_t n);
-   virtual   void     ReadFastArray(Double_t  *d, Int_t n);
-   virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele=0);
-   virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele=0);
-   virtual   void     ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue) ;
-   virtual   void     ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
-   virtual   void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
-   virtual   void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits) ;
-   virtual   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s=0, const TClass* onFileClass=0 );
-   virtual   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass* onFileClass=0);
+   void     ReadFastArray(Bool_t    *b, Int_t n) override;
+   void     ReadFastArray(Char_t    *c, Int_t n) override;
+   void     ReadFastArrayString(Char_t    *c, Int_t n) override;
+   void     ReadFastArray(UChar_t   *c, Int_t n) override;
+   void     ReadFastArray(Short_t   *h, Int_t n) override;
+   void     ReadFastArray(UShort_t  *h, Int_t n) override;
+   void     ReadFastArray(Int_t     *i, Int_t n) override;
+   void     ReadFastArray(UInt_t    *i, Int_t n) override;
+   void     ReadFastArray(Long_t    *l, Int_t n) override;
+   void     ReadFastArray(ULong_t   *l, Int_t n) override;
+   void     ReadFastArray(Long64_t  *l, Int_t n) override;
+   void     ReadFastArray(ULong64_t *l, Int_t n) override;
+   void     ReadFastArray(Float_t   *f, Int_t n) override;
+   void     ReadFastArray(Double_t  *d, Int_t n) override;
+   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) override;
+   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) override;
+   void     ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue)  override;
+   void     ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits) override;
+   void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue) override;
+   void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits)  override;
+   void     ReadFastArray(void  *start , const TClass *cl, Int_t n=1, TMemberStreamer *s = nullptr, const TClass* onFileClass = nullptr) override;
+   void     ReadFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s = nullptr, const TClass* onFileClass = nullptr) override;
 
-   virtual   void     WriteArray(const Bool_t    *b, Int_t n);
-   virtual   void     WriteArray(const Char_t    *c, Int_t n);
-   virtual   void     WriteArray(const UChar_t   *c, Int_t n);
-   virtual   void     WriteArray(const Short_t   *h, Int_t n);
-   virtual   void     WriteArray(const UShort_t  *h, Int_t n);
-   virtual   void     WriteArray(const Int_t     *i, Int_t n);
-   virtual   void     WriteArray(const UInt_t    *i, Int_t n);
-   virtual   void     WriteArray(const Long_t    *l, Int_t n);
-   virtual   void     WriteArray(const ULong_t   *l, Int_t n);
-   virtual   void     WriteArray(const Long64_t  *l, Int_t n);
-   virtual   void     WriteArray(const ULong64_t *l, Int_t n);
-   virtual   void     WriteArray(const Float_t   *f, Int_t n);
-   virtual   void     WriteArray(const Double_t  *d, Int_t n);
-   virtual   void     WriteArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele=0);
-   virtual   void     WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele=0);
+   void     WriteArray(const Bool_t    *b, Int_t n) override;
+   void     WriteArray(const Char_t    *c, Int_t n) override;
+   void     WriteArray(const UChar_t   *c, Int_t n) override;
+   void     WriteArray(const Short_t   *h, Int_t n) override;
+   void     WriteArray(const UShort_t  *h, Int_t n) override;
+   void     WriteArray(const Int_t     *i, Int_t n) override;
+   void     WriteArray(const UInt_t    *i, Int_t n) override;
+   void     WriteArray(const Long_t    *l, Int_t n) override;
+   void     WriteArray(const ULong_t   *l, Int_t n) override;
+   void     WriteArray(const Long64_t  *l, Int_t n) override;
+   void     WriteArray(const ULong64_t *l, Int_t n) override;
+   void     WriteArray(const Float_t   *f, Int_t n) override;
+   void     WriteArray(const Double_t  *d, Int_t n) override;
+   void     WriteArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) override;
+   void     WriteArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) override;
 
-   virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
-   virtual   void     WriteFastArray(const Char_t    *c, Int_t n);
-   virtual   void     WriteFastArrayString(const Char_t    *c, Int_t n);
-   virtual   void     WriteFastArray(const UChar_t   *c, Int_t n);
-   virtual   void     WriteFastArray(const Short_t   *h, Int_t n);
-   virtual   void     WriteFastArray(const UShort_t  *h, Int_t n);
-   virtual   void     WriteFastArray(const Int_t     *i, Int_t n);
-   virtual   void     WriteFastArray(const UInt_t    *i, Int_t n);
-   virtual   void     WriteFastArray(const Long_t    *l, Int_t n);
-   virtual   void     WriteFastArray(const ULong_t   *l, Int_t n);
-   virtual   void     WriteFastArray(const Long64_t  *l, Int_t n);
-   virtual   void     WriteFastArray(const ULong64_t *l, Int_t n);
-   virtual   void     WriteFastArray(const Float_t   *f, Int_t n);
-   virtual   void     WriteFastArray(const Double_t  *d, Int_t n);
-   virtual   void     WriteFastArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele=0);
-   virtual   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele=0);
-   virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
-   virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
+   void     WriteFastArray(const Bool_t    *b, Int_t n) override;
+   void     WriteFastArray(const Char_t    *c, Int_t n) override;
+   void     WriteFastArrayString(const Char_t    *c, Int_t n) override;
+   void     WriteFastArray(const UChar_t   *c, Int_t n) override;
+   void     WriteFastArray(const Short_t   *h, Int_t n) override;
+   void     WriteFastArray(const UShort_t  *h, Int_t n) override;
+   void     WriteFastArray(const Int_t     *i, Int_t n) override;
+   void     WriteFastArray(const UInt_t    *i, Int_t n) override;
+   void     WriteFastArray(const Long_t    *l, Int_t n) override;
+   void     WriteFastArray(const ULong_t   *l, Int_t n) override;
+   void     WriteFastArray(const Long64_t  *l, Int_t n) override;
+   void     WriteFastArray(const ULong64_t *l, Int_t n) override;
+   void     WriteFastArray(const Float_t   *f, Int_t n) override;
+   void     WriteFastArray(const Double_t  *d, Int_t n) override;
+   void     WriteFastArrayFloat16(const Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) override;
+   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) override;
+   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s = nullptr) override;
+   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s = nullptr) override;
 
-   virtual   void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0 );
-   virtual   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
-   virtual   void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
-   virtual   void     StreamObject(TObject *obj);
+   void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = nullptr) override;
+   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = nullptr) override;
+   void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = nullptr) override;
+   void     StreamObject(TObject *obj) override;
 
-   virtual   void     ReadBool(Bool_t       &b);
-   virtual   void     ReadChar(Char_t       &c);
-   virtual   void     ReadUChar(UChar_t     &c);
-   virtual   void     ReadShort(Short_t     &s);
-   virtual   void     ReadUShort(UShort_t   &s);
-   virtual   void     ReadInt(Int_t         &i);
-   virtual   void     ReadUInt(UInt_t       &i);
-   virtual   void     ReadLong(Long_t       &l);
-   virtual   void     ReadULong(ULong_t     &l);
-   virtual   void     ReadLong64(Long64_t   &l);
-   virtual   void     ReadULong64(ULong64_t &l);
-   virtual   void     ReadFloat(Float_t     &f);
-   virtual   void     ReadDouble(Double_t   &d);
-   virtual   void     ReadCharP(Char_t      *c);
-   virtual   void     ReadTString(TString   &s);
-   virtual   void     ReadStdString(std::string *s);
-   using              TBuffer::ReadStdString;
-   virtual   void     ReadCharStar(char* &s);
+   void     ReadBool(Bool_t       &b) override;
+   void     ReadChar(Char_t       &c) override;
+   void     ReadUChar(UChar_t     &c) override;
+   void     ReadShort(Short_t     &s) override;
+   void     ReadUShort(UShort_t   &s) override;
+   void     ReadInt(Int_t         &i) override;
+   void     ReadUInt(UInt_t       &i) override;
+   void     ReadLong(Long_t       &l) override;
+   void     ReadULong(ULong_t     &l) override;
+   void     ReadLong64(Long64_t   &l) override;
+   void     ReadULong64(ULong64_t &l) override;
+   void     ReadFloat(Float_t     &f) override;
+   void     ReadDouble(Double_t   &d) override;
+   void     ReadCharP(Char_t      *c) override;
+   void     ReadTString(TString   &s) override;
+   void     ReadStdString(std::string *s) override;
+   using    TBuffer::ReadStdString;
+   void     ReadCharStar(char* &s) override;
 
-   virtual   void     WriteBool(Bool_t       b);
-   virtual   void     WriteChar(Char_t       c);
-   virtual   void     WriteUChar(UChar_t     c);
-   virtual   void     WriteShort(Short_t     s);
-   virtual   void     WriteUShort(UShort_t   s);
-   virtual   void     WriteInt(Int_t         i);
-   virtual   void     WriteUInt(UInt_t       i);
-   virtual   void     WriteLong(Long_t       l);
-   virtual   void     WriteULong(ULong_t     l);
-   virtual   void     WriteLong64(Long64_t   l);
-   virtual   void     WriteULong64(ULong64_t l);
-   virtual   void     WriteFloat(Float_t     f);
-   virtual   void     WriteDouble(Double_t   d);
-   virtual   void     WriteCharP(const Char_t *c);
-   virtual   void     WriteTString(const TString &s);
-   using              TBuffer::WriteStdString;
-   virtual   void     WriteStdString(const std::string *s);
-   virtual   void     WriteCharStar(char *s);
+   void     WriteBool(Bool_t       b) override;
+   void     WriteChar(Char_t       c) override;
+   void     WriteUChar(UChar_t     c) override;
+   void     WriteShort(Short_t     s) override;
+   void     WriteUShort(UShort_t   s) override;
+   void     WriteInt(Int_t         i) override;
+   void     WriteUInt(UInt_t       i) override;
+   void     WriteLong(Long_t       l) override;
+   void     WriteULong(ULong_t     l) override;
+   void     WriteLong64(Long64_t   l) override;
+   void     WriteULong64(ULong64_t l) override;
+   void     WriteFloat(Float_t     f) override;
+   void     WriteDouble(Double_t   d) override;
+   void     WriteCharP(const Char_t *c) override;
+   void     WriteTString(const TString &s) override;
+   using    TBuffer::WriteStdString;
+   void     WriteStdString(const std::string *s) override;
+   void     WriteCharStar(char *s) override;
 
    // Utilities for TClass
-   virtual   Int_t  ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class);
-   virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onfile_class);
-   virtual   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class);
-   virtual   Int_t  WriteClassBuffer(const TClass *cl, void *pointer);
+   Int_t  ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class) override;
+   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onfile_class) override;
+   Int_t  ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class) override;
+   Int_t  WriteClassBuffer(const TClass *cl, void *pointer) override;
 
-   // Utilites to streamer using sequences.
-   Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
-   Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
-   Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
+   // Utilities to streamer using sequences.
+   Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object) override;
+   Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) override;
+   Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) override;
 
-   ClassDef(TBufferFile,0)  //concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
+   ClassDefOverride(TBufferFile,0)  //concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 };
 
 

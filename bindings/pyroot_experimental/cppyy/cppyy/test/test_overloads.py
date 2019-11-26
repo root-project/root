@@ -3,10 +3,10 @@ from pytest import raises
 from .support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("overloadsDict.so"))
+test_dct = str(currpath.join("overloadsDict"))
 
 def setup_module(mod):
-    setup_make("overloadsDict.so")
+    setup_make("overloads")
 
 
 class TestOVERLOADS:
@@ -72,33 +72,31 @@ class TestOVERLOADS:
     def test03_fragile_class_based_overloads(self):
         """Test functions overloaded on void* and non-existing classes"""
 
-        # TODO: make Reflex generate unknown classes ...
-
         import cppyy
         more_overloads = cppyy.gbl.more_overloads
         aa_ol = cppyy.gbl.aa_ol
-#        bb_ol = cppyy.gbl.bb_ol
+        bb_ol = cppyy.gbl.bb_ol
         cc_ol = cppyy.gbl.cc_ol
-#        dd_ol = cppyy.gbl.dd_ol
+        dd_ol = cppyy.gbl.dd_ol
 
         assert more_overloads().call(aa_ol()) == "aa_ol"
-#        assert more_overloads().call(bb_ol()) == "dd_ol"    # <- bb_ol has an unknown + void*
+        bb = cppyy.bind_object(cppyy.nullptr, bb_ol)
+        assert more_overloads().call(bb     ) == "bb_ol"
         assert more_overloads().call(cc_ol()) == "cc_ol"
-#        assert more_overloads().call(dd_ol()) == "dd_ol"    # <- dd_ol has an unknown
+        dd = cppyy.bind_object(cppyy.nullptr, dd_ol)
+        assert more_overloads().call(dd     ) == "dd_ol"
 
     def test04_fully_fragile_overloads(self):
         """Test that unknown* is preferred over unknown&"""
 
-        # TODO: make Reflex generate unknown classes ...
-        return
-
         import cppyy
         more_overloads2 = cppyy.gbl.more_overloads2
-        bb_ol = cppyy.gbl.bb_ol
-        dd_ol = cppyy.gbl.dd_ol
 
-        assert more_overloads2().call(bb_ol())    == "bb_olptr"
-        assert more_overloads2().call(dd_ol(), 1) == "dd_olptr"
+        bb = cppyy.bind_object(cppyy.nullptr, cppyy.gbl.bb_ol)
+        assert more_overloads2().call(bb)    == "bb_olptr"
+
+        dd = cppyy.bind_object(cppyy.nullptr, cppyy.gbl.dd_ol)
+        assert more_overloads2().call(dd, 1) == "dd_olptr"
 
     def test05_array_overloads(self):
         """Test functions overloaded on different arrays"""

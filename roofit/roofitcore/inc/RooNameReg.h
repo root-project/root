@@ -32,8 +32,6 @@ public:
   static const char* str(const TNamed* ptr) ;
   static const TNamed* known(const char* stringPtr) ;
 
-  static void cleanup() ;
-
   enum {
     kRenamedArg = BIT(19)    // TNamed flag to indicate that some RooAbsArg has been renamed (flag set in new name)
   };

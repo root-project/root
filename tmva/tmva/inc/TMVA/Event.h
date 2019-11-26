@@ -71,6 +71,12 @@ namespace TMVA {
 
       ~Event();
 
+      // operators
+      // NOTE: Because we do not want to change the behaviour of the Event class
+      // as a public interface, we use the explicit default assignment operator,
+      // which is similar to the implicit one but silences gcc9 warnings.
+      Event& operator=( const Event& ) = default;
+
       // accessors
       Bool_t  IsDynamic()         const {return fDynamic; }
 

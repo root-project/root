@@ -3,7 +3,7 @@
 // Author: Danilo Piparo, 2013, 2014
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -338,14 +338,69 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
 }
 
 
+void TModuleGenerator::WriteRegistrationSourceImpl(std::ostream& out,
+                                                   const std::string &dictName,
+                                                   const std::string &demangledDictName,
+                                                   const std::vector<std::string> &headerArray,
+                                                   const std::vector<std::string> &includePathArray,
+                                                   const std::string &fwdDeclStringRAW,
+                                                   const std::string &fwdDeclnArgsToKeepString,
+                                                   const std::string &payloadCodeWrapped,
+                                                   const std::string &headersClassesMapString,
+                                                   const std::string &extraIncludes,
+                                                   bool hasCxxModule) const
+{
+   // Dictionary initialization code for loading the module
+   out << "namespace {\n"
+          "  void TriggerDictionaryInitialization_" << dictName << "_Impl() {\n"
+          "    static const char* headers[] = {\n";
+   WriteStringVec(headerArray, out) << "    };\n";
+   out << "    static const char* includePaths[] = {\n";
+   WriteStringVec(includePathArray, out)
+       << "    };\n";
+
+   out << "    static const char* fwdDeclCode = " << fwdDeclStringRAW << ";\n"
+       << "    static const char* payloadCode = " << payloadCodeWrapped << ";\n";
+   // classesHeaders may depen on payloadCode
+   out << "    static const char* classesHeaders[] = {\n"
+       << headersClassesMapString
+       << "\n};\n";
+   out << "    static bool isInitialized = false;\n"
+          "    if (!isInitialized) {\n"
+          "      TROOT::RegisterModule(\"" << demangledDictName << "\",\n"
+          "        headers, includePaths, payloadCode, fwdDeclCode,\n"
+          "        TriggerDictionaryInitialization_" << dictName << "_Impl, "
+                     << fwdDeclnArgsToKeepString << ", classesHeaders, "
+                     << (hasCxxModule ? "/*hasCxxModule*/true" : "/*hasCxxModule*/false")
+                     << ");\n"
+          "      isInitialized = true;\n"
+          "    }\n"
+          "  }\n"
+          "  static struct DictInit {\n"
+          "    DictInit() {\n"
+          "      TriggerDictionaryInitialization_" << dictName << "_Impl();\n"
+          "    }\n"
+          "  } __TheDictionaryInitializer;\n"
+          "}\n"
+          "void TriggerDictionaryInitialization_" << dictName << "() {\n"
+          "  TriggerDictionaryInitialization_" << dictName << "_Impl();\n"
+          "}\n";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
-      const std::string &fwdDeclnArgsToKeepString,
-      const std::string &headersClassesMapString,
-      const std::string &fwdDeclString) const
+void TModuleGenerator::WriteRegistrationSource(std::ostream &out, const std::string &fwdDeclnArgsToKeepString,
+                                               const std::string &headersClassesMapString,
+                                               const std::string &fwdDeclString, const std::string &extraIncludes, bool hasCxxModule) const
 {
+   if (hasCxxModule) {
+      std::string emptyStr = "\"\"";
+      WriteRegistrationSourceImpl(out, GetDictionaryName(), GetDemangledDictionaryName(), {}, {},
+                                  fwdDeclString, "{}",
+                                  emptyStr, headersClassesMapString, "0",
+                                  /*HasCxxModule*/ true);
+      return;
+   }
 
    std::string fwdDeclStringSanitized = fwdDeclString;
 #ifdef R__WIN32
@@ -441,49 +496,34 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    // way to express as a pragma the option "-Wno-deprecated" the
    // _BACKWARD_BACKWARD_WARNING_H macro, used to avoid to go through
    // backward/backward_warning.h.
-   payloadCode += "#define _BACKWARD_BACKWARD_WARNING_H\n" +
-                  inlinedHeaders + "\n"
+   payloadCode += "#define _BACKWARD_BACKWARD_WARNING_H\n"
+                  "// Inline headers\n"+
+                  inlinedHeaders + "\n"+
+                  (extraIncludes.empty() ? "" : "// Extra includes\n" + extraIncludes + "\n") +
                   "#undef  _BACKWARD_BACKWARD_WARNING_H\n";
 
-   // Dictionary initialization code for loading the module
-   out << "namespace {\n"
-       "  void TriggerDictionaryInitialization_"
-       << GetDictionaryName() << "_Impl() {\n"
-       "    static const char* headers[] = {\n";
-   if (fInlineInputHeaders) {
-      out << 0 ;
-   } else {
-      WriteHeaderArray(out);
-   };
+   // We cannot stream the contents in strings and pass it to
+   // WriteRegistrationSourceImpl because we exceed the std::string::max_size on
+   // Windows.
+   std::vector<std::string> headerArray = {"0"};
+   if (!fInlineInputHeaders)
+      headerArray = fHeaders;
+   const std::vector<std::string>& includePathArray = fCompI;
 
    std::string payloadcodeWrapped = "nullptr";
    if (!fIsInPCH)
       payloadcodeWrapped = "R\"DICTPAYLOAD(\n" + payloadCode + ")DICTPAYLOAD\"";
 
-   out << "    };\n"
-       << "    static const char* includePaths[] = {\n";
-   WriteIncludePathArray(out) <<
-                              "    };\n"
-                              "    static const char* fwdDeclCode = " << fwdDeclStringRAW << ";\n"
-                              "    static const char* payloadCode = " << payloadcodeWrapped << ";\n"
-                              "    " << headersClassesMapString << "\n"
-                              "    static bool isInitialized = false;\n"
-                              "    if (!isInitialized) {\n"
-                              "      TROOT::RegisterModule(\"" << GetDemangledDictionaryName() << "\",\n"
-                              "        headers, includePaths, payloadCode, fwdDeclCode,\n"
-                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders, " << (fCI->getLangOpts().Modules ? "/*has C++ module*/true" : "/*has no C++ module*/false") << ");\n"
-                              "      isInitialized = true;\n"
-                              "    }\n"
-                              "  }\n"
-                              "  static struct DictInit {\n"
-                              "    DictInit() {\n"
-                              "      TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl();\n"
-                              "    }\n"
-                              "  } __TheDictionaryInitializer;\n"
-                              "}\n"
-                              "void TriggerDictionaryInitialization_" << GetDictionaryName() << "() {\n"
-                              "  TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl();\n"
-                              "}" << std::endl;
+   WriteRegistrationSourceImpl(out, GetDictionaryName(),
+                               GetDemangledDictionaryName(),
+                               headerArray,
+                               includePathArray,
+                               fwdDeclStringRAW,
+                               fwdDeclnArgsToKeepString,
+                               payloadcodeWrapped,
+                               headersClassesMapString,
+                               extraIncludes,
+                               /*HasCxxModule*/false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -520,19 +560,29 @@ void TModuleGenerator::WriteContentHeader(std::ostream &out) const
 bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFullPath) const
 {
    hdrFullPath = hdrName;
-   bool headerFound = false;
-   if (llvm::sys::fs::exists(hdrFullPath)) {
+   if (llvm::sys::fs::exists(hdrFullPath))
       return true;
-   } else {
-      for (auto const & incDir : fCompI) {
-         hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
-         if (llvm::sys::fs::exists(hdrFullPath)) {
-            headerFound = true;
-            break;
-         }
+   for (auto const &incDir : fCompI) {
+      hdrFullPath = incDir + ROOT::TMetaUtils::GetPathSeparator() + hdrName;
+      if (llvm::sys::fs::exists(hdrFullPath)) {
+         return true;
       }
    }
-   return headerFound;
+   clang::Preprocessor &PP = fCI->getPreprocessor();
+   clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
+   const clang::DirectoryLookup *CurDir = 0;
+   if (const clang::FileEntry *hdrFileEntry
+         =  HdrSearch.LookupFile(hdrName, clang::SourceLocation(),
+                                 true /*isAngled*/, 0 /*FromDir*/, CurDir,
+                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
+                                                         const clang::DirectoryEntry*>>(),
+                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
+                                 0 /*RequestingModule*/, 0/*SuggestedModule*/)) {
+      hdrFullPath = hdrFileEntry->getName();
+      return true;
+   }
+
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

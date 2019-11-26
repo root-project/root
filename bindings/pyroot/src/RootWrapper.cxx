@@ -121,11 +121,11 @@ namespace {
       Py_DECREF( property );
    }
 
-   void AddPropertyToClass( PyObject* pyclass,
-         Cppyy::TCppScope_t scope, const std::string& name, void* address )
+   void AddConstantPropertyToClass( PyObject* pyclass,
+         Cppyy::TCppScope_t scope, const std::string& name, void* address, TEnum* en )
    {
       PyROOT::PropertyProxy* property =
-         PyROOT::PropertyProxy_NewConstant( scope, name, address );
+         PyROOT::PropertyProxy_NewConstant( scope, name, address, en );
       AddPropertyToClass1( pyclass, property, kTRUE );
       Py_DECREF( property );
    }
@@ -362,9 +362,11 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    TEnum* e = 0;
    while ( (e = (TEnum*)ienum.Next()) ) {
       const TSeqCollection* seq = e->GetConstants();
+      auto isScoped = e->Property() & kIsScopedEnum;
+      if (isScoped) continue; // scoped enum: do not add constants as properties of the enum's scope
       for ( Int_t i = 0; i < seq->GetSize(); i++ ) {
          TEnumConstant* ec = (TEnumConstant*)seq->At( i );
-         AddPropertyToClass( pyclass, scope, ec->GetName(), ec->GetAddress() );
+         AddConstantPropertyToClass( pyclass, scope, ec->GetName(), ec->GetAddress(), e );
       }
    }
 
@@ -787,6 +789,11 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
       for ( auto method : methods )
          overloads.push_back( new TFunctionHolder( Cppyy::gGlobalScope, method ) );
       return (PyObject*)MethodProxy_New( name, overloads );
+   }
+
+   // Try function templates
+   if (Cppyy::ExistsMethodTemplate(Cppyy::gGlobalScope, name)) {
+      return (PyObject*)TemplateProxy_New(name, CreateScopeProxy(""));
    }
 
 // allow lookup into std as if global (historic)

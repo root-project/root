@@ -5,11 +5,20 @@ from .support import setup_make
 
 class TestBOOSTANY:
     def setup_class(cls):
+        cls.disable = False
         import cppyy
+        # TODO: better error handling
         cppyy.include('boost/any.hpp')
+        if not hasattr(cppyy.gbl, 'boost'):
+            cls.disable = True
 
     def test01_any_class(self):
         """Availability of boost::any"""
+
+        if self.disable:
+            import warnings
+            warnings.warn("no boost/any.hpp found, skipping test01_any_class")
+            return
 
         import cppyy
         assert cppyy.gbl.boost.any
@@ -21,6 +30,11 @@ class TestBOOSTANY:
 
     def test02_any_usage(self):
         """boost::any assignment and casting"""
+
+        if self.disable:
+            import warnings
+            warnings.warn("no boost/any.hpp found, skipping test02_any_usage")
+            return
 
         import cppyy
         assert cppyy.gbl.boost

@@ -9,31 +9,35 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import GetEndianess, GetVectorDataPointer, GetSizeOfType, AsRVec
+from libROOTPython import GetEndianess, GetDataPointer, GetSizeOfType, AsRVec
 
-_array_interface_dtypes = [
-    "float", "double", "int", "long", "unsigned int", "unsigned long"
-]
 
 _array_interface_dtype_map = {
     "float": "f",
     "double": "f",
     "int": "i",
     "long": "i",
+    "Long64_t": "i",
     "unsigned int": "u",
-    "unsigned long": "u"
+    "unsigned long": "u",
+    "ULong64_t": "u",
 }
 
 
 def get_array_interface(self):
-    cppname = type(self).__cppname__
-    for dtype in _array_interface_dtypes:
+    cppname = type(self).__cpp_name__
+    for dtype in _array_interface_dtype_map:
         if cppname.endswith("<{}>".format(dtype)):
             dtype_numpy = _array_interface_dtype_map[dtype]
             dtype_size = GetSizeOfType(dtype)
             endianess = GetEndianess()
             size = self.size()
-            pointer = GetVectorDataPointer(self, cppname)
+            # Numpy breaks for data pointer of 0 even though the array is empty.
+            # We set the pointer to 1 but the value itself is arbitrary and never accessed.
+            if self.empty():
+                pointer = 1
+            else:
+                pointer = GetDataPointer(self, cppname, "data")
             return {
                 "shape": (size, ),
                 "typestr": "{}{}{}".format(endianess, dtype_numpy, dtype_size),
@@ -44,7 +48,7 @@ def get_array_interface(self):
 
 def add_array_interface_property(klass, name):
     if True in [
-            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtypes
+            name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map
     ]:
         klass.__array_interface__ = property(get_array_interface)
 

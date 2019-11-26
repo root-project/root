@@ -54,7 +54,6 @@ public:
   virtual ~RooProdPdf() ;
 
   virtual Double_t getValV(const RooArgSet* set=0) const ;
-  Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
@@ -95,8 +94,11 @@ public:
 
   RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
   
-protected:
 
+private:
+
+  Double_t evaluate() const ;
+  virtual RooSpan<double> evaluateBatch(std::size_t begin, std::size_t size) const;
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
@@ -128,17 +130,17 @@ protected:
   // The cache object
   class CacheElem : public RooAbsCacheElement {
   public:
-    CacheElem() : _isRearranged(kFALSE), _rearrangedNum(0), _rearrangedDen(0) {} 
-    virtual ~CacheElem() ;
+    CacheElem() : _isRearranged(kFALSE) { } 
+    virtual ~CacheElem() = default;
     // Payload
     RooArgList _partList ;
     RooArgList _numList ;
     RooArgList _denList ;
     RooArgList _ownedList ;
-    std::vector<RooArgSet*> _normList;
+    std::vector<std::unique_ptr<RooArgSet>> _normList;
     Bool_t _isRearranged ;
-    RooAbsReal* _rearrangedNum ;
-    RooAbsReal* _rearrangedDen ;
+    std::unique_ptr<RooAbsReal> _rearrangedNum{};
+    std::unique_ptr<RooAbsReal> _rearrangedDen{};
     // Cache management functions
     virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
@@ -151,7 +153,6 @@ protected:
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   Double_t calculate(const RooProdPdf::CacheElem& cache, Bool_t verbose=kFALSE) const ;
-  Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
 
  
   friend class RooProdGenContext ;

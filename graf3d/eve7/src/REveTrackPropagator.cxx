@@ -2,7 +2,7 @@
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -210,9 +210,9 @@ Double_t             REveTrackPropagator::fgEditorMaxZ  = 4000;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-REveTrackPropagator::REveTrackPropagator(const char* n, const char* t,
+REveTrackPropagator::REveTrackPropagator(const std::string& n, const std::string& t,
                                          REveMagField *field, Bool_t own_field) :
-   REveElementList(n, t),
+   REveElement(n, t),
    REveRefBackPtr(),
 
    fStepper(kHelix),
@@ -247,7 +247,7 @@ REveTrackPropagator::REveTrackPropagator(const char* n, const char* t,
    fPTBAtt.SetMarkerStyle(4);
    fPTBAtt.SetMarkerSize(0.8);
 
-   if (fMagFieldObj == 0) {
+   if (!fMagFieldObj) {
       fMagFieldObj = new REveMagFieldConst(0., 0., fgDefMagField);
       fOwnMagFiledObj = kTRUE;
    }
@@ -276,30 +276,24 @@ void REveTrackPropagator::OnZeroRefCount()
 /// Check reference count - virtual from REveElement.
 /// Must also take into account references from REveRefBackPtr.
 
-void REveTrackPropagator::CheckReferenceCount(const REveException& eh)
+void REveTrackPropagator::CheckReferenceCount(const std::string& from)
 {
    if (fRefCount <= 0)
    {
-      REveElementList::CheckReferenceCount(eh);
+      REveElement::CheckReferenceCount(from);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Element-change notification.
 /// Stamp all tracks as requiring display-list regeneration.
-/// Virtual from REveElement.
 
-void REveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
+void REveTrackPropagator::StampAllTracks()
 {
-   REveTrack* track;
-   RefMap_i i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      track = dynamic_cast<REveTrack*>(i->first);
-      track->StampObjProps();
-      ++i;
+   for (auto &i: fBackRefs) {
+      auto track = dynamic_cast<REveTrack *>(i.first);
+      if (track) track->StampObjProps();
    }
-   REveElementList::ElementChanged(update_scenes, redraw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -814,6 +808,8 @@ void REveTrackPropagator::LineToBounds(REveVectorD& p)
       tZ = (fMaxZ - fV.fZ) / p.fZ;
    else if (p.fZ < 0)
       tZ = - (fMaxZ + fV.fZ) / p.fZ;
+   else
+      tZ = 1e99;
 
    // time where particle intersects cylinder
    Double_t a = p.fX*p.fX + p.fY*p.fY;
@@ -999,14 +995,12 @@ void REveTrackPropagator::FillPointSet(REvePointSet* ps) const
 
 void REveTrackPropagator::RebuildTracks()
 {
-   REveTrack* track;
-   RefMap_i i = fBackRefs.begin();
-   while (i != fBackRefs.end())
-   {
-      track = dynamic_cast<REveTrack*>(i->first);
-      track->MakeTrack();
-      track->StampObjProps();
-      ++i;
+   for (auto &i: fBackRefs) {
+      auto track = dynamic_cast<REveTrack *>(i.first);
+      if (track) {
+         track->MakeTrack();
+         track->StampObjProps();
+      }
    }
 }
 

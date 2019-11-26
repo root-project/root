@@ -154,6 +154,9 @@ else
    JUPYTER_PATH=$ROOTSYS/etc/notebook:$JUPYTER_PATH; export JUPYTER_PATH
 fi
 
+# Prevent Cppyy from checking the PCH (and avoid warning)
+export CLING_STANDARD_PCH=none
+
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"
 fi

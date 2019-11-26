@@ -257,11 +257,12 @@ std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 /// Replace all occurrences of \param from by \param to in content
 /// Used only internally
 
-void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to)
+void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to, bool once)
 {
    std::size_t start_pos = 0;
    while((start_pos = fContent.find(from, start_pos)) != std::string::npos) {
       fContent.replace(start_pos, from.length(), to);
+      if (once) return;
       start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
    }
 }

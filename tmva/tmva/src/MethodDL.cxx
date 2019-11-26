@@ -61,7 +61,9 @@ using TMVA::DNN::EInitialization;
 using TMVA::DNN::EOutputFunction;
 using TMVA::DNN::EOptimizer;
 
+
 namespace TMVA {
+
 
 ////////////////////////////////////////////////////////////////////////////////
 TString fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key)
@@ -359,6 +361,7 @@ void MethodDL::ProcessOptions()
       }
 
       TString optimizer = fetchValueTmp(block, "Optimizer", TString("ADAM"));
+      settings.optimizerName = optimizer;
       if (optimizer == "SGD") {
          settings.optimizer = DNN::EOptimizer::kSGD;
       } else if (optimizer == "ADAM") {
@@ -373,7 +376,9 @@ void MethodDL::ProcessOptions()
          // Make Adam as default choice if the input string is
          // incorrect.
          settings.optimizer = DNN::EOptimizer::kAdam;
+         settings.optimizerName = "ADAM";
       }
+      
 
       TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
 
@@ -384,6 +389,27 @@ void MethodDL::ProcessOptions()
       }
 
       fTrainingSettings.push_back(settings);
+   }
+
+   // case inputlayout and batch layout was not given. Use default then
+   // (1, batchsize, nvariables)
+   if (fInputWidth == 0 && fInputHeight == 0 && fInputDepth == 0) {
+      fInputDepth = 1;
+      fInputHeight = 1;
+      fInputWidth = GetNVariables();
+   }
+   if (fBatchWidth == 0 && fBatchHeight == 0 && fBatchDepth == 0) {
+      if (fInputHeight == 1 && fInputDepth == 1) {
+         // case of (1, batchsize, input features)
+         fBatchDepth = 1;
+         fBatchHeight = fTrainingSettings.front().batchSize;
+         fBatchWidth = fInputWidth;
+      }
+      else { // more general cases (e.g. for CNN) 
+         fBatchDepth = fTrainingSettings.front().batchSize;
+         fBatchHeight = fInputDepth;
+         fBatchWidth = fInputWidth*fInputHeight;
+      }
    }
 }
 
@@ -507,6 +533,7 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 
 
    for (; layerString != nullptr; layerString = (TObjString *)nextLayer()) {
+
       // Split layer details
       TObjArray *subStrings = layerString->GetString().Tokenize(subDelimiter);
       TIter nextToken(subStrings);
@@ -524,11 +551,17 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          ParseMaxPoolLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RESHAPE") {
          ParseReshapeLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "BNORM") {
+         ParseBatchNormLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RNN") {
          ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
-      } else if (strLayerType == "LSTM") {
-         Log() << kFATAL << "LSTM Layer is not yet fully implemented" << Endl;
-         //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      // } else if (strLayerType == "LSTM") {
+      //    Log() << kError << "LSTM Layer is not yet fully implemented" << Endl;
+      //    //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      //    break;
+      } else {
+         // no type of layer specified - assume is dense layer as in old DNN interface
+         ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       }
    }
 }
@@ -559,10 +592,11 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    // both  100|TANH and TANH|100 are valid cases
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       idxToken++;
-      // first token defines the layer type- skip it 
-      if (idxToken == 1) continue;
       // try a match with the activation function 
       TString strActFnc(token->GetString());
+      // if first token defines the layer type- skip it 
+      if (strActFnc =="DENSE") continue;
+
       if (strActFnc == "RELU") {
          activationFunction = DNN::EActivationFunction::kRelu;
       } else if (strActFnc == "TANH") {
@@ -591,6 +625,8 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
       }
 
    }
+   // avoid zero width. assume is 1
+   if (width == 0) width = 1; 
 
    // Add the dense layer, initialize the weights and biases and copy
    TDenseLayer<Architecture_t> *denseLayer = deepNet.AddDenseLayer(width, activationFunction);
@@ -832,6 +868,47 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate reshape layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseBatchNormLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
+                                 TString delim)
+{
+    
+   // default values 
+   double momentum = -1; //0.99; 
+   double epsilon = 0.0001; 
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: {
+         momentum = std::atof(token->GetString().Data());
+      } break;
+      case 2: // height
+      {
+         epsilon = std::atof(token->GetString().Data());
+      } break;
+      }
+      ++idxToken;
+   }
+  
+   // Add the batch norm  layer
+   // 
+   auto layer = deepNet.AddBatchNormLayer(momentum, epsilon);
+   layer->Initialize();
+
+   // Add the same layer to fNet
+   if (fBuildNet) fNet->AddBatchNormLayer(momentum, epsilon);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Pases the layer string and creates the appropriate rnn layer
 template <typename Architecture_t, typename Layer_t>
 void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
@@ -1057,7 +1134,6 @@ UInt_t TMVA::MethodDL::GetNumValidationSamples()
 template <typename Architecture_t>
 void MethodDL::TrainDeepNet()
 {
-   
 
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Layer_t = TMVA::DNN::VGeneralLayer<Architecture_t>;
@@ -1150,18 +1226,17 @@ void MethodDL::TrainDeepNet()
                << " of them." << Endl;
       }
 
-
       DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
 
       // create a copy of DeepNet for evaluating but with batch size = 1
       // fNet is the saved network and will be with CPU or Referrence architecture
       if (trainingPhase == 1) {
-         fNet = std::unique_ptr<DeepNetImpl_t>(new DeepNetImpl_t(1, inputDepth, inputHeight, inputWidth, batchDepth, 
+         fNet = std::unique_ptr<DeepNetImpl_t>(new DeepNetImpl_t(1, inputDepth, inputHeight, inputWidth, batchDepth,
                                                                  batchHeight, batchWidth, J, I, R, weightDecay));
-         fBuildNet = true; 
+         fBuildNet = true;
       }
       else
-         fBuildNet = false; 
+         fBuildNet = false;
 
       // Initialize the vector of slave nets
       std::vector<DeepNet_t> nets{};
@@ -1171,16 +1246,26 @@ void MethodDL::TrainDeepNet()
          nets.push_back(deepNet);
       }
 
+
       // Add all appropriate layers to deepNet and (if fBuildNet is true) also to fNet
       CreateDeepNet(deepNet, nets);
+
+
+      // set droput probabilities
+      // use convention to store in the layer 1.- dropout probabilities
+      std::vector<Double_t> dropoutVector(settings.dropoutProbabilities);
+      for (auto & p : dropoutVector) {
+         p = 1.0 - p;
+      }
+      deepNet.SetDropoutProbabilities(dropoutVector);
 
       if (trainingPhase > 1) {
          // copy initial weights from fNet to deepnet
          for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
-            const auto & nLayer = fNet->GetLayerAt(i); 
+            const auto & nLayer = fNet->GetLayerAt(i);
             const auto & dLayer = deepNet.GetLayerAt(i);
             // could use a traits for detecting equal architectures
-           // dLayer->CopyWeights(nLayer->GetWeights()); 
+           // dLayer->CopyWeights(nLayer->GetWeights());
            //  dLayer->CopyBiases(nLayer->GetBiases());
             Architecture_t::CopyDiffArch(dLayer->GetWeights(), nLayer->GetWeights() );
             Architecture_t::CopyDiffArch(dLayer->GetBiases(), nLayer->GetBiases() );
@@ -1279,8 +1364,9 @@ void MethodDL::TrainDeepNet()
       std::chrono::time_point<std::chrono::system_clock> tstart, tend;
       tstart = std::chrono::system_clock::now();
 
-      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":    "
-            << "Learning rate = " << settings.learningRate 
+      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ": "
+            << " Optimizer " << settings.optimizerName 
+            << " Learning rate = " << settings.learningRate 
             << " regularization " << (char) settings.regularization 
             << " minimum error = " << minValError
             << Endl;
@@ -1474,7 +1560,10 @@ void MethodDL::Train()
       return;
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
-      Log() << kINFO << "Start of deep neural network training on CPU." << Endl << Endl;
+      // note that number of threads used for BLAS might be different
+      // e.g use openblas_set_num_threads(num_threads) for OPENBLAS backend      
+      Log() << kINFO << "Start of deep neural network training on CPU using (for ROOT-IMT) nthreads = "
+            << gConfig().GetNCpu() << Endl << Endl;
       TrainDeepNet<DNN::TCpu<ScalarImpl_t> >(); 
 #else
       Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
@@ -2027,6 +2116,11 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          
          fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
          
+      }
+       // BatchNorm Layer
+      else if (layerName == "BatchNormLayer") {   
+         // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
+         fNet->AddBatchNormLayer(0., 0.0);
       }
 
 

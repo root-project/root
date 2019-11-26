@@ -81,11 +81,13 @@ enum EProperty {
    kIsReference     = 0x00010000,
    kIsDirectInherit = 0x00020000,
    kIsCCompiled     = 0x00040000,
-   kIsCPPCompiled   = 0x00080000,
-   kIsCompiled      = 0x000C0000,
+   kIsCPPCompiled   = kIsCCompiled,
+   kIsCompiled      = kIsCCompiled,
    kIsConstant      = 0x00100000,
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
+   kIsScopedEnum    = 0x00800000,
+   kIsConstexpr     = 0x02000000,
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
@@ -105,6 +107,7 @@ enum EFunctionProperty {
    kIsPrivate       = 0x00000800,
    kIsStatic        = 0x00004000,
    kIsDefault       = 0x00008000,
+   kIsConstexpr     = 0x02000000
    kIsExplicit      = 0x04000000,
    kIsConstMethod   = 0x10000000,
 */
@@ -120,7 +123,8 @@ enum EFunctionProperty {
    kIsConstructor = 0x00000001,
    kIsConversion  = 0x00000002,
    kIsDestructor  = 0x00000004,
-   kIsOperator    = 0x00000008
+   kIsOperator    = 0x00000008,
+   kIsInlined     = 0x00000010
 };
 
 enum EClassProperty {

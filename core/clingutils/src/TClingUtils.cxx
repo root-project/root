@@ -25,6 +25,7 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
 
 #include "RStl.h"
@@ -60,10 +61,21 @@
 
 #ifdef _WIN32
 #define strncasecmp _strnicmp
-#endif
+#include <io.h>
+#else
+#include <unistd.h>
+#endif // _WIN32
 
 namespace ROOT {
 namespace TMetaUtils {
+
+std::string GetRealPath(const std::string &path)
+{
+   llvm::SmallString<256> result_path;
+   llvm::sys::fs::real_path(path, result_path, /*expandTilde*/true);
+   return result_path.str().str();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -466,10 +478,13 @@ TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
                                        TNormalizedCtxt &normCtxt,
                                        ExistingTypeCheck_t existingTypeCheck,
                                        AutoParse_t autoParse,
+                                       bool *shuttingDownPtr,
                                        const int* pgDebug /*= 0*/):
    fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt),
    fExistingTypeCheck(existingTypeCheck),
-   fAutoParse(autoParse), fPDebug(pgDebug)
+   fAutoParse(autoParse),
+   fInterpreterIsShuttingDownPtr(shuttingDownPtr),
+   fPDebug(pgDebug)
 {
 }
 
@@ -540,7 +555,8 @@ bool TClingLookupHelper::IsDeclaredScope(const std::string &base, bool &isInline
 /// [const] typename[*&][const]
 
 bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname,
-                                                                    std::string &result)
+                                                                    std::string &result,
+                                                                    bool dropstd /* = true */)
 {
    if (tname.empty()) return false;
 
@@ -585,13 +601,13 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          if (strncmp(result.c_str(), "const ", 6) == 0) {
             offset = 6;
          }
-         if (strncmp(result.c_str()+offset, "std::", 5) == 0) {
+         if (dropstd && strncmp(result.c_str()+offset, "std::", 5) == 0) {
             result.erase(offset,5);
          }
          for(unsigned int i = 1; i<result.length(); ++i) {
             if (result[i]=='s') {
                if (result[i-1]=='<' || result[i-1]==',' || result[i-1]==' ') {
-                  if (result.compare(i,5,"std::",5) == 0) {
+                  if (dropstd && result.compare(i,5,"std::",5) == 0) {
                      result.erase(i,5);
                   }
                }
@@ -618,9 +634,18 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
    return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// TClassEdit will call this routine as soon as any of its static variable (used
+// for caching) is destroyed.
+void TClingLookupHelper::ShuttingDownSignal()
+{
+   if (fInterpreterIsShuttingDownPtr)
+      *fInterpreterIsShuttingDownPtr = true;
+}
 
    } // end namespace ROOT
 } // end namespace TMetaUtils
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert the type with name into the collection of typedefs to keep.
@@ -1116,12 +1141,14 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl)
+bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl,
+                                      const cling::Interpreter& interp)
 {
    if (!cl) return false;
 
    if (cl->hasUserDeclaredDestructor()) {
 
+      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
       clang::CXXDestructorDecl *dest = cl->getDestructor();
       if (dest) {
          return (dest->getAccess() == clang::AS_public);
@@ -1678,7 +1705,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << "\n";
 
-      if (args.size()==0 && NeedDestructor(decl))
+      if (args.size()==0 && NeedDestructor(decl, interp))
       {
          finalString << "   static void *newArray_";
          finalString << mappedname.c_str();
@@ -1687,7 +1714,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       }
    }
 
-   if (NeedDestructor(decl)) {
+   if (NeedDestructor(decl, interp)) {
       finalString << "   static void delete_" << mappedname.c_str() << "(void *p);" << "\n" << "   static void deleteArray_" << mappedname.c_str() << "(void *p);" << "\n" << "   static void destruct_" << mappedname.c_str() << "(void *p);" << "\n";
    }
    if (HasDirectoryAutoAdd(decl, interp)) {
@@ -1710,10 +1737,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    // Check if we have any schema evolution rules for this class
    /////////////////////////////////////////////////////////////////////////////
 
-   std::string declName;
-   ROOT::TMetaUtils::GetQualifiedName(declName,*decl);
-   ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( declName.c_str() );
-   ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( declName.c_str() );
+   ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( classname.c_str() );
+   ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( classname.c_str() );
 
    ROOT::MembersTypeMap_t nameTypeMap;
    CreateNameTypeMap( *decl, nameTypeMap ); // here types for schema evo are written
@@ -1864,10 +1889,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol << ") );" << "\n";
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
-      if (args.size()==0 && NeedDestructor(decl))
+      if (args.size()==0 && NeedDestructor(decl, interp))
          finalString << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << "\n";
    }
-   if (NeedDestructor(decl)) {
+   if (NeedDestructor(decl, interp)) {
       finalString << "      instance.SetDelete(&delete_" << mappedname.c_str() << ");" << "\n" << "      instance.SetDeleteArray(&deleteArray_" << mappedname.c_str() << ");" << "\n" << "      instance.SetDestructor(&destruct_" << mappedname.c_str() << ");" << "\n";
    }
    if (HasDirectoryAutoAdd(decl, interp)) {
@@ -2334,7 +2359,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
       finalString << "new " << classname.c_str() << args << ";" << "\n";
       finalString << "   }" << "\n";
 
-      if (args.size()==0 && NeedDestructor(decl)) {
+      if (args.size()==0 && NeedDestructor(decl, interp)) {
          // Can not can newArray if the destructor is not public.
          finalString << "   static void *newArray_";
          finalString << mappedname.c_str();
@@ -2359,7 +2384,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
       }
    }
 
-   if (NeedDestructor(decl)) {
+   if (NeedDestructor(decl, interp)) {
       finalString << "   // Wrapper around operator delete" << "\n" << "   static void delete_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete ((" << classname.c_str() << "*)p);" << "\n" << "   }" << "\n" << "   static void deleteArray_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete [] ((" << classname.c_str() << "*)p);" << "\n" << "   }" << "\n" << "   static void destruct_" << mappedname.c_str() << "(void *p) {" << "\n" << "      typedef " << classname.c_str() << " current_t;" << "\n" << "      ((current_t*)p)->~current_t();" << "\n" << "   }" << "\n";
    }
 
@@ -3055,7 +3080,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
       // Check the token
       if (isdigit(current[0])) {
          for(i=0;i<strlen(current);i++) {
-            if (!isdigit(current[0])) {
+            if (!isdigit(current[i])) {
                // Error we only access integer.
                //NOTE: *** Need to print an error;
                //fprintf(stderr,"*** Datamember %s::%s: size of array (%s) is not an interger\n",
@@ -3983,7 +4008,7 @@ ROOT::TMetaUtils::GetNameTypeForIO(const clang::QualType& thisType,
    if (!hasChanged) return std::make_pair(thisTypeName,thisType);
 
    if (hasChanged && ROOT::TMetaUtils::GetErrorIgnoreLevel() <= ROOT::TMetaUtils::kNote) {
-      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO", 
+      ROOT::TMetaUtils::Info("ROOT::TMetaUtils::GetTypeForIO",
         "Name changed from %s to %s\n", thisTypeName.c_str(), thisTypeNameForIO.c_str());
    }
 
@@ -4069,7 +4094,14 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 
    // If the location is a macro get the expansion location.
    sourceLocation = sourceManager.getExpansionRange(sourceLocation).second;
-   if (sourceManager.isLoadedSourceLocation(sourceLocation)) {
+   // FIXME: We should optimize this routine instead making it do the wrong thing
+   // returning an empty comment if the decl came from the AST.
+   // In order to do that we need to: check if the decl has an attribute and
+   // return the attribute content (including walking the redecl chain) and if
+   // this is not the case we should try finding it in the header file.
+   // This will allow us to move the implementation of TCling*Info::Title() in
+   // TClingDeclInfo.
+   if (!decl.hasOwningModule() && sourceManager.isLoadedSourceLocation(sourceLocation)) {
       // Do not touch disk for nodes coming from the PCH.
       return "";
    }
@@ -4908,17 +4940,9 @@ void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the separator suitable for this platform.
-/// To be replaced at the next llvm upgrade by
-/// const StringRef llvm::sys::path::get_separator()
-
 const std::string& ROOT::TMetaUtils::GetPathSeparator()
 {
-#ifdef WIN32
-   static const std::string gPathSeparator ("\\");
-#else
-   static const std::string gPathSeparator ("/");
-#endif
-   return gPathSeparator;
+   return ROOT::FoundationUtils::GetPathSeparator();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

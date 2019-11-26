@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel, Jochen Thaeder 2009
+// @(#)root/eve7:$Id$
+// Author: Matevz Tadel, Jochen Thaeder 2009, 2018
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,7 +22,9 @@ namespace Experimental {
 // REveJetCone
 //------------------------------------------------------------------------------
 
-class REveJetCone : public REveShape {
+class REveJetCone : public REveShape,
+                    public REveProjectable
+{
    friend class REveJetConeProjected;
 
 private:
@@ -47,11 +49,11 @@ public:
    REveJetCone(const Text_t *n = "REveJetCone", const Text_t *t = "");
    virtual ~REveJetCone() {}
 
-   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset); // override;
-   void BuildRenderData();                                   // override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 
-   void ComputeBBox();                                    // override;
-   TClass *ProjectedClass(const REveProjection *p) const; // override;
+   void ComputeBBox() override;
+   TClass *ProjectedClass(const REveProjection *p) const override;
 
    void SetApex(const REveVector &a) { fApex = a; }
    void SetCylinder(Float_t r, Float_t z)
@@ -70,38 +72,37 @@ public:
 
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length = 0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length = 0);
-
-   ClassDef(REveJetCone, 0); // Short description.
 };
+
 
 //------------------------------------------------------------------------------
 // REveJetConeProjected
 //------------------------------------------------------------------------------
 
-class REveJetConeProjected : public REveShape, public REveProjected {
+class REveJetConeProjected : public REveShape,
+                             public REveProjected
+{
 private:
    REveJetConeProjected(const REveJetConeProjected &);            // Not implemented
    REveJetConeProjected &operator=(const REveJetConeProjected &); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
-   REveJetConeProjected(const char *n = "REveJetConeProjected", const char *t = "");
+   REveJetConeProjected(const std::string &n = "REveJetConeProjected", const std::string& t = "");
    virtual ~REveJetConeProjected();
 
-   void BuildRenderData(); // override;
+   void BuildRenderData() override;
 
    // For TAttBBox:
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    // Projected:
-   virtual void SetProjection(REveProjectionManager *mng, REveProjectable *model);
-   virtual void UpdateProjection();
+   void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
+   void UpdateProjection() override;
 
-   virtual REveElement *GetProjectedAsElement() { return this; }
-
-   ClassDef(REveJetConeProjected, 0); // Projection of REveJetCone.
+   REveElement *GetProjectedAsElement() override { return this; }
 };
 
 } // namespace Experimental

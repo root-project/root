@@ -4,7 +4,6 @@ import sys
 def get_argparse():
 	DESCRIPTION = """This program will add histograms from a list of root files and write them to a target root file.\n
 The target file is newly created and must not exist, or if -f (\"force\") is given, must not be one of the source files.\n
-Supply at least two source files for this to make sense... ;-)
 """
 	EPILOGUE = """
 If Target and source files have different compression settings a slower method is used.
@@ -34,4 +33,6 @@ compression setting after fk (for example 206 when using -fk206)""")
 	parser.add_argument("-ff", help="The compression level use is the one specified in the first input")
 	parser.add_argument("-f0", help="Do not compress the target file")
 	parser.add_argument("-f6", help="Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)")
+	parser.add_argument("TARGET", help="Target file")
+	parser.add_argument("SOURCES", help="Source files")
 	return parser

@@ -88,7 +88,10 @@ namespace cling {
 #include "Varargs.h"
 
 namespace ROOT {
-   namespace TMetaUtils {
+namespace TMetaUtils {
+
+///\returns the resolved normalized absolute path possibly resolving symlinks.
+std::string GetRealPath(const std::string &path);
 
 // Forward Declarations --------------------------------------------------------
 class AnnotatedRecordDecl;
@@ -161,6 +164,7 @@ private:
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
    AutoParse_t         fAutoParse;
+   bool               *fInterpreterIsShuttingDownPtr;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
@@ -168,6 +172,7 @@ public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
                       ExistingTypeCheck_t existingTypeCheck,
                       AutoParse_t autoParse,
+                      bool *shuttingDownPtr,
                       const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
@@ -175,7 +180,8 @@ public:
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
    virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
-   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result);
+   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true);
+   virtual void ShuttingDownSignal();
 };
 
 //______________________________________________________________________________
@@ -400,7 +406,7 @@ bool hasOpaqueTypedef(const AnnotatedRecordDecl &cl, const cling::Interpreter &i
 bool HasResetAfterMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
-bool NeedDestructor(clang::CXXRecordDecl const*);
+bool NeedDestructor(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
 bool NeedTemplateKeyword(clang::CXXRecordDecl const*);

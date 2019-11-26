@@ -34,6 +34,8 @@ public:
 
    MinosError(const MinosError& err) : fParameter(err.fParameter), fMinValue(err.fMinValue), fUpper(err.fUpper),  fLower(err.fLower) {}
 
+   MinosError& operator=(const MinosError& ) = default;
+
    MinosError& operator()(const MinosError& err) {
       fParameter = err.fParameter;
       fMinValue = err.fMinValue;

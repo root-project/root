@@ -12,7 +12,7 @@
 /** \class TPDF
 \ingroup PS
 
-Interface to PDF.
+\brief Interface to PDF.
 
 Like PostScript, PDF is a vector graphics output format allowing a very high
 graphics output quality. The functionalities provided by this class are very
@@ -872,14 +872,14 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          MoveTo(ix-m6, iy-m6);
          LineTo(ix-m6, iy-m2);
       }
-   }
 
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintFast(2," f");
-   } else {
-      PrintFast(2," S");
+      if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
+          ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
+          ms == 47 || ms == 48 || ms == 49) {
+         PrintFast(2," f");
+      } else {
+         PrintFast(2," S");
+      }
    }
 
    SetLineStyle(linestylesav);
@@ -1001,16 +1001,16 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          LineTo(ix-m2, iy-m6);
          PrintFast(2," h");
       } else if (ms == 29 || ms == 30) {
-         MoveTo(ix           , iy+m2);
-         LineTo(ix+0.112255*m, iy+0.15451*m);
-         LineTo(ix+0.47552*m , iy+0.15451*m);
-         LineTo(ix+0.181635*m, iy-0.05902*m);
-         LineTo(ix+0.29389*m , iy-0.40451*m);
-         LineTo(ix           , iy-0.19098*m);
-         LineTo(ix-0.29389*m , iy-0.40451*m);
-         LineTo(ix-0.181635*m, iy-0.05902*m);
-         LineTo(ix-0.47552*m , iy+0.15451*m);
-         LineTo(ix-0.112255*m, iy+0.15451*m);
+         MoveTo(ix           , iy-m2);
+         LineTo(ix-0.112255*m, iy-0.15451*m);
+         LineTo(ix-0.47552*m , iy-0.15451*m);
+         LineTo(ix-0.181635*m, iy+0.05902*m);
+         LineTo(ix-0.29389*m , iy+0.40451*m);
+         LineTo(ix           , iy+0.19098*m);
+         LineTo(ix+0.29389*m , iy+0.40451*m);
+         LineTo(ix+0.181635*m, iy+0.05902*m);
+         LineTo(ix+0.47552*m , iy-0.15451*m);
+         LineTo(ix+0.112255*m, iy-0.15451*m);
          PrintFast(2," h");
       } else if (ms == 35 ) {
          MoveTo(ix-m2, iy   );
@@ -1172,14 +1172,13 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          MoveTo(ix-1, iy);
          LineTo(ix  , iy);
       }
-   }
-
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintFast(2," f");
-   } else {
-      PrintFast(2," S");
+      if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
+          ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
+          ms == 47 || ms == 48 || ms == 49) {
+         PrintFast(2," f");
+      } else {
+         PrintFast(2," S");
+      }
    }
 
    SetLineStyle(linestylesav);

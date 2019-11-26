@@ -132,6 +132,7 @@ void TGeoNodeCache::BuildIdArray()
    Int_t ifree  = 1;
    Int_t nodeid = 0;
    gGeoManager->GetTopNode()->FillIdArray(ifree, nodeid, fNodeIdArray);
+   gGeoManager->CdTop();
    fIdBranch[0] = 0;
 }
 

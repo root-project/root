@@ -16,10 +16,7 @@ class TSeqCollectionListMethods(unittest.TestCase):
     def create_tseqcollection(self):
         sc = ROOT.TList()
         for i in reversed(range(self.num_elems)):
-            o = ROOT.TObjString(str(i))
-            # Prevent immediate deletion of C++ TObjStrings
-            SetOwnership(o, False)
-            sc.Add(o)
+            sc.Add(ROOT.TObjString(str(i)))
 
         return sc
 
@@ -85,6 +82,11 @@ class TSeqCollectionListMethods(unittest.TestCase):
         # Pop with non-integer argument
         with self.assertRaises(TypeError):
             sc2.pop(1.0)
+
+        # Pop a repeated element
+        sc2.append(ROOT.TObjString('2'))
+        elem = sc2.pop()
+        self.assertEqual(sc2.At(0), elem)
 
     def test_reverse(self):
         sc = self.create_tseqcollection()

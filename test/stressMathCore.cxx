@@ -85,6 +85,8 @@
 #include "Math/SVector.h"
 #include "Math/SMatrix.h"
 
+R__ADD_INCLUDE_PATH($ROOTSYS/test)
+
 #include "TrackMathCore.h"
 #include "Math/GenVector/RotationZ.h" // Workaround to autoload libGenVector ROOT-7056
 
@@ -1583,6 +1585,9 @@ int stressMathCore(double nscale = 1) {
 
 
 int main(int argc,const char *argv[]) {
+   std::string inclRootSys = ("-I" + TROOT::GetRootSys() + "/test").Data();
+   TROOT::AddExtraInterpreterArgs({inclRootSys});
+
    double nscale = 1;
    if (argc > 1) {
       nscale = atof(argv[1]);

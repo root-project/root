@@ -1,8 +1,15 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT math/smatrix package
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__Smatrix
+ROOT_STANDARD_LIBRARY_PACKAGE(Smatrix
+  HEADERS
     Math/BinaryOperators.h
     Math/BinaryOpPolicy.h
     Math/CholeskyDecomp.h
@@ -24,8 +31,7 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix
     Math/StaticCheck.h
     Math/SVector.h
     Math/UnaryOperators.h
-  MODULE
-    Smatrix
+  NO_SOURCES
   LINKDEF
     LinkDef.h
   OPTIONS
@@ -51,13 +57,3 @@ ROOT_GENERATE_DICTIONARY(G__Smatrix32
     Core
     MathCore
 )
-
-ROOT_LINKER_LIBRARY(Smatrix
-    G__Smatrix.cxx
-    G__Smatrix32.cxx
-  DEPENDENCIES
-    Core
-    MathCore
-)
-
-ROOT_INSTALL_HEADERS()

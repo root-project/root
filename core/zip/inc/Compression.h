@@ -38,6 +38,7 @@ namespace ROOT {
 ///   since in the case of LZMA we don't care about compression/decompression speed)
 ///   [207 - 208]
 ///  - LZ4 is recommended to be used with compression level 4 [404]
+///  - ZSTD is recommended to be used with compression level 5 [505]
 
 struct RCompressionSetting {
    struct EDefaults { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
@@ -52,7 +53,7 @@ struct RCompressionSetting {
          /// Use the recommended general-purpose setting; moderate read / write speed and compression ratio
          kUseGeneralPurpose = 101,
          /// Use the setting that results in the smallest files; very slow read and write
-         kUseSmallest = 207
+         kUseSmallest = 207,
       };
    };
    struct ELevel { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
@@ -67,6 +68,7 @@ struct RCompressionSetting {
          kUseMin = 1,
          kDefaultZLIB = 1,
          kDefaultLZ4 = 4,
+         kDefaultZSTD = 5,
          kDefaultOld = 6,
          kDefaultLZMA = 7
       };
@@ -87,6 +89,8 @@ struct RCompressionSetting {
          kOldCompressionAlgo,
          /// Use LZ4 compression
          kLZ4,
+         /// Use ZSTD compression
+         kZSTD,
          /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
          kUndefined
       };
@@ -106,6 +110,8 @@ enum ECompressionAlgorithm {
    kOldCompressionAlgo = RCompressionSetting::EAlgorithm::kOldCompressionAlgo,
    /// Deprecated name, do *not* use:
    kLZ4 = RCompressionSetting::EAlgorithm::kLZ4,
+   /// Deprecated name, do *not* use:
+   kZSTD = RCompressionSetting::EAlgorithm::kZSTD,
    /// Deprecated name, do *not* use:
    kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
 };

@@ -66,6 +66,9 @@ protected:
    Int_t                 fXHighlightBin;     //X highlight bin
    Int_t                 fYHighlightBin;     //Y highlight bin
 
+private:
+   mutable TString fObjectInfo;
+
 public:
    THistPainter();
    virtual ~THistPainter();

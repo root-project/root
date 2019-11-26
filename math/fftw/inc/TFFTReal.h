@@ -12,53 +12,6 @@
 #ifndef ROOT_TFFTReal
 #define ROOT_TFFTReal
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TFFTReal
-// One of the interface classes to the FFTW package, can be used directly
-// or via the TVirtualFFT class. Only the basic interface of FFTW is implemented.
-//
-// Computes transforms called r2r in FFTW manual:
-// - transforms of real input and output in "halfcomplex" format i.e.
-//   real and imaginary parts for a transform of size n stored as
-//   (r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1)
-// - discrete Hartley transform
-// - sine and cosine transforms (DCT-I,II,III,IV and DST-I,II,III,IV)
-// For the detailed information on the computed
-// transforms please refer to the FFTW manual, chapter "What FFTW really computes".
-//
-// How to use it:
-// 1) Create an instance of TFFTReal - this will allocate input and output
-//    arrays (unless an in-place transform is specified)
-// 2) Run the Init() function with the desired flags and settings (see function
-//    comments for possible kind parameters)
-// 3) Set the data (via SetPoints()or SetPoint() functions)
-// 4) Run the Transform() function
-// 5) Get the output (via GetPoints() or GetPoint() functions)
-// 6) Repeat steps 3)-5) as needed
-// For a transform of the same size, but of different kind (or with different flags),
-// rerun the Init() function and continue with steps 3)-5)
-//
-// NOTE: 1) running Init() function will overwrite the input array! Don't set any data
-//          before running the Init() function!
-//       2) FFTW computes unnormalized transform, so doing a transform followed by
-//          its inverse will lead to the original array scaled BY:
-//          - transform size (N) for R2HC, HC2R, DHT transforms
-//          - 2*(N-1) for DCT-I (REDFT00)
-//          - 2*(N+1) for DST-I (RODFT00)
-//          - 2*N for the remaining transforms
-// Transform inverses:
-// R2HC<-->HC2R
-// DHT<-->DHT
-// DCT-I<-->DCT-I
-// DCT-II<-->DCT-III
-// DCT-IV<-->DCT-IV
-// DST-I<-->DST-I
-// DST-II<-->DST-III
-// DST-IV<-->DST-IV
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TVirtualFFT.h"
 #include "TString.h"
 

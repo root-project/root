@@ -43,8 +43,8 @@
 #   define cygwingcc
 #endif
 
-#ifdef __linux__
-#define linux
+#if defined(__linux__) && !defined(linux)
+# define linux
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
@@ -141,12 +141,6 @@ static std::string gRndmSalt = std::string("ABCDEFGH");
 #include <shadow.h>
 #endif
 
-#ifdef R__KRB5
-#include "Krb5Auth.h"
-#include <string>
-extern krb5_deltat krb5_clockskew;
-#endif
-
 #ifdef R__SSL
 // SSL specific headers for RSA keys
 #include <openssl/bio.h>
@@ -231,10 +225,9 @@ std::string gServName[3] = { "sockd", "rootd", "proofd" };
 //
 // Local global consts
 static const int gAUTH_CLR_MSK = 0x1;     // Masks for authentication methods
-static const int gAUTH_KRB_MSK = 0x4;
 static const int gMAXTABSIZE = 50000000;
 
-static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Krb5",
+static const std::string gAuthMeth[kMAXSEC] = { "UsrPwd", "Unsupported", "Unsupported",
                                                 "Unsupported", "Unsupported", "Unsupported" };
 static const std::string gAuthTab    = "/rpdauthtab";   // auth table
 static const std::string gDaemonRc   = ".rootdaemonrc"; // daemon access rules
@@ -298,14 +291,6 @@ static char *gUserAllow[kMAXSEC] = { 0 };          // User access control
 static unsigned int gUserAlwLen[kMAXSEC] = { 0 };
 static unsigned int gUserIgnLen[kMAXSEC] = { 0 };
 static char *gUserIgnore[kMAXSEC] = { 0 };
-
-//
-// Kerberos stuff
-#ifdef R__KRB5
-static krb5_context gKcontext;
-static krb5_keytab gKeytab = 0;        // default Keytab file can be changed
-static std::string gKeytabFile = "";   // via RpdSetKeytabFile
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
@@ -543,48 +528,6 @@ int RpdGetOffSet()
    return gOffSet;
 }
 
-#ifdef R__KRB5
-////////////////////////////////////////////////////////////////////////////////
-/// Change the value of the static gKeytab to keytab.
-
-void RpdSetKeytabFile(const char *keytabfile)
-{
-   gKeytabFile = std::string(keytabfile);
-   if (gDebug > 2)
-      ErrorInfo("RpdSetKeytabFile: using keytab file %s", gKeytabFile.c_str());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Free allocated quantities for Krb stuff
-
-void RpdFreeKrb5Vars(krb5_context context, krb5_principal principal,
-                     krb5_ticket *ticket, krb5_auth_context auth_context,
-                     krb5_creds **creds)
-{
-   if (context) {
-      // free creds
-      if (creds)
-         krb5_free_tgt_creds(context,creds);
-
-      // free auth_context
-      if (auth_context)
-         krb5_auth_con_free(context, auth_context);
-
-      // free ticket
-      if (ticket)
-         krb5_free_ticket(context,ticket);
-
-      // free principal
-      if (principal)
-         krb5_free_principal(context, principal);
-
-      // free context
-      krb5_free_context(context);
-   }
-}
-
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 int RpdGetAuthMethod(int kind)
@@ -593,8 +536,6 @@ int RpdGetAuthMethod(int kind)
 
    if (kind == kROOTD_USER)
       method = 0;
-   if (kind == kROOTD_KRB5)
-      method = 2;
 
    return method;
 }
@@ -1543,7 +1484,6 @@ bool RpdCheckToken(char *token, char *tknref)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the requiring subject has already authenticated during this session
 /// and its 'ticket' is still valid.
-/// Not implemented for Krb5 (yet).
 
 int RpdReUseAuth(const char *sstr, int kind)
 {
@@ -1563,27 +1503,6 @@ int RpdReUseAuth(const char *sstr, int kind)
          return 0;              // re-authentication required by administrator
       }
       gSec = 0;
-      // Decode subject string
-      sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
-      user[lenU] = '\0';
-      if ((gReUseRequired = (opt & kAUTH_REUSE_MSK))) {
-         gOffSet = offset;
-         if (gRemPid > 0 && gOffSet > -1) {
-            auth =
-                RpdCheckAuthTab(gSec, user, gOpenHost.c_str(), gRemPid, &gOffSet);
-         }
-         if ((auth == 1) && (offset != gOffSet))
-            auth = 2;
-         // Fill gUser and free allocated memory
-         strlcpy(gUser, user, sizeof(gUser));
-      }
-   }
-   // kKrb5
-   if (kind == kROOTD_KRB5) {
-      if (!(gReUseAllow & gAUTH_KRB_MSK)) {
-         return 0;              // re-authentication required by administrator
-      }
-      gSec = 2;
       // Decode subject string
       sscanf(sstr, "%d %d %d %d %63s", &gRemPid, &offset, &opt, &lenU, user);
       user[lenU] = '\0';
@@ -2116,401 +2035,10 @@ void RpdSendAuthList()
 ////////////////////////////////////////////////////////////////////////////////
 /// Authenticate via Kerberos.
 
-int RpdKrb5Auth(const char *sstr)
+int RpdKrb5Auth(const char *)
 {
-   int auth = 0;
-
-#ifdef R__KRB5
-   NetSend(1, kROOTD_KRB5);
-   // TAuthenticate will respond to our encouragement by sending krb5
-   // authentication through the socket
-
-   int retval;
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: analyzing ... %s", sstr);
-
-   if (gClientProtocol > 8) {
-      int lenU, ofs, opt;
-      char dumm[256];
-      // Decode subject string
-      sscanf(sstr, "%d %d %d %d %255s", &gRemPid, &ofs, &opt, &lenU, dumm);
-      gReUseRequired = (opt & kAUTH_REUSE_MSK);
-#ifdef R__SSL
-      if (gRSASSLKey) {
-         // Determine type of RSA key required
-         gRSAKey = (opt & kAUTH_RSATY_MSK) ? 2 : 1;
-      } else
-         gRSAKey = 1;
-#else
-      gRSAKey = 1;
-#endif
-   }
-
-   // Init context
-   retval = krb5_init_context(&gKcontext);
-   if (retval) {
-      ErrorInfo("RpdKrb5Auth: %s while initializing krb5",
-            error_message(retval));
-      return auth;
-   }
-
-   // Use special Keytab file, if specified
-   if (gKeytabFile.length()) {
-      if ((retval = krb5_kt_resolve(gKcontext, gKeytabFile.c_str(), &gKeytab)))
-         ErrorInfo("RpdKrb5Auth: %s while resolving keytab file %s",
-                        error_message(retval),gKeytabFile.c_str());
-   }
-
-   // get service principal
-   const char *service = "host";
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: using service: %s ",service);
-
-   krb5_principal server;
-   if ((retval = krb5_sname_to_principal(gKcontext, 0, service,
-                                         KRB5_NT_SRV_HST, &server))) {
-      ErrorInfo("RpdKrb5Auth: while generating service name (%s): %d %s",
-                service, retval, error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, 0, 0, 0, 0);
-      return auth;
-   }
-
-   // listen for authentication from the client
-   krb5_auth_context auth_context = 0;
-   krb5_ticket *ticket;
-   char proto_version[100] = "krootd_v_1";
-   int sock = NetGetSockFd();
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: recvauth ... ");
-
-   if ((retval = krb5_recvauth(gKcontext, &auth_context,
-                               (krb5_pointer) &sock, proto_version, server,
-                               0, gKeytab,   // default gKeytab is 0
-                               &ticket))) {
-      ErrorInfo("RpdKrb5Auth: recvauth failed--%s", error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, server, 0, 0, 0);
-      return auth;
-   }
-
-   // get client name
-   char *cname;
-   if ((retval =
-        krb5_unparse_name(gKcontext, ticket->enc_part2->client, &cname))) {
-      ErrorInfo("RpdKrb5Auth: unparse failed: %s", error_message(retval));
-      RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, 0);
-      return auth;
-   }
-   if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: name in ticket is: %s",cname);
-
-   using std::string;
-   std::string user = std::string(cname);
-   free(cname);
-   std::string reply = std::string("authenticated as ").append(user);
-
-   // set user name
-   // avoid using 'erase' (it is buggy with some compilers)
-   snprintf(gUser,64,"%s",user.c_str());
-   char *pc = 0;
-   // cut off realm
-   if ((pc = (char *)strstr(gUser,"@")))
-      *pc = '\0';
-   // drop instances, if any
-   if ((pc = (char *)strstr(gUser,"/")))
-      *pc = '\0';
-
-   std::string targetUser = std::string(gUser);
-
-   if (gClientProtocol >= 9) {
-
-       // Receive target name
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: receiving target user ... ");
-
-      EMessageTypes kind;
-      char buffer[66];
-      NetRecv(buffer, 65, kind);
-
-      if (kind != kROOTD_KRB5) {
-         ErrorInfo("RpdKrb5Auth: protocol error, received message"
-                   " of type %d instead of %d\n",kind,kROOTD_KRB5);
-      }
-      buffer[65] = 0;
-      targetUser = std::string(buffer);
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: received target user %s ",buffer);
-   }
-
-   if (gDebug > 2)
-      ErrorInfo("RpdKrb5Auth: using ticket file: %s ... ",getenv("KRB5CCNAME"));
-
-
-   // If the target user is not the owner of the principal
-   // check if the user is authorized by the target user
-   if (targetUser != gUser) {
-      if (krb5_kuserok(gKcontext, ticket->enc_part2->client,
-                                        targetUser.c_str())) {
-         if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: change user from %s to %s successful",
-                   gUser,targetUser.c_str());
-         snprintf(gUser,64,"%s",targetUser.c_str());
-         reply =  std::string("authenticated as ").append(gUser);
-      } else {
-         ErrorInfo("RpdKrb5Auth: could not change user from %s to %s",
-                   gUser,targetUser.c_str());
-         ErrorInfo("RpdKrb5Auth: continuing with user: %s",gUser);
-      }
-   }
-
-   // Get credentials if in a PROOF session
-   if (gClientProtocol >= 9 &&
-      (gService == kPROOFD || gClientProtocol < 11)) {
-
-      char *data = 0;
-      int size = 0;
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: receiving forward cred ... ");
-
-      {
-         EMessageTypes kind;
-         char bufLen[20];
-         NetRecv(bufLen, 20, kind);
-
-         if (kind != kROOTD_KRB5) {
-            ErrorInfo("RpdKrb5Auth: protocol error, received"
-                      " message of type %d instead of %d\n",
-                      kind, kROOTD_KRB5);
-         }
-
-         size = atoi(bufLen);
-         if (gDebug > 3)
-            ErrorInfo("RpdKrb5Auth: got len '%s' %d ", bufLen, size);
-
-         data = new char[size+1];
-
-         // Receive and decode encoded public key
-         int Nrec = NetRecvRaw(data, size);
-
-         if (gDebug > 3)
-            ErrorInfo("RpdKrb5Auth: received %d ", Nrec);
-      }
-
-      krb5_data forwardCreds;
-      forwardCreds.data = data;
-      forwardCreds.length = size;
-
-      if (gDebug > 2)
-         ErrorInfo("RpdKrb5Auth: received forward cred ... %d %d %d",
-                   data[0], data[1], data[2]);
-
-      int net = sock;
-      retval = krb5_auth_con_genaddrs(gKcontext, auth_context, net,
-                   KRB5_AUTH_CONTEXT_GENERATE_REMOTE_FULL_ADDR);
-      if (retval) {
-         ErrorInfo("RpdKrb5Auth: failed auth_con_genaddrs is: %s\n",
-                   error_message(retval));
-      }
-
-      bool forwarding = true;
-      krb5_creds **creds = 0;
-      if ((retval = krb5_rd_cred(gKcontext, auth_context,
-                                 &forwardCreds, &creds, 0))) {
-         ErrorInfo("RpdKrb5Auth: rd_cred failed--%s", error_message(retval));
-         forwarding = false;
-      }
-      if (data) delete[] data;
-
-      struct passwd *pw = getpwnam(gUser);
-      if (forwarding && pw) {
-         Int_t fromUid = getuid();
-         Int_t fromEUid = geteuid();
-
-         if (setresuid(pw->pw_uid, pw->pw_uid, fromEUid) == -1) {
-            ErrorInfo("RpdKrb5Auth: can't setuid for user %s", gUser);
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: saving ticket to cache ...");
-
-         krb5_context context;
-         // Init context
-         retval = krb5_init_context(&context);
-         if (retval) {
-            ErrorInfo("RpdKrb5Auth: %s while initializing second krb5",
-                error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-
-         krb5_ccache cache = 0;
-         char ccacheName[256];
-         SPrintf(ccacheName,256,"%240s_root_%d",krb5_cc_default_name(context),getpid());
-         if ((retval = krb5_cc_resolve(context, ccacheName, &cache))) {
-            ErrorInfo("RpdKrb5Auth: cc_default failed--%s",
-                      error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-         {
-            char *ccname = new char[strlen("KRB5CCNAME")+strlen(ccacheName)+2];
-            SPrintf(ccname, strlen("KRB5CCNAME")+strlen(ccacheName)+2, "KRB5CCNAME=%.*s", strlen(ccacheName), ccacheName);
-            putenv(ccname);
-         }
-
-         if (gDebug > 5)
-            ErrorInfo("RpdKrb5Auth: working (1) on ticket to cache (%s) ... ",
-                      krb5_cc_get_name(context,cache));
-
-         // this is not working (why?)
-         // this would mean that if a second user comes in, it will tremple
-         // the existing one :(
-         //       if ((retval = krb5_cc_gen_new(context,&cache))) {
-         //          ErrorInfo("RpdKrb5Auth: cc_gen_new failed--%s",
-         //                    error_message(retval));
-         //          return auth;
-         //       }
-
-         const char *cacheName = krb5_cc_get_name(context,cache);
-
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: working (2) on ticket"
-                      " to cache (%s) ... ",cacheName);
-
-         if ((retval = krb5_cc_initialize(context,cache,
-                                          ticket->enc_part2->client))) {
-            ErrorInfo("RpdKrb5Auth: cc_initialize failed--%s",
-                      error_message(retval));
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            krb5_free_context(context);
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            return auth;
-         }
-
-         if ((retval = krb5_cc_store_cred(context,cache, *creds))) {
-            ErrorInfo("RpdKrb5Auth: cc_store_cred failed--%s",
-                       error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-         if (gDebug>5)
-            ErrorInfo("RpdKrb5Auth: done ticket to cache (%s) ... ",
-                      cacheName);
-
-         if ((retval = krb5_cc_close(context,cache))) {
-            ErrorInfo("RpdKrb5Auth: cc_close failed--%s",
-                       error_message(retval));
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            krb5_free_context(context);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-
-         // free context
-         krb5_free_context(context);
-
-         //       if ( chown( cacheName, pw->pw_uid, pw->pw_gid) != 0 ) {
-         //          ErrorInfo("RpdKrb5Auth: could not change the owner"
-         //                    " ship of the cache file %s",cacheName);
-         //       }
-
-         if (setresuid(fromUid,fromEUid,pw->pw_uid) == -1) {
-            ErrorInfo("RpdKrb5Auth: can't setuid back to original uid");
-            NetSend(kErrNotAllowed, kROOTD_ERR);
-            RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, creds);
-            return auth;
-         }
-      }
-
-      // free creds
-      krb5_free_tgt_creds(gKcontext,creds);
-   }
-
-   NetSend(reply.c_str(), kMESS_STRING);
-
-   // free allocated stuff
-   RpdFreeKrb5Vars(gKcontext, server, ticket, auth_context, (krb5_creds **)0);
-
-   // Authentication was successfull
-   auth = 1;
-   gSec = 2;
-
-   if (gClientProtocol > 8) {
-
-      char line[kMAXPATHLEN];
-      if ((gReUseAllow & gAUTH_KRB_MSK) && gReUseRequired) {
-
-         // Ask for the RSA key
-         NetSend(gRSAKey, kROOTD_RSAKEY);
-
-         // Receive the key securely
-         if (RpdRecvClientRSAKey()) {
-            ErrorInfo("RpdKrb5Auth: could not import a valid key"
-                      " - switch off reuse for this session");
-            gReUseRequired = 0;
-         }
-
-         // Set an entry in the auth tab file for later (re)use,
-         // if required ...
-         int offset = -1;
-         char *token = 0;
-         if (gReUseRequired) {
-            SPrintf(line, kMAXPATHLEN, "2 1 %d %d %s %s",
-                    gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-            offset = RpdUpdateAuthTab(1, line, &token);
-            if (gDebug > 2)
-               ErrorInfo("RpdKrb5Auth: line:%s offset:%d", line, offset);
-         }
-         // Comunicate login user name to client
-         SPrintf(line, kMAXPATHLEN, "%s %d", gUser, offset);
-         NetSend(strlen(line), kROOTD_KRB5);   // Send message length first
-         NetSend(line, kMESS_STRING);
-
-         // Send Token
-         if (gReUseRequired && offset > -1) {
-            if (!token || (token && RpdSecureSend(token) == -1)) {
-               ErrorInfo("RpdKrb5Auth: problems secure-sending token"
-                         " - may result in corrupted token");
-            }
-            if (token) delete[] token;
-         }
-         gOffSet = offset;
-
-      } else {
-
-         // Comunicate login user name to client
-         SPrintf(line, kMAXPATHLEN, "%s -1", gUser);
-         NetSend(strlen(line), kROOTD_KRB5);   // Send message length first
-         NetSend(line, kMESS_STRING);
-
-      }
-   } else {
-      NetSend(user.c_str(), kMESS_STRING);
-   }
-
-   if (gDebug > 0)
-      ErrorInfo("RpdKrb5Auth: user %s authenticated", gUser);
-#else
-
-   // no krb5 support
-   if (sstr) { }   // remove compiler warning
-
-   NetSend(0, kROOTD_KRB5);
-#endif
-
-   return auth;
+   ::Error("RpdKrb5Auth", "Kerberos5 no longer supported by ROOT");
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3025,15 +2553,8 @@ void RpdDefaultAuthAllow()
    // No SRP method
    gHaveMeth[1] = 0;
 
-   // Kerberos
-#ifdef R__KRB5
-   gAllowMeth[gNumAllow] = 2;
-   gNumAllow++;
-   gNumLeft++;
-#else
    // No Kerberos method
    gHaveMeth[2] = 0;
-#endif
 
    // No Globus method
    gHaveMeth[3] = 0;
@@ -3466,11 +2987,6 @@ int RpdGuessClientProt(const char *buf, EMessageTypes kind)
       char usr[64], rest[256];
       int ns = sscanf(buf, "%63s %255s", usr, rest);
       if (ns == 1)
-         proto = 8;
-   }
-   // Kerberos authentication
-   if (kind == kROOTD_KRB5) {
-      if (!buf[0])
          proto = 8;
    }
 
@@ -4332,9 +3848,6 @@ int RpdAuthenticate()
             break;
          case kROOTD_PASS:
             auth = RpdPass(buf);
-            break;
-         case kROOTD_KRB5:
-            auth = RpdKrb5Auth(buf);
             break;
          case kROOTD_CLEANUP:
             RpdAuthCleanup(buf,1);

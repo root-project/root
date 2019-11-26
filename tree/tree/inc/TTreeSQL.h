@@ -37,6 +37,7 @@
 class TSQLServer;
 class TSQLRow;
 class TBasketSQL;
+class TSQLTableInfo;
 
 class TTreeSQL : public TTree {
 
@@ -50,11 +51,12 @@ protected:
    TSQLRow               *fRow;
    TSQLServer            *fServer;
    Bool_t                 fBranchChecked;
+   TSQLTableInfo         *fTableInfo;
 
    void                   CheckBasket(TBranch * tb);
    Bool_t                 CheckBranch(TBranch * tb);
    Bool_t                 CheckTable(const TString &table) const;
-   TString                CreateBranches(TSQLResult * rs);
+   void                   CreateBranches();
    std::vector<Int_t>    *GetColumnIndice(TBranch *branch);
    void                   Init();
    void                   ResetQuery();
@@ -88,7 +90,8 @@ public:
    virtual Long64_t       PrepEntry(Long64_t entry);
            void           Refresh();
 
-   ClassDef(TTreeSQL,1);  // TTree Implementation read and write to a SQL database.
+   virtual ~TTreeSQL();
+   ClassDef(TTreeSQL,2);  // TTree Implementation read and write to a SQL database.
 };
 
 

@@ -387,6 +387,16 @@ Int_t TSQLStatement::GetSecond(Int_t npar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// return seconds fraction value for parameter (if applicable)
+
+Int_t TSQLStatement::GetSecondsFraction(Int_t npar)
+{
+   Int_t year, month, day, hour, min, sec, frac;
+   if (GetTimestamp(npar, year, month, day, hour, min, sec, frac)) return frac;
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// return value of parameter in form of TDatime
 /// Be aware, that TDatime does not allow dates before 1995-01-01
 
@@ -403,5 +413,39 @@ TDatime TSQLStatement::GetTimestamp(Int_t npar)
    }
 
    return TDatime(year, month, day, hour, min, sec);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter as timestamp
+
+Bool_t TSQLStatement::SetTimestamp(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameter as TTimeStamp
+
+Bool_t TSQLStatement::SetTimestamp(Int_t, const TTimeStamp&)
+{
+   Warning("SetTimestamp", "Not implemented for TTimeStamp");
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get parameter as timestamp
+
+Bool_t TSQLStatement::GetTimestamp(Int_t, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&, Int_t&)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get parameter as TTimeStamp
+
+Bool_t TSQLStatement::GetTimestamp(Int_t, TTimeStamp&)
+{
+   Warning("GetTimestamp", "Not implemented for TTimeStamp");
+   return kFALSE;
 }
 

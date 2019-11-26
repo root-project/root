@@ -17,13 +17,13 @@ public:
     void Set(Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata);
     void Set(Cppyy::TCppScope_t scope, const std::string& name, void* address);
 
-    std::string GetName() { return CPyCppyy_PyUnicode_AsString(fName); }
+    std::string GetName() { return CPyCppyy_PyText_AsString(fName); }
     void* GetAddress(CPPInstance* pyobj /* owner */);
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     intptr_t           fOffset;
-    Long_t             fProperty;
+    Long_t             fFlags;
     Converter*         fConverter;
     Cppyy::TCppScope_t fEnclosingScope;
     PyObject*          fName;

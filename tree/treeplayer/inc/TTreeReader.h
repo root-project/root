@@ -22,7 +22,6 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include "THashTable.h"
 #include "TTree.h"
 #include "TTreeReaderUtils.h"
 #include "TNotifyLink.h"
@@ -131,6 +130,7 @@ public:
       kEntryChainFileError, ///< problem in opening a chain's file
       kEntryDictionaryError, ///< problem reading dictionary info from tree
       kEntryBeyondEnd, ///< last entry loop has reached its end
+      kEntryBadReader, ///< One of the readers was not successfully initialized.
       kEntryUnknownError ///< LoadTree return less than -4, likely a 'newer' error code.
    };
 
@@ -219,7 +219,8 @@ public:
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
-   Long64_t GetEntries(Bool_t force) const;
+   Long64_t GetEntries() const;
+   Long64_t GetEntries(Bool_t force);
 
    /// Returns the index of the current entry being read.
    ///

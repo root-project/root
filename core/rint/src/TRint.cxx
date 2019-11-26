@@ -14,7 +14,7 @@
 // Rint                                                                 //
 //                                                                      //
 // Rint is the ROOT Interactive Interface. It allows interactive access //
-// to the ROOT system via the CINT C/C++ interpreter.                   //
+// to the ROOT system via the Cling C/C++ interpreter.                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -138,7 +138,7 @@ ClassImp(TRint);
 /// Create an application environment. The TRint environment provides an
 /// interface to the WM manager functionality and eventloop via inheritance
 /// of TApplication and in addition provides interactive access to
-/// the CINT C++ interpreter via the command line.
+/// the Cling C++ interpreter via the command line.
 
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
@@ -159,31 +159,33 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Explicitly load libMathCore it cannot be auto-loaded it when using one
    // of its freestanding functions. Once functions can trigger autoloading we
    // can get rid of this.
-   if (!gInterpreter->HasPCMForLibrary("libMathCore") && !gClassTable->GetDict("TRandom"))
+   if (!gClassTable->GetDict("TRandom"))
       gSystem->Load("libMathCore");
 
-   // Load some frequently used includes
-   Int_t includes = gEnv->GetValue("Rint.Includes", 1);
-   // When the interactive ROOT starts, it can automatically load some frequently
-   // used includes. However, this introduces several overheads
-   //   -The initialisation takes more time
-   //   -Memory overhead when including <vector>
-   // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
-   // to disable the loading of these includes at startup.
-   // You can set the variable to 1 (default) to load only <iostream>, <string> and <DllImport.h>
-   // You can set it to 2 to load in addition <vector> and <utility>
-   // We strongly recommend setting the variable to 2 if your scripts include <vector>
-   // and you execute your scripts multiple times.
-   if (includes > 0) {
-      TString code;
-      code = "#include <iostream>\n"
-             "#include <string>\n" // for std::string std::iostream.
-             "#include <DllImport.h>\n";// Defined R__EXTERN
-      if (includes > 1) {
-         code += "#include <vector>\n"
-                 "#include <utility>";
+   if (!gInterpreter->HasPCMForLibrary("std")) {
+      // Load some frequently used includes
+      Int_t includes = gEnv->GetValue("Rint.Includes", 1);
+      // When the interactive ROOT starts, it can automatically load some frequently
+      // used includes. However, this introduces several overheads
+      //   -The initialisation takes more time
+      //   -Memory overhead when including <vector>
+      // In $ROOTSYS/etc/system.rootrc, you can set the variable Rint.Includes to 0
+      // to disable the loading of these includes at startup.
+      // You can set the variable to 1 (default) to load only <iostream>, <string> and <DllImport.h>
+      // You can set it to 2 to load in addition <vector> and <utility>
+      // We strongly recommend setting the variable to 2 if your scripts include <vector>
+      // and you execute your scripts multiple times.
+      if (includes > 0) {
+         TString code;
+         code = "#include <iostream>\n"
+            "#include <string>\n" // for std::string std::iostream.
+            "#include <DllImport.h>\n";// Defined R__EXTERN
+         if (includes > 1) {
+            code += "#include <vector>\n"
+               "#include <utility>";
+         }
+         ProcessLine(code, kTRUE);
       }
-      ProcessLine(code, kTRUE);
    }
 
    // Load user functions
@@ -265,7 +267,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    Gl_in_key    = &Key_Pressed;
    Gl_beep_hook = &BeepHook;
 
-   // tell CINT to use our getline
+   // tell Cling to use our getline
    gCling->SetGetline(Getline, Gl_histadd);
 }
 
@@ -477,7 +479,7 @@ void TRint::PrintLogo(Bool_t lite)
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("%%s(c) 1995-2019, The ROOT Team"));
+      lines.emplace_back(TString::Format("(c) 1995-2019, The ROOT Team; conception: R. Brun, F. Rademakers%%s"));
       lines.emplace_back(TString::Format("Built for %s on %s%%s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",

@@ -20,41 +20,29 @@ def removeFiles(filesList):
    map(os.unlink, existingFilesList)
 
 #-------------------------------------------------------------------------------
-def removeLeftOvers():
+def removeLeftOvers(filesToRemove):
    """
    Remove leftover files from old versions of this script.
    """
-   filesToRemove = [os.path.join("include","allHeaders.h"),
-                    os.path.join("include","allHeaders.h.pch"),
-                    os.path.join("include","allLinkDef.h"),
-                    "all.h",
-                    "cppflags.txt",
-                    os.path.join("include","allLinkDef.h"),
+   filesToRemove.extend(
+                    [os.path.join("include","allHeaders.h.pch"),
                     os.path.join("etc","allDict.cxx"),
-                    os.path.join("etc","allDict.cxx.h")]
+                    os.path.join("etc","allDict.cxx.h"),
+                    os.path.join("etc","allDict.cxx.pch")]
+                    )
    removeFiles(filesToRemove)
 
 #-------------------------------------------------------------------------------
 def getParams():
    """
    Extract parameters from the commandline, which looks like
-   makePCHInput.py ZZZ XXX YYY -- CXXFLAGS
+   makePCHInput.py WWW XXX YYY ZZZ -- CXXFLAGS
    """
    argv = sys.argv
-   rootSrcDir, modules = argv[1:3]
-   posDelim = argv.index('--')
-   clingetpchList = argv[3:posDelim]
-   cxxflags = argv[posDelim + 1:]
-   #print (', '.join(cxxflags))
-   cxxflagsNoW = [flag for flag in cxxflags if (flag[0:2] != '-W' and flag[0:3] != '-wd' and \
-                                                flag[0:2] != '-x' and flag[0:3] != '-ax' and \
-                                                flag[0:2] != '-O' and flag[0:5] != '-arch') \
-                                                or flag[0:4] == '-Wno']
-   if '-Wno-noexcept-type' in cxxflagsNoW:
-      cxxflagsNoW.remove('-Wno-noexcept-type')
-   #print (', '.join(cxxflagsNoW))
+   rootSrcDir, modules, expPyROOT = argv[1:4]
+   clingetpchList = argv[4:]
 
-   return rootSrcDir, modules, clingetpchList, cxxflagsNoW
+   return rootSrcDir, modules, expPyROOT == 'ON', clingetpchList
 
 #-------------------------------------------------------------------------------
 def getGuardedStlInclude(headerName):
@@ -189,12 +177,13 @@ def getDictNames(theDirName):
    """
    #`find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_`; do
    wildcards = (os.path.join(theDirName , "*", "*", "G__*.cxx"),
-                os.path.join(theDirName , "*", "G__*.cxx"))
+                os.path.join(theDirName , "*", "G__*.cxx"),
+                os.path.join(theDirName , "*", "*", "PyROOT", "G__*.cxx")) # Exp PyROOT
    allDictNames = []
    for wildcard in wildcards:
       allDictNames += glob.glob(wildcard)
    stdDictpattern = os.path.join("core","metautils","src","G__std_")
-   dictNames = filter (lambda dictName: not (stdDictpattern in dictName),allDictNames )
+   dictNames = filter (lambda dictName: not (stdDictpattern in dictName or "/roottest/" in dictName),allDictNames )
    return dictNames
 
 #-------------------------------------------------------------------------------
@@ -224,7 +213,7 @@ def isAnyPatternInString(patterns,theString):
    return False
 
 #-------------------------------------------------------------------------------
-def isDirForPCH(dirName):
+def isDirForPCH(dirName, expPyROOT):
    """
    Check if the directory corresponds to a module whose headers must belong to
    the PCH
@@ -243,10 +232,14 @@ def isDirForPCH(dirName):
                            "gui/gui",
                            "gui/fitpanel",
                            "rootx",
-                           "bindings/pyroot",
                            "roofit/",
                            "tmva",
                            "main"]
+   if expPyROOT:
+      PCHPatternsWhitelist.append("bindings/pyroot_experimental/PyROOT")
+   else:
+      PCHPatternsWhitelist.append("bindings/pyroot")
+
    PCHPatternsBlacklist = ["gui/guihtml",
                            "gui/guibuilder",
                            "math/fftw",
@@ -334,13 +327,6 @@ def getDefUndefLines(dirName):
                                '#ifdef signals\n' +\
                                '# undef signals\n' +\
                                '#endif\n'
-   if "%snet%sldap" %(os.sep,os.sep) in dirName:
-      allHeadersPartContent += '#ifdef Debug\n' +\
-                               '# undef Debug\n' +\
-                               '#endif\n' +\
-                               '#ifdef GSL_SUCCESS\n' +\
-                               '# undef GSL_SUCCESS\n' +\
-                               '#endif\n'
    return allHeadersPartContent
 
 #-------------------------------------------------------------------------------
@@ -358,7 +344,8 @@ def copyLinkDefs(rootSrcDir, outdir):
    os.chdir(rootSrcDir)
    wildcards = (os.path.join("*", "inc", "*LinkDef*.h"),
                 os.path.join("*", "*", "inc", "*LinkDef*.h"),
-                os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"))
+                os.path.join("*", "*", "inc", "*" , "*LinkDef*.h"),
+                os.path.join("*", "*", "PyROOT", "inc", "*LinkDef*.h")) # Exp PyROOT
    linkDefNames = []
    for wildcard in wildcards:
       linkDefNames += glob.glob(wildcard)
@@ -456,9 +443,7 @@ def makePCHInput():
       * etc/dictpch/allHeaders.h
       * etc/dictpch/allCppflags.txt
    """
-   rootSrcDir, modules, clingetpchList, cxxflags = getParams()
-
-   removeLeftOvers()
+   rootSrcDir, modules, expPyROOT, clingetpchList = getParams()
 
    outdir = os.path.join("etc","dictpch")
    allHeadersFilename = os.path.join(outdir,"allHeaders.h")
@@ -472,7 +457,7 @@ def makePCHInput():
       cppFlagsFilename.replace("\\","/")
 
    mkdirIfNotThere(outdir)
-   removeFiles((allHeadersFilename,allLinkdefsFilename))
+   removeLeftOvers([allHeadersFilename, allLinkdefsFilename, cppFlagsFilename])
 
    allHeadersContent = getSTLIncludes()
    allHeadersContent += getExtraIncludes(clingetpchList)
@@ -485,7 +470,7 @@ def makePCHInput():
    allIncPathsList = []
    for dictName in dictNames:
       dirName = getDirName(dictName)
-      if not isDirForPCH(dirName): continue
+      if not isDirForPCH(dirName, expPyROOT): continue
 
       selModules.add(dirName)
 
@@ -502,7 +487,7 @@ def makePCHInput():
 
    copyLinkDefs(rootSrcDir, outdir)
 
-   cppFlagsContent = getCppFlags(rootSrcDir,allIncPathsList) + '\n'.join(cxxflags) + '\n'
+   cppFlagsContent = getCppFlags(rootSrcDir, allIncPathsList) + '\n'
 
    writeFiles(((allHeadersContent, allHeadersFilename),
                (allLinkdefsContent, allLinkdefsFilename),

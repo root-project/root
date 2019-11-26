@@ -1,4 +1,16 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR
+    " ROOT must be built out-of-source.\n"
+    " Please see README/INSTALL for more information.")
+endif()
 
 set(policy_new CMP0072 CMP0077)
 foreach(policy ${policy_new})
@@ -29,7 +41,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(NOT $ENV{ROOTSYS} STREQUAL "")
   string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV_PATH "$ENV{PATH}")
   string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_LD_LIBRARY_PATH "$ENV{LD_LIBRARY_PATH}")
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_PYTHONPATH $ENV{PYTHONPATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_PYTHONPATH "$ENV{PYTHONPATH}")
   string(REPLACE "$ENV{ROOTSYS}" "" ENV_CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
   set(ENV{PATH} "${ENV_PATH}")
   set(ENV{LD_LIBRARY_PATH} "${ENV_LD_LIBRARY_PATH}")
@@ -40,7 +52,6 @@ endif()
 
 set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
-set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
 
 #---Set the ROOT version--------------------------------------------------------------------
 find_package(Git)
@@ -74,8 +85,8 @@ else()
                   ERROR_QUIET
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
+  string(REGEX REPLACE "^v([0-9]+)-([0-9]+)-(.*)" "\\1.\\2.\\3" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
 
-  string(REGEX REPLACE "^v([0-9])-([0-9]+)-" "\\1.\\2." ROOT_VERSION "${GIT_DESCRIBE_ALWAYS}")
   if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
     # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
@@ -93,7 +104,9 @@ else()
     # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
     # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
     SET_VERSION_FROM_FILE()
+    set(ROOT_FULL_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
   endif()
+  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
 endif()
 
 
@@ -105,8 +118,10 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
 include(RootBuildOptions)
-include(RootNewMacros)
+include(RootMacros)
 include(CheckCompiler)
+include(CheckAssembler)
+include(CheckIntrinsics)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
@@ -148,12 +163,8 @@ if(testing)
   enable_testing()
 endif()
 
-#---Check if the user wants to build the project in the source directory------------------------
-ROOT_CHECK_OUT_OF_SOURCE_BUILD()
-
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
-ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
@@ -170,7 +181,7 @@ endif()
 #---Populate the configure arguments returned by 'root-config --config'-------------------------
 get_cmake_property(variables CACHE_VARIABLES)
 foreach(var ${variables})
-  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE)") AND
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
      (NOT ${${var}} STREQUAL "") AND
      (NOT ${var} MATCHES "NOTFOUND"))
     if (var MATCHES "^QT_")
@@ -192,10 +203,17 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
-                   COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
+                   COMMENT "Copying directories such as etc, icons, fonts, js, ui5, etc. to build area")
+
+if(http)
+set(jsroot_files js/*)
+endif()
+if(webgui)
+set(openui5_files ui5/*)
+endif()
 
 #---Copy files to the build area, with dependency---------------------------------
-file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* ${jsroot_files} ${openui5_files})
 set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
@@ -247,36 +265,7 @@ if(cxxmodules)
     # for glew.h to it its trick.
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
   endif()
-endif(cxxmodules)
 
-if(MSVC)
-  set(_os_cat "type")
-else()
-  set(_os_cat "cat")
-endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
-
-add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
-add_custom_command(
-                  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
-)
-install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-
-add_dependencies(move_artifacts copymodulemap)
-
-# Provide our own modulemap for implementations other than libcxx.
-if (NOT WIN32 AND NOT libcxx)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/stl.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-endif()
-
-if (cxxmodules)
   # These vars are useful when we want to compile things without cxxmodules.
   set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility -Wno-module-import-in-extern-c" CACHE STRING "Useful to filter out the modules-related cxxflags.")
   set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
@@ -315,26 +304,44 @@ endif()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
+get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
+get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
+
 #---CXX MODULES-----------------------------------------------------------------------------------
+if(MSVC)
+  set(_os_cat "type")
+else()
+  set(_os_cat "cat")
+endif()
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
+
+add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+add_custom_command(
+                  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
+)
+install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+
+add_dependencies(move_headers copymodulemap)
+
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
+# if it's unchanged.
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
+configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
+    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+    COPYONLY)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
-
-get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
-get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
-
-#---Global PCH-----------------------------------------------------------------------------------
-get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
-get_property(__allFiles GLOBAL PROPERTY ROOT_DICTIONARY_FILES)
-get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
-
 
 set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
 if(cxxmodules)
@@ -345,31 +352,13 @@ if(cxxmodules)
   # are not guaranteed to be compatible among clang revisions.
   string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
-string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
+string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 if(MSVC)
   string(REPLACE "-Zc:__cplusplus" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-endif()
-
-add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
-                          etc/dictpch/allHeaders.h
-                          etc/dictpch/allCppflags.txt
-                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
-
-get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-foreach(d ${incdirs})
-  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
-    set(__allIncludes ${__allIncludes} -I${d})
-  endif()
-endforeach()
-if(WIN32)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
 endif()
 
 if(runtime_cxxmodules)
@@ -383,16 +372,44 @@ if(runtime_cxxmodules)
   unset(ROOT_LIBRARY_TARGETS CACHE)
   set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
+  get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+
+  if(WIN32)
+    list(APPEND incdirs
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
+    )
+  endif()
+
+  foreach(d ${incdirs})
+    if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+      set(__allIncludes ${__allIncludes} -I${d})
+    endif()
+  endforeach()
+
+  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
+  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
+
   add_custom_command(OUTPUT etc/allDict.cxx.pch
-                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
-                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                            etc/dictpch/allLinkDefs.h
-                            etc/dictpch/allHeaders.h
-                            etc/dictpch/allCppflags.txt
-                            rootcling)
+    BYPRODUCTS
+      etc/dictpch/allCppflags.txt
+      etc/dictpch/allHeaders.h
+      etc/dictpch/allLinkDefs.h
+    COMMAND
+      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__cling_pch}
+    COMMAND
+      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
+      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
+      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+    DEPENDS
+      rootcling ${__pch_dependencies} ${__pch_dictionaries}
+      ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+  )
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-  set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
-  add_dependencies(onepcm ${__allTargets})
   install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
@@ -401,7 +418,7 @@ install(
    DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING PATTERN "*.pcm"
-   PATTERN ".*rdict.*" EXCLUDE
+   PATTERN "*_rdict.pcm" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
@@ -410,14 +427,14 @@ add_dependencies(hsimple onepcm)
 if(WIN32)
   add_custom_command(OUTPUT tutorials/hsimple.root
                      COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
-                             set ROOTIGNOREPREFIX=1 &&
+                             set ROOTIGNOREPREFIX=1 && set ROOT_HIST=0 &&
                              $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 else()
   add_custom_command(OUTPUT tutorials/hsimple.root
                      COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
-                             ROOTIGNOREPREFIX=1
+                             ROOTIGNOREPREFIX=1 ROOT_HIST=0
                              $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
@@ -432,7 +449,7 @@ add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh 
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
+add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------
@@ -450,20 +467,23 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE
-                         PATTERN "rootd.rc.d" EXCLUDE
-                         PATTERN "proofd.rc.d" EXCLUDE
-                         PATTERN "rootd.xinetd" EXCLUDE
-                         PATTERN "proofd.xinetd" EXCLUDE
                          PATTERN "root.mimes" EXCLUDE
-                         PATTERN "cmake" EXCLUDE
                          PATTERN "*.in" EXCLUDE)
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
+  if(http)
+     install(DIRECTORY js/     DESTINATION ${CMAKE_INSTALL_JSROOTDIR})
+  endif()
+  if(webgui)
+     install(DIRECTORY ui5/    DESTINATION ${CMAKE_INSTALL_OPENUI5DIR})
+  endif()
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
-  install(DIRECTORY test/      DESTINATION ${CMAKE_INSTALL_TESTDIR} COMPONENT tests)
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-  install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_CMAKEDIR} PATTERN "Find*.cmake" EXCLUDE)
+  install(FILES
+    cmake/modules/RootMacros.cmake
+    cmake/modules/RootTestDriver.cmake
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 endif()
 
 #---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
@@ -488,10 +508,6 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINAR
 if(testing)
   include(RootCTest)
   if(roottest)
-    find_package(Git REQUIRED)
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
@@ -506,9 +522,35 @@ if(testing)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
-                      https://github.com/root-project/roottest.git
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+      find_package(Git REQUIRED)
+
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
+        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+      else()
+        set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
+      endif()
+
+      execute_process(COMMAND
+        ${GIT_EXECUTABLE} ls-remote --heads
+        https://github.com/root-project/roottest.git ${GIT_BRANCH}
+        OUTPUT_VARIABLE ROOTTEST_GIT_BRANCH)
+
+      if(NOT "${ROOTTEST_GIT_BRANCH}" STREQUAL "")
+        set(ROOTTEST_GIT_BRANCH -b ${GIT_BRANCH})
+      endif()
+
+      execute_process(COMMAND
+        ${GIT_EXECUTABLE} clone ${ROOTTEST_GIT_BRANCH}
+        https://github.com/root-project/roottest.git
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+      if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+        message(FATAL_ERROR "Error cloning roottest")
+      endif()
+
       add_subdirectory(roottest)
     endif()
   endif()
@@ -539,6 +581,8 @@ if(testing)
     endif()
   endif()
 endif()
+
+ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
 include(RootCPack)

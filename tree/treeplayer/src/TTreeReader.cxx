@@ -45,10 +45,10 @@ A simpler analysis example can be found below: it histograms a function of the p
 ~~~{.cpp}
 // A simple TTreeReader use: read data from hsimple.root (written by hsimple.C)
 
-#include "TFile.h
-#include "TH1F.h
-#include "TTreeReader.h
-#include "TTreeReaderValue.h
+#include "TFile.h"
+#include "TH1F.h"
+#include "TTreeReader.h"
+#include "TTreeReaderValue.h"
 
 void hsimpleReader() {
    // Create a histogram for the values we read.
@@ -133,12 +133,17 @@ bool analyze(TFile* file) {
 
    TH1F("hist", "TTreeReader example histogram", 10, 0., 100.);
 
+   bool firstEntry = true;
    while (reader.Next()) {
-      if (!CheckValue(weight)) return false;
-      if (!CheckValue(triggerInfo)) return false;
-      if (!CheckValue(muons)) return false;
-      if (!CheckValue(jetPt)) return false;
-      if (!CheckValue(taus)) return false;
+      if (firstEntry) {
+         // Check that branches exist and their types match our expectation.
+         if (!CheckValue(weight)) return false;
+         if (!CheckValue(triggerInfo)) return false;
+         if (!CheckValue(muons)) return false;
+         if (!CheckValue(jetPt)) return false;
+         if (!CheckValue(taus)) return false;
+         firstentry = false;
+      }
 
       // Access the TriggerInfo object as if it's a pointer.
       if (!triggerInfo->hasMuonL1())
@@ -164,6 +169,9 @@ bool analyze(TFile* file) {
          }
       }
    } // TTree entry / event loop
+
+   // Return true if we have iterated through all entries.
+   return reader.GetEntryStatus() == TTreeReader::kEntryBeyondEnd;
 }
 ~~~
 */
@@ -190,7 +198,7 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    fNotify(this)
 {
    if (!fTree) {
-      Error("TTreeReader", "TTree is NULL!");
+      ::Error("TTreeReader::TTreeReader", "TTree is NULL!");
    } else {
       Initialize();
    }
@@ -207,6 +215,12 @@ TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entry
 {
    if (!dir) dir = gDirectory;
    dir->GetObject(keyname, fTree);
+   if (!fTree) {
+      std::string msg = "No TTree called ";
+      msg += keyname;
+      msg += " was found in the selected TDirectory.";
+      Error("TTreeReader", "%s", msg.c_str());
+   }
    Initialize();
 }
 
@@ -295,7 +309,10 @@ Bool_t TTreeReader::Notify()
       SetBit(kBitHaveWarnedAboutEntryListAttachedToTTree);
    }
 
-   fDirector->Notify();
+   if (!fDirector->Notify()) {
+      Error("SetEntryBase()", "There was an error while notifying the proxies.");
+      return false;
+   }
 
    if (fProxiesSet) {
       for (auto value: fValues) {
@@ -410,19 +427,40 @@ void TTreeReader::Restart() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
+/// of the TTree / TChain, independent of a range set by SetEntriesRange()
+/// by calling TTree/TChain::GetEntriesFast.
+
+
+Long64_t TTreeReader::GetEntries() const {
+   if (fEntryList)
+      return fEntryList->GetN();
+   if (!fTree)
+      return -1;
+   return fTree->GetEntriesFast();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange().
 ///
 /// \param force If `IsChain()` and `force`, determines whether all TFiles of
 ///   this TChain should be opened to determine the exact number of entries
 /// of the TChain. If `!IsChain()`, `force` is ignored.
 
-Long64_t TTreeReader::GetEntries(Bool_t force) const {
+Long64_t TTreeReader::GetEntries(Bool_t force)  {
    if (fEntryList)
       return fEntryList->GetN();
    if (!fTree)
       return -1;
-   if (force)
-      return fTree->GetEntries();
+   if (force) {
+      fSetEntryBaseCallingLoadTree = kTRUE;
+      auto res = fTree->GetEntries();
+      // Go back to where we were:
+      fTree->LoadTree(GetCurrentEntry());
+      fSetEntryBaseCallingLoadTree = kFALSE;
+      return res;
+   }
    return fTree->GetEntriesFast();
 }
 

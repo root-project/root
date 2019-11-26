@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT core/clingutils package
 ############################################################################
@@ -23,7 +29,7 @@ target_include_directories(ClingUtils PRIVATE ${CLING_INCLUDE_DIRS})
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
-target_include_directories(ClingUtils PRIVATE SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 # This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
@@ -54,9 +60,9 @@ foreach(dict ${stldicts})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
   ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
-                                NO_SOURCES NO_INSTALL_HEADERS NO_MODULE
+                                NO_SOURCES NO_INSTALL_HEADERS NO_CXXMODULE
                                 STAGE1
-                                HEADERS ${header}
+                                NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
                                 DEPENDENCIES Core)
 endforeach()
@@ -93,9 +99,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
-set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file module.modulemap.build
+foreach(file libc.modulemap cuda.modulemap std.modulemap module.modulemap.build
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
@@ -107,7 +113,7 @@ foreach(file module.modulemap.build
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
     set(dest_file "module.modulemap")
-  else()
+  elseif(NOT ${file} MATCHES ".*modulemap")
     # We do not want our modulemap to be considered part of the PCH.
     set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
   endif()
@@ -128,8 +134,9 @@ endforeach()
 # of that file in build-time versus run-time (different length etc).
 # Capture their build-time version here, and inject it into runtime.
 foreach(file wchar.h bits/stat.h bits/time.h)
-  if(EXISTS /usr/include/${file})
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${file})
+  if(EXISTS ${DEFAULT_SYSROOT}/usr/include/${file})
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${DEFAULT_SYSROOT}/usr/include/${file}
+      ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${file})
   endif()
 endforeach()
 
@@ -162,4 +169,12 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
+# CLING is a shorthand for CLING_LIBRARIES and some other clang-specific
+# dependencies which ensure the correct order of building. Then the cling header
+# files (such as RuntimeUniverse.h) are moved to a semi-private place in ROOT
+# #ROOTSYS/etc. This is the place where ROOT will use them from and we should
+# add an explcit dependency to something cling-related which ROOT knows.
+# ClingUtils seems a good candidate because it is very foundational.
+add_dependencies(ClingUtils LLVMRES)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 

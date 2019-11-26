@@ -40,6 +40,7 @@ setting/clearing/testing named attributes.
 #include "TClass.h"
 #include "TObjString.h"
 #include "TVirtualStreamerInfo.h"
+// #include "TGraphStruct.h"
 
 #include "RooSecondMoment.h"
 #include "RooNameSet.h"
@@ -108,6 +109,10 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
      _ownedComponents(0), _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE),
      _localNoInhibitDirty(kFALSE), _myws(0)
 {
+  if (name == nullptr || strlen(name) == 0) {
+    throw std::logic_error("Each RooFit object needs a name. "
+        "Objects representing the same entity (e.g. an observable 'x') are identified using their name.");
+  }
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 }
 
@@ -126,7 +131,7 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
     TNamed::SetName(name) ;
     _namePtr = (TNamed*) RooNameReg::instance().constPtr(name) ;
   } else {
-    // Same name, Ddon't recalculate name pointer (expensive)
+    // Same name, don't recalculate name pointer (expensive)
     TNamed::SetName(other.GetName()) ;
     _namePtr = other._namePtr ;
   }
@@ -145,6 +150,38 @@ RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
   //setAttribute(Form("CloneOf(%08x)",&other)) ;
   //cout << "RooAbsArg::cctor(" << this << ") #bools = " << _boolAttrib.size() << " #strings = " << _stringAttrib.size() << endl ;
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign all boolean and string properties of the original
+/// object. Transient properties and client-server links are not assigned.
+RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) {
+  TNamed::operator=(other);
+  RooPrintable::operator=(other);
+  _boolAttrib = other._boolAttrib;
+  _stringAttrib = other._stringAttrib;
+  _deleteWatch = other._deleteWatch;
+  _operMode = other._operMode;
+  _fast = other._fast;
+  _ownedComponents = nullptr;
+  _prohibitServerRedirect = other._prohibitServerRedirect;
+  _eocache = other._eocache;
+  _namePtr = other._namePtr;
+  _isConstant = other._isConstant;
+  _localNoInhibitDirty = other._localNoInhibitDirty;
+  _myws = nullptr;
+
+  bool valueProp, shapeProp;
+  for (const auto server : other._serverList) {
+    valueProp = server->_clientListValue.containsByNamePtr(&other);
+    shapeProp = server->_clientListShape.containsByNamePtr(&other);
+    addServer(*server,valueProp,shapeProp) ;
+  }
+
+  setValueDirty();
+  setShapeDirty();
+
+  return *this;
 }
 
 
@@ -458,6 +495,12 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill supplied list with nodes of the arg tree, following all server links,
 /// starting with ourself as top node.
+/// \param[in] list Output list
+/// \param[in] arg Start searching at this element of the tree.
+/// \param[in] doBranch Add branch nodes to the list.
+/// \param[in] doLeaf Add leaf nodes to the list.
+/// \param[in] valueOnly Only check if an element is a value server (no shape server).
+/// \param[in] recurseFundamental
 
 void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, Bool_t doBranch, Bool_t doLeaf, Bool_t valueOnly, Bool_t recurseFundamental) const
 {
@@ -486,7 +529,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
       // Skip non-value server nodes if requested
       Bool_t isValueSrv = server->_clientListValue.containsByNamePtr(arg);
       if (valueOnly && !isValueSrv) {
-	continue ;
+        continue ;
       }
       treeNodeServerList(list,server,doBranch,doLeaf,valueOnly,recurseFundamental) ;
     }
@@ -519,11 +562,11 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
   for (const auto server : _serverList) {
     if (server->isValueServer(*this)) {
       if (server->isFundamental()) {
-	if (!nset || !server->dependsOn(*nset)) {
-	  nodeParamServers.add(*server) ;
-	}
+        if (!nset || !server->dependsOn(*nset)) {
+          nodeParamServers.add(*server) ;
+        }
       } else {
-	nodeBranchServers.add(*server) ;
+        nodeBranchServers.add(*server) ;
       }
     }
   }
@@ -585,7 +628,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnec
 /// ourself as top node that match any of the names of the variable list
 /// of the supplied data set (the dependents). The caller of this
 /// function is responsible for deleting the returned argset.
-/// The complement of this function is getObservables()
+/// The complement of this function is getParameters().
 
 RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 {
@@ -600,7 +643,7 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// ourself as top node that match any of the names the args in the
 /// supplied argset. The caller of this function is responsible
 /// for deleting the returned argset. The complement of this function
-/// is getObservables()
+/// is getParameters().
 
 RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly) const
 {
@@ -781,8 +824,10 @@ Bool_t RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& tes
 /// change to all of our clients. If the object is not in automatic dirty
 /// state propagation mode, this call has no effect
 
-void RooAbsArg::setValueDirty(const RooAbsArg* source) const
+void RooAbsArg::setValueDirty(const RooAbsArg* source)
 {
+  _allBatchesDirty = true;
+
   if (_operMode!=Auto || _inhibitDirty) return ;
 
   // Handle no-propagation scenarios first
@@ -823,7 +868,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 /// Mark this object as having changed its shape, and propagate this status
 /// change to all of our clients.
 
-void RooAbsArg::setShapeDirty(const RooAbsArg* source) const
+void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 {
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
@@ -1424,7 +1469,7 @@ void RooAbsArg::printAttribList(ostream& os) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace server nodes with names matching the dataset variable names
-/// with those data set variables, making this PDF directly dependent on the dataset
+/// with those data set variables, making this PDF directly dependent on the dataset.
 
 void RooAbsArg::attachDataSet(const RooAbsData &data)
 {
@@ -2118,6 +2163,73 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 
 // //_____________________________________________________________________________
+// TGraphStruct* RooAbsArg::graph(Bool_t useFactoryTag, Double_t textSize)
+// {
+//   // Return a TGraphStruct object filled with the tree structure of the pdf object
+
+//   TGraphStruct* theGraph = new TGraphStruct() ;
+
+//   // First list all the tree nodes
+//   RooArgSet nodeSet ;
+//   treeNodeServerList(&nodeSet) ;
+//   TIterator* iter = nodeSet.createIterator() ;
+//   RooAbsArg* node ;
+
+
+//   // iterate over nodes
+//   while((node=(RooAbsArg*)iter->Next())) {
+
+//     // Skip node that represent numeric constants
+//     if (node->IsA()->InheritsFrom(RooConstVar::Class())) continue ;
+
+//     string nodeName ;
+//     if (useFactoryTag && node->getStringAttribute("factory_tag")) {
+//       nodeName  = node->getStringAttribute("factory_tag") ;
+//     } else {
+//       if (node->isFundamental()) {
+// 	nodeName = node->GetName();
+//       } else {
+// 	ostringstream oss ;
+// 	node->printStream(oss,(node->defaultPrintContents(0)&(~kValue)),node->defaultPrintStyle(0)) ;
+// 	nodeName= oss.str() ;
+// // 	nodeName = Form("%s::%s",node->IsA()->GetName(),node->GetName());
+
+//       }
+//     }
+//     if (strncmp(nodeName.c_str(),"Roo",3)==0) {
+//       nodeName = string(nodeName.c_str()+3) ;
+//     }
+//     node->setStringAttribute("graph_name",nodeName.c_str()) ;
+
+//     TGraphNode* gnode = theGraph->AddNode(nodeName.c_str(),nodeName.c_str()) ;
+//     gnode->SetLineWidth(2) ;
+//     gnode->SetTextColor(node->isFundamental()?kBlue:kRed) ;
+//     gnode->SetTextSize(textSize) ;
+//   }
+//   delete iter ;
+
+//   // Get set of all server links
+//   set<pair<RooAbsArg*,RooAbsArg*> > links ;
+//   graphVizAddConnections(links) ;
+
+//   // And insert them into the graph
+//   set<pair<RooAbsArg*,RooAbsArg*> >::iterator liter = links.begin() ;
+//   for( ; liter != links.end() ; ++liter ) {
+
+//     TGraphNode* n1 = (TGraphNode*)theGraph->GetListOfNodes()->FindObject(liter->first->getStringAttribute("graph_name")) ;
+//     TGraphNode* n2 = (TGraphNode*)theGraph->GetListOfNodes()->FindObject(liter->second->getStringAttribute("graph_name")) ;
+//     if (n1 && n2) {
+//       TGraphEdge* edge = theGraph->AddEdge(n1,n2) ;
+//       edge->SetLineWidth(2) ;
+//     }
+//   }
+
+//   return theGraph ;
+// }
+
+
+
+// //_____________________________________________________________________________
 // Bool_t RooAbsArg::inhibitDirty()
 // {
 //   // Return current status of the inhibitDirty global flag. If true
@@ -2392,7 +2504,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
    }
 }
 
-/// Print a RDataFrame at the prompt
+/// Print at the prompt
 namespace cling {
 std::string printValue(RooAbsArg *raa)
 {

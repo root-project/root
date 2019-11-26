@@ -68,12 +68,6 @@ This process is also organized by the workspace through the
 
 using namespace std ;
 
-
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-#include "Api.h"
-#endif
-
-
 #include "TClass.h"
 #include "Riostream.h"
 #include <string.h>
@@ -95,9 +89,8 @@ Bool_t RooWorkspace::_autoClass = kFALSE ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add 'dir' to search path for class declaration (header) files, when
-/// attempting to import class code with importClassClode()
-
+/// Add `dir` to search path for class declaration (header) files. This is needed
+/// to find class headers custom classes are imported into the workspace.
 void RooWorkspace::addClassDeclImportDir(const char* dir) 
 {
   _classDeclDirList.push_back(dir) ;
@@ -105,9 +98,8 @@ void RooWorkspace::addClassDeclImportDir(const char* dir)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add 'dir' to search path for class implementation (.cxx) files, when
-/// attempting to import class code with importClassClode()
-
+/// Add `dir` to search path for class implementation (.cxx) files. This is needed
+/// to find class headers custom classes are imported into the workspace.
 void RooWorkspace::addClassImplImportDir(const char* dir) 
 {
   _classImplDirList.push_back(dir) ;
@@ -1177,11 +1169,9 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save snapshot of values and attributes (including "Constant") of parameters 'params'
-/// If importValues is FALSE, the present values from the object in the workspace are
-/// saved. If importValues is TRUE, the values of the objects passed in the 'params'
-/// argument are saved
-
+/// Save snapshot of values and attributes (including "Constant") of given parameters.
+/// \param[in] name Name of the snapshot.
+/// \param[in] paramNames Comma-separated list of parameter names to be snapshot.
 Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames) 
 {
   return saveSnapshot(name,argSet(paramNames),kFALSE) ;
@@ -1192,7 +1182,7 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save snapshot of values and attributes (including "Constant") of parameters 'params'
+/// Save snapshot of values and attributes (including "Constant") of parameters 'params'.
 /// If importValues is FALSE, the present values from the object in the workspace are
 /// saved. If importValues is TRUE, the values of the objects passed in the 'params'
 /// argument are saved
@@ -1245,11 +1235,11 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the RooArgSet containgin a snapshot of variables contained in the workspace
+/// Return the RooArgSet containing a snapshot of variables contained in the workspace
 ///
-/// Note that the variables of the objects in the snapshots are _copies_ of the
+/// Note that the variables of the objects in the snapshots are **copies** of the
 /// variables in the workspace. To load the values of a snapshot in the workspace
-/// variables use loadSnapshot() instead
+/// variables, use loadSnapshot() instead.
 
 const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 {
@@ -1690,8 +1680,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	  ++diter ;
 	}
       }
-      ooccoutW(_wspace,ObjectHandling) << ". To fix this problem add the required directory to the search "
-				       << "path using RooWorkspace::addClassDeclDir(const char* dir)" << endl ;
+      ooccoutW(_wspace,ObjectHandling) << ". To fix this problem, add the required directory to the search "
+				       << "path using RooWorkspace::addClassDeclImportDir(const char* dir)" << endl ;
       
       return kFALSE ;
     }
@@ -1737,7 +1727,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	}
       }
       ooccoutW(_wspace,ObjectHandling) << ". To fix this problem add the required directory to the search "
-				       << "path using RooWorkspace::addClassImplDir(const char* dir)" << endl ;    
+				       << "path using RooWorkspace::addClassImplImportDir(const char* dir)" << endl ;    
       return kFALSE ;
     }
   }
@@ -2947,23 +2937,14 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 
 void RooWorkspace::WSDir::InternalAppend(TObject* obj) 
 {
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-  TDirectory::Append(obj) ;
-#else
   TDirectory::Append(obj,kFALSE) ;
-#endif
-
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-void RooWorkspace::WSDir::Add(TObject* obj) 
-#else
 void RooWorkspace::WSDir::Add(TObject* obj,Bool_t) 
-#endif
 {
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
@@ -2976,11 +2957,7 @@ void RooWorkspace::WSDir::Add(TObject* obj,Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,02)
-void RooWorkspace::WSDir::Append(TObject* obj) 
-#else
 void RooWorkspace::WSDir::Append(TObject* obj,Bool_t) 
-#endif
 {
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;

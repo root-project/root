@@ -17,6 +17,7 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassRef.h"
+#include "TInterpreter.h"
 #include "TLeaf.h"
 #include "TObjArray.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
@@ -168,8 +169,18 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
          auto be = static_cast<TBranchElement *>(branch);
          if (auto currentClass = be->GetCurrentClass())
             return currentClass->GetName();
-         else
+         else {
+            // Here we have a special case for getting right the type of data members
+            // of classes sorted in TClonesArrays: ROOT-9674
+            auto mother = be->GetMother();
+            if (mother && mother->InheritsFrom(tbranchelement)) {
+               auto beMom = static_cast<TBranchElement *>(mother);
+               auto beMomClass = beMom->GetClass();
+               if (beMomClass && 0 == strcmp("TClonesArray", beMomClass->GetName()))
+                  return be->GetTypeName();
+            }
             return be->GetClassName();
+         }
       }
    }
 
@@ -204,7 +215,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
 
    if (colType.empty() && isCustomColumn) {
       // this must be a temporary branch, we know there is an alias for its type
-      colType = "__tdf" + std::to_string(namespaceID) + "::" + colName + std::to_string(customColID) + "_type";
+      colType = "__rdf" + std::to_string(namespaceID) + "::" + colName + std::to_string(customColID) + "_type";
    }
 
    if (colType.empty())
@@ -273,6 +284,28 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
    }
 
    return newColNames;
+}
+
+void InterpreterDeclare(const std::string &code)
+{
+   if (!gInterpreter->Declare(code.c_str())) {
+      const auto msg = "\nAn error occurred while jitting. The lines above might indicate the cause of the crash\n";
+      throw std::runtime_error(msg);
+   }
+}
+
+Long64_t InterpreterCalc(const std::string &code, const std::string &context)
+{
+   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
+   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
+   if (errorCode != TInterpreter::EErrorCode::kNoError) {
+      std::string msg = "\nAn error occurred while jitting";
+      if (!context.empty())
+         msg += " in " + context;
+      msg += ". The lines above might indicate the cause of the crash\n";
+      throw std::runtime_error(msg);
+   }
+   return res;
 }
 
 } // end NS RDF

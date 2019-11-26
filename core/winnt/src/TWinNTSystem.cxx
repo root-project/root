@@ -23,6 +23,7 @@
 #endif
 
 #include "Windows4Root.h"
+#include "ROOT/FoundationUtils.hxx"
 #include "TWinNTSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -161,7 +162,7 @@ namespace {
    static struct signal_map {
       int code;
       SigHandler_t handler;
-      char *signame;
+      const char *signame;
    } signal_map[kMAXSIGNALS] = {   // the order of the signals should be identical
       -1 /*SIGBUS*/,   0, "bus error",    // to the one in SysEvtHandler.h
       SIGSEGV,  0, "segmentation violation",
@@ -405,7 +406,7 @@ namespace {
    /////////////////////////////////////////////////////////////////////////////
    /// Return the signal name associated with a signal.
 
-   static char *WinNTSigname(ESignals sig)
+   static const char *WinNTSigname(ESignals sig)
    {
       return signal_map[sig].signame;
    }
@@ -1102,16 +1103,7 @@ Bool_t TWinNTSystem::Init()
    fSigcnt = 0;
 
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
-   static char lpFilename[MAX_PATH];
-   if (::GetModuleFileName(
-          NULL,                   // handle to module to find filename for
-          lpFilename,             // pointer to buffer to receive module path
-          sizeof(lpFilename))) {  // size of buffer, in characters
-      const char *dirName = DirName(DirName(lpFilename));
-      gRootDir = StrDup(dirName);
-   } else {
-      gRootDir = 0;
-   }
+   gRootDir = ROOT::FoundationUtils::GetFallbackRootSys().c_str();
 
    // Increase the accuracy of Sleep() without needing to link to winmm.lib
    typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
@@ -2886,10 +2878,10 @@ int TWinNTSystem::SetNonBlock(int fd)
 
 // expand the metacharacters as in the shell
 
-static char
-   *shellMeta      = "~*[]{}?$%",
-   *shellStuff     = "(){}<>\"'",
-   shellEscape     = '\\';
+static const char
+   *shellMeta  = "~*[]{}?$%",
+   *shellStuff = "(){}<>\"'",
+   shellEscape = '\\';
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand a pathname getting rid of special shell characaters like ~.$, etc.
@@ -3867,6 +3859,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
+   // FIXME: Unify with TROOT::ShutDown.
    if (gROOT) {
       gROOT->CloseFiles();
       if (gROOT->GetListOfBrowsers()) {
@@ -3888,7 +3881,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
       gROOT->EndOfProcessCleanups();
    }
    if (gInterpreter) {
-      gInterpreter->ResetGlobals();
+      gInterpreter->ShutDown();
    }
    gVirtualX->CloseDisplay();
 
@@ -4281,6 +4274,12 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             // Change .dll into .lib and remove the
             // path info if it not accessible.
             s = libs(index, end);
+            s.ToLower();
+            if ((s.Index("c:/windows/") != kNPOS) ||
+                (s.Index("python") != kNPOS)) {
+               start += end+1;
+               continue;
+            }
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
                if ( GetPathInfo( s, sbuf ) != 0 ) {
@@ -4294,7 +4293,9 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
                }
             }
             if (!ntlibs.IsNull()) ntlibs.Append(" ");
-            ntlibs.Append(s);
+            if ((s.Index("python") == kNPOS) && (s.Index("cppyy") == kNPOS) &&
+                (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS))
+              ntlibs.Append(s);
          }
          start += end+1;
       }
@@ -5518,7 +5519,7 @@ typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static char *GetWindowsVersion()
+static const char *GetWindowsVersion()
 {
    OSVERSIONINFOEX osvi;
    SYSTEM_INFO si;

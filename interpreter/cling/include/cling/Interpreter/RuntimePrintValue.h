@@ -14,6 +14,7 @@
 #error "This file must not be included by compiled programs."
 #endif
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -280,6 +281,37 @@ namespace cling {
       return cling::printValue(V);
     }
   }
+
+  // unique_ptr<T>:
+  template <class T>
+  inline std::string printValue(std::unique_ptr<T> *val)
+  {
+     auto ptr = val->get();
+     // printValue dereference its argument. use cast to 'const void**' to get
+     // the same printout as a regular pointer.
+     return "std::unique_ptr -> " + printValue((const void**)&ptr);
+  }
+
+  // shared_ptr<T>:
+  template <class T>
+  inline std::string printValue(std::shared_ptr<T> *val)
+  {
+     auto ptr = val->get();
+     // printValue dereference its argument. use cast to 'const void**' to get
+     // the same printout as a regular pointer.
+     return "std::shared_ptr -> " + printValue((const void**)&ptr);
+  }
+
+  // weak_ptr<T>:
+  template <class T>
+  inline std::string printValue(std::weak_ptr<T> *val)
+  {
+     auto ptr = val->lock().get();
+     // printValue dereference its argument. use cast to 'const void**' to get
+     // the same printout as a regular pointer.
+     return "std::weak_ptr -> " + printValue((const void**)&ptr);
+  }
+
 }
 
 #endif

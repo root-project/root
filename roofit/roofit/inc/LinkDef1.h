@@ -59,6 +59,10 @@
 #pragma link C++ class RooLegendre+ ;
 #pragma link C++ class RooNonCentralChiSquare+ ;
 #pragma link C++ class RooJeffreysPrior+ ;
+#pragma link C++ class RooJohnson+;
+#pragma link C++ class RooHypatia2+;
+
+
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;

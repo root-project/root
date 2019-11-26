@@ -14,34 +14,35 @@
 /// \class RooFFTConvPdf
 /// \ingroup Roofitcore
 ///
-/// This class implements a generic one-dimensional numeric convolution of two PDFs
+/// This class implements a generic one-dimensional numeric convolution of two PDFs,
 /// and can convolve any two RooAbsPdfs. The class exploits the convolution theorem
 /// \f[
 ///       f(x) * g(x) \rightarrow F(k_i) \cdot G(k_i)
 /// \f]
-/// and calculate the convolution by calculate a Real->Complex FFT of both input p.d.fs
+/// to calculate the convolution by calculating a Real->Complex FFT of both input PDFs,
 /// multiplying the complex coefficients and performing the reverse Complex->Real FFT
-/// to get the result in the input space. This class using the ROOT FFT Interface to
-/// the (free) FFTW3 package (www.fftw.org) and requires that your ROOT installation is
-/// compiled with the `fftw3=ON` (default). More instructions below.
+/// to get the result in the input space. This class uses the ROOT FFT interface to
+/// the (free) FFTW3 package (www.fftw.org), and requires that your ROOT installation is
+/// compiled with the `fftw3=ON` (default). Instructions for manually installing fftw below.
 ///
 /// Note that the performance in terms of speed and stability of RooFFTConvPdf is 
-/// vastly superior to that of RooNumConvPdf 
+/// vastly superior to that of RooNumConvPdf.
 ///
 /// An important feature of FFT convolutions is that the observable is assumed to be
-/// cyclical. This is correct & desirable behavior for cyclical observables such as angles,
-/// but it may not be for other observables. The effect that is observed is that if
-/// p.d.f is zero at xMin and non-zero at xMax some spillover occurs and
-/// a rising tail may appear at xMin.
-/// This is inevitable when using FFTs, because the FFT behaves as if an input with e.g. 3 bins was:
-/// ` ... 0 1 2 0 1 2 0 1 2 ... `
+/// cyclical. This is correct for cyclical observables such as angles,
+/// but does not hold in general. For non-cyclical variables, wrap-around artifacts may be
+/// encountered, *e.g.* if the PDF is zero at xMin and non-zero at xMax. A rising tail may appear at xMin.
+/// This is inevitable when using FFTs. A distribution with 3 bins therefore looks like:
+/// ```
+/// ... 0 1 2 0 1 2 0 1 2 ...
+/// ```
 ///
-/// Therefore, if bins 0 and 2 are not equal, the FFT sees a step at the boundary, which causes
-/// problems in Fourier space.
+/// Therefore, if bins 0 and 2 are not equal, the FFT sees a cyclical function with a step at the 2|0 boundary, which causes
+/// artifacts in Fourier space.
 ///
 /// The spillover or discontinuity can be reduced or eliminated by
-/// introducing a buffer zone in the FFT calculation. If this feature is activated,
-/// the sampling array for the FFT calculation is extended in both directions
+/// introducing a buffer zone in the FFT calculation. If this feature is activated (on by default),
+/// the sampling array for the FFT calculation is extended in both directions,
 /// and padded with the lowest/highest bin.
 /// Example:
 /// ```
@@ -50,37 +51,37 @@
 ///     rotate:              0 +1 +2 +3 +4 +5 O O U U -5 -4 -3 -2 -1
 /// ```
 /// The buffer bins are stripped away when the FFT output values
-/// are transferred to the p.d.f cache. The default buffer size is 10% of the
-/// observable domain size and can be changed with the `setBufferFraction()` member function.
+/// are transferred back to the p.d.f cache. The default buffer size is 10% of the
+/// observable domain size, and can be changed with the `setBufferFraction()` member function.
 /// 
-/// This class is a caching p.d.f inheriting from RooAbsCachedPdf. If this p.d.f 
-/// is evaluated for a particular value of x, the FFT calculates the values for the
-/// p.d.f at all points in observable space for the given choice of parameters,
-/// which are stored in the cache. Subsequent evaluations of RooFFTConvPdf with
-/// identical parameters will retrieve results from the cache. If one or more
-/// of the parameters change, the cache will be updated, i.e., a new FFT runs.
+/// The RooFFTConvPdf uses caching inherited from a RooAbsCachedPdf. If it is 
+/// evaluated for a particular value of x, the FFT and convolution is calculated
+/// for all bins in the observable space for the given choice of parameters,
+/// which are also stored in the cache. Subsequent evaluations for different values of the convolution observable and
+/// identical parameters will be retrieved from the cache. If one or more
+/// of the parameters change, the cache will be updated, *i.e.*, a new FFT runs.
 /// 
-/// The sampling density of the cache is controlled by the binning of the 
-/// the convolution observable, which can be changed from RooRealVar::setBins(N)
-/// For good results N should be large (>1000). Additional interpolation of
-/// cache values may improve the result if coarse binnings are chosen. These can be
-/// set in the constructor or through the `setInterpolationOrder()` member function.
-/// For N>1000 interpolation will not substantially improve the performance.
+/// The sampling density of the FFT is controlled by the binning of the 
+/// the convolution observable, which can be changed using RooRealVar::setBins(N).
+/// For good results, N should be large (>=1000). Additional interpolation
+/// between the bins may improve the result if coarse binnings are chosen. These can be
+/// activated in the constructor or by calling `setInterpolationOrder()`.
+/// For N >> 1000, interpolation will not substantially improve the accuracy.
 ///
-/// Additionial information on caching activities can be displayed by monitoring
-/// the message stream with topic "Caching" at the INFO level, i.e. 
-/// do `RooMsgService::instance().addStream(RooMsgService::INFO,Topic("Caching"))`
+/// Additionial information on caching can be displayed by monitoring
+/// the message stream with topic "Caching" at the INFO level, *i.e.* 
+/// by calling `RooMsgService::instance().addStream(RooMsgService::INFO,Topic("Caching"))`
 /// to see these message on stdout.
 ///
 /// Multi-dimensional convolutions are not supported at the moment.
 ///
 /// ---
 /// 
-/// Installing a copy of FFTW on Linux and compiling ROOT to use it
+/// Installing an external version of FFTW on Linux and compiling ROOT to use it
 /// -------
 /// 
 /// You have two options:
-/// * ROOT can automatically install FFTW for itself, see `builtin_fftw3` at https://root.cern.ch/building-root
+/// * **Recommended**: ROOT can automatically install FFTW for itself, see `builtin_fftw3` at https://root.cern.ch/building-root
 /// * Install FFTW and let ROOT discover it. `fftw3` is on by default (see https://root.cern.ch/building-root)
 ///
 /// 1) Go to www.fftw.org and download the latest stable version (a .tar.gz file)
@@ -143,7 +144,7 @@ ClassImp(RooFFTConvPdf);
 /// \param[in] convVar Observable to convolve the PDFs in \attention Use a high number of bins (>= 1000) for good accuracy.
 /// \param[in] pdf1 First PDF to be convolved
 /// \param[in] pdf2 Second PDF to be convolved
-/// \param[in] ipOrder Order for interpolation of the discrete FFT outputs
+/// \param[in] ipOrder Order for interpolation between bins (since FFT is discrete)
 /// The binning used for the FFT sampling is controlled by the binning named "cache" in the convolution observable `convVar`.
 /// If such a binning is not set, the same number of bins as for `convVar` will be used.
 
@@ -170,8 +171,8 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& co
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooFFTConvPdf(const char*, const char*, RooRealVar&, RooAbsPdf&, RooAbsPdf&, Int_t)
-/// \param[in] pdfConvVar If the variable used for convolution has a PDF, itself, this holds the PDF and
-/// convVar holds the variable. See also rf210_angularconv.C in the <a href="https://root.cern.ch/root/html/tutorials/roofit/index.html.">roofit tutorials</a>
+/// \param[in] pdfConvVar If the variable used for convolution is a PDF, itself, pass the PDF here, and pass the convolution variable to
+/// `convVar`. See also rf210_angularconv.C in the <a href="https://root.cern.ch/root/html/tutorials/roofit/index.html.">roofit tutorials</a>
 
 RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal& pdfConvVar, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder) :
   RooAbsCachedPdf(name,title,ipOrder),
@@ -242,7 +243,7 @@ void RooFFTConvPdf::prepareFFTBinning(RooRealVar& convVar) const {
           << " This can be done manually by setting an additional binning named 'cache'." << std::endl;
       convVar.setBinning(RooUniformBinning(varBinning.lowBound(), varBinning.highBound(), optimal, "cache"), "cache");
     } else {
-      coutW(Caching) << "The internal binning of variable " << convVar.GetName()
+      coutE(Caching) << "The internal binning of variable " << convVar.GetName()
           << " is not uniform. The numerical FFT will likely yield wrong results." << std::endl;
       convVar.setBinning(varBinning, "cache");
     }
@@ -339,8 +340,13 @@ RooFFTConvPdf::FFTCacheElem::FFTCacheElem(const RooFFTConvPdf& self, const RooAr
 
   pdf1Clone->recursiveRedirectServers(*fftParams) ;
   pdf2Clone->recursiveRedirectServers(*fftParams) ;
-  pdf1Clone->fixAddCoefRange(refName.c_str()) ;
-  pdf2Clone->fixAddCoefRange(refName.c_str()) ;
+  pdf1Clone->fixAddCoefRange(refName.c_str(), true) ;
+  pdf2Clone->fixAddCoefRange(refName.c_str(), true) ;
+  
+  // Ensure that coefficients for Add PDFs are only interpreted with respect to the convolution observable
+  RooArgSet convSet(self._x.arg());
+  pdf1Clone->fixAddCoefNormalization(convSet, true);
+  pdf2Clone->fixAddCoefNormalization(convSet, true);
 
   delete fftParams ;
 
@@ -699,16 +705,16 @@ Double_t*  RooFFTConvPdf::scanPdf(RooRealVar& obs, RooAbsPdf& pdf, const RooData
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the observables to be cached given the normalization set nset
+/// Return the observables to be cached given the normalization set nset.
 ///
-/// If the cache observables is in nset then this is 
+/// If the cache observable is in nset then this is
 ///    - the convolution observable plus 
 ///    - any member of nset that is either a RooCategory, 
 ///    - or was previously specified through setCacheObservables().
 ///
-/// In case the cache observable is _not_ in nset, then it is
+/// In case the cache observable is *not* in nset, then it is
 ///    - the convolution observable plus 
-///    - all member of nset are observables of this p.d.f.
+///    - all member of nset that are observables of this p.d.f.
 /// 
 
 RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const 
@@ -771,7 +777,7 @@ RooArgSet* RooFFTConvPdf::actualObservables(const RooArgSet& nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the parameters on which the cache depends given normalization
 /// set nset. For this p.d.f these are the parameters of the input p.d.f.
-/// but never the convolution variable, it case it is not part of nset
+/// but never the convolution variable, in case it is not part of nset.
 
 RooArgSet* RooFFTConvPdf::actualParameters(const RooArgSet& nset) const 
 {  
@@ -787,7 +793,7 @@ RooArgSet* RooFFTConvPdf::actualParameters(const RooArgSet& nset) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return p.d.f. observable (which can be a function) to substitute given
-/// p.d.f. observable. Substitute x by xprime if xprime is set
+/// p.d.f. observable. Substitutes x by xprime if xprime is set.
 
 RooAbsArg& RooFFTConvPdf::pdfObservable(RooAbsArg& histObservable) const 
 {
@@ -851,8 +857,8 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change the size of the buffer on either side of the observable range to frac times the
-/// size of the range of the convolution observable
+/// Change the size of the buffer on either side of the observable range to `frac` times the
+/// size of the range of the convolution observable.
 
 void RooFFTConvPdf::setBufferFraction(Double_t frac) 
 {
@@ -870,13 +876,13 @@ void RooFFTConvPdf::setBufferFraction(Double_t frac)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change strategy to fill the overflow buffer on either side of the convolution observable range.
 ///
-/// 'Extend' means is that the input p.d.f convolution observable range is widened to include the buffer range
-/// 'Flat' means that the buffer is filled with the p.d.f. value at the boundary of the observable range
-/// 'Mirror' means that the buffer is filled with a ,irror image of the p.d.f. around the convolution observable boundary 
+/// - `Extend` means is that the input p.d.f convolution observable range is widened to include the buffer range
+/// - `Flat` means that the buffer is filled with the p.d.f. value at the boundary of the observable range
+/// - `Mirror` means that the buffer is filled with a mirror image of the p.d.f. around the convolution observable boundary 
 ///
 /// The default strategy is extend. If one of the input p.d.f.s is a RooAddPdf, it is configured so that the interpretation
 /// range of the fraction coefficients is kept at the nominal convolutions observable range (instead of interpreting coefficients
-/// in the widened range including the buffer)
+/// in the widened range including the buffer).
 
 void RooFFTConvPdf::setBufferStrategy(BufStrat bs) 
 {

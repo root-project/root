@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -37,8 +37,8 @@ REveGeoShapeExtract::REveGeoShapeExtract(const char* n, const char* t) :
    fRnrElements (kTRUE),
    fRnrFrame    (kTRUE),
    fMiniFrame   (kTRUE),
-   fShape       (0),
-   fElements    (0)
+   fShape       (nullptr),
+   fElements    (nullptr)
 {
    memset(fTrans, 0, sizeof(fTrans));
    fTrans[0] = fTrans[5] = fTrans[10] = fTrans[15] = 1;
@@ -60,7 +60,7 @@ REveGeoShapeExtract::~REveGeoShapeExtract()
 
 Bool_t REveGeoShapeExtract::HasElements()
 {
-   return fElements != 0 && fElements->GetSize() > 0;
+   return fElements && (fElements->GetSize() > 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ Bool_t REveGeoShapeExtract::HasElements()
 
 void REveGeoShapeExtract::AddElement(REveGeoShapeExtract* gse)
 {
-   if (fElements == 0)
+   if (!fElements)
       fElements = new TList;
 
    fElements->Add(gse);

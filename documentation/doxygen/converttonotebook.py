@@ -73,7 +73,8 @@ from datetime import datetime, date
 # for the script to work correctly.
 gTypesList = ["void", "int", "Int_t", "TF1", "string", "bool", "double", "float", "char",
     "TCanvas", "TTree", "TString", "TSeqCollection", "Double_t", "TFile", "Long64_t", "Bool_t", "TH1",
-    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t"]
+    "RooDataSet", "RooWorkspace" , "HypoTestInverterResult" , "TVectorD" , "TArrayF", "UInt_t",
+    "TGraphErrors", "TGraphAsymmErrors"]
 
 # -------------------------------------
 # -------- Function definitions--------
@@ -727,11 +728,11 @@ def mainfunction(text):
 
     # add the corresponding metadata
     if extension == "py":
-        json_data[u'metadata'] = {
+        json_data['metadata'] = {
             "kernelspec": {
-                "display_name": "Python 2",
+                "display_name": "Python " + str(sys.version_info[0]),
                 "language": "python",
-                "name": "python2"
+                "name": "python" + str(sys.version_info[0])
             },
             "language_info": {
                 "codemirror_mode": {
@@ -747,7 +748,7 @@ def mainfunction(text):
             }
         }
     elif isCpp():
-        json_data[u'metadata'] = {
+        json_data['metadata'] = {
             "kernelspec": {
                 "display_name": "ROOT C++",
                 "language": "c++",

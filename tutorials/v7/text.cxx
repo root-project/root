@@ -6,7 +6,7 @@
 /// \date 2017-10-17
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
-/// \author Olivier couet <Olivier.Couet@cern.ch>
+/// \author Olivier Couet <Olivier.Couet@cern.ch>
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -29,14 +29,10 @@ void text()
    auto canvas = RCanvas::Create("Canvas Title");
 
    for (int i=0; i<=360; i+=10) {
-      auto opts = canvas->Draw(RText({0.5_normal, 0.6_normal}, "____  Hello World"));
+      auto text = canvas->Draw<RText>(RPadPos(0.5_normal, 0.6_normal), "____  Hello World");
 
-      RColor col(0.0015*i, 0.0025*i ,0.003*i);
-      opts->SetTextColor(col);
-      opts->SetTextSize(10+i/10);
-      opts->SetTextAngle(i);
-      opts->SetTextAlign(13);
-      opts->SetTextFont(42);
+      RColor col((int) (0.38*i), (int) (0.64*i), (int) (0.76*i));
+      text->AttrText().SetColor(col).SetSize(10+i/10).SetAngle(i).SetAlign(13).SetFont(42);
    }
 
    canvas->Show();

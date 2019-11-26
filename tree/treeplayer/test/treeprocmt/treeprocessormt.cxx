@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <random>
 #include <string>
 #include <thread>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -139,10 +141,10 @@ void WriteFileManyClusters(unsigned int nevents, const char *treename, const cha
       gSystem->Unlink(filename);
    }
 
-TEST(TreeProcessorMT, MaxTasks)
+TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
 {
    const auto nEvents = 991;
-   const auto filename = "TreeProcessorMT_MaxTasks.root";
+   const auto filename = "TreeProcessorMT_LimitNTasks_CheckEntries.root";
    const auto treename = "t";
    WriteFileManyClusters(nEvents, treename, filename);
    auto nTasks = 0U;
@@ -170,4 +172,59 @@ TEST(TreeProcessorMT, MaxTasks)
 
    gSystem->Unlink(filename);
    ROOT::DisableImplicitMT();
+}
+
+void CheckClusters(std::vector<std::pair<Long64_t, Long64_t>>& clusters, Long64_t entries)
+{
+   using R = std::pair<Long64_t, Long64_t>;
+   // sort them
+   std::sort(clusters.begin(), clusters.end(), [](const R &p1, const R &p2) { return p1.first < p2.first; });
+   // check each end corresponds to the next start
+   const auto nClusters = clusters.size();
+   for (auto i = 0u; i < nClusters - 1; ++i)
+      EXPECT_EQ(clusters[i].second, clusters[i+1].first);
+   // check start and end correspond to true start and end
+   EXPECT_EQ(clusters.front().first, 0LL);
+   EXPECT_EQ(clusters.back().second, entries);
+}
+
+TEST(TreeProcessorMT, LimitNTasks_CheckClusters)
+{
+   const auto nEvents = 156;
+   const auto filename = "TreeProcessorMT_LimitNTasks_CheckClusters.root";
+   const auto treename = "t";
+   WriteFileManyClusters(nEvents, treename, filename);
+
+   std::mutex m;
+   std::vector<std::pair<Long64_t, Long64_t>> clusters;
+   auto get_clusters = [&m, &clusters](TTreeReader &t) {
+      std::lock_guard<std::mutex> l(m);
+      clusters.emplace_back(t.GetEntriesRange());
+   };
+
+   for (auto nThreads = 0; nThreads <= 4; ++nThreads) {
+      ROOT::DisableImplicitMT();
+      ROOT::EnableImplicitMT(nThreads);
+
+      ROOT::TTreeProcessorMT p(filename, treename);
+      p.Process(get_clusters);
+
+      CheckClusters(clusters, nEvents);
+      clusters.clear();
+   }
+
+   gSystem->Unlink(filename);
+   ROOT::DisableImplicitMT();
+}
+
+TEST(TreeProcessorMT, PathName)
+{
+   auto fname = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4mu.root";
+   auto f = std::unique_ptr<TFile>(TFile::Open(fname));
+   auto tree = f->Get<TTree>("Events");
+   ROOT::TTreeProcessorMT p(*tree);
+   std::atomic<unsigned int> n (0U);
+   auto func = [&n](TTreeReader &t) { while (t.Next()) n++;};
+   p.Process(func);
+   EXPECT_EQ(n.load(), 1499064U) << "Wrong number of events processed!\n";
 }

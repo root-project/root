@@ -48,11 +48,11 @@ protected:
   RooRealProxy rho1;
   RooRealProxy rho2;
   Double_t evaluate() const;
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
 private:
 
-  ClassDef(RooBukinPdf,1) // Variation of Novosibirsk PDF
-  double consts;
+  ClassDef(RooBukinPdf,2) // Variation of Novosibirsk PDF
 };
 
 #endif

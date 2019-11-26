@@ -25,20 +25,16 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 \image html RooArgusBG.png
 */
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooArgusBG.h"
 #include "RooRealVar.h"
 #include "RooRealConstant.h"
 #include "RooMath.h"
+#include "BatchHelpers.h"
+#include "RooVDTHeaders.h"
+
 #include "TMath.h"
 
-#include "TError.h"
-
+#include <cmath>
 using namespace std;
 
 ClassImp(RooArgusBG);
@@ -94,6 +90,54 @@ Double_t RooArgusBG::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace {
+//Author: Emmanouil Michalainas, CERN 19 AUGUST 2019  
+
+template<class Tm, class Tm0, class Tc, class Tp>
+void compute(  size_t batchSize,
+               double * __restrict output,
+               Tm M, Tm0 M0, Tc C, Tp P)
+{
+  for (size_t i=0; i<batchSize; i++) {
+    const double t = M[i]/M0[i];
+    const double u = 1 - t*t;
+    output[i] = C[i]*u + P[i]*_rf_fast_log(u);
+  }
+  for (size_t i=0; i<batchSize; i++) {
+    if (M[i] >= M0[i]) output[i] = 0.0;
+    else output[i] = M[i]*_rf_fast_exp(output[i]);
+  }
+}
+};
+
+RooSpan<double> RooArgusBG::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  using namespace BatchHelpers;
+
+  EvaluateInfo info = getInfo( {&m, &m0, &c, &p}, begin, batchSize );
+  if (info.nBatches == 0) {
+    return {};
+  }
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  auto mData = m.getValBatch(begin, info.size);
+
+  if (info.nBatches==1 && !mData.empty()) {
+    compute(info.size, output.data(), mData.data(),
+    BracketAdapter<double> (m0),
+    BracketAdapter<double> (c),
+    BracketAdapter<double> (p));
+  }
+  else {
+    compute(info.size, output.data(),
+    BracketAdapterWithMask (m,m.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (m0,m0.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (c,c.getValBatch(begin,info.size)),
+    BracketAdapterWithMask (p,p.getValBatch(begin,info.size)));
+  }
+  return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (p.arg().isConstant()) {
@@ -116,8 +160,16 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   Double_t f1 = (1.-TMath::Power(min/m0,2));
   Double_t f2 = (1.-TMath::Power(max/m0,2));
   Double_t aLow, aHigh ;
-  aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
-  aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
+  if ( c < 0. ) { 
+    aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
+    aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
+  } else if ( c == 0. ) {
+    aLow  = -m0*m0/3.*f1*sqrt(f1);
+    aHigh = -m0*m0/3.*f1*sqrt(f2);
+  } else {
+    aLow  = 0.5*m0*m0*exp(c*f1)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f1))).imag() - sqrt(c*f1));
+    aHigh = 0.5*m0*m0*exp(c*f2)/(c*sqrt(c)) * (0.5*sqrt(pi)*(RooMath::faddeeva(sqrt(c*f2))).imag() - sqrt(c*f2));
+  }
   Double_t area = aHigh - aLow;
   //cout << "c = " << c << "aHigh = " << aHigh << " aLow = " << aLow << " area = " << area << endl ;
   return area;

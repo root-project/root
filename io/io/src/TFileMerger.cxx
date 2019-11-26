@@ -32,7 +32,6 @@ to be merged, like the standalone hadd program.
 #include "THashList.h"
 #include "TObjString.h"
 #include "TClass.h"
-#include "TMethodCall.h"
 #include "Riostream.h"
 #include "TFileMergeInfo.h"
 #include "TClassRef.h"
@@ -48,6 +47,8 @@ to be merged, like the standalone hadd program.
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
+
+#include <cstring>
 
 ClassImp(TFileMerger);
 
@@ -386,7 +387,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    // Get the dir name
    TString path(target->GetPath());
    // coverity[unchecked_value] 'target' is from a file so GetPath always returns path starting with filename:
-   path.Remove(0, path.Last(':') + 2);
+   path.Remove(0, std::strlen(target->GetFile()->GetPath()));
 
    Int_t nguess = sourcelist->GetSize()+1000;
    THashList allNames(nguess);
@@ -455,9 +456,12 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             // For mergeable objects we add the names in a local hashlist handling them
             // again (see above)
             if (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
-               (cl->IsTObject() &&
-               (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
-                cl->GetMethodWithPrototype("Merge", "TCollection*"))))
+               (cl->IsTObject() && !cl->IsLoaded() &&
+                 /* If it has a dictionary and GetMerge() is nullptr then we already know the answer
+                    to the next question is 'no, if we were to ask we would useless trigger
+                    auto-parsing */
+                 (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
+                  cl->GetMethodWithPrototype("Merge", "TCollection*"))))
                allNames.Add(new TObjString(key->GetName()));
 
             if (fNoTrees && cl->InheritsFrom(R__TTree_Class)) {
@@ -507,6 +511,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                     key->GetName(), key->GetTitle());
                continue;
             }
+            // if (cl->IsTObject())
+            //    obj->ResetBit(kMustCleanup);
             if (cl->IsTObject() && cl != obj->IsA()) {
                Error("MergeRecursive", "TKey and object retrieve disagree on type (%s vs %s).  Continuing with %s.",
                     key->GetClassName(), obj->IsA()->GetName(), obj->IsA()->GetName());
@@ -525,9 +531,11 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   newdir = target->GetDirectory(obj->GetName());
                   if (!newdir) {
                      newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
+                     // newdir->ResetBit(kMustCleanup);
                   }
                } else {
                   newdir = target->mkdir( obj->GetName(), obj->GetTitle() );
+                  // newdir->ResetBit(kMustCleanup);
                }
 
                // newdir is now the starting point of another round of merging
@@ -559,6 +567,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      // make sure we are at the correct directory level by cd'ing to path
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
+                        // For consistency (and persformance), we reset the MustCleanup be also for those
+                        // 'key' retrieved indirectly.
+                        // ndir->ResetBit(kMustCleanup);
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
@@ -624,6 +635,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      // make sure we are at the correct directory level by cd'ing to path
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
+                        // For consistency (and persformance), we reset the MustCleanup be also for those
+                        // 'key' retrieved indirectly.
+                        //ndir->ResetBit(kMustCleanup);
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
@@ -686,6 +700,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      // make sure we are at the correct directory level by cd'ing to path
                      TDirectory *ndir = nextsource->GetDirectory(path);
                      if (ndir) {
+                        // For consistency (and persformance), we reset the MustCleanup be also for those
+                        // 'key' retrieved indirectly.
+                        //ndir->ResetBit(kMustCleanup);
                         ndir->cd();
                         TKey *key2 = (TKey*)ndir->GetListOfKeys()->FindObject(key->GetName());
                         if (key2) {
@@ -737,12 +754,31 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             //!!if the object is a tree, it is stored in globChain...
             if(cl->InheritsFrom( TDirectory::Class() )) {
                //printf("cas d'une directory\n");
+
+               auto dirobj = dynamic_cast<TDirectory*>(obj);
+               TString dirpath(dirobj->GetPath());
+               // coverity[unchecked_value] 'target' is from a file so GetPath always returns path starting with filename:
+               dirpath.Remove(0, std::strlen(dirobj->GetFile()->GetPath()));
+
                // Do not delete the directory if it is part of the output
                // and we are in incremental mode (because it will be reuse
                // and has not been written to disk (for performance reason).
                // coverity[var_deref_model] the IsA()->InheritsFrom guarantees that the dynamic_cast will succeed.
-               if (!(type&kIncremental) || dynamic_cast<TDirectory*>(obj)->GetFile() != target) {
-                  delete obj;
+               if (!(type&kIncremental) || dirobj->GetFile() != target) {
+                  dirobj->ResetBit(kMustCleanup);
+                  delete dirobj;
+               }
+               // Let's also delete the directory from the other source (thanks to the 'allNames'
+               // mechanism above we will not process the directories when tranversing the next
+               // files).
+               TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
+               while (nextsource) {
+                  TDirectory *ndir = nextsource->GetDirectory(dirpath);
+                  // For consistency (and persformance), we reset the MustCleanup be also for those
+                  // 'key' retrieved indirectly.
+                  ndir->ResetBit(kMustCleanup);
+                  delete ndir;
+                  nextsource = (TFile*)sourcelist->After( nextsource );
                }
             } else if (cl->InheritsFrom( TCollection::Class() )) {
                // Don't overwrite, if the object were not merged.
@@ -758,6 +794,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
                      status = kFALSE;
                   }
+                  obj->ResetBit(kMustCleanup);
                } else {
                   if ( target->WriteObjectAny( (void*)obj, cl, oldkeyname, canBeMerged ? "OverWrite" : "" ) <= 0) {
                      status = kFALSE;
@@ -781,6 +818,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
       // to call SaveSelf explicilty.
       target->SaveSelf(kTRUE);
    }
+
    return status;
 }
 
@@ -882,6 +920,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       if (in_type & kIncremental) {
          fOutputFile->Write("",TObject::kOverwrite);
       } else {
+         gROOT->GetListOfFiles()->Remove(fOutputFile);
          fOutputFile->Close();
       }
    }

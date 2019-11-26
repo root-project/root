@@ -1064,6 +1064,13 @@
    ...
 }
 
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Cond
+   fun:_ZN8TStorage14UpdateIsOnHeapERVKjRVj
+   ...
+}
+
 ######## Minimizer
 
 {
@@ -1606,7 +1613,7 @@
 {
    cling pointer checker on uninitialized memory (ROOT-8144)
    Memcheck:Param
-   write(buf)
+   msync(start)
    ...
    fun:_ZN5cling5utils14isAddressValidEPKv
    fun:cling_runtime_internal_throwIfInvalidPointer

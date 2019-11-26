@@ -1,0 +1,57 @@
+<core:FragmentDefinition
+       xmlns="sap.m"
+       xmlns:l="sap.ui.layout"
+       xmlns:jsroot="rootui5.canv.controller"
+       xmlns:core="sap.ui.core">
+        <FlexBox renderType="Bare" width="100%">
+          <items>
+             <jsroot:ColorButton text="marker" attrcolor="{/attmark/color}" tooltip="Marker color"/>
+             <Select selectedKey="{/attmark/style}" tooltip="Marker style">
+                 <items>
+                   <core:Item text="none" key="0"/>
+                   <core:Item text="1" key="1"/>
+                   <core:Item text="2" key="2"/>
+                   <core:Item text="3" key="3"/>
+                   <core:Item text="4" key="4"/>
+                   <core:Item text="5" key="5"/>
+                   <core:Item text="6" key="6"/>
+                   <core:Item text="7" key="7"/>
+                   <core:Item text="8" key="8"/>
+                   <core:Item text="21" key="21"/>
+                   <core:Item text="22" key="22"/>
+                   <core:Item text="23" key="23"/>
+                   <core:Item text="24" key="24"/>
+                   <core:Item text="25" key="25"/>
+                   <core:Item text="26" key="26"/>
+                   <core:Item text="27" key="27"/>
+                   <core:Item text="28" key="28"/>
+                   <core:Item text="29" key="29"/>
+                   <core:Item text="30" key="30"/>
+                   <core:Item text="31" key="31"/>
+                   <core:Item text="32" key="32"/>
+                   <core:Item text="33" key="33"/>
+                   <core:Item text="34" key="34"/>
+                 </items>
+             </Select>
+             <Select selectedKey="{/attmark/size}" tooltip="Marker size">
+                 <items>
+                   <core:Item text="1" key="1"/>
+                   <core:Item text="1.5" key="1.5"/>
+                   <core:Item text="2" key="2"/>
+                   <core:Item text="2.5" key="2.5"/>
+                   <core:Item text="3" key="3"/>
+                   <core:Item text="4" key="4"/>
+                   <core:Item text="5" key="5"/>
+                   <core:Item text="6" key="6"/>
+                   <core:Item text="7" key="7"/>
+                   <core:Item text="8" key="8"/>
+                 </items>
+             </Select>
+             <jsroot:SVGSample svgsample="{/attmark}" tooltip="Marker sample">
+                <jsroot:layoutData>
+                  <FlexItemData growFactor="2"/>
+                </jsroot:layoutData>
+             </jsroot:SVGSample>
+          </items>
+     </FlexBox>
+</core:FragmentDefinition>

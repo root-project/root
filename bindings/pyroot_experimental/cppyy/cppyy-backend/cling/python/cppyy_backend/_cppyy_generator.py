@@ -3,6 +3,7 @@
 """Cppyy binding description generator."""
 from __future__ import print_function
 import argparse
+import collections
 import gettext
 import inspect
 import json
@@ -328,7 +329,7 @@ class CppyyGenerator(object):
                 #   - first as just the bare fields
                 #   - then as children of the typedef
                 #
-                if "type" in child_info and child_info["type"]["kind"] in ("struct", "union"):
+                if "type" in child_info and isinstance(child_info["type"], collections.Mapping) and child_info["type"]["kind"] in ("struct", "union"):
                     assert children[-1] == child_info["type"]
                     children.pop()
                 children.append(child_info)
@@ -538,11 +539,13 @@ class CppyyGenerator(object):
                 #
                 tmp = Config().lib.clang_Type_getNumTemplateArguments(typedef.type)
                 if tmp == -1:
-                    logger.error(_("Unexpected template_arg_count={}").format(tmp))
                     #
-                    # Just a WAG...
+                    # Happens e.g. if the template is a dependent type; instead, try to parse
+                    # its definition (brittle, but the original code just had '1' as a guess,
+                    # which is even worse ...).
                     #
-                    tmp = 1
+                    # logger.error(_("Unexpected template_arg_count={} for {}").format(tmp, typedef.type.get_typedef_name()))
+                    tmp = child.get_definition().displayname.count(',')+1
                 template_count_stack.append(tmp)
                 template_info = Info("template", child)
                 template_info["parameters"] = []
@@ -554,6 +557,7 @@ class CppyyGenerator(object):
                     # Non-first template_infos are just parameters.
                     #
                     template_info_stack[template_stack_index]["parameters"].append(template_info)
+                    template_info_stack.append(template_info)
                 template_stack_index += 1
             elif child.kind == CursorKind.TYPE_REF:
                 if template_stack_index > -1:
@@ -623,6 +627,42 @@ class CppyyGenerator(object):
         logger.debug(_("Ignoring {} {}").format(reason, item_describe(child)))
 
 
+# https://github.com/Rip-Rip/clang_complete/issues/238
+def getBuiltinHeaderPath(library_path):
+    """
+    Locate clang's headers relative to its library (which is given on the
+    command line in --flags.
+    """
+
+    if os.path.isfile(library_path):
+        library_path = os.path.dirname(library_path)
+
+    knownPaths = [
+        library_path + "/../lib/clang",     # default value
+        library_path + "/../clang",         # gentoo
+        library_path + "/clang",            # opensuse
+        library_path + "/",                 # Google
+        "/usr/lib64/clang",                 # x86_64 (openSUSE, Fedora)
+        "/usr/lib/clang"
+    ]
+
+    for path in knownPaths:
+        try:
+            files = os.listdir(path)
+            if len(files) >= 1:
+                files = sorted(files)
+                subDir = files[0]
+            else:
+                subDir = '.'
+            path = os.path.join(path, subDir, "include")
+            if os.path.exists(os.path.join(path, "stddef.h")):
+                return path
+        except:
+            pass
+
+    return None
+
+
 def main(argv=None):
     """
     Takes a set of C++ header files and generate a JSON output file describing
@@ -669,6 +709,9 @@ def main(argv=None):
         #
         if args.libclang:
             Config.set_library_file(args.libclang)
+            hpath = getBuiltinHeaderPath(args.libclang)
+            if hpath:
+                flags = ['-I'+hpath] + flags
         lib = Config().lib
         import ctypes
         from clang.cindex import Type

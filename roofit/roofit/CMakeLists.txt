@@ -1,3 +1,9 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
 ############################################################################
 # CMakeLists.txt file for building ROOT rootfit package
 # @author Pere Mato, CERN
@@ -70,6 +76,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooUnblindUniform.h
     RooUniform.h
     RooVoigtian.h
+    RooJohnson.h
+    RooHypatia2.h
   SOURCES
     src/Roo2DKeysPdf.cxx
     src/RooArgusBG.cxx
@@ -132,6 +140,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUnblindUniform.cxx
     src/RooUniform.cxx
     src/RooVoigtian.cxx
+    src/RooJohnson.cxx
+    src/RooHypatia2.cxx
+    src/BatchHelpers.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
@@ -146,5 +157,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     MathCore
 )
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+if(vdt AND NOT builtin_vdt)
+  target_include_directories(RooFit PRIVATE ${VDT_INCLUDE_DIR})
+endif()
 
+ROOT_ADD_TEST_SUBDIRECTORY(test)

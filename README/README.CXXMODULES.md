@@ -375,9 +375,6 @@ overhead which we go in details bellow.
 
 
 ### Current limitations
-  * Incremental builds -- building ROOT, modifying the source code and rebuilding
-  might not work. To work around it remove all pcm files in the $ROOTSYS/lib
-  folder.
   * Relocatability issues -- we have fixed a few of the relocatability issues we
   found. We are aware of an obscure relocatability issue when ROOT is copied in
   another folder and we are rebuild. ROOT picks up both modulemap files in
@@ -390,9 +387,6 @@ overhead which we go in details bellow.
   version of libstdc++) the generation of the RooFit dictionary goes in an
   infinite loop. We have fixed a number of such situations. Please contact us if
   you see such behavior or disable roofit (`-Droofit=Off`).
-  * ROOT7 -- Due to number of layering violations, `-Droot7=On` does not work.
-  Please remember to explicitly switch it off when building with `-Dcxx14=On`
-  or `-Dcxx17=On`.
 
 ### Performance
 This section compares ROOT PCH technology with C++ Modules which is important but
@@ -439,6 +433,28 @@ the performance of the technology preview with respect to 'standard' ROOT[[9]].
 
 ## How to use
   Compile ROOT with `-Druntime_cxxmodules=On`. Enjoy.
+
+## Citing ROOT's C++ Modules
+```latex
+% Peer-Reviewed Publication
+%
+% 22nd International Conference on Computing in High Energy and Nuclear Physics (CHEP)
+% 8-14 October, 2016, San Francisco, USA
+%
+@inproceedings{Vassilev_ROOTModules,
+  author = {Vassilev,V.},
+  title = {{Optimizing ROOT's Performance Using C++ Modules}},
+  journal = {Journal of Physics: Conference Series},
+  year = 2017,
+  month = {oct},
+  volume = {898},
+  number = {7},
+  pages = {072023},
+  doi = {10.1088/1742-6596/898/7/072023},
+  url = {https://iopscience.iop.org/article/10.1088/1742-6596/898/7/072023/pdf},
+  publisher = {{IOP} Publishing}
+}
+```
   
 # Acknowledgement
 

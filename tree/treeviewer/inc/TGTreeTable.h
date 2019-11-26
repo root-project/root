@@ -13,7 +13,6 @@
 
 #include "TGTable.h"
 
-class TTreeTableInterface;
 class TTree;
 
 class TGTreeTable : public TGTable {

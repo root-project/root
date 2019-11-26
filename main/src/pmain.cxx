@@ -216,9 +216,6 @@ int main(int argc, char **argv)
    gROOT->SetBatch();
    TApplication *theApp = 0;
 
-   // Enable autoloading
-   gInterpreter->EnableAutoLoading();
-
    TString getter("GetTXProofServ");
    TString prooflib = "libProofx";
    if (argc > 2) {

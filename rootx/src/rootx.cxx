@@ -36,57 +36,12 @@
 #include <mach-o/dyld.h>
 #endif
 
-#if defined(__sgi) || defined(__sun)
-#define HAVE_UTMPX_H
-#define UTMP_NO_ADDR
-#endif
-
-#if defined(MAC_OS_X_VERSION_10_5)
-#   define HAVE_UTMPX_H
-#   define UTMP_NO_ADDR
-#endif
-
-#if defined(R__FBSD)
-#   include <sys/param.h>
-#   if __FreeBSD_version >= 900007
-#      define HAVE_UTMPX_H
-#   endif
-#endif
-
-#if defined(_AIX) || \
-    defined(__FreeBSD__) || defined(__Lynx__) || defined(__OpenBSD__) || \
-    (defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_5))
-#define UTMP_NO_ADDR
-#endif
-
 #ifdef __sun
 #   ifndef _REENTRANT
 #      if __SUNPRO_CC > 0x420
 #         define GLOBAL_ERRNO
 #      endif
 #   endif
-#endif
-
-# ifdef HAVE_UTMPX_H
-# include <utmpx.h>
-# define STRUCT_UTMP struct utmpx
-# else
-# if defined(__linux) && defined(__powerpc) && (__GNUC__ == 2) && (__GNUC_MINOR__ < 90)
-   extern "C" {
-# endif
-# include <utmp.h>
-# define STRUCT_UTMP struct utmp
-# endif
-
-#if !defined(UTMP_FILE) && defined(_PATH_UTMP)      // 4.4BSD
-#define UTMP_FILE _PATH_UTMP
-#endif
-#if defined(UTMPX_FILE)                             // Solaris, SysVr4
-#undef  UTMP_FILE
-#define UTMP_FILE UTMPX_FILE
-#endif
-#ifndef UTMP_FILE
-#define UTMP_FILE "/etc/utmp"
 #endif
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
@@ -103,8 +58,7 @@ extern void PopdownLogo();
 extern void CloseDisplay();
 
 
-static STRUCT_UTMP *gUtmpContents;
-static bool gNoLogo = false;
+static bool gNoLogo = true;
       //const  int  kMAXPATHLEN = 8192; defined in Rtypes.h
 
 
@@ -146,79 +100,6 @@ static void ResetErrno()
 }
 
 #endif
-
-static int ReadUtmp()
-{
-   FILE  *utmp;
-   struct stat file_stats;
-   size_t n_read, size;
-
-   gUtmpContents = 0;
-
-   utmp = fopen(UTMP_FILE, "r");
-   if (!utmp)
-      return 0;
-
-   fstat(fileno(utmp), &file_stats);
-   size = file_stats.st_size;
-   if (size <= 0) {
-      fclose(utmp);
-      return 0;
-   }
-
-   gUtmpContents = (STRUCT_UTMP *) malloc(size);
-   if (!gUtmpContents) {
-      fclose(utmp);
-      return 0;
-   }
-
-   n_read = fread(gUtmpContents, 1, size, utmp);
-   if (!ferror(utmp)) {
-      if (fclose(utmp) != EOF && n_read == size)
-         return size / sizeof(STRUCT_UTMP);
-   } else
-      fclose(utmp);
-
-   free(gUtmpContents);
-   gUtmpContents = 0;
-   return 0;
-}
-
-namespace {
-   // Depending on the platform the struct utmp (or utmpx) has either ut_name or ut_user
-   // which are semantically equivalent. Instead of using preprocessor magic,
-   // which is bothersome for cxx modules use SFINAE.
-
-   template<typename T>
-   struct ut_name {
-      template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_name)>::value, int>::type = 0>
-      static char getValue(U* ue, int) {
-         return ue->ut_name[0];
-      }
-
-      template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_user)>::value, int>::type = 0>
-      static char getValue(U* ue, long) {
-         return ue->ut_user[0];
-      }
-   };
-
-   static char get_ut_name(STRUCT_UTMP *ue) {
-      // 0 is an integer literal forcing an overload pickup in case both ut_name and ut_user are present.
-      return ut_name<STRUCT_UTMP>::getValue(ue, 0);
-   }
-}
-
-static STRUCT_UTMP *SearchEntry(int n, const char *tty)
-{
-   STRUCT_UTMP *ue = gUtmpContents;
-
-   while (n--) {
-      if (get_ut_name(ue) && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
-        return ue;
-      ue++;
-   }
-   return 0;
-}
 
 static const char *GetExePath()
 {
@@ -267,51 +148,6 @@ static void SetRootSys()
    }
 }
 
-static void SetDisplay()
-{
-   // Set DISPLAY environment variable.
-
-   if (!getenv("DISPLAY")) {
-      char *tty = ttyname(0);  // device user is logged in on
-      if (tty) {
-         tty += 5;             // remove "/dev/"
-         STRUCT_UTMP *utmp_entry = SearchEntry(ReadUtmp(), tty);
-         if (utmp_entry) {
-            char *display = new char[sizeof(utmp_entry->ut_host) + 15];
-            constexpr size_t hostsize = sizeof(utmp_entry->ut_host) + 1;
-            char *host = new char[ hostsize ];
-            strncpy(host, utmp_entry->ut_host, hostsize - 1);
-            host[sizeof(utmp_entry->ut_host)] = 0;
-            if (host[0]) {
-               if (strchr(host, ':')) {
-                  sprintf(display, "DISPLAY=%s", host);
-                  fprintf(stderr, "*** DISPLAY not set, setting it to %s\n",
-                          host);
-               } else {
-                  sprintf(display, "DISPLAY=%s:0.0", host);
-                  fprintf(stderr, "*** DISPLAY not set, setting it to %s:0.0\n",
-                          host);
-               }
-               putenv(display);
-#ifndef UTMP_NO_ADDR
-            } else if (utmp_entry->ut_addr) {
-               struct hostent *he;
-               if ((he = gethostbyaddr((const char*)&utmp_entry->ut_addr,
-                                       sizeof(utmp_entry->ut_addr), AF_INET))) {
-                  sprintf(display, "DISPLAY=%s:0.0", he->h_name);
-                  fprintf(stderr, "*** DISPLAY not set, setting it to %s:0.0\n",
-                          he->h_name);
-                  putenv(display);
-               }
-#endif
-            }
-            delete [] host;
-            // display cannot be deleted otherwise the env var is deleted too
-         }
-         free(gUtmpContents);
-      }
-   }
-}
 
 static void SetLibraryPath()
 {
@@ -464,7 +300,7 @@ int main(int argc, char **argv)
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
    bool batch = false, about = false;
-   bool notebook = false;
+   int notebook = 0; // index of --notebook args, all other args will be re-directed to nbmain
    int i;
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
@@ -477,11 +313,11 @@ int main(int argc, char **argv)
       if (!strcmp(argv[i], "-ll"))        gNoLogo  = true;
       if (!strcmp(argv[i], "-a"))         about    = true;
       if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
-      if (!strcmp(argv[i], "--version"))    gNoLogo  = true;
-      if (!strcmp(argv[i], "--notebook")) notebook = true;
+      if (!strcmp(argv[i], "--version"))  gNoLogo  = true;
+      if (!strcmp(argv[i], "--notebook")) { notebook = i; break; }
    }
 
-   if (notebook) {
+   if (notebook > 0) {
       // Build command
 #ifdef ROOTBINDIR
       if (getenv("ROOTIGNOREPREFIX"))
@@ -492,8 +328,16 @@ int main(int argc, char **argv)
          snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
 #endif
 
+      int numnbargs = 1 + (argc - notebook);
+
+      argvv = new char* [numnbargs+1];
+      argvv[0] = arg0;
+      for (i = 1; i < numnbargs; i++)
+         argvv[i] = argv[notebook + i];
+      argvv[numnbargs] = nullptr;
+
       // Execute ROOT notebook binary
-      execl(arg0, arg0, NULL);
+      execv(arg0, argvv);
 
       // Exec failed
       fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s exists\n",
@@ -502,6 +346,11 @@ int main(int argc, char **argv)
       return 1;
    }
 
+#ifndef R__HAS_COCOA
+   if (!getenv("DISPLAY")) {
+      gNoLogo = true;
+   }
+#endif
    if (batch)
       gNoLogo = true;
    if (about) {
@@ -510,15 +359,6 @@ int main(int argc, char **argv)
    }
 
    if (!batch) {
-      SetDisplay();
-#ifndef R__HAS_COCOA
-      if (!getenv("DISPLAY")) {
-         fprintf(stderr, "%s: can't figure out DISPLAY, set it manually\n", argv[0]);
-         fprintf(stderr, "In case you run a remote ssh session, restart your ssh session with:\n");
-         fprintf(stderr, "=========>  ssh -Y\n");
-         return 1;
-      }
-#endif
       if (about) {
          PopupLogo(true);
          WaitLogo();

@@ -1,8 +1,8 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve7:$Id$
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,7 +18,13 @@
 namespace ROOT {
 namespace Experimental {
 
-class REveTrackProjected : public REveTrack, public REveProjected
+////////////////////////////////////////////////////////////////////////////////
+/// REveTrackProjected
+/// Projected copy of a REveTrack.
+////////////////////////////////////////////////////////////////////////////////
+
+class REveTrackProjected : public REveTrack,
+                           public REveProjected
 {
 private:
    REveTrackProjected(const REveTrackProjected &);            // Not implemented
@@ -31,31 +37,30 @@ private:
 protected:
    std::vector<Int_t> fBreakPoints; // indices of track break-points
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
-   REveTrackProjected();
-   virtual ~REveTrackProjected() {}
+   REveTrackProjected() = default;
+   virtual ~REveTrackProjected();
 
-   virtual void SetProjection(REveProjectionManager *mng, REveProjectable *model);
+   void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
 
-   virtual void UpdateProjection();
-   virtual REveElement *GetProjectedAsElement() { return this; }
-   virtual void MakeTrack(Bool_t recurse = kTRUE);
+   void UpdateProjection() override;
+   REveElement *GetProjectedAsElement() override { return this; }
+   void MakeTrack(Bool_t recurse = kTRUE) override;
 
    void PrintLineSegments();
 
-   virtual void SecSelected(REveTrack *); // marked as signal in REveTrack
+   void SecSelected(REveTrack *) override; // marked as signal in REveTrack
 
-   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset); // override
-   void BuildRenderData();                                    // override;
-
-   ClassDef(REveTrackProjected, 0); // Projected copy of a REveTrack.
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
+   void BuildRenderData() override;
 };
 
-/******************************************************************************/
-// REveTrackListProjected
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// REveTrackListProjected
+/// Specialization of REveTrackList for holding REveTrackProjected objects.
+////////////////////////////////////////////////////////////////////////////////
 
 class REveTrackListProjected : public REveTrackList, public REveProjected {
 private:
@@ -63,20 +68,18 @@ private:
    REveTrackListProjected &operator=(const REveTrackListProjected &); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    REveTrackListProjected();
    virtual ~REveTrackListProjected() {}
 
-   virtual void SetProjection(REveProjectionManager *proj, REveProjectable *model);
-   virtual void UpdateProjection() {}
-   virtual REveElement *GetProjectedAsElement() { return this; }
+   void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
+   void UpdateProjection() override {}
+   REveElement *GetProjectedAsElement() override { return this; }
 
-   virtual void SetDepth(Float_t d);
+   void SetDepth(Float_t d) override;
    virtual void SetDepth(Float_t d, REveElement *el);
-
-   ClassDef(REveTrackListProjected, 0); // Specialization of REveTrackList for holding REveTrackProjected objects.
 };
 
 } // namespace Experimental

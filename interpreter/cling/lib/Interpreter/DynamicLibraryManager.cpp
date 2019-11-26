@@ -50,58 +50,37 @@ namespace cling {
         SplitPaths(Env, CurPaths, utils::kPruneNonExistant, platform::kEnvDelim,
                    Opts.Verbose());
         for (const auto& Path : CurPaths)
-          m_SystemSearchPaths.push_back(Path.str());
+          m_SearchPaths.push_back({Path.str(), /*IsUser*/true});
       }
     }
 
-    platform::GetSystemLibraryPaths(m_SystemSearchPaths);
+    llvm::SmallVector<std::string, 64> SysPaths;
+    platform::GetSystemLibraryPaths(SysPaths);
+
+    for (const std::string& P : SysPaths)
+      m_SearchPaths.push_back({P, /*IsUser*/false});
 
     // This will currently be the last path searched, should it be pushed to
     // the front of the line, or even to the front of user paths?
-    m_SystemSearchPaths.push_back(".");
+    m_SearchPaths.push_back({".", /*IsUser*/true});
   }
 
   DynamicLibraryManager::~DynamicLibraryManager() {}
 
-  static bool isSharedLib(llvm::StringRef LibName, bool* exists = 0) {
-    using namespace llvm;
-    file_magic Magic;
-    const std::error_code Error = identify_magic(LibName, Magic);
-    if (exists)
-      *exists = !Error;
-
-    return !Error &&
-#ifdef __APPLE__
-      (Magic == file_magic::macho_fixed_virtual_memory_shared_lib
-       || Magic == file_magic::macho_dynamically_linked_shared_lib
-       || Magic == file_magic::macho_dynamically_linked_shared_lib_stub
-       || Magic == file_magic::macho_universal_binary)
-#elif defined(LLVM_ON_UNIX)
-#ifdef __CYGWIN__
-      (Magic == file_magic::pecoff_executable)
-#else
-      (Magic == file_magic::elf_shared_object)
-#endif
-#elif defined(LLVM_ON_WIN32)
-      (Magic == file_magic::pecoff_executable || platform::IsDLL(LibName.str()))
-#else
-# error "Unsupported platform."
-#endif
-      ;
-  }
-
   std::string
   DynamicLibraryManager::lookupLibInPaths(llvm::StringRef libStem) const {
-    llvm::SmallVector<std::string, 128>
-      Paths(m_Opts.LibSearchPath.begin(), m_Opts.LibSearchPath.end());
-    Paths.append(m_SystemSearchPaths.begin(), m_SystemSearchPaths.end());
+    llvm::SmallVector<SearchPathInfo, 128> Paths;
+    for (const std::string &P : m_Opts.LibSearchPath)
+      Paths.push_back({P, /*IsUser*/true});
 
-    for (llvm::SmallVectorImpl<std::string>::const_iterator
-           IPath = Paths.begin(), E = Paths.end();IPath != E; ++IPath) {
-      llvm::SmallString<512> ThisPath(*IPath); // FIXME: move alloc outside loop
+    Paths.append(m_SearchPaths.begin(), m_SearchPaths.end());
+
+    llvm::SmallString<512> ThisPath;
+    for (const SearchPathInfo& Info : Paths) {
+      ThisPath = Info.Path;
       llvm::sys::path::append(ThisPath, libStem);
       bool exists;
-      if (isSharedLib(ThisPath.str(), &exists))
+      if (isSharedLibrary(ThisPath.str(), &exists))
         return ThisPath.str();
       if (exists)
         return "";
@@ -169,7 +148,7 @@ namespace cling {
   DynamicLibraryManager::lookupLibrary(llvm::StringRef libStem) const {
     // If it is an absolute path, don't try iterate over the paths.
     if (llvm::sys::path::is_absolute(libStem)) {
-      if (isSharedLib(libStem))
+      if (isSharedLibrary(libStem))
         return normalizePath(libStem);
       else
         return std::string();
@@ -181,7 +160,7 @@ namespace cling {
       foundName = lookupLibMaybeAddExt("lib" + libStem.str());
     }
 
-    if (!foundName.empty() && isSharedLib(foundName))
+    if (!foundName.empty() && isSharedLibrary(foundName))
       return platform::NormalizePath(foundName);
 
     return std::string();
@@ -268,4 +247,34 @@ namespace cling {
   void DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(void* handle) {
     llvm::sys::DynamicLibrary::addPermanentLibrary(const_cast<void*>(handle));
   }
+
+  bool DynamicLibraryManager::isSharedLibrary(llvm::StringRef libFullPath,
+                                              bool* exists /*=0*/) {
+    using namespace llvm;
+    file_magic Magic;
+    const std::error_code Error = identify_magic(libFullPath, Magic);
+    if (exists)
+      *exists = !Error;
+
+    return !Error &&
+#ifdef __APPLE__
+      (Magic == file_magic::macho_fixed_virtual_memory_shared_lib
+       || Magic == file_magic::macho_dynamically_linked_shared_lib
+       || Magic == file_magic::macho_dynamically_linked_shared_lib_stub
+       || Magic == file_magic::macho_universal_binary)
+#elif defined(LLVM_ON_UNIX)
+#ifdef __CYGWIN__
+      (Magic == file_magic::pecoff_executable)
+#else
+      (Magic == file_magic::elf_shared_object)
+#endif
+#elif defined(LLVM_ON_WIN32)
+      (Magic == file_magic::pecoff_executable
+       || platform::IsDLL(libFullPath.str()))
+#else
+# error "Unsupported platform."
+#endif
+      ;
+  }
+
 } // end namespace cling

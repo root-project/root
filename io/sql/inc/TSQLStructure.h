@@ -12,11 +12,7 @@
 #ifndef ROOT_TSQLStructure
 #define ROOT_TSQLStructure
 
-#include "TNamed.h"
-
 #include "TObjArray.h"
-
-#include "TAttAxis.h"
 
 #ifdef Bool
 #undef Bool
@@ -38,26 +34,24 @@ class TSQLObjectData;
 class TSQLClassInfo;
 class TBufferSQL2;
 
-class TSQLColumnData : public TObject {
+class TSQLColumnData final : public TObject {
 
 protected:
-   TString fName;   ///<!  name of the table column
-   TString fType;   ///<!  type of the table column
-   TString fValue;  ///<!  value of the table column
-   Bool_t fNumeric; ///<!  for numeric quotes (double quotes) are not required
+   TString fName;           ///<!  name of the table column
+   TString fType;           ///<!  type of the table column
+   TString fValue;          ///<!  value of the table column
+   Bool_t fNumeric{kFALSE}; ///<!  for numeric quotes (double quotes) are not required
 public:
-   TSQLColumnData();
    TSQLColumnData(const char *name, const char *sqltype, const char *value, Bool_t numeric);
 
    TSQLColumnData(const char *name, Long64_t value);
-   virtual ~TSQLColumnData();
 
-   virtual const char *GetName() const { return fName.Data(); }
+   const char *GetName() const final { return fName.Data(); }
    const char *GetType() const { return fType.Data(); }
    const char *GetValue() const { return fValue.Data(); }
    Bool_t IsNumeric() const { return fNumeric; }
 
-   ClassDef(TSQLColumnData, 1); // Single SQL column data.
+   ClassDefOverride(TSQLColumnData, 1); // Single SQL column data.
 };
 
 //______________________________________________________________________
@@ -65,16 +59,16 @@ public:
 class TSQLTableData : public TObject {
 
 protected:
-   TSQLFile *fFile;      ///<!
-   TSQLClassInfo *fInfo; ///<!
-   TObjArray fColumns;   ///<! collection of columns
-   TObjArray *fColInfos; ///<! array with TSQLClassColumnInfo, used later for TSQLClassInfo
+   TSQLFile *fFile{nullptr};      ///<!
+   TSQLClassInfo *fInfo{nullptr}; ///<!
+   TObjArray fColumns;            ///<! collection of columns
+   TObjArray *fColInfos{nullptr}; ///<! array with TSQLClassColumnInfo, used later for TSQLClassInfo
 
    TString DefineSQLName(const char *fullname);
    Bool_t HasSQLName(const char *sqlname);
 
 public:
-   TSQLTableData(TSQLFile *f = 0, TSQLClassInfo *info = 0);
+   TSQLTableData(TSQLFile *f = nullptr, TSQLClassInfo *info = nullptr);
    virtual ~TSQLTableData();
 
    void AddColumn(const char *name, Long64_t value);
@@ -107,16 +101,16 @@ protected:
    Bool_t StoreTString(TSqlRegistry *reg);
    Bool_t RecognizeTString(const char *&value);
 
-   TSQLStructure *fParent; //!
-   Int_t fType;            //!
-   const void *fPointer;   //!
-   TString fValue;         //!
-   Int_t fArrayIndex;      //!
-   Int_t fRepeatCnt;       //!
-   TObjArray fChilds;      //!
+   TSQLStructure *fParent{nullptr}; //!
+   Int_t fType{0};                  //!
+   const void *fPointer{nullptr};   //!
+   TString fValue;                  //!
+   Int_t fArrayIndex{-1};           //!
+   Int_t fRepeatCnt{0};             //!
+   TObjArray fChilds;               //!
 
 public:
-   TSQLStructure();
+   TSQLStructure() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    virtual ~TSQLStructure();
 
    TSQLStructure *GetParent() const { return fParent; }

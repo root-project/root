@@ -2196,10 +2196,10 @@ TClass *TFormLeafInfoMethod::ReturnTClass(TMethodCall *mc)
 
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
-   int oldAutoloadVal = gCling->SetClassAutoloading(false);
-   TClassEdit::GetNormalizedName(return_type, mc->GetMethod()->GetReturnTypeName());
-   gCling->SetClassAutoloading(oldAutoloadVal);
-
+   {
+      TInterpreter::SuspendAutoloadingRAII autoloadOff(gInterpreter);
+      TClassEdit::GetNormalizedName(return_type, mc->GetMethod()->GetReturnTypeName());
+   }
    // Beyhond this point we no longer 'need' the lock.
    // How TClass::GetClass will take at least the read lock to search
    // So keeping it just a little longer is likely to be faster
@@ -2411,7 +2411,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim() :
 TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDim& orig) : TFormLeafInfo(orig)
 {
    fNsize = orig.fNsize;
-   fSizes.Copy(fSizes);
+   orig.fSizes.Copy(fSizes);
    fCounter2 = orig.fCounter2?orig.fCounter2->DeepCopy():0;
    fSumOfSizes = orig.fSumOfSizes;
    fDim = orig.fDim;

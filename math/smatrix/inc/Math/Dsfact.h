@@ -40,7 +40,7 @@ namespace ROOT {
 
 /** Dsfact.
     Compute determinant of a symmetric, positive definite matrix of dimension
-    $idim$ and order $n$.
+    \f$idim\f$ and order \f$n\f$.
 
     @author T. Glebe
 */
@@ -130,7 +130,7 @@ static bool Dsfact(MatRepStd<T,n,idim>& rhs, T& det) {
   }
 
 
-};  // end of clas Sdeterminant
+};  // end of class Sdeterminant
 
   }  // namespace Math
 

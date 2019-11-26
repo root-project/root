@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -34,6 +34,7 @@ public:
       kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
+      kEmbedded,  ///< window will be embedded into other, no extra browser need to be started
       kCustom    ///< custom web browser, execution string should be provided
    };
 
@@ -41,9 +42,12 @@ protected:
    EBrowserKind fKind{kNative};   ///<! id of web browser used for display
    std::string fUrl;              ///<! URL to display
    bool fHeadless{false};         ///<! is browser runs in headless mode
+   bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
    int fWidth{0};                 ///<! custom window width, when not specified - used RWebWindow geometry
    int fHeight{0};                ///<! custom window height, when not specified - used RWebWindow geometry
+   int fX{-1};                    ///<! custom window x position, negative is default
+   int fY{-1};                    ///<! custom window y position, negative is default
    std::string fUrlOpt;           ///<! extra URL options, which are append to window URL
    std::string fExec;             ///<! string to run browser, used with kCustom type
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
@@ -55,9 +59,11 @@ public:
 
    RWebDisplayArgs(const char *browser);
 
-   void SetBrowserKind(const std::string &kind);
+   RWebDisplayArgs(int width, int height, int x = -1, int y = -1, const std::string &browser = "");
+
+   RWebDisplayArgs &SetBrowserKind(const std::string &kind);
    /// set browser kind, see EBrowserKind for allowed values
-   void SetBrowserKind(EBrowserKind kind) { fKind = kind; }
+   RWebDisplayArgs &SetBrowserKind(EBrowserKind kind) { fKind = kind; return *this; }
    /// returns configured browser kind, see EBrowserKind for supported values
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;
@@ -75,14 +81,23 @@ public:
    }
 
    /// set window url
-   void SetUrl(const std::string &url) { fUrl = url; }
+   RWebDisplayArgs &SetUrl(const std::string &url) { fUrl = url; return *this; }
    /// returns window url
    std::string GetUrl() const { return fUrl; }
 
+   /// Set standalone mode for running browser, default on
+   /// When disabled, normal browser window (or just tab) will be started
+   void SetStandalone(bool on = true) { fStandalone = on; }
+   /// Return true if browser should runs in standalone mode
+   bool IsStandalone() const { return fStandalone; }
+
    /// set window url options
-   void SetUrlOpt(const std::string &opt) { fUrlOpt = opt; }
+   RWebDisplayArgs &SetUrlOpt(const std::string &opt) { fUrlOpt = opt; return *this; }
    /// returns window url options
    std::string GetUrlOpt() const { return fUrlOpt; }
+
+   /// append extra url options, add "&" as separator if required
+   void AppendUrlOpt(const std::string &opt);
 
    /// returns window url with append options
    std::string GetFullUrl() const;
@@ -93,24 +108,30 @@ public:
    bool IsHeadless() const { return fHeadless; }
 
    /// set preferable web window width
-   void SetWidth(int w = 0) { fWidth = w; }
+   RWebDisplayArgs &SetWidth(int w = 0) { fWidth = w; return *this; }
    /// set preferable web window height
-   void SetHeight(int h = 0) { fHeight = h; }
+   RWebDisplayArgs &SetHeight(int h = 0) { fHeight = h; return *this; }
+   RWebDisplayArgs &SetSize(int w, int h) { fWidth = w; fHeight = h; return *this; }
+
+   /// set preferable web window x position, negative is default
+   RWebDisplayArgs &SetX(int x = -1) { fX = x; return *this; }
+   /// set preferable web window y position, negative is default
+   RWebDisplayArgs &SetY(int y = -1) { fY = y; return *this; }
+   RWebDisplayArgs &SetPos(int x = -1, int y = -1) { fX = x; fY = y; return *this; }
 
    /// returns preferable web window width
    int GetWidth() const { return fWidth; }
    /// returns preferable web window height
    int GetHeight() const { return fHeight; }
+   /// set preferable web window x position
+   int GetX() const { return fX; }
+   /// set preferable web window y position
+   int GetY() const { return fY; }
 
    /// set custom executable to start web browser
-   void SetCustomExec(const std::string &exec)
-   {
-      SetBrowserKind(kCustom);
-      fExec = exec;
-   }
-
+   void SetCustomExec(const std::string &exec);
    /// returns custom executable to start web browser
-   std::string GetCustomExec() const { return GetBrowserKind() == kCustom ? fExec : ""; }
+   std::string GetCustomExec() const;
 
    /// set http server instance, used for window display
    void SetHttpServer(THttpServer *serv) { fServer = serv; }

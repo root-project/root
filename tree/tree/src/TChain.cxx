@@ -773,7 +773,9 @@ void TChain::DirectoryAutoAdd(TDirectory * /* dir */)
 ///
 /// This function accepts TCut objects as arguments.
 /// Useful to use the string operator +, example:
+/// ~~~{.cpp}
 ///    ntuple.Draw("x",cut1+cut2+cut3);
+/// ~~~
 ///
 
 Long64_t TChain::Draw(const char* varexp, const TCut& selection,
@@ -1267,6 +1269,7 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 ///       the TTree is missing from the file.
 ///   * -5: Internal error, please report the circumstance when this happen
 ///       as a ROOT issue.
+///   * -6: An error occurred within the notify callback.
 ///
 /// Note: This is the only routine which sets the value of fTree to
 ///       a non-zero pointer.
@@ -1401,7 +1404,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             }
             // Notify user if requested.
             if (fNotify) {
-               fNotify->Notify();
+               if(!fNotify->Notify()) return -6;
             }
          }
       }
@@ -1513,10 +1516,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // Reuse cache from previous file (if any).
    if (tpf) {
       if (fFile) {
-         tpf->ResetCache();
-         fFile->SetCacheRead(tpf, fTree);
          // FIXME: fTree may be zero here.
          tpf->UpdateBranches(fTree);
+         tpf->ResetCache();
+         fFile->SetCacheRead(tpf, fTree);
       } else {
          // FIXME: One of the file in the chain is missing
          // we have no place to hold the pointer to the
@@ -1554,7 +1557,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
             // to properly account for the number of files/trees even if they
             // have no entries.
             if (fNotify) {
-               fNotify->Notify();
+               if(!fNotify->Notify()) return -6;
             }
 
             // Load the next TTree.
@@ -1677,7 +1680,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // Notify user we have switched trees if requested.
    if (fNotify) {
-      fNotify->Notify();
+      if(!fNotify->Notify()) return -6;
    }
 
    // Return the new local entry number.
@@ -2607,9 +2610,9 @@ void TChain::SetDirectory(TDirectory* dir)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the input entry list (processing the entries of the chain will then be
-/// limited to the entries in the list)
-/// This function finds correspondance between the sub-lists of the TEntryList
-/// and the trees of the TChain
+/// limited to the entries in the list).
+/// This function finds correspondence between the sub-lists of the TEntryList
+/// and the trees of the TChain.
 /// By default (opt=""), both the file names of the chain elements and
 /// the file names of the TEntryList sublists are expanded to full path name.
 /// If opt = "ne", the file names are taken as they are and not expanded

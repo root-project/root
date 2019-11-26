@@ -1732,8 +1732,10 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
    // set the axis labels
    TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
    TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+   TString zlabel = fTotalHistogram->GetZaxis()->GetTitle();
    if (xlabel) hist->GetXaxis()->SetTitle(xlabel);
    if (ylabel) hist->GetYaxis()->SetTitle(ylabel);
+   if (zlabel) hist->GetZaxis()->SetTitle(zlabel);
 
    Int_t bin;
    Int_t nbinsx = hist->GetNbinsX();

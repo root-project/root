@@ -86,6 +86,7 @@ public:
    TProfile2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
    TProfile2D(const TProfile2D &profile);
+   TProfile2D &operator=(const TProfile2D &profile);
    virtual ~TProfile2D();
    virtual Bool_t    Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t    Add(const TH1 *h1, Double_t c1=1);
@@ -143,7 +144,7 @@ public:
    virtual void      Sumw2(Bool_t flag = kTRUE);
    Double_t GetNumberOfBins() { return fBinEntries.GetSize(); }
 
-   ClassDef(TProfile2D,7)  //Profile2D histogram class
+   ClassDef(TProfile2D,8)  //Profile2D histogram class
 };
 
 #endif

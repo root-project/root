@@ -66,17 +66,6 @@ using namespace ROOT::RDF;
 namespace TTraits = ROOT::TypeTraits;
 namespace RDFInternal = ROOT::Internal::RDF;
 
-// Declare code in the interpreter via the TInterpreter::Declare method
-// and return the return code.
-bool InterpreterDeclare(const std::string &code);
-
-// Jit code in the interpreter with TInterpreter::Calc and return
-// a pair containing the return value of Calc and the error code.
-// The error code is:
-//   - 0 if Calc resulted in TInterpreter::kNoError
-//   - 1 otherwise
-std::pair<Long64_t, int> InterpreterCalc(const std::string &code);
-
 using HeadNode_t = ::ROOT::RDF::RResultPtr<RInterface<RLoopManager, void>>;
 HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
@@ -122,20 +111,7 @@ struct Display{};
 }
 // clang-format on
 
-template <int D, typename P, template <int, typename, template <typename> class> class... S>
-class THist;
-
-/// Check whether a histogram type is a classic or v7 histogram.
-template <typename T>
-struct IsV7Hist : public std::false_type {
-   static_assert(std::is_base_of<TH1, T>::value, "not implemented for this type");
-};
-
-template <int D, typename P, template <int, typename, template <typename> class> class... S>
-struct IsV7Hist<THist<D, P, S...>> : public std::true_type {
-};
-
-template <typename T, bool ISV7HISTO = IsV7Hist<T>::value>
+template <typename T, bool ISV6HISTO = std::is_base_of<TH1, T>::value>
 struct HistoUtils {
    static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
@@ -146,7 +122,7 @@ struct HistoUtils {
 };
 
 template <typename T>
-struct HistoUtils<T, true> {
+struct HistoUtils<T, false> {
    static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
@@ -268,7 +244,7 @@ void CheckFilter(Filter &)
 }
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
-                       const ColumnNames_t &dataSourceColumns);
+                       const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &dataSourceColumns);
 
 std::string PrettyPrintAddr(const void *const addr);
 
