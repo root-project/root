@@ -123,6 +123,7 @@ public:
    }
 
    void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, RColumnElementBase *elemArray) {
+      R__ASSERT(count > 0);
       if (!fCurrentPage.Contains(globalIndex)) {
          MapPage(globalIndex);
       }

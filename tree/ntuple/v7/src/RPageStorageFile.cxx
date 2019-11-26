@@ -1,7 +1,7 @@
-/// \file RPageStorage.cxx
+/// \file RPageStorageFile.cxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
-/// \date 2018-10-04
+/// \date 2019-11-25
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -20,12 +20,13 @@
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
-#include <ROOT/RPageStorageRoot.hxx>
+#include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RRawFile.hxx>
 
 #include <Compression.h>
 #include <RVersion.h>
 #include <RZip.h>
-#include <TKey.h>
+#include <TError.h>
 
 #include <chrono>
 #include <cstddef>  // for offsetof()
@@ -38,11 +39,9 @@
 
 namespace {
 
-static constexpr const char* kKeySeparator = "_";
-static constexpr const char* kKeyNTupleFooter = "NTPLF";
-static constexpr const char* kKeyNTupleHeader = "NTPLH";
-static constexpr const char* kKeyPagePayload = "NTPLP";
+// The following types are used to read and write the TFile binary format
 
+/// Big-endian 16-bit unsigned integer
 class RUInt16BE {
 private:
    std::uint16_t fValBE = 0;
@@ -61,6 +60,7 @@ public:
    }
 };
 
+/// Big-endian 32-bit unsigned integer
 class RUInt32BE {
 private:
    std::uint32_t fValBE = 0;
@@ -80,7 +80,7 @@ public:
    }
 };
 
-
+/// Big-endian 32-bit signed integer
 class RInt32BE {
 private:
    std::int32_t fValBE = 0;
@@ -100,6 +100,7 @@ public:
    }
 };
 
+/// Big-endian 64-bit unsigned integer
 class RUInt64BE {
 private:
    std::uint64_t fValBE = 0;
@@ -120,6 +121,7 @@ public:
    }
 };
 
+/// TFile checksum algorithm for name and type strings
 constexpr std::int32_t ChecksumString(std::int32_t id, const char *str) {
    auto len = strlen(str);
    for (unsigned i = 0; i < len; i++)
@@ -127,6 +129,7 @@ constexpr std::int32_t ChecksumString(std::int32_t id, const char *str) {
    return id;
 }
 
+/// Composition of class RNTuple as being interpreted by TFile
 constexpr std::int32_t ChecksumRNTupleClass() {
    std::int32_t id = 0;
    id = ChecksumString(id, "ROOT::Experimental::RNTuple");
@@ -145,6 +148,7 @@ constexpr std::int32_t ChecksumRNTupleClass() {
 
 
 #pragma pack(push, 1)
+/// A name (type, identifies, ...) in the TFile binary format
 struct RTFString {
    char fLName{0};
    char fData[255];
@@ -157,6 +161,7 @@ struct RTFString {
    char GetSize() const { return 1 + fLName; }
 };
 
+/// The timestamp format used in TFile; the default constructor initializes with the current time
 struct RTFDatetime {
    RUInt32BE fDatetime;
    RTFDatetime() {
@@ -169,6 +174,7 @@ struct RTFDatetime {
    explicit RTFDatetime(RUInt32BE val) : fDatetime(val) {}
 };
 
+/// The key part of a TFile record excluding the key, class, and title names
 struct RTFKey {
    RInt32BE fNbytes{0};
    RUInt16BE fVersion{4};
@@ -213,8 +219,13 @@ struct RTFKey {
       if (fNbytes < 0) return -fNbytes;
       return fNbytes;
    }
+
+   std::uint32_t GetHeaderSize() const {
+      return 18 + sizeof(fInfoShort);
+   }
 };
 
+/// The TFile global header
 struct RTFHeader {
    char fMagic[4]{ 'r', 'o', 'o', 't' };
    RUInt32BE fVersion{(ROOT_VERSION_CODE >> 16)*10000 +
@@ -281,6 +292,7 @@ struct RTFHeader {
    }
 };
 
+/// A reference to an unused byte-range in a TFile
 struct RTFFreeEntry {
    RUInt16BE fVersion{1};
    union {
@@ -308,6 +320,7 @@ struct RTFFreeEntry {
    std::uint32_t GetSize() { return (fVersion >= 1000) ? 18 : 10; }
 };
 
+/// Streamer info for TObject
 struct RTFObject {
    RUInt16BE fVersion{1};
    RUInt32BE fUniqueID{0};  // unused
@@ -315,6 +328,7 @@ struct RTFObject {
    explicit RTFObject(std::uint32_t bits) : fBits(bits) {}
 };
 
+/// Streamer info for data member RNTuple::fSeekHeader
 struct RTFStreamerElementSeekHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementSeekHeader) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
@@ -336,6 +350,7 @@ struct RTFStreamerElementSeekHeader {
    char fTypeName[13]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'l', 'o', 'n', 'g' };
 };
 
+/// Streamer info for data member RNTuple::fNbytesHeader
 struct RTFStreamerElementNBytesHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementNBytesHeader) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
@@ -357,6 +372,7 @@ struct RTFStreamerElementNBytesHeader {
    char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
 };
 
+/// Streamer info for data member RNTuple::fSeekFooter
 struct RTFStreamerElementSeekFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementSeekFooter) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
@@ -378,6 +394,7 @@ struct RTFStreamerElementSeekFooter {
    char fTypeName[13]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'l', 'o', 'n', 'g' };
 };
 
+/// Streamer info for data member RNTuple::fNbytesFooter
 struct RTFStreamerElementNBytesFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementNBytesFooter) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
@@ -399,6 +416,7 @@ struct RTFStreamerElementNBytesFooter {
    char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
 };
 
+/// Streamer info for data member RNTuple::fReserved
 struct RTFStreamerElementReserved {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementReserved) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
@@ -420,6 +438,7 @@ struct RTFStreamerElementReserved {
    char fTypeName[13]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'l', 'o', 'n', 'g' };
 };
 
+/// Streamer info frame for data member RNTuple::fSeekHeader
 struct RTFStreamerSeekHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSeekHeader) - sizeof(RUInt32BE))};
    RUInt32BE fNewClassTag{0xffffffff};
@@ -430,6 +449,7 @@ struct RTFStreamerSeekHeader {
    RTFStreamerElementSeekHeader fStreamerElementSeekHeader;
 };
 
+/// Streamer info frame for data member RNTuple::fNbytesHeader
 struct RTFStreamerNBytesHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerNBytesHeader) - sizeof(RUInt32BE))};
    RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
@@ -438,6 +458,7 @@ struct RTFStreamerNBytesHeader {
    RTFStreamerElementNBytesHeader fStreamerElementNBytesHeader;
 };
 
+/// Streamer info frame for data member RNTuple::fSeekFooter
 struct RTFStreamerSeekFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSeekFooter) - sizeof(RUInt32BE))};
    RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
@@ -446,6 +467,7 @@ struct RTFStreamerSeekFooter {
    RTFStreamerElementSeekFooter fStreamerElementSeekFooter;
 };
 
+/// Streamer info frame for data member RNTuple::fNBytesFooter
 struct RTFStreamerNBytesFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerNBytesFooter) - sizeof(RUInt32BE))};
    RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
@@ -454,6 +476,7 @@ struct RTFStreamerNBytesFooter {
    RTFStreamerElementNBytesFooter fStreamerElementNBytesFooter;
 };
 
+/// Streamer info frame for data member RNTuple::fReserved
 struct RTFStreamerReserved {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerReserved) - sizeof(RUInt32BE))};
    RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
@@ -462,6 +485,7 @@ struct RTFStreamerReserved {
    RTFStreamerElementReserved fStreamerElementReserved;
 };
 
+/// Streamer info for class RNTuple
 struct RTFStreamerInfoObject {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerInfoObject) - sizeof(fByteCount))};
    RUInt32BE fNewClassTag{0xffffffff};
@@ -508,6 +532,7 @@ struct RTFStreamerInfoObject {
    } fStreamers;
 };
 
+/// The list of streamer info objects, for a new ntuple contains only the RNTuple class
 struct RTFStreamerInfoList {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerInfoList) - sizeof(fByteCount))};
    RUInt16BE fVersion{5};
@@ -520,12 +545,14 @@ struct RTFStreamerInfoList {
    std::uint32_t GetSize() const { return sizeof(RTFStreamerInfoList); }
 };
 
+/// The header of the directory key index
 struct RTFKeyList {
    RUInt32BE fNKeys;
    std::uint32_t GetSize() const { return sizeof(RTFKeyList); }
    explicit RTFKeyList(std::uint32_t nKeys) : fNKeys(nKeys) {}
 };
 
+/// A streamed TFile object
 struct RTFFile {
    char fModified{0};
    char fWritable{1};
@@ -539,6 +566,7 @@ struct RTFFile {
    RTFFile() = default;
 };
 
+/// A streamed RNTuple class
 struct RTFNTuple {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFNTuple) - sizeof(fByteCount))};
    RUInt16BE fVersion{0};
@@ -557,6 +585,7 @@ struct RTFNTuple {
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
+/// On dataset commit, the file header and the RNTuple object need to be updated
 struct RTFileControlBlock {
    RTFHeader fHeader;
    RTFNTuple fNTuple;
@@ -566,7 +595,7 @@ struct RTFileControlBlock {
 }
 }
 
-ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntupleName, std::string_view path,
+ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
    const RNTupleWriteOptions &options)
    : RPageSink(ntupleName, options)
    , fMetrics("RPageSinkRoot")
@@ -577,41 +606,36 @@ ROOT::Experimental::Detail::RPageSinkRoot::RPageSinkRoot(std::string_view ntuple
       "Do not store real data with this version of RNTuple!";
 
    std::string strPath = std::string(path);
-   fBinaryFile = fopen(strPath.c_str(), "wb");
-   R__ASSERT(fBinaryFile);
+   fFile = fopen(strPath.c_str(), "wb");
+   R__ASSERT(fFile);
    size_t idxDirSep = strPath.find_last_of("\\/");
-   if (idxDirSep != std::string::npos)
-   {
+   if (idxDirSep != std::string::npos) {
       strPath.erase(0, idxDirSep + 1);
    }
    fFileName = strPath;
-   //fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE"));
-   //fFile->SetCompressionSettings(fOptions.GetCompression());
 }
 
-ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
+ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 {
-   if (fBinaryFile)
-      fclose(fBinaryFile);
    if (fFile)
-      fFile->Close();
+      fclose(fFile);
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::Write(void *from, size_t size, std::int64_t offset)
+void ROOT::Experimental::Detail::RPageSinkFile::Write(void *from, size_t size, std::int64_t offset)
 {
-   R__ASSERT(fBinaryFile);
+   R__ASSERT(fFile);
    size_t retval;
    if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
-      retval = fseek(fBinaryFile, offset, SEEK_SET);
+      retval = fseek(fFile, offset, SEEK_SET);
       R__ASSERT(retval == 0);
       fFilePos = offset;
    }
-   retval = fwrite(from, 1, size, fBinaryFile);
+   retval = fwrite(from, 1, size, fFile);
    R__ASSERT(retval == size);
    fFilePos += size;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::WriteKey(
+std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
    void *buffer, std::size_t nbytes, std::int64_t offset,
    std::uint64_t directoryOffset, int compression,
    const std::string &className,
@@ -635,6 +659,8 @@ void ROOT::Experimental::Detail::RPageSinkRoot::WriteKey(
       R__zipMultipleAlgorithm(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes, algorithm);
       if ((zipBytes > 0) && (zipBytes < szSource)) {
          buffer = reinterpret_cast<unsigned char *>(fZipBuffer->data());
+      } else {
+         zipBytes = szSource;
       }
    }
    RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, nbytes, zipBytes);
@@ -642,10 +668,12 @@ void ROOT::Experimental::Detail::RPageSinkRoot::WriteKey(
    Write(&strClass, strClass.GetSize());
    Write(&strObject, strObject.GetSize());
    Write(&strTitle, strTitle.GetSize());
+   auto offsetData = fFilePos;
    Write(buffer, zipBytes);
+   return offsetData;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
+void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /* model */)
 {
    RTFString strTFile{"TFile"};
    RTFString strFileName{fFileName};
@@ -659,6 +687,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    fControlBlock = std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>();
    fControlBlock->fHeader = RTFHeader(fOptions.GetCompression());
 
+   // First record of the file: the TFile object at offset 100
    RTFFile fileRoot;
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
                   sizeof(fileRoot) + strFileName.GetSize() + strEmpty.GetSize());
@@ -666,6 +695,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    fileRoot.fNBytesName = nbytesName;
    fControlBlock->fHeader.fInfoShort.fNbytesName = nbytesName;
 
+   // Second record: the compressed StreamerInfo with the description of the RNTuple class
    fControlBlock->fHeader.fInfoShort.fSeekInfo = 100 + keyRoot.GetSize();
    RTFKey keyStreamerInfo(
       fControlBlock->fHeader.fInfoShort.fSeekInfo, 100, strTList, strStreamerInfo, strStreamerTitle, 0);
@@ -682,10 +712,12 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
             "TList", "StreamerInfo", "Doubly linked list");
    fControlBlock->fHeader.fInfoShort.fNbytesInfo = fFilePos - fControlBlock->fHeader.fInfoShort.fSeekInfo;
 
+   // Reserve the space for the RNTuple record, which will be written on commit
    fControlBlock->fSeekNTuple = fFilePos;
    RTFKey keyRNTuple(fControlBlock->fSeekNTuple, 100, strRNTupleClass, strRNTupleName, strEmpty,
                      fControlBlock->fNTuple.GetSize());
 
+   // The key index of the root TFile object, containing for the time being only the RNTuple key
    fileRoot.fSeekKeys = fFilePos + keyRNTuple.GetSize();
    RTFKeyList keyList{1};
    RTFKey keyKeyList(fileRoot.fSeekKeys, 100, strEmpty, strEmpty, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
@@ -700,16 +732,6 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    Write(&strEmpty, strEmpty.GetSize());
    fileRoot.fNBytesKeys = fFilePos - fileRoot.fSeekKeys;
 
-   //fileHeader.fInfoShort.fSeekFree = fFilePos;
-   //RTFFreeEntry freeEntry(0, 2000000000);
-   //RTFKey keyFreeList(fileHeader.fInfoShort.fSeekFree, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
-   //freeEntry.fInfoShort.fFirst = fileHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
-   //WriteKey(&freeEntry, freeEntry.GetSize(), -1, 100, 0, "", "", "");
-   //fileHeader.fInfoShort.fNbytesFree = fFilePos - fileHeader.fInfoShort.fSeekFree;
-   //fileHeader.SetEnd(fileHeader.fInfoShort.fSeekFree + fileHeader.fInfoShort.fNbytesFree);
-
-   // Write(&fileHeader, fileHeader.GetSize(), 0);
-
    Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
    Write(&strTFile, strTFile.GetSize());
    Write(&strFileName, strFileName.GetSize());
@@ -718,26 +740,21 @@ void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /*
    Write(&strEmpty, strEmpty.GetSize());
    Write(&fileRoot, sizeof(fileRoot));
 
-//   fDirectory = fFile->mkdir(fNTupleName.c_str());
-//   // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
-//   fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
-//   fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
-//
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szHeader = descriptor.SerializeHeader(nullptr);
    auto buffer = new unsigned char[szHeader];
    descriptor.SerializeHeader(buffer);
-   fControlBlock->fNTuple.fSeekHeader = fileRoot.fSeekKeys + keyKeyList.GetSize();
+   fControlBlock->fNTuple.fSeekHeader = fileRoot.fSeekKeys + fileRoot.fNBytesKeys;
    WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
             fOptions.GetCompression());
    fControlBlock->fNTuple.fNBytesHeader = fFilePos - fControlBlock->fNTuple.fSeekHeader;
-//   ROOT::Experimental::Internal::RNTupleBlob blob(szHeader, buffer);
-//   fDirectory->WriteObject(&blob, kKeyNTupleHeader);
    delete[] buffer;
+
+   fClusterStart = fFilePos;
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
-ROOT::Experimental::Detail::RPageSinkRoot::DoCommitPage(ColumnHandle_t columnHandle, const RPage &page)
+ROOT::Experimental::Detail::RPageSinkFile::DoCommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
    unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
    auto packedBytes = page.GetSize();
@@ -750,66 +767,57 @@ ROOT::Experimental::Detail::RPageSinkRoot::DoCommitPage(ColumnHandle_t columnHan
       element->Pack(buffer, page.GetBuffer(), page.GetNElements());
    }
 
-   WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression());
-   //ROOT::Experimental::Internal::RNTupleBlob pagePayload(packedBytes, buffer);
-   //std::string keyName = std::string(kKeyPagePayload) +
-   //   std::to_string(fLastClusterId) + kKeySeparator +
-   //   std::to_string(fLastPageIdx);
-   //fDirectory->WriteObject(&pagePayload, keyName.c_str());
+   auto offsetData = WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression());
 
    if (!isMappable) {
       delete[] buffer;
    }
 
    RClusterDescriptor::RLocator result;
-   result.fPosition = fLastPageIdx++;
-   result.fBytesOnStorage = packedBytes;
+   result.fPosition = offsetData;
+   result.fBytesOnStorage = fFilePos - offsetData;
    return result;
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
-ROOT::Experimental::Detail::RPageSinkRoot::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
+ROOT::Experimental::Detail::RPageSinkFile::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
-   fLastPageIdx = 0;
-   return RClusterDescriptor::RLocator();
+   RClusterDescriptor::RLocator result;
+   result.fPosition = fClusterStart;
+   result.fBytesOnStorage = fFilePos - fClusterStart;
+   fClusterStart = fFilePos;
+   return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::DoCommitDataset()
+void ROOT::Experimental::Detail::RPageSinkFile::DoCommitDataset()
 {
-   //if (!fDirectory)
-   //   return;
-
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szFooter = descriptor.SerializeFooter(nullptr);
    auto buffer = new unsigned char[szFooter];
    descriptor.SerializeFooter(buffer);
-   //ROOT::Experimental::Internal::RNTupleBlob footerBlob(szFooter, buffer);
-   //fDirectory->WriteObject(&footerBlob, kKeyNTupleFooter);
    fControlBlock->fNTuple.fSeekFooter = fFilePos;
-   WriteKey(buffer, szFooter, fFilePos, fFilePos, fOptions.GetCompression());
+   WriteKey(buffer, szFooter, -1, fFilePos, fOptions.GetCompression());
    fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
    fControlBlock->fHeader.fInfoShort.fSeekFree = fFilePos;
+   delete[] buffer;
 
    WriteKey(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple,
             100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");
 
    RTFString strEmpty;
    RTFFreeEntry freeEntry(0, 2000000000);
-   RTFKey keyFreeList(fFilePos, 100, strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
+   RTFKey keyFreeList(fControlBlock->fHeader.fInfoShort.fSeekFree, 100,
+                      strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
    freeEntry.fInfoShort.fFirst = fControlBlock->fHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
    WriteKey(&freeEntry, freeEntry.GetSize(), fControlBlock->fHeader.fInfoShort.fSeekFree, 100, 0, "", "", "");
    fControlBlock->fHeader.fInfoShort.fNbytesFree = fFilePos - fControlBlock->fHeader.fInfoShort.fSeekFree;
-   fControlBlock->fHeader.SetEnd(
-      fControlBlock->fHeader.fInfoShort.fSeekFree + fControlBlock->fHeader.fInfoShort.fNbytesFree);
+   fControlBlock->fHeader.SetEnd(fFilePos);
 
    Write(&fControlBlock->fHeader, fControlBlock->fHeader.GetSize(), 0);
-   std::cout << "HEADER OUT" << std::endl;
-
-   delete[] buffer;
 }
 
 ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSinkRoot::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+ROOT::Experimental::Detail::RPageSinkFile::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    if (nElements == 0)
       nElements = kDefaultElementsPerPage;
@@ -817,7 +825,7 @@ ROOT::Experimental::Detail::RPageSinkRoot::ReservePage(ColumnHandle_t columnHand
    return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
 }
 
-void ROOT::Experimental::Detail::RPageSinkRoot::ReleasePage(RPage &page)
+void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 {
    fPageAllocator->DeletePage(page);
 }
@@ -826,7 +834,7 @@ void ROOT::Experimental::Detail::RPageSinkRoot::ReleasePage(RPage &page)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorKey::NewPage(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorFile::NewPage(
    ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
 {
    RPage newPage(columnId, mem, elementSize * nElements, elementSize);
@@ -834,60 +842,137 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorKey:
    return newPage;
 }
 
-void ROOT::Experimental::Detail::RPageAllocatorKey::DeletePage(
-   const RPage& page, ROOT::Experimental::Internal::RNTupleBlob *payload)
+void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& page)
 {
    if (page.IsNull())
       return;
-   R__ASSERT(page.GetBuffer() == payload->fContent);
-   free(payload->fContent);
-   delete payload;
+   free(page.GetBuffer());
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Detail::RPageSourceRoot::RPageSourceRoot(std::string_view ntupleName, std::string_view path,
+ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
    const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options)
-   , fMetrics("RPageSourceRoot")
+   , fMetrics("RPageSourceFile")
    , fPageAllocator(std::make_unique<RPageAllocatorKey>())
    , fPagePool(std::make_shared<RPagePool>())
+   , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
 {
-   fFile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
+}
+
+ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
+   const RNTupleReadOptions &options)
+   : RPageSourceFile(ntupleName, options)
+{
+   fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path));
+   R__ASSERT(fFile);
+   R__ASSERT(fFile->GetFeatures() & RRawFile::kFeatureHasSize);
 }
 
 
-ROOT::Experimental::Detail::RPageSourceRoot::~RPageSourceRoot()
+ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile()
 {
-   if (fFile)
-      fFile->Close();
 }
 
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRoot::DoAttach()
+void ROOT::Experimental::Detail::RPageSourceFile::Read(void *buffer, std::size_t nbytes, std::uint64_t offset)
 {
-   fDirectory = fFile->GetDirectory(fNTupleName.c_str());
+   auto nread = fFile->ReadAt(buffer, nbytes, offset);
+   R__ASSERT(nread == nbytes);
+}
+
+
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::DoAttach()
+{
+   RTFHeader fileHeader;
+   Read(&fileHeader, sizeof(fileHeader), 0);
+
+   RTFKey key;
+   RTFString name;
+   Read(&key, sizeof(key), fileHeader.fBEGIN);
+   auto offset = fileHeader.fBEGIN + key.fKeyLen;
+   Read(&name, 1, offset);
+   offset += name.GetSize();
+   Read(&name, 1, offset);
+   offset += name.GetSize();
+   RTFFile file;
+   Read(&file, sizeof(file), offset);
+
+   RUInt32BE nKeys;
+   Read(&key, sizeof(key), file.fSeekKeys);
+   offset = file.fSeekKeys + key.fKeyLen;
+   Read(&nKeys, sizeof(nKeys), offset);
+   offset += sizeof(nKeys);
+   for (unsigned int i = 0; i < nKeys; ++i) {
+      Read(&key, sizeof(key), offset);
+      auto offsetNextKey = offset + key.fKeyLen;
+
+      offset += key.GetHeaderSize();
+      Read(&name, 1, offset);
+      offset += name.GetSize();
+      Read(&name, 1, offset);
+      Read(&name, name.GetSize(), offset);
+      if (std::string(name.fData, name.fLName) == fNTupleName)
+         break;
+      offset = offsetNextKey;
+   }
+
+   Read(&key, sizeof(key), key.fInfoShort.fSeekKey);
+   offset = key.fInfoShort.fSeekKey + key.fKeyLen;
+   RTFNTuple ntuple;
+   Read(&ntuple, sizeof(ntuple), offset);
+
+   unsigned char *keyHeader = new unsigned char[ntuple.fNBytesHeader];
+   Read(keyHeader, ntuple.fNBytesHeader, ntuple.fSeekHeader);
+   memcpy(&key, keyHeader, sizeof(key));
+   unsigned char *header = new unsigned char[key.fObjLen];
+   int szUnzipBuffer = key.fObjLen;
+   int szSource = key.fNbytes - key.fKeyLen;
+   int unzipBytes = 0;
+   R__unzip(&szSource, keyHeader + key.fKeyLen, &szUnzipBuffer, header, &unzipBytes);
+   delete[] keyHeader;
+
+   unsigned char *keyFooter = new unsigned char[ntuple.fNBytesFooter];
+   Read(keyFooter, ntuple.fNBytesFooter, ntuple.fSeekFooter);
+   memcpy(&key, keyFooter, sizeof(key));
+   unsigned char *footer = new unsigned char[key.fObjLen];
+   szUnzipBuffer = key.fObjLen;
+   szSource = key.fNbytes - key.fKeyLen;
+   unzipBytes = 0;
+   R__unzip(&szSource, keyFooter + key.fKeyLen, &szUnzipBuffer, footer, &unzipBytes);
+   delete[] keyFooter;
+
+//   unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
+//   auto fileSize = fFile->GetSize();
+//   R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
+//   R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
+//   auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
+//   Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);
+//
+//   std::uint32_t szHeader;
+//   std::uint32_t szFooter;
+//   RNTupleDescriptor::LocateMetadata(postscript, szHeader, szFooter);
+//   R__ASSERT(fileSize >= szHeader + szFooter);
+//
+//   unsigned char *header = new unsigned char[szHeader];
+//   unsigned char *footer = new unsigned char[szFooter];
+//   Read(header, szHeader, 0);
+//   Read(footer, szFooter, fileSize - szFooter);
+
    RNTupleDescriptorBuilder descBuilder;
-
-   auto keyRawNTupleHeader = fDirectory->GetKey(kKeyNTupleHeader);
-   auto ntupleRawHeader = keyRawNTupleHeader->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
-   descBuilder.SetFromHeader(ntupleRawHeader->fContent);
-   free(ntupleRawHeader->fContent);
-   delete ntupleRawHeader;
-
-   auto keyRawNTupleFooter = fDirectory->GetKey(kKeyNTupleFooter);
-   auto ntupleRawFooter = keyRawNTupleFooter->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
-   descBuilder.AddClustersFromFooter(ntupleRawFooter->fContent);
-   free(ntupleRawFooter->fContent);
-   delete ntupleRawFooter;
+   descBuilder.SetFromHeader(header);
+   descBuilder.AddClustersFromFooter(footer);
+   delete[] header;
+   delete[] footer;
 
    return descBuilder.MoveDescriptor();
 }
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePageFromCluster(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(
    ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType clusterIndex)
 {
    auto columnId = columnHandle.fId;
@@ -907,40 +992,51 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
    R__ASSERT(firstInPage <= clusterIndex);
    R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
 
-   //printf("Populating page %lu/%lu [%lu] for column %d starting at %lu\n", clusterId, pageInCluster, pageIdx, columnId, firstInPage);
-
-   std::string keyName = std::string(kKeyPagePayload) +
-      std::to_string(clusterId) + kKeySeparator +
-      std::to_string(pageInfo.fLocator.fPosition);
-   auto pageKey = fDirectory->GetKey(keyName.c_str());
-   auto pagePayload = pageKey->ReadObject<ROOT::Experimental::Internal::RNTupleBlob>();
-
-   unsigned char *buffer = pagePayload->fContent;
    auto element = columnHandle.fColumn->GetElement();
    auto elementSize = element->GetSize();
+
+   auto pageSize = pageInfo.fLocator.fBytesOnStorage;
+   void *pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
+   R__ASSERT(pageBuffer);
+   Read(pageBuffer, pageSize, pageInfo.fLocator.fPosition);
+
+   auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
+   if (pageSize != bytesOnStorage) {
+      R__ASSERT(bytesOnStorage <= kMaxPageSize);
+      // We do have the unzip information in the column range, but here we simply use the value from
+      // the R__zip header
+      int szUnzipBuffer = kMaxPageSize;
+      int szSource = pageSize;
+      unsigned char *source = reinterpret_cast<unsigned char *>(pageBuffer);
+      int unzipBytes = 0;
+      R__unzip(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
+      R__ASSERT(unzipBytes > static_cast<int>(pageSize));
+      memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
+      pageSize = unzipBytes;
+   }
+
    if (!element->IsMappable()) {
-      auto pageSize = elementSize * pageInfo.fNElements;
-      buffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
-      R__ASSERT(buffer != nullptr);
-      element->Unpack(buffer, pagePayload->fContent, pageInfo.fNElements);
-      free(pagePayload->fContent);
-      pagePayload->fContent = buffer;
-      pagePayload->fSize = pageSize;
+      pageSize = elementSize * pageInfo.fNElements;
+      auto unpackedBuffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
+      R__ASSERT(unpackedBuffer != nullptr);
+      element->Unpack(unpackedBuffer, pageBuffer, pageInfo.fNElements);
+      free(pageBuffer);
+      pageBuffer = unpackedBuffer;
    }
 
    auto indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
-   auto newPage = fPageAllocator->NewPage(columnId, pagePayload->fContent, elementSize, pageInfo.fNElements);
+   auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, elementSize, pageInfo.fNElements);
    newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
    fPagePool->RegisterPage(newPage,
-      RPageDeleter([](const RPage &page, void *userData)
+      RPageDeleter([](const RPage &page, void */*userData*/)
       {
-         RPageAllocatorKey::DeletePage(page, reinterpret_cast<ROOT::Experimental::Internal::RNTupleBlob *>(userData));
-      }, pagePayload));
+         RPageAllocatorFile::DeletePage(page);
+      }, nullptr));
    return newPage;
 }
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::PopulatePage(
    ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    auto columnId = columnHandle.fId;
@@ -957,7 +1053,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
 }
 
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::PopulatePage(
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::PopulatePage(
    ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex)
 {
    auto clusterId = clusterIndex.GetClusterId();
@@ -972,12 +1068,14 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRoot::P
    return PopulatePageFromCluster(columnHandle, clusterDescriptor, index);
 }
 
-void ROOT::Experimental::Detail::RPageSourceRoot::ReleasePage(RPage &page)
+void ROOT::Experimental::Detail::RPageSourceFile::ReleasePage(RPage &page)
 {
    fPagePool->ReturnPage(page);
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceRoot::Clone() const
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceFile::Clone() const
 {
-   return std::make_unique<RPageSourceRoot>(fNTupleName, fFile->GetName(), fOptions);
+   auto clone = new RPageSourceFile(fNTupleName, fOptions);
+   clone->fFile = fFile->Clone();
+   return std::unique_ptr<RPageSourceFile>(clone);
 }
