@@ -1293,7 +1293,8 @@ public:
       }
       TDirectory *treeDirectory = fOutputFiles[slot].get();
       if (!fDirName.empty()) {
-         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
+         // call ifNotExist=true since MT can end up making this call multiple times
+         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str(), "", true);
       }
       // re-create output tree as we need to create its branches again, with new input variables
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
