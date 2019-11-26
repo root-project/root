@@ -9,7 +9,7 @@ import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
-from ROOT import gROOT, Long, Double, std
+from ROOT import gROOT, std
 from common import *
 
 import ctypes
@@ -43,7 +43,9 @@ GetC = ROOT.GetC
 GetD = ROOT.GetD
 T1 = ROOT.T1
 T2 = ROOT.T2
-      
+
+exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
 
 ### C++ virtual inheritence test cases =======================================
 class Cpp01Inheritence( MyTestCase ):
@@ -155,10 +157,6 @@ class Cpp01Inheritence( MyTestCase ):
 
 ### C++ template tests =======================================================
 class Cpp02TemplateLookup( MyTestCase ):
-   @classmethod
-   def setUpClass(cls):
-      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
-
    def test01SingleInstantiatedTemplate( self ):
       """Test data member access for a templated class"""
 
@@ -207,13 +205,13 @@ class Cpp02TemplateLookup( MyTestCase ):
       try:
          m.GetSize()
       except TypeError as e:
-         if self.exp_pyroot:
+         if exp_pyroot:
             # The error message has changed in new Cppyy
             self.assert_( "Template method resolution failed" in str(e) )
          else:
             self.assert_( "must be explicit" in str(e) )
 
-      if self.exp_pyroot:
+      if exp_pyroot:
          # New cppyy needs square brackets for explicit instantiation here,
          # otherwise it tries to call the template proxy with the passed
          # argument and it fails, since no instantiation is available.
@@ -255,7 +253,7 @@ class Cpp02TemplateLookup( MyTestCase ):
 
     # note that the function and template arguments are reverted
       self.assertRaises( TypeError, m.GetSize2( 'char', 'long' ), 'a', 1 )
-      if self.exp_pyroot:
+      if exp_pyroot:
          # In the new Cppyy, we need to use square brackets in this case for
          # the bindings to know we are explicitly instantiating for char,long.
          # Otherwise, the templated parameters are just (mis)interpreted as
@@ -266,7 +264,7 @@ class Cpp02TemplateLookup( MyTestCase ):
          # Test new support for square bracket syntax
          self.assertEqual(m.GetSize2['char', 'long']( 1, 'a' ), m.GetCharSize() - m.GetLongSize() )
 
-      if self.exp_pyroot:
+      if exp_pyroot:
          # Cppyy's Long will be deprecated in favour of ctypes.c_long
          # https://bitbucket.org/wlav/cppyy/issues/101
          long_par = ctypes.c_long(256).value
@@ -294,7 +292,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd )
 
     # use existing explicit instantiations
-      if self.exp_pyroot:
+      if exp_pyroot:
          # New cppyy: use bracket syntax for explicit instantiation
          self.assertEqual( m.GetSizeOL[float]( 3.14 ),  m.GetFloatSize() )
       else:
@@ -307,7 +305,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + num_new_inst)
 
     # explicit forced instantiation
-      if self.exp_pyroot:
+      if exp_pyroot:
          # New cppyy: use bracket syntax for explicit instantiation
          inst = m.GetSizeOL[int]
          self.assertEqual( inst( 1 ),       m.GetIntSize() )
@@ -351,7 +349,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       m = MyTemplatedMethodClass()
 
       # Test the templated overload
-      if self.exp_pyroot:
+      if exp_pyroot:
          # In the new Cppyy, we need to use square brackets in this case for
          # the bindings to know we are explicitly instantiating for char.
          # Otherwise, the templated parameter is just (mis)interpreted as
@@ -399,7 +397,7 @@ class Cpp02TemplateLookup( MyTestCase ):
       v = ROOT.std.vector("float")()
       v.push_back(val)
 
-      if self.exp_pyroot:
+      if exp_pyroot:
          inst_float = f["float"]
          inst_float_t = f["Float_t"]
          inst_vec_float = f["vector<float>"]
@@ -433,15 +431,18 @@ class Cpp03PassByNonConstRef( MyTestCase ):
    def test1TestPlaceHolders( self ):
       """Test usage of Long/Double place holders"""
 
-      l = ROOT.Long( pylong(42) )
-      self.assertEqual( l, pylong(42) )
-      self.assertEqual( l/7, pylong(6) )
-      self.assertEqual( l*pylong(1), l )
+      if not exp_pyroot:
+         # Cppyy's Long and Double are deprecated in favour of ctypes
+         # https://bitbucket.org/wlav/cppyy/issues/101
+         l = ROOT.Long( pylong(42) )
+         self.assertEqual( l, pylong(42) )
+         self.assertEqual( l/7, pylong(6) )
+         self.assertEqual( l*pylong(1), l )
 
-      import math
-      d = Double( math.pi )
-      self.assertEqual( d, math.pi )
-      self.assertEqual( d*math.pi, math.pi*math.pi )
+         import math
+         d = ROOT.Double( math.pi )
+         self.assertEqual( d, math.pi )
+         self.assertEqual( d*math.pi, math.pi*math.pi )
 
    def test2PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through non-const reference"""
@@ -450,8 +451,10 @@ class Cpp03PassByNonConstRef( MyTestCase ):
       SetDoubleThroughRef = ROOT.SetDoubleThroughRef
       SetIntThroughRef = ROOT.SetIntThroughRef
 
-      if sys.hexversion < 0x3000000:
-         l = Long( pylong(42) )
+      if not exp_pyroot and sys.hexversion < 0x3000000:
+         # Cppyy's Long is deprecated in favour of ctypes.c_long
+         # https://bitbucket.org/wlav/cppyy/issues/101
+         l = ROOT.Long( pylong(42) )
          SetLongThroughRef( l, 41 )
          self.assertEqual( l, 41 )
 
@@ -461,12 +464,15 @@ class Cpp03PassByNonConstRef( MyTestCase ):
          SetLongThroughRef( l, 41 )
          self.assertEqual( l.value, 41 )
 
-      d = Double( 3.14 )
-      SetDoubleThroughRef( d, 3.1415 )
-      self.assertEqual( d, 3.1415 )
+      if not exp_pyroot:
+         # Cppyy's Double is deprecated in favour of ctypes.c_double
+         # https://bitbucket.org/wlav/cppyy/issues/101
+         d = ROOT.Double( 3.14 )
+         SetDoubleThroughRef( d, 3.1415 )
+         self.assertEqual( d, 3.1415 )
 
-      if sys.hexversion < 0x3000000:
-         i = Long( pylong(42) )
+      if not exp_pyroot and sys.hexversion < 0x3000000:
+         i = ROOT.Long( pylong(42) )
          SetIntThroughRef( i, 13 )
          self.assertEqual( i, 13 )
 
@@ -502,10 +508,6 @@ class Cpp04HandlingAbstractClasses( MyTestCase ):
 
 ### Return by reference should call assignment operator ======================
 class Cpp05AssignToRefArbitraryClass( MyTestCase ):
-   @classmethod
-   def setUpClass(cls):
-      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
-
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
       
@@ -533,7 +535,7 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
       try:
          a[0] = RefTesterNoAssign()
       except TypeError as e:
-         if self.exp_pyroot:
+         if exp_pyroot:
             # Message has changed in new Cppyy
             self.assert_( 'cannot assign' in str(e) )
          else:

@@ -20,7 +20,7 @@ except ImportError:
 
 import ROOT
 from ROOT import gROOT, gInterpreter
-from ROOT import Long, TClass, TObject, TFile
+from ROOT import TClass, TObject, TFile
 from ROOT import TH1I, TVector3, TGraph, TMatrixD
 
 from common import *
@@ -313,7 +313,13 @@ class Regression08CheckEnumExactMatch( MyTestCase ):
       self.assertEqual( ROOT.cow,  a.testEnum2( ROOT.cow ) )
       self.assertEqual( ROOT.bird, a.testEnum3( ROOT.bird ) )
       self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.marsupilami ) )
-      self.assertEqual( ROOT.marsupilami, a.testEnum4( Long(ROOT.marsupilami) ) )
+      if exp_pyroot:
+         # Cppyy's Long is deprecated in favour of ctypes.c_long
+         # https://bitbucket.org/wlav/cppyy/issues/101
+         import ctypes
+         self.assertEqual( ROOT.marsupilami, a.testEnum4( ctypes.c_long(ROOT.marsupilami).value ) )
+      else:
+         self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.Long(ROOT.marsupilami) ) )
 
 
 ### test pythonization of TVector3 ===========================================
