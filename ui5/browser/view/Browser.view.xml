@@ -19,12 +19,9 @@
                         itemClose="tabCloseHandler" />
         </Page>
         <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-            <Input
-                    id="inputText"
-                    type="Text"
-                    class="sapUiSmallMarginBottom"
-                    placeholder="Enter Text ..." />
-            <TextArea value="Lorem ipsum dolor st amet" width="100%" height="calc(100% - 51px)"/>
+          <layoutData><l:SplitterLayoutData size="20%" /></layoutData>
+            <Input id="terminal-input" type="Text" placeholder="Enter command ..." />
+            <TextArea value="Lorem ipsum dolor st amet" width="100%" height="calc(100% - 38px)"/>
         </Page>
       </l:Splitter>
     </detailPages>
