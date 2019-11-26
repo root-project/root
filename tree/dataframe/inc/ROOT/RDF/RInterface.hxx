@@ -2451,7 +2451,7 @@ private:
 
       fLoopManager->Book(actionPtr.get());
 
-      return RDFInternal::CreateSnaphotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
+      return RDFInternal::CreateSnapshotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
                                            std::move(actionPtr));
    }
 
