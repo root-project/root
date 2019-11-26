@@ -2,14 +2,8 @@
           controllerName="rootui5.browser.controller.Browser"
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
-          xmlns:core="sap.ui.core"
           xmlns:t="sap.ui.table"
-          xmlns:l="sap.ui.layout"
-          xmlns:u="sap.ui.unified"
-          xmlns:e="sap.ui.codeeditor"
-          xmlns:tnt="sap.tnt"
-          xmlns:custom="sap.ui.documentation.sdk.controls"
-          xmlns:f="sap.f">
+          xmlns:tnt="sap.tnt">
 
   <Page showSubHeader="false" showHeader="false" showFooter="false">
     <content>

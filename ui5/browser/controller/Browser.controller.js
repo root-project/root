@@ -20,6 +20,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/codeeditor/CodeEditor',
                'sap/m/HBox',
                'sap/m/Image',
+               'sap/tnt/ToolHeader',
+               'sap/m/ToolbarSpacer',
+               'sap/m/OverflowToolbarLayoutData',
                'sap/m/Dialog',
                'rootui5/browser/controller/FileDialog.controller'
 ],function(Controller,
@@ -44,8 +47,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            CodeEditor,
            HBox,
            Image,
+           ToolHeader,
+           ToolbarSpacer,
+           OverflowToolbarLayoutData,
            Dialog,
            FileDialogController) {
+
 
    "use strict";
 
@@ -219,7 +226,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       newCodeEditorFragment: function (ID) {
          return [
-               new sap.tnt.ToolHeader({
+               new ToolHeader({
                   height: "40px",
                   content: [
                      new FileUploader({
@@ -234,8 +241,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                         enabled: false,
                         press: [this.onRunMacro, this]
                      }),
-                     new sap.m.ToolbarSpacer({
-                        layoutData: new sap.m.OverflowToolbarLayoutData({
+                     new ToolbarSpacer({
+                        layoutData: new OverflowToolbarLayoutData({
                            priority:"NeverOverflow",
                            minWidth: "16px"
                         })
