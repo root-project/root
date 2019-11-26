@@ -1,7 +1,7 @@
-/// \file ROOT/RPageStorage.hxx
+/// \file ROOT/RPageStorageFile.hxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
-/// \date 2018-07-19
+/// \date 2019-11-21
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -13,18 +13,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPageStorageRoot
-#define ROOT7_RPageStorageRoot
+#ifndef ROOT7_RPageStorageFile
+#define ROOT7_RPageStorageFile
 
-#include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RColumnModel.hxx>
-#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
-#include <ROOT/RNTupleUtil.hxx>
-
-#include <TDirectory.h>
-#include <TFile.h>
+#include <ROOT/RStringView.hxx>
 
 #include <array>
 #include <cstdio>
@@ -39,10 +33,12 @@ namespace Experimental {
 /**
 \class ROOT::Experimental::RNTuple
 \ingroup NTuple
-\brief Entry point for an RNTuple in a root file
+\brief Entry point for an RNTuple in a ROOT file
 
-The class points to the header and footer, which in turn have the references to the pages.
+The class points to the header and footer keys, which in turn have the references to the pages.
 Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
+Byte offset references in the RNTuple header and footer reference directly the data part of page records,
+skipping the TFile key part.
 */
 // clang-format on
 struct RNTuple {
@@ -60,36 +56,28 @@ struct RNTuple {
 
 
 namespace Internal {
-
-struct RNTupleBlob {
-   RNTupleBlob() {}
-   RNTupleBlob(int size, unsigned char *content) : fSize(size), fContent(content) {}
-   RNTupleBlob(const RNTupleBlob &other) = delete;
-   RNTupleBlob &operator =(const RNTupleBlob &other) = delete;
-   ~RNTupleBlob() = default;
-
-   std::int32_t fVersion = 0;
-   int fSize = 0;
-   unsigned char* fContent = nullptr; //[fSize]
-};
-
+/// Holds references to an open ROOT file during writing
 struct RTFileControlBlock;
-
 } // namespace Internal
 
 
 namespace Detail {
 
+class RPageAllocatorHeap;
 class RPagePool;
+class RRawFile;
+
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkRoot
+\class ROOT::Experimental::Detail::RPageSinkFile
 \ingroup NTuple
-\brief Storage provider that write ntuple pages into a ROOT TFile
+\brief Storage provider that write ntuple pages into a file
+
+The written file can be either in ROOT format or in raw format.
 */
 // clang-format on
-class RPageSinkRoot : public RPageSink {
+class RPageSinkFile : public RPageSink {
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
    /// Cannot process data blocks larger than 1MB
@@ -98,24 +86,26 @@ private:
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   FILE *fBinaryFile = nullptr;
+   FILE *fFile = nullptr;
+   /// Byte offset of the next write (current file size)
    std::uint64_t fFilePos = 0;
+   /// Byte offset of the begining of the currently open cluster
+   std::uint64_t fClusterStart = 0;
+   /// The file name without the parent directory (e.g. "events.root")
    std::string fFileName;
+   /// Scratch space for compression of keys / pages
    std::unique_ptr<std::array<char, kMaxRecordSize>> fZipBuffer;
+   /// Keeps track of TFile control structures, which need to be updated on committing the data set
    std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
-   std::unique_ptr<TFile> fFile;
-   TDirectory *fDirectory = nullptr;
 
-
-   /// Instead of a physical file offset, pages in root are identified by an index which becomes part of the key
-   DescriptorId_t fLastPageIdx = 0;
-
+   /// Writes bytes in the open fFile, either at fFilePos or at the given offset
    void Write(void *from, size_t size, std::int64_t offset = -1);
-   void WriteKey(void *buffer, std::size_t nbytes, std::int64_t offset = -1,
-                 std::uint64_t directoryOffset = 100, int compression = 0,
-                 const std::string &className = "",
-                 const std::string &objectName = "",
-                 const std::string &title = "");
+   /// Writes a TKey including the data record, given by buffer, into fFile; returns the file offset to the payload
+   std::uint64_t WriteKey(void *buffer, std::size_t nbytes, std::int64_t offset = -1,
+                          std::uint64_t directoryOffset = 100, int compression = 0,
+                          const std::string &className = "",
+                          const std::string &objectName = "",
+                          const std::string &title = "");
 
 protected:
    void DoCreate(const RNTupleModel &model) final;
@@ -124,8 +114,8 @@ protected:
    void DoCommitDataset() final;
 
 public:
-   RPageSinkRoot(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   virtual ~RPageSinkRoot();
+   RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
+   virtual ~RPageSinkFile();
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
    void ReleasePage(RPage &page) final;
@@ -136,35 +126,43 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageAllocatorKey
+\class ROOT::Experimental::Detail::RPageAllocatorFile
 \ingroup NTuple
-\brief Adopts the memory returned by TKey->ReadObject()
+\brief Manages pages read from a raw file
 */
 // clang-format on
-class RPageAllocatorKey {
+class RPageAllocatorFile {
 public:
    static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage& page, ROOT::Experimental::Internal::RNTupleBlob *payload);
+   static void DeletePage(const RPage& page);
 };
 
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceRoot
+\class ROOT::Experimental::Detail::RPageSourceFile
 \ingroup NTuple
-\brief Storage provider that reads ntuple pages from a ROOT TFile
+\brief Storage provider that reads ntuple pages from a file
 */
 // clang-format on
-class RPageSourceRoot : public RPageSource {
+class RPageSourceFile : public RPageSource {
+public:
+   /// Cannot process pages larger than 1MB
+   static constexpr std::size_t kMaxPageSize = 1024 * 1024;
+
 private:
    RNTupleMetrics fMetrics;
+   /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorKey> fPageAllocator;
+   /// The page pool migh, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
+   /// A scatch space to uncompress keys / buffers
+   std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
+   /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
+   std::unique_ptr<RRawFile> fFile;
 
-   /// Currently, an ntuple is stored as a directory in a TFile
-   std::unique_ptr<TFile> fFile;
-   TDirectory *fDirectory = nullptr;
-
+   RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
+   void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
 
@@ -172,9 +170,9 @@ protected:
    RNTupleDescriptor DoAttach() final;
 
 public:
-   RPageSourceRoot(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
    std::unique_ptr<RPageSource> Clone() const final;
-   virtual ~RPageSourceRoot();
+   virtual ~RPageSourceFile();
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
@@ -182,6 +180,7 @@ public:
 
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
+
 
 } // namespace Detail
 
