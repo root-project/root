@@ -3,6 +3,7 @@
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
           xmlns:t="sap.ui.table"
+          xmlns:l="sap.ui.layout"
           xmlns:tnt="sap.tnt">
 
   <Page showSubHeader="false" showHeader="false" showFooter="false">
@@ -45,7 +46,11 @@
               </customHeader>
               <content>
                 <tnt:ToolHeader asyncMode="true" height="40px" wdith="320px">
-                  <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan"/>
+                  <l:VerticalLayout width="100%">
+                    <l:content>
+                      <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan"/>
+                    </l:content>
+                  </l:VerticalLayout>
                 </tnt:ToolHeader>
 
                 <ScrollContainer height="calc(100% - 40px)">
