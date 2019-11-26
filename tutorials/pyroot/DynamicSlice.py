@@ -16,13 +16,14 @@
 ## \macro_image
 ## \macro_code
 ##
-## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen
+## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor
 
 import sys
+import ctypes
 
 from ROOT import gRandom, gPad, gROOT, gVirtualX
 from ROOT import kTRUE, kRed
-from ROOT import TCanvas, TH2, TH2F, Double
+from ROOT import TCanvas, TH2, TH2F
 
 
 class DynamicExec:
@@ -116,10 +117,11 @@ if __name__ == '__main__':
  # create a 2-d histogram, fill and draw it
    hpxpy  = TH2F( 'hpxpy', 'py vs px', 40, -4, 4, 40, -4, 4 )
    hpxpy.SetStats( 0 )
-   x, y = Double( 0.1 ), Double( 0.101 )
+   x, y = ctypes.c_double( 0.1 ), ctypes.c_double( 0.101 )
    for i in range( 50000 ):
+   # pass ctypes doubles by reference, then retrieve their modified values with .value
      gRandom.Rannor( x, y )
-     hpxpy.Fill( x, y )
+     hpxpy.Fill( x.value, y.value )
    hpxpy.Draw( 'COL' )
 
  # Add a TExec object to the canvas (explicit use of __main__ is for IPython)
