@@ -4,7 +4,7 @@ from functools import partial
 
 import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
-from libROOTPython import gROOT
+from libROOTPythonizations import gROOT
 
 from ._application import PyROOTApplication
 

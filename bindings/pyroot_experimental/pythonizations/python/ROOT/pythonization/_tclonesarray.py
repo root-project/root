@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import AddSetItemTCAPyz
+from libROOTPythonizations import AddSetItemTCAPyz
 
 
 @pythonization()

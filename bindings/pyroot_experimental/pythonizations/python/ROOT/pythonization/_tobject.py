@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import AddTObjectEqNePyz
+from libROOTPythonizations import AddTObjectEqNePyz
 import cppyy
 
 # Searching

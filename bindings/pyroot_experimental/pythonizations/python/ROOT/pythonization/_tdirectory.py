@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import AddDirectoryGetAttrPyz, AddDirectoryWritePyz
+from libROOTPythonizations import AddDirectoryGetAttrPyz, AddDirectoryWritePyz
 from ROOT import pythonization
 import cppyy
 

@@ -164,7 +164,7 @@ def pythonize_rdataframe(klass, name):
 
 # Add MakeNumpyDataFrame feature as free function to the ROOT module
 try:
-    from libROOTPython import MakeNumpyDataFrame
+    from libROOTPythonizations import MakeNumpyDataFrame
     import cppyy
     cppyy.gbl.ROOT.RDF.MakeNumpyDataFrame = MakeNumpyDataFrame
 except:

@@ -9,12 +9,12 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import AsRVec
+from libROOTPythonizations import AsRVec
 import numpy as np
 
 
 try:
-    from libROOTPython import AsRTensor
+    from libROOTPythonizations import AsRTensor
     has_rtensor = True
 except:
     has_rtensor = False

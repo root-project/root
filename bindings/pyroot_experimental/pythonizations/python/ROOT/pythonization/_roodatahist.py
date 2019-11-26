@@ -10,7 +10,7 @@
 
 from ROOT import pythonization
 
-from libROOTPython import AddUsingToClass
+from libROOTPythonizations import AddUsingToClass
 
 
 @pythonization()

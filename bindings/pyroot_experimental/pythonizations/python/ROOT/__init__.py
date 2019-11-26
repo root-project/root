@@ -77,13 +77,13 @@ if _is_ipython:
 # Register cleanup
 import atexit
 def cleanup():
-    if 'libROOTPython' in sys.modules:
+    if 'libROOTPythonizations' in sys.modules:
         # Run part of the gROOT shutdown sequence.
         # Running it here ensures that it is done before any ROOT libraries
         # are off-loaded, with unspecified order of static object destruction.
         # This also makes sure that Python proxies involved in RecursiveRemove
         # are properly nonified at teardown time
-        gROOT = sys.modules['libROOTPython'].gROOT
+        gROOT = sys.modules['libROOTPythonizations'].gROOT
         gROOT.EndOfProcessCleanups()
 
 atexit.register(cleanup)

@@ -11,7 +11,7 @@
 from ROOT import pythonization
 import cppyy
 import libcppyy
-from libROOTPython import AddCPPInstancePickling
+from libROOTPythonizations import AddCPPInstancePickling
 
 @pythonization(lazy = False)
 def pythonize_cppinstance():

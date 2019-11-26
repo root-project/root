@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import GetEndianess, GetDataPointer, GetSizeOfType, AsRVec
+from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType, AsRVec
 
 
 _array_interface_dtype_map = {
