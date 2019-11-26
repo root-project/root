@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPython import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
+from libROOTPythonizations import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
 
 import cppyy
 from ROOT import pythonization

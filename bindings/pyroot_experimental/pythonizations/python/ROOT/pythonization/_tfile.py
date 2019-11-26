@@ -13,7 +13,7 @@
 # - TDirectoryFile the pythonized Get method (pythonized only in Python)
 # what is left to add is the pythonization of TFile::Open.
 
-from libROOTPython import AddFileOpenPyz
+from libROOTPythonizations import AddFileOpenPyz
 from ROOT import pythonization
 
 # Pythonizor function

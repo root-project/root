@@ -10,7 +10,7 @@
 
 from ROOT import pythonization
 import cppyy
-from libROOTPython import AddTClassDynamicCastPyz
+from libROOTPythonizations import AddTClassDynamicCastPyz
 
 
 @pythonization(lazy = False)
