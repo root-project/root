@@ -716,6 +716,7 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
    std::vector< TCppMethod_t > methods;
    if ( scope == GLOBAL_HANDLE ) {
       TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
+      funcs->FindObject(name.c_str()); // trigger lookup - might load functions from PCH.
       g_globalfuncs.reserve(funcs->GetSize());
 
       TIter ifunc(funcs);
