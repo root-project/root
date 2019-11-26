@@ -291,6 +291,11 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
    if ( TCustomInt_CheckExact( pyobject ) ) {
       para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
       para.fTypeCode = 'V';
+      if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "ROOT.Long is deprecated and will disappear in a future version of ROOT. "
+                       "Instead, use ctypes.c_long for pass-by-ref of longs", 1) < 0) {
+         return kFALSE;
+      }
       return kTRUE;
    }
 #endif
@@ -337,6 +342,11 @@ Bool_t PyROOT::TIntRefConverter::SetArg(
    if ( TCustomInt_CheckExact( pyobject ) ) {
       para.fValue.fVoidp = (void*)&((PyIntObject*)pyobject)->ob_ival;
       para.fTypeCode = 'V';
+      if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "ROOT.Long is deprecated and will disappear in a future version of ROOT. "
+                       "Instead, use ctypes.c_int for pass-by-ref of ints", 1) < 0) {
+         return kFALSE;
+      }
       return kTRUE;
    }
 #endif
@@ -452,6 +462,11 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
    if ( TCustomFloat_CheckExact( pyobject ) ) {
       para.fValue.fVoidp = (void*)&((PyFloatObject*)pyobject)->ob_fval;
       para.fTypeCode = 'V';
+      if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "ROOT.Double is deprecated and will disappear in a future version of ROOT. "
+                       "Instead, use ctypes.c_double for pass-by-ref of doubles", 1) < 0) {
+         return kFALSE;
+      }
       return kTRUE;
    }
 
@@ -462,7 +477,7 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
       return kTRUE;
    }
 
-   PyErr_SetString( PyExc_TypeError, "use ROOT.Double for pass-by-ref of doubles" );
+   PyErr_SetString( PyExc_TypeError, "use ctypes.c_double for pass-by-ref of doubles" );
    return kFALSE;
 }
 
