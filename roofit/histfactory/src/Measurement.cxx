@@ -252,6 +252,89 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
 }
 
 
+#include <ryml.hpp>
+#include <c4/yml/std/map.hpp>
+#include <c4/yml/std/string.hpp>
+
+namespace RooStats { namespace HistFactory {
+    void read(c4::yml::NodeRef const& n, PreprocessFunction *v)
+    {
+      std::string name;
+      std::string expression;
+      std::string dependents;
+      std::string command;   
+
+      n["name"]       >> name;      
+      n["expression"] >> expression;
+      n["dependents"] >> dependents;
+      n["command"]    >> command;   
+      
+      v->SetName      (name      );
+      v->SetExpression(expression);
+      v->SetDependents(dependents);
+      v->SetCommand   (command   );
+    }
+    
+    void write(c4::yml::NodeRef *n, PreprocessFunction const& v)
+    {
+      *n |= c4::yml::MAP;
+
+      auto ch = n->append_child();
+      ch["name"] << v.GetName();
+      ch["expression"] << v.GetExpression();
+      ch["dependents"] << v.GetDependents();
+      ch["command"] << v.GetCommand();
+    }
+  }
+}
+
+namespace std {
+  template<class T> void read(c4::yml::NodeRef const& n, vector<T> *v){
+    for(size_t i=0; i<n.num_children(); ++i){
+      T e;
+      n[i]>>e;
+      v->push_back(e);
+    }
+  }
+  
+  template<class T> void write(c4::yml::NodeRef *n, vector<T> const& v){
+    *n |= c4::yml::SEQ;
+    for(auto e:v){
+      n->append_child() << e;
+    }
+  }
+}  
+
+template<> void RooStats::HistFactory::Measurement::Export(ryml::Tree& t) const {
+  t["OutputFilePrefix"] << fOutputFilePrefix;
+  t["POI"] << fPOI;
+  t["Lumi"] << fLumi;
+  t["LumiRelErr"] << fLumiRelErr;
+  t["BinLow"] << fBinLow;
+  t["BinHigh"] << fBinHigh;
+  t["ExportOnly"] << fExportOnly;
+  t["InterpolationScheme"] << fInterpolationScheme;
+  //  t["Channels"] << fChannels;
+  t["ConstantParams"] << fConstantParams;
+  t["ParamValues"] << fParamValues;
+  //  t["PreprocessFunctions"] << fFunctionObjects;
+  t["GammaSyst"] << fGammaSyst;
+  t["UniformSyst"] << fUniformSyst;
+  t["LogNormSyst"] << fLogNormSyst;
+  t["NoSyst"] << fNoSyst;
+}
+
+void RooStats::HistFactory::Measurement::PrintJSON( std::ostream& os ) {
+  ryml::Tree t;
+  this->Export(t);
+  emit(t);
+}
+void RooStats::HistFactory::Measurement::PrintJSON( std::string filename ) {
+  std::ofstream out(filename);
+  this->PrintJSON(out);
+}
+
+
 /// Create XML files for this measurement in the given directory.
 /// XML files can be configured with a different output prefix
 /// Create an XML file for this measurement

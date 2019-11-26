@@ -29,7 +29,6 @@ namespace HistFactory {
 
 class Measurement : public TNamed {
 
-
 public:
 
   Measurement();
@@ -101,6 +100,9 @@ public:
 
   void PrintTree( std::ostream& = std::cout ); /// Print to a stream
   void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
+  void PrintJSON( std::ostream& os = std::cout );    
+  void PrintJSON( std::string filename );
+  template<class T> void Export(T& t) const;
 
   std::vector< RooStats::HistFactory::Channel >& GetChannels() { return fChannels; }
   RooStats::HistFactory::Channel& GetChannel( std::string );
