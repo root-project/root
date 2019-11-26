@@ -9,11 +9,12 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
+#include "TPyClassGenerator.h"
+#include "TPyReturn.h"
+
 // Bindings
 #include "CPyCppyy.h"
 #include "PyStrings.h"
-#include "TPyClassGenerator.h"
-#include "TPyReturn.h"
 #include "Utility.h"
 
 // ROOT
