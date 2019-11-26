@@ -10,8 +10,9 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from math import exp
 import ROOT
-from ROOT import TF1, TH1F, TMinuit, gROOT, Long, Double
+from ROOT import TF1, TH1F, TMinuit, gROOT
 from common import *
+import ctypes
 
 __all__ = [
    'Func1CallFunctionTestCase',
@@ -27,6 +28,7 @@ if not os.path.exists('InstallableFunction.C'):
 # needs to be early to prevent "ifunc_table overflow!"
 gROOT.LoadMacro( "InstallableFunction.C+" )
 
+exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
 ### helpers for general test cases -------------------------------------------
 def identity( x, par = None ):
@@ -219,10 +221,9 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.SetFCN( fcn )
 
       arglist = array( 'd', 10*[0.] )
-      if sys.hexversion < 0x3000000:
-         ierflg = Long()
+      if not exp_pyroot and sys.hexversion < 0x3000000:
+         ierflg = ROOT.Long()
       else:
-         import ctypes
          ierflg = ctypes.c_int()
 
       arglist[0] = 1
@@ -242,15 +243,20 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.mnexcm( "MIGRAD", arglist, 2, ierflg )
 
     # verify results
+      if exp_pyroot:
+         Double = ctypes.c_double
+      else:
+         Double = ROOT.Double
       amin, edm, errdef = Double(), Double(), Double()
-      if sys.hexversion < 0x3000000:
+      if not exp_pyroot and sys.hexversion < 0x3000000:
+         Long = ROOT.Long
          nvpar, nparx, icstat = Long(), Long(), Long()
       else:
          nvpar, nparx, icstat = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
       gMinuit.mnstat( amin, edm, errdef, nvpar, nparx, icstat )
     # gMinuit.mnprin( 3, amin )
 
-      if sys.hexversion >= 0x3000000:
+      if exp_pyroot or sys.hexversion >= 0x3000000:
          nvpar, nparx, icstat = map(lambda x: x.value, [nvpar, nparx, icstat])
       self.assertEqual( nvpar, 4 )
       self.assertEqual( nparx, 4 )
@@ -261,21 +267,39 @@ class Func5MinuitTestCase( MyTestCase ):
     # check results (somewhat debatable ... )
       par, err = Double(), Double()
 
-      gMinuit.GetParameter( 0, par, err )
-      self.assertEqual( round( par - 2.15, 2 ), 0. )
-      self.assertEqual( round( err - 0.10, 2 ), 0. )
+      if exp_pyroot:
+         # ctypes.c_double requires the explicit retrieval of the inner value
+         gMinuit.GetParameter( 0, par, err )
+         self.assertEqual( round( par.value - 2.15, 2 ), 0. )
+         self.assertEqual( round( err.value - 0.10, 2 ), 0. )
 
-      gMinuit.GetParameter( 1, par, err )
-      self.assertEqual( round( par - 0.81, 2 ), 0. )
-      self.assertEqual( round( err - 0.25, 2 ), 0. )
+         gMinuit.GetParameter( 1, par, err )
+         self.assertEqual( round( par.value - 0.81, 2 ), 0. )
+         self.assertEqual( round( err.value - 0.25, 2 ), 0. )
 
-      gMinuit.GetParameter( 2, par, err )
-      self.assertEqual( round( par - 0.17, 2 ), 0. )
-      self.assertEqual( round( err - 0.40, 2 ), 0. )
+         gMinuit.GetParameter( 2, par, err )
+         self.assertEqual( round( par.value - 0.17, 2 ), 0. )
+         self.assertEqual( round( err.value - 0.40, 2 ), 0. )
 
-      gMinuit.GetParameter( 3, par, err )
-      self.assertEqual( round( par - 0.10, 2 ), 0. )
-      self.assertEqual( round( err - 0.16, 2 ), 0. )
+         gMinuit.GetParameter( 3, par, err )
+         self.assertEqual( round( par.value - 0.10, 2 ), 0. )
+         self.assertEqual( round( err.value - 0.16, 2 ), 0. )
+      else:
+         gMinuit.GetParameter( 0, par, err )
+         self.assertEqual( round( par - 2.15, 2 ), 0. )
+         self.assertEqual( round( err - 0.10, 2 ), 0. )
+
+         gMinuit.GetParameter( 1, par, err )
+         self.assertEqual( round( par - 0.81, 2 ), 0. )
+         self.assertEqual( round( err - 0.25, 2 ), 0. )
+
+         gMinuit.GetParameter( 2, par, err )
+         self.assertEqual( round( par - 0.17, 2 ), 0. )
+         self.assertEqual( round( err - 0.40, 2 ), 0. )
+
+         gMinuit.GetParameter( 3, par, err )
+         self.assertEqual( round( par - 0.10, 2 ), 0. )
+         self.assertEqual( round( err - 0.16, 2 ), 0. )
 
 
 ## actual test run
