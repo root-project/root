@@ -1196,7 +1196,8 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t if
    if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
    if (GetKey(name)) {
-      if(ifNotExist) return (TDirectoryFile*) GetKey(name)->ReadObj();
+      if (ifNotExist)
+         return (TDirectoryFile*) GetKey(name)->ReadObj();
       else {
         Error("mkdir","An object with name %s exists already",name);
         return nullptr;
