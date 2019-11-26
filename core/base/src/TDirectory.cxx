@@ -1028,9 +1028,11 @@ void TDirectory::FillFullPath(TString& buf) const
 ///    gDirectory->cd("b");
 ///    gDirectory->mkdir("d");
 /// ~~~
+/// ifNotExist is just for compatibility with the TDirectoryFile override
 
-TDirectory *TDirectory::mkdir(const char *name, const char *title)
+TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t ifNotExist)
 {
+   if (ifNotExist) Error("mkdir","ifNotExist only valid for TDirectoryFile mkdir",name);
    if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
    TDirectory *newdir = nullptr;

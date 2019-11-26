@@ -172,7 +172,7 @@ public:
    virtual Bool_t      IsModified() const { return kFALSE; }
    virtual Bool_t      IsWritable() const { return kFALSE; }
            void        ls(Option_t *option="") const override;
-   virtual TDirectory *mkdir(const char *name, const char *title="");
+   virtual TDirectory *mkdir(const char *name, const char *title="", Bool_t ifNotExist = kFALSE);
    virtual TFile      *OpenFile(const char * /*name*/, Option_t * /*option*/ = "",
                             const char * /*ftitle*/ = "", Int_t /*compress*/ = 1,
                             Int_t /*netopt*/ = 0) {return nullptr;}
