@@ -963,7 +963,6 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
             "timeWidth":maxCharTime+2, \
             "nameWidth":maxCharName+2, \
             "titleWidth":1}
-    date = ROOT.Long(0)
     for key in keyList:
         datime = key.GetDatime()
         time = datime.GetTime()
