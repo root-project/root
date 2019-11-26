@@ -97,18 +97,18 @@ void TCuda<AFloat>::Backward(TCudaTensor<AFloat> & activation_gradients_backward
                              const TCudaTensor<AFloat> & activation_backward)
 {
    // Compute element-wise product.
-   //Matrix_t df_m = df.GetMatrix(); 
+   //Matrix_t df_m = df.GetMatrix();
 
    // df  is the output of ActivationBackward
    //TCuda<AFloat>::Hadamard(df, activation_gradients);
    //TCuda<AFloat>::Hadamard(df_m, activation_gradients.GetMatrix());
 
-   Matrix_t df_m = df.GetMatrix(); 
+   Matrix_t df_m = df.GetMatrix();
 
    // Activation gradients.
    if (activation_gradients_backward.GetSize() > 0) {
 
-      Matrix_t  activation_gradients_backward_m = activation_gradients_backward.GetMatrix(); 
+      Matrix_t  activation_gradients_backward_m = activation_gradients_backward.GetMatrix();
       TCuda<AFloat>::Multiply(activation_gradients_backward_m, df_m, weights);
    }
 
@@ -140,7 +140,7 @@ template<typename AFloat>
 void TCuda<AFloat>::Copy(TCudaTensor<AFloat> & B,
                              const TCudaTensor<AFloat> & A)
 {
-   size_t n = B.GetSize(); 
+   size_t n = B.GetSize();
    //asssert (A.GetSize() >= B.GetSize());
    cudaMemcpyAsync(B.GetDataPointer(), A.GetDataPointer(),
       n * sizeof(AFloat), cudaMemcpyDeviceToDevice, 0);
@@ -264,11 +264,11 @@ void TCuda<AFloat>::ConvLayerForward(TCudaTensor<AFloat> & output,
 
    //evaluateDerivative<TCuda<AFloat>>(derivatives, activFunc, output);
    //evaluate<TCuda<AFloat>>(output, activFunc);
-   
+
    // save output of convolution before activation function evaluation
    Copy(inputActivationFunc, output);
-   ActivationFunctionForward(output, activFunc, ActivationDescriptor_t() ); 
-  
+   ActivationFunctionForward(output, activFunc, ActivationDescriptor_t() );
+
 }
 
 //____________________________________________________________________________
@@ -295,16 +295,16 @@ void TCuda<AFloat>::ConvLayerBackward(TCudaTensor<AFloat> & activationGradientsB
                                       size_t filterWidth,
                                       size_t nLocalViews)
 {
-    
+
    // Compute activation backward
   //Tensor_t df = activationGradients;   // this is a shallow copy
-   Tensor_t df(activationGradients.GetShape() );  
-   ActivationFunctionBackward(df, outputTensor, activationGradients, inputActivationFunc, 
+   Tensor_t df(activationGradients.GetShape() );
+   ActivationFunctionBackward(df, outputTensor, activationGradients, inputActivationFunc,
                               activFunc, ActivationDescriptor_t() );
 
 
    //Hadamard(df, activationGradients);
-   
+
 
    // Calculate the activation gradients of the previous layer
    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
@@ -407,7 +407,7 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGra
 
         Multiply(resPrime, df.At(event).GetMatrix(), activationsPrime);
 
-        TCuda<AFloat>::ScaleAdd(weightGradients, resPrime, 1.0); 
+        TCuda<AFloat>::ScaleAdd(weightGradients, resPrime, 1.0);
     }
 }
 
@@ -477,15 +477,15 @@ void TCuda<AFloat>::Downsample(TCudaTensor<AFloat> &A,
                                size_t strideRows,
                                size_t strideCols)
 {
-   size_t depth = C.GetCSize(); 
-   size_t bsize = C.GetFirstSize(); 
+   size_t depth = C.GetCSize();
+   size_t bsize = C.GetFirstSize();
 
    dim3 blockDims = TDevice::BlockDims2D();
    dim3 gridDims  = TDevice::GridDims2D( A.GetHSize(), A.GetWSize() );
    cudaStream_t s = A.GetComputeStream();
 
    for(size_t event = 0; event < bsize; event++) {
-      // need to implement tensor kernel 
+      // need to implement tensor kernel
       // ::TMVA::DNN::Cuda::Downsample<<<gridDims, blockDims, 0, s>>>(mA.GetDataPointer(), mB.GetDataPointer(),
       //                                                           mC.GetDataPointer(), depth, imgHeight, imgWidth,
       //                                                           fltHeight, fltWidth, strideRows, strideCols);
@@ -512,11 +512,11 @@ void TCuda<AFloat>::MaxPoolLayerBackward(TCudaTensor<AFloat> & activationGradien
                                          size_t /* nLocalViews */)
 {
    size_t depth = activationGradientsBackward.GetCSize();
-   size_t bsize = activationGradients.GetFirstSize(); 
+   size_t bsize = activationGradients.GetFirstSize();
 
    dim3 blockDims = TDevice::BlockDims2D();
    // activationGradientsBackward.GetHSize() should be equal to depth
-   dim3 gridDims  = TDevice::GridDims2D(activationGradientsBackward.GetHSize(), 
+   dim3 gridDims  = TDevice::GridDims2D(activationGradientsBackward.GetHSize(),
                     activationGradientsBackward.GetWSize());
    cudaStream_t s = activationGradientsBackward.GetComputeStream();
 
@@ -550,15 +550,15 @@ void TCuda<AReal>::Rearrange(TCudaTensor<AReal> &out, const TCudaTensor<AReal> &
    // B x T x D out --- T x B x D in*/
 
    // need to implement (usa CPu impl). Needs by RNN
-   out = in; 
+   out = in;
 
    // size_t B = out.size();
    // size_t T = out[0].GetNrows();
    // size_t D = out[0].GetNcols();
-   // if ((T != in.size()) || (B != in[0].GetNrows()) 
+   // if ((T != in.size()) || (B != in[0].GetNrows())
    //     || (D != in[0].GetNcols())) {
    //    std::cout << "Incompatible Dimensions\n"
-   //       << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() 
+   //       << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols()
    //       << " --> " << B << "x" << T << "x" << D << "\n";
    //    return;
    // }
@@ -596,7 +596,7 @@ void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
    size_t nDepth    = B.GetFirstSize();   // B size
    size_t nRows = B.GetCSize();      // C size
    size_t nCols = B.GetWSize();      // HW size
-   if (B.GetNDim()==4) nCols *= B.GetHSize(); 
+   if (B.GetNDim()==4) nCols *= B.GetHSize();
    assert(B.GetNDim() <= 4);
 
    dim3 blockDims = TDevice::BlockDims2D();
@@ -620,12 +620,12 @@ void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
    // cudaMemcpy(dB, hB, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
    //std::cout << "flatten from : " << size << " , " << nRows << " , " << nCols << std::endl;
 
-   
+
    // for (size_t i = 0; i < size; i++) {
    //    for (size_t j = 0; j < nRows; j++) {
    //       for (size_t k = 0; k < nCols; k++) {
    //          A( 0, i, j * nCols + k) = B(i, j, k);
-   //       }  
+   //       }
    //    }
    // }
 
@@ -665,7 +665,7 @@ void TCuda<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
    size_t nDepth = A.GetFirstSize();   // B size
    size_t nRows = A.GetCSize();      // C size
    size_t nCols = A.GetWSize();      // HW size
-   if (A.GetNDim()==4) nCols *= A.GetHSize(); 
+   if (A.GetNDim()==4) nCols *= A.GetHSize();
    assert(A.GetNDim() <= 4);
 
 
@@ -707,8 +707,44 @@ void TCuda<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
    // }
 
 
-   //  cudaFree(dA); 
-   //  delete [] hA; 
+   //  cudaFree(dA);
+   //  delete [] hA;
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCuda<AFloat>::BatchNormLayerForwardTraining(int , const Tensor_t &x, Tensor_t &y, Matrix_t &,
+                                                   Matrix_t &, Matrix_t &, Matrix_t &, Matrix_t &,
+                                                   Matrix_t &, Matrix_t &,
+                                                   Scalar_t , Scalar_t, Scalar_t,
+                                                   const TensorDescriptor_t &)
+
+{
+   // Bnorm not yet implmented for Cuda
+   // just copy output =input
+   Copy(y, x);
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCuda<AFloat>::BatchNormLayerForwardInference(int, const Tensor_t &x, Matrix_t &, Matrix_t &,
+                                                    Tensor_t &y, const Matrix_t &,
+                                                    const Matrix_t &, Scalar_t ,
+                                                    const TensorDescriptor_t &)
+
+{
+   Copy(y, x);
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCuda<AFloat>::BatchNormLayerBackward(int /* axis */, const Tensor_t &/* x */, const Tensor_t &dy, Tensor_t &dx,
+                                            Matrix_t &/* gamma */, //  Matrix_t &beta, (not needed)
+                                            Matrix_t &/* dgamma */, Matrix_t &/* dbeta */, const Matrix_t &/* mean */,
+                                            const Matrix_t &/* variance */, const Matrix_t &/* iVariance */, Scalar_t /* epsilon */,
+                                            const TensorDescriptor_t &/* bnParDescriptor */)
+{
+   Copy(dx, dy);
 }
 
 } // namespace DNN

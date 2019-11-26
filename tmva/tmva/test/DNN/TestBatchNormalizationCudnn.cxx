@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Cuda.h"
+#include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TestBatchNormalization.h"
 
 using namespace TMVA::DNN;
@@ -27,18 +27,16 @@ int test()
     double error;
 
     gRandom->SetSeed(111);
-    TCuda<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
+    TCudnn<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
     //
     // Test backpropagation for linear net.
     //
-    //Since batch norm is not supported for plain Cuda - the BNOrm layer will be a dummy layer
-    // and an error message should be produced
 
-    error = testBackpropagationWeights<TCuda<double>>(0.00001);
+    error = testBackpropagationWeights<TCudnn<double>>(0.00001);
     if (error > 1e-3)
         return 1;
 
-    error = testCNNBackpropagationWeights<TCuda<double>>(0.00001);
+    error = testCNNBackpropagationWeights<TCudnn<double>>(0.00001);
     if (error > 1e-3)
        return 1;
 

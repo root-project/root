@@ -21,7 +21,7 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
-//#include "TMVA/DNN/BatchNormLayer.h"
+#include "TMVA/DNN/BatchNormLayer.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
@@ -77,18 +77,22 @@ public:
    using AlgorithmHelper_t       = cudnnConvolutionBwdFilterAlgo_t;
    using AlgorithmDataType_t     = cudnnDataType_t;
    using ReduceTensorDescriptor_t = cudnnReduceTensorDescriptor_t;
+   using TensorDescriptor_t       = cudnnTensorDescriptor_t;
 
    using EmptyDescriptor_t       = TCudnnEmptyDescriptor;        // Used if a descriptor is not needed in a class
 
-   /*using BNormLayer_t            = DNN::TBatchNormLayer<TCudnn<AFloat>>;
-   using BNormDescriptors_t      = CNN::TCNNDescriptors<BNormLayer_t>;
-   using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;*/
+   using BNormLayer_t            = TBatchNormLayer<TCudnn<AFloat>>;
+   using BNormDescriptors_t      = TDNNGenDescriptors<BNormLayer_t>;
+   //using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;*/
    using ConvLayer_t             = CNN::TConvLayer<TCudnn<AFloat>>;
    using ConvDescriptors_t       = CNN::TCNNDescriptors<ConvLayer_t>;
    using ConvWorkspace_t         = CNN::TCNNWorkspace<ConvLayer_t>;
    using PoolingLayer_t          = CNN::TMaxPoolLayer<TCudnn<AFloat>>;
    using PoolingDescriptors_t    = CNN::TCNNDescriptors<PoolingLayer_t>;
    using PoolingWorkspace_t      = CNN::TCNNWorkspace<PoolingLayer_t>;
+
+   // template <typename AFloat>
+   // using ConvDescriptors_t = CNN::TCNNDescriptors<CNN::TConvLayer<TCudnn<AFloat>>>;
 
    // convolution options
    // default is -1 (left to cudnn)
@@ -127,11 +131,11 @@ public:
    //
    // Architecture Initialization
    //____________________________________________________________________________
-   # if 0
+
    static void InitializeBNormDescriptors(TDescriptors * & descriptors,
                                           BNormLayer_t *L = nullptr);
-   # endif
-   static void InitializeConvDescriptors(TDescriptors * & descriptors, double coef = 0.0,
+
+   static void InitializeConvDescriptors(TDescriptors * & descriptors,
                                          ConvLayer_t *L = nullptr);
 
    static void InitializePoolDescriptors(TDescriptors * & descriptors,
@@ -139,14 +143,16 @@ public:
 
    static void InitializeActivationDescriptor(ActivationDescriptor_t & descriptors, EActivationFunction activFunc, double coef = 0.0);
 
-   static void ReleaseConvDescriptors(TDescriptors    * descriptors, ConvLayer_t    *L = nullptr);
-   static void ReleasePoolDescriptors(TDescriptors * descriptors, PoolingLayer_t *L = nullptr);
+   static void ReleaseConvDescriptors(TDescriptors    * descriptors );
+   static void ReleasePoolDescriptors(TDescriptors * descriptors );
+   static void ReleaseBNormDescriptors(TDescriptors * descriptors );
    static void ReleaseDescriptor(EmptyDescriptor_t       & emptyDescr) {}        // Does nothing
    static void ReleaseDescriptor(ActivationDescriptor_t  & activationDescr);
    static void ReleaseDescriptor(ConvolutionDescriptor_t & convolutionDescr);
    static void ReleaseDescriptor(DropoutDescriptor_t     & dropoutDescr);
    static void ReleaseDescriptor(FilterDescriptor_t      & filterDescr);
    static void ReleaseDescriptor(PoolingDescriptor_t     & poolingDescr);
+   static void ReleaseDescriptor(TensorDescriptor_t      & tensorDescr);
 
 
    static void InitializeConvWorkspace(TWorkspace * & workspace,
@@ -364,95 +370,25 @@ public:
      * and they are then scaled by two parameter, different for each input variable:
      *  - a scale factor \gamma gamma
      *  - an offset \beta beta */
-   /*
-   static void BatchNormLayerForwardTraining(Matrix_t input,                        // input
-                                             Matrix_t & gamma,                      // gamma
-                                             Matrix_t & beta,                       // beta
-                                             Matrix_t outputActivation,             // out
-                                             Matrix_t & Xmu,                        // Xmu
-                                             Matrix_t & output,                     // Xhat
-                                             Matrix_t & Variance,                   // Var
-                                             Matrix_t & IVariance,                  // Ivar
-                                             # if 0
-                                             const BNormDescriptors_t & descriptors,
-                                             BNormWorkspace_t & workspace,
-                                             # endif
-                                             std::vector<Scalar_t> & RunningMeans,  // Mu_Training
-                                             std::vector<Scalar_t> & RunningVars,   // Var_Training
-                                             Scalar_t nTrainedBatches,              // TrainedBatches
-                                             Scalar_t momentum,                     // GD momentum
-                                             Scalar_t epsilon);                     // epsilon
 
-   */
+   static void BatchNormLayerForwardTraining(int axis, const Tensor_t &x, Tensor_t &y, Matrix_t &gamma, Matrix_t &beta,
+                                             Matrix_t &mean, Matrix_t &, Matrix_t &iVariance, Matrix_t &runningMeans,
+                                             Matrix_t &runningVars, Scalar_t nTrainedBatches, Scalar_t momentum,
+                                             Scalar_t epsilon, const TensorDescriptor_t &bnParDescriptor);
 
-static void BatchNormLayerForwardTraining(Matrix_t, 
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          std::vector<Scalar_t> & ,
-                                          std::vector<Scalar_t> &,
-                                          Scalar_t,
-                                          Scalar_t,
-                                          Scalar_t )
-{}
+   /** During inference the inputs are not normalized using the batch mean but the previously computed
+    * at  running mean and variance */
 
+   static void BatchNormLayerForwardInference(int axis, const Tensor_t &x, Matrix_t &gamma, Matrix_t &beta,
+                                              Tensor_t &y, const Matrix_t &runningMeans,
+                                              const Matrix_t &runningVars, Scalar_t epsilon,
+                                              const TensorDescriptor_t &);
 
-/** During inference the inputs are not normalized using the batch mean but the previously computed
-     * at  running mean and variance */
-   /*
-   static void BatchNormLayerForwardInference(Matrix_t input,
-                                              Matrix_t & gamma,
-                                              Matrix_t & beta,
-                                              Matrix_t outputActivation,
-                                              # if 0
-                                              const BNormDescriptors_t & descriptors,
-                                              BNormWorkspace_t & workspace,
-                                              # endif
-                                              std::vector<Scalar_t> & RunningMeans,
-                                              std::vector<Scalar_t> & RunningVars,
-                                              Scalar_t nTrainedBatches,
-                                              Scalar_t epsilon);
-   */
-static void BatchNormLayerForwardInference(Matrix_t, 
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t,
-                                          std::vector<Scalar_t> & ,
-                                          std::vector<Scalar_t> &,
-                                          Scalar_t,
-                                          Scalar_t )
-{}
-   /**
-    static void BatchNormLayerForwardBackward(const Matrix_t & outputGrad,
-                                             const Matrix_t & gamma,
-                                             Matrix_t &dgamma,
-                                             Matrix_t &dbeta,
-                                             Matrix_t dx,
-                                             Matrix_t & output,
-                                             Matrix_t & Xmu,
-                                             Matrix_t & IVariance,
-                                             Matrix_t & Variance,
-                                             # if 0
-                                             const BNormDescriptors_t & descriptors,
-                                             BNormWorkspace_t & workspace,
-                                             # endif
-                                             Scalar_t epsilon) {}
-   */
-static void BatchNormLayerForwardBackward(const Matrix_t, 
-                                          const Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Matrix_t &,
-                                          Scalar_t )
-{}
+   static void BatchNormLayerBackward(int axis, const Tensor_t &x, const Tensor_t &dy, Tensor_t &dx,
+                                      Matrix_t &gamma, //  Matrix_t &beta, (not needed)
+                                      Matrix_t &dgamma, Matrix_t &dbeta, const Matrix_t &mean, const Matrix_t &variance,
+                                      const Matrix_t &iVariance, Scalar_t epsilon, const TensorDescriptor_t &);
+
    //____________________________________________________________________________
    //
    // Regularization

@@ -504,12 +504,12 @@ size_t TConvLayer<Architecture_t>::calculateNLocalViews(size_t inputHeight, size
 //______________________________________________________________________________
 template <typename Architecture_t>
 void TConvLayer<Architecture_t>::InitializeDescriptors() {
-   Architecture_t::InitializeConvDescriptors(fDescriptors, 0.0, this);
+   Architecture_t::InitializeConvDescriptors(fDescriptors, this);
 }
 
 template <typename Architecture_t>
 void TConvLayer<Architecture_t>::ReleaseDescriptors() {
-   Architecture_t::ReleaseConvDescriptors(fDescriptors, this);
+   Architecture_t::ReleaseConvDescriptors(fDescriptors);
 }
 
 //______________________________________________________________________________

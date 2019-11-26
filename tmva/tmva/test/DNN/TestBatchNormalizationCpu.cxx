@@ -26,19 +26,23 @@ int test()
 
     double error;
 
+    gRandom->SetSeed(111);
+    TCpu<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
     //
     // Test backpropagation for linear net.
     //
 
-    error = testBackpropagationWeights<TCpu<double>>(0.00001);
+    error = testBackpropagationWeights<TCpu<double>>(0.0001);
     if (error > 1e-3)
         return 1;
 
-    
+    error = testCNNBackpropagationWeights<TCpu<double>>(0.0001);
+    if (error > 1e-3)
+       return 1;
 
     return 0;
 }
 
 int main() {
-    return test(); 
+    return test();
 }
