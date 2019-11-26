@@ -1032,7 +1032,8 @@ void TDirectory::FillFullPath(TString& buf) const
 
 TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t ifNotExist)
 {
-   if (ifNotExist) Error("mkdir","ifNotExist only valid for TDirectoryFile mkdir",name);
+   if (ifNotExist)
+      Error("mkdir", "ifNotExist only valid for TDirectoryFile mkdir", name);
    if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
    TDirectory *newdir = nullptr;
