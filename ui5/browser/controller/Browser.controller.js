@@ -714,6 +714,55 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== TabContainer =============== */
       /* ============================================ */
 
+      /* ======================================== */
+      /* =============== Terminal =============== */
+      /* ======================================== */
+
+      onTerminalSubmit: function(oEvent) {
+         let command = oEvent.getSource().getValue();
+         let url = '/ProcessLine/cmd.json?arg1="' + command + '"';
+         console.log(command);
+         JSROOT.NewHttpRequest(url, 'object', function(res) {
+            console.log(res, url);
+            if (res == null) {
+               if (command === ".q") {
+                  window.close();
+               }
+            }
+            // this.updateLog();
+            // this.updateCanvas();
+         }).send();
+
+         oEvent.getSource().setValue("");
+      },
+
+      updateLog: function() {
+         let url = 'log/exe.json?method=ReadOutputLog';
+         JSROOT.NewHttpRequest(url, 'object', function(res) {
+            let output_log = document.getElementById("output_log");
+            if (res !== null) {
+               var string_log = res.fString;
+               output_log.value += string_log;
+            }
+            output_log.value += "root[" + document.n_cmd + "] ";
+            output_log.scrollTop = output_log.scrollHeight;
+         }).send();
+      },
+
+      updateCanvas: function() {
+         let url = 'c1/root.json.gz?compact=3';
+         JSROOT.NewHttpRequest(url, 'object', function(canvas) {
+            if (canvas == null) return;
+            document.getElementById('object_draw').innerHTML = "";
+            JSROOT.redraw('object_draw', canvas);
+         }).send();
+      },
+
+
+      /* ======================================== */
+      /* =============== Terminal =============== */
+      /* ======================================== */
+
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
