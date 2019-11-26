@@ -3,7 +3,8 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RPageStorageRaw.hxx>
+#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 
 #include <TRandom3.h>
 
@@ -13,12 +14,12 @@
 #include <vector>
 #include <utility>
 
+using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
-using RPageSinkRaw = ROOT::Experimental::Detail::RPageSinkRaw;
+using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
-using RPageSourceRaw = ROOT::Experimental::Detail::RPageSourceRaw;
 
 namespace {
 
@@ -47,7 +48,9 @@ TEST(RNTuple, Basics)
    auto wrPt = model->MakeField<float>("pt", 42.0);
 
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      RNTupleWriteOptions options;
+      options.SetContainerFormat(ENTupleContainerFormat::kRaw);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       ntuple->Fill();
       ntuple->CommitCluster();
       *wrPt = 24.0;
@@ -79,7 +82,9 @@ TEST(RNTuple, Extended)
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      RNTupleWriteOptions options;
+      options.SetContainerFormat(ENTupleContainerFormat::kRaw);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
@@ -105,10 +110,4 @@ TEST(RNTuple, Extended)
          chksumRead += v;
    }
    EXPECT_EQ(chksumRead, chksumWrite);
-
-   ROOT::EnableImplicitMT();
-   auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", fileGuard.GetPath());
-   auto minLengh = *rdf.Define("vecSize", "vector.size()").Min("vecSize");
-   EXPECT_GE(1, minLengh);
-   EXPECT_LE(minLengh, 1000);
 }

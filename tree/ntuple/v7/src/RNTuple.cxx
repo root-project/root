@@ -29,8 +29,6 @@
 #include <utility>
 
 #include <TError.h>
-#include <TFile.h>
-#include <ROOT/RPageStorageRoot.hxx>
 
 
 ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
