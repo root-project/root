@@ -1293,7 +1293,7 @@ public:
       }
       TDirectory *treeDirectory = fOutputFiles[slot].get();
       if (!fDirName.empty()) {
-         // call ifNotExist=true since MT can end up making this call multiple times
+         // call returnExistingDirectory=true since MT can end up making this call multiple times
          treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str(), "", true);
       }
       // re-create output tree as we need to create its branches again, with new input variables
