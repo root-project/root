@@ -10,13 +10,23 @@
 
   <SplitApp id="SplitAppBrowser" initialDetail="detail" initialMaster="master" orientationChange="onOrientationChange">
     <detailPages>
-      <Page title="Javascript ROOT Browser">
-        <TabContainer id="myTabContainer"
-                      showAddNewButton="true"
-                      addNewButtonPress="addNewButtonPressHandler"
-                      itemSelect="tabSelectItem"
-                      itemClose="tabCloseHandler" />
-      </Page>
+      <l:Splitter orientation="Vertical">
+        <Page title="Javascript ROOT Browser">
+          <TabContainer id="myTabContainer"
+                        showAddNewButton="true"
+                        addNewButtonPress="addNewButtonPressHandler"
+                        itemSelect="tabSelectItem"
+                        itemClose="tabCloseHandler" />
+        </Page>
+        <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+            <Input
+                    id="inputText"
+                    type="Text"
+                    class="sapUiSmallMarginBottom"
+                    placeholder="Enter Text ..." />
+            <TextArea value="Lorem ipsum dolor st amet" width="100%" height="calc(100% - 51px)"/>
+        </Page>
+      </l:Splitter>
     </detailPages>
     <masterPages>
       <Page id="browserMaster" title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false" enableScrolling="false">
