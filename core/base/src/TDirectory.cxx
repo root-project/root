@@ -1015,6 +1015,7 @@ void TDirectory::FillFullPath(TString& buf) const
 ///
 /// Returns 0 in case of error or if a sub-directory (hierarchy) with the requested
 /// name already exists.
+/// returnExistingDirectory returns a pointer to an already existing sub-directory with the same name.
 /// Returns a pointer to the created sub-directory or to the top sub-directory of
 /// the hierarchy (in the above example, the returned TDirectory * always points
 /// to "a").
@@ -1028,12 +1029,22 @@ void TDirectory::FillFullPath(TString& buf) const
 ///    gDirectory->cd("b");
 ///    gDirectory->mkdir("d");
 /// ~~~
-/// returnExistingDirectory is just for compatibility with the TDirectoryFile override
+/// or
+/// ~~~ {.cpp}
+///    TFile * file = new TFile("afile","RECREATE");
+///    file->mkdir("a");
+///    file->cd("a");
+///    gDirectory->mkdir("b/c");
+///    gDirectory->mkdir("b/d", "", true);
+/// ~~~
 
 TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t returnExistingDirectory)
 {
-   if (returnExistingDirectory)
-      Error("mkdir", "returnExistingDirectory only valid for TDirectoryFile mkdir", name);
+   if (returnExistingDirectory) {
+      auto existingdir = GetDirectory(name);
+      if (existingdir)
+        return existingdir;
+   }
    if (!name || !title || !name[0]) return nullptr;
    if (!title[0]) title = name;
    TDirectory *newdir = nullptr;
