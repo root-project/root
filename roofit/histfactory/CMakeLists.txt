@@ -78,6 +78,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     XMLParser
 )
 
+if(yml)
+  FIND_PACKAGE(rapidyaml)
+  target_include_directories(HistFactory PRIVATE ${RAPIDYAML_INCLUDE_DIRS})
+  target_link_libraries(HistFactory PRIVATE ${RAPIDYAML_LIBRARIES})
+  target_link_directories(HistFactory PRIVATE ${RAPIDYAML_LIBRARY_DIRS})  
+endif()
+
 ROOT_EXECUTABLE(hist2workspace
   MakeModelAndMeasurements.cxx
   hist2workspace.cxx
