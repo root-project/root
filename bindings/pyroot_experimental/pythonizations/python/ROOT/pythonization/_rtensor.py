@@ -9,7 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPython import GetEndianess, GetDataPointer, GetSizeOfType
+from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
 from ROOT.pythonization._rvec import _array_interface_dtype_map
 import cppyy
 
@@ -133,7 +133,7 @@ def pythonize_rtensor(klass, name):
 
 # Add AsRTensor feature as free function to the ROOT module
 try:
-    from libROOTPython import AsRTensor
+    from libROOTPythonizations import AsRTensor
     import cppyy
     cppyy.gbl.TMVA.Experimental.AsRTensor = AsRTensor
 except:
