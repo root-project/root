@@ -165,7 +165,7 @@ public:
    TReshapeLayer<Architecture_t> *AddReshapeLayer(size_t depth, size_t height, size_t width, bool flattening);
 
    /*! Function for adding a Batch Normalization layer with given parameters */
-   TBatchNormLayer<Architecture_t> *AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon);
+   TBatchNormLayer<Architecture_t> *AddBatchNormLayer(Scalar_t momentum = -1, Scalar_t epsilon = 0.0001);
 
    /*! Function for adding Reshape Layer in the Deep Neural Network, when
     *  the layer is already created. */
@@ -716,39 +716,50 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
 }
 
 //______________________________________________________________________________
-/*template <typename Architecture_t, typename Layer_t>
-TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon)
-{
-   size_t batchSize = this->GetBatchSize();
-   size_t inputWidth = 0;
-   if (fLayers.size() == 0) {
-      inputWidth = this->GetInputWidth();
-   } else {
-      Layer_t *lastLayer = fLayers.back();
-      inputWidth = lastLayer->GetWidth();
-   }
-
-   auto bnormLayer = new TBatchNormLayer<Architecture_t>(batchSize, inputWidth, momentum, epsilon);
-
-   fLayers.push_back(bnormLayer);
-
-   return bnormLayer;
-}*/
-
-//______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNormLayer(Scalar_t momentum, Scalar_t epsilon)
 {
+   int axis = -1;
    size_t batchSize = this->GetBatchSize();
+   size_t inputDepth = 0;
+   size_t inputHeight = 0;
    size_t inputWidth = 0;
+   // this is the shape of the output tensor (it is columnmajor by default)
+   // and it is normally (depth, hw, bsize)  and for dense layers  (bsize, w, 1)
+   std::vector<size_t>  shape = {1, 1, 1};
    if (fLayers.size() == 0) {
+      inputDepth = this->GetInputDepth();
+      inputHeight = this->GetInputHeight();
       inputWidth = this->GetInputWidth();
+      // assume that is like for a dense layer
+      shape[0] = batchSize;
+      shape[1] = inputWidth;
+      shape[2] = 1;
    } else {
       Layer_t *lastLayer = fLayers.back();
+      inputDepth = lastLayer->GetDepth();
+      inputHeight = lastLayer->GetHeight();
       inputWidth = lastLayer->GetWidth();
+      shape = lastLayer->GetOutput().GetShape();
+      if (dynamic_cast<TConvLayer<Architecture_t> *>(lastLayer) != nullptr ||
+          dynamic_cast<TMaxPoolLayer<Architecture_t> *>(lastLayer) != nullptr)
+         axis = 1; // use axis = channel axis for convolutional layer
+      if (shape.size() > 3) {
+         for (size_t i = 3; i < shape.size(); ++i)
+            shape[2] *= shape[i];
+      }
+      // if  (axis == 1) {
+      //    shape[0] = batchSize;
+      //    shape[1] = inputDepth;
+      //    shape[2] = inputHeight * inputWidth;
+      // }
+      // for RNN ?
    }
+   std::cout << "addBNormLayer " << inputDepth << " , " << inputHeight << " , " << inputWidth << " , " << shape[0]
+             << "  " << shape[1] << "  " << shape[2] << std::endl;
 
-   auto bnormLayer = new TBatchNormLayer<Architecture_t>(batchSize, inputWidth, momentum, epsilon);
+   auto bnormLayer =
+      new TBatchNormLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, shape, axis, momentum, epsilon);
 
    fLayers.push_back(bnormLayer);
 

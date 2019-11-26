@@ -57,6 +57,11 @@ if (CUDA_FOUND AND tmva-gpu)
   TARGET_LINK_LIBRARIES(testBatchNormalizationCuda ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cuda COMMAND testBatchNormalizationCuda)
 
+   # DNN - Batch normalization Cudnn
+  CUDA_ADD_EXECUTABLE(testBatchNormalizationCudnn TestBatchNormalizationCudnn.cxx )
+  TARGET_LINK_LIBRARIES(testBatchNormalizationCudnn ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cudnn COMMAND testBatchNormalizationCudnn)
+
   # DNN - Minimization Cuda
   CUDA_ADD_EXECUTABLE(testMinimizationCuda TestMinimizationCuda.cxx)
   TARGET_LINK_LIBRARIES(testMinimizationCuda ${Libraries}  )
