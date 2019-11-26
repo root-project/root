@@ -127,9 +127,9 @@ private:
    std::vector<std::unique_ptr<RPageBox>> fPageBoxes;
    std::vector<std::unique_ptr<TText>> fTexts;
    std::vector<std::unique_ptr<TLine>> fLines;
-   // Not Stored as a unique_ptr because ROOT keeps a list of open TPads and may delete fPad before the destructor of this class is called.
-   TPad* fPad;
-   // Not Stored as as unique_ptrs in a vector because ROOT keeps a list of open TPads and may delete fPad before the destructor of this class is called.
+   // Not Stored as a unique_ptr because ROOT will sometimes delete fPad before the destructor of this class is called.
+   TPad *fPad;
+   // Not Stored as as unique_ptrs in a vector because ROOT will sometimes delete fTH1Fs before the destructor of this class is called.
    std::vector<TH1F*> fTH1Fs;
    std::string fNTupleName;
    std::string fAxisTitle; // for TLatex in RDrawStorage::Draw()
@@ -141,7 +141,7 @@ private:
 public:
    // holds all generated cavas pointers in case they need to be manually destructed in the future due to changes in
    // ROOT.
-   std::vector<TCanvas *> fCanvasPtrs;
+   std::vector<TCanvas*> fCanvasPtrs;
    RDrawStorage(RNTupleReader *reader);
    /// holds all created RDrawStorage instances until the lifetime
    static std::vector<RDrawStorage> fgDrawStorageVec;
