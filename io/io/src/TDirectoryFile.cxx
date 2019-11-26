@@ -1186,7 +1186,7 @@ TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *f
 ///
 /// Returns 0 in case of error or if a sub-directory (hierarchy) with the requested
 /// name already exists.
-/// ifNotExist returns a pointer to an extant sub-directory instead 0.
+/// ifNotExist returns a pointer to an already existing sub-directory instead of 0.
 /// Returns a pointer to the created sub-directory or to the top sub-directory of
 /// the hierarchy (in the above example, the returned TDirectory * always points
 /// to "a").
