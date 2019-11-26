@@ -9,11 +9,11 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
+#include "TPython.h"
+
 // Bindings
 #include "CPyCppyy.h"
 #include "PyStrings.h"
-#include "PyROOTStrings.h"
-#include "TPython.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
 #include "ProxyWrappers.h"
@@ -92,8 +92,8 @@
 ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
-namespace PyROOT {
-R__EXTERN PyObject *gRootModule;
+namespace CPyCppyy {
+    extern PyObject *gThisModule;
 }
 
 //- static public members ----------------------------------------------------
@@ -167,7 +167,7 @@ Bool_t TPython::Import(const char *mod_name)
 
    // allow finding to prevent creation of a python proxy for the C++ proxy
    Py_INCREF(mod);
-   PyModule_AddObject(PyROOT::gRootModule, mod_name, mod);
+   PyModule_AddObject(CPyCppyy::gThisModule, mod_name, mod);
 
    // force creation of the module as a namespace
    TClass::GetClass(mod_name, kTRUE);
@@ -404,7 +404,7 @@ const TPyReturn TPython::Eval(const char *expr)
       return TPyReturn(result);
 
    // explicit conversion for python type required
-   PyObject *pyclass = PyObject_GetAttr(result, PyROOT::PyStrings::gClass);
+   PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char*>("__class__"));
    if (pyclass != 0) {
       // retrieve class name and the module in which it resides
       PyObject *name = PyObject_GetAttr(pyclass, CPyCppyy::PyStrings::gName);
