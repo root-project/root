@@ -447,9 +447,39 @@ sap.ui.define([
 
 */
       },
-      SelectElement: function(election_obj, element_id, sec_idcs) {
+      GetSelectionColor:function(selection_obj)
+      {
+         return selection_obj.fName == "Global Highlight" ? "rgb(230, 230, 230)" : "rgb(66, 124, 172)";
+      },
+      FindTreeItemForEveElement:function(element_id)
+      {
+         var items = this.getView().byId("tree").getItems();
+         for (var n = 0; n<items.length;++n) {
+            var item = items[n],
+                ctxt = item.getBindingContext("treeModel"),
+                path = ctxt.getPath(),
+                ttt = item.getBindingContext("treeModel").getProperty(path);
+
+            if (ttt.id == element_id)
+               return item;
+         }
+         return null;
+      },
+      SelectElement: function(selection_obj, element_id, sec_idcs) {
+         let item = this.FindTreeItemForEveElement(element_id);
+         if (item) {
+            let color = this.GetSelectionColor(selection_obj);
+            item.$().css("background-color", color);
+         }
       },
       UnselectElement: function (selection_obj, element_id) {
+         let item = this.FindTreeItemForEveElement(element_id);
+         if (item) {
+            let color = this.GetSelectionColor(selection_obj);
+            let cc = item.$().css("background-color");
+            if (cc == color)
+               item.$().css("background-color", "");
+         }
       },
       onMouseLeave: function(oEvent) {
          // actual call will be performed 100ms later and can be overwritten
