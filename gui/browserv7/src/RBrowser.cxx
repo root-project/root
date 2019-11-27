@@ -525,6 +525,8 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fBrowsable.SetWorkingDirectory(arg.substr(6));
 
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
+   } else if (arg.compare(0, 4, "CMD:") == 0) {
+      gROOT->ProcessLine(arg.substr(4).c_str());
    }
 }
 
