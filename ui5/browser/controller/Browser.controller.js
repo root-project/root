@@ -724,6 +724,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          console.log(command);
          this.websocket.Send("CMD:" + command);
          oEvent.getSource().setValue("");
+         this.requestRootHist();
+      },
+
+      requestRootHist: function() {
+         return this.websocket.Send("ROOTHIST:");
+      },
+
+      updateRootHist: function (hist) {
+         console.log(hist);
+         this.getView().byId("output_log").setValue(hist);
+      },
+
+      requestLogs: function() {
+
+      },
+
+      updateLogs: function(logs) {
+
       },
 
       updateLog: function() {
@@ -915,6 +933,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                }
             }
             break;
+            case "HIST":
+               this.updateRootHist(msg);
+               break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }

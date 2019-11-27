@@ -527,8 +527,27 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 4, "CMD:") == 0) {
       gROOT->ProcessLine(arg.substr(4).c_str());
+   } else if (arg.compare(0, 9, "ROOTHIST:") == 0) {
+      std::string homePath = gSystem->UnixPathName(gSystem->HomeDirectory());
+      std::string histPath = "/.root_hist";
+      std::string path = homePath + histPath;
+
+      printf(path.c_str());
+      std::ifstream infile(path);
+
+      std::string result = "";
+      std::string line;
+      while (std::getline(infile, line))
+      {
+         result.append(line);
+         result.append("\n");
+      }
+
+      fWebWindow->Send(connid, "HIST:"s + result);
    }
 }
+
+//.root_hist
 
 
 
