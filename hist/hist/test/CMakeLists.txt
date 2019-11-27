@@ -13,6 +13,8 @@ ROOT_ADD_GTEST(testTFormula test_TFormula.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTKDE test_tkde.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTH1FindFirstBinAbove test_TH1_FindFirstBinAbove.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(test_TEfficiency test_TEfficiency.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(TGraphMultiErrorsTests TGraphMultiErrorsTests.cxx LIBRARIES Hist RIO)
+
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
 endif()

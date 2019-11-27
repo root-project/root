@@ -22,6 +22,7 @@
 #include "TAttFill.h"
 #include "TAttMarker.h"
 
+#include "TArrayD.h"
 #include "TVector.h"
 #include "TH1.h"
 #include "TF1.h"
@@ -37,22 +38,20 @@
 
 ClassImp(TGraphMultiErrors)
 
-   /** \class TGraphMultiErrors
-    TGraph with asymmetric error bars and multiple y error dimensions.
+/** \class TGraphMultiErrors
+ TGraph with asymmetric error bars and multiple y error dimensions.
 
-    The TGraphAsymmErrors painting is currently performed by its functions TGraphMultiErrors::Paint,
-    TGraphMultiErrors::PaintReverse and TGraphMultiErrors::PaintGraphMultiErrors. These are supposed to be included in
-    the TGraphPainter class if this class should become part of ROOT.
-    All drawing options of TGraphAsymmErrors are available.
-    For more information see the function TGraphMultiErrors::PaintGraphMultiErrors.
-   */
+ The TGraphAsymmErrors painting is currently performed by its functions TGraphMultiErrors::Paint,
+ TGraphMultiErrors::PaintReverse and TGraphMultiErrors::PaintGraphMultiErrors. These are supposed to be included in
+ the TGraphPainter class if this class should become part of ROOT.
+ All drawing options of TGraphAsymmErrors are available.
+ For more information see the function TGraphMultiErrors::PaintGraphMultiErrors.
+*/
 
-   ///////////////////////////////////////////////////////////////////////////////
-   /// TGraphMultiErrors default constructor.
+///////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors default constructor.
 
-   TGraphMultiErrors::TGraphMultiErrors()
-   : TGraph(), fNErrorDimensions(0), fExL(nullptr), fExH(nullptr), fEyL(nullptr), fEyH(nullptr), fEyLSum(nullptr),
-     fEyHSum(nullptr), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fAttFill(nullptr), fAttLine(nullptr)
+TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNYErrors(0), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fExL(NULL), fExH(NULL)
 {
 }
 
@@ -61,16 +60,12 @@ ClassImp(TGraphMultiErrors)
 ///
 /// the arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim)
-   : TGraph(n), fNErrorDimensions(dim), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne) : TGraph(np), fNYErrors(ne), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
    if (!CtorAllocate())
       return;
 
    FillZero(0, fNpoints);
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,39 +73,23 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim)
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exL,
-                                     const Float_t *exH, const Float_t *eyL, const Float_t *eyH, Int_t m)
-   : TGraph(n, x, y), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, const Float_t *eyL, const Float_t *eyH, Int_t m) : TGraph(np, x, y), fNYErrors(1), fSumErrorsMode(m)
 {
    if (!CtorAllocate())
       return;
 
-   for (Int_t i = 0; i < n; i++) {
-      if (exL)
-         fExL[i] = exL[i];
-      else
-         fExL[i] = 0.;
-
-      if (exH)
-         fExH[i] = exH[i];
-      else
-         fExH[i] = 0.;
-
-      if (eyL)
-         fEyL[0][i] = eyL[i];
-      else
-         fEyL[0][i] = 0.;
-
-      if (eyH)
-         fEyH[0][i] = eyH[i];
-      else
-         fEyH[0][i] = 0.;
+   for (Int_t i = 0; i < fNpoints; i++) {
+      if (exL) fExL[i] = exL[i];
+      else     fExL[i] = 0.;
+      if (exH) fExH[i] = exH[i];
+      else     fExH[i] = 0.;
+      if (eyL) fEyL[0][i] = eyL[i];
+      else     fEyL[0][i] = 0.;
+      if (eyH) fEyH[0][i] = eyH[i];
+      else     fEyH[0][i] = 0.;
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,39 +97,25 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Float_t *x, const Float_t *y
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exL,
-                                     const Double_t *exH, const Double_t *eyL, const Double_t *eyH, Int_t m)
-   : TGraph(n, x, y), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, const Double_t *eyL, const Double_t *eyH, Int_t m) : TGraph(np, x, y), fNYErrors(1), fSumErrorsMode(m)
 {
    if (!CtorAllocate())
       return;
 
-   n = fNpoints * sizeof(Double_t);
+   Int_t n = fNpoints * sizeof(Double_t);
 
-   if (exL)
-      memcpy(fExL, exL, n);
-   else
-      memset(fExL, 0, n);
+   if (exL) memcpy(fExL, exL, n);
+   else     memset(fExL, 0, n);
+   if (exH) memcpy(fExH, exH, n);
+   else     memset(fExH, 0, n);
 
-   if (exH)
-      memcpy(fExH, exH, n);
-   else
-      memset(fExH, 0, n);
+   if (eyL) fEyL[0].Set(fNpoints, eyL);
+   else     fEyL[0].Reset(0.);
 
-   if (eyL)
-      memcpy(fEyL[0], eyL, n);
-   else
-      memset(fEyL[0], 0, n);
+   if (eyH) fEyH[0].Set(fNpoints, eyH);
+   else     fEyH[0].Reset(0.);
 
-   if (eyH)
-      memcpy(fEyH[0], eyH, n);
-   else
-      memset(fEyH[0], 0, n);
-
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,41 +123,26 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, const Double_t *x, const Double_t 
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Float_t *x, const Float_t *y, const Float_t *exL,
-                                     const Float_t *exH, Float_t **eyL, Float_t **eyH, Int_t m)
-   : TGraph(n, x, y), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, Float_t **eyL, Float_t **eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
 {
    if (!CtorAllocate())
       return;
 
-   for (Int_t i = 0; i < n; i++) {
-      if (exL)
-         fExL[i] = exL[i];
-      else
-         fExL[i] = 0.;
+   for (Int_t i = 0; i < fNpoints; i++) {
+      if (exL) fExL[i] = exL[i];
+      else     fExL[i] = 0.;
+      if (exH) fExH[i] = exH[i];
+      else     fExH[i] = 0.;
 
-      if (exH)
-         fExH[i] = exH[i];
-      else
-         fExH[i] = 0.;
-
-      for (Int_t j = 0; j < dim; j++) {
-         if (eyL)
-            fEyL[j][i] = eyL[j][i];
-         else
-            fEyL[j][i] = 0.;
-
-         if (eyH)
-            fEyH[j][i] = eyH[j][i];
-         else
-            fEyH[j][i] = 0.;
+      for (Int_t j = 0; j < fNYErrors; j++) {
+         if (eyL) fEyL[j][i] = eyL[j][i];
+         else     fEyL[j][i] = 0.;
+         if (eyH) fEyH[j][i] = eyH[j][i];
+         else     fEyH[j][i] = 0.;
       }
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,41 +150,26 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Float_t *x, const
 ///
 /// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Double_t *x, const Double_t *y, const Double_t *exL,
-                                     const Double_t *exH, Double_t **eyL, Double_t **eyH, Int_t m)
-   : TGraph(n, x, y), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, Double_t **eyL, Double_t **eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
 {
    if (!CtorAllocate())
       return;
 
-   n = fNpoints * sizeof(Double_t);
+   Int_t n = fNpoints * sizeof(Double_t);
 
-   if (exL)
-      memcpy(fExL, exL, n);
-   else
-      memset(fExL, 0, n);
+   if (exL) memcpy(fExL, exL, n);
+   else     memset(fExL, 0, n);
+   if (exH) memcpy(fExH, exH, n);
+   else     memset(fExH, 0, n);
 
-   if (exH)
-      memcpy(fExH, exH, n);
-   else
-      memset(fExH, 0, n);
-
-   for (Int_t j = 0; j < fNErrorDimensions; j++) {
-      if (eyL)
-         memcpy(fEyL[j], eyL[j], n);
-      else
-         memset(fEyL[j], 0, n);
-
-      if (eyH)
-         memcpy(fEyH[j], eyH[j], n);
-      else
-         memset(fEyH[j], 0, n);
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      if (eyL) fEyL[j].Set(fNpoints, eyL[j]);
+      else     fEyL[j].Reset(0.);
+      if (eyH) fEyH[j].Set(fNpoints, eyH[j]);
+      else     fEyH[j].Reset(0.);
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,9 +179,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t n, Int_t dim, const Double_t *x, cons
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL,
-                                     const TVectorF &tvExH, const TVectorF &tvEyL, const TVectorF &tvEyH, Int_t m)
-   : TGraph(), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL, const TVectorF &tvExH, const TVectorF &tvEyL, const TVectorF &tvEyH, Int_t m) : TGraph(), fNYErrors(1), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -264,18 +197,15 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, c
    Int_t itvEyHL = tvEyH.GetLwb();
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i] = tvX(i + itvXL);
-      fY[i] = tvY(i + itvYL);
-      fExL[i] = tvExL(i + itvExLL);
-      fExH[i] = tvExH(i + itvExHL);
-      fEyL[0][i] = tvEyL(i + itvEyLL);
-      fEyH[0][i] = tvEyH(i + itvEyHL);
+      fX[i] = tvX(itvXL + i);
+      fY[i] = tvY(itvYL + i);
+      fExL[i] = tvExL(itvExLL + i);
+      fExH[i] = tvExH(itvExHL + i);
+      fEyL[0][i] = tvEyL(itvEyLL + i);
+      fEyH[0][i] = tvEyH(itvEyHL + i);
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,9 +215,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, c
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL,
-                                     const TVectorD &tvExH, const TVectorD &tvEyL, const TVectorD &tvEyH, Int_t m)
-   : TGraph(), fNErrorDimensions(1), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL, const TVectorD &tvExH, const TVectorD &tvEyL, const TVectorD &tvEyH, Int_t m) : TGraph(), fNYErrors(1), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -313,10 +241,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, c
       fEyH[0][i] = tvEyH(i + itvEyHL);
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -326,9 +251,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, c
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL,
-                                     const TVectorF &tvExH, const TVectorF *tvEyL, const TVectorF *tvEyH, Int_t m)
-   : TGraph(), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL, const TVectorF &tvExH, const TVectorF *tvEyL, const TVectorF *tvEyH, Int_t m) : TGraph(), fNYErrors(ne), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -349,16 +272,13 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorF &tvX, const TVect
       fExL[i] = tvExL(i + itvExLL);
       fExH[i] = tvExH(i + itvExHL);
 
-      for (Int_t j = 0; j < dim; j++) {
+      for (Int_t j = 0; j < ne; j++) {
          fEyL[j][i] = tvEyL[j](i + tvEyL[j].GetLwb());
          fEyH[j][i] = tvEyH[j](i + tvEyH[j].GetLwb());
       }
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,9 +288,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorF &tvX, const TVect
 /// The number of points in the graph is the minimum of number of points
 /// in tvX and tvY.
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL,
-                                     const TVectorD &tvExH, const TVectorD *tvEyL, const TVectorD *tvEyH, Int_t m)
-   : TGraph(), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL, const TVectorD &tvExH, const TVectorD *tvEyL, const TVectorD *tvEyH, Int_t m) : TGraph(), fNYErrors(ne), fSumErrorsMode(m)
 {
    fNpoints = TMath::Min(tvX.GetNrows(), tvY.GetNrows());
 
@@ -391,24 +309,21 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t dim, const TVectorD &tvX, const TVect
       fExL[i] = tvExL(i + itvExLL);
       fExH[i] = tvExH(i + itvExHL);
 
-      for (Int_t j = 0; j < dim; j++) {
+      for (Int_t j = 0; j < ne; j++) {
          fEyL[j][i] = tvEyL[j](i + tvEyL[j].GetLwb());
          fEyH[j][i] = tvEyH[j](i + tvEyH[j].GetLwb());
       }
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors copy constructor
 
-TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors &tgme) : TGraph(tgme), fEyLSum(nullptr), fEyHSum(nullptr)
+TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors &tgme) : TGraph(tgme)
 {
-   fNErrorDimensions = tgme.fNErrorDimensions;
+   fNYErrors      = tgme.fNYErrors;
    fSumErrorsMode = tgme.fSumErrorsMode;
 
    if (!CtorAllocate())
@@ -418,20 +333,14 @@ TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors &tgme) : TGraph(tgm
    memcpy(fExL, tgme.fExL, n);
    memcpy(fExH, tgme.fExH, n);
 
-   for (Int_t j = 0; j < fNErrorDimensions; j++) {
-      memcpy(fEyL[j], tgme.fEyL[j], n);
-      memcpy(fEyH[j], tgme.fEyH[j], n);
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      fEyL[j] = tgme.fEyL[j];
+      fEyH[j] = tgme.fEyH[j];
+      tgme.fAttFill[j].Copy(fAttFill[j]);
+      tgme.fAttLine[j].Copy(fAttLine[j]);
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
-
-   for (Int_t j = 0; j < fNErrorDimensions; j++) {
-      tgme.GetAttFill(j)->Copy(fAttFill[j]);
-      tgme.GetAttLine(j)->Copy(fAttLine[j]);
-   }
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -442,28 +351,12 @@ TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
    if (this != &tgme) {
       TGraph::operator=(tgme);
       // delete arrays
-      if (fExL)
-         delete[] fExL;
-      if (fExH)
-         delete[] fExH;
+      if (fExL) delete[] fExL;
+      if (fExH) delete[] fExH;
+      if (fEyLSum) delete[] fEyLSum;
+      if (fEyHSum) delete[] fEyHSum;
 
-      if (fEyL) {
-         for (Int_t j = 0; j < fNErrorDimensions; j++)
-            delete[] fEyL[j];
-         delete[] fEyL;
-      }
-      if (fEyH) {
-         for (Int_t j = 0; j < fNErrorDimensions; j++)
-            delete[] fEyH[j];
-         delete[] fEyH;
-      }
-
-      if (fAttFill)
-         delete[] fAttFill;
-      if (fAttLine)
-         delete[] fAttLine;
-
-      fNErrorDimensions = tgme.fNErrorDimensions;
+      fNYErrors      = tgme.fNYErrors;
       fSumErrorsMode = tgme.fSumErrorsMode;
 
       if (!CtorAllocate())
@@ -473,20 +366,14 @@ TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
       memcpy(fExL, tgme.fExL, n);
       memcpy(fExH, tgme.fExH, n);
 
-      for (Int_t j = 0; j < fNErrorDimensions; j++) {
-         memcpy(fEyL[j], tgme.fEyL[j], n);
-         memcpy(fEyH[j], tgme.fEyH[j], n);
+      for (Int_t j = 0; j < fNYErrors; j++) {
+         fEyL[j] = tgme.fEyL[j];
+	 fEyH[j] = tgme.fEyH[j];
+	 tgme.fAttFill[j].Copy(fAttFill[j]);
+	 tgme.fAttLine[j].Copy(fAttLine[j]);
       }
 
-      CalcYErrorSum();
-
-      fAttFill = new TAttFill[fNErrorDimensions];
-      fAttLine = new TAttLine[fNErrorDimensions];
-
-      for (Int_t j = 0; j < fNErrorDimensions; j++) {
-         tgme.GetAttFill(j)->Copy(fAttFill[j]);
-         tgme.GetAttLine(j)->Copy(fAttLine[j]);
-      }
+      CalcYErrorsSum();
    }
    return *this;
 }
@@ -495,9 +382,7 @@ TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
 /// TGraphMultiErrors constructor importing its parameters from the TH1 object passed as argument
 /// the low and high errors are set to the bin error of the histogram.
 
-TGraphMultiErrors::TGraphMultiErrors(const TH1 *h, Int_t dim)
-   : TGraph(h), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr),
-     fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
+TGraphMultiErrors::TGraphMultiErrors(const TH1 *h, Int_t ne) : TGraph(h), fNYErrors(ne), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
    if (!CtorAllocate())
       return;
@@ -508,16 +393,13 @@ TGraphMultiErrors::TGraphMultiErrors(const TH1 *h, Int_t dim)
       fEyL[0][i] = h->GetBinError(i + 1);
       fEyH[0][i] = h->GetBinError(i + 1);
 
-      for (Int_t j = 1; j < fNErrorDimensions; j++) {
+      for (Int_t j = 1; j < fNYErrors; j++) {
          fEyL[j][i] = 0.;
          fEyH[j][i] = 0.;
       }
    }
 
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 
    TAttFill::Copy(fAttFill[0]);
    TAttLine::Copy(fAttLine[0]);
@@ -527,9 +409,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TH1 *h, Int_t dim)
 /// Creates a TGraphMultiErrors by dividing two input TH1 histograms:
 /// pass/total. (see TGraphMultiErrors::Divide)
 
-TGraphMultiErrors::TGraphMultiErrors(const TH1 *pass, const TH1 *total, Int_t dim, Option_t *option)
-   : TGraph(pass ? pass->GetNbinsX() : 0), fNErrorDimensions(dim), fEyLSum(nullptr), fEyHSum(nullptr),
-     fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
+TGraphMultiErrors::TGraphMultiErrors(const TH1 *pass, const TH1 *total, Int_t ne, Option_t *option) : TGraph(pass ? pass->GetNbinsX() : 0), fNYErrors(ne), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
    if (!pass || !total) {
       Error("TGraphMultiErrors", "Invalid histogram pointers");
@@ -549,10 +429,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TH1 *pass, const TH1 *total, Int_t di
    pass->TAttMarker::Copy(*this);
 
    Divide(pass, total, option);
-   CalcYErrorSum();
-
-   fAttFill = new TAttFill[fNErrorDimensions];
-   fAttLine = new TAttLine[fNErrorDimensions];
+   CalcYErrorsSum();
 
    TAttFill::Copy(fAttFill[0]);
    TAttLine::Copy(fAttLine[0]);
@@ -563,31 +440,183 @@ TGraphMultiErrors::TGraphMultiErrors(const TH1 *pass, const TH1 *total, Int_t di
 
 TGraphMultiErrors::~TGraphMultiErrors()
 {
-   if (fExL)
+   if (fExL) delete[] fExL;
+   if (fExH) delete[] fExH;
+   fEyL.resize(0);
+   fEyH.resize(0);
+   if (fEyLSum) delete[] fEyLSum;
+   if (fEyHSum) delete[] fEyHSum;
+   fAttFill.resize(0);
+   fAttLine.resize(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Should be called from ctors after fNpoints has been set
+/// Note: This function should be called only from the constructor
+/// since it does not delete previously existing arrays
+
+Bool_t TGraphMultiErrors::CtorAllocate()
+{
+   if (!fNpoints || !fNYErrors) {
+      fExL = fExH = NULL;
+      fEyL.resize(0);
+      fEyH.resize(0);
+      return kFALSE;
+   }
+
+   fExL = new Double_t[fMaxSize];
+   fExH = new Double_t[fMaxSize];
+   fEyL.resize(fNYErrors, TArrayD(fMaxSize));
+   fEyH.resize(fNYErrors, TArrayD(fMaxSize));
+   fEyLSum = new Double_t[fMaxSize];
+   fEyHSum = new Double_t[fMaxSize];
+   fAttFill.resize(fNYErrors);
+   fAttLine.resize(fNYErrors);
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy and release.
+
+void TGraphMultiErrors::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin)
+{
+   CopyPoints(newarrays, ibegin, iend, obegin);
+   if (newarrays) {
+      delete[] fX;
+      fX = newarrays[0];
+      delete[] fY;
+      fY = newarrays[1];
+
       delete[] fExL;
-   if (fExH)
+      fExL = newarrays[2];
       delete[] fExH;
+      fExH = newarrays[3];
 
-   if (fEyL) {
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         delete[] fEyL[j];
-      delete[] fEyL;
-   }
-   if (fEyH) {
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         delete[] fEyH[j];
-      delete[] fEyH;
+      delete[] newarrays;
    }
 
-   if (fEyLSum)
-      delete[] fEyLSum;
-   if (fEyHSum)
-      delete[] fEyHSum;
+   CalcYErrorsSum();
+}
 
-   if (fAttFill)
-      delete[] fAttFill;
-   if (fAttLine)
-      delete[] fAttLine;
+////////////////////////////////////////////////////////////////////////////////
+/// Copy errors from fE*** to arrays[***]
+/// or to f*** Copy points.
+
+Bool_t TGraphMultiErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin)
+{
+   if (TGraph::CopyPoints(arrays, ibegin, iend, obegin)) {
+      Int_t n = (iend - ibegin) * sizeof(Double_t);
+
+      if (arrays) {
+         memmove(&arrays[2][obegin], &fExL[ibegin], n);
+         memmove(&arrays[3][obegin], &fExH[ibegin], n);
+      } else {
+         memmove(&fExL[obegin], &fExL[ibegin], n);
+         memmove(&fExH[obegin], &fExH[ibegin], n);
+      }
+
+      return kTRUE;
+   } else
+      return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set zero values for point arrays in the range [begin, end)
+
+void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
+{
+   if (!from_ctor)
+      TGraph::FillZero(begin, end, from_ctor);
+
+   Int_t n = (end - begin) * sizeof(Double_t);
+   memset(fExL + begin, 0, n);
+   memset(fExH + begin, 0, n);
+   memset(fEyLSum + begin, 0, n);
+   memset(fEyHSum + begin, 0, n);
+
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      memset(fEyL[j].GetArray() + begin, 0, n);
+      memset(fEyH[j].GetArray() + begin, 0, n);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Recalculates the summed y error arrays
+
+void TGraphMultiErrors::CalcYErrorsSum()
+{
+   if (fEyLSum) delete[] fEyLSum;
+   if (fEyHSum) delete[] fEyHSum;
+
+   fEyLSum = new Double_t[fNpoints];
+   fEyHSum = new Double_t[fNpoints];
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      fEyLSum[i] = GetErrorYlow(i);
+      fEyHSum[i] = GetErrorYhigh(i);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///  protected function to perform the merge operation of a graph with multiple asymmetric errors
+
+Bool_t TGraphMultiErrors::DoMerge(const TGraph *tg)
+{
+   if (tg->GetN() == 0)
+      return kFALSE;
+
+   if (tg->IsA() == TGraphMultiErrors::Class()) {
+      auto tgme = (TGraphMultiErrors *)tg;
+
+      for (Int_t i = 0; i < tgme->GetN(); i++) {
+         Int_t ipoint = GetN();
+         Double_t x, y;
+         tgme->GetPoint(i, x, y);
+         SetPoint(ipoint, x, y);
+         SetPointEX(ipoint, tgme->GetErrorXlow(i), tgme->GetErrorXhigh(i));
+         for (Int_t j = 0; j < tgme->GetNYErrors(); j++)
+            SetPointEY(ipoint, j, tgme->GetErrorYlow(i, j), tgme->GetErrorYhigh(i, j));
+      }
+
+      return kTRUE;
+   } else {
+      Warning("DoMerge", "Merging a %s is not compatible with a TGraphMultiErrors - Errors will be ignored", tg->IsA()->GetName());
+      return TGraph::DoMerge(tg);
+   }
+
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Swap points.
+
+void TGraphMultiErrors::SwapPoints(Int_t pos1, Int_t pos2)
+{
+   SwapValues(fExL, pos1, pos2);
+   SwapValues(fExH, pos1, pos2);
+
+   for (Int_t j = 0; j <= fNYErrors; j++) {
+      SwapValues(fEyL[j].GetArray(), pos1, pos2);
+      SwapValues(fEyH[j].GetArray(), pos1, pos2);
+   }
+
+   TGraph::SwapPoints(pos1, pos2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new y error to the graph and fill it with the values from eyL and eyH
+
+void TGraphMultiErrors::AddYError(Int_t np, const Double_t *eyL, const Double_t *eyH)
+{
+   fEyL.push_back(TArrayD(np, eyL));
+   fEyH.push_back(TArrayD(np, eyH));
+   fEyL.back().Set(fNpoints);
+   fEyH.back().Set(fNpoints);
+   fAttFill.push_back(TAttFill());
+   fAttLine.push_back(TAttLine());
+
+   fNYErrors += 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -914,13 +943,13 @@ void TGraphMultiErrors::Divide(const TH1 *pass, const TH1 *total, Option_t *opt)
 
       // use bin contents
       else {
-         t = int(total->GetBinContent(b) + 0.5);
-         p = int(pass->GetBinContent(b) + 0.5);
+	  t = TMath::Nint(total->GetBinContent(b));
+	  p = TMath::Nint(pass->GetBinContent(b));
 
          if (bPoissonRatio)
             t += p;
 
-         if (!t && !plot0Bins)
+         if (t == 0. && !plot0Bins)
             continue; // skip bins with total = 0
       }
 
@@ -981,7 +1010,7 @@ void TGraphMultiErrors::Divide(const TH1 *pass, const TH1 *total, Option_t *opt)
             }
          } else {
             // when not using weights (all cases) or in case of  Poisson ratio with weights
-            if (t)
+            if (t != 0.)
                eff = ((Double_t)p) / t;
 
             low = pBound(t, p, conf, false);
@@ -1048,7 +1077,7 @@ void TGraphMultiErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
          xmax = fX[i] + fExH[i];
 
       Double_t eyLMax = 0., eyHMax = 0.;
-      for (Int_t j = 0; j < fNErrorDimensions; j++) {
+      for (Int_t j = 0; j < fNYErrors; j++) {
          eyLMax = TMath::Max(eyLMax, fEyL[j][i]);
          eyHMax = TMath::Max(eyHMax, fEyH[j][i]);
       }
@@ -1069,240 +1098,20 @@ void TGraphMultiErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy and release.
+/// Deletes the y error with the index e
+/// Note that you must keep at least 1 error
 
-void TGraphMultiErrors::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin)
+void TGraphMultiErrors::DeleteYError(Int_t e)
 {
-   CopyPoints(newarrays, ibegin, iend, obegin);
-   if (newarrays) {
-      delete[] fX;
-      fX = newarrays[0];
-      delete[] fY;
-      fY = newarrays[1];
+   if (fNYErrors == 1 || e >= fNYErrors)
+      return;
 
-      delete[] fExL;
-      fExL = newarrays[2];
-      delete[] fExH;
-      fExH = newarrays[3];
+   fEyL.erase(fEyL.begin() + e);
+   fEyH.erase(fEyH.begin() + e);
+   fAttFill.erase(fAttFill.begin() + e);
+   fAttLine.erase(fAttLine.begin() + e);
 
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         delete[] fEyL[j];
-      delete[] fEyL;
-      fEyL = new Double_t *[fNErrorDimensions];
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         fEyL[j] = newarrays[2 * j + 4];
-
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         delete[] fEyH[j];
-      delete[] fEyH;
-      fEyH = new Double_t *[fNErrorDimensions];
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         fEyH[j] = newarrays[2 * j + 5];
-
-      delete[] newarrays;
-   }
-
-   CalcYErrorSum();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy errors from fE*** to arrays[***]
-/// or to f*** Copy points.
-
-Bool_t TGraphMultiErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin)
-{
-   if (TGraph::CopyPoints(arrays, ibegin, iend, obegin)) {
-      Int_t n = (iend - ibegin) * sizeof(Double_t);
-
-      if (arrays) {
-         memmove(&arrays[2][obegin], &fExL[ibegin], n);
-         memmove(&arrays[3][obegin], &fExH[ibegin], n);
-
-         for (Int_t j = 0; j < fNErrorDimensions; j++) {
-            memmove(&arrays[2 * j + 4][obegin], &fEyL[j][ibegin], n);
-            memmove(&arrays[2 * j + 5][obegin], &fEyH[j][ibegin], n);
-         }
-      } else {
-         memmove(&fExL[obegin], &fExL[ibegin], n);
-         memmove(&fExH[obegin], &fExH[ibegin], n);
-
-         for (Int_t j = 0; j < fNErrorDimensions; j++) {
-            memmove(&fEyL[j][obegin], &fEyL[j][ibegin], n);
-            memmove(&fEyH[j][obegin], &fEyH[j][ibegin], n);
-         }
-      }
-
-      return kTRUE;
-   } else
-      return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy and release.
-///
-/// Necessary for correct treatment of multiple y error dimensions
-
-void TGraphMultiErrors::CopyAndReleaseY(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin)
-{
-   CopyPointsY(newarrays, ibegin, TMath::Min(iend, fNErrorDimensions), obegin);
-   if (newarrays) {
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         delete[] fEyL[j];
-      delete[] fEyL;
-      fEyL = new Double_t *[iend - ibegin];
-      for (Int_t j = 0; j < iend - ibegin; j++)
-         fEyL[j] = newarrays[2 * j];
-
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         delete[] fEyH[j];
-      delete[] fEyH;
-      fEyH = new Double_t *[iend - ibegin];
-      for (Int_t j = 0; j < iend - ibegin; j++)
-         fEyH[j] = newarrays[2 * j + 1];
-
-      delete[] newarrays;
-   }
-
-   CalcYErrorSum();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy errors from fE*** to arrays[***]
-/// or to f*** Copy points.
-///
-/// Necessary for correct treatment of multiple y error dimensions
-
-Bool_t TGraphMultiErrors::CopyPointsY(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin)
-{
-   Int_t n = fNpoints * sizeof(Double_t);
-
-   for (Int_t j = ibegin; j < iend; j++) {
-      if (arrays) {
-         memmove(&arrays[2 * j - ibegin + obegin][0], &fEyL[j][0], n);
-         memmove(&arrays[2 * j + 1 - ibegin + obegin][0], &fEyH[j][0], n);
-      } else {
-         memmove(&fEyL[j - ibegin + obegin][0], &fEyL[j][0], n);
-         memmove(&fEyH[j - ibegin + obegin][0], &fEyH[j][0], n);
-      }
-   }
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Should be called from ctors after fNpoints has been set
-/// Note: This function should be called only from the constructor
-/// since it does not delete previously existing arrays
-
-Bool_t TGraphMultiErrors::CtorAllocate()
-{
-   if (!fNpoints || !fNErrorDimensions) {
-      fExL = fExH = nullptr;
-      fEyL = fEyH = nullptr;
-      return kFALSE;
-   }
-
-   fExL = new Double_t[fMaxSize];
-   fExH = new Double_t[fMaxSize];
-   fEyL = new Double_t *[fNErrorDimensions];
-   fEyH = new Double_t *[fNErrorDimensions];
-   fEyLSum = new Double_t[fNpoints];
-   fEyHSum = new Double_t[fNpoints];
-
-   for (Int_t j = 0; j < fNErrorDimensions; j++) {
-      fEyL[j] = new Double_t[fMaxSize];
-      fEyH[j] = new Double_t[fMaxSize];
-   }
-
-   return kTRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///  protected function to perform the merge operation of a graph with multiple asymmetric errors
-
-Bool_t TGraphMultiErrors::DoMerge(const TGraph *tg)
-{
-   if (tg->GetN() == 0)
-      return kFALSE;
-
-   if (tg->IsA() == TGraphMultiErrors::Class()) {
-      auto tgme = (TGraphMultiErrors *)tg;
-
-      for (Int_t i = 0; i < tgme->GetN(); i++) {
-         Int_t ipoint = GetN();
-         Double_t x, y;
-         tgme->GetPoint(i, x, y);
-         SetPoint(ipoint, x, y);
-         SetPointEX(ipoint, tgme->GetErrorXlow(i), tgme->GetErrorXhigh(i));
-         for (Int_t j = 0; j < tgme->GetNErrorDimensions(); j++)
-            SetPointEY(ipoint, j, tgme->GetErrorYlow(i, j), tgme->GetErrorYhigh(i, j));
-      }
-
-      return kTRUE;
-   } else {
-      Warning("DoMerge", "Merging a %s is not compatible with a TGraphMultiErrors - Errors will be ignored",
-              tg->IsA()->GetName());
-      return TGraph::DoMerge(tg);
-   }
-
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set zero values for point arrays in the range [begin, end)
-
-void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
-{
-   if (!from_ctor)
-      TGraph::FillZero(begin, end, from_ctor);
-
-   Int_t n = (end - begin) * sizeof(Double_t);
-   memset(fExL + begin, 0, n);
-   memset(fExH + begin, 0, n);
-   memset(fEyLSum + begin, 0, n);
-   memset(fEyHSum + begin, 0, n);
-
-   for (Int_t j = 0; j < fNErrorDimensions; j++) {
-      memset(fEyL[j] + begin, 0, n);
-      memset(fEyH[j] + begin, 0, n);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set zero values for point arrays in the range [begin, end)
-///
-/// Necessary for correct treatment of multiple y error dimensions
-
-void TGraphMultiErrors::FillZeroY(Int_t begin, Int_t end)
-{
-   Int_t n = fNpoints * sizeof(Double_t);
-
-   for (Int_t j = begin; j < end; j++) {
-      memset(fEyL[j], 0, n);
-      memset(fEyH[j], 0, n);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get x coordinate of point i
-
-Double_t TGraphMultiErrors::GetPointX(Int_t i) const
-{
-   if (i < 0 || i >= fNpoints || !fX)
-      return -1.;
-
-   return fX[i];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get y coordinate of point i
-
-Double_t TGraphMultiErrors::GetPointY(Int_t i) const
-{
-   if (i < 0 || i >= fNpoints || !fY)
-      return -1.;
-
-   return fY[i];
+   fNYErrors -= 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1326,7 +1135,7 @@ Double_t TGraphMultiErrors::GetErrorX(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorY(Int_t i) const
 {
-   if (i < 0 || i >= fNpoints || (!fEyL && !fEyH))
+   if (i < 0 || i >= fNpoints || (fEyL.empty() && fEyH.empty()))
       return -1.;
 
    Double_t eyL = GetErrorYlow(i);
@@ -1335,16 +1144,16 @@ Double_t TGraphMultiErrors::GetErrorY(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get error on y coordinate in dimension dim for point i
+/// Get error e on y coordinate for point i
 /// In case of asymmetric errors the mean of the square sum is returned
 
-Double_t TGraphMultiErrors::GetErrorY(Int_t i, Int_t dim) const
+Double_t TGraphMultiErrors::GetErrorY(Int_t i, Int_t e) const
 {
-   if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || (!fEyL && !fEyH))
+   if (i < 0 || i >= fNpoints || e >= fNYErrors || (fEyL.empty() && fEyH.empty()))
       return -1.;
 
-   Double_t eyL = fEyL ? fEyL[dim][i] : 0.;
-   Double_t eyH = fEyH ? fEyH[dim][i] : 0.;
+   Double_t eyL = fEyL.empty() ? 0. : fEyL[e][i];
+   Double_t eyH = fEyH.empty() ? 0. : fEyH[e][i];
    return TMath::Sqrt((eyL * eyL + eyH * eyH) / 2.);
 }
 
@@ -1376,19 +1185,19 @@ Double_t TGraphMultiErrors::GetErrorXhigh(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorYlow(Int_t i) const
 {
-   if (i < 0 || i >= fNpoints || !fEyL)
+   if (i < 0 || i >= fNpoints || fEyL.empty())
       return -1.;
 
    if (fSumErrorsMode == TGraphMultiErrors::kOnlyFirst)
       return fEyL[0][i];
    else if (fSumErrorsMode == TGraphMultiErrors::kSquareSum) {
       Double_t sum = 0.;
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
+      for (Int_t j = 0; j < fNYErrors; j++)
          sum += fEyL[j][i] * fEyL[j][i];
       return TMath::Sqrt(sum);
-   } else if (fSumErrorsMode == TGraphMultiErrors::kSum) {
+   } else if (fSumErrorsMode == TGraphMultiErrors::kAbsSum) {
       Double_t sum = 0.;
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
+      for (Int_t j = 0; j < fNYErrors; j++)
          sum += fEyL[j][i];
       return sum;
    }
@@ -1402,19 +1211,19 @@ Double_t TGraphMultiErrors::GetErrorYlow(Int_t i) const
 
 Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i) const
 {
-   if (i < 0 || i >= fNpoints || !fEyH)
+   if (i < 0 || i >= fNpoints || fEyH.empty())
       return -1.;
 
    if (fSumErrorsMode == TGraphMultiErrors::kOnlyFirst)
       return fEyH[0][i];
    else if (fSumErrorsMode == TGraphMultiErrors::kSquareSum) {
       Double_t sum = 0.;
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
+      for (Int_t j = 0; j < fNYErrors; j++)
          sum += fEyH[j][i] * fEyH[j][i];
       return TMath::Sqrt(sum);
-   } else if (fSumErrorsMode == TGraphMultiErrors::kSum) {
+   } else if (fSumErrorsMode == TGraphMultiErrors::kAbsSum) {
       Double_t sum = 0.;
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
+      for (Int_t j = 0; j < fNYErrors; j++)
          sum += fEyH[j][i];
       return sum;
    }
@@ -1423,189 +1232,156 @@ Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get low error on y coordinate in dimension dim for point i
+/// Get low error e on y coordinate for point i
 
-Double_t TGraphMultiErrors::GetErrorYlow(Int_t i, Int_t dim) const
+Double_t TGraphMultiErrors::GetErrorYlow(Int_t i, Int_t e) const
 {
-   if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || !fEyL)
+   if (i < 0 || i >= fNpoints || e >= fNYErrors || fEyL.empty())
       return -1.;
-   else
-      return fEyL[dim][i];
+
+   return fEyL[e][i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get high error on y coordinate in dimension dim for point i
+/// Get high error e on y coordinate for point i
 
-Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t dim) const
+Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t e) const
 {
-   if (i < 0 || i >= fNpoints || dim >= fNErrorDimensions || !fEyH)
+   if (i < 0 || i >= fNpoints || e >= fNYErrors || fEyH.empty())
       return -1.;
+
+   return fEyH[e][i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get all low errors on y coordinates as an array summed according to fSumErrorsMode
+
+Double_t *TGraphMultiErrors::GetEYlow()
+{
+   if (!fEyLSum)
+      CalcYErrorsSum();
+
+   return fEyLSum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get all high errors on y coordinates as an array summed according to fSumErrorsMode
+
+Double_t *TGraphMultiErrors::GetEYhigh()
+{
+   if (!fEyHSum)
+      CalcYErrorsSum();
+
+   return fEyHSum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get all low errors e on y coordinates as an array
+
+Double_t *TGraphMultiErrors::GetEYlow(Int_t e)
+{
+   if (e >= fNYErrors || fEyL.empty())
+      return NULL;
    else
-      return fEyH[dim][i];
+      return fEyL[e].GetArray();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get all high errors e on y coordinates as an array
+
+Double_t *TGraphMultiErrors::GetEYhigh(Int_t e)
+{
+   if (e >= fNYErrors || fEyH.empty())
+      return NULL;
+   else
+      return fEyH[e].GetArray();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get AttFill pointer for specified error dimension
 
-TAttFill *TGraphMultiErrors::GetAttFill(Int_t dim) const
+TAttFill *TGraphMultiErrors::GetAttFill(Int_t e)
 {
-   if (dim >= 0 && dim < fNErrorDimensions)
-      return (fAttFill + dim);
+   if (e >= 0 && e < fNYErrors)
+      return &fAttFill.at(e);
    else
-      return nullptr;
+      return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get AttLine pointer for specified error dimension
 
-TAttLine *TGraphMultiErrors::GetAttLine(Int_t dim) const
+TAttLine *TGraphMultiErrors::GetAttLine(Int_t e)
 {
-   if (dim >= 0 && dim < fNErrorDimensions)
-      return (fAttLine + dim);
+   if (e >= 0 && e < fNYErrors)
+      return &fAttLine.at(e);
    else
-      return nullptr;
+      return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Fill Color for specified error dimension (-1 = Global and x errors)
+/// Get Fill Color for specified error e (-1 = Global and x errors)
 
-Color_t TGraphMultiErrors::GetFillColor(Int_t dim) const
+Color_t TGraphMultiErrors::GetFillColor(Int_t e) const
 {
-   if (dim == -1)
+   if (e == -1)
       return GetFillColor();
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      return fAttFill[dim].GetFillColor();
+   else if (e >= 0 && e < fNYErrors)
+      return fAttFill[e].GetFillColor();
    else
       return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Fill Style for specified error dimension (-1 = Global and x errors)
+/// Get Fill Style for specified error e (-1 = Global and x errors)
 
-Style_t TGraphMultiErrors::GetFillStyle(Int_t dim) const
+Style_t TGraphMultiErrors::GetFillStyle(Int_t e) const
 {
-   if (dim == -1)
+   if (e == -1)
       return GetFillStyle();
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      return fAttFill[dim].GetFillStyle();
+   else if (e >= 0 && e < fNYErrors)
+      return fAttFill[e].GetFillStyle();
    else
       return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Line Color for specified error dimension (-1 = Global and x errors)
+/// Get Line Color for specified error e (-1 = Global and x errors)
 
-Color_t TGraphMultiErrors::GetLineColor(Int_t dim) const
+Color_t TGraphMultiErrors::GetLineColor(Int_t e) const
 {
-   if (dim == -1)
+   if (e == -1)
       return GetLineColor();
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      return fAttLine[dim].GetLineColor();
+   else if (e >= 0 && e < fNYErrors)
+      return fAttLine[e].GetLineColor();
    else
       return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Line Style for specified error dimension (-1 = Global and x errors)
+/// Get Line Style for specified error e (-1 = Global and x errors)
 
-Style_t TGraphMultiErrors::GetLineStyle(Int_t dim) const
+Style_t TGraphMultiErrors::GetLineStyle(Int_t e) const
 {
-   if (dim == -1)
+   if (e == -1)
       return GetLineStyle();
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      return fAttLine[dim].GetLineStyle();
+   else if (e >= 0 && e < fNYErrors)
+      return fAttLine[e].GetLineStyle();
    else
       return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Line Width for specified error dimension (-1 = Global and x errors)
+/// Get Line Width for specified error e (-1 = Global and x errors)
 
-Width_t TGraphMultiErrors::GetLineWidth(Int_t dim) const
+Width_t TGraphMultiErrors::GetLineWidth(Int_t e) const
 {
-   if (dim == -1)
+   if (e == -1)
       return GetLineWidth();
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      return fAttLine[dim].GetLineWidth();
+   else if (e >= 0 && e < fNYErrors)
+      return fAttLine[e].GetLineWidth();
    else
       return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Recalculates the summed y error arrays
-
-void TGraphMultiErrors::CalcYErrorSum()
-{
-   if (fEyLSum)
-      delete[] fEyLSum;
-   if (fEyHSum)
-      delete[] fEyHSum;
-
-   fEyLSum = new Double_t[fNpoints];
-   fEyHSum = new Double_t[fNpoints];
-
-   for (Int_t i = 0; i < fNpoints; i++) {
-      fEyLSum[i] = GetErrorYlow(i);
-      fEyHSum[i] = GetErrorYhigh(i);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get all low errors on y coordinates in dimension dim as an array
-
-Double_t *TGraphMultiErrors::GetEYlow(Int_t dim)
-{
-   if (dim >= fNErrorDimensions || !fEyL)
-      return nullptr;
-   else
-      return fEyL[dim];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get all high errors on y coordinates in dimension dim as an array
-
-Double_t *TGraphMultiErrors::GetEYhigh(Int_t dim)
-{
-   if (dim >= fNErrorDimensions || !fEyH)
-      return nullptr;
-   else
-      return fEyH[dim];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Implementation to get information on point of graph at cursor position
-/// Adapted from class TH1
-
-char *TGraphMultiErrors::GetObjectInfo(Int_t px, Int_t py) const
-{
-   // localize point
-   Int_t ipoint = -2;
-   Int_t i;
-   // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
-      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
-      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
-
-      if (dpx * dpx + dpy * dpy < 25) {
-         ipoint = i;
-         break;
-      }
-   }
-
-   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
-
-   if (ipoint == -2)
-      return Form("x=%g, y=%g", x, y);
-
-   Double_t xval = fX[ipoint];
-   Double_t yval = fY[ipoint];
-   // Double_t xvalErr     = fEx[ipoint];
-   // Double_t yvalErrStat = fEyStat[ipoint];
-   // Double_t yvalErrSysL = fEySysL[ipoint];
-   // Double_t yvalErrSysH = fEySysH[ipoint];
-
-   return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1619,11 +1395,11 @@ void TGraphMultiErrors::Print(Option_t *) const
          printf(", exl[%d]=%g", i, fExL[i]);
       if (fExH)
          printf(", exh[%d]=%g", i, fExH[i]);
-      if (fEyL)
-         for (Int_t j = 0; j < fNErrorDimensions; j++)
+      if (!fEyL.empty())
+         for (Int_t j = 0; j < fNYErrors; j++)
             printf(", eyl[%d][%d]=%g", j, i, fEyL[j][i]);
-      if (fEyH)
-         for (Int_t j = 0; j < fNErrorDimensions; j++)
+      if (!fEyH.empty())
+         for (Int_t j = 0; j < fNYErrors; j++)
             printf(", eyh[%d][%d]=%g", j, i, fEyH[j][i]);
       printf("\n");
    }
@@ -1632,36 +1408,35 @@ void TGraphMultiErrors::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
 {
    char quote = '"';
-   out << "    " << std::endl;
+   out << "   " << std::endl;
 
    if (gROOT->ClassSaved(TGraphMultiErrors::Class()))
-      out << "    ";
+      out << "   ";
    else
-      out << "    TGraphMultiErrors* ";
+      out << "   TGraphMultiErrors* ";
 
-   out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNErrorDimensions << ");" << std::endl;
-   out << "    tgme->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "    tgme->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNYErrors << ");" << std::endl;
+   out << "   tgme->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   tgme->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    SaveFillAttributes(out, "tgme", 0, 1001);
    SaveLineAttributes(out, "tgme", 1, 1, 1);
    SaveMarkerAttributes(out, "tgme", 1, 1, 1);
 
-   for (Int_t j = 0; j < fNErrorDimensions; j++) {
-      SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);
-      SaveLineAttributes(out, Form("tgme->GetAttLine(%d)", j), 1, 1, 1);
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      fAttFill[j].SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);
+      fAttLine[j].SaveLineAttributes(out, Form("tgme->GetAttLine(%d)", j), 1, 1, 1);
    }
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      out << "    tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");" << std::endl;
-      out << "    tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");" << std::endl;
+      out << "   tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");" << std::endl;
+      out << "   tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");" << std::endl;
 
-      for (Int_t j = 0; j < fNErrorDimensions; j++)
-         out << "    tgme->SetPointEY(" << i << ", " << j << ", " << fEyL[j][i] << ", " << fEyH[j][i] << ");"
-             << std::endl;
+      for (Int_t j = 0; j < fNYErrors; j++)
+         out << "   tgme->SetPointEY(" << i << ", " << j << ", " << fEyL[j][i] << ", " << fEyH[j][i] << ");" << std::endl;
    }
 
    static Int_t frameNumber = 0;
@@ -1671,8 +1446,8 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s", hname.Data()));
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "    tgme->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
-      out << "    " << std::endl;
+      out << "   tgme->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   " << std::endl;
    }
 
    // save list of functions
@@ -1681,47 +1456,17 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    while ((obj = next())) {
       obj->SavePrimitive(out, "nodraw");
       if (obj->InheritsFrom("TPaveStats")) {
-         out << "    tgme->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "    ptstats->SetParent(tgme->GetListOfFunctions());" << std::endl;
+         out << "   tgme->GetListOfFunctions()->Add(ptstats);" << std::endl;
+         out << "   ptstats->SetParent(tgme->GetListOfFunctions());" << std::endl;
       } else
-         out << "    tgme->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
+         out << "   tgme->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
    }
 
    const char *l = strstr(option, "multigraph");
    if (l)
-      out << "    multigraph->Add(tgme, " << quote << l + 10 << quote << ");" << std::endl;
+      out << "   multigraph->Add(tgme, " << quote << l + 10 << quote << ");" << std::endl;
    else
-      out << "    tgme->Draw(" << quote << option << quote << ");" << std::endl;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set x coordinate of point i
-
-void TGraphMultiErrors::SetPointX(Int_t i, Double_t x)
-{
-   if (i < 0)
-      return;
-
-   if (i >= fNpoints) {
-      // re-allocate the object
-      TGraphMultiErrors::SetPoint(i, x, 0.);
-   } else
-      fX[i] = x;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set y coordinate of point i
-
-void TGraphMultiErrors::SetPointY(Int_t i, Double_t y)
-{
-   if (i < 0)
-      return;
-
-   if (i >= fNpoints) {
-      // re-allocate the object
-      TGraphMultiErrors::SetPoint(i, 0., y);
-   } else
-      fY[i] = y;
+      out << "   tgme->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1729,8 +1474,7 @@ void TGraphMultiErrors::SetPointY(Int_t i, Double_t y)
 ///
 /// Up to 3 y error dimensions possible.
 
-void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2,
-                                      Double_t eyH2, Double_t eyL3, Double_t eyH3)
+void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2, Double_t eyH2, Double_t eyL3, Double_t eyH3)
 {
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
@@ -1754,37 +1498,37 @@ void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1,
 
    SetPointEX(ipoint, exL, exH);
 
-   if (fNErrorDimensions > 0)
+   if (fNYErrors > 0)
       SetPointEY(ipoint, 0, eyL1, eyH1);
-   if (fNErrorDimensions > 1)
+   if (fNYErrors > 1)
       SetPointEY(ipoint, 1, eyL2, eyH2);
-   if (fNErrorDimensions > 2)
+   if (fNYErrors > 2)
       SetPointEY(ipoint, 2, eyL3, eyH3);
    gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ex and ey values for point number i.
+/// Set ex and ey values for point i.
 
-void TGraphMultiErrors::SetPointError(Int_t i, Double_t exL, Double_t exH, Double_t *eyL, Double_t *eyH)
+void TGraphMultiErrors::SetPointError(Int_t i, Int_t ne, Double_t exL, Double_t exH, const Double_t *eyL, const Double_t *eyH)
 {
    SetPointEX(i, exL, exH);
-   SetPointEY(i, eyL, eyH);
+   SetPointEY(i, ne, eyL, eyH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ex values for point number i.
+/// Set ex values for point i.
 
 void TGraphMultiErrors::SetPointEX(Int_t i, Double_t exL, Double_t exH)
 {
-   SetPointEXL(i, exL);
-   SetPointEXH(i, exH);
+   SetPointEXlow(i, exL);
+   SetPointEXhigh(i, exH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set exL value for point number i.
+/// Set exL value for point i.
 
-void TGraphMultiErrors::SetPointEXL(Int_t i, Double_t exL)
+void TGraphMultiErrors::SetPointEXlow(Int_t i, Double_t exL)
 {
    if (i < 0)
       return;
@@ -1798,9 +1542,9 @@ void TGraphMultiErrors::SetPointEXL(Int_t i, Double_t exL)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set exH value for point number i.
+/// Set exH value for point i.
 
-void TGraphMultiErrors::SetPointEXH(Int_t i, Double_t exH)
+void TGraphMultiErrors::SetPointEXhigh(Int_t i, Double_t exH)
 {
    if (i < 0)
       return;
@@ -1814,329 +1558,211 @@ void TGraphMultiErrors::SetPointEXH(Int_t i, Double_t exH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ey values for point number i.
+/// Set ey values for point i.
 
-void TGraphMultiErrors::SetPointEY(Int_t i, Double_t *eyL, Double_t *eyH)
+void TGraphMultiErrors::SetPointEY(Int_t i, Int_t ne, const Double_t *eyL, const Double_t *eyH)
 {
-   SetPointEYL(i, eyL);
-   SetPointEYH(i, eyH);
+   SetPointEYlow(i, ne, eyL);
+   SetPointEYhigh(i, ne, eyH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set eyL values for point number i.
+/// Set eyL values for point i.
 
-void TGraphMultiErrors::SetPointEYL(Int_t i, Double_t *eyL)
+void TGraphMultiErrors::SetPointEYlow(Int_t i, Int_t ne, const Double_t *eyL)
 {
-   for (Int_t j = 0; j < fNErrorDimensions; j++)
-      SetPointEYL(i, j, eyL[j]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set eyH values for point number i.
-
-void TGraphMultiErrors::SetPointEYH(Int_t i, Double_t *eyH)
-{
-   for (Int_t j = 0; j < fNErrorDimensions; j++)
-      SetPointEYH(i, j, eyH[j]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set ey values in dimension dim for point number i.
-
-void TGraphMultiErrors::SetPointEY(Int_t i, Int_t dim, Double_t eyL, Double_t eyH)
-{
-   SetPointEYL(i, dim, eyL);
-   SetPointEYH(i, dim, eyH);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set eyL value in dimension dim for point number i.
-
-void TGraphMultiErrors::SetPointEYL(Int_t i, Int_t dim, Double_t eyL)
-{
-   if (i < 0 || dim < 0)
-      return;
-
-   if (i >= fNpoints)
-      // re-allocate the object
-      TGraphMultiErrors::SetPoint(i, 0., 0.);
-
-   if (dim >= fNErrorDimensions)
-      SetNErrorDimensions(dim + 1);
-
-   fEyL[dim][i] = eyL;
-   fEyLSum[i] = GetErrorYlow(i);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set eyH value in dimension dim for point number i.
-
-void TGraphMultiErrors::SetPointEYH(Int_t i, Int_t dim, Double_t eyH)
-{
-   if (i < 0 || dim < 0)
-      return;
-
-   if (i >= fNpoints)
-      // re-allocate the object
-      TGraphMultiErrors::SetPoint(i, 0., 0.);
-
-   if (dim >= fNErrorDimensions)
-      SetNErrorDimensions(dim + 1);
-
-   fEyH[dim][i] = eyH;
-   fEyHSum[i] = GetErrorYhigh(i);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set ey values in dimension dim.
-
-void TGraphMultiErrors::SetDimensionEY(Int_t dim, Double_t *eyL, Double_t *eyH)
-{
-   SetDimensionEYL(dim, eyL);
-   SetDimensionEYH(dim, eyH);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set eyL values in dimension dim.
-
-void TGraphMultiErrors::SetDimensionEYL(Int_t dim, Double_t *eyL)
-{
-   for (Int_t i = 0; i < fNpoints; i++)
-      SetPointEYL(i, dim, eyL[i]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set eyH values in dimension dim.
-
-void TGraphMultiErrors::SetDimensionEYH(Int_t dim, Double_t *eyH)
-{
-   for (Int_t i = 0; i < fNpoints; i++)
-      SetPointEYH(i, dim, eyH[i]);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Update amount of y error dimensions and reallocate
-
-void TGraphMultiErrors::SetNErrorDimensions(Int_t dim)
-{
-   if (dim < 0)
-      dim = 0;
-   if (dim == fNErrorDimensions)
-      return;
-
-   Double_t **ps = AllocateArrays(2 * dim, fNpoints);
-   CopyAndReleaseY(ps, 0, dim, 0);
-   if (dim > fNErrorDimensions)
-      FillZeroY(fNErrorDimensions, dim);
-
-   auto newAttFill = new TAttFill[dim];
-   auto newAttLine = new TAttLine[dim];
-
-   for (Int_t j = 0; j < TMath::Min(fNErrorDimensions, dim); j++) {
-      fAttFill[j].Copy(newAttFill[j]);
-      fAttLine[j].Copy(newAttLine[j]);
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      if (j < ne) SetPointEYlow(i, j, eyL[j]);
+      else     	  SetPointEYlow(i, j, 0.);
    }
-
-   delete[] fAttFill;
-   delete[] fAttLine;
-
-   fAttFill = newAttFill;
-   fAttLine = newAttLine;
-
-   fNErrorDimensions = dim;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TAttFill parameters of error dimension dim by copying from another TAttFill (-1 = Global and x errors)
+/// Set eyH values for point i.
 
-void TGraphMultiErrors::SetAttFill(Int_t dim, TAttFill *taf)
+void TGraphMultiErrors::SetPointEYhigh(Int_t i, Int_t ne, const Double_t *eyH)
 {
-   if (dim == -1)
+   for (Int_t j = 0; j < fNYErrors; j++) {
+      if (j < ne) SetPointEYhigh(i, j, eyH[j]);
+      else        SetPointEYhigh(i, j, 0.);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set error e ey values for point i.
+
+void TGraphMultiErrors::SetPointEY(Int_t i, Int_t e, Double_t eyL, Double_t eyH)
+{
+   SetPointEYlow(i, e, eyL);
+   SetPointEYhigh(i, e, eyH);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set error e eyL value for point i.
+
+void TGraphMultiErrors::SetPointEYlow(Int_t i, Int_t e, Double_t eyL)
+{
+   if (i < 0 || e < 0)
+      return;
+
+   if (i >= fNpoints)
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., 0.);
+
+   while (e >= fNYErrors)
+      AddYError(fNpoints);
+
+   fEyL[e][i] = eyL;
+   if (fEyLSum) fEyLSum[i] = GetErrorYlow(i);
+   else         CalcYErrorsSum();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set error e eyH value for point i.
+
+void TGraphMultiErrors::SetPointEYhigh(Int_t i, Int_t e, Double_t eyH)
+{
+   if (i < 0 || e < 0)
+      return;
+
+   if (i >= fNpoints)
+      // re-allocate the object
+      TGraphMultiErrors::SetPoint(i, 0., 0.);
+
+   while (e >= fNYErrors)
+      AddYError(fNpoints);
+
+   fEyH[e][i] = eyH;
+   if (fEyHSum) fEyHSum[i] = GetErrorYhigh(i);
+   else         CalcYErrorsSum();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set error e ey values
+
+void TGraphMultiErrors::SetEY(Int_t e, Int_t np, const Double_t *eyL, const Double_t *eyH)
+{
+   SetEYlow(e, np, eyL);
+   SetEYhigh(e, np, eyH);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set error e eyL values
+
+void TGraphMultiErrors::SetEYlow(Int_t e, Int_t np, const Double_t *eyL)
+{
+   for (Int_t i = 0; i < fNpoints; i++) {
+      if (i < np) SetPointEYlow(i, e, eyL[i]);
+      else        SetPointEYlow(i, e, 0.);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set error e eyH values
+
+void TGraphMultiErrors::SetEYhigh(Int_t e, Int_t np, const Double_t *eyH)
+{
+   for (Int_t i = 0; i < fNpoints; i++) {
+      if (i < np) SetPointEYhigh(i, e, eyH[i]);
+      else        SetPointEYhigh(i, e, 0.);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set TAttFill parameters of error e by copying from another TAttFill (-1 = Global and x errors)
+
+void TGraphMultiErrors::SetAttFill(Int_t e, TAttFill *taf)
+{
+   if (e == -1)
       taf->TAttFill::Copy(*this);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      taf->TAttFill::Copy(fAttFill[dim]);
+   else if (e >= 0 && e < fNYErrors)
+      taf->TAttFill::Copy(fAttFill[e]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TAttLine parameters of error dimension dim by copying from another TAttLine (-1 = Global and x errors)
+/// Set TAttLine parameters of error e by copying from another TAttLine (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetAttLine(Int_t dim, TAttLine *taf)
+void TGraphMultiErrors::SetAttLine(Int_t e, TAttLine *taf)
 {
-   if (dim == -1)
+   if (e == -1)
       taf->TAttLine::Copy(*this);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      taf->TAttLine::Copy(fAttLine[dim]);
+   else if (e >= 0 && e < fNYErrors)
+      taf->TAttLine::Copy(fAttLine[e]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Fill Color of error dimension dim (-1 = Global and x errors)
+/// Set Fill Color of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetFillColor(Int_t dim, Color_t fcolor)
+void TGraphMultiErrors::SetFillColor(Int_t e, Color_t fcolor)
 {
-   if (dim == -1)
+   if (e == -1)
       SetFillColor(fcolor);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttFill[dim].SetFillColor(fcolor);
+   else if (e >= 0 && e < fNYErrors)
+      fAttFill[e].SetFillColor(fcolor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Fill Color and Alpha of error dimension dim (-1 = Global and x errors)
+/// Set Fill Color and Alpha of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetFillColorAlpha(Int_t dim, Color_t fcolor, Float_t falpha)
+void TGraphMultiErrors::SetFillColorAlpha(Int_t e, Color_t fcolor, Float_t falpha)
 {
-   if (dim == -1)
+   if (e == -1)
       SetFillColorAlpha(fcolor, falpha);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttFill[dim].SetFillColorAlpha(fcolor, falpha);
+   else if (e >= 0 && e < fNYErrors)
+      fAttFill[e].SetFillColorAlpha(fcolor, falpha);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Fill Style of error dimension dim (-1 = Global and x errors)
+/// Set Fill Style of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetFillStyle(Int_t dim, Style_t fstyle)
+void TGraphMultiErrors::SetFillStyle(Int_t e, Style_t fstyle)
 {
-   if (dim == -1)
+   if (e == -1)
       SetFillStyle(fstyle);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttFill[dim].SetFillStyle(fstyle);
+   else if (e >= 0 && e < fNYErrors)
+      fAttFill[e].SetFillStyle(fstyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Color of error dimension dim (-1 = Global and x errors)
+/// Set Line Color of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetLineColor(Int_t dim, Color_t lcolor)
+void TGraphMultiErrors::SetLineColor(Int_t e, Color_t lcolor)
 {
-   if (dim == -1)
+   if (e == -1)
       SetLineColor(lcolor);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttLine[dim].SetLineColor(lcolor);
+   else if (e >= 0 && e < fNYErrors)
+      fAttLine[e].SetLineColor(lcolor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Color and Alpha of error dimension dim (-1 = Global and x errors)
+/// Set Line Color and Alpha of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetLineColorAlpha(Int_t dim, Color_t lcolor, Float_t lalpha)
+void TGraphMultiErrors::SetLineColorAlpha(Int_t e, Color_t lcolor, Float_t lalpha)
 {
-   if (dim == -1)
+   if (e == -1)
       SetLineColorAlpha(lcolor, lalpha);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttLine[dim].SetLineColorAlpha(lcolor, lalpha);
+   else if (e >= 0 && e < fNYErrors)
+      fAttLine[e].SetLineColorAlpha(lcolor, lalpha);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Style of error dimension dim (-1 = Global and x errors)
+/// Set Line Style of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetLineStyle(Int_t dim, Style_t lstyle)
+void TGraphMultiErrors::SetLineStyle(Int_t e, Style_t lstyle)
 {
-   if (dim == -1)
+   if (e == -1)
       SetLineStyle(lstyle);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttLine[dim].SetLineStyle(lstyle);
+   else if (e >= 0 && e < fNYErrors)
+      fAttLine[e].SetLineStyle(lstyle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Width of error dimension dim (-1 = Global and x errors)
+/// Set Line Width of error e (-1 = Global and x errors)
 
-void TGraphMultiErrors::SetLineWidth(Int_t dim, Width_t lwidth)
+void TGraphMultiErrors::SetLineWidth(Int_t e, Width_t lwidth)
 {
-   if (dim == -1)
+   if (e == -1)
       SetLineWidth(lwidth);
-   else if (dim >= 0 && dim < fNErrorDimensions)
-      fAttLine[dim].SetLineWidth(lwidth);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TGraphMultiErrors.
-
-void TGraphMultiErrors::Streamer(TBuffer &R__b)
-{
-   UInt_t R__s, R__c;
-   if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v) {
-      }
-      TGraph::Streamer(R__b);
-      R__b >> fNErrorDimensions;
-
-      delete[] fExL;
-      fExL = new Double_t[fNpoints];
-      R__b.ReadFastArray(fExL, fNpoints);
-
-      delete[] fExH;
-      fExH = new Double_t[fNpoints];
-      R__b.ReadFastArray(fExH, fNpoints);
-
-      delete[] fEyL;
-      fEyL = new Double_t *[fNErrorDimensions];
-      for (Int_t i = 0; i < fNErrorDimensions; i++) {
-         fEyL[i] = new Double_t[fNpoints];
-         R__b.ReadFastArray(fEyL[i], fNpoints);
-      }
-
-      delete[] fEyH;
-      fEyH = new Double_t *[fNErrorDimensions];
-      for (Int_t i = 0; i < fNErrorDimensions; i++) {
-         fEyH[i] = new Double_t[fNpoints];
-         R__b.ReadFastArray(fEyH[i], fNpoints);
-      }
-
-      delete[] fEyLSum;
-      fEyLSum = new Double_t[fNpoints];
-      R__b.ReadFastArray(fEyLSum, fNpoints);
-
-      delete[] fEyHSum;
-      fEyHSum = new Double_t[fNpoints];
-      R__b.ReadFastArray(fEyHSum, fNpoints);
-
-      R__b >> fSumErrorsMode;
-
-      delete[] fAttFill;
-      fAttFill = new TAttFill[fNErrorDimensions];
-      R__b.ReadFastArray(fAttFill, TAttFill::Class(), fNErrorDimensions);
-
-      delete[] fAttLine;
-      fAttLine = new TAttLine[fNErrorDimensions];
-      R__b.ReadFastArray(fAttLine, TAttLine::Class(), fNErrorDimensions);
-
-      R__b.CheckByteCount(R__s, R__c, TGraphMultiErrors::IsA());
-   } else {
-      R__c = R__b.WriteVersion(TGraphMultiErrors::IsA(), kTRUE);
-      TGraph::Streamer(R__b);
-      R__b << fNErrorDimensions;
-
-      R__b.WriteFastArray(fExL, fNpoints);
-      R__b.WriteFastArray(fExH, fNpoints);
-
-      for (Int_t i = 0; i < fNErrorDimensions; i++)
-         R__b.WriteFastArray(fEyL[i], fNpoints);
-
-      for (Int_t i = 0; i < fNErrorDimensions; i++)
-         R__b.WriteFastArray(fEyH[i], fNpoints);
-
-      R__b.WriteFastArray(fEyLSum, fNpoints);
-      R__b.WriteFastArray(fEyHSum, fNpoints);
-
-      R__b << fSumErrorsMode;
-
-      R__b.WriteFastArray(fAttFill, TAttFill::Class(), fNErrorDimensions);
-      R__b.WriteFastArray(fAttLine, TAttLine::Class(), fNErrorDimensions);
-
-      R__b.SetByteCount(R__c, kTRUE);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Swap points.
-
-void TGraphMultiErrors::SwapPoints(Int_t pos1, Int_t pos2)
-{
-   SwapValues(fExL, pos1, pos2);
-   SwapValues(fExH, pos1, pos2);
-
-   for (Int_t j = 0; j <= fNErrorDimensions; j++) {
-      SwapValues(fEyL[j], pos1, pos2);
-      SwapValues(fEyH[j], pos1, pos2);
-   }
-
-   TGraph::SwapPoints(pos1, pos2);
+   else if (e >= 0 && e < fNYErrors)
+      fAttLine[e].SetLineWidth(lwidth);
 }
