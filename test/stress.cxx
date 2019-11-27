@@ -56,6 +56,7 @@
 // Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 // Test 15 : Divert Tree branches to separate files................ OK
 // Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
+// Test 17 : Test mkdir............................................ OK
 // ******************************************************************
 //*  Linux pcbrun.cern.ch 2.4.20 #1 Thu Jan 9 12:21:02 MET 2003
 //******************************************************************
@@ -115,6 +116,7 @@ void stress13();
 void stress14();
 void stress15();
 void stress16();
+void stress17();
 void cleanup();
 
 
@@ -132,7 +134,7 @@ int main(int argc, char **argv)
    if (argc > 2) style  = atoi(argv[2]);
    Int_t printSubBench = kFALSE;
    if (argc > 3) printSubBench = atoi(argv[3]);
-   Int_t portion = 65535;
+   Int_t portion = 131071;
    if (argc > 4) portion  = atoi(argv[4]);
    stress(nevent, style, printSubBench, portion);
    return 0;
@@ -150,7 +152,7 @@ int gPrintSubBench = 0;
 Double_t ntotin=0, ntotout=0;
 
 void stress(Int_t nevent, Int_t style = 1,
-            Int_t printSubBenchmark = kFALSE, UInt_t portion = 65535)
+            Int_t printSubBenchmark = kFALSE, UInt_t portion = 131071)
 {
    //Main control function invoking all test programs
 
@@ -185,6 +187,7 @@ void stress(Int_t nevent, Int_t style = 1,
    if (portion&8192) stress14();
    if (portion&16384) stress15();
    if (portion&32768) stress16();
+   if (portion&65536) stress17();
    gBenchmark->Stop("stress");
 
    cleanup();
@@ -1602,6 +1605,37 @@ void stress16()
       printf("%-8s nlines in stress_lhcb.ps file = %d\n"," ",nlines);
    }
    if (gPrintSubBench) { printf("Test 16 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Test mkdir returnExistingDirectory outside and within a Root file
+/// Create some directories, ensure they point to the expected places
+
+void stress17()
+{
+   Bprint(17,"Test mkdir");
+   
+   // check mkdir functions as expected in TDirectory
+   TDirectory *free_motherdir = new TDirectory("free_motherdir", "free_motherdir");
+   TDirectory *free_daughterdir = free_motherdir->mkdir("free_daughterdir");
+   TDirectory *free_daughter2 = free_motherdir->mkdir("free_daughterdir");
+   TDirectory *free_daughtersame = free_motherdir->mkdir("free_daughterdir", "", true);
+   
+   // check mkdir functions as expected inside a file
+   TFile f("stress.root","update");
+   TDirectory *motherdir = f.mkdir("motherdir");
+   TDirectory *daughterdir = motherdir->mkdir("daughterdir");
+   TDirectory *daughternull = motherdir->mkdir("daughterdir");
+   TDirectory *daughtersame = motherdir->mkdir("daughterdir", "", true);
+   
+   Bool_t OK = kTRUE;
+   if (daughternull != nullptr || daughtersame != daughterdir || free_daughter2 == free_daughterdir || free_daughtersame != free_daughterdir) OK = kFALSE;
+   if (OK) printf("OK\n");
+   else    {
+      printf("FAILED\n");
+      printf("%-8s free_daughterdir=%d, free_daughter2=%d, free_daughtersame=%d, daughterdir=%d, daughternull=%d, daughtersame=%d \n"," ",free_daughterdir,free_daughter2,free_daughtersame,daughterdir,daughternull,daughtersame);
+   }
+   if (gPrintSubBench) { printf("Test 17 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
 void cleanup()
