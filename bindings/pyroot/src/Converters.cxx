@@ -711,6 +711,16 @@ Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
 Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
 {
    if ( pyobject == Py_None || pyobject == gNullPtrObject ) {
+
+      if (pyobject == Py_None) {
+         if (PyErr_WarnEx(PyExc_FutureWarning,
+                          "The conversion from None to null pointer is deprecated "
+                          "and will not be allowed anymore in a future version of ROOT. "
+                          "Instead, use ROOT.nullptr or 0", 1) < 0) {
+            return kFALSE;
+         }
+      }
+
       address = (void*)0;
       return kTRUE;
    }
