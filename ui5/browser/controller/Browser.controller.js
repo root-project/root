@@ -722,17 +722,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let command = oEvent.getSource().getValue();
          let url = '/ProcessLine/cmd.json?arg1="' + command + '"';
          console.log(command);
-         JSROOT.NewHttpRequest(url, 'object', function(res) {
-            console.log(res, url);
-            if (res == null) {
-               if (command === ".q") {
-                  window.close();
-               }
-            }
-            // this.updateLog();
-            // this.updateCanvas();
-         }).send();
-
+         this.websocket.Send("CMD:" + command);
          oEvent.getSource().setValue("");
       },
 
