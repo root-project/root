@@ -1223,7 +1223,7 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       } else if (theGraph->InheritsFrom(TGraphQQ::Class())) {
          PaintGraphQQ(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphAsymmErrors::Class())) {
-	 PaintGraphAsymmErrors(theGraph,chopt);
+         PaintGraphAsymmErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphMultiErrors::Class())) {
 	 PaintGraphMultiErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphErrors::Class())) {
@@ -2646,36 +2646,36 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    auto tg = (TGraphMultiErrors*) theGraph;
 
-   Int_t NErrorDimensions = tg->GetNErrorDimensions();
+   Int_t NYErrors = tg->GetNYErrors();
 
    TString tsOpt = option;
    tsOpt.ToLower();
 
-   auto options = new TString[NErrorDimensions + 1];
+   TString options[NYErrors + 1];
    Int_t filled = 0;
 
-   if (tsOpt.CountChar(';') < NErrorDimensions) {
+   if (tsOpt.CountChar(';') < NYErrors) {
       options[0] = tsOpt.Contains(";") ? tsOpt(0, tsOpt.First(';')) : tsOpt.Copy();
       filled++;
    }
 
    Ssiz_t firstSemicolon;
-   while ((firstSemicolon = tsOpt.First(';')) != kNPOS && filled <= NErrorDimensions) {
+   while ((firstSemicolon = tsOpt.First(';')) != kNPOS && filled <= NYErrors) {
       options[filled] = tsOpt(0, firstSemicolon);
       tsOpt = tsOpt(firstSemicolon + 1, tsOpt.Length());
       filled++;
    }
 
-   if (filled <= NErrorDimensions) {
+   if (filled <= NYErrors) {
       options[filled] = tsOpt.Copy();
       filled++;
    }
 
-   for (Int_t i = filled; i <= NErrorDimensions; i++)
+   for (Int_t i = filled; i <= NYErrors; i++)
       options[i] = "";
 
    Double_t* xline = nullptr;
-   auto      yline = new Double_t*[NErrorDimensions];
+   Double_t* yline[NYErrors];
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2690,10 +2690,10 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t* theY   = tg->GetY();
    Double_t* theExL = tg->GetEXlow();
    Double_t* theExH = tg->GetEXhigh();
-   auto      theEyL = new Double_t*[NErrorDimensions];
-   auto      theEyH = new Double_t*[NErrorDimensions];
+   Double_t* theEyL[NYErrors];
+   Double_t* theEyH[NYErrors];
 
-   for (Int_t j = 0; j < NErrorDimensions; j++) {
+   for (Int_t j = 0; j < NYErrors; j++) {
       theEyL[j] = tg->GetEYlow(j);
       theEyH[j] = tg->GetEYhigh(j);
    }
@@ -2701,25 +2701,25 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    if (!theX || !theY || !theExL || !theExH || !theEyL || !theEyH)
       return;
 
-   auto   DrawErrors = new Bool_t  [NErrorDimensions];
-   Bool_t AnyErrors  = kFALSE;
-   Bool_t NoErrorsX  = kTRUE;
-   Bool_t Option0X   = kFALSE;
-   Bool_t DrawMarker = kFALSE;
-   auto   Braticks   = new Bool_t  [NErrorDimensions];
-   auto   Brackets   = new Bool_t  [NErrorDimensions];
-   auto   EndLines   = new Bool_t  [NErrorDimensions];
-   auto   ArrowOpt   = new Char_t* [NErrorDimensions];
-   auto   Option5    = new Bool_t  [NErrorDimensions];
-   auto   Option4    = new Bool_t  [NErrorDimensions];
-   auto   Option3    = new Bool_t  [NErrorDimensions];
-   Bool_t AnyOption3 = kFALSE;
-   auto   Option2    = new Bool_t  [NErrorDimensions];
-   auto   Option0    = new Bool_t  [NErrorDimensions];
-   Bool_t AnyOption0 = kFALSE;
-   auto   Scale      = new Double_t[NErrorDimensions];
+   Bool_t   DrawErrors[NYErrors];
+   Bool_t   AnyErrors  = kFALSE;
+   Bool_t   NoErrorsX  = kTRUE;
+   Bool_t   Option0X   = kFALSE;
+   Bool_t   DrawMarker = kFALSE;
+   Bool_t   Braticks[NYErrors];
+   Bool_t   Brackets[NYErrors];
+   Bool_t   EndLines[NYErrors];
+   Char_t*  ArrowOpt[NYErrors];
+   Bool_t   Option5[NYErrors];
+   Bool_t   Option4[NYErrors];
+   Bool_t   Option3[NYErrors];
+   Bool_t   AnyOption3 = kFALSE;
+   Bool_t   Option2[NYErrors];
+   Bool_t   Option0[NYErrors];
+   Bool_t   AnyOption0 = kFALSE;
+   Double_t Scale[NYErrors];
 
-   for (Int_t j = 0; j < NErrorDimensions; j++) {
+   for (Int_t j = 0; j < NYErrors; j++) {
       if (options[j + 1].Contains("s=")) {
 	 sscanf(strstr(options[j + 1].Data(), "s="), "s=%lf", &Scale[j]);
 	 options[j + 1].ReplaceAll(options[j + 1](TRegexp("s=*[0-9]\\.*[0-9]")), "");
@@ -2805,7 +2805,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       if2 = 2*NPointsInside;
    }
 
-   for (Int_t j = 0; j < NErrorDimensions; j++) {
+   for (Int_t j = 0; j < NYErrors; j++) {
       if (Option3[j] && DrawErrors[j]) {
 	 yline[j] = new Double_t[2*NPointsInside];
 
@@ -2879,7 +2879,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 	 if2--;
       }
 
-      for (Int_t j = 0; j < NErrorDimensions; j++) {
+      for (Int_t j = 0; j < NYErrors; j++) {
 	 if (!DrawErrors[j])
 	    continue;
 
@@ -3046,7 +3046,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    tg->TAttLine::Copy(*tgDummy);
    tg->TAttMarker::Copy(*tgDummy);
 
-   for (Int_t j = 0; j < NErrorDimensions; j++) {
+   for (Int_t j = 0; j < NYErrors; j++) {
       if (Option3[j] && DrawErrors[j]) {
 	 if (IndividualStyles) {
 	    tg->GetAttFill(j)->Copy(*tgDummy);
