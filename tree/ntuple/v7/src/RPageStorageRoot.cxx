@@ -58,9 +58,6 @@ ROOT::Experimental::Detail::RPageSinkRoot::~RPageSinkRoot()
 void ROOT::Experimental::Detail::RPageSinkRoot::DoCreate(const RNTupleModel & /* model */)
 {
    fDirectory = fFile->mkdir(fNTupleName.c_str());
-   // In TBrowser, use RNTupleBrowser(TDirectory *directory) in order to show the ntuple contents
-   fDirectory->SetBit(TDirectoryFile::kCustomBrowse);
-   fDirectory->SetTitle("ROOT::Experimental::Detail::RNTupleBrowser");
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szHeader = descriptor.SerializeHeader(nullptr);
