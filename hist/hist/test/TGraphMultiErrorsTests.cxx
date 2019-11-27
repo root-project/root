@@ -18,8 +18,8 @@ TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
    auto   aeyhstat = new double[5]  {0.5, 1, 0.5, 1, 2.};
    auto   aeylsys  = new double[5]  {0.5, 0.4, 0.8, 0.3, 1.2};
    auto   aeyhsys  = new double[5]  {0.6, 0.7, 0.6, 0.4, 0.8};
-   auto   aeyl    = new double*[2] {aeylstat, aeylsys};
-   auto   aeyh    = new double*[2] {aeyhstat, aeyhsys};
+   auto   aeyl     = new double*[2] {aeylstat, aeylsys};
+   auto   aeyh     = new double*[2] {aeyhstat, aeyhsys};
 
    auto gme = new TGraphMultiErrors(5, 2, ax, ay, aexl, aexh, aeyl, aeyh, TGraphMultiErrors::kOnlyFirst);
    gme->SetMarkerStyle(20);
@@ -70,11 +70,4 @@ TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
    delete gme;
    f.Close();
    gSystem->Unlink(ofileName);
-
-   delete[] aeylstat;
-   delete[] aeyhstat;
-   delete[] aeylsys;
-   delete[] aeyhsys;
-   delete[] aeyl;
-   delete[] aeyl;
 }
