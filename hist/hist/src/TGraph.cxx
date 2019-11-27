@@ -1585,6 +1585,28 @@ Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get x value for point i.
+
+Double_t TGraph::GetPointX(Int_t i) const
+{
+   if (i < 0 || i >= fNpoints || !fX)
+      return -1.;
+
+   return fX[i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get y value for point i.
+
+Double_t TGraph::GetPointY(Int_t i) const
+{
+   if (i < 0 || i >= fNpoints || !fY)
+      return -1.;
+
+   return fY[i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get x axis of the graph.
 
 TAxis *TGraph::GetXaxis() const
@@ -1602,6 +1624,38 @@ TAxis *TGraph::GetYaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation to get information on point of graph at cursor position
+/// Adapted from class TH1
+
+char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
+{
+   // localize point
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i = 0; i < fNpoints; i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+
+      if (dpx * dpx + dpy * dpy < 25) {
+         ipoint = i;
+         break;
+      }
+   }
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+
+   if (ipoint == -2)
+      return Form("x=%g, y=%g", x, y);
+
+   Double_t xval = fX[ipoint];
+   Double_t yval = fY[ipoint];
+
+   return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2212,6 +2266,22 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
    fX[i] = x;
    fY[i] = y;
    if (gPad) gPad->Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set x value for point i.
+
+void TGraph::SetPointX(Int_t i, Double_t x)
+{
+    SetPoint(i, x, GetPointY(i));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set y value for point i.
+
+void TGraph::SetPointY(Int_t i, Double_t y)
+{
+    SetPoint(i, GetPointX(i), y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

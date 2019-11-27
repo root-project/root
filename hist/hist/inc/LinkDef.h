@@ -46,7 +46,7 @@
 #pragma link C++ class TGraph-;
 #pragma link C++ class TGraphErrors-;
 #pragma link C++ class TGraphAsymmErrors-;
-#pragma link C++ class TGraphMultiErrors-;
+#pragma link C++ class TGraphMultiErrors+;
 #pragma link C++ class TGraphBentErrors+;
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
