@@ -3069,10 +3069,8 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    delete tgDummy;
 
-   if (AnyOption3) {
+   if (AnyOption3)
       delete [] xline;
-      delete [] yline;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

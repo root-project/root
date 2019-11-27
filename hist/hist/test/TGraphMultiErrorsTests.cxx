@@ -14,14 +14,14 @@ TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
    double ay[]      = {0, 2, 4, 1, 3};
    double aexl[]    = {0.3, 0.3, 0.3, 0.3, 0.3};
    double aexh[]    = {0.3, 0.3, 0.3, 0.3, 0.3};
-   double* aeylstat = new double[5]  {1, 0.5, 1, 0.5, 1};
-   double* aeyhstat = new double[5]  {0.5, 1, 0.5, 1, 2.};
-   double* aeylsys  = new double[5]  {0.5, 0.4, 0.8, 0.3, 1.2};
-   double* aeyhsys  = new double[5]  {0.6, 0.7, 0.6, 0.4, 0.8};
-   double** aeyl    = new double*[2] {aeylstat, aeylsys};
-   double** aeyh    = new double*[2] {aeyhstat, aeyhsys};
+   auto   aeylstat = new double[5]  {1, 0.5, 1, 0.5, 1};
+   auto   aeyhstat = new double[5]  {0.5, 1, 0.5, 1, 2.};
+   auto   aeylsys  = new double[5]  {0.5, 0.4, 0.8, 0.3, 1.2};
+   auto   aeyhsys  = new double[5]  {0.6, 0.7, 0.6, 0.4, 0.8};
+   auto   aeyl    = new double*[2] {aeylstat, aeylsys};
+   auto   aeyh    = new double*[2] {aeyhstat, aeyhsys};
 
-   TGraphMultiErrors* gme = new TGraphMultiErrors(5, 2, ax, ay, aexl, aexh, aeyl, aeyh, TGraphMultiErrors::kOnlyFirst);
+   auto gme = new TGraphMultiErrors(5, 2, ax, ay, aexl, aexh, aeyl, aeyh, TGraphMultiErrors::kOnlyFirst);
    gme->SetMarkerStyle(20);
    gme->SetLineColor(kRed);
    gme->GetAttLine(0)->SetLineColor(kRed);
@@ -70,4 +70,11 @@ TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
    delete gme;
    f.Close();
    gSystem->Unlink(ofileName);
+
+   delete[] aeylstat;
+   delete[] aeyhstat;
+   delete[] aeylsys;
+   delete[] aeyhsys;
+   delete[] aeyl;
+   delete[] aeyl;
 }
