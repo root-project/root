@@ -39,7 +39,6 @@ console.log("JupyROOT - %%cpp magic configured");
 _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
 
 
-_jsROOTSourceDir = "/static/"
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
@@ -47,19 +46,55 @@ _jsCode = """
 <div id="{jsDivId}"
      style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
 </div>
-<script src="/static/components/requirejs/require.js" type="text/javascript" charset="utf-8"></script>
 <script>
- requirejs.config({{
-     paths: {{
-       'JSRootCore' : '{jsROOTSourceDir}scripts/JSRootCore',
-     }}
-   }});
- require(['JSRootCore'],
-     function(Core) {{
-       var obj = Core.JSONR_unref({jsonContent});
-       Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
-     }}
- );
+if (typeof require !== 'undefined') {{
+
+    // All requirements met (we are in jupyter notebooks or we loaded requirejs before).
+    display_{jsDivId}();
+
+}} else {{
+
+    // We are in jupyterlab, we need to insert requirejs and configure it.
+    // Jupyterlab might be installed in a different base_url so we need to know it.
+    try {{
+        var base_url = JSON.parse(document.getElementById('jupyter-config-data').innerHTML).baseUrl;
+    }} catch(_) {{
+        var base_url = '/';
+    }}
+
+    // Try loading a local version of requirejs and fallback to cdn if not possible.
+    requirejs_load(base_url + 'static/components/requirejs/require.js', requirejs_success(base_url), function(){{
+        requirejs_load('https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js', requirejs_success(base_url), function(){{
+            document.getElementById("{jsDivId}").innerHTML = "Failed to load requireJs";
+        }});
+    }});
+}}
+
+function requirejs_load(src, on_load, on_error) {{
+    var script = document.createElement('script');
+    script.src = src;
+    script.onload = on_load;
+    script.onerror = on_error;
+    document.head.appendChild(script);
+}}
+
+function requirejs_success(base_url) {{
+    return function() {{
+        require.config({{
+            baseUrl: base_url + 'static/'
+        }});
+        display_{jsDivId}();
+    }}
+}}
+
+function display_{jsDivId}() {{
+    require(['scripts/JSRootCore'],
+        function(Core) {{
+            var obj = Core.JSONR_unref({jsonContent});
+            Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+        }}
+    );
+}}
 </script>
 """
 
@@ -413,7 +448,6 @@ class NotebookDrawer(object):
 
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
-                                    jsROOTSourceDir = _jsROOTSourceDir,
                                     jsonContent = json.Data(),
                                     jsDrawOptions = options,
                                     jsDivId = divId)
