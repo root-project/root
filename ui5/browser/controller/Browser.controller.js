@@ -725,6 +725,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.Send("CMD:" + command);
          oEvent.getSource().setValue("");
          this.requestRootHist();
+         this.requestLogs();
       },
 
       requestRootHist: function() {
@@ -745,11 +746,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       requestLogs: function() {
-
+         return this.websocket.Send("LOGS:");
       },
 
       updateLogs: function(logs) {
-
+         this.getView().byId("output_log").setValue(logs);
       },
 
       updateLog: function() {
@@ -944,6 +945,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "HIST":
                this.updateRootHist(msg);
                break;
+            case "LOGS":
+               this.updateLogs(msg);
+               break;
          default:
             console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
          }
@@ -1033,6 +1037,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.updateBReadcrumbs(arr[0]);
          this.requestRootHist();
+         this.requestLogs();
 
          for (var k=1; k<arr.length; ++k)
             this.createCanvas(arr[k][0], arr[k][1], arr[k][2]);
