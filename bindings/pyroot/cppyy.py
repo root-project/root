@@ -245,6 +245,7 @@ if not _builtin_cppyy:
 
 #--- Pythonization factories --------------------------------------------
 import _pythonization
+py = _pythonization
 _pythonization._set_backend( _backend )
 from _pythonization import *
 del _pythonization
