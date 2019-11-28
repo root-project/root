@@ -290,7 +290,7 @@ TEST(RNTupleShow, BasicTypes)
    
    std::ostringstream os2;
    ntuple2->Show(10, ROOT::Experimental::ENTupleFormat::kJSON, os2);
-   std::string fString2{ "Index should be smaller than number of entries in ntuple.\n" };
+   std::string fString2{ "Index exceeds maximum number of entries. (2)\n" };
    EXPECT_EQ(fString2, os2.str());
 }
 
@@ -308,13 +308,14 @@ TEST(RNTupleShow, VectorFields)
       
       *fieldIntVec = std::vector<int>{4, 5, 6};
       *fieldFloatVecVec = std::vector<std::vector<float>>{std::vector<float>{0.1, 0.2}, std::vector<float>{1.1, 1.2}};
-      *fieldBoolVecVec = std::vector<std::vector<bool>>{std::vector<bool>{true, false}, std::vector<bool>{false, false}};
+      *fieldBoolVecVec = std::vector<std::vector<bool>>{std::vector<bool>{false, true, false}, std::vector<bool>{false, true}, std::vector<bool>{true, false, false }};
       ntuple->Fill();
       
       fieldIntVec->emplace_back(7);
       fieldFloatVecVec->emplace_back(std::vector<float>{2.2, 2.3});
       fieldBoolVecVec->emplace_back(std::vector<bool>{false, true});
       ntuple->Fill();
+      //ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
    auto fieldIntVec = model2->MakeField<std::vector<int>>("intVec");
@@ -326,9 +327,9 @@ TEST(RNTupleShow, VectorFields)
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
       + "{\n"
-      + "  \"intVec\": { 4, 5, 6 },\n"
-      + "  \"floatVecVec\": { { 0.100000f, 0.200000f }, { 1.10000f, 1.20000f } },\n"
-      + "  \"booleanVecVec\": { { true, false }, { false, false } }\n"
+      + "  \"intVec\": {4, 5, 6},\n"
+      + "  \"floatVecVec\": {{ 0.1, 0.2 }, { 1.1, 1.2 }},\n"
+      + "  \"booleanVecVec\": {{ false, true, false }, { false, true }, { true, false, false }}\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
    
@@ -336,58 +337,9 @@ TEST(RNTupleShow, VectorFields)
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
       + "{\n"
-      + "  \"intVec\": { 4, 5, 6, 7 },\n"
-      + "  \"floatVecVec\": { { 0.100000f, 0.200000f }, { 1.10000f, 1.20000f }, { 2.20000f, 2.30000f } },\n"
-      + "  \"booleanVecVec\": { { true, false }, { false, false }, { false, true } }\n"
-      + "}\n" };
-   EXPECT_EQ(fString1, os1.str());
-}
-
-TEST(RNTupleShow, ObjectFields)
-{
-   std::string rootFileName{"ShowObject.root"};
-   std::string ntupleName{"ClassContainingNTuple"};
-   FileRaii fileGuard(rootFileName);
-   {
-      auto model = RNTupleModel::Create();
-      auto customStructfield = model->MakeField<CustomStruct>("CustomStruct");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      
-      *customStructfield = CustomStruct(4.0f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "ExampleString");
-      ntuple->Fill();
-      
-      *customStructfield = CustomStruct(5.0f, std::vector<float>{3.1f, 3.2f, 3.3f}, std::vector<std::vector<float>>{{4.1f, 4.2f, 4.3f}, {5.1f, 5.2f, 5.3f}}, "AnotherString");
-      ntuple->Fill();
-   }
-   auto model2 = RNTupleModel::Create();
-   auto customStructfield = model2->MakeField<CustomStruct>("CustomStruct");
-   auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
-   
-   std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
-   std::string fString{ std::string("")
-      + "{\n"
-      + "  \"CustomStruct\": \n"
-      + "  {\n"
-      + "    \"a\": 4,\n"
-      + "    \"v1\": { 0.100000f, 0.200000f, 0.300000f },\n"
-      + "    \"v2\": { { 1.10000f, 1.20000f, 1.30000f }, { 2.10000f, 2.20000f, 2.30000f } },\n"
-      + "    \"s\": \"ExampleString\"\n"
-      + "  }\n"
-      + "}\n" };
-   EXPECT_EQ(fString, os.str());
-   
-   std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
-   std::string fString1{ std::string("")
-      + "{\n"
-      + "  \"CustomStruct\": \n"
-      + "  {\n"
-      + "    \"a\": 5,\n"
-      + "    \"v1\": { 3.10000f, 3.20000f, 3.30000f },\n"
-      + "    \"v2\": { { 4.10000f, 4.20000f, 4.30000f }, { 5.10000f, 5.20000f, 5.30000f } },\n"
-      + "    \"s\": \"AnotherString\"\n"
-      + "  }\n"
+      + "  \"intVec\": {4, 5, 6, 7},\n"
+      + "  \"floatVecVec\": {{ 0.1, 0.2 }, { 1.1, 1.2 }, { 2.2, 2.3 }},\n"
+      + "  \"booleanVecVec\": {{ false, true, false }, { false, true }, { true, false, false }, { false, true }}\n"
       + "}\n" };
    EXPECT_EQ(fString1, os1.str());
 }
@@ -404,6 +356,8 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       auto Vecarrayfield = model->MakeField<std::array<std::vector<double>, 4>>("ArrayOfVec");
       auto StringArray = model->MakeField<std::array<std::string, 2>>("stringArray");
       auto ClusterSize = model->MakeField<ClusterSize_t>("ClusterSizeField");
+      auto arrayOfArray = model->MakeField<std::array<std::array<bool, 2>, 3>>("ArrayOfArray");
+      auto arrayVecfield = model->MakeField<std::vector<std::array<float, 2>>>("VecOfArray");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
       
       *Intarrayfield = {1, 3};
@@ -411,6 +365,8 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       *Vecarrayfield = {std::vector<double>{1, 2}, std::vector<double>{4, 5}, std::vector<double>{7, 8, 9}, std::vector<double>{11} };
       *StringArray = {"First", "Second"};
       *ClusterSize = ClusterSize_t(44);
+      *arrayOfArray = { std::array<bool,2>{ true, false }, std::array<bool,2>{ false, true }, std::array<bool,2>{ false, false } };
+      *arrayVecfield = { std::array<float, 2>{ 0, 1 }, std::array<float, 2>{ 2, 3 }, std::array<float, 2>{ 4, 5 } };
       ntuple->Fill();
       
       *Intarrayfield = {2, 5};
@@ -418,6 +374,8 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       *Vecarrayfield = {std::vector<double>{17, 19}, std::vector<double>{23, 29}, std::vector<double>{31, 37, 41}, std::vector<double>{43} };
       *StringArray = {"Third", "Fourth"};
       *ClusterSize = ClusterSize_t(32);
+      *arrayOfArray = { std::array<bool,2>{ true, true }, std::array<bool,2>{ false, true }, std::array<bool,2>{ true, true } };
+      *arrayVecfield = { std::array<float, 2>{ 6, 7 }, std::array<float, 2>{ 8, 9 } };
       ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
@@ -426,6 +384,8 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
    auto Vecarrayfield = model2->MakeField<std::array<std::vector<double>, 4>>("ArrayOfVec");
    auto StringArray = model2->MakeField<std::array<std::string, 2>>("stringArray");
    auto ClusterSize = model2->MakeField<ClusterSize_t>("ClusterSizeField");
+   auto arrayOfArray = model2->MakeField<std::array<std::array<bool, 2>, 3>>("ArrayOfArray");
+   auto arrayVecfield = model2->MakeField<std::vector<std::array<float, 2>>>("VecOfArray");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
    
    std::ostringstream os;
@@ -433,10 +393,12 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
    std::string fString{ std::string("")
       + "{\n"
       + "  \"IntArray\": [1, 3],\n"
-      + "  \"FloatArray\": [3.50000f, 4.60000f, 5.70000f],\n"
-      + "  \"ArrayOfVec\": [{ 1.0000000, 2.0000000 }, { 4.0000000, 5.0000000 }, { 7.0000000, 8.0000000, 9.0000000 }, { 11.000000 }],\n"
+      + "  \"FloatArray\": [3.5, 4.6, 5.7],\n"
+      + "  \"ArrayOfVec\": [{ 1, 2 }, { 4, 5 }, { 7, 8, 9 }, { 11 }],\n"
       + "  \"stringArray\": [\"First\", \"Second\"],\n"
-      + "  \"ClusterSizeField\": 44\n"
+      + "  \"ClusterSizeField\": 44,\n"
+      + "  \"ArrayOfArray\": [[ true, false ], [ false, true ], [ false, false ]],\n"
+      + "  \"VecOfArray\": {[ 0, 1 ], [ 2, 3 ], [ 4, 5 ]}\n"
       + "}\n"};
    EXPECT_EQ(fString, os.str());
    
@@ -445,11 +407,152 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"IntArray\": [2, 5],\n"
-      + "  \"FloatArray\": [2.30000f, 5.70000f, 11.1300f],\n"
-      + "  \"ArrayOfVec\": [{ 17.000000, 19.000000 }, { 23.000000, 29.000000 }, { 31.000000, 37.000000, 41.000000 }, { 43.000000 }],\n"
+      + "  \"FloatArray\": [2.3, 5.7, 11.13],\n"
+      + "  \"ArrayOfVec\": [{ 17, 19 }, { 23, 29 }, { 31, 37, 41 }, { 43 }],\n"
       + "  \"stringArray\": [\"Third\", \"Fourth\"],\n"
-      + "  \"ClusterSizeField\": 32\n"
+      + "  \"ClusterSizeField\": 32,\n"
+      + "  \"ArrayOfArray\": [[ true, true ], [ false, true ], [ true, true ]],\n"
+      + "  \"VecOfArray\": {[ 6, 7 ], [ 8, 9 ]}\n"
       + "}\n"};
    EXPECT_EQ(fString1, os1.str());
 }
 
+TEST(RNTupleShow, ObjectFields)
+{
+   std::string rootFileName{"ShowObject.root"};
+   std::string ntupleName{"ClassContainingNTuple"};
+   FileRaii fileGuard(rootFileName);
+   {
+      auto model = RNTupleModel::Create();
+      auto customStructfield = model->MakeField<CustomStruct>("CustomStruct");
+      auto customStructVec = model->MakeField<std::vector<CustomStruct>>("CustomStructVec");
+      auto customStructArray = model->MakeField<std::array<CustomStruct, 2>>("CustomStructArray");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+      
+      *customStructfield = CustomStruct{4.1f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String"};
+      *customStructVec = {
+         CustomStruct{4.2f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example2String"},
+         CustomStruct{4.3f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "Example3String"},
+         CustomStruct{4.4f, std::vector<float>{0.1f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example4String"}
+      };
+      *customStructArray = {
+      CustomStruct{4.5f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1"},
+      CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}
+      };
+      ntuple->Fill();
+      
+      *customStructfield = CustomStruct{5.1f, std::vector<float>{3.1f, 3.2f, 3.3f}, std::vector<std::vector<float>>{{4.1f, 4.2f, 4.3f}, {5.1f, 5.2f, 5.3f}}, "AnotherString"};
+      *customStructVec = {
+         CustomStruct{5.2f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example5String"},
+         CustomStruct{5.3f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.3f}}, "Example6String"},
+         CustomStruct{5.4f, std::vector<float>{0.1f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example7String"}
+      };
+      *customStructArray = {
+      CustomStruct{5.5f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f}}, "AnotherString3"},
+      CustomStruct{5.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString4"}
+      };
+      ntuple->Fill();
+   }
+   auto model2 = RNTupleModel::Create();
+   auto customStructfield = model2->MakeField<CustomStruct>("CustomStruct");
+   auto customStructVec = model2->MakeField<std::vector<CustomStruct>>("CustomStructVec");
+   auto customStructArray = model2->MakeField<std::array<CustomStruct, 2>>("CustomStructArray");
+   auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
+   
+   std::ostringstream os;
+   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   std::string fString{ std::string("")
+      + "{\n"
+      + "  \"CustomStruct\": \n"
+      + "  {\n"
+      + "    \"a\": 4.1,\n"
+      + "    \"v1\": {0.1, 0.2, 0.3},\n"
+      + "    \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "    \"s\": \"Example1String\"\n"
+      + "  }\n"
+      + "  \"CustomStructVec\": {\n"
+      + "    {\n"
+      + "      \"a\": 4.2,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "      \"s\": \"Example2String\"\n"
+      + "    }, \n"
+      + "    {\n"
+      + "      \"a\": 4.3,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.3 }},\n"
+      + "      \"s\": \"Example3String\"\n"
+      + "    }, \n"
+      + "    {\n"
+      + "      \"a\": 4.4,\n"
+      + "      \"v1\": {0.1, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "      \"s\": \"Example4String\"\n"
+      + "    }\n"
+      + "  },\n"
+      + "  \"CustomStructArray\": [\n"
+      + "    {\n"
+      + "      \"a\": 4.5,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "      \"s\": \"AnotherString1\"\n"
+      + "    }, \n"
+      + "    {\n"
+      + "      \"a\": 4.6,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.3 }},\n"
+      + "      \"s\": \"AnotherString2\"\n"
+      + "    }\n"
+      + "  ]\n"
+      + "}\n" };
+   EXPECT_EQ(fString, os.str());
+   
+   std::ostringstream os1;
+   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   std::string fString1{ std::string("")
+      + "{\n"
+      + "  \"CustomStruct\": \n"
+      + "  {\n"
+      + "    \"a\": 5.1,\n"
+      + "    \"v1\": {3.1, 3.2, 3.3},\n"
+      + "    \"v2\": {{ 4.1, 4.2, 4.3 }, { 5.1, 5.2, 5.3 }},\n"
+      + "    \"s\": \"AnotherString\"\n"
+      + "  }\n"
+      + "  \"CustomStructVec\": {\n"
+      + "    {\n"
+      + "      \"a\": 5.2,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "      \"s\": \"Example5String\"\n"
+      + "    }, \n"
+      + "    {\n"
+      + "      \"a\": 5.3,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.3 }},\n"
+      + "      \"s\": \"Example6String\"\n"
+      + "    }, \n"
+      + "    {\n"
+      + "      \"a\": 5.4,\n"
+      + "      \"v1\": {0.1, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "      \"s\": \"Example7String\"\n"
+      + "    }\n"
+      + "  },\n"
+      + "  \"CustomStructArray\": [\n"
+      + "    {\n"
+      + "      \"a\": 5.5,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2 }},\n"
+      + "      \"s\": \"AnotherString3\"\n"
+      + "    }, \n"
+      + "    {\n"
+      + "      \"a\": 5.6,\n"
+      + "      \"v1\": {0.1, 0.2, 0.3},\n"
+      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.3 }},\n"
+      + "      \"s\": \"AnotherString4\"\n"
+      + "    }\n"
+      + "  ]\n"
+      + "}\n" };
+   EXPECT_EQ(fString1, os1.str());
+   ntuple2->PrintInfo();
+}

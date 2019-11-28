@@ -258,6 +258,7 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase* GetParent() const { return fParent; }
+   const RFieldBase* GetFirstChild() const;
    bool IsSimple() const { return fIsSimple; }
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
@@ -271,7 +272,12 @@ public:
    /// Used for the visitor design pattern, see for example RNTupleReader::Print()
    virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
    virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
+   void FirstSubFieldAcceptVisitor(RNTupleVisitor &visitor, int level) const {
+      if (fSubFields.size() && fSubFields[0])
+         fSubFields[0]->AcceptVisitor(visitor, level);
+   }
    virtual void TraverseValueVisitor(RValueVisitor &visitor, int level) const;
+   virtual void NotVisitTopFieldTraverseValueVisitor(RValueVisitor &visitor, int level) const;
 
    RLevelInfo GetLevelInfo() const {
       return RLevelInfo(this);
@@ -339,6 +345,7 @@ public:
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const override;
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -366,6 +373,13 @@ public:
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
 };
 
 
@@ -392,6 +406,7 @@ public:
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
+   size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
@@ -978,6 +993,13 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void CommitCluster() final { fNWritten = 0; }
+   void AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const final;
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
 };
 
 
