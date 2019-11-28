@@ -39,14 +39,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <vector>
-
 #include "TH1F.h"
 #include "TH2F.h"
 
 #include "TMVA/Results.h"
 #include "TMVA/Event.h"
 #include "IFitterTarget.h"
+
+#include <vector>
 
 namespace TMVA {
 
