@@ -531,18 +531,18 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       std::string homePath = gSystem->UnixPathName(gSystem->HomeDirectory());
       std::string histPath = "/.root_hist";
       std::string path = homePath + histPath;
-
-      printf(path.c_str());
       std::ifstream infile(path);
 
-      std::string result = "";
+      std::vector<std::string> unique_vector;
       std::string line;
       while (std::getline(infile, line))
       {
-         result.append(line);
-         result.append("\n");
+         if(!(std::find(unique_vector.begin(), unique_vector.end(), line) != unique_vector.end())) {
+            unique_vector.push_back(line);
+         }
       }
-
+      std::string result;
+      for (const auto &piece : unique_vector) result += piece + ",";
       fWebWindow->Send(connid, "HIST:"s + result);
    }
 }

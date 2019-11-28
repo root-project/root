@@ -732,8 +732,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       updateRootHist: function (hist) {
-         console.log(hist);
-         this.getView().byId("output_log").setValue(hist);
+         let pos = hist.lastIndexOf(',');
+         hist = hist.substring(0,pos) + "" + hist.substring(pos+1);
+         hist = hist.split(",");
+         let json = {hist:[]};
+
+         for(let i=0; i<hist.length; i++) {
+            json.hist.push({name: hist[i] });
+
+         }
+         this.getView().byId("terminal-input").setModel(new JSONModel(json));
       },
 
       requestLogs: function() {
