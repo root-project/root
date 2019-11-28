@@ -1,0 +1,15 @@
+<core:FragmentDefinition
+   xmlns="sap.m"
+   xmlns:core="sap.ui.core">
+   <VBox width="100%">
+      <items>
+         <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+         </Breadcrumbs>
+         <List headerText="Files" items="{ path: '/filesList' }"
+            itemPress="onItemPress">
+            <StandardListItem title="{name}" icon="{icon}"
+               type="Active" />
+         </List>
+      </items>
+   </VBox>
+</core:FragmentDefinition>
