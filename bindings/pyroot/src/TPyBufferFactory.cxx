@@ -206,6 +206,37 @@ namespace {
       return Py_None;
    }
 
+   PyObject *SetSize(PyObject *self, PyObject *pynlen)
+   {
+      if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "buffer.SetSize(N) is deprecated and will disappear in a future version of ROOT. "
+                       "Instead, use buffer.reshape((N,))", 1) < 0) {
+         return nullptr;
+      }
+
+      return buffer_setsize(self, pynlen);
+   }
+
+   PyObject *reshape(PyObject *self, PyObject *shape)
+   {
+      // Allow the user to fix up the actual (type-strided) size of the buffer.
+      if (!PyTuple_Check(shape) || PyTuple_GET_SIZE(shape) != 1) {
+         if (shape) {
+            PyObject* pystr = PyObject_Str(shape);
+            if (pystr) {
+               PyErr_Format(PyExc_TypeError, "tuple object of length 1 expected, received %s",
+                   PyROOT_PyUnicode_AsStringChecked(pystr));
+               Py_DECREF(pystr);
+               return nullptr;
+            }
+         }
+         PyErr_SetString(PyExc_TypeError, "tuple object of length 1 expected");
+         return nullptr;
+      }
+
+      return buffer_setsize(self, PyTuple_GET_ITEM(shape, 0));
+   }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// return a typecode in the style of module array
 
@@ -248,7 +279,8 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 
    PyMethodDef buffer_methods[] = {
-      { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_O, NULL },
+      { (char*)"SetSize", (PyCFunction)SetSize, METH_O, NULL },
+      { (char*)"reshape", (PyCFunction)reshape, METH_O, NULL },
       { (char*)NULL, NULL, 0, NULL }
    };
 
