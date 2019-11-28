@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
 from ROOT import TObject, TLorentzVector, kRed, kGreen, kBlue, TVectorF, TROOT, TCanvas, gInterpreter, gROOT, TMatrixD, TString, std
+from ROOT import MakeNullPointer, AsCObject, BindObject, AddressOf
 from common import *
 from functools import partial
 
@@ -25,30 +26,6 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
    @classmethod
    def setUpClass(cls):
       cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
-
-      cls.AddressOf = ROOT.AddressOf
-
-      if cls.exp_pyroot:
-         # MakeNullPointer(klass) does not exist anymore in new Cppyy,
-         # but it is equivalent to bind_object(0, klass)
-         cls.MakeNullPointer = partial(ROOT.bind_object, 0)
-      else:
-         cls.MakeNullPointer = ROOT.MakeNullPointer
-
-      if cls.exp_pyroot:
-         # AsCObject still present in new Cppyy, returns a proxy to
-         # an opaque pointer to the provided object.
-         # Not exposed in new PyROOT for now (is it really necessary?)
-         import libcppyy
-         cls.AsCObject = libcppyy.as_cobject
-      else:
-         cls.AsCObject = ROOT.AsCObject
-
-      if cls.exp_pyroot:
-         # BindObject is bind_object in new Cppyy
-         cls.BindObject = ROOT.bind_object
-      else:
-         cls.BindObject = ROOT.BindObject
 
    def test01ClassEnum( self ):
       """Test class enum access and values"""
@@ -233,8 +210,6 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       """Test passing of variants of void pointer arguments"""
 
       gROOT.LoadMacro( "PointerPassing.C+" )
-      AddressOf = self.AddressOf
-      MakeNullPointer = self.MakeNullPointer
       
       Z = ROOT.Z
 
@@ -314,22 +289,21 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       import ROOT
 
       s = TString( "Hello World!" )
-      co = self.AsCObject( s )
+      co = AsCObject( s )
       
       if self.exp_pyroot:
          # In new Cppyy, addressof returns an integer/long
-         ad = self.AddressOf(s)
+         ad = AddressOf(s)
       else:
-         ad = self.AddressOf( s )[ 0 ]
+         ad = AddressOf( s )[ 0 ]
 
-      self.assert_( s == self.BindObject( co, s.__class__ ) )
-      self.assert_( s == self.BindObject( co, "TString" ) )
-      self.assert_( s == self.BindObject( ad, s.__class__ ) )
-      self.assert_( s == self.BindObject( ad, "TString" ) )
+      self.assert_( s == BindObject( co, s.__class__ ) )
+      self.assert_( s == BindObject( co, "TString" ) )
+      self.assert_( s == BindObject( ad, s.__class__ ) )
+      self.assert_( s == BindObject( ad, "TString" ) )
 
    def test15ObjectAndPointerComparisons( self ):
       """Verify object and pointer comparisons"""
-      MakeNullPointer = self.MakeNullPointer
 
       c1 = MakeNullPointer( TCanvas )
       self.assertEqual( c1, None )
