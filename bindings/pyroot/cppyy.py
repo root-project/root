@@ -241,6 +241,7 @@ if _builtin_cppyy:
 #--- Compatibility ------------------------------------------------------
 if not _builtin_cppyy:
    bind_object = _backend.BindObject
+   nullptr = _backend.nullptr
 
 #--- Pythonization factories --------------------------------------------
 import _pythonization
