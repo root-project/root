@@ -19,7 +19,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/layout/SplitterLayoutData',
                'sap/ui/codeeditor/CodeEditor',
                'sap/m/HBox',
-               'sap/m/Image'
+               'sap/m/Image',
+               'sap/m/Dialog',
+               'rootui5/browser/controller/FileDialog.controller'
 ],function(Controller,
            Link,
            Fragment,
@@ -41,8 +43,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            SplitterLayoutData,
            CodeEditor,
            HBox,
-           Image) {
-
+           Image,
+           Dialog,
+           FileDialogController) {
 
    "use strict";
 
@@ -252,8 +255,54 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
       },
 
+
+      /** @brief Invoke dialog with server side code */
+      onSaveAs: async function() {
+         if (!this.saveAsDialog) {
+
+            var fragment, controller = new FileDialogController;
+
+            controller.initDialog();
+
+            await Fragment.load({
+               name: "rootui5.browser.view.filedialog",
+               controller: controller,
+               id: "saveAsFragment"
+            }).then(function (oFragment) {
+               fragment = oFragment;
+               oFragment.setModel(controller.oModel);
+            });
+
+            this.saveAsDialog = new Dialog({
+               title: "Select name for saving file",
+               contentWidth: "70%",
+               contentHeight: "50%",
+               resizable: true,
+               draggable: true,
+               content: fragment,
+                beginButton: new Button({
+                  text: 'Cancel',
+                  press: this.closeSaveAsDialog.bind(this)
+                }),
+                endButton: new Button({
+                  text: 'Ok',
+                  press: this.closeSaveAsDialog.bind(this, true)
+                })
+            });
+
+            this.saveAsDialog.addStyleClass("sapUiSizeCompact");
+
+         }
+
+         this.saveAsDialog.open();
+      },
+
+      closeSaveAsDialog: function(on) {
+         this.saveAsDialog.close();
+      },
+
       /** @brief Handle the "Save As..." button press event */
-      onSaveAs: function () {
+      onSaveAsOld: function () {
          const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
          const sText = oModel.getProperty("/code");
