@@ -568,14 +568,10 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
    } else if (arg.compare(0, 5, "LOGS:") == 0) {
 
       TString pathtmp = TString::Format("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
-      std::string result;
-      std::string line;
-      std::ifstream infile(pathtmp.Data());
-      while (std::getline(infile, line))
-      {
-         result += line + "\n";
-      }
-      fWebWindow->Send(connid, "LOGS:"s + result);
+      TString result;
+      std::ifstream instr(pathtmp.Data());
+      result.ReadFile(instr);
+      fWebWindow->Send(connid, "LOGS:"s + result.Data());
 
    }
 }
