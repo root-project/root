@@ -32,7 +32,6 @@ sap.ui.define(['rootui5/panel/Controller',
          */
 
          this.kind = "None"; // not yet known
-
          this.oModel = new JSONModel({ dialogTitle: "Dialog Title", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
          this.getView().setModel(this.oModel);
 
@@ -45,6 +44,12 @@ sap.ui.define(['rootui5/panel/Controller',
             oFragment.setModel(pthis.oModel);
 
          });
+      },
+
+      /** @brief Use controller with m.Dialog, no separate view */
+      initDialog: function() {
+         this.kind = "None"; // not yet known
+         this.oModel = new JSONModel({ filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
       },
 
       onClosePress: async function() {
