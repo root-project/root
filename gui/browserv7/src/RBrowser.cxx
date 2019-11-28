@@ -30,6 +30,8 @@
 #include "TWebCanvas.h"
 #include "TCanvas.h"
 #include "TBufferJSON.h"
+#include "TApplication.h"
+#include "TRint.h"
 #include "TLeaf.h"
 #include "TBranch.h"
 #include "TTree.h"
@@ -526,7 +528,23 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 4, "CMD:") == 0) {
+
+      TString sPrompt = "root []";
+      TString pathtmp = TString::Format("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
+      TApplication *app = gROOT->GetApplication();
+      if (app->InheritsFrom("TRint"))
+         sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
+
+      FILE *lunout = fopen(pathtmp.Data(), "a+t");
+      if (lunout) {
+         fputs(Form("%s%s\n",sPrompt.Data(), arg.substr(4).c_str()), lunout);
+         fclose(lunout);
+      }
+
+      gSystem->RedirectOutput(pathtmp.Data(), "a");
       gROOT->ProcessLine(arg.substr(4).c_str());
+      gSystem->RedirectOutput(0);
+
    } else if (arg.compare(0, 9, "ROOTHIST:") == 0) {
       std::string homePath = gSystem->UnixPathName(gSystem->HomeDirectory());
       std::string histPath = "/.root_hist";
@@ -544,6 +562,18 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       std::string result;
       for (const auto &piece : unique_vector) result += piece + ",";
       fWebWindow->Send(connid, "HIST:"s + result);
+   } else if (arg.compare(0, 5, "LOGS:") == 0) {
+
+      TString pathtmp = TString::Format("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
+      std::string result;
+      std::string line;
+      std::ifstream infile(pathtmp.Data());
+      while (std::getline(infile, line))
+      {
+         result += line + "\n";
+      }
+      fWebWindow->Send(connid, "LOGS:"s + result);
+
    }
 }
 
