@@ -34,13 +34,16 @@ class ROOTFacade(types.ModuleType):
         self.gROOT = gROOT
 
         # Expose some functionality from CPyCppyy extension module
-        self._cppyy_exports = [ 'nullptr', 'bind_object',
+        self._cppyy_exports = [ 'nullptr', 'bind_object', 'as_cobject',
                                 'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict',
                                 'SetOwnership' ]
         for name in self._cppyy_exports:
             setattr(self, name, getattr(cppyy_backend, name))
+        # For backwards compatibility
         self.AddressOf = cppyy_backend.addressof
         self.MakeNullPointer = partial(self.bind_object, 0)
+        self.BindObject = self.bind_object
+        self.AsCObject = self.as_cobject
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
