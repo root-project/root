@@ -896,15 +896,27 @@ class TestClassDATATYPES:
                 arr = arr.shape.fromaddress(arr.itemaddress(0), self.N)
             if PYTEST_MIGRATION:
                 if self.exp_pyroot:
-                    # In new Cpyy, buffers have a reshape method
+                    # In new Cppyy, buffers have a reshape method
                     arr.reshape((self.N,))
+
+                    assert len(arr) == self.N
+
+                    l = list(arr)
+                    for i in range(self.N):
+                        assert arr[i] == l[i]
                 else:
                     arr.SetSize(self.N)
-            assert len(arr) == self.N
+                    # Test forward compatibility
+                    arr2 = getattr(c, func)()
+                    arr2.reshape((self.N,))
 
-            l = list(arr)
-            for i in range(self.N):
-                assert arr[i] == l[i]
+                    for a in arr,arr2:
+
+                        assert len(a) == self.N
+
+                        l = list(a)
+                        for i in range(self.N):
+                            assert a[i] == l[i]
 
     def test21_voidp(self):
         """Use of void* data"""
