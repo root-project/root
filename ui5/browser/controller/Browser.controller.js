@@ -1032,6 +1032,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!arr) return;
 
          this.updateBReadcrumbs(arr[0]);
+         this.requestRootHist();
 
          for (var k=1; k<arr.length; ++k)
             this.createCanvas(arr[k][0], arr[k][1], arr[k][2]);
