@@ -37,6 +37,7 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TFolder.h"
+#include "Getline.h"
 
 #include <sstream>
 #include <iostream>
@@ -532,8 +533,10 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       TString sPrompt = "root []";
       TString pathtmp = TString::Format("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
       TApplication *app = gROOT->GetApplication();
-      if (app->InheritsFrom("TRint"))
+      if (app->InheritsFrom("TRint")) {
          sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
+         Gl_histadd((char *)arg.substr(4).c_str());
+      }
 
       FILE *lunout = fopen(pathtmp.Data(), "a+t");
       if (lunout) {
