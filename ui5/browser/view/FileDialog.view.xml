@@ -5,14 +5,9 @@
           xmlns:core="sap.ui.core"
           xmlns:t="sap.ui.table"
           xmlns:l="sap.ui.layout">
-   <Page title="{/dialogTitle}" showNavButton="false" showFooter="true"
+   <Page id="dialogPage" title="{/dialogTitle}" showNavButton="false" showFooter="true"
          showSubHeader="false" showHeader="true" enableScrolling="true">
          <content>
-            <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-            </Breadcrumbs>
-            <List headerText="Files" items="{ path: '/filesList' }" itemPress="onItemPress">
-               <StandardListItem title="{name}" icon="{icon}" type="Active" />
-            </List>
          </content>
          <footer>
             <OverflowToolbar>

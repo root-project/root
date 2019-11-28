@@ -1,7 +1,8 @@
 sap.ui.define(['rootui5/panel/Controller',
                "sap/ui/model/json/JSONModel",
+               'sap/ui/core/Fragment',
                "sap/m/Link"
-],function(GuiPanelController, JSONModel, Link) {
+],function(GuiPanelController, JSONModel, Fragment, Link) {
 
    "use strict";
 
@@ -11,7 +12,6 @@ sap.ui.define(['rootui5/panel/Controller',
 
       //function called from GuiPanelController
       onPanelInit : function() {
-
 
          // TODO: provide functionality via BrowserModel - once we know that exactly we need
 
@@ -35,6 +35,16 @@ sap.ui.define(['rootui5/panel/Controller',
 
          this.oModel = new JSONModel({ dialogTitle: "Dialog Title", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
          this.getView().setModel(this.oModel);
+
+         var pthis = this;
+
+         Fragment.load({name: "rootui5.browser.view.filedialog", controller: this, id: "fragmentId"}).then(function (oFragment) {
+            pthis.getView().addDependent(oFragment);
+
+            pthis.getView().byId("dialogPage").addContent(oFragment);
+            oFragment.setModel(pthis.oModel);
+
+         });
       },
 
       onClosePress: async function() {
@@ -50,7 +60,7 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
       updateBReadcrumbs: function(split) {
-         let oBreadcrumbs = this.getView().byId("breadcrumbs");
+         var oBreadcrumbs = sap.ui.core.Fragment.byId("fragmentId", "breadcrumbs")
          oBreadcrumbs.removeAllLinks();
          for (let i=-1; i<split.length; i++) {
             let txt = i<0 ? "/": split[i];
