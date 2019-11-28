@@ -1,5 +1,6 @@
 import types
 import sys
+from functools import partial
 
 import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
@@ -39,6 +40,7 @@ class ROOTFacade(types.ModuleType):
         for name in self._cppyy_exports:
             setattr(self, name, getattr(cppyy_backend, name))
         self.AddressOf = cppyy_backend.addressof
+        self.MakeNullPointer = partial(self.bind_object, 0)
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
