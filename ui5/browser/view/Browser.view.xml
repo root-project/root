@@ -20,7 +20,11 @@
         </Page>
         <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
           <layoutData><l:SplitterLayoutData size="20%" /></layoutData>
-            <Input id="terminal-input" type="Text" placeholder="Enter command ..." submit="onTerminalSubmit"/>
+          <Input id="terminal-input" type="Text" placeholder="Enter command ..." submit="onTerminalSubmit" suggestionItems="{/hist}" showSuggestion="true">
+            <suggestionItems>
+              <core:Item text="{name}" />
+            </suggestionItems>
+          </Input>
             <TextArea id="output_log" value="Lorem ipsum dolor st amet" width="100%" height="calc(100% - 38px)"/>
         </Page>
       </l:Splitter>
