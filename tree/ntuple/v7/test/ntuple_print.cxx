@@ -315,7 +315,6 @@ TEST(RNTupleShow, VectorFields)
       fieldFloatVecVec->emplace_back(std::vector<float>{2.2, 2.3});
       fieldBoolVecVec->emplace_back(std::vector<bool>{false, true});
       ntuple->Fill();
-      //ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
    auto fieldIntVec = model2->MakeField<std::vector<int>>("intVec");

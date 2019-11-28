@@ -29,7 +29,6 @@ namespace ROOT {
 namespace Experimental {
 class RNTupleReader;
 namespace Detail {
-class RFieldValue;
 
 // clang-format off
 /**
@@ -155,7 +154,7 @@ public:
 \class ROOT::Experimental::RValueVisitor
 \ingroup NTuple
 \brief Traverses through an ntuple to display its entries.
-    
+
 Each visit outputs the entry of a single field as in a .json file. Used when RNTupleReader::Show() is called to show a single entry.
 */
 // clang-format on
