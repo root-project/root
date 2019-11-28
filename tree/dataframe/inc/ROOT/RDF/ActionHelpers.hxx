@@ -11,15 +11,6 @@
 #ifndef ROOT_RDFOPERATIONS
 #define ROOT_RDFOPERATIONS
 
-#include <algorithm>
-#include <limits>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <vector>
-#include <iomanip>
-
 #include "Compression.h"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
@@ -43,6 +34,15 @@
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
+
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
+#include <iomanip>
 
 /// \cond HIDDEN_SYMBOLS
 
