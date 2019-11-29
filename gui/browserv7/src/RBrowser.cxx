@@ -538,7 +538,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
          Gl_histadd((char *)arg.substr(4).c_str());
       }
 
-      std::ofstream ofs(filename, pathtmp.str(), std::ofstream::out | std::ofstream::app);
+      std::ofstream ofs(pathtmp.str(), std::ofstream::out | std::ofstream::app);
       ofs << sPrompt << arg.substr(4);
       ofs.close();
 
@@ -547,13 +547,12 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       gSystem->RedirectOutput(0);
    } else if (arg.compare(0, 9, "ROOTHIST:") == 0) {
       std::ostringstream path;
-      path << gSystem->UnixPathName(gSystem->HomeDirectory() << "/.root_hist" ;
-      std::ifstream infile(path);
+      path << gSystem->UnixPathName(gSystem->HomeDirectory()) << "/.root_hist" ;
+      std::ifstream infile(path.str());
 
       std::vector<std::string> unique_vector;
       std::string line;
-      while (std::getline(infile, line))
-      {
+      while (std::getline(infile, line)) {
          if(!(std::find(unique_vector.begin(), unique_vector.end(), line) != unique_vector.end())) {
             unique_vector.push_back(line);
          }
