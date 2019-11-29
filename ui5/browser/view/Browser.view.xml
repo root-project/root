@@ -3,6 +3,7 @@
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
           xmlns:t="sap.ui.table"
+          xmlns:core="sap.ui.core"
           xmlns:l="sap.ui.layout"
           xmlns:tnt="sap.tnt">
 
@@ -75,7 +76,7 @@
 
           <detailPages>
             <l:Splitter orientation="Vertical">
-              <Page title="Javascript ROOT Browser">
+              <Page title="Javascript ROOT Browser" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
                 <TabContainer id="myTabContainer" showAddNewButton="true" addNewButtonPress="addNewButtonPressHandler" itemSelect="tabSelectItem" itemClose="tabCloseHandler" />
               </Page>
               <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
