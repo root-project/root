@@ -25,7 +25,9 @@
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserTObjectItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserTKeyItem+;
+
 #pragma link C++ class ROOT::Experimental::RBrowserFileItem+;
+#pragma link C++ class ROOT::Experimental::Browsable::SysFileElement+;
 
 #pragma link C++ class ROOT::Experimental::RBrowserRequest+;
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
