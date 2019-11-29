@@ -6087,6 +6087,9 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
 
 Int_t TCling::AutoParse(const char *cls)
 {
+   if (llvm::StringRef(cls).contains("(lambda)"))
+      return 0;
+
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!fHeaderParsingOnDemand || fIsAutoParsingSuspended) {
