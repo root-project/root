@@ -223,3 +223,15 @@ TEST_F(TClingTests, GetSharedLibDeps)
    EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")),
                      "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library '   '\n");
 }
+
+// Check the interface which interacts with the cling::LookupHelper.
+TEST_F(TClingTests, ClingLookupHelper) {
+  // Exception spec evaluation.
+  // Emulate the LookupHelper sequence:
+  // auto S = LookupHelper::findScope("ROOT::Internal::RDF", diag)
+  // LookupHelper::findAnyFunction(S, "RDataFrameTake<float>", diag)
+  // LookupHelper::findAnyFunction(S, "RDataFrameTake<std::vector<float>>", diag)
+  auto *cl = gCling->ClassInfo_Factory("ROOT::Internal::RDF");
+  gCling->GetFunction(cl, "RDataFrameTake<float>");
+  gCling->GetFunction(cl, "RDataFrameTake<std::vector<float>>");
+}
