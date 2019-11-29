@@ -1,15 +1,25 @@
 <core:FragmentDefinition
    xmlns="sap.m"
    xmlns:core="sap.ui.core">
-   <VBox width="100%">
-      <items>
-         <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
-         </Breadcrumbs>
-         <List headerText="Files" items="{ path: '/filesList' }"
-            itemPress="onItemPress">
-            <StandardListItem title="{name}" icon="{icon}"
-               type="Active" />
-         </List>
-      </items>
-   </VBox>
+   <Page title="" showNavButton="false"
+         showHeader="false" showSubHeader="true" showFooter="{/canEnterFile}" enableScrolling="true">
+         <subHeader>
+            <OverflowToolbar>
+               <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+               </Breadcrumbs>
+            </OverflowToolbar>
+         </subHeader>
+         <content>
+            <List headerText="Files" items="{ path: '/filesList' }"
+                  itemPress="onItemPress">
+                <StandardListItem title="{name}" icon="{icon}" type="Active" />
+            </List>
+         </content>
+         <footer>
+            <OverflowToolbar>
+               <Input id="SelectedFile" type="Text" placeholder="Enter file name" value="{/fileName}">
+               </Input>
+            </OverflowToolbar>
+         </footer>
+   </Page>
 </core:FragmentDefinition>

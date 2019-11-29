@@ -48,16 +48,30 @@ sap.ui.define(['rootui5/panel/Controller',
          });
       },
 
-      /** @brief Use controller with m.Dialog, no separate view */
-      initDialog: function(conn) {
+      /** @brief Use controller with m.Dialog, no separate view
+       * @private
+       * TODO: make special method to create full dialog here */
+      initDialog: function(conn, filename) {
 
          console.log("CALLING FileDialog.initDialog");
          this.kind = "None"; // not yet known
-         this.oModel = new JSONModel({ filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
+         this.oModel = new JSONModel({ canEnterFile: true, fileName: filename || "", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
 
          // just initialize, server should confirm creation of channel
          this.websocket = conn;
          conn.SetReceiver(this);
+      },
+
+      // returns full file name as array
+      getFullFileName: function() {
+         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
+         let oLinks = oBreadcrumbs.getLinks();
+         let path = [];
+         for (let i = 0; i < oLinks.length; i++) {
+            if (i>0) path.push(oLinks[i].getText());
+         }
+         path.push(this.oModel.getProperty("/fileName"));
+         return path;
       },
 
       onClosePress: async function() {
@@ -65,15 +79,8 @@ sap.ui.define(['rootui5/panel/Controller',
          this.isConnected = false;
       },
 
-      /** @brief Send RBrowserRequest to the browser, not yet used */
-      sendBrowserRequest: function(_oper, args) {
-         var req = { path: "", first: 0, number: 0, sort: _oper };
-         JSROOT.extend(req, args);
-         this.websocket.Send("BRREQ:" + JSON.stringify(req));
-      },
-
       updateBReadcrumbs: function(split) {
-         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs")
+         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
          oBreadcrumbs.removeAllLinks();
          for (let i=-1; i<split.length; i++) {
             let txt = i<0 ? "/": split[i];
@@ -115,16 +122,23 @@ sap.ui.define(['rootui5/panel/Controller',
      closeFileDialog: function() {
         // add more logic when FileDialog embed into main window
         if (this.did_close) return;
-        if (window) window.open('','_self').close();
+        console.log('TRY TO CLOSE FILE DIALOG');
+
+        if (this.dialog) {
+           this.dialog.close();
+           this.dialog.destroy();
+        } else if (window) {
+           window.open('','_self').close();
+        }
+
         this.did_close = true;
      },
 
+      OnWebsocketOpened: function(handle) {
+         this.isConnected = true;
 
-     OnWebsocketOpened: function(handle) {
-        this.isConnected = true;
-
-        if (this.model)
-           this.model.sendFirstRequest(this.websocket);
+         if (this.model)
+            this.model.sendFirstRequest(this.websocket);
       },
 
       OnWebsocketClosed: function() {
@@ -134,8 +148,8 @@ sap.ui.define(['rootui5/panel/Controller',
          this.isConnected = false;
       },
 
-     /** Entry point for all data from server */
-     OnWebsocketMsg: function(handle, msg) {
+      /** Entry point for all data from server */
+      OnWebsocketMsg: function(handle, msg) {
 
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
@@ -171,11 +185,16 @@ sap.ui.define(['rootui5/panel/Controller',
 
          // console.log('Property', prop);
 
-         if (prop && (prop.icon == "sap-icon://folder-blank"))
+         if (prop && (prop.icon == "sap-icon://folder-blank")) {
+            this.oModel.setProperty("/fileName", "");
             return this.websocket.Send('CHDIR:' + item.getTitle()); // dialog send chdir
+         }
+
+
+         this.oModel.setProperty("/fileName", item.getTitle());
 
          // this is final selection, server should close connection at the end
-         this.websocket.Send('SELECT:' + item.getTitle());
+         // this.websocket.Send('SELECT:' + item.getTitle());
       },
 
       onBeforeRendering: function() {
