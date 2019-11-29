@@ -259,20 +259,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Invoke dialog with server side code */
       onSaveAs: async function() {
 
+         const oEditor = this.getSelectedCodeEditor();
+         const oModel = oEditor.getModel();
+         const sText = oModel.getProperty("/code");
+         let filename = oModel.getProperty("/fullfilename");
+
          var newconn = this.websocket.CreateChannel();
 
-         var fragment, controller = new FileDialogController;
+         var fragment;
 
-         controller.initDialog(newconn);
+         this.saveAsController = new FileDialogController;
+
+         this.saveAsController.initDialog(newconn, filename);
 
          await Fragment.load({
             name: "rootui5.browser.view.filedialog",
-            controller: controller,
+            controller: this.saveAsController,
             id: "FileDialogFragment"
          }).then(function (oFragment) {
             fragment = oFragment;
-            oFragment.setModel(controller.oModel);
          });
+
+         fragment.setModel(this.saveAsController.oModel);
 
          this.saveAsDialog = new Dialog({
             title: "Select name for saving file",
@@ -295,16 +303,38 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.saveAsDialog.open();
 
-         const oEditor = this.getSelectedCodeEditor();
-         const oModel = oEditor.getModel();
+         this.saveAsController.dialog = this.saveAsDialog;
 
-         this.websocket.Send("SAVEAS:" + JSON.stringify([ oModel.getProperty("/filename") || "untiled",  newconn.getChannelId().toString() ]));
+         this.websocket.Send("SAVEAS:" + JSON.stringify([ filename || "untiled",  newconn.getChannelId().toString() ]));
       },
 
       closeSaveAsDialog: function(on) {
-         this.saveAsDialog.close();
-         this.saveAsDialog.destroy();
+         if (this.saveAsController) {
 
+            if (on) {
+               var fullname = this.saveAsController.getFullFileName();
+               console.log('Save AS', fullname);
+
+               const oEditor = this.getSelectedCodeEditor();
+               const oModel = oEditor.getModel();
+               const sText = oModel.getProperty("/code");
+
+               fullname.push(sText);
+
+               this.websocket.Send("DOSAVE:" + JSON.stringify(fullname));
+            }
+
+            this.saveAsController.websocket.Close();
+            delete this.saveAsController;
+         }
+
+         if (this.saveAsDialog) {
+            this.saveAsDialog.close();
+            this.saveAsDialog.destroy();
+            delete this.saveAsDialog;
+
+            this.websocket.Send("CLOSESAVEAS");
+         }
       },
 
       /** @brief Handle the "Save As..." button press event */
@@ -453,6 +483,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                break;
          }
          oTabElement.setAdditionalText(filename);
+         oModel.setProperty("/fullfilename", filename);
          if (filename.lastIndexOf('.') > 0)
             filename = filename.substr(0, filename.lastIndexOf('.'));
          oModel.setProperty("/filename", filename);
@@ -818,13 +849,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          for (var k = 0; k < rows.length; ++k) {
             rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
          }
-      },
-
-      /** @brief Send RBrowserRequest to the browser */
-      sendBrowserRequest: function (_oper, args) {
-         var req = {path: "", first: 0, number: 0, sort: _oper};
-         JSROOT.extend(req, args);
-         this.websocket.Send("BRREQ:" + JSON.stringify(req));
       },
 
       sendDblClick: function (fullpath, opt) {
