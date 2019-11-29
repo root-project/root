@@ -1806,7 +1806,7 @@
       this.wait_for_file = false;
       if (!res) return;
       if (this.receiver.ProvideData)
-         this.receiver.ProvideData(res, 0);
+         this.receiver.ProvideData(1, res, 0);
       setTimeout(this.next_operation.bind(this),10);
    }
 
@@ -1856,16 +1856,35 @@
 
    /** Invoke method in the receiver.
     * @private */
-   WebWindowHandle.prototype.InvokeReceiver = function(method, arg, arg2) {
+   WebWindowHandle.prototype.InvokeReceiver = function(brdcst, method, arg, arg2) {
       if (this.receiver && (typeof this.receiver[method] == 'function'))
          this.receiver[method](this, arg, arg2);
+
+      if (brdcst & this.channels) {
+         var ks = Object.keys(this.channels);
+         for (var n=0;n<ks.length;++n)
+            this.channels[ks[n]].InvokeReceiver(false, method, arg, arg2);
+      }
    }
 
    /** Provide data for receiver. When no queue - do it directly.
     * @private */
-   WebWindowHandle.prototype.ProvideData = function(_msg, _len) {
+   WebWindowHandle.prototype.ProvideData = function(chid, _msg, _len) {
+      if (this.wait_first_recv) {
+         console.log("FIRST MESSAGE", chid, _msg);
+         delete this.wait_first_recv;
+         return this.InvokeReceiver(false, "OnWebsocketOpened");
+      }
+
+      if ((chid > 1) && this.channels)  {
+         var channel = this.channels[chid];
+         if (channel)
+            return channel.ProvideData(1, _msg, _len);
+      }
+
       if (!this.msgqueue || !this.msgqueue.length)
-         return this.InvokeReceiver("OnWebsocketMsg", _msg, _len);
+         return this.InvokeReceiver(false, "OnWebsocketMsg", _msg, _len);
+
       this.msgqueue.push({ ready: true, msg: _msg, len: _len});
    }
 
@@ -1888,7 +1907,7 @@
       this._loop_msgqueue = true;
       while ((this.msgqueue.length > 0) && this.msgqueue[0].ready) {
          var front = this.msgqueue.shift();
-         this.InvokeReceiver("OnWebsocketMsg", front.msg, front.len);
+         this.InvokeReceiver(false, "OnWebsocketMsg", front.msg, front.len);
       }
       if (this.msgqueue.length == 0)
          delete this.msgqueue;
@@ -1897,6 +1916,12 @@
 
    /** Close connection. */
    WebWindowHandle.prototype.Close = function(force) {
+      if (this.master) {
+         delete this.master.channels[this.channelid];
+         delete this.master;
+         return;
+      }
+
       if (this.timerid) {
          clearTimeout(this.timerid);
          delete this.timerid;
@@ -1917,6 +1942,9 @@
 
    /** Send text message via the connection. */
    WebWindowHandle.prototype.Send = function(msg, chid) {
+      if (this.master)
+         return this.master.Send(msg, this.channelid);
+
       if (!this._websocket || (this.state<=0)) return false;
 
       if (isNaN(chid) || (chid===undefined)) chid = 1; // when not configured, channel 1 is used - main widget
@@ -1942,6 +1970,36 @@
       delete this.timerid;
       this.Send("KEEPALIVE", 0);
    }
+
+   /** Method open channel, which will share same connection, but can be used independently from main
+    * @private */
+   WebWindowHandle.prototype.CreateChannel = function() {
+      if (this.master)
+         return master.CreateChannel();
+
+      var channel = new WebWindowHandle("channel");
+      channel.wait_first_recv = true; // first received message via the channel is confirmation of established connection
+
+      if (!this.channels) {
+         this.channels = {};
+         this.freechannelid = 2;
+      }
+
+      channel.master = this;
+      channel.channelid = this.freechannelid++;
+
+      // register
+      this.channels[channel.channelid] = channel;
+
+      // now server-side entity should be initialized and init message send from server side!
+      return channel;
+   }
+
+   /** Returns used channel ID, 1 by default */
+   WebWindowHandle.prototype.getChannelId = function() {
+      return this.channelid && this.master ? this.channelid : 1;
+   }
+
 
    /** Method opens relative path with the same kind of socket.
     * @private
@@ -2012,13 +2070,15 @@
             var key = pthis.key || "";
 
             pthis.Send("READY=" + key, 0); // need to confirm connection
-            pthis.InvokeReceiver('OnWebsocketOpened');
+            pthis.InvokeReceiver(false, "OnWebsocketOpened");
          }
 
          conn.onmessage = function(e) {
             var msg = e.data;
 
             if (pthis.next_binary) {
+
+               var binchid = pthis.next_binary;
                delete pthis.next_binary;
 
                if (msg instanceof Blob) {
@@ -2033,7 +2093,7 @@
                } else {
                   // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
                   // this is from CEF or LongPoll handler
-                  pthis.ProvideData(msg, e.offset || 0);
+                  pthis.ProvideData(binchid, msg, e.offset || 0);
                }
 
                return;
@@ -2059,14 +2119,14 @@
                console.log('GET chid=0 message', msg);
                if (msg == "CLOSE") {
                   pthis.Close(true); // force closing of socket
-                  pthis.InvokeReceiver('OnWebsocketClosed');
+                  pthis.InvokeReceiver(true, "OnWebsocketClosed");
                }
             } else if (msg == "$$binary$$") {
-               pthis.next_binary = true;
+               pthis.next_binary = chid;
             } else if (msg == "$$nullbinary$$") {
-               pthis.ProvideData(new ArrayBuffer(0), 0);
+               pthis.ProvideData(chid, new ArrayBuffer(0), 0);
             } else {
-               pthis.ProvideData(msg);
+               pthis.ProvideData(chid, msg);
             }
 
             if (pthis.ackn > 7)
@@ -2078,14 +2138,14 @@
             if (pthis.state > 0) {
                console.log('websocket closed');
                pthis.state = 0;
-               pthis.InvokeReceiver('OnWebsocketClosed');
+               pthis.InvokeReceiver(true, "OnWebsocketClosed");
             }
          }
 
          conn.onerror = function (err) {
             console.log("websocket error " + err);
             if (pthis.state > 0) {
-               pthis.InvokeReceiver('OnWebsocketError', err);
+               pthis.InvokeReceiver(true, "OnWebsocketError", err);
                pthis.state = 0;
             }
          }
