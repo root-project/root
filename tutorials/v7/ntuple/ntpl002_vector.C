@@ -121,7 +121,10 @@ void Read()
 
    // Quick overview of the ntuple's key meta-data
    ntuple->PrintInfo();
-   // In a future version of RNTuple, there will be support for ntuple->Show() and ntuple->Scan()
+   
+   std::cout << "The entry No.42 in JSON format:" << std::endl;
+   ntuple->Show(41);
+   // In a future version of RNTuple, there will be support for ntuple->Scan()
 
    TCanvas *c2 = new TCanvas("c2", "Dynamic Filling Example", 200, 10, 700, 500);
    TH1F h("h", "This is the px distribution", 100, -4, 4);
