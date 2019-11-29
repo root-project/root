@@ -753,29 +753,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.getView().byId("output_log").setValue(logs);
       },
 
-      updateLog: function() {
-         let url = 'log/exe.json?method=ReadOutputLog';
-         JSROOT.NewHttpRequest(url, 'object', function(res) {
-            let output_log = document.getElementById("output_log");
-            if (res !== null) {
-               var string_log = res.fString;
-               output_log.value += string_log;
-            }
-            output_log.value += "root[" + document.n_cmd + "] ";
-            output_log.scrollTop = output_log.scrollHeight;
-         }).send();
-      },
-
-      updateCanvas: function() {
-         let url = 'c1/root.json.gz?compact=3';
-         JSROOT.NewHttpRequest(url, 'object', function(canvas) {
-            if (canvas == null) return;
-            document.getElementById('object_draw').innerHTML = "";
-            JSROOT.redraw('object_draw', canvas);
-         }).send();
-      },
-
-
       /* ======================================== */
       /* =============== Terminal =============== */
       /* ======================================== */
