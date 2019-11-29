@@ -530,21 +530,22 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 4, "CMD:") == 0) {
 
-      TString sPrompt = "root []";
-      TString pathtmp = TString::Format("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
+      std::string sPrompt = "root []";
+//      std::string pathtmp = Form("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
+      std::ostringstream pathtmp;
+      pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
       TApplication *app = gROOT->GetApplication();
       if (app->InheritsFrom("TRint")) {
          sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
          Gl_histadd((char *)arg.substr(4).c_str());
       }
 
-      FILE *lunout = fopen(pathtmp.Data(), "a+t");
-      if (lunout) {
-         fputs(Form("%s%s\n",sPrompt.Data(), arg.substr(4).c_str()), lunout);
-         fclose(lunout);
-      }
+      std::ofstream ofs;
+      ofs.open(pathtmp.str(), std::ofstream::out | std::ofstream::app);
+      ofs << sPrompt << arg.substr(4);
+      ofs.close();
 
-      gSystem->RedirectOutput(pathtmp.Data(), "a");
+      gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
       gROOT->ProcessLine(arg.substr(4).c_str());
       gSystem->RedirectOutput(0);
 
@@ -567,9 +568,10 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       fWebWindow->Send(connid, "HIST:"s + result);
    } else if (arg.compare(0, 5, "LOGS:") == 0) {
 
-      TString pathtmp = TString::Format("%s/command.%d.log", gSystem->TempDirectory(), gSystem->GetPid());
+      std::ostringstream pathtmp;
+      pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
       TString result;
-      std::ifstream instr(pathtmp.Data());
+      std::ifstream instr(pathtmp.str().c_str());
       result.ReadFile(instr);
       fWebWindow->Send(connid, "LOGS:"s + result.Data());
 
