@@ -1311,16 +1311,20 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       GetEnvVarPath("CLING_MODULEMAP_PATH", Paths);
 
       // Give highest precedence of the modulemap in the cwd.
-      std::string CWD = gSystem->WorkingDirectory();
-      std::string ModuleMapCWD
-         = CWD + ROOT::FoundationUtils::GetPathSeparator() + "module.modulemap";
-      if (llvm::sys::fs::exists(ModuleMapCWD))
-         Paths.push_back(CWD);
+      Paths.push_back(gSystem->WorkingDirectory());
 
       for (const std::string& P : Paths) {
-         clingArgsStorage.push_back(("-fmodule-map-file=" + P +
-                                     ROOT::FoundationUtils::GetPathSeparator()
-                                     + "module.modulemap"));
+         std::string ModuleMapLoc = P + ROOT::FoundationUtils::GetPathSeparator()
+            + "module.modulemap";
+         if (!llvm::sys::fs::exists(ModuleMapLoc)) {
+            if (gDebug > 1)
+               ::Info("TCling::TCling", "Modulemap %s does not exist \n",
+                      ModuleMapLoc.c_str());
+
+            continue;
+         }
+
+         clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapLoc);
       }
    }
 
