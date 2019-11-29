@@ -1,6 +1,6 @@
 /// \file RDrawStorage.cxx
 /// \ingroup NTupleDraw ROOT7
-/// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
+/// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-11-07
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -33,6 +33,7 @@
 #include <TText.h>
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstring>
 #include <iostream>
@@ -83,9 +84,9 @@ void ROOT::Experimental::Detail::RMetaDataBox::Inspect() const
 
 ClassImp(ROOT::Experimental::Detail::RMetaDataBox)
 
-   // ------------------------------ RPageBox ----------------------------------
+// ------------------------------ RPageBox ----------------------------------
 
-   void ROOT::Experimental::Detail::RPageBox::Dump() const
+void ROOT::Experimental::Detail::RPageBox::Dump() const
 {
    std::cout << " ==> Dumping Page information:\n\n";
    std::cout << "Page Id:                \t\t" << fPageBoxId << " / " << fParent->GetPageBoxSize() << std::endl;
@@ -177,9 +178,12 @@ void ROOT::Experimental::Detail::RPageBox::Inspect() const
 
 ClassImp(ROOT::Experimental::Detail::RPageBox)
 
-   // ------------------------------ RDrawStorage ------------------------------
+// ------------------------------ RDrawStorage ------------------------------
 
-   ROOT::Experimental::Detail::RPageBox::RPageBox(double x1, double y1, double x2, double y2, std::string fieldName,
+constexpr std::array<const char*, 12/*15*/> ROOT::Experimental::RColumnTypeIdentifier::fColumnTypeNames;
+constexpr std::array<ROOT::Experimental::ClusterSize_t::ValueType, 12 /*15*/> ROOT::Experimental::RColumnTypeIdentifier::fColumnBitSizeOnDisk;
+
+ROOT::Experimental::Detail::RPageBox::RPageBox(double x1, double y1, double x2, double y2, std::string fieldName,
                                                   std::string fieldType, DescriptorId_t fieldId,
                                                   DescriptorId_t columnId, DescriptorId_t clusterId,
                                                   EColumnType columnType, ClusterSize_t::ValueType nElements,
@@ -190,70 +194,8 @@ ClassImp(ROOT::Experimental::Detail::RPageBox)
      fClusterId{clusterId}, fNElements{nElements}, fGlobalRangeStart{globalRangeStart},
      fClusterRangeStart{clusterRangeStart}, fLocator{locator}, fParent{parent}, fPageBoxId{pageBoxId}
 {
-   switch (columnType) {
-   case EColumnType::kIndex:
-      fColumnType = "Index";
-      fElementSizeOnDisk = sizeof(ClusterSize_t) * 8;
-      break;
-   case EColumnType::kSwitch:
-      fColumnType = "Switch";
-      fElementSizeOnDisk = sizeof(ROOT::Experimental::RColumnSwitch) * 8;
-      break;
-   case EColumnType::kByte:
-      fColumnType = "Byte";
-      fElementSizeOnDisk = sizeof(char) * 8;
-      break;
-   case EColumnType::kBit:
-      fColumnType = "Bit";
-      fElementSizeOnDisk = sizeof(bool) * 8;
-      break;
-   case EColumnType::kReal64:
-      fColumnType = "Real64";
-      fElementSizeOnDisk = sizeof(double) * 8;
-      break;
-   case EColumnType::kReal32:
-      fColumnType = "Real32";
-      fElementSizeOnDisk = sizeof(float) * 8;
-      break;
-   // Uncomment after implementing custom-sized float-packing.
-   /*case EColumnType::kReal24:
-      fColumnType = "Real24";
-      fElementSizeOnDisk = 24;
-      break;
-   case EColumnType::kCustomDouble:
-      fColumnType = "CustomDouble";
-      fElementSizeOnDisk = sizeof(double)*8;
-      break;
-   case EColumnType::kCustomFloat:
-      fColumnType = "CustomFloat";
-      fElementSizeOnDisk = sizeof(float)*8;
-      break;*/
-   case EColumnType::kReal16:
-      fColumnType = "Real16";
-      fElementSizeOnDisk = 16;
-      break;
-   case EColumnType::kReal8:
-      fColumnType = "Real8";
-      fElementSizeOnDisk = 8;
-      break;
-   case EColumnType::kInt64:
-      fColumnType = "Int64";
-      fElementSizeOnDisk = 64;
-      break;
-   case EColumnType::kInt32:
-      fColumnType = "Int32";
-      fElementSizeOnDisk = 32;
-      break;
-   case EColumnType::kInt16:
-      fColumnType = "Int16";
-      fElementSizeOnDisk = 16;
-      break;
-   case EColumnType::kUnknown:
-      fColumnType = "kUnknown";
-      fElementSizeOnDisk = -1;
-      break;
-   default: assert(false);
-   }
+   fColumnType = std::string{RColumnTypeIdentifier::GetColumnTypeNames(static_cast<std::int32_t>(columnType))};
+   fElementSizeOnDisk = RColumnTypeIdentifier::GetColumnBitSizeOnDisk(static_cast<std::int32_t>(columnType));
 }
 
 ROOT::Experimental::Detail::RDrawStorage::RDrawStorage(ROOT::Experimental::RNTupleReader *reader)
@@ -451,7 +393,8 @@ void ROOT::Experimental::Detail::RDrawStorage::Draw()
 
    // 2. Create a new canvas
    static std::int32_t uniqueId = 0;
-   // Trying to delete multiple canvases with the same name leads to an error or when two canvases have the same name, only 1 may get deleted, causing a memory leak.
+   // Trying to delete multiple canvases with the same name leads to an error or when two canvases have the same name,
+   // only 1 may get deleted, causing a memory leak.
    std::string uniqueCanvasName = "RDrawStorage" + std::to_string(++uniqueId);
    fCanvasPtrs.emplace_back(new TCanvas(uniqueCanvasName.c_str(), fNTupleName.c_str(), 1000, 300));
 
@@ -581,15 +524,6 @@ ROOT::Experimental::RNTupleDraw::RNTupleDraw(const std::unique_ptr<RNTupleReader
    fStorage = &Detail::RDrawStorage::fgDrawStorageVec.back();
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleDraw>
-ROOT::Experimental::RNTupleDraw::Open(const std::unique_ptr<RNTupleReader> &reader)
-{
-   if (reader == nullptr) {
-      std::cout << "The RNTupleReader is invalid, a nullptr was returned." << std::endl;
-      return nullptr;
-   }
-   return std::make_unique<RNTupleDraw>(reader);
-}
 
 void ROOT::Experimental::RNTupleDraw::Draw()
 {

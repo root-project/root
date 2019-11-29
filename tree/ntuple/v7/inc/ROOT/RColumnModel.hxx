@@ -16,8 +16,10 @@
 #ifndef ROOT7_RColumnModel
 #define ROOT7_RColumnModel
 
+#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <array>
 #include <string>
 
 namespace ROOT {
@@ -43,11 +45,53 @@ enum class EColumnType {
    kBit,
    kReal64,
    kReal32,
+   // kReal24, to uncomment after implementing custom-sized float
    kReal16,
    kReal8,
    kInt64,
    kInt32,
    kInt16,
+   // kCustomDouble, to uncomment after implementing custom-sized float
+   // kCustomFloat, to uncomment after implementing custom-sized float
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RColumnTypeIdentifier
+\ingroup NTuple
+\brief Holds static arrays with EColumnType MetaData
+
+Contains static arrays to obtain information about a specific columnType.
+*/
+// clang-format on
+class RColumnTypeIdentifier {
+public:
+   static constexpr std::array<const char *, 12 /*15*/> fColumnTypeNames{
+      "Unknown", "Index", "Switch", "Byte", "Bit", "Real64", "Real32", /*"Real24", */ "Real16",
+      "Real8",   "Int64", "Int32",  "Int16" /*, "CustomDouble", "CustomFloat"*/};
+   static constexpr std::array<ClusterSize_t::ValueType, 12 /*15*/> fColumnBitSizeOnDisk{
+      0,
+      sizeof(ClusterSize_t) * 8,
+      sizeof(ROOT::Experimental::RColumnSwitch) * 8,
+      sizeof(char) * 8,
+      sizeof(bool) * 8,
+      sizeof(double) * 8,
+      sizeof(float) * 8,/*, 24*/
+      16,
+      8,
+      64,
+      32,
+      16 /*, sizeof(double)*8, sizeof(float)*8*/};
+   static const char *GetColumnTypeNames(std::uint32_t index)
+   {
+      assert(index < fColumnTypeNames.size());
+      return fColumnTypeNames[index];
+   }
+   static ClusterSize_t::ValueType GetColumnBitSizeOnDisk(std::uint32_t index)
+   {
+      assert(index < fColumnBitSizeOnDisk.size());
+      return fColumnBitSizeOnDisk[index];
+   }
 };
 
 // clang-format off
@@ -69,9 +113,7 @@ public:
    EColumnType GetType() const { return fType; }
    bool GetIsSorted() const { return fIsSorted; }
 
-   bool operator ==(const RColumnModel &other) const {
-      return (fType == other.fType) && (fIsSorted == other.fIsSorted);
-   }
+   bool operator==(const RColumnModel &other) const { return (fType == other.fType) && (fIsSorted == other.fIsSorted); }
 };
 
 } // namespace Experimental

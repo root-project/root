@@ -1,6 +1,6 @@
 /// \file ROOT/RDrawStorage.hxx
 /// \ingroup NTupleDraw ROOT7
-/// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
+/// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-11-07
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -42,7 +42,8 @@ class RDrawStorage;
 \ingroup NTupleDraw
 \brief A TBox which contains metadata information of a RNTuple
 
-A RMetaDataBox is drawn on the TCanvas showing the RNTuple storage layout and represents some metadata (header or footer) in the RNTuple. It also holds some data of the metadata it represents, like its byte size.
+A RMetaDataBox is drawn on the TCanvas showing the RNTuple storage layout and represents some metadata (header or
+footer) in the RNTuple. It also holds some data of the metadata it represents, like its byte size.
 */
 // clang-format on
 class RMetaDataBox : public TBox {
@@ -67,7 +68,8 @@ public:
 \ingroup NTupleDraw
 \brief A TBox which represents a RPage
 
-A RPageBox is drawn on the TCanvas showing the RNTuple storage layout and represents a RPage in the RNTuple. It also holds various data of a RPage, which allows the user to dump/inspect the RPageBox to obtain information about the RPage.
+A RPageBox is drawn on the TCanvas showing the RNTuple storage layout and represents a RPage in the RNTuple. It also
+holds various data of a RPage, which allows the user to dump/inspect the RPageBox to obtain information about the RPage.
 */
 // clang-format on
 class RPageBox : public TBox {
@@ -110,7 +112,8 @@ public:
 \ingroup NTupleDraw
 \brief Main class for drawing the storage layout of a RNTuple
 
-This class coordinates the drawing process of the storage layout of a RNTuple. It also holds all generated unique pointers with a static member variable until ROOT is terminated, in order for the drawing to persist.
+This class coordinates the drawing process of the storage layout of a RNTuple. It also holds all generated unique
+pointers with a static member variable until ROOT is terminated, in order for the drawing to persist.
 */
 // clang-format on
 class RDrawStorage {
@@ -129,8 +132,9 @@ private:
    std::vector<std::unique_ptr<TLine>> fLines;
    // Not Stored as a unique_ptr because ROOT will sometimes delete fPad before the destructor of this class is called.
    TPad *fPad;
-   // Not Stored as as unique_ptrs in a vector because ROOT will sometimes delete fTH1Fs before the destructor of this class is called.
-   std::vector<TH1F*> fTH1Fs;
+   // Not Stored as as unique_ptrs in a vector because ROOT will sometimes delete fTH1Fs before the destructor of this
+   // class is called.
+   std::vector<TH1F *> fTH1Fs;
    std::string fNTupleName;
    std::string fAxisTitle; // for TLatex in RDrawStorage::Draw()
    std::unique_ptr<RMetaDataBox> fHeaderBox;
@@ -141,9 +145,10 @@ private:
 public:
    // holds all generated cavas pointers in case they need to be manually destructed in the future due to changes in
    // ROOT.
-   std::vector<TCanvas*> fCanvasPtrs;
+   std::vector<TCanvas *> fCanvasPtrs;
    RDrawStorage(RNTupleReader *reader);
-   /// holds all created RDrawStorage instances until the lifetime
+   /// holds all created RDrawStorage instances until the ROOT program is terminated. Deleting a RDrawStorage earlier
+   /// could cause objects drawn on the canvas to get deleted along with it.
    static std::vector<RDrawStorage> fgDrawStorageVec;
    static std::int32_t GetColourFromFieldId(DescriptorId_t fieldId);
    std::size_t GetPageBoxSize() const { return fPageBoxes.size(); }
@@ -163,16 +168,18 @@ public:
 \ingroup NTupleDraw
 \brief User interface for drawing the structure of an ntuple
 
-This class acts as a user interface like RNTupleWriter and RNTupleReader. It acts as a delegeator to RDrawStorage instead of doing the drawing job itself. This way the lifetime of the data displayed on the canvas is tied to the termination of the ROOT program and not to the destruction of a RNTupleDraw or RNTupleReader instance.
+This class acts as a user interface like RNTupleWriter and RNTupleReader. It acts as a delegeator to RDrawStorage
+instead of doing the drawing job itself. This way the lifetime of the data displayed on the canvas is tied to the
+termination of the ROOT program and not to the destruction of a RNTupleDraw or RNTupleReader instance.
 */
 // clang-format on
 class RNTupleDraw {
 private:
    Detail::RDrawStorage *fStorage;
    bool fEmpty = false;
+
 public:
    RNTupleDraw(const std::unique_ptr<RNTupleReader> &reader);
-   static std::unique_ptr<RNTupleDraw> Open(const std::unique_ptr<RNTupleReader> &reader);
    void Draw();
 };
 } // namespace Experimental

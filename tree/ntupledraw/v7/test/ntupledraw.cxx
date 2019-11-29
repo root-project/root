@@ -57,8 +57,8 @@ TEST(PrintStorageLayout, emptyNTuple)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, fileGuard.GetPath());
    } // flushes content to file
    auto reader = RNTupleReader::Open(ntupleName, fileGuard.GetPath());
-   auto draw = RNTupleDraw::Open(reader);
-   draw->Draw();
+   auto draw = RNTupleDraw(reader);
+   draw.Draw();
    
    FileRaii fileGuard2("test_printStorageLayout_empty2.root");
    std::string_view ntupleName2 = "emptyFile2";
@@ -118,6 +118,9 @@ TEST(PrintStorageLayout, rawFile)
    EXPECT_EQ(1ull, drawStorage.GetNClusters());
    EXPECT_EQ(4ull, drawStorage.GetPageBoxSize());
    drawStorage.Draw();
+   // To check if RNTupleReader is not dead after drawing
+   std::stringstream os;
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, os);
 }
 
 TEST(PrintStorageLayout, callTwice)
