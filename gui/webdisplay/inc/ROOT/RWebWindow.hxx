@@ -86,6 +86,7 @@ private:
       int fClientCredits{0};               ///<! number of credits received from client
       bool fDoingSend{false};              ///<! true when performing send operation
       std::queue<QueueItem> fQueue;        ///<! output queue
+      std::map<int,std::shared_ptr<RWebWindow>> fEmbed; ///<! map of embed window for that connection, key value is channel id
       WebConn() = default;
       WebConn(unsigned connid) : fConnId(connid) {}
       WebConn(unsigned connid, unsigned wsid) : fConnId(connid), fActive(true), fWSId(wsid) {}
@@ -112,6 +113,9 @@ private:
    typedef std::vector<std::shared_ptr<WebConn>> ConnectionsList;
 
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
+   std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embeded
+   unsigned fMasterConnId{0};                       ///<! master connection id
+   int fMasterChannel{-1};                          ///<! channel id in the master window
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
@@ -176,6 +180,8 @@ private:
    void CheckInactiveConnections();
 
    unsigned AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
+
+   unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
@@ -316,6 +322,9 @@ public:
    void TerminateROOT();
 
    static std::shared_ptr<RWebWindow> Create();
+
+   static unsigned ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDisplayArgs &args = "");
+
 };
 
 } // namespace Experimental
