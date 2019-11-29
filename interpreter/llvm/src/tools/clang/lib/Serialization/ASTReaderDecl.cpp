@@ -4136,14 +4136,11 @@ void ASTDeclReader::UpdateDecl(Decl *D,
       // FIXME: If the exception specification is already present, check that it
       // matches.
       if (isUnresolvedExceptionSpec(FPT->getExceptionSpecType())) {
-        FD->setType(Reader.getContext().getFunctionType(
-            FPT->getReturnType(), FPT->getParamTypes(),
-            FPT->getExtProtoInfo().withExceptionSpec(ESI)));
-
         // When we get to the end of deserializing, see if there are other decls
         // that we need to propagate this exception specification onto.
         Reader.PendingExceptionSpecUpdates.insert(
-            std::make_pair(FD->getCanonicalDecl(), FD));
+          std::make_pair(FD->getCanonicalDecl(),
+                         ASTReader::PendingExceptionSpecUpdateInfo(FD,ESI)));
       }
       break;
     }
