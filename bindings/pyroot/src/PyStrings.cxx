@@ -25,6 +25,7 @@ PyObject* PyROOT::PyStrings::gModule = 0;
 PyObject* PyROOT::PyStrings::gMRO = 0;
 PyObject* PyROOT::PyStrings::gName = 0;
 PyObject* PyROOT::PyStrings::gCppName = 0;
+PyObject* PyROOT::PyStrings::gCppNameNew = 0;
 PyObject* PyROOT::PyStrings::gNe = 0;
 PyObject* PyROOT::PyStrings::gTypeCode = 0;
 
@@ -81,6 +82,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gMRO, __mro__ );
    PYROOT_INITIALIZE_STRING( gName, __name__ );
    PYROOT_INITIALIZE_STRING( gCppName, __cppname__ );
+   PYROOT_INITIALIZE_STRING( gCppNameNew, __cpp_name__ );
    PYROOT_INITIALIZE_STRING( gNe, __ne__ );
    PYROOT_INITIALIZE_STRING( gTypeCode, typecode );
 
@@ -133,6 +135,7 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gMRO ); PyStrings::gMRO = 0;
    Py_DECREF( PyStrings::gName ); PyStrings::gName = 0;
    Py_DECREF( PyStrings::gCppName ); PyStrings::gCppName = 0;
+   Py_DECREF( PyStrings::gCppNameNew ); PyStrings::gCppNameNew = 0;
    Py_DECREF( PyStrings::gNe ); PyStrings::gNe = 0;
    Py_DECREF( PyStrings::gTypeCode ); PyStrings::gTypeCode = 0;
 

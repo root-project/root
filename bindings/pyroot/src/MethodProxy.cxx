@@ -557,11 +557,17 @@ namespace {
 
       { (char*)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
             (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
+      { (char*)"__creates__", (getter)mp_getcreates, (setter)mp_setcreates,
+            (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
       { (char*)"_mempolicy", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
+            (char*)"For argument ownership rules: like global, either heuristic or strict", NULL },
+      { (char*)"__mempolicy__", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
             (char*)"For argument ownership rules: like global, either heuristic or strict", NULL },
       { (char*)"_manage_smart_ptr", (getter)mp_get_manage_smart_ptr, (setter)mp_set_manage_smart_ptr,
         (char*)"If a smart pointer is returned, determines management policy.", NULL },
       { (char*)"_threaded", (getter)mp_getthreaded, (setter)mp_setthreaded,
+            (char*)"If true, releases GIL on call into C++", NULL },
+      { (char*)"__release_gil__", (getter)mp_getthreaded, (setter)mp_setthreaded,
             (char*)"If true, releases GIL on call into C++", NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
