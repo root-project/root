@@ -258,47 +258,53 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @brief Invoke dialog with server side code */
       onSaveAs: async function() {
-         if (!this.saveAsDialog) {
 
-            var fragment, controller = new FileDialogController;
+         var newconn = this.websocket.CreateChannel();
 
-            controller.initDialog();
+         var fragment, controller = new FileDialogController;
 
-            await Fragment.load({
-               name: "rootui5.browser.view.filedialog",
-               controller: controller,
-               id: "saveAsFragment"
-            }).then(function (oFragment) {
-               fragment = oFragment;
-               oFragment.setModel(controller.oModel);
-            });
+         controller.initDialog(newconn);
 
-            this.saveAsDialog = new Dialog({
-               title: "Select name for saving file",
-               contentWidth: "70%",
-               contentHeight: "50%",
-               resizable: true,
-               draggable: true,
-               content: fragment,
-                beginButton: new Button({
-                  text: 'Cancel',
-                  press: this.closeSaveAsDialog.bind(this)
-                }),
-                endButton: new Button({
-                  text: 'Ok',
-                  press: this.closeSaveAsDialog.bind(this, true)
-                })
-            });
+         await Fragment.load({
+            name: "rootui5.browser.view.filedialog",
+            controller: controller,
+            id: "FileDialogFragment"
+         }).then(function (oFragment) {
+            fragment = oFragment;
+            oFragment.setModel(controller.oModel);
+         });
 
-            this.saveAsDialog.addStyleClass("sapUiSizeCompact");
+         this.saveAsDialog = new Dialog({
+            title: "Select name for saving file",
+            contentWidth: "70%",
+            contentHeight: "50%",
+            resizable: true,
+            draggable: true,
+            content: fragment,
+            beginButton: new Button({
+               text: 'Cancel',
+               press: this.closeSaveAsDialog.bind(this)
+            }),
+            endButton: new Button({
+               text: 'Ok',
+               press: this.closeSaveAsDialog.bind(this, true)
+            })
+         });
 
-         }
+         this.saveAsDialog.addStyleClass("sapUiSizeCompact");
 
          this.saveAsDialog.open();
+
+         const oEditor = this.getSelectedCodeEditor();
+         const oModel = oEditor.getModel();
+
+         this.websocket.Send("SAVEAS:" + JSON.stringify([ oModel.getProperty("/filename") || "untiled",  newconn.getChannelId().toString() ]));
       },
 
       closeSaveAsDialog: function(on) {
          this.saveAsDialog.close();
+         this.saveAsDialog.destroy();
+
       },
 
       /** @brief Handle the "Save As..." button press event */

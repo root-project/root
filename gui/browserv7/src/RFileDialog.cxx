@@ -96,7 +96,6 @@ void RFileDialog::SetCallback(RFileDialogCallback_t callback)
 
 std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
 {
-
    // not used now, can be reactivated later
    std::unique_ptr<RBrowserRequest> request;
 
@@ -124,10 +123,9 @@ std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
 void RFileDialog::Show(const RWebDisplayArgs &args)
 {
    fDidSelect = false;
-   fSelect.clear();
 
    if (fWebWindow->NumConnections() == 0) {
-      fWebWindow->Show(args);
+      RWebWindow::ShowWindow(fWebWindow, args);
    } else {
       WebWindowCallback(0, "RELOAD");
    }
