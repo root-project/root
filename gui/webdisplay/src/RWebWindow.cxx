@@ -77,6 +77,9 @@ ROOT::Experimental::RWebWindow::RWebWindow() = default;
 
 ROOT::Experimental::RWebWindow::~RWebWindow()
 {
+   if (fMaster)
+      fMaster->RemoveEmbedWindow(fMasterConnId, fMasterChannel);
+
    if (fWSHandler)
       fWSHandler->SetDisabled();
 
@@ -92,8 +95,11 @@ ROOT::Experimental::RWebWindow::~RWebWindow()
          fPendingConn.clear();
       }
 
-      for (auto &conn : lst)
+      for (auto &conn : lst) {
          conn->fActive = false;
+         for (auto &elem: conn->fEmbed)
+            elem.second->fMaster.reset();
+      }
 
       fMgr->Unregister(*this);
    }
@@ -275,17 +281,26 @@ std::shared_ptr<ROOT::Experimental::RWebWindow::WebConn> ROOT::Experimental::RWe
 
 std::shared_ptr<ROOT::Experimental::RWebWindow::WebConn> ROOT::Experimental::RWebWindow::RemoveConnection(unsigned wsid)
 {
-   std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (size_t n=0; n<fConn.size();++n)
-      if (fConn[n]->fWSId == wsid) {
-         std::shared_ptr<WebConn> res = std::move(fConn[n]);
-         fConn.erase(fConn.begin() + n);
-         res->fActive = false;
-         return res;
-      }
+   std::shared_ptr<WebConn> res;
 
-   return nullptr;
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      for (size_t n = 0; n < fConn.size(); ++n)
+         if (fConn[n]->fWSId == wsid) {
+            res = std::move(fConn[n]);
+            fConn.erase(fConn.begin() + n);
+            res->fActive = false;
+            break;
+         }
+   }
+
+   if (res)
+      for (auto &elem: res->fEmbed)
+         elem.second->fMaster.reset();
+
+   return res;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +461,7 @@ void ROOT::Experimental::RWebWindow::CheckPendingConnections()
 
    float tmout = fMgr->GetLaunchTmout();
 
-   ConnectionsList selected;
+   ConnectionsList_t selected;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
@@ -644,6 +659,13 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
          } else {
             ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
             conn->fReady = 10;
+         }
+      } else if (cdata.compare(0,8,"CLOSECH=") == 0) {
+         int channel = std::stoi(cdata.substr(8));
+         auto iter = conn->fEmbed.find(channel);
+         if (iter != conn->fEmbed.end()) {
+            iter->second->ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+            conn->fEmbed.erase(iter);
          }
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
@@ -970,9 +992,9 @@ void ROOT::Experimental::RWebWindow::CloseConnection(unsigned connid)
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns connection (or all active connections)
 
-ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid, bool only_active) const
+ROOT::Experimental::RWebWindow::ConnectionsList_t ROOT::Experimental::RWebWindow::GetConnections(unsigned connid, bool only_active) const
 {
-   ConnectionsList arr;
+   ConnectionsList_t arr;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
@@ -1273,6 +1295,20 @@ unsigned ROOT::Experimental::RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWind
    arr[0]->fEmbed[channel] = window;
 
    return arr[0]->fConnId;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Remove RWebWindow associated with the channel
+
+void ROOT::Experimental::RWebWindow::RemoveEmbedWindow(unsigned connid, int channel)
+{
+   auto arr = GetConnections(connid);
+
+   for (auto &conn : arr) {
+      auto iter = conn->fEmbed.find(channel);
+      if (iter != conn->fEmbed.end())
+         conn->fEmbed.erase(iter);
+   }
 }
 
 

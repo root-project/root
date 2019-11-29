@@ -1917,6 +1917,7 @@
    /** Close connection. */
    WebWindowHandle.prototype.Close = function(force) {
       if (this.master) {
+         this.master.Send("CLOSECH=" + this.channelid, 0);
          delete this.master.channels[this.channelid];
          delete this.master;
          return;
