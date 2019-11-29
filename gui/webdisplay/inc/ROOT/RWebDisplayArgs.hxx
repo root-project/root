@@ -17,13 +17,18 @@
 #define ROOT7_RWebDisplayArgs
 
 #include <string>
+#include <memory>
 
 class THttpServer;
 
 namespace ROOT {
 namespace Experimental {
 
+class RWebWindow;
+
 class RWebDisplayArgs {
+
+friend class RWebWindow;
 
 public:
    enum EBrowserKind {
@@ -34,7 +39,7 @@ public:
       kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
-      kEmbedded,  ///< window will be embedded into other, no extra browser need to be started
+      kEmbedded, ///< window will be embedded into other, no extra browser need to be started
       kCustom    ///< custom web browser, execution string should be provided
    };
 
@@ -52,6 +57,9 @@ protected:
    std::string fExec;             ///<! string to run browser, used with kCustom type
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
 
+   std::shared_ptr<RWebWindow> fMaster; ///<!  master window
+   int fMasterChannel{-1};              ///<!  used master channel
+
 public:
    RWebDisplayArgs();
 
@@ -61,12 +69,18 @@ public:
 
    RWebDisplayArgs(int width, int height, int x = -1, int y = -1, const std::string &browser = "");
 
+   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel = -1);
+
+   virtual ~RWebDisplayArgs();
+
    RWebDisplayArgs &SetBrowserKind(const std::string &kind);
    /// set browser kind, see EBrowserKind for allowed values
    RWebDisplayArgs &SetBrowserKind(EBrowserKind kind) { fKind = kind; return *this; }
    /// returns configured browser kind, see EBrowserKind for supported values
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;
+
+   void SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel = -1);
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const
