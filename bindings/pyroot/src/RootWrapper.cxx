@@ -708,6 +708,8 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 
    // add __cppname__ to keep the C++ name of the class/scope
    PyObject_SetAttr( pyclass, PyStrings::gCppName, PyROOT_PyUnicode_FromString( actual.c_str() ) );
+   // add also __cpp_name__ for forward compatibility
+   PyObject_SetAttr( pyclass, PyStrings::gCppNameNew, PyROOT_PyUnicode_FromString( actual.c_str() ) );
 
    // add __module__  (see https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_name) 
    std::string module;
