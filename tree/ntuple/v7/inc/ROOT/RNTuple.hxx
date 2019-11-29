@@ -83,6 +83,13 @@ enum class ENTupleInfo {
    kStorageDetails, // size on storage, page sizes, compression factor, etc.
    kMetrics, // internals performance counters, requires that EnableMetrics() was called
 };
+   
+/**
+* Listing of the different options that can be returned by RNTupleReader::Show()
+*/
+enum class ENTupleFormat {
+   kJSON,      // prints a single entry/row in JSON format.
+};
 
 
 // clang-format off
@@ -140,7 +147,11 @@ public:
    const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
-   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
+   void PrintInfo(const ENTupleInfo format = ENTupleInfo::kSummary, std::ostream &output = std::cout);
+
+   /// Shows the values of the i-th entry/row, where i = index. format = ENTupleInfo::kJSON
+   /// (default) prints the output in JSON-like format.
+   void Show(NTupleSize_t index, const ENTupleFormat format = ENTupleFormat::kJSON, std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
