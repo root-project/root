@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RWebDisplayArgs.hxx>
+#include <ROOT/RWebWindow.hxx>
 #include <ROOT/RConfig.hxx>
 
 #include "TROOT.h"
@@ -59,6 +60,24 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int 
    SetPos(x, y);
    SetBrowserKind(browser);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor - specify master window and channel (if reserved already)
+
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel)
+{
+   SetMasterWindow(master, channel);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+ROOT::Experimental::RWebDisplayArgs::~RWebDisplayArgs()
+{
+  // must be defined here to correctly call RWebWindow destructor
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
@@ -129,8 +148,18 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Assign window and channel id where other window will be embed
+
+void ROOT::Experimental::RWebDisplayArgs::SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel)
+{
+   SetBrowserKind(kEmbedded);
+   fMaster = master;
+   fMasterChannel = channel;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Append string to url options
-/// Add "&" as separator if any options already exsists
+/// Add "&" as separator if any options already exists
 
 void ROOT::Experimental::RWebDisplayArgs::AppendUrlOpt(const std::string &opt)
 {
