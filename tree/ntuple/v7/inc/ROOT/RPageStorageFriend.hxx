@@ -1,6 +1,6 @@
 /// \file RPageStorageFriend.hxx
 /// \ingroup NTuple ROOT7
-/// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
+/// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-10-04
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -18,6 +18,7 @@
 
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <memory>
@@ -63,6 +64,8 @@ private:
    /// Is set to true when the meta-data of the clusters don't match.
    /// Getting pages from a unsafe RPageStorageFrame can lead to undefined behaviour.
    bool fUnsafe = false;
+   // TODO(jblomer): implement fMetrics
+   RNTupleMetrics fMetrics /*= RNTupleMetrics(std::string{"RPageStorageFriend"})*/;
 
 protected:
    RNTupleDescriptor DoAttach();
@@ -87,6 +90,7 @@ public:
    void ReleasePage(RPage &page) final;
 
    bool IsUnsafe() const { return fUnsafe; }
+   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // namespace Detail

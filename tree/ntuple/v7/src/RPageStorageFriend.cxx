@@ -1,6 +1,6 @@
 /// \file RPageStorageFriend.cxx
 /// \ingroup NTuple ROOT7
-/// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
+/// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-10-04
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -27,7 +27,7 @@
 ROOT::Experimental::Detail::RPageSourceFriend::RPageSourceFriend(std::string_view ntupleName,
                                                                  std::vector<std::string> locationVec,
                                                                  const RNTupleReadOptions &options)
-   : RPageSource{ntupleName, options}
+   : RPageSource{ntupleName, options}, fMetrics{"RPageSourceFriend"}
 {
    for (const auto &location : locationVec) {
       fSources.emplace_back(Create(ntupleName, location, options));
@@ -41,7 +41,7 @@ ROOT::Experimental::Detail::RPageSourceFriend::RPageSourceFriend(std::string_vie
 ROOT::Experimental::Detail::RPageSourceFriend::RPageSourceFriend(std::string_view ntupleName,
                                                                  std::vector<RPageSource *> sources,
                                                                  const RNTupleReadOptions &options)
-   : RPageSource{ntupleName, options}
+   : RPageSource{ntupleName, options}, fMetrics{"RPageSourceFriend"}
 {
    for (const auto &s : sources) {
       fSources.emplace_back(s->Clone());
@@ -55,7 +55,7 @@ ROOT::Experimental::Detail::RPageSourceFriend::RPageSourceFriend(std::string_vie
 ROOT::Experimental::Detail::RPageSourceFriend::RPageSourceFriend(std::string_view ntupleName,
                                                                  std::vector<std::unique_ptr<RPageSource>> &&sources,
                                                                  const RNTupleReadOptions &options)
-   : RPageSource{ntupleName, options}, fSources{std::move(sources)}
+   : RPageSource{ntupleName, options}, fSources{std::move(sources)}, fMetrics{"RPageSourceFriend"}
 {
    fUnsafe = CompareFileMetaData();
    InitializeMemberVariables();

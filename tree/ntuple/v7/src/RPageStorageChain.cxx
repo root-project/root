@@ -1,6 +1,6 @@
 /// \file ROOT/RPageStorageChain.cxx
 /// \ingroup NTuple ROOT7
-/// \author Simon Leisibach <simon.satoshi.rene.leisibach@cern.ch>
+/// \author Simon Leisibach <simon.leisibach@gmail.com>
 /// \date 2019-09-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -30,7 +30,7 @@
 ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view ntupleName,
                                                                std::vector<std::string> locationVec,
                                                                const RNTupleReadOptions &options)
-   : RPageSource{ntupleName, options}
+   : RPageSource{ntupleName, options}, fMetrics{"RPageSourceChain"}
 {
    // No need to check if locationVec is empty. It's already tested in RNTupleReader::Open
 
@@ -46,7 +46,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
 ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view ntupleName,
                                                                std::vector<RPageSource *> sources,
                                                                const RNTupleReadOptions &options)
-   : RPageSource{ntupleName, options}
+   : RPageSource{ntupleName, options}, fMetrics{"RPageSourceChain"}
 {
    for (const auto &s : sources) {
       fSources.emplace_back(s->Clone());
@@ -60,7 +60,7 @@ ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view 
 ROOT::Experimental::Detail::RPageSourceChain::RPageSourceChain(std::string_view ntupleName,
                                                                std::vector<std::unique_ptr<RPageSource>> &&sources,
                                                                const RNTupleReadOptions &options)
-   : RPageSource{ntupleName, options}, fSources{std::move(sources)}
+   : RPageSource{ntupleName, options}, fSources{std::move(sources)}, fMetrics{"RPageSourceChain"}
 {
    fUnsafe = CompareFileMetaData();
    InitializeMemberVariables();
