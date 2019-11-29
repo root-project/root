@@ -110,7 +110,7 @@ private:
       QueueEntry(unsigned connid, EQueueEntryKind kind, std::string &&data) : fConnId(connid), fKind(kind), fData(data) {}
    };
 
-   typedef std::vector<std::shared_ptr<WebConn>> ConnectionsList;
+   using ConnectionsList_t = std::vector<std::shared_ptr<WebConn>>;
 
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
    std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embeded
@@ -123,8 +123,8 @@ private:
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
    unsigned fConnCnt{0};                            ///<! counter of new connections to assign ids
-   ConnectionsList fPendingConn;                    ///<! list of pending connection with pre-assigned keys
-   ConnectionsList fConn;                           ///<! list of all accepted connections
+   ConnectionsList_t fPendingConn;                  ///<! list of pending connection with pre-assigned keys
+   ConnectionsList_t fConn;                         ///<! list of all accepted connections
    mutable std::mutex fConnMutex;                   ///<! mutex used to protect connection list
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
@@ -153,7 +153,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   ConnectionsList GetConnections(unsigned connid = 0, bool only_active = false) const;
+   ConnectionsList_t GetConnections(unsigned connid = 0, bool only_active = false) const;
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -182,6 +182,8 @@ private:
    unsigned AddDisplayHandle(bool batch_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
 
    unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel);
+
+   void RemoveEmbedWindow(unsigned connid, int channel);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
