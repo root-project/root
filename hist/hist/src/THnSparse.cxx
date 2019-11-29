@@ -518,7 +518,7 @@ axis. A TH2 h("h","h",10, 0., 10., 20, -5., 5.) would correspond to
     Int_t bins[2] = {10, 20};
     Double_t xmin[2] = {0., -5.};
     Double_t xmax[2] = {10., 5.};
-    THnSparse hs("hs", "hs", 2, bins, xmin, xmax);
+    THnSparseD hs("hs", "hs", 2, bins, xmin, xmax);
 
 ## Filling
 A THnSparse is filled just like a regular histogram, using
