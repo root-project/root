@@ -164,6 +164,8 @@ namespace {
                         // add the __cppname__ for templates
                         PyObject* cppnamepy = PyROOT_PyUnicode_FromString((Cppyy::GetScopedFinalName(scope)+"::"+name).c_str());
                         PyDict_SetItem(dct, PyStrings::gCppName, cppnamepy);
+                         // add also __cpp_name__ for forward compatibility
+                        PyDict_SetItem(dct, PyStrings::gCppNameNew, cppnamepy);
                         Py_DECREF(cppnamepy);
 
                         // create new type with labeled values in place

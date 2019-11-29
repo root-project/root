@@ -189,6 +189,7 @@ namespace {
       { (char*)"__reduce__",   (PyCFunction)op_reduce,   METH_NOARGS, NULL },
       { (char*)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS, (char*)"dispatch to selected overload" },
       { (char*)"_get_smart_ptr", (PyCFunction)op_get_smart_ptr, METH_NOARGS, (char*)"get associated smart pointer, if any" },
+      { (char*)"__smartptr__", (PyCFunction)op_get_smart_ptr, METH_NOARGS, (char*)"get associated smart pointer, if any" },
       { (char*)NULL, NULL, 0, NULL }
    };
 
