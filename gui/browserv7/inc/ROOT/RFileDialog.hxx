@@ -52,7 +52,7 @@ protected:
    std::string  fTitle;                ///<! title
    RBrowsable   fBrowsable;            ///<! central browsing element
 
-   unsigned fConnId{0}; ///<! default connection id
+   unsigned fConnId{0};                ///<! default connection id
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 
@@ -76,6 +76,8 @@ public:
    virtual ~RFileDialog();
 
    void SetCallback(RFileDialogCallback_t callback);
+
+   void SetFileName(const std::string &fname) { fSelect = fname; }
 
    void Show(const RWebDisplayArgs &args = "");
    void Hide();

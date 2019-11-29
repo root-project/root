@@ -31,13 +31,15 @@ sap.ui.define(['rootui5/panel/Controller',
          };
          */
 
+         console.log("CALLING FileDialog.onPanelInit");
+
          this.kind = "None"; // not yet known
          this.oModel = new JSONModel({ dialogTitle: "Dialog Title", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
          this.getView().setModel(this.oModel);
 
          var pthis = this;
 
-         Fragment.load({name: "rootui5.browser.view.filedialog", controller: this, id: "fragmentId"}).then(function (oFragment) {
+         Fragment.load({name: "rootui5.browser.view.filedialog", controller: this, id: "FileDialogFragment"}).then(function (oFragment) {
             pthis.getView().addDependent(oFragment);
 
             pthis.getView().byId("dialogPage").addContent(oFragment);
@@ -47,9 +49,15 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
       /** @brief Use controller with m.Dialog, no separate view */
-      initDialog: function() {
+      initDialog: function(conn) {
+
+         console.log("CALLING FileDialog.initDialog");
          this.kind = "None"; // not yet known
          this.oModel = new JSONModel({ filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
+
+         // just initialize, server should confirm creation of channel
+         this.websocket = conn;
+         conn.SetReceiver(this);
       },
 
       onClosePress: async function() {
@@ -65,7 +73,7 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
       updateBReadcrumbs: function(split) {
-         var oBreadcrumbs = sap.ui.core.Fragment.byId("fragmentId", "breadcrumbs")
+         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs")
          oBreadcrumbs.removeAllLinks();
          for (let i=-1; i<split.length; i++) {
             let txt = i<0 ? "/": split[i];
@@ -104,18 +112,19 @@ sap.ui.define(['rootui5/panel/Controller',
         this.oModel.setProperty("/filesList", cfg.brepl.nodes);
      },
 
+     closeFileDialog: function() {
+        // add more logic when FileDialog embed into main window
+        if (this.did_close) return;
+        if (window) window.open('','_self').close();
+        this.did_close = true;
+     },
+
+
      OnWebsocketOpened: function(handle) {
         this.isConnected = true;
 
         if (this.model)
            this.model.sendFirstRequest(this.websocket);
-      },
-
-      closeFileDialog: function() {
-         // add more logic when FileDialog embed into main window
-         if (this.did_close) return;
-         if (window) window.open('','_self').close();
-         this.did_close = true;
       },
 
       OnWebsocketClosed: function() {
