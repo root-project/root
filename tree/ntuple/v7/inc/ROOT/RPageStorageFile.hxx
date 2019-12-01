@@ -18,6 +18,7 @@
 
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
+#include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <array>
@@ -42,14 +43,20 @@ skipping the TFile key part.
 */
 // clang-format on
 struct RNTuple {
+   /// Allows for evolving the struct in future versions
+   std::uint32_t fVersion = 0;
    /// The file offset of the key containing the ntuple header
    std::uint64_t fSeekHeader = 0;
-   /// The size of the ntuple header including the TKey
+   /// The size of the compressed ntuple header including the TKey
    std::uint32_t fNBytesHeader = 0;
+   /// The size of the uncompressed ntuple header
+   std::uint32_t fLenHeader = 0;
    /// The file offset of the key containing the ntuple footer
    std::uint64_t fSeekFooter = 0;
-   /// The size of the ntuple footer including the TKey
+   /// The size of the compressed ntuple footer including the TKey
    std::uint32_t fNBytesFooter = 0;
+   /// The size of the uncompressed ntuple footer
+   std::uint32_t fLenFooter = 0;
    /// Currently unused, reserved for later use
    std::uint64_t fReserved = 0;
 };
@@ -93,19 +100,24 @@ private:
    std::uint64_t fClusterStart = 0;
    /// The file name without the parent directory (e.g. "events.root")
    std::string fFileName;
-   /// Scratch space for compression of keys / pages
-   std::unique_ptr<std::array<char, kMaxRecordSize>> fZipBuffer;
+   /// Helper for zipping keys and header / footer; comprises a 16MB zip buffer
+   RNTupleCompressor fCompressor;
    /// Keeps track of TFile control structures, which need to be updated on committing the data set
    std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
 
    /// Writes bytes in the open fFile, either at fFilePos or at the given offset
-   void Write(void *from, size_t size, std::int64_t offset = -1);
+   void Write(const void *from, size_t size, std::int64_t offset = -1);
    /// Writes a TKey including the data record, given by buffer, into fFile; returns the file offset to the payload
-   std::uint64_t WriteKey(void *buffer, std::size_t nbytes, std::int64_t offset = -1,
+   std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::int64_t offset = -1,
                           std::uint64_t directoryOffset = 100, int compression = 0,
                           const std::string &className = "",
                           const std::string &objectName = "",
                           const std::string &title = "");
+   /// Writes a compressed raw record
+   void WriteRecord(const void *buffer, std::size_t nbytes, std::int64_t offset = -1, int compression = 0);
+
+   void WriteRawSkeleton();
+   void WriteTFileSkeleton();
 
 protected:
    void DoCreate(const RNTupleModel &model) final;
@@ -153,11 +165,11 @@ public:
 private:
    RNTupleMetrics fMetrics;
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
-   std::unique_ptr<RPageAllocatorKey> fPageAllocator;
+   std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    /// The page pool migh, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
-   /// A scatch space to uncompress keys / buffers
-   std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
+   /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
+   RNTupleDecompressor fDecompressor;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<RRawFile> fFile;
 
@@ -165,6 +177,9 @@ private:
    void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
+
+   RNTupleDescriptor AttachTFile();
+   RNTupleDescriptor AttachRaw();
 
 protected:
    RNTupleDescriptor DoAttach() final;

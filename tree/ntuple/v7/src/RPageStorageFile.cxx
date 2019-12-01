@@ -17,6 +17,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
@@ -137,9 +138,13 @@ constexpr std::int32_t ChecksumRNTupleClass() {
    id = ChecksumString(id, "unsigned long");
    id = ChecksumString(id, "fNBytesHeader");
    id = ChecksumString(id, "unsigned int");
+   id = ChecksumString(id, "fLenHeader");
+   id = ChecksumString(id, "unsigned int");
    id = ChecksumString(id, "fSeekFooter");
    id = ChecksumString(id, "unsigned long");
    id = ChecksumString(id, "fNBytesFooter");
+   id = ChecksumString(id, "unsigned int");
+   id = ChecksumString(id, "fLenFooter");
    id = ChecksumString(id, "unsigned int");
    id = ChecksumString(id, "fReserved");
    id = ChecksumString(id, "unsigned long");
@@ -292,6 +297,7 @@ struct RTFHeader {
    }
 };
 
+
 /// A reference to an unused byte-range in a TFile
 struct RTFFreeEntry {
    RUInt16BE fVersion{1};
@@ -326,6 +332,28 @@ struct RTFObject {
    RUInt32BE fUniqueID{0};  // unused
    RUInt32BE fBits;
    explicit RTFObject(std::uint32_t bits) : fBits(bits) {}
+};
+
+/// Streamer info for data member RNTuple::fVersion
+struct RTFStreamerElementVersion {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementVersion) - sizeof(RUInt32BE))};
+   RUInt16BE fVersion{4};
+
+   RUInt32BE fByteCountNamed{0x40000000 |
+      (sizeof(RUInt16BE) + sizeof(RTFObject) + 10)};
+   RUInt16BE fVersionNamed{1};
+   RTFObject fObjectNamed{0x02000000 | 0x01000000};
+   char fLName = 8;
+   char fName[8]{ 'f', 'V', 'e', 'r', 's', 'i', 'o', 'n' };
+   char fLTitle = 0;
+
+   RUInt32BE fType{13};
+   RUInt32BE fSize{4};
+   RUInt32BE fArrLength{0};
+   RUInt32BE fArrDim{0};
+   char fMaxIndex[20]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   char fLTypeName = 12;
+   char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
 };
 
 /// Streamer info for data member RNTuple::fSeekHeader
@@ -372,6 +400,28 @@ struct RTFStreamerElementNBytesHeader {
    char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
 };
 
+/// Streamer info for data member RNTuple::fLenHeader
+struct RTFStreamerElementLenHeader {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementLenHeader) - sizeof(RUInt32BE))};
+   RUInt16BE fVersion{4};
+
+   RUInt32BE fByteCountNamed{0x40000000 |
+      (sizeof(RUInt16BE) + sizeof(RTFObject) + 13)};
+   RUInt16BE fVersionNamed{1};
+   RTFObject fObjectNamed{0x02000000 | 0x01000000};
+   char fLName = 10;
+   char fName[10]{ 'f', 'L', 'e', 'n', 'H', 'e', 'a', 'd', 'e', 'r' };
+   char fLTitle = 0;
+
+   RUInt32BE fType{13};
+   RUInt32BE fSize{4};
+   RUInt32BE fArrLength{0};
+   RUInt32BE fArrDim{0};
+   char fMaxIndex[20]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   char fLTypeName = 12;
+   char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
+};
+
 /// Streamer info for data member RNTuple::fSeekFooter
 struct RTFStreamerElementSeekFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementSeekFooter) - sizeof(RUInt32BE))};
@@ -399,12 +449,32 @@ struct RTFStreamerElementNBytesFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementNBytesFooter) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
 
-   RUInt32BE fByteCountNamed{0x40000000 |
-      (sizeof(RUInt16BE) + sizeof(RTFObject) + 15)};
+   RUInt32BE fByteCountNamed{0x40000000 | (sizeof(RUInt16BE) + sizeof(RTFObject) + 15)};
    RUInt16BE fVersionNamed{1};
    RTFObject fObjectNamed{0x02000000 | 0x01000000};
    char fLName = 13;
    char fName[13]{ 'f', 'N', 'B', 'y', 't', 'e', 's', 'F', 'o', 'o', 't', 'e', 'r' };
+   char fLTitle = 0;
+
+   RUInt32BE fType{13};
+   RUInt32BE fSize{4};
+   RUInt32BE fArrLength{0};
+   RUInt32BE fArrDim{0};
+   char fMaxIndex[20]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   char fLTypeName = 12;
+   char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
+};
+
+/// Streamer info for data member RNTuple::fLenFooter
+struct RTFStreamerElementLenFooter {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementLenFooter) - sizeof(RUInt32BE))};
+   RUInt16BE fVersion{4};
+
+   RUInt32BE fByteCountNamed{0x40000000 | (sizeof(RUInt16BE) + sizeof(RTFObject) + 13)};
+   RUInt16BE fVersionNamed{1};
+   RTFObject fObjectNamed{0x02000000 | 0x01000000};
+   char fLName = 10;
+   char fName[10]{ 'f', 'L', 'e', 'n', 'F', 'o', 'o', 't', 'e', 'r' };
    char fLTitle = 0;
 
    RUInt32BE fType{13};
@@ -438,6 +508,15 @@ struct RTFStreamerElementReserved {
    char fTypeName[13]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'l', 'o', 'n', 'g' };
 };
 
+/// Streamer info frame for data member RNTuple::fVersion
+struct RTFStreamerVersion {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerVersion) - sizeof(RUInt32BE))};
+   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
+   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerVersion) - 3 * sizeof(RUInt32BE))};
+   RUInt16BE fVersion{2};
+   RTFStreamerElementVersion fStreamerElementVersion;
+};
+
 /// Streamer info frame for data member RNTuple::fSeekHeader
 struct RTFStreamerSeekHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSeekHeader) - sizeof(RUInt32BE))};
@@ -458,6 +537,15 @@ struct RTFStreamerNBytesHeader {
    RTFStreamerElementNBytesHeader fStreamerElementNBytesHeader;
 };
 
+/// Streamer info frame for data member RNTuple::fLenHeader
+struct RTFStreamerLenHeader {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerLenHeader) - sizeof(RUInt32BE))};
+   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
+   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerLenHeader) - 3 * sizeof(RUInt32BE))};
+   RUInt16BE fVersion{2};
+   RTFStreamerElementLenHeader fStreamerElementLenHeader;
+};
+
 /// Streamer info frame for data member RNTuple::fSeekFooter
 struct RTFStreamerSeekFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSeekFooter) - sizeof(RUInt32BE))};
@@ -474,6 +562,15 @@ struct RTFStreamerNBytesFooter {
    RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerNBytesFooter) - 3 * sizeof(RUInt32BE))};
    RUInt16BE fVersion{2};
    RTFStreamerElementNBytesFooter fStreamerElementNBytesFooter;
+};
+
+/// Streamer info frame for data member RNTuple::fLenFooter
+struct RTFStreamerLenFooter {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerLenFooter) - sizeof(RUInt32BE))};
+   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
+   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerLenFooter) - 3 * sizeof(RUInt32BE))};
+   RUInt16BE fVersion{2};
+   RTFStreamerElementLenFooter fStreamerElementLenFooter;
 };
 
 /// Streamer info frame for data member RNTuple::fReserved
@@ -524,10 +621,13 @@ struct RTFStreamerInfoObject {
    RUInt32BE fLowerBound{0};
 
    struct {
+      RTFStreamerVersion fStreamerVersion;
       RTFStreamerSeekHeader fStreamerSeekHeader;
       RTFStreamerNBytesHeader fStreamerNBytesHeader;
+      RTFStreamerLenHeader fStreamerLenHeader;
       RTFStreamerSeekFooter fStreamerSeekFooter;
       RTFStreamerNBytesFooter fStreamerNBytesFooter;
+      RTFStreamerLenFooter fStreamerLenFooter;
       RTFStreamerReserved fStreamerReserved;
    } fStreamers;
 };
@@ -573,10 +673,24 @@ struct RTFNTuple {
    RInt32BE fChecksum{ChecksumRNTupleClass()};
    RUInt64BE fSeekHeader{0};
    RUInt32BE fNBytesHeader{0};
+   RUInt32BE fLenHeader{0};
    RUInt64BE fSeekFooter{0};
    RUInt32BE fNBytesFooter{0};
+   RUInt32BE fLenFooter{0};
    RUInt64BE fReserved{0};
    std::uint32_t GetSize() const { return sizeof(RTFNTuple); }
+};
+
+/// The raw file global header
+struct RRawFileHeader {
+   char fMagic[7]{ 'r', 'n', 't', 'u', 'p', 'l', 'e' };
+   RUInt32BE fRootVersion{(ROOT_VERSION_CODE >> 16)*10000 +
+                          ((ROOT_VERSION_CODE & 0xFF00) >> 8) * 100 +
+                          (ROOT_VERSION_CODE & 0xFF)};
+   RUInt32BE fFormatVersion{1};
+   RUInt32BE fCompress{0};
+   RTFNTuple fNTuple;
+   // followed by the ntuple name
 };
 #pragma pack(pop)
 
@@ -600,7 +714,6 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    : RPageSink(ntupleName, options)
    , fMetrics("RPageSinkRoot")
    , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
-   , fZipBuffer(std::make_unique<std::array<char, kMaxRecordSize>>())
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
@@ -621,7 +734,7 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
       fclose(fFile);
 }
 
-void ROOT::Experimental::Detail::RPageSinkFile::Write(void *from, size_t size, std::int64_t offset)
+void ROOT::Experimental::Detail::RPageSinkFile::Write(const void *from, size_t size, std::int64_t offset)
 {
    R__ASSERT(fFile);
    size_t retval;
@@ -636,7 +749,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::Write(void *from, size_t size, s
 }
 
 std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
-   void *buffer, std::size_t nbytes, std::int64_t offset,
+   const void *buffer, std::size_t nbytes, std::int64_t offset,
    std::uint64_t directoryOffset, int compression,
    const std::string &className,
    const std::string &objectName,
@@ -648,32 +761,41 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
    RTFString strObject{objectName};
    RTFString strTitle{title};
 
-   int zipBytes = nbytes;
-   if (compression != 0) {
-      R__ASSERT(nbytes <= kMaxRecordSize);
-      auto level = compression % 100;
-      auto algorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
-      int szZipBuffer = kMaxRecordSize;
-      int szSource = nbytes;
-      char *source = reinterpret_cast<char *>(buffer);
-      R__zipMultipleAlgorithm(level, &szSource, source, &szZipBuffer, fZipBuffer->data(), &zipBytes, algorithm);
-      if ((zipBytes > 0) && (zipBytes < szSource)) {
-         buffer = reinterpret_cast<unsigned char *>(fZipBuffer->data());
-      } else {
-         zipBytes = szSource;
-      }
-   }
-   RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, nbytes, zipBytes);
+   R__ASSERT(nbytes <= kMaxRecordSize);
+   auto nbytesZip = fCompressor(buffer, nbytes, compression);
+   RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, nbytes, nbytesZip);
+
    Write(&key, key.fKeyHeaderSize, offset);
    Write(&strClass, strClass.GetSize());
    Write(&strObject, strObject.GetSize());
    Write(&strTitle, strTitle.GetSize());
    auto offsetData = fFilePos;
-   Write(buffer, zipBytes);
+   Write(fCompressor.GetZipBuffer(), nbytesZip);
    return offsetData;
 }
 
-void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /* model */)
+void ROOT::Experimental::Detail::RPageSinkFile::WriteRecord(
+   const void *buffer, std::size_t nbytes, std::int64_t offset, int compression)
+{
+   auto nbytesZip = fCompressor(buffer, nbytes, compression);
+   Write(fCompressor.GetZipBuffer(), nbytesZip, offset);
+}
+
+
+void ROOT::Experimental::Detail::RPageSinkFile::WriteRawSkeleton()
+{
+   RRawFileHeader rawHeader;
+   rawHeader.fCompress = fOptions.GetCompression();
+   Write(&rawHeader, sizeof(rawHeader), 0);
+   RTFString ntupleName{fNTupleName};
+   Write(&ntupleName, ntupleName.GetSize());
+
+   fControlBlock->fSeekNTuple = fFilePos;
+   fControlBlock->fNTuple.fSeekHeader = fFilePos + sizeof(RTFNTuple);
+}
+
+
+void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
 {
    RTFString strTFile{"TFile"};
    RTFString strFileName{fFileName};
@@ -684,7 +806,6 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /*
    RTFString strRNTupleName{fNTupleName};
    RTFString strEmpty;
 
-   fControlBlock = std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>();
    fControlBlock->fHeader = RTFHeader(fOptions.GetCompression());
 
    // First record of the file: the TFile object at offset 100
@@ -704,9 +825,12 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /*
       offsetof(struct RTFStreamerInfoList, fStreamerInfo) +
       offsetof(struct RTFStreamerInfoObject, fStreamers) +
       offsetof(struct RTFStreamerSeekHeader, fNewClassTag) + 2;
+   streamerInfo.fStreamerInfo.fStreamers.fStreamerVersion.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesHeader.fClassTag = 0x80000000 | classTagOffset;
+   streamerInfo.fStreamerInfo.fStreamers.fStreamerLenHeader.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
+   streamerInfo.fStreamerInfo.fStreamers.fStreamerLenFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerReserved.fClassTag = 0x80000000 | classTagOffset;
    WriteKey(&streamerInfo, streamerInfo.GetSize(), fControlBlock->fHeader.fInfoShort.fSeekInfo, 100, 1,
             "TList", "StreamerInfo", "Doubly linked list");
@@ -740,16 +864,35 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /*
    Write(&strEmpty, strEmpty.GetSize());
    Write(&fileRoot, sizeof(fileRoot));
 
+   fControlBlock->fNTuple.fSeekHeader = fileRoot.fSeekKeys + fileRoot.fNBytesKeys;
+}
+
+
+void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /* model */)
+{
+   fControlBlock = std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szHeader = descriptor.SerializeHeader(nullptr);
    auto buffer = new unsigned char[szHeader];
    descriptor.SerializeHeader(buffer);
-   fControlBlock->fNTuple.fSeekHeader = fileRoot.fSeekKeys + fileRoot.fNBytesKeys;
-   WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
-            fOptions.GetCompression());
-   fControlBlock->fNTuple.fNBytesHeader = fFilePos - fControlBlock->fNTuple.fSeekHeader;
-   delete[] buffer;
 
+   switch (fOptions.GetContainerFormat()) {
+   case ENTupleContainerFormat::kTFile:
+      WriteTFileSkeleton();
+      WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
+              fOptions.GetCompression());
+      break;
+   case ENTupleContainerFormat::kRaw:
+      WriteRawSkeleton();
+      WriteRecord(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fOptions.GetCompression());
+      break;
+   default:
+      R__ASSERT(false);
+   }
+
+   fControlBlock->fNTuple.fNBytesHeader = fFilePos - fControlBlock->fNTuple.fSeekHeader;
+   fControlBlock->fNTuple.fLenHeader = szHeader;
+   delete[] buffer;
    fClusterStart = fFilePos;
 }
 
@@ -767,10 +910,16 @@ ROOT::Experimental::Detail::RPageSinkFile::DoCommitPage(ColumnHandle_t columnHan
       element->Pack(buffer, page.GetBuffer(), page.GetNElements());
    }
 
-   auto offsetData = WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression());
-
-   if (!isMappable) {
-      delete[] buffer;
+   auto offsetData = fFilePos;
+   switch (fOptions.GetContainerFormat()) {
+   case ENTupleContainerFormat::kTFile:
+      offsetData = WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression());
+      break;
+   case ENTupleContainerFormat::kRaw:
+      WriteRecord(buffer, packedBytes, -1, fOptions.GetCompression());
+      break;
+   default:
+      R__ASSERT(false);
    }
 
    RClusterDescriptor::RLocator result;
@@ -796,11 +945,21 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCommitDataset()
    auto buffer = new unsigned char[szFooter];
    descriptor.SerializeFooter(buffer);
    fControlBlock->fNTuple.fSeekFooter = fFilePos;
-   WriteKey(buffer, szFooter, -1, fFilePos, fOptions.GetCompression());
-   fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
-   fControlBlock->fHeader.fInfoShort.fSeekFree = fFilePos;
-   delete[] buffer;
 
+   if (fOptions.GetContainerFormat() == ENTupleContainerFormat::kRaw) {
+      WriteRecord(buffer, szFooter, -1, fOptions.GetCompression());
+      fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
+      fControlBlock->fNTuple.fLenFooter = szFooter;
+      WriteRecord(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple, 0);
+      return;
+   }
+
+   R__ASSERT(fOptions.GetContainerFormat() == ENTupleContainerFormat::kTFile);
+   WriteKey(buffer, szFooter, -1, fFilePos, fOptions.GetCompression());
+
+   fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
+   fControlBlock->fNTuple.fLenFooter = szFooter;
+   fControlBlock->fHeader.fInfoShort.fSeekFree = fFilePos;
    WriteKey(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple,
             100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");
 
@@ -814,6 +973,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCommitDataset()
    fControlBlock->fHeader.SetEnd(fFilePos);
 
    Write(&fControlBlock->fHeader, fControlBlock->fHeader.GetSize(), 0);
+   delete[] buffer;
 }
 
 ROOT::Experimental::Detail::RPage
@@ -857,11 +1017,11 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options)
    , fMetrics("RPageSourceFile")
-   , fPageAllocator(std::make_unique<RPageAllocatorKey>())
+   , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
-   , fUnzipBuffer(std::make_unique<std::array<unsigned char, kMaxPageSize>>())
 {
 }
+
 
 ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
    const RNTupleReadOptions &options)
@@ -885,7 +1045,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::Read(void *buffer, std::size_t
 }
 
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::DoAttach()
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachTFile()
 {
    RTFHeader fileHeader;
    Read(&fileHeader, sizeof(fileHeader), 0);
@@ -925,42 +1085,19 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    RTFNTuple ntuple;
    Read(&ntuple, sizeof(ntuple), offset);
 
-   unsigned char *keyHeader = new unsigned char[ntuple.fNBytesHeader];
-   Read(keyHeader, ntuple.fNBytesHeader, ntuple.fSeekHeader);
-   memcpy(&key, keyHeader, sizeof(key));
+   unsigned char *recordHeader = new unsigned char[ntuple.fNBytesHeader];
+   Read(recordHeader, ntuple.fNBytesHeader, ntuple.fSeekHeader);
+   memcpy(&key, recordHeader, sizeof(key));
    unsigned char *header = new unsigned char[key.fObjLen];
-   int szUnzipBuffer = key.fObjLen;
-   int szSource = key.fNbytes - key.fKeyLen;
-   int unzipBytes = 0;
-   R__unzip(&szSource, keyHeader + key.fKeyLen, &szUnzipBuffer, header, &unzipBytes);
-   delete[] keyHeader;
+   fDecompressor(recordHeader + key.fKeyLen, key.fNbytes - key.fKeyLen, key.fObjLen, header);
+   delete[] recordHeader;
 
-   unsigned char *keyFooter = new unsigned char[ntuple.fNBytesFooter];
-   Read(keyFooter, ntuple.fNBytesFooter, ntuple.fSeekFooter);
-   memcpy(&key, keyFooter, sizeof(key));
+   unsigned char *recordFooter = new unsigned char[ntuple.fNBytesFooter];
+   Read(recordFooter, ntuple.fNBytesFooter, ntuple.fSeekFooter);
+   memcpy(&key, recordFooter, sizeof(key));
    unsigned char *footer = new unsigned char[key.fObjLen];
-   szUnzipBuffer = key.fObjLen;
-   szSource = key.fNbytes - key.fKeyLen;
-   unzipBytes = 0;
-   R__unzip(&szSource, keyFooter + key.fKeyLen, &szUnzipBuffer, footer, &unzipBytes);
-   delete[] keyFooter;
-
-//   unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
-//   auto fileSize = fFile->GetSize();
-//   R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
-//   R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
-//   auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
-//   Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);
-//
-//   std::uint32_t szHeader;
-//   std::uint32_t szFooter;
-//   RNTupleDescriptor::LocateMetadata(postscript, szHeader, szFooter);
-//   R__ASSERT(fileSize >= szHeader + szFooter);
-//
-//   unsigned char *header = new unsigned char[szHeader];
-//   unsigned char *footer = new unsigned char[szFooter];
-//   Read(header, szHeader, 0);
-//   Read(footer, szFooter, fileSize - szFooter);
+   fDecompressor(recordFooter + key.fKeyLen, key.fNbytes - key.fKeyLen, key.fObjLen, footer);
+   delete[] recordFooter;
 
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetFromHeader(header);
@@ -969,6 +1106,57 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    delete[] footer;
 
    return descBuilder.MoveDescriptor();
+}
+
+
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachRaw()
+{
+   RRawFileHeader fileHeader;
+   Read(&fileHeader, sizeof(fileHeader), 0);
+   RTFString ntupleName;
+   auto offset = sizeof(fileHeader);
+   Read(&ntupleName, 1, offset);
+   offset += ntupleName.GetSize();
+   RTFNTuple ntuple;
+   Read(&ntuple, sizeof(ntuple), offset);
+
+   std::cout << "Got an NTUple, header at " << ntuple.fSeekHeader <<
+     " size "  << ntuple.fNBytesHeader <<
+     " len " << ntuple.fLenHeader <<
+     "   footer at " << ntuple.fSeekFooter <<
+     " size "  << ntuple.fNBytesFooter <<
+     " len " << ntuple.fLenFooter << std::endl;
+
+
+   auto recordHeader = new unsigned char[ntuple.fNBytesHeader];
+   auto header = new unsigned char[ntuple.fLenHeader];
+   Read(recordHeader, ntuple.fNBytesHeader, ntuple.fSeekHeader);
+   fDecompressor(recordHeader, ntuple.fNBytesHeader, ntuple.fLenHeader, header);
+   delete recordHeader;
+
+   auto recordFooter = new unsigned char[ntuple.fNBytesFooter];
+   auto footer = new unsigned char[ntuple.fLenFooter];
+   Read(recordFooter, ntuple.fNBytesFooter, ntuple.fSeekFooter);
+   fDecompressor(recordFooter, ntuple.fNBytesFooter, ntuple.fLenFooter, footer);
+   delete recordFooter;
+
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetFromHeader(header);
+   descBuilder.AddClustersFromFooter(footer);
+   delete[] header;
+   delete[] footer;
+   return descBuilder.MoveDescriptor();
+}
+
+
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::DoAttach()
+{
+   char ident[4];
+   Read(ident, 4, 0);
+   if (std::string(ident, 4) == "root")
+      return AttachTFile();
+
+   return AttachRaw();
 }
 
 
@@ -1002,17 +1190,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
 
    auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    if (pageSize != bytesOnStorage) {
-      R__ASSERT(bytesOnStorage <= kMaxPageSize);
-      // We do have the unzip information in the column range, but here we simply use the value from
-      // the R__zip header
-      int szUnzipBuffer = kMaxPageSize;
-      int szSource = pageSize;
-      unsigned char *source = reinterpret_cast<unsigned char *>(pageBuffer);
-      int unzipBytes = 0;
-      R__unzip(&szSource, source, &szUnzipBuffer, fUnzipBuffer->data(), &unzipBytes);
-      R__ASSERT(unzipBytes > static_cast<int>(pageSize));
-      memcpy(pageBuffer, fUnzipBuffer->data(), unzipBytes);
-      pageSize = unzipBytes;
+      fDecompressor(pageBuffer, pageSize, bytesOnStorage);
+      pageSize = bytesOnStorage;
    }
 
    if (!element->IsMappable()) {
