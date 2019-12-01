@@ -29,6 +29,7 @@ HEADERS
   ROOT/RNTupleOptions.hxx
   ROOT/RNTupleUtil.hxx
   ROOT/RNTupleView.hxx
+  ROOT/RNTupleZip.hxx
   ROOT/RPage.hxx
   ROOT/RPageAllocator.hxx
   ROOT/RPagePool.hxx
