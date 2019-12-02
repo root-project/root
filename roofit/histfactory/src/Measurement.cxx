@@ -252,6 +252,7 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
 }
 
 
+#ifdef INCLUDE_RYML
 #include <ryml.hpp>
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
@@ -288,7 +289,7 @@ namespace RooStats { namespace HistFactory {
   }
 }
 
-namespace std {
+namespace c4 { namespace yml {
   template<class T> void read(c4::yml::NodeRef const& n, vector<T> *v){
     for(size_t i=0; i<n.num_children(); ++i){
       T e;
@@ -303,31 +304,40 @@ namespace std {
       n->append_child() << e;
     }
   }
-}  
+  }}  
 
-template<> void RooStats::HistFactory::Measurement::Export(ryml::Tree& t) const {
-  t["OutputFilePrefix"] << fOutputFilePrefix;
-  t["POI"] << fPOI;
-  t["Lumi"] << fLumi;
-  t["LumiRelErr"] << fLumiRelErr;
-  t["BinLow"] << fBinLow;
-  t["BinHigh"] << fBinHigh;
-  t["ExportOnly"] << fExportOnly;
-  t["InterpolationScheme"] << fInterpolationScheme;
-  //  t["Channels"] << fChannels;
-  t["ConstantParams"] << fConstantParams;
-  t["ParamValues"] << fParamValues;
-  //  t["PreprocessFunctions"] << fFunctionObjects;
-  t["GammaSyst"] << fGammaSyst;
-  t["UniformSyst"] << fUniformSyst;
-  t["LogNormSyst"] << fLogNormSyst;
-  t["NoSyst"] << fNoSyst;
+template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) const {
+  auto meas = n[c4::to_csubstr(this->GetName())];
+  meas |= c4::yml::MAP;
+  meas["POI"] << fPOI;
+  meas["Lumi"] << fLumi;
+  meas["LumiRelErr"] << fLumiRelErr;
+  meas["InterpolationScheme"] << fInterpolationScheme;
+  auto ch = meas["Channels"];
+  ch |= c4::yml::MAP;
+  for(const auto& c:fChannels){
+    c.Export(ch);
+  }
+  meas["ConstantParams"] << fConstantParams;
+  meas["ParamValues"] << fParamValues;
+  meas["PreprocessFunctions"] << fFunctionObjects;
+  meas["GammaSyst"] << fGammaSyst;
+  meas["UniformSyst"] << fUniformSyst;
+  meas["LogNormSyst"] << fLogNormSyst;
+  meas["NoSyst"] << fNoSyst;
 }
+#endif
 
 void RooStats::HistFactory::Measurement::PrintJSON( std::ostream& os ) {
+#ifdef INCLUDE_RYML  
   ryml::Tree t;
-  this->Export(t);
-  emit(t);
+  c4::yml::NodeRef n = t.rootref();
+  n |= c4::yml::MAP;
+  this->Export(n);
+  os << t;
+#else
+  std::cerr << "JSON export only support with rapidyaml!" << std::endl;
+#endif
 }
 void RooStats::HistFactory::Measurement::PrintJSON( std::string filename ) {
   std::ofstream out(filename);

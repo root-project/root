@@ -72,7 +72,8 @@ public:
 
   void Print(std::ostream& = std::cout);  
   void PrintXML( std::string Directory, std::string Prefix="" );
-
+  template<class T> void Export(T& t) const;
+  
   void CollectHistograms();
   bool CheckHistograms();
 

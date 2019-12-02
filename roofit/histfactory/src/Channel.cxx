@@ -159,6 +159,31 @@ void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::strin
 
 }
 
+#ifdef INCLUDE_RYML
+#include <ryml.hpp>
+#include <c4/yml/std/map.hpp>
+#include <c4/yml/std/string.hpp>
+
+namespace RooStats { namespace HistFactory {
+    template<> void RooStats::HistFactory::Channel::Export(c4::yml::NodeRef& n) const {
+      auto name = c4::to_csubstr(fName);      
+      auto ch = n[name];
+      ch |= c4::yml::MAP;
+
+      auto staterr = ch["StatErrorConfig"];
+      staterr |= c4::yml::MAP;
+      staterr["RelErrorThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
+      staterr["ConstraintType"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
+      
+      auto samples = ch["Samples"];
+      samples |= c4::yml::MAP;
+      for(const auto& s:fSamples){
+        s.Export(samples);
+      }
+    }
+  }
+}
+#endif
 
 
 void RooStats::HistFactory::Channel::SetData( std::string DataHistoName, std::string DataInputFile, std::string DataHistoPath ) {

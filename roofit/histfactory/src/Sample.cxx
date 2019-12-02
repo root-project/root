@@ -309,6 +309,53 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
 }
 
 
+#ifdef INCLUDE_RYML
+#include <ryml.hpp>
+#include <c4/yml/std/map.hpp>
+#include <c4/yml/std/string.hpp>
+
+namespace c4 { namespace yml {
+  void read(c4::yml::NodeRef const& n, TH1& h){
+//    for(size_t i=0; i<n.num_children(); ++i){
+//      T e;
+//      n[i]>>e;
+//      v->push_back(e);
+//    }
+  }
+  
+  void write(c4::yml::NodeRef *n, const TH1& h){
+    *n |= c4::yml::SEQ;
+    for(size_t i=0; i<h.GetNbinsX()+2; ++i){
+      n->append_child() << h.GetBinContent(i);
+    }    
+  }
+}}
+
+namespace RooStats { namespace HistFactory {
+    template<> void RooStats::HistFactory::Sample::Export(c4::yml::NodeRef& n) const {
+      auto name = c4::to_csubstr(fName);            
+      auto s = n[name];
+      s |= c4::yml::MAP;
+
+      // std::vector< RooStats::HistFactory::OverallSys >  fOverallSysList;
+      // std::vector< RooStats::HistFactory::NormFactor >  fNormFactorList;
+      // 
+      // std::vector< RooStats::HistFactory::HistoSys >    fHistoSysList;
+      // std::vector< RooStats::HistFactory::HistoFactor > fHistoFactorList;
+      // 
+      // std::vector< RooStats::HistFactory::ShapeSys >    fShapeSysList;
+      // std::vector< RooStats::HistFactory::ShapeFactor > fShapeFactorList;
+  
+
+      s["NormalizeByTheory"] << fNormalizeByTheory;
+      s["StatErrorActivate"] << fStatErrorActivate;
+
+      s["Data"] << *(fhNominal.GetObject());
+    }
+  }
+}
+#endif
+
 
 // Some helper functions
 // (Not strictly necessary because
