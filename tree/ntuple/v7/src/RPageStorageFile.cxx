@@ -134,6 +134,10 @@ constexpr std::int32_t ChecksumString(std::int32_t id, const char *str) {
 constexpr std::int32_t ChecksumRNTupleClass() {
    std::int32_t id = 0;
    id = ChecksumString(id, "ROOT::Experimental::RNTuple");
+   id = ChecksumString(id, "fVersion");
+   id = ChecksumString(id, "unsigned int");
+   id = ChecksumString(id, "fSize");
+   id = ChecksumString(id, "unsigned int");
    id = ChecksumString(id, "fSeekHeader");
    id = ChecksumString(id, "unsigned long");
    id = ChecksumString(id, "fNBytesHeader");
@@ -339,12 +343,32 @@ struct RTFStreamerElementVersion {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementVersion) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
 
-   RUInt32BE fByteCountNamed{0x40000000 |
-      (sizeof(RUInt16BE) + sizeof(RTFObject) + 10)};
+   RUInt32BE fByteCountNamed{0x40000000 | (sizeof(RUInt16BE) + sizeof(RTFObject) + 10)};
    RUInt16BE fVersionNamed{1};
    RTFObject fObjectNamed{0x02000000 | 0x01000000};
    char fLName = 8;
    char fName[8]{ 'f', 'V', 'e', 'r', 's', 'i', 'o', 'n' };
+   char fLTitle = 0;
+
+   RUInt32BE fType{13};
+   RUInt32BE fSize{4};
+   RUInt32BE fArrLength{0};
+   RUInt32BE fArrDim{0};
+   char fMaxIndex[20]{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   char fLTypeName = 12;
+   char fTypeName[12]{ 'u', 'n', 's', 'i', 'g', 'n', 'e', 'd', ' ', 'i', 'n', 't' };
+};
+
+/// Streamer info for data member RNTuple::fSize
+struct RTFStreamerElementSize {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementSize) - sizeof(RUInt32BE))};
+   RUInt16BE fVersion{4};
+
+   RUInt32BE fByteCountNamed{0x40000000 | (sizeof(RUInt16BE) + sizeof(RTFObject) + 7)};
+   RUInt16BE fVersionNamed{1};
+   RTFObject fObjectNamed{0x02000000 | 0x01000000};
+   char fLName = 5;
+   char fName[5]{ 'f', 'S', 'i', 'z', 'e' };
    char fLTitle = 0;
 
    RUInt32BE fType{13};
@@ -406,7 +430,7 @@ struct RTFStreamerElementLenHeader {
    RUInt16BE fVersion{4};
 
    RUInt32BE fByteCountNamed{0x40000000 |
-      (sizeof(RUInt16BE) + sizeof(RTFObject) + 13)};
+      (sizeof(RUInt16BE) + sizeof(RTFObject) + 12)};
    RUInt16BE fVersionNamed{1};
    RTFObject fObjectNamed{0x02000000 | 0x01000000};
    char fLName = 10;
@@ -470,7 +494,7 @@ struct RTFStreamerElementLenFooter {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerElementLenFooter) - sizeof(RUInt32BE))};
    RUInt16BE fVersion{4};
 
-   RUInt32BE fByteCountNamed{0x40000000 | (sizeof(RUInt16BE) + sizeof(RTFObject) + 13)};
+   RUInt32BE fByteCountNamed{0x40000000 | (sizeof(RUInt16BE) + sizeof(RTFObject) + 12)};
    RUInt16BE fVersionNamed{1};
    RTFObject fObjectNamed{0x02000000 | 0x01000000};
    char fLName = 10;
@@ -511,19 +535,28 @@ struct RTFStreamerElementReserved {
 /// Streamer info frame for data member RNTuple::fVersion
 struct RTFStreamerVersion {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerVersion) - sizeof(RUInt32BE))};
-   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
-   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerVersion) - 3 * sizeof(RUInt32BE))};
+   RUInt32BE fNewClassTag{0xffffffff};
+   char fClassName[19]{'T', 'S', 't', 'r', 'e', 'a', 'm', 'e', 'r', 'B', 'a', 's', 'i', 'c', 'T', 'y', 'p', 'e', '\0'};
+   RUInt32BE fByteCountRemaining{0x40000000 |
+      (sizeof(RTFStreamerVersion) - 2 * sizeof(RUInt32BE) - 19 /* strlen(fClassName) + 1 */ - sizeof(RUInt32BE))};
    RUInt16BE fVersion{2};
    RTFStreamerElementVersion fStreamerElementVersion;
+};
+
+/// Streamer info frame for data member RNTuple::fSize
+struct RTFStreamerSize {
+   RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSize) - sizeof(RUInt32BE))};
+   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
+   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerSize) - 3 * sizeof(RUInt32BE))};
+   RUInt16BE fVersion{2};
+   RTFStreamerElementSize fStreamerElementSize;
 };
 
 /// Streamer info frame for data member RNTuple::fSeekHeader
 struct RTFStreamerSeekHeader {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFStreamerSeekHeader) - sizeof(RUInt32BE))};
-   RUInt32BE fNewClassTag{0xffffffff};
-   char fClassName[19]{'T', 'S', 't', 'r', 'e', 'a', 'm', 'e', 'r', 'B', 'a', 's', 'i', 'c', 'T', 'y', 'p', 'e', '\0'};
-   RUInt32BE fByteCountRemaining{0x40000000 |
-      (sizeof(RTFStreamerSeekHeader) - 2 * sizeof(RUInt32BE) - 19 /* strlen(fClassName) + 1 */ - sizeof(RUInt32BE))};
+   RUInt32BE fClassTag{0x80000000};  // Fix-up after construction, or'd with 0x80000000
+   RUInt32BE fByteCountRemaining{0x40000000 | (sizeof(RTFStreamerSeekHeader) - 3 * sizeof(RUInt32BE))};
    RUInt16BE fVersion{2};
    RTFStreamerElementSeekHeader fStreamerElementSeekHeader;
 };
@@ -617,11 +650,12 @@ struct RTFStreamerInfoObject {
    RTFObject fObjectObjArr{0x02000000};
    char fNameObjArr{0};
 
-   RUInt32BE fNObjects{5};
+   RUInt32BE fNObjects{9};
    RUInt32BE fLowerBound{0};
 
    struct {
       RTFStreamerVersion fStreamerVersion;
+      RTFStreamerSize fStreamerSize;
       RTFStreamerSeekHeader fStreamerSeekHeader;
       RTFStreamerNBytesHeader fStreamerNBytesHeader;
       RTFStreamerLenHeader fStreamerLenHeader;
@@ -669,8 +703,10 @@ struct RTFFile {
 /// A streamed RNTuple class
 struct RTFNTuple {
    RUInt32BE fByteCount{0x40000000 | (sizeof(RTFNTuple) - sizeof(fByteCount))};
-   RUInt16BE fVersion{0};
+   RUInt16BE fVersionClass{0};
    RInt32BE fChecksum{ChecksumRNTupleClass()};
+   RUInt32BE fVersionInternal{0};
+   RUInt32BE fSize{sizeof(ROOT::Experimental::RNTuple)};
    RUInt64BE fSeekHeader{0};
    RUInt32BE fNBytesHeader{0};
    RUInt32BE fLenHeader{0};
@@ -824,8 +860,9 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
    auto classTagOffset = keyStreamerInfo.fKeyLen +
       offsetof(struct RTFStreamerInfoList, fStreamerInfo) +
       offsetof(struct RTFStreamerInfoObject, fStreamers) +
-      offsetof(struct RTFStreamerSeekHeader, fNewClassTag) + 2;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerVersion.fClassTag = 0x80000000 | classTagOffset;
+      offsetof(struct RTFStreamerVersion, fNewClassTag) + 2;
+   streamerInfo.fStreamerInfo.fStreamers.fStreamerSize.fClassTag = 0x80000000 | classTagOffset;
+   streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekHeader.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesHeader.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerLenHeader.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekFooter.fClassTag = 0x80000000 | classTagOffset;
