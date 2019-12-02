@@ -1625,15 +1625,14 @@ void stress17()
    TFile f("stress.root","update");
    TDirectory *motherdir = f.mkdir("motherdir");
    TDirectory *daughterdir = motherdir->mkdir("daughterdir");
-   // TDirectory *daughternull = motherdir->mkdir("daughterdir");  // would produce Error message and cause test to fail
    TDirectory *daughtersame = motherdir->mkdir("daughterdir", "", true);
    
    Bool_t OK = kTRUE;
-   if (/*daughternull != nullptr || */daughtersame != daughterdir || free_daughter2 == free_daughterdir || free_daughtersame != free_daughterdir) OK = kFALSE;
+   if (daughtersame != daughterdir || free_daughter2 == free_daughterdir || free_daughtersame != free_daughterdir) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s free_daughterdir=%p, free_daughter2=%p, free_daughtersame=%p, daughterdir=%p, daughternull=%p, daughtersame=%p \n"," ",free_daughterdir,free_daughter2,free_daughtersame,daughterdir,0/*daughternull*/,daughtersame);
+      printf("%-8s free_daughterdir=%p, free_daughter2=%p, free_daughtersame=%p, daughterdir=%p, daughtersame=%p \n"," ",free_daughterdir,free_daughter2,free_daughtersame,daughterdir,daughtersame);
    }
    if (gPrintSubBench) { printf("Test 17 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
