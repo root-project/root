@@ -1633,7 +1633,7 @@ void stress17()
    if (OK) printf("OK\n");
    else    {
       printf("FAILED\n");
-      printf("%-8s free_daughterdir=%d, free_daughter2=%d, free_daughtersame=%d, daughterdir=%d, daughternull=%d, daughtersame=%d \n"," ",free_daughterdir,free_daughter2,free_daughtersame,daughterdir,0/*daughternull*/,daughtersame);
+      printf("%-8s free_daughterdir=%d, free_daughter2=%d, free_daughtersame=%d, daughterdir=%d, daughternull=%d, daughtersame=%d \n"," ",(intptr_t)free_daughterdir,(intptr_t)free_daughter2,(intptr_t)free_daughtersame,(intptr_t)daughterdir,0/*(intptr_t)daughternull*/,(intptr_t)daughtersame);
    }
    if (gPrintSubBench) { printf("Test 17 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
