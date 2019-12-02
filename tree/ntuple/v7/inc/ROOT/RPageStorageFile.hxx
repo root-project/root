@@ -89,8 +89,6 @@ The written file can be either in ROOT format or in raw format.
 class RPageSinkFile : public RPageSink {
 private:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
-   /// Cannot process data blocks larger than 1MB
-   static constexpr std::size_t kMaxRecordSize = 1024 * 1024;
 
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;

@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include <ROOT/RNTupleZip.hxx>
+#include <RZip.h>
 
 #include <memory>
 #include <string>
@@ -57,8 +58,40 @@ TEST(RNTupleZip, Small)
 {
    RNTupleCompressor compressor;
    char X = 'x';
-   char x = 0;
    EXPECT_EQ(1U, compressor(&X, 1, 101));
    RNTupleDecompressor()(compressor.GetZipBuffer(), 1, 1, &X);
    EXPECT_EQ('x', X);
+}
+
+
+TEST(RNTupleZip, Large)
+{
+   constexpr unsigned int N = kMAXZIPBUF + 32;
+   auto zipBuffer = std::make_unique<unsigned char[]>(N);
+   auto unzipBuffer = std::make_unique<char[]>(N);
+   std::string data(N, 'x');
+
+   RNTupleCompressor compressor;
+   RNTupleDecompressor decompressor;
+
+   /// Trailing byte cannot be compressed, entire buffer returns uncompressed
+   int nWrites = 0;
+   auto szZip = compressor(data.data(), kMAXZIPBUF + 1, 101,
+      [&zipBuffer, &nWrites](const void *buffer, size_t nbytes, size_t offset) {
+         memcpy(zipBuffer.get() + offset, buffer, nbytes);
+         nWrites++;
+      });
+   EXPECT_EQ(2, nWrites);
+   EXPECT_EQ(static_cast<unsigned int>(kMAXZIPBUF) + 1, szZip);
+
+   nWrites = 0;
+   szZip = compressor(data.data(), data.length(), 101,
+      [&zipBuffer, &nWrites](const void *buffer, size_t nbytes, size_t offset) {
+         memcpy(zipBuffer.get() + offset, buffer, nbytes);
+         nWrites++;
+      });
+   EXPECT_LT(szZip, N);
+   EXPECT_EQ(2, nWrites);
+   decompressor(zipBuffer.get(), szZip, N, unzipBuffer.get());
+   EXPECT_EQ(data, std::string(unzipBuffer.get(), N));
 }

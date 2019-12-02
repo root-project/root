@@ -19,6 +19,7 @@
 #include <RZip.h>
 #include <TError.h>
 
+#include <algorithm>
 #include <array>
 #include <cstring>
 #include <functional>
@@ -42,11 +43,56 @@ private:
    std::unique_ptr<Buffer_t> fZipBuffer;
 
 public:
+   /// Data might be overwritten, if a zipped block in the middle of a large input data stream
+   /// turns out to be uncompressible
+   using Writer_t = std::function<void(const void *buffer, size_t nbytes, size_t offset)>;
+   static constexpr size_t kMaxSingleBlock = kMAXZIPBUF;
+
    RNTupleCompressor() : fZipBuffer(std::unique_ptr<Buffer_t>(new Buffer_t())) {}
    RNTupleCompressor(const RNTupleCompressor &other) = delete;
    RNTupleCompressor &operator =(const RNTupleCompressor &other) = delete;
 
-   /// Returns the size of the compressed data block. The data is written into the zip buffer
+   /// Returns the size of the compressed data. Data is compressed in 16MB blocks and written
+   /// piecewise using the provided writer
+   size_t operator() (const void *from, size_t nbytes, int compression, Writer_t fnWriter) {
+      R__ASSERT(from != nullptr);
+
+      auto cxLevel = compression % 100;
+      if (cxLevel == 0) {
+         fnWriter(from, nbytes, 0);
+         return nbytes;
+      }
+
+      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
+      unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
+      char *source = const_cast<char *>(static_cast<const char *>(from));
+      int szTarget = kMAXZIPBUF;
+      char *target = reinterpret_cast<char *>(fZipBuffer->data());
+      int szOutBlock = 0;
+      int szRemaining = nbytes;
+      size_t szZipData = 0;
+      for (unsigned int i = 0; i < nZipBlocks; ++i) {
+         int szSource = std::min(static_cast<int>(kMAXZIPBUF), szRemaining);
+         R__zipMultipleAlgorithm(cxLevel, &szSource, source, &szTarget, target, &szOutBlock, cxAlgorithm);
+         R__ASSERT(szOutBlock >= 0);
+         if ((szOutBlock == 0) || (szOutBlock >= szSource)) {
+            // Uncompressible block, we have to store the entire input data stream uncompressed
+            fnWriter(from, nbytes, 0);
+            return nbytes;
+         }
+
+         fnWriter(target, szOutBlock, szZipData);
+         szZipData += szOutBlock;
+         source += szSource;
+         szRemaining -= szSource;
+      }
+      R__ASSERT(szRemaining == 0);
+      R__ASSERT(szZipData < nbytes);
+      return szZipData;
+   }
+
+   /// Returns the size of the compressed data block. The data is written into the zip buffer.
+   /// This works only for small input buffer up to 16MB
    size_t operator() (const void *from, size_t nbytes, int compression) {
       R__ASSERT(from != nullptr);
       R__ASSERT(nbytes <= kMAXZIPBUF);
@@ -104,12 +150,28 @@ public:
       }
       R__ASSERT(dataLen > nbytes);
 
-      int szUnzipBuffer = dataLen;
-      int szSource = nbytes;
-      int unzipBytes = 0;
       unsigned char *source = const_cast<unsigned char *>(static_cast<const unsigned char *>(from));
-      R__unzip(&szSource, source, &szUnzipBuffer, static_cast<unsigned char *>(to), &unzipBytes);
-      R__ASSERT((unzipBytes >= 0) && (static_cast<unsigned int>(unzipBytes) == dataLen));
+      unsigned char *target = static_cast<unsigned char *>(to);
+      int szRemaining = dataLen;
+      do {
+         int szSource;
+         int szTarget;
+         int retval = R__unzip_header(&szSource, source, &szTarget);
+         R__ASSERT(retval == 0);
+         R__ASSERT(szSource > 0);
+         R__ASSERT(szTarget > szSource);
+         R__ASSERT(static_cast<unsigned int>(szSource) <= nbytes);
+         R__ASSERT(static_cast<unsigned int>(szTarget) <= dataLen);
+
+         int unzipBytes = 0;
+         R__unzip(&szSource, source, &szTarget, target, &unzipBytes);
+         R__ASSERT(unzipBytes == szTarget);
+
+         target += szTarget;
+         source += szSource;
+         szRemaining -= unzipBytes;
+      } while (szRemaining > 0);
+      R__ASSERT(szRemaining == 0);
    }
 
    /**
