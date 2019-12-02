@@ -45,6 +45,8 @@ skipping the TFile key part.
 struct RNTuple {
    /// Allows for evolving the struct in future versions
    std::uint32_t fVersion = 0;
+   /// Allows for skipping the struct
+   std::uint32_t fSize = sizeof(RNTuple);
    /// The file offset of the key containing the ntuple header
    std::uint64_t fSeekHeader = 0;
    /// The size of the compressed ntuple header including the TKey
