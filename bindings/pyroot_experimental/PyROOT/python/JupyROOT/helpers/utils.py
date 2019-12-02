@@ -15,6 +15,7 @@ import itertools
 import re
 import fnmatch
 import time
+from datetime import datetime
 from hashlib import sha1
 from contextlib import contextmanager
 from subprocess import check_output
@@ -201,18 +202,29 @@ def _invokeAclicMac(fileName):
 def _codeToFilename(code):
     '''Convert code to a unique file name
 
-    >>> _codeToFilename("int f(i){return i*i;}")
-    'dbf7e731.C'
+    >>> code = "int f(i){return i*i;}"
+    >>> _codeToFilename(code)[0:9]
+    'dbf7e731_'
+    >>> _codeToFilename(code)[9:-2].isdigit()
+    True
+    >>> _codeToFilename(code)[-2:]
+    '.C'
     '''
     code_enc = code if type(code) == bytes else code.encode('utf-8')
     fileNameBase = sha1(code_enc).hexdigest()[0:8]
-    return fileNameBase + ".C"
+    timestamp = datetime.now().strftime("%H%M%S%f")
+    return fileNameBase + "_" + timestamp + ".C"
 
 def _dumpToUniqueFile(code):
     '''Dump code to file whose name is unique
 
-    >>> _dumpToUniqueFile("int f(i){return i*i;}")
-    'dbf7e731.C'
+    >>> code = "int f(i){return i*i;}"
+    >>> _dumpToUniqueFile(code)[0:9]
+    'dbf7e731_'
+    >>> _dumpToUniqueFile(code)[9:-2].isdigit()
+    True
+    >>> _dumpToUniqueFile(code)[-2:]
+    '.C'
     '''
     fileName = _codeToFilename(code)
     with open (fileName,'w') as ofile:
