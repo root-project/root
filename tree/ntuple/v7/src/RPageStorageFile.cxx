@@ -797,24 +797,40 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
    RTFString strObject{objectName};
    RTFString strTitle{title};
 
-   R__ASSERT(nbytes <= kMaxRecordSize);
-   auto nbytesZip = fCompressor(buffer, nbytes, compression);
-   RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, nbytes, nbytesZip);
+   RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, 0, 0);
+   key.fObjLen = nbytes;
+   std::uint64_t offsetData = 0;
+   //if (nbytes > fCompressor.kMaxSingleBlock) {
+   if (nbytes > 20) {
+      // Slow path, size of the key is only known after the compressed data are written
+      Write(&strClass, strClass.GetSize(), offset + key.fKeyHeaderSize);
+      Write(&strObject, strObject.GetSize());
+      Write(&strTitle, strTitle.GetSize());
+      offsetData = fFilePos;
+      auto nbytesZip = fCompressor(buffer, nbytes, compression,
+         [this, offsetData](const void *b, size_t n, size_t o) { Write(b, n, offsetData + o); });
+      key.fNbytes = key.fNbytes + nbytesZip;
+      Write(&key, key.fKeyHeaderSize, offset);
+      Write(nullptr, 0, offsetData + nbytesZip);
+   } else {
+      auto nbytesZip = fCompressor(buffer, nbytes, compression);
+      key.fNbytes = key.fNbytes + nbytesZip;
+      Write(&key, key.fKeyHeaderSize, offset);
+      Write(&strClass, strClass.GetSize());
+      Write(&strObject, strObject.GetSize());
+      Write(&strTitle, strTitle.GetSize());
+      offsetData = fFilePos;
+      Write(fCompressor.GetZipBuffer(), nbytesZip);
+   }
 
-   Write(&key, key.fKeyHeaderSize, offset);
-   Write(&strClass, strClass.GetSize());
-   Write(&strObject, strObject.GetSize());
-   Write(&strTitle, strTitle.GetSize());
-   auto offsetData = fFilePos;
-   Write(fCompressor.GetZipBuffer(), nbytesZip);
    return offsetData;
 }
 
 void ROOT::Experimental::Detail::RPageSinkFile::WriteRecord(
    const void *buffer, std::size_t nbytes, std::int64_t offset, int compression)
 {
-   auto nbytesZip = fCompressor(buffer, nbytes, compression);
-   Write(fCompressor.GetZipBuffer(), nbytesZip, offset);
+   fCompressor(buffer, nbytes, compression,
+      [this, offset](const void *b, size_t n, size_t o) { Write(b, n, offset + o); });
 }
 
 
@@ -917,7 +933,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /*
    case ENTupleContainerFormat::kTFile:
       WriteTFileSkeleton();
       WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
-              fOptions.GetCompression());
+               fOptions.GetCompression());
       break;
    case ENTupleContainerFormat::kRaw:
       WriteRawSkeleton();
@@ -1156,14 +1172,6 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    offset += ntupleName.GetSize();
    RTFNTuple ntuple;
    Read(&ntuple, sizeof(ntuple), offset);
-
-   std::cout << "Got an NTUple, header at " << ntuple.fSeekHeader <<
-     " size "  << ntuple.fNBytesHeader <<
-     " len " << ntuple.fLenHeader <<
-     "   footer at " << ntuple.fSeekFooter <<
-     " size "  << ntuple.fNBytesFooter <<
-     " len " << ntuple.fLenFooter << std::endl;
-
 
    auto recordHeader = new unsigned char[ntuple.fNBytesHeader];
    auto header = new unsigned char[ntuple.fLenHeader];
