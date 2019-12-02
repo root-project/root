@@ -319,6 +319,9 @@ public:
 
    RVec(std::initializer_list<T> init) : fData(init) {}
 
+   // destructors
+   virtual ~RVec() {}
+
    // assignment
    RVec<T> &operator=(const RVec<T> &v)
    {
