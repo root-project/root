@@ -10,6 +10,7 @@
 #include <ROOT/RVec.hxx>
 
 #include <TClass.h>
+#include <TFile.h>
 #include <TRandom3.h>
 
 #include "gtest/gtest.h"
@@ -17,6 +18,7 @@
 #include "CustomStruct.hxx"
 
 #include <array>
+#include <cstdio>
 #include <exception>
 #include <memory>
 #include <string>
@@ -815,4 +817,45 @@ TEST(RNTuple, ReadString)
    }
    int nElementsPerPage = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(1).fPageInfos.at(1).fNElements;
    EXPECT_EQ(contentString, viewSt(nElementsPerPage/7));
+}
+
+
+TEST(RNTuple, LargeFile)
+{
+   FileRaii fileGuard("test_large_file.root");
+
+   auto modelWrite = RNTupleModel::Create();
+   auto& wrEnergy  = *modelWrite->MakeField<double>("energy");
+
+   TRandom3 rnd(42);
+   double chksumWrite = 0.0;
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "f", fileGuard.GetPath(), options);
+      constexpr unsigned long nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
+      for (unsigned int i = 0; i < nEvents; ++i) {
+         wrEnergy = rnd.Rndm();
+         chksumWrite += wrEnergy;
+         ntuple->Fill();
+      }
+   }
+   FILE *file = fopen(fileGuard.GetPath().c_str(), "rb");
+   ASSERT_TRUE(file != nullptr);
+   EXPECT_EQ(0, fseek(file, 0, SEEK_END));
+   EXPECT_GT(ftell(file), 2048LL * 1024LL * 1024LL);
+   fclose(file);
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   auto rdEnergy  = ntuple->GetView<double>("energy");
+   double chksumRead = 0.0;
+
+   for (auto i : ntuple->GetViewRange()) {
+      chksumRead += rdEnergy(i);
+   }
+
+   EXPECT_EQ(chksumRead, chksumWrite);
+   auto f = TFile::Open(fileGuard.GetPath().c_str(), "READ");
+   EXPECT_TRUE(f != nullptr);
+   delete f;
 }
