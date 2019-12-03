@@ -800,8 +800,7 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
    RTFKey key(offset, directoryOffset, strClass, strObject, strTitle, 0, 0);
    key.fObjLen = nbytes;
    std::uint64_t offsetData = 0;
-   //if (nbytes > fCompressor.kMaxSingleBlock) {
-   if (nbytes > 20) {
+   if (nbytes > fCompressor.kMaxSingleBlock) {
       // Slow path, size of the key is only known after the compressed data are written
       Write(&strClass, strClass.GetSize(), offset + key.fKeyHeaderSize);
       Write(&strObject, strObject.GetSize());
