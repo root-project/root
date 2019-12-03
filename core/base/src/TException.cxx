@@ -18,13 +18,19 @@ exception handling functionality.
 
 #include "TException.h"
 
-ExceptionContext_t *gException;
+#ifdef WIN32
+#define R__DLLEXPORT __declspec(dllexport)
+#else
+#define R__DLLEXPORT
+#endif
+
+R__DLLEXPORT ExceptionContext_t *gException;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If an exception context has been set (using the TRY and RETRY macros)
 /// jump back to where it was set.
 
-void Throw(int code)
+R__DLLEXPORT void Throw(int code)
 {
    if (gException)
 #ifdef NEED_SIGJMP
@@ -34,4 +40,4 @@ void Throw(int code)
 #endif
 }
 
-
+R__DLLEXPORT TExceptionHandler* gExceptionHandler = nullptr;

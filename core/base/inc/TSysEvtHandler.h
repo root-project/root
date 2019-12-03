@@ -110,6 +110,7 @@ enum ESignals {
    kSigSystem,
    kSigPipe,
    kSigIllegalInstruction,
+   kSigAbort,
    kSigQuit,
    kSigInterrupt,
    kSigWindowChanged,
