@@ -183,7 +183,7 @@ struct RTFDatetime {
    explicit RTFDatetime(RUInt32BE val) : fDatetime(val) {}
 };
 
-/// The key part of a TFile record excluding the key, class, and title names
+/// The key part of a TFile record excluding the class, object, and title names
 struct RTFKey {
    RInt32BE fNbytes{0};
    RUInt16BE fVersion{4};
@@ -225,11 +225,14 @@ struct RTFKey {
    }
 
    std::uint32_t GetSize() const {
+      // Negative size indicates a gap in the file
       if (fNbytes < 0) return -fNbytes;
       return fNbytes;
    }
 
-   std::uint32_t GetHeaderSize() const {
+   std::uint32_t GetHeaderSize(std::uint64_t offset) const {
+      if (offset > std::numeric_limits<std::int32_t>::max())
+         return 18 + sizeof(fInfoLong);
       return 18 + sizeof(fInfoShort);
    }
 };
@@ -271,29 +274,108 @@ struct RTFHeader {
       fInfoShort.fCompress = compression;
    }
 
-   std::uint32_t GetSize() {
+   void SetBigFile() {
+      if (fVersion >= 1000000)
+         return;
+
+      std::uint32_t end        = fInfoShort.fEND;
+      std::uint32_t seekFree   = fInfoShort.fSeekFree;
+      std::uint32_t nbytesFree = fInfoShort.fNbytesFree;
+      std::uint32_t nFree      = fInfoShort.fNfree;
+      std::uint32_t nbytesName = fInfoShort.fNbytesName;
+      std::uint32_t compress   = fInfoShort.fCompress;
+      std::uint32_t seekInfo   = fInfoShort.fSeekInfo;
+      std::uint32_t nbytesInfo = fInfoShort.fNbytesInfo;
+      fInfoLong.fEND        = end;
+      fInfoLong.fSeekFree   = seekFree;
+      fInfoLong.fNbytesFree = nbytesFree;
+      fInfoLong.fNfree      = nFree;
+      fInfoLong.fNbytesName = nbytesName;
+      fInfoLong.fUnits      = 8;
+      fInfoLong.fCompress   = compress;
+      fInfoLong.fSeekInfo   = seekInfo;
+      fInfoLong.fNbytesInfo = nbytesInfo;
+      fVersion = fVersion + 1000000;
+   }
+
+   bool IsBigFile(std::uint64_t offset = 0) const {
+      return (fVersion >= 1000000) || (offset > std::numeric_limits<std::int32_t>::max());
+   }
+
+   std::uint32_t GetSize() const {
       std::uint32_t sizeHead = 4 + sizeof(fVersion) + sizeof(fBEGIN);
-      if (fVersion >= 1000000) return sizeHead + sizeof(fInfoLong);
+      if (IsBigFile()) return sizeHead + sizeof(fInfoLong);
       return sizeHead + sizeof(fInfoShort);
    }
 
    std::uint64_t GetEnd() const {
-      if (fVersion >= 1000000) return fInfoLong.fEND;
+      if (IsBigFile()) return fInfoLong.fEND;
       return fInfoShort.fEND;
    }
 
    void SetEnd(std::uint64_t value) {
-      if ((value > (std::uint64_t(1) << 31)) || (fVersion >= 1000000)) {
-         if (fVersion < 1000000)
-            fVersion = fVersion + 1000000;
+      if (IsBigFile(value)) {
+         SetBigFile();
          fInfoLong.fEND = value;
       } else {
          fInfoShort.fEND = value;
       }
    }
 
+   std::uint64_t GetSeekFree() const {
+      if (IsBigFile()) return fInfoLong.fSeekFree;
+      return fInfoShort.fSeekFree;
+   }
+
+   void SetSeekFree(std::uint64_t value) {
+      if (IsBigFile(value)) {
+         SetBigFile();
+         fInfoLong.fSeekFree = value;
+      } else {
+         fInfoShort.fSeekFree = value;
+      }
+   }
+
+   void SetNbytesFree(std::uint32_t value) {
+      if (IsBigFile()) {
+         fInfoLong.fNbytesFree = value;
+      } else {
+         fInfoShort.fNbytesFree = value;
+      }
+   }
+
+   void SetNbytesName(std::uint32_t value) {
+      if (IsBigFile()) {
+         fInfoLong.fNbytesName = value;
+      } else {
+         fInfoShort.fNbytesName = value;
+      }
+   }
+
+   std::uint64_t GetSeekInfo() const {
+      if (IsBigFile()) return fInfoLong.fSeekInfo;
+      return fInfoShort.fSeekInfo;
+   }
+
+   void SetSeekInfo(std::uint64_t value) {
+      if (IsBigFile(value)) {
+         SetBigFile();
+         fInfoLong.fSeekInfo = value;
+      } else {
+         fInfoShort.fSeekInfo = value;
+      }
+   }
+
+   void SetNbytesInfo(std::uint32_t value) {
+      if (IsBigFile()) {
+         fInfoLong.fNbytesInfo = value;
+      } else {
+         fInfoShort.fNbytesInfo = value;
+      }
+   }
+
    void SetCompression(std::uint32_t value) {
-      if (fVersion >= 1000000) {
+      if (IsBigFile()) {
          fInfoLong.fCompress = value;
       } else {
          fInfoShort.fCompress = value;
@@ -317,7 +399,7 @@ struct RTFFreeEntry {
    };
 
    RTFFreeEntry() : fInfoShort() {}
-   RTFFreeEntry(std::uint64_t first, std::uint64_t last) {
+   void Set(std::uint64_t first, std::uint64_t last) {
       if (last > std::numeric_limits<std::int32_t>::max()) {
          fVersion = fVersion + 1000;
          fInfoLong.fFirst = first;
@@ -865,12 +947,11 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
                   sizeof(fileRoot) + strFileName.GetSize() + strEmpty.GetSize());
    std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
    fileRoot.fNBytesName = nbytesName;
-   fControlBlock->fHeader.fInfoShort.fNbytesName = nbytesName;
+   fControlBlock->fHeader.SetNbytesName(nbytesName);
 
    // Second record: the compressed StreamerInfo with the description of the RNTuple class
-   fControlBlock->fHeader.fInfoShort.fSeekInfo = 100 + keyRoot.GetSize();
-   RTFKey keyStreamerInfo(
-      fControlBlock->fHeader.fInfoShort.fSeekInfo, 100, strTList, strStreamerInfo, strStreamerTitle, 0);
+   fControlBlock->fHeader.SetSeekInfo(100 + keyRoot.GetSize());
+   RTFKey keyStreamerInfo(fControlBlock->fHeader.GetSeekInfo(), 100, strTList, strStreamerInfo, strStreamerTitle, 0);
    RTFStreamerInfoList streamerInfo;
    auto classTagOffset = keyStreamerInfo.fKeyLen +
       offsetof(struct RTFStreamerInfoList, fStreamerInfo) +
@@ -884,9 +965,9 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
    streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerLenFooter.fClassTag = 0x80000000 | classTagOffset;
    streamerInfo.fStreamerInfo.fStreamers.fStreamerReserved.fClassTag = 0x80000000 | classTagOffset;
-   WriteKey(&streamerInfo, streamerInfo.GetSize(), fControlBlock->fHeader.fInfoShort.fSeekInfo, 100, 1,
+   WriteKey(&streamerInfo, streamerInfo.GetSize(), fControlBlock->fHeader.GetSeekInfo(), 100, 1,
             "TList", "StreamerInfo", "Doubly linked list");
-   fControlBlock->fHeader.fInfoShort.fNbytesInfo = fFilePos - fControlBlock->fHeader.fInfoShort.fSeekInfo;
+   fControlBlock->fHeader.SetNbytesInfo(fFilePos - fControlBlock->fHeader.GetSeekInfo());
 
    // Reserve the space for the RNTuple record, which will be written on commit
    fControlBlock->fSeekNTuple = fFilePos;
@@ -1011,17 +1092,18 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCommitDataset()
 
    fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
    fControlBlock->fNTuple.fLenFooter = szFooter;
-   fControlBlock->fHeader.fInfoShort.fSeekFree = fFilePos;
+   fControlBlock->fHeader.SetSeekFree(fFilePos);
    WriteKey(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple,
             100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");
 
    RTFString strEmpty;
-   RTFFreeEntry freeEntry(0, 2000000000);
-   RTFKey keyFreeList(fControlBlock->fHeader.fInfoShort.fSeekFree, 100,
+   RTFFreeEntry freeEntry;
+   RTFKey keyFreeList(fControlBlock->fHeader.GetSeekFree(), 100,
                       strEmpty, strEmpty, strEmpty, freeEntry.GetSize());
-   freeEntry.fInfoShort.fFirst = fControlBlock->fHeader.fInfoShort.fSeekFree + keyFreeList.GetSize();
-   WriteKey(&freeEntry, freeEntry.GetSize(), fControlBlock->fHeader.fInfoShort.fSeekFree, 100, 0, "", "", "");
-   fControlBlock->fHeader.fInfoShort.fNbytesFree = fFilePos - fControlBlock->fHeader.fInfoShort.fSeekFree;
+   std::uint64_t firstFree = fControlBlock->fHeader.GetSeekFree() + keyFreeList.GetSize();
+   freeEntry.Set(firstFree, std::max(2000000000ULL, ((firstFree / 1000000000ULL) + 1) * 1000000000ULL));
+   WriteKey(&freeEntry, freeEntry.GetSize(), fControlBlock->fHeader.GetSeekFree(), 100, 0, "", "", "");
+   fControlBlock->fHeader.SetNbytesFree(fFilePos - fControlBlock->fHeader.GetSeekFree());
    fControlBlock->fHeader.SetEnd(fFilePos);
 
    Write(&fControlBlock->fHeader, fControlBlock->fHeader.GetSize(), 0);
@@ -1122,7 +1204,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       Read(&key, sizeof(key), offset);
       auto offsetNextKey = offset + key.fKeyLen;
 
-      offset += key.GetHeaderSize();
+      offset += key.GetHeaderSize(offset);
       Read(&name, 1, offset);
       offset += name.GetSize();
       Read(&name, 1, offset);
