@@ -54,7 +54,7 @@ class TString;
 
 //Moved from TSystem.
 enum ESysConstants {
-   kMAXSIGNALS       = 15,
+   kMAXSIGNALS       = 16,
    kMAXPATHLEN       = 8192,
    kBUFFERSIZE       = 8192,
    kItimerResolution = 10      // interval-timer resolution in ms
