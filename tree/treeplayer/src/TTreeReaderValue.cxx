@@ -27,6 +27,7 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TNtuple.h"
+#include "TROOT.h"
 #include <vector>
 
 // clang-format off
@@ -407,8 +408,8 @@ TBranch *ROOT::Internal::TTreeReaderValueBase::SearchBranchWithCompositeName(TLe
          return nullptr;
       }
       else {
-         TDictionary *tempDict = TDictionary::GetDictionary(myLeaf->GetTypeName());
-         if (tempDict && tempDict->IsA() == TDataType::Class() && TDictionary::GetDictionary(((TDataType*)tempDict)->GetTypeName()) == fDict){
+         TDataType *tempDict = gROOT->GetType(myLeaf->GetTypeName());
+         if (tempDict && fDict->IsA() == TDataType::Class() && tempDict->GetType() == ((TDataType*)fDict)->GetType()) {
             //fLeafOffset = myLeaf->GetOffset() / 4;
             branchActualType = fDict;
             fLeaf = myLeaf;
