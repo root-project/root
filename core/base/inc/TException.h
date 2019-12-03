@@ -73,6 +73,14 @@ struct ExceptionContext_t {
 
 R__EXTERN ExceptionContext_t *gException;
 
-extern void Throw(int code);
+R__EXTERN void Throw(int code);
+
+class TExceptionHandler {
+public:
+   virtual ~TExceptionHandler() {}
+   virtual void HandleException(int sig) = 0;
+};
+
+R__EXTERN TExceptionHandler* gExceptionHandler;
 
 #endif
