@@ -169,6 +169,7 @@ namespace {
       -1 /*SIGSYS*/,   0, "bad argument to system call",
       -1 /*SIGPIPE*/,  0, "write on a pipe with no one to read it",
       SIGILL,   0, "illegal instruction",
+      SIGABRT,  0, "abort",
       -1 /*SIGQUIT*/,  0, "quit",
       SIGINT,   0, "interrupt",
       -1 /*SIGWINCH*/, 0, "window size change",
@@ -1088,16 +1089,15 @@ Bool_t TWinNTSystem::Init()
    // signal. Signals don't have one. If we don't handle them, Windows will
    // raise an exception, which has a context, and which is handled by
    // ExceptionFilter.
-   /*
-   WinNTSignal(kSigChild,                 SigHandler);
-   WinNTSignal(kSigBus,                   SigHandler);
+   //WinNTSignal(kSigChild,                 SigHandler);
+   //WinNTSignal(kSigBus,                   SigHandler);
    WinNTSignal(kSigSegmentationViolation, SigHandler);
    WinNTSignal(kSigIllegalInstruction,    SigHandler);
-   WinNTSignal(kSigSystem,                SigHandler);
-   WinNTSignal(kSigPipe,                  SigHandler);
-   WinNTSignal(kSigAlarm,                 SigHandler);
+   WinNTSignal(kSigAbort,                 SigHandler);
+   //WinNTSignal(kSigSystem,                SigHandler);
+   //WinNTSignal(kSigPipe,                  SigHandler);
+   //WinNTSignal(kSigAlarm,                 SigHandler);
    WinNTSignal(kSigFloatingException,     SigHandler);
-   */
    ::SetUnhandledExceptionFilter(ExceptionFilter);
 
    fSigcnt = 0;
@@ -1762,9 +1762,17 @@ void TWinNTSystem::DispatchSignals(ESignals sig)
       fSigcnt++;
    }
    else {
-      StackTrace();
-      if (TROOT::Initialized()) {
-         ::Throw(sig);
+      if (gExceptionHandler) {
+         //sig is ESignal, should it be mapped to the correct signal number?
+         if (sig == kSigFloatingException) _fpreset();
+         gExceptionHandler->HandleException(sig);
+      } else {
+         //map to the real signal code + set the
+         //high order bit to indicate a signal (?)
+         StackTrace();
+         if (TROOT::Initialized()) {
+             ::Throw(sig);
+         }
       }
       Abort(-1);
    }
