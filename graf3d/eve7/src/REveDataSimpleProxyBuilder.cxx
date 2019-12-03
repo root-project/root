@@ -55,7 +55,7 @@ REveDataSimpleProxyBuilder::Build(const REveDataCollection *collection,
       {
          itemHolder = CreateCompound(true, true);
          itemHolder->SetMainColor(collection->GetMainColor());
-         itemHolder->SetName(Form("compound %d", index));
+         itemHolder->SetName(Form("%s %d", collection->GetCName(), index));
 
          product->AddElement(itemHolder);
       }
@@ -91,7 +91,7 @@ REveDataSimpleProxyBuilder::BuildViewType(const REveDataCollection* collection,
       {
          itemHolder = CreateCompound(true, true);
          itemHolder->SetMainColor(collection->GetMainColor());
-         itemHolder->SetName(Form("compound %d", index));
+         itemHolder->SetName(Form("%s %d", collection->GetCName(), index));
 
          product->AddElement(itemHolder);
       }
