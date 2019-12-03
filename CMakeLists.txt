@@ -139,6 +139,8 @@ if(ccache)
   endif()
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
 #---Enable test coverage -----------------------------------------------------------------------
 if(coverage)
   set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")

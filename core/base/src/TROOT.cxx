@@ -2043,6 +2043,7 @@ void TROOT::InitInterpreter()
    // rootcling.
    if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")
        && !dlsym(RTLD_DEFAULT, "usedToIdentifyStaticRoot")) {
+      
       // Make sure no llvm symbols are visible before loading libCling. If they
       // exist libCling will use those and not ours, causing havoc in the
       // interpreter. Look for an extern "C" symbol to avoid mangling; look for a
@@ -2053,10 +2054,15 @@ void TROOT::InitInterpreter()
       // libraries which is not the same!
       LLVMEnablePrettyStackTraceAddr = dlsym(RTLD_DEFAULT, "LLVMEnablePrettyStackTrace");
       // FIXME: When we configure with -Dclingtest=On we intentionally export the symbols. Silence this error.
+      int clingFlags = RTLD_LAZY|RTLD_LOCAL;
       if (LLVMEnablePrettyStackTraceAddr) {
+#ifdef RTLD_DEEPBIND
+         clingFlags = clingFlags|RTLD_DEEPBIND;
+#else
          Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
                "This will cause problems; please hide them or dlopen() them "
                "after the call to TROOT::InitInterpreter()!");
+#endif
       }
 
       char *libRIO = gSystem->DynamicPathName("libRIO");
@@ -2069,7 +2075,7 @@ void TROOT::InitInterpreter()
       }
 
       char *libcling = gSystem->DynamicPathName("libCling");
-      gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
+      gInterpreterLib = dlopen(libcling, clingFlags);
       delete [] libcling;
 
       if (!gInterpreterLib) {
