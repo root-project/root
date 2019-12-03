@@ -210,11 +210,14 @@ struct RTFKey {
           std::uint32_t szObjInMem, std::uint32_t szObjOnDisk = 0)
    {
       fObjLen = szObjInMem;
-      if (seekKey > std::numeric_limits<std::int32_t>::max()) {
+      if ((seekKey > std::numeric_limits<std::int32_t>::max()) ||
+          (seekPdir > std::numeric_limits<std::int32_t>::max()))
+      {
          fKeyHeaderSize = 18 + sizeof(fInfoLong);
          fKeyLen = fKeyHeaderSize + clName.GetSize() + objName.GetSize() + titleName.GetSize();
          fInfoLong.fSeekKey = seekKey;
          fInfoLong.fSeekPdir = seekPdir;
+         fVersion = fVersion + 1000;
       } else {
          fKeyHeaderSize = 18 + sizeof(fInfoShort);
          fKeyLen = fKeyHeaderSize + clName.GetSize() + objName.GetSize() + titleName.GetSize();
@@ -226,14 +229,21 @@ struct RTFKey {
 
    std::uint32_t GetSize() const {
       // Negative size indicates a gap in the file
-      if (fNbytes < 0) return -fNbytes;
+      if (fNbytes < 0)
+         return -fNbytes;
       return fNbytes;
    }
 
-   std::uint32_t GetHeaderSize(std::uint64_t offset) const {
-      if (offset > std::numeric_limits<std::int32_t>::max())
+   std::uint32_t GetHeaderSize() const {
+      if (fVersion >= 1000)
          return 18 + sizeof(fInfoLong);
       return 18 + sizeof(fInfoShort);
+   }
+
+   std::uint64_t GetSeekKey() const {
+      if (fVersion >= 1000)
+         return fInfoLong.fSeekKey;
+      return fInfoShort.fSeekKey;
    }
 };
 
@@ -776,10 +786,33 @@ struct RTFFile {
    RTFDatetime fDateM;
    RUInt32BE fNBytesKeys{0};
    RUInt32BE fNBytesName{0};
-   RUInt32BE fSeekDir{100};
-   RUInt32BE fSeekParent{0};
-   RUInt32BE fSeekKeys{0};
-   RTFFile() = default;
+   // The version of the key has to tell whether offsets are 32bit or 64bit long
+   union {
+      struct {
+         RUInt32BE fSeekDir{100};
+         RUInt32BE fSeekParent{0};
+         RUInt32BE fSeekKeys{0};
+      } fInfoShort;
+      struct {
+         RUInt64BE fSeekDir{100};
+         RUInt64BE fSeekParent{0};
+         RUInt64BE fSeekKeys{0};
+      } fInfoLong;
+   };
+
+   RTFFile() : fInfoShort() {}
+
+   std::uint32_t GetSize(std::uint32_t versionKey = 0) const {
+      if (versionKey >= 1000)
+         return 18 + sizeof(fInfoLong);
+      return 18 + sizeof(fInfoShort);
+   }
+
+   std::uint64_t GetSeekKeys(std::uint32_t versionKey = 0) const {
+      if (versionKey >= 1000)
+         return fInfoLong.fSeekKeys;
+      return fInfoShort.fSeekKeys;
+   }
 };
 
 /// A streamed RNTuple class
@@ -944,7 +977,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
    // First record of the file: the TFile object at offset 100
    RTFFile fileRoot;
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
-                  sizeof(fileRoot) + strFileName.GetSize() + strEmpty.GetSize());
+                  fileRoot.GetSize() + strFileName.GetSize() + strEmpty.GetSize());
    std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
    fileRoot.fNBytesName = nbytesName;
    fControlBlock->fHeader.SetNbytesName(nbytesName);
@@ -975,10 +1008,10 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
                      fControlBlock->fNTuple.GetSize());
 
    // The key index of the root TFile object, containing for the time being only the RNTuple key
-   fileRoot.fSeekKeys = fFilePos + keyRNTuple.GetSize();
+   fileRoot.fInfoShort.fSeekKeys = fFilePos + keyRNTuple.GetSize();
    RTFKeyList keyList{1};
-   RTFKey keyKeyList(fileRoot.fSeekKeys, 100, strEmpty, strEmpty, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
-   Write(&keyKeyList, keyKeyList.fKeyHeaderSize, fileRoot.fSeekKeys);
+   RTFKey keyKeyList(fileRoot.GetSeekKeys(), 100, strEmpty, strEmpty, strEmpty, keyList.GetSize() + keyRNTuple.fKeyLen);
+   Write(&keyKeyList, keyKeyList.fKeyHeaderSize, fileRoot.GetSeekKeys());
    Write(&strEmpty, strEmpty.GetSize());
    Write(&strEmpty, strEmpty.GetSize());
    Write(&strEmpty, strEmpty.GetSize());
@@ -987,7 +1020,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
    Write(&strRNTupleClass, strRNTupleClass.GetSize());
    Write(&strRNTupleName, strRNTupleName.GetSize());
    Write(&strEmpty, strEmpty.GetSize());
-   fileRoot.fNBytesKeys = fFilePos - fileRoot.fSeekKeys;
+   fileRoot.fNBytesKeys = fFilePos - fileRoot.GetSeekKeys();
 
    Write(&keyRoot, keyRoot.fKeyHeaderSize, 100);
    Write(&strTFile, strTFile.GetSize());
@@ -995,9 +1028,9 @@ void ROOT::Experimental::Detail::RPageSinkFile::WriteTFileSkeleton()
    Write(&strEmpty, strEmpty.GetSize());
    Write(&strFileName, strFileName.GetSize());
    Write(&strEmpty, strEmpty.GetSize());
-   Write(&fileRoot, sizeof(fileRoot));
+   Write(&fileRoot, fileRoot.GetSize());
 
-   fControlBlock->fNTuple.fSeekHeader = fileRoot.fSeekKeys + fileRoot.fNBytesKeys;
+   fControlBlock->fNTuple.fSeekHeader = fileRoot.GetSeekKeys() + fileRoot.fNBytesKeys;
 }
 
 
@@ -1196,15 +1229,16 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    Read(&file, sizeof(file), offset);
 
    RUInt32BE nKeys;
-   Read(&key, sizeof(key), file.fSeekKeys);
-   offset = file.fSeekKeys + key.fKeyLen;
+   offset = file.GetSeekKeys(key.fVersion);
+   Read(&key, sizeof(key), offset);
+   offset += key.fKeyLen;
    Read(&nKeys, sizeof(nKeys), offset);
    offset += sizeof(nKeys);
    for (unsigned int i = 0; i < nKeys; ++i) {
       Read(&key, sizeof(key), offset);
       auto offsetNextKey = offset + key.fKeyLen;
 
-      offset += key.GetHeaderSize(offset);
+      offset += key.GetHeaderSize();
       Read(&name, 1, offset);
       offset += name.GetSize();
       Read(&name, 1, offset);
@@ -1214,8 +1248,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       offset = offsetNextKey;
    }
 
-   Read(&key, sizeof(key), key.fInfoShort.fSeekKey);
-   offset = key.fInfoShort.fSeekKey + key.fKeyLen;
+   Read(&key, sizeof(key), key.GetSeekKey());
+   offset = key.GetSeekKey() + key.fKeyLen;
    RTFNTuple ntuple;
    Read(&ntuple, sizeof(ntuple), offset);
 
