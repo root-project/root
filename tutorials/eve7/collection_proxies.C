@@ -207,9 +207,6 @@ class XYJetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<XYJet>
          SetupAddElement(marker, iItemHolder, true);
          marker->SetName(Form("line %s %d", Collection()->GetCName(), idx));
       }
-
-      iItemHolder->SetName(Form("comp %s %d", Collection()->GetCName(), idx));
-      jet->SetName(Form("jet %s %d", Collection()->GetCName(), idx));
    }
 
 
@@ -231,14 +228,9 @@ class TrackProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticle>
    void Build(const TParticle& p, int idx, REveElement* iItemHolder, const REveViewContext* context) override
    {
       const TParticle *x = &p;
-      // printf("==============  BUILD track %s (pt=%f, eta=%f) \n", iItemHolder->GetCName(), p.Pt(), p.Eta());
       auto track = new REveTrack((TParticle*)(x), 1, context->GetPropagator());
       track->MakeTrack();
       SetupAddElement(track, iItemHolder, true);
-      // iItemHolder->AddElement(track);
-      
-      iItemHolder->SetName(Form("comp %s %d", Collection()->GetCName(), idx));
-      track->SetName(Form("track %s id=%d", Collection()->GetCName(), idx));
    }
 };
 
