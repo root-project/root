@@ -1526,7 +1526,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	for (int j=0; j<data.numEntries(); j++)
 	  {
 	    *obs = *data.get(j);//sets obs to current data point, this is where the pdf will be evaluated
-	    RooArgSet* floatingparams = (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false);
+	    std::unique_ptr<RooArgSet> floatingparams( (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false) );
 	    const RooArgList& floated = rw->floatParsFinal();
 	    //determine first derivatives
 	    vector<double> diffs(floated.getSize(), 0.0);
