@@ -1393,7 +1393,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 			  << "             (error will be proportional to the number of events in MC).\n"
 			  << "           - Or provide SumW2Error(false), to return errors from original HESSE error matrix\n"
 			  << "             (which will be proportional to the sum of the weights, i.e., a dataset with <sum of weights> events).\n"
-			  << "           - Or provide Asymptotic(true), to use the asymptotically correct expression\n"      
+			  << "           - Or provide AsymptoticError(true), to use the asymptotically correct expression\n"      
 			  << "             (for details see https://arxiv.org/abs/1911.01303)."
 			  << endl ;
   }
