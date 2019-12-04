@@ -67,13 +67,13 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
 void CreateTNtuple(const char *filename, const char *tuplename, int nentries, int more,
                    const char* openmode)
 {
-   std::stringstream ss;
-   ss << tuplename << "D";
-   auto tuplenamed = ss.str().c_str();
+
+   std::string tuplenamed(tuplename);
+   tuplenamed += "D";
 
    TFile f(filename, openmode);
    TNtuple ntuple(tuplename, "Test tuple", "x:y:z");
-   TNtupleD ntupled(tuplenamed, "Test tupled", "x:y:z");
+   TNtupleD ntupled(tuplenamed.c_str(), "Test tupled", "x:y:z");
 
    float x, y, z;
    for (int i = 0; i < nentries; ++i) {
