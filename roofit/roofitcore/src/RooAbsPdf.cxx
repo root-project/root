@@ -1447,7 +1447,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   //avoid setting both SumW2 and Asymptotic for uncertainty correction
   if (doSumW2==1 && doAsymptotic==1) {
-      coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") ERROR: Can not run both asymptotically correct method and SumW2 correction" << endl ;
+      coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") ERROR: Cannot compute both asymptotically correct and SumW2 errors." << endl ;
       return ret;
     }
 
