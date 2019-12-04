@@ -404,6 +404,9 @@ int main( int argc, char **argv )
       std::cout << "Each process should handle at least 3 files for efficiency.";
       std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
    }
+   if (nProcesses == 1)
+      multiproc = kFALSE;
+
    std::vector<std::string> partialFiles;
 
    if (multiproc) {
