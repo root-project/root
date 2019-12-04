@@ -1371,7 +1371,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t doEEWall = pc.getInt("doEEWall") ;
   Int_t doWarn   = pc.getInt("doWarn") ;
   Int_t doSumW2  = pc.getInt("doSumW2") ;
-  Int_t doAsymptotic = pc.getInt("doAsymptotic");
+  Int_t doAsymptotic = pc.getInt("doAsymptoticError");
   const RooArgSet* minosSet = static_cast<RooArgSet*>(pc.getObject("minosSet")) ;
 #ifdef __ROOFIT_NOROOMINIMIZER
   const char* minType =0 ;
