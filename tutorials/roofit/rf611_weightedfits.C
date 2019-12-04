@@ -160,7 +160,7 @@ int rf611_weightedfits(int acceptancemodel=2) {
       hc0pull2->Fill((c0.getValV()-c0gen)/c0.getError());
       hc1pull2->Fill((c1.getValV()-c1gen)/c1.getError());
       
-      result = pol.fitTo(data, Save(true), Asymptotic(true));//this uses the asymptotically correct approach
+      result = pol.fitTo(data, Save(true), AsymptoticError(true));//this uses the asymptotically correct approach
       hc0pull3->Fill((c0.getValV()-c0gen)/c0.getError());
       hc1pull3->Fill((c1.getValV()-c1gen)/c1.getError());      
     }
