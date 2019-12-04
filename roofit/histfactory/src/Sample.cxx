@@ -322,15 +322,73 @@ namespace c4 { namespace yml {
 //      v->push_back(e);
 //    }
   }
-  
-  void write(c4::yml::NodeRef *n, const TH1& h){
-    *n |= c4::yml::SEQ;
-    for(size_t i=0; i<h.GetNbinsX()+2; ++i){
-      n->append_child() << h.GetBinContent(i);
-    }    
-  }
-}}
 
+    
+  void write(c4::yml::NodeRef *bounds, const TAxis& ax){
+    if(!ax.IsVariableBinSize()){
+      *bounds |= c4::yml::MAP;
+      (*bounds)["nbins"] << ax.GetNbins();                
+      (*bounds)["min"] << ax.GetXmin();
+      (*bounds)["max"] << ax.GetXmax();
+    } else {
+      *bounds |= c4::yml::SEQ;              
+      for(size_t i=1; i<=ax.GetNbins(); ++i){
+        bounds->append_child() << ax.GetBinLowEdge(i);      
+      }
+    }
+  }
+    
+  void write(c4::yml::NodeRef *n, const TH1& h){
+    *n |= c4::yml::MAP;
+    auto bounds = (*n)["binning"];
+    auto weights = (*n)["counts"];
+    weights |= c4::yml::SEQ;    
+    auto errors = (*n)["errors"];    
+    errors |= c4::yml::SEQ;    
+    if(h.GetDimension()==1){
+      write(&bounds,*(h.GetXaxis()));
+      for(size_t i=1; i<=h.GetNbinsX(); ++i){
+        weights.append_child() << h.GetBinContent(i);
+        errors.append_child() << h.GetBinError(i);        
+      }    
+    } else {
+      bounds |= c4::yml::SEQ;
+      auto x = bounds.append_child();
+      x << "x";
+      write(&x,*(h.GetXaxis()));
+      auto y = bounds.append_child();
+      y << "y";
+      write(&y,*(h.GetYaxis()));      
+      if(h.GetDimension()>2){
+        auto z = bounds.append_child();
+        z << "z";
+        write(&z,*(h.GetZaxis()));              
+      }
+      for(size_t i=1; i<=h.GetNbinsX(); ++i){
+        auto binx = weights.append_child();
+        binx |= c4::yml::SEQ;
+        auto binxe = errors.append_child();
+        binxe |= c4::yml::SEQ;                                
+        for(size_t j=1; j<=h.GetNbinsY(); ++j){
+          if(h.GetDimension()>2){      
+            auto biny = binx.append_child();
+            biny |= c4::yml::SEQ;
+            auto binye = binxe.append_child();
+            binye |= c4::yml::SEQ;                            
+            for(size_t k=1; k<=h.GetNbinsY(); ++k){        
+              biny.append_child() << h.GetBinContent(i,j,k);
+              binye.append_child() << h.GetBinError(i,j,k);              
+            }
+          } else {
+            binx.append_child() << h.GetBinContent(i,j);
+            binxe.append_child() << h.GetBinError(i,j);            
+          }
+        }
+      }          
+    }
+  }
+  }
+}
 namespace RooStats { namespace HistFactory {
     template<> void RooStats::HistFactory::Sample::Export(c4::yml::NodeRef& n) const {
       auto name = c4::to_csubstr(fName);            
