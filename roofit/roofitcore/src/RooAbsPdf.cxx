@@ -1535,7 +1535,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 		RooRealVar* paramresult = (RooRealVar*)floated.at(k);
 		RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
 		//determine first derivative to parameter k at best estimate point
-		RooDerivative* deriv = derivative(*paraminternal, *obs, 1);
+		std::unique_ptr<RooDerivative> deriv( derivative(*paraminternal, *obs, 1) );
 		double diff = deriv->getVal();		
 		*paraminternal = paramresult->getVal();
 		diffs.at(k) = diff;
