@@ -1512,7 +1512,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
       //asymptotically correct approach
       if (doAsymptotic==1 && m.getNPar()>0) {
 	// Calculated corrected errors for weighted likelihood fits
-	RooFitResult* rw = m.save();
+	std::unique_ptr<RooFitResult> rw(m.save());
 	//weighted inverse Hessian matrix
 	const TMatrixDSym& matV = rw->covarianceMatrix();
 	coutI(Fitting) << "RooAbsPdf::fitTo(" << GetName() << ") Calculating covariance matrix according to the asymptotically correct approach. If you find this method useful please consider citing https://arxiv.org/abs/1911.01303." << endl;
