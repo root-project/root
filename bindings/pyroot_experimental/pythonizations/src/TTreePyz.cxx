@@ -99,7 +99,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
          address = (void *)leaf->GetValuePointer();
 
       PyObject *value = pcnv->FromMemory(&address);
-      delete pcnv;
+      CPyCppyy::DestroyConverter(pcnv);
 
       return value;
    } else if (leaf->GetValuePointer()) {
@@ -110,7 +110,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
          value = pcnv->FromMemory((void *)*(void **)leaf->GetValuePointer());
       else
          value = pcnv->FromMemory((void *)leaf->GetValuePointer());
-      delete pcnv;
+      CPyCppyy::DestroyConverter(pcnv);
 
       return value;
    }
