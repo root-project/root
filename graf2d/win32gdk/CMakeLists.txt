@@ -10,7 +10,7 @@
 ############################################################################
 include_directories(${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src 
 					${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/gdk
-					${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib)
+					${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/glib)
 
 set(iconvlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/iconv-1.3.lib)
 set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll)
