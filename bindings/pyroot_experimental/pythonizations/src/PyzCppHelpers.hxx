@@ -29,7 +29,4 @@ std::string GetTypestrFromArrayInterface(PyObject *obj);
 unsigned int GetDatatypeSizeFromTypestr(const std::string& typestr);
 bool CheckEndianessFromTypestr(const std::string& typestr);
 
-// void* to CPPInstance conversion, returns a new reference
-PyObject *CPPInstance_FromVoidPtr(void *addr, const char *classname, Bool_t python_owns = kFALSE);
-
 #endif // PYROOT_PYZCPPHELPERS
