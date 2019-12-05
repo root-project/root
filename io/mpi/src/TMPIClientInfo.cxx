@@ -30,7 +30,7 @@ void TMPIClientInfo::SetFile(TFile *file)
    // Register the new file as coming from this client.
    if (file != fFile) {
       if (fFile) {
-         R__MigrateKey(fFile, file);
+         MigrateKey(fFile, file);
          // delete the previous memory file (if any)
          delete file;
       } else {
@@ -43,7 +43,7 @@ void TMPIClientInfo::SetFile(TFile *file)
    ++fContactsCount;
 }
 
-void TMPIClientInfo::R__MigrateKey(TDirectory *destination, TDirectory *source)
+void TMPIClientInfo::MigrateKey(TDirectory *destination, TDirectory *source)
 {
    if (destination == 0 || source == 0)
       return;
@@ -60,7 +60,7 @@ void TMPIClientInfo::R__MigrateKey(TDirectory *destination, TDirectory *source)
          if (!destination_subdir) {
             destination_subdir = destination->mkdir(key->GetName());
          }
-         R__MigrateKey(destination, source);
+         MigrateKey(destination, source);
       } else {
          TKey *oldkey = destination->GetKey(key->GetName());
          if (oldkey) {

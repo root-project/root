@@ -24,7 +24,7 @@ private:
    TTimeStamp fLastContact;
    Double_t fTimeSincePrevContact;
 
-   static void R__MigrateKey(TDirectory *destination, TDirectory *source);
+   static void MigrateKey(TDirectory *destination, TDirectory *source);
 
 public:
    TMPIClientInfo();                                      // default constructor

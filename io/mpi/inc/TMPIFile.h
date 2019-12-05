@@ -66,6 +66,8 @@ private:
       ClientColl_t fClients;
       TTimeStamp fLastMerge;
       TFileMerger fMerger;
+
+      static void DeleteObject(TDirectory *dir, Bool_t withReset);
       
    public:
       ParallelFileMerger(const char *filename, Int_t compression_settings, Bool_t writeCache = kFALSE);
@@ -74,8 +76,7 @@ private:
       ULong_t Hash() const { return fFilename.Hash(); };
       const char *GetName() const { return fFilename; };
 
-      static void R__DeleteObject(TDirectory *dir, Bool_t withReset);
-      static Bool_t R__NeedInitialMerge(TDirectory *dir);
+      static Bool_t NeedInitialMerge(TDirectory *dir);
 
       Bool_t InitialMerge(TFile *input);
       Bool_t Merge();

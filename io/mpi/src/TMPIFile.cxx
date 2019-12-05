@@ -169,7 +169,7 @@ void TMPIFile::RunCollector(Bool_t cache)
          }
 
          // first merge needs extra care
-         if (info->R__NeedInitialMerge(transient)) {
+         if (info->NeedInitialMerge(transient)) {
             info->InitialMerge(transient);
          }
 
@@ -216,7 +216,7 @@ TMPIFile::ParallelFileMerger::~ParallelFileMerger()
       delete client.GetFile();
 }
 
-void TMPIFile::ParallelFileMerger::R__DeleteObject(TDirectory *dir, Bool_t withReset)
+void TMPIFile::ParallelFileMerger::DeleteObject(TDirectory *dir, Bool_t withReset)
 {
    if (dir == 0)
       return;
@@ -230,7 +230,7 @@ void TMPIFile::ParallelFileMerger::R__DeleteObject(TDirectory *dir, Bool_t withR
          if (!subdir) {
             subdir = (TDirectory *)key->ReadObj();
          }
-         R__DeleteObject(subdir, withReset);
+         DeleteObject(subdir, withReset);
       } else {
          Bool_t todelete = kFALSE;
          if (withReset) {
@@ -247,7 +247,7 @@ void TMPIFile::ParallelFileMerger::R__DeleteObject(TDirectory *dir, Bool_t withR
    }
 }
 
-Bool_t TMPIFile::ParallelFileMerger::R__NeedInitialMerge(TDirectory *dir)
+Bool_t TMPIFile::ParallelFileMerger::NeedInitialMerge(TDirectory *dir)
 {
    if (dir == 0)
       return kFALSE;
@@ -260,7 +260,7 @@ Bool_t TMPIFile::ParallelFileMerger::R__NeedInitialMerge(TDirectory *dir)
          if (!subdir) {
             subdir = (TDirectory *)key->ReadObj();
          }
-         if (R__NeedInitialMerge(subdir)) {
+         if (NeedInitialMerge(subdir)) {
             return kTRUE;
          }
       } else {
@@ -285,7 +285,7 @@ Bool_t TMPIFile::ParallelFileMerger::InitialMerge(TFile *input)
    fMerger.AddFile(input);
    Bool_t result =
       fMerger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kResetable | TFileMerger::kKeepCompression);
-   R__DeleteObject(input, kTRUE);
+   DeleteObject(input, kTRUE);
    return result;
 }
 
@@ -297,7 +297,7 @@ Bool_t TMPIFile::ParallelFileMerger::InitialMerge(TFile *input)
 Bool_t TMPIFile::ParallelFileMerger::Merge()
 {
    // Remove object that can *not* be incrementally merge and will *not* be reset by the client code.
-   R__DeleteObject(fMerger.GetOutputFile(), kFALSE);
+   DeleteObject(fMerger.GetOutputFile(), kFALSE);
    for (UInt_t f = 0; f < fClients.size(); ++f) {
       fMerger.AddFile(fClients[f].GetFile());
    }
@@ -308,7 +308,7 @@ Bool_t TMPIFile::ParallelFileMerger::Merge()
    // re-merged (Histograms).
    for (UInt_t f = 0; f < fClients.size(); ++f) {
       if (fClients[f].GetFile()) {
-         R__DeleteObject(fClients[f].GetFile(), kTRUE);
+         DeleteObject(fClients[f].GetFile(), kTRUE);
       } else {
          // We back up the file (probably due to memory constraint)
          TFile *file = TFile::Open(fClients[f].GetLocalName(), "UPDATE");
@@ -316,7 +316,7 @@ Bool_t TMPIFile::ParallelFileMerger::Merge()
             Error("Merge", "output file unavailable");
          }
          // Remove object that can be incrementally merge and will be reset by the client code.
-         R__DeleteObject(file, kTRUE);
+         DeleteObject(file, kTRUE);
          file->Write();
          delete file;
       }
@@ -513,7 +513,6 @@ void TMPIFile::SplitMPIComm()
             " Number of processors should be two times larger than outpts. For %d outputs at least %d "
             "should be allocated instead of %d",
             fSplitLevel, MIN_FILE_NUM * fSplitLevel, fMPIGlobalSize);
-      return;
    }
 
    // using one collector
