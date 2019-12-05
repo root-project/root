@@ -312,8 +312,9 @@ Bool_t TMPIFile::ParallelFileMerger::Merge()
       } else {
          // We back up the file (probably due to memory constraint)
          TFile *file = TFile::Open(fClients[f].GetLocalName(), "UPDATE");
-         if (file->IsZombie())
-            exit(1);
+         if (file->IsZombie()) {
+            Error("Merge", "output file unavailable");
+         }
          // Remove object that can be incrementally merge and will be reset by the client code.
          R__DeleteObject(file, kTRUE);
          file->Write();
@@ -395,6 +396,7 @@ void TMPIFile::CreateBufferAndSend()
 {
    if (this->IsCollector()) {
       Error("CreateBufferAndSend", " should not be called by a collector");
+      return;
    }
    this->Write();
    Int_t count = this->GetEND();
@@ -415,8 +417,8 @@ void TMPIFile::CreateEmptyBufferAndSend()
 
    if (!IsReceived()) {
       MPI_Wait(&fMPIRequest, MPI_STATUS_IGNORE);
-      delete[] fSendBuf;
    }
+   delete[] fSendBuf; // empty the buffer once received by master
    fSendBuf = nullptr;
    MPI_Send(fSendBuf, 0, MPI_CHAR, 0, fMPIColor, fSubComm);
 }
@@ -428,14 +430,12 @@ void TMPIFile::CreateEmptyBufferAndSend()
 void TMPIFile::Sync()
 {
    // check if the previous send request is accepted by master.
-   if (IsReceived()) { // if accepted create and send current batch
-      CreateBufferAndSend();
-   } else {
-      // if not accepted wait until received by master
+   if (!IsReceived()) {
       MPI_Wait(&fMPIRequest, MPI_STATUS_IGNORE);
-      delete[] fSendBuf; // empty the buffer once received by master
-      CreateBufferAndSend();
    }
+   delete[] fSendBuf; // empty the buffer once received by master
+   fSendBuf = nullptr;
+   CreateBufferAndSend();
    this->ResetAfterMerge((TFileMergeInfo *)0);
 }
 
@@ -513,6 +513,7 @@ void TMPIFile::SplitMPIComm()
             " Number of processors should be two times larger than outpts. For %d outputs at least %d "
             "should be allocated instead of %d",
             fSplitLevel, MIN_FILE_NUM * fSplitLevel, fMPIGlobalSize);
+      return;
    }
 
    // using one collector
