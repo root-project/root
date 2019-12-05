@@ -57,7 +57,7 @@ std::vector<int>         TCudaTensor<AFloat>::fInstances(1,0);
 /// https://en.wikipedia.org/wiki/Row-_and_column-major_order
 /// https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.strides.html
 template<typename AFloat>
-std::vector<std::size_t> TCudaTensor<AFloat>::ComputeStridesFromShape(const std::vector<std::size_t> &shape, 
+std::vector<std::size_t> TCudaTensor<AFloat>::ComputeStridesFromShape(const std::vector<std::size_t> &shape,
    bool rowmajorLayout)
 {
    const auto size = shape.size();
@@ -101,11 +101,11 @@ TCudaTensor<AFloat>::TCudaTensor(const std::vector<size_t> & shape,
       fTensorDescriptor(nullptr), fMemoryLayout(layout)
 {
    fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
-   
-   fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
-                                              fStrides.back()*fShape.back(); 
 
-   // create a new buffer in this case 
+   fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() :
+                                              fStrides.back()*fShape.back();
+
+   // create a new buffer in this case
    fElementBuffer = TCudaDeviceBuffer<AFloat>(fSize, 0);
    // need to initialize Cuda when creating a new Cuda Buffer (e.g. create Tensor descriptor)
    InitializeCuda();
@@ -118,7 +118,7 @@ TCudaTensor<AFloat>::TCudaTensor(const AFloat * host_data, const std::vector<siz
                                  int device, int streamIndx)
    : TCudaTensor(shape, layout, device, streamIndx)
 {
-   // do I need to allocate this buffer ???? 
+   // do I need to allocate this buffer ????
    // is not a mem leak
    // AFloat * buffer = new AFloat[fSize];
    // size_t index = 0;
@@ -136,17 +136,17 @@ TCudaTensor<AFloat>::TCudaTensor(const AFloat * host_data, const std::vector<siz
 
 //____________________________________________________________________________
 template<typename AFloat>
-TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,  
+TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,
                                  const std::vector<size_t> & shape,
                                  TMVA::Experimental::MemoryLayout layout,
                                  int device, int streamIndx)
-   : fNDim(shape.size()), fElementBuffer(buffer), fShape(shape), fStrides( shape.size()), fDevice(device), 
+   : fNDim(shape.size()), fElementBuffer(buffer), fShape(shape), fStrides( shape.size()), fDevice(device),
      fStreamIndx(streamIndx), fTensorDescriptor(nullptr), fMemoryLayout(layout)
 {
    // constructor from an existing buffer . Buffer size must contain given size
    fStrides = ComputeStridesFromShape(fShape, layout==MemoryLayout::RowMajor);
-   
-   fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() : 
+
+   fSize = (layout==MemoryLayout::RowMajor) ? fStrides.front()*fShape.front() :
                                               fStrides.back()*fShape.back();
    R__ASSERT(fSize <= buffer.GetSize());
 
@@ -179,16 +179,16 @@ TCudaTensor<AFloat>::TCudaTensor(const TCudaMatrix<AFloat>& matrix, size_t dim) 
       // change shape from (nrows,ncols) to (nrows,ncols,1,1)
       // this works onlt for coolum major layout since this is same of TCudaMatrix
       fShape.insert(fShape.end(), dim-2, 1);
-      fStrides.insert(fStrides.end(),dim-2,fSize); 
-      fNDim = dim; 
+      fStrides.insert(fStrides.end(),dim-2,fSize);
+      fNDim = dim;
       // need to reset tensor descriptor since we are changing the shape
-      SetTensorDescriptor(); 
+      SetTensorDescriptor();
    }
 }
 
 //____________________________________________________________________________
 template <typename AFloat>
-TCudaTensor<AFloat>::~TCudaTensor() 
+TCudaTensor<AFloat>::~TCudaTensor()
 {
    if (fTensorDescriptor && fTensorDescriptor.use_count() == 1 ) {
       // //std::cout << "Destroy tensor descriptor for shape ";
@@ -199,7 +199,7 @@ TCudaTensor<AFloat>::~TCudaTensor()
 
       fInstances[fStreamIndx]--;
 
-         // When all tensors in a streamIndx are destroyed, release cudnn resources 
+         // When all tensors in a streamIndx are destroyed, release cudnn resources
       if (fInstances[fStreamIndx] <= 0) {
          std::cout << "All Cuda tensors are -released - destroy cudnn handle " << fInstances[fStreamIndx] << std::endl;
          CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
@@ -220,18 +220,28 @@ TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
       TCudaMatrix<AFloat> temp = GetMatrix();
       return temp;
    }
-   // we can convert directy to TMatrix 
-   assert(fNDim <= 4); 
-   size_t nRows = fShape[0]*fShape[1];
-   size_t nCols = fShape[2];
-   if (fNDim == 4) nCols*= fShape[3];
-   TMatrixT<AFloat> hostMatrix( nRows, nCols ); 
+   // we can convert directy to TMatrix
+   // assert(fNDim <= 4);
+   // size_t nRows = fShape[0]*fShape[1];
+   // size_t nCols = fShape[2];
+   // if (fNDim == 4) nCols*= fShape[3];
 
-   
-   cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer, fSize * sizeof(AFloat),
+   if (GetLayout() == MemoryLayout::RowMajor) {
+
+     // This assume that tensor D1, D2, D3,D4 is converted in   D1 , D2*D3*D4
+     TMatrixT<AFloat> hostMatrix( GetNrows(), GetNcols() );
+     cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer, fSize * sizeof(AFloat),
            cudaMemcpyDeviceToHost);
+     return hostMatrix;
 
-   return hostMatrix;
+   }
+   // else in case of column major tensor we need to transpose(this is what is done in TCudaMatrix)
+   // Here we assume that D1, D2, D3 is converted in   a matrix  (D3, D1*D2)
+   TMatrixT<AFloat> hostMatrix( GetNcols(), GetNrows() );
+   cudaMemcpy(hostMatrix.GetMatrixArray(), fElementBuffer, fSize * sizeof(AFloat),
+              cudaMemcpyDeviceToHost);
+   return hostMatrix.T();  // return transpose matrix
+
 }
 //____________________________________________________________________________
 template <typename AFloat>
@@ -292,32 +302,34 @@ inline void TCudaTensor<AFloat>::InitializeCuda()
 }
 template<typename AFloat>
 void TCudaTensor<AFloat>::SetTensorDescriptor() {
-      if (!fTensorDescriptor) return; 
+      if (!fTensorDescriptor) return;
       if (fSize == 0) return;
 
       // cuDNN NdTensor format has a minsize of 4 tensor dimensions
       // 4D tensor is more performant on lower dimensions and supports all folowing operations
       //if (fNDim == 4) {
-      Shape_t shape = fShape; 
-      if (fNDim < 4 && fNDim > 1 ) { 
-         // add 1 to tensor 
-         if (fMemoryLayout == MemoryLayout::RowMajor)  
+      Shape_t shape = fShape;
+      if (fNDim < 4 && fNDim > 1 ) {
+         // add 1 to tensor
+         if (fMemoryLayout == MemoryLayout::RowMajor)
             shape.insert(shape.end(),4-fNDim, 1);
-         else 
+         else
             shape.insert(shape.begin(),4-fNDim,1);
-      } else if (fNDim > 4) { 
-         std::cout << "Error : Dim = "<< fNDim 
+      } else if (fNDim > 4) {
+         std::cout << "Error : Dim = "<< fNDim
          <<". Currently only 4D tensors are supported for the TMVA cuDNN backend."
          << std::endl;
       }
       if (fMemoryLayout == MemoryLayout::RowMajor)  {
-            CUDNNCHECK(cudnnSetTensor4dDescriptor(fTensorDescriptor->fCudnnDesc,
+            auto status = cudnnSetTensor4dDescriptor(fTensorDescriptor->fCudnnDesc,
                                                CUDNN_TENSOR_NCHW,// Layout of the tensor in memory
                                                fDataType,
                                                (int)shape[0],   // batch size
                                                (int)shape[1],   // no. channels
                                                (int)shape[2],   // image height
-                                               (int)shape[3])); // image width
+                                               (int)shape[3]); // image width
+            assert(status == CUDNN_STATUS_SUCCESS);
+            CUDNNCHECK(status);
       }
       else {
             CUDNNCHECK(cudnnSetTensor4dDescriptor(fTensorDescriptor->fCudnnDesc,
@@ -328,32 +340,32 @@ void TCudaTensor<AFloat>::SetTensorDescriptor() {
                        (int)shape[1],   // image height
                        (int)shape[0])); // image width
       }
-      
+
       // Some operations in cudnn may not work with this tensor description
-      //else if 
- 
+      //else if
+
         /*CUDNNCHECK(cudnnSetTensorNdDescriptor(fTensorDescriptor,
                                               fDataType,
                                               (int)fNDim,
                                               (int *)fShape.data(),
                                               (int *)fStrides.data()));*/
       //}
-   
+
 #ifdef NDEBUG
       size_t tensorSize;
       CUDNNCHECK(cudnnGetTensorSizeInBytes(fTensorDescriptor->fCudnnDesc, &tensorSize));
       assert(fSize == tensorSize/sizeof(AFloat));
 
-        //    int n,c,h,w = 0; 
-   // int s1,s2,s3,s4 = 0; 
-   // cudnnDataType_t  dataType; 
+        //    int n,c,h,w = 0;
+   // int s1,s2,s3,s4 = 0;
+   // cudnnDataType_t  dataType;
    // cudnnGetTensor4dDescriptor( fTensorDescriptor, &dataType,&n,&c,&h,&w,&s1,&s2,&s3,&s4 );
-   // std::vector<size_t>  shape_input = {n,c,h,w}; 
+   // std::vector<size_t>  shape_input = {n,c,h,w};
    // assert (shape_input == GetShape());
 
 #endif
 
- 
+
    }
 
 //____________________________________________________________________________
@@ -370,32 +382,32 @@ void TCudaTensor<AFloat>::Print(const char * name, bool truncate) const
 {
       //TCudaBuffer<AFloat> hostBuffer (fSize);
       //fElementBuffer.CopyTo(hostBuffer);
-    #if 0  
-      AFloat hostBuffer[fSize]; 
+    #if 0
+      AFloat hostBuffer[fSize];
 
       cudaMemcpy(hostBuffer, fElementBuffer, fSize * sizeof(AFloat),
                  cudaMemcpyDeviceToHost);
-      
+
       for (size_t i = 0; i < fSize; i++) std::cout << hostBuffer[i] << "  ";
    #endif
    PrintShape(name);
-   size_t n = fSize; 
-   if (n > 10 && truncate) n = 10; 
+   size_t n = fSize;
+   if (n > 10 && truncate) n = 10;
    std::cout << "Data : { ";
    for (size_t i = 0; i < n; ++i ) {
-      AFloat * elementPointer = fElementBuffer + i; 
+      AFloat * elementPointer = fElementBuffer + i;
       std::cout << AFloat( TCudaDeviceReference<AFloat>(elementPointer) );
-      if (i < n-1) std::cout << " , "; 
+      if (i < n-1) std::cout << " , ";
    }
-   if (n < fSize) std::cout << "............   } "; 
+   if (n < fSize) std::cout << "............   } ";
    std::cout << " } " << std::endl;
 }
 template<typename AFloat>
 void TCudaTensor<AFloat>::PrintShape(const char * name) const
 {
-      std::string memlayout = (GetLayout() == MemoryLayout::RowMajor) ? "RowMajor" : "ColMajor"; 
+      std::string memlayout = (GetLayout() == MemoryLayout::RowMajor) ? "RowMajor" : "ColMajor";
       std::cout << name << " shape : { ";
-      for (size_t i = 0; i < fNDim-1; ++i ) 
+      for (size_t i = 0; i < fNDim-1; ++i )
          std::cout << fShape[i] << " , ";
       std::cout << fShape.back() << " } " << " Layout : " << memlayout << std::endl;
 }
@@ -406,7 +418,7 @@ template<typename AFloat>
 TCudaTensor<AFloat>::operator Experimental::RTensor<AFloat>() const
 {
    std::vector<size_t> shape(fNDims, fNDims + fDim)
-   
+
    Experimental::RTensor<AFloat> hostTensor( shape)
 
    AFloat * buffer = new AFloat[fSize];

@@ -466,7 +466,6 @@ void TConvLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    // write weights and bias matrix
    this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
-
 }
 
 //______________________________________________________________________________

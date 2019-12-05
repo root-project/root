@@ -618,7 +618,7 @@ void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
    // }
 
    // cudaMemcpy(dB, hB, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
-   //std::cout << "flatten from : " << size << " , " << nRows << " , " << nCols << std::endl;
+   //std::cout << "flatten from : " << nDepth << " , " << nRows << " , " << nCols << std::endl;
 
 
    // for (size_t i = 0; i < size; i++) {
@@ -633,7 +633,15 @@ void TCuda<AFloat>::Flatten(TCudaTensor<AFloat> &A,
 
    // to be fixed !!!
    // Launch the kernel using our device pointers.
-   ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+
+
+   // for columnwise tensor (B x HW X C) -> flatten in (CHW x B ) 
+   if (B.GetLayout() == GetTensorLayout() )
+      ::TMVA::DNN::Cuda::Flatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+   else
+      // in case of Row wise tensor (Cudnn) input is B x C x H x W --> CHW x B
+      // no need to traspose C with respect to HW
+      ::TMVA::DNN::Cuda::FlattenRM<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
 
    //PrintTensor(A, "kernel reshape");
 
@@ -693,8 +701,13 @@ void TCuda<AFloat>::Deflatten(TCudaTensor<AFloat> &A,
    //  cudaMemcpy(dA, hA, sizeof(AFloat *) * size, cudaMemcpyHostToDevice);
 
     // Launch the kernel using our device pointers.
-   ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
-
+   // for columnwise output tensor (B x HW X C) -> de-flatten transposing C and HW 
+    if (A.GetLayout() == GetTensorLayout() )
+      ::TMVA::DNN::Cuda::Deflatten<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+   else
+      // case of deflatting in a row-wise tensor
+      ::TMVA::DNN::Cuda::DeflattenRM<<<gridDims, blockDims>>>(A.GetDataPointer(), B.GetDataPointer(), nDepth, nRows, nCols);
+   
    // assert (  B.GetFirstSize() == 1);
    // assert (  B.GetHSize() == size);
    // assert (  B.GetWSize() == nRows*nCols);

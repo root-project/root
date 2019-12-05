@@ -217,6 +217,9 @@ public:
    static void CopyDiffArch(Tensor_t & A,
                             const ATensor_t & B);
 
+   template <typename ATensor_t>
+   static void CopyWeightsDiffArch(Tensor_t &A, const ATensor_t &B);
+
    //template<>
    static void CopyDiffArch(Tensor_t A, const Tensor_t & B ) { Copy(A,B); }
 
@@ -981,16 +984,50 @@ void TCudnn<AFloat>::FreeConvWorkspace(TWorkspace * workspace, ConvLayer_t *L) {
 
 //____________________________________________________________________________
 template <typename AFloat>
-template <typename AMatrix_t>
+template <typename ATensor>
 void TCudnn<AFloat>::CopyDiffArch(TCudaTensor<AFloat> &B,
-                        const AMatrix_t &A)
+                        const ATensor &A)
+{
+
+   // should add static assert that A has not to be same type as B
+
+   // this copying tensors from different architectures
+   if (B.GetLayout() == GetTensorLayout() ) {
+      assert(B.GetShape().size() == 4);
+      for (size_t i = 0; i < A.GetFirstSize(); ++i) {
+         TMatrixT<AFloat> matIn = A.At(i).GetMatrix(); // this convert tensor (B,D,HW) in  (D,HW)i -> (D,HW)i
+         // TMAtrix has the correct layout (row-wise) no need to traspose in this case
+         TCudaTensor<AFloat> tmpOut = B.At(i); // matrix (D,HW)
+         // copy will copy the buffer
+         TCudaTensor<AFloat> tmpIn(matIn.GetMatrixArray(), tmpOut.GetShape(), tmpOut.GetLayout());
+         Copy(tmpOut, tmpIn);
+      }
+   } else {
+      // case of same layout (column major)
+      TMatrixT<AFloat> tmp = A;
+      TCudaMatrix<AFloat> tmp2(tmp);
+      TCudaTensor<AFloat> tA(tmp2);
+      Copy(B, tA);
+   }
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+template <typename AMatrix>
+void TCudnn<AFloat>::CopyWeightsDiffArch(TCudaTensor<AFloat> &B, const  AMatrix &A)
 {
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
-   TMatrixT<AFloat> tmp = A;// .GetMatrix();
+   TMatrixT<AFloat> tmp = A; // .GetMatrix();
+   // we need to traspose for different layout
+   if (B.GetLayout() == GetTensorLayout()  ) {
+      // this is for CNN weights that are in row-major formats
+      assert(B.GetShape().size() == 4);  // weights shape should be 4
+      tmp.T();
+   }
    TCudaMatrix<AFloat> tmp2(tmp);
-   TCudaTensor<AFloat> tA( tmp2 );
-   Copy(B, tA );
+   TCudaTensor<AFloat> tA(tmp2);
+   Copy(B, tA);
 }
 
 //____________________________________________________________________________
@@ -1000,7 +1037,7 @@ void TCudnn<AFloat>::CopyDiffArch(std::vector<Tensor_t> &B,
                             const std::vector<AMatrix_t> &A)
 {
    for (size_t i = 0; i < B.size(); ++i) {
-      CopyDiffArch(B[i], A[i]);
+      CopyWeightsDiffArch(B[i], A[i]);
    }
 }
 

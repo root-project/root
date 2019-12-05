@@ -35,6 +35,11 @@ CUDA_ADD_EXECUTABLE(testConvLayerCuda TestConvLayerCuda.cxx)
 target_link_libraries(testConvLayerCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCuda COMMAND testConvLayerCuda)
 
+CUDA_ADD_EXECUTABLE(testForwardPassCuda TestForwardPassCuda.cxx)
+target_link_libraries(testForwardPassCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-ForwardCuda COMMAND testForwardPassCuda)
+
+
 CUDA_ADD_EXECUTABLE(testRotateWeightsCuda TestRotateWeightsCuda.cxx)
 target_link_libraries(testRotateWeightsCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotateWeightsCuda COMMAND testRotateWeightsCuda)
@@ -54,6 +59,10 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-ConvLayerCudnn COMMAND testConvLayerCudnn)
 CUDA_ADD_EXECUTABLE(testPoolingLayerCudnn TestPoolingLayerCudnn.cxx)
 target_link_libraries(testPoolingLayerCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-CNN-PoolingLayerCudnn COMMAND testPoolingLayerCudnn)
+
+CUDA_ADD_EXECUTABLE(testMixedArchitectures TestMixedArchitectures.cxx)
+target_link_libraries(testMixedArchitectures ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-CNN-MixedArchitectures COMMAND testMixedArchitectures)
 
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
 
@@ -76,7 +85,7 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape COMMAND testReshape)
 ROOT_EXECUTABLE(testRotWeights TestRotateWeights.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-RotWeights COMMAND testRotWeights)
 
-#-- features not implemeted in ref architectures 
+#-- features not implemeted in ref architectures
 #ROOT_EXECUTABLE(testForwardPass TestForwardPass.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-CNN-Forward COMMAND testForwardPass)
 
@@ -123,7 +132,7 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Pred-CPU COMMAND testConvNetPredCpu)
 ROOT_EXECUTABLE(testReshapeCpu TestReshapeCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape-CPU COMMAND testReshapeCpu)
 
-#-- need to be fixed 
+#-- need to be fixed
 #ROOT_EXECUTABLE(testTensorDataLoaderCpu TestTensorDataLoaderCpu.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader-CPU COMMAND testTensorDataLoaderCpu)
 

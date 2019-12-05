@@ -1134,7 +1134,7 @@ template<typename AFloat>
 void TCudnn<AFloat>::Flatten(TCudaTensor<AFloat> &A,
                             const TCudaTensor<AFloat> &B)
 {
-   TCuda<AFloat>::Flatten(A,B);
+   TCuda<AFloat>::Flatten(A, B);
 }
 
 //_________________________________________TCudaMatrix<AFloat> weightGradMatrix = weight_gradients.GetMatrix(); ____________________________
