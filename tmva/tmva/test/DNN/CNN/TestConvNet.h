@@ -352,8 +352,9 @@ auto testConvForwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, si
    constructConvNet(convNet);
    convNet.Initialize();
 
-   typename Architecture::Tensor_t X (batchSize, imgDepth, imgHeight * imgWidth);
+   //typename Architecture::Tensor_t X (batchSize, imgDepth, imgHeight * imgWidth);
 
+   typename Architecture::Tensor_t X =  Architecture::CreateTensor(batchSize, imgDepth, imgHeight , imgWidth);
    randomBatch(X);
 
 
@@ -415,6 +416,103 @@ auto testConvPrediction(size_t batchSize, size_t imgDepth, size_t imgHeight, siz
       }
       std::cout << "" << std::endl;
    }
+}
+
+/*! Generate a conv net, perform p */
+//______________________________________________________________________________
+template <typename Architecture1, typename Architecture2>
+auto testMixedConvForwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, size_t imgWidth, size_t batchDepth,
+                         size_t batchHeight, size_t batchWidth, bool debug) -> double
+{
+   // using Matrix_t = typename Architecture::Matrix_t;
+   using Net1_t = TDeepNet<Architecture1>;
+   using Net2_t = TDeepNet<Architecture2>;
+
+   Net1_t convNet1(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
+                 ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   constructLinearConvNet(convNet1);
+   convNet1.Initialize();
+
+   Net2_t convNet2(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
+                   ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   constructLinearConvNet(convNet2);
+   convNet2.Initialize();
+
+
+
+
+
+   typename Architecture1::Tensor_t X =  Architecture1::CreateTensor(batchSize, imgDepth, imgHeight , imgWidth);
+
+   randomBatch(X);
+
+   typename Architecture2::Tensor_t X2 =  Architecture2::CreateTensor(batchSize, imgDepth, imgHeight , imgWidth);
+   Architecture2::CopyDiffArch(X2, X);
+
+   if (debug) {
+      convNet1.Print();
+      Architecture1::PrintTensor(X,"X input arch 1");
+      Architecture2::PrintTensor(X2,"X input arch 2");
+      // std::cout << "buffer of tensor2  - size " << X2.GetSize() << std::endl;
+      // for (size_t i = 0; i < X2.GetSize(); ++i)
+      //    std::cout << X2.GetDeviceBuffer()[i] << ", ";
+      // std::cout << std::endl;
+
+      std::cout << "Forward net1 " << std::endl;
+   }
+
+   convNet1.Forward(X);
+
+   if (debug) {
+      std::cout << "look at net2 " << std::endl;
+      convNet2.Print();
+   }
+
+   // copy weights from net1 to net2
+   for (size_t i = 0; i < convNet1.GetDepth(); ++i) {
+      const auto &layer1 = convNet1.GetLayerAt(i);
+      const auto &layer2 = convNet2.GetLayerAt(i);
+      Architecture2::CopyDiffArch(layer2->GetWeights(), layer1->GetWeights());
+      Architecture2::CopyDiffArch(layer2->GetBiases(), layer1->GetBiases());
+   }
+   if (debug) {
+      Architecture1::PrintTensor(convNet1.GetLayerAt(0)->GetWeightsAt(0), " con layer 1 weights arch 1");
+      Architecture2::PrintTensor(convNet2.GetLayerAt(0)->GetWeightsAt(0), " conv layer 1 weights arch 2 ");
+
+      Architecture1::PrintTensor(convNet1.GetLayerAt(0)->GetBiasesAt(0), " conv layer 1 bias arch 1");
+      Architecture2::PrintTensor(convNet2.GetLayerAt(0)->GetBiasesAt(0), " conv layer 1 bias arch 2 ");
+
+      // typename Architecture2::Tensor_t t(convNet2.GetLayerAt(1)->GetWeightsAt(0));
+      // std::cout << "buffer of tensor2  - size " << t.GetSize() << std::endl;
+      // for (size_t i = 0; i < t.GetSize(); ++i)
+      //    std::cout << t.GetDeviceBuffer()[i] << ", ";
+      // std::cout << std::endl;
+   }
+
+
+
+
+
+   // examine the output
+   convNet2.Forward(X2);
+
+   if (debug) {
+      for (size_t i = 0; i < convNet1.GetDepth()-1; ++i) {
+         std::cout << "layer  " << i << std::endl;
+         Architecture1::PrintTensor(convNet1.GetLayerAt(i)->GetOutput(), "output layer-i arch 1");
+         Architecture2::PrintTensor(convNet2.GetLayerAt(i)->GetOutput(), "output layer-i arch 2");
+      }
+   }
+
+   Architecture1::PrintTensor(convNet1.GetLayers().back()->GetOutput(), "output layer architecture 1");
+   Architecture2::PrintTensor(convNet2.GetLayers().back()->GetOutput(), "output layer architecture 2");
+
+   TMatrixT<typename Architecture1::Scalar_t> out1 = convNet1.GetLayers().back()->GetOutput();
+   TMatrixT<typename Architecture2::Scalar_t> out2 = convNet2.GetLayers().back()->GetOutput();
+
+   Double_t error = maximumRelativeError(out1, out2);
+   return error;
+
 }
 
 /*! Generate a conv net, test the backward pass, always with stride 1. */

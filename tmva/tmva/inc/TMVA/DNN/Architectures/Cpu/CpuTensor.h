@@ -185,6 +185,13 @@ public:
 
    }
 
+   // for backward compatibility (assume column-major 
+   // for backward compatibility : for CM tensor (n1,n2,n3,n4) -> ( n1*n2*n3, n4)
+   //                              for RM tensor (n1,n2,n3,n4) -> ( n2*n3*n4, n1 ) ???
+   size_t GetNrows() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? this->GetStrides().back() : this->GetShape().front();}
+   size_t GetNcols() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? this->GetShape().back() : this->GetStrides().front(); }
+
+
    MemoryLayout GetLayout() const { return this->GetMemoryLayout(); }
 
    //this will be an unsafe view. Method exists for backwards compatibility only

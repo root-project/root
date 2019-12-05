@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing Method DL for Conv Net for the Reference backend                  *
+ *      Testing Conv Net Forward Pass for the CPU                                 *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
@@ -24,22 +24,55 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#include "TestMethodDLCNN.h"
-#include "TString.h"
+////////////////////////////////////////////////////////////////////
+// Testing the Conv Net Forward Pass                              //
+////////////////////////////////////////////////////////////////////
+
+#include <iostream>
+#include "TMVA/DNN/Architectures/TCudnn.h"
+
+#include "TestConvNet.h"
+
+using namespace TMVA::DNN;
+using namespace TMVA::DNN::CNN;
+
+void test1()
+{
+
+   size_t batchSizeTest1 = 50;
+   size_t imgDepthTest1 = 3;
+   size_t imgHeightTest1 = 32;
+   size_t imgWidthTest1 = 32;
+   size_t batchDepth = batchSizeTest1;
+   size_t batchHeight = imgDepthTest1;
+   size_t batchWidth = imgHeightTest1 * imgWidthTest1;
+
+   testConvForwardPass<TCudnn<float>>(batchSizeTest1, imgDepthTest1, imgHeightTest1, imgWidthTest1, batchDepth,
+                                     batchHeight, batchWidth);
+}
+
+void test2()
+{
+
+   size_t batchSizeTest2 = 50;
+   size_t imgDepthTest2 = 3;
+   size_t imgHeightTest2 = 32;
+   size_t imgWidthTest2 = 32;
+   size_t batchDepth = batchSizeTest2;
+   size_t batchHeight = imgDepthTest2;
+   size_t batchWidth = imgHeightTest2 * imgWidthTest2;
+
+   testConvForwardPass<TCudnn<float>>(batchSizeTest2, imgDepthTest2, imgHeightTest2, imgWidthTest2, batchDepth,
+                                     batchHeight, batchWidth);
+}
 
 int main()
 {
-   std::cout << "Testing Method DL for CPU backend: " << std::endl;
+   std::cout << "Testing CNN Forward Pass:" << std::endl;
 
-   TString archCPU = "CPU";
-   testMethodDL_CNN(archCPU);
+   std::cout << "Test1" << std::endl;
+   test1();
 
-#ifdef R__HAS_TMVAGPU
-   std::cout << "Testing Method DL for GPU backend: " << std::endl;
-
-   TString archGPU  = "GPU";
-   testMethodDL_CNN(archGPU);
-#endif
-   
-   return 0;
+   std::cout << "Test2" << std::endl;
+   test2();
 }

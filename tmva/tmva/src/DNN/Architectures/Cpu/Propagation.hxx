@@ -945,6 +945,7 @@ void TCpu<AFloat>::Flatten(TCpuTensor<AFloat> &A, const TCpuTensor<AFloat> &B )
 {
 
    //printf ( "input tensor %f \n",B(0,0,0));
+   //std::cout << "Flatten CPU arch " << std::endl;
 
    assert( B.GetShape().size() == 3  );
    assert( A.GetShape().size() == 3  );
