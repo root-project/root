@@ -32,7 +32,7 @@
 #include <algorithm>
 
 namespace TMVA {
-   class DataSetInfo; 
+   class DataSetInfo;
 namespace DNN {
 
 //
@@ -134,13 +134,13 @@ private:
    using DeviceBuffer_t = typename Architecture_t::DeviceBuffer_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Tensor_t = typename Architecture_t::Tensor_t;
-   using Shape_t = typename Architecture_t::Tensor_t::Shape_t; 
+   using Shape_t = typename Architecture_t::Tensor_t::Shape_t;
    using BatchIterator_t = TTensorBatchIterator<Data_t, Architecture_t>;
 
    const Data_t &fData; ///< The data that should be loaded in the batches.
    size_t fNSamples;        ///< The total number of samples in the dataset.
    size_t fBatchSize;       ///< The size of a batch.
-   Shape_t    fInputLayout;  // the input data layout  (does not include batch size) 
+   Shape_t    fInputLayout;  // the input data layout  (does not include batch size)
    size_t fBatchDepth;      ///< The number of matrices in the tensor.
    size_t fBatchHeight;     ///< The number od rows in each matrix.
    size_t fBatchWidth;      ///< The number of columns in each matrix.
@@ -156,7 +156,7 @@ private:
 
 public:
    /*! Constructor. */
-   TTensorDataLoader(const Data_t &data, size_t nSamples, size_t batchSize, const Shape_t & inputLayout,  
+   TTensorDataLoader(const Data_t &data, size_t nSamples, size_t batchSize, const Shape_t & inputLayout,
        const Shape_t & batchLayout, size_t nOutputFeatures, size_t nStreams = 1);
 
    TTensorDataLoader(const TTensorDataLoader &) = default;
@@ -251,7 +251,7 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    // here sample index has batch size as offset , while in
    // copy tensor input has batch depth.
    // We support then now two cases: batchdepth = 1  batchHeight = batch size
-   //   or batch depth = batch 
+   //   or batch depth = batch
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;
 
@@ -269,13 +269,13 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    // do reshape in case of first layer at the beginning for cudnn
    // Tensor_t newInputTensor ;
    // if (inputTensor.GetShape().size() == 4) {
-     
+
    //       new
    //       Architecture_t::Flatten(newInputTensor,inputTensor);
-   //       inputTensor = newInputTensor; 
+   //       inputTensor = newInputTensor;
    //    }
    }
-      
+
 
    // size_t jump = fBatchHeight * fBatchWidth;
    // for (size_t i = 0; i < fBatchDepth; i++) {
@@ -283,14 +283,14 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
    // }
    Matrix_t outputMatrix(outputDeviceBuffer, fBatchSize, fNOutputFeatures);
-   Matrix_t weightMatrix(weightDeviceBuffer, fBatchSize, fNOutputFeatures);
+   Matrix_t weightMatrix(weightDeviceBuffer, fBatchSize, 1);
 
    fBatchIndex++;
 
    //std::cout << "Batch number " << fBatchIndex << std::endl;
-   //Architecture_t::PrintTensor(inputTensor, "inputTensor"); 
+   //Architecture_t::PrintTensor(inputTensor, "inputTensor");
    //Architecture_t::PrintTensor(Tensor_t(outputMatrix), "output matrix");
-   
+
    return TTensorBatch<Architecture_t>(inputTensor, outputMatrix, weightMatrix);
 }
 

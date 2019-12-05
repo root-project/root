@@ -1557,7 +1557,11 @@ void MethodDL::TrainDeepNet()
                   // std::cout << "Weights for layer " << i << std::endl;
                   // for (size_t k = 0; k < dlayer->GetWeights().size(); ++k)
                   //    dLayer->GetWeightsAt(k).Print();
+                  // debug tensors
                }
+               // Architecture_t::PrintTensor(deepNet.GetLayerAt(1)->GetWeightsAt(0), " cudnn weights");
+               // ArchitectureImpl_t::PrintTensor(fNet->GetLayerAt(1)->GetWeightsAt(0), " cpu weights");
+
                minValError = valError;
             }
             else if ( minValError <= 0. )
@@ -2011,6 +2015,13 @@ const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
 {
+   // Long64_t nEvents = Data()->GetNEvents();
+   // std::vector<Double_t>  v(nEvents);
+   // for (Long64_t i = 0; i < nEvents; ++i) {
+   //    Data()->SetCurrentEvent(i);
+   //    v[i] = GetMvaValue();
+   // }
+   // return v;
 
 
    Long64_t nEvents = Data()->GetNEvents();
@@ -2035,13 +2046,14 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
       return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
 //#endif
    }
-   Log() << kINFO << "ERROR:  STANDARD architecture  is not supported anymore for MethodDL ! " 
+   Log() << kINFO << "ERROR:  STANDARD architecture  is not supported anymore for MethodDL ! "
          << Endl << Endl;
 // #if HAVE_REFERENCE
 //    return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
 // #else
    return std::vector<Double_t>(nEvents,TMath::QuietNaN());
 //#endif
+
 }
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const

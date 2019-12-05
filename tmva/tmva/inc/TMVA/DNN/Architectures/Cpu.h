@@ -706,7 +706,7 @@ void TCpu<AReal>::CopyDiffArch(TCpuMatrix<AReal> &B,
 {
    // copy from another architecture using the reference one
    // this is not very efficient since creates temporary objects
-   TMatrixT<AReal> tmp = A;
+   TMatrixT<AReal> tmp = A;  // this works also if A is a tensor
    Copy(B, TCpuMatrix<AReal>(tmp) );
 }
 
@@ -716,13 +716,23 @@ template <typename ATensor_t>
 void TCpu<AReal>::CopyDiffArch(TCpuTensor<AReal> &B,
                             const ATensor_t &A)
 {
-   // assume tensor are dim 3 and can be converted in a matrix
-   for (size_t i = 0; i < B.GetFirstSize(); ++i) {
-      CopyDiffArch(B.At(i).GetMatrix(), A.At(i).GetMatrix());
+
+   R__ASSERT(A.GetSize() == B.GetSize());
+   // suppose A is of (B,D,H.W) and we want to convert to B,HW,D  or (D,HW,B) in ColumnMajor format
+   for (size_t i = 0; i < A.GetFirstSize(); ++i) {
+      TMatrixT<AReal> tmpIn = A.At(i);  // this convert tensor (B,D,H,W) in  (D,H,W)i -> (D,HW)i
+      //std::cout << " i == " << i << std::endl;
+      //tmpIn.Print();
+      TCpuMatrix<AReal> tmpOut = B.At(i).GetMatrix();    // matrix (D,HW)
+      Copy(tmpOut, TCpuMatrix<AReal>(tmpIn));
    }
+   // ATensor_t tmpIn = A.Reshape({A.GetNrows(), A.GetNcols()});
+   // auto tmpOut = B.Reshape({A.GetNrows(), A.GetNcols()});
+   // Matrix_t mOut = tmpOut.GetMatrix();
+   // CopyDiffArch(mOut, tmpIn.GetMatrix());
 }
 
-// implementation using vector of matrices for the weights
+// Implementation using vector of matrices for the weights
 template <typename AReal>
 template <typename AMatrix_t>
 void TCpu<AReal>::CopyDiffArch(std::vector<TCpuMatrix<AReal>> &A, const std::vector<AMatrix_t> &B)
