@@ -2,21 +2,25 @@
 /// \ingroup tutorial_io
 /// This macro shows the usage of TMPIFile to simulate event
 /// reconstruction and merging them in parallel.
+/// The JetEvent class is in $ROOTSYS/tutorials/tree/JetEvent.h,cxx
 ///
 /// To run this macro do the following:
-///   - Build the JetEvent library: "root -b -l -q buildJetEvent.C"
-///   - Run MPI test: "mpirun -np 4 root -b -l -q testTMPIFile.C"
+/// ~~~{.bash}
+/// mpirun -np 4 root -b -l -q testTMPIFile.C
+/// ~~~
 ///
 /// \macro_code
 ///
 /// \author Taylor Childers, Yunsong Wang
 
-R__LOAD_LIBRARY(../tree/JetEvent_cxx)
-
 #include "TMPIFile.h"
+
+#ifdef TMPI_SECOND_RUN
 
 #include <chrono>
 #include <sstream>
+
+R__LOAD_LIBRARY(JetEvent_cxx)
 
 /* ---------------------------------------------------------------------------
 
@@ -173,11 +177,8 @@ void test_tmpi()
    }
 }
 
-void testTMPIFile()
+void testTMPIFile(Bool_t secRun)
 {
-   TString tutdir = gROOT->GetTutorialDir();
-   gSystem->Load(tutdir + "/tree/JetEvent_cxx");
-
    auto start = std::chrono::high_resolution_clock::now();
 
    test_tmpi();
@@ -189,3 +190,42 @@ void testTMPIFile()
    Info("testTMPIFile", "%s", msg.c_str());
    Info("testTMPIFile", "exiting");
 }
+
+#else
+
+void testTMPIFile()
+{
+   Int_t flag;
+   MPI_Initialized(&flag);
+   if (!flag) {
+      MPI_Init(NULL, NULL);
+   }
+
+   // Get rank and size
+   Int_t rank, size;
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+
+   // Procecss 0 generates JetEvent library
+   if (rank == 0) {
+      TString tutdir = gROOT->GetTutorialDir();
+      gSystem->Exec("cp " + tutdir + "/tree/JetEvent* .");
+      gROOT->ProcessLine(".L JetEvent.cxx+");
+   }
+   // Wait until it's done
+   MPI_Barrier(MPI_COMM_WORLD);
+   
+   gROOT->ProcessLine("#define TMPI_SECOND_RUN yes");
+   gROOT->ProcessLine("#include \"" __FILE__ "\"");
+   gROOT->ProcessLine("testTMPIFile(true)");
+   
+   // TMPIFile will do MPI_Finalize() when closing the file
+   Int_t finalized = 0;
+   MPI_Finalized(&finalized);
+   if (!finalized) {
+      MPI_Finalize();
+   }
+}
+
+#endif
