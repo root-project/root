@@ -312,7 +312,7 @@ auto TBatchNormLayer<Architecture_t>::Forward(Tensor_t &x, bool inTraining) -> v
    }
 
    auto descr = static_cast<BNormDescriptors_t *> (fDescriptors);
-   if (inTraining)
+   if (inTraining) {
       Architecture_t::BatchNormLayerForwardTraining(fNormAxis, x2, y2,
                                                     this->GetWeightsAt(0), this->GetWeightsAt(1),
                                                     this->GetBatchMean(), this->GetVariance(), this->GetIVariance(),
@@ -320,12 +320,15 @@ auto TBatchNormLayer<Architecture_t>::Forward(Tensor_t &x, bool inTraining) -> v
                                                     this->GetVarVector(), this->GetNTrainedBatches(),
                                                     this->GetMomentum(), this->GetEpsilon(),
                                                     descr->HelperDescriptor);
+      fTrainedBatches++;
+   }
 
-   else
+   else {
       Architecture_t::BatchNormLayerForwardInference(fNormAxis, x2, this->GetWeightsAt(0), this->GetWeightsAt(1),
                                                      y2, this->GetMuVector(), this->GetVarVector(),
                                                      this->GetEpsilon(), descr->HelperDescriptor);
-
+      fTrainedBatches = 0;
+   }
 #if 0
    Matrix_t input = x.At(0).GetMatrix();
 
