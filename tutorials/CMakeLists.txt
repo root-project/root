@@ -107,7 +107,7 @@ if(NOT ROOT_xml_FOUND)
 endif()
 
 if(NOT ROOT_mpi_FOUND)
-  set(mpi_veto io/buildJetEvent.C io/testTMPIFile.C)
+  set(mpi_veto io/testTMPIFile.C)
 endif()
 
 if(NOT XROOTD_FOUND)
@@ -283,7 +283,6 @@ set(all_veto hsimple.C
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
-             ${mpi_veto}
              ${fitsio_veto}
              ${tmva_veto}
              ${mathmore_veto}
@@ -425,7 +424,6 @@ foreach(t ${tutorials})
                 ENVIRONMENT ${ROOT_environ}
                 TIMEOUT ${thisTestTimeout})
 endforeach()
-
 
 #---Python tutorials-----------------------------------------------------
 if(ROOT_python_FOUND)
