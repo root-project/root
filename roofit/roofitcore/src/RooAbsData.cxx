@@ -2379,7 +2379,7 @@ TTree *RooAbsData::GetClonedTree() const
 void RooAbsData::convertToTreeStore()
 {
    if (storageType != RooAbsData::Tree) {
-      RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
+      RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), _vars, *_dstore);
       delete _dstore;
       _dstore = newStore;
       storageType = RooAbsData::Tree;
