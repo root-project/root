@@ -797,12 +797,15 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
    TCpuBuffer<AFloat> &inputBuffer = input.GetDeviceBuffer();
    TCpuBuffer<AFloat> &outputBuffer = output.GetDeviceBuffer();
 
-   for (int k = 0; k < d; ++k) {
+
+   // lambda implementing computation for each single component k we need to normalize
+   auto f = [&] (UInt_t k)
+   {
 
       auto inputK = inputBuffer.GetSubBuffer(k * n, n);
       auto outputK = outputBuffer.GetSubBuffer(k * n, n);
 
-      Scalar_t meanK = 0;
+      double  meanK = 0;
       meanK = 0;
       for (int i = 0; i < n; i++) {
          meanK += inputK[i];
@@ -811,16 +814,17 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
 
       double sq = 0;
       for (int i = 0; i < n; i++) {
-         Scalar_t xmu = inputK[i] - meanK;
+         double xmu = inputK[i] - meanK;
          sq = sq + (xmu * xmu);
          outputK[i] = xmu;
       }
+      mean(0,k) = meanK;
       variance(0,k) = sq / n;
       iVariance(0,k) = 1. / std::sqrt(variance(0,k) + epsilon);
 
-      Scalar_t iVK = iVariance(0, k);
-      Scalar_t gK = gamma(0, k);
-      Scalar_t bK = beta(0, k);
+      double iVK = iVariance(0, k);
+      double gK = gamma(0, k);
+      double bK = beta(0, k);
       for (int i = 0; i < n; i++) {
          outputK[i] = gK * iVK * outputK[i]  + bK;
       }
@@ -832,7 +836,7 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
          runningMeans(0,k) = mean(0,k);
          runningVars(0,k) = variance(0,k) * (n) / (Scalar_t(n - 1) + epsilon);
       } else {
-         Scalar_t decay = momentum;
+         double decay = momentum;
          if (momentum < 0) decay = nTrainedBatches/Scalar_t(nTrainedBatches+1);
          runningMeans(0,k) = decay * runningMeans(0,k) + (1. - decay) * mean(0,k);
          runningVars(0,k) = decay * runningVars(0,k) + (1.-decay) * variance(0,k) * (n) / (Scalar_t(n - 1) + epsilon);
@@ -840,8 +844,9 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
       // std::cout << " training batch " << nTrainedBatches << " estimated mu : " << runningMeans(0, k)
       // << " estimated var " << runningVars(0,k) << std::endl;
 
-   } // end loop on k
+   }; // end f(k) definition
 
+   TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(d) );
 }
 
 //____________________________________________________________________________
@@ -865,21 +870,23 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(int axis, const TCpuTensor<AFl
    TCpuBuffer<AFloat> &inputBuffer = input.GetDeviceBuffer();
    TCpuBuffer<AFloat> &outputBuffer = output.GetDeviceBuffer();
 
-   for (int k = 0; k < d; ++k) {
+   auto f = [&] (UInt_t k) {
+   
       auto inputK = inputBuffer.GetSubBuffer(k * n, n);
       auto outputK = outputBuffer.GetSubBuffer(k * n, n);
 
-      Scalar_t gK = gamma(0, k);
-      Scalar_t bK = beta(0, k);
-      Scalar_t mK = runningMeans(0, k);
-      Scalar_t vK = 1. / (sqrt(runningVars(0, k) + epsilon));
+      double gK = gamma(0, k);
+      double bK = beta(0, k);
+      double mK = runningMeans(0, k);
+      double vK = 1. / (sqrt(runningVars(0, k) + epsilon));
 
       // during inference just use stored mu and variance
       for (int i = 0; i < n; i++) {
          outputK[i] = gK * (inputK[i] - mK) * vK + bK;
       }
-   }
+   };  // end definition of f(k)
 
+   TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(d) );
 }
 
 //____________________________________________________________________________
@@ -907,8 +914,9 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
    TCpuBuffer<AFloat> & dyBuffer = outputGrad.GetDeviceBuffer();
    TCpuBuffer<AFloat> & dxBuffer = inputGrad.GetDeviceBuffer();
 
+
    // compute first gradients for gamma and beta
-   for (int k = 0; k < d; k++) {
+   auto f = [&] (UInt_t k) {
       dgamma(0, k) = 0;
       dbeta(0, k) = 0;
       auto inputK = inputBuffer.GetSubBuffer(k * n, n);
@@ -916,7 +924,7 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
       auto inputGradK = dxBuffer.GetSubBuffer(k * n, n);
       auto meanK = mean(0, k);
       for (int i = 0; i < n; i++) {
-         Scalar_t xhat = inputK[i] - meanK;
+         double xhat = inputK[i] - meanK;
          dbeta(0, k) += outputGradK[i];
          dgamma(0, k) += outputGradK[i] * xhat;
       }
@@ -925,13 +933,15 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
       dgamma(0, k) *= iVariance(0, k);
 
       // compute gradients with respect to input
-      Scalar_t bterm = npSumDyHMu / (variance(0, k) + epsilon);
-      Scalar_t aterm = (1. / double(n) * gamma(0, k) * iVariance(0, k));
+      double bterm = npSumDyHMu / (variance(0, k) + epsilon);
+      double aterm = (1. / double(n) * gamma(0, k) * iVariance(0, k));
       for (int i = 0; i < n; i++) {
-         Scalar_t xmu = inputK[i] - meanK;
-         inputGrad(i, k) = aterm * (n * outputGradK[i] - npSumDy - xmu * bterm);
+         double xmu = inputK[i] - meanK;
+         inputGradK[i] = aterm * (n * outputGradK[i] - npSumDy - xmu * bterm);
       }
-   }
+   };
+
+   TCpuMatrix<AFloat>::GetThreadExecutor().Foreach(f, ROOT::TSeqI(d) );
 }
 
 //____________________________________________________________________________
