@@ -2044,3 +2044,18 @@ void RooDataSet::Streamer(TBuffer &R__b)
    }
 }
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert vector-based storage to tree-based storage. This implementation overrides the base class
+/// implementation because the latter doesn't transfer weights.
+void RooDataSet::convertToTreeStore()
+{
+   if (storageType != RooAbsData::Tree) {
+      RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), _vars, *_dstore, nullptr, _wgtVar ? _wgtVar->GetName() : nullptr);
+      delete _dstore;
+      _dstore = newStore;
+      storageType = RooAbsData::Tree;
+   }
+}
+

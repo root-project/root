@@ -415,6 +415,7 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
     _tree = new TTree(name,title);
     _tree->ResetBit(kCanDelete);
     _tree->ResetBit(kMustCleanup);
+    _tree->SetDirectory(nullptr);
   }
 
   TString pwd(gDirectory->GetPath()) ;

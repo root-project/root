@@ -138,6 +138,8 @@ public:
 
   static void cleanup();
 
+  void convertToTreeStore() override;
+
 protected:
 
   virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) override;

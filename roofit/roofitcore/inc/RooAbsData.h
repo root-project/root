@@ -61,7 +61,7 @@ public:
   TTree *GetClonedTree() const;
 
   void convertToVectorStore() ;
-  void convertToTreeStore();
+  virtual void convertToTreeStore();
 
   void attachBuffers(const RooArgSet& extObs) ;
   void resetBuffers() ;
