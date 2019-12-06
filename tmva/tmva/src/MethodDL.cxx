@@ -1344,7 +1344,7 @@ void MethodDL::TrainDeepNet()
 
          //std::cout << " input use count " << inputTensor.GetBufferUseCount() << std::endl;
          // should we apply droput to the loss ??
-         minValError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
+         minValError += deepNet.Loss(inputTensor, outputMatrix, weights, false, includeRegularization);
       }
       // add Regularization term
       Double_t regzTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0;
@@ -1520,12 +1520,13 @@ void MethodDL::TrainDeepNet()
 
 
             Double_t valError = 0.0;
+            bool inTraining = false;
             for (auto batch : validationData) {
                auto inputTensor = batch.GetInput();
                auto outputMatrix = batch.GetOutput();
                auto weights = batch.GetWeights();
                // should we apply droput to the loss ??
-               valError += deepNet.Loss(inputTensor, outputMatrix, weights, false, false);
+               valError += deepNet.Loss(inputTensor, outputMatrix, weights, inTraining, includeRegularization);
             }
             // normalize loss to number of batches and add regularization term
             Double_t regTerm = (includeRegularization) ? deepNet.RegularizationTerm() : 0.0;

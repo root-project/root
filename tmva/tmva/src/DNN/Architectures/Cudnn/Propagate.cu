@@ -689,7 +689,8 @@ void TCudnn<AFloat>::BatchNormLayerForwardTraining(int axis, const Tensor_t &x,
    //x.PrintShape("x");
    //y.PrintShape("y");
 
-   double exponentialAverageFactor = momentum;
+   // the factor is defined in Cudnn as 1-momentum
+   double exponentialAverageFactor = (momentum < 0.) ? 1. / (1 + nTrainedBatches) :  1. - momentum;
    CUDNNCHECK(cudnnBatchNormalizationForwardTraining(x.GetCudnnHandle(), bnMode,
                                                       &a, &b,
                                                       x.GetTensorDescriptor(), x.GetDataPointer(),
