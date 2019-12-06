@@ -791,15 +791,15 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
    TCpuTensor<AFloat> output = BatchNormLayerReshapeTensor(axis,y);
 
    assert (input.GetShape().size() == 2);
-   int n = input.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
-   int d = input.GetShape()[1];   // size of the coordinate we are not normalizing (e.g. feature size)
+   size_t n = input.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
+   size_t d = input.GetShape()[1];   // size of the coordinate we are not normalizing (e.g. feature size)
 
    TCpuBuffer<AFloat> &inputBuffer = input.GetDeviceBuffer();
    TCpuBuffer<AFloat> &outputBuffer = output.GetDeviceBuffer();
 
 
    // lambda implementing computation for each single component k we need to normalize
-   auto f = [&] (UInt_t k)
+   auto f = [&] (size_t k)
    {
 
       auto inputK = inputBuffer.GetSubBuffer(k * n, n);
@@ -807,16 +807,18 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
 
       double  meanK = 0;
       meanK = 0;
-      for (int i = 0; i < n; i++) {
-         meanK += inputK[i];
+      for (size_t i = 0; i < n; i++) {
+         AFloat xi = inputK[i];
+         meanK += xi;
       }
       meanK = meanK/ n;
 
       double sq = 0;
-      for (int i = 0; i < n; i++) {
-         double xmu = inputK[i] - meanK;
+      for (size_t i = 0; i < n; i++) {
+         AFloat xi = inputK[i];
+         double xmu = xi - meanK;
          sq = sq + (xmu * xmu);
-         outputK[i] = xmu;
+         outputK[i] = AFloat(xmu);
       }
       mean(0,k) = meanK;
       variance(0,k) = sq / n;
@@ -825,8 +827,9 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
       double iVK = iVariance(0, k);
       double gK = gamma(0, k);
       double bK = beta(0, k);
-      for (int i = 0; i < n; i++) {
-         outputK[i] = gK * iVK * outputK[i]  + bK;
+      for (size_t i = 0; i < n; i++) {
+         AFloat yi = outputK[i] ;
+         outputK[i] = AFloat( gK * iVK * yi  + bK );
       }
 
 
@@ -864,14 +867,14 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(int axis, const TCpuTensor<AFl
    TCpuTensor<AFloat> output = BatchNormLayerReshapeTensor(axis,y);
 
    assert (input.GetShape().size() == 2);
-   int n = input.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
-   int d = input.GetShape()[1];
+   size_t n = input.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
+   size_t d = input.GetShape()[1];
 
    TCpuBuffer<AFloat> &inputBuffer = input.GetDeviceBuffer();
    TCpuBuffer<AFloat> &outputBuffer = output.GetDeviceBuffer();
 
-   auto f = [&] (UInt_t k) {
-   
+   auto f = [&] (size_t k) {
+
       auto inputK = inputBuffer.GetSubBuffer(k * n, n);
       auto outputK = outputBuffer.GetSubBuffer(k * n, n);
 
@@ -881,8 +884,9 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(int axis, const TCpuTensor<AFl
       double vK = 1. / (sqrt(runningVars(0, k) + epsilon));
 
       // during inference just use stored mu and variance
-      for (int i = 0; i < n; i++) {
-         outputK[i] = gK * (inputK[i] - mK) * vK + bK;
+      for (size_t i = 0; i < n; i++) {
+         AFloat xi = inputK[i];
+         outputK[i] = AFloat( gK * (xi - mK) * vK + bK );
       }
    };  // end definition of f(k)
 
@@ -907,8 +911,8 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
    TCpuTensor<AFloat> outputGrad = BatchNormLayerReshapeTensor(axis,dy);
 
    assert (outputGrad.GetShape().size() == 2);
-   int n = outputGrad.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
-   int d = outputGrad.GetShape()[1];
+   size_t n = outputGrad.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
+   size_t d = outputGrad.GetShape()[1];
 
    TCpuBuffer<AFloat> & inputBuffer = input.GetDeviceBuffer();
    TCpuBuffer<AFloat> & dyBuffer = outputGrad.GetDeviceBuffer();
@@ -916,15 +920,16 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
 
 
    // compute first gradients for gamma and beta
-   auto f = [&] (UInt_t k) {
+   auto f = [&] (size_t k) {
       dgamma(0, k) = 0;
       dbeta(0, k) = 0;
       auto inputK = inputBuffer.GetSubBuffer(k * n, n);
       auto outputGradK = dyBuffer.GetSubBuffer(k * n, n);
       auto inputGradK = dxBuffer.GetSubBuffer(k * n, n);
       auto meanK = mean(0, k);
-      for (int i = 0; i < n; i++) {
-         double xhat = inputK[i] - meanK;
+      for (size_t i = 0; i < n; i++) {
+         AFloat xi = inputK[i];
+         double xhat = xi - meanK;
          dbeta(0, k) += outputGradK[i];
          dgamma(0, k) += outputGradK[i] * xhat;
       }
@@ -935,9 +940,11 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
       // compute gradients with respect to input
       double bterm = npSumDyHMu / (variance(0, k) + epsilon);
       double aterm = (1. / double(n) * gamma(0, k) * iVariance(0, k));
-      for (int i = 0; i < n; i++) {
-         double xmu = inputK[i] - meanK;
-         inputGradK[i] = aterm * (n * outputGradK[i] - npSumDy - xmu * bterm);
+      for (size_t i = 0; i < n; i++) {
+         AFloat xi = inputK[i];
+         AFloat dyi = outputGradK[i];
+         double xmu = xi - meanK;
+         inputGradK[i] = AFloat( aterm * (n * dyi - npSumDy - xmu * bterm) );
       }
    };
 
