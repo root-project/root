@@ -86,7 +86,7 @@
                     <core:Item text="{name}" />
                   </suggestionItems>
                 </Input>
-                <TextArea editable="false" id="output_log" class="output_log" value="Lorem ipsum dolor st amet" width="100%" height="calc(100% - 38px)"/>
+                <TextArea editable="false" id="output_log" class="output_log" width="100%" height="calc(100% - 38px)"/>
               </Page>
             </l:Splitter>
           </detailPages>
