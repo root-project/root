@@ -794,29 +794,35 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
    int n = input.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
    int d = input.GetShape()[1];   // size of the coordinate we are not normalizing (e.g. feature size)
 
+   TCpuBuffer<AFloat> &inputBuffer = input.GetDeviceBuffer();
+   TCpuBuffer<AFloat> &outputBuffer = output.GetDeviceBuffer();
+
    for (int k = 0; k < d; ++k) {
 
-      mean(0,k) = 0;
+      auto inputK = inputBuffer.GetSubBuffer(k * n, n);
+      auto outputK = outputBuffer.GetSubBuffer(k * n, n);
+
+      Scalar_t meanK = 0;
+      meanK = 0;
       for (int i = 0; i < n; i++) {
-         mean(0,k) += input(i, k);
+         meanK += inputK[i];
       }
-      mean(0,k) = mean(0,k) / n;
+      meanK = meanK/ n;
 
       double sq = 0;
       for (int i = 0; i < n; i++) {
-         Scalar_t xmu = input(i, k) - mean(0,k);
+         Scalar_t xmu = inputK[i] - meanK;
          sq = sq + (xmu * xmu);
+         outputK[i] = xmu;
       }
       variance(0,k) = sq / n;
-      // fVar(0,k) = fVar(0,k) + epsilon;
-      // sqrtvar(0,k) =
       iVariance(0,k) = 1. / std::sqrt(variance(0,k) + epsilon);
-      for (int i = 0; i < n; i++) {
-         Scalar_t xhat = ( input(i,k) - mean(0,k) ) * iVariance(0, k);
-         output(i, k) = gamma(0, k) * xhat + beta(0, k);
 
-         // std::cout << "BNFWtraining " << k << "," << i << " xhat " << xhat << " gamma " << gamma(0, k) << " beta " << beta(0, k)
-         //           << std::endl;
+      Scalar_t iVK = iVariance(0, k);
+      Scalar_t gK = gamma(0, k);
+      Scalar_t bK = beta(0, k);
+      for (int i = 0; i < n; i++) {
+         outputK[i] = gK * iVK * outputK[i]  + bK;
       }
 
 
@@ -835,9 +841,6 @@ void TCpu<AFloat>::BatchNormLayerForwardTraining(int axis, const TCpuTensor<AFlo
       // << " estimated var " << runningVars(0,k) << std::endl;
 
    } // end loop on k
-   nTrainedBatches++;
-
-   // fVar.Print();
 
 }
 
@@ -859,17 +862,24 @@ void TCpu<AFloat>::BatchNormLayerForwardInference(int axis, const TCpuTensor<AFl
    int n = input.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
    int d = input.GetShape()[1];
 
+   TCpuBuffer<AFloat> &inputBuffer = input.GetDeviceBuffer();
+   TCpuBuffer<AFloat> &outputBuffer = output.GetDeviceBuffer();
+
    for (int k = 0; k < d; ++k) {
+      auto inputK = inputBuffer.GetSubBuffer(k * n, n);
+      auto outputK = outputBuffer.GetSubBuffer(k * n, n);
+
+      Scalar_t gK = gamma(0, k);
+      Scalar_t bK = beta(0, k);
+      Scalar_t mK = runningMeans(0, k);
+      Scalar_t vK = 1. / (sqrt(runningVars(0, k) + epsilon));
+
       // during inference just use stored mu and variance
       for (int i = 0; i < n; i++) {
-         output(i, k) =
-            gamma(0, k) * ((input(i, k) - runningMeans(0,k)) / (sqrt(runningVars(0,k) + epsilon))) + beta(0, k);
+         outputK[i] = gK * (inputK[i] - mK) * vK + bK;
       }
    }
 
-   //nTrainedBatches = 0;
-
-   // std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
 }
 
 //____________________________________________________________________________
@@ -893,33 +903,33 @@ void TCpu<AFloat>::BatchNormLayerBackward(int axis, const TCpuTensor<AFloat> &x,
    int n = outputGrad.GetShape()[0];   // size of coordinates we are normalizing (e.g batch size)
    int d = outputGrad.GetShape()[1];
 
+   TCpuBuffer<AFloat> & inputBuffer = input.GetDeviceBuffer();
+   TCpuBuffer<AFloat> & dyBuffer = outputGrad.GetDeviceBuffer();
+   TCpuBuffer<AFloat> & dxBuffer = inputGrad.GetDeviceBuffer();
 
    // compute first gradients for gamma and beta
    for (int k = 0; k < d; k++) {
       dgamma(0, k) = 0;
       dbeta(0, k) = 0;
+      auto inputK = inputBuffer.GetSubBuffer(k * n, n);
+      auto outputGradK = dyBuffer.GetSubBuffer(k * n, n);
+      auto inputGradK = dxBuffer.GetSubBuffer(k * n, n);
+      auto meanK = mean(0, k);
       for (int i = 0; i < n; i++) {
-         Scalar_t xhat = (input(i,k) - mean(0,k)) * iVariance(0,k);
-         dbeta(0, k) += outputGrad(i, k);
-         dgamma(0, k) += outputGrad(i, k) * xhat;
-         // dxhat(i,k) = dout(i,k) * gamma(0,k);
+         Scalar_t xhat = inputK[i] - meanK;
+         dbeta(0, k) += outputGradK[i];
+         dgamma(0, k) += outputGradK[i] * xhat;
       }
-   }
+      double npSumDy = dbeta(0, k);
+      double npSumDyHMu = dgamma(0, k);
+      dgamma(0, k) *= iVariance(0, k);
 
-   // compute gradients with respect to input
-
-
-   for (int k = 0; k < d; k++) {
-      double npSumDy = 0;
-      double npSumDyHMu = 0;
+      // compute gradients with respect to input
+      Scalar_t bterm = npSumDyHMu / (variance(0, k) + epsilon);
+      Scalar_t aterm = (1. / double(n) * gamma(0, k) * iVariance(0, k));
       for (int i = 0; i < n; i++) {
-         npSumDy += outputGrad(i, k);
-         npSumDyHMu += outputGrad(i, k) * (input(i, k) - mean(0, k));
-      }
-      for (int i = 0; i < n; i++) {
-         Scalar_t xmu = (input(i,k) - mean(0,k));
-         inputGrad(i, k) = (1. / double(n) * gamma(0, k) * iVariance(0,k)) *
-                    (n * outputGrad(i, k) - npSumDy -  xmu / (variance(0,k)+ epsilon) * npSumDyHMu);
+         Scalar_t xmu = inputK[i] - meanK;
+         inputGrad(i, k) = aterm * (n * outputGradK[i] - npSumDy - xmu * bterm);
       }
    }
 }
