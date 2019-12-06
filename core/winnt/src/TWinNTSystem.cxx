@@ -1089,15 +1089,17 @@ Bool_t TWinNTSystem::Init()
    // signal. Signals don't have one. If we don't handle them, Windows will
    // raise an exception, which has a context, and which is handled by
    // ExceptionFilter.
-   //WinNTSignal(kSigChild,                 SigHandler);
-   //WinNTSignal(kSigBus,                   SigHandler);
+   /*
+   WinNTSignal(kSigChild,                 SigHandler);
+   WinNTSignal(kSigBus,                   SigHandler);
    WinNTSignal(kSigSegmentationViolation, SigHandler);
    WinNTSignal(kSigIllegalInstruction,    SigHandler);
    WinNTSignal(kSigAbort,                 SigHandler);
-   //WinNTSignal(kSigSystem,                SigHandler);
-   //WinNTSignal(kSigPipe,                  SigHandler);
-   //WinNTSignal(kSigAlarm,                 SigHandler);
+   WinNTSignal(kSigSystem,                SigHandler);
+   WinNTSignal(kSigPipe,                  SigHandler);
+   WinNTSignal(kSigAlarm,                 SigHandler);
    WinNTSignal(kSigFloatingException,     SigHandler);
+   */
    ::SetUnhandledExceptionFilter(ExceptionFilter);
 
    fSigcnt = 0;
