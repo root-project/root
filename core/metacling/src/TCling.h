@@ -26,6 +26,8 @@
 
 #include "TInterpreter.h"
 
+#include <map>
+#include <memory>
 #include <tuple>
 #include <set>
 #include <unordered_set>
@@ -124,8 +126,8 @@ private: // Data Members
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
    Bool_t          fCxxModulesEnabled;// True if C++ modules was enabled
 
-   cling::Interpreter*   fInterpreter;   // The interpreter.
-   cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
+   std::unique_ptr<cling::Interpreter>   fInterpreter;   // The interpreter.
+   std::unique_ptr<cling::MetaProcessor> fMetaProcessor; // The metaprocessor.
 
    std::vector<cling::Value> *fTemporaries;    // Stack of temporaries
    ROOT::TMetaUtils::TNormalizedCtxt  *fNormalizedCtxt; // Which typedef to avoid stripping.
@@ -182,7 +184,8 @@ public: // Public Interface
    TCling(const char* name, const char* title, const char* const argv[]);
    TCling(const char* name, const char* title): TCling(name, title, kNullArgv) {}
 
-   cling::Interpreter *GetInterpreterImpl() { return fInterpreter; }
+   cling::Interpreter *GetInterpreterImpl() const { return fInterpreter.get(); }
+   cling::MetaProcessor *GetMetaProcessorImpl() const { return fMetaProcessor.get(); }
 
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }

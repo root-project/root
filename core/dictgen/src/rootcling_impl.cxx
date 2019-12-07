@@ -2003,8 +2003,6 @@ static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
 
    // Make sure it hits disk now.
    out->flush();
-   bool deleteOutputFile = compilerInstance->getDiagnostics().hasErrorOccurred();
-   compilerInstance->clearOutputFiles(deleteOutputFile);
 
    return true;
 }
@@ -4989,7 +4987,6 @@ int RootClingMain(int argc,
    {
       cling::Interpreter::PushTransactionRAII RAII(&interp);
       CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());
-      CI->clearOutputFiles(CI->getDiagnostics().hasErrorOccurred());
    }
 
    // Add the warnings

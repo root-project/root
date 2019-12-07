@@ -74,6 +74,10 @@ namespace {
 class ApplicationStarter {
 public:
    ApplicationStarter() {
+      // Insure ROOT's atexit is executed *after* the atexit that calls
+      // ApplicationStarter's destructor, by forcing the ROOT's atexit
+      // registration now.
+      TROOT::Initialize();
       // setup dummy holders for global and std namespaces
       assert( g_classrefs.size() == GLOBAL_HANDLE );
       g_name2classrefidx[ "" ]      = GLOBAL_HANDLE;
