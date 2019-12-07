@@ -1022,12 +1022,7 @@ TROOT::~TROOT()
       SafeDelete(fCleanups);
 #endif
 
-      // llvm::TimingGroup used for measuring the timing relies the destructors.
-      // In order to make use of this feature we have to call the destructor of
-      // TCling which will shut down clang, cling and llvm.
-      // gSystem->Getenv is not available anymore.
-      if (::getenv("ROOT_CLING_TIMING"))
-         delete fInterpreter;
+      delete fInterpreter;
 
 
       // Prints memory stats
@@ -2853,6 +2848,13 @@ Int_t TROOT::IncreaseDirLevel()
 void TROOT::IndentLevel()
 {
    for (int i = 0; i < fgDirLevel; i++) std::cout.put(' ');
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize ROOT explicitly.
+
+void TROOT::Initialize() {
+   (void) gROOT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

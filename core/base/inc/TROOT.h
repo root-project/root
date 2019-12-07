@@ -351,6 +351,7 @@ public:
    static void        SetMacroPath(const char *newpath);
    static Int_t       IncreaseDirLevel();
    static void        IndentLevel();
+   static void        Initialize();
    static Bool_t      Initialized();
    static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
