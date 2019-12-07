@@ -55,7 +55,6 @@ extern "C" {
    int TCling__AutoLoadCallback(const char* className);
    int TCling__AutoParseCallback(const char* className);
    const char* TCling__GetClassSharedLibs(const char* className);
-//    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
    int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,

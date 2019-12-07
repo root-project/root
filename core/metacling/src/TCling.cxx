@@ -629,12 +629,6 @@ extern "C" const char* TCling__GetClassSharedLibs(const char* className)
    return ((TCling*)gCling)->GetClassSharedLibs(className);
 }
 
-// // Returns 0 for failure 1 for success
-// extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
-// {
-//    return ((TCling*)gCling)->IsAutoLoadNamespaceCandidate(name);
-// }
-
 // Returns 0 for failure 1 for success
 extern "C" int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl)
 {
@@ -1455,7 +1449,6 @@ TCling::~TCling()
 {
    fIsShuttingDown = true;
    delete fMapfile;
-//    delete fMapNamespaces;
    delete fRootmapFiles;
    delete fMetaProcessor;
    delete fTemporaries;
@@ -5396,8 +5389,6 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    if (!fMapfile) {
       fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
-//       fMapNamespaces = new THashTable();
-//       fMapNamespaces->SetOwner();
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
       InitRootmapFile(".rootmap");
@@ -5526,15 +5517,6 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
             }
             delete[] wlib;
          }
-         // Fill in the namespace candidate list
-//          Ssiz_t last = cls.Last(':');
-//          if (last != kNPOS) {
-//             // Please note that the funny op overload does substring.
-//             TString namespaceCand = cls(0, last - 1);
-//             // This is a reference to a substring that lives in fMapfile
-//             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
-//                fMapNamespaces->Add(new TNamed(namespaceCand.Data(), ""));
-//          }
          delete tokens;
       }
       else if (!strncmp(cls.Data(), "Declare.", 8) && cls.Length() > 8) {
@@ -5750,8 +5732,6 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
    if (!fMapfile) {
       fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
-//       fMapNamespaces = new THashTable();
-//       fMapNamespaces->SetOwner();
 
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
@@ -6512,16 +6492,6 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
    //fprintf(stderr, "addr: %016lx\n", reinterpret_cast<unsigned long>(addr));
    return addr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name)
-{
-//    if (fMapNamespaces){
-//       return fMapNamespaces->FindObject(name);
-//    }
-   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
