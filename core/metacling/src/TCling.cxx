@@ -1108,6 +1108,8 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 #endif
    LoadModule("std", clingInterp);
 
+   LoadModule("_Builtin_intrinsics", clingInterp);
+
    // Load core modules
    // This should be vector in order to be able to pass it to LoadModules
    std::vector<std::string> CoreModules = {"ROOT_Foundation_C",
