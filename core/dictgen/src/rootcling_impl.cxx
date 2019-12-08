@@ -3803,6 +3803,14 @@ gOptSink(llvm::cl::ZeroOrMore, llvm::cl::Sink,
          llvm::cl::desc("Consumes all unrecognized options."),
          llvm::cl::cat(gRootclingOptions));
 
+static llvm::cl::SubCommand
+gBareClingSubcommand("bare-cling", "Call directly cling and exit.");
+
+static llvm::cl::list<std::string>
+gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
+                  llvm::cl::desc("Consumes options and sends them to cling."),
+                  llvm::cl::cat(gRootclingOptions), llvm::cl::sub(gBareClingSubcommand));
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true iff a given module (and its submodules) contains all headers
 /// needed by the given ModuleGenerator.
@@ -3955,6 +3963,28 @@ int RootClingMain(int argc,
    llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
 
    llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
+
+   std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
+   if (gBareClingSubcommand) {
+      std::vector<const char *> clingArgsC;
+      clingArgsC.push_back(executableFileName);
+      // Help cling finds its runtime (RuntimeUniverse.h and such).
+      clingArgsC.push_back("-I");
+      clingArgsC.push_back(gDriverConfig->fTROOT__GetEtcDir());
+
+      //clingArgsC.push_back("-resource-dir");
+      //clingArgsC.push_back(llvmResourceDir.c_str());
+
+      for (const std::string& Opt : gOptBareClingSink)
+         clingArgsC.push_back(Opt.c_str());
+
+      auto interp = llvm::make_unique<cling::Interpreter>(clingArgsC.size(),
+                                                          &clingArgsC[0],
+                                                          llvmResourceDir.c_str());
+      // FIXME: Diagnose when we have misspelled a flag. Currently we show no
+      // diagnostic and report exit as success.
+      return interp->getDiagnostics().hasFatalErrorOccurred();
+   }
 
    std::string dictname;
    std::string dictpathname;
@@ -4245,7 +4275,6 @@ int RootClingMain(int argc,
    cling::Interpreter* interpPtr = nullptr;
 
    std::list<std::string> filesIncludedByLinkdef;
-   std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
    if (!gDriverConfig->fBuildingROOTStage1) {
       // Pass the interpreter arguments to TCling's interpreter:
       clingArgsC.push_back("-resource-dir");
