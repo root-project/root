@@ -1300,6 +1300,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
    PyObject* StlIterIsEqual( PyObject* self, PyObject* other )
    {
+      if (other != Py_None) {
+         if (Utility::AddBinaryOperator(self, other, "==", "__eq__", nullptr, true))
+            return PyObject_CallMethodObjArgs(self, PyStrings::gEq, other, nullptr);
+      }
+
       return PyErr_Format( PyExc_LookupError,
          "No operator==(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
@@ -1311,6 +1316,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
    PyObject* StlIterIsNotEqual( PyObject* self, PyObject* other )
    {
+      if (other != Py_None) {
+         if (Utility::AddBinaryOperator(self, other, "!=", "__ne__", nullptr, true))
+            return PyObject_CallMethodObjArgs(self, PyStrings::gNe, other, nullptr);
+      }
+
       return PyErr_Format( PyExc_LookupError,
          "No operator!=(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
