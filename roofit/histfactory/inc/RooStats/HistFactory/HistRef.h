@@ -63,6 +63,11 @@ public:
    /// operator= passing an object pointer :  user gives away its ownerhisp 
    void operator= (TH1 * h) { SetObject(h); } 
 
+   /// Release ownership of object.
+   TH1* ReleaseObject() {
+     return fHist.release();
+   }
+
    
 
 private:
