@@ -271,7 +271,7 @@ struct RGetBinIndex {
    {
       constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
       int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
-      if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin > std::get<thisAxis>(axes).GetNBinsNoOver())) {
+      if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin >= std::get<thisAxis>(axes).GetNBinsNoOver())) {
          hist->GrowAxis(thisAxis, x[thisAxis]);
          status = RAxisBase::EFindStatus::kCanGrow;
 
