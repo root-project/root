@@ -98,6 +98,7 @@ namespace ROOT {
 
          Bool_t ProcessVersion( const TString& version ) const;
          Bool_t ProcessChecksum( const TString& checksum ) const;
+         UInt_t ParseChecksum( const char* checksum ) const;
          static void ProcessList( TObjArray* array, const TString& list );
          static void ProcessDeclaration( TObjArray* array, const TString& list );
 
