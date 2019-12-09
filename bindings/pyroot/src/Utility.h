@@ -33,11 +33,11 @@ namespace PyROOT {
 
       // helpers for dynamically constructing binary operators
       Bool_t AddBinaryOperator( PyObject* left, PyObject* right,
-         const char* op, const char* label, const char* alt_label = NULL );
+         const char* op, const char* label, const char* alt_label = NULL, bool lazy = false );
       Bool_t AddBinaryOperator( PyObject* pyclass,
-         const char* op, const char* label, const char* alt_label = NULL );
+         const char* op, const char* label, const char* alt_label = NULL, bool lazy = false );
       Bool_t AddBinaryOperator( PyObject* pyclass, const std::string& lcname, const std::string& rcname,
-         const char* op, const char* label, const char* alt_label = NULL );
+         const char* op, const char* label, const char* alt_label = NULL, bool lazy = false );
 
    // helper for template classes and methods
       enum ArgPreference { kNone, kPointer, kReference, kValue };

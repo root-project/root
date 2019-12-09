@@ -313,7 +313,7 @@ Bool_t PyROOT::Utility::AddUsingToClass( PyObject* pyclass, const char* method )
 /// gC2POperatorMapping (i.e. if it is ambiguous at the member level).
 
 Bool_t PyROOT::Utility::AddBinaryOperator(
-   PyObject* left, PyObject* right, const char* op, const char* label, const char* alt )
+   PyObject* left, PyObject* right, const char* op, const char* label, const char* alt, bool lazy )
 {
 // this should be a given, nevertheless ...
    if ( ! ObjectProxy_Check( left ) )
@@ -324,7 +324,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
    std::string lcname = ClassName( left );
    PyObject* pyclass = PyObject_GetAttr( left, PyStrings::gClass );
 
-   Bool_t result = AddBinaryOperator( pyclass, lcname, rcname, op, label, alt );
+   Bool_t result = AddBinaryOperator( pyclass, lcname, rcname, op, label, alt, lazy );
 
    Py_DECREF( pyclass );
    return result;
@@ -334,14 +334,14 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 /// Install binary operator op in pyclass, working on two instances of pyclass.
 
 Bool_t PyROOT::Utility::AddBinaryOperator(
-   PyObject* pyclass, const char* op, const char* label, const char* alt )
+   PyObject* pyclass, const char* op, const char* label, const char* alt, bool lazy )
 {
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
    if ( ! pyname ) pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
    std::string cname = Cppyy::ResolveName( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
-   return AddBinaryOperator( pyclass, cname, cname, op, label, alt );
+   return AddBinaryOperator( pyclass, cname, cname, op, label, alt, lazy );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +362,7 @@ static inline Cppyy::TCppMethod_t FindAndAddOperator( const std::string& lcname,
 }
 
 Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string& lcname,
-   const std::string& rcname, const char* op, const char* label, const char* alt )
+   const std::string& rcname, const char* op, const char* label, const char* alt, bool lazy )
 {
 // Find a global function with a matching signature and install the result on pyclass;
 // in addition, __gnu_cxx, std::__1, and _pyroot_internal are searched pro-actively (as
@@ -372,7 +372,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 // which in turn can trigger the creation of a (default) TApplication. Wait with looking
 // for binary operators '!=' and '==' (which are set early in Pythonize.cxx) until fully
 // initialized. Other operators are expected to have entered from user code.
-   if ( !gApplication && (strcmp( op, "==" ) == 0 || strcmp( op, "!=" ) == 0) )
+   if ( !lazy && !gApplication && (strcmp( op, "==" ) == 0 || strcmp( op, "!=" ) == 0) )
       return kFALSE;
 
 // For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
@@ -449,6 +449,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
       Bool_t ok = AddToClass( pyclass, label, pyfunc );
       if ( ok && alt )
          return AddToClass( pyclass, alt, label );
+      return ok;
    }
 
    return kFALSE;
