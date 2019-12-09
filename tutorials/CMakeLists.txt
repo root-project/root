@@ -296,6 +296,7 @@ set(all_veto hsimple.C
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
+             ${mpi_veto}
              ${fitsio_veto}
              ${tmva_veto}
              ${mathmore_veto}
@@ -329,6 +330,17 @@ list(LENGTH tutorials_veto veto)
 message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons")
 
 list(REMOVE_ITEM tutorials ${tutorials_veto})
+
+if(mpi)
+  set (temp_list ${tutorials})
+  list(FILTER tutorials INCLUDE REGEX "MPI")
+  set(mpi_tutorials ${tutorials})
+  set(tutorials ${temp_list})
+  list(REMOVE_ITEM tutorials ${mpi_tutorials})
+endif()
+
+list(LENGTH mpi_tutorials mpi_total)
+message(STATUS "${mpi_total} MPI tutorials in total")
 
 #---Special return code------------------------------------------------
 set(returncode_1 fit/fit2a.C fit/graph2dfit.C
@@ -433,6 +445,33 @@ foreach(t ${tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                LABELS tutorial
+                DEPENDS tutorial-hsimple ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ}
+                TIMEOUT ${thisTestTimeout})
+endforeach()
+
+#---Loop over all MPI tutorials and define the corresponding test---------
+foreach(t ${mpi_tutorials})
+  list(FIND returncode_1 ${t} index)
+  if(index EQUAL -1)
+    set(rc 0)
+  else()
+    set(rc 255)
+  endif()
+  string(REPLACE ".C" "" tname ${t})
+  string(REPLACE "/" "-" tname ${tname})
+
+   # These tests on ARM64 need much more than 20 minutes - increase the timeout
+   if(ROOT_ARCHITECTURE MATCHES arm64)
+     set(thisTestTimeout 2400) # 40m
+   else()
+     set(thisTestTimeout 1200) # 20m
+   endif()
+
+  ROOT_ADD_TEST(tutorial-${tname}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
