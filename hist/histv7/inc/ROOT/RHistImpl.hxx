@@ -335,14 +335,14 @@ template <int I, class COORD, class AXES>
 struct RFillBinCoord {
    void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx) const
    {
-      int axisbin = binidx % std::get<I>(axes).GetNBins();
-      size_t coordidx = std::tuple_size<AXES>::value - I - 1;
+      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
+      int axisbin = binidx % std::get<thisAxis>(axes).GetNBins();
       switch (kind) {
-      case EBinCoord::kBinFrom: coord[coordidx] = std::get<I>(axes).GetBinFrom(axisbin); break;
-      case EBinCoord::kBinCenter: coord[coordidx] = std::get<I>(axes).GetBinCenter(axisbin); break;
-      case EBinCoord::kBinTo: coord[coordidx] = std::get<I>(axes).GetBinTo(axisbin); break;
+      case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
+      case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+      case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
       }
-      RFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind, binidx / std::get<I>(axes).GetNBins());
+      RFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind, binidx / std::get<thisAxis>(axes).GetNBins());
    }
 };
 
