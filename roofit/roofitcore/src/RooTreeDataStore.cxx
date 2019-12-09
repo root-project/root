@@ -1373,11 +1373,14 @@ void RooTreeDataStore::Streamer(TBuffer &R__b)
       // Large trees cannot be written because of the 1Gb I/O limitation.
       // Here, we take the tree away from our instance, write it, and continue
       // to write the rest of the class normally
+      auto tmpDir = _tree->GetDirectory();
       TFile* parent = dynamic_cast<TFile*>(R__b.GetParent());
       assert(parent);
+
       _tree->SetDirectory(parent);
       _tree->FlushBaskets(false);
       parent->WriteObject(_tree, makeTreeName().c_str());
+      _tree->SetDirectory(tmpDir);
       _tree = nullptr;
     }
 
