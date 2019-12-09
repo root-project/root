@@ -229,7 +229,7 @@ namespace TMVA {
       }
 
       // Training history
-      virtual const std::vector<Float_t>& GetTrainingHistory(const char* name) {
+      virtual const std::vector<Float_t>& GetTrainingHistory(const char* /*name*/ ) {
          std::vector<Float_t>* ptr = new std::vector<Float_t>(0);
          return (*ptr);
       }

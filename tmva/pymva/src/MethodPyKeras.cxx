@@ -278,7 +278,7 @@ void MethodPyKeras::Train() {
    UInt_t nAllEvents = Data()->GetNTrainingEvents();
    UInt_t nValEvents = GetNumValidationSamples();
    UInt_t nTrainingEvents = nAllEvents - nValEvents;
-   
+
    Log() << kINFO << "Split TMVA training data in " << nTrainingEvents << " training events and "
          << nValEvents << " validation events" << Endl;
 
@@ -334,7 +334,7 @@ void MethodPyKeras::Train() {
    float* valDataWeights = new float[nValEvents];
    //validation events follows the trainig one in the TMVA training vector
    for (UInt_t i=0; i< nValEvents ; i++) {
-      UInt_t ievt = nTrainingEvents + i; // TMVA event index 
+      UInt_t ievt = nTrainingEvents + i; // TMVA event index
       const TMVA::Event* e = GetTrainingEvent(ievt);
       // Fill variables
       for (UInt_t j=0; j<fNVars; j++) {
@@ -445,21 +445,20 @@ void MethodPyKeras::Train() {
    PyRunString("number_of_keys=len(history.history.keys())");
    PyObject* PyNkeys=PyDict_GetItemString(fLocalNS, "number_of_keys");
    int nkeys=PyLong_AsLong(PyNkeys);
-   PyObject* stra=NULL;
    for (iHis=0; iHis<nkeys; iHis++) {
       std::cout<<"Getting his:"<<iHis<<std::endl;
       PyRunString(TString::Format("copy_string=history.history.keys()[%d]",iHis));
       PyObject* stra=PyDict_GetItemString(fLocalNS, "copy_string");
       if(!stra) break;
-      const char* name = PyString_AsString(stra);
+      const char* name = PyBytes_AsString(stra);
       PyRunString("print(history.history.keys())","Failed to do printing of history");
       PyRunString(TString::Format("for i,p in enumerate(history.history['%s']):\n   HistoryOutput[i]=p\n",name),
                   TString::Format("Failed to get %s from training history",name));
-      for (int i=0; i<fHistory.size(); i++)
+      for (size_t i=0; i<fHistory.size(); i++)
          fTrainHistory.AddValue(name,i+1,fHistory[i]);
 
    }
-   
+
    /*
     * Store trained model to file (only if option 'SaveBestOnly' is NOT activated,
     * because we do not want to override the best model checkpoint)
