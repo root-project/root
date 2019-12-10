@@ -76,7 +76,7 @@ ClassImp(TGraphMultiErrors)
 ///////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors default constructor.
 
-TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNYErrors(0), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fExL(NULL), fExH(NULL)
+TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNYErrors(0), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst), fExL(nullptr), fExH(nullptr)
 {
 }
 
@@ -95,10 +95,7 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title) : 
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne) : TGraph(np), fNYErrors(ne), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
-   if (!CtorAllocate())
-      return;
-
-   FillZero(0, fNpoints);
+   CtorAllocate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -647,18 +644,18 @@ TGraphMultiErrors::~TGraphMultiErrors()
 Bool_t TGraphMultiErrors::CtorAllocate()
 {
    if (!fNpoints || !fNYErrors) {
-      fExL = fExH = NULL;
+      fExL = fExH = nullptr;
       fEyL.resize(0);
       fEyH.resize(0);
       return kFALSE;
    }
 
-   fExL = new Double_t[fMaxSize];
-   fExH = new Double_t[fMaxSize];
+   fExL = new Double_t[fMaxSize] {0.};
+   fExH = new Double_t[fMaxSize] {0.};
    fEyL.resize(fNYErrors, TArrayD(fMaxSize));
    fEyH.resize(fNYErrors, TArrayD(fMaxSize));
-   fEyLSum = new Double_t[fMaxSize];
-   fEyHSum = new Double_t[fMaxSize];
+   fEyLSum = new Double_t[fMaxSize] {0.};
+   fEyHSum = new Double_t[fMaxSize] {0.};
    fAttFill.resize(fNYErrors);
    fAttLine.resize(fNYErrors);
 
@@ -798,12 +795,12 @@ void TGraphMultiErrors::SwapPoints(Int_t pos1, Int_t pos2)
 
 void TGraphMultiErrors::AddYError(Int_t np, const Double_t *eyL, const Double_t *eyH)
 {
-   fEyL.push_back(TArrayD(np, eyL));
-   fEyH.push_back(TArrayD(np, eyH));
+   fEyL.emplace_back(np, eyL);
+   fEyH.emplace_back(np, eyH);
    fEyL.back().Set(fNpoints);
    fEyH.back().Set(fNpoints);
-   fAttFill.push_back(TAttFill());
-   fAttLine.push_back(TAttLine());
+   fAttFill.emplace_back();
+   fAttLine.emplace_back();
 
    fNYErrors += 1;
 }
@@ -1470,7 +1467,7 @@ Double_t *TGraphMultiErrors::GetEYhigh() const
 Double_t *TGraphMultiErrors::GetEYlow(Int_t e)
 {
    if (e >= fNYErrors || fEyL.empty())
-      return NULL;
+      return nullptr;
    else
       return fEyL[e].GetArray();
 }
@@ -1481,7 +1478,7 @@ Double_t *TGraphMultiErrors::GetEYlow(Int_t e)
 Double_t *TGraphMultiErrors::GetEYhigh(Int_t e)
 {
    if (e >= fNYErrors || fEyH.empty())
-      return NULL;
+      return nullptr;
    else
       return fEyH[e].GetArray();
 }
@@ -1494,7 +1491,7 @@ TAttFill *TGraphMultiErrors::GetAttFill(Int_t e)
    if (e >= 0 && e < fNYErrors)
       return &fAttFill.at(e);
    else
-      return NULL;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1505,7 +1502,7 @@ TAttLine *TGraphMultiErrors::GetAttLine(Int_t e)
    if (e >= 0 && e < fNYErrors)
       return &fAttLine.at(e);
    else
-      return NULL;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
