@@ -87,7 +87,7 @@ int main()
     std::cout << "Test1: backward pass with linear activation network - compare with finite difference" << std::endl;
 
    // fix random initialization
-   TCudnn<double>::SetRandomSeed(12346);
+   gRandom->SetSeed(12345);
    TCudnn<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
 
 
