@@ -34,8 +34,8 @@ protected:
    Double_t *fExH;                   ///<[fNpoints] array of X high errors
    std::vector<TArrayD> fEyL;        ///< two dimensional array of Y low errors
    std::vector<TArrayD> fEyH;        ///< two dimensional array of Y high errors
-   mutable Double_t *fEyLSum = NULL; ///<! array of summed Y low errors for fitting
-   mutable Double_t *fEyHSum = NULL; ///<! array of summed Y high errors for fitting
+   mutable Double_t *fEyLSum = nullptr; ///<! array of summed Y low errors for fitting
+   mutable Double_t *fEyHSum = nullptr; ///<! array of summed Y high errors for fitting
    std::vector<TAttFill> fAttFill;   ///< the AttFill attributes of the different errors
    std::vector<TAttLine> fAttLine;   ///< the AttLine attributes of the different errors
 
@@ -44,7 +44,7 @@ protected:
 
    virtual void       CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin);
    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin);
-   void               FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
+   virtual void       FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
 
    void               CalcYErrorsSum() const;
    virtual Bool_t     DoMerge(const TGraph *tg);
@@ -62,10 +62,10 @@ public:
    TGraphMultiErrors(Int_t np, Int_t ne = 1);
    TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne = 1);
 
-   TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL = NULL, const Float_t *exH = NULL, const Float_t *eyL = NULL, const Float_t *eyH = NULL, Int_t m = kOnlyFirst);
-   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL = NULL, const Float_t *exH = NULL, const Float_t *eyL = NULL, const Float_t *eyH = NULL, Int_t m = kOnlyFirst);
-   TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL = NULL, const Double_t *exH = NULL, const Double_t *eyL = NULL, const Double_t *eyH = NULL, Int_t m = kOnlyFirst);
-   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL = NULL, const Double_t *exH = NULL, const Double_t *eyL = NULL, const Double_t *eyH = NULL, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL = nullptr, const Float_t *exH = nullptr, const Float_t *eyL = nullptr, const Float_t *eyH = nullptr, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL = nullptr, const Float_t *exH = nullptr, const Float_t *eyL = nullptr, const Float_t *eyH = nullptr, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL = nullptr, const Double_t *exH = nullptr, const Double_t *eyL = nullptr, const Double_t *eyH = nullptr, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL = nullptr, const Double_t *exH = nullptr, const Double_t *eyL = nullptr, const Double_t *eyH = nullptr, Int_t m = kOnlyFirst);
 
    TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<std::vector<Float_t>> eyL, std::vector<std::vector<Float_t>> eyH, Int_t m = kOnlyFirst);
    TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<std::vector<Float_t>> eyL, std::vector<std::vector<Float_t>> eyH, Int_t m = kOnlyFirst);
@@ -91,7 +91,7 @@ public:
 
    virtual ~TGraphMultiErrors();
 
-   virtual void AddYError(Int_t np, const Double_t *eyL = NULL, const Double_t *eyH = NULL);
+   virtual void AddYError(Int_t np, const Double_t *eyL = nullptr, const Double_t *eyH = nullptr);
    virtual void Apply(TF1 *f);
    virtual void BayesDivide(const TH1 *pass, const TH1 *total, Option_t *opt = "");
    void         Divide(const TH1 *pass, const TH1 *total, Option_t *opt = "cp");

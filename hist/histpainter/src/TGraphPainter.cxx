@@ -2647,6 +2647,10 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    auto tg = (TGraphMultiErrors*) theGraph;
 
    Int_t NYErrors = tg->GetNYErrors();
+   if (NYErrors <= 0) {
+      PaintGraphSimple(tg, option);
+      return;
+   }
 
    TString tsOpt = option;
    tsOpt.ToLower();
