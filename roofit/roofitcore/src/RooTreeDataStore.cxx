@@ -446,7 +446,7 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load values from tree 't' into this data collection, optionally
-/// selecting events using 'select' RooFormulaVar
+/// selecting events using 'select' RooFormulaVar.
 ///
 /// The source tree 't' is first clone as not disturb its branch
 /// structure when retrieving information from it.
@@ -483,10 +483,17 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   // Clone list of variables  
   RooArgSet *sourceArgSet = (RooArgSet*) _varsww.snapshot(kFALSE) ;
   
+  // Check that we have the branches:
+  for (const auto var : *sourceArgSet) {
+    if (!tClone->GetBranch(var->GetName())) {
+      coutE(InputArguments) << "Didn't find a branch in Tree '" << tClone->GetName()
+          << "' to read variable '" << var->GetName() << "' from."
+          << "\n\tNote: Name the RooFit variable the same as the branch." << std::endl;
+    }
+  }
+
   // Attach args in cloned list to cloned source tree
-  TIterator* sourceIter =  sourceArgSet->createIterator() ;
-  RooAbsArg* sourceArg = 0;
-  while ((sourceArg=(RooAbsArg*)sourceIter->Next())) {
+  for (const auto sourceArg : *sourceArgSet) {
     sourceArg->attachToTree(*tClone,_defTreeBufSize) ;
   }
 
@@ -499,46 +506,42 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   // Loop over events in source tree   
-  RooAbsArg* destArg = 0;
-  TIterator* destIter = _varsww.createIterator() ;
   Int_t numInvalid(0) ;
   Int_t nevent= (Int_t)tClone->GetEntries();
   for(Int_t i=0; i < nevent; ++i) {
     Int_t entryNumber=tClone->GetEntryNumber(i);
     if (entryNumber<0) break;
     tClone->GetEntry(entryNumber,1);
- 
+
     // Copy from source to destination
-     destIter->Reset() ;
-     sourceIter->Reset() ;
-     Bool_t allOK(kTRUE) ;
-     while ((destArg = (RooAbsArg*)destIter->Next())) {              
-       sourceArg = (RooAbsArg*) sourceIter->Next() ;
-       destArg->copyCache(sourceArg) ;
-       sourceArg->copyCache(destArg) ;
-       if (!destArg->isValid()) {
-	 numInvalid++ ;
-	 allOK=kFALSE ;
-	 break ;
-       }       
-     }   
+    Bool_t allOK(kTRUE) ;
+    for (unsigned int j=0; j < sourceArgSet->size(); ++j) {
+      auto destArg = _varsww[j];
+      const auto sourceArg = (*sourceArgSet)[j];
 
-     // Does this event pass the cuts?
-     if (!allOK || (selectClone && selectClone->getVal()==0)) {
-       continue ; 
-     }
+      destArg->copyCache(sourceArg) ;
+      sourceArg->copyCache(destArg) ;
+      if (!destArg->isValid()) {
+        numInvalid++ ;
+        allOK=kFALSE ;
+        break ;
+      }
+    }
 
-     fill() ;
+    // Does this event pass the cuts?
+    if (!allOK || (selectClone && selectClone->getVal()==0)) {
+      continue ;
+    }
+
+    fill() ;
   }
-  delete destIter ;
 
   if (numInvalid>0) {
     coutI(Eval) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out of range events" << endl ;
   }
-  
+
   SetTitle(t->GetTitle());
 
-  delete sourceIter ;
   delete sourceArgSet ;
   delete selectClone ;
   delete tClone ;
