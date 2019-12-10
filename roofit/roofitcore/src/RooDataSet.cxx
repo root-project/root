@@ -226,7 +226,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   pc.defineDependency("LinkDataSlice","IndexCat") ;
   pc.defineDependency("OwnLinked","LinkDataSlice") ;
 
-  
+
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
@@ -266,28 +266,28 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     // Make import mapping if index category is specified
     map<string,RooAbsData*> hmap ;  
     if (indexCat) {
-       char tmp[64000];
-       strlcpy(tmp, lnkSliceNames, 64000);
-       char *token = strtok(tmp, ",");
-       TIterator *hiter = lnkSliceData.MakeIterator();
-       while (token) {
-          hmap[token] = (RooAbsData *)hiter->Next();
-          token = strtok(0, ",");
+      char tmp[64000];
+      strlcpy(tmp, lnkSliceNames, 64000);
+      char *token = strtok(tmp, ",");
+      TIterator *hiter = lnkSliceData.MakeIterator();
+      while (token) {
+        hmap[token] = (RooAbsData *)hiter->Next();
+        token = strtok(0, ",");
       }
       delete hiter ;
     }
-    
+
     // Lookup name of weight variable if it was specified by object reference
     if (wgtVar) {
       // coverity[UNUSED_VALUE]
       wgtVarName = wgtVar->GetName() ;
     }
-        
+
     appendToDir(this,kTRUE) ;
-    
+
     // Initialize RooDataSet with optional weight variable
     initialize(0) ;
-    
+
     map<string,RooAbsDataStore*> storeMap ;
     RooCategory* icat = (RooCategory*) (indexCat ? _vars.find(indexCat->GetName()) : 0 ) ;
     if (!icat) {
@@ -296,30 +296,30 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     for (map<string,RooAbsData*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
       // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
       if (indexCat && !indexCat->lookupType(hiter->first.c_str())) {
-	indexCat->defineType(hiter->first.c_str()) ;
-	coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
+        indexCat->defineType(hiter->first.c_str()) ;
+        coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
       }
       if (icat && !icat->lookupType(hiter->first.c_str())) {	
-	icat->defineType(hiter->first.c_str()) ;
+        icat->defineType(hiter->first.c_str()) ;
       }
       icat->setLabel(hiter->first.c_str()) ;
       storeMap[icat->getLabel()]=hiter->second->store() ;
 
       // Take ownership of slice if requested
       if (ownLinked) {
-	addOwnedComponent(hiter->first.c_str(),*hiter->second) ;
+        addOwnedComponent(hiter->first.c_str(),*hiter->second) ;
       }
     }
 
     // Create composite datastore
     _dstore = new RooCompositeDataStore(name,title,_vars,*icat,storeMap) ;
-        
+
   } else {
 
     if (wgtVar) {
       wgtVarName = wgtVar->GetName() ;
     }
-    
+
     // Clone weight variable of imported dataset if we are not weighted
     if (!wgtVar && !wgtVarName && impData && impData->_wgtVar) {
       _wgtVar = (RooRealVar*) impData->_wgtVar->createFundamental() ;
@@ -336,18 +336,18 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       _dstore = tstore ;
     } else if (defaultStorageType==Vector) {
       if (wgtVarName && newWeight) {
-	RooAbsArg* wgttmp = _vars.find(wgtVarName) ;
-	if (wgttmp) {
-	  wgttmp->setAttribute("NewWeight") ;
-	}
+        RooAbsArg* wgttmp = _vars.find(wgtVarName) ;
+        if (wgttmp) {
+          wgttmp->setAttribute("NewWeight") ;
+        }
       }
       vstore = new RooVectorDataStore(name,title,_vars,wgtVarName) ;
       _dstore = vstore ;
     } else {
       _dstore = 0 ;
     }
-    
-    
+
+
     // Make import mapping if index category is specified
     map<string,RooDataSet*> hmap ;  
     if (indexCat) {
@@ -356,12 +356,12 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       char* token = strtok(tmp,",") ;
       TIterator* hiter = impSliceData.MakeIterator() ;
       while(token) {
-	hmap[token] = (RooDataSet*) hiter->Next() ;
-	token = strtok(0,",") ;
+        hmap[token] = (RooDataSet*) hiter->Next() ;
+        token = strtok(0,",") ;
       }
       delete hiter ;
     }
-    
+
     // process StoreError requests
     if (errorSet) {
       RooArgSet* intErrorSet = (RooArgSet*) _vars.selectCommon(*errorSet) ;
@@ -369,7 +369,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       TIterator* iter = intErrorSet->createIterator() ;
       RooAbsArg* arg ;
       while((arg=(RooAbsArg*)iter->Next())) {
-	arg->attachToStore(*_dstore) ;
+        arg->attachToStore(*_dstore) ;
       }
       delete iter ;
       delete intErrorSet ;
@@ -380,20 +380,20 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
       TIterator* iter = intAsymErrorSet->createIterator() ;
       RooAbsArg* arg ;
       while((arg=(RooAbsArg*)iter->Next())) {
-	arg->attachToStore(*_dstore) ;
-    }
+        arg->attachToStore(*_dstore) ;
+      }
       delete iter ;
       delete intAsymErrorSet ;
     }
-    
+
     // Lookup name of weight variable if it was specified by object reference
     if (wgtVar) {
       wgtVarName = wgtVar->GetName() ;
     }
-    
-    
+
+
     appendToDir(this,kTRUE) ;
-    
+
     // Initialize RooDataSet with optional weight variable
     if (wgtVarName && *wgtVarName) {
       // Use the supplied weight column
@@ -402,199 +402,196 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     } else {
       if (impData && impData->_wgtVar && vars.find(impData->_wgtVar->GetName())) {
 
-	// Use the weight column of the source data set
-	initialize(impData->_wgtVar->GetName()) ;
+        // Use the weight column of the source data set
+        initialize(impData->_wgtVar->GetName()) ;
 
       } else if (indexCat) {
 
-	RooDataSet* firstDS = hmap.begin()->second ;
-	if (firstDS->_wgtVar && vars.find(firstDS->_wgtVar->GetName())) {
-	  initialize(firstDS->_wgtVar->GetName()) ;      
-	} else {
-	  initialize(0) ;
-	}
+        RooDataSet* firstDS = hmap.begin()->second ;
+        if (firstDS->_wgtVar && vars.find(firstDS->_wgtVar->GetName())) {
+          initialize(firstDS->_wgtVar->GetName()) ;
+        } else {
+          initialize(0) ;
+        }
       } else {
-	initialize(0) ;
+        initialize(0) ;
       }
     }
-    
+
     // Import one or more datasets with a cut specification
     if (cutSpec && *cutSpec) {
-      
+
       // Create a RooFormulaVar cut from given cut expression
       if (indexCat) {
 
-	// Case 2a --- Import multiple RooDataSets as slices with cutspec
-	RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
-	for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
-	  // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-	  if (!indexCat->lookupType(hiter->first.c_str())) {
-	    indexCat->defineType(hiter->first.c_str()) ;
-	    coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
-	  }
-	  if (!icat->lookupType(hiter->first.c_str())) {	
-	    icat->defineType(hiter->first.c_str()) ;
-	  }
-	  icat->setLabel(hiter->first.c_str()) ;
-	  
-	  RooFormulaVar cutVarTmp(cutSpec,cutSpec,hiter->second->_vars) ;
-	  _dstore->loadValues(hiter->second->store(),&cutVarTmp,cutRange) ;
-	}
-	
+        // Case 2a --- Import multiple RooDataSets as slices with cutspec
+        RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
+        for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
+          // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
+          if (!indexCat->lookupType(hiter->first.c_str())) {
+            indexCat->defineType(hiter->first.c_str()) ;
+            coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
+          }
+          if (!icat->lookupType(hiter->first.c_str())) {
+            icat->defineType(hiter->first.c_str()) ;
+          }
+          icat->setLabel(hiter->first.c_str()) ;
+
+          RooFormulaVar cutVarTmp(cutSpec,cutSpec,hiter->second->_vars) ;
+          _dstore->loadValues(hiter->second->store(),&cutVarTmp,cutRange) ;
+        }
+
       } else if (impData) {
 
-	// Case 3a --- Import RooDataSet with cutspec
-	RooFormulaVar cutVarTmp(cutSpec,cutSpec,impData->_vars) ;
-	_dstore->loadValues(impData->store(),&cutVarTmp,cutRange);
+        // Case 3a --- Import RooDataSet with cutspec
+        RooFormulaVar cutVarTmp(cutSpec,cutSpec,impData->_vars) ;
+        _dstore->loadValues(impData->store(),&cutVarTmp,cutRange);
       } else if (impTree) {
 
-	// Case 4a --- Import TTree from memory with cutspec
-	RooFormulaVar cutVarTmp(cutSpec,cutSpec,_vars) ;
-	if (tstore) {
-	  tstore->loadValues(impTree,&cutVarTmp,cutRange);      
-	} else {
-	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(impTree,&cutVarTmp,cutRange) ;
-	  _dstore->append(tmpstore) ;
-	}
+        // Case 4a --- Import TTree from memory with cutspec
+        RooFormulaVar cutVarTmp(cutSpec,cutSpec,_vars) ;
+        if (tstore) {
+          tstore->loadValues(impTree,&cutVarTmp,cutRange);
+        } else {
+          RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+          tmpstore.loadValues(impTree,&cutVarTmp,cutRange) ;
+          _dstore->append(tmpstore) ;
+        }
       } else if (fname && strlen(fname)) {
 
-	// Case 5a --- Import TTree from file with cutspec
-	TFile *f = TFile::Open(fname) ;
-	if (!f) {
-	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;	  
-	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
-	}
-	TTree* t = dynamic_cast<TTree*>(f->Get(tname)) ;
-	if (!t) {
-	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
-	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
-	}
-	RooFormulaVar cutVarTmp(cutSpec,cutSpec,_vars) ;
-	if (tstore) {
-	  tstore->loadValues(t,&cutVarTmp,cutRange);      	
-	} else {
-	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(t,&cutVarTmp,cutRange) ;
-	  _dstore->append(tmpstore) ;
-	}
-	f->Close() ;
+        // Case 5a --- Import TTree from file with cutspec
+        TFile *f = TFile::Open(fname) ;
+        if (!f) {
+          coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;
+          throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
+        }
+        TTree* t = dynamic_cast<TTree*>(f->Get(tname)) ;
+        if (!t) {
+          coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
+          throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
+        }
+        RooFormulaVar cutVarTmp(cutSpec,cutSpec,_vars) ;
+        if (tstore) {
+          tstore->loadValues(t,&cutVarTmp,cutRange);
+        } else {
+          RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+          tmpstore.loadValues(t,&cutVarTmp,cutRange) ;
+          _dstore->append(tmpstore) ;
+        }
+        f->Close() ;
 
       }
-      
+
       // Import one or more datasets with a cut formula
     } else if (cutVar) {
-      
+
       if (indexCat) {
-	
-	// Case 2b --- Import multiple RooDataSets as slices with cutvar
 
-	RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
-	for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
-	  // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-	  if (!indexCat->lookupType(hiter->first.c_str())) {
-	    indexCat->defineType(hiter->first.c_str()) ;
-	    coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
-	  }
-	  if (!icat->lookupType(hiter->first.c_str())) {	
-	    icat->defineType(hiter->first.c_str()) ;
-	  }
-	  icat->setLabel(hiter->first.c_str()) ;
-	  _dstore->loadValues(hiter->second->store(),cutVar,cutRange) ;
-	}
-	
-	
+        // Case 2b --- Import multiple RooDataSets as slices with cutvar
+
+        RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
+        for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
+          // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
+          if (!indexCat->lookupType(hiter->first.c_str())) {
+            indexCat->defineType(hiter->first.c_str()) ;
+            coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
+          }
+          if (!icat->lookupType(hiter->first.c_str())) {
+            icat->defineType(hiter->first.c_str()) ;
+          }
+          icat->setLabel(hiter->first.c_str()) ;
+          _dstore->loadValues(hiter->second->store(),cutVar,cutRange) ;
+        }
+
+
       } else if (impData) {
-	// Case 3b --- Import RooDataSet with cutvar
-	_dstore->loadValues(impData->store(),cutVar,cutRange);
+        // Case 3b --- Import RooDataSet with cutvar
+        _dstore->loadValues(impData->store(),cutVar,cutRange);
       } else if (impTree) {
-	// Case 4b --- Import TTree from memory with cutvar
-	if (tstore) {
-	  tstore->loadValues(impTree,cutVar,cutRange);
-	} else {
-	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(impTree,cutVar,cutRange) ;
-	  _dstore->append(tmpstore) ;
-	}
-	} else if (fname && strlen(fname)) {
-	// Case 5b --- Import TTree from file with cutvar
-	TFile *f = TFile::Open(fname) ;
-	if (!f) {
-	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;	  
-	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
-	}
-	TTree* t = dynamic_cast<TTree*>(f->Get(tname)) ;
-	if (!t) {
-	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
-	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
-	}
-	if (tstore) {
-	  tstore->loadValues(t,cutVar,cutRange);      	
-	} else {
-	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(t,cutVar,cutRange) ;
-	  _dstore->append(tmpstore) ;
-	}
+        // Case 4b --- Import TTree from memory with cutvar
+        if (tstore) {
+          tstore->loadValues(impTree,cutVar,cutRange);
+        } else {
+          RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+          tmpstore.loadValues(impTree,cutVar,cutRange) ;
+          _dstore->append(tmpstore) ;
+        }
+      } else if (fname && strlen(fname)) {
+        // Case 5b --- Import TTree from file with cutvar
+        TFile *f = TFile::Open(fname) ;
+        if (!f) {
+          coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;
+          throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
+        }
+        TTree* t = dynamic_cast<TTree*>(f->Get(tname)) ;
+        if (!t) {
+          coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
+          throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
+        }
+        if (tstore) {
+          tstore->loadValues(t,cutVar,cutRange);
+        } else {
+          RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+          tmpstore.loadValues(t,cutVar,cutRange) ;
+          _dstore->append(tmpstore) ;
+        }
 
-	f->Close() ;
+        f->Close() ;
       }
-      
+
       // Import one or more datasets without cuts
     } else {
-      
+
       if (indexCat) {
-	
-	RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
-	for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
-	  // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-	  if (!indexCat->lookupType(hiter->first.c_str())) {
-	    indexCat->defineType(hiter->first.c_str()) ;
-	    coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
-	  }
-	  if (!icat->lookupType(hiter->first.c_str())) {	
-	    icat->defineType(hiter->first.c_str()) ;
-	  }
-	  icat->setLabel(hiter->first.c_str()) ;
-	  // Case 2c --- Import multiple RooDataSets as slices
-	  _dstore->loadValues(hiter->second->store(),0,cutRange) ;
-	}
-	
-	
+
+        RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
+        for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
+          // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
+          if (!indexCat->lookupType(hiter->first.c_str())) {
+            indexCat->defineType(hiter->first.c_str()) ;
+            coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
+          }
+          if (!icat->lookupType(hiter->first.c_str())) {
+            icat->defineType(hiter->first.c_str()) ;
+          }
+          icat->setLabel(hiter->first.c_str()) ;
+          // Case 2c --- Import multiple RooDataSets as slices
+          _dstore->loadValues(hiter->second->store(),0,cutRange) ;
+        }
+
+
       } else if (impData) {
-	// Case 3c --- Import RooDataSet
-	_dstore->loadValues(impData->store(),0,cutRange);
-      } else if (impTree) {
-	// Case 4c --- Import TTree from memort
-	if (tstore) {
-	  tstore->loadValues(impTree,0,cutRange);
-	} else {
-	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(impTree,0,cutRange) ;
-	  _dstore->append(tmpstore) ;
-	}
-      } else if (fname && strlen(fname)) {
-	// Case 5c --- Import TTree from file
-	TFile *f = TFile::Open(fname) ;
-	if (!f) {
-	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;	  
-	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
-	}
-	TTree* t = dynamic_cast<TTree*>(f->Get(tname)) ;
-	if (!t) {
-	  coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
-	  throw string(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
-	}
-	if (tstore) {
-	  tstore->loadValues(t,0,cutRange);      	
-	} else {
-	  RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
-	  tmpstore.loadValues(t,0,cutRange) ;
-	  _dstore->append(tmpstore) ;
-	}
-	f->Close() ;
+        // Case 3c --- Import RooDataSet
+        _dstore->loadValues(impData->store(),0,cutRange);
+
+      } else if (impTree || (fname && strlen(fname))) {
+        // Case 4c --- Import TTree from memory / file
+        std::unique_ptr<TFile> file;
+
+        if (impTree == nullptr) {
+          file.reset(TFile::Open(fname));
+          if (!file) {
+            coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' cannot be opened or does not exist" << endl ;
+            throw std::invalid_argument(Form("RooDataSet::ctor(%s) ERROR file %s cannot be opened or does not exist",GetName(),fname)) ;
+          }
+
+          file->GetObject(tname, impTree);
+          if (!impTree) {
+            coutE(InputArguments) << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname << "' does not contain a TTree named '" << tname << "'" << endl ;
+            throw std::invalid_argument(Form("RooDataSet::ctor(%s) ERROR file %s does not contain a TTree named %s",GetName(),fname,tname)) ;
+          }
+        }
+
+        if (tstore) {
+          tstore->loadValues(impTree,0,cutRange);
+        } else {
+          RooTreeDataStore tmpstore(name,title,_vars,wgtVarName) ;
+          tmpstore.loadValues(impTree,0,cutRange) ;
+          _dstore->append(tmpstore) ;
+        }
       }
     }
-    
+
   }
   TRACE_CREATE
 }
