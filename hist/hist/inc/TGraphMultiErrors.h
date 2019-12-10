@@ -22,21 +22,22 @@
 
 #include "TGraph.h"
 
+class TArrayF;
 class TArrayD;
 
 class TGraphMultiErrors : public TGraph {
 
 protected:
-   Int_t fNYErrors;                ///< The amount of different y-errors
-   Int_t fSumErrorsMode;           ///< How y errors are summed: kOnlyFirst = Only First; kSquareSum = Squared Sum; kSum = Absolute Addition
-   Double_t *fExL;                 ///<[fNpoints] array of X low errors
-   Double_t *fExH;                 ///<[fNpoints] array of X high errors
-   std::vector<TArrayD> fEyL;      ///< two dimensional array of Y low errors
-   std::vector<TArrayD> fEyH;      ///< two dimensional array of Y high errors
-   Double_t *fEyLSum = NULL;       ///<! array of summed Y low errors for fitting
-   Double_t *fEyHSum = NULL;       ///<! array of summed Y high errors for fitting
-   std::vector<TAttFill> fAttFill; ///< the AttFill attributes of the different errors
-   std::vector<TAttLine> fAttLine; ///< the AttLine attributes of the different errors
+   Int_t fNYErrors;                  ///< The amount of different y-errors
+   Int_t fSumErrorsMode;             ///< How y errors are summed: kOnlyFirst = Only First; kSquareSum = Squared Sum; kSum = Absolute Addition
+   Double_t *fExL;                   ///<[fNpoints] array of X low errors
+   Double_t *fExH;                   ///<[fNpoints] array of X high errors
+   std::vector<TArrayD> fEyL;        ///< two dimensional array of Y low errors
+   std::vector<TArrayD> fEyH;        ///< two dimensional array of Y high errors
+   mutable Double_t *fEyLSum = NULL; ///<! array of summed Y low errors for fitting
+   mutable Double_t *fEyHSum = NULL; ///<! array of summed Y high errors for fitting
+   std::vector<TAttFill> fAttFill;   ///< the AttFill attributes of the different errors
+   std::vector<TAttLine> fAttLine;   ///< the AttLine attributes of the different errors
 
    virtual Double_t **Allocate(Int_t size);
    Bool_t             CtorAllocate();
@@ -45,7 +46,7 @@ protected:
    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin);
    void               FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
 
-   void               CalcYErrorsSum();
+   void               CalcYErrorsSum() const;
    virtual Bool_t     DoMerge(const TGraph *tg);
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
 
@@ -57,15 +58,28 @@ public:
    };
 
    TGraphMultiErrors();
+   TGraphMultiErrors(const Char_t *name, const Char_t *title);
    TGraphMultiErrors(Int_t np, Int_t ne = 1);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne = 1);
 
    TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL = NULL, const Float_t *exH = NULL, const Float_t *eyL = NULL, const Float_t *eyH = NULL, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL = NULL, const Float_t *exH = NULL, const Float_t *eyL = NULL, const Float_t *eyH = NULL, Int_t m = kOnlyFirst);
    TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL = NULL, const Double_t *exH = NULL, const Double_t *eyL = NULL, const Double_t *eyH = NULL, Int_t m = kOnlyFirst);
-   TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL = NULL, const Float_t *exH = NULL, Float_t **eyL = NULL, Float_t **eyH = NULL, Int_t m = kOnlyFirst);
-   TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL = NULL, const Double_t *exH = NULL, Double_t **eyL = NULL, Double_t **eyH = NULL, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL = NULL, const Double_t *exH = NULL, const Double_t *eyL = NULL, const Double_t *eyH = NULL, Int_t m = kOnlyFirst);
+
+   TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<std::vector<Float_t>> eyL, std::vector<std::vector<Float_t>> eyH, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<std::vector<Float_t>> eyL, std::vector<std::vector<Float_t>> eyH, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<std::vector<Double_t>> eyL, std::vector<std::vector<Double_t>> eyH, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<std::vector<Double_t>> eyL, std::vector<std::vector<Double_t>> eyH, Int_t m = kOnlyFirst);
+
+   TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<TArrayF> eyL, std::vector<TArrayF> eyH, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<TArrayF> eyL, std::vector<TArrayF> eyH, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<TArrayD> eyL, std::vector<TArrayD> eyH, Int_t m = kOnlyFirst);
+   TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<TArrayD> eyL, std::vector<TArrayD> eyH, Int_t m = kOnlyFirst);
 
    TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL, const TVectorF &tvExH, const TVectorF &tvEyL, const TVectorF &tvEyH, Int_t m = kOnlyFirst);
    TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL, const TVectorD &tvExH, const TVectorD &tvEyL, const TVectorD &tvEyH, Int_t m = kOnlyFirst);
+
    TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL, const TVectorF &tvExH, const TVectorF *tvEyL, const TVectorF *tvEyH, Int_t m = kOnlyFirst);
    TGraphMultiErrors(Int_t ne, const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL, const TVectorD &tvExH, const TVectorD *tvEyL, const TVectorD *tvEyH, Int_t m = kOnlyFirst);
 
@@ -95,13 +109,10 @@ public:
    virtual Double_t GetErrorYlow(Int_t i, Int_t e) const;
    virtual Double_t GetErrorYhigh(Int_t i, Int_t e) const;
 
-   using TGraph::GetEYlow;
-   using TGraph::GetEYhigh;
-
    virtual Double_t *GetEXlow() const { return fExL; }
    virtual Double_t *GetEXhigh() const { return fExH; }
-   virtual Double_t *GetEYlow();
-   virtual Double_t *GetEYhigh();
+   virtual Double_t *GetEYlow() const;
+   virtual Double_t *GetEYhigh() const;
    virtual Double_t *GetEYlow(Int_t e);
    virtual Double_t *GetEYhigh(Int_t e);
 

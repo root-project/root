@@ -2693,12 +2693,14 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t* theEyL[NYErrors];
    Double_t* theEyH[NYErrors];
 
+   Bool_t theEyExists = kTRUE;
    for (Int_t j = 0; j < NYErrors; j++) {
       theEyL[j] = tg->GetEYlow(j);
       theEyH[j] = tg->GetEYhigh(j);
+      theEyExists &= (theEyL[j] && theEyH[j]);
    }
 
-   if (!theX || !theY || !theExL || !theExH || !theEyL || !theEyH)
+   if (!theX || !theY || !theExL || !theExH || !theEyExists)
       return;
 
    Bool_t   DrawErrors[NYErrors];

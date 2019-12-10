@@ -41,11 +41,36 @@ ClassImp(TGraphMultiErrors)
 /** \class TGraphMultiErrors
  TGraph with asymmetric error bars and multiple y error dimensions.
 
- The TGraphAsymmErrors painting is currently performed by its functions TGraphMultiErrors::Paint,
- TGraphMultiErrors::PaintReverse and TGraphMultiErrors::PaintGraphMultiErrors. These are supposed to be included in
- the TGraphPainter class if this class should become part of ROOT.
- All drawing options of TGraphAsymmErrors are available.
- For more information see the function TGraphMultiErrors::PaintGraphMultiErrors.
+ The TGraphMultiErrors painting is performed thanks to the TGraphPainter
+ class. All details about the various painting options are given in this class.
+
+ The picture below gives an example:
+
+ Begin_Macro(source)
+ {
+    c1 = new TCanvas("c1", "A Simple Graph with multiple y-errors", 200, 10, 700, 500);
+    c1->SetGrid();
+    c1->GetFrame()->SetBorderSize(12);
+    const Int_t np = 5;
+    Double_t x[np]       = {0, 1, 2, 3, 4};
+    Double_t y[np]       = {0, 2, 4, 1, 3};
+    Double_t exl[np]     = {0.3, 0.3, 0.3, 0.3, 0.3};
+    Double_t exh[np]     = {0.3, 0.3, 0.3, 0.3, 0.3};
+    Double_t eylstat[np] = {1, 0.5, 1, 0.5, 1};
+    Double_t eyhstat[np] = {0.5, 1, 0.5, 1, 2};
+    Double_t eylsys[np]  = {0.5, 0.4, 0.8, 0.3, 1.2};
+    Double_t eyhsys[np]  = {0.6, 0.7, 0.6, 0.4, 0.8};
+    gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", np, x, y, exl, exh, eylstat, eyhstat);
+    gme->AddYError(np, eylsys, eyhsys);
+    gme->SetMarkerStyle(20);
+    gme->SetLineColor(kRed);
+    gme->GetAttLine(0)->SetLineColor(kRed);
+    gme->GetAttLine(1)->SetLineColor(kBlue);
+    gme->GetAttFill(1)->SetFillStyle(0);
+    gme->Draw("APS ; Z ; 5 s=0.5");
+    return c1;
+ }
+ End_Macro
 */
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -55,10 +80,18 @@ TGraphMultiErrors::TGraphMultiErrors() : TGraph(), fNYErrors(0), fSumErrorsMode(
 {
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors default constructor with name and title.
+
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title) : TGraphMultiErrors()
+{
+   SetNameTitle(name, title);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor.
+/// TGraphMultiErrors normal constructor with np points and ne y-errors.
 ///
-/// the arrays are preset to zero
+/// All values are initialized to 0.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne) : TGraph(np), fNYErrors(ne), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
 {
@@ -69,9 +102,20 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne) : TGraph(np), fNYErrors
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with a single y error dimension.
+/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
 ///
-/// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
+/// All values are initialized to 0.
+
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne) : TGraphMultiErrors(np, ne)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with np points and a single y-error.
+///
+/// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
+/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, const Float_t *eyL, const Float_t *eyH, Int_t m) : TGraph(np, x, y), fNYErrors(1), fSumErrorsMode(m)
 {
@@ -93,9 +137,20 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with a single y error dimension.
+/// TGraphMultiErrors normal constructor with name, title, np points and a single y-error.
 ///
-/// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
+/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
+
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, const Float_t *eyL, const Float_t *eyH, Int_t m) : TGraphMultiErrors(np, x, y, exL, exH, eyL, eyH, m)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with np points and a single y-error.
+///
+/// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
+/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, const Double_t *eyL, const Double_t *eyH, Int_t m) : TGraph(np, x, y), fNYErrors(1), fSumErrorsMode(m)
 {
@@ -119,11 +174,22 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with a multiple y error dimensions.
+/// TGraphMultiErrors normal constructor with name, title, np points and a single y-error.
 ///
-/// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
+/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, Float_t **eyL, Float_t **eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, const Double_t *eyL, const Double_t *eyH, Int_t m) : TGraphMultiErrors(np, x, y, exL, exH, eyL, eyH, m)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of std::vectors.
+
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<std::vector<Float_t>> eyL, std::vector<std::vector<Float_t>> eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
 {
    if (!CtorAllocate())
       return;
@@ -135,10 +201,14 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const
       else     fExH[i] = 0.;
 
       for (Int_t j = 0; j < fNYErrors; j++) {
-         if (eyL) fEyL[j][i] = eyL[j][i];
-         else     fEyL[j][i] = 0.;
-         if (eyH) fEyH[j][i] = eyH[j][i];
-         else     fEyH[j][i] = 0.;
+	 if (Int_t(eyL.size()) > j && Int_t(eyL[j].size()) > i)
+	    fEyL[j][i] = eyL[j][i];
+	 else
+	    fEyL[j][i] = 0.;
+	 if (Int_t(eyH.size()) > j && Int_t(eyH[j].size()) > i)
+	    fEyH[j][i] = eyH[j][i];
+	 else
+	    fEyH[j][i] = 0.;
       }
    }
 
@@ -146,11 +216,23 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with a multiple y error dimensions.
+/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
 ///
-/// if exL,H or eyL,H are null, the corresponding arrays are preset to zero
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of std::vectors.
 
-TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, Double_t **eyL, Double_t **eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<std::vector<Float_t>> eyL, std::vector<std::vector<Float_t>> eyH, Int_t m) : TGraphMultiErrors(np, ne, x, y, exL, exH, eyL, eyH, m)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of std::vectors.
+
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<std::vector<Double_t>> eyL, std::vector<std::vector<Double_t>> eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
 {
    if (!CtorAllocate())
       return;
@@ -162,18 +244,124 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, cons
    if (exH) memcpy(fExH, exH, n);
    else     memset(fExH, 0, n);
 
-   for (Int_t j = 0; j < fNYErrors; j++) {
-      if (eyL) fEyL[j].Set(fNpoints, eyL[j]);
-      else     fEyL[j].Reset(0.);
-      if (eyH) fEyH[j].Set(fNpoints, eyH[j]);
-      else     fEyH[j].Reset(0.);
+   for (Int_t i = 0; i < fNpoints; i++) {
+      for (Int_t j = 0; j < fNYErrors; j++) {
+	 if (Int_t(eyL.size()) > j && Int_t(eyL[j].size()) > i)
+	    fEyL[j][i] = eyL[j][i];
+	 else
+	    fEyL[j][i] = 0.;
+	 if (Int_t(eyH.size()) > j && Int_t(eyH[j].size()) > i)
+	    fEyH[j][i] = eyH[j][i];
+	 else
+	    fEyH[j][i] = 0.;
+      }
    }
 
    CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of std::vectors.
+
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<std::vector<Double_t>> eyL, std::vector<std::vector<Double_t>> eyH, Int_t m) : TGraphMultiErrors(np, ne, x, y, exL, exH, eyL, eyH, m)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of TArrayF objects.
+
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<TArrayF> eyL, std::vector<TArrayF> eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
+{
+   if (!CtorAllocate())
+      return;
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      if (exL) fExL[i] = exL[i];
+      else     fExL[i] = 0.;
+      if (exH) fExH[i] = exH[i];
+      else     fExH[i] = 0.;
+
+      for (Int_t j = 0; j < fNYErrors; j++) {
+	 if (Int_t(eyL.size()) > j && eyL[j].GetSize() > i)
+	    fEyL[j][i] = eyL[j][i];
+	 else
+	    fEyL[j][i] = 0.;
+	 if (Int_t(eyH.size()) > j && eyH[j].GetSize() > i)
+	    fEyH[j][i] = eyH[j][i];
+	 else
+	    fEyH[j][i] = 0.;
+      }
+   }
+
+   CalcYErrorsSum();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of TArrayF objects.
+
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL, const Float_t *exH, std::vector<TArrayF> eyL, std::vector<TArrayF> eyH, Int_t m) : TGraphMultiErrors(np, ne, x, y, exL, exH, eyL, eyH, m)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of TArrayD objects.
+
+TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<TArrayD> eyL, std::vector<TArrayD> eyH, Int_t m) : TGraph(np, x, y), fNYErrors(ne), fSumErrorsMode(m)
+{
+   if (!CtorAllocate())
+      return;
+
+   Int_t n = fNpoints * sizeof(Double_t);
+
+   if (exL) memcpy(fExL, exL, n);
+   else     memset(fExL, 0, n);
+   if (exH) memcpy(fExH, exH, n);
+   else     memset(fExH, 0, n);
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      for (Int_t j = 0; j < fNYErrors; j++) {
+	 if (Int_t(eyL.size()) > j && eyL[j].GetSize() > i)
+	    fEyL[j][i] = eyL[j][i];
+	 else
+	    fEyL[j][i] = 0.;
+	 if (Int_t(eyH.size()) > j && eyH[j].GetSize() > i)
+	    fEyH[j][i] = eyH[j][i];
+	 else
+	    fEyH[j][i] = 0.;
+      }
+   }
+
+   CalcYErrorsSum();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+///
+/// If exL,H are NULL, the corresponding values are preset to zero.
+/// The multiple y-errors are passed as std::vectors of TArrayD objects.
+
+TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL, const Double_t *exH, std::vector<TArrayD> eyL, std::vector<TArrayD> eyH, Int_t m) : TGraphMultiErrors(np, ne, x, y, exL, exH, eyL, eyH, m)
+{
+   SetNameTitle(name, title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Constructor with six vectors of floats in input and a single y error dimension
+/// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
 /// A grapherrors is built with the X coordinates taken from tvX and Y coord from tvY
 /// and the errors from vectors tvExL/H and tvEyL/H.
 /// The number of points in the graph is the minimum of number of points
@@ -210,6 +398,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, c
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with six vectors of doubles in input and a single y error dimension
+/// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
 /// A grapherrors is built with the X coordinates taken from tvX and Y coord from tvY
 /// and the errors from vectors tvExL/H and tvEyL/H.
 /// The number of points in the graph is the minimum of number of points
@@ -544,7 +733,7 @@ void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 ////////////////////////////////////////////////////////////////////////////////
 /// Recalculates the summed y error arrays
 
-void TGraphMultiErrors::CalcYErrorsSum()
+void TGraphMultiErrors::CalcYErrorsSum() const
 {
    if (fEyLSum) delete[] fEyLSum;
    if (fEyHSum) delete[] fEyHSum;
@@ -1256,7 +1445,7 @@ Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t e) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get all low errors on y coordinates as an array summed according to fSumErrorsMode
 
-Double_t *TGraphMultiErrors::GetEYlow()
+Double_t *TGraphMultiErrors::GetEYlow() const
 {
    if (!fEyLSum)
       CalcYErrorsSum();
@@ -1267,7 +1456,7 @@ Double_t *TGraphMultiErrors::GetEYlow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Get all high errors on y coordinates as an array summed according to fSumErrorsMode
 
-Double_t *TGraphMultiErrors::GetEYhigh()
+Double_t *TGraphMultiErrors::GetEYhigh() const
 {
    if (!fEyHSum)
       CalcYErrorsSum();
