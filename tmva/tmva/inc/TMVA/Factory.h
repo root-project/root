@@ -149,8 +149,8 @@ namespace TMVA {
 
       TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
 
-      Bool_t IsSilentFile();
-      Bool_t IsModelPersistence();
+      Bool_t IsSilentFile() const { return fSilentFile;}
+      Bool_t IsModelPersistence() const { return fModelPersistence; }
 
       Double_t GetROCIntegral(DataLoader *loader, TString theMethodName, UInt_t iClass = 0);
       Double_t GetROCIntegral(TString datasetname, TString theMethodName, UInt_t iClass = 0);

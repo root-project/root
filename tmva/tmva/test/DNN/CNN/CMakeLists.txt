@@ -142,7 +142,7 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Reshape-CPU COMMAND testReshapeCpu)
 ROOT_EXECUTABLE(testConvBackpropagationCpu TestConvBackpropagation.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation-CPU COMMAND testConvBackpropagationCpu)
 
-ROOT_EXECUTABLE(testMethodDLCNNCpu TestMethodDLCNN.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL-CPU COMMAND testMethodDLCNNCpu)
+ROOT_EXECUTABLE(testMethodDLCNN TestMethodDLCNN.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL COMMAND testMethodDLCNN)
 
 endif ()
