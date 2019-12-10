@@ -212,9 +212,10 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
 
 bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params, unsigned int dataSize, bool chi2fit) {
    // set the objective function for the fit and a model function
-   SetFCN(fcn, params, dataSize, chi2fit);
+   if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false; 
    // need to set fFunc afterwards because SetFCN could reset fFUnc
    fFunc = std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone()));
+   return (fFunc != nullptr); 
 }
 
 bool Fitter::SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params, unsigned int dataSize,
@@ -232,8 +233,9 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const IModelFunct
                     unsigned int dataSize, bool chi2fit)
 {
    // set the objective function for the fit and a model function
-   SetFCN(fcn, params, dataSize, chi2fit);
+   if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false;
    fFunc = std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone()));
+   return (fFunc != nullptr); 
 }
 
 bool Fitter::SetFCN(const ROOT::Math::FitMethodFunction &fcn, const double *params)
