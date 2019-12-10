@@ -2013,6 +2013,7 @@ TDirectory *TMVA::MethodBase::MethodBaseDir() const
          << " not set yet --> check if already there.." << Endl;
 
    TDirectory *factoryBaseDir = GetFile();
+   if (!factoryBaseDir) return nullptr;
    fMethodBaseDir = factoryBaseDir->GetDirectory(datasetName);
    if (!fMethodBaseDir) {
       fMethodBaseDir = factoryBaseDir->mkdir(datasetName, Form("Base directory for dataset %s", datasetName));
@@ -2105,9 +2106,9 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
       else
          Log() << kINFO << TString::Format("Dataset[%s] : ",DataInfo().GetName())
                << " variable plots are not produces ! The number of variables is " << DataInfo().GetNVariables()
-               << " , it is larger than " << gConfig().GetVariablePlotting().fMaxNumOfAllowedVariables << Endl; 
+               << " , it is larger than " << gConfig().GetVariablePlotting().fMaxNumOfAllowedVariables << Endl;
    }
-} 
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// write special monitoring histograms to file
