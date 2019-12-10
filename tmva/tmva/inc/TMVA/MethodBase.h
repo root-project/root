@@ -374,12 +374,12 @@ namespace TMVA {
       void             SetFile(TFile* file){fFile=file;}
 
       //Silent file
-      void SetSilentFile(Bool_t status){fSilentFile=status;}
-      Bool_t IsSilentFile(){return fSilentFile;}
+      void SetSilentFile(Bool_t status) {fSilentFile=status;}
+      Bool_t IsSilentFile() const {return fSilentFile;}
 
       //Model Persistence
       void SetModelPersistence(Bool_t status){fModelPersistence=status;}//added support to create/remove dir here if exits or not
-      Bool_t IsModelPersistence(){return fModelPersistence;}
+      Bool_t IsModelPersistence() const {return fModelPersistence;}
 
       // the TMVA version can be obtained and checked using
       //    if (GetTrainingTMVAVersionCode()>TMVA_VERSION(3,7,2)) {...}

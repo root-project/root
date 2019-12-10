@@ -1973,6 +1973,13 @@ TDirectory* TMVA::MethodBase::BaseDir() const
    if (fBaseDir != 0) return fBaseDir;
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " not set yet --> check if already there.." <<Endl;
 
+   if (IsSilentFile()) {
+      Log() << kFATAL << Form("Dataset[%s] : ", DataInfo().GetName())
+            << "MethodBase::BaseDir() - No directory exists when running a Method without output file. Enable the "
+               "output when creating the factory"
+            << Endl;
+   }
+
    TDirectory* methodDir = MethodBaseDir();
    if (methodDir==0)
       Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "MethodBase::BaseDir() - MethodBaseDir() return a NULL pointer!" << Endl;
