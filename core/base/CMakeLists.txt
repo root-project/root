@@ -206,7 +206,11 @@ endif()
 if(root7)
   list(APPEND BASE_HEADERS
       ROOT/RDirectoryEntry.hxx
+      ROOT/RError.hxx
       ROOT/RIndexIter.hxx)
+  list(APPEND BASE_SOURCES
+       v7/src/RError.cxx)
+  ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
 
