@@ -15,6 +15,8 @@
 
 #include "TMPIFile.h"
 
+R__LOAD_LIBRARY(RMPI)  // Work around autoloading issue when ROOT modules are enabled 
+
 #ifdef TMPI_SECOND_RUN
 
 #include <chrono>
