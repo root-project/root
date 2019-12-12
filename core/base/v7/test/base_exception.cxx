@@ -2,7 +2,6 @@
 
 #include <ROOT/RError.hxx>
 
-#include <cerrno>
 #include <stdexcept>
 
 using RException = ROOT::Experimental::RException;
@@ -25,7 +24,6 @@ static RStatusSyscall MockFileOpen(bool succeed)
 {
    if (succeed)
       return RStatusSyscall(42);
-   errno = EPERM;
    return RStatusSyscall::Fail("Not allowed to succeed");
 }
 
