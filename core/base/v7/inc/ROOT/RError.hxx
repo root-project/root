@@ -18,7 +18,6 @@
 
 #include <ROOT/RConfig.hxx>
 
-#include <cerrno>
 #include <cstddef>
 #include <new>
 #include <stdexcept>
@@ -36,8 +35,7 @@ namespace Experimental {
 // clang-format on
 class RException : public std::runtime_error {
 public:
-   explicit RException(const std::string &what)
-      : std::runtime_error(what + " [errno: " + std::to_string(errno) + "]") {}
+   explicit RException(const std::string &what) : std::runtime_error(what) {}
 };
 
 
