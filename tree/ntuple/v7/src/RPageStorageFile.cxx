@@ -1292,13 +1292,13 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    auto header = new unsigned char[ntuple.fLenHeader];
    Read(recordHeader, ntuple.fNBytesHeader, ntuple.fSeekHeader);
    fDecompressor(recordHeader, ntuple.fNBytesHeader, ntuple.fLenHeader, header);
-   delete recordHeader;
+   delete[] recordHeader;
 
    auto recordFooter = new unsigned char[ntuple.fNBytesFooter];
    auto footer = new unsigned char[ntuple.fLenFooter];
    Read(recordFooter, ntuple.fNBytesFooter, ntuple.fSeekFooter);
    fDecompressor(recordFooter, ntuple.fNBytesFooter, ntuple.fLenFooter, footer);
-   delete recordFooter;
+   delete[] recordFooter;
 
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetFromHeader(header);
