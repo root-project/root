@@ -122,36 +122,31 @@ public:
    }
 };
 
-/// TFile checksum algorithm for name and type strings
-constexpr std::int32_t ChecksumString(std::int32_t id, const char *str) {
-   auto len = strlen(str);
-   for (unsigned i = 0; i < len; i++)
-      id = id *3 + str[i];
-   return id;
-}
-
 /// Composition of class RNTuple as being interpreted by TFile
 constexpr std::int32_t ChecksumRNTupleClass() {
+   const char *ident = "ROOT::Experimental::RNTuple"
+      "fVersion"
+      "unsigned int"
+      "fSize"
+      "unsigned int"
+      "fSeekHeader"
+      "unsigned long"
+      "fNBytesHeader"
+      "unsigned int"
+      "fLenHeader"
+      "unsigned int"
+      "fSeekFooter"
+      "unsigned long"
+      "fNBytesFooter"
+      "unsigned int"
+      "fLenFooter"
+      "unsigned int"
+      "fReserved"
+      "unsigned long";
    std::int32_t id = 0;
-   id = ChecksumString(id, "ROOT::Experimental::RNTuple");
-   id = ChecksumString(id, "fVersion");
-   id = ChecksumString(id, "unsigned int");
-   id = ChecksumString(id, "fSize");
-   id = ChecksumString(id, "unsigned int");
-   id = ChecksumString(id, "fSeekHeader");
-   id = ChecksumString(id, "unsigned long");
-   id = ChecksumString(id, "fNBytesHeader");
-   id = ChecksumString(id, "unsigned int");
-   id = ChecksumString(id, "fLenHeader");
-   id = ChecksumString(id, "unsigned int");
-   id = ChecksumString(id, "fSeekFooter");
-   id = ChecksumString(id, "unsigned long");
-   id = ChecksumString(id, "fNBytesFooter");
-   id = ChecksumString(id, "unsigned int");
-   id = ChecksumString(id, "fLenFooter");
-   id = ChecksumString(id, "unsigned int");
-   id = ChecksumString(id, "fReserved");
-   id = ChecksumString(id, "unsigned long");
+   auto len = strlen(ident);
+   for (unsigned i = 0; i < len; i++)
+      id = id *3 + ident[i];
    return id;
 }
 
