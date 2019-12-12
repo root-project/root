@@ -168,7 +168,7 @@ if not _builtin_cppyy:
 ### configuration ---------------------------------------------------------------
 class _Configuration( object ):
    __slots__ = [ 'IgnoreCommandLineOptions', 'StartGuiThread', 'ExposeCppMacros',
-                 '_gts', 'DisableRootLogon' ]
+                 '_gts', 'DisableRootLogon', 'ShutDown' ]
 
    def __init__( self ):
       self.IgnoreCommandLineOptions = 0
@@ -176,6 +176,7 @@ class _Configuration( object ):
       self.ExposeCppMacros = False
       self._gts = []
       self.DisableRootLogon = False
+      self.ShutDown = True
 
    def __setGTS( self, value ):
       for c in value:
@@ -866,21 +867,29 @@ def cleanup():
    del v, k, items, types
 
  # destroy facade
+   shutdown = PyConfig.ShutDown
    facade.__dict__.clear()
    del facade
 
    if 'libPyROOT' in sys.modules:
-    # run part the gROOT shutdown sequence ... running it here ensures that
-    # it is done before any ROOT libraries are off-loaded, with unspecified
-    # order of static object destruction;
-      gROOT = sys.modules[ 'libPyROOT' ].gROOT
-      gROOT.EndOfProcessCleanups()
-      del gROOT
+      pyroot_backend = sys.modules['libPyROOT']
+      if shutdown:
+       # run part the gROOT shutdown sequence ... running it here ensures that
+       # it is done before any ROOT libraries are off-loaded, with unspecified
+       # order of static object destruction;
+         pyroot_backend.ClearProxiedObjects()
+         pyroot_backend.gROOT.EndOfProcessCleanups()
+      else:
+       # Soft teardown
+       # Make sure all the objects regulated by PyROOT are deleted and their
+       # Python proxies are properly nonified.
+         pyroot_backend.ClearProxiedObjects()
 
     # cleanup cached python strings
-      sys.modules[ 'libPyROOT' ]._DestroyPyStrings()
+      pyroot_backend._DestroyPyStrings()
 
     # destroy ROOT extension module
+      del pyroot_backend
       del sys.modules[ 'libPyROOT' ]
 
  # destroy ROOT module

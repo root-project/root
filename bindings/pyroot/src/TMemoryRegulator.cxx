@@ -192,6 +192,29 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// clean up all tracked objects
+
+void PyROOT::TMemoryRegulator::ClearProxiedObjects()
+{
+   while (!fgObjectTable->empty()) {
+      auto elem = fgObjectTable->begin();
+      auto cppobj = elem->first;
+      auto pyobj = (ObjectProxy*)PyWeakref_GetObject(elem->second);
+
+      if (pyobj && (pyobj->fFlags & ObjectProxy::kIsOwner)) {
+         // Only delete the C++ object if the Python proxy owns it.
+         // The deletion will trigger RecursiveRemove on the object
+         delete cppobj;
+      }
+      else {
+         // Non-owning proxy, just unregister to clean tables.
+         // The proxy deletion by Python will have no effect on C++, so all good
+         UnregisterObject(cppobj);
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// start tracking <object> proxied by <pyobj>
 
 Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )

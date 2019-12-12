@@ -798,6 +798,8 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "_ResetRootModule", (PyCFunction)RootModuleResetCallback,
      METH_NOARGS, (char*) "PyROOT internal function" },
+   { (char*) "ClearProxiedObjects", (PyCFunction)ClearProxiedObjects,
+     METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
    { (char*) "addressof", (PyCFunction)addressof,

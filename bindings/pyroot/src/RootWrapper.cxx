@@ -175,6 +175,11 @@ namespace {
 } // unnamed namespace
 
 
+static TMemoryRegulator &GetMemoryRegulator() {
+   static TMemoryRegulator m;
+   return m;
+}
+
 //- public functions ---------------------------------------------------------
 void PyROOT::InitRoot()
 {
@@ -182,8 +187,7 @@ void PyROOT::InitRoot()
    PyEval_InitThreads();
 
 // memory management
-   static TMemoryRegulator m;
-   gROOT->GetListOfCleanups()->Add( &m );
+   gROOT->GetListOfCleanups()->Add( &GetMemoryRegulator() );
 
 // bind ROOT globals that are needed in ROOT.py
    AddToGlobalScope( "gROOT", "TROOT.h", gROOT, Cppyy::GetScope( gROOT->IsA()->GetName() ) );
@@ -808,6 +812,15 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
 // nothing found
    PyErr_Format( PyExc_LookupError, "no such global: %s", name.c_str() );
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all memory-regulated objects
+
+PyObject *PyROOT::ClearProxiedObjects()
+{
+   GetMemoryRegulator().ClearProxiedObjects();
+   Py_RETURN_NONE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
