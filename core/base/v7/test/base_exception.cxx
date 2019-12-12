@@ -24,7 +24,7 @@ static RStatusSyscall MockFileOpen(bool succeed)
 {
    if (succeed)
       return RStatusSyscall(42);
-   return RStatusSyscall::Fail("Not allowed to succeed");
+   return RStatusSyscall::Fail(-1, "Not allowed to succeed");
 }
 
 class ExceptionX : public std::runtime_error {
