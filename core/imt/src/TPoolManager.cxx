@@ -24,7 +24,7 @@ namespace ROOT {
             mustDelete = false;
          }
 
-         nThreads = nThreads != 0 ? nThreads : tbb::task_scheduler_init::default_num_threads();
+         nThreads = nThreads != 0 ? nThreads : ROOT::NLogicalCores();
          fSched ->initialize(nThreads);
          fgPoolSize = nThreads;
       };
