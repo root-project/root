@@ -658,13 +658,13 @@ namespace Internal {
          // Does the file exist?
          if(stat(quotaFile.c_str(), &buffer) == 0) {
             f.open(quotaFile);
-            int cfs_quota;
+            float cfs_quota;
             f>>cfs_quota;
             f.close();
-            if(cfs_quota != -1) {
+            if(cfs_quota > 0) {
                std::string periodFile("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us");
                f.open(periodFile);
-               int cfs_period;
+               float cfs_period;
                f>>cfs_period;
                f.close();
                return cfs_quota/cfs_period;
