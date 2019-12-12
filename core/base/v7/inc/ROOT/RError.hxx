@@ -45,9 +45,9 @@ namespace Detail {
 /**
 \class ROOT::Experimental::Detail::RStatusType
 \ingroup Base
-\brief Values of this type have a distinct value that indicates an error, such as -1 for system calls
+\brief Values of this type have range of values dedicated to indicate errors, such as negative ints for system calls.
 
-Derived classes need to implement IsError() and SetError() to select the error value.
+Derived classes need to implement IsError() to select the range of error values.
 */
 // clang-format on
 template <typename T, class DerivedT>
@@ -58,12 +58,10 @@ protected:
 public:
    using ValueType_t = T;
 
-   RStatusType() { SetError(); }
    explicit RStatusType(const T &value) : fValue(value) {};
    const T &Get() const { return fValue; }
 
    bool IsError() const { return static_cast<DerivedT *>(this)->IsError(); }
-   void SetError() { static_cast<DerivedT *>(this)->SetError(); }
 };
 
 // clang-format off
@@ -75,10 +73,8 @@ public:
 // clang-format on
 class RStatusTypeBool : public RStatusType<bool, RStatusTypeBool> {
 public:
-   RStatusTypeBool() = default;
    explicit RStatusTypeBool(bool value) : RStatusType<bool, RStatusTypeBool>(value) {}
    bool IsError() const { return fValue == false; }
-   void SetError() { fValue = false; }
 };
 
 // clang-format off
@@ -90,10 +86,8 @@ public:
 // clang-format on
 class RStatusTypeSyscall : public RStatusType<int, RStatusTypeSyscall> {
 public:
-   RStatusTypeSyscall() = default;
    explicit RStatusTypeSyscall(int value) : RStatusType<int, RStatusTypeSyscall>(value) {}
    bool IsError() const { return fValue < 0; }
-   void SetError() { fValue = -1; }
 };
 
 // clang-format off
@@ -130,14 +124,14 @@ class RStatus : public RStatusBase {
 
 public:
    // Named constructor for error cases
-   static RStatus Fail(const std::string &why)
+   static RStatus Fail(typename T::ValueType_t value, const std::string &why)
    {
-      RStatus status;
-      status.MayThrow(why);
-      return status;
+      // Fast path reserved for return code checking
+      if (R__unlikely(fgThrowInstantExceptions))
+         throw RException(why);
+      return RStatus(value);
    }
 
-   RStatus() = default;
    RStatus(const RStatus &other) = delete;
    RStatus(RStatus &&other) = default;
    RStatus &operator =(const RStatus &other) = delete;
@@ -161,14 +155,6 @@ public:
             throw RException("unchecked error");
          }
       }
-   }
-
-   void MayThrow(const std::string &why)
-   {
-      fStatus.SetError();
-      // Fast path reserved for return code checking
-      if (R__unlikely(fgThrowInstantExceptions))
-         throw RException(why);
    }
 
    bool IsError()
