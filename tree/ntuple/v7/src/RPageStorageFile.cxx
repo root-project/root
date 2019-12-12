@@ -124,7 +124,7 @@ public:
 
 /// Composition of class RNTuple as being interpreted by TFile
 constexpr std::int32_t ChecksumRNTupleClass() {
-   const char *ident = "ROOT::Experimental::RNTuple"
+   const char ident[] = "ROOT::Experimental::RNTuple"
       "fVersion"
       "unsigned int"
       "fSize"
@@ -144,8 +144,7 @@ constexpr std::int32_t ChecksumRNTupleClass() {
       "fReserved"
       "unsigned long";
    std::int32_t id = 0;
-   auto len = strlen(ident);
-   for (unsigned i = 0; i < len; i++)
+   for (unsigned i = 0; i < (sizeof(ident) - 1); i++)
       id = id *3 + ident[i];
    return id;
 }
