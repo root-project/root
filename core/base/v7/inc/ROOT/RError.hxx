@@ -46,9 +46,11 @@ namespace Detail {
 \class ROOT::Experimental::Detail::RStatusType
 \ingroup Base
 \brief Values of this type have a distinct value that indicates an error, such as -1 for system calls
+
+Derived classes need to implement IsError() and SetError() to select the error value.
 */
 // clang-format on
-template <typename T>
+template <typename T, class DerivedT>
 class RStatusType {
 protected:
    T fValue;
@@ -56,13 +58,12 @@ protected:
 public:
    using ValueType_t = T;
 
-   RStatusType() { SetError(); };
+   RStatusType() { SetError(); }
    explicit RStatusType(const T &value) : fValue(value) {};
    const T &Get() const { return fValue; }
 
-   // Template specializations need to select the error value
-   bool IsError() const { return true; }
-   void SetError() {}
+   bool IsError() const { return static_cast<DerivedT *>(this)->IsError(); }
+   void SetError() { static_cast<DerivedT *>(this)->SetError(); }
 };
 
 // clang-format off
@@ -72,10 +73,10 @@ public:
 \brief For routines that indicate success by returning true
 */
 // clang-format on
-class RStatusTypeBool : public RStatusType<bool> {
+class RStatusTypeBool : public RStatusType<bool, RStatusTypeBool> {
 public:
    RStatusTypeBool() = default;
-   explicit RStatusTypeBool(bool value) : RStatusType<bool>(value) {}
+   explicit RStatusTypeBool(bool value) : RStatusType<bool, RStatusTypeBool>(value) {}
    bool IsError() const { return fValue == false; }
    void SetError() { fValue = false; }
 };
@@ -87,10 +88,10 @@ public:
 \brief For system calls that return 0 (or a meaningful integer) on success
 */
 // clang-format on
-class RStatusTypeSyscall : public RStatusType<int> {
+class RStatusTypeSyscall : public RStatusType<int, RStatusTypeSyscall> {
 public:
    RStatusTypeSyscall() = default;
-   explicit RStatusTypeSyscall(int value) : RStatusType<int>(value) {}
+   explicit RStatusTypeSyscall(int value) : RStatusType<int, RStatusTypeSyscall>(value) {}
    bool IsError() const { return fValue < 0; }
    void SetError() { fValue = -1; }
 };
