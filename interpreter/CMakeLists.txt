@@ -114,7 +114,8 @@ if(clingtest)
                                        ENVIRONMENT ${CLINGTEST_EXECUTABLE})
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
-  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  set(CMAKE_C_VISIBILITY_PRESET hidden)
 endif()
 
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
