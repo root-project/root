@@ -77,8 +77,9 @@ of a main program creating an interactive version is shown below:
 #include <map>
 #include <stdlib.h>
 #ifdef R__LINUX
-#include <sched.h>
 #include <unistd.h>
+#include <sched.h>
+#include <sys/stat.h>
 #endif
 #ifdef WIN32
 #include <io.h>
@@ -649,21 +650,25 @@ namespace Internal {
       CPU_ZERO(&cpuset);
       if(0 == sched_getaffinity(getpid(), sizeof(cpu_set_t), &cpuset)) {
             return CPU_COUNT(&cpuset);
-      } else {
+      } else { 
          // Check for bandwith control
          std::ifstream f;
          std::string quotaFile("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us");
-         f.open(quotaFile);
-         int cfs_quota;
-         f>>cfs_quota;
-         f.close();
-         if(cfs_quota != -1) {
-            std::string periodFile("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us");
-            f.open(periodFile);
-            int cfs_period;
-            f>>cfs_period;
+         struct stat buffer;
+         // Does the file exist?
+         if(stat(quotaFile.c_str(), &buffer) == 0) {
+            f.open(quotaFile);
+            int cfs_quota;
+            f>>cfs_quota;
             f.close();
-            return cfs_quota/cfs_period;
+            if(cfs_quota != -1) {
+               std::string periodFile("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us");
+               f.open(periodFile);
+               int cfs_period;
+               f>>cfs_period;
+               f.close();
+               return cfs_quota/cfs_period;
+            }
          }
       }
 #endif
