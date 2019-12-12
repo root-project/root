@@ -39,13 +39,16 @@ TEST(Exception, InstantExceptions)
 {
    ROOT::Experimental::SetThrowInstantExceptions(true); // the default
    bool passedFailure = false;
+   bool exceptionThrown = false;
 
    try {
       TestFailure();
       passedFailure = true;
    } catch (const RException&) {
+      exceptionThrown = true;
    }
    EXPECT_FALSE(passedFailure);
+   EXPECT_TRUE(exceptionThrown);
 }
 
 
@@ -86,9 +89,13 @@ TEST(Exception, DoubleThrow)
    ROOT::Experimental::SetThrowInstantExceptions(false);
    try {
       auto rv = TestFailure();
+      // Throwing ExceptionX will destruct rv along the way. Since rv carries an error state, it would normally
+      // throw an exception itself. In this test, we verify that rv surpresses throwing an exception if another
+      // exception is currently active.
       throw ExceptionX("something else went wrong");
    } catch (const ExceptionX&) {
-      // This will not catch RException, so that the program crashes if rv throws
+      // This will only catch ExceptionX but not RException. In case rv mistakenly throws an exception,
+      // we would notice the test failure by a crash of the unit test.
    }
 }
 
@@ -97,6 +104,7 @@ TEST(Exception, Syscall)
 {
    ROOT::Experimental::SetThrowInstantExceptions(true);
    auto fd = MockFileOpen(true);
+   ASSERT_TRUE(fd.IsValid());
    EXPECT_EQ(42, fd);
 
    EXPECT_THROW(MockFileOpen(false), RException);
