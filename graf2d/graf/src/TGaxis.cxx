@@ -918,7 +918,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetTitle(axis->GetTitle());
    SetTitleOffset(axis->GetTitleOffset());
    SetTitleSize(axis->GetTitleSize());
-   SetMaxDigits(axis->GetMaxDigits());
+///   SetMaxDigits(axis->GetMaxDigits());
    SetBit(TAxis::kCenterTitle,   axis->TestBit(TAxis::kCenterTitle));
    SetBit(TAxis::kCenterLabels,  axis->TestBit(TAxis::kCenterLabels));
    SetBit(TAxis::kRotateTitle,   axis->TestBit(TAxis::kRotateTitle));
