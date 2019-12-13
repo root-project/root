@@ -1854,14 +1854,7 @@ TString RooAbsArg::cleanBranchName() const
   cleanName.ReplaceAll("{","L") ;
   cleanName.ReplaceAll("}","R") ;
 
-  if (cleanName.Length()<=60) return cleanName ;
-
-  // Name is too long, truncate and include CRC32 checksum of full name in clean name
-  static char buf[1024] ;
-  strlcpy(buf,cleanName.Data(),1024) ;
-  snprintf(buf+46,1024-46,"_CRC%08x",crc32(cleanName.Data())) ;
-
-  return TString(buf) ;
+  return cleanName;
 }
 
 
