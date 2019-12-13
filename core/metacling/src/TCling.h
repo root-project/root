@@ -184,9 +184,6 @@ public: // Public Interface
    TCling(const char* name, const char* title, const char* const argv[]);
    TCling(const char* name, const char* title): TCling(name, title, kNullArgv) {}
 
-   cling::Interpreter *GetInterpreterImpl() const { return fInterpreter.get(); }
-   cling::MetaProcessor *GetMetaProcessorImpl() const { return fMetaProcessor.get(); }
-
    void    AddIncludePath(const char* path);
    void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
@@ -613,6 +610,7 @@ private: // Private Utility Functions and Classes
 
    std::map<std::string, llvm::StringRef> fPendingRdicts;
    friend void TCling__RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
+   friend cling::Interpreter* TCling__GetInterpreter();
    void RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
    void LoadPCM(std::string pcmFileNameFullPath);
    void LoadPCMImpl(TFile &pcmFile);
@@ -622,6 +620,8 @@ private: // Private Utility Functions and Classes
    Bool_t HandleNewTransaction(const cling::Transaction &T);
    bool IsClassAutoloadingEnabled() const;
    void ProcessClassesToUpdate();
+   cling::Interpreter *GetInterpreterImpl() const { return fInterpreter.get(); }
+   cling::MetaProcessor *GetMetaProcessorImpl() const { return fMetaProcessor.get(); }
 };
 
 #endif
