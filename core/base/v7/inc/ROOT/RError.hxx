@@ -130,7 +130,7 @@ public:
       }
       return fValue;
    }
-   operator bool() const
+   explicit operator bool() const
    {
       fIsChecked = true;
       return !fError;
