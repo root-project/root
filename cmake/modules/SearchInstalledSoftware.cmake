@@ -495,9 +495,12 @@ endif()
 #---Check for Python installation-------------------------------------------------------
 
 message(STATUS "Looking for python")
-unset(PYTHON_INCLUDE_DIR CACHE)
-unset(PYTHON_LIBRARY CACHE)
-unset(CMAKE_INSTALL_PYROOTDIR)
+
+if(pyroot_experimental)
+  unset(PYTHON_INCLUDE_DIR CACHE)
+  unset(PYTHON_LIBRARY CACHE)
+  unset(CMAKE_INSTALL_PYROOTDIR)
+endif()
 
 # Python is required by header and manpage generation
 
