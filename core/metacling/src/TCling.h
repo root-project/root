@@ -2,7 +2,7 @@
 // Author: Axel Naumann, 2011-10-19
 
 /*************************************************************************
- * Copyright (C) 1995-2012, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -28,11 +28,10 @@
 
 #include <map>
 #include <memory>
-#include <tuple>
 #include <set>
-#include <unordered_set>
+#include <tuple>
 #include <unordered_map>
-#include <map>
+#include <unordered_set>
 #include <vector>
 
 #ifndef WIN32
