@@ -71,16 +71,9 @@ of a main program creating an interactive version is shown below:
 #include "RConfigOptions.h"
 #include "RVersion.h"
 #include "RGitCommit.h"
-
-#include <fstream>
 #include <string>
 #include <map>
 #include <stdlib.h>
-#ifdef R__LINUX
-#include <unistd.h>
-#include <sched.h>
-#include <sys/stat.h>
-#endif
 #ifdef WIN32
 #include <io.h>
 #include "Windows4Root.h"
@@ -634,49 +627,7 @@ namespace Internal {
 #endif
    }
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Returns the available number of logical cores.
-   ///
-   ///  Performs the following checks in order:
-   ///  - Checks processor affinity (linux only)
-   ///  - Checks if there is CFS bandwith control in place (linux only, assuming standard paths)
-   ///  - If none of the cases above are true (or if Windows/MacOS), returns the number of logical cores provided by bare metal.
-   ////////////////////////////////////////////////////////////////////////////////
-   UInt_t NLogicalCores()
-   {
-#ifdef R__LINUX
-      // Check for processor affinity
-      cpu_set_t cpuset;
-      CPU_ZERO(&cpuset);
-      if(0 == sched_getaffinity(getpid(), sizeof(cpu_set_t), &cpuset)) {
-            return CPU_COUNT(&cpuset);
-      } else { 
-         // Check for bandwith control
-         std::ifstream f;
-         std::string quotaFile("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us");
-         struct stat buffer;
-         // Does the file exist?
-         if(stat(quotaFile.c_str(), &buffer) == 0) {
-            f.open(quotaFile);
-            float cfs_quota;
-            f>>cfs_quota;
-            f.close();
-            if(cfs_quota > 0) {
-               std::string periodFile("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us");
-               f.open(periodFile);
-               float cfs_period;
-               f>>cfs_period;
-               f.close();
-               return cfs_quota/cfs_period;
-            }
-         }
-      }
-#endif
-      // return bare metal logical cpus
-      SysInfo_t info;
-      gSystem->GetSysInfo(&info);
-      return info.fCpus;
-   }
+
 } // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
