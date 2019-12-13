@@ -1549,10 +1549,10 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 /// is multiplied by the M-dimensional bin volume, (M = N(sumSet)),
 /// or the fraction of it that falls inside the range rangeName,
 /// making the return value the integral over the function
-/// represented by this histogram
+/// represented by this histogram.
 ///
 /// If correctForBinSize is not specified, the weights are multiplied by the
-/// fraction of the bin volume that falls inside the range, i.e. a factor or
+/// fraction of the bin volume that falls inside the range, i.e. a factor of
 /// binVolumeInRange/totalBinVolume.
 
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
@@ -1569,7 +1569,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     _vars = sliceOnlySet;
   }
 
-  // Calculate mask and refence plot bins for non-iterating variables,
+  // Calculate mask and reference plot bins for non-iterating variables,
   // and get ranges for iterating variables
   std::vector<bool> mask(_vars.getSize());
   std::vector<Int_t> refBin(_vars.getSize());
@@ -1586,8 +1586,8 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
       assert(argLV);
       refBin[i] = argLV->getBin();
     }
-    std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >::const_iterator
-	it = ranges.find(sumsetv ? sumsetv : slicesetv);
+
+	auto it = ranges.find(sumsetv ? sumsetv : slicesetv);
     if (ranges.end() != it) {
       rangeLo[i] = it->second.first;
       rangeHi[i] = it->second.second;

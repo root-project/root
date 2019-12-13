@@ -906,17 +906,15 @@ const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, con
 /// where \f$ F[x,y,p] \f$ is the function we represent, and
 /// \f$ \{ p \} \f$ are the remaining variables ("parameters").
 ///
-/// \param[in] dependentVars Dependent variables over which to normalise, \f$ \{x\} \f$
-/// \param[in] projectedVars Variables to project out, \f$ \{ y \} \f$
+/// \param[in] dependentVars Dependent variables over which to normalise, \f$ \{x\} \f$.
+/// \param[in] projectedVars Variables to project out, \f$ \{ y \} \f$.
 /// \param[out] cloneSet Will be set to a RooArgSet*, which will contain a clone of *this plus its projection integral object.
 /// The latter will also be returned. The caller takes ownership of this set.
 /// \param[in] rangeName Optional range for projection integrals
 /// \param[in] condObs Conditional observables, which are not integrated for normalisation, even if they
-/// are in `dependentVars` or `projectedVars`
-/// \return A pointer to the newly created object, or else zero in case of an
-/// error. The caller is responsible for deleting the contents of
-/// cloneSet (which includes the returned projection object)
-
+/// are in `dependentVars` or `projectedVars`.
+/// \return A pointer to the newly created object, or zero in case of an
+/// error. The caller is responsible for deleting the `cloneSet` (which includes the returned projection object).
 const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 						   RooArgSet *&cloneSet, const char* rangeName, const RooArgSet* condObs) const
 {
