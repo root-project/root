@@ -212,10 +212,10 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
 
 bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction &fcn, const IModelFunction & func, const double *params, unsigned int dataSize, bool chi2fit) {
    // set the objective function for the fit and a model function
-   if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false; 
+   if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false;
    // need to set fFunc afterwards because SetFCN could reset fFUnc
    fFunc = std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone()));
-   return (fFunc != nullptr); 
+   return (fFunc != nullptr);
 }
 
 bool Fitter::SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const double *params, unsigned int dataSize,
@@ -235,7 +235,7 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGradFunction &fcn, const IModelFunct
    // set the objective function for the fit and a model function
    if (!SetFCN(fcn, params, dataSize, chi2fit) ) return false;
    fFunc = std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction *>(func.Clone()));
-   return (fFunc != nullptr); 
+   return (fFunc != nullptr);
 }
 
 bool Fitter::SetFCN(const ROOT::Math::FitMethodFunction &fcn, const double *params)
@@ -655,12 +655,10 @@ bool Fitter::DoLinearFit( ) {
 bool Fitter::CalculateHessErrors() {
    // compute the Hesse errors according to configuration
    // set in the parameters and append value in fit result
-   if (fObjFunction.get() == 0) {
+   if (!fObjFunction) {
       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Objective function has not been set");
       return false;
    }
-   // assume a fResult pointer always exists
-   assert (fResult.get() );
 
    // need a special treatment in case of weighted likelihood fit
    // (not yet implemented)
@@ -685,21 +683,23 @@ bool Fitter::CalculateHessErrors() {
       //    // reset fcn in minimizer
       // }
 
-
-   // create minimizer if not done or if name has changed
-   if ( !fMinimizer  ||
-       fResult->MinimizerType().find(fConfig.MinimizerType()) == std::string::npos ) {
-      bool ret = DoInitMinimizer();
-      if (!ret) {
-       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Error initializing the minimizer");
-       return false;
-      }
+     // a fit Result pointer must exist when a minimizer exists
+   if (fMinimizer && !fResult ) {
+      MATH_ERROR_MSG("Fitter::CalculateHessErrors", "FitResult has not been created");
+      return false;
    }
 
+   // update  minimizer (recreate if not done or if name has changed
+   if (!DoUpdateMinimizerOptions()) {
+       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Error re-initializing the minimizer");
+       return false;
+   }
 
    if (!fMinimizer ) {
-       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Need to do a fit before calculating the errors");
-       return false;
+      // this should not happen
+      MATH_ERROR_MSG("Fitter::CalculateHessErrors", "Need to do a fit before calculating the errors");
+      assert(false);
+      return false;
    }
 
    //run Hesse
@@ -714,7 +714,7 @@ bool Fitter::CalculateHessErrors() {
 
 
    // re-give a minimizer instance in case it has been changed
-   ret |= fResult->Update(fMinimizer, ret);
+   ret |= fResult->Update(fMinimizer, fConfig, ret);
 
    // when possible get ncalls from FCN and set in fit result
    if (fFitType != ROOT::Math::FitMethodFunction::kUndefined ) {
@@ -735,12 +735,12 @@ bool Fitter::CalculateMinosErrors() {
    // (in DoMinimization) when creating the FItResult if the
    //  FitConfig::MinosErrors() flag is set
 
-   if (!fMinimizer.get() ) {
+   if (!fMinimizer) {
        MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Minimizer does not exist - cannot calculate Minos errors");
        return false;
    }
 
-   if (!fResult.get() || fResult->IsEmpty() ) {
+   if (!fResult || fResult->IsEmpty() ) {
        MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Invalid Fit Result - cannot calculate Minos errors");
        return false;
    }
@@ -748,6 +748,12 @@ bool Fitter::CalculateMinosErrors() {
    if (fFitType == 2 && fConfig.UseWeightCorrection() ) {
       MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Computation of MINOS errors not implemented for weighted likelihood fits");
       return false;
+   }
+
+   // update  minimizer (but cannot re-create in this case). Must use an existing one
+   if (!DoUpdateMinimizerOptions(false)) {
+       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Error re-initializing the minimizer");
+       return false;
    }
 
    // set flag to compute Minos error to false in FitConfig to avoid that
@@ -765,8 +771,13 @@ bool Fitter::CalculateMinosErrors() {
       if (ret) fResult->SetMinosError(index, elow, eup);
       ok |= ret;
    }
-   if (!ok)
+   if (!ok) {
        MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Minos error calculation failed for all parameters");
+   }
+
+   // re-give a minimizer instance in case it has been changed
+   // but maintain previous valid status. Do not set result to false if minos failed
+   ok &= fResult->Update(fMinimizer, fConfig, fResult->IsValid());
 
    return ok;
 }
@@ -809,7 +820,7 @@ bool Fitter::DoInitMinimizer() {
    // using an auto_Ptr will delete the previous existing one
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
    if (fMinimizer.get() == 0) {
-      MATH_ERROR_MSG("Fitter::FitFCN","Minimizer cannot be created");
+      MATH_ERROR_MSG("Fitter::DoInitMinimizer","Minimizer cannot be created");
       return false;
    }
 
@@ -835,6 +846,37 @@ bool Fitter::DoInitMinimizer() {
 
 }
 
+bool Fitter::DoUpdateMinimizerOptions(bool canDifferentMinim ) {
+   // update minimizer options when re-doing a Fit or computing Hesse or Minos errors
+
+
+   // create a new minimizer if it is different type
+   // minimizer type string stored in FitResult is "minimizer name" + " / " + minimizer algo
+   std::string newMinimType = fConfig.MinimizerType() + " / " + fConfig.MinimizerAlgoType(); 
+   if (fMinimizer && fResult && newMinimType != fResult->MinimizerType() ) {
+      // if a different minimizer is allowed (e.g. when calling Hesse)
+      if (canDifferentMinim) { 
+         std::string msg = "Using now " + newMinimType; 
+         MATH_INFO_MSG("Fitter::DoUpdateMinimizerOptions", msg.c_str());
+         if (!DoInitMinimizer() )
+            return false;
+      }
+      else { 
+         std::string msg = "Cannot change minimizer. Continue using " + fResult->MinimizerType();   
+         MATH_WARN_MSG("Fitter::DoUpdateMinimizerOptions",msg.c_str());
+      }
+   }
+
+   // create minimizer if it was not done before
+   if (!fMinimizer) {
+      if (!DoInitMinimizer())
+         return false;
+   }
+
+   // set new minimizer options (but not functions and parameters)
+   fMinimizer->SetOptions(fConfig.MinimizerOptions());
+   return true;
+}
 
 bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
    // perform the minimization (assume we have already initialized the minimizer)
