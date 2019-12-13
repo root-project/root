@@ -256,21 +256,21 @@ Double_t RooHistPdf::totVolume() const
 }
 
 namespace {
-    bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
-    {
-      const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
-      const RooAbsRealLValue *_y = dynamic_cast<const RooAbsRealLValue*>(&y);
-      if (!_x || !_y) return false;
-      if (!range || !strlen(range) || !_x->hasRange(range) ||
-	  _x->getBinningPtr(range)->isParameterized()) {
-	// parameterized ranges may be full range now, but that might change,
-	// so return false
-	if (range && strlen(range) && _x->getBinningPtr(range)->isParameterized())
-	    return false;
-	return (_x->getMin() == _y->getMin() && _x->getMax() == _y->getMax());
-      }
-      return (_x->getMin(range) == _y->getMin() && _x->getMax(range) == _y->getMax());
-    }
+bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
+{
+  const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
+  const RooAbsRealLValue *_y = dynamic_cast<const RooAbsRealLValue*>(&y);
+  if (!_x || !_y) return false;
+  if (!range || !strlen(range) || !_x->hasRange(range) ||
+      _x->getBinningPtr(range)->isParameterized()) {
+    // parameterized ranges may be full range now, but that might change,
+    // so return false
+    if (range && strlen(range) && _x->getBinningPtr(range)->isParameterized())
+      return false;
+    return (_x->getMin() == _y->getMin() && _x->getMax() == _y->getMax());
+  }
+  return (_x->getMin(range) == _y->getMin() && _x->getMax(range) == _y->getMax());
+}
 }
 
 
@@ -295,7 +295,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
       code |= 2 << n;
       analVars.add(*pa);
       if (fullRange(*pa, *ha, rangeName)) {
-	frcode |= 2 << n;
+        frcode |= 2 << n;
       }
     }
   }
@@ -320,7 +320,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return integral identified by 'code'. The actual integration
 /// is deferred to RooDataHist::sum() which implements partial
-/// or complete summation over the histograms contents
+/// or complete summation over the histograms contents.
 
 Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
@@ -343,19 +343,19 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
     if (!(code & 1)) {
       RooAbsRealLValue* rlv = dynamic_cast<RooAbsRealLValue*>(pa);
       if (rlv) {
-	const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
-	if (rangeName && rlv->hasRange(rangeName)) {
-	  ranges[ha] = std::make_pair(
-	      rlv->getMin(rangeName), rlv->getMax(rangeName));
-	} else if (binning) {
-	  if (!binning->isParameterized()) {
-	    ranges[ha] = std::make_pair(
-		binning->lowBound(), binning->highBound());
-	  } else {
-	    ranges[ha] = std::make_pair(
-		binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
-	  }
-	}
+        const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
+        if (rangeName && rlv->hasRange(rangeName)) {
+          ranges[ha] = std::make_pair(
+              rlv->getMin(rangeName), rlv->getMax(rangeName));
+        } else if (binning) {
+          if (!binning->isParameterized()) {
+            ranges[ha] = std::make_pair(
+                binning->lowBound(), binning->highBound());
+          } else {
+            ranges[ha] = std::make_pair(
+                binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
+          }
+        }
       }
     }
     // WVE must sync hist slice list values to pdf slice list
@@ -367,14 +367,14 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   }
 
   Double_t ret = (code & 1) ?
-    _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
-    _dataHist->sum(intSet,_histObsList,kFALSE,kTRUE, ranges);
-  
+      _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
+      _dataHist->sum(intSet,_histObsList,kFALSE,kTRUE, ranges);
+
   //    cout << "intSet = " << intSet << endl ;
   //    cout << "slice position = " << endl ;
   //    _histObsList.Print("v") ;
   //    cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
-  
+
   return ret ;
 }
 

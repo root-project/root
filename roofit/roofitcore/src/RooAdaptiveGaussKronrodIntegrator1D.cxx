@@ -22,16 +22,16 @@
 RooAdaptiveGaussKronrodIntegrator1D implements the Gauss-Kronrod integration algorithm.
 
 An adaptive Gaussian quadrature method for numerical integration in
-which error is estimation based on evaluation at special points
-known as "Kronrod points."  By suitably picking these points,
+which error is estimated based on evaluation at special points
+known as the "Kronrod points".  By suitably picking these points,
 abscissas from previous iterations can be reused as part of the new
 set of points, whereas usual Gaussian quadrature would require
 recomputation of all abscissas at each iteration.
 
 This class automatically handles (-inf,+inf) integrals by dividing
 the integration in three regions (-inf,-1), (-1,1), (1,inf) and
-calculating the 1st and 3rd term using a x -> 1/x coordinate
-transformation
+calculating the 1st and 3rd term using a \f$ x \rightarrow 1/x \f$ coordinate
+transformation.
 
 This class embeds the adaptive Gauss-Kronrod integrator from the
 GNU Scientific Library version 1.5 and applies a chosen rule ( 10-,
@@ -39,8 +39,8 @@ GNU Scientific Library version 1.5 and applies a chosen rule ( 10-,
 subdivided and recursively integrated until the required precision
 is reached.
 
-For integrands with integrable singulaties the Wynn epsilon rule
-can be selected to speed up the converges of these integrals
+For integrands with integrable singularities the Wynn epsilon rule
+can be selected to speed up the convergence of these integrals.
 **/
 
 #include "RooFit.h"
