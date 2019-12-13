@@ -19,7 +19,7 @@
 //                                                                      //
 // This class defines an interface to the cling C++ interpreter.        //
 //                                                                      //
-// Cling is a full ANSI compliant C++-11 interpreter based on           //
+// Cling is a full ANSI compliant C++ interpreter based on              //
 // clang/LLVM technology.                                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
