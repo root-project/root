@@ -45,7 +45,7 @@ struct RCoordArray: std::array<double, DIMENSIONS> {
 
    /// Copy-construction from a C++-style array.
    /// (No need for a move-constructor, it isn't any better for doubles)
-   RCoordArray(const std::array<double, DIMENSIONS>& arr) : Base_t(arr) {}
+   RCoordArray(const std::array<double, DIMENSIONS>& arr): Base_t(arr) {}
 };
 
 template <int DIMENSIONS>
