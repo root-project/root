@@ -35,8 +35,8 @@ struct RCoordArray: std::array<double, DIMENSIONS> {
 
    /// Fallback constructor, invoked if the one above fails because of the wrong number of
    /// arguments / coordinates.
-   template<class T, class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 != DIMENSIONS>::type>
-   RCoordArray(T, ELEMENTS...) {
+   template<class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 != DIMENSIONS>::type>
+   RCoordArray(double, ELEMENTS...) {
       static_assert(sizeof...(ELEMENTS) + 1 == DIMENSIONS, "Number of coordinates does not match DIMENSIONS");
    }
 
