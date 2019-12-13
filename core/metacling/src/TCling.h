@@ -608,8 +608,6 @@ private: // Private Utility Functions and Classes
    void AddFriendToClass(clang::FunctionDecl*, clang::CXXRecordDecl*) const;
 
    std::map<std::string, llvm::StringRef> fPendingRdicts;
-   friend void TCling__RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
-   friend cling::Interpreter* TCling__GetInterpreter();
    void RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
    void LoadPCM(std::string pcmFileNameFullPath);
    void LoadPCMImpl(TFile &pcmFile);
@@ -621,6 +619,9 @@ private: // Private Utility Functions and Classes
    void ProcessClassesToUpdate();
    cling::Interpreter *GetInterpreterImpl() const { return fInterpreter.get(); }
    cling::MetaProcessor *GetMetaProcessorImpl() const { return fMetaProcessor.get(); }
+
+   friend void TCling__RegisterRdictForLoadPCM(const std::string &pcmFileNameFullPath, llvm::StringRef *pcmContent);
+   friend cling::Interpreter* TCling__GetInterpreter();
 };
 
 #endif
