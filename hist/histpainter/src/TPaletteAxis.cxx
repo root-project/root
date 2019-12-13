@@ -498,7 +498,15 @@ void TPaletteAxis::Paint(Option_t *)
          }
       }
    }
-   Int_t ndiv  = fH->GetZaxis()->GetNdivisions() % 100; //take primary divisions only
+
+   // Take primary divisions only
+   Int_t ndiv = fH->GetZaxis()->GetNdivisions();
+   Bool_t isOptimized = ndiv>0;
+   Int_t absDiv = abs(ndiv);
+   Int_t maxD = absDiv/1000000;
+   ndiv = absDiv%100 + maxD*1000000;
+   if (!isOptimized) ndiv  = -ndiv;
+
    char chopt[6] = "S   ";
    chopt[1] = 0;
    strncat(chopt, "+L", 3);
