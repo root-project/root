@@ -74,7 +74,9 @@ void JeffreysPriorDemo()
    RooGenericPdf *test = new RooGenericPdf("test", "test", "1./sqrt(mu)", *w.set("poi"));
 
    TCanvas *c1 = new TCanvas;
-   RooPlot *plot = w.var("mu")->frame();
+   // The method to compute the Jeffreys prior becomes unstable at the boundaries.
+   // Therefore, we don't plot it all the way.
+   RooPlot *plot = w.var("mu")->frame(Range(2, 199));
    pi.plotOn(plot);
    test->plotOn(plot, LineColor(kRed));
    plot->Draw();
@@ -153,7 +155,6 @@ void TestJeffreysGaussSigma()
    w.defineSet("obs", "x");
 
    RooJeffreysPrior pi("jeffreys", "jeffreys", *w.pdf("p"), *w.set("poi"), *w.set("obs"));
-   pi.specialIntegratorConfig(kTRUE)->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 3);
 
    const RooArgSet *temp = w.set("poi");
    pi.getParameters(*temp)->Print();
@@ -199,7 +200,6 @@ void TestJeffreysGaussMeanAndSigma()
    w.defineSet("obs", "x");
 
    RooJeffreysPrior pi("jeffreys", "jeffreys", *w.pdf("p"), *w.set("poi"), *w.set("obs"));
-   pi.specialIntegratorConfig(kTRUE)->getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 3);
 
    const RooArgSet *temp = w.set("poi");
    pi.getParameters(*temp)->Print();
