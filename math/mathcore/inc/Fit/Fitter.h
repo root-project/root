@@ -476,9 +476,10 @@ protected:
    bool DoMinimization(const ROOT::Math::IMultiGenFunction * chifunc = 0);
    // update config after fit
    void DoUpdateFitConfig();
+   // update minimizer options for re-fitting
+   bool DoUpdateMinimizerOptions(bool canDifferentMinim = true);
    // get function calls from the FCN
    int GetNCallsFromFCN();
-
 
    //set data for the fit
    void SetData(const FitData & data) {
