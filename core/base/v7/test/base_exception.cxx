@@ -5,26 +5,30 @@
 #include <stdexcept>
 
 using RException = ROOT::Experimental::RException;
-using RStatusBool = ROOT::Experimental::RStatusBool;
-using RStatusSyscall = ROOT::Experimental::RStatusSyscall;
 
 namespace {
 
-static RStatusBool TestFailure()
+static ROOT::Experimental::RResult<bool> TestFailure()
 {
-   return RStatusBool(false);
+   R__FAIL("test failure");
 }
 
-static RStatusBool TestSuccess()
+static ROOT::Experimental::RResult<bool> TestSuccess()
 {
-   return RStatusBool(true);
+   return true;
 }
 
-static RStatusSyscall MockFileOpen(bool succeed)
+static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
 {
    if (succeed)
-      return RStatusSyscall(42);
-   return RStatusSyscall::Fail(-1, "Not allowed to succeed");
+      return 42;
+   R__FAIL("failure");
+}
+
+static ROOT::Experimental::RResult<int> TestChain(bool succeed)
+{
+   auto rv = TestSyscall(succeed);
+   R__FORWARD_RESULT(rv);
 }
 
 class ExceptionX : public std::runtime_error {
@@ -35,26 +39,23 @@ public:
 } // anonymous namespace
 
 
-TEST(Exception, InstantExceptions)
+TEST(Exception, Report)
 {
-   ROOT::Experimental::SetThrowInstantExceptions(true); // the default
-   bool passedFailure = false;
    bool exceptionThrown = false;
-
    try {
-      TestFailure();
-      passedFailure = true;
-   } catch (const RException&) {
+      TestChain(false);
+   } catch (const RException& e) {
       exceptionThrown = true;
+      ASSERT_EQ(2U, e.GetError().GetStackTrace().size());
+      EXPECT_EQ("TestSyscall", e.GetError().GetStackTrace().at(0).fFunction);
+      EXPECT_EQ("TestChain", e.GetError().GetStackTrace().at(1).fFunction);
    }
-   EXPECT_FALSE(passedFailure);
    EXPECT_TRUE(exceptionThrown);
 }
 
 
 TEST(Exception, DiscardReturnValue)
 {
-   ROOT::Experimental::SetThrowInstantExceptions(false);
    bool exceptionThrown;
 
    try {
@@ -77,16 +78,14 @@ TEST(Exception, DiscardReturnValue)
 
 TEST(Exception, CheckReturnValue)
 {
-   ROOT::Experimental::SetThrowInstantExceptions(false);
    auto rv = TestFailure();
-   EXPECT_TRUE(rv.IsError());
+   EXPECT_FALSE(rv);
    // No exception / crash when the scope closes
 }
 
 
 TEST(Exception, DoubleThrow)
 {
-   ROOT::Experimental::SetThrowInstantExceptions(false);
    try {
       auto rv = TestFailure();
       // Throwing ExceptionX will destruct rv along the way. Since rv carries an error state, it would normally
@@ -102,10 +101,12 @@ TEST(Exception, DoubleThrow)
 
 TEST(Exception, Syscall)
 {
-   ROOT::Experimental::SetThrowInstantExceptions(true);
-   auto fd = MockFileOpen(true);
-   ASSERT_TRUE(fd.IsValid());
-   EXPECT_EQ(42, fd);
+   auto fd = TestSyscall(true);
+   if (!fd) {
+      // In production code, we would expect error handling code other than throw
+      EXPECT_THROW(fd.Throw(), RException);
+   }
+   EXPECT_EQ(42, fd.Get());
 
-   EXPECT_THROW(MockFileOpen(false), RException);
+   EXPECT_THROW(TestSyscall(false).Get(), RException);
 }
