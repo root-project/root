@@ -15,9 +15,26 @@
 
 #include "ROOT/RError.hxx"
 
-thread_local bool ROOT::Experimental::Detail::RStatusBase::fgThrowInstantExceptions = true;
+#include <string>
 
-void ROOT::Experimental::SetThrowInstantExceptions(bool value)
+std::string ROOT::Experimental::RError::GetReport() const
 {
-   Detail::RStatusBase::SetThrowInstantExceptions(value);
+   auto report = fMessage + "\nAt:\n";
+   for (const auto &loc : fStackTrace) {
+      report += "  " + loc.fFunction + " [" + loc.fSourceFile + ":" + std::to_string(loc.fSourceLine) + "]\n";
+   }
+   return report;
+}
+
+ROOT::Experimental::RError::RError(
+   const std::string &message, const std::string &func, const std::string &file, int line)
+   : fMessage(message)
+
+{
+   AddFrame(func, file, line);
+}
+
+void ROOT::Experimental::RError::AddFrame(const std::string &func, const std::string &file, int line)
+{
+   fStackTrace.emplace_back(RLocation(func, file, line));
 }

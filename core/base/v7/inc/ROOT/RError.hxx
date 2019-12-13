@@ -19,12 +19,51 @@
 #include <ROOT/RConfig.hxx>
 
 #include <cstddef>
+#include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+// clang-format off
+/**
+\class ROOT::Experimental::RError
+\ingroup Base
+\brief Captures diagnostics related to a ROOT runtime error
+*/
+// clang-format on
+class RError {
+public:
+   struct RLocation {
+      RLocation() = default;
+      RLocation(const std::string &func, const std::string &file, int line)
+         : fFunction(func), fSourceFile(file), fSourceLine(line) {}
+      std::string fFunction;
+      std::string fSourceFile;
+      int fSourceLine;
+   };
+
+private:
+   /// User-facing error message
+   std::string fMessage;
+   /// The location of the error related to fMessage plus upper frames if the error is forwarded through the call stack
+   std::vector<RLocation> fStackTrace;
+
+public:
+   /// Used by R__FAIL
+   RError(const std::string &message, const std::string &func, const std::string &file, int line);
+   /// Used by R__FORWARD_RESULT
+   void AddFrame(const std::string &func, const std::string &file, int line);
+   /// Add more information to the diagnostics
+   void AppendMessage(const std::string &info) { fMessage += info; }
+   /// Format a dignostics report, e.g. for an exception message
+   std::string GetReport() const;
+   const std::vector<RLocation> &GetStackTrace() const { return fStackTrace; }
+};
 
 // clang-format off
 /**
@@ -34,138 +73,70 @@ namespace Experimental {
 */
 // clang-format on
 class RException : public std::runtime_error {
+   RError fError;
 public:
-   explicit RException(const std::string &what) : std::runtime_error(what) {}
+   explicit RException(const RError &error) : std::runtime_error(error.GetReport()), fError(error) {}
+   const RError &GetError() const { return fError; }
 };
-
-
-namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RStatusType
+\class ROOT::Experimental::RResult
 \ingroup Base
-\brief Values of this type have range of values dedicated to indicate errors, such as negative ints for system calls.
+\brief The class is used as a return type for operations that can fail; wraps a value of type T or an RError
 
-Derived classes need to implement IsError() to select the range of error values.
+The RResult enforces checking whether it contains a valid value or an error state. If the RResult leaves the scope
+unchecked, it will throw an exception.  RResult can only be allocated on the stack, which is enforced by deleting the
+new operator.  RResult is movable but not copyable to avoid throwing exceptions multiple times.
 */
 // clang-format on
-template <typename T, class DerivedT>
-class RStatusType {
-protected:
+template <typename T>
+class RResult {
+private:
    T fValue;
+   std::unique_ptr<RError> fError;
+   /// This is safe because checking an RResult is not a multi-threaded operation
+   mutable bool fIsChecked{false};
 
 public:
-   using ValueType_t = T;
+   RResult(const T &value) : fValue(value) {}
+   RResult(std::unique_ptr<RError> error) : fError(std::move(error)) {}
 
-   explicit RStatusType(const T &value) : fValue(value) {};
-   const T &Get() const { return fValue; }
+   RResult(const RResult &other) = delete;
+   RResult(RResult &&other) = default;
+   RResult &operator =(const RResult &other) = delete;
+   RResult &operator =(RResult &&other) = default;
 
-   bool IsError() const { return static_cast<DerivedT *>(this)->IsError(); }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RStatusTypeBool
-\ingroup Base
-\brief For routines that indicate success by returning true
-*/
-// clang-format on
-class RStatusTypeBool : public RStatusType<bool, RStatusTypeBool> {
-public:
-   explicit RStatusTypeBool(bool value) : RStatusType<bool, RStatusTypeBool>(value) {}
-   bool IsError() const { return fValue == false; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RStatusTypeSyscall
-\ingroup Base
-\brief For system calls that return 0 (or a meaningful integer) on success
-*/
-// clang-format on
-class RStatusTypeSyscall : public RStatusType<int, RStatusTypeSyscall> {
-public:
-   explicit RStatusTypeSyscall(int value) : RStatusType<int, RStatusTypeSyscall>(value) {}
-   bool IsError() const { return fValue < 0; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RStatusBase
-\ingroup Base
-\brief Type-independent logic of the RStatus wrapper
-*/
-// clang-format on
-class RStatusBase {
-protected:
-   static thread_local bool fgThrowInstantExceptions; /* true by default */
-public:
-   static void SetThrowInstantExceptions(bool value) { fgThrowInstantExceptions = value; }
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RStatus
-\ingroup Base
-\brief Wraps a return value such that unchecked error states trigger an exception
-
-The Status wrapper itself is movable but not copyable to prevent multiple exceptions from being thrown.
-The wrapper is also only stack allocatable because throwing an exception depends on the object going out of scope.
-
-If the class should be used like a C return type, it has to be cleared by a call to IsError() or IsValid() or
-ClearError().  Otherwise, an error state will throw an exception nevertheless when the object goes out of scope.
-*/
-// clang-format on
-template <typename T> // Has to be RStatusType
-class RStatus : public RStatusBase {
-   T fStatus;
-   bool fIsChecked = false;
-
-public:
-   // Named constructor for error cases
-   static RStatus Fail(typename T::ValueType_t value, const std::string &why)
+   ~RResult() noexcept(false)
    {
-      // Fast path reserved for return code checking
-      if (R__unlikely(fgThrowInstantExceptions))
-         throw RException(why);
-      return RStatus(value);
-   }
-
-   RStatus(const RStatus &other) = delete;
-   RStatus(RStatus &&other) = default;
-   RStatus &operator =(const RStatus &other) = delete;
-   RStatus &operator =(RStatus &&other) = default;
-
-   // Construct from return value
-   explicit RStatus(const typename T::ValueType_t &value) : fStatus(value) {}
-   // Assign a return value
-   RStatus &operator =(const typename T::ValueType_t &value) { this->fStatus = value; }
-
-   ~RStatus() noexcept(false)
-   {
-      if (!fIsChecked && fStatus.IsError()) {
+      if (R__unlikely(fError && !fIsChecked)) {
          // Prevent from throwing if the object is deconstructed in the course of stack unwinding for another exception
 #if __cplusplus >= 201703L
-         if (std::uncaught_exceptions() == 0)
+         if (std::uncaught_exceptions() == 0): std::runtime_error(what) {}
 #else
          if (!std::uncaught_exception())
 #endif
          {
-            throw RException("unchecked error");
+            throw RException(*fError);
          }
       }
    }
 
-   bool IsError()
+   const T &Get()
+   {
+      if (R__unlikely(fError)) {
+         fError->AppendMessage(" (invalid access)");
+         throw RException(*fError);
+      }
+      return fValue;
+   }
+   operator bool() const
    {
       fIsChecked = true;
-      return fStatus.IsError();
+      return !fError;
    }
-   bool IsValid() { return !IsError(); }
-   void ClearError() { fIsChecked = true; }
-
-   operator typename T::ValueType_t() const { return fStatus.Get(); }
+   RError *GetError() { return fError.get(); }
+   void Throw() { throw RException(*fError); }
 
    // Prevent heap construction of RStatus objects
    void *operator new(std::size_t size) = delete;
@@ -174,12 +145,11 @@ public:
    void *operator new[](std::size_t, void *) = delete;
 };
 
-} // namespace Detail
-
-void SetThrowInstantExceptions(bool value);
-
-using RStatusBool = Detail::RStatus<Detail::RStatusTypeBool>;
-using RStatusSyscall = Detail::RStatus<Detail::RStatusTypeSyscall>;
+/// Short-hand to return an RResult<T> in an error state
+#define R__FAIL(msg) return std::make_unique<ROOT::Experimental::RError>(msg, __func__, __FILE__, __LINE__)
+/// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
+#define R__FORWARD_RESULT(res) if (res.GetError()) { res.GetError()->AddFrame(__func__, __FILE__, __LINE__); } \
+   return res
 
 } // namespace Experimental
 } // namespace ROOT
