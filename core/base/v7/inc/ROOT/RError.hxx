@@ -138,7 +138,7 @@ public:
    RError *GetError() { return fError.get(); }
    void Throw() { throw RException(*fError); }
 
-   // Prevent heap construction of RStatus objects
+   // Prevent heap construction of RResult objects
    void *operator new(std::size_t size) = delete;
    void *operator new(std::size_t, void *) = delete;
    void *operator new[](std::size_t) = delete;
