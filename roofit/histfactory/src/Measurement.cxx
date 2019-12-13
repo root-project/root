@@ -307,24 +307,130 @@ namespace c4 { namespace yml {
   }}  
 
 template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) const {
+  for(const auto& ch:this->fChannels){
+    if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
+  }
+  
   auto meas = n[c4::to_csubstr(this->GetName())];
   meas |= c4::yml::MAP;
-  meas["POI"] << fPOI;
-  meas["Lumi"] << fLumi;
-  meas["LumiRelErr"] << fLumiRelErr;
-  meas["InterpolationScheme"] << fInterpolationScheme;
-  auto ch = meas["Channels"];
+
+  // collect information
+  std::map<std::string,RooStats::HistFactory::Constraint::Type> constraints;
+  std::map<std::string,NormFactor > normfactors;
+  for(const auto& ch:fChannels){
+    for(const auto&s: ch.GetSamples()){
+      for(const auto& sys:s.GetOverallSysList()){
+        constraints[sys.GetName()] = RooStats::HistFactory::Constraint::Gaussian;
+      }
+      for(const auto& sys:s.GetHistoSysList()){
+        constraints[sys.GetName()] = RooStats::HistFactory::Constraint::Gaussian;
+      }
+      for(const auto& sys:s.GetShapeSysList()){
+        constraints[sys.GetName()] = sys.GetConstraintType();
+      }
+      for(const auto& norm:s.GetNormFactorList()){
+        normfactors[norm.GetName()] = norm;
+      }
+    }
+  }
+
+  // parameters
+  
+  auto parlist = meas["createParameterList"];
+  parlist |= c4::yml::SEQ;
+  
+  auto lumi = parlist.append_child();
+  lumi |= c4::yml::MAP;  
+  lumi << "Lumi";
+  lumi["value"] << fLumi;  
+  lumi["relErr"] << fLumiRelErr;
+
+  for(auto par:fPOI){
+    auto node = parlist.append_child();
+    node |= c4::yml::MAP;    
+    node << par;
+    if(fParamValues.find(par) != fParamValues.end()){
+      node["value"] << fParamValues.at(par);
+    }    
+  }
+  for(auto par:fConstantParams){
+    if(par == "Lumi") continue;
+    auto node = parlist.append_child();
+    node |= c4::yml::MAP;    
+    node << par;
+    if(fParamValues.find(par)!=fParamValues.end()){
+      node["value"] << fParamValues.at(par);
+    }
+  }
+
+  for(auto norm:normfactors){
+    auto node = parlist.append_child();
+    node |= c4::yml::MAP;
+    node << norm.second.GetName();
+    node["value"] << norm.second.GetVal();        
+    node["low"] << norm.second.GetLow();
+    node["high"] << norm.second.GetHigh();
+    node["const"] << norm.second.GetConst();        
+  }
+  
+  // pdfs
+  
+  auto pdflist = meas["createPdfList"];
+  pdflist |= c4::yml::SEQ;
+  
+  auto sim = pdflist.append_child();
+  sim |= c4::yml::MAP;  
+  sim << "simultaneous";
+  auto simdict = sim["dict"];
+  simdict |= c4::yml::MAP;  
+  simdict["InterpolationScheme"] << fInterpolationScheme;  
+  
+  auto ch = sim["channels"];
   ch |= c4::yml::MAP;
   for(const auto& c:fChannels){
     c.Export(ch);
   }
-  meas["ConstantParams"] << fConstantParams;
-  meas["ParamValues"] << fParamValues;
-  meas["PreprocessFunctions"] << fFunctionObjects;
-  meas["GammaSyst"] << fGammaSyst;
-  meas["UniformSyst"] << fUniformSyst;
-  meas["LogNormSyst"] << fLogNormSyst;
-  meas["NoSyst"] << fNoSyst;
+
+  for(auto sys:constraints){
+    auto node = pdflist.append_child();
+    node |= c4::yml::MAP;
+    node << sys.first;
+    node["type"] << RooStats::HistFactory::Constraint::Name(sys.second);
+    if(sys.second == RooStats::HistFactory::Constraint::Gaussian){
+      node["x"] << std::string("alpha_")+sys.first;
+      node["mean"] << "0.";
+      node["sigma"] << "1.";
+    }
+  }
+  
+  for(auto sys:fGammaSyst){
+    auto node = pdflist.append_child();
+    node |= c4::yml::MAP;
+    node << sys.first;
+    node["value"] << sys.second;    
+  }
+  for(auto sys:fUniformSyst){
+    auto node = pdflist.append_child();
+    node |= c4::yml::MAP;
+    node << sys.first;
+    node["value"] << sys.second;    
+  }
+  for(auto sys:fLogNormSyst){
+    auto node = pdflist.append_child();
+    node |= c4::yml::MAP;
+    node << sys.first;
+    node["value"] << sys.second;    
+  }
+  for(auto sys:fNoSyst){
+    auto node = pdflist.append_child();
+    node |= c4::yml::MAP;    
+    node << sys.first;
+    node["value"] << sys.second;
+  }
+
+  if(fFunctionObjects.size() > 0){
+    meas["createFunctionList"] << fFunctionObjects;
+  }
 }
 #endif
 
@@ -342,6 +448,22 @@ void RooStats::HistFactory::Measurement::PrintJSON( std::ostream& os ) {
 void RooStats::HistFactory::Measurement::PrintJSON( std::string filename ) {
   std::ofstream out(filename);
   this->PrintJSON(out);
+}
+
+void RooStats::HistFactory::Measurement::PrintYAML( std::ostream& os ) {
+#ifdef INCLUDE_RYML  
+  ryml::Tree t;
+  c4::yml::NodeRef n = t.rootref();
+  n |= c4::yml::MAP;
+  this->Export(n);
+  os << t;
+#else
+  std::cerr << "YAML export only support with rapidyaml!" << std::endl;
+#endif
+}
+void RooStats::HistFactory::Measurement::PrintYAML( std::string filename ) {
+  std::ofstream out(filename);
+  this->PrintYAML(out);
 }
 
 
@@ -735,8 +857,7 @@ std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir )
 /// right away. Instead, once all such histograms have been supplied,
 /// one should run this method to open all ROOT files and to copy and
 /// save all necessary histograms.
-void RooStats::HistFactory::Measurement::CollectHistograms()
-{
+void RooStats::HistFactory::Measurement::CollectHistograms() {
 
 
   for( unsigned int chanItr = 0; chanItr < fChannels.size(); ++chanItr) {

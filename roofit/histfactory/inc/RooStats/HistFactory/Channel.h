@@ -36,15 +36,15 @@ public:
   /// set name of channel
   void SetName( const std::string& Name ) { fName = Name; }
   /// get name of channel
-  std::string GetName() { return fName; }
+  std::string GetName() const { return fName; }
   /// set name of input file containing histograms
   void SetInputFile( const std::string& file ) { fInputFile = file; }
   /// get name of input file
-  std::string GetInputFile() { return fInputFile; }
+  std::string GetInputFile() const { return fInputFile; }
   /// set path for histograms in input file
   void SetHistoPath( const std::string& file ) { fHistoPath = file; }
   /// get path to histograms in input file
-  std::string GetHistoPath() { return fHistoPath; }
+  std::string GetHistoPath() const { return fHistoPath; }
 
   /// set data object
   void SetData( const RooStats::HistFactory::Data& data ) { fData = data; }
@@ -69,13 +69,14 @@ public:
   void AddSample( RooStats::HistFactory::Sample sample );
   /// get vector of samples for this channel
   std::vector< RooStats::HistFactory::Sample >& GetSamples() { return fSamples; }
+  const std::vector< RooStats::HistFactory::Sample >& GetSamples() const { return fSamples; }
 
   void Print(std::ostream& = std::cout);  
   void PrintXML( std::string Directory, std::string Prefix="" );
   template<class T> void Export(T& t) const;
   
   void CollectHistograms();
-  bool CheckHistograms();
+  bool CheckHistograms() const;
 
 protected:
   

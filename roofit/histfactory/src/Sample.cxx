@@ -395,20 +395,51 @@ namespace RooStats { namespace HistFactory {
       auto s = n[name];
       s |= c4::yml::MAP;
 
-      // std::vector< RooStats::HistFactory::OverallSys >  fOverallSysList;
-      // std::vector< RooStats::HistFactory::NormFactor >  fNormFactorList;
-      // 
-      // std::vector< RooStats::HistFactory::HistoSys >    fHistoSysList;
-      // std::vector< RooStats::HistFactory::HistoFactor > fHistoFactorList;
-      // 
+      if(fOverallSysList.size() > 0){
+        auto overallSys = s["overallSystematics"];
+        overallSys |= c4::yml::SEQ;
+        for(auto& sys:fOverallSysList){
+          auto node = overallSys.append_child();
+          node |= c4::yml::MAP;        
+          node << sys.GetName();
+          node["parameter"] << std::string("alpha_")+sys.GetName();
+          node["low"] << sys.GetLow();
+          node["high"] << sys.GetHigh();
+        }
+      }
+
+      if(fNormFactorList.size()>0){
+        auto normFactors = s["normFactors"];
+        normFactors |= c4::yml::SEQ;
+        for(auto& sys:fNormFactorList){
+          auto node = normFactors.append_child();
+          node << sys.GetName();
+        }
+      }
+
+      if(fHistoSysList.size()>0){
+        auto histoSys = s["histogramSystematics"];
+        histoSys |= c4::yml::SEQ;
+        for(size_t i=0; i<fHistoSysList.size(); ++i){
+          auto sys = fHistoSysList[i];
+          auto node = histoSys.append_child();
+          node |= c4::yml::MAP;        
+          node << sys.GetName();
+          node["parameter"] << std::string("alpha_")+sys.GetName();
+          node["dataLow"] << *(sys.GetHistoLow());
+          node["dataHigh"] << *(sys.GetHistoHigh());
+        }
+      }
+
       // std::vector< RooStats::HistFactory::ShapeSys >    fShapeSysList;
       // std::vector< RooStats::HistFactory::ShapeFactor > fShapeFactorList;
   
+      auto tags = s["dict"];
+      tags |= c4::yml::MAP;      
+      tags["normalizeByTheory"] << fNormalizeByTheory;
+      tags["statErrorActivate"] << fStatErrorActivate;
 
-      s["NormalizeByTheory"] << fNormalizeByTheory;
-      s["StatErrorActivate"] << fStatErrorActivate;
-
-      s["Data"] << *(fhNominal.GetObject());
+      s["data"] << *(fhNominal.GetObject());
     }
   }
 }

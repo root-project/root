@@ -102,6 +102,8 @@ public:
   void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
   void PrintJSON( std::ostream& os = std::cout );    
   void PrintJSON( std::string filename );
+  void PrintYAML( std::ostream& os = std::cout );    
+  void PrintYAML( std::string filename );  
   template<class T> void Export(T& t) const;
 
   std::vector< RooStats::HistFactory::Channel >& GetChannels() { return fChannels; }

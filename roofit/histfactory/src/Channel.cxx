@@ -170,12 +170,12 @@ namespace RooStats { namespace HistFactory {
       auto ch = n[name];
       ch |= c4::yml::MAP;
 
-      auto staterr = ch["StatErrorConfig"];
-      staterr |= c4::yml::MAP;
-      staterr["RelErrorThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
-      staterr["ConstraintType"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
+      auto tags = ch["dict"];
+      tags |= c4::yml::MAP;
+      tags["statErrorRelThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
+      tags["statErrorConstraintType"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
       
-      auto samples = ch["Samples"];
+      auto samples = ch["sum"];
       samples |= c4::yml::MAP;
       for(const auto& s:fSamples){
         s.Export(samples);
@@ -345,7 +345,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 }
 
 
-bool RooStats::HistFactory::Channel::CheckHistograms() { 
+bool RooStats::HistFactory::Channel::CheckHistograms() const { 
 
   // Check that all internal histogram pointers
   // are properly configured (ie that they're not NULL)
@@ -360,7 +360,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
     // Get the histograms for the samples:
     for( unsigned int sampItr = 0; sampItr < fSamples.size(); ++sampItr ) {
 
-      RooStats::HistFactory::Sample& sample = fSamples.at( sampItr );
+      const RooStats::HistFactory::Sample& sample = fSamples.at( sampItr );
 
       // Get the nominal histogram:
       if( sample.GetHisto() == NULL ) {
@@ -404,7 +404,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the HistoSys Variations:
       for( unsigned int histoSysItr = 0; histoSysItr < sample.GetHistoSysList().size(); ++histoSysItr ) {
 
-	RooStats::HistFactory::HistoSys& histoSys = sample.GetHistoSysList().at( histoSysItr );
+	const RooStats::HistFactory::HistoSys& histoSys = sample.GetHistoSysList().at( histoSysItr );
 
 	if( histoSys.GetHistoLow() == NULL ) {
 	  std::cout << "Error: HistoSyst Low for Systematic " << histoSys.GetName() 
@@ -423,7 +423,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the HistoFactor Variations:
       for( unsigned int histoFactorItr = 0; histoFactorItr < sample.GetHistoFactorList().size(); ++histoFactorItr ) {
 
-	RooStats::HistFactory::HistoFactor& histoFactor = sample.GetHistoFactorList().at( histoFactorItr );
+	const RooStats::HistFactory::HistoFactor& histoFactor = sample.GetHistoFactorList().at( histoFactorItr );
 
 	if( histoFactor.GetHistoLow() == NULL ) {
 	  std::cout << "Error: HistoSyst Low for Systematic " << histoFactor.GetName() 
@@ -442,7 +442,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the ShapeSys Variations:
       for( unsigned int shapeSysItr = 0; shapeSysItr < sample.GetShapeSysList().size(); ++shapeSysItr ) {
 	
-	RooStats::HistFactory::ShapeSys& shapeSys = sample.GetShapeSysList().at( shapeSysItr );
+	const RooStats::HistFactory::ShapeSys& shapeSys = sample.GetShapeSysList().at( shapeSysItr );
 
 	if( shapeSys.GetErrorHist() == NULL ) {
 	  std::cout << "Error: HistoSyst High for Systematic " << shapeSys.GetName() 
