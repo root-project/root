@@ -104,7 +104,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
 
   if (!processedFormula.empty())
-    _tFormula = std::make_unique<TFormula>(name, processedFormula.c_str());
+    _tFormula = std::make_unique<TFormula>(name, processedFormula.c_str(), false);
 
   if (!_tFormula || !_tFormula->IsValid()) {
     coutF(InputArguments) << "RooFormula '" << GetName() << "' did not compile."
@@ -290,7 +290,7 @@ std::vector<bool> RooFormula::findCategoryServers(const RooAbsCollection& collec
 Bool_t RooFormula::reCompile(const char* newFormula)
 {
   std::string processed = processFormula(newFormula);
-  auto newTF = std::make_unique<TFormula>(GetName(), processed.c_str());
+  auto newTF = std::make_unique<TFormula>(GetName(), processed.c_str(), false);
 
   if (!newTF->IsValid()) {
     coutE(InputArguments) << __func__ << ": new equation doesn't compile, formula unchanged" << endl;
