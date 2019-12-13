@@ -46,9 +46,10 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::ROCCalc::ROCCalc(TH1 *mvaS, TH1 *mvaB)
-   : fMaxIter(100), fAbsTol(0.0), fStatus(kTRUE), fmvaS(0), fmvaB(0), fmvaSpdf(0), fmvaBpdf(0), fSplS(0), fSplB(0),
-     fSplmvaCumS(0), fSplmvaCumB(0), fSpleffBvsS(0), fmvaScumul(0), fmvaBcumul(0), fnStot(0), fnBtot(0), fSignificance(0),
-     fPurity(0), effBvsS(0), rejBvsS(0), inveffBvsS(0), fLogger(new TMVA::MsgLogger("ROCCalc"))
+   : fMaxIter(100), fAbsTol(0.0), fStatus(kTRUE), fmvaS(nullptr), fmvaB(nullptr), fmvaSpdf(nullptr), fmvaBpdf(nullptr),
+     fSplS(nullptr), fSplB(nullptr), fSplmvaCumS(nullptr), fSplmvaCumB(nullptr), fSpleffBvsS(nullptr), fmvaScumul(nullptr),
+     fmvaBcumul(nullptr), fnStot(0), fnBtot(0), fSignificance(nullptr), fPurity(nullptr),
+     effBvsS(nullptr), rejBvsS(nullptr), inveffBvsS(nullptr), fLogger(new TMVA::MsgLogger("ROCCalc"))
 {
    fUseSplines = kTRUE;
    fNbins      = 100;
@@ -453,7 +454,7 @@ TH1* TMVA::ROCCalc::GetPurity( Int_t nStot, Int_t nBtot)
 
 TH1 *  TMVA::ROCCalc::GetSignificance(Int_t nStot, Int_t nBtot)
 {
-   if (fnStot==nStot && fnBtot==nBtot && !fSignificance) return (TH1*) fSignificance->Clone();
+   if (fnStot==nStot && fnBtot==nBtot && fSignificance) return (TH1*) fSignificance->Clone();
    fnStot=nStot; fnBtot=nBtot;
 
    fSignificance = (TH1*) fmvaScumul->Clone("Significance"); fSignificance->SetTitle("Significance");
@@ -463,7 +464,7 @@ TH1 *  TMVA::ROCCalc::GetSignificance(Int_t nStot, Int_t nBtot)
    fSignificance->SetLineColor(2);
    fSignificance->SetLineWidth(5);
 
-   fPurity = (TH1*) fmvaScumul->Clone("_Purity"); fPurity->SetTitle("Purity");
+   fPurity = (TH1*) fmvaScumul->Clone("Purity"); fPurity->SetTitle("Purity");
    fPurity->Reset(); fPurity->SetFillStyle(0);
    fPurity->SetXTitle("mva cut value");
    fPurity->SetYTitle("Purity: S/(S+B)");
