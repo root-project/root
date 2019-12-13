@@ -112,7 +112,7 @@ public:
       if (R__unlikely(fError && !fIsChecked)) {
          // Prevent from throwing if the object is deconstructed in the course of stack unwinding for another exception
 #if __cplusplus >= 201703L
-         if (std::uncaught_exceptions() == 0): std::runtime_error(what) {}
+         if (std::uncaught_exceptions() == 0)
 #else
          if (!std::uncaught_exception())
 #endif
