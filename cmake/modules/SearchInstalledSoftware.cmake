@@ -498,6 +498,7 @@ message(STATUS "Looking for python")
 unset(PYTHON_INCLUDE_DIR CACHE)
 unset(PYTHON_LIBRARY CACHE)
 unset(CMAKE_INSTALL_PYROOTDIR)
+
 # Python is required by header and manpage generation
 
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
@@ -539,6 +540,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
       # Re-run, now with NumPy, but not required:
       find_package(Python2 COMPONENTS Interpreter Development NumPy)
       # Compat with find_package(PythonInterp), find_package(PythonLibs)
+      set(PYTHON_EXECUTABLE "${Python2_EXECUTABLE}")
       set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}")
       set(PYTHON_LIBRARIES "${Python2_LIBRARIES}")
       set(PYTHON_VERSION_STRING "${Python2_VERSION}")
@@ -562,6 +564,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
       # Re-run, now with NumPy, but not required:
       find_package(Python COMPONENTS Interpreter Development NumPy)
       # Compat with find_package(PythonInterp), find_package(PythonLibs), find_package(NumPy)
+      set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
       set(PYTHON_INCLUDE_DIRS "${Python_INCLUDE_DIRS}")
       set(PYTHON_LIBRARIES "${Python_LIBRARIES}")
       set(PYTHON_VERSION_STRING "${Python_VERSION}")
