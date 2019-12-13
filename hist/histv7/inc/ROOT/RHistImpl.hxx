@@ -271,8 +271,8 @@ struct RGetBinIndex {
    {
       constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
       int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
-      if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin > std::get<thisAxis>(axes).GetNBinsNoOver())) {
-         hist->GrowAxis(I, x[thisAxis]);
+      if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin >= std::get<thisAxis>(axes).GetNBinsNoOver())) {
+         hist->GrowAxis(thisAxis, x[thisAxis]);
          status = RAxisBase::EFindStatus::kCanGrow;
 
          // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
@@ -320,29 +320,29 @@ enum class EBinCoord {
    kBinTo      ///< Get the bin high edge
 };
 
-template <int I, class COORD, class AXES>
+template <int I, int NDIM, class COORD, class AXES>
 struct RFillBinCoord;
 
 // Break recursion.
-template <class COORD, class AXES>
-struct RFillBinCoord<-1, COORD, AXES> {
+template <int NDIM, class COORD, class AXES>
+struct RFillBinCoord<-1, NDIM, COORD, AXES> {
    void operator()(COORD & /*coord*/, const AXES & /*axes*/, EBinCoord /*kind*/, int /*binidx*/) const {}
 };
 
 /** Fill `coord` with low bin edge or center or high bin edge of all axes.
  */
-template <int I, class COORD, class AXES>
+template <int I, int NDIM, class COORD, class AXES>
 struct RFillBinCoord {
    void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx) const
    {
-      int axisbin = binidx % std::get<I>(axes).GetNBins();
-      size_t coordidx = std::tuple_size<AXES>::value - I - 1;
+      constexpr const int thisAxis = NDIM - I - 1;
+      int axisbin = binidx % std::get<thisAxis>(axes).GetNBins();
       switch (kind) {
-      case EBinCoord::kBinFrom: coord[coordidx] = std::get<I>(axes).GetBinFrom(axisbin); break;
-      case EBinCoord::kBinCenter: coord[coordidx] = std::get<I>(axes).GetBinCenter(axisbin); break;
-      case EBinCoord::kBinTo: coord[coordidx] = std::get<I>(axes).GetBinTo(axisbin); break;
+      case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
+      case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+      case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
       }
-      RFillBinCoord<I - 1, COORD, AXES>()(coord, axes, kind, binidx / std::get<I>(axes).GetNBins());
+      RFillBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, binidx / std::get<thisAxis>(axes).GetNBins());
    }
 };
 
@@ -446,7 +446,7 @@ public:
    /// Get the center coordinate of the bin.
    CoordArray_t GetBinCenter(int binidx) const final
    {
-      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
       RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
       return coord;
@@ -455,7 +455,7 @@ public:
    /// Get the coordinate of the low limit of the bin.
    CoordArray_t GetBinFrom(int binidx) const final
    {
-      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
       RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
       return coord;
@@ -464,7 +464,7 @@ public:
    /// Get the coordinate of the high limit of the bin.
    CoordArray_t GetBinTo(int binidx) const final
    {
-      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, CoordArray_t, decltype(fAxes)>;
+      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
       RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
       return coord;
