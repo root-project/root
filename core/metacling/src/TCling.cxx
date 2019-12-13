@@ -1438,6 +1438,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
 TCling::~TCling()
 {
+   // ROOT's atexit functions require the interepreter to be available.
+   // Run them before shutting down.
+   if (!IsFromRootCling())
+      GetInterpreterImpl()->runAtExitFuncs();
    fIsShuttingDown = true;
    delete fMapfile;
    delete fRootmapFiles;
