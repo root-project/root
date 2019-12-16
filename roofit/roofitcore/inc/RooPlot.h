@@ -16,10 +16,12 @@
 #ifndef ROO_PLOT
 #define ROO_PLOT
 
-#include <float.h>
 #include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
+
+#include <memory>
+#include <float.h>
 
 class TH1 ;
 
@@ -37,6 +39,7 @@ class TAttText;
 class TClass ;
 class TAxis;
 class TBrowser ;
+class TLegend;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
@@ -114,6 +117,7 @@ public:
   void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", Bool_t invisible=kFALSE, Bool_t refreshNorm=kFALSE);
   void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
   void addTH1(TH1 *hist, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
+  std::unique_ptr<TLegend> BuildLegend() const;
 
   void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
 
