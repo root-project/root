@@ -8,6 +8,8 @@
 #include "RooDataSet.h"
 #include "RooFitResult.h"
 
+#include "TFile.h"
+
 #include <numeric>
 
 #include "gtest/gtest.h"
@@ -83,53 +85,22 @@ TEST(RooExponential, Integral)
   }
 }
 
-//TEST(RooJohnson, Generator)
-//{
-//  MAKE_JOHNSON_AND_VARS
-//
-//  ASSERT_FALSE(mu.isConstant());
-//
-//  mu = 120.;
-//  sigma = 30.;
-//  gamma = 3.;
-//  delta = 3.;
-//
-//  auto frame = mass.frame(RooFit::Title("Johnson"));
-//  auto data = johnson.generate(mass, RooFit::NumEvents(10000));
-//  data->plotOn(frame);
-//  johnson.plotOn(frame, RooFit::LineColor(kRed), RooFit::LineColor(kDotted));
-//  johnson.fitTo(*data, RooFit::PrintLevel(-1));
-//  johnson.plotOn(frame, RooFit::LineColor(kBlue), RooFit::LineColor(kDashed));
-//  johnson.paramOn(frame);
-//
-//  EXPECT_LT(frame->chiSquare(), 1.);
-//
-////  TCanvas canv;
-////  frame->Draw();
-////  canv.SaveAs("/tmp/Johnson_gen1.png");
-//
-//
-//
-//
-//  mu = -100.;
-//  sigma = 50.;
-//  gamma = 2.;
-//  delta = 1.;
-//
-//  frame = mass.frame(RooFit::Title("Johnson"));
-//  auto data2 = johnson.generate(mass, 10000.);
-//  data2->plotOn(frame);
-//  johnson.plotOn(frame, RooFit::LineColor(kBlue));
-//  EXPECT_LT(frame->chiSquare(), 1.);
-//
-//
-//  auto res = johnson.fitTo(*data2, RooFit::Save(), RooFit::PrintLevel(-1));
-//  johnson.plotOn(frame, RooFit::LineColor(kRed), RooFit::LineStyle(kDashed));
-//  johnson.paramOn(frame);
-//  EXPECT_LT(frame->chiSquare(res->floatParsInit().size()), 1.);
-//
-////  TCanvas canv2;
-////  frame->Draw();
-////  canv2.SaveAs("/tmp/Johnson_gen2.png");
-//}
 
+TEST(RooExponential, IO) {
+  TFile file("./exponentialPdf.root");
+  ASSERT_TRUE(file.IsOpen());
+
+  RooExponential* expo;
+  file.GetObject("expo", expo);
+  ASSERT_NE(expo, nullptr);
+
+  // This depends on proper (de-)serialisation of proxies:
+  std::unique_ptr<RooArgSet> vars(expo->getVariables());
+  RooRealVar& x  = dynamic_cast<RooRealVar&>((*vars)["x"]);
+  RooRealVar& ex = dynamic_cast<RooRealVar&>((*vars)["ex"]);
+
+  x = 4.;
+  ex = -5.;
+
+  EXPECT_NEAR(expo->getVal(), std::exp(4.*-5.), 1.E-14);
+}

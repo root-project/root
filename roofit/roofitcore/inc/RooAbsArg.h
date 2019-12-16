@@ -49,7 +49,6 @@ class RooSetProxy ;
 class RooListProxy ;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
-class RooRealProxy ;
 
 class RooRefArray : public TObjArray {
  public:
@@ -633,7 +632,6 @@ private:
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
   mutable bool _allBatchesDirty{true}; //! Mark batches as dirty (only meaningful for RooAbsReal).
 
-  friend class RooRealProxy ;
   mutable OperMode _operMode ; // Dirty state propagation mode
   mutable Bool_t _fast ; // Allow fast access mode in getVal() and proxies
 
