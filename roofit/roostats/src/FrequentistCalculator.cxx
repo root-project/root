@@ -94,9 +94,11 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       RooArgSet globalObs;
       if (fNullModel->GetGlobalObservables()) globalObs.add(*fNullModel->GetGlobalObservables());
 
+      auto& config = GetGlobalRooStatsConfig();
       RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
                                                         RooFit::GlobalObservables(globalObs),
-                                                        RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()) );
+                                                        RooFit::ConditionalObservables(conditionalObs),
+                                                        RooFit::Offset(config.useLikelihoodOffset));
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
@@ -201,10 +203,11 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       RooArgSet globalObs;
       if (fAltModel->GetGlobalObservables()) globalObs.add(*fAltModel->GetGlobalObservables());
 
-
+      const auto& config = GetGlobalRooStatsConfig();
       RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
                                                        RooFit::GlobalObservables(globalObs),
-                                                       RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
+                                                       RooFit::ConditionalObservables(conditionalObs),
+                                                       RooFit::Offset(config.useLikelihoodOffset));
 
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values

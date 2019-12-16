@@ -307,7 +307,9 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
     if (globObs) globalObs.add(*globObs);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs), RooFit::Offset(RooStats::IsNLLOffset()));
+    auto& config = GetGlobalRooStatsConfig();
+    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(kFALSE),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs),
+        RooFit::Offset(config.useLikelihoodOffset));
 
     RooArgSet* attachedSet = nll->getVariables();
 
@@ -364,6 +366,7 @@ Double_t AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   
        RooMinimizer minim(*nll);
        int strategy = ROOT::Math::MinimizerOptions::DefaultStrategy();
        minim.setStrategy( strategy);
+       minim.setEvalErrorWall(config.useEvalErrorWall);
        // use tolerance - but never smaller than 1 (default in RooMinimizer)
        double tol =  ROOT::Math::MinimizerOptions::DefaultTolerance();
        tol = std::max(tol,1.0); // 1.0 is the minimum value used in RooMinimizer
@@ -1274,11 +1277,22 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
       std::string minimizerType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
       std::string minimizerAlgo = ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo();
-      model.GetPdf()->fitTo(realData, RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()),
-                            RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()),
-                            RooFit::PrintLevel(minimPrintLevel-1), RooFit::Hesse(false),
-                            RooFit::Constrain(constrainParams),RooFit::GlobalObservables(globalObs),
-                            RooFit::ConditionalObservables(conditionalObs), RooFit::Offset(RooStats::IsNLLOffset()));
+      std::vector<RooCmdArg> args;
+      args.push_back(RooFit::Minimizer(minimizerType.c_str(),minimizerAlgo.c_str()));
+      args.push_back(RooFit::Strategy(ROOT::Math::MinimizerOptions::DefaultStrategy()));
+      args.push_back(RooFit::PrintLevel(minimPrintLevel-1));
+      args.push_back(RooFit::Hesse(false));
+      args.push_back(RooFit::Constrain(constrainParams));
+      args.push_back(RooFit::GlobalObservables(globalObs));
+      args.push_back(RooFit::ConditionalObservables(conditionalObs));
+      args.push_back(RooFit::Offset(GetGlobalRooStatsConfig().useLikelihoodOffset));
+      args.push_back(RooFit::EvalErrorWall(GetGlobalRooStatsConfig().useEvalErrorWall));
+
+      RooLinkedList argList;
+      for (auto& arg : args) {
+        argList.Add(&arg);
+      }
+      model.GetPdf()->fitTo(realData, argList);
       if (verbose>0) { std::cout << "fit time "; tw2.Print();}
       if (verbose > 1) {
          // after the fit the nuisance parameters will have their best fit value
