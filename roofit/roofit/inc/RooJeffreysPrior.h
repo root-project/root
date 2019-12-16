@@ -17,7 +17,7 @@ class RooArgList ;
 class RooJeffreysPrior : public RooAbsPdf {
 public:
 
-  RooJeffreysPrior() ;
+  RooJeffreysPrior() { };
   RooJeffreysPrior(const char *name, const char *title, RooAbsPdf& nominal, const RooArgList& paramSet, const RooArgList& obsSet) ;
   virtual ~RooJeffreysPrior() ;
 
@@ -27,22 +27,31 @@ public:
   const RooArgList& lowList() const { return _obsSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-
 protected:
 
-  RooRealProxy _nominal;           // The nominal value
-  //RooAbsPdf* _nominal;           // The nominal value
-  RooArgList   _ownedList ;       // List of owned components
-  RooListProxy _obsSet ;            // Low-side variation
-  RooListProxy _paramSet ;            // interpolation parameters
-  mutable TIterator* _paramIter ;  //! Iterator over paramSet
-  mutable TIterator* _obsIter ;  //! Iterator over lowSet
+  RooPdfProxy _nominal;    // Proxy to the PDF for this prior.
+  RooListProxy _obsSet ;   // Observables of the PDF.
+  RooListProxy _paramSet ; // Parameters of the PDF.
 
   Double_t evaluate() const;
 
-  ClassDef(RooJeffreysPrior,1) // Sum of RooAbsReal objects
+private:
+  struct CacheElem : public RooAbsCacheElement {
+  public:
+      virtual ~CacheElem() = default;
+      // Payload
+      std::unique_ptr<RooAbsPdf> _pdf;
+      std::unique_ptr<RooArgSet> _pdfVariables;
+
+      virtual RooArgList containedArgs(Action) override {
+        RooArgList list(*_pdf);
+        list.add(*_pdfVariables, true);
+        return list;
+      }
+  };
+  mutable RooObjCacheManager _cacheMgr; //!
+
+  ClassDef(RooJeffreysPrior,2) // Sum of RooAbsReal objects
 };
 
 #endif
