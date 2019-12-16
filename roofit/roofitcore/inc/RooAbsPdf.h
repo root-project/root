@@ -25,7 +25,6 @@
 class RooDataSet;
 class RooDataHist ;
 class RooArgSet ;
-class RooRealProxy ;
 class RooAbsGenContext ;
 class RooFitResult ;
 class RooExtendPdf ;

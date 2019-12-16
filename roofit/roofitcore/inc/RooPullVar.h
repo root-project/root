@@ -35,7 +35,7 @@ public:
 
 protected:
 
-  RooRealProxy _meas ;
+  RooRealVarProxy _meas ;
   RooRealProxy _true ;
 
   Double_t evaluate() const;

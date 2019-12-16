@@ -458,7 +458,6 @@ protected:
 
   friend class RooAbsPdf ;
   friend class RooAbsAnaConvPdf ;
-  friend class RooRealProxy ;
 
   RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
 
