@@ -26,6 +26,14 @@ drop_from_path()
 
 clean_environment()
 {
+   # Assert that we got enough arguments
+   if test $# -ne 2 ; then
+      echo "clean_environment: needs 2 arguments"
+      return 1
+   fi
+
+   local version=$1
+   local exp_pyroot=$2
 
    if [ -n "${old_rootsys}" ] ; then
       if [ -n "${PATH}" ]; then
@@ -35,47 +43,57 @@ clean_environment()
       if [ -n "${LD_LIBRARY_PATH}" ]; then
          drop_from_path "$LD_LIBRARY_PATH" "${old_rootsys}/lib"
          LD_LIBRARY_PATH=$newpath
-         for pyroot_libs_dir in ${old_rootsys}/lib/python*
-         do
-            drop_from_path "$LD_LIBRARY_PATH" "$pyroot_libs_dir"
-            LD_LIBRARY_PATH=$newpath
-         done
+         if [ ! -z "${exp_pyroot}" ] ; then
+            for pyroot_libs_dir in ${old_rootsys}/lib/python*
+            do
+               drop_from_path "$LD_LIBRARY_PATH" "$pyroot_libs_dir"
+               LD_LIBRARY_PATH=$newpath
+            done
+         fi
       fi
       if [ -n "${DYLD_LIBRARY_PATH}" ]; then
          drop_from_path "$DYLD_LIBRARY_PATH" "${old_rootsys}/lib"
          DYLD_LIBRARY_PATH=$newpath
-         for pyroot_libs_dir in ${old_rootsys}/lib/python*
-         do
-            drop_from_path "$DYLD_LIBRARY_PATH" "$pyroot_libs_dir"
-            DYLD_LIBRARY_PATH=$newpath
-         done
+         if [ ! -z "${exp_pyroot}" ] ; then
+            for pyroot_libs_dir in ${old_rootsys}/lib/python*
+            do
+               drop_from_path "$DYLD_LIBRARY_PATH" "$pyroot_libs_dir"
+               DYLD_LIBRARY_PATH=$newpath
+            done
+         fi
       fi
       if [ -n "${SHLIB_PATH}" ]; then
          drop_from_path "$SHLIB_PATH" "${old_rootsys}/lib"
          SHLIB_PATH=$newpath
-         for pyroot_libs_dir in ${old_rootsys}/lib/python*
-         do
-            drop_from_path "$SHLIB_PATH" "$pyroot_libs_dir"
-            SHLIB_PATH=$newpath
-         done
+         if [ ! -z "${exp_pyroot}" ] ; then
+            for pyroot_libs_dir in ${old_rootsys}/lib/python*
+            do
+               drop_from_path "$SHLIB_PATH" "$pyroot_libs_dir"
+               SHLIB_PATH=$newpath
+            done
+         fi
       fi
       if [ -n "${LIBPATH}" ]; then
          drop_from_path "$LIBPATH" "${old_rootsys}/lib"
          LIBPATH=$newpath
-         for pyroot_libs_dir in ${old_rootsys}/lib/python*
-         do
-            drop_from_path "$LIBPATH" "$pyroot_libs_dir"
-            LIBPATH=$newpath
-         done
+         if [ ! -z "${exp_pyroot}" ] ; then
+            for pyroot_libs_dir in ${old_rootsys}/lib/python*
+            do
+               drop_from_path "$LIBPATH" "$pyroot_libs_dir"
+               LIBPATH=$newpath
+            done
+         fi
       fi
       if [ -n "${PYTHONPATH}" ]; then
          drop_from_path "$PYTHONPATH" "${old_rootsys}/lib"
          PYTHONPATH=$newpath
-         for pyroot_libs_dir in ${old_rootsys}/lib/python*
-         do
-            drop_from_path "$PYTHONPATH" "$pyroot_libs_dir"
-            PYTHONPATH=$newpath
-         done
+         if [ ! -z "${exp_pyroot}" ] ; then
+            for pyroot_libs_dir in ${old_rootsys}/lib/python*
+            do
+               drop_from_path "$PYTHONPATH" "$pyroot_libs_dir"
+               PYTHONPATH=$newpath
+            done
+         fi
       fi
       if [ -n "${MANPATH}" ]; then
          drop_from_path "$MANPATH" "${old_rootsys}/man"
@@ -105,17 +123,13 @@ clean_environment()
 set_environment()
 {
    # Assert that we got enough arguments
-   if test $# -ne 1 ; then
-      echo "set_environment: needs 1 argument"
+   if test $# -ne 2 ; then
+      echo "set_environment: needs 2 arguments"
       return 1
    fi
 
    local version=$1
-
-   # Check if the directory created in PyROOT experimental exists
-   if [ -d "@libdir@/python${version}" ]; then
-           exp_pyroot=true
-   fi
+   local exp_pyroot=$2
 
    if [ -z "${PATH}" ]; then
       PATH=@bindir@; export PATH
@@ -250,7 +264,11 @@ fi
 
 if [ -z "${ROOT_PYTHON_VERSION}" ] ; then
    py_localruntimedir=@py_localruntimedir@
-   ROOT_PYTHON_VERSION=${py_localruntimedir#@localruntimedir@/python}
+   py_version=${py_localruntimedir#@localruntimedir@/python}
+   if [ -d "$ROOTSYS/lib/python${py_version}" ]; then
+      # Experimental PyROOT
+      ROOT_PYTHON_VERSION=${py_version}
+   fi
 else
    # check if version exists and exit if not
    if [ ! -d "@libdir@/python${ROOT_PYTHON_VERSION}" ]; then
@@ -266,8 +284,14 @@ else
 fi
 
 
-clean_environment
-set_environment "${ROOT_PYTHON_VERSION}"
+# Check if the directory created in PyROOT experimental exists
+if [ -d "@libdir@/python${ROOT_PYTHON_VERSION}" ]; then
+   exp_pyroot=true
+fi
+
+
+clean_environment "${ROOT_PYTHON_VERSION}" "${exp_pyroot}"
+set_environment "${ROOT_PYTHON_VERSION}" "${exp_pyroot}"
 
 
 # Prevent Cppyy from checking the PCH (and avoid warning)
