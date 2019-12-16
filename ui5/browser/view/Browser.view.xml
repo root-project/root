@@ -46,7 +46,7 @@
                 </Toolbar>
               </customHeader>
               <content>
-                <tnt:ToolHeader asyncMode="true" height="40px" wdith="320px">
+                <tnt:ToolHeader asyncMode="true" height="40px">
                   <l:VerticalLayout width="100%">
                     <l:content>
                       <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan"/>
