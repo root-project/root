@@ -14,6 +14,9 @@
 #pragma link C++ class RooRealIntegral+ ;
 #pragma link C++ class RooRealMPFE+ ;
 #pragma link C++ class RooRealProxy+ ;
+#pragma link C++ class RooPdfProxy+;
+#pragma link C++ class RooLVarProxy+;
+#pragma link C++ class RooRealVarProxy+;
 #pragma link C++ class RooRealVar- ;
 #pragma link C++ class RooRealVarSharedProperties+ ;
 #pragma link C++ class RooRefCountList+ ;

@@ -19,11 +19,14 @@
 \class RooPullVar
 \ingroup Roofitcore
 
-Class RooPullVar represents the pull of measurement w.r.t to true value
-using the measurement value and its error. Both the true value and
-the measured value (with error) are taken from two user supplied
-RooRealVars. If an asymmetric error is defined on a given measurement the proper 
-side of that asymmetric error will be used
+RooPullVar represents the pull of a measurement w.r.t. the true value
+using the measurement and its error. Both the true value and
+the measured value (with error) are taken from two user-supplied
+RooRealVars. If the measured parameter has an asymmetric error, the proper
+side of that error will be used:
+\f[
+ \mathrm{Pull}_x = \frac{x_\mathrm{meas}-x_\mathrm{true}}{\Delta_x}
+\f]
 **/
 
 #include "RooFit.h"
@@ -52,9 +55,12 @@ RooPullVar::RooPullVar()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct RooAbsReal representing the pull of a RooRealVar 'meas' providing the
-/// measured value and its error and a RooAbsReal 'truth' providing the true value
-
+/// Construct the pull of the RooRealVar 'meas'.
+///
+/// \param[in] name  Name of the pull variable.
+/// \param[in] title The title (for plotting).
+/// \param[in] meas  The measurement. This variable needs to have an error.
+/// \param[in] truth The true value.
 RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, RooAbsReal& truth) :
   RooAbsReal(name, title),
   _meas("meas","Measurement",this,meas),
@@ -94,7 +100,7 @@ RooPullVar::~RooPullVar()
 
 Double_t RooPullVar::evaluate() const 
 {
-  const RooRealVar& meas = static_cast<const RooRealVar&>(_meas.arg()) ;  
+  const auto& meas = _meas.arg();
   if (meas.hasAsymError()) {
     Double_t delta = _meas-_true ;
     if (delta<0) {
