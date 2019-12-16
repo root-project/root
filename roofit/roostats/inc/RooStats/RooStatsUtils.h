@@ -21,7 +21,6 @@
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooAbsCollection.h"
-#include "TIterator.h"
 #include "RooStats/ModelConfig.h"
 #include "RooProdPdf.h"
 #include "RooDataSet.h"
@@ -38,7 +37,14 @@ In addition the namespace contain a set of utility functions.
 */
 
 namespace RooStats {
+   struct RooStatsConfig {
+      bool useLikelihoodOffset{false}; /// Offset the likelihood by passing RooFit::Offset to fitTo().
+      bool useEvalErrorWall{true};     /// Use the error wall RooFit::EvalErrorWall to drive the fitter away from disallowed parameter values.
+   };
 
+   /// Retrieve the config object which can be used to set flags for things like offsetting the likelihood
+   /// or using the error wall for the minimiser.
+   RooStatsConfig& GetGlobalRooStatsConfig();
 
    /// returns one-sided significance corresponding to a p-value
    inline Double_t PValueToSignificance(Double_t pvalue){

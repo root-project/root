@@ -27,11 +27,12 @@ NamespaceImp(RooStats)
 
 using namespace std;
 
-// this file is only for the documentation of RooStats namespace
-
 namespace RooStats {
 
-   bool gUseOffset = false;
+   RooStatsConfig& GetGlobalRooStatsConfig() {
+      static RooStatsConfig theConfig;
+      return theConfig;
+   }
 
    Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b ) {
    // Asimov significance
@@ -55,14 +56,14 @@ namespace RooStats {
       return std::sqrt(za2); 
    }
 
-
+   /// Use an offset in NLL calculations.
    void UseNLLOffset(bool on) {
-      // use offset in NLL calculations
-      gUseOffset = on;
+      GetGlobalRooStatsConfig().useLikelihoodOffset = on;
    }
 
+   /// Test of RooStats should by default offset NLL calculations.
    bool IsNLLOffset() {
-      return gUseOffset;
+      return GetGlobalRooStatsConfig().useLikelihoodOffset;
    }
 
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
