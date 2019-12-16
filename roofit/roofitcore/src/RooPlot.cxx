@@ -41,15 +41,8 @@ or other mappings that need to be made to plot a multi-dimensional
 object onto a one-dimensional plot.
 **/
 
-
-#include "RooFit.h"
-
-#include "TClass.h"
-#include "TH1D.h"
-#include "TBrowser.h"
-#include "TPad.h"
-
 #include "RooPlot.h"
+
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
 #include "RooPlotable.h"
@@ -58,12 +51,18 @@ object onto a one-dimensional plot.
 #include "RooHist.h"
 #include "RooMsgService.h"
 
+#include "TClass.h"
+#include "TH1D.h"
+#include "TBrowser.h"
+#include "TPad.h"
+
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
 #include "TDirectory.h"
 #include "TDirectoryFile.h"
+#include "TLegend.h"
 
 #include "Riostream.h"
 #include <string.h>
@@ -1378,4 +1377,17 @@ void RooPlot::Streamer(TBuffer &R__b)
   } else {
     R__b.WriteClassBuffer(RooPlot::Class(),this);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Build a legend that contains all objects that have been drawn on the plot.
+std::unique_ptr<TLegend> RooPlot::BuildLegend() const {
+  std::unique_ptr<TLegend> leg(new TLegend(0.5, 0.7, 0.9, 0.9));
+  leg->SetBorderSize(0);
+  leg->SetFillStyle(0);
+  for (int i=0; i < _items.GetSize(); ++i) {
+    leg->AddEntry(getObject(i));
+  }
+
+  return leg;
 }
