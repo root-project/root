@@ -454,17 +454,6 @@ public:
   inline OperMode operMode() const { return _operMode  ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ;
 
-  static UInt_t crc32(const char* data);
-  static UInt_t crc32(const char* data, ULong_t sz, UInt_t crc = 0);
-
-  static const UInt_t fnv1a32start = 2166136261u;
-  static UInt_t fnv1a32(const char* data);
-  static UInt_t fnv1a32(const char* data, ULong_t sz, UInt_t hash = fnv1a32start);
-
-  static const ULong64_t fnv1a64start = (ULong64_t(3421674724u) << 32) | ULong64_t(2216829733u);
-  static ULong64_t fnv1a64(const char* data);
-  static ULong64_t fnv1a64(const char* data, ULong_t sz, ULong64_t hash = fnv1a64start);
-
   Bool_t addOwnedComponents(const RooArgSet& comps) ;
   const RooArgSet* ownedComponents() const { return _ownedComponents ; }
 
