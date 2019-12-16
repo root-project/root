@@ -928,51 +928,41 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   // Check that the dependents are all fundamental. Filter out any that we
   // do not depend on, and make substitutions by name in our leaf list.
   // Check for overlaps with the projection variables.
-
-  TIterator *dependentIterator= dependentVars.createIterator();
-  assert(0 != dependentIterator);
-  const RooAbsArg *arg = 0;
-  while((arg= (const RooAbsArg*)dependentIterator->Next())) {
+  for (const auto arg : dependentVars) {
     if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
       coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: variable \"" << arg->GetName()
-	   << "\" of wrong type: " << arg->ClassName() << endl;
-      delete dependentIterator;
+	       << "\" of wrong type: " << arg->ClassName() << endl;
       return 0;
     }
 
     RooAbsArg *found= treeNodes.find(arg->GetName());
     if(!found) {
       coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
-		      << "\" is not a dependent and will be ignored." << endl;
+		          << "\" is not a dependent and will be ignored." << endl;
       continue;
     }
     if(found != arg) {
       if (leafNodes.find(found->GetName())) {
-	leafNodes.replace(*found,*arg);
+        leafNodes.replace(*found,*arg);
       } else {
-	leafNodes.add(*arg) ;
+        leafNodes.add(*arg) ;
 
-	// Remove any dependents of found, replace by dependents of LV node
-	RooArgSet* lvDep = arg->getObservables(&leafNodes) ;
-	RooAbsArg* lvs ;
-	TIterator* iter = lvDep->createIterator() ;
-	while((lvs=(RooAbsArg*)iter->Next())) {
-	  RooAbsArg* tmp = leafNodes.find(lvs->GetName()) ;
-	  if (tmp) {
-	    leafNodes.remove(*tmp) ;
-	    leafNodes.add(*lvs) ;
-	  }
-	}
-	delete iter ;
-
+        // Remove any dependents of found, replace by dependents of LV node
+        RooArgSet* lvDep = arg->getObservables(&leafNodes) ;
+        for (const auto lvs : *lvDep) {
+          RooAbsArg* tmp = leafNodes.find(lvs->GetName()) ;
+          if (tmp) {
+            leafNodes.remove(*tmp) ;
+            leafNodes.add(*lvs) ;
+          }
+        }
       }
     }
 
     // check if this arg is also in the projection set
     if(0 != projectedVars && projectedVars->find(arg->GetName())) {
       coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
-		      << "\" cannot be both a dependent and a projected variable." << endl;
-      delete dependentIterator;
+		          << "\" cannot be both a dependent and a projected variable." << endl;
       return 0;
     }
   }
@@ -1025,7 +1015,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     projectedVars->printStream(cout,kName|kArgs,kSingleLine);
     // cleanup and exit
     if(0 != projected) delete projected;
-    delete dependentIterator;
     return 0;
   }
 
@@ -1038,9 +1027,6 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 
   // Add the projection integral to the cloneSet so that it eventually gets cleaned up by the caller.
   cloneSet->addOwned(*projected);
-
-  // cleanup
-  delete dependentIterator;
 
   // return a const pointer to remind the caller that they do not delete the returned object
   // directly (it is contained in the cloneSet instead).
