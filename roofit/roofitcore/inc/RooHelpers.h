@@ -26,19 +26,23 @@
 namespace RooHelpers {
 
 /// Switches the message service to verbose while the instance alive.
-class MakeVerbose {
+class LocalChangeMsgLevel {
   public:
-    MakeVerbose(RooFit::MsgTopic extraTopics = static_cast<RooFit::MsgTopic>(0u)) {
+    /// Change message level (and topics) while this object is alive, reset when it goes out of scope.
+    /// \param[in] lvl The desired message level. Defaults to verbose.
+    /// \param[in] extraTopics Extra topics to be switched on.
+    LocalChangeMsgLevel(RooFit::MsgLevel lvl = RooFit::DEBUG,
+        RooFit::MsgTopic extraTopics = static_cast<RooFit::MsgTopic>(0u)) {
       auto& msg = RooMsgService::instance();
       fOldKillBelow = msg.globalKillBelow();
-      msg.setGlobalKillBelow(RooFit::DEBUG);
+      msg.setGlobalKillBelow(lvl);
       fOldConf = msg.getStream(0);
-      msg.getStream(0).minLevel= RooFit::DEBUG;
+      msg.getStream(0).minLevel = lvl;
       msg.getStream(0).addTopic(extraTopics);
       msg.setStreamStatus(0, true);
     }
 
-    ~MakeVerbose() {
+    ~LocalChangeMsgLevel() {
       auto& msg = RooMsgService::instance();
       msg.setGlobalKillBelow(fOldKillBelow);
       msg.getStream(0) = fOldConf;
