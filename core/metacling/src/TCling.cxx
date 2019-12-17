@@ -6216,7 +6216,7 @@ static bool MayExistInObjectFile(llvm::object::ObjectFile *soFile, uint32_t hash
 static bool FindSymbol(const std::string &library_filename,
                        const std::string &mangled_name, unsigned IgnoreSymbolFlags = 0)
 {
-   auto ObjF = llvm::object::ObjectFile::createObjectFile(library_filename);
+   auto ObjF = llvm::object::ObjectFile::createObjectFile(ROOT::TMetaUtils::GetRealPath(library_filename));
    if (!ObjF) {
       Warning("TCling__FindSymbol", "Failed to read object file %s", library_filename.c_str());
       return false;
