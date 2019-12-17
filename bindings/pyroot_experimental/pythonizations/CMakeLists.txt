@@ -117,7 +117,7 @@ if(package_installed EQUAL 0 AND setuptools_version GREATER_EQUAL 39.0)
 else()
     # create egg in a dummy way
     set(ROOT_egg "${CMAKE_CURRENT_BINARY_DIR}/PyROOT.egg")
-    file(WRITE ROOT_egg "PyROOT ${ROOT_VERSION}")
+    file(WRITE ${ROOT_egg} "PyROOT ${ROOT_VERSION}")
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
