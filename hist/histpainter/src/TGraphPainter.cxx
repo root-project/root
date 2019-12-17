@@ -2655,7 +2655,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    TString tsOpt = option;
    tsOpt.ToLower();
 
-   TString options[NYErrors + 1];
+   std::vector<TString> options(NYErrors + 1);
    Int_t filled = 0;
 
    if (tsOpt.CountChar(';') < NYErrors) {
@@ -2679,7 +2679,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       options[i] = "";
 
    Double_t* xline = nullptr;
-   Double_t* yline[NYErrors];
+   std::vector<Double_t*> yline(NYErrors);
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2694,8 +2694,8 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t* theY   = tg->GetY();
    Double_t* theExL = tg->GetEXlow();
    Double_t* theExH = tg->GetEXhigh();
-   Double_t* theEyL[NYErrors];
-   Double_t* theEyH[NYErrors];
+   std::vector<Double_t*> theEyL(NYErrors);
+   std::vector<Double_t*> theEyH(NYErrors);
 
    Bool_t theEyExists = kTRUE;
    for (Int_t j = 0; j < NYErrors; j++) {
@@ -2707,28 +2707,30 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    if (!theX || !theY || !theExL || !theExH || !theEyExists)
       return;
 
-   Bool_t   DrawErrors[NYErrors];
-   Bool_t   AnyErrors  = kFALSE;
-   Bool_t   NoErrorsX  = kTRUE;
-   Bool_t   Option0X   = kFALSE;
-   Bool_t   DrawMarker = kFALSE;
-   Bool_t   Braticks[NYErrors];
-   Bool_t   Brackets[NYErrors];
-   Bool_t   EndLines[NYErrors];
-   Char_t*  ArrowOpt[NYErrors];
-   Bool_t   Option5[NYErrors];
-   Bool_t   Option4[NYErrors];
-   Bool_t   Option3[NYErrors];
-   Bool_t   AnyOption3 = kFALSE;
-   Bool_t   Option2[NYErrors];
-   Bool_t   Option0[NYErrors];
-   Bool_t   AnyOption0 = kFALSE;
-   Double_t Scale[NYErrors];
+   std::vector<Bool_t> DrawErrors(NYErrors);
+   Bool_t AnyErrors = kFALSE;
+   Bool_t NoErrorsX = kTRUE;
+   Bool_t Option0X = kFALSE;
+   Bool_t DrawMarker = kFALSE;
+   std::vector<Bool_t> Braticks(NYErrors);
+   std::vector<Bool_t> Brackets(NYErrors);
+   std::vector<Bool_t> EndLines(NYErrors);
+   std::vector<Char_t*> ArrowOpt(NYErrors);
+   std::vector<Bool_t> Option5(NYErrors);
+   std::vector<Bool_t> Option4(NYErrors);
+   std::vector<Bool_t> Option3(NYErrors);
+   Bool_t AnyOption3 = kFALSE;
+   std::vector<Bool_t> Option2(NYErrors);
+   std::vector<Bool_t> Option0(NYErrors);
+   Bool_t AnyOption0 = kFALSE;
+   std::vector<Double_t> Scale(NYErrors);
+
+   const TRegexp ScaleRegExp("s=*[0-9]\\.*[0-9]");
 
    for (Int_t j = 0; j < NYErrors; j++) {
       if (options[j + 1].Contains("s=")) {
         sscanf(strstr(options[j + 1].Data(), "s="), "s=%lf", &Scale[j]);
-        options[j + 1].ReplaceAll(options[j + 1](TRegexp("s=*[0-9]\\.*[0-9]")), "");
+        options[j + 1].ReplaceAll(options[j + 1](ScaleRegExp), "");
       } else
         Scale[j] = 1.;
 
@@ -2775,7 +2777,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t ScaleX = 1.;
    if (options[0].Contains("s=")) {
       sscanf(strstr(options[0].Data(), "s="), "s=%lf", &ScaleX);
-      options[0].ReplaceAll(options[0](TRegexp("s=*[0-9]\\.*[0-9]")), "");
+      options[0].ReplaceAll(options[0](ScaleRegExp), "");
    }
 
    if (!AnyErrors && !DrawErrorsX) {
