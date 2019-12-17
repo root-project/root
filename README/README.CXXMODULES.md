@@ -375,10 +375,6 @@ overhead which we go in details bellow.
 
 
 ### Current limitations
-  * Relocatability issues -- we have fixed a few of the relocatability issues we
-  found. We are aware of an obscure relocatability issue when ROOT is copied in
-  another folder and we are rebuild. ROOT picks up both modulemap files in
-  seemingly distinct locations.
   * Building pcms with rootcling -- in rare cases there might be issues when
   building pcm files with rootcling. The easiest will be to open a bug report
   to clang, however, reproducing a failure outside of rootcling is very difficult
