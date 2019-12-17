@@ -650,14 +650,20 @@ Bool_t TGraphMultiErrors::CtorAllocate()
       return kFALSE;
    }
 
-   fExL = new Double_t[fMaxSize] {0.};
-   fExH = new Double_t[fMaxSize] {0.};
+   fExL = new Double_t[fMaxSize];
+   fExH = new Double_t[fMaxSize];
    fEyL.resize(fNYErrors, TArrayD(fMaxSize));
    fEyH.resize(fNYErrors, TArrayD(fMaxSize));
-   fEyLSum = new Double_t[fMaxSize] {0.};
-   fEyHSum = new Double_t[fMaxSize] {0.};
+   fEyLSum = new Double_t[fMaxSize];
+   fEyHSum = new Double_t[fMaxSize];
    fAttFill.resize(fNYErrors);
    fAttLine.resize(fNYErrors);
+
+   Int_t n = fMaxSize * sizeof(Double_t);
+   memset(fExL, 0, n);
+   memset(fExH, 0, n);
+   memset(fEyLSum, 0, n);
+   memset(fEyHSum, 0, n);
 
    return kTRUE;
 }
