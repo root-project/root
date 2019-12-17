@@ -525,6 +525,13 @@ TGraph::~TGraph()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Allocate internal data structures for `newsize` points.
+
+Double_t **TGraph::Allocate(Int_t newsize) {
+   return AllocateArrays(2, newsize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Allocate arrays.
 
 Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)

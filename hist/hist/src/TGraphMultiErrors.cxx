@@ -812,6 +812,14 @@ void TGraphMultiErrors::AddYError(Int_t np, const Double_t *eyL, const Double_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Allocate internal data structures for `size` points.
+Double_t **TGraphMultiErrors::Allocate(Int_t size)
+{
+   return AllocateArrays(4, size);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Apply a function to all data points `y = f(x,y)`
 ///
 /// Errors are calculated as `eyh = f(x,y+eyh)-f(x,y)` and
