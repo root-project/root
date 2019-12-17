@@ -203,10 +203,10 @@ set_environment()
          export LIBPATH
       fi
       if [ -z "${PYTHONPATH}" ]; then
-         PYTHONPATH=@libdir@:@libdir@/python${version}
+         PYTHONPATH=@libdir@/python${version}
          export PYTHONPATH       # Linux, ELF HP-UX
       else
-         PYTHONPATH=@libdir@:@libdir@/python${version}:$PYTHONPATH
+         PYTHONPATH=@libdir@/python${version}:$PYTHONPATH
          export PYTHONPATH
       fi
    fi
