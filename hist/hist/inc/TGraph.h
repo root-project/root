@@ -190,8 +190,4 @@ public:
    ClassDef(TGraph,4)  //Graph graphics class
 };
 
-inline Double_t **TGraph::Allocate(Int_t newsize) {
-   return AllocateArrays(2, newsize);
-}
-
 #endif

@@ -182,8 +182,4 @@ public:
    ClassDef(TGraphMultiErrors, 1) // A Graph with asymmetric error bars and multiple y error dimensions
 };
 
-inline Double_t **TGraphMultiErrors::Allocate(Int_t size)
-{
-   return AllocateArrays(4, size);
-}
 #endif // ROOT_TGraphMultiErrors
