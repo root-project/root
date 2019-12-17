@@ -333,7 +333,9 @@ different. There are several differences which can be noticed:
 
 ## Changes required by the users
   * Self-contained header files -- every header file should be able to compile
-  on its own. For instance, `gcc -fsyntax-only -xc++ header.h`
+  on its own. For instance, `cat header.h header.h | gcc -fsyntax-only -xc++ -`.
+  This command concatenates `header.h` twice before compiling it to make sure
+  it has proper include protectors.
   * Enable it in `rootcling` -- rootcling can produce a C++ Modules-aware
   dictionary when it is invoked with `-cxxmodule` flag.
   * Modularization of external dependencies -- if a header file is not explicitly
