@@ -439,6 +439,12 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
    if(fEYhigh) delete [] fEYhigh;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate internal data structures for `size` points.
+
+Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
+   return AllocateArrays(6, size);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply a function to all data points `y = f(x,y)`
