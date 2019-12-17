@@ -499,7 +499,6 @@ message(STATUS "Looking for python")
 if(pyroot_experimental)
   unset(PYTHON_INCLUDE_DIR CACHE)
   unset(PYTHON_LIBRARY CACHE)
-  unset(CMAKE_INSTALL_PYROOTDIR)
 endif()
 
 # Python is required by header and manpage generation
