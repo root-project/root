@@ -103,21 +103,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREAT
     target_compile_options(ROOTPythonizations PRIVATE -Wno-deprecated-register)
 endif()
 
-# configure setup.py to retrieve information for the python egg
-set(SETUP_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in")
-set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
-configure_file(${SETUP_PY_IN} ${SETUP_PY})
-
 # create egg with PyROOT info
-execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -c 'import setuptools'; echo $?" OUTPUT_VARIABLE package_installed)
-execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -c 'import setuptools as s; l = s.__version__.split(\".\"); l = l[0:2]; print(\".\".join(l))'" OUTPUT_VARIABLE setuptools_version)
-if(package_installed EQUAL 0 AND setuptools_version GREATER_EQUAL 39.0)
-    add_custom_target(ROOT_egg ALL COMMAND ${PYTHON_EXECUTABLE} setup.py install_egg_info -d ${py_localruntimedir}/ROOT WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    add_custom_command(TARGET ROOT_egg POST_BUILD COMMAND bash -c "rm -rf python/*.egg-info" WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-else()
-    # create egg in a dummy way
-    set(ROOT_egg "${CMAKE_CURRENT_BINARY_DIR}/PyROOT.egg")
-    file(WRITE ${ROOT_egg} "PyROOT ${ROOT_VERSION}")
-endif()
+set(ROOT_egg "${CMAKE_CURRENT_BINARY_DIR}/PyROOT.egg")
+file(WRITE ${ROOT_egg} "PyROOT ${ROOT_VERSION}")
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
