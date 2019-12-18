@@ -21,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     RooLegendre.h
     RooSpHarmonic.h
     RooNonCentralChiSquare.h
+    RooHypatia2.h
   SOURCES
     src/RooFitMoreLib.cxx
     src/RooAdaptiveGaussKronrodIntegrator1D.cxx
@@ -28,6 +29,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     src/RooLegendre.cxx
     src/RooSpHarmonic.cxx
     src/RooNonCentralChiSquare.cxx
+    src/RooHypatia2.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF
@@ -36,6 +38,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     ${ROOT_MATHMORE_LIBRARY}
     Core
     RooFitCore
+    RooFit
     Hist
     Matrix
     Tree
