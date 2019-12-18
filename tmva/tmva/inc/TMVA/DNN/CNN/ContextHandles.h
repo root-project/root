@@ -63,7 +63,6 @@ struct TCNNWorkspace : public TMVA::DNN::TWorkspace {
 
    using ReduceTensorDescriptor_t = typename Layer_t::ReduceTensorDescriptor_t;
 
-   // FIXME: Add other cudnn types (algorithm preference etc.)
    using AlgorithmDataType_t = typename Layer_t::AlgorithmDataType_t;
 
    AlgorithmForward_t AlgorithmForward;
@@ -77,13 +76,11 @@ struct TCNNWorkspace : public TMVA::DNN::TWorkspace {
    size_t *HelperWorkspace;
 
    void *fReductionWorkspace = nullptr;
-   // void *fIndicesWorkspace = nullptr;
 
    size_t ForwardWorkspaceSize;
    size_t BackwardWorkspaceSize;
    size_t HelperWorkspaceSize;
    size_t fReductionWorkspaceSize = 0;
-   // size_t fIndicesWorkspaceSize = 0;
 
    ReduceTensorDescriptor_t fReduceTensorDesc;
 };

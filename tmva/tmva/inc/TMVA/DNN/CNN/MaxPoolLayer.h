@@ -229,13 +229,6 @@ TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 }
 
 //______________________________________________________________________________
-// template <typename Architecture_t>
-// void TMaxPoolLayer<Architecture_t>::Initialize() {
-//    InitializeDescriptors();
-//    InitializeWorkspace();
-// }
-
-//______________________________________________________________________________
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Forward(Tensor_t &input, bool applyDropout) -> void
 {
@@ -320,13 +313,13 @@ void TMaxPoolLayer<Architecture_t>::ReleaseDescriptors() {
 //______________________________________________________________________________
 template <typename Architecture_t>
 void TMaxPoolLayer<Architecture_t>::InitializeWorkspace() {
-#if 0  // this is for dropout and needs to be fixed
-   TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
-                      this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
-                      this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+// #if 0  // this is for dropout and needs to be fixed
+//    TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
+//                       this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
+//                       this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
-   Architecture_t::InitializePoolDropoutWorkspace(fWorkspace, fDescriptors, params, this);
-#endif
+//    Architecture_t::InitializePoolDropoutWorkspace(fWorkspace, fDescriptors, params, this);
+// #endif
 }
 
 template <typename Architecture_t>

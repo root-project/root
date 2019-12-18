@@ -32,7 +32,6 @@
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
-//#include "TMVA/DNN/CNN/Descriptors.h"
 
 #include <vector>
 #include <iostream>
@@ -246,17 +245,8 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
     **/
    fInputActivation = Tensor_t( batchSize, depth, fNLocalViews);     // create tensor (shape is B x C x LV)
    fForwardTensor = Tensor_t ( batchSize, fNLocalViews, fNLocalViewPixels );
-   // for (size_t i = 0; i < batchSize; i++) {
-   //    fInputActivation.emplace_back(depth, fNLocalViews);
-   //    fForwardMatrices.emplace_back(fNLocalViews, fNLocalViewPixels);
-   // }
-   // TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
-   //                    this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
-   //                    this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+   
 
-   // Architecture_t::PrepareInternals(this->GetOutput(), this->GetInputActivation(), this->GetWeights(),
-   //                                  this->GetBiases(), this->GetWeightGradients(), this->GetBiasGradients(),
-   //                                  this->GetActivationGradients(), params);
    InitializeDescriptors();
    InitializeWorkspace();
 }
@@ -277,16 +267,7 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
 {
    InitializeDescriptors();
    InitializeWorkspace();
-   // size_t outputNSlices = (layer->GetInputActivation()).size();
-   // size_t outputNRows = 0;
-   // size_t outputNCols = 0;
-
-   // for (size_t i = 0; i < outputNSlices; i++) {
-   //    outputNRows = (layer->GetInputActivationAt(i)).GetNrows();
-   //    outputNCols = (layer->GetInputActivationAt(i)).GetNcols();
-   //    fInputActivation.emplace_back(outputNRows, outputNCols);
-   //    fForwardMatrices.emplace_back(layer->GetNLocalViews(), layer->GetNLocalViewPixels());
-   // }
+   
 }
 
 //______________________________________________________________________________
@@ -304,15 +285,6 @@ TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
 {
    InitializeDescriptors();
    InitializeWorkspace();
-   //AllocateWorkspace();
-   // size_t outputNSlices = convLayer.fInputActivation.size();
-   // size_t outputNRows = convLayer.GetInputActivationAt(0).GetNrows();
-   // size_t outputNCols = convLayer.GetInputActivationAt(0).GetNcols();
-
-   // for (size_t i = 0; i < outputNSlices; i++) {
-   //    fInputActivation.emplace_back(outputNRows, outputNCols);
-   //    fForwardMatrices.emplace_back(convLayer.fNLocalViews, convLayer.fNLocalViewPixels);
-   // }
 }
 
 //______________________________________________________________________________
@@ -332,12 +304,6 @@ TConvLayer<Architecture_t>::~TConvLayer()
    }
 }
 
-//______________________________________________________________________________
-// template <typename Architecture_t>
-// void TConvLayer<Architecture_t>::Initialize() {
-//    InitializeDescriptors();
-//    InitializeWorkspace();
-// }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -352,53 +318,6 @@ auto TConvLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/)
                                     this->GetBiasesAt(0), params, this->GetActivationFunction(),
                                     this->GetForwardMatrices(), (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors),
                                     (TCNNWorkspace<TConvLayer<Architecture_t>> &) (*fWorkspace));
-
-#if 0
-   // in printciple I could make the indices data member of the class
-   Matrix_t inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
-   //Matrix_t inputTr2(this->GetNLocalViews(), this->GetNLocalViewPixels());
-   std::vector<int> vIndices(inputTr.GetNrows() * inputTr.GetNcols() );
-   R__ASSERT( input.size() > 0);
-   Architecture_t::Im2colIndices(vIndices, input[0], this->GetNLocalViews(), this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
-                             this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
-                             this->GetPaddingHeight(), this->GetPaddingWidth());
-   // batch size loop
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-
-      if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
-         Architecture_t::Dropout(input[i], this->GetDropoutProbability());
-      }
-
-      inputTr.Zero();
-      //inputTr2.Zero();
-      // Architecture_t::Im2col(inputTr2, input[i], this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
-      //                         this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
-      //                         this->GetPaddingHeight(), this->GetPaddingWidth());
-      Architecture_t::Im2colFast(inputTr, input[i], vIndices);
-      // bool diff = false;
-      // for (int j = 0; j < inputTr.GetNrows(); ++j) {
-      //    for (int k = 0; k < inputTr.GetNcols(); ++k) {
-      //       if ( inputTr2(j,k) != inputTr(j,k) ) {
-      //          diff = true;
-      //          std::cout <<  "different im2col for " << j << " , " << k << "  " << inputTr(j,k) << "  shoud be " << inputTr2(j,k) << std::endl;
-      //       }
-      //    }
-      // }
-      // if (diff) {
-      //    std::cout << "ConvLayer:: Different Im2Col for batch " << i  << std::endl;
-      //    printf("Layer parameters : %d x %d , filter %d x %d , stride %d %d , pad %d %d \n",this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
-      //                         this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
-      //           this->GetPaddingHeight(), this->GetPaddingWidth() );
-      //    // TMVA_DNN_PrintTCpuMatrix(inputTr);
-      //    // TMVA_DNN_PrintTCpuMatrix(inputTr2);
-      // }
-      // R__ASSERT(!diff);
-      Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeightsAt(0), inputTr);
-      Architecture_t::AddConvBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
-
-      evaluate<Architecture_t>(this->GetOutputAt(i), fF);
-   }
-#endif
 }
 
 //______________________________________________________________________________
