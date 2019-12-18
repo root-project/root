@@ -40,7 +40,7 @@ namespace RooStats{
     SPlot(const char* name, const char* title, const RooDataSet &data);
     SPlot(const char* name, const char* title,RooDataSet& data, RooAbsPdf* pdf,
      const RooArgList &yieldsList,const RooArgSet &projDeps=RooArgSet(),
-     bool includeWeights=kTRUE, bool copyDataSet = kFALSE, const char* newName = "",
+     bool useWeights=kTRUE, bool copyDataSet = kFALSE, const char* newName = "",
      const RooCmdArg& fitToarg5=RooCmdArg::none(),
      const RooCmdArg& fitToarg6=RooCmdArg::none(),
      const RooCmdArg& fitToarg7=RooCmdArg::none(),
