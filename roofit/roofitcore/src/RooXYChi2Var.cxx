@@ -39,7 +39,7 @@
 
 #include "RooRealVar.h"
 
-#include "RooGaussKronrodIntegrator1D.h"
+//#include "RooGaussKronrodIntegrator1D.h"
 #include "RooAbsDataStore.h"
 #include "RooRealBinding.h"
 #include "RooNumIntFactory.h"
