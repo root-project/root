@@ -8,6 +8,7 @@
 #pragma link C++ class RooLegendre+ ;
 #pragma link C++ class RooSpHarmonic+ ;
 #pragma link C++ class RooNonCentralChiSquare+ ;
+#pragma link C++ class RooHypatia2+;
 
 //
 #endif 

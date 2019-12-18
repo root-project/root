@@ -57,7 +57,6 @@
 #pragma link C++ class RooUniform+ ;
 #pragma link C++ class RooJeffreysPrior+ ;
 #pragma link C++ class RooJohnson+;
-#pragma link C++ class RooHypatia2+;
 
 
 #pragma link C++ class RooFunctorBinding+ ;
