@@ -134,44 +134,15 @@ template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/) -> void
 {
    if (fFlattening) {
-      //size_t size = input.size();
-      //size_t nRows = input[0].GetNrows();
-      //size_t nCols = input[0].GetNcols();
-
-      //printf ( "input tensor %f \n",input(0,0,0));
-      //printf ( "output tensor %f \n",this->GetOutput()(0,0,0));
-
-      //Tensor_t input2(input);
-
-      //TMVA::DNN::debugTensor<Architecture_t>(this->GetOutput(),"output");
+    
       Architecture_t::Flatten(this->GetOutput(), input);
-
-      //TMVA::DNN::debugTensor<Architecture_t>(input2,"input");
       
       return;
    } else {
-      // size_t out_size = this->GetOutput().size();
-      // if (input.size() == 1 && out_size  > 1 ) {
-      //    // deflatten
-      //    size_t nRows = this->GetOutput()[0].GetNrows();
-      //    size_t nCols = this->GetOutput()[0].GetNcols();
-
-         
-
+     
          Architecture_t::Deflatten(this->GetOutput(), input); //, out_size, nRows, nCols);
          return;
       }
-      // if (out_size == input.size()) {
-      //    for (size_t i = 0; i < out_size; i++) {
-      //       Architecture_t::Reshape(this->GetOutputAt(i), input[i]);
-      //    }
-      //    return;
-      // }
-      // std::cout << "Error: - reshape from " << input.size() << " , " << input[0].GetNrows() << " , "
-      //    << input[0].GetNcols() << " to " << out_size << " , " << this->GetOutput()[0].GetNrows() << " , "
-      //    << this->GetOutput()[0].GetNcols() << " is not supported !!! " << std::endl;
-      // return;
-   //}
 }
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
@@ -185,25 +156,11 @@ auto TReshapeLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, const
    if (size == 0) return;
    if (fFlattening) {
       // deflatten in backprop
-      // size_t nRows = gradients_backward[0].GetNrows();
-      // size_t nCols = gradients_backward[0].GetNcols();
       Architecture_t::Deflatten(gradients_backward, this->GetActivationGradients());
       return;
    } else {
-      // size_t input_size = this->GetActivationGradients().size();
-      // if (size == 1 && input_size  > 1 ) {
-      //    // deflatten operator:  flatten in bakprop
-         //size_t nRows = this->GetActivationGradientsAt(0).GetNrows();
-         //size_t nCols = this->GetActivationGradientsAt(0).GetNcols();
          Architecture_t::Flatten(gradients_backward, this->GetActivationGradients() );
          return;
-      //}
-      // if (size == input_size) {
-      //    for (size_t i = 0; i < size; i++) {
-      //       Architecture_t::Reshape(gradients_backward[i], this->GetActivationGradientsAt(i));
-      //    }
-      //    return;
-      // }
    }
 }
 

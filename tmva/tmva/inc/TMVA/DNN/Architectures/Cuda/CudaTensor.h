@@ -21,11 +21,7 @@
 
 //#include "cuda.h"
 #include "cudnn.h"
-/*#include "cuda_runtime.h"
-#include "cublas_v2.h"
-#include "curand_kernel.h"*/
-//#include "thrust/fill.h"
-//#include "thrust/device_vector.h"
+
 
 #include <vector>
 #include <cstring>
@@ -90,13 +86,8 @@ private:
        cudnnTensorDescriptor_t   fCudnnDesc;
    };
 
-   //static size_t                         fInstances;        ///< Current number of matrix instances.
    static std::vector<cudnnHandle_t>     fCudnnHandle;      ///< Holds the cuddn library context (one for every CUDA stream)
-   //static AFloat                         * fDeviceReturn;   ///< Buffer for kernel return values.
-   //static AFloat                         * fOnes;           ///< Vector used for summations of columns.
-   //static size_t                         fNOnes;            ///< Current length of the one vector.
-   //static curandState_t                  * fCurandStates;
-   //static size_t                         fNCurandStates;
+   
    static cudnnDataType_t                fDataType;         ///< Cudnn datatype used for the tensor
    /** For each GPU device keep the CUDA streams in which tensors are used.
      * Instances belonging to the same stream on the same deviceshare a
@@ -172,20 +163,6 @@ public:
    /** Convert cuda matrix to Root TMatrix. Performs synchronous data transfer. */
    operator TMatrixT<AFloat>() const;
 
-   /** Set the return buffer on the device to the specified value. This is
-    * required for example for reductions in order to initialize the
-    * accumulator. */
-   //inline static void ResetDeviceReturn(AFloat value = 0.0);
-   /** Transfer the value in the device return buffer to the host. This
-    *  tranfer is synchronous */
-   //inline static AFloat GetDeviceReturn();
-   /** Return device pointer to the device return buffer */
-   //inline static AFloat *        GetDeviceReturnPointer() {return fDeviceReturn;}
-   //inline static curandState_t * GetCurandStatesPointer() {return fCurandStates;}
-
-   /** Blocking synchronization with the associated compute stream, if it's
-    * not the default stream. */
-   //inline void Synchronize(const TCudaTensor &) const;
 
    MemoryLayout GetLayout() const { return fMemoryLayout; }
 
@@ -219,20 +196,10 @@ public:
        fElementBuffer.SetComputeStream(stream);
    }
 
-   /** Access to elements of device matrices provided through TCudaDeviceReference
-    *  class. Note that access is synchronous end enforces device synchronization
-    *  on all streams. Only used for testing. */
-   //TCudaDeviceReference<AFloat> operator()(size_t i, size_t j) const;
-
-   // FIXME: Change to on device division and reduction
    bool isEqual (TCudaTensor<AFloat> & other) {
 
       if (fSize != other.GetSize()) return false;
 
-      /*TCudaHostBuffer<AFloat> hostBufferThis(fSize);
-      TCudaHostBuffer<AFloat> hostBufferOther(fSize);
-      fElementBuffer.CopyTo(hostBufferThis);
-      other.GetDeviceBuffer().CopyTo(hostBufferOther);*/
 
       std::unique_ptr<AFloat[]> hostBufferThis(new AFloat[fSize]);
       std::unique_ptr<AFloat[]> hostBufferOther(new AFloat[fSize]);
@@ -250,7 +217,6 @@ public:
    bool isEqual (const AFloat * hostBufferOther, size_t otherSize) {
       if (fSize != otherSize) return false;
 
-      //TCudaHostBuffer<AFloat> hostBufferThis (fSize);
 
       std::unique_ptr<AFloat[]> hostBufferThis(new AFloat[fSize]);
       cudaMemcpy(hostBufferThis.get(), fElementBuffer, fSize * sizeof(AFloat),
@@ -353,15 +319,6 @@ public:
       size_t newSize = (fMemoryLayout == MemoryLayout::RowMajor) ? fStrides.front() * fShape.front() : fStrides.back() * fShape.back();
       R__ASSERT(newSize <= fSize);
       fSize = newSize;
-#ifdef DEBUG
-      std::cout << "reshaping tensor to a new shape " << std::endl;
-      std::cout << "old shape : ";
-      for (size_t i = 0; i < fNDim; i++) std::cout << fShape[i] << "  ";
-      std::cout << std::endl;
-      std::cout << "new shape : ";
-      for (size_t i = 0; i < fNDim; i++) std::cout << fShape[i] << "  ";
-      std::cout << std::endl;
-#endif
       // reset the descritor for Cudnn
       SetTensorDescriptor();
    }
@@ -467,47 +424,6 @@ inline void cudnnError(cudnnStatus_t status, const char *file, int line, bool ab
    }
 }
 
-//______________________________________________________________________________
-/*template<typename AFloat>
-inline cudaStream_t TCudaTensor<AFloat>::GetComputeStream() const
-{
-   return fElementBuffer.GetComputeStream();
-}
-
-//______________________________________________________________________________
-template<typename AFloat>
-inline void TCudaTensor<AFloat>::SetComputeStream(cudaStream_t stream)
-{
-   return fElementBuffer.SetComputeStream(stream);
-}
-
-//______________________________________________________________________________
-template<typename AFloat>
-inline void TCudaTensor<AFloat>::Synchronize(const TCudaTensor &A) const
-{
-   cudaEvent_t event;
-   cudaEventCreateWithFlags(&event, cudaEventDisableTiming);
-   cudaEventRecord(event, A.GetComputeStream());
-   cudaStreamWaitEvent(fElementBuffer.GetComputeStream(), event, 0);
-   cudaEventDestroy(event);
-}*/
-
-//______________________________________________________________________________
-// template<typename AFloat>
-// inline void TCudaTensor<AFloat>::ResetDeviceReturn(AFloat value)
-// {
-//    AFloat buffer = value;
-//    cudaMemcpy(fDeviceReturn, & buffer, sizeof(AFloat), cudaMemcpyHostToDevice);
-// }
-
-// //______________________________________________________________________________
-// template<typename AFloat>
-// inline AFloat TCudaTensor<AFloat>::GetDeviceReturn()
-// {
-//    AFloat buffer;
-//    cudaMemcpy(& buffer, fDeviceReturn, sizeof(AFloat), cudaMemcpyDeviceToHost);
-//    return buffer;
-// }
 
 } // namespace DNN
 } // namespace TMVA

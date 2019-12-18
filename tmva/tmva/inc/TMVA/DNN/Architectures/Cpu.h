@@ -148,10 +148,6 @@ public:
    static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
-   // // Utility function to convert from a Matrix to a Tensor
-   // static Tensor_t  MatrixToTensor(Matrix_t & A) {
-   //    return Tensor_t(A.GetRawDataPointer(), Shape_t({A.GetNrows(), A.GetNcols() }), RTensor::MemoryLayout::ColumnMajor);
-   // }
 
    //____________________________________________________________________________
    //
@@ -721,11 +717,11 @@ void TCpu<AReal>::CopyDiffArch(TCpuTensor<AReal> &B,
    // suppose A is of (B,D,H.W) and we want to convert to B,HW,D  or (D,HW,B) in ColumnMajor format
    for (size_t i = 0; i < A.GetFirstSize(); ++i) {
       TMatrixT<AReal> tmpIn = A.At(i);  // this convert tensor (B,D,H,W) in  (D,H,W)i -> (D,HW)i
-      //std::cout << " i == " << i << std::endl;
-      //tmpIn.Print();
+
       TCpuMatrix<AReal> tmpOut = B.At(i).GetMatrix();    // matrix (D,HW)
       Copy(tmpOut, TCpuMatrix<AReal>(tmpIn));
    }
+   
    // ATensor_t tmpIn = A.Reshape({A.GetNrows(), A.GetNcols()});
    // auto tmpOut = B.Reshape({A.GetNrows(), A.GetNcols()});
    // Matrix_t mOut = tmpOut.GetMatrix();
@@ -750,8 +746,7 @@ void TCpu<AReal>::PrintTensor(const typename TCpu<AReal>::Tensor_t & A, const st
    for (size_t k = 0; k < shape.size()-1; ++k)
       std::cout << shape[k] << " , ";
    std::cout << shape.back() << " } ";
-   //std::cout << " is view/owner " << A.IsView() << " / " << A.IsOwner() << " layout " << A.GetLayout() << std::endl;
-   //std::cout << " layout " << A.GetLayout() << std::endl;
+
    // print elements
    // need to find way to nice printing all elements
    std::cout << " tensor count " << A.GetBufferUseCount() << std::endl;

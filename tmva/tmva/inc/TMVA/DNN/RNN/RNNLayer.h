@@ -183,9 +183,6 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
      fWeightStateGradients(this->GetWeightGradientsAt(1)),
      fBiasGradients(this->GetBiasGradientsAt(0))
 {
-//   for (size_t i = 0; i < timeSteps; ++i) {
-//      fDerivatives.emplace_back(batchSize, stateSize);
-//   }
    // Nothing
 }
 
