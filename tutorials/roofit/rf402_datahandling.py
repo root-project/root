@@ -48,8 +48,9 @@ for i in range(1000):
 
     # We must explicitly refer to x,y, here to pass the values because
     # d is not linked to them (as explained above)
-    print(x, y, c)
-    print(type(x))
+    if i < 3:
+        print(x, y, c)
+        print(type(x))
     d.add(ROOT.RooArgSet(x, y, c))
 
 d.Print("v")
