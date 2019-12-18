@@ -27,8 +27,6 @@
 #ifndef TMVA_DNN_BatchNormLayer
 #define TMVA_DNN_BatchNormLayer
 
-//#include "TMatrix.h"
-
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
 
@@ -72,7 +70,6 @@ public:
    using HelperDescriptor_t  = typename Architecture_t::TensorDescriptor_t;
    using BNormDescriptors_t = typename Architecture_t::BNormDescriptors_t;
 
-   //using Matrix_t = TMatrixD;
 
 private:
 
@@ -83,20 +80,10 @@ private:
    Scalar_t fMomentum; ///< The weight decay.
    Scalar_t fEpsilon;
 
-   //Matrix_t fXmu;
-   //Matrix_t fXhat;
-
-   // Matrix_t dgammax;
-   //Matrix_t fVar;
-   // Matrix_t sqrtvar;
-   //Matrix_t fIvar;
-
    Matrix_t fMu;
    Matrix_t fVar;
    Matrix_t fIVar;
 
-   // Matrix_t fGamma;
-   // Matrix_t fBeta;
    Matrix_t fMu_Training;
    Matrix_t fVar_Training;
 
@@ -233,13 +220,6 @@ TBatchNormLayer<Architecture_t>::TBatchNormLayer(size_t batchSize, size_t inputD
      fVar_Training(1, VGeneralLayer<Architecture_t>::GetWeightsAt(0).GetNcols()),
      fReshapedData(1,1,1)  // use a dummy single element tensor
 
-//   fXmu(batchSize, inputWidth), fXhat(batchSize, inputWidth),
-//   // dgammax(batchSize, inputWidth),
-//   fVar(1, inputWidth),
-//   // sqrtvar(1, inputWidth),
-//   fMu(calculateBNormDim(axis, inputDepth, inpuyHeight, inputWidth)),
-//   fIvar(1, inputWidth), fMu_Training(inputWidth),
-//   fVar_Training(inputWidth)
 {
 
 }
@@ -276,8 +256,8 @@ auto TBatchNormLayer<Architecture_t>::Initialize() -> void
 {
    Matrix_t &gamma = this->GetWeightsAt(0);
    Matrix_t &beta = this->GetWeightsAt(1);
-   size_t bndim = gamma.GetNcols(); // fMu_Training.size();
-   // initialize<Architecture_t>(gamma, EInitialization::kIdentity);
+   size_t bndim = gamma.GetNcols(); 
+
    initialize<Architecture_t>(beta, EInitialization::kZero);
    for (size_t i = 0; i < bndim; ++i) {
       gamma(0, i) = 1.;
@@ -329,76 +309,7 @@ auto TBatchNormLayer<Architecture_t>::Forward(Tensor_t &x, bool inTraining) -> v
                                                      this->GetEpsilon(), descr->HelperDescriptor);
       fTrainedBatches = 0;
    }
-#if 0
-   Matrix_t input = x.At(0).GetMatrix();
 
-   Matrix_t &gamma = this->GetWeightsAt(0);
-   Matrix_t &beta = this->GetWeightsAt(1);
-
-   // gamma.Print();
-   // beta.Print();
-
-   Matrix_t out = this->GetOutputAt(0);
-   double epsilon = fEpsilon;
-
-   int n = input.GetNrows();
-   int d = input.GetNcols();
-
-   for (int k = 0; k < d; ++k) {
-
-      if (inTraining) {
-
-         double mean = 0;
-         for (int i = 0; i < n; i++) {
-            mean = mean + input(i, k);
-         }
-         mean = mean / n;
-
-         for (int i = 0; i < n; i++) {
-            fXmu(i, k) = input(i, k) - mean;
-         }
-         double sq = 0;
-         for (int i = 0; i < n; i++) {
-            sq = sq + (fXmu(i, k) * fXmu(i, k));
-         }
-         fVar(0, k) = sq / n;
-         // fVar(0,k) = fVar(0,k) + epsilon;
-         // sqrtvar(0,k) =
-         fIvar(0, k) = 1. / std::sqrt(fVar(0, k) + epsilon);
-         for (int i = 0; i < n; i++) {
-            fXhat(i, k) = fXmu(i, k) * fIvar(0, k);
-            out(i, k) = gamma(0, k) * fXhat(i, k) + beta(0, k);
-         }
-
-         // fVar(0,k) -= epsilon;
-
-         if (fTrainedBatches == 0) {
-            fMu_Training[k] = mean;
-            fVar_Training[k] = fVar(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
-         } else {
-            Scalar_t decay = fMomentum;
-            if (fMomentum < 0) decay = fTrainedBatches/Scalar_t(fTrainedBatches+1);
-            fMu_Training[k] = decay * fMu_Training[k] + (1. - decay) * mean;
-            fVar_Training[k] = decay * fVar_Training[k] + (1.-decay) * fVar(0, k) * (n) / (Scalar_t(n - 1) + epsilon);
-         }
-
-      }
-      // during inference just use stored mu and variance
-      else {
-         for (int i = 0; i < n; i++) {
-            out(i, k) =
-               gamma(0, k) * ((input(i, k) - fMu_Training[k]) / (sqrt(fVar_Training[k] + epsilon))) + beta(0, k);
-         }
-      }
-   } // end loop on k
-   if (inTraining) fTrainedBatches++;
-   else fTrainedBatches = 0;
-   // fVar.Print();
-   // if (inTraining)
-   //    std::cout << " training batch " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
-   // else
-   //    std::cout << " testing batch  " << fTrainedBatches << " mu var0" << fMu_Training[0] << std::endl;
-   # endif
 }
 
 //______________________________________________________________________________
@@ -431,48 +342,6 @@ auto TBatchNormLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
                                           this->GetBatchMean(), this->GetVariance(), this->GetIVariance(),
                                           this->GetEpsilon(), descr->HelperDescriptor);
    }
-# if 0
-   double epsilon = fEpsilon;
-
-
-   // inputs
-   const Matrix_t &dout = this->GetActivationGradients().At(0).GetMatrix();
-   const Matrix_t &gamma = this->GetWeightsAt(0);
-   //const Matrix_t &x = activations_backward[0];
-   int d = dout.GetNcols();
-   int n = dout.GetNrows();
-
-   // outputs gradients
-   Matrix_t &dgamma = this->GetWeightGradientsAt(0);
-   Matrix_t &dbeta = this->GetWeightGradientsAt(1);
-   Matrix_t dx = gradients_backward.At(0).GetMatrix();
-
-   // compute first gradients for gamma and beta
-   for (int k = 0; k < d; k++) {
-      dgamma(0, k) = 0;
-      dbeta(0, k) = 0;
-      for (int i = 0; i < n; i++) {
-         dbeta(0, k) += dout(i, k);
-         dgamma(0, k) += dout(i, k) * fXhat(i, k);
-         // dxhat(i,k) = dout(i,k) * gamma(0,k);
-      }
-   }
-
-   // compute gradients with respect to input
-   double npSumDy = 0;
-   double npSumDyHMu = 0;
-
-   for (int k = 0; k < d; k++) {
-      for (int i = 0; i < n; i++) {
-         npSumDy += dout(i, k);
-         npSumDyHMu += dout(i, k) * fXmu(i, k);
-      }
-      for (int i = 0; i < n; i++) {
-         dx(i, k) = (1. / double(n) * gamma(0, k) * fIvar(0, k)) *
-                    (n * dout(i, k) - npSumDy - fXmu(i, k) / (fVar(0, k) + epsilon) * npSumDyHMu);
-      }
-   }
-   # endif
 }
 
 //______________________________________________________________________________
@@ -502,9 +371,6 @@ void TBatchNormLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "BatchNormLayer");
 
-   //gTools().AddAttr(layerxml, "InputSize", fInputWidth);
-   // gTools().xmlengine().NewAttr(layerxml, 0, "Momentum", gTools().StringFromDouble(fMomentum));
-   // gTools().xmlengine().NewAttr(layerxml, 0, "Epsilon", gTools().StringFromDouble(fEpsilon));
 
    gTools().AddAttr(layerxml, "Momentum", fMomentum);
    gTools().AddAttr(layerxml, "Epsilon", fEpsilon);
@@ -514,13 +380,6 @@ void TBatchNormLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 
    this->WriteMatrixToXML(layerxml, "Training-mu", fMu_Training);
    this->WriteMatrixToXML(layerxml, "Training-variance", fVar_Training);
-
-   // TMatrixT<Scalar_t> muMat(1, fMu_Training.size(), fMu_Training.data());
-   // //VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::WriteMatrixToXML(layerxml, "Training-mu", muMat);
-   // this->WriteMatrixToXML(layerxml, "Training-mu", Matrix_t(muMat) );
-   // TMatrixT<Scalar_t> varMat(1, fVar_Training.size(), fVar_Training.data());
-   // //VGeneralLayer<TMVA::DNN::TReference<Scalar_t> >::WriteMatrixToXML(layerxml, "Training-variance", varMat);
-   // this->WriteMatrixToXML(layerxml, "Training-variance", Matrix_t(varMat) );
 
    // write weights (gamma and beta)
    this->WriteMatrixToXML(layerxml, "Gamma", this->GetWeightsAt(0));
@@ -539,16 +398,6 @@ void TBatchNormLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 
    this->ReadMatrixXML(parent, "Training-mu", fMu_Training);
    this->ReadMatrixXML(parent, "Training-variance", fVar_Training);
-
-   // Matrix_t muMat(1, fMu_Training.size());
-   // this->ReadMatrixXML(parent, "Training-mu", muMat);
-   // TMatrixT<Scalar_t> tmp = muMat;
-   // std::copy(tmp.GetMatrixArray(), tmp.GetMatrixArray()+fMu_Training.size(), fMu_Training.begin() );
-
-   // Matrix_t varMat(1, fVar_Training.size());
-   // this->ReadMatrixXML(parent, "Training-variance", varMat);
-   // TMatrixT<Scalar_t> tmp2 = varMat;
-   // std::copy(tmp2.GetMatrixArray(), tmp2.GetMatrixArray()+fVar_Training.size(), fVar_Training.begin() );
 
    this->ReadMatrixXML(parent, "Gamma", this->GetWeightsAt(0));
    this->ReadMatrixXML(parent, "Beta", this->GetWeightsAt(1));

@@ -95,17 +95,6 @@ void TCudnn<AFloat>::Copy(Tensor_t & B, const Tensor_t & A)
                    nElements * sizeof(AFloat), cudaMemcpyDeviceToDevice, 0);
 }
 
-//____________________________________________________________________________
-/*template<typename AFloat>
-size_t TCudnn<AFloat>::calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride)
-{
-   size_t temp = imgDim - fltDim + 2 * padding;
-   if (temp % stride || temp + stride <= 0) {
-      Fatal("calculateDimension", "Not compatible hyper parameters for layer - (imageDim, filterDim, padding, stride)"
-            " %zu , %zu , %zu , %zu", imgDim, fltDim, padding, stride);
-   }
-   return temp / stride + 1;
-}*/
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -539,14 +528,7 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
    auto reduceTensorDesc = convWorkspace->fReduceTensorDesc;
    CUDNNCHECK(cudnnSetReduceTensorDescriptor(reduceTensorDesc, CUDNN_REDUCE_TENSOR_ADD, Tensor_t::GetDataType(),
                                              CUDNN_PROPAGATE_NAN, CUDNN_REDUCE_TENSOR_NO_INDICES, CUDNN_32BIT_INDICES));
-   // cudnnReduceTensorOp_t           reduceTensorOp,
-   // cudnnDataType_t                 reduceTensorCompType,
-   // cudnnNanPropagation_t           reduceTensorNanOpt,
-   // cudnnReduceTensorIndices_t      reduceTensorIndices,
-   // cudnnIndicesType_t              reduceTensorIndicesType))
-
-   //size_t wsizeInBytes;
-   //void *reductionWorkspace = nullptr;
+   
    CUDNNCHECK(cudnnGetReductionWorkspaceSize(cudnnHandle, reduceTensorDesc, activationGradients.GetTensorDescriptor(),
                                              biasGradients.GetTensorDescriptor(),
                                              &convWorkspace->fReductionWorkspaceSize));
@@ -800,14 +782,8 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
    assert (shape_output == outputTensor.GetShape());
 #endif
 
-   //assert( workspace.ForwardWorkspace != 0);
-
-   //cudnnMathType_t math_type = CUDNN_TENSOR_OP_MATH; // : CUDNN_DEFAULT_MATH);
-   // if using tensor math (cudnn version > 7)
-   //CUDNNCHECK(cudnnSetConvolutionMathType(descriptors.LayerDescriptor, math_type));
 
    // Perform convolution
-   //CUDNNCHECK(cudnnConvolutionForward(cudnnHandle,
    cudnnStatus_t status =  cudnnConvolutionForward(cudnnHandle,
                                       &alpha,
                                       input.GetTensorDescriptor(),
@@ -863,7 +839,6 @@ void TCudnn<AFloat>::ConvLayerForward(Tensor_t & outputTensor,
 
    //TCudnn<AFloat>::PrintTensor(outputTensor, "after activation");
 
-   //cudaFree(cudnnWorkspace);
 }
 
 //____________________________________________________________________________

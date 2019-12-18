@@ -266,30 +266,13 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    // in case of dense layers
    if (fBatchDepth == 1 && fBatchHeight == fBatchSize && fInputLayout[0] == 1 && fInputLayout[1] == 1){
       inputTensor = Tensor_t( inputDeviceBuffer, {fBatchSize, fInputLayout.back() }, Tensor_t::MemoryLayout::ColumnMajor );
-   // do reshape in case of first layer at the beginning for cudnn
-   // Tensor_t newInputTensor ;
-   // if (inputTensor.GetShape().size() == 4) {
-
-   //       new
-   //       Architecture_t::Flatten(newInputTensor,inputTensor);
-   //       inputTensor = newInputTensor;
-   //    }
    }
 
-
-   // size_t jump = fBatchHeight * fBatchWidth;
-   // for (size_t i = 0; i < fBatchDepth; i++) {
-   //    DeviceBuffer_t subInputDeviceBuffer = inputDeviceBuffer.GetSubBuffer(i * jump, jump);
-   //    inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
-   // }
    Matrix_t outputMatrix(outputDeviceBuffer, fBatchSize, fNOutputFeatures);
    Matrix_t weightMatrix(weightDeviceBuffer, fBatchSize, 1);
 
    fBatchIndex++;
 
-   //std::cout << "Batch number " << fBatchIndex << std::endl;
-   //Architecture_t::PrintTensor(inputTensor, "inputTensor");
-   //Architecture_t::PrintTensor(Tensor_t(outputMatrix), "output matrix");
 
    return TTensorBatch<Architecture_t>(inputTensor, outputMatrix, weightMatrix);
 }
