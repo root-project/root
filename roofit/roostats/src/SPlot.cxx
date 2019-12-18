@@ -141,13 +141,13 @@ SPlot::SPlot(const SPlot &other):
 ///\param[in] pdf PDF to compute s weights for.
 ///\param[in] yieldsList List of parameters in `pdf` that are yields.
 ///\param[in] projDeps Don't normalise over these parameters when calculating the sWeights. Will be passed on to AddSWeight().
-///\param[in] includeWeights Whether or not to include the weights in `data`. Passed on to AddSWeight().
+///\param[in] useWeights Include weights of the input data in calculation of s weights.
 ///\param[in] cloneData Make a clone of the incoming data before adding weights.
 ///\param[in] newName New name for the data.
 ///\param[in] argX Additional arguments for the fitting step in AddSWeight().
 SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf,
         const RooArgList &yieldsList, const RooArgSet &projDeps,
-        bool includeWeights, bool cloneData, const char* newName,
+        bool useWeights, bool cloneData, const char* newName,
         const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8):
   TNamed(name, title)
 {
@@ -171,7 +171,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   //calculate sWeights, and include them
   //in the RooDataSet of this class.
 
-  this->AddSWeight(pdf, yieldsList, projDeps, includeWeights, arg5, arg6, arg7, arg8);
+  this->AddSWeight(pdf, yieldsList, projDeps, useWeights, arg5, arg6, arg7, arg8);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +363,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// \param[in] yieldsTmp Yields to use to compute s weights.
 /// \param[in] projDeps These will not be normalized over when calculating the sWeights,
 /// and will be considered parameters, not observables.
-/// \param[in] includeWeights
+/// \param[in] includeWeights Include weights of the input data in calculation of s weights.
 /// \param[in] argX Optional additional arguments for the fitting step.
 void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
          const RooArgSet &projDeps, bool includeWeights,
@@ -539,10 +539,10 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       for(Int_t n=0; n<nspec; ++n)
    for(Int_t j=0; j<nspec; ++j)
      {
-       if(includeWeights == kTRUE)
+       if(includeWeights)
          covInv(n,j) +=  fSData->weight()*pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
        else
-         covInv(n,j) +=  pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
+         covInv(n,j) +=                   pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
      }
 
       //ADDED WEIGHT ABOVE
@@ -626,7 +626,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
      //ie events weights are absorbed into sWeight
 
 
-     if(includeWeights == kTRUE) sweightvec[n]->setVal(fSData->weight() * nsum/dsum) ;
+     if(includeWeights) sweightvec[n]->setVal(fSData->weight() * nsum/dsum) ;
      else  sweightvec[n]->setVal( nsum/dsum) ;
 
      pdfvec[n]->setVal( pdfvalues[ievt][n] ) ;
