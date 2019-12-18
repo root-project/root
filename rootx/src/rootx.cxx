@@ -201,6 +201,9 @@ static void SetLibraryPath()
 #  endif
    putenv(msg);
 #ifdef ROOTPREFIX
+   } else {
+      char *msg = strdup("LD_LIBRARY_PATH=" ROOTLIBDIR);
+      putenv(msg);
    }
 #endif
 }
