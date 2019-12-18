@@ -1589,4 +1589,5 @@ if(webgui)
      BUILD_COMMAND ""
      INSTALL_COMMAND ""
      SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
