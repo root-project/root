@@ -18,6 +18,8 @@
 
 #include <ROOT/FoundationUtils.hxx>
 
+#include <RConfigure.h>
+
 #include <algorithm>
 
 #include <errno.h>
@@ -118,6 +120,13 @@ const std::string& GetFallbackRootSys() {
 #endif
    return fallback;
 }
+
+#ifdef ROOTPREFIX
+static bool IgnorePrefix() {
+   static bool ignorePrefix = ::getenv("ROOTIGNOREPREFIX");
+   return ignorePrefix;
+}
+#endif
 
 const std::string& GetRootSys() {
 #ifdef ROOTPREFIX
