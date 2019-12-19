@@ -257,12 +257,12 @@ Bool_t RooIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
-    _xmin= integrand()->getMinLimit(0);
-    _xmax= integrand()->getMaxLimit(0);
+    const_cast<double&>(_xmin) = integrand()->getMinLimit(0);
+    const_cast<double&>(_xmax) = integrand()->getMaxLimit(0);
   }
-  _range= _xmax - _xmin;
-  if(_range < 0) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min >= max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
+  const_cast<double&>(_range) = _xmax - _xmin;
+  if (_range < 0.) {
+    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min > max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
     return kFALSE;
   }
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
@@ -276,56 +276,59 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
 {
   assert(isValid());
 
+  if (_range == 0.)
+    return 0.;
+
   // Copy yvec to xvec if provided
   if (yvec) {
-    UInt_t i ; for (i=0 ; i<_function->getDimension()-1 ; i++) {
+    for (UInt_t i = 0 ; i<_function->getDimension()-1 ; i++) {
       _x[i+1] = yvec[i] ;
     }
   }
 
-  Int_t j;
+
   _h[1]=1.0;
   Double_t zeroThresh = _epsAbs/_range ;
-  for(j= 1; j<=_maxSteps; j++) {
+  for(Int_t j = 1; j <= _maxSteps; ++j) {
     // refine our estimate using the appropriate summation rule
     _s[j]= (_rule == Trapezoid) ? addTrapezoids(j) : addMidpoints(j);
 
     if (j >= _minStepsZero) {
       Bool_t allZero(kTRUE) ;
-      Int_t jj ; for (jj=0 ; jj<=j ; jj++) {	
-	if (_s[j]>=zeroThresh) {
-	  allZero=kFALSE ;
-	}
+      for (int jj=0 ; jj<=j ; jj++) {
+        if (_s[j]>=zeroThresh) {
+          allZero=kFALSE ;
+        }
       }
       if (allZero) {
-	//cout << "Roo1DIntegrator(" << this << "): zero convergence at step " << j << ", value = " << 0 << endl ;
-	return 0;
+        //cout << "Roo1DIntegrator(" << this << "): zero convergence at step " << j << ", value = " << 0 << endl ;
+        return 0;
       }
     }
-    
+
     if (_fixSteps>0) {
-      
+
       // Fixed step mode, return result after fixed number of steps
       if (j==_fixSteps) {
-	//cout << "returning result at fixed step " << j << endl ;
-	return _s[j];
+        //cout << "returning result at fixed step " << j << endl ;
+        return _s[j];
       }
 
     } else  if(j >= _nPoints) {
 
       // extrapolate the results of recent refinements and check for a stable result
       if (_doExtrap) {
-	extrapolate(j);
+        extrapolate(j);
       } else {
-	_extrapValue = _s[j] ;
-	_extrapError = _s[j]-_s[j-1] ;
+        _extrapValue = _s[j] ;
+        _extrapError = _s[j]-_s[j-1] ;
       }
 
       if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) {
-	return _extrapValue;
+        return _extrapValue;
       }
       if(fabs(_extrapError) <= _epsAbs) {
-	return _extrapValue ;
+        return _extrapValue ;
       }
 
     }
@@ -334,13 +337,12 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
   }
 
   oocoutW((TObject*)0,Integration) << "RooIntegrator1D::integral: integral of " << _function->getName() << " over range (" << _xmin << "," << _xmax << ") did not converge after " 
-				   << _maxSteps << " steps" << endl;
-  for(j= 1; j <= _maxSteps; j++) {
+      << _maxSteps << " steps" << endl;
+  for(Int_t j = 1; j <= _maxSteps; ++j) {
     ooccoutW((TObject*)0,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
   }
 
   return _s[_maxSteps] ;
-
 }
 
 
@@ -380,14 +382,11 @@ Double_t RooIntegrator1D::addMidpoints(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the n-th stage of refinement of the extended trapezoidal
 /// summation rule. This is the most efficient rule for a well behaved
-/// integrand that can be evaluated over its entire range, including the
+/// integrands that can be evaluated over its entire range, including the
 /// endpoints.
 
 Double_t RooIntegrator1D::addTrapezoids(Int_t n)
 {
-  Double_t x,tnm,sum,del;
-  Int_t it,j;
-
   if (n == 1) {
     // use a single trapezoid to cover the full range
     return (_savedResult= 0.5*_range*(integrand(xvec(_xmin)) + integrand(xvec(_xmax))));
@@ -395,12 +394,18 @@ Double_t RooIntegrator1D::addTrapezoids(Int_t n)
   else {
     // break the range down into several trapezoids using 2**(n-2)
     // equally-spaced interior points
-    for(it=1, j=1; j < n-1; j++) it <<= 1;
-    tnm= it;
-    del= _range/tnm;
-    x= _xmin + 0.5*del;
-    for(sum=0.0, j=1; j<=it; j++, x+=del) sum += integrand(xvec(x));
-    return (_savedResult= 0.5*(_savedResult + _range*sum/tnm));
+    const int nInt = std::pow(2, n-2);
+    const double del = _range/nInt;
+    const double xmin = _xmin;
+
+    double sum = 0.;
+    // TODO Replace by batch computation
+    for (int j=0; j<nInt; ++j) {
+      double x = xmin + (0.5+j)*del;
+      sum += integrand(xvec(x));
+    }
+
+    return (_savedResult= 0.5*(_savedResult + _range*sum/nInt));
   }
 }
 
