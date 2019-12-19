@@ -6218,7 +6218,8 @@ static bool FindSymbol(const std::string &library_filename,
 {
    auto ObjF = llvm::object::ObjectFile::createObjectFile(ROOT::TMetaUtils::GetRealPath(library_filename));
    if (!ObjF) {
-      Warning("TCling__FindSymbol", "Failed to read object file %s", library_filename.c_str());
+      if (gDebug > 1)
+         Warning("TCling__FindSymbol", "Failed to read object file %s", library_filename.c_str());
       return false;
    }
 
