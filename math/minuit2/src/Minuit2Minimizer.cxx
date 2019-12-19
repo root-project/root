@@ -855,8 +855,8 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
    // print error message in Minos
    // Note that the only invalid condition can happen when the (npar-1) minimization fails
    // The error is also invalid when the maximum number of calls is reached or a new function minimum is found
-   // in case of the parameter at the limit the error is not ivalid. 
-   // When the error is invalid the returned error is the Hessian error. 
+   // in case of the parameter at the limit the error is not ivalid.
+   // When the error is invalid the returned error is the Hessian error.
 
    if (debugLevel >= 1) {
       if (runLower) {
@@ -1001,7 +1001,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
    // switch off Minuit2 printing (for level of  0,1)
    int prev_level = (PrintLevel() <= 1 ) ?   TurnOffPrintInfoLevel() : -2;
 
-   // decrease print-level to have too many messages 
+   // decrease print-level to have too many messages
    MnPrint::SetLevel( PrintLevel() -1 );
 
    // set the precision if needed
@@ -1056,10 +1056,12 @@ bool Minuit2Minimizer::Hesse( ) {
 
    ROOT::Minuit2::MnHesse hesse( strategy );
 
+   if (PrintLevel() >= 1)
+      std::cout << "Minuit2Minimizer::Hesse using max-calls " << maxfcn << std::endl;
 
    // case when function minimum exists
-   if (fMinimum  ) {
-      
+   if (fMinimum) {
+
       // if (PrintLevel() >= 3) {
       //    std::cout << "Minuit2Minimizer::Hesse  - State before running Hesse " << std::endl;
       //    std::cout << fState << std::endl;
@@ -1067,7 +1069,7 @@ bool Minuit2Minimizer::Hesse( ) {
 
       // run hesse and function minimum will be updated with Hesse result
       hesse( *fMinuitFCN, *fMinimum, maxfcn );
-      // update user state 
+      // update user state
       fState = fMinimum->UserState();
    }
 
@@ -1101,7 +1103,7 @@ bool Minuit2Minimizer::Hesse( ) {
          else if (!(fMinimum->Error().IsPosDef()) ) hstatus = 3;
       }
       if (PrintLevel() > 0) {
-         std::string msg = "Hesse failed - matrix is " + covStatusType; 
+         std::string msg = "Hesse failed - matrix is " + covStatusType;
          MN_INFO_MSG2("Minuit2Minimizer::Hesse",msg);
          MN_INFO_VAL2("MInuit2Minimizer::Hesse",hstatus);
       }
@@ -1109,7 +1111,7 @@ bool Minuit2Minimizer::Hesse( ) {
       return false;
    }
    if (PrintLevel() > 0) {
-      std::string msg = "Hesse is valid - matrix is " + covStatusType; 
+      std::string msg = "Hesse is valid - matrix is " + covStatusType;
       MN_INFO_MSG2("Minuit2Minimizer::Hesse",msg);
    }
 
@@ -1154,4 +1156,3 @@ void Minuit2Minimizer::SetStorageLevel(int level) {
 } // end namespace Minuit2
 
 } // end namespace ROOT
-
