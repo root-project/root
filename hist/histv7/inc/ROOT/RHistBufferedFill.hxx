@@ -54,9 +54,13 @@ public:
       fXBuf[fCursor] = x;
       fWBuf[fCursor++] = weight;
       if (fCursor == SIZE) {
-         toDerived().Flush();
-         fCursor = 0;
+         Flush();
       }
+   }
+
+   void Flush() {
+      toDerived().FlushImpl();
+      fCursor = 0;
    }
 };
 
@@ -87,6 +91,9 @@ private:
    std::array<CoordArray_t, SIZE> fXBuf;
    std::array<Weight_t, SIZE> fWBuf;
 
+   friend class Internal::RHistBufferedFillBase<RHistBufferedFill<HIST, SIZE>, HIST, SIZE>;
+   void FlushImpl() { fHist.FillN(this->GetCoords(), this->GetWeights()); }
+
 public:
    RHistBufferedFill(Hist_t &hist): fHist{hist} {}
 
@@ -97,11 +104,9 @@ public:
 
    void FillN(const std::span<const CoordArray_t> xN) { fHist.FillN(xN); }
 
-   void Flush() { fHist.FillN(this->GetCoords(), this->GetWeights()); }
-
    HIST &GetHist()
    {
-      Flush(); // synchronize!
+      this->Flush(); // synchronize!
       return fHist;
    }
    operator HIST &() { return GetHist(); }
