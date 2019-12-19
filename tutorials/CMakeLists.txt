@@ -339,9 +339,6 @@ if(mpi)
   list(REMOVE_ITEM tutorials ${mpi_tutorials})
 endif()
 
-list(LENGTH mpi_tutorials mpi_total)
-message(STATUS "${mpi_total} MPI tutorials in total")
-
 #---Special return code------------------------------------------------
 set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/arrow.C
