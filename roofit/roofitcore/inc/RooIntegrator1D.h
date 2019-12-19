@@ -75,9 +75,9 @@ protected:
   void extrapolate(Int_t n) ;
   
   // Numerical integrator workspace
-  mutable Double_t _xmin;              //! Lower integration bound
-  mutable Double_t _xmax;              //! Upper integration bound
-  mutable Double_t _range;             //! Size of integration range
+  Double_t _xmin;              //! Lower integration bound
+  Double_t _xmax;              //! Upper integration bound
+  Double_t _range;             //! Size of integration range
   Double_t _extrapValue;               //! Extrapolated value
   Double_t _extrapError;               //! Error on extrapolated value
   Double_t *_h ;                       //! Integrator workspace
