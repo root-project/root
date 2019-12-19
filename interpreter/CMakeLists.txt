@@ -139,6 +139,16 @@ if(gcctoolchain)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
 endif()
 
+# We will not fix llvm or clang.
+string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+
+if(LLVM_SHARED_LINKER_FLAGS)
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LLVM_SHARED_LINKER_FLAGS}")
+endif()
+if(LLVM_EXE_LINKER_FLAGS)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_EXE_LINKER_FLAGS}")
+endif()
+
 if(builtin_llvm)
   # Since debug builds of LLVM are quite large, we want to be able
   # to control the build types of ROOT and LLVM independently. The

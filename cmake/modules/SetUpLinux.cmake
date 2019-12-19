@@ -96,6 +96,48 @@ endif()
 # JIT must be able to resolve symbols from all ROOT binaries.
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
+# Set developer flags
+if(dev)
+  # Warnings are errors.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+
+  # Do not relink just because a dependent .so has changed.
+  # I.e. relink only if a header included by the libs .o-s has changed,
+  # whether or not that header "belongs" to a different .so.
+  set(CMAKE_LINK_DEPENDS_NO_SHARED On)
+
+  # Split debug info for faster builds.
+  if(NOT gnuinstall)
+    # We won't install DWARF files.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gsplit-dwarf")
+  endif()
+
+  # Try faster linkers, prefer lld then gold.
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=lld -Wl,--version OUTPUT_VARIABLE stdout ERROR_QUIET)
+  if("${stdout}" MATCHES "LLD ")
+    set(SUPERIOR_LINKER "lld")
+  else()
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version OUTPUT_VARIABLE stdout ERROR_QUIET)
+    if ("${stdout}" MATCHES "GNU gold")
+      set(SUPERIOR_LINKER "gold")
+    endif()
+  endif()
+  # Only lld and gold support --gdb-index
+  if(SUPERIOR_LINKER)
+    set(LLVM_USE_LINKER "${SUPERIOR_LINKER}")
+    if(CMAKE_BUILD_TYPE MATCHES "Deb")
+      message(STATUS "Using ${SUPERIOR_LINKER} linker with gdb-index")
+      set(GDBINDEX "-Wl,--gdb-index")
+    else()
+      message(STATUS "Using ${SUPERIOR_LINKER} linker")
+    endif()
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=${SUPERIOR_LINKER} ${GDBINDEX}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=${SUPERIOR_LINKER} ${GDBINDEX}")
+    set(LLVM_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=${SUPERIOR_LINKER} ${GDBINDEX}")
+    set(LLVM_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=${SUPERIOR_LINKER} ${GDBINDEX}")
+  endif()
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W")
