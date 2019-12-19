@@ -24,6 +24,7 @@
 
 #include "RtypesCore.h"
 #include "Event.h"
+#include "ThreadLocalStorage.h"
 
 namespace TMVA {
 
@@ -84,4 +85,3 @@ inline Bool_t TMVA::BDTEventWrapper::operator<( const BDTEventWrapper& other ) c
 }
 
 #endif
-

@@ -55,9 +55,6 @@ public:
    /// Thread-specific HIST::FillN().
    void FillN(const std::span<const CoordArray_t> xN) { fManager.FillN(xN); }
 
-   HIST &GetHist() { return fManager->GetHist(); }
-   operator HIST &() { return GetHist(); }
-
    static constexpr int GetNDim() { return HIST::GetNDim(); }
 
 private:

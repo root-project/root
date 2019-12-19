@@ -44,7 +44,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsStudy.h
     RooAbsTestStatistic.h
     RooAcceptReject.h
-    RooAdaptiveGaussKronrodIntegrator1D.h
     RooAdaptiveIntegratorND.h
     RooAddGenContext.h
     RooAddition.h
@@ -109,7 +108,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFormulaVar.h
     RooFracRemainder.h
     RooFunctor.h
-    RooGaussKronrodIntegrator1D.h
     RooGenContext.h
     RooGenericPdf.h
     RooGenFitStudy.h
@@ -231,6 +229,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooHelpers.h
     RooSpan.h
     BatchData.h
+    BatchHelpers.h
     RooVDTHeaders.h
     RooWrapperPdf.h
   SOURCES
@@ -269,7 +268,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsStudy.cxx
     src/RooAbsTestStatistic.cxx
     src/RooAcceptReject.cxx
-    src/RooAdaptiveGaussKronrodIntegrator1D.cxx
     src/RooAdaptiveIntegratorND.cxx
     src/RooAddGenContext.cxx
     src/RooAddition.cxx
@@ -332,7 +330,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFormulaVar.cxx
     src/RooFracRemainder.cxx
     src/RooFunctor.cxx
-    src/RooGaussKronrodIntegrator1D.cxx
     src/RooGenContext.cxx
     src/RooGenericPdf.cxx
     src/RooGenFitStudy.cxx
@@ -451,6 +448,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooXYChi2Var.cxx
     src/RooHelpers.cxx
     src/BatchData.cxx
+    src/BatchHelpers.cxx
     src/RooWrapperPdf.cxx
     DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
