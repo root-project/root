@@ -207,7 +207,7 @@ std::error_code Process::FixupStandardFileDescriptors() {
   for (int StandardFD : StandardFDs) {
     struct stat st;
     errno = 0;
-    if (RetryAfterSignal(-1, &fstat, StandardFD, &st) < 0) {
+    if (RetryAfterSignal(-1, fstat, StandardFD, &st) < 0) {
       assert(errno && "expected errno to be set if fstat failed!");
       // fstat should return EBADF if the file descriptor is closed.
       if (errno != EBADF)
