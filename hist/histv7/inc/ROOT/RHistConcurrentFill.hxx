@@ -55,13 +55,14 @@ public:
    /// Thread-specific HIST::FillN().
    void FillN(const std::span<const CoordArray_t> xN) { fManager.FillN(xN); }
 
-   /// The buffer is full, flush it out.
-   void Flush() { fManager.FillN(this->GetCoords(), this->GetWeights()); }
-
    HIST &GetHist() { return fManager->GetHist(); }
    operator HIST &() { return GetHist(); }
 
    static constexpr int GetNDim() { return HIST::GetNDim(); }
+
+private:
+   friend class Internal::RHistBufferedFillBase<RHistConcurrentFiller<HIST, SIZE>, HIST, SIZE>;
+   void FlushImpl() { fManager.FillN(this->GetCoords(), this->GetWeights()); }
 };
 
 /**
