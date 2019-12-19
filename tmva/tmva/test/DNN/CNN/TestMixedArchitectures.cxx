@@ -37,9 +37,8 @@
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
-bool debug = false;
 
-bool test1()
+bool test1(bool debug)
 {
 
    size_t batchSizeTest1 = 3;
@@ -61,7 +60,7 @@ bool test1()
    return true;
 }
 
-bool test2()
+bool test2(bool debug)
 {
 
    size_t batchSizeTest1 = 3;
@@ -71,8 +70,6 @@ bool test2()
    size_t batchDepth = batchSizeTest1;
    size_t batchHeight = imgDepthTest1;
    size_t batchWidth = imgHeightTest1 * imgWidthTest1;
-
-   //debug = true;
 
    float error = testMixedConvForwardPass<TCpu<float>, TCudnn<float>>(
       batchSizeTest1, imgDepthTest1, imgHeightTest1, imgWidthTest1, batchDepth, batchHeight, batchWidth, debug);
@@ -87,14 +84,16 @@ bool test2()
 
 int main()
 {
+
+   bool debug = false;
    std::cout << "Testing CNN Forward Pass for GPU (Cudnn)  - CPU:" << std::endl;
 
    std::cout << "Test1" << std::endl;
-   bool ok = test1();
-   ok &= test2();
+   bool ok = test1(debug);
+
+   std::cout << "Test2" << std::endl;
+   ok &= test2(debug);
 
    return (ok) ? 0 : -1;
 
-   // std::cout << "Test2" << std::endl;
-   // test2();
 }

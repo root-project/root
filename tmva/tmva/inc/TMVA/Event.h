@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Jan Therhaag
 
 /**********************************************************************************
@@ -18,9 +18,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -35,7 +35,6 @@
 #include <vector>
 
 #include "Rtypes.h"
-#include "ThreadLocalStorage.h"
 #include "TMVA/Types.h"
 
 #include "TObject.h"
@@ -58,14 +57,14 @@ namespace TMVA {
       // constructors
       Event();
       Event( const Event& );
-      explicit Event( const std::vector<Float_t>& values, 
-                      const std::vector<Float_t>& targetValues, 
-                      const std::vector<Float_t>& spectatorValues, 
+      explicit Event( const std::vector<Float_t>& values,
+                      const std::vector<Float_t>& targetValues,
+                      const std::vector<Float_t>& spectatorValues,
                       UInt_t theClass = 0, Double_t weight = 1.0, Double_t boostweight = 1.0 );
-      explicit Event( const std::vector<Float_t>& values, 
-                      const std::vector<Float_t>& targetValues, 
+      explicit Event( const std::vector<Float_t>& values,
+                      const std::vector<Float_t>& targetValues,
                       UInt_t theClass = 0, Double_t weight = 1.0, Double_t boostweight = 1.0 );
-      explicit Event( const std::vector<Float_t>&, 
+      explicit Event( const std::vector<Float_t>&,
                       UInt_t theClass, Double_t weight = 1.0, Double_t boostweight = 1.0 );
       explicit Event( const std::vector<Float_t*>*&, UInt_t nvar );
 
@@ -84,7 +83,7 @@ namespace TMVA {
       Double_t GetWeight()         const;
       Double_t GetOriginalWeight() const { return fWeight; }
       Double_t GetBoostWeight()    const { return TMath::Max(Double_t(0.0001),fBoostWeight); }
-      UInt_t   GetClass()          const { return fClass; }  
+      UInt_t   GetClass()          const { return fClass; }
 
       UInt_t   GetNVariables()        const;
       UInt_t   GetNTargets()          const;
@@ -92,7 +91,7 @@ namespace TMVA {
 
       Float_t  GetValue( UInt_t ivar) const;
       Float_t  GetValueFast(UInt_t ivar) const { return fDynamic ? *(*fValuesDynamic)[ivar] : fValues[ivar]; }
-      std::vector<Float_t>& GetValues() 
+      std::vector<Float_t>& GetValues()
          {
             //For a detailed explanation, please see the heading "Avoid Duplication in const and Non-const Member Function," on p. 23, in Item 3 "Use const whenever possible," in Effective C++, 3d ed by Scott Meyers, ISBN-13: 9780321334879.
             // http://stackoverflow.com/questions/123758/how-do-i-remove-code-duplication-between-similar-const-and-non-const-member-func
@@ -147,9 +146,9 @@ namespace TMVA {
       Bool_t                         fDynamic;         // is set when the dynamic values are taken
       mutable Bool_t                 fDoNotBoost;       // mark event as not to be boosted (used to compensate for events with negative event weights
    public:
-       
+
        ClassDef(Event,1);
-       
+
    };
 }
 
