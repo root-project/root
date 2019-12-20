@@ -40,11 +40,11 @@
 #include "MemoryRegulator.h"
 
 // Stl
-#include <map>
+#include <unordered_map>
 
 namespace PyROOT {
 
-typedef std::map<Cppyy::TCppObject_t, Cppyy::TCppType_t> ObjectMap_t;
+typedef std::unordered_map<Cppyy::TCppObject_t, Cppyy::TCppType_t> ObjectMap_t;
 
 class TMemoryRegulator : public TObject {
 private:
@@ -58,6 +58,8 @@ public:
    TMemoryRegulator();
 
    virtual void RecursiveRemove(TObject *);
+
+   void ClearProxiedObjects();
 };
 
 } // namespace PyROOT

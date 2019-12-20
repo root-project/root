@@ -11,6 +11,12 @@
 
 #include "TMemoryRegulator.h"
 
+#include "ProxyWrappers.h"
+#include "CPPInstance.h"
+#include "CPPInstance.h"
+
+using namespace CPyCppyy;
+
 PyROOT::ObjectMap_t PyROOT::TMemoryRegulator::fObjectMap = PyROOT::ObjectMap_t();
 
 ////////////////////////////////////////////////////////////////////////////
@@ -18,8 +24,8 @@ PyROOT::ObjectMap_t PyROOT::TMemoryRegulator::fObjectMap = PyROOT::ObjectMap_t()
 ///        construction and destruction
 PyROOT::TMemoryRegulator::TMemoryRegulator()
 {
-   CPyCppyy::MemoryRegulator::SetRegisterHook(PyROOT::TMemoryRegulator::RegisterHook);
-   CPyCppyy::MemoryRegulator::SetUnregisterHook(PyROOT::TMemoryRegulator::UnregisterHook);
+   MemoryRegulator::SetRegisterHook(PyROOT::TMemoryRegulator::RegisterHook);
+   MemoryRegulator::SetUnregisterHook(PyROOT::TMemoryRegulator::UnregisterHook);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -76,6 +82,31 @@ void PyROOT::TMemoryRegulator::RecursiveRemove(TObject *object)
    ObjectMap_t::iterator ppo = fObjectMap.find(cppobj);
    if (ppo != fObjectMap.end()) {
       klass = ppo->second;
-      CPyCppyy::MemoryRegulator::RecursiveRemove(cppobj, klass);
+      MemoryRegulator::RecursiveRemove(cppobj, klass);
+      fObjectMap.erase(ppo);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Clean up all tracked objects.
+void PyROOT::TMemoryRegulator::ClearProxiedObjects()
+{
+   while (!fObjectMap.empty()) {
+      auto elem = fObjectMap.begin();
+      auto cppobj = elem->first;
+      auto klassid = elem->second;
+      auto pyclass = CreateScopeProxy(klassid);
+      auto pyobj = (CPPInstance *)MemoryRegulator::RetrievePyObject(cppobj, pyclass);
+
+      if (pyobj && (pyobj->fFlags & CPPInstance::kIsOwner)) {
+         // Only delete the C++ object if the Python proxy owns it.
+         // The deletion will trigger RecursiveRemove on the object
+         delete static_cast<TObject *>(cppobj);
+      }
+      else {
+         // Non-owning proxy, just unregister to clean tables.
+         // The proxy deletion by Python will have no effect on C++, so all good
+         MemoryRegulator::UnregisterPyObject(pyobj, pyclass);
+      }
    }
 }
