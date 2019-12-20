@@ -339,10 +339,6 @@ protected:
    std::shared_ptr<IModelFunction> ModelFunction()  { return fFitFunc; }
    void SetModelFunction(const std::shared_ptr<IModelFunction> & func) { fFitFunc = func; }
 
-   // set the minimizer type string from FitConfig (Minimizer name / minimizer algo)
-   void SetMinimizerType(const FitConfig & fconfig);
-
-
    friend class Fitter;
 
 
