@@ -59,6 +59,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     TGeoVolume.h
     TGeoVoxelFinder.h
     TGeoXtru.h
+    TGeoTessellated.h
     TVirtualGeoConverter.h
     TVirtualGeoPainter.h
     TVirtualGeoTrack.h
@@ -110,6 +111,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     src/TGeoVolume.cxx
     src/TGeoVoxelFinder.cxx
     src/TGeoXtru.cxx
+    src/TGeoTessellated.cxx
     src/TVirtualGeoConverter.cxx
     src/TVirtualGeoPainter.cxx
     src/TVirtualGeoTrack.cxx
