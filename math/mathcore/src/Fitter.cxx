@@ -852,17 +852,17 @@ bool Fitter::DoUpdateMinimizerOptions(bool canDifferentMinim ) {
 
    // create a new minimizer if it is different type
    // minimizer type string stored in FitResult is "minimizer name" + " / " + minimizer algo
-   std::string newMinimType = fConfig.MinimizerType() + " / " + fConfig.MinimizerAlgoType(); 
-   if (fMinimizer && fResult && newMinimType != fResult->MinimizerType() ) {
+   std::string newMinimType = fConfig.MinimizerName();
+   if (fMinimizer && fResult && newMinimType != fResult->MinimizerType()) {
       // if a different minimizer is allowed (e.g. when calling Hesse)
-      if (canDifferentMinim) { 
-         std::string msg = "Using now " + newMinimType; 
-         MATH_INFO_MSG("Fitter::DoUpdateMinimizerOptions", msg.c_str());
+      if (canDifferentMinim) {
+         std::string msg = "Using now " + newMinimType;
+         MATH_INFO_MSG("Fitter::DoUpdateMinimizerOptions: ", msg.c_str());
          if (!DoInitMinimizer() )
             return false;
       }
-      else { 
-         std::string msg = "Cannot change minimizer. Continue using " + fResult->MinimizerType();   
+      else {
+         std::string msg = "Cannot change minimizer. Continue using " + fResult->MinimizerType();
          MATH_WARN_MSG("Fitter::DoUpdateMinimizerOptions",msg.c_str());
       }
    }
