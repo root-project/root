@@ -49,7 +49,7 @@ public:
 protected:
 
    EDialogTypes fKind{kOpenFile};      ///<! dialog kind OpenFile, SaveAs, NewFile
-   std::string  fTitle;                ///<! title
+   std::string  fTitle;                ///<! title, when not specified default will be used
    RBrowsable   fBrowsable;            ///<! central browsing element
 
    unsigned fConnId{0};                ///<! default connection id
@@ -57,8 +57,8 @@ protected:
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 
    bool fDidSelect{false};           ///<! true when dialog is selected or closed
+   bool fDidCallback{false};         ///<! indicate if callback was invoked
    std::string fSelect;              ///<! result of file selection
-   RElementPath_t fSelectPath;       ///<! selected path
    RFileDialogCallback_t fCallback;  ///<! function receiving result
 
    std::string ProcessBrowserRequest(const std::string &msg);
@@ -69,16 +69,16 @@ protected:
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
+   void InvokeCallBack();
+
    static std::string Dialog(EDialogTypes kind, const std::string &title);
 
 public:
 
-   RFileDialog(EDialogTypes kind = kOpenFile, const std::string &title = "OpenFile dialog");
+   RFileDialog(EDialogTypes kind = kOpenFile, const std::string &title = "", const std::string &fname = "");
    virtual ~RFileDialog();
 
    void SetCallback(RFileDialogCallback_t callback);
-
-   void SetFileName(const std::string &fname) { fSelect = fname; }
 
    void Show(const RWebDisplayArgs &args = "");
    void Hide();

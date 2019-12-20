@@ -46,26 +46,45 @@ web-based FileDialog.
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
+/// When title not specified, default will be used
 
-RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title)
+RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std::string &fname)
 {
    fKind = kind;
    fTitle = title;
 
-   std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   printf("Current dir %s\n", workdir.c_str());
+   if (fTitle.empty())
+      switch (fKind) {
+         case kOpenFile: fTitle = "Open file"; break;
+         case kSaveAsFile: fTitle = "Save as file"; break;
+         case kNewFile: fTitle = "New file"; break;
+      }
 
+   fSelect = fname;
+
+   // TODO: windows
    fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
-   fBrowsable.SetWorkingDirectory(workdir);
+
+   auto separ = fSelect.rfind("/");
+
+   if (fSelect.empty() || (separ == std::string::npos)) {
+      std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
+      fBrowsable.SetWorkingDirectory(workdir);
+   } else {
+      std::string workdir = fSelect.substr(0, separ);
+      fBrowsable.SetWorkingDirectory(workdir);
+      fSelect = fSelect.substr(separ+1);
+   }
 
    fWebWindow = RWebWindow::Create();
 
+   // when dialog used in standalone mode, ui5 panel will be loaded
    fWebWindow->SetPanelName("rootui5.browser.view.FileDialog");
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
                             [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); },
-                            [this](unsigned connid) { if (fConnId == connid) fConnId = 0; if (fCallback && !fDidSelect) fCallback(""); fDidSelect = true; });
+                            [this](unsigned connid) { if (fConnId == connid) fConnId = 0; InvokeCallBack(); });
    fWebWindow->SetGeometry(800, 600); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -86,8 +105,8 @@ RFileDialog::~RFileDialog()
 void RFileDialog::SetCallback(RFileDialogCallback_t callback)
 {
    fCallback = callback;
-   if (fDidSelect && fCallback)
-      fCallback(fSelect);
+   if (fDidSelect)
+      InvokeCallBack();
 }
 
 
@@ -123,6 +142,7 @@ std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
 void RFileDialog::Show(const RWebDisplayArgs &args)
 {
    fDidSelect = false;
+   fDidCallback = false;
 
    if (fWebWindow->NumConnections() == 0) {
       RWebWindow::ShowWindow(fWebWindow, args);
@@ -157,9 +177,14 @@ void RFileDialog::SendInitMsg(unsigned connid)
       case kNewFile : kindstr = "NewFile"; break;
    }
 
+   auto jtitle = TBufferJSON::ToJSON(&fTitle);
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
+   auto jfname = TBufferJSON::ToJSON(&fSelect);
 
-   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : \""s + fTitle + "\", \"path\" : "s + jpath.Data() + ", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
+   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : "s + jtitle.Data() +
+                          ", \"path\" : "s + jpath.Data() +
+                          ", \"fname\" : "s + jfname.Data() +
+                          ", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
 
    fWebWindow->Send(connid, "INMSG:"s + jsoncode);
 }
@@ -218,13 +243,12 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
 
       auto elem = fBrowsable.GetElement(arg.substr(7));
 
-      if (elem)
+      if (elem) {
          fSelect = elem->GetTitle();
+         fDidSelect = true;
+      }
 
-      if (fCallback && !fDidSelect)
-         fCallback(fSelect);
-
-      fDidSelect = true;
+      InvokeCallBack();
 
       fWebWindow->Send(connid, "CLOSE:"s); // sending close
    } else if (arg.compare(0, 10, "DLGSELECT:") == 0) {
@@ -237,21 +261,37 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
          return;
       }
 
-      fSelectPath = *path;
+      fSelect = SysFileElement::ProduceFileName(*path);
 
-      auto elem = fBrowsable.GetElementFromTop(fSelectPath);
+      auto elem = fBrowsable.GetElementFromTop(*path);
 
       printf("SELECT %s HasElement %s\n", arg.substr(10).c_str(), elem ? "true" : "false");
 
-      if (elem)
+      if (elem) {
          fWebWindow->Send(connid, "NEED_CONFIRM"s); // sending request for confirmation
-      else
-         fWebWindow->Send(connid, "SELECT_CONFIRMED"s); // sending request for confirmation
+      } else {
+         fWebWindow->Send(connid, "SELECT_CONFIRMED:"s + fSelect); // sending select confirmation with fully qualified file name
+         fDidSelect = true;
+         InvokeCallBack();
+      }
    } else if (arg == "DLGNOSELECT") {
-      fSelectPath.clear();
+      fSelect.clear();
+      fDidSelect = true;
       fWebWindow->Send(connid, "NOSELECT_CONFIRMED"s); // sending confirmation of NOSELECT
+
+      InvokeCallBack();
    } else if (arg == "DLG_CONFIRM_SELECT") {
-      fWebWindow->Send(connid, "SELECT_CONFIRMED"s);
+      fDidSelect = true;
+      fWebWindow->Send(connid, "SELECT_CONFIRMED:"s + fSelect);
+      InvokeCallBack();
+   }
+}
+
+void RFileDialog::InvokeCallBack()
+{
+   if (fCallback && !fDidCallback) {
+      fCallback(fSelect);
+      fDidCallback = true;
    }
 }
 
@@ -269,7 +309,6 @@ std::string RFileDialog::Dialog(EDialogTypes kind, const std::string &title)
 
    return dlg.fSelect;
 }
-
 
 
 std::string RFileDialog::OpenFile(const std::string &title)

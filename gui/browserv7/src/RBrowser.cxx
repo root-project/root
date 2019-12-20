@@ -210,18 +210,30 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
    if (drawingOptions == "$$$image$$$") {
       auto img = elem->GetContent("image64");
-      if (!img.empty())
-         return "FIMG:"s + img;
-      else
+      if (img.empty())
          return ""s;
+
+      auto fname = elem->GetContent("filename");
+      if (fname.empty())
+         fname = elem->GetName();
+
+      std::vector<std::string> args = { fname, img };
+
+      return "FIMG:"s + TBufferJSON::ToJSON(&args).Data();
    }
 
    if (drawingOptions == "$$$editor$$$") {
       auto code = elem->GetContent("text");
-      if (!code.empty())
-         return "FREAD:"s + code;
-      else
+      if (code.empty())
          return ""s;
+
+      auto fname = elem->GetContent("filename");
+      if (fname.empty())
+         fname = elem->GetName();
+
+      std::vector<std::string> args = { fname, code };
+
+      return "FREAD:"s + TBufferJSON::ToJSON(&args).Data();
    }
 
    auto canv = GetActiveCanvas();
@@ -460,11 +472,7 @@ std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
 
 void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   size_t len = arg.find("\n");
-   if (len != std::string::npos)
-      printf("Recv %s\n", arg.substr(0, len).c_str());
-   else
-      printf("Recv %s\n", arg.c_str());
+   printf("Recv %s total %d\n", arg.substr(0, 25).c_str(), (int) arg.length());
 
    if (arg == "QUIT_ROOT") {
 
@@ -575,20 +583,18 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
          printf("SAVEAS failure - wrong arguments %s, should be array with two strings\n", arg.substr(7).c_str());
       } else {
          printf("Start SAVEAS dialog %s %s\n", arr->at(0).c_str(), arr->at(1).c_str());
-         fFileDialog = std::make_unique<RFileDialog>(RFileDialog::kSaveAsFile);
-         fFileDialog->SetFileName(arr->at(0));
+         fFileDialog = std::make_unique<RFileDialog>(RFileDialog::kSaveAsFile, "Save as file from editor", arr->at(0));
+         fFileDialog->SetCallback([this](const std::string &) { fFileDialog.reset(); }); // use callback to release pointer
          fFileDialog->Show({fWebWindow, std::stoi(arr->at(1))});
       }
-   } else if (arg == "CLOSESAVEAS") {
-      fFileDialog.reset();
    } else if (arg.compare(0, 7, "DOSAVE:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-      if (!arr || (arr->size() < 2)) {
+      if (!arr || (arr->size() !=2)) {
          printf("DOSAVE failure - wrong arguments %s, should be at least two items\n", arg.substr(7).c_str());
       } else {
-         printf("Calling dosave nargs %d\n", (int) arr->size());
-         for (auto str : *arr)
-            printf("    %s\n", str.c_str());
+         printf("Saving file %s size %d\n", arr->at(0).c_str(), (int) arr->at(1).length());
+         std::ofstream f(arr->at(0));
+         f << arr->at(1);
       }
    }
 }

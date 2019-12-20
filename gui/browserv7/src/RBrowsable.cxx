@@ -30,6 +30,7 @@ RElement::EContentKind RElement::GetContentKind(const std::string &kind)
    if ((kind == "image") || (kind == "image64")) return kImage;
    if (kind == "png") return kPng;
    if ((kind == "jpg") || (kind == "jpeg")) return kJpeg;
+   if (kind == "filename") return kFileName;
    return kNone;
 }
 
