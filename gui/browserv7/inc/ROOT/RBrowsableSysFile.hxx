@@ -93,6 +93,9 @@ public:
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
    std::string GetContent(const std::string &kind) override;
+
+   static std::string ProduceFileName(const RElementPath_t &path);
+
 };
 
 } // namespace Browsable

@@ -365,5 +365,40 @@ std::string SysFileElement::GetContent(const std::string &kind)
       return "data:image/"s  + GetName().substr(pos+1) + ";base64,"s + encode.Data();
    }
 
+   if (GetContentKind(kind) == kFileName) {
+      return GetFullName();
+   }
+
    return ""s;
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Produces file name from RElementPath_t
+/// Respects Window/Linux file path coding
+
+std::string SysFileElement::ProduceFileName(const RElementPath_t &path)
+{
+   std::string res, slash = "/"s;
+
+   if (!path.empty()) {
+#ifdef WIN32
+      slash = "\\"s;
+#else
+      if (path[0] != slash) res = slash;
+#endif
+
+      bool first = true;
+      for (auto &elem : path) {
+         if (first)
+            first = false;
+         else
+            res.append(slash);
+
+         res.append(elem);
+      }
+   }
+
+   return res;
+}
+

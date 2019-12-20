@@ -17,7 +17,7 @@
          </content>
          <footer>
             <OverflowToolbar>
-               <Input id="SelectedFile" type="Text" placeholder="Enter file name" value="{/fileName}">
+               <Input id="SelectedFile" type="Text" placeholder="Enter file name" value="{/fileName}" valueLiveUpdate="true">
                </Input>
             </OverflowToolbar>
          </footer>

@@ -12,6 +12,8 @@
          <footer>
             <OverflowToolbar>
                <ToolbarSpacer/>
+               <Button text="Ok" icon="sap-icon://log" type="Transparent"
+                       tooltip="Accept selection" press="onOkPress"/>
                <Button text="Close" icon="sap-icon://log" type="Transparent"
                        tooltip="close dialog" press="onClosePress"/>
             </OverflowToolbar>
