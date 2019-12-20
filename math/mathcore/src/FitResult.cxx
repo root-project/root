@@ -116,7 +116,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    fMinimizer= min;
    fFitFunc = func;
 
-   SetMinimizerType(fconfig);
+   fMinimType = fconfig.MinimizerName();
 
    // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
    if (fNCalls == 0) fNCalls = ncalls;
@@ -223,18 +223,6 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
 }
 
-void FitResult::SetMinimizerType(const FitConfig & fconfig) { 
-   // set minimizer type
-   fMinimType = fconfig.MinimizerType();
-
-   // append algorithm name for minimizer that support it
-   if ( (fMinimType.find("Fumili") == std::string::npos) &&
-        (fMinimType.find("GSLMultiFit") == std::string::npos)
-      ) {
-      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType();
-   }
-}
-
 FitResult::~FitResult() {
    // destructor. FitResult manages the fit Function pointer
    //if (fFitFunc) delete fFitFunc;
@@ -297,7 +285,7 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const
    fMinimizer = min;
 
    // in case minimizer changes
-   SetMinimizerType(fconfig);
+   fMinimType = fconfig.MinimizerName();
 
    const unsigned int npar = fParams.size();
    if (min->NDim() != npar ) {
@@ -745,4 +733,3 @@ bool FitResult::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoi
    } // end namespace Fit
 
 } // end namespace ROOT
-
