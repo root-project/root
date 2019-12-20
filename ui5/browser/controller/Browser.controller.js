@@ -255,9 +255,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
       },
 
-
       /** @brief Invoke dialog with server side code */
-      onSaveAs: async function() {
+      onSaveAs: function() {
 
          const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
@@ -266,75 +265,33 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          var newconn = this.websocket.CreateChannel();
 
-         var fragment;
-
          this.saveAsController = new FileDialogController;
 
-         this.saveAsController.initDialog(newconn, filename);
-
-         await Fragment.load({
-            name: "rootui5.browser.view.filedialog",
-            controller: this.saveAsController,
-            id: "FileDialogFragment"
-         }).then(function (oFragment) {
-            fragment = oFragment;
-         });
-
-         fragment.setModel(this.saveAsController.oModel);
-
-         this.saveAsDialog = new Dialog({
-            title: "Select name for saving file",
-            contentWidth: "70%",
-            contentHeight: "50%",
-            resizable: true,
-            draggable: true,
-            content: fragment,
-            beginButton: new Button({
-               text: 'Cancel',
-               press: this.closeSaveAsDialog.bind(this)
-            }),
-            endButton: new Button({
-               text: 'Ok',
-               press: this.closeSaveAsDialog.bind(this, true)
-            })
-         });
-
-         this.saveAsDialog.addStyleClass("sapUiSizeCompact");
-
-         this.saveAsDialog.open();
-
-         this.saveAsController.dialog = this.saveAsDialog;
+         this.saveAsController.initDialog(newconn, filename, this.dialogCompletionHandler.bind(this));
 
          this.websocket.Send("SAVEAS:" + JSON.stringify([ filename || "untiled",  newconn.getChannelId().toString() ]));
       },
 
-      closeSaveAsDialog: function(on) {
-         if (this.saveAsController) {
+      dialogCompletionHandler: function(on) {
+         if (!this.saveAsController)
+            return;
 
-            if (on) {
-               var fullname = this.saveAsController.getFullFileName();
-               console.log('Save AS', fullname);
+         if (on) {
+            var fullname = this.saveAsController.getFullFileName();
+            console.log('Save AS', fullname);
 
-               const oEditor = this.getSelectedCodeEditor();
-               const oModel = oEditor.getModel();
-               const sText = oModel.getProperty("/code");
+            const oEditor = this.getSelectedCodeEditor();
+            const oModel = oEditor.getModel();
+            const sText = oModel.getProperty("/code");
 
-               fullname.push(sText);
+            fullname.push(sText);
 
-               this.websocket.Send("DOSAVE:" + JSON.stringify(fullname));
-            }
-
-            this.saveAsController.websocket.Close();
-            delete this.saveAsController;
+            this.websocket.Send("DOSAVE:" + JSON.stringify(fullname));
          }
 
-         if (this.saveAsDialog) {
-            this.saveAsDialog.close();
-            this.saveAsDialog.destroy();
-            delete this.saveAsDialog;
+         delete this.saveAsController;
 
-            this.websocket.Send("CLOSESAVEAS");
-         }
+         this.websocket.Send("CLOSESAVEAS");
       },
 
       /** @brief Handle the "Save As..." button press event */

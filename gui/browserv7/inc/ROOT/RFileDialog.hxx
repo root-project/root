@@ -58,6 +58,7 @@ protected:
 
    bool fDidSelect{false};           ///<! true when dialog is selected or closed
    std::string fSelect;              ///<! result of file selection
+   RElementPath_t fSelectPath;       ///<! selected path
    RFileDialogCallback_t fCallback;  ///<! function receiving result
 
    std::string ProcessBrowserRequest(const std::string &msg);

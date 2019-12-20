@@ -227,6 +227,31 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
       fDidSelect = true;
 
       fWebWindow->Send(connid, "CLOSE:"s); // sending close
+   } else if (arg.compare(0, 10, "DLGSELECT:") == 0) {
+      // selected file name, if file exists - send request for confirmation
+
+      auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(10));
+
+      if (!path) {
+         printf("Error to decode JSON %s\n", arg.substr(10).c_str());
+         return;
+      }
+
+      fSelectPath = *path;
+
+      auto elem = fBrowsable.GetElementFromTop(fSelectPath);
+
+      printf("SELECT %s HasElement %s\n", arg.substr(10).c_str(), elem ? "true" : "false");
+
+      if (elem)
+         fWebWindow->Send(connid, "NEED_CONFIRM"s); // sending request for confirmation
+      else
+         fWebWindow->Send(connid, "SELECT_CONFIRMED"s); // sending request for confirmation
+   } else if (arg == "DLGNOSELECT") {
+      fSelectPath.clear();
+      fWebWindow->Send(connid, "NOSELECT_CONFIRMED"s); // sending confirmation of NOSELECT
+   } else if (arg == "DLG_CONFIRM_SELECT") {
+      fWebWindow->Send(connid, "SELECT_CONFIRMED"s);
    }
 }
 
