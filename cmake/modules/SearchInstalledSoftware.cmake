@@ -1724,8 +1724,10 @@ check_cxx_source_compiles("
 int main() {
    std::atomic<int> a1;
    int a1val = a1.load();
+   (void)a1val;
    std::atomic<uint64_t> a2;
    uint64_t a2val = a2.load(std::memory_order_relaxed);
+   (void)a2val;
    return 0;
 }
 " ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
