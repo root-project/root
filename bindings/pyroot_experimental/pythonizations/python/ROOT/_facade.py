@@ -14,6 +14,7 @@ class PyROOTConfiguration(object):
 
     def __init__(self):
         self.IgnoreCommandLineOptions = False
+        self.ShutDown = True
 
 
 class ROOTFacade(types.ModuleType):
