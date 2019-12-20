@@ -55,8 +55,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
    return Controller.extend("rootui5.browser.controller.Browser", {
       onInit: async function () {
 
-        this.globalId = 1;
-        this.nextElem = "";
+         this.globalId = 1;
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -260,8 +259,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          const oEditor = this.getSelectedCodeEditor();
          const oModel = oEditor.getModel();
+         const filename = oModel.getProperty("/fullname");
          const sText = oModel.getProperty("/code");
-         let filename = oModel.getProperty("/fullfilename");
 
          var newconn = this.websocket.CreateChannel();
 
@@ -269,29 +268,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.saveAsController.initDialog(newconn, filename, this.dialogCompletionHandler.bind(this));
 
-         this.websocket.Send("SAVEAS:" + JSON.stringify([ filename || "untiled",  newconn.getChannelId().toString() ]));
+         this.websocket.Send("SAVEAS:" + JSON.stringify([ filename || "",  newconn.getChannelId().toString() ]));
       },
 
-      dialogCompletionHandler: function(on) {
+      dialogCompletionHandler: function(on, fname) {
          if (!this.saveAsController)
             return;
 
-         if (on) {
-            var fullname = this.saveAsController.getFullFileName();
-            console.log('Save AS', fullname);
+         const oEditor = this.getSelectedCodeEditor();
 
-            const oEditor = this.getSelectedCodeEditor();
-            const oModel = oEditor.getModel();
-            const sText = oModel.getProperty("/code");
+         if (on && oEditor) {
+            this.setFileNameType(oEditor, fname);
 
-            fullname.push(sText);
+            const sText = oEditor.getModel().getProperty("/code");
 
-            this.websocket.Send("DOSAVE:" + JSON.stringify(fullname));
+            this.websocket.Send("DOSAVE:" + JSON.stringify([fname, sText]));
          }
 
          delete this.saveAsController;
-
-         this.websocket.Send("CLOSESAVEAS");
       },
 
       /** @brief Handle the "Save As..." button press event */
@@ -363,19 +357,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return sap.ui.getCore().byId(oTabItemString + "Editor");
          } else {
             if (!no_warning) MessageToast.show("Sorry, you need to select a code editor tab", {duration: 1500});
-            return -1;
          }
       },
 
       /** @brief Extract the file name and extension
        * @desc Used to set the editor's model properties and display the file name on the tab element  */
-      setFileNameType: function (filename) {
-         let oEditor = this.getSelectedCodeEditor();
+      setFileNameType: function (oEditor, fullname) {
          let oModel = oEditor.getModel();
          let oTabElement = oEditor.getParent().getParent();
          let ext = "txt";
          let runButton = this.getElementFromCurrentTab("Run");
          runButton.setEnabled(false);
+
+         let filename = fullname;
+         let p = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
+         if (p>0) filename = filename.substr(p+1);
+
          if (filename.lastIndexOf('.') > 0)
             ext = filename.substr(filename.lastIndexOf('.') + 1);
 
@@ -438,11 +435,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                else
                   return false;
                break;
+
          }
          oTabElement.setAdditionalText(filename);
-         oModel.setProperty("/fullfilename", filename);
+
          if (filename.lastIndexOf('.') > 0)
             filename = filename.substr(0, filename.lastIndexOf('.'));
+
+         oModel.setProperty("/fullname", fullname);
          oModel.setProperty("/filename", filename);
          oModel.setProperty("/ext", ext);
          return true;
@@ -451,13 +451,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @brief Handle the "Browse..." button press event */
       onChangeFile: function (oEvent) {
          let oEditor = this.getSelectedCodeEditor();
-         let oModel = oEditor.getModel();
+         if (!oEditor) return;
+
          let oReader = new FileReader();
          oReader.onload = function () {
-            oModel.setProperty("/code", oReader.result);
+            oEditor.getModel().setProperty("/code", oReader.result);
          };
          let file = oEvent.getParameter("files")[0];
-         if (this.setFileNameType(file.name))
+         if (this.setFileNameType(oEditor, file.name))
             oReader.readAsText(file);
       },
 
@@ -503,13 +504,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       getSelectedImageViewer: function (no_warning) {
          let oTabItemString = this.getView().byId("myTabContainer").getSelectedItem();
 
-
-         if (oTabItemString.indexOf("ImageViewer") !== -1) {
+         if (oTabItemString.indexOf("ImageViewer") !== -1)
             return sap.ui.getCore().byId(oTabItemString + "Image");
-         }
 
          if (!no_warning) MessageToast.show("Sorry, you need to select an image viewer tab", {duration: 1500});
-         return -1;
       },
 
       /* ============================================ */
@@ -846,16 +844,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // first try to activate editor
          let codeEditor = this.getSelectedCodeEditor(true);
-         if (codeEditor !== -1) {
-            this.nextElem = { fullpath };
-            let filename = fullpath.substr(fullpath.lastIndexOf('/') + 1);
-            if (this.setFileNameType(filename))
+         if (codeEditor) {
+            if (this.setFileNameType(codeEditor, fullpath))
                return this.sendDblClick(fullpath, "$$$editor$$$");
          }
 
          let viewerTab = this.getSelectedImageViewer(true);
-         if (viewerTab !== -1) {
-            this.nextElem = { fullpath };
+         if (viewerTab) {
             return this.sendDblClick(fullpath, "$$$image$$$");
          }
 
@@ -908,19 +903,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "INMSG":
             this.processInitMsg(msg);
             break;
-         case "FREAD":  // file read
-            let result = this.getSelectedCodeEditor();
-            if (result !== -1) {
-               result.getModel().setProperty("/code", msg);
+         case "FREAD":  // text file read
+            var oEditor = this.getSelectedCodeEditor();
+
+            if (oEditor) {
+               var arr = JSON.parse(msg);
+
+               this.setFileNameType(oEditor, arr[0]);
+
+               oEditor.getModel().setProperty("/code", arr[1]);
+
                this.getElementFromCurrentTab("Save").setEnabled(true);
-               result.getModel().setProperty("/fullpath", this.nextElem.fullpath);
             }
             break;
          case "FIMG":  // image file read
-            const image = this.getSelectedImageViewer(true);
-            if(image !== -1) {
-               image.getParent().getParent().setAdditionalText(this.nextElem.fullpath);
-               image.setSrc(msg);
+            const oViewer = this.getSelectedImageViewer(true);
+            if(oViewer) {
+               var arr = JSON.parse(msg);
+               var filename = arr[0];
+               let p = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
+               if (p>0) filename = filename.substr(p+1);
+               oViewer.getParent().getParent().setAdditionalText(filename);
+               oViewer.setSrc(arr[1]);
             }
             break;
          case "CANVS":  // canvas created by server, need to establish connection

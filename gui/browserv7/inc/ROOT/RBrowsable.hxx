@@ -244,7 +244,8 @@ public:
       kText,      ///< "text" - plain text for code editor
       kImage,     ///< "image64" - base64 for supported image formats (png/gif/gpeg)
       kPng,       ///< "png" - plain png binary code, returned inside std::string
-      kJpeg       ///< "jpg" or "jpeg" - plain jpg binary code, returned inside std::string
+      kJpeg,      ///< "jpg" or "jpeg" - plain jpg binary code, returned inside std::string
+      kFileName   ///< "filename" - file name if applicable
    };
 
    static EContentKind GetContentKind(const std::string &kind);

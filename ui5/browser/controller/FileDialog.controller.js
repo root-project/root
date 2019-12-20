@@ -48,8 +48,9 @@ sap.ui.define(['rootui5/panel/Controller',
 
             pthis.getView().byId("dialogPage").addContent(oFragment);
             oFragment.setModel(pthis.oModel);
-
          });
+
+         this.own_window = true;
       },
 
       // returns full file name as array
@@ -68,7 +69,12 @@ sap.ui.define(['rootui5/panel/Controller',
          return path;
       },
 
-      onClosePress: async function() {
+      /** Press OK button in standalone mode */
+      onOkPress: function() {
+      },
+
+      /** Close dialog in standalone mode */
+      onClosePress: function() {
          if (window) window.open('','_self').close();
          this.isConnected = false;
       },
@@ -90,15 +96,16 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
       onBreadcrumbsPress: function(oEvent) {
-        let sId = oEvent.getSource().sId;
-        let oBreadcrumbs = oEvent.getSource().getParent();
-        let oLinks = oBreadcrumbs.getLinks();
-        let path = [];
-        for (let i = 0; i < oLinks.length; i++) {
-           if (i>0) path.push(oLinks[i].getText());
-           if (oLinks[i].getId() === sId ) break;
-        }
-        this.websocket.Send('CHPATH:' + JSON.stringify(path));
+         let sId = oEvent.getSource().sId;
+         let oBreadcrumbs = oEvent.getSource().getParent();
+         let oLinks = oBreadcrumbs.getLinks();
+         let path = [];
+         for (let i = 0; i < oLinks.length; i++) {
+            if (i>0) path.push(oLinks[i].getText());
+            if (oLinks[i].getId() === sId ) break;
+         }
+         this.oModel.setProperty("/fileName", "");
+         this.websocket.Send('CHPATH:' + JSON.stringify(path));
       },
 
       processInitMsg: function(msg) {
@@ -109,22 +116,22 @@ sap.ui.define(['rootui5/panel/Controller',
          this.kind = cfg.kind; //
 
          this.updateBReadcrumbs(cfg.path);
+         if (cfg.fname)
+            this.oModel.setProperty("/fileName", cfg.fname);
 
          this.oModel.setProperty("/dialogTitle", cfg.title);
          this.oModel.setProperty("/filesList", cfg.brepl.nodes);
       },
 
+      /** Close file dialog */
       closeFileDialog: function() {
          // add more logic when FileDialog embed into main window
          if (this.did_close) return;
-         console.log('TRY TO CLOSE FILE DIALOG');
 
-         if (this.dialog) {
-            this.dialog.close();
-            this.dialog.destroy();
-         } else if (window) {
-           window.open('','_self').close();
-         }
+         this.closeEmbededDialog();
+
+         if (this.own_window && window)
+            window.open('','_self').close();
 
          this.did_close = true;
       },
@@ -138,7 +145,6 @@ sap.ui.define(['rootui5/panel/Controller',
 
       OnWebsocketClosed: function() {
          // when connection closed, close panel as well
-         console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
          this.closeFileDialog();
          this.isConnected = false;
       },
@@ -169,13 +175,13 @@ sap.ui.define(['rootui5/panel/Controller',
             this.oModel.setProperty("/filesList", repl.nodes);
             break;
          case "SELECT_CONFIRMED": // when selected file can be used for SaveAs operation
-            this.closeDialog(true);
+            this.closeEmbededDialog(true, msg);
             break;
          case "NEED_CONFIRM": // need confirmation warning
             this.showWarningDialog();
             break;
          case "NOSELECT_CONFIRMED":
-            this.closeDialog(false);
+            this.closeEmbededDialog(false, "");
             break;
 
          default:
@@ -225,7 +231,6 @@ sap.ui.define(['rootui5/panel/Controller',
             return this.websocket.Send('CHDIR:' + item.getTitle()); // dialog send chdir
          }
 
-
          this.oModel.setProperty("/fileName", item.getTitle());
 
          // this is final selection, server should close connection at the end
@@ -236,10 +241,8 @@ sap.ui.define(['rootui5/panel/Controller',
       /** @brief Start SaveAs dialog @private */
 
       initDialog: async function(conn, filename, handler) {
-
-         console.log("CALLING FileDialog.initDialog");
          this.kind = "None"; // not yet known
-         this.oModel = new JSONModel({ canEnterFile: true, fileName: filename || "", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
+         this.oModel = new JSONModel({ canEnterFile: true, dialogTitle: "Title0", fileName: filename || "", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
 
          // just initialize, server should confirm creation of channel
          this.websocket = conn;
@@ -260,7 +263,7 @@ sap.ui.define(['rootui5/panel/Controller',
          fragment.setModel(this.oModel);
 
          this.dialog = new Dialog({
-            title: "Select name for saving file",
+            title: "{/dialogTitle}",
             contentWidth: "70%",
             contentHeight: "50%",
             resizable: true,
@@ -272,44 +275,34 @@ sap.ui.define(['rootui5/panel/Controller',
             }),
             endButton: new Button({
                text: 'Ok',
+               enabled: "{= ${/fileName} !== '' }",
                press: this.dialogBtnOkPress.bind(this)
             })
          });
 
          this.dialog.addStyleClass("sapUiSizeCompact");
 
+         this.dialog.setModel(this.oModel);
+
          this.dialog.open();
       },
 
       /** Press Ok button id Dialog, send selected file name and wait if confirmation required */
       dialogBtnOkPress: function() {
+         // send array, will be converted on the server side
          var fullname = this.getFullFileName();
-
-         console.log('Sending DLGSELECT ' + fullname)
-
          this.websocket.Send("DLGSELECT:" + JSON.stringify(fullname));
-
-         // if (typeof this.dialog_complete_handler == "function")
-         //    this.dialog_complete_handler(true);
-
-         // this.closeDialog();
       },
 
       /** Press Cancel button id Dialog */
       dialogBtnCancelPress: function() {
-
          this.websocket.Send("DLGNOSELECT");
-
-         // if (typeof this.dialog_complete_handler == "function")
-         //    this.dialog_complete_handler(false);
-
-         // this.closeDialog();
       },
 
       /** Method to close dialog */
-      closeDialog: function(result) {
+      closeEmbededDialog: function(result, fname) {
          if ((result !== undefined) && (typeof this.dialog_complete_handler == "function"))
-            this.dialog_complete_handler(result);
+            this.dialog_complete_handler(result, fname);
 
          delete this.dialog_complete_handler;
 
@@ -323,7 +316,6 @@ sap.ui.define(['rootui5/panel/Controller',
             this.dialog.destroy();
             delete this.dialog;
          }
-
       },
 
       onBeforeRendering: function() {
