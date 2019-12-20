@@ -130,9 +130,21 @@ PyObject *SetItem(CPPInstance *self, PyObject *args)
       if (!object)
          return nullptr;
 
+      // Unregister the previous pair (C++ obj, Py obj)
+      auto pyclass = PyObject_GetAttrString((PyObject*)pyobj, "__class__");
+      MemoryRegulator::UnregisterPyObject(pyobj, pyclass);
+      Py_DECREF(pyclass);
+
+      // Delete the previous C++ object (if Python owns)
+      if (pyobj->fFlags & CPPInstance::kIsOwner)
+         delete static_cast<TObject *>(pyobj->GetObject());
+
+      // Update the Python proxy with the new C++ object and register the new pair
+      pyobj->Set(object);
+      MemoryRegulator::RegisterPyObject(pyobj, object);
+
       // A TClonesArray is always the owner of the objects it contains
       pyobj->CppOwns();
-      MemoryRegulator::RegisterPyObject(pyobj, object);
    }
 
    Py_RETURN_NONE;
