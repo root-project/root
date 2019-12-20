@@ -110,19 +110,37 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       t2 = TLorentzVector( 0., 0., 0.,  0. )
       t3 = TLorentzVector( t1 )
 
-      t4 = TLorentzVector(0, 0, 0, 0)
-      t4.__init__(TLorentzVector(0, 1, 2, 3))
-      # the following should work exactly as above, but no longer does on some version of ROOT 6
-      t5 = TLorentzVector(0, 0, 0, 0)
-      TLorentzVector.__init__(t5, TLorentzVector(0, 1, 2, 3))
-
       self.assertEqual( t1, t3 )
       self.assertNotEqual( t1, t2 )
-      #self.assertNotEqual( t4, t5 )
 
       for i in range(4):
          self.assertEqual( t1[i], t3[i] )
-         self.assertEqual( t4[i], t5[i] )
+
+      if self.exp_pyroot:
+         # Test copy constructor with null pointer
+         t4 = MakeNullPointer(TLorentzVector)
+         t4.__init__(TLorentzVector(0, 1, 2, 3))
+         t5 = MakeNullPointer(TLorentzVector)
+         TLorentzVector.__init__(t5, TLorentzVector(0, 1, 2, 3))
+
+         # Test __assign__ if the object already exists
+         t6 = TLorentzVector(0, 0, 0, 0)
+         t6.__assign__(TLorentzVector(0, 1, 2, 3))
+         t7 = TLorentzVector(0, 0, 0, 0)
+         TLorentzVector.__assign__(t7, TLorentzVector(0, 1, 2, 3))
+
+         for i in range(4):
+            self.assertEqual( t4[i], t5[i] )
+            self.assertEqual( t6[i], t7[i] )
+      else:
+         t4 = TLorentzVector(0, 0, 0, 0)
+         t4.__init__(TLorentzVector(0, 1, 2, 3))
+         # the following should work exactly as above, but no longer does on some version of ROOT 6
+         t5 = TLorentzVector(0, 0, 0, 0)
+         TLorentzVector.__init__(t5, TLorentzVector(0, 1, 2, 3))
+
+         for i in range(4):
+            self.assertEqual( t4[i], t5[i] )
 
    def test08ObjectValidity( self ):
       """Test object validity checking"""
