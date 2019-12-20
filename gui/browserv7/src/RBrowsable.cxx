@@ -421,10 +421,16 @@ std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
    return TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data();
 }
 
-std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &path)
+std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &str)
 {
-   auto arr = DecomposePath(path);
+   auto path = DecomposePath(str);
 
-   return RElement::GetSubElement(fWorkElement, arr);
+   return RElement::GetSubElement(fWorkElement, path);
 }
+
+std::shared_ptr<Browsable::RElement> RBrowsable::GetElementFromTop(const RElementPath_t &path)
+{
+   return RElement::GetSubElement(fTopElement, path);
+}
+
 

@@ -473,7 +473,8 @@ public:
 
    std::string ProcessRequest(const RBrowserRequest &request);
 
-   std::shared_ptr<Browsable::RElement> GetElement(const std::string &path);
+   std::shared_ptr<Browsable::RElement> GetElement(const std::string &str);
+   std::shared_ptr<Browsable::RElement> GetElementFromTop(const RElementPath_t &path);
 };
 
 
