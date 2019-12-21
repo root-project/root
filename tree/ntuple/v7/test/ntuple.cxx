@@ -130,6 +130,64 @@ TEST(RNTuple, StorageRoot)
 }
 
 
+TEST(RNTuple, Multi)
+{
+   FileRaii fileGuard("test_ntuple_multi.root");
+   auto file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
+   //auto file = TFile::Open("test_ntuple_multi.root", "RECREATE");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkFile>("first", file, RNTupleWriteOptions()));
+      //RNTupleWriter ntuple(std::move(model),
+      //   std::make_unique<RPageSinkFile>("first", fileGuard.GetPath(), RNTupleWriteOptions()));
+      //RNTupleWriter ntuple(std::move(model),
+      //   std::make_unique<RPageSinkFile>("first", "test_ntuple_multi.root", RNTupleWriteOptions()));
+      ntuple.Fill();
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("E", 1.0);
+      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkFile>("second", file, RNTupleWriteOptions()));
+      ntuple.Fill();
+   }
+   file->Close();
+   delete file;
+
+   RNTupleReader ntupleFirst(std::make_unique<RPageSourceFile>("first", fileGuard.GetPath(), RNTupleReadOptions()));
+   //RNTupleReader ntuple(std::make_unique<RPageSourceFile>("first", "test_ntuple_multi.root", RNTupleReadOptions()));
+   auto viewPt = ntupleFirst.GetView<float>("pt");
+   int n = 0;
+   for (auto i : ntupleFirst.GetViewRange()) {
+      EXPECT_EQ(42.0, viewPt(i));
+      n++;
+   }
+   EXPECT_EQ(1, n);
+
+   RNTupleReader ntupleSecond(std::make_unique<RPageSourceFile>("second", fileGuard.GetPath(), RNTupleReadOptions()));
+   auto viewE = ntupleSecond.GetView<float>("E");
+   n = 0;
+   for (auto i : ntupleSecond.GetViewRange()) {
+      EXPECT_EQ(1.0, viewE(i));
+      n++;
+   }
+   EXPECT_EQ(1, n);
+
+   /*file = TFile::Open(fileGuard.GetPath().c_str(), "UPDATE");
+   ASSERT_TRUE(file != nullptr);
+   {
+      RPageSinkFile sink("secondNtuple", file, RNTupleWriteOptions());
+      auto model = RNTupleModel::Create();
+      sink.Create(*model);
+      sink.CommitDataset();
+   }*/
+
+   //RPageSourceFile sourceFirst("first", fileGuard.GetPath(), RNTupleReadOptions());
+   //RPageSourceFile sourceFirst("first", "test_ntuple_multi.root", RNTupleReadOptions());
+   //sourceFirst.Attach();
+}
+
+
 TEST(RNTuple, WriteRead)
 {
    FileRaii fileGuard("test_ntuple_writeread.root");
