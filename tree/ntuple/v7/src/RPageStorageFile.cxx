@@ -27,6 +27,8 @@
 #include <Compression.h>
 #include <RVersion.h>
 #include <RZip.h>
+#include <TFile.h>
+#include <TKey.h>
 #include <TError.h>
 
 #include <chrono>
@@ -829,7 +831,7 @@ struct RTFNTuple {
 /// The raw file global header
 struct RRawFileHeader {
    char fMagic[7]{ 'r', 'n', 't', 'u', 'p', 'l', 'e' };
-   RUInt32BE fRootVersion{(ROOT_VERSION_CODE >> 16)*10000 +
+   RUInt32BE fRootVersion{(ROOT_VERSION_CODE >> 16) * 10000 +
                           ((ROOT_VERSION_CODE & 0xFF00) >> 8) * 100 +
                           (ROOT_VERSION_CODE & 0xFF)};
    RUInt32BE fFormatVersion{1};
@@ -838,6 +840,20 @@ struct RRawFileHeader {
    // followed by the ntuple name
 };
 #pragma pack(pop)
+
+class RKeyBlob : public TKey {
+public:
+   explicit RKeyBlob(TFile *file) : TKey(file) {
+      fClassName = ROOT::Experimental::Detail::RPageSinkFile::kBlobClassName;
+      fKeylen += strlen(ROOT::Experimental::Detail::RPageSinkFile::kBlobClassName);
+   }
+
+   void Reserve(size_t nbytes, std::uint64_t *seekKey)
+   {
+      Create(nbytes);
+      *seekKey = fSeekKey;
+   }
+};
 
 }
 
@@ -864,8 +880,9 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
       "Do not store real data with this version of RNTuple!";
 
    std::string strPath = std::string(path);
-   fFile = fopen(strPath.c_str(), "wb");
-   R__ASSERT(fFile);
+   fFileStream = fopen(strPath.c_str(), "wb");
+   R__ASSERT(fFileStream);
+   R__ASSERT(ftell(fFileStream) == 0);
    size_t idxDirSep = strPath.find_last_of("\\/");
    if (idxDirSep != std::string::npos) {
       strPath.erase(0, idxDirSep + 1);
@@ -873,27 +890,52 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    fFileName = strPath;
 }
 
+ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TFile *file,
+   const RNTupleWriteOptions &options)
+   : RPageSink(ntupleName, options)
+   , fMetrics("RPageSinkRoot")
+   , fPageAllocator(std::make_unique<RPageAllocatorHeap>())
+   , fFileProper(file)
+{
+   R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
+      "Do not store real data with this version of RNTuple!";
+}
+
 ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 {
-   if (fFile)
-      fclose(fFile);
+   if (fFileStream)
+      fclose(fFileStream);
 }
 
 void ROOT::Experimental::Detail::RPageSinkFile::Write(const void *from, size_t size, std::int64_t offset)
 {
-   R__ASSERT(fFile);
+   R__ASSERT(fFileStream);
    size_t retval;
    if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
-      retval = fseek(fFile, offset, SEEK_SET);
+      retval = fseek(fFileStream, offset, SEEK_SET);
       R__ASSERT(retval == 0);
       fFilePos = offset;
    }
-   retval = fwrite(from, 1, size, fFile);
+   retval = fwrite(from, 1, size, fFileStream);
    R__ASSERT(retval == size);
    fFilePos += size;
 }
 
 std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
+   const void *buffer, std::size_t nbytes, std::int64_t offset,
+   std::uint64_t directoryOffset, int compression,
+   const std::string &className,
+   const std::string &objectName,
+   const std::string &title)
+{
+   if (fFileProper) {
+      WriteKeyProper(buffer, nbytes, compression);
+      return 0;
+   }
+   return WriteKeyStream(buffer, nbytes, offset, directoryOffset, compression, className, objectName, title);
+}
+
+std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKeyStream(
    const void *buffer, std::size_t nbytes, std::int64_t offset,
    std::uint64_t directoryOffset, int compression,
    const std::string &className,
@@ -932,6 +974,64 @@ std::uint64_t ROOT::Experimental::Detail::RPageSinkFile::WriteKey(
    }
 
    return offsetData;
+}
+
+void ROOT::Experimental::Detail::RPageSinkFile::WriteProper(
+   const void *buffer, std::size_t nbytes, std::uint64_t offset)
+{
+   std::cout << "WRITEPROPER " << nbytes << std::endl;
+   fFileProper->Seek(offset);
+   bool rv = fFileProper->WriteBuffer((char *)(buffer), nbytes);
+   R__ASSERT(!rv);
+}
+
+void ROOT::Experimental::Detail::RPageSinkFile::WriteKeyProper(
+   const void *buffer, std::size_t nbytes, int compression,
+   std::uint64_t *offsetKey, std::uint64_t *offsetData, std::uint32_t *sizeData, std::uint32_t *sizeKeyData)
+{
+   R__ASSERT(fFileProper);
+
+   std::cout << "WRITE KEY PROPER " << nbytes << std::endl;
+   std::uint32_t nbytesZip;
+   if (nbytes > fCompressor.kMaxSingleBlock) {
+      // Difficult, let's see
+      R__ASSERT(false);
+   }
+   nbytesZip = fCompressor(buffer, nbytes, compression);
+   if (sizeData)
+      *sizeData = nbytesZip;
+
+   RKeyBlob keyBlob(fFileProper);
+
+   std::uint64_t seekKey;
+   keyBlob.Reserve(nbytesZip, &seekKey);
+   if (offsetKey)
+      *offsetKey = seekKey;
+
+   RTFString strClass{kBlobClassName};
+   RTFString strObject;
+   RTFString strTitle;
+   RTFKey keyHeader(seekKey, seekKey, strClass, strObject, strTitle, nbytes, nbytesZip);
+
+   auto offset = seekKey;
+   WriteProper(&keyHeader, keyHeader.fKeyHeaderSize, offset);
+   offset += keyHeader.fKeyHeaderSize;
+   WriteProper(&strClass, strClass.GetSize(), offset);
+   offset += strClass.GetSize();
+   WriteProper(&strObject, strObject.GetSize(), offset);
+   offset += strObject.GetSize();
+   WriteProper(&strTitle, strTitle.GetSize(), offset);
+   offset += strTitle.GetSize();
+   if (offsetData)
+      *offsetData = offset;
+   if (sizeKeyData)
+      *sizeKeyData = (offset - seekKey) + nbytesZip;
+   WriteProper(fCompressor.GetZipBuffer(), nbytesZip, offset);
+
+   fFilePos = fFileProper->GetEND();
+   //fFileProper->Write();
+   //fFileProper->Close();
+   //delete fFileProper;
 }
 
 void ROOT::Experimental::Detail::RPageSinkFile::WriteRecord(
@@ -1035,25 +1135,34 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /*
    auto szHeader = descriptor.SerializeHeader(nullptr);
    auto buffer = new unsigned char[szHeader];
    descriptor.SerializeHeader(buffer);
+   fControlBlock->fNTuple.fLenHeader = szHeader;
 
-   switch (fOptions.GetContainerFormat()) {
-   case ENTupleContainerFormat::kTFile:
-      WriteTFileSkeleton();
-      WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
-               fOptions.GetCompression());
-      break;
-   case ENTupleContainerFormat::kRaw:
-      WriteRawSkeleton();
-      WriteRecord(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fOptions.GetCompression());
-      break;
-   default:
-      R__ASSERT(false);
+   if (fFileProper) {
+      std::uint64_t offsetKey;
+      std::uint32_t sizeKeyData;
+      WriteKeyProper(buffer, szHeader, fOptions.GetCompression(),
+                     &offsetKey, nullptr, nullptr, &sizeKeyData);
+      fControlBlock->fNTuple.fSeekHeader = offsetKey;
+      fControlBlock->fNTuple.fNBytesHeader = offsetKey;
+   } else {
+      switch (fOptions.GetContainerFormat()) {
+      case ENTupleContainerFormat::kTFile:
+         WriteTFileSkeleton();
+         WriteKey(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fControlBlock->fNTuple.fSeekHeader,
+                  fOptions.GetCompression(), kBlobClassName);
+         break;
+      case ENTupleContainerFormat::kRaw:
+         WriteRawSkeleton();
+         WriteRecord(buffer, szHeader, fControlBlock->fNTuple.fSeekHeader, fOptions.GetCompression());
+         break;
+      default:
+         R__ASSERT(false);
+      }
+      fControlBlock->fNTuple.fNBytesHeader = fFilePos - fControlBlock->fNTuple.fSeekHeader;
    }
 
-   fControlBlock->fNTuple.fNBytesHeader = fFilePos - fControlBlock->fNTuple.fSeekHeader;
-   fControlBlock->fNTuple.fLenHeader = szHeader;
-   delete[] buffer;
    fClusterStart = fFilePos;
+   delete[] buffer;
 }
 
 ROOT::Experimental::RClusterDescriptor::RLocator
@@ -1071,15 +1180,20 @@ ROOT::Experimental::Detail::RPageSinkFile::DoCommitPage(ColumnHandle_t columnHan
    }
 
    auto offsetData = fFilePos;
-   switch (fOptions.GetContainerFormat()) {
-   case ENTupleContainerFormat::kTFile:
-      offsetData = WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression());
-      break;
-   case ENTupleContainerFormat::kRaw:
-      WriteRecord(buffer, packedBytes, -1, fOptions.GetCompression());
-      break;
-   default:
-      R__ASSERT(false);
+   if (fFileProper) {
+      WriteKeyProper(buffer, packedBytes, fOptions.GetCompression(),
+                     nullptr, &offsetData, nullptr, nullptr);
+   } else {
+      switch (fOptions.GetContainerFormat()) {
+      case ENTupleContainerFormat::kTFile:
+         offsetData = WriteKey(buffer, packedBytes, -1, fFilePos, fOptions.GetCompression(), kBlobClassName);
+         break;
+      case ENTupleContainerFormat::kRaw:
+         WriteRecord(buffer, packedBytes, -1, fOptions.GetCompression());
+         break;
+      default:
+         R__ASSERT(false);
+      }
    }
 
    RClusterDescriptor::RLocator result;
@@ -1104,21 +1218,43 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCommitDataset()
    auto szFooter = descriptor.SerializeFooter(nullptr);
    auto buffer = new unsigned char[szFooter];
    descriptor.SerializeFooter(buffer);
+   fControlBlock->fNTuple.fLenFooter = szFooter;
+
+   if (fFileProper) {
+      std::uint64_t offsetKey;
+      std::uint32_t sizeKeyData;
+      WriteKeyProper(buffer, szFooter, fOptions.GetCompression(),
+                     &offsetKey, nullptr, nullptr, &sizeKeyData);
+      fControlBlock->fNTuple.fSeekFooter = offsetKey;
+      fControlBlock->fNTuple.fNBytesFooter = sizeKeyData;
+      delete[] buffer;
+      fFileProper->Write();
+
+      RNTuple ntupleAnchor;
+      ntupleAnchor.fSeekHeader = fControlBlock->fNTuple.fSeekHeader;
+      ntupleAnchor.fNBytesHeader = fControlBlock->fNTuple.fNBytesHeader;
+      ntupleAnchor.fLenHeader = fControlBlock->fNTuple.fLenHeader;
+      ntupleAnchor.fSeekFooter = fControlBlock->fNTuple.fSeekFooter;
+      ntupleAnchor.fNBytesFooter = fControlBlock->fNTuple.fNBytesFooter;
+      ntupleAnchor.fLenFooter = fControlBlock->fNTuple.fLenFooter;
+      fFileProper->WriteObject(&ntupleAnchor, fNTupleName.c_str());
+
+      return;
+   }
+
    fControlBlock->fNTuple.fSeekFooter = fFilePos;
 
    if (fOptions.GetContainerFormat() == ENTupleContainerFormat::kRaw) {
       WriteRecord(buffer, szFooter, -1, fOptions.GetCompression());
       fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
-      fControlBlock->fNTuple.fLenFooter = szFooter;
       WriteRecord(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple, 0);
       return;
    }
 
    R__ASSERT(fOptions.GetContainerFormat() == ENTupleContainerFormat::kTFile);
-   WriteKey(buffer, szFooter, -1, fFilePos, fOptions.GetCompression());
+   WriteKey(buffer, szFooter, -1, fFilePos, fOptions.GetCompression(), kBlobClassName);
 
    fControlBlock->fNTuple.fNBytesFooter = fFilePos - fControlBlock->fNTuple.fSeekFooter;
-   fControlBlock->fNTuple.fLenFooter = szFooter;
    fControlBlock->fHeader.SetSeekFree(fFilePos);
    WriteKey(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple,
             100, 0, "ROOT::Experimental::RNTuple", fNTupleName, "");

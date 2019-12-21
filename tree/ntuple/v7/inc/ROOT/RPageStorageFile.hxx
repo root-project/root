@@ -27,6 +27,8 @@
 #include <string>
 #include <unordered_map>
 
+class TFile;
+
 namespace ROOT {
 namespace Experimental {
 
@@ -87,13 +89,19 @@ The written file can be either in ROOT format or in raw format.
 */
 // clang-format on
 class RPageSinkFile : public RPageSink {
-private:
+public:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
+   /// The artifical class name used for the RNTuple keys in a .root file container
+   static constexpr char const *kBlobClassName = "RBlob";
 
+private:
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   FILE *fFile = nullptr;
+   /// Appending to existing files requires a proper TFile
+   TFile *fFileProper = nullptr;
+   /// New files with a single ntuple can be created with a raw file; this is used by the constructor that takes a path
+   FILE *fFileStream = nullptr;
    /// Byte offset of the next write (current file size)
    std::uint64_t fFilePos = 0;
    /// Byte offset of the begining of the currently open cluster
@@ -113,6 +121,17 @@ private:
                           const std::string &className = "",
                           const std::string &objectName = "",
                           const std::string &title = "");
+   std::uint64_t WriteKeyStream(const void *buffer, std::size_t nbytes, std::int64_t offset,
+                                std::uint64_t directoryOffset, int compression,
+                                const std::string &className,
+                                const std::string &objectName,
+                                const std::string &title);
+   void WriteProper(const void *buffer, std::size_t nbytes, std::uint64_t offset);
+   void WriteKeyProper(const void *buffer, std::size_t nbytes, int compression,
+                       std::uint64_t *offsetKey = nullptr,
+                       std::uint64_t *offsetData = nullptr,
+                       std::uint32_t *sizeData = nullptr,
+                       std::uint32_t *sizeKeyData = nullptr);
    /// Writes a compressed raw record
    void WriteRecord(const void *buffer, std::size_t nbytes, std::int64_t offset = -1, int compression = 0);
 
@@ -127,6 +146,7 @@ protected:
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, TFile *file, const RNTupleWriteOptions &options);
    virtual ~RPageSinkFile();
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
