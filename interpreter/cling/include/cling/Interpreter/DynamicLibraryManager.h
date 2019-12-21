@@ -96,7 +96,7 @@ namespace cling {
     }
 
     void addSearchPath(llvm::StringRef dir) {
-      m_SearchPaths.emplace_back(SearchPathInfo{dir, /*IsUser*/true});
+      m_SearchPaths.emplace_back(SearchPathInfo{dir, /*IsUser*/ true});
     }
 
     ///\brief Looks up a library taking into account the current include paths
