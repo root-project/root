@@ -29,6 +29,8 @@ public:
 };
 
 namespace ROOT {
+namespace Internal {
 static TVersionCheck gVersionCheck(ROOT_VERSION_CODE);
+}
 }
 #endif
