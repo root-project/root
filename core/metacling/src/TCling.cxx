@@ -1437,7 +1437,13 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
-   // We are set up.
+   if (!fromRootCling) {
+      // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
+      // e.g. because of an RPATH build.
+      fInterpreter->getDynamicLibraryManager()->addSearchPath(TROOT::GetLibDir().Data());
+   }
+
+   // We are set up. EnableAutoLoading() is checking for fromRootCling.
    EnableAutoLoading();
 }
 
