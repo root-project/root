@@ -258,34 +258,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onSaveAs: function() {
 
          const oEditor = this.getSelectedCodeEditor();
-         const filename = oEditor.getModel().getProperty("/fullpath");
 
-         var newconn = this.websocket.CreateChannel();
+         FileDialogController.SaveAs({
+            websocket: this.websocket,
+            filename: oEditor.getModel().getProperty("/fullpath"),
+            title: "Select file name to save",
+            onOk: function(fname) {
+               this.setFileNameType(oEditor, fname);
+               const sText = oEditor.getModel().getProperty("/code");
+               oEditor.getModel().setProperty("/modified", false);
+               this.websocket.Send("SAVEFILE:" + JSON.stringify([fname, sText]));
 
-         this.saveAsController = new FileDialogController;
-
-         this.saveAsController.initDialog(newconn, filename, this.dialogCompletionHandler.bind(this));
-
-         this.websocket.Send("SAVEAS:" + JSON.stringify([ filename || "",  newconn.getChannelId().toString() ]));
-      },
-
-      /** @brief Handle closure of file dialog */
-      dialogCompletionHandler: function(on, fname) {
-         if (!this.saveAsController)
-            return;
-
-         const oEditor = this.getSelectedCodeEditor();
-
-         if (on && oEditor) {
-            this.setFileNameType(oEditor, fname);
-
-            const sText = oEditor.getModel().getProperty("/code");
-            oEditor.getModel().setProperty("/modified", false);
-
-            this.websocket.Send("SAVEFILE:" + JSON.stringify([fname, sText]));
-         }
-
-         delete this.saveAsController;
+            }.bind(this),
+            onCancel: function() { },
+            onFailure: function() { }
+         });
       },
 
       /** @brief Handle the "Save" button press event */

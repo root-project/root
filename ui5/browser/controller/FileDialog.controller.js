@@ -12,7 +12,7 @@ sap.ui.define(['rootui5/panel/Controller',
 
    /** FileDialog controller */
 
-   return GuiPanelController.extend("rootui5.browser.controller.FileDialog", {
+   var FileDialog = GuiPanelController.extend("rootui5.browser.controller.FileDialog", {
 
       //function called from GuiPanelController
       onPanelInit : function() {
@@ -113,13 +113,17 @@ sap.ui.define(['rootui5/panel/Controller',
 
          var cfg = JSON.parse(msg);
 
-         this.kind = cfg.kind; //
+         if (!this.dialog) {
+            // when not an embedded dialog, update configuration from server
+            this.kind = cfg.kind;
+            this.oModel.setProperty("/dialogTitle", cfg.title);
+         }
 
-         this.updateBReadcrumbs(cfg.path);
          if (cfg.fname)
             this.oModel.setProperty("/fileName", cfg.fname);
 
-         this.oModel.setProperty("/dialogTitle", cfg.title);
+         this.updateBReadcrumbs(cfg.path);
+
          this.oModel.setProperty("/filesList", cfg.brepl.nodes);
       },
 
@@ -175,13 +179,13 @@ sap.ui.define(['rootui5/panel/Controller',
             this.oModel.setProperty("/filesList", repl.nodes);
             break;
          case "SELECT_CONFIRMED": // when selected file can be used for SaveAs operation
-            this.closeEmbededDialog(true, msg);
+            this.closeEmbededDialog(msg);
             break;
          case "NEED_CONFIRM": // need confirmation warning
             this.showWarningDialog();
             break;
          case "NOSELECT_CONFIRMED":
-            this.closeEmbededDialog(false, "");
+            this.closeEmbededDialog("");
             break;
 
          default:
@@ -238,17 +242,46 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
 
+      /** method used to complete dialog */
+      _completeDialog: function(funcname, arg) {
+         if (!this.dialog_args)
+            return;
+
+         if (!funcname) funcname = "onFailure";
+
+         if (typeof this.dialog_args[funcname] == "function")
+            this.dialog_args[funcname](arg);
+
+         delete this.dialog_args;
+      },
+
       /** @brief Start SaveAs dialog @private */
 
-      initDialog: async function(conn, filename, handler) {
-         this.kind = "None"; // not yet known
-         this.oModel = new JSONModel({ canEnterFile: true, dialogTitle: "Title0", fileName: filename || "", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
+      _initDialog: async function(kind, args) {
 
-         // just initialize, server should confirm creation of channel
-         this.websocket = conn;
-         conn.SetReceiver(this);
+         if (!args || typeof args != "object")
+            return null;
 
-         this.dialog_complete_handler = handler;
+         this.dialog_args = args || {};
+         if (!args.websocket)
+            return this._completeDialog("onFailure");
+
+         var fname = args.filename || "";
+         var p = Math.max(fname.lastIndexOf("/"), fname.lastIndexOf("\\"));
+         if (p>0) fname = fname.substr(p+1);
+
+         this.kind = kind; // not yet known
+         this.oModel = new JSONModel({
+                              canEnterFile: this.kind == "SaveAs",
+                              dialogTitle: args.title || "Title",
+                              fileName: fname, // will be returned from the server, just for initialization
+                              filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]
+         });
+
+         // create extra channel for the FileDialog
+         this.websocket = args.websocket.CreateChannel();
+         // assign ourself as receiver of all
+         this.websocket.SetReceiver(this);
 
          var fragment;
 
@@ -285,6 +318,10 @@ sap.ui.define(['rootui5/panel/Controller',
          this.dialog.setModel(this.oModel);
 
          this.dialog.open();
+
+         args.websocket.Send("FILEDIALOG:" + JSON.stringify([ this.kind, args.filename,  this.websocket.getChannelId().toString() ]));
+
+         return this;
       },
 
       /** Press Ok button id Dialog, send selected file name and wait if confirmation required */
@@ -300,11 +337,9 @@ sap.ui.define(['rootui5/panel/Controller',
       },
 
       /** Method to close dialog */
-      closeEmbededDialog: function(result, fname) {
-         if ((result !== undefined) && (typeof this.dialog_complete_handler == "function"))
-            this.dialog_complete_handler(result, fname);
-
-         delete this.dialog_complete_handler;
+      closeEmbededDialog: function(fname) {
+         if (fname !== undefined)
+            this._completeDialog(fname ? "onOk" : "onCancel", fname);
 
          if (this.websocket) {
             this.websocket.Close();
@@ -326,5 +361,35 @@ sap.ui.define(['rootui5/panel/Controller',
          this.renderingDone = true;
       }
    });
+
+   /** Function to initiate SaveAs dialog from client side
+    * Following arguments has to be specified:
+    * args.websocket - current available connection, used to send "FILEDIALOG:" request
+    * args.filename - initial file name in the dialog
+    * args.title - title used for the dialog
+    * args.onOk - handler when file is selected and "Ok" button is pressed
+    * args.onCancel - handler when "Cancel" button is pressed
+    * args.onFailure - handler when any failure appears, dialog will be closed afterwards
+    */
+   FileDialog.SaveAs = function(args) {
+      var controller = new FileDialog();
+
+      return controller._initDialog("SaveAs", args);
+   };
+
+   FileDialog.NewFile = function(args) {
+      var controller = new FileDialog();
+
+      return controller._initDialog("NewFile", args);
+   };
+
+   FileDialog.OpenFile = function(args) {
+      var controller = new FileDialog();
+
+      return controller._initDialog("OpenFile", args);
+   };
+
+
+   return FileDialog;
 
 });
