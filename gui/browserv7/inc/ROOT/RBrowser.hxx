@@ -66,7 +66,7 @@ protected:
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);
    long ProcessRunCommand(const std::string &file_path);
-   bool ProcessSaveFile(const std::string &file_path);
+   void ProcessSaveFile(const std::string &file_path);
    std::string GetCurrentWorkingDirectory();
 
    void SendInitMsg(unsigned connid);

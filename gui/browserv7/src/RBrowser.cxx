@@ -164,20 +164,16 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 /////////////////////////////////////////////////////////////////////////////////
 /// Process file save command in the editor
 
-bool ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &file_path)
+void ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &arg)
 {
-   // Split the path (filename + text)
-   std::vector<std::string> split;
-   std::string buffer;
-   std::istringstream path(file_path);
-   if (std::getline(path, buffer, ':'))
-      split.push_back(buffer);
-   if (std::getline(path, buffer, '\0'))
-      split.push_back(buffer);
-   // TODO: can be done with RElement as well
-   std::ofstream ostrm(split[0]);
-   ostrm << split[1];
-   return true;
+   auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg);
+   if (!arr || (arr->size() !=2)) {
+      printf("SAVEFILE failure - wrong arguments %s, should be at least two items\n", arg.c_str());
+   } else {
+      printf("Saving file %s size %d\n", arr->at(0).c_str(), (int) arr->at(1).length());
+      std::ofstream f(arr->at(0));
+      f << arr->at(1);
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -513,8 +509,6 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 
    } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
       ProcessRunCommand(arg.substr(9));
-   } else if (arg.compare(0,9, "SAVEFILE:") == 0) {
-      ProcessSaveFile(arg.substr(9));
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
       printf("Select %s\n", fActiveCanvas.c_str());
@@ -587,15 +581,8 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
          fFileDialog->SetCallback([this](const std::string &) { fFileDialog.reset(); }); // use callback to release pointer
          fFileDialog->Show({fWebWindow, std::stoi(arr->at(1))});
       }
-   } else if (arg.compare(0, 7, "DOSAVE:") == 0) {
-      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-      if (!arr || (arr->size() !=2)) {
-         printf("DOSAVE failure - wrong arguments %s, should be at least two items\n", arg.substr(7).c_str());
-      } else {
-         printf("Saving file %s size %d\n", arr->at(0).c_str(), (int) arr->at(1).length());
-         std::ofstream f(arr->at(0));
-         f << arr->at(1);
-      }
+   } else if (arg.compare(0, 9, "SAVEFILE:") == 0) {
+      ProcessSaveFile(arg.substr(9));
    }
 }
 
