@@ -258,9 +258,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onSaveAs: function() {
 
          const oEditor = this.getSelectedCodeEditor();
-         const oModel = oEditor.getModel();
-         const filename = oModel.getProperty("/fullname");
-         const sText = oModel.getProperty("/code");
+         const filename = oEditor.getModel().getProperty("/fullpath");
 
          var newconn = this.websocket.CreateChannel();
 
@@ -271,6 +269,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.Send("SAVEAS:" + JSON.stringify([ filename || "",  newconn.getChannelId().toString() ]));
       },
 
+      /** @brief Handle closure of file dialog */
       dialogCompletionHandler: function(on, fname) {
          if (!this.saveAsController)
             return;
@@ -281,24 +280,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.setFileNameType(oEditor, fname);
 
             const sText = oEditor.getModel().getProperty("/code");
+            oEditor.getModel().setProperty("/modified", false);
 
-            this.websocket.Send("DOSAVE:" + JSON.stringify([fname, sText]));
+            this.websocket.Send("SAVEFILE:" + JSON.stringify([fname, sText]));
          }
 
          delete this.saveAsController;
-      },
-
-      /** @brief Handle the "Save As..." button press event */
-      onSaveAsOld: function () {
-         const oEditor = this.getSelectedCodeEditor();
-         const oModel = oEditor.getModel();
-         const sText = oModel.getProperty("/code");
-         let filename = oModel.getProperty("/filename");
-         let ext = oModel.getProperty("/ext");
-         if (filename === undefined) filename = "untitled";
-         if (ext === undefined) ext = "txt";
-         File.save(sText, filename, ext);
-         oModel().setProperty("/modified", false);
       },
 
       /** @brief Handle the "Save" button press event */
@@ -307,11 +294,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          const oModel = oEditor.getModel();
          const sText = oModel.getProperty("/code");
          const fullpath = oModel.getProperty("/fullpath");
-         if (fullpath === undefined) {
+         if (!fullpath)
             return onSaveAs();
-         }
          oModel.setProperty("/modified", false);
-         return this.websocket.Send("SAVEFILE:" + fullpath + ":" + sText);
+         return this.websocket.Send("SAVEFILE:" + JSON.stringify([fullpath, sText]));
       },
 
       reallyRunMacro: function () {
@@ -442,7 +428,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (filename.lastIndexOf('.') > 0)
             filename = filename.substr(0, filename.lastIndexOf('.'));
 
-         oModel.setProperty("/fullname", fullname);
+         oModel.setProperty("/fullpath", fullname);
          oModel.setProperty("/filename", filename);
          oModel.setProperty("/ext", ext);
          return true;
