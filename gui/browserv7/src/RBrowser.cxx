@@ -569,18 +569,10 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       std::ifstream instr(pathtmp.str().c_str());
       result.ReadFile(instr);
       fWebWindow->Send(connid, "LOGS:"s + result.Data());
-   } else if (arg.compare(0, 7, "SAVEAS:") == 0) {
-
-      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-
-      if (!arr || (arr->size() != 2)) {
-         printf("SAVEAS failure - wrong arguments %s, should be array with two strings\n", arg.substr(7).c_str());
-      } else {
-         printf("Start SAVEAS dialog %s %s\n", arr->at(0).c_str(), arr->at(1).c_str());
-         fFileDialog = std::make_unique<RFileDialog>(RFileDialog::kSaveAsFile, "Save as file from editor", arr->at(0));
+   } else if (arg.compare(0, 11, "FILEDIALOG:") == 0) {
+      fFileDialog = RFileDialog::Embedded(fWebWindow, arg);
+      if (fFileDialog)
          fFileDialog->SetCallback([this](const std::string &) { fFileDialog.reset(); }); // use callback to release pointer
-         fFileDialog->Show({fWebWindow, std::stoi(arr->at(1))});
-      }
    } else if (arg.compare(0, 9, "SAVEFILE:") == 0) {
       ProcessSaveFile(arg.substr(9));
    }

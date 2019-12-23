@@ -160,8 +160,20 @@ void RFileDialog::Hide()
    fWebWindow->CloseConnections();
 }
 
+
+std::string RFileDialog::TypeAsString(EDialogTypes kind)
+{
+   switch(kind) {
+      case kOpenFile : return "OpenFile"s;
+      case kSaveAsFile : return "SaveAs"s;
+      case kNewFile : return "NewFile"s;
+   }
+
+   return ""s;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Process client connect
+/// Sends initial message to the client
 
 void RFileDialog::SendInitMsg(unsigned connid)
 {
@@ -170,18 +182,12 @@ void RFileDialog::SendInitMsg(unsigned connid)
    request.first = 0;
    request.number = 0;
 
-   std::string kindstr;
-   switch(fKind) {
-      case kOpenFile : kindstr = "OpenFile"; break;
-      case kSaveAsFile : kindstr = "SaveAsFile"; break;
-      case kNewFile : kindstr = "NewFile"; break;
-   }
-
    auto jtitle = TBufferJSON::ToJSON(&fTitle);
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
    auto jfname = TBufferJSON::ToJSON(&fSelect);
 
-   std::string jsoncode = "{ \"kind\" : \""s + kindstr + "\", \"title\" : "s + jtitle.Data() +
+   std::string jsoncode = "{ \"kind\" : \""s + TypeAsString(fKind) +
+                          "\", \"title\" : "s + jtitle.Data() +
                           ", \"path\" : "s + jpath.Data() +
                           ", \"fname\" : "s + jfname.Data() +
                           ", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
@@ -324,6 +330,38 @@ std::string RFileDialog::SaveAsFile(const std::string &title)
 std::string RFileDialog::NewFile(const std::string &title)
 {
    return Dialog(kNewFile, title);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Create dialog instance to use as embedded dialog inside other widget
+/// Embedded dialog started on the client side where FileDialogController.SaveAs() method called
+/// Such method immediately send message with "FILEDIALOG:" prefix
+/// On the server side widget should detect such message and call RFileDialog::Embedded()
+/// providing received string as second argument.
+
+std::unique_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args)
+{
+   if (args.compare(0, 11, "FILEDIALOG:") != 0)
+      return nullptr;
+
+   auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(args.substr(11));
+
+   if (!arr || (arr->size() != 3)) {
+      printf("Embedded failure - wrong arguments %s, should be array with two strings\n", args.c_str());
+      return nullptr;
+   }
+
+   auto kind = kSaveAsFile;
+
+   if (TypeAsString(kOpenFile) == arr->at(0))
+      kind = kOpenFile;
+   else if (TypeAsString(kNewFile) == arr->at(0))
+      kind = kNewFile;
+
+   auto dialog = std::make_unique<RFileDialog>(kind, "", arr->at(1));
+   dialog->Show({window, std::stoi(arr->at(2))});
+   return dialog;
 }
 
 
