@@ -1322,7 +1322,7 @@
             .call(this.fillatt.func);
       }
 
-      if (this.options.Rect)
+      if (this.options.Rect) {
          nodes.filter(function(d) { return (d.exlow > 0) && (d.exhigh > 0) && (d.eylow > 0) && (d.eyhigh > 0); })
            .append("svg:rect")
            .attr("x", function(d) { d.rect = true; return d.grx0; })
@@ -1331,6 +1331,7 @@
            .attr("height", function(d) { return d.gry0 - d.gry2; })
            .call(this.fillatt.func)
            .call(this.options.Rect === 2 ? this.lineatt.func : function() {});
+      }
 
       this.error_size = 0;
 
@@ -1371,10 +1372,18 @@
          this.error_size = lw;
 
          lw = Math.floor((this.lineatt.width-1)/2); // one should take into account half of end-cup line width
-         nodes.filter(function(d) { return (d.exlow > 0) || (d.exhigh > 0) || (d.eylow > 0) || (d.eyhigh > 0); })
-             .append("svg:path")
+
+         var visible = nodes.filter(function(d) { return (d.exlow > 0) || (d.exhigh > 0) || (d.eylow > 0) || (d.eyhigh > 0); });
+         if (!JSROOT.BatchMode && (JSROOT.gStyle.Tooltip > 0))
+            visible.append("svg:path")
+                   .style("stroke", "none")
+                   .style("fill", "none")
+                   .style("pointer-events", "visibleFill")
+                   .attr("d", function(d) { return "M"+d.grx0+","+d.gry0+"h"+(d.grx2-d.grx0)+"v"+(d.gry2-d.gry0)+"h"+(d.grx0-d.grx2)+"z"; });
+
+         visible.append("svg:path")
              .call(this.lineatt.func)
-             .style('fill', "none")
+             .style("fill", "none")
              .attr("d", function(d) {
                 d.error = true;
                 return ((d.exlow > 0)  ? mm + (d.grx0+lw) + "," + d.grdx0 + vleft : "") +
