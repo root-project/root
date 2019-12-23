@@ -20,7 +20,6 @@
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RBrowsable.hxx>
-#include <ROOT/RFileDialog.hxx>
 
 #include <vector>
 #include <memory>
@@ -48,7 +47,6 @@ protected:
    std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
    std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
    std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
-   std::unique_ptr<RFileDialog>               fFileDialog;  ///<!  file dialog used for SaveAs and New file activity
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 

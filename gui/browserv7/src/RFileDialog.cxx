@@ -56,7 +56,7 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    if (fTitle.empty())
       switch (fKind) {
          case kOpenFile: fTitle = "Open file"; break;
-         case kSaveAsFile: fTitle = "Save as file"; break;
+         case kSaveAs: fTitle = "Save as file"; break;
          case kNewFile: fTitle = "New file"; break;
       }
 
@@ -82,9 +82,9 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    fWebWindow->SetPanelName("rootui5.browser.view.FileDialog");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
+   fWebWindow->SetCallBacks([this](unsigned connid) { SendInitMsg(connid); },
                             [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); },
-                            [this](unsigned connid) { if (fConnId == connid) fConnId = 0; InvokeCallBack(); });
+                            [this](unsigned) { InvokeCallBack(); });
    fWebWindow->SetGeometry(800, 600); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -95,6 +95,7 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 
 RFileDialog::~RFileDialog()
 {
+   InvokeCallBack(); // invoke callback if not yet performed
    printf("RFileDialog Destructor\n");
 }
 
@@ -142,7 +143,6 @@ std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
 void RFileDialog::Show(const RWebDisplayArgs &args)
 {
    fDidSelect = false;
-   fDidCallback = false;
 
    if (fWebWindow->NumConnections() == 0) {
       RWebWindow::ShowWindow(fWebWindow, args);
@@ -164,9 +164,9 @@ void RFileDialog::Hide()
 std::string RFileDialog::TypeAsString(EDialogTypes kind)
 {
    switch(kind) {
-      case kOpenFile : return "OpenFile"s;
-      case kSaveAsFile : return "SaveAs"s;
-      case kNewFile : return "NewFile"s;
+      case kOpenFile: return "OpenFile"s;
+      case kSaveAs: return "SaveAs"s;
+      case kNewFile: return "NewFile"s;
    }
 
    return ""s;
@@ -245,18 +245,6 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
 
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
       SendDirContent(connid);
-   } else if (arg.compare(0, 7, "SELECT:") == 0) {
-
-      auto elem = fBrowsable.GetElement(arg.substr(7));
-
-      if (elem) {
-         fSelect = elem->GetTitle();
-         fDidSelect = true;
-      }
-
-      InvokeCallBack();
-
-      fWebWindow->Send(connid, "CLOSE:"s); // sending close
    } else if (arg.compare(0, 10, "DLGSELECT:") == 0) {
       // selected file name, if file exists - send request for confirmation
 
@@ -269,41 +257,46 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
 
       fSelect = SysFileElement::ProduceFileName(*path);
 
-      auto elem = fBrowsable.GetElementFromTop(*path);
+      bool need_confirm = false;
 
-      printf("SELECT %s HasElement %s\n", arg.substr(10).c_str(), elem ? "true" : "false");
+      if ((GetType() == kSaveAs) || (GetType() == kNewFile))
+         if (fBrowsable.GetElementFromTop(*path))
+            need_confirm = true;
 
-      if (elem) {
+      if (need_confirm) {
          fWebWindow->Send(connid, "NEED_CONFIRM"s); // sending request for confirmation
       } else {
          fWebWindow->Send(connid, "SELECT_CONFIRMED:"s + fSelect); // sending select confirmation with fully qualified file name
          fDidSelect = true;
-         InvokeCallBack();
       }
    } else if (arg == "DLGNOSELECT") {
       fSelect.clear();
       fDidSelect = true;
       fWebWindow->Send(connid, "NOSELECT_CONFIRMED"s); // sending confirmation of NOSELECT
-
-      InvokeCallBack();
    } else if (arg == "DLG_CONFIRM_SELECT") {
       fDidSelect = true;
       fWebWindow->Send(connid, "SELECT_CONFIRMED:"s + fSelect);
-      InvokeCallBack();
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Invoke specified callback
 
 void RFileDialog::InvokeCallBack()
 {
-   if (fCallback && !fDidCallback) {
-      fCallback(fSelect);
-      fDidCallback = true;
+   if (fCallback) {
+      auto func = fCallback;
+      fCallback = nullptr;
+      func(fSelect);
    }
 }
 
-std::string RFileDialog::Dialog(EDialogTypes kind, const std::string &title)
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Start specified dialog type
+
+std::string RFileDialog::Dialog(EDialogTypes kind, const std::string &title, const std::string &fname)
 {
-   RFileDialog dlg(kind, title);
+   RFileDialog dlg(kind, title, fname);
 
    dlg.Show();
 
@@ -316,22 +309,35 @@ std::string RFileDialog::Dialog(EDialogTypes kind, const std::string &title)
    return dlg.fSelect;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+/// Start OpenFile dialog.
+/// Blocks until file name is selected or Cancel button is pressed
+/// Returns selected file name (or empty string)
 
-std::string RFileDialog::OpenFile(const std::string &title)
+std::string RFileDialog::OpenFile(const std::string &title, const std::string &fname)
 {
-   return Dialog(kOpenFile, title);
+   return Dialog(kOpenFile, title, fname);
 }
 
-std::string RFileDialog::SaveAsFile(const std::string &title)
+/////////////////////////////////////////////////////////////////////////////////////
+/// Start SaveAs dialog.
+/// Blocks until file name is selected or Cancel button is pressed
+/// Returns selected file name (or empty string)
+
+std::string RFileDialog::SaveAs(const std::string &title, const std::string &fname)
 {
-   return Dialog(kSaveAsFile, title);
+   return Dialog(kSaveAs, title, fname);
 }
 
-std::string RFileDialog::NewFile(const std::string &title)
-{
-   return Dialog(kNewFile, title);
-}
+/////////////////////////////////////////////////////////////////////////////////////
+/// Start NewFile dialog.
+/// Blocks until file name is selected or Cancel button is pressed
+/// Returns selected file name (or empty string)
 
+std::string RFileDialog::NewFile(const std::string &title, const std::string &fname)
+{
+   return Dialog(kNewFile, title, fname);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Create dialog instance to use as embedded dialog inside other widget
@@ -339,8 +345,9 @@ std::string RFileDialog::NewFile(const std::string &title)
 /// Such method immediately send message with "FILEDIALOG:" prefix
 /// On the server side widget should detect such message and call RFileDialog::Embedded()
 /// providing received string as second argument.
+/// Returned instance of shared_ptr<RFileDialog> may be used to assign callback when file is selected
 
-std::unique_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args)
+std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args)
 {
    if (args.compare(0, 11, "FILEDIALOG:") != 0)
       return nullptr;
@@ -348,19 +355,23 @@ std::unique_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(args.substr(11));
 
    if (!arr || (arr->size() != 3)) {
-      printf("Embedded failure - wrong arguments %s, should be array with two strings\n", args.c_str());
+      printf("Embedded failure - wrong arguments %s, should be array with three strings\n", args.c_str());
       return nullptr;
    }
 
-   auto kind = kSaveAsFile;
+   auto kind = kSaveAs;
 
    if (TypeAsString(kOpenFile) == arr->at(0))
       kind = kOpenFile;
    else if (TypeAsString(kNewFile) == arr->at(0))
       kind = kNewFile;
 
-   auto dialog = std::make_unique<RFileDialog>(kind, "", arr->at(1));
+   auto dialog = std::make_shared<RFileDialog>(kind, "", arr->at(1));
    dialog->Show({window, std::stoi(arr->at(2))});
+
+   // TODO: how one can avoid const_cast for lambda capture to release
+   dialog->SetCallback([dialog](const std::string &) mutable { dialog.reset(); }); // use callback to release pointer
+
    return dialog;
 }
 

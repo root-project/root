@@ -16,7 +16,6 @@
  *************************************************************************/
 
 #include <ROOT/RFileDialog.hxx>
-#include <ROOT/RDirectory.hxx>
 
 // Show how RFileDialog can be used in sync and async modes
 // Normally file dialogs will be used inside other widgets as ui5 dialogs
@@ -33,24 +32,24 @@ void filedialog(int kind = 0)
 
    // example of sync methods, blocks until name is selected
    switch (kind) {
-      case 1: fileName = RFileDialog::OpenFile("Open file title"); break;
-      case 2: fileName = RFileDialog::SaveAsFile("Save as title"); break;
-      case 3: fileName = RFileDialog::NewFile("New File title"); break;
+      case 1: fileName = RFileDialog::OpenFile("OpenFile title"); break;
+      case 2: fileName = RFileDialog::SaveAs("SaveAs title", "newfile.xml"); break;
+      case 3: fileName = RFileDialog::NewFile("NewFile title", "test.txt"); break;
    }
 
    if (kind > 0) {
-      printf("fileName %s\n", fileName.c_str());
+      printf("Sync file name %s\n", fileName.c_str());
       return;
    }
 
-   auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "Open file (async) title");
-   // add to global list
-   RDirectory::Heap().Add("filedialog", dialog);
+   auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "OpenFile (async) title");
 
-   dialog->SetCallback([](const std::string &res) {
-      printf("Selected %s\n", res.c_str());
-      // remove from global list
-      RDirectory::Heap().Remove("filedialog");
+   // use dialog capture to keep reference until file name is selected
+   dialog->SetCallback([dialog](const std::string &res) mutable {
+      printf("Selected file %s\n", res.c_str());
+
+      // cleanup dialog - actually not needed, lambda is cleaned up after that call anyway
+      // dialog.reset();
    });
 
    dialog->Show();

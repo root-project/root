@@ -42,7 +42,7 @@ public:
 
    enum EDialogTypes {
       kOpenFile,
-      kSaveAsFile,
+      kSaveAs,
       kNewFile
    };
 
@@ -52,12 +52,9 @@ protected:
    std::string  fTitle;                ///<! title, when not specified default will be used
    RBrowsable   fBrowsable;            ///<! central browsing element
 
-   unsigned fConnId{0};                ///<! default connection id
-
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 
    bool fDidSelect{false};           ///<! true when dialog is selected or closed
-   bool fDidCallback{false};         ///<! indicate if callback was invoked
    std::string fSelect;              ///<! result of file selection
    RFileDialogCallback_t fCallback;  ///<! function receiving result
 
@@ -73,12 +70,14 @@ protected:
 
    void InvokeCallBack();
 
-   static std::string Dialog(EDialogTypes kind, const std::string &title);
+   static std::string Dialog(EDialogTypes kind, const std::string &title, const std::string &fname);
 
 public:
 
    RFileDialog(EDialogTypes kind = kOpenFile, const std::string &title = "", const std::string &fname = "");
    virtual ~RFileDialog();
+
+   const EDialogTypes &GetType() const { return fKind; }
 
    void SetCallback(RFileDialogCallback_t callback);
 
@@ -88,11 +87,11 @@ public:
    bool IsCompleted() const { return fDidSelect; }
    const std::string &GetFileName() const { return fSelect; }
 
-   static std::string OpenFile(const std::string &title);
-   static std::string SaveAsFile(const std::string &title);
-   static std::string NewFile(const std::string &title);
+   static std::string OpenFile(const std::string &title = "", const std::string &fname = "");
+   static std::string SaveAs(const std::string &title = "", const std::string &fname = "");
+   static std::string NewFile(const std::string &title = "", const std::string &fname = "");
 
-   static std::unique_ptr<RFileDialog> Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args);
+   static std::shared_ptr<RFileDialog> Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args);
 
 };
 
