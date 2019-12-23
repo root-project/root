@@ -1644,11 +1644,12 @@
          this.connid = "connect";
       } else if (kind === "close") {
          if ((this.connid===null) || (this.connid==="close")) return;
-         url+="?connection="+this.connid + "&close";
+         url+="?connection=" + this.connid + "&close";
          this.connid = "close";
-         reqmode += ";sync"; // use sync mode to close connection before browser window closed
+         reqmode = "text;sync"; // use sync mode to close connection before browser window closed
       } else if ((this.connid===null) || (typeof this.connid!=='number')) {
-         return console.error("No connection");
+         if (!JSROOT.browser.qt5) console.error("No connection");
+         return;
       } else {
          url+="?connection="+this.connid;
          if (kind==="dummy") url+="&dummy";
@@ -1682,7 +1683,7 @@
 
             var str = "", i = 0, u8Arr = new Uint8Array(res), offset = u8Arr.length;
             if (offset < 4) {
-               console.error('longpoll got short message in raw mode ' + offset);
+               if (!JSROOT.browser.qt5) console.error('longpoll got short message in raw mode ' + offset);
                return this.handle.processreq(null);
             }
 

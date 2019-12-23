@@ -180,7 +180,7 @@
             var indx = parseFloat(d);
             if (!this.regular_labels)
                indx = (indx - this.axis.fXmin)/(this.axis.fXmax - this.axis.fXmin) * this.axis.fNbins;
-            indx = Math.round(indx);
+            indx = Math.floor(indx);
             if ((indx<0) || (indx>=this.axis.fNbins)) return null;
             for (var i = 0; i < this.axis.fLabels.arr.length; ++i) {
                var tstr = this.axis.fLabels.arr[i];
