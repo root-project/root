@@ -61,6 +61,8 @@ protected:
    std::string fSelect;              ///<! result of file selection
    RFileDialogCallback_t fCallback;  ///<! function receiving result
 
+   static std::string TypeAsString(EDialogTypes kind);
+
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string GetCurrentWorkingDirectory();
 
@@ -89,6 +91,8 @@ public:
    static std::string OpenFile(const std::string &title);
    static std::string SaveAsFile(const std::string &title);
    static std::string NewFile(const std::string &title);
+
+   static std::unique_ptr<RFileDialog> Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args);
 
 };
 
