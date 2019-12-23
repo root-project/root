@@ -2,7 +2,7 @@
    xmlns="sap.m"
    xmlns:core="sap.ui.core">
    <Page title="" showNavButton="false"
-         showHeader="false" showSubHeader="true" showFooter="{/canEnterFile}" enableScrolling="true">
+         showHeader="false" showSubHeader="true" showFooter="true" enableScrolling="true">
          <subHeader>
             <OverflowToolbar>
                <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
@@ -17,7 +17,7 @@
          </content>
          <footer>
             <OverflowToolbar>
-               <Input id="SelectedFile" type="Text" placeholder="Enter file name" value="{/fileName}" valueLiveUpdate="true">
+               <Input id="SelectedFile" type="Text" enabled="{/canEditName}" placeholder="Enter file name" value="{/fileName}" valueLiveUpdate="true">
                </Input>
             </OverflowToolbar>
          </footer>

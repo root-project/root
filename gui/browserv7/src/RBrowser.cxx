@@ -22,6 +22,7 @@
 #include <ROOT/RDrawableProvider.hxx>
 #include <ROOT/RBrowsableSysFile.hxx>
 #include <ROOT/RBrowsableTObject.hxx>
+#include <ROOT/RFileDialog.hxx>
 #include <ROOT/RCanvas.hxx>
 
 #include "TString.h"
@@ -570,9 +571,7 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       result.ReadFile(instr);
       fWebWindow->Send(connid, "LOGS:"s + result.Data());
    } else if (arg.compare(0, 11, "FILEDIALOG:") == 0) {
-      fFileDialog = RFileDialog::Embedded(fWebWindow, arg);
-      if (fFileDialog)
-         fFileDialog->SetCallback([this](const std::string &) { fFileDialog.reset(); }); // use callback to release pointer
+      RFileDialog::Embedded(fWebWindow, arg);
    } else if (arg.compare(0, 9, "SAVEFILE:") == 0) {
       ProcessSaveFile(arg.substr(9));
    }
