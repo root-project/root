@@ -924,14 +924,15 @@ TROOT::~TROOT()
 
       // ATTENTION!!! Order is important!
 
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fBrowsables);
 
       // FIXME: Causes rootcling to deadlock, debug and uncomment
       // SafeDelete(fRootFolder);
 
+#ifdef R__COMPLETE_MEM_TERMINATION
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
+
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
