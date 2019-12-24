@@ -949,9 +949,7 @@ TROOT::~TROOT()
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
-#endif
       fColors->Delete();     SafeDelete(fColors);
       fStyles->Delete();     SafeDelete(fStyles);
 
