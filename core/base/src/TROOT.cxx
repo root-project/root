@@ -1018,6 +1018,7 @@ TROOT::~TROOT()
       //
       //    delete fInterpreter;
 
+      // We cannot delete fCleanups because of the logic in atexit which needs it.
       SafeDelete(fCleanups);
 #endif
 
