@@ -4000,7 +4000,8 @@ int RootClingMain(int argc,
       ROOT::TMetaUtils::Error("", "Option %s can be used only when option %s is specified.\n",
                               gOptModuleMapFiles.ArgStr.str().c_str(),
                               gOptCxxModule.ArgStr.str().c_str());
-      // FIXME: Show the output of -help.
+      std::cout << "\n";
+      llvm::cl::PrintHelpMessage();
       return 1;
    }
 
