@@ -16,6 +16,11 @@ function usage()
     echo ""
 }
 
+if ((BASH_VERSINFO[0] < 4)); then
+    echo "Sorry, you need at least bash-4.0 to run this script." >&2
+    exit 1
+fi
+
 if [[ -z "$@" ]]; then
     echo "Needs arguments."
     usage
