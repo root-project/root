@@ -3676,12 +3676,8 @@ gOptGeneratePCH("generate-pch",
                llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
                llvm::cl::Hidden,
                llvm::cl::cat(gRootclingOptions));
- // FIXME: We should remove the IgnoreExistingDict option as it is not used.
 static llvm::cl::opt<bool>
-gOptIgnoreExistingDict("r",
-               llvm::cl::desc("Similar to -f but it ignores the dictionary generation. \
-When -r is present rootcling becomes a tool to generate rootmaps (and capability files)."),
-               llvm::cl::Hidden,
+gOptIgnoreExistingDict("r", llvm::cl::desc("Deprecated, legacy flag which is ignored. "),
                llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<std::string>
 gOptDictionaryFileName(llvm::cl::Positional, llvm::cl::Required,
@@ -4022,6 +4018,8 @@ int RootClingMain(int argc,
       fprintf(stderr, "warning: Please remove the deprecated flag -c.\n");
    if (gOptP)
       fprintf(stderr, "warning: Please remove the deprecated flag -p.\n");
+   if (gOptIgnoreExistingDict)
+      fprintf(stderr, "warning: Please remove the deprecated flag -r.\n");
 
    for (auto I = gOptDictionaryHeaderFiles.begin(), E = gOptDictionaryHeaderFiles.end(); I != E; ++I) {
       if ((*I)[0] == '+') {
@@ -4050,7 +4048,7 @@ int RootClingMain(int argc,
 
    if (IsImplementationName(gOptDictionaryFileName)) {
       FILE *fp;
-      if (!gOptIgnoreExistingDict && (fp = fopen(gOptDictionaryFileName.c_str(), "r")) != 0) {
+      if ((fp = fopen(gOptDictionaryFileName.c_str(), "r")) != 0) {
          fclose(fp);
          if (!gOptForce) {
             ROOT::TMetaUtils::Error(0, "%s: output file %s already exists\n", executableFileName, gOptDictionaryFileName.c_str());
@@ -4551,22 +4549,17 @@ int RootClingMain(int argc,
    std::ostream *dictStreamPtr = NULL;
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
-   if (!gOptIgnoreExistingDict) {
-      if (!dictpathname.empty()) {
-         tmpCatalog.addFileName(dictpathname);
-         fileout.open(dictpathname.c_str());
-         dictStreamPtr = &fileout;
-         if (!(*dictStreamPtr)) {
-            ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-                                    dictpathname.c_str());
-            return 1;
-         }
-      } else {
-         dictStreamPtr = &std::cout;
+   if (!dictpathname.empty()) {
+      tmpCatalog.addFileName(dictpathname);
+      fileout.open(dictpathname.c_str());
+      dictStreamPtr = &fileout;
+      if (!(*dictStreamPtr)) {
+         ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
+                                 dictpathname.c_str());
+         return 1;
       }
    } else {
-      fileout.open("/dev/null");
-      dictStreamPtr = &fileout;
+      dictStreamPtr = &std::cout;
    }
 
    // Now generate a second stream for the split dictionary if it is necessary
@@ -4859,54 +4852,53 @@ int RootClingMain(int argc,
    // annotation, let's write the pcms.
    HeadersDeclsMap_t headersClassesMap;
    HeadersDeclsMap_t headersDeclsMap;
-   if (!gOptIgnoreExistingDict) {
-      const std::string fwdDeclnArgsToKeepString(GetFwdDeclnArgsToKeepString(normCtxt, interp));
 
-      ExtractHeadersForDecls(scan.fSelectedClasses,
-                             scan.fSelectedTypedefs,
-                             scan.fSelectedFunctions,
-                             scan.fSelectedVariables,
-                             scan.fSelectedEnums,
-                             headersClassesMap,
-                             headersDeclsMap,
-                             interp);
+   const std::string fwdDeclnArgsToKeepString(GetFwdDeclnArgsToKeepString(normCtxt, interp));
 
-      std::string detectedUmbrella;
-      for (auto & arg : pcmArgs) {
-         if (gOptInlineInput && !ROOT::TMetaUtils::IsLinkdefFile(arg.c_str()) && ROOT::TMetaUtils::IsHeaderName(arg)) {
-            detectedUmbrella = arg;
-            break;
-         }
+   ExtractHeadersForDecls(scan.fSelectedClasses,
+                          scan.fSelectedTypedefs,
+                          scan.fSelectedFunctions,
+                          scan.fSelectedVariables,
+                          scan.fSelectedEnums,
+                          headersClassesMap,
+                          headersDeclsMap,
+                          interp);
+
+   std::string detectedUmbrella;
+   for (auto & arg : pcmArgs) {
+      if (gOptInlineInput && !ROOT::TMetaUtils::IsLinkdefFile(arg.c_str()) && ROOT::TMetaUtils::IsHeaderName(arg)) {
+         detectedUmbrella = arg;
+         break;
       }
+   }
 
-      if (gOptWriteEmptyRootPCM){
-         headersDeclsMap.clear();
+   if (gOptWriteEmptyRootPCM){
+      headersDeclsMap.clear();
+   }
+
+
+   std::string headersClassesMapString = "\"\"";
+   std::string fwdDeclsString = "\"\"";
+   if (!gOptCxxModule) {
+      headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
+                                                                    detectedUmbrella,
+                                                                    true);
+      if (!gDriverConfig->fBuildingROOTStage1) {
+         if (!gOptWriteEmptyRootPCM)
+            fwdDeclsString = GenerateFwdDeclString(scan, interp);
       }
-
-
-      std::string headersClassesMapString = "\"\"";
-      std::string fwdDeclsString = "\"\"";
-      if (!gOptCxxModule) {
-         headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
-                                                                       detectedUmbrella,
-                                                                       true);
-         if (!gDriverConfig->fBuildingROOTStage1) {
-            if (!gOptWriteEmptyRootPCM)
-               fwdDeclsString = GenerateFwdDeclString(scan, interp);
-         }
-      }
-      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
-                                     extraIncludes, gOptCxxModule);
-      // If we just want to inline the input header, we don't need
-      // to generate any files.
-      if (!gOptInlineInput) {
-         // Write the module/PCH depending on what mode we are on
-         if (modGen.IsPCH()) {
-            if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (gOptCxxModule) {
-            if (!CheckModuleValid(modGen, llvmResourceDir, interp, linkdefFilename, moduleName.str()))
-               return 1;
-         }
+   }
+   modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
+                                  extraIncludes, gOptCxxModule);
+   // If we just want to inline the input header, we don't need
+   // to generate any files.
+   if (!gOptInlineInput) {
+      // Write the module/PCH depending on what mode we are on
+      if (modGen.IsPCH()) {
+         if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
+      } else if (gOptCxxModule) {
+         if (!CheckModuleValid(modGen, llvmResourceDir, interp, linkdefFilename, moduleName.str()))
+            return 1;
       }
    }
 
