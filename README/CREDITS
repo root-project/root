@@ -776,6 +776,11 @@ N: Iulia Pasov
 E: iulia.pasov@gmail.com
 D: prototyping JavaScript graphics with d3.js
 
+N: Alexander Penev
+E: alexander_penev@yahoo.com
+D: Dyld symbol resolution facilities in cling and TCling
+D: runtime c++ modules on osx
+
 N: Marc Paterno
 E: paterno@fnal.gov
 D: implement utility functions used by TGraphAsymmErrors::BayesDivide

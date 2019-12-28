@@ -34,6 +34,8 @@
 
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
+
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 
@@ -74,9 +76,6 @@ extern "C" {
    void TCling__RestoreInterpreterMutex(void *state);
    void *TCling__LockCompilationDuringUserCodeExecution();
    void TCling__UnlockCompilationDuringUserCodeExecution(void *state);
-   void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
-                                    std::vector<std::string> &sPaths,
-                                    cling::Interpreter &interpreter, bool searchSystem);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : InterpreterCallbacks(interp)
@@ -920,104 +919,4 @@ void *TClingCallbacks::LockCompilationDuringUserCodeExecution()
 void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
 {
    TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
-}
-
-static bool shouldIgnore(const std::string& FileName,
-                         const cling::DynamicLibraryManager& dyLibManager) {
-   if (llvm::sys::fs::is_directory(FileName))
-     return true;
-
-   if (!cling::DynamicLibraryManager::isSharedLibrary(FileName))
-     return true;
-
-   // No need to check linked libraries, as this function is only invoked
-   // for symbols that cannot be found (neither by dlsym nor in the JIT).
-   if (dyLibManager.isLibraryLoaded(FileName.c_str()))
-      return true;
-
-
-   auto ObjF = llvm::object::ObjectFile::createObjectFile(FileName);
-   if (!ObjF) {
-      if (gDebug > 1)
-         ROOT::TMetaUtils::Warning("[DyLD]", "Failed to read object file %s",
-                                   FileName.c_str());
-      return true;
-   }
-
-   llvm::object::ObjectFile *file = ObjF.get().getBinary();
-
-   if (isa<llvm::object::ELFObjectFileBase>(*file)) {
-      for (auto S : file->sections()) {
-         StringRef name;
-         S.getName(name);
-         if (name == ".text") {
-            // Check if the library has only debug symbols, usually when
-            // stripped with objcopy --only-keep-debug. This check is done by
-            // reading the manual of objcopy and inspection of stripped with
-            // objcopy libraries.
-            auto SecRef = static_cast<llvm::object::ELFSectionRef&>(S);
-            if (SecRef.getType() == llvm::ELF::SHT_NOBITS)
-               return true;
-
-            return (SecRef.getFlags() & llvm::ELF::SHF_ALLOC) == 0;
-         }
-      }
-      return true;
-   }
-   //FIXME: Handle osx using isStripped after upgrading to llvm9.
-
-   llvm::StringRef fileStem = llvm::sys::path::stem(FileName);
-   return fileStem.startswith("libNew") || fileStem.startswith("libcppyy_backend");
-}
-
-static void SearchAndAddPath(const std::string& Path,
-      std::vector<std::pair<uint32_t, std::string>> &sLibraries, std::vector<std::string> &sPaths,
-      std::unordered_set<std::string>& alreadyLookedPath, cling::DynamicLibraryManager* dyLibManager)
-{
-   // Already searched?
-   auto it = alreadyLookedPath.insert(Path);
-   if (!it.second)
-      return;
-   StringRef DirPath(Path);
-   if (!llvm::sys::fs::is_directory(DirPath))
-      return;
-
-   bool flag = false;
-   std::error_code EC;
-   for (llvm::sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
-         DirIt != DirEnd && !EC; DirIt.increment(EC)) {
-
-      std::string FileName(DirIt->path());
-      if (shouldIgnore(FileName, *dyLibManager))
-         continue;
-
-      sLibraries.push_back(std::make_pair(sPaths.size(), llvm::sys::path::filename(FileName)));
-      flag = true;
-   }
-
-   if (flag)
-      sPaths.push_back(Path);
-}
-
-// Extracted here to circumvent ODR clash between
-// std::Sp_counted_ptr_inplace<llvm::sys::fs::detail::DirIterState, std::allocator<llvm::sys::fs::detail::DirIterState>, (_gnu_cxx::_Lock_policy)2>::_M_get_deleter(std::type_info const&)
-// coming from a no-rtti and a rtti build in libstdc++ from GCC >= 8.1.
-// In its function body, rtti uses `arg0 == typeid(...)` protected by #ifdef __cpp_rtti. Depending
-// on which symbol (with or without rtti) the linker picks up, the argument `arg0` is a valid
-// type_info - or not, in which case this comparison crashes.
-// Circumvent this by removing the rtti-use of this function:
-void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
-                                 std::vector<std::string> &sPaths,
-                                 cling::Interpreter &interpreter, bool searchSystem)
-{
-   // Store the information of path so that we don't have to iterate over the same path again and again.
-   static std::unordered_set<std::string> alreadyLookedPath;
-   cling::DynamicLibraryManager* dyLibManager = interpreter.getDynamicLibraryManager();
-
-   const auto &searchPaths = dyLibManager->getSearchPath();
-   for (const cling::DynamicLibraryManager::SearchPathInfo &Info : searchPaths) {
-      if (!Info.IsUser && !searchSystem)
-         continue;
-      SearchAndAddPath(Info.Path, sLibraries, sPaths, alreadyLookedPath, dyLibManager);
-   }
 }
