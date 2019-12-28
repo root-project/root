@@ -653,11 +653,6 @@ extern "C" void TCling__SplitAclicMode(const char* fileName, string &mode,
    io = aclicio.Data(); fname = f.Data();
 }
 
-// Implemented in TClingCallbacks.
-extern "C" void TCling__FindLoadedLibraries(std::vector<std::pair<uint32_t, std::string>> &sLibraries,
-                                 std::vector<std::string> &sPaths,
-                                 cling::Interpreter &interpreter, bool searchSystem);
-
 //______________________________________________________________________________
 //
 //
@@ -1531,9 +1526,16 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
    if (!fromRootCling) {
+      cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
-      fInterpreter->getDynamicLibraryManager()->addSearchPath(TROOT::GetLibDir().Data());
+      DLM.addSearchPath(TROOT::GetLibDir().Data());
+      auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
+         llvm::StringRef stem = llvm::sys::path::stem(FileName);
+         return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
+      };
+      // Initialize the dyld for the llvmLazyFunctionCreator.
+      DLM.initializeDyld(ShouldPermanentlyIgnore);
    }
 }
 
@@ -1582,69 +1584,6 @@ void TCling::ShutDown()
 {
    fIsShuttingDown = true;
    ResetGlobals();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Wrapper around dladdr (and friends)
-
-static std::string FindLibraryName(void (*func)())
-{
-#if defined(__CYGWIN__) && defined(__GNUC__)
-   return {};
-#elif defined(G__WIN32)
-   MEMORY_BASIC_INFORMATION mbi;
-   if (!VirtualQuery (func, &mbi, sizeof (mbi)))
-   {
-      return {};
-   }
-
-   HMODULE hMod = (HMODULE) mbi.AllocationBase;
-   char moduleName[MAX_PATH];
-
-   if (!GetModuleFileNameA (hMod, moduleName, sizeof (moduleName)))
-   {
-      return {};
-   }
-   return ROOT::TMetaUtils::GetRealPath(moduleName);
-#else
-   Dl_info info;
-   if (dladdr((void*)func, &info) == 0) {
-      // Not in a known shared library, let's give up
-      return {};
-   } else {
-      if (strchr(info.dli_fname, '/'))
-         return ROOT::TMetaUtils::GetRealPath(info.dli_fname);
-      // Else absolute path. For all we know that's a binary.
-      // Some people have dictionaries in binaries, this is how we find their path:
-      // (see also https://stackoverflow.com/a/1024937/6182509)
-# if defined(R__MACOSX)
-      char buf[PATH_MAX] = { 0 };
-      uint32_t bufsize = sizeof(buf);
-      if (_NSGetExecutablePath(buf, &bufsize) >= 0)
-         return ROOT::TMetaUtils::GetRealPath(buf);
-      return ROOT::TMetaUtils::GetRealPath(info.dli_fname);
-# elif defined(R__UNIX)
-      char buf[PATH_MAX] = { 0 };
-      // Cross our fingers that /proc/self/exe exists.
-      if (readlink("/proc/self/exe", buf, sizeof(buf)) > 0)
-         return ROOT::TMetaUtils::GetRealPath(buf);
-      std::string pipeCmd = std::string("which \"") + info.dli_fname + "\"";
-      FILE* pipe = popen(pipeCmd.c_str(), "r");
-      if (!pipe)
-         return ROOT::TMetaUtils::GetRealPath(info.dli_fname);
-      std::string result;
-      while (fgets(buf, sizeof(buf), pipe)) {
-         result += buf;
-      }
-      pclose(pipe);
-      return ROOT::TMetaUtils::GetRealPath(result);
-# else
-#  error "Unsupported platform."
-# endif
-      return {};
-   }
-#endif
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2068,7 +2007,7 @@ void TCling::RegisterModule(const char* modulename,
    if (payloadCode)
       code += payloadCode;
 
-   std::string dyLibName = FindLibraryName(triggerFunc);
+   std::string dyLibName = cling::DynamicLibraryManager::getSymbolLocation(triggerFunc);
    assert(!llvm::sys::fs::is_symlink_file(dyLibName));
 
    if (dyLibName.empty()) {
@@ -6243,260 +6182,42 @@ bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::stri
    return false;
 }
 
-// This is a GNU implementation of hash used in bloom filter!
-static uint32_t GNUHash(StringRef S) {
-   uint32_t H = 5381;
-   for (uint8_t C : S)
-      H = (H << 5) + H + C;
-   return H;
-}
-
-static StringRef GetGnuHashSection(llvm::object::ObjectFile *file) {
-   for (auto S : file->sections()) {
-      StringRef name;
-      S.getName(name);
-      if (name == ".gnu.hash") {
-         StringRef content;
-         S.getContents(content);
-         return content;
-      }
-   }
-   return "";
-}
-
-/// Bloom filter in a stohastic data structure which can tell us if a symbol
-/// name does not exist in a library with 100% certainty. If it tells us it exists
-/// this may not be true: https://blogs.oracle.com/solaris/gnu-hash-elf-sections-v2
-///
-/// ELF has this optimization in the new linkers by default, It is stored in the
-/// gnu.hash section of the object file.
-///
-///\returns true true if the symbol may be in the library.
-static bool MayExistInObjectFile(llvm::object::ObjectFile *soFile, uint32_t hash) {
-   if (!soFile->isELF())
-      return true;
-
-   // LLVM9: soFile->makeTriple().is64Bit()
-   const int bits = 8 * soFile->getBytesInAddress();
-
-   StringRef contents = GetGnuHashSection(soFile);
-   if (contents.size() < 16)
-      // We need to search if the library doesn't have .gnu.hash section!
-      return true;
-   const char* hashContent = contents.data();
-
-   // See https://flapenguin.me/2017/05/10/elf-lookup-dt-gnu-hash/ for .gnu.hash table layout.
-   uint32_t maskWords = *reinterpret_cast<const uint32_t *>(hashContent + 8);
-   uint32_t shift2 = *reinterpret_cast<const uint32_t *>(hashContent + 12);
-   uint32_t hash2 = hash >> shift2;
-   uint32_t n = (hash / bits) % maskWords;
-
-   const char *bloomfilter = hashContent + 16;
-   const char *hash_pos = bloomfilter + n*(bits/8); // * (Bits / 8)
-   uint64_t word = *reinterpret_cast<const uint64_t *>(hash_pos);
-   uint64_t bitmask = ( (1ULL << (hash % bits)) | (1ULL << (hash2 % bits)));
-   return  (bitmask & word) == bitmask;
-}
-
-/// Looks up symbols from a an object file, representing the library.
-///\returns true on success.
-static bool FindSymbol(const std::string &library_filename,
-                       const std::string &mangled_name, unsigned IgnoreSymbolFlags = 0)
-{
-   auto ObjF = llvm::object::ObjectFile::createObjectFile(ROOT::TMetaUtils::GetRealPath(library_filename));
-   if (!ObjF) {
-      if (gDebug > 1)
-         Warning("TCling__FindSymbol", "Failed to read object file %s", library_filename.c_str());
-      return false;
-   }
-
-   llvm::object::ObjectFile *BinObjFile = ObjF.get().getBinary();
-
-   uint32_t hashedMangle = GNUHash(mangled_name);
-   // If the symbol does not exist, exit early. In case it may exist, iterate.
-   if (!MayExistInObjectFile(BinObjFile, hashedMangle))
-      return false;
-
-   for (const auto &S : BinObjFile->symbols()) {
-      uint32_t Flags = S.getFlags();
-      // Do not insert in the table symbols flagged to ignore.
-      if (Flags & IgnoreSymbolFlags)
-         continue;
-
-      // Note, we are at last resort and loading library based on a weak
-      // symbol is allowed. Otherwise, the JIT will issue an unresolved
-      // symbol error.
-      //
-      // There are other weak symbol kinds (marked as 'V') to denote
-      // typeinfo and vtables. It is unclear whether we should load such
-      // libraries or from which library we should resolve the symbol.
-      // We seem to not have a way to differentiate it from the symbol API.
-
-      llvm::Expected<StringRef> SymNameErr = S.getName();
-      if (!SymNameErr) {
-         Warning("TCling__FindSymbol", "Failed to read symbol %s", mangled_name.c_str());
-         continue;
-      }
-
-      if (SymNameErr.get() == mangled_name) {
-         if (gDebug > 1)
-            Info("TCling__FindSymbol", "Symbol %s found in %s\n",
-                 mangled_name.c_str(), library_filename.c_str());
-         return true;
-      }
-   }
-
-   if (!BinObjFile->isELF())
-      return false;
-
-   // ELF file format has .dynstr section for the dynamic symbol table.
-   const auto *ElfObj = cast<llvm::object::ELFObjectFileBase>(BinObjFile);
-
-   for (const auto &S : ElfObj->getDynamicSymbolIterators()) {
-      uint32_t Flags = S.getFlags();
-      // DO NOT insert to table if symbol was undefined
-      if (Flags & llvm::object::SymbolRef::SF_Undefined)
-         continue;
-
-      // Note, we are at last resort and loading library based on a weak
-      // symbol is allowed. Otherwise, the JIT will issue an unresolved
-      // symbol error.
-      //
-      // There are other weak symbol kinds (marked as 'V') to denote
-      // typeinfo and vtables. It is unclear whether we should load such
-      // libraries or from which library we should resolve the symbol.
-      // We seem to not have a way to differentiate it from the symbol API.
-
-      llvm::Expected<StringRef> SymNameErr = S.getName();
-      if (!SymNameErr) {
-         Warning("TCling__FindSymbol", "Failed to read symbol %s", mangled_name.c_str());
-         continue;
-      }
-
-      if (SymNameErr.get() == mangled_name)
-         return true;
-   }
-
-   return false;
-}
-
-static std::string ResolveSymbol(const std::string& mangled_name,
-                                 cling::Interpreter *interp,
-                                 bool searchSystem = true) {
-   assert(!mangled_name.empty());
-   using namespace llvm::sys::path;
-   using namespace llvm::sys::fs;
-
+static void* LazyFunctionCreatorAutoloadForModule(const std::string &mangled_name,
+                                                  const cling::DynamicLibraryManager &DLM) {
    R__LOCKGUARD(gInterpreterMutex);
 
-   static bool sFirstRun = true;
-   static bool sFirstSystemLibrary = true;
-   // LibraryPath contains a pair offset to the canonical dirname (stored as
-   // sPaths[i]) and a filename. For example, `/home/foo/root/lib/libTMVA.so`,
-   // the .first will contain an index in sPaths where `/home/foo/root/lib/`
-   // will be stored and .second `libTMVA.so`.
-   // This approach reduces the duplicate paths as at one location there may be
-   // plenty of libraries.
-   using LibraryPath = std::pair<uint32_t, std::string>;
-   using LibraryPaths = std::vector<LibraryPath>;
-   using BasePaths = std::vector<std::string>;
-   static LibraryPaths sLibraries;
-   static BasePaths sPaths;
-   static LibraryPaths sQueriedLibraries;
-
-   // For system header AutoLoading
-   static LibraryPaths sSysLibraries;
-
-   if (sFirstRun) {
-      TCling__FindLoadedLibraries(sLibraries, sPaths, *interp, /* searchSystem */ false);
-      sFirstRun = false;
-   }
-
-   auto GetLibFileName = [](const LibraryPath &P, const BasePaths &BaseP) {
-      llvm::SmallString<512> Vec(BaseP[P.first]);
-      llvm::sys::path::append(Vec, StringRef(P.second));
-      return Vec.str().str();
+   auto LibLoader = [](const std::string& LibName) -> bool {
+     if (gSystem->Load(LibName.c_str(), "", false) < 0) {
+       Error("TCling__LazyFunctionCreatorAutoloadForModule",
+             "Failed to load library %s", LibName.c_str());
+       return false;
+     }
+     return true; //success.
    };
 
-   if (!sQueriedLibraries.empty()) {
-      // Last call we were asked if a library contains a symbol. Usually, the
-      // caller wants to load this library. Check if was loaded and remove it
-      // from our lists of not-yet-loaded libs.
-      for (const LibraryPath &P : sQueriedLibraries) {
-         const std::string LibName = GetLibFileName(P, sPaths);
-         if (!gCling->IsLibraryLoaded(LibName.c_str()))
-            continue;
-
-         sLibraries.erase(std::remove(sLibraries.begin(), sLibraries.end(), P), sLibraries.end());
-         if (!sSysLibraries.empty())
-            sSysLibraries.erase(std::remove(sSysLibraries.begin(), sSysLibraries.end(), P), sSysLibraries.end());
-      }
-   }
-
-   if (sFirstRun) {
-      TCling__FindLoadedLibraries(sLibraries, sPaths, *interp, /* searchSystem */ false);
-      sFirstRun = false;
-   }
-
-   // Iterate over files under this path. We want to get each ".so" files
-   for (const LibraryPath &P : sLibraries) {
-      const std::string LibName = GetLibFileName(P, sPaths);
-
-      // FIXME: We should also iterate over the dynamic symbols for ROOT
-      // libraries. However, it seems to be redundant for the moment as we do
-      // not strictly require symbols from those sections. Enable after checking
-      // performance!
-      if (FindSymbol(LibName, mangled_name, /*ignore*/
-                     llvm::object::SymbolRef::SF_Undefined)) {
-         sQueriedLibraries.push_back(P);
-         return LibName;
-      }
-   }
-
-   if (!searchSystem)
-      return "";
-
-   // Lookup in non-system libraries failed. Expand the search to the system.
-   if (sFirstSystemLibrary) {
-      TCling__FindLoadedLibraries(sSysLibraries, sPaths, *interp, /* searchSystem */ true);
-      sFirstSystemLibrary = false;
-   }
-
-   for (const LibraryPath &P : sSysLibraries) {
-      const std::string LibName = GetLibFileName(P, sPaths);
-
-      if (FindSymbol(LibName, mangled_name, /*ignore*/
-                     llvm::object::SymbolRef::SF_Undefined |
-                     llvm::object::SymbolRef::SF_Weak)) {
-         sQueriedLibraries.push_back(P);
-         return LibName;
-      }
-   }
-
-   return ""; // Search found no match.
-}
-
-static void* LazyFunctionCreatorAutoloadForModule(const std::string &mangled_name,
-                                                  cling::Interpreter *interp) {
-// The JIT gives us a mangled name which has only one leading underscore on
-// all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
-// linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
-   std::string maybe_prefixed_mangled_name = mangled_name;
 #ifdef R__MACOSX
+   // The JIT gives us a mangled name which has only one leading underscore on
+   // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
+   // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
    assert(!llvm::StringRef(mangled_name).startswith("__") && "Already added!");
-   maybe_prefixed_mangled_name = "_" + maybe_prefixed_mangled_name;
-#endif
+   std::string libName = DLM.searchLibrariesForSymbol('_' + mangled_name,
+                                                      /*searchSystem=*/ true);
+#else
+   std::string libName = DLM.searchLibrariesForSymbol(mangled_name,
+                                                      /*searchSystem=*/ true);
+#endif //R__MACOSX
 
-   std::string LibName = ResolveSymbol(maybe_prefixed_mangled_name, interp);
-   if (LibName.empty())
+   assert(!llvm::StringRef(libName).startswith("libNew") &&
+          "We must not resolve symbols from libNew!");
+
+   if (libName.empty())
       return nullptr;
 
-   if (gSystem->Load(LibName.c_str(), "", false) < 0)
-      Error("TCling__LazyFunctionCreatorAutoloadForModule",
-            "Failed to load library %s", LibName.c_str());
+   if (!LibLoader(libName))
+      return nullptr;
 
-   void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
-   return addr;
+   return llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6504,7 +6225,8 @@ static void* LazyFunctionCreatorAutoloadForModule(const std::string &mangled_nam
 
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    if (fCxxModulesEnabled)
-      return LazyFunctionCreatorAutoloadForModule(mangled_name, GetInterpreterImpl());
+      return LazyFunctionCreatorAutoloadForModule(mangled_name,
+                                                  *GetInterpreterImpl()->getDynamicLibraryManager());
 
    // First see whether the symbol is in the library that we are currently
    // loading. It will have access to the symbols of its dependent libraries,
@@ -7157,7 +6879,7 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          if (BinObjFile->isELF()) {
           // Skip the symbols which are part of the C/C++ runtime and have a
           // fixed library version. See binutils ld VERSION. Those reside in
-          // 'system' libraries, which we avoid in ResolveSymbol.
+          // 'system' libraries, which we avoid in FindLibraryForSymbol.
           if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
               SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
             continue;
@@ -7177,7 +6899,8 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName))
             continue;
 
-         std::string found = ResolveSymbol(SymName, interp, /*searchSystem*/false);
+         R__LOCKGUARD(gInterpreterMutex);
+         std::string found = interp->getDynamicLibraryManager()->searchLibrariesForSymbol(SymName, /*searchSystem*/false);
          // The expected output is just filename without the full path, which
          // is not very accurate, because our Dyld implementation might find
          // a match in location a/b/c.so and if we return just c.so ROOT might
