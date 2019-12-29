@@ -61,6 +61,12 @@ class RDataFrameAsNumpy(unittest.TestCase):
         for col in col_names:
             self.assertTrue(all(npy[col] == ref[col]))
 
+    def test_branch_bool(self):
+        df = ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)")
+        npy = df.AsNumpy()
+        self.assertTrue(bool(npy["x"][0]) == False)
+        self.assertTrue(bool(npy["x"][1]) == True)
+
     def test_read_array(self):
         ROOT.gInterpreter.Declare("""
         std::array<unsigned int, 3> create_array(unsigned int n) {
