@@ -80,6 +80,16 @@ class RDataFrameAsNumpy(unittest.TestCase):
         for col in col_names:
             self.assertTrue(all(npy[col] == ref[col]))
 
+    def test_branch_bool(self):
+        """
+        Test bool data-type as a special case since we cannot adopt
+        the std::vector<bool> with numpy arrays
+        """
+        df = ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)")
+        npy = df.AsNumpy()
+        self.assertTrue(bool(npy["x"][0]) == False)
+        self.assertTrue(bool(npy["x"][1]) == True)
+
     def test_read_array(self):
         """
         Testing reading a std::array
