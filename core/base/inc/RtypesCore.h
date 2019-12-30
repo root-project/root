@@ -22,6 +22,8 @@
 
 #include <ROOT/RConfig.hxx>
 
+#include "DllImport.h"
+
 #include <stddef.h> // size_t, NULL
 
 //---- Tag used by rootcling to determine constructor used for I/O.
@@ -109,5 +111,10 @@ const Long64_t  kMinLong64   = -kMaxLong64 - 1;
 
 const size_t    kBitsPerByte = 8;
 const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
+
+//---- debug global ------------------------------------------------------------
+
+R__EXTERN Int_t gDebug;
+
 
 #endif
