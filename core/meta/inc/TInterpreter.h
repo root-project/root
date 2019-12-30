@@ -25,6 +25,7 @@
 #include "TDataType.h"
 #include "TDictionary.h"
 #include "TInterpreterValue.h"
+#include "TNamed.h"
 #include "TVirtualRWMutex.h"
 
 #include <map>
