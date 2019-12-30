@@ -86,10 +86,6 @@ typedef TClass* (*DictFuncPtr_t)();  //pointer to dictionary function
 #define TESTBIT(n,i) ((Bool_t)(((n) & BIT(i)) != 0))
 
 
-//---- debug global ------------------------------------------------------------
-
-R__EXTERN Int_t gDebug;
-
 
 //---- ClassDef macros ---------------------------------------------------------
 
