@@ -20,6 +20,7 @@ make -j4 move_headers intrinsics_gen ClangCommentCommandList ClangCommentCommand
          ClangDiagnosticAST ClangDiagnosticDriver ClangDiagnosticAnalysis            \
          ClangDriverOptions ClangAttrParserStringSwitches ClangAttrParsedAttrList    \
          ClangAttrTemplateInstantiate ClangAttrSpellingListIndex                     \
-         ClangAttrParsedAttrImpl ClangAttrParsedAttrKinds googletest
+         ClangAttrParsedAttrImpl ClangAttrParsedAttrKinds googletest Dictgen         \
+         ClangAttrSubjectMatchRuleList BaseTROOT
 ln -s $PWD/compile_commands.json $PWD/../root/
 
