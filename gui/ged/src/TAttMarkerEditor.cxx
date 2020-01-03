@@ -27,6 +27,7 @@
 #include "TAttMarkerEditor.h"
 #include "TGedMarkerSelect.h"
 #include "TGColorSelect.h"
+#include "TGComboBox.h"
 #include "TGNumberEntry.h"
 #include "TColor.h"
 #include "TGLabel.h"
@@ -41,6 +42,7 @@ enum EMarkerWid {
    kCOLOR,
    kMARKER,
    kMARKER_SIZE,
+   kMARKER_LINE_WIDTH,
    kALPHA,
    kALPHAFIELD
 };
@@ -74,6 +76,11 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
    f2->AddFrame(fMarkerSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fMarkerSize->Associate(this);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   fWidthCombo = new TGLineWidthComboBox(this, kMARKER_LINE_WIDTH);
+   fWidthCombo->Resize(137, 20);
+   AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
+   fWidthCombo->Associate(this);
 
    TGLabel *AlphaLabel = new TGLabel(this,"Opacity");
    AddFrame(AlphaLabel,
@@ -112,6 +119,7 @@ void TAttMarkerEditor::ConnectSignals2Slots()
    fMarkerType->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
    fMarkerSize->Connect("ValueSet(Long_t)", "TAttMarkerEditor", this, "DoMarkerSize()");
    (fMarkerSize->GetNumberEntry())->Connect("ReturnPressed()", "TAttMarkerEditor", this, "DoMarkerSize()");
+   fWidthCombo->Connect("Selected(Int_t)", "TAttMarkerEditor", this, "DoMarkerLineWidth(Int_t)");
    fAlpha->Connect("Released()","TAttMarkerEditor", this, "DoAlpha()");
    fAlpha->Connect("PositionChanged(Int_t)","TAttMarkerEditor", this, "DoLiveAlpha(Int_t)");
    fAlphaField->Connect("ReturnPressed()","TAttMarkerEditor", this, "DoAlphaField()");
@@ -146,6 +154,8 @@ void TAttMarkerEditor::SetModel(TObject* obj)
       fMarkerSize->SetNumber(s);
    }
    fMarkerType->SetMarkerStyle(marker);
+
+   fWidthCombo->Select(fAttMarker->GetMarkerLineWidth());
 
    Color_t c = fAttMarker->GetMarkerColor();
    Pixel_t p = TColor::Number2Pixel(c);
@@ -205,6 +215,13 @@ void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
       fMarkerSize->SetState(kTRUE);
 
    fAttMarker->SetMarkerStyle(marker);
+
+   if (!fAttMarker->HasMarkerLineWidth()) {
+      fWidthCombo->Select(1);
+      fWidthCombo->SetEnabled(kFALSE);
+   } else
+      fWidthCombo->SetEnabled(kTRUE);
+
    Update();
 }
 
@@ -222,6 +239,22 @@ void TAttMarkerEditor::DoMarkerSize()
       fMarkerSize->SetState(kTRUE);
    Float_t size = fMarkerSize->GetNumber();
    fAttMarker->SetMarkerSize(size);
+   Update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the marker line width.
+
+void TAttMarkerEditor::DoMarkerLineWidth(Width_t width)
+{
+   if (fAvoidSignal) return;
+   if (!fAttMarker->HasMarkerLineWidth()) {
+      fWidthCombo->Select(1);
+      fWidthCombo->SetEnabled(kFALSE);
+      width = 1;
+   } else
+      fWidthCombo->SetEnabled(kTRUE);
+   fAttMarker->SetMarkerLineWidth(width);
    Update();
 }
 

@@ -42,7 +42,7 @@ public:
    virtual void     DrawTextNDC(Double_t , Double_t , const char *) { }
    virtual void     FillAttributes(Int_t , Int_t ) { }
    virtual void     LineAttributes(Int_t , Int_t , Int_t ) { }
-   virtual void     MarkerAttributes(Int_t , Int_t , Float_t ) { }
+   virtual void     MarkerAttributes(Int_t , Int_t , Float_t , Int_t) { }
    virtual void     TextAttributes(Int_t ,Float_t ,Int_t ,Int_t ,Float_t ) { }
 
    virtual void     Build() { }
@@ -64,7 +64,7 @@ public:
    static void      Terminate();
    static void      UpdateFillAttributes(Int_t col, Int_t sty);
    static void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
-   static void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);
+   static void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz, Int_t mlwidth);
    static void      UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
 
    ClassDef(TVirtualPadEditor,0)  //Abstract interface for graphics pad editor

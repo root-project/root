@@ -46,7 +46,7 @@ ClassImp(TVirtualX);
 /// Ctor of ABC
 
 TVirtualX::TVirtualX(const char *name, const char *title) : TNamed(name, title),
-      TAttLine(1,1,1),TAttFill(1,1),TAttText(11,0,1,62,0.01), TAttMarker(1,1,1),
+      TAttLine(1,1,1),TAttFill(1,1),TAttText(11,0,1,62,0.01), TAttMarker(1,1,1,1),
       fDrawMode()
 {
 }
@@ -855,6 +855,13 @@ void TVirtualX::SetMarkerSize(Float_t /*markersize*/)
 /// Sets marker style.
 
 void TVirtualX::SetMarkerStyle(Style_t /*markerstyle*/)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets marker line width.
+
+void TVirtualX::SetMarkerLineWidth(Width_t /*markerlinewidth*/)
 {
 }
 

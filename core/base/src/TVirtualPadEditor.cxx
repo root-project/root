@@ -162,10 +162,10 @@ void TVirtualPadEditor::UpdateLineAttributes(Int_t color, Int_t style,
 /// Update marker attributes via the pad editor
 
 void TVirtualPadEditor::UpdateMarkerAttributes(Int_t color, Int_t style,
-                                               Float_t msize)
+                                               Float_t msize, Int_t mlwidth)
 {
    ShowEditor();
 
    if (fgPadEditor)
-      fgPadEditor->MarkerAttributes(color, style, msize);
+      fgPadEditor->MarkerAttributes(color, style, msize, mlwidth);
 }

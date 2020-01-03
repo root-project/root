@@ -193,6 +193,8 @@ public:
    virtual void   SetMarkerSize(Size_t s, TEveElement* el);
    virtual void   SetMarkerStyle(Style_t s);
    virtual void   SetMarkerStyle(Style_t s, TEveElement* el);
+   virtual void   SetMarkerLineWidth(Width_t w);
+   virtual void   SetMarkerLineWidth(Width_t w, TEveElement* el);
 
    void   SetRnrLine(Bool_t rnr);
    void   SetRnrLine(Bool_t rnr, TEveElement* el);

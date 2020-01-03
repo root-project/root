@@ -431,7 +431,12 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    if (fMarkerStyle == 23 || fMarkerStyle == 32) PrintStr(",rotate=180");
 
-   PrintStr(Form("},mark size=%fpt,mark=",8./3.33*fMarkerSize));
+   PrintStr(Form("},mark size=%fpt", 8./3.33*(fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.))));
+
+   if (HasMarkerLineWidth())
+       PrintStr(Form(", line width=%fpt", 4./3.33*(fMarkerLineWidth/2)));
+
+   PrintStr(", mark=");
    switch (fMarkerStyle) {
    case 1 :
       PrintStr("*");

@@ -29,6 +29,7 @@ class TGColorSelect;
 class TGedMarkerSelect;
 class TAttMarker;
 class TGNumberEntryField;
+class TGLineWidthComboBox;
 
 class TAttMarkerEditor : public TGedFrame {
 
@@ -37,6 +38,7 @@ protected:
    TGNumberEntry       *fMarkerSize;      // marker size combo box
    TGColorSelect       *fColorSelect;     // marker color
    TGedMarkerSelect    *fMarkerType;      // marker type
+   TGLineWidthComboBox *fWidthCombo;      // marker line width combo box
    Bool_t              fSizeForText;      // true if "text" draw option uses marker size
    TGHSlider           *fAlpha;           // fill opacity
    TGNumberEntryField  *fAlphaField;
@@ -55,6 +57,7 @@ public:
    virtual void     DoMarkerAlphaColor(ULong_t p);
    virtual void     DoMarkerSize();
    virtual void     DoMarkerStyle(Style_t style);
+   virtual void     DoMarkerLineWidth(Width_t width);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();
    virtual void     DoLiveAlpha(Int_t a);

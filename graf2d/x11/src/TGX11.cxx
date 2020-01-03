@@ -121,6 +121,10 @@ static struct {
    int    n;
    XPoint xy[kMAXMK];
 } gMarker;                        // Point list to draw marker
+static int  gMarkerLineWidth = 0;
+static int  gMarkerLineStyle = LineSolid;
+static int  gMarkerCapStyle  = CapRound;
+static int  gMarkerJoinStyle = JoinRound;
 
 //
 // Keep style values for line GC
@@ -2398,6 +2402,28 @@ void TGX11::SetMarkerSize(Float_t msize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width.
+
+void TGX11::SetMarkerLineWidth(Width_t mlinewidth)
+{
+   if (mlinewidth != fMarkerLineWidth) {
+      fMarkerLineWidth = mlinewidth;
+      if (HasMarkerLineWidth())
+	  SetMarkerStyle(-fMarkerStyle);
+   }
+
+   if (mlinewidth == 1 || !HasMarkerLineWidth())
+      gMarkerLineWidth = 0;
+   else
+      gMarkerLineWidth = mlinewidth;
+
+   if (gMarkerLineWidth < 0) return;
+
+   XSetLineAttributes((Display*)fDisplay, *gGCmark, gMarkerLineWidth,
+                      gMarkerLineStyle, gMarkerCapStyle, gMarkerJoinStyle);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set marker type.
 ///
 ///  \param [in] type      : marker type
@@ -2415,7 +2441,7 @@ void TGX11::SetMarkerSize(Float_t msize)
 void TGX11::SetMarkerType(int type, int n, RXPoint *xy)
 {
    gMarker.type = type;
-   gMarker.n = n < kMAXMK ? n : kMAXMK;
+   gMarker.n = (n < kMAXMK || gMarker.type < 2) ? n : kMAXMK;
    if (gMarker.type >= 2) {
       for (int i = 0; i < gMarker.n; i++) {
          gMarker.xy[i].x = xy[i].x;
@@ -2434,7 +2460,9 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
    if (markerstyle >= 50) return;
    markerstyle  = TMath::Abs(markerstyle);
    fMarkerStyle = markerstyle;
-   Int_t im = Int_t(4*fMarkerSize + 0.5);
+   SetMarkerLineWidth(fMarkerLineWidth);
+   Float_t MarkerSizeReduced = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   Int_t im = Int_t(4*MarkerSizeReduced + 0.5);
    if (markerstyle == 2) {
       // + shaped marker
       shape[0].x = -im;  shape[0].y = 0;
@@ -2523,7 +2551,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,4,shape);
    } else if (markerstyle == 27) {
       // open losange
-      Int_t imx = Int_t(2.66*fMarkerSize + 0.5);
+      Int_t imx = Int_t(2.66*MarkerSizeReduced + 0.5);
       shape[0].x =-imx;  shape[0].y = 0;
       shape[1].x =   0;  shape[1].y = -im;
       shape[2].x = imx;  shape[2].y = 0;
@@ -2532,7 +2560,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,5,shape);
    } else if (markerstyle == 28) {
       // open cross
-      Int_t imx = Int_t(1.33*fMarkerSize + 0.5);
+      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
       shape[0].x = -im;  shape[0].y =-imx;
       shape[1].x =-imx;  shape[1].y =-imx;
       shape[2].x =-imx;  shape[2].y = -im;
@@ -2549,10 +2577,10 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,13,shape);
    } else if (markerstyle == 29) {
       // full star pentagone
-      Int_t im1 = Int_t(0.66*fMarkerSize + 0.5);
-      Int_t im2 = Int_t(2.00*fMarkerSize + 0.5);
-      Int_t im3 = Int_t(2.66*fMarkerSize + 0.5);
-      Int_t im4 = Int_t(1.33*fMarkerSize + 0.5);
+      Int_t im1 = Int_t(0.66*MarkerSizeReduced + 0.5);
+      Int_t im2 = Int_t(2.00*MarkerSizeReduced + 0.5);
+      Int_t im3 = Int_t(2.66*MarkerSizeReduced + 0.5);
+      Int_t im4 = Int_t(1.33*MarkerSizeReduced + 0.5);
       shape[0].x = -im;  shape[0].y = im4;
       shape[1].x =-im2;  shape[1].y =-im1;
       shape[2].x =-im3;  shape[2].y = -im;
@@ -2567,10 +2595,10 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,11,shape);
    } else if (markerstyle == 30) {
       // open star pentagone
-      Int_t im1 = Int_t(0.66*fMarkerSize + 0.5);
-      Int_t im2 = Int_t(2.00*fMarkerSize + 0.5);
-      Int_t im3 = Int_t(2.66*fMarkerSize + 0.5);
-      Int_t im4 = Int_t(1.33*fMarkerSize + 0.5);
+      Int_t im1 = Int_t(0.66*MarkerSizeReduced + 0.5);
+      Int_t im2 = Int_t(2.00*MarkerSizeReduced + 0.5);
+      Int_t im3 = Int_t(2.66*MarkerSizeReduced + 0.5);
+      Int_t im4 = Int_t(1.33*MarkerSizeReduced + 0.5);
       shape[0].x = -im;  shape[0].y = im4;
       shape[1].x =-im2;  shape[1].y =-im1;
       shape[2].x =-im3;  shape[2].y = -im;
@@ -2592,7 +2620,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,4,shape);
    } else if (markerstyle == 33) {
       // full losange
-      Int_t imx = Int_t(2.66*fMarkerSize + 0.5);
+      Int_t imx = Int_t(2.66*MarkerSizeReduced + 0.5);
       shape[0].x =-imx;  shape[0].y = 0;
       shape[1].x =   0;  shape[1].y = -im;
       shape[2].x = imx;  shape[2].y = 0;
@@ -2601,7 +2629,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,5,shape);
    } else if (markerstyle == 34) {
       // full cross
-      Int_t imx = Int_t(1.33*fMarkerSize + 0.5);
+      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
       shape[0].x = -im;  shape[0].y =-imx;
       shape[1].x =-imx;  shape[1].y =-imx;
       shape[2].x =-imx;  shape[2].y = -im;
@@ -2640,7 +2668,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,8,shape);
    } else if (markerstyle == 37) {
       // open three triangles
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =   0;  shape[0].y =   0;
       shape[1].x =-im2;  shape[1].y =  im;
       shape[2].x = im2;  shape[2].y =  im;
@@ -2654,7 +2682,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2, 10,shape);
    } else if (markerstyle == 38) {
       // + shaped marker with octagon
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x = -im;  shape[0].y = 0;
       shape[1].x = -im;  shape[1].y =-im2;
       shape[2].x =-im2;  shape[2].y = -im;
@@ -2673,7 +2701,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,15,shape);
    } else if (markerstyle == 39) {
       // filled three triangles
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =   0;  shape[0].y =   0;
       shape[1].x =-im2;  shape[1].y =  im;
       shape[2].x = im2;  shape[2].y =  im;
@@ -2686,7 +2714,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,9,shape);
    } else if (markerstyle == 40) {
       // four open triangles X
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =     0;  shape[0].y =    0;
       shape[1].x =   im2;  shape[1].y =   im;
       shape[2].x =    im;  shape[2].y =  im2;
@@ -2703,7 +2731,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,13,shape);
    } else if (markerstyle == 41) {
       // four filled triangles X
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =     0;  shape[0].y =    0;
       shape[1].x =   im2;  shape[1].y =   im;
       shape[2].x =    im;  shape[2].y =  im2;
@@ -2720,7 +2748,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,13,shape);
    } else if (markerstyle == 42) {
       // open double diamonds
-      Int_t imx = Int_t(fMarkerSize + 0.5);
+      Int_t imx = Int_t(MarkerSizeReduced + 0.5);
       shape[0].x=     0;   shape[0].y= im;
       shape[1].x=  -imx;   shape[1].y= imx;
       shape[2].x  = -im;   shape[2].y = 0;
@@ -2733,7 +2761,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,9,shape);
    } else if (markerstyle == 43) {
       // filled double diamonds
-      Int_t imx = Int_t(fMarkerSize + 0.5);
+      Int_t imx = Int_t(MarkerSizeReduced + 0.5);
       shape[0].x =    0;   shape[0].y =   im;
       shape[1].x = -imx;   shape[1].y =  imx;
       shape[2].x =  -im;   shape[2].y =    0;
@@ -2746,7 +2774,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,9,shape);
    } else if (markerstyle == 44) {
       // open four triangles plus
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =    0;  shape[0].y =    0;
       shape[1].x =  im2;  shape[1].y =   im;
       shape[2].x = -im2;  shape[2].y =   im;
@@ -2761,8 +2789,8 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,11,shape);
    } else if (markerstyle == 45) {
       // filled four triangles plus
-      Int_t im0 = Int_t(0.4*fMarkerSize + 0.5);
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im0 = Int_t(0.4*MarkerSizeReduced + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =  im0;  shape[0].y =  im0;
       shape[1].x =  im2;  shape[1].y =   im;
       shape[2].x = -im2;  shape[2].y =   im;
@@ -2779,7 +2807,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,13,shape);
    } else if (markerstyle == 46) {
       // open four triangles X
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =    0;  shape[0].y =  im2;
       shape[1].x = -im2;  shape[1].y =   im;
       shape[2].x =  -im;  shape[2].y =  im2;
@@ -2796,7 +2824,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(2,13,shape);
    } else if (markerstyle == 47) {
       // filled four triangles X
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =    0;  shape[0].y =  im2;
       shape[1].x = -im2;  shape[1].y =   im;
       shape[2].x =  -im;  shape[2].y =  im2;
@@ -2813,7 +2841,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,13,shape);
    } else if (markerstyle == 48) {
       // four filled squares X
-      Int_t im2 = Int_t(2.0*fMarkerSize + 0.5);
+      Int_t im2 = Int_t(2.0*MarkerSizeReduced + 0.5);
       shape[0].x =    0;  shape[0].y =  im2*1.005;
       shape[1].x = -im2;  shape[1].y =   im;
       shape[2].x =  -im;  shape[2].y =  im2;
@@ -2834,7 +2862,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
       SetMarkerType(3,16,shape);
    } else if (markerstyle == 49) {
       // four filled squares plus
-      Int_t imx = Int_t(1.33*fMarkerSize + 0.5);
+      Int_t imx = Int_t(1.33*MarkerSizeReduced + 0.5);
       shape[0].x =-imx;  shape[0].y =-imx*1.005;
       shape[1].x =-imx;  shape[1].y = -im;
       shape[2].x = imx;  shape[2].y = -im;

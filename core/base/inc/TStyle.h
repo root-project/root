@@ -131,6 +131,7 @@ private:
    TString       fPaintTextFormat;   ///< Printing format for TH2::PaintText
    Float_t       fLineScalePS;       ///< Line scale factor when drawing lines on Postscript
    Int_t         fJoinLinePS;        ///< Determines the appearance of joining lines on PostScript
+   Int_t         fCapLinePS;         ///< Determines the appearance of line caps on PostScript
    Double_t      fTimeOffset;        ///< Time offset to the beginning of an axis
    Bool_t        fIsReading;         ///<! Set to FALSE when userclass::UseCurrentStyle is called by the style manager
    Float_t       fImageScaling;      ///< Image scaling to produce high definition bitmap images
@@ -272,7 +273,8 @@ public:
    const char      *GetHeaderPS() const {return fHeaderPS.Data();}
    const char      *GetTitlePS()  const {return fTitlePS.Data();}
    const char      *GetLineStyleString(Int_t i=1) const;
-   Int_t            GetJoinLinePS() const {return fJoinLinePS;}
+   Int_t            GetJoinLinePS() const {return fJoinLinePS;} ///< Returns line join method. See `TPostScript::SetLineJoin` for details.
+   Int_t            GetCapLinePS()  const {return fCapLinePS;}  ///< Returns line cap method. See `TPostScript::SetLineCap` for details.
    Float_t          GetLineScalePS() const {return fLineScalePS;}
 
    Bool_t           IsReading() const {return fIsReading;}
@@ -285,7 +287,8 @@ public:
    void             SetHatchesLineWidth(Int_t l) {fHatchesLineWidth = l;}
    void             SetHatchesSpacing(Double_t h) {fHatchesSpacing = TMath::Max(0.1,h);}
    void             SetTitlePS(const char *pstitle);
-   void             SetJoinLinePS(Int_t joinline=0) {fJoinLinePS=joinline;}
+   void             SetJoinLinePS(Int_t joinline=0) {fJoinLinePS=joinline;} ///< Set line join method. See `TPostScript::SetLineJoin` for details.
+   void             SetCapLinePS(Int_t capline=0) {fCapLinePS=capline;}     ///< Set line cap method. See `TPostScript::SetLineCap` for details.
    void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
    void             SetLineStyleString(Int_t i, const char *text);
    void             SetNdivisions(Int_t n=510, Option_t *axis="X");

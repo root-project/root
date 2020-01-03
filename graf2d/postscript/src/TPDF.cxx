@@ -94,6 +94,7 @@ const Int_t kObjFirstPage        = 51; // First page object
 const Int_t kNumberOfFonts = 15;
 
 Int_t TPDF::fgLineJoin = 0;
+Int_t TPDF::fgLineCap  = 0;
 
 ClassImp(TPDF);
 
@@ -583,7 +584,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(1);
+   SetLineWidth(HasMarkerLineWidth() ? fMarkerLineWidth : 1);
    SetColor(Int_t(fMarkerColor));
    Int_t ms = abs(fMarkerStyle);
 
@@ -591,8 +592,8 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) {
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4.*fLineScale : 0.);
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
      msize = 1.;
@@ -631,20 +632,20 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          LineTo(ix   , iy+m2);
       // X shape (X)
       } else if (ms == 5) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
          MoveTo(ix-m2, iy);
          LineTo(ix+m2, iy);
          MoveTo(ix   , iy-m2);
          LineTo(ix   , iy+m2);
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Circle
       } else if (ms == 24 || ms == 20) {
          MoveTo(ix-m2, iy);
@@ -894,7 +895,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(1);
+   SetLineWidth(HasMarkerLineWidth() ? fMarkerLineWidth : 1);
    SetColor(Int_t(fMarkerColor));
    Int_t ms = abs(fMarkerStyle);
 
@@ -902,8 +903,8 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) {
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4.*fLineScale : 0.);
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
      msize = 1.5;
@@ -941,20 +942,20 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          LineTo(ix   , iy+m2);
       // X shape (X)
       } else if (ms == 5) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
          MoveTo(ix-m2, iy);
          LineTo(ix+m2, iy);
          MoveTo(ix   , iy-m2);
          LineTo(ix   , iy+m2);
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Circle
       } else if (ms == 24 || ms == 20) {
          MoveTo(ix-m2, iy);
@@ -1605,6 +1606,10 @@ void TPDF::NewPage()
       WriteInteger(fgLineJoin);
       PrintFast(2," j");
    }
+   if (fgLineCap) {
+      WriteInteger(fgLineCap);
+      PrintFast(2," J");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1650,6 +1655,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fAlpha     = -1.;
    fType      = abs(wtype);
    SetLineJoin(gStyle->GetJoinLinePS());
+   SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS()/4.);
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
@@ -2451,6 +2457,32 @@ void TPDF::SetLineColor( Color_t cindex )
 void TPDF::SetLineJoin( Int_t linejoin )
 {
    fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TPDF::fgLineCap.
+/// This parameter determines the appearance of line caps in a PDF
+/// output.
+/// It takes one argument which may be:
+///   - 0 (butt caps)
+///   - 1 (round caps)
+///   - 2 (projecting caps)
+/// The default value is 0 (butt caps).
+///
+/// \image html postscript_2.png
+///
+/// To change the line cap behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetCapLinePS(2); // Set the PDF line cap to projecting.
+/// ~~~
+
+void TPDF::SetLineCap( Int_t linecap )
+{
+   fgLineCap = linecap;
+   if (fgLineCap<0) fgLineCap=0;
+   if (fgLineCap>2) fgLineCap=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

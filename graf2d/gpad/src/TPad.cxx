@@ -5976,12 +5976,13 @@ void TPad::SetAttLinePS(Color_t color, Style_t style, Width_t lwidth)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set postscript marker attributes.
 
-void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize)
+void TPad::SetAttMarkerPS(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth)
 {
    if (gVirtualPS) {
       gVirtualPS->SetMarkerColor(color);
       gVirtualPS->SetMarkerStyle(style);
       gVirtualPS->SetMarkerSize(msize);
+      gVirtualPS->SetMarkerLineWidth(mlinewidth);
    }
 }
 

@@ -256,6 +256,7 @@ const Float_t kScale = 0.93376068;
 static Bool_t MustEmbed[32];
 
 Int_t TPostScript::fgLineJoin = 0;
+Int_t TPostScript::fgLineCap  = 0;
 
 ClassImp(TPostScript);
 
@@ -284,6 +285,7 @@ TPostScript::TPostScript() : TVirtualPS()
    fLastCellGreen   = 0;
    fLastCellRed     = 0;
    fLineJoin        = 0;
+   fLineCap         = 0;
    fLineScale       = 0.;
    fMarkerSizeCur   = 0.;
    fMaxLines        = 0;
@@ -371,6 +373,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    fSave          = 0;
    fFontEmbed     = kFALSE;
    SetLineJoin(gStyle->GetJoinLinePS());
+   SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    fMode          = fType%10;
@@ -695,8 +698,8 @@ void TPostScript::DefineMarkers()
    PrintStr("/m30 {mp gsave x w2 sub y w2 add w3 sub m currentpoint t");
    PrintStr(" 4 {side} repeat cl s gr} def@");
    PrintStr("/m31 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d");
-   PrintStr(" x w2 sub y w2 add m w w neg d x w2 sub y w2");
-   PrintStr(" sub m w w d s} def@");
+   PrintStr(" x w2 .707 mul sub y w2 .707 mul add m w 1.44 div w 1.44 div neg d x w2 .707 mul sub y w2 .707 mul");
+   PrintStr(" sub m w 1.44 div w 1.44 div d s} def@");
    PrintStr("/m32 {mp x y w2 sub m w2 w d w neg 0 d cl s} def@");
    PrintStr("/m33 {mp x y w2 add m w3 neg w2 neg d w3 w2 neg d w3 w2 d cl f} def@");
    PrintStr("/m34 {mp x w2 sub y w2 sub w3 add m w3 0 d ");
@@ -747,7 +750,7 @@ void TPostScript::DefineMarkers()
    PrintStr(" 0 w3 neg d w3 0 d 0 w3 d w3 0 d 0 w3 d w3 neg 0 d 0 w3 d w3 neg 0 d");
    PrintStr(" 0 w3 neg d w3 neg 0 d 0 w3 neg d w3 0 d 0 w3 d w3 0 d 0 w3 neg d w3 neg 0 d cl f } def@");
    PrintStr("/m2 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d s} def@");
-   PrintStr("/m5 {mp x w2 sub y w2 sub m w w d x w2 sub y w2 add m w w neg d s} def@");
+   PrintStr("/m5 {mp x w2 .707 mul sub y w2 .707 mul sub m w 1.44 div w 1.44 div d x w2 .707 mul sub y w2 .707 mul add m w 1.44 div w 1.44 div neg d s} def@");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1104,7 +1107,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(1);
+   SetLineWidth(HasMarkerLineWidth() ? fMarkerLineWidth : 1);
    SetColor(Int_t(fMarkerColor));
    markerstyle = abs(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
@@ -1118,14 +1121,14 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle >= 50) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
-   if (markerstyle == 1) {
+   if (markerstyle == 1 || (markerstyle >= 9 && markerstyle <= 19)) {
       markersize = 2.;
    } else if (markerstyle == 6) {
       markersize = 4.;
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize  = fMarkerSize;
+      Float_t symbolsize = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4.*fLineScale/4. : 0.);
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
@@ -1177,7 +1180,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(1);
+   SetLineWidth(HasMarkerLineWidth() ? fMarkerLineWidth : 1);
    SetColor(Int_t(fMarkerColor));
    markerstyle = abs(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
@@ -1191,14 +1194,14 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle >= 50) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
-   if (markerstyle == 1) {
+   if (markerstyle == 1 || (markerstyle >= 9 && markerstyle <= 19)) {
       markersize = 2.;
    } else if (markerstyle == 6) {
       markersize = 4.;
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize  = fMarkerSize;
+      Float_t symbolsize = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4.*fLineScale/4. : 0.);
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
@@ -2484,6 +2487,30 @@ void TPostScript::SetLineJoin( Int_t linejoin )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TPostScript::fgLineCap.
+/// This parameter determines the appearance of line caps in a PostScript
+/// output.
+/// It takes one argument which may be:
+///   - 0 (butt caps)
+///   - 1 (round caps)
+///   - 2 (projecting caps)
+/// The default value is 0 (butt caps).
+///
+/// \image html postscript_2.png
+///
+/// To change the line cap behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetCapLinePS(2); // Set the PS line cap to projecting.
+/// ~~~
+
+void TPostScript::SetLineCap( Int_t linecap )
+{
+   fgLineCap = linecap;
+   if (fgLineCap<0) fgLineCap=0;
+   if (fgLineCap>2) fgLineCap=2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change the line style
 ///
 ///  - linestyle = 2 dashed
@@ -3054,6 +3081,10 @@ void TPostScript::Zone()
    if (fgLineJoin) {
       WriteInteger(fgLineJoin);
       PrintFast(12," setlinejoin");
+   }
+   if (fgLineCap) {
+      WriteInteger(fgLineCap);
+      PrintFast(11," setlinecap");
    }
    PrintFast(6," 0 0 t");
    fRed     = -1;

@@ -29,6 +29,9 @@
 #include "TObjArray.h"
 #include "TClass.h"
 
+Int_t TSVG::fgLineJoin = 0;
+Int_t TSVG::fgLineCap  = 0;
+
 ClassImp(TSVG);
 
 /** \class TSVG
@@ -84,6 +87,8 @@ TSVG::TSVG() : TVirtualPS()
    fXsize       = 0.;
    fYsize       = 0.;
    fYsizeSVG    = 0;
+   fLineJoin    = 0;
+   fLineCap     = 0;
    SetTitle("SVG");
 }
 
@@ -115,6 +120,8 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    fLenBuffer = 0;
    fType      = abs(wtype);
+   SetLineJoin(gStyle->GetJoinLinePS());
+   SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
@@ -353,6 +360,10 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    } else {
       SetColorAlpha(light);
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 
    //- Draw bottom&right part of the box
@@ -417,6 +428,10 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    } else {
       SetColorAlpha(dark);
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
@@ -573,8 +588,8 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) msize = 0.01;
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
 
@@ -603,8 +618,12 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr("<g stroke=");
       SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
+      WriteReal(fMarkerLineWidth, kFALSE);
       PrintStr("\" fill=\"none\"");
+      if (fgLineJoin)
+	 PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      if (fgLineCap)
+	 PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -647,23 +666,23 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
@@ -688,23 +707,23 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
@@ -973,8 +992,8 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) msize = 0.01;
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
 
@@ -1003,8 +1022,12 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr("<g stroke=");
       SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
+      WriteReal(fMarkerLineWidth, kFALSE);
       PrintStr("\" fill=\"none\"");
+      if (fgLineJoin)
+	 PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      if (fgLineCap)
+	 PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1047,23 +1070,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
@@ -1088,23 +1111,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
@@ -1450,9 +1473,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
             WriteReal(it/4);
          }
          delete tokens;
-         PrintFast(1,"\"");
       }
-      PrintFast(2,"/>");
    } else {
       PrintFast(8,"z\" fill=");
       if (fais == 0) {
@@ -1461,8 +1482,12 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       } else {
          SetColorAlpha(fFillColor);
       }
-      PrintFast(2,"/>");
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+   PrintFast(2,"/>");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1623,6 +1648,54 @@ void TSVG::SetFillColor( Color_t cindex )
 void TSVG::SetLineColor( Color_t cindex )
 {
    fLineColor = cindex;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TSVG::fgLineJoin.
+/// This parameter determines the appearance of joining lines in a SVG
+/// output.
+/// It takes one argument which may be:
+///   - 0 (miter join)
+///   - 1 (round join)
+///   - 2 (bevel join)
+/// The default value is 0 (miter join).
+///
+/// \image html postscript_1.png
+///
+/// To change the line join behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetJoinLinePS(2); // Set the PS line join to bevel.
+/// ~~~
+
+void TSVG::SetLineJoin( Int_t linejoin )
+{
+   fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TSVG::fgLineCap.
+/// This parameter determines the appearance of line caps in a SVG
+/// output.
+/// It takes one argument which may be:
+///   - 0 (butt caps)
+///   - 1 (round caps)
+///   - 2 (projecting caps)
+/// The default value is 0 (butt caps).
+///
+/// \image html postscript_2.png
+///
+/// To change the line cap behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetCapLinePS(2); // Set the PS line cap to projecting.
+/// ~~~
+
+void TSVG::SetLineCap( Int_t linecap )
+{
+   fgLineCap = linecap;
+   if (fgLineCap<0) fgLineCap=0;
+   if (fgLineCap>2) fgLineCap=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

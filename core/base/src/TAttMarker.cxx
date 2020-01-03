@@ -36,6 +36,7 @@ The marker attributes are:
   - [Marker color](#M1)
   - [Marker style](#M2)
   - [Marker size](#M3)
+  - [Marker line width](#M4)
 
 ## <a name="M1"></a> Marker color
 The marker color is a color index (integer) pointing in the ROOT color
@@ -167,6 +168,46 @@ pixels; therefore `SetMarkerSize` does not apply on them. To have a
 "scalable dot" a filled circle should be used instead, i.e. the marker style
 number 20. By default (if `SetMarkerStyle` is not specified), the marker
 style used is 1. That's the most common one to draw scatter plots.
+
+## <a name="M4"></a> Marker line width
+
+The marker line width specifys the width of the lines used to draw the bounding
+lines of the different marker symbols in pixel units. It only applys on marker
+symbols consisting of lines. The function `HasMarkerLineWidth` returns whether
+the current marker style supports changed line widths. The attribute is defined
+similar to the line width attribute of `TAttLine`.
+
+The marker line width of any class inheriting from `TAttMarker` can
+be changed using the method `SetMarkerLineWidth` and retrieved using the
+method `GetMarkerLineWidth`.
+
+Begin_Macro
+{
+   gStyle->SetJoinLinePS(1);
+   gStyle->SetCapLinePS(1);
+   c = new TCanvas("c","Marker line widths",0,0,500,80);
+   TMarker marker;
+   marker.SetMarkerStyle(3);
+   marker.SetMarkerSize(5);
+   Double_t x = 0;
+   Double_t dx = 1/6.0;
+   for (Int_t i=1; i<6; i++) {
+      x += dx;
+      marker.SetMarkerLineWidth(i);
+      marker.DrawMarker(x,.5);
+   }
+}
+End_Macro
+
+Note that for saving an object as a vector graphics file the default value for
+the line join method is miter and for the line cap style it is butt. However this
+might look ugly for some marker styles with line widths larger than 1. To get the
+same result as when drawing to a `TCanvas` you have to set both attributes to round
+which can be done using:
+~~~ {.cpp}
+gStyle->SetJoinLinePS(1);
+gStyle->SetCapLinePS(1);
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -176,10 +217,11 @@ style used is 1. That's the most common one to draw scatter plots.
 
 TAttMarker::TAttMarker()
 {
-   if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; return;}
-   fMarkerColor = gStyle->GetMarkerColor();
-   fMarkerStyle = gStyle->GetMarkerStyle();
-   fMarkerSize  = gStyle->GetMarkerSize();
+   if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; fMarkerLineWidth=1; return;}
+   fMarkerColor     = gStyle->GetMarkerColor();
+   fMarkerStyle     = gStyle->GetMarkerStyle();
+   fMarkerSize      = gStyle->GetMarkerSize();
+   fMarkerLineWidth = gStyle->GetMarkerLineWidth();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,11 +232,12 @@ TAttMarker::TAttMarker()
 ///  - style : Marker style (from 1 to 30)
 ///  - size  : marker size (float)
 
-TAttMarker::TAttMarker(Color_t color, Style_t style, Size_t msize)
+TAttMarker::TAttMarker(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth)
 {
-   fMarkerColor = color;
-   fMarkerSize  = msize;
-   fMarkerStyle = style;
+   fMarkerColor     = color;
+   fMarkerSize      = msize;
+   fMarkerStyle     = style;
+   fMarkerLineWidth = mlinewidth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,9 +252,27 @@ TAttMarker::~TAttMarker()
 
 void TAttMarker::Copy(TAttMarker &attmarker) const
 {
-   attmarker.fMarkerColor  = fMarkerColor;
-   attmarker.fMarkerStyle  = fMarkerStyle;
-   attmarker.fMarkerSize   = fMarkerSize;
+   attmarker.fMarkerColor     = fMarkerColor;
+   attmarker.fMarkerStyle     = fMarkerStyle;
+   attmarker.fMarkerSize      = fMarkerSize;
+   attmarker.fMarkerLineWidth = fMarkerLineWidth;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns whether the line width attribute applys on the current marker style.
+
+Bool_t TAttMarker::HasMarkerLineWidth() const
+{
+    return (   fMarkerStyle == 2  || fMarkerStyle == 3
+            || fMarkerStyle == 4  || fMarkerStyle == 5
+            || fMarkerStyle == 24 || fMarkerStyle == 25
+            || fMarkerStyle == 26 || fMarkerStyle == 27
+            || fMarkerStyle == 28 || fMarkerStyle == 30
+            || fMarkerStyle == 31 || fMarkerStyle == 32
+            || fMarkerStyle == 35 || fMarkerStyle == 36
+            || fMarkerStyle == 37 || fMarkerStyle == 38
+            || fMarkerStyle == 40 || fMarkerStyle == 42
+            || fMarkerStyle == 44 || fMarkerStyle == 46);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,12 +282,13 @@ void TAttMarker::Modify()
 {
    if (!gPad) return;
    if (!gPad->IsBatch()) {
-      gVirtualX->SetMarkerColor(fMarkerColor);
-      gVirtualX->SetMarkerSize (fMarkerSize);
-      gVirtualX->SetMarkerStyle(fMarkerStyle);
+      gVirtualX->SetMarkerColor    (fMarkerColor);
+      gVirtualX->SetMarkerSize     (fMarkerSize);
+      gVirtualX->SetMarkerStyle    (fMarkerStyle);
+      gVirtualX->SetMarkerLineWidth(fMarkerLineWidth);
    }
 
-   gPad->SetAttMarkerPS(fMarkerColor,fMarkerStyle,fMarkerSize);
+   gPad->SetAttMarkerPS(fMarkerColor,fMarkerStyle,fMarkerSize,fMarkerLineWidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,15 +296,16 @@ void TAttMarker::Modify()
 
 void TAttMarker::ResetAttMarker(Option_t *)
 {
-   fMarkerColor  = 1;
-   fMarkerStyle  = 1;
-   fMarkerSize   = 1;
+   fMarkerColor     = 1;
+   fMarkerStyle     = 1;
+   fMarkerSize      = 1;
+   fMarkerLineWidth = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save line attributes as C++ statement(s) on output stream out.
 
-void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
+void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef, Int_t widdef)
 {
    if (fMarkerColor != coldef) {
       if (fMarkerColor > 228) {
@@ -257,6 +320,9 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
    if (fMarkerSize != sizdef) {
       out<<"   "<<name<<"->SetMarkerSize("<<fMarkerSize<<");"<<std::endl;
    }
+   if (fMarkerLineWidth != widdef) {
+      out<<"   "<<name<<"->SetMarkerLineWidth("<<fMarkerLineWidth<<");"<<std::endl;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +330,7 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
 
 void TAttMarker::SetMarkerAttributes()
 {
-   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
+   TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize,fMarkerLineWidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

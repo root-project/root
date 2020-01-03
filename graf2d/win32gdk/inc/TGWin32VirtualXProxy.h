@@ -104,11 +104,13 @@ public:
    void      SetMarkerColor(Color_t cindex);
    void      SetMarkerSize(Float_t markersize);
    void      SetMarkerStyle(Style_t markerstyle);
+   void      SetMarkerLineWidth(Width_t markerlinewidth);
    void      ResetAttMarker(Option_t *toption="");
    void      SetMarkerAttributes();
-   Color_t   GetMarkerColor() const;
-   Style_t   GetMarkerStyle() const;
-   Size_t    GetMarkerSize()  const;
+   Color_t   GetMarkerColor()     const;
+   Style_t   GetMarkerStyle()     const;
+   Size_t    GetMarkerSize()      const;
+   Width_t   GetMarkerLineWidth() const;
    void      SetOpacity(Int_t percent);
    void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
    void      SetTextAlign(Short_t talign=11);

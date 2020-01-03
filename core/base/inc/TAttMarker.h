@@ -22,25 +22,29 @@ protected:
    Color_t    fMarkerColor;       ///< Marker color
    Style_t    fMarkerStyle;       ///< Marker style
    Size_t     fMarkerSize;        ///< Marker size
+   Width_t    fMarkerLineWidth;   ///< Marker line width
 
 public:
    TAttMarker();
-   TAttMarker(Color_t color, Style_t style, Size_t msize);
+   TAttMarker(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth);
    virtual ~TAttMarker();
            void     Copy(TAttMarker &attmarker) const;
-   virtual Color_t  GetMarkerColor() const {return fMarkerColor;} ///< Return the marker color
-   virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;} ///< Return the marker style
-   virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}  ///< Return the marker size
+   virtual Color_t  GetMarkerColor()     const {return fMarkerColor;}     ///< Return the marker color
+   virtual Style_t  GetMarkerStyle()     const {return fMarkerStyle;}     ///< Return the marker style
+   virtual Size_t   GetMarkerSize()      const {return fMarkerSize;}      ///< Return the marker size
+   virtual Width_t  GetMarkerLineWidth() const {return fMarkerLineWidth;} ///< Return the marker line width
+   virtual Bool_t   HasMarkerLineWidth() const;                           ///< Returns whether the line width attribute applys to the current marker style.
    virtual void     Modify();
    virtual void     ResetAttMarker(Option_t *toption="");
-   virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
+   virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1, Int_t widdef=1);
    virtual void     SetMarkerAttributes();  // *MENU*
-   virtual void     SetMarkerColor(Color_t mcolor=1) { fMarkerColor = mcolor;} ///< Set the marker color
+   virtual void     SetMarkerColor(Color_t mcolor=1)         { fMarkerColor = mcolor;}         ///< Set the marker color
    virtual void     SetMarkerColorAlpha(Color_t mcolor, Float_t malpha);
-   virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;} ///< Set the marker style
-   virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}  ///< Set the marker size
+   virtual void     SetMarkerStyle(Style_t mstyle=1)         { fMarkerStyle = mstyle;}         ///< Set the marker style
+   virtual void     SetMarkerSize(Size_t msize=1)            { fMarkerSize  = msize;}          ///< Set the marker size
+   virtual void     SetMarkerLineWidth(Width_t mlinewidth=1) { fMarkerLineWidth = mlinewidth;} ///< Set the marker line width
 
-   ClassDef(TAttMarker,2);  //Marker attributes
+   ClassDef(TAttMarker,3);  //Marker attributes
 };
 
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,

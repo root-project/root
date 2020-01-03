@@ -280,6 +280,27 @@ void TEvePointSet::SetMarkerSize(Size_t msize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width, propagate to projecteds.
+
+void TEvePointSet::SetMarkerLineWidth(Width_t mlinewidth)
+{
+   static const TEveException eh("TEvePointSet::SetMarkerLineWidth ");
+
+   std::list<TEveProjected*>::iterator pi = fProjectedList.begin();
+   while (pi != fProjectedList.end())
+   {
+      TEvePointSet* pt = dynamic_cast<TEvePointSet*>(*pi);
+      if (pt)
+      {
+         pt->SetMarkerLineWidth(mlinewidth);
+         pt->StampObjProps();
+      }
+      ++pi;
+   }
+   TAttMarker::SetMarkerLineWidth(mlinewidth);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint point-set.
 
 void TEvePointSet::Paint(Option_t*)
@@ -527,6 +548,21 @@ void TEvePointSetArray::SetMarkerSize(Size_t msize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width, propagate to children.
+
+void TEvePointSetArray::SetMarkerLineWidth(Width_t mlinewidth)
+{
+   static const TEveException eh("TEvePointSetArray::SetMarkerLineWidth ");
+
+   for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
+      TAttMarker* m = dynamic_cast<TAttMarker*>((*i)->GetObject(eh));
+      if (m && m->GetMarkerLineWidth() == fMarkerLineWidth)
+         m->SetMarkerLineWidth(mlinewidth);
+   }
+   TAttMarker::SetMarkerLineWidth(mlinewidth);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Called from TEvePointSelector when internal arrays of the tree-selector
 /// are filled up and need to be processed.
 /// Virtual from TEvePointSelectorConsumer.
@@ -625,6 +661,7 @@ void TEvePointSetArray::InitBins(const char* quant_name,
       fBins[i]->SetMarkerColor(fMarkerColor);
       fBins[i]->SetMarkerStyle(fMarkerStyle);
       fBins[i]->SetMarkerSize(fMarkerSize);
+      fBins[i]->SetMarkerLineWidth(fMarkerLineWidth);
       AddElement(fBins[i]);
    }
 

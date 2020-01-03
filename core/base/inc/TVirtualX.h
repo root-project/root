@@ -144,6 +144,7 @@ public:
    virtual void      SetMarkerColor(Color_t cindex);
    virtual void      SetMarkerSize(Float_t markersize);
    virtual void      SetMarkerStyle(Style_t markerstyle);
+   virtual void      SetMarkerLineWidth(Width_t markerlinewidth);
    virtual void      SetOpacity(Int_t percent);
    virtual void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
    virtual void      SetTextAlign(Short_t talign=11);

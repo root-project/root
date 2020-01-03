@@ -330,6 +330,7 @@ void TEveTrack::SetAttLineAttMarker(TEveTrackList* tl)
    SetMarkerColor(tl->GetMarkerColor());
    SetMarkerStyle(tl->GetMarkerStyle());
    SetMarkerSize(tl->GetMarkerSize());
+   SetMarkerLineWidth(tl->GetMarkerLineWidth());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -566,7 +567,7 @@ ClassImp(TEveTrackList);
 
 TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
    TEveElementList(),
-   TAttMarker(1, 20, 1),
+   TAttMarker(1, 20, 1, 1),
    TAttLine(1,1,1),
 
    fPropagator(0),
@@ -592,7 +593,7 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
 
 TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* prop) :
    TEveElementList(name),
-   TAttMarker(1, 20, 1),
+   TAttMarker(1, 20, 1, 1),
    TAttLine(1,1,1),
 
    fPropagator(0),
@@ -988,6 +989,38 @@ void TEveTrackList::SetMarkerSize(Size_t size, TEveElement* el)
          track->SetMarkerSize(size);
       if (fRecurse)
          SetMarkerSize(size, *i);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width for the list and the elements.
+
+void TEveTrackList::SetMarkerLineWidth(Width_t width)
+{
+   for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
+   {
+      TEveTrack* track = (TEveTrack*)(*i);
+      if (track->GetMarkerLineWidth() == fMarkerLineWidth)
+         track->SetMarkerLineWidth(width);
+      if (fRecurse)
+         SetMarkerLineWidth(width, *i);
+   }
+   fMarkerLineWidth = width;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width for children of el.
+
+void TEveTrackList::SetMarkerLineWidth(Width_t width, TEveElement* el)
+{
+   TEveTrack* track;
+   for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
+   {
+      track = dynamic_cast<TEveTrack*>(*i);
+      if (track && track->GetMarkerLineWidth() == fMarkerLineWidth)
+         track->SetMarkerLineWidth(width);
+      if (fRecurse)
+         SetMarkerLineWidth(width, *i);
    }
 }
 

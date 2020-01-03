@@ -49,7 +49,7 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 ///    default is object = "LPF"
 
 TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* option )
-             :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
+             :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1,1)
 {
    fObject = 0;
    if ( !label && obj ) fLabel = obj->GetTitle();

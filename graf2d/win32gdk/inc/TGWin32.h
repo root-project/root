@@ -135,12 +135,14 @@ protected:
    Bool_t      fPenModified;        ///< line syle || width modified
    Bool_t      fMarkerStyleModified;
    Bool_t      fMarkerColorModified;
+   Bool_t      fMarkerLineWidthModified;
 
    void        UpdateFillColor();
    void        UpdateFillStyle();
    void        UpdateLineColor();
    void        UpdateMarkerStyle();
    void        UpdateMarkerColor();
+   void        UpdateMarkerLineWidth();
    void        UpdateLineStyle();
 
    // needed by TGWin32TTF
@@ -215,6 +217,7 @@ public:
    void      SetMarkerColor(Color_t cindex);
    void      SetMarkerSize(Float_t markersize);
    void      SetMarkerStyle(Style_t markerstyle);
+   void      SetMarkerLineWidth(Width_t markerlinewidth);
    void      SetOpacity(Int_t percent);
    void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
    void      SetTextAlign(Short_t talign=11);

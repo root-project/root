@@ -349,14 +349,18 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
    Quartz::SetLineColor(ctx, GetMarkerColor());//Can not fail (for coverity).
    Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, 1);
+   if (HasMarkerLineWidth())
+      Quartz::SetLineWidth(ctx, GetMarkerLineWidth());
+   else
+      Quartz::SetLineWidth(ctx, 1);
 
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], GetMarkerSize() * drawable.fScaleFactor, GetMarkerStyle());
+   Float_t MarkerSizeReduced = GetMarkerSize() - (HasMarkerLineWidth() ? (GetMarkerLineWidth()/2)/4. : 0.);
+   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, GetMarkerStyle());
 }
 
 
@@ -626,6 +630,15 @@ void TGQuartz::SetMarkerStyle(Style_t markerstyle)
    // Set marker style.
 
    TAttMarker::SetMarkerStyle(markerstyle);
+}
+
+
+//______________________________________________________________________________
+void TGQuartz::SetMarkerLineWidth(Width_t markerlinewidth)
+{
+   // Set marker line width.
+
+   TAttMarker::SetMarkerLineWidth(markerlinewidth);
 }
 
 

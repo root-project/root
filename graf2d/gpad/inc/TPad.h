@@ -342,7 +342,7 @@ public:
    virtual void      SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup);
    virtual void      SetAttFillPS(Color_t color, Style_t style);
    virtual void      SetAttLinePS(Color_t color, Style_t style, Width_t lwidth);
-   virtual void      SetAttMarkerPS(Color_t color, Style_t style, Size_t msize);
+   virtual void      SetAttMarkerPS(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth);
    virtual void      SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
    static  void      SetMaxPickDistance(Int_t maxPick=5);
    virtual void      SetName(const char *name) {fName = name;} // *MENU*

@@ -81,6 +81,7 @@ public:
    virtual void SetMarkerColor(Color_t col) { SetMainColor(col); }
    virtual void SetMarkerStyle(Style_t mstyle=1);
    virtual void SetMarkerSize(Size_t msize=1);
+   virtual void SetMarkerLineWidth(Width_t mlinewidth=1);
 
    virtual void Paint(Option_t* option="");
 
@@ -134,6 +135,7 @@ public:
    virtual void SetMarkerColor(Color_t tcolor=1);
    virtual void SetMarkerStyle(Style_t mstyle=1);
    virtual void SetMarkerSize(Size_t msize=1);
+   virtual void SetMarkerLineWidth(Width_t mlinewidth=1);
 
    virtual void TakeAction(TEvePointSelector*);
 

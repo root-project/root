@@ -26,6 +26,11 @@ protected:
    Bool_t       fBoundingBox;     ///< True when the SVG header is printed
    Bool_t       fRange;           ///< True when a range has been defined
    Double_t     fYsizeSVG;        ///< Page's Y size in SVG units
+   Int_t        fLineJoin;        ///< Appearance of joining lines
+   Int_t        fLineCap;         ///< Appearance of line caps
+
+   static Int_t fgLineJoin;       ///< Appearance of joining lines
+   static Int_t fgLineCap;        ///< Appearance of line caps
 
 public:
    TSVG();
@@ -58,6 +63,8 @@ public:
    void  SetColor(Float_t r, Float_t g, Float_t b);
    void  SetFillColor( Color_t cindex=1);
    void  SetLineColor( Color_t cindex=1);
+   void  SetLineJoin(Int_t linejoin=0);
+   void  SetLineCap(Int_t linecap=0);
    void  SetLineStyle(Style_t linestyle = 1);
    void  SetLineWidth(Width_t linewidth = 1);
    void  SetLineScale(Float_t =3) { }

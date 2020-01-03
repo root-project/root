@@ -681,6 +681,9 @@ void TGLPadPainter::DrawPolyMarker()
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glColor4fv(rgba);
 
+   const Width_t w = (gVirtualX->HasMarkerLineWidth() ? gVirtualX->GetMarkerLineWidth() : 1);
+   glLineWidth(w > fLimits.GetMaxLineWidth() ? fLimits.GetMaxLineWidth() : !w ? 1.f : w);
+
    const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = gVirtualX->GetMarkerStyle();
    const UInt_t n = UInt_t(fPoly.size());
@@ -801,6 +804,7 @@ void TGLPadPainter::DrawPolyMarker()
 
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
+   glLineWidth(1.f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
