@@ -101,7 +101,7 @@ public:
 
 
 class TMyBrowserImp : public TBrowserImp {
-   TObjectLevelIter &fIter;   ///<!  back-reference on iterat
+   TObjectLevelIter &fIter;   ///<!  back-reference on iterator
 
 public:
 
@@ -200,7 +200,9 @@ void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
 // ==============================================================================================
 
 
-/** Create element for the browser */
+///////////////////////////////////////////////////////////////
+/// Create element for the browser
+
 std::unique_ptr<RBrowserItem> TObjectLevelIter::CreateBrowserItem()
 {
    std::shared_ptr<TObjectElement> elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);

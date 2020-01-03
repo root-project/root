@@ -452,11 +452,9 @@ class RBrowsable {
 
    RElementPath_t DecomposePath(const std::string &path);
 
-   bool SamePath(const RElementPath_t &p1, const RElementPath_t &p2) const;
-
    void ResetLastRequest();
 
-   bool ProcessRequest(const RBrowserRequest &request, RBrowserReply &reply);
+   bool ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply);
 
 public:
    RBrowsable() = default;
