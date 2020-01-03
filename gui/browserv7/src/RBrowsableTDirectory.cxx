@@ -195,6 +195,9 @@ public:
 // ==============================================================================================
 
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Return element for current TKey object in TDirectory
+
 std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 {
    return std::make_shared<TKeyElement>(fDir, fKey);

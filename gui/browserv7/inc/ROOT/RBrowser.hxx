@@ -68,7 +68,7 @@ protected:
    std::string GetCurrentWorkingDirectory();
 
    void SendInitMsg(unsigned connid);
-   void WebWindowCallback(unsigned connid, const std::string &arg);
+   void ProcessMsg(unsigned connid, const std::string &arg);
 
 public:
    RBrowser(bool use_rcanvas = true);

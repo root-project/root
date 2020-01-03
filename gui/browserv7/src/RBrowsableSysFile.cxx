@@ -87,7 +87,7 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
-   /** Trying to gen next entry */
+   /** Trying to produce next entry */
    bool NextDirEntry()
    {
       fCurrentName.clear();
