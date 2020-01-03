@@ -160,6 +160,8 @@ RProvider::~RProvider()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// Register file open function for specified extension
 
 void RProvider::RegisterFile(const std::string &extension, FileFunc_t func)
 {
@@ -171,6 +173,9 @@ void RProvider::RegisterFile(const std::string &extension, FileFunc_t func)
     fmap.emplace(extension, StructFile{this,func});
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// Register browse function for specified class
+
 void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
 {
     auto &bmap = GetBrowseMap();
@@ -181,10 +186,8 @@ void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
     bmap.emplace(cl, StructBrowse{this,func});
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////
 // remove provider from all registered lists
-
 
 std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, const std::string &fullname)
 {
@@ -205,7 +208,6 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
 
    return nullptr;
 }
-
 
 /////////////////////////////////////////////////////////////////////////
 /// Create browsable element for the object
@@ -308,47 +310,25 @@ RElementPath_t RBrowsable::DecomposePath(const std::string &strpath)
    return arr;
 }
 
-
 /////////////////////////////////////////////////////////////////////////
 /// Process browser request
 
-bool RBrowsable::SamePath(const RElementPath_t &p1, const RElementPath_t &p2) const
-{
-   if (p1.size() != p2.size())
-      return false;
-
-   for (unsigned n = 0; n < p1.size(); ++n)
-      if (p1[n] != p2[n])
-         return false;
-
-   return true;
-}
-
-
-/////////////////////////////////////////////////////////////////////////
-/// Process browser request
-
-bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &reply)
+bool RBrowsable::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
    if (gDebug > 0)
       printf("REQ: Do decompose path '%s'\n",request.path.c_str());
 
-   auto arr = DecomposePath(request.path);
+   auto path = DecomposePath(request.path);
 
-   if (!SamePath(arr, fLastPath) || !fLastElement) {
+   if ((path != fLastPath) || !fLastElement) {
 
-      auto elem = RElement::GetSubElement(fWorkElement, arr);
+      auto elem = RElement::GetSubElement(fWorkElement, path);
       if (!elem) return false;
 
       ResetLastRequest();
 
-      fLastPath = arr;
+      fLastPath = path;
       fLastElement = elem;
-   }
-
-   if (gDebug > 0) {
-      printf("REQ:Try to navigate %d\n", (int) arr.size());
-      for (auto & subdir : arr) printf("   %s\n", subdir.c_str());
    }
 
    // when request childs, always try to make elements
@@ -408,6 +388,8 @@ bool RBrowsable::ProcessRequest(const RBrowserRequest &request, RBrowserReply &r
    return true;
 }
 
+/////////////////////////////////////////////////////////////////////////
+/// Process browser request, returns string with JSON of RBrowserReply data
 
 std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
 {
@@ -417,10 +399,13 @@ std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
    reply.first = 0;
    reply.nchilds = 0;
 
-   ProcessRequest(request, reply);
+   ProcessBrowserRequest(request, reply);
 
    return TBufferJSON::ToJSON(&reply, TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data();
 }
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns element with path, specified as string
 
 std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &str)
 {
@@ -428,6 +413,9 @@ std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &s
 
    return RElement::GetSubElement(fWorkElement, path);
 }
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns element with path, specified as RElementPath_t
 
 std::shared_ptr<Browsable::RElement> RBrowsable::GetElementFromTop(const RElementPath_t &path)
 {

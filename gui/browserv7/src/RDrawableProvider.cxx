@@ -15,17 +15,26 @@
 
 using namespace ROOT::Experimental;
 
+//////////////////////////////////////////////////////////////////////////////////
+// Returns map of registered drawing functions for v6 canvas
+
 RDrawableProvider::MapV6_t &RDrawableProvider::GetV6Map()
 {
    static RDrawableProvider::MapV6_t sMap;
    return sMap;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// Returns map of registered drawing functions for v7 canvas
+
 RDrawableProvider::MapV7_t &RDrawableProvider::GetV7Map()
 {
    static RDrawableProvider::MapV7_t sMap;
    return sMap;
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+// Register drawing function for v6 canvas
 
 void RDrawableProvider::RegisterV6(const TClass *cl, FuncV6_t func)
 {
@@ -36,6 +45,9 @@ void RDrawableProvider::RegisterV6(const TClass *cl, FuncV6_t func)
 
     bmap.emplace(cl, StructV6{this, func});
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+// Register drawing function for v7 canvas
 
 void RDrawableProvider::RegisterV7(const TClass *cl, FuncV7_t func)
 {

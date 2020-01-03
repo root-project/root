@@ -51,22 +51,7 @@ sap.ui.define(['rootui5/panel/Controller',
          this.own_window = true;
       },
 
-      // returns full file name as array
-      getFullFileName: function() {
-         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
-         var oLinks = oBreadcrumbs.getLinks();
-         var path = [];
-         for (var i = 1; i < oLinks.length; i++) {
-            path.push(oLinks[i].getText());
-         }
-
-         var lastdir = oBreadcrumbs.getCurrentLocationText();
-         if (lastdir) path.push(lastdir);
-
-         path.push(this.oModel.getProperty("/fileName"));
-         return path;
-      },
-
+      /** Set path to the Breadcrumb element */
       updateBReadcrumbs: function(split) {
          var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
          oBreadcrumbs.removeAllLinks();
@@ -83,19 +68,58 @@ sap.ui.define(['rootui5/panel/Controller',
          }
       },
 
-      onBreadcrumbsPress: function(oEvent) {
-         let sId = oEvent.getSource().sId;
-         let oBreadcrumbs = oEvent.getSource().getParent();
-         let oLinks = oBreadcrumbs.getLinks();
-         let path = [];
-         for (let i = 0; i < oLinks.length; i++) {
+      /** Returns coded in Breadcrumb path
+       * If selectedId specified, return path up to that element id */
+      getBreadcrumbPath: function(selectedId) {
+         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs"),
+             oLinks = oBreadcrumbs.getLinks(),
+             path = [];
+
+         for (var i = 0; i < oLinks.length; i++) {
             if (i>0) path.push(oLinks[i].getText());
-            if (oLinks[i].getId() === sId ) break;
+            if (selectedId && (oLinks[i].getId() === selectedId)) return path;
          }
+
+         var lastdir = oBreadcrumbs.getCurrentLocationText();
+         if (lastdir) path.push(lastdir);
+         return path;
+      },
+
+      // returns full file name as array
+      getFullFileName: function() {
+         var path = this.getBreadcrumbPath();
+         path.push(this.oModel.getProperty("/fileName"));
+         return path;
+      },
+
+      /** Handler for Breadcrumbs press event */
+      onBreadcrumbsPress: function(oEvent) {
+         var path = this.getBreadcrumbPath(oEvent.getSource().sId);
          if (this.kind == "OpenFile")
             this.oModel.setProperty("/fileName", "");
-         this.websocket.Send('CHPATH:' + JSON.stringify(path));
+         this.websocket.Send("CHPATH:" + JSON.stringify(path));
       },
+
+      /** Handler for List item press event */
+      onItemPress: function(event) {
+         var item = event.getParameters().listItem;
+         if (!item) return;
+
+         var ctxt = item.getBindingContext(),
+             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+
+         if (prop && (prop.icon == "sap-icon://folder-blank")) {
+            if (this.kind == "OpenFile")
+               this.oModel.setProperty("/fileName", "");
+
+            var path = this.getBreadcrumbPath();
+            path.push(item.getTitle());
+            return this.websocket.Send("CHPATH:" + JSON.stringify(path));
+         }
+
+         this.oModel.setProperty("/fileName", item.getTitle());
+      },
+
 
       processInitMsg: function(msg) {
          var cfg = JSON.parse(msg);
@@ -112,6 +136,12 @@ sap.ui.define(['rootui5/panel/Controller',
 
          this.updateBReadcrumbs(cfg.path);
 
+         this.oModel.setProperty("/filesList", cfg.brepl.nodes);
+      },
+
+      processChangePathMsg: function(msg) {
+         var cfg = JSON.parse(msg);
+         this.updateBReadcrumbs(cfg.path);
          this.oModel.setProperty("/filesList", cfg.brepl.nodes);
       },
 
@@ -165,12 +195,8 @@ sap.ui.define(['rootui5/panel/Controller',
          case "INMSG":
             this.processInitMsg(msg);
             break;
-         case "WORKPATH":
-            this.updateBReadcrumbs(JSON.parse(msg));
-            break;
-         case "BREPL":   // browser reply
-            var repl = JSON.parse(msg);
-            this.oModel.setProperty("/filesList", repl.nodes);
+         case "CHMSG":
+            this.processChangePathMsg(msg);
             break;
          case "SELECT_CONFIRMED": // when selected file can be used for SaveAs operation
             this.closeFileDialog(msg);
@@ -187,8 +213,9 @@ sap.ui.define(['rootui5/panel/Controller',
          }
       },
 
+      /** Shown when warning message about overwritten file should appear */
       showWarningDialog: function() {
-         var oDialog = new Dialog({
+         var oWarnDlg = new Dialog({
             title: "Warning",
             type: "Message",
             state: "Warning",
@@ -196,42 +223,23 @@ sap.ui.define(['rootui5/panel/Controller',
             beginButton: new Button({
                text: 'Cancel',
                press: function() {
-                  oDialog.close();
+                  oWarnDlg.close();
                }
             }),
             endButton: new Button({
                text: 'Ok',
                type: ButtonType.Emphasized,
                press: function() {
-                  oDialog.close();
+                  oWarnDlg.close();
                   this.websocket.Send("DLG_CONFIRM_SELECT");
                }.bind(this)
             }),
             afterClose: function() {
-               oDialog.destroy();
+               oWarnDlg.destroy();
             }
          });
 
-         oDialog.open();
-      },
-
-      /** Handler for List item press event */
-      onItemPress: function(event) {
-         var item = event.getParameters().listItem;
-         if (!item) return;
-
-         var ctxt = item.getBindingContext(),
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
-
-         // console.log('Property', prop);
-
-         if (prop && (prop.icon == "sap-icon://folder-blank")) {
-            if (this.kind == "OpenFile")
-               this.oModel.setProperty("/fileName", "");
-            return this.websocket.Send('CHDIR:' + item.getTitle()); // dialog send chdir
-         }
-
-         this.oModel.setProperty("/fileName", item.getTitle());
+         oWarnDlg.open();
       },
 
       /** method used to complete dialog */

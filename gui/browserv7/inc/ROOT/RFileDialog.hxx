@@ -56,17 +56,14 @@ protected:
 
    bool fDidSelect{false};           ///<! true when dialog is selected or closed
    std::string fSelect;              ///<! result of file selection
-   RFileDialogCallback_t fCallback;  ///<! function receiving result
+   RFileDialogCallback_t fCallback;  ///<! function receiving result, called once
 
    static std::string TypeAsString(EDialogTypes kind);
 
-   std::string ProcessBrowserRequest(const std::string &msg);
-   std::string GetCurrentWorkingDirectory();
-
    void SendInitMsg(unsigned connid);
-   void SendDirContent(unsigned connid);
+   void SendChPathMsg(unsigned connid);
 
-   void WebWindowCallback(unsigned connid, const std::string &arg);
+   void ProcessMsg(unsigned connid, const std::string &arg);
 
    void InvokeCallBack();
 

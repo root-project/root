@@ -19,9 +19,7 @@
 #include <ROOT/RBrowsableSysFile.hxx>
 #include <ROOT/RBrowserItem.hxx>
 
-
 #include "TSystem.h"
-
 #include "TBufferJSON.h"
 
 #include <sstream>
@@ -83,7 +81,7 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { SendInitMsg(connid); },
-                            [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); },
+                            [this](unsigned connid, const std::string &arg) { ProcessMsg(connid, arg); },
                             [this](unsigned) { InvokeCallBack(); });
    fWebWindow->SetGeometry(800, 600); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
@@ -96,9 +94,8 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 RFileDialog::~RFileDialog()
 {
    InvokeCallBack(); // invoke callback if not yet performed
-   printf("RFileDialog Destructor\n");
+   R__DEBUG_HERE("rbrowser") << "RFileDialog destructor";
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign callback. If file was already selected, immediately call it
@@ -109,31 +106,6 @@ void RFileDialog::SetCallback(RFileDialogCallback_t callback)
    if (fDidSelect)
       InvokeCallBack();
 }
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// Process browser request
-
-std::string RFileDialog::ProcessBrowserRequest(const std::string &msg)
-{
-   // not used now, can be reactivated later
-   std::unique_ptr<RBrowserRequest> request;
-
-   if (msg.empty()) {
-      request = std::make_unique<RBrowserRequest>();
-      request->path = "/";
-      request->first = 0;
-      request->number = 10000;
-   } else {
-      request = TBufferJSON::FromJSON<RBrowserRequest>(msg);
-   }
-
-   if (!request)
-      return ""s;
-
-   return "BREPL:"s + fBrowsable.ProcessRequest(*request.get());
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Show or update RFileDialog in web window
@@ -147,10 +119,9 @@ void RFileDialog::Show(const RWebDisplayArgs &args)
    if (fWebWindow->NumConnections() == 0) {
       RWebWindow::ShowWindow(fWebWindow, args);
    } else {
-      WebWindowCallback(0, "RELOAD");
+      SendInitMsg(0);
    }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hide ROOT Browser
@@ -160,6 +131,9 @@ void RFileDialog::Hide()
    fWebWindow->CloseConnections();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns dialog type as string
+/// String value used for configuring JS-side
 
 std::string RFileDialog::TypeAsString(EDialogTypes kind)
 {
@@ -177,52 +151,38 @@ std::string RFileDialog::TypeAsString(EDialogTypes kind)
 
 void RFileDialog::SendInitMsg(unsigned connid)
 {
-   RBrowserRequest request;
-   request.path = "/";
-   request.first = 0;
-   request.number = 0;
+   RBrowserRequest req;
+   req.sort = "alphabetical";
 
    auto jtitle = TBufferJSON::ToJSON(&fTitle);
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
    auto jfname = TBufferJSON::ToJSON(&fSelect);
 
-   std::string jsoncode = "{ \"kind\" : \""s + TypeAsString(fKind) +
-                          "\", \"title\" : "s + jtitle.Data() +
-                          ", \"path\" : "s + jpath.Data() +
-                          ", \"fname\" : "s + jfname.Data() +
-                          ", \"brepl\" : "s + fBrowsable.ProcessRequest(request) + "   }"s;
-
-   fWebWindow->Send(connid, "INMSG:"s + jsoncode);
+   fWebWindow->Send(connid, "INMSG:{\"kind\" : \""s + TypeAsString(fKind) + "\", "s +
+                                   "\"title\" : "s + jtitle.Data() + ","s +
+                                   "\"path\" : "s + jpath.Data() + ","s +
+                                   "\"fname\" : "s + jfname.Data() + ","s +
+                                   "\"brepl\" : "s + fBrowsable.ProcessRequest(req) + "   }"s);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Return the current directory of ROOT
+/// Sends new data after change current directory
 
-std::string RFileDialog::GetCurrentWorkingDirectory()
+void RFileDialog::SendChPathMsg(unsigned connid)
 {
-   return "WORKPATH:"s + TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath()).Data();
+   RBrowserRequest req;
+   req.sort = "alphabetical";
+
+   auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
+
+   fWebWindow->Send(connid, "CHMSG:{\"path\" : "s + jpath.Data() +
+                                 ", \"brepl\" : "s + fBrowsable.ProcessRequest(req) + "   }"s);
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Sends files list to the browser
+/// Process received data from client
 
-void RFileDialog::SendDirContent(unsigned connid)
-{
-   RBrowserRequest request;
-   request.path = "/";
-   request.first = 0;
-   request.number = 0;
-   auto msg = "BREPL:"s + fBrowsable.ProcessRequest(request);
-
-   fWebWindow->Send(connid, msg);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-/// receive data from client
-
-void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
+void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
 {
    size_t len = arg.find("\n");
    if (len != std::string::npos)
@@ -231,27 +191,18 @@ void RFileDialog::WebWindowCallback(unsigned connid, const std::string &arg)
       printf("Recv %s\n", arg.c_str());
 
    if (arg.compare(0, 7, "CHPATH:") == 0) {
-      printf("chpath %s\n", arg.substr(7).c_str());
       auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
       if (path) fBrowsable.SetWorkingPath(*path);
-      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-      SendDirContent(connid);
-   } else if (arg.compare(0, 6, "CHDIR:") == 0) {
-      printf("chdir dir %s\n", arg.substr(6).c_str());
 
-      auto path = fBrowsable.GetWorkingPath();
-      path.emplace_back(arg.substr(6));
-      fBrowsable.SetWorkingPath(path);
+      SendChPathMsg(connid);
 
-      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
-      SendDirContent(connid);
    } else if (arg.compare(0, 10, "DLGSELECT:") == 0) {
       // selected file name, if file exists - send request for confirmation
 
       auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(10));
 
       if (!path) {
-         printf("Error to decode JSON %s\n", arg.substr(10).c_str());
+         R__ERROR_HERE("rbrowser") << "Fail to decode JSON " << arg.substr(10);
          return;
       }
 
@@ -286,6 +237,8 @@ void RFileDialog::InvokeCallBack()
 {
    if (fCallback) {
       auto func = fCallback;
+      // reset callback to release associated with lambda resources
+      // reset before invoking callback to avoid multiple calls
       fCallback = nullptr;
       func(fSelect);
    }
@@ -355,7 +308,7 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(args.substr(11));
 
    if (!arr || (arr->size() != 3)) {
-      printf("Embedded failure - wrong arguments %s, should be array with three strings\n", args.c_str());
+      R__ERROR_HERE("rbrowser") << "Embedded FileDialog failure - argument should have three strings" << args.substr(11);
       return nullptr;
    }
 
@@ -369,10 +322,8 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
    auto dialog = std::make_shared<RFileDialog>(kind, "", arr->at(1));
    dialog->Show({window, std::stoi(arr->at(2))});
 
-   // TODO: how one can avoid const_cast for lambda capture to release
-   dialog->SetCallback([dialog](const std::string &) mutable { dialog.reset(); }); // use callback to release pointer
+   // use callback to release pointer, actually not needed but just to avoid compiler warning
+   dialog->SetCallback([dialog](const std::string &) mutable { dialog.reset(); });
 
    return dialog;
 }
-
-

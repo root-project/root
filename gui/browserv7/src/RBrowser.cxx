@@ -70,7 +70,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 
    std::string seldir, topdir, toplbl;
 
-   printf("Current dir %s home %s\n", workdir.c_str(), homedir.c_str());
+   R__DEBUG_HERE("rbrowser") << "Current dir " << workdir << "home" << homedir;
 
 #ifdef WIN32
    auto pos = workdir.find(":");
@@ -114,7 +114,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
-                            [this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
+                            [this](unsigned connid, const std::string &arg) { ProcessMsg(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -168,10 +168,10 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 void ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &arg)
 {
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg);
-   if (!arr || (arr->size() !=2)) {
-      printf("SAVEFILE failure - wrong arguments %s, should be at least two items\n", arg.c_str());
+   if (!arr || (arr->size()!=2)) {
+      R__ERROR_HERE("rbrowser") << "SaveFile failure, json array should have two items " << arg;
    } else {
-      printf("Saving file %s size %d\n", arr->at(0).c_str(), (int) arr->at(1).length());
+      R__DEBUG_HERE("rbrowser") << "SaveFile " << arr->at(0) << "  content length " << arr->at(1).length();
       std::ofstream f(arr->at(0));
       f << arr->at(1);
    }
@@ -198,7 +198,7 @@ long ROOT::Experimental::RBrowser::ProcessRunCommand(const std::string &file_pat
 
 std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
 {
-   printf("DoubleClick %s\n", item_path.c_str());
+   R__DEBUG_HERE("rbrowser") << "DoubleClick " << item_path;
 
    auto elem = fBrowsable.GetElement(item_path);
    if (!elem) return ""s;
@@ -282,7 +282,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
    }
 
 
-   printf("No active canvas to process dbl click\n");
+   R__DEBUG_HERE("rbrowser") << "No active canvas to process dbl click";
 
 
    return "";
@@ -295,13 +295,10 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
 void ROOT::Experimental::RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
-   auto number = fWebWindow->NumConnections();
-
-   if ((number == 0) || always_start_new_browser) {
+   if (!fWebWindow->NumConnections() || always_start_new_browser) {
       fWebWindow->Show(args);
    } else {
-      for (int n=0;n<number;++n)
-         WebWindowCallback(fWebWindow->GetConnectionId(n),"RELOAD");
+      SendInitMsg(0);
    }
 }
 
@@ -410,7 +407,6 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::GetAc
 
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Close and delete specified canvas
 
@@ -451,8 +447,6 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
    std::string msg = "INMSG:";
    msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
 
-   printf("Init msg %s\n", msg.c_str());
-
    fWebWindow->Send(connid, msg);
 }
 
@@ -465,11 +459,11 @@ std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// receive data from client
+/// Process received message from the client
 
-void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std::string &arg)
+void ROOT::Experimental::RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
 {
-   printf("Recv %s total %d\n", arg.substr(0, 25).c_str(), (int) arg.length());
+   R__DEBUG_HERE("rbrowser") << "ProcessMsg  len " << arg.length() << " substr(30) " << arg.substr(0, 30);
 
    if (arg == "QUIT_ROOT") {
 
@@ -512,24 +506,16 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
       ProcessRunCommand(arg.substr(9));
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
-      printf("Select %s\n", fActiveCanvas.c_str());
    } else if (arg.compare(0,13, "CLOSE_CANVAS:") == 0) {
       CloseCanvas(arg.substr(13));
    } else if (arg == "GETWORKPATH") {
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 7, "CHPATH:") == 0) {
-      printf("Current path %s\n", arg.substr(7).c_str());
       auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
-
       if (path) fBrowsable.SetWorkingPath(*path);
-
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
-
-      printf("CHDIR %s\n", arg.substr(6).c_str());
-
       fBrowsable.SetWorkingDirectory(arg.substr(6));
-
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 4, "CMD:") == 0) {
       std::string sPrompt = "root []";
@@ -581,6 +567,8 @@ void ROOT::Experimental::RBrowser::WebWindowCallback(unsigned connid, const std:
 // ============================================================================================
 
 using namespace ROOT::Experimental;
+
+/** Provider for drawing of ROOT6 classes */
 
 class RV6DrawProvider : public RDrawableProvider {
 public:
@@ -644,6 +632,8 @@ public:
 
 } newRV6DrawProvider;
 
+
+/** Provider for drawing of ROOT7 classes */
 
 class RV7DrawProvider : public RDrawableProvider {
 public:
