@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageFile
 
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RStringView.hxx>
@@ -31,39 +32,6 @@ class TFile;
 
 namespace ROOT {
 namespace Experimental {
-
-// clang-format off
-/**
-\class ROOT::Experimental::RNTuple
-\ingroup NTuple
-\brief Entry point for an RNTuple in a ROOT file
-
-The class points to the header and footer keys, which in turn have the references to the pages.
-Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
-Byte offset references in the RNTuple header and footer reference directly the data part of page records,
-skipping the TFile key part.
-*/
-// clang-format on
-struct RNTuple {
-   /// Allows for evolving the struct in future versions
-   std::uint32_t fVersion = 0;
-   /// Allows for skipping the struct
-   std::uint32_t fSize = sizeof(RNTuple);
-   /// The file offset of the key containing the ntuple header
-   std::uint64_t fSeekHeader = 0;
-   /// The size of the compressed ntuple header including the TKey
-   std::uint32_t fNBytesHeader = 0;
-   /// The size of the uncompressed ntuple header
-   std::uint32_t fLenHeader = 0;
-   /// The file offset of the key containing the ntuple footer
-   std::uint64_t fSeekFooter = 0;
-   /// The size of the compressed ntuple footer including the TKey
-   std::uint32_t fNBytesFooter = 0;
-   /// The size of the uncompressed ntuple footer
-   std::uint32_t fLenFooter = 0;
-   /// Currently unused, reserved for later use
-   std::uint64_t fReserved = 0;
-};
 
 
 namespace Internal {
