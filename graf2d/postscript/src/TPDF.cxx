@@ -592,7 +592,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4.*fLineScale : 0.);
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? TMath::Floor(fMarkerLineWidth/2.)/4.*fLineScale : 0.);
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
@@ -903,7 +903,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4.*fLineScale : 0.);
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? TMath::Floor(fMarkerLineWidth/2.)/4.*fLineScale : 0.);
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {

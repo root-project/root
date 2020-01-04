@@ -1126,7 +1126,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4.*fLineScale/4. : 0.);
+      Float_t symbolsize = fMarkerSize - (HasMarkerLineWidth() ? TMath::Floor(fMarkerLineWidth/2.)/4.*fLineScale/4. : 0.);
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
@@ -1199,7 +1199,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4.*fLineScale/4. : 0.);
+      Float_t symbolsize = fMarkerSize - (HasMarkerLineWidth() ? TMath::Floor(fMarkerLineWidth/2.)/4.*fLineScale/4. : 0.);
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());

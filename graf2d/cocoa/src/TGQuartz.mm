@@ -42,6 +42,7 @@
 #include "TStyle.h"
 #include "TROOT.h"
 #include "TEnv.h"
+#include "TMath.h"
 
 // To scale fonts to the same size as the TTF version
 const Float_t kScale = 0.93376068;
@@ -362,7 +363,7 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    CGContextSetLineJoin(ctx, CGLineJoin.round);
    CGContextSetLineCap(ctx, CGLineCap.round);
 
-   Float_t MarkerSizeReduced = GetMarkerSize() - (HasMarkerLineWidth() ? Float_t(GetMarkerLineWidth()/2)/4. : 0.);
+   Float_t MarkerSizeReduced = GetMarkerSize() - (HasMarkerLineWidth() ? TMath::Floor(GetMarkerLineWidth()/2.)/4. : 0.);
    Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, GetMarkerStyle());
 
    CGContextSetLineJoin(ctx, CGLineJoin.miter);
