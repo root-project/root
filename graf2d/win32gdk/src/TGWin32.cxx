@@ -3450,7 +3450,7 @@ void TGWin32::UpdateMarkerStyle()
 {
    static GdkPoint shape[30];
 
-   Float_t MarkerSizeReduced = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   Float_t MarkerSizeReduced = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4. : 0.);
    Int_t im = Int_t(4 * MarkerSizeReduced + 0.5);
 
    if (fMarkerStyle == 2) {

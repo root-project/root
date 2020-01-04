@@ -2461,7 +2461,7 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
    markerstyle  = TMath::Abs(markerstyle);
    fMarkerStyle = markerstyle;
    SetMarkerLineWidth(fMarkerLineWidth);
-   Float_t MarkerSizeReduced = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   Float_t MarkerSizeReduced = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4. : 0.);
    Int_t im = Int_t(4*MarkerSizeReduced + 0.5);
    if (markerstyle == 2) {
       // + shaped marker

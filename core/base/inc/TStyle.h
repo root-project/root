@@ -403,7 +403,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "");
    void             SaveSource(const char *filename, Option_t *option=0);
 
-   ClassDef(TStyle, 18);  //A collection of all graphics attributes
+   ClassDef(TStyle, 19);  //A collection of all graphics attributes
 };
 
 

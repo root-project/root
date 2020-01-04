@@ -299,7 +299,7 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
    // Define the marker size
    const Int_t kBASEMARKER = 8;
-   Double_t msize = (fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.)) * kBASEMARKER * gStyle->GetImageScaling();
+   Double_t msize = (fMarkerSize - (HasMarkerLineWidth() ? Double_t(fMarkerLineWidth/2)/4. : 0.)) * kBASEMARKER * gStyle->GetImageScaling();
    if (ms == 6) msize *= 0.2;
    if (ms == 7) msize *= 0.3;
    Double_t m  = msize;

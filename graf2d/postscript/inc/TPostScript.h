@@ -49,8 +49,6 @@ protected:
    Float_t fGreen;           ///< Per cent of green
    Float_t fBlue;            ///< Per cent of blue
    Float_t fLineScale;       ///< Line width scale factor
-   Int_t   fLineJoin;        ///< Appearance of joining lines
-   Int_t   fLineCap;         ///< Appearance of line caps
    Int_t   fSave;            ///< Number of gsave for restore
    Int_t   fNXzone;          ///< Number of zones along X
    Int_t   fNYzone;          ///< Number of zones along Y

@@ -26,8 +26,6 @@ protected:
    Bool_t       fBoundingBox;     ///< True when the SVG header is printed
    Bool_t       fRange;           ///< True when a range has been defined
    Double_t     fYsizeSVG;        ///< Page's Y size in SVG units
-   Int_t        fLineJoin;        ///< Appearance of joining lines
-   Int_t        fLineCap;         ///< Appearance of line caps
 
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps

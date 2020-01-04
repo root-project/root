@@ -87,8 +87,6 @@ TSVG::TSVG() : TVirtualPS()
    fXsize       = 0.;
    fYsize       = 0.;
    fYsizeSVG    = 0;
-   fLineJoin    = 0;
-   fLineCap     = 0;
    SetTitle("SVG");
 }
 
@@ -588,7 +586,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4. : 0.);
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
@@ -992,7 +990,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? (fMarkerLineWidth/2)/4. : 0.);
+   Float_t msize  = fMarkerSize - (HasMarkerLineWidth() ? Float_t(fMarkerLineWidth/2)/4. : 0.);
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
