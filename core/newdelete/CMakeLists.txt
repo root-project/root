@@ -13,6 +13,8 @@ ROOT_LINKER_LIBRARY(New
   src/NewDelete.cxx
   DEPENDENCIES
     Core
+  TYPE
+    STATIC
 )
 
 target_include_directories(New PRIVATE ../clib/res)
