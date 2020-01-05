@@ -177,3 +177,26 @@ TEST(MiniFile, Multi)
    reader.ReadBlob(&buf, 1, offFooter2);
    EXPECT_EQ(footer2, buf);
 }
+
+
+TEST(MiniFile, Failures)
+{
+   // TODO(jblomer): failures should be exceptions
+   EXPECT_DEATH(RMiniFileWriter::Recreate("MyNTuple", "/can/not/open", 0, ENTupleContainerFormat::kTFile), ".*");
+
+   FileRaii fileGuard("test_ntuple_minifile_failures.root");
+
+   auto writer = std::unique_ptr<RMiniFileWriter>(
+      RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+   char header = 'h';
+   char footer = 'f';
+   char blob = 'b';
+   writer->WriteNTupleHeader(&header, 1, 1);
+   writer->WriteBlob(&blob, 1, 1);
+   writer->WriteNTupleFooter(&footer, 1, 1);
+   writer->Commit();
+
+   auto rawFile = std::unique_ptr<RRawFile>(RRawFile::Create(fileGuard.GetPath()));
+   RMiniFileReader reader(*rawFile);
+   EXPECT_DEATH(reader.GetNTuple("No such NTiple"), ".*");
+}
