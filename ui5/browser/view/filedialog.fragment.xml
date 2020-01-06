@@ -16,10 +16,14 @@
             </List>
          </content>
          <footer>
-            <OverflowToolbar>
+           <Toolbar>
+               <ComboBox selectedKey="{/fileExt}" items="{ path: '/fileExtList' }"
+                         change="onFileExtChanged">
+                  <core:Item key="{id}" text="{text}" />
+               </ComboBox>
                <Input id="SelectedFile" type="Text" enabled="{/canEditName}" placeholder="Enter file name" value="{/fileName}" valueLiveUpdate="true">
                </Input>
-            </OverflowToolbar>
+            </Toolbar>
          </footer>
    </Page>
 </core:FragmentDefinition>
