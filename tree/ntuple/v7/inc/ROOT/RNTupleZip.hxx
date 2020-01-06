@@ -140,7 +140,7 @@ public:
    RNTupleDecompressor &operator =(const RNTupleDecompressor &other) = delete;
 
    /**
-    * The nbytes parameter provides the size of the from buffer. The dataLen gives the size of the uncompressed data.
+    * The nbytes parameter provides the size ls of the from buffer. The dataLen gives the size of the uncompressed data.
     * The block is uncompressed iff nbytes == dataLen.
     */
    void operator() (const void *from, size_t nbytes, size_t dataLen, void *to) {

@@ -96,7 +96,7 @@ RNTuple data keys.
 class RMiniFileReader {
 private:
    /// The raw file used to read byte ranges
-   Detail::RRawFile &fFile;
+   Detail::RRawFile *fFile = nullptr;
    /// Indicates whether the file is a TFile container or an RNTuple raw file
    bool fIsRaw = false;
    /// Used when the file turns out to be a raw file
@@ -105,8 +105,9 @@ private:
    RNTuple GetNTupleProper(std::string_view ntupleName);
 
 public:
+   RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
-   explicit RMiniFileReader(Detail::RRawFile &rawFile);
+   explicit RMiniFileReader(Detail::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RNTuple GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer

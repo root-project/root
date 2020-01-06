@@ -882,7 +882,7 @@ struct RTFileControlBlock {
 } // namespace Internal
 
 
-ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(Detail::RRawFile &rawFile)
+ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(Detail::RRawFile *rawFile)
    : fFile(rawFile)
 {
 }
@@ -964,7 +964,7 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
 
 void ROOT::Experimental::Internal::RMiniFileReader::ReadBlob(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   auto nread = fFile.ReadAt(buffer, nbytes, offset);
+   auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
 }
 

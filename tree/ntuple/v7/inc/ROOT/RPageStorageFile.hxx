@@ -32,19 +32,10 @@ class TFile;
 
 namespace ROOT {
 namespace Experimental {
-
-
-namespace Internal {
-/// Holds references to an open ROOT file during writing
-struct RTFileControlBlock;
-} // namespace Internal
-
-
 namespace Detail {
 
 class RPageAllocatorHeap;
 class RPagePool;
-class RRawFile;
 
 
 // clang-format off
@@ -59,52 +50,18 @@ The written file can be either in ROOT format or in raw format.
 class RPageSinkFile : public RPageSink {
 public:
    static constexpr std::size_t kDefaultElementsPerPage = 10000;
-   /// The artifical class name used for the RNTuple keys in a .root file container
-   static constexpr char const *kBlobClassName = "RBlob";
 
 private:
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   /// Appending to existing files requires a proper TFile
-   TFile *fFileProper = nullptr;
-   /// New files with a single ntuple can be created with a raw file; this is used by the constructor that takes a path
-   FILE *fFileStream = nullptr;
-   /// Byte offset of the next write (current file size)
-   std::uint64_t fFilePos = 0;
-   /// Byte offset of the begining of the currently open cluster
-   std::uint64_t fClusterStart = 0;
-   /// The file name without the parent directory (e.g. "events.root")
-   std::string fFileName;
+   std::unique_ptr<Internal::RMiniFileWriter> fWriter;
+   /// Byte offset of the first page of the current cluster
+   std::uint64_t fClusterMinOffset = std::uint64_t(-1);
+   /// Byte offset of the end of the last page of the current cluster
+   std::uint64_t fClusterMaxOffset = 0;
    /// Helper for zipping keys and header / footer; comprises a 16MB zip buffer
    RNTupleCompressor fCompressor;
-   /// Keeps track of TFile control structures, which need to be updated on committing the data set
-   std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
-
-   /// Writes bytes in the open fFile, either at fFilePos or at the given offset
-   void Write(const void *from, size_t size, std::int64_t offset = -1);
-   /// Writes a TKey including the data record, given by buffer, into fFile; returns the file offset to the payload
-   std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::int64_t offset = -1,
-                          std::uint64_t directoryOffset = 100, int compression = 0,
-                          const std::string &className = "",
-                          const std::string &objectName = "",
-                          const std::string &title = "");
-   std::uint64_t WriteKeyStream(const void *buffer, std::size_t nbytes, std::int64_t offset,
-                                std::uint64_t directoryOffset, int compression,
-                                const std::string &className,
-                                const std::string &objectName,
-                                const std::string &title);
-   void WriteProper(const void *buffer, std::size_t nbytes, std::uint64_t offset);
-   void WriteKeyProper(const void *buffer, std::size_t nbytes, int compression,
-                       std::uint64_t *offsetKey = nullptr,
-                       std::uint64_t *offsetData = nullptr,
-                       std::uint32_t *sizeData = nullptr,
-                       std::uint32_t *sizeKeyData = nullptr);
-   /// Writes a compressed raw record
-   void WriteRecord(const void *buffer, std::size_t nbytes, std::int64_t offset = -1, int compression = 0);
-
-   void WriteRawSkeleton();
-   void WriteTFileSkeleton();
 
 protected:
    void DoCreate(const RNTupleModel &model) final;
@@ -114,7 +71,9 @@ protected:
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   RPageSinkFile(std::string_view ntupleName, TFile *file, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options,
+                 std::unique_ptr<TFile> &file);
+   RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
    virtual ~RPageSinkFile();
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
@@ -160,14 +119,12 @@ private:
    RNTupleDecompressor fDecompressor;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<RRawFile> fFile;
+   /// Takes the fFile to read ntuple blobs from it
+   Internal::RMiniFileReader fReader;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
-   void Read(void *buffer, std::size_t nbytes, std::uint64_t offset);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
                                  ClusterSize_t::ValueType clusterIndex);
-
-   RNTupleDescriptor AttachTFile();
-   RNTupleDescriptor AttachRaw();
 
 protected:
    RNTupleDescriptor DoAttach() final;
