@@ -12,6 +12,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ namespace ROOT::Experimental::Browsable;
+
 #pragma link C++ class ROOT::Experimental::Browsable::RHolder+;
 #pragma link C++ class ROOT::Experimental::Browsable::RAnyObjectHolder+;
 #pragma link C++ class ROOT::Experimental::Browsable::RTObjectHolder+;
