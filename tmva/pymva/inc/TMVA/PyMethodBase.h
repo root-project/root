@@ -37,19 +37,20 @@ class TSpline;
 class TH1F;
 class TH1D;
 
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-function"
 
+#include "Python.h"
 
-#ifndef PyObject_HEAD
-struct _object;
-typedef _object PyObject;
-#define Py_single_input 256
-#endif
+// #ifndef PyObject_HEAD
+// struct _object;
+// typedef _object PyObject;
+// #define Py_single_input 256
+// #endif
 
 // needed by NPY_API_VERSION - version of numpy < 1.07 will not be supported 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 // needed for compilation of numpy/ndarrayobject.h file 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-function"
 #include "numpy/numpyconfig.h"
 #include "numpy/ndarrayobject.h"
 
