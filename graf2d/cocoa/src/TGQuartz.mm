@@ -360,14 +360,14 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   CGContextSetLineJoin(ctx, CGLineJoin.round);
-   CGContextSetLineCap(ctx, CGLineCap.round);
+   CGContextSetLineJoin(ctx, kCGLineJoinRound);
+   CGContextSetLineCap(ctx, kCGLineCapRound);
 
    Float_t MarkerSizeReduced = GetMarkerSize() - (HasMarkerLineWidth() ? TMath::Floor(GetMarkerLineWidth()/2.)/4. : 0.);
    Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, GetMarkerStyle());
 
-   CGContextSetLineJoin(ctx, CGLineJoin.miter);
-   CGContextSetLineCap(ctx, CGLineCap.butt);
+   CGContextSetLineJoin(ctx, kCGLineJoinMiter);
+   CGContextSetLineCap(ctx, kCGLineCapButt);
 }
 
 

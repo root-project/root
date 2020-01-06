@@ -672,7 +672,7 @@ void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out<<"   ps->SetGraphIO(psGraphIO);"<<std::endl;
    fGraphIO->SaveFillAttributes(out,"psGraphIO",0,1001);
    fGraphIO->SaveLineAttributes(out,"psGraphIO",1,1,1);
-   fGraphIO->SaveMarkerAttributes(out,"psGraphIO",1,1,1);
+   fGraphIO->SaveMarkerAttributes(out,"psGraphIO",1,1,1,1);
    for (i=0;i<npoints;i++) {
       out<<"   psGraphIO->SetPoint("<<i<<","<<fGraphIO->GetX()[i]<<","<<fGraphIO->GetY()[i]<<");"<<std::endl;
       out<<"   psGraphIO->SetPointError("<<i<<",0,"<<fGraphIO->GetEY()[i]<<");"<<std::endl;
@@ -684,7 +684,7 @@ void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out<<"   ps->SetGraphTime(psGraphTime);"<<std::endl;
    fGraphTime->SaveFillAttributes(out,"psGraphTime",0,1001);
    fGraphTime->SaveLineAttributes(out,"psGraphTime",1,1,1);
-   fGraphTime->SaveMarkerAttributes(out,"psGraphTime",1,1,1);
+   fGraphTime->SaveMarkerAttributes(out,"psGraphTime",1,1,1,1);
    for (i=0;i<npoints;i++) {
       out<<"   psGraphTime->SetPoint("<<i<<","<<fGraphTime->GetX()[i]<<","<<fGraphTime->GetY()[i]<<");"<<std::endl;
       out<<"   psGraphTime->SetPointError("<<i<<",0,"<<fGraphTime->GetEY()[i]<<");"<<std::endl;

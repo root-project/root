@@ -718,7 +718,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveFillAttributes(out, "gre", 0, 1001);
    SaveLineAttributes(out, "gre", 1, 1, 1);
-   SaveMarkerAttributes(out, "gre", 1, 1, 1);
+   SaveMarkerAttributes(out, "gre", 1, 1, 1, 1);
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();

@@ -518,7 +518,7 @@ void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"pmarker3D = new TPolyMarker3D("<<fN<<","<<GetMarkerStyle()<<","<<quote<<fOption<<quote<<");"<<std::endl;
    out<<"   pmarker3D->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
 
-   SaveMarkerAttributes(out,"pmarker3D",1,1,1);
+   SaveMarkerAttributes(out,"pmarker3D",1,1,1,1);
 
    for (Int_t i=0;i<Size();i++) {
       out<<"   pmarker3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<std::endl;

@@ -2140,7 +2140,7 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveFillAttributes(out, "graph", 0, 1001);
    SaveLineAttributes(out, "graph", 1, 1, 1);
-   SaveMarkerAttributes(out, "graph", 1, 1, 1);
+   SaveMarkerAttributes(out, "graph", 1, 1, 1, 1);
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();

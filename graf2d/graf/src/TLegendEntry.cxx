@@ -125,7 +125,7 @@ void TLegendEntry::SaveEntry(std::ostream &out, const char* name )
       fLabel.Data()<<quote<<","<<quote<<fOption.Data()<<quote<<");"<<std::endl;
    SaveFillAttributes(out,"entry",0,0);
    SaveLineAttributes(out,"entry",0,0,0);
-   SaveMarkerAttributes(out,"entry",0,0,0);
+   SaveMarkerAttributes(out,"entry",0,0,0,0);
    SaveTextAttributes(out,"entry",0,0,0,0,0);
 }
 

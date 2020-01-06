@@ -569,7 +569,7 @@ selection based on track parameters.
 
 REveTrackList::REveTrackList(REveTrackPropagator* prop) :
    REveElement(),
-   TAttMarker(1, 20, 1),
+   TAttMarker(1, 20, 1, 1),
    TAttLine(1,1,1),
 
    fPropagator(0),
@@ -595,7 +595,7 @@ REveTrackList::REveTrackList(REveTrackPropagator* prop) :
 
 REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop) :
    REveElement(name),
-   TAttMarker(1, 20, 1),
+   TAttMarker(1, 20, 1, 1),
    TAttLine(1,1,1),
 
    fPropagator(0),
@@ -961,6 +961,35 @@ void REveTrackList::SetMarkerSize(Size_t size, REveElement* el)
          track->SetMarkerSize(size);
       if (fRecurse)
          SetMarkerSize(size, c);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width for the list and the elements.
+
+void REveTrackList::SetMarkerLineWidth(Width_t width)
+{
+   for (auto &c: RefChildren()) {
+      auto track = (REveTrack *)(c);
+      if (track->GetMarkerLineWidth() == fMarkerLineWidth)
+         track->SetMarkerLineWidth(width);
+      if (fRecurse)
+         SetMarkerLineWidth(width, c);
+   }
+   fMarkerLineWidth = width;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size for children of el.
+
+void REveTrackList::SetMarkerLineWidth(Width_t width, REveElement* el)
+{
+   for (auto &c: el->RefChildren()) {
+      auto track = dynamic_cast<REveTrack*>(c);
+      if (track && track->GetMarkerLineWidth() == fMarkerLineWidth)
+         track->SetMarkerLineWidth(width);
+      if (fRecurse)
+         SetMarkerLineWidth(width, c);
    }
 }
 

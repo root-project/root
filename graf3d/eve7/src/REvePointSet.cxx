@@ -178,6 +178,23 @@ void REvePointSet::SetMarkerSize(Size_t msize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width, propagate to projecteds.
+
+void REvePointSet::SetMarkerLineWidth(Width_t mlinewidth)
+{
+   for (auto &pi: fProjectedList)
+   {
+      REvePointSet* pt = dynamic_cast<REvePointSet *>(pi);
+      if (pt)
+      {
+         pt->SetMarkerLineWidth(mlinewidth);
+         pt->StampObjProps();
+      }
+   }
+   TAttMarker::SetMarkerLineWidth(mlinewidth);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy visualization parameters from element el.
 
 void REvePointSet::CopyVizParams(const REveElement* el)
@@ -367,6 +384,20 @@ void REvePointSetArray::SetMarkerSize(Size_t msize)
          m->SetMarkerSize(msize);
    }
    TAttMarker::SetMarkerSize(msize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker line width, propagate to children.
+
+void REvePointSetArray::SetMarkerLineWidth(Width_t mlinewidth)
+{
+   for (auto & el : fChildren)
+   {
+      TAttMarker* m = dynamic_cast<TAttMarker*>(el);
+      if (m && m->GetMarkerLineWidth() == fMarkerLineWidth)
+         m->SetMarkerLineWidth(mlinewidth);
+   }
+   TAttMarker::SetMarkerLineWidth(mlinewidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

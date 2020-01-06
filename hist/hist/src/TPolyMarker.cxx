@@ -321,7 +321,7 @@ void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    out<<"pmarker = new TPolyMarker("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<std::endl;
 
-   SaveMarkerAttributes(out,"pmarker",1,1,1);
+   SaveMarkerAttributes(out,"pmarker",1,1,1,1);
 
    for (Int_t i=0;i<Size();i++) {
       out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;

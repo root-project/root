@@ -201,7 +201,7 @@ void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
-   SaveMarkerAttributes(out,GetName(),1,1,1);
+   SaveMarkerAttributes(out,GetName(),1,1,1,1);
    fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
    fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
    fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");

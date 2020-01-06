@@ -567,7 +567,7 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 
    SaveFillAttributes(out,"grbe",0,1001);
    SaveLineAttributes(out,"grbe",1,1,1);
-   SaveMarkerAttributes(out,"grbe",1,1,1);
+   SaveMarkerAttributes(out,"grbe",1,1,1,1);
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();

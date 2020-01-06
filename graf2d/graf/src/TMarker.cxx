@@ -299,7 +299,7 @@ void TMarker::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
    out<<"marker = new TMarker("<<fX<<","<<fY<<","<<fMarkerStyle<<");"<<std::endl;
 
-   SaveMarkerAttributes(out,"marker",1,1,1);
+   SaveMarkerAttributes(out,"marker",1,1,1,1);
 
    out<<"   marker->Draw();"<<std::endl;
 }

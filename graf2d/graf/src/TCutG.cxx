@@ -369,7 +369,7 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveFillAttributes(out,"cutg",0,1001);
    SaveLineAttributes(out,"cutg",1,1,1);
-   SaveMarkerAttributes(out,"cutg",1,1,1);
+   SaveMarkerAttributes(out,"cutg",1,1,1,1);
 
    for (Int_t i=0;i<fNpoints;i++) {
       out<<"   cutg->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;

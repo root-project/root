@@ -1276,7 +1276,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
 
    SaveFillAttributes(out, "grae", 0, 1001);
    SaveLineAttributes(out, "grae", 1, 1, 1);
-   SaveMarkerAttributes(out, "grae", 1, 1, 1);
+   SaveMarkerAttributes(out, "grae", 1, 1, 1, 1);
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();

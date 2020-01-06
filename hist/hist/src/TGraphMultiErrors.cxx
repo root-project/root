@@ -1624,7 +1624,7 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
 
    SaveFillAttributes(out, "tgme", 0, 1001);
    SaveLineAttributes(out, "tgme", 1, 1, 1);
-   SaveMarkerAttributes(out, "tgme", 1, 1, 1);
+   SaveMarkerAttributes(out, "tgme", 1, 1, 1, 1);
 
    for (Int_t j = 0; j < fNYErrors; j++) {
       fAttFill[j].SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);

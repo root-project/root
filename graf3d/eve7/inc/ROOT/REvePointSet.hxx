@@ -70,6 +70,7 @@ public:
    void SetMarkerColor(Color_t col) override { SetMainColor(col); }
    void SetMarkerStyle(Style_t mstyle = 1) override;
    void SetMarkerSize(Size_t msize = 1) override;
+   void SetMarkerLineWidth(Width_t mlinewidth = 1) override;
 
    void CopyVizParams(const REveElement *el) override;
    void WriteVizParams(std::ostream &out, const TString &var) override;
@@ -117,6 +118,7 @@ public:
    void SetMarkerColor(Color_t tcolor = 1) override;
    void SetMarkerStyle(Style_t mstyle = 1) override;
    void SetMarkerSize(Size_t msize = 1) override;
+   void SetMarkerLineWidth(Width_t mlinewidth = 1) override;
 
    Int_t Size(Bool_t under = kFALSE, Bool_t over = kFALSE) const;
 

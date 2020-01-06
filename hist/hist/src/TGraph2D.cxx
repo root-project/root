@@ -1539,7 +1539,7 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveFillAttributes(out, "graph2d", 0, 1001);
    SaveLineAttributes(out, "graph2d", 1, 1, 1);
-   SaveMarkerAttributes(out, "graph2d", 1, 1, 1);
+   SaveMarkerAttributes(out, "graph2d", 1, 1, 1, 1);
 
    for (Int_t i = 0; i < fNpoints; i++) {
       out << "   graph2d->SetPoint(" << i << "," << fX[i] << "," << fY[i] << "," << fZ[i] << ");" << std::endl;

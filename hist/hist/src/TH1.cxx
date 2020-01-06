@@ -6977,7 +6977,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    // save attributes
    SaveFillAttributes(out,hname,0,1001);
    SaveLineAttributes(out,hname,1,1,1);
-   SaveMarkerAttributes(out,hname,1,1,1);
+   SaveMarkerAttributes(out,hname,1,1,1,1);
    fXaxis.SaveAttributes(out,hname,"->GetXaxis()");
    fYaxis.SaveAttributes(out,hname,"->GetYaxis()");
    fZaxis.SaveAttributes(out,hname,"->GetZaxis()");

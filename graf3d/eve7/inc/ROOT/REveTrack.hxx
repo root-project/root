@@ -197,6 +197,8 @@ public:
    virtual void SetMarkerSize(Size_t s, REveElement *el);
    void SetMarkerStyle(Style_t s) override;
    virtual void SetMarkerStyle(Style_t s, REveElement *el);
+   void SetMarkerLineWidth(Width_t w) override;
+   virtual void SetMarkerLineWidth(Width_t w, REveElement *el);
 
    void SetRnrLine(Bool_t rnr);
    void SetRnrLine(Bool_t rnr, REveElement *el);

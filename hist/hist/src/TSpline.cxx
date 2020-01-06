@@ -975,7 +975,7 @@ void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveFillAttributes(out,"spline3",0,1001);
    SaveLineAttributes(out,"spline3",1,1,1);
-   SaveMarkerAttributes(out,"spline3",1,1,1);
+   SaveMarkerAttributes(out,"spline3",1,1,1,1);
    if (fNpx != 100) out<<"   spline3->SetNpx("<<fNpx<<");"<<std::endl;
 
    for (Int_t i=0;i<fNp;i++) {
@@ -1785,7 +1785,7 @@ void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SaveFillAttributes(out,"spline5",0,1001);
    SaveLineAttributes(out,"spline5",1,1,1);
-   SaveMarkerAttributes(out,"spline5",1,1,1);
+   SaveMarkerAttributes(out,"spline5",1,1,1,1);
    if (fNpx != 100) out<<"   spline5->SetNpx("<<fNpx<<");"<<std::endl;
 
    for (Int_t i=0;i<fNp;i++) {
