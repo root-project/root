@@ -55,6 +55,7 @@ protected:
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 
    bool fDidSelect{false};           ///<! true when dialog is selected or closed
+   std::string fExtension{"AllFiles"}; ///<! name of selected file extension, AllFiles is default value
    std::string fSelect;              ///<! result of file selection
    RFileDialogCallback_t fCallback;  ///<! function receiving result, called once
 

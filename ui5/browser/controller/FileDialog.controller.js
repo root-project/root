@@ -36,7 +36,12 @@ sap.ui.define(['rootui5/panel/Controller',
          */
 
          this.kind = "None"; // not yet known
-         this.oModel = new JSONModel({ dialogTitle: "Dialog Title", fileName: "", filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]});
+         this.oModel = new JSONModel({ canEditName: (this.kind == "SaveAs") || (this.kind == "NewFile"),
+                                       dialogTitle: "Dialog Title",
+                                       fileName: "",
+                                       filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
+                                       fileExt: "AllFiles",
+                                       fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
          this.getView().setModel(this.oModel);
 
          var pthis = this;
@@ -120,6 +125,11 @@ sap.ui.define(['rootui5/panel/Controller',
          this.oModel.setProperty("/fileName", item.getTitle());
       },
 
+      /** When selected file extenstion changed */
+      onFileExtChanged: function() {
+         var extName = this.oModel.getProperty("/fileExt");
+         this.websocket.Send("CHEXT:" + extName);
+      },
 
       processInitMsg: function(msg) {
          var cfg = JSON.parse(msg);
@@ -131,10 +141,10 @@ sap.ui.define(['rootui5/panel/Controller',
             this.oModel.setProperty("/canEditName", (this.kind == "SaveAs") || (this.kind == "NewFile"));
          }
 
-         if (cfg.fname)
-            this.oModel.setProperty("/fileName", cfg.fname);
-
          this.updateBReadcrumbs(cfg.path);
+
+         this.oModel.setProperty("/fileName", cfg.fname);
+         this.oModel.setProperty("/fileExt", cfg.fextension);
 
          this.oModel.setProperty("/filesList", cfg.brepl.nodes);
       },
@@ -270,13 +280,13 @@ sap.ui.define(['rootui5/panel/Controller',
          var p = Math.max(fname.lastIndexOf("/"), fname.lastIndexOf("\\"));
          if (p>0) fname = fname.substr(p+1);
 
-         this.kind = kind; // not yet known
-         this.oModel = new JSONModel({
-                              canEditName: (this.kind == "SaveAs") || (this.kind == "NewFile"),
-                              dialogTitle: args.title || "Title",
-                              fileName: fname, // will be returned from the server, just for initialization
-                              filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}]
-         });
+         this.kind = kind;
+         this.oModel = new JSONModel({ canEditName: (this.kind == "SaveAs") || (this.kind == "NewFile"),
+                                       dialogTitle: args.title || "Title",
+                                       fileName: fname, // will be returned from the server, just for initialization
+                                       filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
+                                       fileExt: "AllFiles",
+                                       fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
 
          // create extra channel for the FileDialog
          this.websocket = args.websocket.CreateChannel();
