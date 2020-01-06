@@ -163,7 +163,7 @@ Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 /// Update dependent elements' bounding box and mark scenes
 /// containing element root or its children as requiring a repaint.
 
-void REveProjectionManager::UpdateDependentElsAndScenes(REveElement */*root*/)
+void REveProjectionManager::UpdateDependentElsAndScenes(REveElement * /*root*/)
 {
    for (auto &d: fDependentEls) {
       TAttBBox* bbox = dynamic_cast<TAttBBox *>(d);
