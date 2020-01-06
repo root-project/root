@@ -1016,7 +1016,9 @@ RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const R
 {
   const char* idxCatName = _indexCat.arg().GetName() ;
   
-  if (vars.find(idxCatName) && prototype==0 && (auxProto==0 || auxProto->getSize()==0) && (autoBinned || (binnedTag && strlen(binnedTag)))) {    
+  if (vars.find(idxCatName) && prototype==0
+      && (auxProto==0 || auxProto->getSize()==0)
+      && (autoBinned || (binnedTag && strlen(binnedTag)))) {
 
     // Return special generator config that can also do binned generation for selected states
     return new RooSimSplitGenContext(*this,vars,verbose,autoBinned,binnedTag) ;
@@ -1031,7 +1033,7 @@ RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const R
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return specialized generator contenxt for simultaneous p.d.f.s
+/// Return specialized generator context for simultaneous p.d.f.s
 
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					      const RooArgSet* auxProto, Bool_t verbose) const 

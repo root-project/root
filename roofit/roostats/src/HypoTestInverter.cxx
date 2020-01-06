@@ -630,13 +630,18 @@ bool HypoTestInverter::RunFixedScan( int nBins, double xMin, double xMax, bool s
 
    if (xMin < fScannedVariable->getMin()) {
       xMin = fScannedVariable->getMin();
-      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMin < lower bound, use xmin = "
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMin < lower bound, using xmin = "
                                           << xMin << std::endl;
    }
    if (xMax > fScannedVariable->getMax()) {
       xMax = fScannedVariable->getMax();
-      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMax > upper bound, use xmax = "
+      oocoutW((TObject*)0,InputArguments) << "HypoTestInverter::RunFixedScan - xMax > upper bound, using xmax = "
                                           << xMax << std::endl;
+   }
+
+   if (xMin <= 0. && scanLog) {
+     oocoutE((TObject*)nullptr, InputArguments) << "HypoTestInverter::RunFixedScan - cannot go in log steps if xMin <= 0" << std::endl;
+     return false;
    }
 
    double thisX = xMin;

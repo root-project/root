@@ -278,16 +278,15 @@ RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooA
 ////////////////////////////////////////////////////////////////////////////////
 
 const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg) {
-   RooArgSet *allVars = fPdf ? fPdf->getVariables() : 0;
-   RooArgSet *saveAll = allVars ? dynamic_cast<RooArgSet*>(allVars->snapshot()) : 0;
+   RooArgSet *allVars = fPdf ? fPdf->getVariables() : nullptr;
+   RooArgSet *saveAll = allVars ? allVars->snapshot() : nullptr;
    for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
       if( fTestStatistics[i] == NULL ) continue;
       TString name( TString::Format("%s_TS%u", fSamplingDistName.c_str(), i) );
-      RooArgSet* parForTS = dynamic_cast<RooArgSet*>(poi.snapshot());
+      std::unique_ptr<RooArgSet> parForTS(poi.snapshot());
       RooRealVar ts( name, fTestStatistics[i]->GetVarName(), fTestStatistics[i]->Evaluate( data, *parForTS ) );
       RooArgList tset(ts);
       detOutAgg.AppendArgSet(&tset);
-      delete parForTS;
       if (const RooArgSet* detOut = fTestStatistics[i]->GetDetailedOutput()) {
         name.Append("_");
         detOutAgg.AppendArgSet(detOut, name);
@@ -426,6 +425,15 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       *allVars = *saveAll; // important for example for SimpleLikelihoodRatioTestStat
 
       RooAbsData* toydata = GenerateToyData(*paramPoint, weight);
+      if (i == 0 && !fPdf->canBeExtended() && dynamic_cast<RooSimultaneous*>(fPdf)) {
+        const RooArgSet* toySet = toydata->get();
+        if (std::none_of(toySet->begin(), toySet->end(), [](const RooAbsArg* arg){
+          return dynamic_cast<const RooAbsCategory*>(arg) != nullptr;
+        }))
+          oocoutE((TObject*)nullptr, Generation) << "ToyMCSampler: Generated toy data didn't contain a category variable, although"
+            " a simultaneous PDF is in use. To generate events for a simultaneous PDF, all components need to be"
+            " extended. Otherwise, the number of events to generate per component cannot be determined." << std::endl;
+      }
 
       *allVars = *fParametersForTestStat;
 
@@ -601,81 +609,80 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 /// instead of the standard RooAbsPdf::generate(...).
 /// It takes into account whether the number of events is given explicitly
 /// or whether it should use the expected number of events. It also takes
-/// into account the option to generate a binned data set (ie RooDataHist).
+/// into account the option to generate a binned data set (*i.e.* RooDataHist).
 
 RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet* protoData, int forceEvents) const {
 
-   if(fProtoData) {
-      protoData = fProtoData;
-      forceEvents = protoData->numEntries();
-   }
+  if(fProtoData) {
+    protoData = fProtoData;
+    forceEvents = protoData->numEntries();
+  }
 
-   RooAbsData *data = NULL;
-   int events = forceEvents;
-   if(events == 0) events = fNEvents;
+  RooAbsData *data = NULL;
+  int events = forceEvents;
+  if(events == 0) events = fNEvents;
 
-   // cannot use multigen when the nuisance parameters change for every toy
-   bool useMultiGen = (fUseMultiGen || fgAlwaysUseMultiGen) && !fNuisanceParametersSampler;
+  // cannot use multigen when the nuisance parameters change for every toy
+  bool useMultiGen = (fUseMultiGen || fgAlwaysUseMultiGen) && !fNuisanceParametersSampler;
 
-   if(events == 0) {
-      if( pdf.canBeExtended() && pdf.expectedEvents(observables) > 0) {
-         if(fGenerateBinned) {
-            if(protoData) data = pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true));
-            else          data = pdf.generate(observables, AllBinned(), Extended());
-         }else{
-      if(protoData) {
-        if (useMultiGen) {
-          if (!_gs2) { _gs2 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) ; }
-          data = pdf.generate(*_gs2) ;
+  if (events == 0) {
+    if (pdf.canBeExtended() && pdf.expectedEvents(observables) > 0) {
+      if(fGenerateBinned) {
+        if(protoData) data = pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true));
+        else          data = pdf.generate(observables, AllBinned(), Extended());
+      } else {
+        if (protoData) {
+          if (useMultiGen) {
+            if (!_gs2) { _gs2 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)) ; }
+            data = pdf.generate(*_gs2) ;
+          } else {
+            data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
+          }
         } else {
-          data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
+          if (useMultiGen) {
+            if (!_gs1) { _gs1 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) ) ; }
+            data = pdf.generate(*_gs1) ;
+          } else {
+            data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) );
+          }
+
         }
       }
-            else  {
-         if (useMultiGen) {
-      if (!_gs1) { _gs1 = pdf.prepareMultiGen(observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) ) ; }
-      data = pdf.generate(*_gs1) ;
-         } else {
-      data = pdf.generate                    (observables, Extended(), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag) );
-         }
-
-       }
-         }
-      }else{
-         oocoutE((TObject*)0,InputArguments)
-            << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero"
-            << endl;
+    } else {
+      oocoutE((TObject*)0,InputArguments)
+                << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero"
+                << endl;
+    }
+  } else {
+    if (fGenerateBinned) {
+      if(protoData) data = pdf.generate(observables, events, AllBinned(), ProtoData(*protoData, true, true));
+      else          data = pdf.generate(observables, events, AllBinned());
+    } else {
+      if (protoData) {
+        if (useMultiGen) {
+          if (!_gs3) { _gs3 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)); }
+          data = pdf.generate(*_gs3) ;
+        } else {
+          data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
+        }
+      } else {
+        if (useMultiGen) {
+          if (!_gs4) { _gs4 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)); }
+          data = pdf.generate(*_gs4) ;
+        } else {
+          data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag));
+        }
       }
-   }else{
-      if(fGenerateBinned) {
-         if(protoData) data = pdf.generate(observables, events, AllBinned(), ProtoData(*protoData, true, true));
-         else          data = pdf.generate(observables, events, AllBinned());
-      }else{
-   if(protoData) {
-     if (useMultiGen) {
-       if (!_gs3) { _gs3 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true)); }
-       data = pdf.generate(*_gs3) ;
-     } else {
-       data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag), ProtoData(*protoData, true, true));
-     }
-   } else {
-     if (useMultiGen) {
-       if (!_gs4) { _gs4 = pdf.prepareMultiGen(observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag)); }
-       data = pdf.generate(*_gs4) ;
-     } else {
-       data = pdf.generate                    (observables, NumEvents(events), AutoBinned(fGenerateAutoBinned), GenBinned(fGenerateBinnedTag));
-     }
-   }
-      }
-   }
+    }
+  }
 
-   // in case of number counting print observables
-   // if (data->numEntries() == 1) {
-   //    std::cout << "generate observables : ";
-   //    RooStats::PrintListContent(*data->get(0), std::cout);
-   // }
+  // in case of number counting print observables
+  // if (data->numEntries() == 1) {
+  //    std::cout << "generate observables : ";
+  //    RooStats::PrintListContent(*data->get(0), std::cout);
+  // }
 
-   return data;
+  return data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -100,8 +100,8 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   // We must extended likelihood to determine the relative fractions of the components
   _idxCatName = idxCat->GetName() ;
   if (!model.canBeExtended()) {
-    oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
-			     << " to calculate number of events per category" << endl ;
+    oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << "): All components of the simultaneous PDF "
+			     << "must be extended PDFs. Otherwise, it is impossible to calculate the number of events to be generated per component." << endl ;
     _isValid = kFALSE ;
     _numPdf = 0 ;
     // coverity[UNINIT_CTOR]

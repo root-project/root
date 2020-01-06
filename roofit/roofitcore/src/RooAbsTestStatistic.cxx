@@ -623,7 +623,6 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 /// in the input dataset is made.  If the test statistic was constructed with
 /// a range specification on the data, the cloneData argument is ignore and
 /// the data is always cloned.
-
 Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData) 
 { 
   // Trigger refresh of likelihood offsets 
@@ -650,24 +649,30 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 	_gofArray[i]->setDataSlave(indata, cloneData);
       }
     } else {
-//       cout << "NONEMPTY DATASET WITHOUT FAST SPLIT SUPPORT! "<< indata.GetName() << endl;
-      const RooAbsCategoryLValue* indexCat = & ((RooSimultaneous*)_func)->indexCat();
-      TList* dlist = indata.split(*indexCat, kTRUE);
+      const RooAbsCategoryLValue& indexCat = static_cast<RooSimultaneous*>(_func)->indexCat();
+      TList* dlist = indata.split(indexCat, kTRUE);
+      if (!dlist) {
+        coutF(DataHandling) << "Tried to split '" << indata.GetName() << "' into categories of '" << indexCat.GetName()
+            << "', but splitting failed. Input data:" << std::endl;
+        indata.Print("V");
+        throw std::runtime_error("Error when setting up test statistic: dataset couldn't be split into categories.");
+      }
+
       for (Int_t i = 0; i < _nGof; ++i) {
-	RooAbsData* compData = (RooAbsData*) dlist->FindObject(_gofArray[i]->GetName());
-	// 	cout << "component data for index " << _gofArray[i]->GetName() << " is " << compData << endl;
-	if (compData) {
-	  _gofArray[i]->setDataSlave(*compData,kFALSE,kTRUE);
-	} else {
-	  coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << _gofArray[i]->GetName() << endl;
-	}
+        RooAbsData* compData = (RooAbsData*) dlist->FindObject(_gofArray[i]->GetName());
+        // 	cout << "component data for index " << _gofArray[i]->GetName() << " is " << compData << endl;
+        if (compData) {
+          _gofArray[i]->setDataSlave(*compData,kFALSE,kTRUE);
+        } else {
+          coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << _gofArray[i]->GetName() << endl;
+        }
       }
     }
     break;
   case MPMaster:
     // Not supported
     coutF(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") FATAL: setData() is not supported in multi-processor mode" << endl;
-    throw string("RooAbsTestStatistic::setData is not supported in MPMaster mode");
+    throw std::runtime_error("RooAbsTestStatistic::setData is not supported in MPMaster mode");
     break;
   }
 

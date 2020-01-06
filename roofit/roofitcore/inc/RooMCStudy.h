@@ -59,6 +59,7 @@ public:
   const RooFitResult* fitResult(Int_t sampleNum) const ;
         RooAbsData* genData(Int_t sampleNum) const ;
   const RooDataSet& fitParDataSet() ;
+  /// Return a RooDataSet containing the pre-fit parameters of each toy cycle.
   const RooDataSet* genParDataSet() const { 
     // Return dataset with generator parameters for each toy. When constraints are used these
     // may generally not be the same
