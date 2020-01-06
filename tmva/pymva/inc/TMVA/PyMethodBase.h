@@ -37,31 +37,11 @@ class TSpline;
 class TH1F;
 class TH1D;
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-function"
-
-#include "Python.h"
-
-// #ifndef PyObject_HEAD
-// struct _object;
-// typedef _object PyObject;
-// #define Py_single_input 256
-// #endif
-
-// needed by NPY_API_VERSION - version of numpy < 1.07 will not be supported 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-// needed for compilation of numpy/ndarrayobject.h file 
-#include "numpy/numpyconfig.h"
-#include "numpy/ndarrayobject.h"
-
-// forward declaration of PyArrayObject
-// #if (NPY_API_VERSION >= 0x00000007 )
-// struct tagPyArrayObject;
-// typedef tagPyArrayObject PyArrayObject;
-// #else
-// struct PyArrayObject;
-// #endif
-
+#ifndef PyObject_HEAD
+struct _object;
+typedef _object PyObject;
+#define Py_single_input 256
+#endif
 
 namespace TMVA {
 
@@ -129,10 +109,6 @@ namespace TMVA {
    protected:
       PyObject *fModule; // Module to load
       PyObject *fClassifier; // Classifier object
-
-      PyArrayObject *fTrainData;
-      PyArrayObject *fTrainDataWeights; // array of weights
-      PyArrayObject *fTrainDataClasses; // array with sig/bgk class
 
       PyObject *fPyReturn; // python return data
 

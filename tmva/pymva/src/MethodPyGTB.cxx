@@ -20,6 +20,9 @@
 #include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include "TMVA/MethodPyGTB.h"
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
 #include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
@@ -338,16 +341,16 @@ void MethodPyGTB::Train()
    npy_intp dimsData[2];
    dimsData[0] = fNrowsTraining;
    dimsData[1] = fNvars;
-   fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
+   PyArrayObject * fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainData", (PyObject*)fTrainData);
    float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
    npy_intp dimsClasses = (npy_intp) fNrowsTraining;
-   fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyArrayObject * fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataClasses", (PyObject*)fTrainDataClasses);
    float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
 
-   fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyArrayObject * fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
    PyDict_SetItemString(fLocalNS, "trainDataWeights", (PyObject*)fTrainDataWeights);
    float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
 
