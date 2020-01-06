@@ -39,7 +39,6 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 
 
 #include "RooStats/AsymptoticCalculator.h"
-#include "RooStats/ToyMCSampler.h"
 #include "RooStats/ModelConfig.h"
 #include "RooStats/ProfileLikelihoodTestStat.h"
 #include "RooStats/RooStatsUtils.h"

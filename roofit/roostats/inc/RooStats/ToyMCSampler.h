@@ -144,9 +144,9 @@ class ToyMCSampler: public TestStatSampler {
 
       virtual Int_t GetNToys(void) { return fNToys; }
       virtual void SetNToys(const Int_t ntoy) { fNToys = ntoy; }
+      /// Forces the generation of exactly `n` events even for extended PDFs. Set to 0 to
+      /// use the Poisson-distributed events from the extended PDF.
       virtual void SetNEventsPerToy(const Int_t nevents) {
-         // Forces n events even for extended PDFs. Set NEvents=0 to
-         // use the Poisson distributed events from the extended PDF.
          fNEvents = nevents;
       }
 
