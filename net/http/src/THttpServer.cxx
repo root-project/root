@@ -1273,7 +1273,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 {
    len = 0;
 
-   std::ifstream is(filename);
+   std::ifstream is(filename, std::ios::in | std::ios::binary);
    if (!is)
       return nullptr;
 
@@ -1297,7 +1297,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
 
 std::string THttpServer::ReadFileContent(const std::string &filename)
 {
-   std::ifstream is(filename);
+   std::ifstream is(filename, std::ios::in | std::ios::binary);
    std::string res;
    if (is) {
       is.seekg(0, std::ios::end);
