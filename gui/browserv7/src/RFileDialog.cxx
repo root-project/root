@@ -153,14 +153,18 @@ void RFileDialog::SendInitMsg(unsigned connid)
 {
    RBrowserRequest req;
    req.sort = "alphabetical";
+   if (fExtension != "AllFiles"s)
+      req.extension = fExtension;
 
    auto jtitle = TBufferJSON::ToJSON(&fTitle);
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
    auto jfname = TBufferJSON::ToJSON(&fSelect);
+   auto jextension = TBufferJSON::ToJSON(&fExtension);
 
    fWebWindow->Send(connid, "INMSG:{\"kind\" : \""s + TypeAsString(fKind) + "\", "s +
                                    "\"title\" : "s + jtitle.Data() + ","s +
                                    "\"path\" : "s + jpath.Data() + ","s +
+                                   "\"fextension\" : "s + jextension.Data() + ","s +
                                    "\"fname\" : "s + jfname.Data() + ","s +
                                    "\"brepl\" : "s + fBrowsable.ProcessRequest(req) + "   }"s);
 }
@@ -172,6 +176,8 @@ void RFileDialog::SendChPathMsg(unsigned connid)
 {
    RBrowserRequest req;
    req.sort = "alphabetical";
+   if (fExtension != "AllFiles"s)
+      req.extension = fExtension;
 
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
 
@@ -193,6 +199,14 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
    if (arg.compare(0, 7, "CHPATH:") == 0) {
       auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
       if (path) fBrowsable.SetWorkingPath(*path);
+
+      SendChPathMsg(connid);
+
+   } else if (arg.compare(0, 6, "CHEXT:") == 0) {
+
+      fExtension = arg.substr(6);
+
+      printf("select extension %s \n", fExtension.c_str());
 
       SendChPathMsg(connid);
 
