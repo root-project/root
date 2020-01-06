@@ -19,9 +19,6 @@
 #include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include "TMVA/MethodPyRandomForest.h"
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
-
 #include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
