@@ -290,8 +290,12 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 #ifdef _MSC_VER
    std::vector<char *> argv;
    std::string firstarg = fProg;
-   while(firstarg.find("\\") != std::string::npos)
-      firstarg.erase(0, firstarg.find("\\")+1);
+   auto slashpos = firstarg.rfind("\\");
+   if (slashpos != std::string::npos)
+      firstarg.erase(0, slashpos + 1);
+   slashpos = firstarg.rfind("/");
+   if (slashpos != std::string::npos)
+      firstarg.erase(0, slashpos + 1);
    argv.push_back((char *)firstarg.c_str());
 
    std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
