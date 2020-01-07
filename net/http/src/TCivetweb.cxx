@@ -234,7 +234,16 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    Bool_t execres = kTRUE, debug = engine->IsDebugMode();
 
    if (!debug && serv->IsFileRequested(request_info->local_uri, filename)) {
-      if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
+
+
+#ifdef _MSC_VER
+      // on Windows only root files will be send with civetweb methods
+      // due to missing support of symbolic links all other files will be send directly
+      if ((filename.Length() < 6) || (filename.Index(".root") != filename.Length() - 5)) {
+#else
+      // on Linux only css and js files send directly to provide cache-control header
+      if ((filename.Length() > 3) && ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS))) {
+#endif
          std::string buf = THttpServer::ReadFileContent(filename.Data());
          if (buf.empty()) {
             arg->Set404();
@@ -312,13 +321,11 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
    } else if (arg->IsFile()) {
-#ifdef _MSC_VER
       TString fname = (const char *)arg->GetContent();
+#ifdef _MSC_VER
       fname.ReplaceAll("/", "\\");
-      mg_send_file(conn, fname.Data());
-#else
-      mg_send_file(conn, (const char *)arg->GetContent());
 #endif
+      mg_send_file(conn, fname.Data());
    } else {
 
       Bool_t dozip = kFALSE;
