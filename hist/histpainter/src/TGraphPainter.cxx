@@ -430,10 +430,9 @@ Begin_Macro(source)
    double* aeyhstat = new double[5]  {0.5, 1, 0.5, 1, 0.5};
    double* aeylsys  = new double[5]  {0.5, 0.4, 0.8, 0.3, 1.2};
    double* aeyhsys  = new double[5]  {0.6, 0.7, 0.6, 0.4, 0.8};
-   double** aeyl    = new double*[2] {aeylstat, aeylsys};
-   double** aeyh    = new double*[2] {aeyhstat, aeyhsys};
 
-   TGraphMultiErrors* gme = new TGraphMultiErrors(5, 2, ax, ay, aexl, aexh, aeyl, aeyh);
+   TGraphMultiErrors* gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", 5, ax, ay, aexl, aexh, aeylstat, aeyhstat);
+   gme->AddYError(5, aeylsys, aeyhsys);
    gme->SetMarkerStyle(20);
    gme->SetLineColor(kRed);
    gme->GetAttLine(0)->SetLineColor(kRed);
