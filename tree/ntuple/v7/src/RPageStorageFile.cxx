@@ -188,7 +188,7 @@ void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& pag
 {
    if (page.IsNull())
       return;
-   free(page.GetBuffer());
+   delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
 }
 
 
@@ -265,8 +265,8 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    auto elementSize = element->GetSize();
 
    auto pageSize = pageInfo.fLocator.fBytesOnStorage;
-   void *pageBuffer = malloc(std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements)));
-   R__ASSERT(pageBuffer);
+   auto pageBuffer = new unsigned char[
+      std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements))];
    fReader.ReadBlob(pageBuffer, pageInfo.fLocator.fBytesOnStorage, pageInfo.fLocator.fPosition);
 
    auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
@@ -277,10 +277,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
 
    if (!element->IsMappable()) {
       pageSize = elementSize * pageInfo.fNElements;
-      auto unpackedBuffer = reinterpret_cast<unsigned char *>(malloc(pageSize));
-      R__ASSERT(unpackedBuffer != nullptr);
+      auto unpackedBuffer = new unsigned char[pageSize];
       element->Unpack(unpackedBuffer, pageBuffer, pageInfo.fNElements);
-      free(pageBuffer);
+      delete[] pageBuffer;
       pageBuffer = unpackedBuffer;
    }
 
