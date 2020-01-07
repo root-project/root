@@ -64,6 +64,11 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREAT
     target_compile_options(cppyy PRIVATE -Wno-deprecated-register)
 endif()
 
+# Disables warnings due to new field tp_vectorcall in Python 3.8
+if(NOT MSVC AND ${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.8")
+  target_compile_options(cppyy PRIVATE -Wno-missing-field-initializers)
+endif()
+
 target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
 
 target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
