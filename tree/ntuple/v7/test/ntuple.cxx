@@ -83,13 +83,13 @@ TEST(RNTuple, ReconstructModel)
    auto fieldArray = model->MakeField<std::array<double, 2>>("array");
    auto fieldVariant = model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
    {
-      RPageSinkFile sink("myTree", fileGuard.GetPath(), RNTupleWriteOptions());
+      RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
       sink.Create(*model.get());
       sink.CommitDataset();
       model = nullptr;
    }
 
-   RPageSourceFile source("myTree", fileGuard.GetPath(), RNTupleReadOptions());
+   RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
 
    auto modelReconstructed = source.GetDescriptor().GenerateModel();
@@ -110,7 +110,7 @@ TEST(RNTuple, Storage)
 {
    FileRaii fileGuard("test_ntuple_storage.root");
    {
-      RPageSinkFile sink("myTree", fileGuard.GetPath(), RNTupleWriteOptions());
+      RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
 
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
@@ -125,7 +125,7 @@ TEST(RNTuple, Storage)
       sink.CommitDataset();
    }
 
-   RPageSourceFile source("myTree", fileGuard.GetPath(), RNTupleReadOptions());
+   RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
 }
 
@@ -192,7 +192,7 @@ TEST(RNTuple, WriteRead)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
    }
 
@@ -205,7 +205,7 @@ TEST(RNTuple, WriteRead)
    auto rdKlass = modelRead->Get<CustomStruct>("klass");
 
    RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(1U, ntuple.GetNEntries());
    ntuple.LoadEntry(0);
 
@@ -244,11 +244,11 @@ TEST(RNTuple, ClassVector)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(1U, ntuple.GetNEntries());
 
    auto viewKlassVec = ntuple.GetViewCollection("klassVec");
@@ -273,7 +273,7 @@ TEST(RNTuple, RVec)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
       wrJets->clear();
       wrJets->push_back(1.0);
@@ -284,7 +284,7 @@ TEST(RNTuple, RVec)
    auto rdJetsAsRVec = modelReadAsRVec->MakeField<ROOT::VecOps::RVec<float>>("jets");
 
    RNTupleReader ntupleRVec(std::move(modelReadAsRVec),
-      std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(2U, ntupleRVec.GetNEntries());
 
    ntupleRVec.LoadEntry(0);
@@ -299,8 +299,8 @@ TEST(RNTuple, RVec)
    auto modelReadAsStdVector = RNTupleModel::Create();
    auto rdJetsAsStdVector = modelReadAsStdVector->MakeField<std::vector<float>>("jets");
 
-   RNTupleReader ntupleStdVector(std::move(modelReadAsStdVector),
-                                 std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+   RNTupleReader ntupleStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceFile>(
+      "myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(2U, ntupleRVec.GetNEntries());
 
    ntupleStdVector.LoadEntry(0);
@@ -333,14 +333,14 @@ TEST(RNTuple, BoolVector)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
    }
 
    auto rdBoolStdVec = modelRead->Get<std::vector<bool>>("boolStdVec");
    auto rdBoolRVec = modelRead->Get<ROOT::RVec<bool>>("boolRVec");
    RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(1U, ntuple.GetNEntries());
    ntuple.LoadEntry(0);
 
@@ -377,7 +377,7 @@ TEST(RNTuple, Clusters)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
       ntuple.CommitCluster();
       *wrPt = 24.0;
@@ -398,7 +398,7 @@ TEST(RNTuple, Clusters)
    auto rdFourVec = modelRead->Get<std::array<float, 4>>("fourVec");
 
    RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(3U, ntuple.GetNEntries());
 
    ntuple.LoadEntry(0);
@@ -447,7 +447,7 @@ TEST(RNTuple, Variant)
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
       ntuple.CommitCluster();
       *wrVariant = 4;
@@ -458,7 +458,7 @@ TEST(RNTuple, Variant)
    auto rdVariant = modelRead->Get<std::variant<double, int>>("variant");
 
    RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    EXPECT_EQ(3U, ntuple.GetNEntries());
 
    ntuple.LoadEntry(0);
@@ -484,14 +484,14 @@ TEST(RNTuple, View)
 
    {
       RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("f", fileGuard.GetPath(), RNTupleWriteOptions()));
+         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
       ntuple.CommitCluster();
       fieldJets->clear();
       ntuple.Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("f", fileGuard.GetPath(), RNTupleReadOptions()));
+   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    auto viewPt = ntuple.GetView<float>("pt");
    int n = 0;
    for (auto i : ntuple.GetViewRange()) {
@@ -539,7 +539,7 @@ TEST(RNTuple, Composable)
    auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
 
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(eventModel), "f", fileGuard.GetPath());
+      auto ntuple = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath());
 
       for (unsigned i = 0; i < 8; ++i) {
          for (unsigned t = 0; t < 3; ++t) {
@@ -558,7 +558,7 @@ TEST(RNTuple, Composable)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewPt = ntuple->GetView<float>("pt");
    auto viewTracks = ntuple->GetViewCollection("tracks");
    auto viewTrackEnergy = viewTracks.GetView<float>("energy");
@@ -619,38 +619,38 @@ TEST(RNTuple, RealWorld1)
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    auto modelWrite = RNTupleModel::Create();
-   auto& wrEvent   = *modelWrite->MakeField<std::uint32_t>("event");
-   auto& wrSignal  = *modelWrite->MakeField<bool>("signal");
-   auto& wrEnergy  = *modelWrite->MakeField<double>("energy");
-   auto& wrTimes   = *modelWrite->MakeField<std::vector<double>>("times");
-   auto& wrIndices = *modelWrite->MakeField<std::vector<std::uint32_t>>("indices");
+   auto wrEvent   = modelWrite->MakeField<std::uint32_t>("event");
+   auto wrSignal  = modelWrite->MakeField<bool>("signal");
+   auto wrEnergy  = modelWrite->MakeField<double>("energy");
+   auto wrTimes   = modelWrite->MakeField<std::vector<double>>("times");
+   auto wrIndices = modelWrite->MakeField<std::vector<std::uint32_t>>("indices");
 
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "f", fileGuard.GetPath());
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
       constexpr unsigned int nEvents = 60000;
       for (unsigned int i = 0; i < nEvents; ++i) {
-         wrEvent = i;
-         wrEnergy = rnd.Rndm() * 1000.;
-         wrSignal = i % 2;
+         *wrEvent = i;
+         *wrEnergy = rnd.Rndm() * 1000.;
+         *wrSignal = i % 2;
 
-         chksumWrite += double(wrEvent);
-         chksumWrite += double(wrSignal);
-         chksumWrite += wrEnergy;
+         chksumWrite += double(*wrEvent);
+         chksumWrite += double(*wrSignal);
+         chksumWrite += *wrEnergy;
 
          auto nTimes = 1 + floor(rnd.Rndm() * 1000.);
-         wrTimes.resize(nTimes);
+         wrTimes->resize(nTimes);
          for (unsigned int n = 0; n < nTimes; ++n) {
-            wrTimes[n] = 1 + rnd.Rndm()*1000. - 500.;
-            chksumWrite += wrTimes[n];
+            wrTimes->at(n) = 1 + rnd.Rndm()*1000. - 500.;
+            chksumWrite += wrTimes->at(n);
          }
 
          auto nIndices = 1 + floor(rnd.Rndm() * 1000.);
-         wrIndices.resize(nIndices);
+         wrIndices->resize(nIndices);
          for (unsigned int n = 0; n < nIndices; ++n) {
-            wrIndices[n] = 1 + floor(rnd.Rndm() * 1000.);
-            chksumWrite += double(wrIndices[n]);
+            wrIndices->at(n) = 1 + floor(rnd.Rndm() * 1000.);
+            chksumWrite += double(wrIndices->at(n));
          }
 
          ntuple->Fill();
@@ -658,21 +658,23 @@ TEST(RNTuple, RealWorld1)
    }
 
    auto modelRead  = RNTupleModel::Create();
-   auto& rdEvent   = *modelRead->MakeField<std::uint32_t>("event");
-   auto& rdSignal  = *modelRead->MakeField<bool>("signal");
-   auto& rdEnergy  = *modelRead->MakeField<double>("energy");
-   auto& rdTimes   = *modelRead->MakeField<std::vector<double>>("times");
-   auto& rdIndices = *modelRead->MakeField<std::vector<std::uint32_t>>("indices");
+   auto rdEvent   = modelRead->MakeField<std::uint32_t>("event");
+   auto rdSignal  = modelRead->MakeField<bool>("signal");
+   auto rdEnergy  = modelRead->MakeField<double>("energy");
+   auto rdTimes   = modelRead->MakeField<std::vector<double>>("times");
+   auto rdIndices = modelRead->MakeField<std::vector<std::uint32_t>>("indices");
 
    double chksumRead = 0.0;
-   auto ntuple = RNTupleReader::Open(std::move(modelRead), "f", fileGuard.GetPath());
+   auto ntuple = RNTupleReader::Open(std::move(modelRead), "myNTuple", fileGuard.GetPath());
    for (auto entryId : *ntuple) {
       ntuple->LoadEntry(entryId);
-      chksumRead += double(rdEvent) + double(rdSignal) + rdEnergy;
-      for (auto t : rdTimes) chksumRead += t;
-      for (auto ind : rdIndices) chksumRead += double(ind);
+      chksumRead += double(*rdEvent) + double(*rdSignal) + *rdEnergy;
+      for (auto t : *rdTimes) chksumRead += t;
+      for (auto ind : *rdIndices) chksumRead += double(ind);
    }
 
+   // The floating point arithmetic should have been executed in the same order for reading and writing,
+   // thus we expect the checksums to be bitwise identical
    EXPECT_EQ(chksumRead, chksumWrite);
 }
 
@@ -696,12 +698,12 @@ TEST(RNTuple, RDF)
    wrKlass->s = "abc";
 
    {
-      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "f", fileGuard.GetPath());
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
       ntuple->Fill();
    }
 
    ROOT::EnableImplicitMT();
-   auto rdf = ROOT::Experimental::MakeNTupleDataFrame("f", fileGuard.GetPath());
+   auto rdf = ROOT::Experimental::MakeNTupleDataFrame("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(42.0, *rdf.Min("pt"));
 }
 
@@ -871,7 +873,7 @@ TEST(RNTuple, LargeFile)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
-      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "f", fileGuard.GetPath(), options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
       constexpr unsigned long nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
       for (unsigned int i = 0; i < nEvents; ++i) {
          wrEnergy = rnd.Rndm();
@@ -885,7 +887,7 @@ TEST(RNTuple, LargeFile)
    EXPECT_GT(ftell(file), 2048LL * 1024LL * 1024LL);
    fclose(file);
 
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto rdEnergy  = ntuple->GetView<double>("energy");
    double chksumRead = 0.0;
 
