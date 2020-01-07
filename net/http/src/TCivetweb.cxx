@@ -312,7 +312,13 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
    } else if (arg->IsFile()) {
+#ifdef _MSC_VER
+      TString fname = (const char *)arg->GetContent();
+      fname.ReplaceAll("/", "\\");
+      mg_send_file(conn, fname.Data());
+#else
       mg_send_file(conn, (const char *)arg->GetContent());
+#endif
    } else {
 
       Bool_t dozip = kFALSE;
