@@ -7121,7 +7121,8 @@ Double_t TH1::GetStdDev(Int_t axis) const
    Int_t ax[3] = {2,4,7};
    Int_t axm = ax[axis%10 - 1];
    x    = stats[axm]/stats[0];
-   stddev2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
+   // for negative stddev (e.g. when having negative weights) - return stdev=0
+   stddev2 = TMath::Max( stats[axm+1]/stats[0] -x*x, 0.0 );
    if (axis<10)
       return TMath::Sqrt(stddev2);
    else {
