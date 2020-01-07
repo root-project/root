@@ -44,14 +44,22 @@ sap.ui.define(['rootui5/panel/Controller',
                                        fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
          this.getView().setModel(this.oModel);
 
-         var pthis = this;
+         Fragment.load({
+            name: "rootui5.browser.view.filedialog",
+            controller: this,
+            id: "FileDialogFragment"
+         }).then(function (oFragment) {
+            this.fragment = oFragment;
+            this.getView().addDependent(this.fragment);
+            this.getView().byId("dialogPage").addContent(this.fragment);
+            this.fragment.setModel(this.oModel);
 
-         Fragment.load({name: "rootui5.browser.view.filedialog", controller: this, id: "FileDialogFragment"}).then(function (oFragment) {
-            pthis.getView().addDependent(oFragment);
+            if (this._init_msg) {
+               this.processInitMsg(msg);
+               delete this._init_msg;
+            }
 
-            pthis.getView().byId("dialogPage").addContent(oFragment);
-            oFragment.setModel(pthis.oModel);
-         });
+         }.bind(this));
 
          this.own_window = true;
       },
@@ -203,7 +211,10 @@ sap.ui.define(['rootui5/panel/Controller',
 
          switch (mhdr) {
          case "INMSG":
-            this.processInitMsg(msg);
+            if (!this.fragment)
+               this._init_msg = msg;
+            else
+               this.processInitMsg(msg);
             break;
          case "CHMSG":
             this.processChangePathMsg(msg);
@@ -293,17 +304,15 @@ sap.ui.define(['rootui5/panel/Controller',
          // assign ourself as receiver of all
          this.websocket.SetReceiver(this);
 
-         var fragment;
-
          await Fragment.load({
             name: "rootui5.browser.view.filedialog",
             controller: this,
             id: "FileDialogFragment"
          }).then(function (oFragment) {
-            fragment = oFragment;
-         });
+            this.fragment = oFragment;
+         }.bind(this));
 
-         fragment.setModel(this.oModel);
+         this.fragment.setModel(this.oModel);
 
          this.dialog = new Dialog({
             title: "{/dialogTitle}",
@@ -328,6 +337,12 @@ sap.ui.define(['rootui5/panel/Controller',
          this.dialog.setModel(this.oModel);
 
          this.dialog.open();
+
+         if (this._init_msg) {
+            // probably never happens here, but keep it for completnece
+            this.processInitMsg(msg);
+            delete this._init_msg;
+         }
 
          args.websocket.Send("FILEDIALOG:" + JSON.stringify([ this.kind, args.filename,  this.websocket.getChannelId().toString() ]));
 
