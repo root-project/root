@@ -90,10 +90,8 @@ sap.ui.define(['rootui5/panel/Controller',
        * If selectedId specified, return path up to that element id */
       getBreadcrumbPath: function(selectedId) {
          var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
-
          if (selectedId && oBreadcrumbs) {
             var oLinks = oBreadcrumbs.getLinks(), path = [];
-
             for (var i = 0; i < oLinks.length; i++) {
                if (i>0) path.push(oLinks[i].getText());
                if (oLinks[i].getId() === selectedId) return path;
