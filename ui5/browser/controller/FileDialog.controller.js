@@ -66,7 +66,12 @@ sap.ui.define(['rootui5/panel/Controller',
 
       /** Set path to the Breadcrumb element */
       updateBReadcrumbs: function(split) {
+         this._currentPath = split;
+
          var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
+         if (!oBreadcrumbs)
+            return;
+
          oBreadcrumbs.removeAllLinks();
          oBreadcrumbs.setCurrentLocationText("");
          for (let i=-1; i<split.length; i++) {
@@ -84,18 +89,18 @@ sap.ui.define(['rootui5/panel/Controller',
       /** Returns coded in Breadcrumb path
        * If selectedId specified, return path up to that element id */
       getBreadcrumbPath: function(selectedId) {
-         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs"),
-             oLinks = oBreadcrumbs.getLinks(),
-             path = [];
+         var oBreadcrumbs = sap.ui.core.Fragment.byId("FileDialogFragment", "breadcrumbs");
 
-         for (var i = 0; i < oLinks.length; i++) {
-            if (i>0) path.push(oLinks[i].getText());
-            if (selectedId && (oLinks[i].getId() === selectedId)) return path;
+         if (selectedId && oBreadcrumbs) {
+            var oLinks = oBreadcrumbs.getLinks(), path = [];
+
+            for (var i = 0; i < oLinks.length; i++) {
+               if (i>0) path.push(oLinks[i].getText());
+               if (oLinks[i].getId() === selectedId) return path;
+            }
          }
 
-         var lastdir = oBreadcrumbs.getCurrentLocationText();
-         if (lastdir) path.push(lastdir);
-         return path;
+         return this._currentPath.slice(); // make copy of original array
       },
 
       // returns full file name as array
