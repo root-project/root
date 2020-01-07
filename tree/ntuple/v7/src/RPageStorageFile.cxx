@@ -78,7 +78,7 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /* model */)
+void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szHeader = descriptor.SerializeHeader(nullptr);
@@ -93,7 +93,7 @@ void ROOT::Experimental::Detail::RPageSinkFile::DoCreate(const RNTupleModel & /*
 
 
 ROOT::Experimental::RClusterDescriptor::RLocator
-ROOT::Experimental::Detail::RPageSinkFile::DoCommitPage(ColumnHandle_t columnHandle, const RPage &page)
+ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
@@ -132,7 +132,7 @@ ROOT::Experimental::Detail::RPageSinkFile::DoCommitPage(ColumnHandle_t columnHan
 
 
 ROOT::Experimental::RClusterDescriptor::RLocator
-ROOT::Experimental::Detail::RPageSinkFile::DoCommitCluster(ROOT::Experimental::NTupleSize_t /* nEntries */)
+ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
 {
    RClusterDescriptor::RLocator result;
    result.fPosition = fClusterMinOffset;
@@ -143,7 +143,7 @@ ROOT::Experimental::Detail::RPageSinkFile::DoCommitCluster(ROOT::Experimental::N
 }
 
 
-void ROOT::Experimental::Detail::RPageSinkFile::DoCommitDataset()
+void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto szFooter = descriptor.SerializeFooter(nullptr);
@@ -220,7 +220,7 @@ ROOT::Experimental::Detail::RPageSourceFile::~RPageSourceFile()
 }
 
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::DoAttach()
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFile::AttachImpl()
 {
    RNTupleDescriptorBuilder descBuilder;
    const auto fNTuple = fReader.GetNTuple(fNTupleName);
