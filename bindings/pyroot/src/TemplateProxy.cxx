@@ -251,6 +251,12 @@ namespace {
          pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
          if ( pymeth ) { // overloads stop here, as this is an explicit match
             Py_DECREF( pyname_v1 );
+            if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "Instantiating a function template with parentheses ( f(type1, ..., typeN) ) "
+                       "is deprecated and will not be supported in a future version of ROOT. "
+                       "Instead, use square brackets: f[type1, ..., typeN]", 1) < 0) {
+               return nullptr;
+            }
             return pymeth;         // callable method, next step is by user
          }
       }
@@ -338,6 +344,12 @@ namespace {
             Py_DECREF( pymeth );
             pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
             Py_DECREF( pyname_v1 );
+            if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "Instantiating a function template with parentheses ( f(type1, ..., typeN) ) "
+                       "is deprecated and will not be supported in a future version of ROOT. "
+                       "Instead, use square brackets: f[type1, ..., typeN]", 1) < 0) {
+               return nullptr;
+            }
             return pymeth;         // callable method, next step is by user
          }
          Py_DECREF( pyname_v1 );
