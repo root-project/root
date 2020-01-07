@@ -44,7 +44,11 @@ add_library(cppyy SHARED ${headers} ${sources})
 
 if(NOT MSVC)
   target_compile_options(cppyy PRIVATE
-    -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+    -Wno-shadow -Wno-strict-aliasing)
+endif()
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  target_compile_options(cppyy PRIVATE
+    -Wno-unused-but-set-parameter)
 endif()
 
 # Disables warnings coming from PyCFunction casts
