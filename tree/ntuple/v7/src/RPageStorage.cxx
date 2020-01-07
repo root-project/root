@@ -141,13 +141,13 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
-   DoCreate(model);
+   CreateImpl(model);
 }
 
 
 void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
-   auto locator = DoCommitPage(columnHandle, page);
+   auto locator = CommitPageImpl(columnHandle, page);
 
    auto columnId = columnHandle.fId;
    fOpenColumnRanges[columnId].fNElements += page.GetNElements();
@@ -160,7 +160,7 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
 
 void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   auto locator = DoCommitCluster(nEntries);
+   auto locator = CommitClusterImpl(nEntries);
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
