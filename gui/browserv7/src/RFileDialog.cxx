@@ -66,7 +66,9 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 
    std::string workdir;
 
-   if (separ != std::string::npos) {
+   if (fSelect.empty() || (separ == std::string::npos)) {
+      workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
+   } else {
       workdir = fSelect.substr(0, separ);
       fSelect = fSelect.substr(separ+1);
    }
