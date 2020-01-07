@@ -7,7 +7,7 @@
 #------------------------------------------------------------------------------
 
 set(CLING_DEPEND_LIBS
-  clangAnalysis
+  clangParse
   clangAST
   clangBasic
   clangCodeGen
@@ -15,11 +15,11 @@ set(CLING_DEPEND_LIBS
   clangEdit
   clangFrontend
   clangLex
-  clangParse
   clangRewrite
   clangRewriteFrontend
   clangSema
   clangSerialization
+  clangAnalysis
   CACHE STRING "Dependency Clang libraries for Cling"
 )
 
