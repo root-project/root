@@ -1244,8 +1244,9 @@ void ROOT::Experimental::Internal::RMiniFileWriter::WriteTFileSkeleton(int defau
    fileRoot.fNBytesName = nbytesName;
    fControlBlock->fHeader.SetNbytesName(nbytesName);
 
-   // Second record: the compressed StreamerInfo with the description of the RNTuple class
-   // This record usually comes at the end, but in this case we know beforehand all the types
+   // Second record: the compressed StreamerInfo with the description of the RNTuple class.
+   // This record usually comes at the end, but in this context we create a file with a single RNTuple only,
+   // so we know beforehand all the types.
    fControlBlock->fHeader.SetSeekInfo(100 + keyRoot.GetSize());
    RTFKey keyStreamerInfo(fControlBlock->fHeader.GetSeekInfo(), 100, strTList, strStreamerInfo, strStreamerTitle, 0);
    RTFStreamerInfoList streamerInfo;
