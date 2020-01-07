@@ -35,6 +35,16 @@ clean_environment()
    local exp_pyroot=$1
    local pyroot_dir=$2
 
+   # Check if we are using ZSH
+   if [ ! -z $ZSH_VERSION ] ; then
+      # Check if nonomatch option is set, enable if not and save
+      # the initial status
+      if ! setopt | grep -q nonomatch; then
+         setopt +o nomatch
+         unset_nomatch=true
+      fi
+   fi
+
    if [ -n "${old_rootsys}" ] ; then
       if [ -n "${PATH}" ]; then
          drop_from_path "$PATH" "${old_rootsys}/bin"
@@ -128,6 +138,12 @@ clean_environment()
          default_manpath=""
       fi
    fi
+
+   # Check value of $unset_nomatch and unset if needed
+   if [ ! -z "${unset_nomatch}" ]; then
+      setopt -o nomatch
+   fi
+
 }
 
 set_environment()
@@ -317,6 +333,7 @@ export CLING_STANDARD_PCH=none
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
    ROOTSYS="`cygpath -w $ROOTSYS`"
 fi
+
 
 unset old_rootsys
 unset thisroot
