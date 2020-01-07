@@ -60,19 +60,39 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 
    fSelect = fname;
 
-   // TODO: windows
-   fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
-
    auto separ = fSelect.rfind("/");
 
+   std::string workdir;
+
    if (fSelect.empty() || (separ == std::string::npos)) {
-      std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
-      fBrowsable.SetWorkingDirectory(workdir);
+      workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
    } else {
-      std::string workdir = fSelect.substr(0, separ);
-      fBrowsable.SetWorkingDirectory(workdir);
+      workdir = fSelect.substr(0, separ);
       fSelect = fSelect.substr(separ+1);
    }
+
+#ifdef _MSC_VER
+   // TODO: in case of windows list of letters are required
+
+   std::string toplbl, topdir;
+
+   auto pos = workdir.find(":");
+   if (pos != std::string::npos) {
+      toplbl = workdir.substr(0,pos+1);
+   } else {
+      workdir = toplbl = "c:";
+   }
+   topdir = toplbl + "\\";
+
+   auto comp = std::make_shared<Browsable::RComposite>("top","Top element in file dialog for windows");
+   comp->Add(std::make_shared<Browsable::RWrapper>(toplbl,std::make_unique<SysFileElement>(topdir)));
+   fBrowsable.SetTopElement(comp);
+
+#else
+   fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
+#endif
+
+   fBrowsable.SetWorkingDirectory(workdir);
 
    fWebWindow = RWebWindow::Create();
 
