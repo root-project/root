@@ -1101,7 +1101,7 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
       writer->WriteRawFileSkeleton(defaultCompression);
       break;
    default:
-      R__ASSERT(false);
+      R__ASSERT(false && "Internal error: unhandled container format");
    }
 
    return writer;
