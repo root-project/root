@@ -64,10 +64,10 @@ private:
    RNTupleCompressor fCompressor;
 
 protected:
-   void DoCreate(const RNTupleModel &model) final;
-   RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   RClusterDescriptor::RLocator DoCommitCluster(NTupleSize_t nEntries) final;
-   void DoCommitDataset() final;
+   void CreateImpl(const RNTupleModel &model) final;
+   RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
+   void CommitDatasetImpl() final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
@@ -127,7 +127,7 @@ private:
                                  ClusterSize_t::ValueType clusterIndex);
 
 protected:
-   RNTupleDescriptor DoAttach() final;
+   RNTupleDescriptor AttachImpl() final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
