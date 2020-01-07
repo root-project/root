@@ -131,6 +131,7 @@ protected:
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data
    std::unique_ptr<RPageSource> Clone() const final;
    virtual ~RPageSourceFile();
 
