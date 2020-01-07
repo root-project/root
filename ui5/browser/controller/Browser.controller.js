@@ -63,8 +63,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onInit: async function () {
 
          let pthis = this;
-         sap.ui.Device.orientation.attachHandler(function(mParams) {
-            let burgerMenu = pthis.getView().byId("burgerMenu");
+         let burgerMenu = pthis.getView().byId("burgerMenu");
+
+         let splitApp = pthis.getView().byId("SplitAppBrowser");
+         $(window).resize(() => {
+            console.log(splitApp.getMode());
+         });
+
+         sap.ui.Device.orientation.attachHandler((mParams) => {
             burgerMenu.detachPress(pthis.onFullScreenPressLandscape, pthis);
             burgerMenu.detachPress(pthis.onFullScreenPressPortrait, pthis);
 
@@ -74,6 +80,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
             }
          });
+
+         if(sap.ui.Device.orientation.landscape) {
+            burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
+         } else {
+            burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
+         }
 
         this.globalId = 1;
         this.nextElem = "";
