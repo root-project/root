@@ -56,7 +56,7 @@ def add_array_interface_property(klass, name):
         name: string containing the name of the class
     """
     if True in [
-            not name.find("RTensor<{},".format(dtype)) is -1 for dtype in _array_interface_dtype_map
+            name.find("RTensor<{},".format(dtype)) != -1 for dtype in _array_interface_dtype_map
     ]:
         klass.__array_interface__ = property(get_array_interface)
 
