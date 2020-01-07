@@ -392,7 +392,7 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Explicit instantiation with square bracket syntax.
-/// Implementation is equivalent to case 2 in tpp_call (parenthesis syntax)
+/// Implementation is equivalent to case 2&4b in tpp_call (parenthesis syntax)
 
    PyObject *tpp_subscript(TemplateProxy *pytmpl, PyObject *args)
    {
@@ -422,6 +422,8 @@ namespace {
       // Build "< type, type, ... >" part of method name
       PyObject* pyname = Utility::BuildTemplateName(pytmpl->fPyName, args, 0);
       if (justOne) Py_DECREF(args);
+
+      // Non-instantiating obj->method< t0, t1, ... >( a0, a1, ... )
       if ((isType || nStrings == nArgs) && pyname) {  // types in args or all strings
          // Lookup method on self (to make sure it propagates), which is readily callable
          PyObject* pymeth = PyObject_GetAttr(pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname);
@@ -429,6 +431,38 @@ namespace {
             Py_DECREF(pyname);
             return pymeth; // Callable method, next step is by user
          }
+         PyErr_Clear();
+      }
+
+      // Still here? try instantiating methods
+      PyObject* clName = PyObject_GetAttr(pytmpl->fPyClass, PyStrings::gCppName);
+      if (!clName) {
+         PyErr_Clear();
+         clName = PyObject_GetAttr(pytmpl->fPyClass, PyStrings::gName);
+      }
+      auto clNameStr = std::string(PyROOT_PyUnicode_AsString(clName));
+      if (clNameStr == "_global_cpp")
+         clNameStr = ""; // global namespace
+      auto klass = TClass::GetClass(clNameStr.c_str());
+      Py_DECREF(clName);
+
+      // Instantiating obj->method< t0, t1, ... >( a0, a1, ... )
+      if (pyname) {
+         std::string mname = PyROOT_PyUnicode_AsString(pyname);
+         // The following causes instantiation as necessary
+         TMethod *cppmeth = klass ? klass->GetMethodAny(mname.c_str()) : nullptr;
+         if (cppmeth) {    // overload stops here
+            PyObject *pymeth = (PyObject*)MethodProxy_New(
+               mname, new TMethodHolder(Cppyy::GetScope(klass->GetName()),(Cppyy::TCppMethod_t)cppmeth));
+            PyObject_SetAttr(pytmpl->fPyClass, pyname, (PyObject*)pymeth);
+            if (mname != cppmeth->GetName()) // happens with typedefs and template default arguments
+               PyObject_SetAttrString(pytmpl->fPyClass, (char*)mname.c_str(), (PyObject*)pymeth);
+            Py_DECREF(pymeth);
+            pymeth = PyObject_GetAttr(pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname);
+            Py_DECREF(pyname);
+            return pymeth;         // callable method, next step is by user
+         }
+         Py_DECREF(pyname);
       }
 
       PyErr_Format(PyExc_TypeError, "cannot resolve method template instantiation for \'%s\'",
