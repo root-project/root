@@ -220,9 +220,6 @@ public:
     virtual bool ToMemory(PyObject* value, void* address);
 };
 
-extern template class InstancePtrPtrConverter<true>;
-extern template class InstancePtrPtrConverter<false>;
-
 class InstanceArrayConverter : public InstancePtrConverter {
 public:
     InstanceArrayConverter(Cppyy::TCppType_t klass, dims_t dims, bool keepControl = false) :
