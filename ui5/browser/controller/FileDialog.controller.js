@@ -55,7 +55,7 @@ sap.ui.define(['rootui5/panel/Controller',
             this.fragment.setModel(this.oModel);
 
             if (this._init_msg) {
-               this.processInitMsg(msg);
+               this.processInitMsg(this._init_msg);
                delete this._init_msg;
             }
 
@@ -345,7 +345,7 @@ sap.ui.define(['rootui5/panel/Controller',
 
          if (this._init_msg) {
             // probably never happens here, but keep it for completnece
-            this.processInitMsg(msg);
+            this.processInitMsg(this._init_msg);
             delete this._init_msg;
          }
 
