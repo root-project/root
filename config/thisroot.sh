@@ -313,6 +313,12 @@ fi
 if [ -d "@libdir@/python${ROOT_PYTHON_VERSION}" ]; then
    exp_pyroot=true
 fi
+# Check if an option EXP_PYROOT=true is passed by command line
+# this covers the case of installation directory that would not be
+# covered with the previous check
+if [ "$EXP_PYROOT" = true ]; then
+    exp_pyroot=true
+fi
 
 
 # Check if we are in build or installation directory
@@ -342,3 +348,5 @@ unset -f clean_environment
 unset -f set_environment
 unset ROOT_PYTHON_VERSION
 unset pyroot_dir
+unset exp_pyroot
+unset EXP_PYROOT
