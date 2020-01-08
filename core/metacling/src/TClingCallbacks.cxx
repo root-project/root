@@ -870,6 +870,11 @@ void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
    TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
 }
 
+static bool shouldIgnore(llvm::StringRef FileName) {
+   llvm::StringRef fileStem = llvm::sys::path::stem(FileName);
+   return fileStem.startswith("libNew");
+}
+
 static void SearchAndAddPath(const std::string& Path,
       std::vector<std::pair<uint32_t, std::string>> &sLibraries, std::vector<std::string> &sPaths,
       std::unordered_set<std::string>& alreadyLookedPath, cling::DynamicLibraryManager* dyLibManager)
@@ -896,6 +901,10 @@ static void SearchAndAddPath(const std::string& Path,
       // for symbols that cannot be found (neither by dlsym nor in the JIT).
       if (dyLibManager->isLibraryLoaded(FileName.c_str()))
          continue;
+
+      if (shouldIgnore(FileName))
+         continue;
+
       sLibraries.push_back(std::make_pair(sPaths.size(), llvm::sys::path::filename(FileName)));
       flag = true;
    }

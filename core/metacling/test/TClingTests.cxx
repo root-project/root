@@ -202,21 +202,21 @@ TEST_F(TClingTests, GetSharedLibDeps)
    std::string SeenDeps
       = MakeDepLibsPlatformIndependent(GetLibDeps("libGenVector.so"));
 #ifdef R__MACOSX
-   ASSERT_TRUE(llvm::StringRef(SeenDeps).startswith("GenVector New"));
+   // It may depend on tbb
+   ASSERT_TRUE(llvm::StringRef(SeenDeps).startswith("GenVector"));
 #else
-   // Depends only on libCore.so but libCore.so is loaded and thus missing.
-   ASSERT_STREQ("GenVector", SeenDeps.c_str());
+    // Depends only on libCore.so but libCore.so is loaded and thus missing.
+    ASSERT_STREQ("GenVector", SeenDeps.c_str());
 #endif
 
    SeenDeps = MakeDepLibsPlatformIndependent(GetLibDeps("libTreePlayer.so"));
    llvm::StringRef SeenDepsRef = SeenDeps;
 
    // Depending on the configuration we expect:
-   // TreePlayer Gpad Graf Graf3d Hist [Imt] [MathCore] MultiProc Net [New] Tree [tbb]..
+   // TreePlayer Gpad Graf Graf3d Hist [Imt] [MathCore] MultiProc Net Tree [tbb]..
    // FIXME: We should add a generic gtest regex matcher and use a regex here.
    ASSERT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
-   ASSERT_TRUE(SeenDepsRef.contains("MultiProc Net"));
-   ASSERT_TRUE(SeenDepsRef.contains("Tree"));
+   ASSERT_TRUE(SeenDepsRef.contains("MultiProc Net Tree"));
 
    EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")),
                      "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library ''\n");
