@@ -87,6 +87,9 @@ public:
    /** Name of RElement - file name in this case */
    std::string GetName() const override { return fFileName; }
 
+   /** Checks if element name match to provided value */
+   bool MatchName(const std::string &name) const override;
+
    /** Title of RElement - full file name  */
    std::string GetTitle() const override { return GetFullName(); }
 

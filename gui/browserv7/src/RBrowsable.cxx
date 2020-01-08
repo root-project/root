@@ -84,6 +84,19 @@ public:
    /** Reset iterator to the first element, returns false if not supported */
    bool Reset() override { fIndx = -1; return true; }
 
+   /** Find item with specified name, use item MatchName() functionality */
+   bool Find(const std::string &name) override
+   {
+      if (!Reset()) return false;
+
+      while (Next()) {
+         if (fComp.GetChilds()[fIndx]->MatchName(name))
+            return true;
+      }
+
+      return false;
+   }
+
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -111,7 +124,9 @@ bool RLevelIter::Find(const std::string &name)
    return false;
 }
 
-
+/////////////////////////////////////////////////////////////////////
+/// Return icon name for the given class
+/// TODO: should be factorized out from here
 
 std::string RProvider::GetClassIcon(const std::string &classname)
 {

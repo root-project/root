@@ -29,6 +29,7 @@
 
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 using namespace std::string_literals;
 
@@ -327,6 +328,27 @@ SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Check if file name the same, ignore case on Windows
+
+bool SysFileElement::MatchName(const std::string &name) const
+{
+   auto ownname = GetName();
+
+#ifdef _MSC_VER
+
+   return std::equal(name.begin(), name.end(),
+                     ownname.begin(), ownname.end(),
+                     [](char a, char b) {
+                         return tolower(a) == tolower(b);
+                      });
+#else
+
+   return ownname == name;
+
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Returns full file name - including directory
 
 std::string SysFileElement::GetFullName() const
@@ -387,7 +409,7 @@ std::string SysFileElement::ProduceFileName(const RElementPath_t &path)
    std::string res, slash = "/"s;
 
    if (!path.empty()) {
-#ifdef WIN32
+#ifdef _MSC_VER
       slash = "\\"s;
 #else
       if (path[0] != slash) res = slash;
