@@ -23,6 +23,10 @@
 #include "TList.h"
 #include "TBase64.h"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 #include <sstream>
 #include <fstream>
 
@@ -427,7 +431,7 @@ std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RComposite> &comp,
          comp->Add(std::make_shared<Browsable::RWrapper>(name, std::make_unique<SysFileElement>(dir)));
       }
       delete volumes;
-      
+
    } else {
       comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<SysFileElement>("/")));
 
@@ -437,8 +441,7 @@ std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RComposite> &comp,
 
       if (!homedir.empty())
          comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<SysFileElement>(homedir)));
-   } 
-
+   }
 
    return seldir;
 }
