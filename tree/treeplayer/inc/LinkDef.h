@@ -28,7 +28,9 @@
 #pragma link C++ class ROOT::Experimental::TTreeReaderFast+;
 #pragma link C++ class TTreeTableInterface;
 #pragma link C++ class TSimpleAnalysis+;
+#ifndef _MSC_VER
 #pragma link C++ class TMPWorkerTree+;
+#endif
 #ifdef R__USE_IMT
 #pragma link C++ class ROOT::TTreeProcessorMT-;
 #endif
