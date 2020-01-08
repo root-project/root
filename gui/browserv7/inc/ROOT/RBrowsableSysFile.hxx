@@ -96,6 +96,8 @@ public:
 
    static std::string ProduceFileName(const RElementPath_t &path);
 
+   static std::string ProvideTopEntries(std::shared_ptr<RComposite> &comp, const std::string &workdir = "");
+
 };
 
 } // namespace Browsable

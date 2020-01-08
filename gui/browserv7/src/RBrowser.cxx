@@ -65,45 +65,19 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   std::string workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
+   auto comp = std::make_shared<Browsable::RComposite>("top","Root browser");
 
-   std::string seldir, topdir, toplbl;
-
-   R__DEBUG_HERE("rbrowser") << "Current dir " << workdir << "home" << homedir;
-
-#ifdef WIN32
-   auto pos = workdir.find(":");
-   if (pos != std::string::npos) {
-      toplbl = workdir.substr(0,pos+1);
-      seldir = workdir;
-   } else {
-      seldir = toplbl = "c:"; // suppose that
-   }
-
-   topdir = toplbl + "\\";
-#else
-   topdir = "/";
-   toplbl = "fs";
-   seldir = "/fs"s + workdir;
-
-#endif
-
-   auto comp = std::make_shared<Browsable::RComposite>("top","very top of Root browser");
-   comp->Add(std::make_shared<Browsable::RWrapper>(toplbl,std::make_unique<SysFileElement>(topdir)));
-   if (!homedir.empty())
-      comp->Add(std::make_shared<Browsable::RWrapper>("home",std::make_unique<SysFileElement>(homedir)));
+   auto seldir = SysFileElement::ProvideTopEntries(comp);
 
    std::unique_ptr<RHolder> rootfold = std::make_unique<RTObjectHolder>(gROOT->GetRootFolder(), kFALSE);
    auto elem_root = Browsable::RProvider::Browse(rootfold);
    if (elem_root)
-      comp->Add(std::make_shared<Browsable::RWrapper>("root",elem_root));
+      comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
 
    std::unique_ptr<RHolder> rootfiles = std::make_unique<RTObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
    auto elem_files = Browsable::RProvider::Browse(rootfiles);
    if (elem_files)
-      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files",elem_files));
-
+      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files));
 
    fBrowsable.SetTopElement(comp);
 
