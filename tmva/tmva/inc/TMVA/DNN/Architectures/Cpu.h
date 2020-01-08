@@ -24,6 +24,7 @@
 #include "TMVA/DNN/BatchNormLayer.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
+#include "TMVA/DNN/RNN/RNNLayer.h"
 
 #include "TMVA/DNN/Architectures/Cpu/CpuBuffer.h"
 #include "TMVA/DNN/Architectures/Cpu/CpuMatrix.h"
@@ -84,8 +85,9 @@ public:
    using AlgorithmHelper_t       = DummyConvolutionBwdFilterAlgo;
    using AlgorithmDataType_t     = DummyDataType;
    using ReduceTensorDescriptor_t = DummyDataType;
+   using RecurrentDescriptor_t = DummyDataType;
 
-   using EmptyDescriptor_t       = DummyDescriptor;        // Used if a descriptor is not needed in a class
+   using EmptyDescriptor_t = DummyDescriptor; // Used if a descriptor is not needed in a class
 
    using BNormLayer_t            = TBatchNormLayer<TCpu<AReal>>;
    using BNormDescriptors_t      = TDNNGenDescriptors<BNormLayer_t>;
@@ -96,6 +98,10 @@ public:
    using PoolingLayer_t          = CNN::TMaxPoolLayer<TCpu<AReal>>;
    using PoolingDescriptors_t    = CNN::TCNNDescriptors<PoolingLayer_t>;
    using PoolingWorkspace_t      = CNN::TCNNWorkspace<PoolingLayer_t>;
+
+   using RNNLayer_t = RNN::TBasicRNNLayer<TCpu<AReal>>;
+   using RNNDescriptors_t = RNN::TRNNDescriptors<RNNLayer_t>;
+   using RNNWorkspace_t = RNN::TRNNWorkspace<RNNLayer_t>;
 
    static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::ColumnMajor; }
 
@@ -113,6 +119,8 @@ public:
       for (size_t i = 0; i < n; ++i)
          newWeights.emplace_back( weights[i].GetNrows(), weights[i].GetNcols());
    }
+
+   static bool IsCudnn() { return false; }
    //____________________________________________________________________________
    //
    // Architecture Initialization
@@ -127,6 +135,7 @@ public:
                                          ConvLayer_t * /*L = nullptr*/) {}
    static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
                                          PoolingLayer_t * /*L = nullptr*/) {}
+   static void InitializeRNNDescriptors(TDescriptors *& /*descriptors*/, RNNLayer_t * /*L = nullptr*/) {}
 
    static void InitializeActivationDescriptor(ActivationDescriptor_t &/*descriptors*/, EActivationFunction /*activFunc */ , double /*coef*/ = 0.0) {}
 
@@ -134,6 +143,7 @@ public:
    static void ReleaseConvDescriptors(TDescriptors * & /*descriptors*/) {}
    static void ReleasePoolDescriptors(TDescriptors * & /*descriptors*/) {}
    static void ReleaseBNormDescriptors(TDescriptors * & /*descriptors*/) {}
+   static void ReleaseRNNDescriptors(TDescriptors *& /*descriptors*/) {}
 
    static void InitializeConvWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
@@ -143,9 +153,11 @@ public:
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        PoolingLayer_t * /*L = nullptr*/) {}
+   static void InitializeRNNWorkspace(TWorkspace *& /*workspace*/ , TDescriptors *& /*descriptors*/, RNNLayer_t * /*L = nullptr*/)  {}
 
-   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t * /*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
-   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t * /*L = nullptr*/) {}
+   static void FreeConvWorkspace(TWorkspace * & /*workspace*/) {}   ///< Only used for certain cudnn on-device memory
+   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/) {}
+   static void FreeRNNWorkspace(TWorkspace *& /*workspace*/) {}
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
 
@@ -615,6 +627,15 @@ public:
                                            const Matrix_t &input,         // BxD
                                            Matrix_t &input_gradient);
 
+   // dummy RNN functions
+   static void RNNForward(const Tensor_t &/* x */, const Matrix_t &/* hx */, const Matrix_t &/* cx */, const Matrix_t &/* weights */,
+                          Tensor_t &/* y */, Matrix_t &/* hy */, Matrix_t &/* cy */, const RNNDescriptors_t &/* descr */,
+                          RNNWorkspace_t &/* workspace */, bool /* isTraining */) {}
+
+   static void RNNBackward(const Tensor_t &/* x */, const Matrix_t &/* hx */, const Matrix_t &/* cx */, const Tensor_t &/* y */,
+                           const Tensor_t &/* dy */, const Matrix_t &/* dhy */, const Matrix_t &/* dcy */, const Matrix_t &/* weights */,
+                           Tensor_t &/* dx */, Matrix_t &/* dhx */, Matrix_t &/* dcx */, Matrix_t &/* dw */, const RNNDescriptors_t &/* desc */,
+                           RNNWorkspace_t &/* workspace */) {}
    ///@}
 
    //____________________________________________________________________________
@@ -721,7 +742,7 @@ void TCpu<AReal>::CopyDiffArch(TCpuTensor<AReal> &B,
       TCpuMatrix<AReal> tmpOut = B.At(i).GetMatrix();    // matrix (D,HW)
       Copy(tmpOut, TCpuMatrix<AReal>(tmpIn));
    }
-   
+
    // ATensor_t tmpIn = A.Reshape({A.GetNrows(), A.GetNcols()});
    // auto tmpOut = B.Reshape({A.GetNrows(), A.GetNcols()});
    // Matrix_t mOut = tmpOut.GetMatrix();

@@ -156,8 +156,8 @@ public:
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /*activationDescr*/) {}
 
-   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}     ///< Only used for certain cudnn on-device memory
-   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
+   static void FreeConvWorkspace(TWorkspace * & /*workspace*/) {}     ///< Only used for certain cudnn on-device memory
+   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/) {}
 
 
    //____________________________________________________________________________
