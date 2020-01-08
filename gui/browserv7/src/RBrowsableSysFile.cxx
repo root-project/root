@@ -20,11 +20,8 @@
 
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TList.h"
 #include "TBase64.h"
-
-#ifdef _MSC_VER
-#include <windows.h>
-#endif
 
 #include <sstream>
 #include <fstream>
@@ -419,34 +416,29 @@ std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RComposite> &comp,
 
    seldir = gSystem->UnixPathName(seldir.c_str());
 
-#ifdef _MSC_VER
-
-   auto drives = GetLogicalDrives();
-
-   auto mask = 1;
-
-   for (char lbl='A';lbl <= 'Z'; lbl++) {
-      if (drives & mask) {
-         std::string name = std::string(lbl) + ":"s;
+   auto volumes = gSystem->GetVolumes("all");
+   if (volumes) {
+      // this is Windows
+      TIter iter(volumes);
+      TObject *obj;
+      while ((obj = iter()) != nullptr) {
+         std::string name = obj->GetName();
          std::string dir = name + "\\"s;
-         comp->Add(std::make_shared<Browsable::RWrapper>("name", std::make_unique<SysFileElement>(dir)));
+         comp->Add(std::make_shared<Browsable::RWrapper>(name, std::make_unique<SysFileElement>(dir)));
       }
+      delete volumes;
+      
+   } else {
+      comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<SysFileElement>("/")));
 
-      mask = mask << 1;
-   }
+      seldir = "/Files system"s + seldir;
 
-#else
+      std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
 
-   comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<SysFileElement>("/")));
+      if (!homedir.empty())
+         comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<SysFileElement>(homedir)));
+   } 
 
-   seldir = "/Files system"s + seldir;
-
-   std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
-
-   if (!homedir.empty())
-      comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<SysFileElement>(homedir)));
-
-#endif
 
    return seldir;
 }
