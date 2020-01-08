@@ -19,15 +19,15 @@ TEST(RNTupleZip, Basics)
    std::string data = "xxxxxxxxxxxxxxxxxxxxxxxx";
    auto szZipped = compressor(data.data(), data.length(), 101);
    EXPECT_LT(szZipped, data.length());
-   char unzipBuffer[data.length()];
-   decompressor(compressor.GetZipBuffer(), szZipped, data.length(), unzipBuffer);
-   EXPECT_EQ(data, std::string(unzipBuffer, data.length()));
+   auto unzipBuffer = std::unique_ptr<char[]>(new char[data.length()]);
+   decompressor(compressor.GetZipBuffer(), szZipped, data.length(), unzipBuffer.get());
+   EXPECT_EQ(data, std::string(unzipBuffer.get(), data.length()));
 
    // inplace decompression
-   unsigned char zipBuffer[data.length()];
-   memcpy(zipBuffer, compressor.GetZipBuffer(), szZipped);
-   decompressor(zipBuffer, szZipped, data.length());
-   EXPECT_EQ(data, std::string(reinterpret_cast<char *>(zipBuffer), data.length()));
+   auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char [data.length()]);
+   memcpy(zipBuffer.get(), compressor.GetZipBuffer(), szZipped);
+   decompressor(zipBuffer.get(), szZipped, data.length());
+   EXPECT_EQ(data, std::string(reinterpret_cast<char *>(zipBuffer.get()), data.length()));
 }
 
 
