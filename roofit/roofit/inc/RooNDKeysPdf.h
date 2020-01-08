@@ -54,18 +54,20 @@ public:
                MirrorAsymRight, MirrorLeftAsymRight,
                MirrorAsymBoth };
 
-  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+  RooNDKeysPdf() = default;
+
+  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
                TString options = "ma", Double_t rho = 1, Double_t nSigma = 3, Bool_t rotate = kTRUE,
                Bool_t sortInput = kTRUE);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist, TString options = "ma",
                Double_t rho = 1, Double_t nSigma = 3, Bool_t rotate = kTRUE, Bool_t sortInput = kTRUE);
 
-  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
                const TVectorD &rho, TString options = "ma", Double_t nSigma = 3, Bool_t rotate = kTRUE,
                Bool_t sortInput = kTRUE);
 
-  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
                const RooArgList &rhoList, TString options = "ma", Double_t nSigma = 3, Bool_t rotate = kTRUE,
                Bool_t sortInput = kTRUE);
 
@@ -73,10 +75,10 @@ public:
                const RooArgList &rhoList, TString options = "ma", Double_t nSigma = 3, Bool_t rotate = kTRUE,
                Bool_t sortInput = kTRUE);
 
-  RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooAbsData &data, Mirror mirror = NoMirror,
+  RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooDataSet &data, Mirror mirror = NoMirror,
                Double_t rho = 1, Double_t nSigma = 3, Bool_t rotate = kTRUE, Bool_t sortInput = kTRUE);
 
-  RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooAbsData &data,
+  RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
                TString options = "ma", Double_t rho = 1.0, Double_t nSigma = 3, Bool_t rotate = kTRUE,
                Bool_t sortInput = kTRUE);
 
@@ -111,22 +113,19 @@ public:
 protected:
 
   RooListProxy _varList ;
-  TIterator* _varItr ;   //! do not persist
-
   RooListProxy _rhoList;
-  TIterator *_rhoItr; //! do not persist
 
   Double_t evaluate() const;
 
-  void createPdf(Bool_t firstCall = kTRUE) const;
-  void setOptions() const;
-  void initialize() const;
+  void createPdf(Bool_t firstCall = kTRUE);
+  void setOptions();
+  void initialize();
   void loadDataSet(Bool_t firstCall) const;
   void mirrorDataSet() const;
   void loadWeightSet() const;
   void calculateShell(BoxInfo *bi) const;
   void calculatePreNorm(BoxInfo *bi) const;
-  void sortDataIndices(BoxInfo *bi = 0) const;
+  void sortDataIndices(BoxInfo *bi = 0);
   void calculateBandWidth() const;
   Double_t gauss(std::vector<Double_t> &x, std::vector<std::vector<Double_t>> &weights) const;
   void loopRange(std::vector<Double_t> &x, std::map<Int_t, Bool_t> &ibMap) const;
@@ -134,24 +133,23 @@ protected:
   RooDataSet *createDatasetFromHist(const RooArgList &varList, const TH1 &hist) const;
   void updateRho() const;
 
-  mutable RooDataSet *_dataP; //! do not persist
-  const RooAbsData &_data;    //!
+  std::unique_ptr<RooDataSet> _ownedData{nullptr};
+  const RooDataSet* _data; //! do not persist
   mutable TString _options;
   mutable Double_t _widthFactor;
   mutable Double_t _nSigma;
 
-  mutable Bool_t _fixedShape;
-  mutable Bool_t _mirror;
-  mutable Bool_t _debug;
-  mutable Bool_t _verbose;
+  mutable Bool_t _fixedShape{false};
+  mutable Bool_t _mirror{false};
+  mutable Bool_t _debug{false};   //!
+  mutable Bool_t _verbose{false}; //!
 
-  mutable Double_t _sqrt2pi;
-  mutable Int_t _nDim;
-  mutable Int_t _nEvents;
-  mutable Int_t _nEventsM;
-  mutable Double_t _nEventsW;
-  mutable Double_t _d;
-  mutable Double_t _n;
+  mutable Int_t _nDim{0};
+  mutable Int_t _nEvents{0};
+  mutable Int_t _nEventsM{0};
+  mutable Double_t _nEventsW{0.};
+  mutable Double_t _d{0.};
+  mutable Double_t _n{0.};
 
   // cached info on variable
 
@@ -161,10 +159,7 @@ protected:
   mutable std::vector<std::vector<Double_t> > _weights1;
   mutable std::vector<std::vector<Double_t> >* _weights; //!
 
-#ifndef __CINT__
-  mutable std::vector<iiVec> _sortIdcs;   //!
-  mutable std::vector<itVec> _sortTVIdcs; //!
-#endif
+  std::vector<itVec> _sortTVIdcs; //!
 
   mutable std::vector<std::string> _varName;
   mutable std::vector<Double_t> _rho;
@@ -175,9 +170,9 @@ protected:
   mutable std::vector<Double_t> _xDatLo, _xDatHi;
   mutable std::vector<Double_t> _xDatLo3s, _xDatHi3s;
 
-  mutable Bool_t _netFluxZ;
-  mutable Double_t _nEventsBW;
-  mutable Double_t _nEventsBMSW;
+  mutable Bool_t _netFluxZ{false};
+  mutable Double_t _nEventsBW{0.};
+  mutable Double_t _nEventsBMSW{0.};
   mutable std::vector<Double_t> _xVarLo, _xVarHi;
   mutable std::vector<Double_t> _xVarLoM3s, _xVarLoP3s, _xVarHiM3s, _xVarHiP3s;
   mutable std::map<Int_t,Bool_t> _bpsIdcs;
@@ -190,36 +185,24 @@ protected:
   mutable BoxInfo _fullBoxInfo ;
 
   mutable std::vector<Int_t> _idx;
-  mutable Double_t _minWeight;
-  mutable Double_t _maxWeight;
+  mutable Double_t _minWeight{0.};
+  mutable Double_t _maxWeight{0.};
   mutable std::map<Int_t,Double_t> _wMap;
 
-  mutable TMatrixDSym* _covMat;
-  mutable TMatrixDSym* _corrMat;
-  mutable TMatrixD* _rotMat;
-  mutable TVectorD* _sigmaR;
-  mutable TVectorD* _dx;
-  mutable Double_t _sigmaAvgR;
+  mutable TMatrixDSym* _covMat{nullptr};
+  mutable TMatrixDSym* _corrMat{nullptr};
+  mutable TMatrixD* _rotMat{nullptr};
+  mutable TVectorD* _sigmaR{nullptr};
+  mutable TVectorD* _dx{nullptr};
+  mutable Double_t _sigmaAvgR{0.};
 
   mutable Bool_t _rotate;
   mutable Bool_t _sortInput;
   mutable Int_t _nAdpt;
 
-  mutable RooChangeTracker *_tracker; //! do not persist
+  mutable RooChangeTracker *_tracker{nullptr}; //
 
-  /// sorter function
-  struct SorterTV_L2H {
-    Int_t idx;
-
-    SorterTV_L2H (Int_t index) : idx(index) {}
-    bool operator() (const itPair& a, const itPair& b) {
-      const TVectorD& aVec = *(a.second);
-      const TVectorD& bVec = *(b.second);
-      return (aVec[idx]<bVec[idx]);
-    }
-  };
-
-  ClassDef(RooNDKeysPdf, 2) // General N-dimensional non-parametric kernel estimation p.d.f
+  ClassDef(RooNDKeysPdf, 1) // General N-dimensional non-parametric kernel estimation p.d.f
 };
 
 #endif
