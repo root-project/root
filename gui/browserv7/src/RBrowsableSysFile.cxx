@@ -27,6 +27,11 @@
 #include <fstream>
 #include <algorithm>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#include <tchar.h>
+#endif
+
 using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
@@ -51,6 +56,36 @@ class RSysDirLevelIter : public RLevelIter {
          CloseDir();
 
       fDir = gSystem->OpenDirectory(fPath.c_str());
+
+#ifdef _MSC_VER
+    if (!fDir) {
+
+      auto hFile = CreateFile(fPath.c_str(),  // file to open
+                              0,                // open for reading
+                              0,                // share for reading
+                              0,                // default security
+                              OPEN_EXISTING,    // existing file only
+                              FILE_FLAG_BACKUP_SEMANTICS, // flag to work with dirs
+                              NULL);                 // no attr. template
+
+      if( hFile != INVALID_HANDLE_VALUE) {
+         const int BUFSIZE = 2048;
+         TCHAR path[BUFSIZE];
+         auto dwRet = GetFinalPathNameByHandle( hFile, path, BUFSIZE, VOLUME_NAME_DOS );
+         // produced file name may include \\? symbols, which are indicating long file name
+         if ((dwRet > 0) && (dwRet < BUFSIZE)) 
+           if ((path[0] == '\\') && (path[1] == '\\') && (path[2] == '?') && (path[3] == '\\')) {
+              R__DEBUG_HERE("Browserv7") << "Try to open directory " << (path+4) << " instead of " << fPath;
+              fDir = gSystem->OpenDirectory(path + 4);
+              if (fDir) fPath = path + 4;
+           }
+      }
+      
+      CloseHandle(hFile);
+   }
+
+#endif
+
       if (!fDir) {
          R__ERROR_HERE("Browserv7") << "Fail to open directory " << fPath;
          return false;
@@ -266,9 +301,10 @@ public:
 
 std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
 {
-   auto EndsWith = [fname](const std::string &suffix) {
-      std::string name = fname;
-      std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+    std::string name = fname;
+    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+   auto EndsWith = [name](const std::string &suffix) {
       return (name.length() > suffix.length()) ? (0 == name.compare (name.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
@@ -297,6 +333,7 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
       return "sap-icon://document-text"s;
    if ((EndsWith(".bmp")) ||
        (EndsWith(".gif")) ||
+       (EndsWith(".jpeg")) ||
        (EndsWith(".jpg")) ||
        (EndsWith(".png")) ||
        (EndsWith(".svg")))
@@ -324,6 +361,22 @@ SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// return file name
+/// in case of windows may exclude .lnk extension
+
+std::string SysFileElement::GetName() const
+{ 
+#ifdef _MSC_VER
+   auto name = fFileName;
+   if ((name.length() > 4) && (name.rfind(".lnk") == name.length() - 4))
+      name.resize(name.length() - 4);
+   return name;
+#else
+   return fFileName; 
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Check if file name the same, ignore case on Windows
 
 bool SysFileElement::MatchName(const std::string &name) const
@@ -345,15 +398,11 @@ bool SysFileElement::MatchName(const std::string &name) const
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Returns full file name - including directory
+/// Returns full file name - including fully quialified path
 
 std::string SysFileElement::GetFullName() const
 {
-   std::string path = fDirName;
-   if (!path.empty() && (path.rfind("/") != path.length() - 1))
-      path.append("/");
-   path.append(fFileName);
-   return path;
+   return fDirName + fFileName;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +413,19 @@ std::unique_ptr<RLevelIter> SysFileElement::GetChildsIter()
    if (!R_ISDIR(fStat.fMode))
       return nullptr;
 
-   return std::make_unique<RSysDirLevelIter>(GetFullName());
+   auto dirname = GetFullName();
+
+#ifdef _MSC_VER
+
+  if (!dirname.empty() && dirname.find_last_of("\\/") != dirname.length()-1)
+     dirname.append("\\");
+
+#else
+  if (!dirname.empty() && dirname.find_last_of("/") != dirname.length()-1)
+     dirname.append("/");
+#endif
+
+   return std::make_unique<RSysDirLevelIter>(dirname);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -395,35 +456,6 @@ std::string SysFileElement::GetContent(const std::string &kind)
    return ""s;
 }
 
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Produces file name from RElementPath_t
-/// Respects Window/Linux file path coding
-
-std::string SysFileElement::ProduceFileName(const RElementPath_t &path)
-{
-   std::string res, slash = "/"s;
-
-   if (!path.empty()) {
-#ifdef _MSC_VER
-      slash = "\\"s;
-#else
-      if (path[0] != slash) res = slash;
-#endif
-
-      bool first = true;
-      for (auto &elem : path) {
-         if (first)
-            first = false;
-         else
-            res.append(slash);
-
-         res.append(elem);
-      }
-   }
-
-   return res;
-}
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Provide top entries for file system

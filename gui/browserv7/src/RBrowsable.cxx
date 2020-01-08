@@ -26,11 +26,15 @@ using namespace std::string_literals;
 
 RElement::EContentKind RElement::GetContentKind(const std::string &kind)
 {
-   if (kind == "text") return kText;
-   if ((kind == "image") || (kind == "image64")) return kImage;
-   if (kind == "png") return kPng;
-   if ((kind == "jpg") || (kind == "jpeg")) return kJpeg;
-   if (kind == "filename") return kFileName;
+    std::string lkind = kind;
+    std::transform(lkind.begin(), lkind.end(), lkind.begin(), ::tolower);
+
+
+   if (lkind == "text") return kText;
+   if ((lkind == "image") || (lkind == "image64")) return kImage;
+   if (lkind == "png") return kPng;
+   if ((lkind == "jpg") || (lkind == "jpeg")) return kJpeg;
+   if (lkind == "filename") return kFileName;
    return kNone;
 }
 
