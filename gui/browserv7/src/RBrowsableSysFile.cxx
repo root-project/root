@@ -23,10 +23,6 @@
 #include "TList.h"
 #include "TBase64.h"
 
-#ifdef _MSC_VER
-#include <windows.h>
-#endif
-
 #include <sstream>
 #include <fstream>
 #include <algorithm>
@@ -467,5 +463,3 @@ std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RComposite> &comp,
 
    return seldir;
 }
-
-
