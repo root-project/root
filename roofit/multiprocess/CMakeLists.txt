@@ -3,6 +3,8 @@
 # @author Patrick Bos, Netherlands eScience Center
 ############################################################################
 
+FIND_PACKAGE(ZeroMQ REQUIRED)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMultiProcess
     HEADERS
         RooFit/MultiProcess/worker.h
@@ -31,6 +33,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMultiProcess
         "-writeEmptyRootPCM"
     DEPENDENCIES
         RooFitZMQ
+    LIBRARIES
+        ${ZeroMQ_LIBRARY}
 )
 
 if(testing)

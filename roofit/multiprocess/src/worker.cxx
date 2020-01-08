@@ -36,6 +36,7 @@ bool is_worker_loop_running()
 void worker_loop()
 {
    assert(JobManager::instance()->process_manager().is_worker());
+   std::cout << "started worker_loop" << std::endl;
    worker_loop_running = true;
    bool carry_on = true;
    Task task;
@@ -53,16 +54,19 @@ void worker_loop()
 
    while (carry_on) {
       decltype(get_time()) t1 = 0, t2 = 0, t3 = 0;
+      std::cout << "worker_loop next iteration" << std::endl;
 
       // try to dequeue a task
       if (dequeue_acknowledged) { // don't ask twice
          t1 = get_time();
          JobManager::instance()->messenger().send_from_worker_to_queue(W2Q::dequeue);
+         std::cout << "worker_loop sent dequeue" << std::endl;
          dequeue_acknowledged = false;
       }
 
       // receive handshake
       message_q2w = JobManager::instance()->messenger().receive_from_queue_on_worker<Q2W>();
+      std::cout << "worker_loop received handshake" << std::endl;
 
       switch (message_q2w) {
       case Q2W::terminate: {
@@ -89,10 +93,10 @@ void worker_loop()
 
          t3 = get_time();
          std::cout
-            << "job done: worker " << JobManager::instance()->process_manager().worker_id() << " asked at " << t1 << ", started at "
+            << "task done: worker " << JobManager::instance()->process_manager().worker_id() << " asked at " << t1 << ", started at "
             << t2 << " and finished at " << t3 << std::endl;
 
-         JobManager::instance()->messenger().send_from_worker_to_queue(W2Q::send_result);
+         JobManager::instance()->messenger().send_from_worker_to_queue(W2Q::send_result, job_id, task);
          JobManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
 
          message_q2w = JobManager::instance()->messenger().receive_from_queue_on_worker<Q2W>();

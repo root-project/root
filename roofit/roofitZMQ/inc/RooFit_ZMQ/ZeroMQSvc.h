@@ -19,6 +19,9 @@
 #include "RooFit_ZMQ/Utility.h"
 #include "RooFit_ZMQ/functions.h"
 
+// debugging
+#include <unistd.h> // getpid
+
 //namespace ZMQ {
 //  namespace Detail {
 //
@@ -97,10 +100,10 @@ auto retry_send(zmq::socket_t& socket, int max_tries, args_t ...args) -> decltyp
       if (++tries == max_tries
           || e.num() != EINTR  // only recoverable error
           ) {
-        std::cerr << "ERROR in ZeroMQSvc::send (retry_send): " << e.what() << " (errno: " << e.num() << ")\n";
+        std::cerr << "ERROR in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
         throw e;
       }
-      std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::send (retry_send): " << e.what() << ")\n";
+      std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << ")\n";
     }
   }
 }
@@ -116,10 +119,10 @@ auto retry_recv(zmq::socket_t& socket, int max_tries, args_t ...args) -> decltyp
       if (++tries == max_tries
           || e.num() != EINTR  // only recoverable error
           ) {
-        std::cerr << "ERROR in ZeroMQSvc::send (retry_recv): " << e.what() << " (errno: " << e.num() << ")\n";
+        std::cerr << "ERROR in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
         throw e;
       }
-      std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::send (retry_recv): " << e.what() << ")\n";
+      std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << ")\n";
     }
   }
 }

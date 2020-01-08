@@ -37,7 +37,7 @@
 #include <RooTimer.h>
 #include <RooMsgService.h>
 
-#include <MultiProcess/TaskManager.h>
+//#include <MultiProcess/TaskManager.h>
 
 namespace RooFit {
 
@@ -185,12 +185,12 @@ namespace RooFit {
 
     t8 = get_time();
 
-    if (MultiProcess::TaskManager::is_instantiated()) {
-      oocxcoutD((TObject *) nullptr, Benchmarking2) << "NumericalDerivatorMinuit2::setup_differentiate on worker "
-                                                    << MultiProcess::TaskManager::instance()->get_worker_id()
-                                                    << ", timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4
-                                                    << " " << t5 << " " << t6 << " " << t7 << " " << t8 << std::endl;
-    }
+//    if (RooFit::MultiProcess::TaskManager::is_instantiated()) {
+//      oocxcoutD((TObject *) nullptr, Benchmarking2) << "NumericalDerivatorMinuit2::setup_differentiate on worker "
+//                                                    << MultiProcess::TaskManager::instance()->get_worker_id()
+//                                                    << ", timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4
+//                                                    << " " << t5 << " " << t6 << " " << t7 << " " << t8 << std::endl;
+//    }
   }
 
   std::tuple<double, double, double> NumericalDerivatorMinuit2::partial_derivative(const double *x, const std::vector<ROOT::Fit::ParameterSettings>& parameters, unsigned int i_component) {

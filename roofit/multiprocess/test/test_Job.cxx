@@ -1,17 +1,3 @@
-/*
- * Project: RooFit
- * Authors:
- *   PB, Patrick Bos, Netherlands eScience Center, p.bos@esciencecenter.nl
- *
- * Copyright (c) 2016-2019, Netherlands eScience Center
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- */
-
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -31,9 +17,13 @@
 
 #include <RooFit/MultiProcess/Job.h>
 #include <RooFit/MultiProcess/types.h>  // JobTask
+// needed to complete type returned from...
+#include <RooFit/MultiProcess/JobManager.h>      // ... Job::get_manager()
+#include <RooFit/MultiProcess/ProcessManager.h>  // ... JobManager::process_manager()
+#include <RooFit/MultiProcess/Queue.h>           // ... JobManager::queue()
 
 #include "gtest/gtest.h"
-#include "test_lib.h"
+#include "utils.h"
 
 class xSquaredPlusBVectorSerial {
 public:
@@ -53,7 +43,7 @@ public:
       return result;
    }
 
-protected:
+   // for simplicity of the example (avoiding getters/setters) we make data members public as well
    double _b;
    std::vector<double> x;
    std::vector<double> result;
@@ -61,52 +51,88 @@ protected:
 
 class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Job {
 public:
-   xSquaredPlusBVectorParallel(std::size_t NumCPU, double b_init, std::vector<double> x_init)
-      : RooFit::MultiProcess::Job(NumCPU),
+   xSquaredPlusBVectorParallel(std::size_t NumCPU, xSquaredPlusBVectorSerial* serial)
+      : RooFit::MultiProcess::Job(NumCPU), serial(serial)
    {
    }
 
-   void evaluate() override
+   void evaluate()
    {
-      if (get_manager()->is_master()) {
+      if (get_manager()->process_manager().is_master()) {
          // master fills queue with tasks
-         for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
+         for (std::size_t task_id = 0; task_id < serial->x.size(); ++task_id) {
             RooFit::MultiProcess::JobTask job_task(id, task_id);
-            get_manager()->to_queue(job_task);
+            get_manager()->queue().add(job_task);
          }
-         waiting_for_queued_tasks = true;
 
          // wait for task results back from workers to master
          gather_worker_results();
-
-         // put task results in desired container (same as used in serial class)
-         for (std::size_t task_id = 0; task_id < x.size(); ++task_id) {
-            result[task_id] = results[task_id];
-         }
       }
    }
+
+   std::vector<double> get_result()
+   {
+      evaluate();
+      return serial->result;
+   }
+
+   void update_real(std::size_t /*ix*/, double val, bool /*is_constant*/) override {
+      if (get_manager()->process_manager().is_worker()) {
+         serial->_b = val;
+      }
+   }
+
+   // -- BEGIN plumbing --
+
+   void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) override {
+      double result = get_manager()->messenger().template receive_from_worker_on_queue<double>(worker_id);
+      serial->result[task] = result;
+   }
+
+   void send_back_task_result_from_worker(std::size_t task) override {
+      get_manager()->messenger().template send_from_worker_to_queue(serial->result[task]);
+   }
+
+   void send_back_results_from_queue_to_master() override {
+//      get_manager()->messenger().send_from_queue_to_master(serial->result.size());
+      for (std::size_t task_ix = 0ul; task_ix < serial->result.size(); ++task_ix) {
+         get_manager()->messenger().send_from_queue_to_master(task_ix, serial->result[task_ix]);
+      }
+   }
+
+   void clear_results() override {
+      // no need to clear any results cache since we just reuse the result vector on the queue
+   }
+
+   void receive_results_on_master() override {
+//      std::size_t N_job_tasks = get_manager()->messenger().template receive_from_queue_on_master<std::size_t>();
+//      for (std::size_t task_ix = 0ul; task_ix < N_job_tasks; ++task_ix) {
+      for (std::size_t task_ix = 0ul; task_ix < serial->result.size(); ++task_ix) {
+         std::size_t task_id = get_manager()->messenger().template receive_from_queue_on_master<std::size_t>();
+         serial->result[task_id] = get_manager()->messenger().template receive_from_queue_on_master<double>();
+      }
+   }
+
+   // -- END plumbing --
+
 
 private:
    void evaluate_task(std::size_t task) override
    {
-      assert(get_manager()->is_worker());
-      result[task] = std::pow(x[task], 2) + _b.getVal();
+      assert(get_manager()->process_manager().is_worker());
+      serial->result[task] = std::pow(serial->x[task], 2) + serial->_b;
    }
 
-   double get_task_result(std::size_t task) override
-   {
-      assert(get_manager()->is_worker());
-      return result[task];
-   }
+   std::shared_ptr<xSquaredPlusBVectorSerial> serial;
 };
 
-class MultiProcessVectorSingleJob : public ::testing::TestWithParam<std::size_t> {
+class TestMPJob : public ::testing::TestWithParam<std::size_t> {
    // You can implement all the usual fixture class members here.
    // To access the test parameter, call GetParam() from class
    // TestWithParam<T>.
 };
 
-TEST_P(MultiProcessVectorSingleJob, getResult)
+TEST_P(TestMPJob, singleJobGetResult)
 {
    // Simple test case: calculate x^2 + b, where x is a vector. This case does
    // both a simple calculation (squaring the input vector x) and represents
@@ -130,7 +156,7 @@ TEST_P(MultiProcessVectorSingleJob, getResult)
 
    // start parallel test
 
-   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
+   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, &x_sq_plus_b);
 
    auto y_parallel = x_sq_plus_b_parallel.get_result();
 
@@ -140,12 +166,8 @@ TEST_P(MultiProcessVectorSingleJob, getResult)
    EXPECT_EQ(Hex(y_parallel[3]), Hex(y_expected[3]));
 }
 
-INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses, MultiProcessVectorSingleJob, ::testing::Values(1, 2, 3));
 
-class MultiProcessVectorMultiJob : public ::testing::TestWithParam<std::size_t> {
-};
-
-TEST_P(MultiProcessVectorMultiJob, getResult)
+TEST_P(TestMPJob, multiJobGetResult)
 {
    // Simple test case: calculate x^2 + b, where x is a vector. This case does
    // both a simple calculation (squaring the input vector x) and represents
@@ -158,8 +180,10 @@ TEST_P(MultiProcessVectorMultiJob, getResult)
    std::size_t NumCPU = GetParam();
 
    // define jobs
-   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
-   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, b_initial + 1, x);
+   xSquaredPlusBVectorSerial x_sq_plus_b(b_initial, x);
+   xSquaredPlusBVectorSerial x_sq_plus_b2(b_initial + 1, x);
+   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, &x_sq_plus_b);
+   xSquaredPlusBVectorParallel x_sq_plus_b_parallel2(NumCPU, &x_sq_plus_b2);
 
    // do stuff
    auto y_parallel = x_sq_plus_b_parallel.get_result();
@@ -176,4 +200,42 @@ TEST_P(MultiProcessVectorMultiJob, getResult)
    EXPECT_EQ(Hex(y_parallel2[3]), Hex(y_expected[3] + 1));
 }
 
-INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses, MultiProcessVectorMultiJob, ::testing::Values(2, 1, 3));
+
+// TODO: implement update_real test!
+
+//TEST_P(TestMPJob, singleJobUpdateReal)
+//{
+//// Simple test case: calculate x^2 + b, where x is a vector. This case does
+//// both a simple calculation (squaring the input vector x) and represents
+//// handling of state updates in b.
+//std::vector<double> x{0, 1, 2, 3};
+//double b_initial = 3.;
+//
+//// start serial test
+//
+//xSquaredPlusBVectorSerial x_sq_plus_b(b_initial, x);
+//
+//auto y = x_sq_plus_b.get_result();
+//std::vector<double> y_expected{3, 4, 7, 12};
+//
+//EXPECT_EQ(Hex(y[0]), Hex(y_expected[0]));
+//EXPECT_EQ(Hex(y[1]), Hex(y_expected[1]));
+//EXPECT_EQ(Hex(y[2]), Hex(y_expected[2]));
+//EXPECT_EQ(Hex(y[3]), Hex(y_expected[3]));
+//
+//std::size_t NumCPU = GetParam();
+//
+//// start parallel test
+//
+//xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, &x_sq_plus_b);
+//
+//auto y_parallel = x_sq_plus_b_parallel.get_result();
+//
+//EXPECT_EQ(Hex(y_parallel[0]), Hex(y_expected[0]));
+//EXPECT_EQ(Hex(y_parallel[1]), Hex(y_expected[1]));
+//EXPECT_EQ(Hex(y_parallel[2]), Hex(y_expected[2]));
+//EXPECT_EQ(Hex(y_parallel[3]), Hex(y_expected[3]));
+//}
+
+
+INSTANTIATE_TEST_CASE_P(NumberOfWorkerProcesses, TestMPJob, ::testing::Values(1, 2, 3));

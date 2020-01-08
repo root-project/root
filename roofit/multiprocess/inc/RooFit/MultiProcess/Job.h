@@ -68,7 +68,6 @@ return_type CertainJob::evaluate() {
          JobTask job_task(id, ix);
          get_manager()->queue().add(job_task);
       }
-      waiting_for_queued_tasks = true;
 
       // wait for task results back from workers to master
       gather_worker_results();
@@ -96,8 +95,9 @@ public:
    virtual void send_back_task_result_from_worker(std::size_t task) = 0;
    virtual void receive_task_result_on_queue(std::size_t task, std::size_t worker_id) = 0;
    virtual void send_back_results_from_queue_to_master() = 0;
-   // after results have been retrieved, they should be cleared to ensure
-   // they won't be retrieved the next time again
+   // after results have been retrieved, they may need to be cleared to ensure
+   // they won't be retrieved the next time again, e.g. when using a map to
+   // collect results; if not needed it can just be left empty
    virtual void clear_results() = 0;
    virtual void receive_results_on_master() = 0;
 
@@ -108,7 +108,6 @@ protected:
 
    std::size_t N_workers;
    std::size_t id;
-   bool waiting_for_queued_tasks = false;
 
 private:
    // do not use _manager directly, it must first be initialized! use get_manager()

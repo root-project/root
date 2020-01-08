@@ -17,7 +17,9 @@
 
 #include <sys/types.h>  // pid_t
 #include <vector>
-#include "RooFit/MultiProcess/Queue.h"
+
+// forward declaration
+class Queue;
 
 namespace RooFit {
 namespace MultiProcess {

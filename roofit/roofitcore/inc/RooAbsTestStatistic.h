@@ -34,8 +34,9 @@ typedef RooAbsData* pRooAbsData ;
 typedef RooRealMPFE* pRooRealMPFE ;
 
 class RooAbsTestStatistic : public RooAbsReal {
-    friend class RooRealMPFE;
-    friend class RooTestStatMPDriver ;
+  friend class RooRealMPFE;
+  friend class RooTestStatMPDriver ;
+  friend class RooWrapperL;
 public:
 
   // Constructors, assignment etc

@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-find_package(ZeroMQ REQUIRED)
+#find_package(ZeroMQ REQUIRED)
 
 # this should really be used as a dependency for the RooFitCore target, but since the ROOT macros do some custom variable mangling, instead of just using target_link_libraries, defining this library as INTERFACE gives an error like this: https://gitlab.kitware.com/cmake/cmake/issues/18194 when trying to call get_property(dep_include_dirs... in RootNewMacros.cmake.
 #add_library(ZeroMQ INTERFACE)
@@ -250,13 +250,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         RooMinimizerType.h
         RooMinimizer_impl.h
         MultiProcess/BidirMMapPipe.h
-        MultiProcess/GradMinimizer.h
-        MultiProcess/Job.h
-        MultiProcess/NLLVar.h
-        MultiProcess/TaskManager.h
-        MultiProcess/Vector.h
-        MultiProcess/messages.h
-        MultiProcess/util.h
+#        MultiProcess/GradMinimizer.h
+#        MultiProcess/Job.h
+#        MultiProcess/NLLVar.h
+#        MultiProcess/TaskManager.h
+#        MultiProcess/Vector.h
+#        MultiProcess/messages.h
+#        MultiProcess/util.h
   SOURCES
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
@@ -483,15 +483,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/RooGradientFunction.cxx
         src/RooMinimizerType.cxx
         src/MultiProcess/BidirMMapPipe.cxx
-        src/MultiProcess/GradMinimizerFcn.cxx
-        src/MultiProcess/Job.cxx
-        src/MultiProcess/NLLVar.cxx
-        src/MultiProcess/TaskManager.cxx
-        src/MultiProcess/messages.cxx
-        src/MultiProcess/util.cxx
+#        src/MultiProcess/GradMinimizerFcn.cxx
+#        src/MultiProcess/Job.cxx
+#        src/MultiProcess/NLLVar.cxx
+#        src/MultiProcess/TaskManager.cxx
+#        src/MultiProcess/messages.cxx
+#        src/MultiProcess/util.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
-    -I${ZeroMQ_INCLUDE_DIR} # necessary because zmq.h is included in the RooFitCore dictionary as well via MultiProcess
+#    -I${ZeroMQ_INCLUDE_DIR} # necessary because zmq.h is included in the RooFitCore dictionary as well via MultiProcess
   DEPENDENCIES
     Core
     Hist
@@ -503,11 +503,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-        RooFitZMQ
+#        RooFitZMQ
 #        ZeroMQ # as noted above, this doesn't work here, so we instead list it as a library below
   LIBRARIES
         ${RT_LIBRARY}
-        ${ZeroMQ_LIBRARY}
+#        ${ZeroMQ_LIBRARY}
 )
 
 #target_include_directories(RooFitCore PRIVATE ${ZeroMQ_INCLUDE_DIR})

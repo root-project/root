@@ -16,13 +16,13 @@
 
 #include "gtest/gtest.h"
 
-TEST(worker, loop)
-{
-   do_fork();
-   if (on_master()) {
-      wait();
-      terminate_worker();
-   } else if (on_worker()) {
-      worker_loop();
-   }
-}
+//TEST(worker, loop)
+//{
+//   do_fork();
+//   if (on_master()) {
+//      wait();
+//      terminate_worker();
+//   } else if (on_worker()) {
+//      worker_loop();
+//   }
+//}

@@ -17,6 +17,7 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/worker.h"
 #include "RooFit/MultiProcess/Job.h"
+#include "RooFit/MultiProcess/Queue.h"
 
 namespace RooFit {
 namespace MultiProcess {
@@ -27,7 +28,7 @@ Job::Job(std::size_t _N_workers) : N_workers(_N_workers)
 }
 
 Job::Job(const Job &other)
-   : N_workers(other.N_workers), waiting_for_queued_tasks(other.waiting_for_queued_tasks), _manager(other._manager)
+   : N_workers(other.N_workers), _manager(other._manager)
 {
    id = JobManager::add_job_object(this);
 }
@@ -45,16 +46,8 @@ JobManager *Job::get_manager()
       _manager = JobManager::instance(N_workers);
    }
 
-   _manager->activate();
-
-   // N.B.: must check for queue activation here, otherwise get_manager is not callable
-   //       from queue loop!
-   if (!_manager->queue().is_activated()) {
-      _manager->queue().activate();
-   }
-
-   if (!_manager->worker_loop_activated()) {
-      _manager->activate_worker_loop();
+   if (!_manager->is_activated()) {
+      _manager->activate();
    }
 
    return _manager;
@@ -62,10 +55,7 @@ JobManager *Job::get_manager()
 
 void Job::gather_worker_results()
 {
-   if (waiting_for_queued_tasks) {
-      get_manager()->retrieve();
-      waiting_for_queued_tasks = false;
-   }
+   get_manager()->retrieve();
 }
 
 } // namespace MultiProcess

@@ -16,6 +16,7 @@
 #define ROOT_ROOFIT_MultiProcess_Messenger
 
 #include "RooFit/MultiProcess/Messenger_decl.h"
+#include "Messenger_decl.h"
 
 namespace RooFit {
 namespace MultiProcess {

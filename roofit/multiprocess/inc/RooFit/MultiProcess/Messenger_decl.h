@@ -27,10 +27,32 @@ namespace MultiProcess {
 
 void set_socket_immediate(ZmqLingeringSocketPtr<> &socket);
 
+// test messages
+enum class X2X : int {
+   ping = -1,
+   pong = -2,
+};
+
 class Messenger {
 public:
    explicit Messenger(const ProcessManager &process_manager);
    ~Messenger();
+
+   void test_connections(const ProcessManager &process_manager);
+
+   enum class test_snd_pipes {
+      M2Q,
+      Q2M,
+      Q2W,
+      W2Q
+   };
+
+   enum class test_rcv_pipes {
+      fromQonM,
+      fromMonQ,
+      fromWonQ,
+      fromQonW,
+   };
 
    void close_master_queue_connection() noexcept;
    void close_queue_worker_connections();
@@ -67,11 +89,15 @@ public:
 
    bool is_initialized() const;
 
+   void test_receive(ZmqLingeringSocketPtr<> &socket, X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
+   void test_send(ZmqLingeringSocketPtr<> &socket, X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
+
 private:
    std::vector<ZmqLingeringSocketPtr<>> qw_sockets;
    ZmqLingeringSocketPtr<> this_worker_qw_socket;
    ZmqLingeringSocketPtr<> mq_socket;
 };
+
 
 // Messages from master to queue
 enum class M2Q : int {
@@ -83,7 +109,7 @@ enum class M2Q : int {
 };
 
 // Messages from queue to master
-enum class Q2M : int { retrieve_rejected = 20, retrieve_accepted = 21 };
+enum class Q2M : int { retrieve_rejected = 20, retrieve_accepted = 21, retrieve_later = 22 };
 
 // Messages from worker to queue
 enum class W2Q : int { dequeue = 30, send_result = 31 };

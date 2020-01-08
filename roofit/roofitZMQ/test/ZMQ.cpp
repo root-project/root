@@ -17,7 +17,7 @@
 #include <sstream>
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
-#include <MultiProcess/util.h> // wait_for_child
+#include <RooFit/MultiProcess/util.h> // wait_for_child
 
 void elaborate_bind(const ZmqLingeringSocketPtr<>& socket, std::string name) {
   try {

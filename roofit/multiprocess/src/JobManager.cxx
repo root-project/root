@@ -20,6 +20,7 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Job.h"
+#include "RooFit/MultiProcess/Queue.h"  // complete type for JobManager::queue()
 #include "RooFit/MultiProcess/worker.h"
 
 
@@ -30,7 +31,8 @@ namespace MultiProcess {
 JobManager* JobManager::instance(std::size_t N_workers) {
    if (!JobManager::is_instantiated()) {
       assert(N_workers != 0);
-      _instance = std::make_unique<JobManager>(N_workers);
+      _instance.reset(new JobManager(N_workers));  // can't use make_unique, because ctor is private
+      _instance->messenger().test_connections(_instance->process_manager());
    }
    return _instance.get();
 }
@@ -145,13 +147,25 @@ void JobManager::retrieve() {
       while (carry_on) {
          messenger().send_from_master_to_queue(M2Q::retrieve);
          auto handshake = messenger().receive_from_queue_on_master<Q2M>();
-         if (handshake == Q2M::retrieve_accepted) {
-            carry_on = false;
-            auto N_jobs = messenger().receive_from_queue_on_master<std::size_t>();
-            for (std::size_t job_ix = 0; job_ix < N_jobs; ++job_ix) {
-               auto job_object_id = messenger().receive_from_queue_on_master<std::size_t>();
-               JobManager::get_job_object(job_object_id)->receive_results_on_master();
+         switch (handshake) {
+            case Q2M::retrieve_accepted: {
+               carry_on = false;
+               auto N_jobs = messenger().receive_from_queue_on_master<std::size_t>();
+               for (std::size_t job_ix = 0; job_ix < N_jobs; ++job_ix) {
+                  auto job_object_id = messenger().receive_from_queue_on_master<std::size_t>();
+                  JobManager::get_job_object(job_object_id)->receive_results_on_master();
+               }
             }
+            break;
+            case Q2M::retrieve_later: {
+               carry_on = true;
+            }
+            break;
+            case Q2M::retrieve_rejected: {
+               carry_on = false;
+               throw std::logic_error("Master sent M2Q::retrieve, but queue had no tasks yet: Q2M::retrieve_rejected. Aborting!");
+            }
+            break;
          }
       }
    }
@@ -170,7 +184,7 @@ void JobManager::results_from_queue_to_master()
 }
 
 
-void JobManager::activate() const
+void JobManager::activate()
 {
    // This function exists purely because activation from the constructor is
    // impossible; the constructor must return a constructed instance, which it

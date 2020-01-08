@@ -63,7 +63,7 @@ public:
    void retrieve();
    void results_from_queue_to_master();
 
-   void activate() const;
+   void activate();
    bool is_activated() const;
 
 private:

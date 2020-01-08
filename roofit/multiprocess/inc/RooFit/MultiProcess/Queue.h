@@ -25,12 +25,6 @@ namespace MultiProcess {
 
 class Queue {
 public:
-   ~Queue();
-
-   void terminate() noexcept;
-
-   bool is_activated() const;
-
    bool pop(JobTask &job_task);
    void add(JobTask job_task);
 
@@ -43,7 +37,6 @@ private:
    std::queue <JobTask> _queue;
    std::size_t N_tasks = 0;  // total number of received tasks
    std::size_t N_tasks_completed = 0;
-   bool queue_activated = false;
 };
 
 } // namespace MultiProcess
