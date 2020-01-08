@@ -61,36 +61,21 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    fSelect = fname;
 
    auto separ = fSelect.rfind("/");
+   if (separ == std::string::npos)
+      separ = fSelect.rfind("\\");
 
    std::string workdir;
 
-   if (fSelect.empty() || (separ == std::string::npos)) {
-      workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   } else {
+   if (separ != std::string::npos) {
       workdir = fSelect.substr(0, separ);
       fSelect = fSelect.substr(separ+1);
    }
 
-#ifdef _MSC_VER
-   // TODO: in case of windows list of letters are required
+   auto comp = std::make_shared<Browsable::RComposite>("top", "Top file dialog element");
 
-   std::string toplbl, topdir;
+   workdir = SysFileElement::ProvideTopEntries(comp, workdir);
 
-   auto pos = workdir.find(":");
-   if (pos != std::string::npos) {
-      toplbl = workdir.substr(0,pos+1);
-   } else {
-      workdir = toplbl = "c:";
-   }
-   topdir = toplbl + "\\";
-
-   auto comp = std::make_shared<Browsable::RComposite>("top","Top element in file dialog for windows");
-   comp->Add(std::make_shared<Browsable::RWrapper>(toplbl,std::make_unique<SysFileElement>(topdir)));
    fBrowsable.SetTopElement(comp);
-
-#else
-   fBrowsable.SetTopElement(std::make_unique<SysFileElement>("/"));
-#endif
 
    fBrowsable.SetWorkingDirectory(workdir);
 
@@ -240,13 +225,26 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
          return;
       }
 
-      fSelect = SysFileElement::ProduceFileName(*path);
+      // check if element exists
+      auto elem = fBrowsable.GetElementFromTop(*path);
+      if (elem)
+         fSelect = elem->GetContent("filename");
+      else
+         fSelect.clear();
 
       bool need_confirm = false;
 
-      if ((GetType() == kSaveAs) || (GetType() == kNewFile))
-         if (fBrowsable.GetElementFromTop(*path))
+      if ((GetType() == kSaveAs) || (GetType() == kNewFile)) {
+         if (elem) {
             need_confirm = true;
+         } else {
+            std::string fname = path->back();
+            path->pop_back();
+            auto direlem = fBrowsable.GetElementFromTop(*path);
+            if (direlem)
+               fSelect = elem->GetContent("filename") + "/"s + fname;
+         }
+      }
 
       if (need_confirm) {
          fWebWindow->Send(connid, "NEED_CONFIRM"s); // sending request for confirmation

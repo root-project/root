@@ -22,6 +22,10 @@
 #include "TROOT.h"
 #include "TBase64.h"
 
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 #include <sstream>
 #include <fstream>
 
@@ -401,4 +405,50 @@ std::string SysFileElement::ProduceFileName(const RElementPath_t &path)
 
    return res;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Provide top entries for file system
+/// On windows it is list of existing drivers, on Linux it is "Files system" and "Home"
+
+std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RComposite> &comp, const std::string &workdir)
+{
+   std::string seldir = workdir;
+
+   if (seldir.empty())
+      seldir = gSystem->WorkingDirectory();
+
+   seldir = gSystem->UnixPathName(seldir.c_str());
+
+#ifdef _MSC_VER
+
+   auto drives = GetLogicalDrives();
+
+   auto mask = 1;
+
+   for (char lbl='A';lbl <= 'Z'; lbl++) {
+      if (drives & mask) {
+         std::string name = std::string(lbl) + ":"s;
+         std::string dir = name + "\\"s;
+         comp->Add(std::make_shared<Browsable::RWrapper>("name", std::make_unique<SysFileElement>(dir)));
+      }
+
+      mask = mask << 1;
+   }
+
+#else
+
+   comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<SysFileElement>("/")));
+
+   seldir = "/Files system"s + seldir;
+
+   std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
+
+   if (!homedir.empty())
+      comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<SysFileElement>(homedir)));
+
+#endif
+
+   return seldir;
+}
+
 
