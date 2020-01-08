@@ -228,9 +228,10 @@ TAttMarker::TAttMarker()
 /// TAttMarker normal constructor.
 ///
 /// Text attributes are taking from the argument list
-///  - color : Marker Color Index
-///  - style : Marker style (from 1 to 30)
-///  - size  : marker size (float)
+///  - color      : Marker Color Index
+///  - style      : Marker style (from 1 to 49)
+///  - size       : Marker size (float)
+///  - line width : Marker line width
 
 TAttMarker::TAttMarker(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth)
 {

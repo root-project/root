@@ -208,7 +208,7 @@ public:
    virtual void     SetPad(Double_t xlow, Double_t ylow, Double_t xup, Double_t yup) = 0;
    virtual void     SetAttFillPS(Color_t color, Style_t style) = 0;
    virtual void     SetAttLinePS(Color_t color, Style_t style, Width_t lwidth) = 0;
-   virtual void     SetAttMarkerPS(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth) = 0;
+   virtual void     SetAttMarkerPS(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth = 1) = 0;
    virtual void     SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize) = 0;
    virtual void     SetName(const char *name) = 0;
    virtual void     SetSelected(TObject *obj) = 0;

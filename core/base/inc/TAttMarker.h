@@ -26,7 +26,7 @@ protected:
 
 public:
    TAttMarker();
-   TAttMarker(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth);
+   TAttMarker(Color_t color, Style_t style, Size_t msize, Width_t mlinewidth = 1);
    virtual ~TAttMarker();
            void     Copy(TAttMarker &attmarker) const;
    virtual Color_t  GetMarkerColor()     const {return fMarkerColor;}     ///< Return the marker color
