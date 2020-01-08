@@ -255,6 +255,9 @@ public:
    /** Name of RBrowsable, must be provided in derived classes */
    virtual std::string GetName() const = 0;
 
+   /** Checks if element name match to provided value */
+   virtual bool MatchName(const std::string &name) const { return name == GetName(); }
+
    /** Title of RBrowsable (optional) */
    virtual std::string GetTitle() const { return ""; }
 
