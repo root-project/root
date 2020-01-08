@@ -66,19 +66,14 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
 
    std::string workdir;
 
-   if (fSelect.empty() || (separ == std::string::npos)) {
-      workdir = gSystem->UnixPathName(gSystem->WorkingDirectory());
-   } else {
+   if (separ != std::string::npos) {
       workdir = fSelect.substr(0, separ);
       fSelect = fSelect.substr(separ+1);
    }
 
    auto comp = std::make_shared<Browsable::RComposite>("top", "Top file dialog element");
-
    workdir = SysFileElement::ProvideTopEntries(comp, workdir);
-
    fBrowsable.SetTopElement(comp);
-
    fBrowsable.SetWorkingDirectory(workdir);
 
    fWebWindow = RWebWindow::Create();
