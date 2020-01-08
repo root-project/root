@@ -136,7 +136,7 @@ constexpr std::int32_t ChecksumRNTupleClass() {
       "unsigned long";
    std::int32_t id = 0;
    for (unsigned i = 0; i < (sizeof(ident) - 1); i++)
-      id = id *3 + ident[i];
+      id = static_cast<std::int32_t>(static_cast<std::int64_t>(id) * 3 + ident[i]);
    return id;
 }
 
@@ -1085,7 +1085,7 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
    if (idxDirSep != std::string::npos) {
       fileName.erase(0, idxDirSep + 1);
    }
-   FILE *fileStream = fopen(path.to_string().c_str(), "wb");
+   FILE *fileStream = fopen(std::string(path.data(), path.size()).c_str(), "wb");
    R__ASSERT(fileStream);
 
    auto writer = new RMiniFileWriter(ntupleName);
@@ -1111,7 +1111,7 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
 ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMiniFileWriter::Recreate(
    std::string_view ntupleName, std::string_view path, std::unique_ptr<TFile> &file)
 {
-   file = std::unique_ptr<TFile>(TFile::Open(path.to_string().c_str(), "RECREATE"));
+   file = std::unique_ptr<TFile>(TFile::Open(std::string(path.data(), path.size()).c_str(), "RECREATE"));
    R__ASSERT(file && !file->IsZombie());
 
    auto writer = new RMiniFileWriter(ntupleName);
