@@ -3,7 +3,7 @@ import ROOT
 from sys import stdout
 
 def printme(o):
-    print("t now %g %d %d" % (o.get("double")(), o.get("int")(), o.get("float")()))
+    print("t now %g %d %d" % (o.get["double"](), o.get["int"](), o.get["float"]()))
     stdout.flush()
 
 ROOT.gROOT.ProcessLine(".L t.h+")
