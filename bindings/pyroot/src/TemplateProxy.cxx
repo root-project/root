@@ -402,6 +402,7 @@ namespace {
          nArgs = 1;
          auto item = args;
          args = PyTuple_New(nArgs);
+         Py_INCREF(item);
          PyTuple_SET_ITEM(args, 0, item);
       } else {
          nArgs = PyTuple_GET_SIZE(args);
