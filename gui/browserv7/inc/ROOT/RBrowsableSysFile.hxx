@@ -85,7 +85,7 @@ public:
    virtual ~SysFileElement() = default;
 
    /** Name of RElement - file name in this case */
-   std::string GetName() const override { return fFileName; }
+   std::string GetName() const override;
 
    /** Checks if element name match to provided value */
    bool MatchName(const std::string &name) const override;
@@ -96,8 +96,6 @@ public:
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
    std::string GetContent(const std::string &kind) override;
-
-   static std::string ProduceFileName(const RElementPath_t &path);
 
    static std::string ProvideTopEntries(std::shared_ptr<RComposite> &comp, const std::string &workdir = "");
 
