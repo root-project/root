@@ -38,7 +38,7 @@ class. All details about the various painting options are given in this class.
 The picture below gives an example:
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","A Simple Graph with bent error bars",200,10,700,500);
+   auto c1 = new TCanvas("c1","A Simple Graph with bent error bars",200,10,700,500);
    const Int_t n = 10;
    Double_t x[n]    = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t y[n]    = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
@@ -50,12 +50,11 @@ Begin_Macro(source)
    Double_t eyld[n] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
    Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
    Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
-   gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
+   auto gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
    gr->SetTitle("TGraphBentErrors Example");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
-   return c1;
 }
 End_Macro
 */

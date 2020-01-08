@@ -37,12 +37,12 @@ TGraph with asymmetric error bars.
 
 The TGraphAsymmErrors painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
-<p>
+
 The picture below gives an example:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","A Simple Graph with asymmetric error bars",200,10,700,500);
+   auto c1 = new TCanvas("c1","A Simple Graph with asymmetric error bars",200,10,700,500);
    c1->SetFillColor(42);
    c1->SetGrid();
    c1->GetFrame()->SetFillColor(21);
@@ -54,12 +54,11 @@ Begin_Macro(source)
    Double_t eyl[n] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
    Double_t exh[n] = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
    Double_t eyh[n] = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
-   gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
+   auto gr = new TGraphAsymmErrors(n,x,y,exl,exh,eyl,eyh);
    gr->SetTitle("TGraphAsymmErrors Example");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
-   return c1;
 }
 End_Macro
 */
