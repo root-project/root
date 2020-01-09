@@ -12,7 +12,7 @@
 #include <ROOT/RBrowsable.hxx>
 
 #include <functional>
-
+#include <map>
 
 class TVirtualPad;
 
@@ -51,8 +51,8 @@ private:
    struct StructV6 { RDrawableProvider *provider;  FuncV6_t func; };
    struct StructV7 { RDrawableProvider *provider;  FuncV7_t func; };
 
-   using MapV6_t = std::map<const TClass*, StructV6>;
-   using MapV7_t = std::map<const TClass*, StructV7>;
+   using MapV6_t = std::multimap<const TClass*, StructV6>;
+   using MapV7_t = std::multimap<const TClass*, StructV7>;
 
    static MapV6_t &GetV6Map();
    static MapV7_t &GetV7Map();
