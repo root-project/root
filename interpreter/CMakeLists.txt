@@ -390,6 +390,7 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
 
 
+  find_package(LLVM REQUIRED)
   if (builtin_clang)
     add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
   else()
