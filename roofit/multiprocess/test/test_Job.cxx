@@ -123,7 +123,7 @@ private:
       serial->result[task] = std::pow(serial->x[task], 2) + serial->_b;
    }
 
-   std::shared_ptr<xSquaredPlusBVectorSerial> serial;
+   xSquaredPlusBVectorSerial* serial;
 };
 
 class TestMPJob : public ::testing::TestWithParam<std::size_t> {
