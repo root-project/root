@@ -432,6 +432,16 @@ class TestClasSTLITERATORCOMPARISON:
 
         self.__run_tests(m)
 
+    def test04_builtin_vector_iterators_bool(self):
+        """Test iterator comparison for vector of bool"""
+
+        from cppyy.gbl import std
+
+        v = std.vector(bool)()
+        v.resize(1)
+
+        self.__run_tests(v)
+
 
 ### Stream usage =============================================================
 class TestClasSTLSTREAM:
