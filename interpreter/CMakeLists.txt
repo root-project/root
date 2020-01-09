@@ -390,12 +390,12 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
 
 
-if (builtin_clang)
-  add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
-else()
-  find_package(Clang REQUIRED)
-  add_subdirectory(cling)
-endif()
+  if (builtin_clang)
+    add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
+  else()
+    find_package(Clang REQUIRED)
+    add_subdirectory(cling)
+  endif()
 endif(builtin_llvm)
 
 #---Export the include directories------------------------------------------------------------------

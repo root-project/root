@@ -18,18 +18,6 @@ else()
   endif()
 endif()
 
-if(NOT builtin_clang)
-  set(prefixed_link_libraries)
-  foreach(dep ${CLING_DEPEND_LIBS})
-    if("${dep}" MATCHES "^clang")
-      set(dep "${LLVM_LIBRARY_DIR}/lib${dep}.a")
-     endif()
-     list(APPEND prefixed_link_libraries "${dep}")
-   endforeach()
-  set(LINK_LIBS "${prefixed_link_libraries}")
-  link_directories("${LLVM_LIBRARY_DIR}")
-endif()
-
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:ClingUtils>
