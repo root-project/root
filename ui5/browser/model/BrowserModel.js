@@ -198,8 +198,7 @@ sap.ui.define([
               first: first || 0,
               number: number || this.threshold || 100,
               sort: this.sortOrder || "",
-              extension: "",
-              filter: this.itemsFilter || ""
+              regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
            };
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },

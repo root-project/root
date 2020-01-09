@@ -41,8 +41,9 @@ sap.ui.define(['rootui5/panel/Controller',
                                        fileName: "",
                                        filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
                                        fileExt: "AllFiles",
-                                       showFileExt: true,
-                                       fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
+                                       showFileExt: false,
+                                       fileExtList: [] });
+                                      // fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
          this.getView().setModel(this.oModel);
 
          Fragment.load({
@@ -169,7 +170,7 @@ sap.ui.define(['rootui5/panel/Controller',
             this.oModel.setProperty("/fileExtList", arr);
             this.oModel.setProperty("/showFileExt", true);
          } else {
-            this.oModel.setProperty("/fileExt", "AllFiles");
+            this.oModel.setProperty("/fileExt", "All files");
             this.oModel.setProperty("/showFileExt", false);
          }
 
@@ -315,9 +316,10 @@ sap.ui.define(['rootui5/panel/Controller',
                                        dialogTitle: args.title || "Title",
                                        fileName: fname, // will be returned from the server, just for initialization
                                        filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
-                                       fileExt: "AllFiles",
-                                       showFileExt: true,
-                                       fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
+                                       fileExt: "All files",
+                                       showFileExt: false,
+                                       fileExtList: [] });
+                                       // fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
 
          // create extra channel for the FileDialog
          this.websocket = args.websocket.CreateChannel();
@@ -364,7 +366,15 @@ sap.ui.define(['rootui5/panel/Controller',
             delete this._init_msg;
          }
 
-         args.websocket.Send("FILEDIALOG:" + JSON.stringify([ this.kind, args.filename,  this.websocket.getChannelId().toString() ]));
+         var server_args = [ this.kind, args.filename || "", this.websocket.getChannelId().toString() ];
+
+         // add at the end filter and filter array
+         if (args.filter || args.filters) {
+            server_args.push(args.filter || "Any files");
+            server_args = server_args.concat(args.filters || ["Any files (*)"]);
+         }
+
+         args.websocket.Send("FILEDIALOG:" + JSON.stringify(server_args));
 
          return this;
       },

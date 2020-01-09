@@ -263,12 +263,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             websocket: this.websocket,
             filename: oEditor.getModel().getProperty("/fullpath"),
             title: "Select file name to save",
+            filter: "Any files",
+            filters: ["Text files (*.txt)", "C++ files (*.cxx *.cpp *.c)", "Any files (*)"],
             onOk: function(fname) {
                this.setFileNameType(oEditor, fname);
                const sText = oEditor.getModel().getProperty("/code");
                oEditor.getModel().setProperty("/modified", false);
                this.websocket.Send("SAVEFILE:" + JSON.stringify([fname, sText]));
-
             }.bind(this),
             onCancel: function() { },
             onFailure: function() { }
