@@ -304,7 +304,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceRaw::Po
    auto newPage = fPageAllocator->NewPage(columnId, pageBuffer, elementSize, pageInfo.fNElements);
    newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
    fPagePool->RegisterPage(newPage,
-      RPageDeleter([](const RPage &page, void */*userData*/)
+      RPageDeleter([](const RPage &page, void * /*userData*/)
       {
          RPageAllocatorFile::DeletePage(page);
       }, nullptr));
