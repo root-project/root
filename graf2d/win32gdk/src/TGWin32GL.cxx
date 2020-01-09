@@ -190,7 +190,7 @@ singleScreenDesc = {
 
 class TGWin32GLManager::TGWin32GLImpl {
 public:
-   TGWin32GLImpl() : fNextFreeContext(0)
+   TGWin32GLImpl() : fNextFreeContext(nullptr)
    {}
    ~TGWin32GLImpl();
    std::deque<TGLContext> fGLContexts;
@@ -311,8 +311,8 @@ Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
 
    CDCGuard dcGuard(dibDC);
 
-   BITMAPINFOHEADER bmpHeader = {sizeof bmpHeader, ctx.fW, ctx.fH, 1, 32, BI_RGB};
-   void *bmpCnt = 0;
+   BITMAPINFOHEADER bmpHeader = {sizeof bmpHeader, (LONG) ctx.fW, (LONG) ctx.fH, 1, 32, BI_RGB};
+   void *bmpCnt = nullptr;
    HBITMAP hDIB = CreateDIBSection(dibDC, (BITMAPINFO*)&bmpHeader, DIB_RGB_COLORS, &bmpCnt, 0, 0);
 
    if (!hDIB) {
@@ -513,7 +513,7 @@ void TGWin32GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
 
 Bool_t TGWin32GLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
-    return plot->PlotSelected(px, py);
+   return plot->PlotSelected(px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
