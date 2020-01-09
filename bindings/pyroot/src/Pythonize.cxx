@@ -2539,7 +2539,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    // vector-optimized iterator protocol
    // Breaks for vector of bool since the "data" member function is not required in the STL.
-      if ( name.find("vector<bool>") == std::string::npos ) {
+      if ( name.find("vector<bool>") == std::string::npos && name.find("RVec<bool>") == std::string::npos ) {
          ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)vector_iter;
       }
 
