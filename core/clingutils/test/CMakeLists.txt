@@ -26,4 +26,8 @@ if(APPLE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -w")
 endif()
 
+if(NOT builtin_clang)
+  link_directories("${LLVM_LIBRARY_DIR}")
+endif()
+
 ROOT_ADD_UNITTEST_DIR(Core RIO ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
