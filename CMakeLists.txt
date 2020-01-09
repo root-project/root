@@ -589,4 +589,6 @@ include(RootCPack)
 
 # Exp PyROOT: remove empty directory wrongly created
 # Keep until we figure why it happens
-install(CODE "execute_process(COMMAND bash -c \"rm -rf ${CMAKE_INSTALL_PREFIX}/lib/python*\")")
+if(pyroot_experimental AND (NOT "${CMAKE_INSTALL_PREFIX}" MATCHES "^/usr"))
+  install(CODE "execute_process(COMMAND bash -c \"rm -rf ${CMAKE_INSTALL_PREFIX}/lib/python*\")")
+endif()
