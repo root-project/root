@@ -60,12 +60,18 @@ else() # standalone roottest.git
   endforeach()
   # If we didn't manage to find LZ4_VERSION/ZSTD_VERSION in "root-config --config" output,
   # we consider that ROOT had used system LZ4/ZSTD and we can find it via find_package().
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/cmake/modules ${ROOT_SOURCE_DIR}/cmake/modules)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules ${ROOTSYS}/cmake/modules ${ROOT_SOURCE_DIR}/cmake/modules)
   if(NOT LZ4_VERSION)
     find_package(LZ4)
+    if(NOT LZ4_FOUND)
+      message(FATAL_ERROR "lz4 is required to be installed before running roottest.git")
+    endif()
   endif()
   if(NOT ZSTD_VERSION)
     find_package(ZSTD)
+    if(NOT ZSTD_FOUND)
+      message(FATAL_ERROR "zstd is required to be installed before running roottest.git")
+    endif()
   endif()
   # To be able to use the same C++ standard as used in ROOT, we can try to retrieve it from root-config --features
   exec_program(root-config ARGS "--features" OUTPUT_VARIABLE ROOT_FEATURES RETURN_VALUE RETVAR)
