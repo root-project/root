@@ -149,24 +149,105 @@ std::string RFileDialog::TypeAsString(EDialogTypes kind)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Configure selected filter
+/// Has to be one of the string from NameFilters entry
+
+void RFileDialog::SetSelectedFilter(const std::string &name)
+{
+   fSelectedFilter = name;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns selected filter
+/// Can differ from specified value - if it does not match to existing entry in NameFilters
+
+std::string RFileDialog::GetSelectedFilter() const
+{
+   if (fNameFilters.size() == 0)
+      return fSelectedFilter;
+
+   std::string lastname, allname;
+
+   for (auto &entry : fNameFilters) {
+      auto pp = entry.find(" (");
+      if (pp == std::string::npos) continue;
+      auto name = entry.substr(0, pp);
+
+      if (name == fSelectedFilter)
+         return name;
+
+      if (allname.empty() && GetRegexp(name).empty())
+         allname = name;
+
+      lastname = name;
+   }
+
+   if (!allname.empty()) return allname;
+   if (!lastname.empty()) return lastname;
+
+   return ""s;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns regexp for selected filter
+/// String should have form "Filter name (*.ext1 *.ext2 ...)
+
+std::string RFileDialog::GetRegexp(const std::string &fname) const
+{
+   if (!fname.empty())
+      for (auto &entry : fNameFilters) {
+         if (entry.compare(0, fname.length(), fname) == 0) {
+            auto pp = entry.find("(", fname.length());
+
+            std::string res;
+
+            while (pp != std::string::npos) {
+               pp = entry.find("*.", pp);
+               if (pp == std::string::npos) break;
+
+               auto pp2 = entry.find_first_of(" )", pp+2);
+               if (pp2 == std::string::npos) break;
+
+               if (res.empty()) res = "^(.*\\.(";
+                           else res.append("|");
+
+               res.append(entry.substr(pp+2, pp2 - pp - 2));
+
+               pp = pp2;
+            }
+
+            if (!res.empty()) res.append(")$)");
+
+            return res;
+
+         }
+      }
+
+   return ""s;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Sends initial message to the client
 
 void RFileDialog::SendInitMsg(unsigned connid)
 {
+   auto filter = GetSelectedFilter();
    RBrowserRequest req;
    req.sort = "alphabetical";
-   if (fExtension != "AllFiles"s)
-      req.extension = fExtension;
+   req.regex = GetRegexp(filter);
 
    auto jtitle = TBufferJSON::ToJSON(&fTitle);
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
    auto jfname = TBufferJSON::ToJSON(&fSelect);
-   auto jextension = TBufferJSON::ToJSON(&fExtension);
+   auto jfilters = TBufferJSON::ToJSON(&fNameFilters);
+   auto jfilter = TBufferJSON::ToJSON(&filter);
 
    fWebWindow->Send(connid, "INMSG:{\"kind\" : \""s + TypeAsString(fKind) + "\", "s +
                                    "\"title\" : "s + jtitle.Data() + ","s +
                                    "\"path\" : "s + jpath.Data() + ","s +
-                                   "\"fextension\" : "s + jextension.Data() + ","s +
+                                   "\"filter\" : "s + jfilter.Data() + ","s +
+                                   "\"filters\" : "s + jfilters.Data() + ","s +
                                    "\"fname\" : "s + jfname.Data() + ","s +
                                    "\"brepl\" : "s + fBrowsable.ProcessRequest(req) + "   }"s);
 }
@@ -178,8 +259,7 @@ void RFileDialog::SendChPathMsg(unsigned connid)
 {
    RBrowserRequest req;
    req.sort = "alphabetical";
-   if (fExtension != "AllFiles"s)
-      req.extension = fExtension;
+   req.regex = GetRegexp(GetSelectedFilter());
 
    auto jpath = TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath());
 
@@ -206,9 +286,7 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
 
    } else if (arg.compare(0, 6, "CHEXT:") == 0) {
 
-      fExtension = arg.substr(6);
-
-      printf("select extension %s \n", fExtension.c_str());
+      SetSelectedFilter(arg.substr(6));
 
       SendChPathMsg(connid);
 
@@ -239,7 +317,7 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
             path->pop_back();
             auto direlem = fBrowsable.GetElementFromTop(*path);
             if (direlem)
-               fSelect = elem->GetContent("filename") + "/"s + fname;
+               fSelect = direlem->GetContent("filename") + "/"s + fname;
          }
       }
 

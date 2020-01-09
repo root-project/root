@@ -14,6 +14,7 @@
 #include "TBufferJSON.h"
 
 #include <algorithm>
+#include <regex>
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
@@ -391,15 +392,12 @@ bool RBrowsable::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserR
       fLastSortMethod = request.sort;
    }
 
+   const std::regex expr(request.regex);
+
    int id = 0;
    for (auto &item : fLastSortedItems) {
-      auto iname = item->GetName();
 
-      if (!request.filter.empty() && (iname.compare(0, request.filter.length(), request.filter) != 0))
-         continue;
-
-      if (!request.extension.empty() && !item->IsFolder() &&
-           ((iname.length() < request.extension.length() + 1) || (iname.at(iname.length() - request.extension.length()-1) != '.') || (iname.compare(iname.length() - request.extension.length(), request.extension.length(), request.extension) != 0)))
+      if (!request.regex.empty() && !item->IsFolder() && !std::regex_match(item->GetName(), expr))
          continue;
 
       if ((id >= request.first) && ((request.number == 0) || (id < request.first + request.number)))

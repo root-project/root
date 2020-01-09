@@ -38,15 +38,19 @@ void filedialog(int kind = 0)
    }
 
    if (kind > 0) {
-      printf("Sync file name %s\n", fileName.c_str());
+      printf("Selected file: %s\n", fileName.c_str());
       return;
    }
 
-   auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "OpenFile (async) title");
+   auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "OpenFile dialog in async mode");
+
+   dialog->SetNameFilters({ "C++ files (*.cxx *.cpp *.c *.C)", "Image files (*.png *.jpg *.jpeg)", "Text files (*.txt)", "Any files (*)" });
+
+   dialog->SetSelectedFilter("C++ files");
 
    // use dialog capture to keep reference until file name is selected
    dialog->SetCallback([dialog](const std::string &res) mutable {
-      printf("Selected file %s\n", res.c_str());
+      printf("Selected file: %s\n", res.c_str());
 
       // cleanup dialog - actually not needed, lambda is cleaned up after that call anyway
       // dialog.reset();
