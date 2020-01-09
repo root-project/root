@@ -457,7 +457,7 @@ static void W32ChangeProperty(HWND w, Atom_t property, Atom_t type,
       } else {
          strcpy(atomName, buffer);
       }
-      sprintf(propName, "#0x%0.4x", atomName);
+      sprintf(propName, "#0x%0.4x", (unsigned) atomName);
       _ChangeProperty(w, propName, (char *) data, nelements, type);
       free(atomName);
    }
