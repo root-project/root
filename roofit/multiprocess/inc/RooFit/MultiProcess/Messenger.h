@@ -27,7 +27,7 @@ template <typename T, typename... Ts>
 void Messenger::send_from_worker_to_queue(T item, Ts... items)
 {
    try {
-      zmqSvc().send(*this_worker_qw_socket, item);
+      zmqSvc().send(*this_worker_qw_push, item);
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
       throw;
@@ -40,7 +40,7 @@ template <typename value_t>
 value_t Messenger::receive_from_worker_on_queue(std::size_t this_worker_id)
 {
    try {
-      auto value = zmqSvc().receive<value_t>(*qw_sockets[this_worker_id]);
+      auto value = zmqSvc().receive<value_t>(*qw_pull[this_worker_id]);
       return value;
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
@@ -52,7 +52,7 @@ template <typename T, typename... Ts>
 void Messenger::send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts... items)
 {
    try {
-      zmqSvc().send(*qw_sockets[this_worker_id], item);
+      zmqSvc().send(*qw_push[this_worker_id], item);
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
       throw;
@@ -65,7 +65,7 @@ template <typename value_t>
 value_t Messenger::receive_from_queue_on_worker()
 {
    try {
-      auto value = zmqSvc().receive<value_t>(*this_worker_qw_socket);
+      auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull);
       return value;
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
@@ -80,7 +80,7 @@ template <typename T, typename... Ts>
 void Messenger::send_from_queue_to_master(T item, Ts... items)
 {
    try {
-      zmqSvc().send(*mq_socket, item);
+      zmqSvc().send(*mq_push, item);
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
       throw;
@@ -93,7 +93,7 @@ template <typename value_t>
 value_t Messenger::receive_from_queue_on_master()
 {
    try {
-      auto value = zmqSvc().receive<value_t>(*mq_socket);
+      auto value = zmqSvc().receive<value_t>(*mq_pull);
       return value;
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;

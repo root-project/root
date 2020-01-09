@@ -87,15 +87,20 @@ public:
    template <typename value_t>
    value_t receive_from_master_on_queue();
 
-   bool is_initialized() const;
+//   bool is_initialized() const;
 
    void test_receive(ZmqLingeringSocketPtr<> &socket, X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
    void test_send(ZmqLingeringSocketPtr<> &socket, X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
 
 private:
-   std::vector<ZmqLingeringSocketPtr<>> qw_sockets;
-   ZmqLingeringSocketPtr<> this_worker_qw_socket;
-   ZmqLingeringSocketPtr<> mq_socket;
+   // push
+   std::vector<ZmqLingeringSocketPtr<>> qw_push;
+   ZmqLingeringSocketPtr<> this_worker_qw_push;
+   ZmqLingeringSocketPtr<> mq_push;
+   // pull
+   std::vector<ZmqLingeringSocketPtr<>> qw_pull;
+   ZmqLingeringSocketPtr<> this_worker_qw_pull;
+   ZmqLingeringSocketPtr<> mq_pull;
 };
 
 

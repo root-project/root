@@ -40,7 +40,7 @@ JobManager* JobManager::instance(std::size_t N_workers) {
 // static function
 JobManager* JobManager::instance() {
    if (!JobManager::is_instantiated()) {
-      throw std::runtime_error("in TaskManager::instance(): no instance was created yet! Call TaskManager::instance(std::size_t N_workers) first.");
+      throw std::runtime_error("in JobManager::instance(): no instance was created yet! Call JobManager::instance(std::size_t N_workers) first.");
    }
    return _instance.get();
 }
@@ -61,10 +61,10 @@ JobManager::JobManager(std::size_t N_workers) {
 
 JobManager::~JobManager() {
 #ifndef NDEBUG
-   std::cout << "destroying TaskManager on PID " << getpid() << (process_manager().is_worker() ? " worker" : (process_manager().is_queue()? " queue" : " master"));
+   std::cout << "destroying JobManager on PID " << getpid() << (process_manager().is_worker() ? " worker" : (process_manager().is_queue()? " queue" : " master"));
 #endif
    // The instance gets created by some Job. Once all Jobs are gone, the
-   // TM will get destroyed. In this case, the job_objects map should have
+   // JM will get destroyed. In this case, the job_objects map should have
    // been emptied. This check makes sure:
    assert(JobManager::job_objects.empty());
    // The subsequent destruction of everything on all forks is not trivial,
