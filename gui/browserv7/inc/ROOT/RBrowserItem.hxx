@@ -31,8 +31,7 @@ public:
    int first{0};     ///< first child to request
    int number{0};    ///< number of childs to request, 0 - all childs
    std::string sort; ///< kind of sorting
-   std::string extension; ///< applied extension, TODO: use regexp!
-   std::string filter; ///< filter expression for items
+   std::string regex; ///< applied regex
 };
 
 /** Representation of single item in the browser */
