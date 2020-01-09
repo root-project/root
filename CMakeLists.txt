@@ -87,7 +87,6 @@ else() # standalone roottest.git
   find_program(ROOT_genreflex_CMD genreflex PATHS ${ROOTSYS}/bin)
   find_program(ROOT_rootcint_CMD rootcint PATHS ${ROOTSYS}/bin)
   find_program(ROOT_rootcling_CMD rootcling PATHS ${ROOTSYS}/bin)
-  include(RootNewMacros)
   enable_testing()
 endif()
 
