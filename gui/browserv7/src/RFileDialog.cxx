@@ -232,6 +232,8 @@ std::string RFileDialog::GetRegexp(const std::string &fname) const
 
 void RFileDialog::SendInitMsg(unsigned connid)
 {
+   printf("Sending dialog init msg\n");
+
    auto filter = GetSelectedFilter();
    RBrowserRequest req;
    req.sort = "alphabetical";
@@ -414,8 +416,8 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
 
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(args.substr(11));
 
-   if (!arr || (arr->size() != 3)) {
-      R__ERROR_HERE("rbrowser") << "Embedded FileDialog failure - argument should have three strings" << args.substr(11);
+   if (!arr || (arr->size() < 3)) {
+      R__ERROR_HERE("rbrowser") << "Embedded FileDialog failure - argument should have at least three strings" << args.substr(11);
       return nullptr;
    }
 
@@ -427,7 +429,16 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
       kind = kNewFile;
 
    auto dialog = std::make_shared<RFileDialog>(kind, "", arr->at(1));
-   dialog->Show({window, std::stoi(arr->at(2))});
+
+   auto chid = std::stoi(arr->at(2));
+
+   if (arr->size() > 4) {
+      dialog->SetSelectedFilter(arr->at(3));
+      arr->erase(arr->begin(), arr->begin() + 4); // erase 4 elements, keep only list of filters
+      dialog->SetNameFilters(*arr);
+   }
+
+   dialog->Show({window, chid});
 
    // use callback to release pointer, actually not needed but just to avoid compiler warning
    dialog->SetCallback([dialog](const std::string &) mutable { dialog.reset(); });
