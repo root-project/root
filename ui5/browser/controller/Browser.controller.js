@@ -480,17 +480,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ============================================ */
 
       newImageViewerFragment: function (ID) {
-         return new HBox({
-            alignContent: "Center",
-            alignItems: "Center",
-            justifyContent: "Center",
-            height: "100%",
-            width: "100%",
-            items: new Image(ID + "Image", {
+         return new sap.m.Page({
+            showNavButton: false,
+            showFooter: false,
+            showSubHeader: false,
+            showHeader: false,
+            content: new Image(ID + "Image", {
                src: "",
                densityAware: false
             })
-         })
+         });
       },
 
       newImageViewer: async function () {
@@ -508,6 +507,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oTabContainer.addItem(tabContainerItem);
          oTabContainer.setSelectedItem(tabContainerItem);
+
+         sap.ui.getCore().byId(ID + 'Image').addStyleClass("imageViewer");
       },
 
       getSelectedImageViewer: function (no_warning) {
