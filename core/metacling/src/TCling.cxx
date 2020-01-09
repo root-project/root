@@ -1155,6 +1155,10 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
    // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
    clingInterp.declare("#ifdef I\n #undef I\n #endif\n");
 
+   // libc++ complex.h has #define complex _Complex. Give preference to the one
+   // in std.
+   clingInterp.declare("#ifdef complex\n #undef complex\n #endif\n");
+
    // These macros are from loading R related modules, which conflict with
    // user's code.
    clingInterp.declare("#ifdef PI\n #undef PI\n #endif\n");
