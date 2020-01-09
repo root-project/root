@@ -439,7 +439,7 @@ std::string SysFileElement::GetContent(const std::string &kind)
    }
 
    if ((GetContentKind(kind) == kImage) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://picture"s)) {
-      std::ifstream t(GetFullName());
+      std::ifstream t(GetFullName(), std::ios::binary);
       std::string content = std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
 
       auto encode = TBase64::Encode(content.data(), content.length());
