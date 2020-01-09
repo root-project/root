@@ -41,6 +41,7 @@ sap.ui.define(['rootui5/panel/Controller',
                                        fileName: "",
                                        filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
                                        fileExt: "AllFiles",
+                                       showFileExt: true,
                                        fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
          this.getView().setModel(this.oModel);
 
@@ -155,7 +156,22 @@ sap.ui.define(['rootui5/panel/Controller',
          this.updateBReadcrumbs(cfg.path);
 
          this.oModel.setProperty("/fileName", cfg.fname);
-         this.oModel.setProperty("/fileExt", cfg.fextension);
+
+         if (cfg.filters && cfg.filters.length) {
+            var arr = [];
+            for (var k=0;k<cfg.filters.length;++k) {
+               var fname = cfg.filters[k];
+               var p = fname.indexOf("(");
+               if (p>0) fname = fname.substr(0,p);
+               arr.push({id: fname.trim(), text: cfg.filters[k]});
+            }
+            this.oModel.setProperty("/fileExt", cfg.filter);
+            this.oModel.setProperty("/fileExtList", arr);
+            this.oModel.setProperty("/showFileExt", true);
+         } else {
+            this.oModel.setProperty("/fileExt", "AllFiles");
+            this.oModel.setProperty("/showFileExt", false);
+         }
 
          this.oModel.setProperty("/filesList", cfg.brepl.nodes);
       },
@@ -300,6 +316,7 @@ sap.ui.define(['rootui5/panel/Controller',
                                        fileName: fname, // will be returned from the server, just for initialization
                                        filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
                                        fileExt: "AllFiles",
+                                       showFileExt: true,
                                        fileExtList: [{ id: "AllFiles", text: "All files (*.*)" }, { id: "png", text: "png files (*.png)"}, { id: "cxx", text: "CXX files (*.cxx)"}] });
 
          // create extra channel for the FileDialog
@@ -323,7 +340,7 @@ sap.ui.define(['rootui5/panel/Controller',
             contentHeight: args.height || "50%",
             resizable: (args.resizable === undefined) ? true : args.resizable,
             draggable: (args.draggable === undefined) ? true : args.draggable,
-            content: fragment,
+            content: this.fragment,
             beginButton: new Button({
                text: 'Cancel',
                press: this.onCancelPress.bind(this)

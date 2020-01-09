@@ -17,7 +17,7 @@
          </content>
          <footer>
            <Toolbar>
-               <ComboBox selectedKey="{/fileExt}" items="{ path: '/fileExtList' }"
+               <ComboBox selectedKey="{/fileExt}" items="{ path: '/fileExtList' }" visible="{/showFileExt}"
                          change="onFileExtChanged">
                   <core:Item key="{id}" text="{text}" />
                </ComboBox>
