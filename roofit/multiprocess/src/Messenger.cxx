@@ -81,7 +81,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
 }
 
 Messenger::~Messenger() {
-   close_master_queue_connection();
+   close_master_queue_connection(true);
    // the destructor is only used on the master process, so worker-queue
    // connections needn't be closed here; see documentation of JobManager
    // destructor
@@ -178,9 +178,6 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
       std::cout << "DONE testing Messenger connections on master" << std::endl;
    } else if (process_manager.is_queue()) {
       std::cout << "testing Messenger connections on queue" << std::endl;
-      bool master_done = false;
-      std::size_t N_workers_done = 0;
-
       ZeroMQPoller poller;
       std::size_t mq_index;
       std::tie(poller, mq_index) = create_poller();
@@ -189,24 +186,22 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
          test_send(qw_push[ix], X2X::ping, test_snd_pipes::Q2W, ix);
       }
 
-      while (!master_done || N_workers_done < process_manager.N_workers()) {
+      while (!process_manager.sigterm_received() && (poller.size() > 0)) {
          // poll: wait until status change (-1: infinite timeout)
          std::cout << "queue polling" << std::endl;
          auto poll_result = poller.poll(-1);
          std::cout << "queue got poll result with size " << poll_result.size() << std::endl;
          // then process incoming messages from sockets
          for (auto readable_socket : poll_result) {
+            std::cout << "readable_socket.second: " << readable_socket.second << std::endl;
             // message comes from the master/queue socket (first element):
             if (readable_socket.first == mq_index) {
-               if (master_done) {
-                  throw std::runtime_error("Messenger::test_connections on queue: received another message from master, but was already done!");
-               }
                std::cout << "queue doing master" << std::endl;
                test_receive(mq_pull, X2X::ping, test_rcv_pipes::fromMonQ, -1);
                test_send(mq_push, X2X::pong, test_snd_pipes::Q2M, -1);
                test_send(mq_push, X2X::ping, test_snd_pipes::Q2M, -1);
                test_receive(mq_pull, X2X::pong, test_rcv_pipes::fromMonQ, -1);
-               master_done = true;
+               poller.unregister_socket(*mq_pull);
                std::cout << "queue done with master" << std::endl;
             } else { // from a worker socket
                // TODO: dangerous assumption for this_worker_id, may become invalid if we allow multiple queue_loops on the same process!
@@ -217,8 +212,8 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
                test_receive(qw_pull[this_worker_id], X2X::ping, test_rcv_pipes::fromWonQ, this_worker_id);
                test_send(qw_push[this_worker_id], X2X::pong, test_snd_pipes::Q2W, this_worker_id);
 
-               ++N_workers_done;
-               std::cout << "queue done with worker " << this_worker_id << ", now " << N_workers_done << " workers done" << std::endl;
+               poller.unregister_socket(*qw_pull[this_worker_id]);
+               std::cout << "queue done with worker " << this_worker_id << std::endl;
             }
          }
       }
@@ -237,7 +232,7 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
 }
 
 
-void Messenger::close_master_queue_connection() noexcept {
+void Messenger::close_master_queue_connection(bool close_context) noexcept {
    // this function is called from the Messenger destructor on the master process
    // and from JobManager::activate on the queue process before _Exiting that process
    // so we need not check for those processes here (also, we can't on master, because
@@ -247,18 +242,22 @@ void Messenger::close_master_queue_connection() noexcept {
    try {
       mq_push.reset(nullptr);
       mq_pull.reset(nullptr);
-      zmqSvc().close_context();
+      if (close_context) {
+         zmqSvc().close_context();
+      }
    } catch (const std::exception& e) {
       std::cerr << "WARNING: something in Messenger::terminate threw an exception! Original exception message:\n" << e.what() << std::endl;
    }
 }
 
 
-void Messenger::close_queue_worker_connections() {
+void Messenger::close_queue_worker_connections(bool close_context) {
    if (JobManager::instance()->process_manager().is_worker()) {
       this_worker_qw_push.reset(nullptr);
       this_worker_qw_pull.reset(nullptr);
-      zmqSvc().close_context();
+      if (close_context) {
+         zmqSvc().close_context();
+      }
    } else if (JobManager::instance()->process_manager().is_queue()) {
       for (std::size_t worker_ix = 0ul; worker_ix < JobManager::instance()->process_manager().N_workers(); ++worker_ix) {
          qw_push[worker_ix].reset(nullptr);

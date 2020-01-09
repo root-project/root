@@ -13,7 +13,9 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
+#include <csignal>  // for sigterm handling on child processes
 #include <iostream>
+#include <unordered_set>
 
 #include "RooFit/MultiProcess/util.h"
 #include "RooFit/MultiProcess/JobManager.h"
@@ -42,6 +44,25 @@ ProcessManager::~ProcessManager()
    terminate();
 }
 
+
+// static member initialization
+bool ProcessManager::_sigterm_received = false;
+
+// static function
+void ProcessManager::handle_sigterm(int /*signum*/) {
+   // We need this to tell the children to die, because we can't talk
+   // to them anymore during JobManager destruction, because that kills
+   // the Messenger first. We do that with SIGTERMs. The sigterm_received()
+   // should be checked in message loops to stop them when it's true.
+   _sigterm_received = true;
+   std::cout << "handled SIGTERM on PID " << getpid() << std::endl;
+}
+
+// static function
+bool ProcessManager::sigterm_received() {
+   return _sigterm_received;
+}
+
 void ProcessManager::initialize_processes(bool cpu_pinning) {
    // Initialize processes;
    // ... first workers:
@@ -64,6 +85,18 @@ void ProcessManager::initialize_processes(bool cpu_pinning) {
          _is_queue = true;
       } else {
          _is_master = true;
+      }
+   }
+
+   // set the sigterm handler on the child processes
+   if (!_is_master) {
+      struct sigaction sa;
+      memset (&sa, '\0', sizeof(sa));
+      sa.sa_handler = ProcessManager::handle_sigterm;
+
+      if (sigaction(SIGTERM, &sa, NULL) < 0) {
+         std::perror("sigaction failed");
+         std::exit(1);
       }
    }
 
@@ -118,7 +151,7 @@ bool ProcessManager::is_initialized() const {
 void ProcessManager::terminate() noexcept {
    try {
       if (is_master()) {
-         JobManager::instance()->messenger().send_from_master_to_queue(M2Q::terminate);
+//         JobManager::instance()->messenger().send_from_master_to_queue(M2Q::terminate);
          shutdown_processes();
       }
    } catch (const std::exception& e) {
@@ -127,24 +160,58 @@ void ProcessManager::terminate() noexcept {
 }
 
 
-void ProcessManager::terminate_workers() {
-   if (is_queue()) {
-      for(std::size_t worker_ix = 0; worker_ix < _N_workers; ++worker_ix) {
-         JobManager::instance()->messenger().send_from_queue_to_worker(worker_ix, Q2W::terminate);
-      }
-      JobManager::instance()->messenger().close_queue_worker_connections();
-   }
-}
+//void ProcessManager::terminate_workers() {
+//   if (is_queue()) {
+//      for(std::size_t worker_ix = 0; worker_ix < _N_workers; ++worker_ix) {
+//         JobManager::instance()->messenger().send_from_queue_to_worker(worker_ix, Q2W::terminate);
+//      }
+//      JobManager::instance()->messenger().close_queue_worker_connections();
+//   }
+//}
 
+
+int chill_wait() {
+   int status = 0;
+   pid_t pid;
+   do {
+      pid = wait(&status);
+   } while (-1 == pid && EINTR == errno); // retry on interrupted system call
+
+   if (0 != status) {
+      if (WIFEXITED(status)) {
+         printf("exited, status=%d\n", WEXITSTATUS(status));
+      } else if (WIFSIGNALED(status)) {
+         printf("killed by signal %d\n", WTERMSIG(status));
+      } else if (WIFSTOPPED(status)) {
+         printf("stopped by signal %d\n", WSTOPSIG(status));
+      } else if (WIFCONTINUED(status)) {
+         printf("continued\n");
+      }
+   }
+
+   if (-1 == pid) {
+      throw std::runtime_error(std::string("waitpid, errno ") + std::to_string(errno));
+   }
+
+   return pid;
+}
 
 void ProcessManager::shutdown_processes() {
    if (is_master()) {
-      // first wait for the workers that will be terminated by the queue
+      // terminate all children
+      std::unordered_set<pid_t> children;
+      children.insert(queue_pid);
+      kill(queue_pid, SIGTERM);
       for (auto pid : worker_pids) {
-         wait_for_child(pid, true, 5);
+         kill(pid, SIGTERM);
+         children.insert(pid);
       }
-      // then wait for the queue
-      wait_for_child(queue_pid, true, 5);
+      // then wait for them to actually die and clean out the zombies
+      while (!children.empty()) {
+         pid_t pid = chill_wait();
+         std::cout << "chillly waited for PID " << pid << std::endl;
+         children.erase(pid);
+      }
    }
 
    initialized = false;

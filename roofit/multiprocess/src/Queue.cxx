@@ -151,25 +151,33 @@ void Queue::loop()
    std::size_t mq_index;
    std::tie(poller, mq_index) = JobManager::instance()->messenger().create_poller();
 
-   while (carry_on) {
-      // poll: wait until status change (-1: infinite timeout)
-      auto poll_result = poller.poll(-1);
-      // then process incoming messages from sockets
-      for (auto readable_socket : poll_result) {
-         // message comes from the master/queue socket (first element):
-         if (readable_socket.first == mq_index) {
-            auto message = JobManager::instance()->messenger().receive_from_master_on_queue<M2Q>();
-            carry_on = process_master_message(message);
-            // on terminate, also stop for-loop, no need to check other
-            // sockets anymore:
-            if (!carry_on) {
-               break;
+   while (!ProcessManager::sigterm_received() && carry_on) {
+      try { // watch for zmq_error from send or recv caused by SIGTERM from master
+         // poll: wait until status change (-1: infinite timeout)
+         auto poll_result = poller.poll(-1);
+         // then process incoming messages from sockets
+         for (auto readable_socket : poll_result) {
+            // message comes from the master/queue socket (first element):
+            if (readable_socket.first == mq_index) {
+               auto message = JobManager::instance()->messenger().receive_from_master_on_queue<M2Q>();
+               carry_on = process_master_message(message);
+               // on terminate, also stop for-loop, no need to check other
+               // sockets anymore:
+               if (!carry_on) {
+                  break;
+               }
+            } else { // from a worker socket
+               // TODO: dangerous assumption for this_worker_id, may become invalid if we allow multiple queue_loops on the same process!
+               auto this_worker_id = readable_socket.first - 1;  // TODO: replace with a more reliable lookup
+               auto message = JobManager::instance()->messenger().receive_from_worker_on_queue<W2Q>(this_worker_id);
+               process_worker_message(this_worker_id, message);
             }
-         } else { // from a worker socket
-            // TODO: dangerous assumption for this_worker_id, may become invalid if we allow multiple queue_loops on the same process!
-            auto this_worker_id = readable_socket.first - 1;  // TODO: replace with a more reliable lookup
-            auto message = JobManager::instance()->messenger().receive_from_worker_on_queue<W2Q>(this_worker_id);
-            process_worker_message(this_worker_id, message);
+         }
+      } catch (zmq::error_t& e) {
+         if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
+            break;
+         } else {
+            throw;
          }
       }
    }

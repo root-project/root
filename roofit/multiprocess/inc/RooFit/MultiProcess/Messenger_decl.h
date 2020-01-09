@@ -54,8 +54,8 @@ public:
       fromQonW,
    };
 
-   void close_master_queue_connection() noexcept;
-   void close_queue_worker_connections();
+   void close_master_queue_connection(bool close_context) noexcept;
+   void close_queue_worker_connections(bool close_context);
 
    std::pair<ZeroMQPoller, std::size_t> create_poller();
 

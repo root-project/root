@@ -34,7 +34,7 @@ public:
    bool is_initialized() const;
 
    void terminate() noexcept;
-   void terminate_workers();
+//   void terminate_workers();
 
    bool is_master() const;
    bool is_queue() const;
@@ -43,6 +43,9 @@ public:
    std::size_t N_workers() const;
 
    void identify_processes() const;
+
+   static void handle_sigterm(int signum);
+   static bool sigterm_received();
 
 private:
    void initialize_processes(bool cpu_pinning = true);
@@ -59,6 +62,7 @@ private:
 
    bool initialized = false;
 
+   static bool _sigterm_received;
 };
 
 } // namespace MultiProcess
