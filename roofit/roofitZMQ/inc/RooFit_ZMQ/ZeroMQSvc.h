@@ -100,7 +100,7 @@ auto retry_send(zmq::socket_t& socket, int max_tries, args_t ...args) -> decltyp
       if (++tries == max_tries
           || e.num() != EINTR  // only recoverable error
           ) {
-        std::cerr << "ERROR in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
+//        std::cerr << "ERROR in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
         throw e;
       }
       std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::send (retry_send) on pid " << getpid() << ": " << e.what() << ")\n";
@@ -119,7 +119,7 @@ auto retry_recv(zmq::socket_t& socket, int max_tries, args_t ...args) -> decltyp
       if (++tries == max_tries
           || e.num() != EINTR  // only recoverable error
           ) {
-        std::cerr << "ERROR in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
+//        std::cerr << "ERROR in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << " (errno: " << e.num() << ")\n";
         throw e;
       }
       std::cerr << "RETRY " << tries << "/" << (max_tries - 1) << " in ZeroMQSvc::recv (retry_recv) on pid " << getpid() << ": " << e.what() << ")\n";
@@ -199,7 +199,7 @@ public:
    T receive(zmq::socket_t& socket, bool* more = nullptr) const {
       // receive message
       zmq::message_t msg;
-      auto nbytes = retry_recv(socket, 3, &msg);
+      auto nbytes = retry_recv(socket, 1, &msg);
       if (0 == nbytes) {
          throw ZMQ::TimeOutException{};
       }
@@ -214,7 +214,7 @@ public:
    T receive(zmq::socket_t& socket, bool* more = nullptr) const {
       // receive message
       zmq::message_t msg;
-      auto nbytes = retry_recv(socket, 3, &msg);
+      auto nbytes = retry_recv(socket, 1, &msg);
       if (0 == nbytes) {
          throw ZMQ::TimeOutException{};
       }
@@ -227,7 +227,7 @@ public:
 //   std::unique_ptr<T> receive(zmq::socket_t& socket, bool* more = nullptr) const {
 //      // receive message
 //      zmq::message_t msg;
-//      auto nbytes = retry_recv(socket, 3, &msg);
+//      auto nbytes = retry_recv(socket, 1, &msg);
 //      if (0 == nbytes) {
 //         throw ZMQ::TimeOutException{};
 //      }
@@ -254,7 +254,7 @@ public:
    // Send message with ZMQ
    template <class T, typename std::enable_if<!std::is_same<T, zmq::message_t>::value, T>::type* = nullptr>
       bool send(zmq::socket_t& socket, const T& item, int flags = 0) const {
-      return retry_send(socket, 3, encode(item), flags);
+      return retry_send(socket, 1, encode(item), flags);
    }
 
    bool send(zmq::socket_t& socket, const char* item, int flags = 0) const;
