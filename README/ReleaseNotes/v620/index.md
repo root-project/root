@@ -1,10 +1,10 @@
 % ROOT Version 6.20 Release Notes
-% 2019-05-29
+% 2020-01-10
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.20/00 is scheduled for release in November 2019.
+ROOT version 6.20/00 is scheduled for release in January 2020.
 
 For more information, see:
 
