@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 #
 # A pyROOT script that allows one to
 # make quick measuremenst.
@@ -9,6 +8,7 @@
 # as well as potentially uncertainties on those
 # values, and returns a fitted signal value
 # and errors
+from __future__ import print_function
 
 
 def main():
@@ -110,8 +110,8 @@ def MakeSimpleMeasurement( signal_val, background_val, data_val, signal_uncertai
 
     try:
         import ROOT
-    except:
-        print "It seems that pyROOT isn't properly configured"
+    except ImportError:
+        print("It seems that pyROOT isn't properly configured")
         return
 
     # Create and name a measurement
