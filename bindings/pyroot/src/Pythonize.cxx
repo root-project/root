@@ -2793,6 +2793,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    else if ( name == "RooSimultaneous" )
       Utility::AddUsingToClass( pyclass, "plotOn" );
+   else if ( name == "RooAbsPdf" ) {
+      Utility::AddUsingToClass( pyclass, "createChi2" );
+      Utility::AddUsingToClass( pyclass, "chi2FitTo" );
+   }
 
    // TODO: store these on the pythonizations module, not on gRootModule
    // TODO: externalize this code and use update handlers on the python side
