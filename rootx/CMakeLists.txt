@@ -56,3 +56,7 @@ if(x11 OR cocoa)
     ${CMAKE_BINARY_DIR}/include/rootCommandLineOptionsHelp.h
   )
 endif()
+
+if(rpath)
+  add_definitions(-DIS_RPATH_BUILD=1)
+endif()
