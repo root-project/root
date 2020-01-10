@@ -48,15 +48,9 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 
 **/
 
-#include "RooFit.h"
+#include "RooDataSet.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
-#include <fstream>
-#include "TTree.h"
-#include "TH2.h"
-#include "TDirectory.h"
-#include "RooDataSet.h"
 #include "RooPlot.h"
 #include "RooAbsReal.h"
 #include "Roo1DTable.h"
@@ -69,14 +63,23 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooMsgService.h"
 #include "RooCmdConfig.h"
 #include "RooHist.h"
-#include "TROOT.h"
-#include "TFile.h"
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooCompositeDataStore.h"
 #include "RooTreeData.h"
 #include "RooSentinel.h"
 #include "RooTrace.h"
+#include "RooHelpers.h"
+
+#include "TTree.h"
+#include "TH2.h"
+#include "TDirectory.h"
+#include "TROOT.h"
+#include "TFile.h"
+#include "ROOT/RMakeUnique.hxx"
+
+#include <fstream>
+
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
@@ -1720,12 +1723,12 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   Bool_t verbose= !opts.Contains("q");
   Bool_t debug= opts.Contains("d");
 
-  RooDataSet *data= new RooDataSet("dataset", fileList, variables);
+  auto data = std::make_unique<RooDataSet>("dataset", fileList, variables);
   if (ownIsBlind) { variables.remove(*blindState) ; delete blindState ; }
   if(!data) {
     oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: unable to create a new dataset"
 			<< endl;
-    return 0;
+    return nullptr;
   }
 
   // Redirect blindCat to point to the copy stored in the data set
@@ -1738,14 +1741,14 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     RooAbsArg* tmp = 0;
     tmp = data->_vars.find(indexCatName) ;
     if (!tmp) {
-      oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: no index category named " 
+      oocoutE(data.get(),DataHandling) << "RooDataSet::read: no index category named "
 			  << indexCatName << " in supplied variable list" << endl ;
-      return 0 ;
+      return nullptr;
     }
     if (tmp->IsA()!=RooCategory::Class()) {
-      oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: variable " << indexCatName 
+      oocoutE(data.get(),DataHandling) << "RooDataSet::read: variable " << indexCatName
 			  << " is not a RooCategory" << endl ;
-      return 0 ;
+      return nullptr;
     }
     indexCat = (RooCategory*)tmp ;
     
@@ -1756,24 +1759,18 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
   Int_t outOfRange(0) ;
 
-  // Make local copy of file list for tokenizing
-  char fileList2[64000];
-  strlcpy(fileList2, fileList, 64000);
-
   // Loop over all names in comma separated list
-  char *filename = strtok(fileList2,", ") ;
-  Int_t fileSeqNum(0) ;
-  while (filename) {
+  Int_t fileSeqNum(0);
+  for (const auto& filename : RooHelpers::tokenise(std::string(fileList), ", ")) {
     // Determine index category number, if this option is active
     if (indexCat) {
 
       // Find and detach optional file category name 
-      char *catname = strchr(filename,':') ;
+      const char *catname = strchr(filename.c_str(),':');
 
       if (catname) {
-	// Use user category name if provided
-	*catname=0 ;
-	catname++ ;
+        // Use user category name if provided
+        catname++ ;
 
 	const RooCatType* type = indexCat->lookupType(catname,kFALSE) ;
 	if (type) {
@@ -1789,7 +1786,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	char newLabel[128] ;
 	snprintf(newLabel,128,"file%03d",fileSeqNum) ;
 	if (indexCat->defineType(newLabel,fileSeqNum)) {
-	  oocoutE((TObject*)0,DataHandling) << "RooDataSet::read: Error, cannot register automatic type name " << newLabel 
+	  oocoutE(data.get(), DataHandling) << "RooDataSet::read: Error, cannot register automatic type name " << newLabel
 			      << " in index category " << indexCat->GetName() << endl ;
 	  return 0 ;
 	}	
@@ -1798,16 +1795,17 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       }
     }
 
-    oocoutI((TObject*)0,DataHandling) << "RooDataSet::read: reading file " << filename << endl ;
+    oocoutI(data.get(), DataHandling) << "RooDataSet::read: reading file " << filename << endl ;
 
     // Prefix common path 
     TString fullName(commonPath) ;
     fullName.Append(filename) ;
     ifstream file(fullName) ;
 
-    if(!file.good()) {
-      oocoutW((TObject*)0,DataHandling) << "RooDataSet::read: unable to open '"
-	   << filename << "', skipping" << endl;
+    if (!file.good()) {
+      oocoutE(data.get(), DataHandling) << "RooDataSet::read: unable to open '"
+	   << filename << "'. Returning nullptr now." << endl;
+      return nullptr;
     }
     
 //  Double_t value;
@@ -1816,12 +1814,12 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
     while(file.good() && !file.eof()) {
       line++;
-      if(debug) oocxcoutD((TObject*)0,DataHandling) << "reading line " << line << endl;
+      if(debug) oocxcoutD(data.get(),DataHandling) << "reading line " << line << endl;
 
       // process comment lines
       if (file.peek() == '#')
 	{
-	  if(debug) oocxcoutD((TObject*)0,DataHandling) << "skipping comment on line " << line << endl;	    
+	  if(debug) oocxcoutD(data.get(),DataHandling) << "skipping comment on line " << line << endl;
 	}
       else {	
 
@@ -1836,7 +1834,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 	// Stop at end of file or on read error
 	if(file.eof()) break ;	
 	if(!file.good()) {
-	  oocoutE((TObject*)0,DataHandling) << "RooDataSet::read(static): read error at line " << line << endl ;
+	  oocoutE(data.get(), DataHandling) << "RooDataSet::read(static): read error at line " << line << endl ;
 	  break;
 	}	
 
@@ -1852,7 +1850,6 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
     file.close();
 
     // get next file name 
-    filename = strtok(0," ,") ;
     fileSeqNum++ ;
   }
 
@@ -1863,9 +1860,10 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       origIndexCat->defineType(type->GetName(), type->getVal());
     }
   }
-  oocoutI((TObject*)0,DataHandling) << "RooDataSet::read: read " << data->numEntries()
+  oocoutI(data.get(),DataHandling) << "RooDataSet::read: read " << data->numEntries()
 				    << " events (ignored " << outOfRange << " out of range events)" << endl;
-  return data;
+
+  return data.release();
 }
 
 
