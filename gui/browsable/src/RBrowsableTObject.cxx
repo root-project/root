@@ -12,16 +12,16 @@
 #include "ROOT/RLogger.hxx"
 
 #include "TROOT.h"
-#include "TH1.h"
 #include "TBrowser.h"
 #include "TBrowserImp.h"
 #include "TFolder.h"
+
+#include <sstream>
 
 using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
-
 
 ///////////////////////////////////////////////////////////////////////////
 /// Return TObject instance with ownership
@@ -36,8 +36,11 @@ void *RTObjectHolder::TakeObject()
       fOwner = false;
    } else if (fObj && !fObj->IsA()->InheritsFrom("TDirectory") && !fObj->IsA()->InheritsFrom("TTree")) {
       res = fObj->Clone();
-      TH1 *h1 = dynamic_cast<TH1 *>(res);
-      if (h1) h1->SetDirectory(nullptr);
+      if (res && res->InheritsFrom("TH1")) {
+         std::stringstream cmd;
+         cmd << "((TH1 *) " << std::hex << std::showbase << (size_t)res << ")->SetDirectory(nullptr);";
+         gROOT->ProcessLine(cmd.str().c_str());
+      }
    } else {
       res = nullptr;
    }
