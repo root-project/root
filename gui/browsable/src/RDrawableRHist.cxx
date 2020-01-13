@@ -23,11 +23,11 @@
 using namespace ROOT::Experimental;
 
 class RV7HistDrawProvider : public RDrawableProvider {
-public:
-   RV7HistDrawProvider()
+   template<class HistClass>
+   void RegisterHistClass()
    {
-      RegisterV7(TClass::GetClass<RH2D>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &) -> bool {
-         auto hist = obj->get_shared<RH2D>();
+      RegisterV7(TClass::GetClass<HistClass>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &) -> bool {
+         auto hist = obj->get_shared<HistClass>();
          if (!hist) return false;
 
          if (subpad->NumPrimitives() > 0) {
@@ -40,5 +40,14 @@ public:
 
          return true;
       });
+   }
+
+public:
+
+   RV7HistDrawProvider()
+   {
+      RegisterHistClass<RH1D>();
+      RegisterHistClass<RH2D>();
+      RegisterHistClass<RH3D>();
    }
 } newRV7HistDrawProvider;
