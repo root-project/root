@@ -563,7 +563,7 @@ void TLegend::Paint( Option_t* option )
          fY2 = fY2+fY1;
          fX2 = fX2+fX1;
       } else {
-         Warning("Paint", "Legend to large to be automatically placed. A default position is used");
+         Warning("Paint", "Legend too large to be automatically placed; a default position is used");
          fX1 = 0.5;
          fY1 = 0.67;
          fX2 = 0.88;
