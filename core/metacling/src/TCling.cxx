@@ -6342,8 +6342,7 @@ static std::string ResolveSymbol(const std::string& mangled_name,
       // not strictly require symbols from those sections. Enable after checking
       // performance!
       if (FindSymbol(LibName, mangled_name, /*ignore*/
-                     llvm::object::SymbolRef::SF_Undefined |
-                     llvm::object::SymbolRef::SF_Weak)) {
+                     llvm::object::SymbolRef::SF_Undefined)) {
          sQueriedLibraries.push_back(P);
          return LibName;
       }
