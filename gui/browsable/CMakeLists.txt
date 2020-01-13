@@ -14,10 +14,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/RBrowsableSysFile.hxx
     ROOT/RBrowserItem.hxx
     ROOT/RDrawableProvider.hxx
+    ROOT/RBrowsableTObject.hxx
+    ROOT/RBrowsableTDirectory.hxx
   SOURCES
     src/RBrowsable.cxx
     src/RBrowsableSysFile.cxx
     src/RDrawableProvider.cxx
+    src/RBrowsableTObject.cxx
+    src/RBrowsableTDirectory.cxx
   DEPENDENCIES
     RIO
 )
