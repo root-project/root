@@ -26,7 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     RIO
     Gpad
     WebGui6
-    Tree
     ROOTGpadv7
     ROOTHistDrawProvider
+    ROOTTreeDrawProvider
 )
