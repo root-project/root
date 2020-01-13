@@ -61,7 +61,7 @@ void PyROOT::Init()
    AddToGlobalScope("gInterpreter", "TInterpreter.h", gInterpreter, Cppyy::GetScope(gInterpreter->IsA()->GetName()));
 }
 
-PyObject *PyROOT::ClearProxiedObjects()
+PyObject *PyROOT::ClearProxiedObjects(PyObject * /* self */, PyObject * /* args */)
 {
    // Delete all memory-regulated objects
    GetMemoryRegulator().ClearProxiedObjects();
