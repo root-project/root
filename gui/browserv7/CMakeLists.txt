@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -18,7 +18,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   SOURCES
     src/RBrowsableTObject.cxx
     src/RBrowsableTDirectory.cxx
-    src/RDrawableRHist.cxx
     src/RBrowser.cxx
     src/RFileDialog.cxx
   DEPENDENCIES
@@ -29,5 +28,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     WebGui6
     Tree
     ROOTGpadv7
-    ROOTHistDraw
+    ROOTHistDrawProvider
 )
