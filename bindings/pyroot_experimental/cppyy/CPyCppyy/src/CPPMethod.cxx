@@ -545,11 +545,11 @@ bool CPyCppyy::CPPMethod::ConvertAndSetArgs(PyObject* args, CallContext* ctxt)
     // argc must be between min and max number of arguments
         if (argc < fArgsRequired) {
             SetPyError_(CPyCppyy_PyText_FromFormat(
-                "takes at least %ld arguments (%ld given)", fArgsRequired, argc));
+                "takes at least %zd arguments (%zd given)", fArgsRequired, argc));
             return false;
         } else if (argMax < argc) {
             SetPyError_(CPyCppyy_PyText_FromFormat(
-                "takes at most %ld arguments (%ld given)", argMax, argc));
+                "takes at most %zd arguments (%zd given)", argMax, argc));
             return false;
         }
     }
