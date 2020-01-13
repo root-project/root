@@ -235,9 +235,14 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
 
 std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<Browsable::RHolder> &object)
 {
+   if (!object)
+      return nullptr;
+
    auto &bmap = GetBrowseMap();
 
    auto cl = object->GetClass();
+   if (!cl)
+      return nullptr;
 
    auto iter = bmap.find(cl);
 

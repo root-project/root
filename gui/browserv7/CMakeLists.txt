@@ -18,12 +18,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RFileDialog.cxx
   DEPENDENCIES
     ROOTBrowsable
-    ROOTWebDisplay
-    RIO
-    Gpad
     WebGui6
     ROOTGpadv7
-    ROOTHistDrawProvider
-    ROOTObjectDrawProvider
-    ROOTTreeDrawProvider
 )
