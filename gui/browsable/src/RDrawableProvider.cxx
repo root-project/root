@@ -12,6 +12,7 @@
 
 #include "TBaseClass.h"
 #include "TList.h"
+#include "TSystem.h"
 
 using namespace ROOT::Experimental;
 
@@ -89,9 +90,41 @@ RDrawableProvider::~RDrawableProvider()
 
 bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
 {
+   if (!obj || !obj->GetClass())
+      return false;
+
    auto &map6 = GetV6Map();
 
    TClass *cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter6 = map6.find(cl);
+
+      if (iter6 != map6.end()) {
+         if (iter6->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   for (auto &pair : map6)
+      if ((pair.first == obj->GetClass()) || !pair.first)
+         if (pair.second.func(subpad, obj, opt))
+            return true;
+
+   // try to load necessary library and repeat action again
+   // TODO: need factory methods for that
+
+   if (obj->GetClass()->InheritsFrom("TLeaf"))
+      gSystem->Load("libROOTTreeDrawProvider");
+   else if (obj->GetClass()->InheritsFrom(TObject::Class()))
+      gSystem->Load("libROOTObjectDrawProvider");
+   else
+      return false;
+
+   cl = const_cast<TClass *>(obj->GetClass());
    while (cl) {
       auto iter6 = map6.find(cl);
 
@@ -119,9 +152,43 @@ bool RDrawableProvider::DrawV6(TVirtualPad *subpad, std::unique_ptr<Browsable::R
 
 bool RDrawableProvider::DrawV7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
 {
+   if (!obj || !obj->GetClass())
+      return false;
+
    auto &map7 = GetV7Map();
 
    TClass *cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter7 = map7.find(cl);
+
+      if (iter7 != map7.end()) {
+         if (iter7->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   for (auto &pair : map7)
+      if ((pair.first == obj->GetClass()) || !pair.first)
+         if (pair.second.func(subpad, obj, opt))
+            return true;
+
+   // try to load necessary library and repeat action again
+   // TODO: need factory methods for that
+
+   if (obj->GetClass()->InheritsFrom("TLeaf"))
+      gSystem->Load("libROOTTreeDrawProvider");
+   else if (obj->GetClass()->InheritsFrom(TObject::Class()))
+      gSystem->Load("libROOTObjectDrawProvider");
+   else if (obj->GetClass()->InheritsFrom("ROOT::Experimental::RH1D") || obj->GetClass()->InheritsFrom("ROOT::Experimental::RH2D") || obj->GetClass()->InheritsFrom("ROOT::Experimental::RH2D"))
+      gSystem->Load("libROOTHistDrawProvider");
+   else
+      return false;
+
+   cl = const_cast<TClass *>(obj->GetClass());
    while (cl) {
       auto iter7 = map7.find(cl);
 

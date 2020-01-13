@@ -25,7 +25,6 @@ class TObject;
 using RElementPath_t = std::vector<std::string>;
 
 
-
 namespace ROOT {
 namespace Experimental {
 
