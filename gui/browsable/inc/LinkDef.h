@@ -27,6 +27,10 @@
 
 #pragma link C++ class ROOT::Experimental::RDrawableProvider+;
 
+#pragma link C++ class ROOT::Experimental::Browsable::RTObjectHolder+;
+#pragma link C++ class ROOT::Experimental::RBrowserTObjectItem+;
+#pragma link C++ class ROOT::Experimental::RBrowserTKeyItem+;
+
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserFileItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserRequest+;
