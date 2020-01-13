@@ -29,6 +29,9 @@
 #include "TObjArray.h"
 #include "TClass.h"
 
+Int_t TSVG::fgLineJoin = 0;
+Int_t TSVG::fgLineCap  = 0;
+
 ClassImp(TSVG);
 
 /** \class TSVG
@@ -115,6 +118,8 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    fLenBuffer = 0;
    fType      = abs(wtype);
+   SetLineJoin(gStyle->GetJoinLinePS());
+   SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
@@ -353,6 +358,10 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    } else {
       SetColorAlpha(light);
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 
    //- Draw bottom&right part of the box
@@ -417,6 +426,10 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    } else {
       SetColorAlpha(dark);
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
@@ -610,6 +623,10 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr(" stroke-width=\"");
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
+      if (fgLineJoin)
+         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      if (fgLineCap)
+         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1015,6 +1032,10 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr(" stroke-width=\"");
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
+      if (fgLineJoin)
+         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      if (fgLineCap)
+         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1462,7 +1483,6 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          delete tokens;
          PrintFast(1,"\"");
       }
-      PrintFast(2,"/>");
    } else {
       PrintFast(8,"z\" fill=");
       if (fais == 0) {
@@ -1471,8 +1491,12 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       } else {
          SetColorAlpha(fFillColor);
       }
-      PrintFast(2,"/>");
    }
+   if (fgLineJoin)
+      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+   if (fgLineCap)
+      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+   PrintFast(2,"/>");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1633,6 +1657,54 @@ void TSVG::SetFillColor( Color_t cindex )
 void TSVG::SetLineColor( Color_t cindex )
 {
    fLineColor = cindex;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TSVG::fgLineJoin.
+/// This parameter determines the appearance of joining lines in a SVG
+/// output.
+/// It takes one argument which may be:
+///   - 0 (miter join)
+///   - 1 (round join)
+///   - 2 (bevel join)
+/// The default value is 0 (miter join).
+///
+/// \image html postscript_1.png
+///
+/// To change the line join behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetJoinLinePS(2); // Set the PS line join to bevel.
+/// ~~~
+
+void TSVG::SetLineJoin( Int_t linejoin )
+{
+   fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TSVG::fgLineCap.
+/// This parameter determines the appearance of line caps in a SVG
+/// output.
+/// It takes one argument which may be:
+///   - 0 (butt caps)
+///   - 1 (round caps)
+///   - 2 (projecting caps)
+/// The default value is 0 (butt caps).
+///
+/// \image html postscript_2.png
+///
+/// To change the line cap behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetCapLinePS(2); // Set the PS line cap to projecting.
+/// ~~~
+
+void TSVG::SetLineCap( Int_t linecap )
+{
+   fgLineCap = linecap;
+   if (fgLineCap<0) fgLineCap=0;
+   if (fgLineCap>2) fgLineCap=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
