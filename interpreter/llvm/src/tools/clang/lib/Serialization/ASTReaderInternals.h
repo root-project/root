@@ -42,7 +42,7 @@ class ASTDeclContextNameLookupTrait {
   
 public:
   // Maximum number of lookup tables we allow before condensing the tables.
-  static const int MaxTables = 4;
+  static const int MaxTables = 256;
 
   /// The lookup result is a list of global declaration IDs.
   typedef llvm::SmallVector<DeclID, 4> data_type;
