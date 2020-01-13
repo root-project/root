@@ -32,6 +32,17 @@ ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
      ROOTHistDraw
 )
 
+# provider for generic drawing of TObject on RCanvas/TCanvas
+
+ROOT_LINKER_LIBRARY(ROOTObjectDrawProvider
+     src/RDrawableTObject.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     RIO
+     Gpad
+     ROOTGpadv7
+)
+
 # provider for drawing of TTree on RCanvas/TCanvas
 
 ROOT_LINKER_LIBRARY(ROOTTreeDrawProvider

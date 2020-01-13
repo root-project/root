@@ -28,5 +28,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     WebGui6
     ROOTGpadv7
     ROOTHistDrawProvider
+    ROOTObjectDrawProvider
     ROOTTreeDrawProvider
 )
