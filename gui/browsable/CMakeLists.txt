@@ -31,3 +31,16 @@ ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
      ROOTGpadv7
      ROOTHistDraw
 )
+
+# provider for drawing of TTree on RCanvas/TCanvas
+
+ROOT_LINKER_LIBRARY(ROOTTreeDrawProvider
+     src/RDrawableTTree.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     RIO
+     Tree
+     Gpad
+     Hist
+     ROOTGpadv7
+)
