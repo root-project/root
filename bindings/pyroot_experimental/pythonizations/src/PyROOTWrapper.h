@@ -20,7 +20,7 @@ namespace PyROOT {
 void Init();
 
 // clean up all objects controlled by TMemoryRegulator
-PyObject *ClearProxiedObjects();
+PyObject *ClearProxiedObjects(PyObject *self, PyObject *args);
 
 } // namespace PyROOT
 
