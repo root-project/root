@@ -13,13 +13,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
     ROOT/RBrowsableTObject.hxx
     ROOT/RBrowsableTDirectory.hxx
-    ROOT/RDrawableProvider.hxx
     ROOT/RBrowser.hxx
     ROOT/RFileDialog.hxx
   SOURCES
     src/RBrowsableTObject.cxx
     src/RBrowsableTDirectory.cxx
-    src/RDrawableProvider.cxx
     src/RDrawableRHist.cxx
     src/RBrowser.cxx
     src/RFileDialog.cxx
