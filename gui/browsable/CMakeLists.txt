@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT gui/browserv7
+# CMakeLists.txt file for building ROOT gui/browsable
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
@@ -20,4 +20,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     src/RDrawableProvider.cxx
   DEPENDENCIES
     RIO
+)
+
+# provider for drawing of v7 histograms on RCanvas
+
+ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
+     src/RDrawableRHist.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTGpadv7
+     ROOTHistDraw
 )
