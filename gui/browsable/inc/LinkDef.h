@@ -16,7 +16,6 @@
 
 #pragma link C++ class ROOT::Experimental::Browsable::RHolder+;
 #pragma link C++ class ROOT::Experimental::Browsable::RAnyObjectHolder+;
-#pragma link C++ class ROOT::Experimental::Browsable::RTObjectHolder+;
 #pragma link C++ class ROOT::Experimental::Browsable::RProvider+;
 #pragma link C++ class ROOT::Experimental::Browsable::RElement+;
 #pragma link C++ class ROOT::Experimental::Browsable::RLevelIter+;

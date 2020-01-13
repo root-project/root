@@ -12,6 +12,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class ROOT::Experimental::Browsable::RTObjectHolder+;
 #pragma link C++ class ROOT::Experimental::RBrowserTObjectItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserTKeyItem+;
 
