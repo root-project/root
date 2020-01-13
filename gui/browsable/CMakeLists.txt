@@ -47,7 +47,7 @@ ROOT_LINKER_LIBRARY(ROOTObjectDrawProvider
      ROOTGpadv7
 )
 
-# provider for drawing of TTree on RCanvas/TCanvas
+# provider for drawing of TLeaf on RCanvas/TCanvas
 
 ROOT_LINKER_LIBRARY(ROOTTreeDrawProvider
      src/RDrawableTTree.cxx

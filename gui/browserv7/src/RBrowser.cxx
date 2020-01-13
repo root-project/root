@@ -30,11 +30,10 @@
 #include "TROOT.h"
 #include "TWebCanvas.h"
 #include "TCanvas.h"
+#include "TFolder.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
 #include "TRint.h"
-#include "TH1.h"
-#include "TFolder.h"
 #include "Getline.h"
 
 #include <sstream>
@@ -47,6 +46,8 @@
 
 using namespace std::string_literals;
 
+using namespace ROOT::Experimental;
+
 using namespace ROOT::Experimental::Browsable;
 
 /** \class ROOT::Experimental::RBrowser
@@ -58,7 +59,7 @@ web-based ROOT Browser prototype.
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
+RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
@@ -103,7 +104,7 @@ ROOT::Experimental::RBrowser::RBrowser(bool use_rcanvas)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-ROOT::Experimental::RBrowser::~RBrowser()
+RBrowser::~RBrowser()
 {
    fCanvases.clear();
 }
@@ -112,7 +113,7 @@ ROOT::Experimental::RBrowser::~RBrowser()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process browser request
 
-std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::string &msg)
+std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
 {
    std::string res;
 
@@ -136,7 +137,7 @@ std::string ROOT::Experimental::RBrowser::ProcessBrowserRequest(const std::strin
 /////////////////////////////////////////////////////////////////////////////////
 /// Process file save command in the editor
 
-void ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &arg)
+void RBrowser::ProcessSaveFile(const std::string &arg)
 {
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg);
    if (!arr || (arr->size()!=2)) {
@@ -151,7 +152,7 @@ void ROOT::Experimental::RBrowser::ProcessSaveFile(const std::string &arg)
 /////////////////////////////////////////////////////////////////////////////////
 /// Process file save command in the editor
 
-long ROOT::Experimental::RBrowser::ProcessRunCommand(const std::string &file_path)
+long RBrowser::ProcessRunCommand(const std::string &file_path)
 {
    // Split the path (filename + text)
    std::vector<std::string> split;
@@ -167,7 +168,7 @@ long ROOT::Experimental::RBrowser::ProcessRunCommand(const std::string &file_pat
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
+std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::string &drawingOptions)
 {
    R__DEBUG_HERE("rbrowser") << "DoubleClick " << item_path;
 
@@ -210,7 +211,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
       auto obj = elem->GetObject();
 
       if (obj)
-         if (ROOT::Experimental::RDrawableProvider::DrawV6(canv, obj, drawingOptions)) {
+         if (RDrawableProvider::DrawV6(canv, obj, drawingOptions)) {
             canv->ForceUpdate(); // force update async - do not wait for confirmation
             return "SLCTCANV:"s + canv->GetName();
          }
@@ -223,38 +224,14 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 
       auto obj = elem->GetObject();
       if (obj)
-         if (ROOT::Experimental::RDrawableProvider::DrawV7(subpad, obj, drawingOptions)) {
+         if (RDrawableProvider::DrawV7(subpad, obj, drawingOptions)) {
             rcanv->Modified();
             rcanv->Update(true);
             return "SLCTCANV:"s + rcanv->GetTitle();
          }
-
-/*
-      if (rcanv->NumPrimitives() > 0) {
-         rcanv->Wipe();
-         rcanv->Modified();
-         rcanv->Update(true);
-      }
-
-      // FIXME: how to proceed with TObject ownership here
-      TObject *clone = tobj->Clone();
-      TH1 *h1 = dynamic_cast<TH1 *>(clone);
-      if (h1) h1->SetDirectory(nullptr);
-
-      std::shared_ptr<TObject> ptr;
-      ptr.reset(clone);
-      rcanv->Draw<RObjectDrawable>(ptr, drawingOptions);
-      rcanv->Modified();
-
-      rcanv->Update(true);
-
-      return "SLCTCANV:"s + rcanv->GetTitle();
-      */
    }
 
-
    R__DEBUG_HERE("rbrowser") << "No active canvas to process dbl click";
-
 
    return "";
 }
@@ -264,7 +241,7 @@ std::string ROOT::Experimental::RBrowser::ProcessDblClick(const std::string &ite
 /// If web window already started - just refresh it like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
 
-void ROOT::Experimental::RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
+void RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
    if (!fWebWindow->NumConnections() || always_start_new_browser) {
       fWebWindow->Show(args);
@@ -276,7 +253,7 @@ void ROOT::Experimental::RBrowser::Show(const RWebDisplayArgs &args, bool always
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Hide ROOT Browser
 
-void ROOT::Experimental::RBrowser::Hide()
+void RBrowser::Hide()
 {
    if (!fWebWindow)
       return;
@@ -287,7 +264,7 @@ void ROOT::Experimental::RBrowser::Hide()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Create new web canvas, invoked when new canvas created on client side
 
-TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
+TCanvas *RBrowser::AddCanvas()
 {
    TString canv_name;
    canv_name.Form("webcanv%d", (int)(fCanvases.size()+1));
@@ -319,11 +296,11 @@ TCanvas *ROOT::Experimental::RBrowser::AddCanvas()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates RCanvas for the output
 
-std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::AddRCanvas()
+std::shared_ptr<RCanvas> RBrowser::AddRCanvas()
 {
    std::string name = "rcanv"s + std::to_string(fRCanvases.size()+1);
 
-   auto canv = ROOT::Experimental::RCanvas::Create(name);
+   auto canv = RCanvas::Create(name);
 
    canv->Show("embed");
 
@@ -337,7 +314,7 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::AddRC
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL for canvas - required for client to establish connection
 
-std::string ROOT::Experimental::RBrowser::GetCanvasUrl(TCanvas *canv)
+std::string RBrowser::GetCanvasUrl(TCanvas *canv)
 {
    TWebCanvas *web = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
    return fWebWindow->GetRelativeAddr(web->GetWebWindow());
@@ -346,7 +323,7 @@ std::string ROOT::Experimental::RBrowser::GetCanvasUrl(TCanvas *canv)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL for canvas - required for client to establish connection
 
-std::string ROOT::Experimental::RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas> &canv)
+std::string RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas> &canv)
 {
    return "../"s + canv->GetWindowAddr() + "/"s;
 }
@@ -354,7 +331,7 @@ std::string ROOT::Experimental::RBrowser::GetRCanvasUrl(std::shared_ptr<RCanvas>
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns active web canvas (if any)
 
-TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
+TCanvas *RBrowser::GetActiveCanvas() const
 {
    auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [this](const std::unique_ptr<TCanvas> &canv) { return fActiveCanvas == canv->GetName(); });
 
@@ -367,7 +344,7 @@ TCanvas *ROOT::Experimental::RBrowser::GetActiveCanvas() const
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns active RCanvas (if any)
 
-std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::GetActiveRCanvas() const
+std::shared_ptr<RCanvas> RBrowser::GetActiveRCanvas() const
 {
    auto iter = std::find_if(fRCanvases.begin(), fRCanvases.end(), [this](const std::shared_ptr<RCanvas> &canv) { return fActiveCanvas == canv->GetTitle(); });
 
@@ -381,7 +358,7 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RBrowser::GetAc
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Close and delete specified canvas
 
-void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
+void RBrowser::CloseCanvas(const std::string &name)
 {
    auto iter = std::find_if(fCanvases.begin(), fCanvases.end(), [name](std::unique_ptr<TCanvas> &canv) { return name == canv->GetName(); });
 
@@ -395,7 +372,7 @@ void ROOT::Experimental::RBrowser::CloseCanvas(const std::string &name)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process client connect
 
-void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
+void RBrowser::SendInitMsg(unsigned connid)
 {
    std::vector<std::vector<std::string>> reply;
 
@@ -424,7 +401,7 @@ void ROOT::Experimental::RBrowser::SendInitMsg(unsigned connid)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return the current directory of ROOT
 
-std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
+std::string RBrowser::GetCurrentWorkingDirectory()
 {
    return "WORKPATH:"s + TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath()).Data();
 }
@@ -432,7 +409,7 @@ std::string ROOT::Experimental::RBrowser::GetCurrentWorkingDirectory()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
 
-void ROOT::Experimental::RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
+void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
 {
    R__DEBUG_HERE("rbrowser") << "ProcessMsg  len " << arg.length() << " substr(30) " << arg.substr(0, 30);
 
