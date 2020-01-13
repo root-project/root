@@ -252,7 +252,7 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
    };
 
    PyObject *item;
-   auto idx = 0u;
+   auto idx = 0;
    std::stringstream typestr;
    std::vector<std::string> pytypes(inputTypesSize);
    std::vector<std::string> inputTypesStr(inputTypesSize);

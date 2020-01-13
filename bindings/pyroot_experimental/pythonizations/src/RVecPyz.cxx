@@ -49,7 +49,7 @@ PyObject *PyROOT::AsRVec(PyObject * /*self*/, PyObject * obj)
       return NULL;
    }
    long size = 0;
-   for (unsigned int i = 0; i < PyTuple_Size(pyshape); i++) {
+   for (int i = 0; i < PyTuple_Size(pyshape); i++) {
       if (size == 0) size = 1;
       size *= PyLong_AsLong(PyTuple_GetItem(pyshape, i));
    }
