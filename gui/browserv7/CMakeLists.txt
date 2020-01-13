@@ -8,19 +8,15 @@
 # CMakeLists.txt file for building ROOT gui/browserv7
 ############################################################################
 
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
-    ROOT/RBrowsable.hxx
-    ROOT/RBrowsableSysFile.hxx
     ROOT/RBrowsableTObject.hxx
     ROOT/RBrowsableTDirectory.hxx
-    ROOT/RBrowserItem.hxx
     ROOT/RDrawableProvider.hxx
     ROOT/RBrowser.hxx
     ROOT/RFileDialog.hxx
   SOURCES
-    src/RBrowsable.cxx
-    src/RBrowsableSysFile.cxx
     src/RBrowsableTObject.cxx
     src/RBrowsableTDirectory.cxx
     src/RDrawableProvider.cxx
@@ -28,6 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
     src/RBrowser.cxx
     src/RFileDialog.cxx
   DEPENDENCIES
+    ROOTBrowsable
     ROOTWebDisplay
     RIO
     Gpad
