@@ -20,11 +20,12 @@
 \ingroup Roofitcore
 
 A RooCurve is a one-dimensional graphical representation of a real-valued function.
-A curve is approximated by straight line segments with endpoints chosen to give
+A curve is approximated by straight line segments with end points chosen to give
 a "good" approximation to the true curve. The goodness of the approximation is
-controlled by a precision and a resolution parameter. To view the points where
-a function y(x) is actually evaluated to approximate a smooth curve, use the fact
-that a RooCurve is a TGraph:
+controlled by a precision and a resolution parameter.
+
+A RooCurve derives from TGraph, so it can either be drawn as a line (default) or
+as points:
 ```
 RooPlot *p = y.plotOn(x.frame());
 p->getAttMarker("curve_y")->SetMarkerStyle(20);
@@ -62,7 +63,7 @@ ClassImp(RooCurve);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Default constructor.
 
 RooCurve::RooCurve() : _showProgress(kFALSE)
 {
@@ -76,13 +77,15 @@ RooCurve::RooCurve() : _showProgress(kFALSE)
 /// how precisely the smooth curve is rasterized. Use the optional argument set
 /// to specify how the expression should be normalized. Use the optional scale
 /// factor to rescale the expression after normalization.
-/// If shiftToZero is set, the entire curve is shift down to make the lowest
-/// point in of the curve go through zero.
-
+/// If shiftToZero is set, the entire curve is shifted down to make the lowest
+/// point of the curve go through zero.
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
-		   Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
-		   Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal, 
-		   Bool_t showProg) : _showProgress(showProg)
+    Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
+    Bool_t shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, Double_t eeVal,
+    Bool_t showProg) :
+        TGraph(),
+        RooPlotable(),
+        _showProgress(showProg)
 {
 
   // grab the function's name and title
@@ -146,11 +149,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
 
   // Adjust limits
-  Int_t i ;
-  for (i=0 ; i<GetN() ; i++) {    
-    Double_t x2,y2 ;
-    GetPoint(i,x2,y2) ;
-    updateYAxisLimits(y2);
+  for (int i=0 ; i<GetN() ; i++) {
+    updateYAxisLimits(fY[i]);
   }
   this->Sort();
 }
@@ -161,7 +161,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Doubl
 /// Create a 1-dim curve of the value of the specified real-valued
 /// expression as a function of x. Use the optional precision
 /// parameter to control how precisely the smooth curve is
-/// rasterized.  If shiftToZero is set, the entire curve is shift
+/// rasterized. If shiftToZero is set, the entire curve is shifted
 /// down to make the lowest point in of the curve go through zero.
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
@@ -177,11 +177,8 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
 
   // Adjust limits
-  Int_t i ;
-  for (i=0 ; i<GetN() ; i++) {    
-    Double_t x,y ;
-    GetPoint(i,x,y) ;
-    updateYAxisLimits(y);
+  for (int i=0 ; i<GetN() ; i++) {
+    updateYAxisLimits(fY[i]);
   }
   this->Sort();
 }
@@ -189,10 +186,17 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor of curve as sum of two other curves
+/// Constructor of a curve as sum of two other curves.
+/// \f[
+/// C_\mathrm{sum} = \mathrm{scale1}*c1 + \mathrm{scale2}*c2
+/// \f]
 ///
-/// Csum = scale1*c1 + scale2*c2
-///
+/// \param[in] name Name of the curve (to retrieve it from a plot)
+/// \param[in] title Title (for plotting).
+/// \param[in] c1 First curve.
+/// \param[in] c2 Second curve.
+/// \param[in] scale1 Scale y values for c1 by this factor.
+/// \param[in] scale1 Scale y values for c2 by this factor.
 
 RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) :
   _showProgress(kFALSE)
@@ -208,14 +212,14 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
   // Add X points of C1
   Int_t i1,n1 = c1.GetN() ;
   for (i1=0 ; i1<n1 ; i1++) {
-    const_cast<RooCurve&>(c1).GetPoint(i1,x,y) ;
+    c1.GetPoint(i1,x,y) ;
     pointList.push_back(x) ;
   }
 
   // Add X points of C2
   Int_t i2,n2 = c2.GetN() ;
   for (i2=0 ; i2<n2 ; i2++) {
-    const_cast<RooCurve&>(c2).GetPoint(i2,x,y) ;
+    c2.GetPoint(i2,x,y) ;
     pointList.push_back(x) ;
   }
   
@@ -223,16 +227,16 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
   sort(pointList.begin(),pointList.end()) ;
 
   // Loop over X points
-  deque<double>::iterator iter ;
   Double_t last(-RooNumber::infinity()) ;
-  for (iter=pointList.begin() ; iter!=pointList.end() ; ++iter) {
+  for (auto point : pointList) {
 
-    if ((*iter-last)>1e-10) {      
+    if ((point-last)>1e-10) {
       // Add OR of points to new curve, skipping duplicate points within tolerance
-      addPoint(*iter,scale1*c1.interpolate(*iter)+scale2*c2.interpolate(*iter)) ;
+      addPoint(point,scale1*c1.interpolate(point)+scale2*c2.interpolate(point)) ;
     }
-    last = *iter ;
+    last = point ;
   }
+
   this->Sort();
 }
 
@@ -297,7 +301,7 @@ void RooCurve::shiftCurveToZero(Double_t prevYMax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add points calculated with the specified function, over the range (xlo,xhi).
 /// Add at least minPoints equally spaced points, and add sufficient points so that
-/// the maximum deviation from the final straight-line segements is prec*(ymax-ymin),
+/// the maximum deviation from the final straight-line segments is prec*(ymax-ymin),
 /// down to a minimum horizontal spacing of resolution*(xhi-xlo).
 
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
@@ -372,7 +376,9 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   Double_t x1,x2= xlo;
 
   if (wmode==Extended) {
-    addPoint(xlo-dx,0) ;
+    // Add two points to make curve jump from 0 to yval at the left end of the plotting range.
+    // This ensures that filled polygons are drawn properly.
+    addPoint(xlo-dx*1.00000001,0) ;
     addPoint(xlo-dx,yval[0]) ;
   } else if (wmode==Straight) {
     addPoint(xlo,0) ;
