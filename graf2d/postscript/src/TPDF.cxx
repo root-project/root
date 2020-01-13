@@ -94,6 +94,7 @@ const Int_t kObjFirstPage        = 51; // First page object
 const Int_t kNumberOfFonts = 15;
 
 Int_t TPDF::fgLineJoin = 0;
+Int_t TPDF::fgLineCap  = 0;
 
 ClassImp(TPDF);
 
@@ -1615,6 +1616,10 @@ void TPDF::NewPage()
       WriteInteger(fgLineJoin);
       PrintFast(2," j");
    }
+   if (fgLineCap) {
+      WriteInteger(fgLineCap);
+      PrintFast(2," J");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1660,6 +1665,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    fAlpha     = -1.;
    fType      = abs(wtype);
    SetLineJoin(gStyle->GetJoinLinePS());
+   SetLineCap(gStyle->GetCapLinePS());
    SetLineScale(gStyle->GetLineScalePS()/4.);
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
@@ -2461,6 +2467,32 @@ void TPDF::SetLineColor( Color_t cindex )
 void TPDF::SetLineJoin( Int_t linejoin )
 {
    fgLineJoin = linejoin;
+   if (fgLineJoin<0) fgLineJoin=0;
+   if (fgLineJoin>2) fgLineJoin=2;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the global parameter TPDF::fgLineCap.
+/// This parameter determines the appearance of line caps in a PDF
+/// output.
+/// It takes one argument which may be:
+///   - 0 (butt caps)
+///   - 1 (round caps)
+///   - 2 (projecting caps)
+/// The default value is 0 (butt caps).
+///
+/// \image html postscript_2.png
+///
+/// To change the line cap behaviour just do:
+/// ~~~ {.cpp}
+/// gStyle->SetCapLinePS(2); // Set the PDF line cap to projecting.
+/// ~~~
+
+void TPDF::SetLineCap( Int_t linecap )
+{
+   fgLineCap = linecap;
+   if (fgLineCap<0) fgLineCap=0;
+   if (fgLineCap>2) fgLineCap=2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
