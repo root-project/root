@@ -17,37 +17,84 @@
 /** \class RooGExpModel
     \ingroup Roofit
 
-Class RooGExpModel is a RooResolutionModel implementation that models
+The RooGExpModel is a RooResolutionModel implementation that models
 a resolution function that is the convolution of a Gaussian with
-a one-sided exponential. Object of class RooGExpModel can be used
-for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
+a one-sided exponential. Such objects can be used
+for analytical convolutions with classes inheriting from RooAbsAnaConvPdf.
+\f[
+  \mathrm{GExp} = \exp \left( -\frac{1}{2} \left(\frac{x-\mu}{\sigma} \right)^2 \right)^2
+    \otimes \exp\left( -\frac{x}{\tau} \right)
+\f]
+
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "Riostream.h"
 #include "RooGExpModel.h"
+
+#include "RooFit.h"
 #include "RooMath.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
 #include "RooMath.h"
 #include "TMath.h"
 
-#include "TError.h"
 
 using namespace std;
 
 ClassImp(RooGExpModel);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create a Gauss (x) Exp model with mean, sigma and tau parameters and scale factors for each parameter.
+///
+/// \note If scale factors for the parameters are not needed, `RooConst(1.)` can be passed.
+///
+/// \param[in] name Name of this instance.
+/// \param[in] title Title (e.g. for plotting)
+/// \param[in] x The convolution observable.
+/// \param[in] mean The mean of the Gaussian.
+/// \param[in] sigma Width of the Gaussian.
+/// \param[in] rlife Lifetime constant \f$ \tau \f$.
+/// \param[in] meanSF  Scale factor for mean.
+/// \param[in] sigmaSF Scale factor for sigma.
+/// \param[in] rlifeSF Scale factor for rlife.
+/// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
+/// \param[in] type  Switch between normal and flipped model.
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
+    RooAbsReal& meanIn, RooAbsReal& sigmaIn, RooAbsReal& rlifeIn,
+    RooAbsReal& meanSF, RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
+    Bool_t nlo, Type type) :
+  RooResolutionModel(name, title, xIn),
+  _mean("mean", "Mean of Gaussian component", this, meanIn),
+  sigma("sigma", "Width", this, sigmaIn),
+  rlife("rlife", "Life time", this, rlifeIn),
+  _meanSF("meanSF", "Scale factor for mean", this, meanSF),
+  ssf("ssf", "Sigma Scale Factor", this, sigmaSF),
+  rsf("rsf", "RLife Scale Factor", this, rlifeSF),
+  _flip(type==Flipped),
+  _nlo(nlo),
+  _flatSFInt(false),
+  _asympInt(false)
+{
+}
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Gauss (x) Exp model with sigma and tau parameters.
+///
+/// \param[in] name Name of this instance.
+/// \param[in] title Title (e.g. for plotting)
+/// \param[in] x The convolution observable.
+/// \param[in] sigma Width of the Gaussian.
+/// \param[in] rlife Lifetime constant \f$ \tau \f$.
+/// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
+/// \param[in] type  Switch between normal and flipped model.
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             Bool_t nlo, Type type) :
   RooResolutionModel(name,title,xIn),
+  _mean("mean", "Mean of Gaussian component", this, RooRealConstant::value(0.)),
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
+  _meanSF("meanSF", "Scale factor for mean", this, RooRealConstant::value(1)),
   ssf("ssf","Sigma Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
   rsf("rsf","RLife Scale Factor",this,(RooRealVar&)RooRealConstant::value(1)),
   _flip(type==Flipped),_nlo(nlo), _flatSFInt(kFALSE), _asympInt(kFALSE)
@@ -55,14 +102,25 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Create a Gauss (x) Exp model with sigma and tau parameters.
+///
+/// \param[in] name Name of this instance.
+/// \param[in] title Title (e.g. for plotting)
+/// \param[in] x The convolution observable.
+/// \param[in] sigma Width of the Gaussian.
+/// \param[in] rlife Lifetime constant \f$ \tau \f$.
+/// \param[in] srSF Scale factor for both sigma and tau.
+/// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
+/// \param[in] type  Switch between normal and flipped model.
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             RooAbsReal& _rsSF,
             Bool_t nlo, Type type) :
   RooResolutionModel(name,title,xIn),
+  _mean("mean", "Mean of Gaussian component", this, RooRealConstant::value(0.)),
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
+  _meanSF("meanSF", "Scale factor for mean", this, RooRealConstant::value(1)),
   ssf("ssf","Sigma Scale Factor",this,_rsSF),
   rsf("rsf","RLife Scale Factor",this,_rsSF),
   _flip(type==Flipped),
@@ -73,14 +131,26 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// Create a Gauss (x) Exp model with sigma and tau parameters and scale factors.
+///
+/// \param[in] name Name of this instance.
+/// \param[in] title Title (e.g. for plotting)
+/// \param[in] x The convolution observable.
+/// \param[in] sigma Width of the Gaussian.
+/// \param[in] rlife Lifetime constant \f$ \tau \f$.
+/// \param[in] sigmaSF Scale factor for sigma.
+/// \param[in] rlifeSF Scale factor for rlife.
+/// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
+/// \param[in] type  Switch between normal and flipped model.
 RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             RooAbsReal& _sigmaSF, RooAbsReal& _rlifeSF,
             Bool_t nlo, Type type) :
   RooResolutionModel(name,title,xIn),
+  _mean("mean", "Mean of Gaussian component", this, RooRealConstant::value(0.)),
   sigma("sigma","Width",this,_sigma),
   rlife("rlife","Life time",this,_rlife),
+  _meanSF("meanSF", "Scale factor for mean", this, RooRealConstant::value(1)),
   ssf("ssf","Sigma Scale Factor",this,_sigmaSF),
   rsf("rsf","RLife Scale Factor",this,_rlifeSF),
   _flip(type==Flipped),
@@ -94,8 +164,10 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 
 RooGExpModel::RooGExpModel(const RooGExpModel& other, const char* name) :
   RooResolutionModel(other,name),
+  _mean("mean", this, other._mean),
   sigma("sigma",this,other.sigma),
   rlife("rlife",this,other.rlife),
+  _meanSF("meanSf", this, other._meanSF),
   ssf("ssf",this,other.ssf),
   rsf("rsf",this,other.rsf),
   _flip(other._flip),
@@ -134,13 +206,71 @@ Int_t RooGExpModel::basisCode(const char* name) const
   return 0 ;
 }
 
+
+namespace {
+////////////////////////////////////////////////////////////////////////////////
+/// Approximation of the log of the complex error function
+Double_t logErfC(Double_t xx)
+{
+  Double_t t,z,ans;
+  z=fabs(xx);
+  t=1.0/(1.0+0.5*z);
+
+  if(xx >= 0.0)
+    ans=log(t)+(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
+   t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
+  else
+    ans=log(2.0-t*exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
+        t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277))))))))));
+
+  return ans;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
+/// to explicitly cancel the divergent exp(y*y) behaviour of
+/// CWERF for z = x + i y with large negative y
+
+std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c)
+{
+  static Double_t rootpi= sqrt(atan2(0.,-1.));
+  std::complex<Double_t> z(swt*c,u+c);
+  std::complex<Double_t> zc(u+c,-swt*c);
+  std::complex<Double_t> zsq= z*z;
+  std::complex<Double_t> v= -zsq - u*u;
+
+  return std::exp(v)*(-std::exp(zsq)/(zc*rootpi) + 1.)*2.;
+}
+
+
+// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
+std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
+{
+  std::complex<Double_t> z(swt*c,u+c);
+  return (z.imag()>-4.0) ? RooMath::faddeeva_fast(z)*std::exp(-u*u) : evalCerfApprox(swt,u,c) ;
+}
+
+
+// Calculate Re(exp(-u^2) cwerf(i(u+c)))
+// added FMV, 08/17/03
+inline Double_t evalCerfRe(Double_t u, Double_t c) {
+  Double_t expArg = u*2*c+c*c ;
+  if (expArg<300) {
+     return exp(expArg) * RooMath::erfc(u+c);
+  } else {
+     return exp(expArg+logErfC(u+c));
+  }
+}
+
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Double_t RooGExpModel::evaluate() const
 {
   static Double_t root2(sqrt(2.)) ;
-//   static Double_t root2pi(sqrt(2*atan2(0.,-1.))) ;
-//   static Double_t rootpi(sqrt(atan2(0.,-1.)));
 
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
@@ -161,15 +291,15 @@ Double_t RooGExpModel::evaluate() const
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
     if (verboseEval()>2) cout << "RooGExpModel::evaluate(" << GetName() << ") 1st form" << endl ;
 
-    Double_t expArg = sig*sig/(2*rtau*rtau) + fsign*x/rtau ;
+    Double_t expArg = sig*sig/(2*rtau*rtau) + fsign*(x - _mean*_meanSF)/rtau ;
 
     Double_t result ;
     if (expArg<300) {
-      result = 1/(2*rtau) * exp(expArg) * RooMath::erfc(sig/(root2*rtau) + fsign*x/(root2*sig));
+      result = 1/(2*rtau) * exp(expArg) * RooMath::erfc(sig/(root2*rtau) + fsign*(x - _mean*_meanSF)/(root2*sig));
     } else {
       // If exponent argument is very large, bring canceling RooMath::erfc() term inside exponent
       // to avoid floating point over/underflows of intermediate calculations
-      result = 1/(2*rtau) * exp(expArg + logErfC(sig/(root2*rtau) + fsign*x/(root2*sig))) ;
+      result = 1/(2*rtau) * exp(expArg + logErfC(sig/(root2*rtau) + fsign*(x - _mean*_meanSF)/(root2*sig))) ;
     }
 
 //     Double_t result = 1/(2*rtau)
@@ -273,24 +403,6 @@ Double_t RooGExpModel::evaluate() const
   return 0 ;
   }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Approximation of the log of the complex error function
-
-Double_t RooGExpModel::logErfC(Double_t xx) const
-{
-  Double_t t,z,ans;
-  z=fabs(xx);
-  t=1.0/(1.0+0.5*z);
-
-  if(xx >= 0.0)
-    ans=log(t)+(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
-   t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))));
-  else
-    ans=log(2.0-t*exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+
-        t*(0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277))))))))));
-
-  return ans;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -298,11 +410,11 @@ std::complex<Double_t> RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Do
 {
   static Double_t root2(sqrt(2.)) ;
 
-  Double_t s1= -sign*x/tau;
+  Double_t s1= -sign*(x - _mean*_meanSF)/tau;
   //Double_t s1= x/tau;
   Double_t c1= sig/(root2*tau);
   Double_t u1= s1/(2*c1);
-  Double_t s2= x/rtau;
+  Double_t s2= (x - _mean*_meanSF)/rtau;
   Double_t c2= sig/(root2*rtau);
   Double_t u2= fsign*s2/(2*c2) ;
   //Double_t u2= s2/(2*c2) ;
@@ -324,11 +436,11 @@ Double_t RooGExpModel::calcSinConv(Double_t sign, Double_t sig, Double_t tau, Do
 {
   static Double_t root2(sqrt(2.)) ;
 
-  Double_t s1= -sign*x/tau;
+  Double_t s1= -sign*(x - _mean*_meanSF)/tau;
   //Double_t s1= x/tau;
   Double_t c1= sig/(root2*tau);
   Double_t u1= s1/(2*c1);
-  Double_t s2= x/rtau;
+  Double_t s2= (x - _mean*_meanSF)/rtau;
   Double_t c2= sig/(root2*rtau);
   Double_t u2= fsign*s2/(2*c2) ;
   //Double_t u2= s2/(2*c2) ;
@@ -350,7 +462,7 @@ Double_t RooGExpModel::calcDecayConv(Double_t sign, Double_t tau, Double_t sig, 
   static Double_t rootpi(sqrt(atan2(0.,-1.)));
 
   // Process flip status
-  Double_t xp(x) ;
+  Double_t xp(x - _mean*_meanSF) ;
   //if (_flip) {
   //  xp   *= -1 ;
   //  sign *= -1 ;
@@ -567,8 +679,8 @@ Double_t RooGExpModel::analyticalIntegral(Int_t code, const char* rangeName) con
 
     //Double_t result = 1.0 ; // WVE inferred from limit(tau->0) of cosBasisNorm
     // finite+asymtotic normalization, added FMV, 07/24/03
-    Double_t xpmin = x.min(rangeName)/rtau ;
-    Double_t xpmax = x.max(rangeName)/rtau ;
+    Double_t xpmin = (x.min(rangeName) - _mean*_meanSF)/rtau ;
+    Double_t xpmax = (x.max(rangeName) - _mean*_meanSF)/rtau ;
     Double_t c = sig/(root2*rtau) ;
     Double_t umin = xpmin/(2*c) ;
     Double_t umax = xpmax/(2*c) ;
@@ -694,13 +806,13 @@ std::complex<Double_t> RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau
 {
   static Double_t root2(sqrt(2.)) ;
 
-  Double_t smin1= x.min(rangeName)/tau;
-  Double_t smax1= x.max(rangeName)/tau;
+  Double_t smin1= (x.min(rangeName) - _mean*_meanSF)/tau;
+  Double_t smax1= (x.max(rangeName) - _mean*_meanSF)/tau;
   Double_t c1= sig/(root2*tau);
   Double_t umin1= smin1/(2*c1);
   Double_t umax1= smax1/(2*c1);
-  Double_t smin2= x.min(rangeName)/rtau;
-  Double_t smax2= x.max(rangeName)/rtau;
+  Double_t smin2= (x.min(rangeName) - _mean*_meanSF)/rtau;
+  Double_t smax2= (x.max(rangeName) - _mean*_meanSF)/rtau;
   Double_t c2= sig/(root2*rtau);
   Double_t umin2= smin2/(2*c2) ;
   Double_t umax2= smax2/(2*c2) ;
@@ -721,13 +833,13 @@ Double_t RooGExpModel::calcSinConvNorm(Double_t sign, Double_t tau, Double_t sig
 {
   static Double_t root2(sqrt(2.)) ;
 
-  Double_t smin1= x.min(rangeName)/tau;
-  Double_t smax1= x.max(rangeName)/tau;
+  Double_t smin1= (x.min(rangeName) - _mean*_meanSF)/tau;
+  Double_t smax1= (x.max(rangeName) - _mean*_meanSF)/tau;
   Double_t c1= sig/(root2*tau);
   Double_t umin1= smin1/(2*c1);
   Double_t umax1= smax1/(2*c1);
-  Double_t smin2= x.min(rangeName)/rtau;
-  Double_t smax2= x.max(rangeName)/rtau;
+  Double_t smin2= (x.min(rangeName) - _mean*_meanSF)/rtau;
+  Double_t smax2= (x.max(rangeName) - _mean*_meanSF)/rtau;
   Double_t c2= sig/(root2*rtau);
   Double_t umin2= smin2/(2*c2) ;
   Double_t umax2= smax2/(2*c2) ;
@@ -780,22 +892,6 @@ Double_t RooGExpModel::evalCerfInt(Double_t sign, Double_t tau, Double_t umin, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
-/// to explicitly cancel the divergent exp(y*y) behaviour of
-/// CWERF for z = x + i y with large negative y
-
-std::complex<Double_t> RooGExpModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c)
-{
-  static Double_t rootpi= sqrt(atan2(0.,-1.));
-  std::complex<Double_t> z(swt*c,u+c);
-  std::complex<Double_t> zc(u+c,-swt*c);
-  std::complex<Double_t> zsq= z*z;
-  std::complex<Double_t> v= -zsq - u*u;
-
-  return std::exp(v)*(-std::exp(zsq)/(zc*rootpi) + 1.)*2.;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooGExpModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
@@ -809,13 +905,16 @@ void RooGExpModel::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;
   Double_t xgen ;
-  while(1) {
+  while (true) {
     Double_t xgau = RooRandom::randomGenerator()->Gaus(0,(sigma*ssf));
     Double_t xexp = RooRandom::uniform();
-    if (!_flip) xgen= xgau + (rlife*rsf)*log(xexp);  // modified, FMV 08/13/03
-    else xgen= xgau - (rlife*rsf)*log(xexp);
-    if (xgen<x.max() && xgen>x.min()) {
-      x = xgen ;
+    if (!_flip)
+      xgen = xgau + (rlife*rsf)*log(xexp);  // modified, FMV 08/13/03
+    else
+      xgen = xgau - (rlife*rsf)*log(xexp);
+
+    if (xgen < (x.max() - _mean*_meanSF) && xgen > (x.min() - _mean*_meanSF)) {
+      x = xgen + _mean*_meanSF;
       return ;
     }
   }
