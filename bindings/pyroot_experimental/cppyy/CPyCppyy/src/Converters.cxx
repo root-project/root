@@ -544,7 +544,7 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
             return false;                                                    \
         Py_ssize_t len = CPyCppyy_PyText_GET_SIZE(value);                    \
         if (len != 1) {                                                      \
-            PyErr_Format(PyExc_TypeError, #type" expected, got string of size %ld", len);\
+            PyErr_Format(PyExc_TypeError, #type" expected, got string of size %zd", len);\
             return false;                                                    \
         }                                                                    \
         *((type*)address) = (type)buf[0];                                    \
