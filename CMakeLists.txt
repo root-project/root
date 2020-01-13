@@ -414,12 +414,6 @@ else()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
-file(GLOB ${pcms} "*.pcm")
-install(
-   FILES ${pcms}
-   DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
