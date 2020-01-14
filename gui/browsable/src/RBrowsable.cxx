@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,47 +19,6 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
-
-
-/////////////////////////////////////////////////////////////////////
-/// Find item with specified name
-/// Default implementation, should work for all
-
-RElement::EContentKind RElement::GetContentKind(const std::string &kind)
-{
-    std::string lkind = kind;
-    std::transform(lkind.begin(), lkind.end(), lkind.begin(), ::tolower);
-
-
-   if (lkind == "text") return kText;
-   if ((lkind == "image") || (lkind == "image64")) return kImage;
-   if (lkind == "png") return kPng;
-   if ((lkind == "jpg") || (lkind == "jpeg")) return kJpeg;
-   if (lkind == "filename") return kFileName;
-   return kNone;
-}
-
-/////////////////////////////////////////////////////////////////////
-/// Returns sub element
-
-std::shared_ptr<RElement> RElement::GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path)
-{
-   auto curr = elem;
-
-   for (auto &itemname : path) {
-      if (!curr)
-         return nullptr;
-
-      auto iter = curr->GetChildsIter();
-      if (!iter || !iter->Find(itemname))
-         return nullptr;
-
-      curr = iter->GetElement();
-   }
-
-   return curr;
-}
-
 
 
 class RCompositeIter : public RLevelIter {
@@ -110,23 +69,6 @@ public:
 std::unique_ptr<RLevelIter> RComposite::GetChildsIter()
 {
    return std::make_unique<RCompositeIter>(*this);
-}
-
-
-/////////////////////////////////////////////////////////////////////
-/// Find item with specified name
-/// Default implementation, should work for all
-
-bool RLevelIter::Find(const std::string &name)
-{
-   if (!Reset()) return false;
-
-   while (Next()) {
-      if (GetName() == name)
-         return true;
-   }
-
-   return false;
 }
 
 /////////////////////////////////////////////////////////////////////
