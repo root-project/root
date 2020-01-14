@@ -428,9 +428,39 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
-      set(pcm_name)
+      # Currently we are not able to build R C++ module, so we still need to be able to install it's _rdict.pcm.
+      if(NOT ARG_NO_CXXMODULE)
+        set(pcm_name)
+      endif()
       if(cpp_module)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
+        set(extra_core_modules)
+        set(extra_core_module_files)
+        # FIXME: remove specific case for installation of extra Core modules.
+        # Currently, special PCMS are generated via rootcling call for Core as extra PCMS, leaving no trace in ROOT build system.
+        # We need urgently move generation of special PCMs to use proper CMake targets (it will be enabled after 6.20).
+        if (${cpp_module} MATCHES "Core")
+          set(extra_core_modules "_Builtin_intrinsics" 
+                                 "_Builtin_stddef_max_align_t" 
+                                 "Cling_Runtime"
+                                 "Cling_Runtime_Extra"
+                                 "std"
+                                 "ROOT_Config"
+                                 "ROOT_Rtypes"
+                                 "ROOT_Foundation_C"
+                                 "ROOT_Foundation_Stage1_NoRTTI")
+          if(APPLE)
+            set(extra_core_modules ${extra_core_modules} "Darwin")
+          else()
+            set(extra_core_modules ${extra_core_modules} "libc")
+          endif()
+          if(CUDA_FOUND)
+            set(extra_core_modules ${extra_core_modules} "cuda")
+          endif()
+          foreach(extra ${extra_core_modules})
+            set(extra_core_module_files ${extra_core_module_files} ${library_output_dir}/${extra}.pcm)
+          endforeach()
+        endif()
         if (APPLE)
           if (${cpp_module} MATCHES "(GCocoa|GQuartz)")
             set(cpp_module_file)
@@ -559,6 +589,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     if (cpp_module_file)
       install(FILES ${cpp_module_file}
                     DESTINATION ${shared_lib_install_dir} COMPONENT libraries)
+      if (${cpp_module} MATCHES "Core")
+        install(FILES ${extra_core_module_files}
+                      DESTINATION ${shared_lib_install_dir} COMPONENT libraries)
+      endif()
     endif()
 
     if(ARG_STAGE1)
