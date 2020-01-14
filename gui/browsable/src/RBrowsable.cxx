@@ -6,9 +6,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RBrowsable.hxx"
+#include <ROOT/RBrowsable.hxx>
 
-#include "ROOT/RLogger.hxx"
+#include <ROOT/Browsable/RProvider.hxx>
+#include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/RLogger.hxx>
 
 #include "TClass.h"
 #include "TBufferJSON.h"

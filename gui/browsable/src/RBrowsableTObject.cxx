@@ -9,7 +9,11 @@
 
 #include <ROOT/RBrowsableTObject.hxx>
 
-#include "ROOT/RLogger.hxx"
+#include <ROOT/Browsable/RElement.hxx>
+#include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
+
+#include <ROOT/RLogger.hxx>
 
 #include "TROOT.h"
 #include "TBrowser.h"

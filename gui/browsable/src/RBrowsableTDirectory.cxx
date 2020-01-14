@@ -8,6 +8,10 @@
 
 
 #include <ROOT/RBrowsableTDirectory.hxx>
+
+#include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
+
 #include <ROOT/RBrowsableTObject.hxx>
 
 #include "ROOT/RLogger.hxx"

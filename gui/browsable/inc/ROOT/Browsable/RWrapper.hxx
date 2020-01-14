@@ -10,6 +10,7 @@
 #define ROOT7_Browsable_RWrapper
 
 #include <ROOT/Browsable/RElement.hxx>
+#include <ROOT/Browsable/RLevelIter.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -34,10 +35,10 @@ public:
 
    virtual ~RWrapper() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of element, must be provided in derived classes */
    std::string GetName() const override { return fName; }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of element (optional) */
    std::string GetTitle() const override { return fElem->GetTitle(); }
 
    /** Create iterator for childs elements if any */

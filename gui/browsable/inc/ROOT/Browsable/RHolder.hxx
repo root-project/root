@@ -121,7 +121,7 @@ public:
 
 /** \class RShared<T>
 \ingroup rbrowser
-\brief Holder of with shared_ptr<T> instance. Should be used to transfer shared_ptr<T> in RBrowsable methods
+\brief Holder of with shared_ptr<T> instance. Should be used to transfer shared_ptr<T> in browsable methods
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-19
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -145,7 +145,7 @@ public:
 
 /** \class RUnique<T>
 \ingroup rbrowser
-\brief Holder of with unique_ptr<T> instance. Should be used to transfer unique_ptr<T> in RBrowsable methods
+\brief Holder of with unique_ptr<T> instance. Should be used to transfer unique_ptr<T> in browsable methods
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-19
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!

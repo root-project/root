@@ -21,13 +21,11 @@ using RElementPath_t = std::vector<std::string>;
 
 namespace Browsable {
 
-
 class RLevelIter;
-
 
 /** \class RElement
 \ingroup rbrowser
-\brief Basic element of RBrowsable hierarchy. Provides access to data, creates iterator if any
+\brief Basic element of browsable hierarchy. Provides access to data, creates iterator if any
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2019-10-14
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -49,13 +47,13 @@ public:
 
    virtual ~RElement() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of browsable, must be provided in derived classes */
    virtual std::string GetName() const = 0;
 
    /** Checks if element name match to provided value */
    virtual bool MatchName(const std::string &name) const { return name == GetName(); }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of browsable (optional) */
    virtual std::string GetTitle() const { return ""; }
 
    /** Create iterator for childs elements if any */

@@ -16,6 +16,10 @@
 
 #include <ROOT/RBrowser.hxx>
 
+#include <ROOT/Browsable/RGroup.hxx>
+#include <ROOT/Browsable/RWrapper.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
+
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RObjectDrawable.hxx>
