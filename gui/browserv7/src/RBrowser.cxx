@@ -19,13 +19,13 @@
 #include <ROOT/Browsable/RGroup.hxx>
 #include <ROOT/Browsable/RWrapper.hxx>
 #include <ROOT/Browsable/RProvider.hxx>
+#include <ROOT/Browsable/TObjectHolder.hxx>
+#include <ROOT/Browsable/RSysFile.hxx>
 
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RObjectDrawable.hxx>
 #include <ROOT/RDrawableProvider.hxx>
-#include <ROOT/RBrowsableSysFile.hxx>
-#include <ROOT/RBrowsableTObject.hxx>
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RCanvas.hxx>
 

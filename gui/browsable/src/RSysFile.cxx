@@ -14,15 +14,15 @@
 /// is welcome!
 
 
-#include "ROOT/RBrowsableSysFile.hxx"
+#include <ROOT/Browsable/RSysFile.hxx>
 
+#include <ROOT/Browsable/RSysFileItem.hxx>
 #include <ROOT/Browsable/RWrapper.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
 #include <ROOT/Browsable/RProvider.hxx>
 
 #include "ROOT/RLogger.hxx"
 
-#include "TSystem.h"
 #include "TROOT.h"
 #include "TList.h"
 #include "TBase64.h"

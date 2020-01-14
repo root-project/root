@@ -16,9 +16,9 @@
 #include <ROOT/RFileDialog.hxx>
 
 #include <ROOT/Browsable/RGroup.hxx>
+#include <ROOT/Browsable/RSysFile.hxx>
 
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RBrowsableSysFile.hxx>
 
 #include "TSystem.h"
 #include "TBufferJSON.h"
