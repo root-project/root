@@ -305,113 +305,113 @@ endif()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
-get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
-get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
+	get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
+	get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
+	add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
 
-#---CXX MODULES-----------------------------------------------------------------------------------
-if(MSVC)
-  set(_os_cat "type")
-else()
-  set(_os_cat "cat")
-endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
+	#---CXX MODULES-----------------------------------------------------------------------------------
+	if(MSVC)
+	  set(_os_cat "type")
+	else()
+	  set(_os_cat "cat")
+	endif()
+	file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
+	file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
 
-add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
-add_custom_command(
-                  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
-)
-install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+	add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+	add_custom_command(
+			  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+			  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+			  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+			  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
+	)
+	install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
-add_dependencies(move_headers copymodulemap)
+	add_dependencies(move_headers copymodulemap)
 
-# Take all the modulemap contents we collected from the packages and append them to our modulemap.
-# We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
-# add_subdirectory calls above.
-get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
-# if it's unchanged.
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
-configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
-    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-    COPYONLY)
+	# Take all the modulemap contents we collected from the packages and append them to our modulemap.
+	# We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
+	# add_subdirectory calls above.
+	get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+	string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+	# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
+	# if it's unchanged.
+	file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
+	configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
+	    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+	    COPYONLY)
 
-# From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
-set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
+	# From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
+	set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
-set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
-if(cxxmodules)
-  # rootcling uses our internal version of clang. Passing the modules flags here
-  # would allow rootcling to find module files built by the external compiler
-  # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
-  # different clang version (even different commit revision) as the modules files
-  # are not guaranteed to be compatible among clang revisions.
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
-endif(cxxmodules)
-string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-if(MSVC)
-  string(REPLACE "-Zc:__cplusplus" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-  string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-  string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-  string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-  string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-endif()
+	set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
+	if(cxxmodules)
+	  # rootcling uses our internal version of clang. Passing the modules flags here
+	  # would allow rootcling to find module files built by the external compiler
+	  # (eg. $CXX or $CC). This, in turn, would cause problems if we are using
+	  # different clang version (even different commit revision) as the modules files
+	  # are not guaranteed to be compatible among clang revisions.
+	  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
+	endif(cxxmodules)
+	string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+	if(MSVC)
+	  string(REPLACE "-Zc:__cplusplus" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+	  string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+	  string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+	  string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+	  string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+	endif()
 
-if(runtime_cxxmodules)
-  # Dummy target that does nothing, we don't need a PCH for modules.
-  # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
-  # to test hsimple.C after all C++ modules are updated.
-  add_custom_target(onepcm)
-  foreach(target_dependency ${ROOT_LIBRARY_TARGETS})
-    add_dependencies(onepcm ${target_dependency})
-  endforeach()
-  unset(ROOT_LIBRARY_TARGETS CACHE)
-  set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
-else()
-  get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+	if(runtime_cxxmodules)
+	  # Dummy target that does nothing, we don't need a PCH for modules.
+	  # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
+	  # to test hsimple.C after all C++ modules are updated.
+	  add_custom_target(onepcm)
+	  foreach(target_dependency ${ROOT_LIBRARY_TARGETS})
+	    add_dependencies(onepcm ${target_dependency})
+	  endforeach()
+	  unset(ROOT_LIBRARY_TARGETS CACHE)
+	  set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
+	else()
+	  get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 
-  if(WIN32)
-    list(APPEND incdirs
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
-    )
-  endif()
+	  if(WIN32)
+	    list(APPEND incdirs
+	      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
+	      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
+	      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
+	    )
+	  endif()
 
-  foreach(d ${incdirs})
-    if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
-      set(__allIncludes ${__allIncludes} -I${d})
-    endif()
-  endforeach()
+	  foreach(d ${incdirs})
+	    if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+	      set(__allIncludes ${__allIncludes} -I${d})
+	    endif()
+	  endforeach()
 
-  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
-  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
-  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
+	  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
+	  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+	  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
 
-  add_custom_command(OUTPUT etc/allDict.cxx.pch
-    BYPRODUCTS
-      etc/dictpch/allCppflags.txt
-      etc/dictpch/allHeaders.h
-      etc/dictpch/allLinkDefs.h
-    COMMAND
-      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
-      ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__cling_pch}
-    COMMAND
-      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
-      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
-      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
-    DEPENDS
-      rootcling ${__pch_dependencies} ${__pch_dictionaries}
-      ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
-      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-  )
-  add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+	  add_custom_command(OUTPUT etc/allDict.cxx.pch
+	    BYPRODUCTS
+	      etc/dictpch/allCppflags.txt
+	      etc/dictpch/allHeaders.h
+	      etc/dictpch/allLinkDefs.h
+	    COMMAND
+	      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+	      ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__cling_pch}
+	    COMMAND
+	      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
+	      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
+	      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+	    DEPENDS
+	      rootcling ${__pch_dependencies} ${__pch_dictionaries}
+	      ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+	      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+	  )
+	  add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
+	  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
@@ -593,3 +593,7 @@ ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
 include(RootCPack)
+
+# Exp PyROOT: remove empty directory wrongly created
+# Keep until we figure why it happens
+install(CODE "execute_process(COMMAND bash -c \"rm -rf ${CMAKE_INSTALL_PREFIX}/lib/python*\")")
