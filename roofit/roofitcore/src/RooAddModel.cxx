@@ -15,38 +15,35 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
-// RooAddModel is an efficient implementation of a sum of PDFs of the form 
-//
-//  c_1*PDF_1 + c_2*PDF_2 + ... c_n*PDF_n 
-//
-// or 
-//
-//  c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
-//
-// The first form is for extended likelihood fits, where the
-// expected number of events is Sum(i) c_i. The coefficients c_i
-// can either be explicitly provided, or, if all components support
-// extended likelihood fits, they can be calculated the contribution
-// of each PDF to the total number of expected events.
-//
-// In the second form, the sum of the coefficients is enforced to be one,
-// and the coefficient of the last PDF is calculated from that condition.
-//
-// RooAddPdf relies on each component PDF to be normalized and will perform 
-// no normalization other than calculating the proper last coefficient c_n, if requested.
-// An (enforced) condition for this assuption is that each PDF_i is independent
-// of each coefficient_i.
-//
-// 
+///
+/// RooAddModel is an efficient implementation of a sum of PDFs of the form
+/// \f[
+///  c_1*\mathrm{PDF}_1 + c_2*\mathrm{PDF}_2 + ... c_n*\mathrm{PDF}_n
+/// \]f
+/// or
+/// \f[
+///  c_1*\mathrm{PDF}_1 + c_2*\mathrm{PDF}_2 + ... (1-\sum(c_1, \ldots, c_{n-1}))*\mathrm{PDF}_n
+///
+/// The first form is for extended likelihood fits, where the
+/// expected number of events is \f$ \sum_i c_i \f$. The coefficients \f$ c_i \f$
+/// can either be explicitly provided, or, if all components support
+/// extended likelihood fits, they can be calculated the contribution
+/// of each PDF to the total number of expected events.
+///
+/// In the second form, the sum of the coefficients is enforced to be one,
+/// and the coefficient of the last PDF is calculated from that condition.
+///
+/// RooAddPdf relies on each component PDF to be normalized and will perform
+/// no normalization other than calculating the proper last coefficient \f$ c_n \f$, if requested.
+/// An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ is independent
+/// of each coefficient i.
+///
+///
+
+#include "RooAddModel.h"
 
 #include "RooFit.h"
 #include "RooMsgService.h"
-
-#include "TIterator.h"
-#include "TIterator.h"
-#include "TList.h"
-#include "RooAddModel.h"
 #include "RooDataSet.h"
 #include "RooRealProxy.h"
 #include "RooPlot.h"
@@ -54,12 +51,7 @@
 #include "RooAddGenContext.h"
 #include "RooRealConstant.h"
 #include "RooNameReg.h"
-#include "RooMsgService.h"
 #include "RooRealIntegral.h"
-
-#include "Riostream.h"
-
-
 
 using namespace std;
 
@@ -72,12 +64,12 @@ ClassImp(RooAddModel);
 RooAddModel::RooAddModel() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
+  _projectCoefs(false),
   _codeReg(10),
-  _snormList(0)
+  _snormList(0),
+  _haveLastCoef(false),
+  _allExtendable(false)
 {
-  _pdfIter   = _pdfList.createIterator() ;
-  _coefIter  = _coefList.createIterator() ;
-
   _coefCache = new Double_t[10] ;
   _coefErrCount = _errorCount ;
 }
@@ -110,9 +102,6 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
 			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
     assert(0) ;
   }
-
-  _pdfIter  = _pdfList.createIterator() ;
-  _coefIter = _coefList.createIterator() ;
  
   // Constructor with N PDFs and N or N-1 coefs
   TIterator* pdfIter = inPdfList.createIterator() ;
@@ -180,8 +169,6 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   _haveLastCoef(other._haveLastCoef),
   _allExtendable(other._allExtendable)
 {
-  _pdfIter  = _pdfList.createIterator() ;
-  _coefIter = _coefList.createIterator() ;
   _coefCache = new Double_t[_pdfList.getSize()] ;
   _coefErrCount = _errorCount ;
 }
@@ -193,9 +180,6 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
 
 RooAddModel::~RooAddModel()
 {
-  delete _pdfIter ;
-  delete _coefIter ;
-
   if (_coefCache) delete[] _coefCache ;
 }
 
@@ -276,19 +260,16 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
   newTitle.Append(" convoluted with basis function ") ;
   newTitle.Append(inBasis->GetName()) ;
 
-  _pdfIter->Reset() ;
-  RooResolutionModel* model ;
   RooArgList modelList ;
-  while((model = (RooResolutionModel*)_pdfIter->Next())) {       
+  for (auto obj : _pdfList) {
+    auto model = static_cast<RooResolutionModel*>(obj);
     // Create component convolution
     RooResolutionModel* conv = model->convolution(inBasis,owner) ;    
     modelList.add(*conv) ;
   }
 
-  _coefIter->Reset() ;
-  RooAbsReal* coef ;
   RooArgList theCoefList ;  
-  while((coef = (RooAbsReal*)_coefIter->Next())) {
+  for (auto coef : _coefList) {
     theCoefList.add(*coef) ;
   }
     
@@ -315,19 +296,17 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
 
 Int_t RooAddModel::basisCode(const char* name) const 
 {
-  TIterator* mIter = _pdfList.createIterator() ;
-  RooResolutionModel* model ;
   Bool_t first(kTRUE), code(0) ;
-    while((model = (RooResolutionModel*)mIter->Next())) {
-      Int_t subCode = model->basisCode(name) ;
-      if (first) {
-	code = subCode ;
-	first = kFALSE ;
-      } else if (subCode==0) {
-	code = 0 ;
-      }
+  for (auto obj : _pdfList) {
+    auto model = static_cast<RooResolutionModel*>(obj);
+    Int_t subCode = model->basisCode(name) ;
+    if (first) {
+      code = subCode ;
+      first = kFALSE ;
+    } else if (subCode==0) {
+      code = 0 ;
+    }
   }
-  delete mIter ;
 
   return code ;
 }
@@ -361,12 +340,9 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
   }    
 
   // Fill with dummy unit RRVs for now
-  _pdfIter->Reset() ;
-  _coefIter->Reset() ;
-  RooAbsPdf* pdf ;
-  RooAbsReal* coef ;
-  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {    
-    coef=(RooAbsPdf*)_coefIter->Next() ;
+  for (unsigned int i = 0; i < _pdfList.size(); ++i) {
+    auto pdf = static_cast<RooAbsPdf*>(&_pdfList[i]);
+    auto coef = i < _coefList.size() ? &_coefList[i] : nullptr;
 
     // Start with full list of dependents
     RooArgSet supNSet(*fullDepList) ;
@@ -379,8 +355,8 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
     }
 
     // Remove coef dependents
-    RooArgSet* coefDeps = coef ? coef->getObservables(nset) : 0 ;
-    if (coefDeps) {
+    if (coef) {
+      RooArgSet* coefDeps = coef->getObservables(nset);
       supNSet.remove(*coefDeps,kTRUE,kTRUE) ;
       delete coefDeps ;
     }
@@ -430,10 +406,8 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
     ccoutI(Caching) << "        with reference range: " << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"<none>") << endl ;
     
     // Recalculate projection integrals of PDFs 
-    _pdfIter->Reset() ;
-    RooAbsPdf* thePdf ;
-
-    while((thePdf=(RooAbsPdf*)_pdfIter->Next())) {
+    for (const auto obj : _pdfList) {
+        const auto thePdf = static_cast<RooAbsPdf*>(obj);
 
       // Calculate projection integral
       RooAbsReal* pdfProj ;
@@ -632,14 +606,12 @@ Double_t RooAddModel::evaluate() const
 
   
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  _pdfIter->Reset() ;
-  _coefIter->Reset() ;
-  RooAbsPdf* pdf ;
-
   Double_t snormVal ;
   Double_t value(0) ;
   Int_t i(0) ;
-  while((pdf = (RooAbsPdf*)_pdfIter->Next())) {
+  for (auto obj : _pdfList) {
+    auto pdf = static_cast<RooAbsPdf*>(obj);
+
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)cache->_suppNormList.at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
@@ -679,12 +651,10 @@ Bool_t RooAddModel::checkObservables(const RooArgSet* nset) const
 {
   Bool_t ret(kFALSE) ;
 
-  _pdfIter->Reset() ;
-  _coefIter->Reset() ;
-  RooAbsReal* coef ;
-  RooAbsReal* pdf ;
-  while((coef=(RooAbsReal*)_coefIter->Next())) {
-    pdf = (RooAbsReal*)_pdfIter->Next() ;
+  for (unsigned int i = 0; i < _pdfList.size(); ++i) {
+    auto pdf = &_pdfList[i];
+    auto coef = &_coefList[i];
+
     if (pdf->observableOverlaps(nset,*coef)) {
       coutE(InputArguments) << "RooAddModel::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName() 
 			    << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
@@ -737,9 +707,9 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
   cache = new IntCacheElem ;
 
   // Fill Cache
-  _pdfIter->Reset() ;
-  RooResolutionModel* model ;
-  while ((model=(RooResolutionModel*)_pdfIter->Next())) {
+  for (auto obj : _pdfList) {
+    auto model = static_cast<RooResolutionModel*>(obj);
+
     RooAbsReal* intPdf = model->createIntegral(*iset,nset,0,isetRangeName) ;
     cache->_intList.addOwned(*intPdf) ;
   }
@@ -793,14 +763,11 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
   updateCoefficients(*pcache,nset) ;
   
   // Do running sum of coef/pdf pairs, calculate lastCoef.
-  TIterator* compIntIter = compIntList->createIterator() ;
-  _coefIter->Reset() ;
-  RooAbsReal* pdfInt ;
-
   Double_t snormVal ;
   Double_t value(0) ;
   Int_t i(0) ;
-  while((pdfInt = (RooAbsReal*)compIntIter->Next())) {
+  for (const auto obj : *compIntList) {
+    auto pdfInt = static_cast<const RooAbsReal*>(obj);
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)pcache->_suppNormList.at(i))->getVal() : 1.0 ;
       Double_t intVal = pdfInt->getVal(nset) ;
@@ -810,8 +777,6 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
     }
     i++ ;
   }
-
-  delete compIntIter ;
   
   return value ;
   
@@ -826,22 +791,20 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
 Double_t RooAddModel::expectedEvents(const RooArgSet* nset) const 
 {  
   Double_t expectedTotal(0.0);
-  RooAbsPdf* pdf ;
-    
+
   if (_allExtendable) {
     
     // Sum of the extended terms
-    _pdfIter->Reset() ;
-    while((pdf = (RooAbsPdf*)_pdfIter->Next())) {      
+    for (auto obj : _pdfList) {
+      auto pdf = static_cast<RooAbsPdf*>(obj);
       expectedTotal += pdf->expectedEvents(nset) ;
     }   
     
   } else {
     
     // Sum the coefficients
-    _coefIter->Reset() ;
-    RooAbsReal* coef ;
-    while((coef=(RooAbsReal*)_coefIter->Next())) {
+    for (const auto obj : _coefList) {
+      auto coef = static_cast<RooAbsReal*>(obj);
       expectedTotal += coef->getVal() ;
     }   
   }
@@ -904,9 +867,9 @@ RooAbsGenContext* RooAddModel::genContext(const RooArgSet &vars, const RooDataSe
 
 Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const 
 {
-  _pdfIter->Reset() ;
-  RooAbsPdf* pdf ;
-  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+  for (auto obj : _pdfList) {
+    auto pdf = static_cast<RooAbsPdf*>(obj);
+
     if (!pdf->isDirectGenSafe(arg)) {
       return kFALSE ;
     }
@@ -921,9 +884,9 @@ Bool_t RooAddModel::isDirectGenSafe(const RooAbsArg& arg) const
 
 Int_t RooAddModel::getGenerator(const RooArgSet& directVars, RooArgSet &/*generateVars*/, Bool_t /*staticInitOK*/) const
 {
-  _pdfIter->Reset() ;
-  RooAbsPdf* pdf ;
-  while((pdf=(RooAbsPdf*)_pdfIter->Next())) {
+  for (auto obj : _pdfList) {
+    auto pdf = static_cast<RooAbsPdf*>(obj);
+
     RooArgSet tmp ;
     if (pdf->getGenerator(directVars,tmp)==0) {
       return 0 ;
@@ -978,25 +941,21 @@ RooArgList RooAddModel::IntCacheElem::containedArgs(Action)
 
 void RooAddModel::printMetaArgs(ostream& os) const 
 {
-  _pdfIter->Reset() ;
-  _coefIter->Reset() ;
-
   Bool_t first(kTRUE) ;
     
   os << "(" ;
-  RooAbsArg* coef, *pdf ;
-  while((coef=(RooAbsArg*)_coefIter->Next())) {
+  for (unsigned int i=0; i < _coefList.size(); ++i) {
+    auto coef = &_coefList[i];
+    auto pdf = &_pdfList[i];
     if (!first) {
       os << " + " ;
     } else {
       first = kFALSE ;
     }
-    pdf=(RooAbsArg*)_pdfIter->Next() ;
     os << coef->GetName() << " * " << pdf->GetName() ;
   }
-  pdf = (RooAbsArg*) _pdfIter->Next() ;
-  if (pdf) {
-    os << " + [%] * " << pdf->GetName() ;
+  if (_pdfList.size() > _coefList.size()) {
+    os << " + [%] * " << _pdfList[_pdfList.size()-1].GetName() ;
   }
   os << ") " ;    
 }
