@@ -11,7 +11,7 @@
 
 #include <ROOT/REveGeomData.hxx>
 
-#include <ROOT/RBrowserItem.hxx>
+#include <ROOT/RBrowserRequest.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/RLogger.hxx>
