@@ -13,6 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
     ROOT/RBrowsable.hxx
     ROOT/RBrowserRequest.hxx
+    ROOT/RBrowserReply.hxx
     ROOT/RBrowser.hxx
     ROOT/RFileDialog.hxx
   SOURCES

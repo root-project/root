@@ -18,7 +18,6 @@
 #define ROOT7_RBrowser
 
 #include <ROOT/RWebWindow.hxx>
-#include <ROOT/RBrowserItem.hxx>
 #include <ROOT/RBrowsable.hxx>
 
 #include <vector>

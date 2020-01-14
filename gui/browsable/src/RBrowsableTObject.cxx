@@ -24,14 +24,13 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 ///////////////////////////////////////////////////////////////////////////
 /// Return TObject instance with ownership
 /// If object is not owned by the holder, it will be cloned (with few exceptions)
 
-void *RTObjectHolder::TakeObject()
+void *TObjectHolder::TakeObject()
 {
    auto res = fObj;
 
@@ -64,7 +63,7 @@ Iterator over keys in TDirectory
 
 class TObjectLevelIter : public RLevelIter {
 
-   std::vector<std::shared_ptr<Browsable::RElement>> fElements;
+   std::vector<std::shared_ptr<RElement>> fElements;
 
    int fCounter{-1};
 
@@ -73,7 +72,7 @@ public:
 
    virtual ~TObjectLevelIter() = default;
 
-   void AddElement(std::shared_ptr<Browsable::RElement> &&elem)
+   void AddElement(std::shared_ptr<RElement> &&elem)
    {
       fElements.emplace_back(std::move(elem));
    }
@@ -94,7 +93,7 @@ public:
    int CanHaveChilds() const override { return -1; }
 
    /** Create element for the browser */
-   std::unique_ptr<RBrowserItem> CreateBrowserItem() override;
+   std::unique_ptr<RItem> CreateItem() override;
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
@@ -123,19 +122,19 @@ public:
 
 class TObjectElement : public RElement {
 protected:
-   std::unique_ptr<Browsable::RHolder> fObject;
+   std::unique_ptr<RHolder> fObject;
    TObject *fObj{nullptr};
    std::string fName;
 
 public:
    TObjectElement(TObject *obj, const std::string &name = "") : fObj(obj), fName(name)
    {
-      fObject = std::make_unique<RTObjectHolder>(fObj);
+      fObject = std::make_unique<TObjectHolder>(fObj);
       if (fName.empty())
          fName = fObj->GetName();
    }
 
-   TObjectElement(std::unique_ptr<Browsable::RHolder> &obj, const std::string &name = "")
+   TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name = "")
    {
       fObject = std::move(obj); // take responsibility
       fObj = const_cast<TObject *>(fObject->Get<TObject>()); // try to cast into TObject
@@ -210,14 +209,14 @@ void TMyBrowserImp::Add(TObject *obj, const char *name, Int_t)
 ///////////////////////////////////////////////////////////////
 /// Create element for the browser
 
-std::unique_ptr<RBrowserItem> TObjectLevelIter::CreateBrowserItem()
+std::unique_ptr<RItem> TObjectLevelIter::CreateItem()
 {
    std::shared_ptr<TObjectElement> elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
 
    std::string clname = elem->ClassName();
    bool can_have_childs = (clname.find("TDirectory") == 0) || (clname.find("TTree") == 0) || (clname.find("TNtuple") == 0);
 
-   auto item = std::make_unique<RBrowserTObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);
+   auto item = std::make_unique<TObjectItem>(elem->GetName(), can_have_childs ? 1 : 0);
 
    item->SetClassName(elem->ClassName());
 
@@ -233,7 +232,7 @@ class TFolderElement : public TObjectElement {
 
 public:
 
-   TFolderElement(std::unique_ptr<Browsable::RHolder> &obj) : TObjectElement(obj) {}
+   TFolderElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj) {}
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 };
@@ -241,7 +240,7 @@ public:
 class TCollectionElement : public TObjectElement {
 public:
 
-   TCollectionElement(std::unique_ptr<Browsable::RHolder> &obj) : TObjectElement(obj) {}
+   TCollectionElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj) {}
 
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 };
@@ -275,9 +274,9 @@ public:
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
    {
-      std::unique_ptr<RHolder> holder = std::make_unique<RTObjectHolder>(*fIter, kFALSE);
+      std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(*fIter, kFALSE);
 
-      return Browsable::RProvider::Browse(holder);
+      return RProvider::Browse(holder);
    }
 };
 
@@ -309,11 +308,11 @@ class RTObjectProvider : public RProvider {
 public:
    RTObjectProvider()
    {
-      RegisterBrowse(TFolder::Class(), [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+      RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);
       });
 
-      auto coll_labmda = [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+      auto coll_labmda = [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TCollectionElement>(object);
       };
 
@@ -321,7 +320,7 @@ public:
       RegisterBrowse(TObjArray::Class(), coll_labmda);
 
 
-      RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+      RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TFolder>())
             return std::make_shared<TFolderElement>(object);
          if (object->CanCastTo<TCollection>())

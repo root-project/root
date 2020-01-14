@@ -14,22 +14,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RBrowserRequest
-#define ROOT7_RBrowserRequest
+#ifndef ROOT7_RBrowserReply
+#define ROOT7_RBrowserReply
 
 #include <string>
+#include <vector>
+#include <ROOT/Browsable/RItem.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
-/** Request send from client to get content of path element */
-class RBrowserRequest {
+/** Reply on browser request */
+class RBrowserReply {
 public:
-   std::string path; ///< requested path
-   int first{0};     ///< first child to request
-   int number{0};    ///< number of childs to request, 0 - all childs
-   std::string sort; ///< kind of sorting
-   std::string regex; ///< applied regex
+   std::string path;                  ///< reply path
+   int nchilds{0};                    ///< total number of childs in the node
+   int first{0};                      ///< first node in returned list
+   std::vector<const Browsable::RItem *> nodes; ///< list of pointers, no ownership!
 };
 
 } // namespace Experimental

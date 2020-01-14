@@ -22,15 +22,15 @@
 #pragma link C++ class ROOT::Experimental::Browsable::RGroup+;
 #pragma link C++ class ROOT::Experimental::Browsable::RWrapper+;
 
-#pragma link C++ class ROOT::Experimental::Browsable::SysFileElement+;
+#pragma link C++ class ROOT::Experimental::Browsable::RSysFile+;
 
 #pragma link C++ class ROOT::Experimental::RDrawableProvider+;
 
-#pragma link C++ class ROOT::Experimental::Browsable::RTObjectHolder+;
-#pragma link C++ class ROOT::Experimental::RBrowserTObjectItem+;
-#pragma link C++ class ROOT::Experimental::RBrowserTKeyItem+;
+#pragma link C++ class ROOT::Experimental::Browsable::TObjectHolder+;
+#pragma link C++ class ROOT::Experimental::Browsable::TObjectItem+;
+#pragma link C++ class ROOT::Experimental::Browsable::TKeyItem+;
 
-#pragma link C++ class ROOT::Experimental::RBrowserItem+;
-#pragma link C++ class ROOT::Experimental::RBrowserFileItem+;
+#pragma link C++ class ROOT::Experimental::Browsable::RItem+;
+#pragma link C++ class ROOT::Experimental::Browsable::RSysFileItem+;
 
 #endif

@@ -14,13 +14,10 @@
 
 namespace ROOT {
 namespace Experimental {
-
-class RBrowserItem;
-
 namespace Browsable {
 
 class RElement;
-
+class RItem;
 
 /** \class RLevelIter
 \ingroup rbrowser
@@ -49,7 +46,7 @@ public:
    /** Returns full information for current element */
    virtual std::shared_ptr<RElement> GetElement() = 0;
 
-   virtual std::unique_ptr<RBrowserItem> CreateBrowserItem();
+   virtual std::unique_ptr<RItem> CreateItem();
 
    /** Reset iterator to the first element, returns false if not supported */
    virtual bool Reset() { return false; }

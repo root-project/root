@@ -6,35 +6,34 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RBrowsableTDirectory
-#define ROOT7_RBrowsableTDirectory
+#ifndef ROOT7_Browsable_TDirectory
+#define ROOT7_Browsable_TDirectory
 
-#include <ROOT/RBrowserItem.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 
 class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
-
+namespace Browsable {
 
 /** Representation of single item in the file browser for object from TKey */
-class RBrowserTKeyItem : public RBrowserItem {
+class TKeyItem : public RItem {
    std::string className; ///< class name
 
 public:
 
-   RBrowserTKeyItem() = default;
+   TKeyItem() = default;
 
-   RBrowserTKeyItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
+   TKeyItem(const std::string &_name, int _nchilds) : RItem(_name, _nchilds) {}
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RBrowserTKeyItem() = default;
+   virtual ~TKeyItem() = default;
 
    void SetClassName(const std::string &_className) { className = _className; }
 };
 
-// ========================================================================================
-
+} // namespace Browsable
 } // namespace Experimental
 } // namespace ROOT
 

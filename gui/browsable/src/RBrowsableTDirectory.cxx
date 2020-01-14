@@ -25,7 +25,6 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 
@@ -92,9 +91,9 @@ public:
    }
 
    /** Create element for the browser */
-   std::unique_ptr<RBrowserItem> CreateBrowserItem() override
+   std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<RBrowserTKeyItem>(GetName(), CanHaveChilds());
+      auto item = std::make_unique<TKeyItem>(GetName(), CanHaveChilds());
 
       item->SetClassName(fKey->GetClassName());
 
@@ -156,7 +155,7 @@ public:
       auto obj = GetObject();
 
       if (obj) {
-         auto elem = Browsable::RProvider::Browse(obj);
+         auto elem = RProvider::Browse(obj);
          if (elem) return elem->GetChildsIter();
       }
 
@@ -185,7 +184,7 @@ public:
 
          bool owned_by_dir = fDir->FindObject(tobj) == tobj;
 
-         return std::make_unique<RTObjectHolder>(tobj, !owned_by_dir);
+         return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }
 
       void *obj = fKey->ReadObjectAny(obj_class);
@@ -300,11 +299,11 @@ public:
          return std::make_shared<TDirectoryElement>(fullname, f);
       });
 
-      RegisterBrowse(TFile::Class(), [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+      RegisterBrowse(TFile::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TDirectoryElement>("", const_cast<TFile*>(object->Get<TFile>()));
       });
 
-      RegisterBrowse(nullptr, [](std::unique_ptr<Browsable::RHolder> &object) -> std::shared_ptr<RElement> {
+      RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TDirectory>())
             return std::make_shared<TDirectoryElement>("", const_cast<TDirectory*>(object->Get<TDirectory>()));
          return nullptr;

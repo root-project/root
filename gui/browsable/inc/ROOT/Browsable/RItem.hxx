@@ -14,18 +14,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RBrowserItem
-#define ROOT7_RBrowserItem
+#ifndef ROOT7_Browsable_RItem
+#define ROOT7_Browsable_RItem
 
 #include <string>
-#include <vector>
-#include <memory>
 
 namespace ROOT {
 namespace Experimental {
+namespace Browsable {
 
 /** Representation of single item in the browser */
-class RBrowserItem {
+class RItem {
 protected:
    std::string name;     ///< item name
    int nchilds{0};       ///< number of childs
@@ -34,10 +33,10 @@ protected:
    bool expanded{false}; ///< is expanded, not used yet
 public:
 
-   RBrowserItem() = default;
-   RBrowserItem(const std::string &_name, int _nchilds = 0, const std::string &_icon = "") : name(_name), nchilds(_nchilds), icon(_icon) {}
+   RItem() = default;
+   RItem(const std::string &_name, int _nchilds = 0, const std::string &_icon = "") : name(_name), nchilds(_nchilds), icon(_icon) {}
    // must be here, one needs virtual table for correct streaming of sub-classes
-   virtual ~RBrowserItem() = default;
+   virtual ~RItem() = default;
 
    const std::string &GetName() const { return name; }
    const std::string &GetIcon() const { return icon; }
@@ -47,7 +46,7 @@ public:
    void SetExpanded(bool on = true) { expanded = on; }
    void SetIcon(const std::string &_icon) { icon = _icon; }
 
-   virtual bool Compare(const RBrowserItem *b, const std::string &) const
+   virtual bool Compare(const RItem *b, const std::string &) const
    {
       if (IsFolder() != b->IsFolder())
          return IsFolder();
@@ -56,6 +55,7 @@ public:
 };
 
 
+} // namespace Browsable
 } // namespace Experimental
 } // namespace ROOT
 

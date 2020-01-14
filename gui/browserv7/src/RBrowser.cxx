@@ -69,14 +69,14 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
 
-   auto seldir = SysFileElement::ProvideTopEntries(comp);
+   auto seldir = RSysFile::ProvideTopEntries(comp);
 
-   std::unique_ptr<RHolder> rootfold = std::make_unique<RTObjectHolder>(gROOT->GetRootFolder(), kFALSE);
+   std::unique_ptr<RHolder> rootfold = std::make_unique<TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
    auto elem_root = Browsable::RProvider::Browse(rootfold);
    if (elem_root)
       comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
 
-   std::unique_ptr<RHolder> rootfiles = std::make_unique<RTObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
+   std::unique_ptr<RHolder> rootfiles = std::make_unique<TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
    auto elem_files = Browsable::RProvider::Browse(rootfiles);
    if (elem_files)
       comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files));
