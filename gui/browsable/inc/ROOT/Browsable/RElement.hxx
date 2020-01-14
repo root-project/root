@@ -59,7 +59,7 @@ public:
    virtual std::string GetTitle() const { return ""; }
 
    /** Create iterator for childs elements if any */
-   virtual std::unique_ptr<RLevelIter> GetChildsIter() { return nullptr; }
+   virtual std::unique_ptr<RLevelIter> GetChildsIter();
 
    /** Returns element content, depends from kind. Can be "text" or "image64" */
    virtual std::string GetContent(const std::string & = "text") { return ""; }

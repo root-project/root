@@ -14,6 +14,15 @@ using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
 
+
+/////////////////////////////////////////////////////////////////////
+/// Returns child iterator (if any)
+
+std::unique_ptr<RLevelIter> RElement::GetChildsIter()
+{
+   return nullptr;
+}
+
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
