@@ -16,8 +16,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/RWrapper.hxx
     ROOT/Browsable/RGroup.hxx
     ROOT/Browsable/RProvider.hxx
+    ROOT/Browsable/RItem.hxx
     ROOT/RBrowsableSysFile.hxx
-    ROOT/RBrowserItem.hxx
     ROOT/RDrawableProvider.hxx
     ROOT/RBrowsableTObject.hxx
     ROOT/RBrowsableTDirectory.hxx
