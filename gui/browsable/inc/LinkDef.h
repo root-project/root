@@ -19,7 +19,7 @@
 #pragma link C++ class ROOT::Experimental::Browsable::RProvider+;
 #pragma link C++ class ROOT::Experimental::Browsable::RElement+;
 #pragma link C++ class ROOT::Experimental::Browsable::RLevelIter+;
-#pragma link C++ class ROOT::Experimental::Browsable::RComposite+;
+#pragma link C++ class ROOT::Experimental::Browsable::RGroup+;
 #pragma link C++ class ROOT::Experimental::Browsable::RWrapper+;
 #pragma link C++ class ROOT::Experimental::RBrowsable+;
 
