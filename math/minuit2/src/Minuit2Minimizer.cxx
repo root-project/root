@@ -841,7 +841,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
          maxfcn_used = 2*(nvar+1)*(200 + 100*nvar + 5*nvar*nvar);
       }
       // print an empty line above
-      std::cout << "*****************************************************\n";
+      std::cout << "******************************************************************************************************\n";
       std::string txt = (runLower) ? "lower" : "upper";
       if (runLower && runUpper) txt = "lower and upper";
       std::cout << "Minuit2Minimizer::GetMinosError - Run MINOS " << txt << " error for parameter #" << i << " : " << par_name
