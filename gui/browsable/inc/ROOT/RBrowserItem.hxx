@@ -24,16 +24,6 @@
 namespace ROOT {
 namespace Experimental {
 
-/** Request send from client to get content of path element */
-class RBrowserRequest {
-public:
-   std::string path; ///< requested path
-   int first{0};     ///< first child to request
-   int number{0};    ///< number of childs to request, 0 - all childs
-   std::string sort; ///< kind of sorting
-   std::string regex; ///< applied regex
-};
-
 /** Representation of single item in the browser */
 class RBrowserItem {
 protected:
@@ -63,17 +53,8 @@ public:
          return IsFolder();
       return GetName() < b->GetName();
    }
-
 };
 
-/** Reply on browser request */
-class RBrowserReply {
-public:
-   std::string path;                  ///< reply path
-   int nchilds{0};                    ///< total number of childs in the node
-   int first{0};                      ///< first node in returned list
-   std::vector<const RBrowserItem *> nodes; ///< list of pointers, no ownership!
-};
 
 } // namespace Experimental
 } // namespace ROOT

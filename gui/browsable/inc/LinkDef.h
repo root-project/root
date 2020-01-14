@@ -21,7 +21,6 @@
 #pragma link C++ class ROOT::Experimental::Browsable::RLevelIter+;
 #pragma link C++ class ROOT::Experimental::Browsable::RGroup+;
 #pragma link C++ class ROOT::Experimental::Browsable::RWrapper+;
-#pragma link C++ class ROOT::Experimental::RBrowsable+;
 
 #pragma link C++ class ROOT::Experimental::Browsable::SysFileElement+;
 
@@ -33,7 +32,5 @@
 
 #pragma link C++ class ROOT::Experimental::RBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserFileItem+;
-#pragma link C++ class ROOT::Experimental::RBrowserRequest+;
-#pragma link C++ class ROOT::Experimental::RBrowserReply+;
 
 #endif

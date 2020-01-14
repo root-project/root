@@ -11,6 +11,8 @@
 
 #include <ROOT/RBrowserItem.hxx>
 
+#include <ROOT/RBrowserRequest.hxx>
+
 #include <ROOT/Browsable/RElement.hxx>
 
 #include <memory>
