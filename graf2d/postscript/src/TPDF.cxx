@@ -587,12 +587,16 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    SetColor(Int_t(fMarkerColor));
    Int_t ms = abs(fMarkerStyle);
 
-   if (ms >= 6 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms >= 6 && ms <= 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
    Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) {
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
      msize = 1.;
@@ -631,20 +635,20 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          LineTo(ix   , iy+m2);
       // X shape (X)
       } else if (ms == 5) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
          MoveTo(ix-m2, iy);
          LineTo(ix+m2, iy);
          MoveTo(ix   , iy-m2);
          LineTo(ix   , iy+m2);
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Circle
       } else if (ms == 24 || ms == 20) {
          MoveTo(ix-m2, iy);
@@ -898,12 +902,16 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    SetColor(Int_t(fMarkerColor));
    Int_t ms = abs(fMarkerStyle);
 
-   if (ms >= 6 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms >= 6 && ms <= 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
    Float_t msize  = fMarkerSize;
-   if (fMarkerStyle == 1) {
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
      msize = 1.5;
@@ -941,20 +949,20 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          LineTo(ix   , iy+m2);
       // X shape (X)
       } else if (ms == 5) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
          MoveTo(ix-m2, iy);
          LineTo(ix+m2, iy);
          MoveTo(ix   , iy-m2);
          LineTo(ix   , iy+m2);
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         MoveTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
+         MoveTo(ix-m2*0.707, iy-m2*0.707);
+         LineTo(ix+m2*0.707, iy+m2*0.707);
+         MoveTo(ix-m2*0.707, iy+m2*0.707);
+         LineTo(ix+m2*0.707, iy-m2*0.707);
       // Circle
       } else if (ms == 24 || ms == 20) {
          MoveTo(ix-m2, iy);
