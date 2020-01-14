@@ -127,7 +127,7 @@ bool RBrowsable::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserR
       fLastAllChilds = true;
 
       while (iter->Next() && fLastAllChilds) {
-         fLastItems.emplace_back(iter->CreateBrowserItem());
+         fLastItems.emplace_back(iter->CreateItem());
          if (id++ > 10000)
             fLastAllChilds = false;
       }
@@ -155,7 +155,7 @@ bool RBrowsable::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserR
 
          if (request.sort != "unsorted")
             std::sort(fLastSortedItems.begin(), fLastSortedItems.end(),
-                      [request](const RBrowserItem *a, const RBrowserItem *b) { return a->Compare(b, request.sort); });
+                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a->Compare(b, request.sort); });
       }
       fLastSortMethod = request.sort;
    }
@@ -213,5 +213,4 @@ std::shared_ptr<Browsable::RElement> RBrowsable::GetElementFromTop(const RElemen
 {
    return RElement::GetSubElement(fTopElement, path);
 }
-
 

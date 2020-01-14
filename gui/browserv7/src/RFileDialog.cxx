@@ -16,9 +16,9 @@
 #include <ROOT/RFileDialog.hxx>
 
 #include <ROOT/Browsable/RGroup.hxx>
+
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RBrowsableSysFile.hxx>
-#include <ROOT/RBrowserItem.hxx>
 
 #include "TSystem.h"
 #include "TBufferJSON.h"
@@ -73,7 +73,7 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    }
 
    auto comp = std::make_shared<Browsable::RGroup>("top", "Top file dialog element");
-   workdir = SysFileElement::ProvideTopEntries(comp, workdir);
+   workdir = RSysFile::ProvideTopEntries(comp, workdir);
    fBrowsable.SetTopElement(comp);
    fBrowsable.SetWorkingDirectory(workdir);
 

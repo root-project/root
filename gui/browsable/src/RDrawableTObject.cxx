@@ -66,7 +66,7 @@ public:
             return false;
 
          // here clear ownership is required
-         // If it possible, TObject will be cloned by RTObjectHolder
+         // If it possible, TObject will be cloned by TObjectHolder
          auto tobj = obj->get_shared<TObject>();
          if (!tobj) return false;
 
