@@ -10,14 +10,14 @@
 #define ROOT7_RBrowsableTObject
 
 #include <ROOT/Browsable/RHolder.hxx>
-#include <ROOT/RBrowserItem.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
 namespace Browsable {
 
-/** \class RTObjectHolder
+/** \class TObjectHolder
 \ingroup rbrowser
 \brief Holder of TObject instance. Should not be used very often, while ownership is undefined for it
 \author Sergey Linev <S.Linev@gsi.de>
@@ -25,16 +25,16 @@ namespace Browsable {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RTObjectHolder : public RHolder {
+class TObjectHolder : public RHolder {
    TObject* fObj{nullptr};   ///<! plain holder without IO
    bool fOwner;              ///<! is TObject owner
 protected:
    void *AccessObject() final { return fOwner ? nullptr : fObj; }
    void *TakeObject() final;
-   RHolder* DoCopy() const final { return new RTObjectHolder(fObj); }
+   RHolder* DoCopy() const final { return new TObjectHolder(fObj); }
 public:
-   RTObjectHolder(TObject *obj, bool owner = false) { fObj = obj; fOwner = owner; }
-   virtual ~RTObjectHolder()
+   TObjectHolder(TObject *obj, bool owner = false) { fObj = obj; fOwner = owner; }
+   virtual ~TObjectHolder()
    {
       if (fOwner) delete fObj;
    }
@@ -43,27 +43,23 @@ public:
    const void *GetObject() const final { return fObj; }
 };
 
-} // Browsable
-
-
 /** Representation of single item in the file browser for object from TKey */
-class RBrowserTObjectItem : public RBrowserItem {
+class TObjectItem : public RItem {
    std::string className; ///< class name
 
 public:
 
-   RBrowserTObjectItem() = default;
+   TObjectItem() = default;
 
-   RBrowserTObjectItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
+   TObjectItem(const std::string &_name, int _nchilds) : RItem(_name, _nchilds) {}
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RBrowserTObjectItem() = default;
+   virtual ~TObjectItem() = default;
 
    void SetClassName(const std::string &_className) { className = _className; }
 };
 
-// ========================================================================================
-
+} // namespace Browsable
 } // namespace Experimental
 } // namespace ROOT
 

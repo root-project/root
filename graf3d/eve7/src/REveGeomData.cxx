@@ -12,6 +12,7 @@
 #include <ROOT/REveGeomData.hxx>
 
 #include <ROOT/RBrowserRequest.hxx>
+#include <ROOT/RBrowserReply.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
 #include <ROOT/REveUtil.hxx>
 #include <ROOT/RLogger.hxx>
@@ -566,7 +567,7 @@ std::string ROOT::Experimental::REveGeomDescription::ProcessBrowserRequest(const
       printf("Total number of valid nodes %d\n", nelements);
 
    } else {
-      std::vector<RBrowserItem> temp_nodes;
+      std::vector<Browsable::RItem> temp_nodes;
       bool toplevel = (request->path.compare("/") == 0);
 
       // create temporary object for the short time

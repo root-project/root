@@ -9,11 +9,10 @@
 #ifndef ROOT7_RBrowsable
 #define ROOT7_RBrowsable
 
-#include <ROOT/RBrowserItem.hxx>
+#include <ROOT/Browsable/RElement.hxx>
 
 #include <ROOT/RBrowserRequest.hxx>
-
-#include <ROOT/Browsable/RElement.hxx>
+#include <ROOT/RBrowserReply.hxx>
 
 #include <memory>
 #include <string>
@@ -40,9 +39,9 @@ class RBrowsable {
 
    RElementPath_t fLastPath;                             ///<! path to last used element
    std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used in request
-   std::vector<std::unique_ptr<RBrowserItem>> fLastItems; ///<! created browser items - used in requests
+   std::vector<std::unique_ptr<Browsable::RItem>> fLastItems; ///<! created browser items - used in requests
    bool fLastAllChilds{false};                           ///<! if all chlds were extracted
-   std::vector<const RBrowserItem *> fLastSortedItems;   ///<! sorted child items, used in requests
+   std::vector<const Browsable::RItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
 
    RElementPath_t DecomposePath(const std::string &path);
