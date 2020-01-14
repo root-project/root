@@ -9,7 +9,8 @@
 #ifndef ROOT7_RBrowsableTObject
 #define ROOT7_RBrowsableTObject
 
-#include <ROOT/RBrowsable.hxx>
+#include <ROOT/Browsable/RHolder.hxx>
+#include <ROOT/RBrowserItem.hxx>
 
 namespace ROOT {
 namespace Experimental {

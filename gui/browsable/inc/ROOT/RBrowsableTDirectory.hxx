@@ -9,7 +9,7 @@
 #ifndef ROOT7_RBrowsableTDirectory
 #define ROOT7_RBrowsableTDirectory
 
-#include <ROOT/RBrowsable.hxx>
+#include <ROOT/RBrowserItem.hxx>
 
 class TDirectory;
 
