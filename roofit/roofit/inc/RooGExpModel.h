@@ -42,21 +42,21 @@ public:
     // coverity[UNINIT_CTOR]
   }
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& meanSF, RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
           Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& srSF,
           Bool_t nlo=kFALSE, Type type=Normal) ;
 
-  RooGExpModel(const char *name, const char *title, RooRealVar& x,
+  RooGExpModel(const char *name, const char *title, RooAbsRealLValue& x,
           RooAbsReal& sigma, RooAbsReal& rlife,
           RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
           Bool_t nlo=kFALSE, Type type=Normal) ;
