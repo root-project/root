@@ -6,6 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
+#include <ROOT/Browsable/RAnyObjectHolder.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/TObjectHolder.hxx>

@@ -10,14 +10,17 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
   HEADERS
+    ROOT/Browsable/RAnyObjectHolder.hxx
     ROOT/Browsable/RElement.hxx
     ROOT/Browsable/RGroup.hxx
     ROOT/Browsable/RHolder.hxx
     ROOT/Browsable/RItem.hxx
     ROOT/Browsable/RLevelIter.hxx
     ROOT/Browsable/RProvider.hxx
+    ROOT/Browsable/RShared.hxx
     ROOT/Browsable/RSysFile.hxx
     ROOT/Browsable/RSysFileItem.hxx
+    ROOT/Browsable/RUnique.hxx
     ROOT/Browsable/RWrapper.hxx
     ROOT/Browsable/TKeyItem.hxx
     ROOT/Browsable/TObjectHolder.hxx
