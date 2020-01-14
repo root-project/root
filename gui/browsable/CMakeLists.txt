@@ -17,9 +17,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/RLevelIter.hxx
     ROOT/Browsable/RProvider.hxx
     ROOT/Browsable/RSysFile.hxx
+    ROOT/Browsable/RSysFileItem.hxx
     ROOT/Browsable/RWrapper.hxx
     ROOT/Browsable/TKeyItem.hxx
     ROOT/Browsable/TObjectHolder.hxx
+    ROOT/Browsable/TObjectItem.hxx
     ROOT/RDrawableProvider.hxx
   SOURCES
     src/RDrawableProvider.cxx
@@ -29,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     src/RProvider.cxx
     src/RSysFile.cxx
     src/TDirectoryElement.cxx
+    src/TObjectElement.cxx
     src/TObjectHolder.cxx
   DEPENDENCIES
     RIO
