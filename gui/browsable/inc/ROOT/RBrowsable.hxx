@@ -11,19 +11,11 @@
 
 #include <ROOT/RBrowserItem.hxx>
 
-#include <ROOT/Browsable/RHolder.hxx>
 #include <ROOT/Browsable/RElement.hxx>
-#include <ROOT/Browsable/RLevelIter.hxx>
-#include <ROOT/Browsable/RWrapper.hxx>
-#include <ROOT/Browsable/RGroup.hxx>
-#include <ROOT/Browsable/RProvider.hxx>
 
 #include <memory>
 #include <string>
 #include <vector>
-
-class TObject;
-
 
 namespace ROOT {
 namespace Experimental {

@@ -16,6 +16,10 @@
 
 #include "ROOT/RBrowsableSysFile.hxx"
 
+#include <ROOT/Browsable/RWrapper.hxx>
+#include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
+
 #include "ROOT/RLogger.hxx"
 
 #include "TSystem.h"
@@ -73,14 +77,14 @@ class RSysDirLevelIter : public RLevelIter {
          TCHAR path[BUFSIZE];
          auto dwRet = GetFinalPathNameByHandle( hFile, path, BUFSIZE, VOLUME_NAME_DOS );
          // produced file name may include \\? symbols, which are indicating long file name
-         if ((dwRet > 0) && (dwRet < BUFSIZE)) 
+         if ((dwRet > 0) && (dwRet < BUFSIZE))
            if ((path[0] == '\\') && (path[1] == '\\') && (path[2] == '?') && (path[3] == '\\')) {
               R__DEBUG_HERE("Browserv7") << "Try to open directory " << (path+4) << " instead of " << fPath;
               fDir = gSystem->OpenDirectory(path + 4);
               if (fDir) fPath = path + 4;
            }
       }
-      
+
       CloseHandle(hFile);
    }
 
@@ -365,14 +369,14 @@ SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename
 /// in case of windows may exclude .lnk extension
 
 std::string SysFileElement::GetName() const
-{ 
+{
 #ifdef _MSC_VER
    auto name = fFileName;
    if ((name.length() > 4) && (name.rfind(".lnk") == name.length() - 4))
       name.resize(name.length() - 4);
    return name;
 #else
-   return fFileName; 
+   return fFileName;
 #endif
 }
 

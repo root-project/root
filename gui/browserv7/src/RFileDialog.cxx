@@ -15,6 +15,7 @@
 
 #include <ROOT/RFileDialog.hxx>
 
+#include <ROOT/Browsable/RGroup.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RBrowsableSysFile.hxx>
 #include <ROOT/RBrowserItem.hxx>

@@ -35,10 +35,10 @@ public:
 
    virtual ~RGroup() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of browsable, must be provided in derived classes */
    std::string GetName() const override { return fName; }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of browsable (optional) */
    std::string GetTitle() const override { return fTitle; }
 
    /** Create iterator for childs elements if any */
