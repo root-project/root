@@ -428,7 +428,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
-      set(pcm_name)
+      # Currently we are not able to build R C++ module, so we still need to be able to install it's _rdict.pcm.
+      if(NOT ARG_NO_CXXMODULE)
+        set(pcm_name)
+      endif()
       if(cpp_module)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
         if (APPLE)
