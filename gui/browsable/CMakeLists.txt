@@ -16,7 +16,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/RWrapper.hxx
     ROOT/Browsable/RGroup.hxx
     ROOT/Browsable/RProvider.hxx
-    ROOT/RBrowsable.hxx
     ROOT/RBrowsableSysFile.hxx
     ROOT/RBrowserItem.hxx
     ROOT/RDrawableProvider.hxx
@@ -26,7 +25,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     src/RElement.cxx
     src/RLevelIter.cxx
     src/RProvider.cxx
-    src/RBrowsable.cxx
     src/RGroup.cxx
     src/RBrowsableSysFile.cxx
     src/RDrawableProvider.cxx
