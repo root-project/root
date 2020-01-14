@@ -198,18 +198,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
             for (unsigned int j = 0; j <= i; ++j)
                fCovMatrix.push_back(min->CovMatrix(i,j) );
       }
-
-      // minos errors
-      if (fValid && fconfig.MinosErrors()) {
-         const std::vector<unsigned int> & ipars = fconfig.MinosParams();
-         unsigned int n = (ipars.size() > 0) ? ipars.size() : npar;
-         for (unsigned int i = 0; i < n; ++i) {
-          double elow, eup;
-          unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
-          bool ret = min->GetMinosError(index, elow, eup);
-          if (ret) SetMinosError(index, elow, eup);
-         }
-      }
+      // minos errors are set separetly when calling Fitter::CalculateMinosErrors()
 
       // globalCC
       fGlobalCC.reserve(npar);
@@ -479,7 +468,10 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       else {
          if (fErrors.size() != 0)
             os << "   +/-   " << std::left << std::setw(nn) << fErrors[i] << std::right;
-         if (IsParameterBound(i) )
+         if (HasMinosError(i))
+            os << "  " << std::left  << std::setw(nn) << LowerError(i) << " +" << std::setw(nn) << UpperError(i)
+               << " (Minos) ";
+         if (IsParameterBound(i))
             os << " \t (limited)";
       }
       os << std::endl;
