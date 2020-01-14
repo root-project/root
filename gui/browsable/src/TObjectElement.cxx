@@ -18,6 +18,8 @@
 #include "TBrowserImp.h"
 #include "TFolder.h"
 #include "TList.h"
+#include "TObjArray.h"
+#include "TDirectory.h"
 
 #include <sstream>
 
@@ -251,6 +253,8 @@ public:
    }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////
+/// Provides iterator for TFolder
 
 std::unique_ptr<RLevelIter> TFolderElement::GetChildsIter()
 {
@@ -261,6 +265,9 @@ std::unique_ptr<RLevelIter> TFolderElement::GetChildsIter()
   return TObjectElement::GetChildsIter();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+/// Provides iterator for generic TCollecion
+
 std::unique_ptr<RLevelIter> TCollectionElement::GetChildsIter()
 {
    auto coll = fObject->Get<TCollection>();
@@ -270,9 +277,7 @@ std::unique_ptr<RLevelIter> TCollectionElement::GetChildsIter()
    return TObjectElement::GetChildsIter();
 }
 
-
 // ==============================================================================================
-
 
 class RTObjectProvider : public RProvider {
 
@@ -290,13 +295,12 @@ public:
       RegisterBrowse(TList::Class(), coll_labmda);
       RegisterBrowse(TObjArray::Class(), coll_labmda);
 
-
       RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TFolder>())
             return std::make_shared<TFolderElement>(object);
          if (object->CanCastTo<TCollection>())
             return std::make_shared<TCollectionElement>(object);
-         if (object->CanCastTo<TObject>())
+         if (object->CanCastTo<TObject>() && !object->CanCastTo<TDirectory>()) // TODO: how to fix order of invoking
             return std::make_shared<TObjectElement>(object);
          return nullptr;
       });
