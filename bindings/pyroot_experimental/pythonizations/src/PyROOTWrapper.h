@@ -12,10 +12,15 @@
 #ifndef PYROOT_ROOTWRAPPER_H
 #define PYROOT_ROOTWRAPPER_H
 
+#include "Python.h"
+
 namespace PyROOT {
 
 // initialize ROOT
 void Init();
+
+// clean up all objects controlled by TMemoryRegulator
+PyObject *ClearProxiedObjects(PyObject *self, PyObject *args);
 
 } // namespace PyROOT
 

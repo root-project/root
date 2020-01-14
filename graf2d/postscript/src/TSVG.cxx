@@ -570,12 +570,16 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Int_t ms = GetMarkerStyleBase();
 
-   if (ms >= 6 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms >= 6 && ms <= 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
    Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
-   if (fMarkerStyle == 1) msize = 0.01;
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
 
@@ -648,23 +652,23 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
@@ -689,23 +693,23 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
@@ -971,12 +975,16 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Int_t ms = GetMarkerStyleBase();
 
-   if (ms >= 6 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms >= 6 && ms <= 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
    Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
-   if (fMarkerStyle == 1) msize = 0.01;
+   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
 
@@ -1049,23 +1057,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
@@ -1090,23 +1098,23 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
+         WriteReal(ix-m2*0.707, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2, kFALSE);
+         WriteReal(iy+m2*0.707, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
+         WriteReal(ix+m2*0.707, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2, kFALSE);
+         WriteReal(iy-m2*0.707, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {

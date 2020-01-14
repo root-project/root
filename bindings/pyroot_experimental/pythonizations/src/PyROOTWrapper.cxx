@@ -41,17 +41,29 @@ static void AddToGlobalScope(const char *label, const char * /* hdr */, TObject 
 
 } // unnamed namespace
 
+static TMemoryRegulator &GetMemoryRegulator()
+{
+   static TMemoryRegulator m;
+   return m;
+}
+
 void PyROOT::Init()
 {
    // Initialize and acquire the GIL to allow for threading in ROOT
    PyEval_InitThreads();
 
    // Memory management
-   static TMemoryRegulator m;
-   gROOT->GetListOfCleanups()->Add(&m);
+   gROOT->GetListOfCleanups()->Add(&GetMemoryRegulator());
 
    // Bind ROOT globals that will be needed in ROOT.py
    AddToGlobalScope("gROOT", "TROOT.h", gROOT, Cppyy::GetScope(gROOT->IsA()->GetName()));
    AddToGlobalScope("gSystem", "TSystem.h", gSystem, Cppyy::GetScope(gSystem->IsA()->GetName()));
    AddToGlobalScope("gInterpreter", "TInterpreter.h", gInterpreter, Cppyy::GetScope(gInterpreter->IsA()->GetName()));
+}
+
+PyObject *PyROOT::ClearProxiedObjects(PyObject * /* self */, PyObject * /* args */)
+{
+   // Delete all memory-regulated objects
+   GetMemoryRegulator().ClearProxiedObjects();
+   Py_RETURN_NONE;
 }
