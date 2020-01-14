@@ -2821,6 +2821,10 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
          if (!yline[j]) {
             Error("Paint", "too many points, out of memory");
+            delete[] xline;
+            for (Int_t k = 0; k < j; k++)
+               if (yline[k])
+                  delete[] yline[k];
             return;
          }
       }
