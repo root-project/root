@@ -428,7 +428,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
-      # Currently we are not able to build R C++ module, so we still need to be able to install it's _rdict.pcm.
+      # If we specify NO_CXXMODULE we should be able to still install the produced _rdict.pcm file.
       if(NOT ARG_NO_CXXMODULE)
         set(pcm_name)
       endif()
