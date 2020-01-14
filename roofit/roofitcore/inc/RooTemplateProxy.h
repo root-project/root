@@ -121,16 +121,16 @@ private:
     return lvptr_impl(static_cast<T*>(nullptr));
   }
 
-  /// Overload with RooAbsRealLValue and derived types. Just returns the pointer.
+  /// Overload when the class template parameter is RooAbsRealLValue or more derived. Just returns the pointer.
   RooAbsRealLValue* lvptr_impl(RooAbsRealLValue*) const {
-    return _arg;
+    return static_cast<RooAbsRealLValue*>(_arg);
   }
 
-  /// Overload with base types. Attempts a cast.
-  /// \deprecated The payload of this proxy should be at least RooAbsRealLValue or more derived for
-  /// this function to be called safely.
+  /// Overload for cases where the class template parameter is does not derive from RooAbsRealLValue. Attempts a cast.
+  /// \deprecated Instead of using a proxy with a base type like RooAbsReal, change the template parameter to a type that
+  /// makes downcasting to RooAbsRealLValue unnecessary.
   RooAbsRealLValue* lvptr_impl(RooAbsArg*) const
-    R__SUGGEST_ALTERNATIVE("The template argument of RooTemplateProxy needs to derive from RooAbsRealLValue.") {
+    R__SUGGEST_ALTERNATIVE("Change the template parameter to RooAbsRealLValue or more derived when using functions that assume that the proxied object is RooAbsRealLValue.") {
 #ifdef NDEBUG
     return static_cast<RooAbsRealLValue*>(_arg);
 #else
