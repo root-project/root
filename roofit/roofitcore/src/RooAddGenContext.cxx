@@ -117,14 +117,12 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   _pdfSet = (RooArgSet*) RooArgSet(model).snapshot(kTRUE) ;
   _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
 
-
-  model._pdfIter->Reset() ;
-  RooAbsPdf* pdf ;
   _nComp = model._pdfList.getSize() ;
   _coefThresh = new Double_t[_nComp+1] ;
   _vars = (RooArgSet*) vars.snapshot(kFALSE) ;
 
-  while((pdf=(RooAbsPdf*)model._pdfIter->Next())) {
+  for (const auto obj : model._pdfList) {
+    auto pdf = static_cast<RooAbsPdf*>(obj);
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.push_back(cx) ;
   }  

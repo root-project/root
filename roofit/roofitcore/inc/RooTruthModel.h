@@ -36,7 +36,7 @@ public:
 
   // Constructors, assignment etc
   inline RooTruthModel() { }
-  RooTruthModel(const char *name, const char *title, RooRealVar& x) ; 
+  RooTruthModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooTruthModel(const RooTruthModel& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooTruthModel(*this,newname) ; }
   virtual ~RooTruthModel();

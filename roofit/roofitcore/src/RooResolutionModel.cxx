@@ -34,30 +34,31 @@
  *  \f[
  *    \mathrm{PDF}(x,\bar a, \bar b, \bar c) = \sum_k \mathrm{coef}_k(\bar a) * R_k(x, \bar b, \bar c)
  *  \f]
+ *
  *  A minimal implementation of a RooResolutionModel consists of a
  *  ```
  *    Int_t basisCode(const char* name)
  *  ```
- *  function indication which basis functions this resolution model supports, and
+ *  function indicating which basis functions this resolution model supports, and
  *  ```
- *    Double_t evaluate()
+ *    Double_t evaluate(),
  *  ```
- *  Implementing the resolution model, optionally convoluted with one of the
- *  supported basis functions. RooResolutionModel objects can be used as regular
+ *  which should implement the resolution model (optionally convoluted with one of the
+ *  supported basis functions). RooResolutionModel objects can be used as regular
  *  PDFs (They inherit from RooAbsPdf), or as resolution model convoluted with
  *  a basis function. The implementation of evaluate() can identify the requested
- *  from of use from the basisCode() function. If zero, the regular PDF value
- *  should be calculated. If non-zero, the models value convoluted with the
+ *  mode using basisCode(). If zero, the regular PDF value
+ *  should be calculated. If non-zero, the model's value convoluted with the
  *  basis function identified by the code should be calculated.
  *
  *  Optionally, analytical integrals can be advertised and implemented, in the
  *  same way as done for regular PDFS (see RooAbsPdf for further details).
- *  Also in getAnalyticalIntegral()/analyticalIntegral() the implementation
+ *  Also in getAnalyticalIntegral() / analyticalIntegral(), the implementation
  *  should use basisCode() to determine for which scenario the integral is
  *  requested.
  *
  *  The choice of basis returned by basisCode() is guaranteed not to change
- *  of the lifetime of a RooResolutionModel object.
+ *  during the lifetime of a RooResolutionModel object.
  *
  */
 
@@ -75,9 +76,11 @@ ClassImp(RooResolutionModel);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with convolution variable 'x'
-
-RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
+/// Constructor with convolution variable 'x'.
+/// The convolution variable needs to be convertable to real values, and be able
+/// to give information about its range. This is supported by e.g. RooRealVar or RooLinearVar, which
+/// accepts offsetting and scaling an observable.
+RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& _x) :
   RooAbsPdf(name,title), 
   x("x","Dependent or convolution variable",this,_x),
   _basisCode(0), _basis(0), 
