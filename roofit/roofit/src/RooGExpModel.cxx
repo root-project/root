@@ -58,7 +58,7 @@ ClassImp(RooGExpModel);
 /// \param[in] rlifeSF Scale factor for rlife.
 /// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
 /// \param[in] type  Switch between normal and flipped model.
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
     RooAbsReal& meanIn, RooAbsReal& sigmaIn, RooAbsReal& rlifeIn,
     RooAbsReal& meanSF, RooAbsReal& sigmaSF, RooAbsReal& rlifeSF,
     Bool_t nlo, Type type) :
@@ -87,7 +87,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 /// \param[in] rlife Lifetime constant \f$ \tau \f$.
 /// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
 /// \param[in] type  Switch between normal and flipped model.
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             Bool_t nlo, Type type) :
   RooResolutionModel(name,title,xIn),
@@ -112,7 +112,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 /// \param[in] srSF Scale factor for both sigma and tau.
 /// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
 /// \param[in] type  Switch between normal and flipped model.
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             RooAbsReal& _rsSF,
             Bool_t nlo, Type type) :
@@ -142,7 +142,7 @@ RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
 /// \param[in] rlifeSF Scale factor for rlife.
 /// \param[in] nlo   Include next-to-leading order for higher accuracy of convolution.
 /// \param[in] type  Switch between normal and flipped model.
-RooGExpModel::RooGExpModel(const char *name, const char *title, RooRealVar& xIn,
+RooGExpModel::RooGExpModel(const char *name, const char *title, RooAbsRealLValue& xIn,
             RooAbsReal& _sigma, RooAbsReal& _rlife,
             RooAbsReal& _sigmaSF, RooAbsReal& _rlifeSF,
             Bool_t nlo, Type type) :
