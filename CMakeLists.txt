@@ -414,10 +414,11 @@ else()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
-file(GLOB ${pcms} "*.pcm")
 install(
-   FILES ${pcms}
+   DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   FILES_MATCHING PATTERN "*.pcm"
+   PATTERN "*_rdict.pcm" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
@@ -585,3 +586,7 @@ ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
 include(RootCPack)
+
+# Exp PyROOT: remove empty directory wrongly created
+# Keep until we figure why it happens
+install(CODE "execute_process(COMMAND bash -c \"rm -rf ${CMAKE_INSTALL_PREFIX}/lib/python*\")")
