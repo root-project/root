@@ -51,7 +51,7 @@ private:
    struct StructBrowse { RProvider *provider{nullptr};  BrowseFunc_t func; };
    struct StructFile { RProvider *provider{nullptr};  FileFunc_t func; };
 
-   using BrowseMap_t = std::map<const TClass*, StructBrowse>;
+   using BrowseMap_t = std::multimap<const TClass*, StructBrowse>;
    using FileMap_t = std::multimap<std::string, StructFile>;
 
    static BrowseMap_t &GetBrowseMap();
