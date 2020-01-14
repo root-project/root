@@ -189,7 +189,7 @@ namespace std {
 
 //#include <__debug>
 
-#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+#if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER) && !defined(_MSC_VER)
 #pragma GCC system_header
 #endif
 

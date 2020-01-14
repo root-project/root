@@ -333,9 +333,9 @@ win32)
       auxcflags="$auxcflags -GR -GX -G5"
    fi
    auxlibs=
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
-   forceevelibs=$rootuevelibs
+   #forcelibs=$rootulibs
+   #forceglibs=$rootuglibs
+   #forceevelibs=$rootuevelibs
    ;;
 win32gcc | win64gcc)
    # Windows (32 or 64) with cygwin gcc
