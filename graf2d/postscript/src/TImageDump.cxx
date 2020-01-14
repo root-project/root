@@ -294,8 +294,12 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    Int_t ms = TMath::Abs(fMarkerStyle);
    static TPoint pt[20];
 
-   if (ms > 7 && ms <= 19) ms = 20;
-   if (ms == 4) ms = 24;
+   if (ms == 4)
+      ms = 24;
+   else if (ms == 8)
+      ms = 20;
+   else if (ms >= 9 && ms <= 19)
+      ms = 1;
 
    // Define the marker size
    const Int_t kBASEMARKER = 8;
@@ -349,16 +353,16 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          break;
       // X shape (X)
       case 5:
-         fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(ix+m2), UInt_t(iy+m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy+m2), UInt_t(ix+m2), UInt_t(iy-m2), col->AsHexString());
+         fImage->DrawLine(UInt_t(ix-m2*0.707), UInt_t(iy-m2*0.707), UInt_t(ix+m2*0.707), UInt_t(iy+m2*0.707), col->AsHexString());
+         fImage->DrawLine(UInt_t(ix-m2*0.707), UInt_t(iy+m2*0.707), UInt_t(ix+m2*0.707), UInt_t(iy-m2*0.707), col->AsHexString());
          break;
       // Asterisk shape (*)
       case 3:
       case 31:
          fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy), UInt_t(ix+m2), UInt_t(iy), col->AsHexString());
          fImage->DrawLine(UInt_t(ix), UInt_t(iy-m2), UInt_t(ix), UInt_t(iy+m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy-m2), UInt_t(ix+m2), UInt_t(iy+m2), col->AsHexString());
-         fImage->DrawLine(UInt_t(ix-m2), UInt_t(iy+m2), UInt_t(ix+m2), UInt_t(iy-m2), col->AsHexString());
+         fImage->DrawLine(UInt_t(ix-m2*0.707), UInt_t(iy-m2*0.707), UInt_t(ix+m2*0.707), UInt_t(iy+m2*0.707), col->AsHexString());
+         fImage->DrawLine(UInt_t(ix-m2*0.707), UInt_t(iy+m2*0.707), UInt_t(ix+m2*0.707), UInt_t(iy-m2*0.707), col->AsHexString());
          break;
       // Circle
       case 4:
