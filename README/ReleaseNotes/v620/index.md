@@ -24,6 +24,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Alexandra Dobrescu, CERN/SFT,\
  Giulio Eulisse, CERN/ALICE,\
+ Massimiliano Galli, CERN/SFT and Unibo,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
@@ -248,3 +249,30 @@ The following builtins have been updated:
 - Vdt 0.4.3
 - VecCore 0.6.0
 - XRootD 4.10.0
+
+
+## PyROOT
+
+### Current PyROOT
+
+### Experimental PyROOT
+
+- MultiPython: build and install PyROOT with multiple Python versions.
+  - Build:
+  ~~~ {.bash}
+  cmake -DPYTHON_EXECUTABLE=/path/to/first/Python/installation /path/to/ROOT/source
+  cmake --build .
+  cmake -DPYTHON_EXECUTABLE=/path/to/second/Python/installation /path/to/ROOT/source
+  cmake --build .
+  ( ... )
+  ~~~
+  - Source a specific built version (last one picked as default):
+  ~~~ {.bash}
+  ROOT_PYTHON_VERSION=X.Y source /path/to/bin/thisroot.sh
+  ~~~
+  - PyROOT installation directory can be customized:
+  ~~~ {.bash}
+  cmake -DCMAKE_INSTALL_PYROOTDIR=/path/to/PyROOT/install/dir /path/to/ROOT/source
+  cmake --build .
+  make install
+  ~~~
