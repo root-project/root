@@ -9,7 +9,7 @@
 #ifndef ROOT7_RBrowsableSysFile
 #define ROOT7_RBrowsableSysFile
 
-#include <ROOT/RBrowserItem.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 #include <ROOT/Browsable/RElement.hxx>
 #include <ROOT/Browsable/RGroup.hxx>
 
@@ -18,9 +18,10 @@
 
 namespace ROOT {
 namespace Experimental {
+namespace Browsable {
 
 /** Representation of single item in the file browser */
-class RBrowserFileItem : public RBrowserItem {
+class RSysFileItem : public RItem {
 public:
    // internal data, used for generate directory list
    int type{0};             ///<! file type
@@ -39,23 +40,23 @@ public:
    std::string fgid;     ///< group id
 
    /** Default constructor */
-   RBrowserFileItem() = default;
+   RSysFileItem() = default;
 
-   RBrowserFileItem(const std::string &_name, int _nchilds) : RBrowserItem(_name, _nchilds) {}
+   RSysFileItem(const std::string &_name, int _nchilds) : RItem(_name, _nchilds) {}
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RBrowserFileItem() = default;
+   virtual ~RSysFileItem() = default;
 
    bool IsFolder() const override { return isdir; }
 
 
-   bool Compare(const RBrowserItem *b, const std::string &method) const override
+   bool Compare(const RItem *b, const std::string &method) const override
    {
       if (IsFolder() != b->IsFolder())
          return IsFolder();
 
       if (method == "size") {
-         auto fb = dynamic_cast<const RBrowserFileItem *> (b);
+         auto fb = dynamic_cast<const RSysFileItem *> (b);
          if (fb)
             return size < fb->size;
       }
@@ -66,11 +67,9 @@ public:
 
 
 
-namespace Browsable {
-
 // ========================================================================================
 
-class SysFileElement : public RElement {
+class RSysFile : public RElement {
    FileStat_t fStat;       ///<! file stat object
    std::string fDirName;   ///<! fully-qualified directory name
    std::string fFileName;  ///<! file name in current dir
@@ -78,13 +77,13 @@ class SysFileElement : public RElement {
    std::string GetFullName() const;
 
 public:
-   SysFileElement(const std::string &filename);
+   RSysFile(const std::string &filename);
 
-   SysFileElement(const FileStat_t& stat, const std::string &dirname, const std::string &filename) : fStat(stat), fDirName(dirname), fFileName(filename)
+   RSysFile(const FileStat_t& stat, const std::string &dirname, const std::string &filename) : fStat(stat), fDirName(dirname), fFileName(filename)
    {
    }
 
-   virtual ~SysFileElement() = default;
+   virtual ~RSysFile() = default;
 
    /** Name of RElement - file name in this case */
    std::string GetName() const override;

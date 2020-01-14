@@ -9,13 +9,9 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 
 #include <ROOT/Browsable/RElement.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 
-#include <ROOT/RBrowserItem.hxx>
-
-using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
-using namespace std::string_literals;
-
 
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
@@ -37,8 +33,8 @@ bool RLevelIter::Find(const std::string &name)
 /////////////////////////////////////////////////////////////////////
 /// Create generic description item for RBrowser
 
-std::unique_ptr<RBrowserItem> RLevelIter::CreateBrowserItem()
+std::unique_ptr<RItem> RLevelIter::CreateItem()
 {
-   return HasItem() ? std::make_unique<RBrowserItem>(GetName(), CanHaveChilds(), CanHaveChilds() > 0 ? "sap-icon://folder-blank" : "sap-icon://document") : nullptr;
+   return HasItem() ? std::make_unique<RItem>(GetName(), CanHaveChilds(), CanHaveChilds() > 0 ? "sap-icon://folder-blank" : "sap-icon://document") : nullptr;
 }
 

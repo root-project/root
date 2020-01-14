@@ -38,7 +38,6 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 
 /** \class RSysDirLevelIter
@@ -196,9 +195,9 @@ public:
 
    static std::string GetFileIcon(const std::string &fname);
 
-   std::unique_ptr<RBrowserItem> CreateBrowserItem() override
+   std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<RBrowserFileItem>(GetName(), CanHaveChilds());
+      auto item = std::make_unique<RSysFileItem>(GetName(), CanHaveChilds());
 
       // this is construction of current item
       char tmp[256];
@@ -294,7 +293,7 @@ public:
          if (elem) return elem;
       }
 
-      return std::make_shared<SysFileElement>(fCurrentStat, fPath, fCurrentName);
+      return std::make_shared<RSysFile>(fCurrentStat, fPath, fCurrentName);
    }
 
 };
@@ -352,7 +351,7 @@ std::string RSysDirLevelIter::GetFileIcon(const std::string &fname)
 /////////////////////////////////////////////////////////////////////////////////
 /// Create file element
 
-SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename)
+RSysFile::RSysFile(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
@@ -368,7 +367,7 @@ SysFileElement::SysFileElement(const std::string &filename) : fFileName(filename
 /// return file name
 /// in case of windows may exclude .lnk extension
 
-std::string SysFileElement::GetName() const
+std::string RSysFile::GetName() const
 {
 #ifdef _MSC_VER
    auto name = fFileName;
@@ -383,7 +382,7 @@ std::string SysFileElement::GetName() const
 /////////////////////////////////////////////////////////////////////////////////
 /// Check if file name the same, ignore case on Windows
 
-bool SysFileElement::MatchName(const std::string &name) const
+bool RSysFile::MatchName(const std::string &name) const
 {
    auto ownname = GetName();
 
@@ -404,7 +403,7 @@ bool SysFileElement::MatchName(const std::string &name) const
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns full file name - including fully quialified path
 
-std::string SysFileElement::GetFullName() const
+std::string RSysFile::GetFullName() const
 {
    return fDirName + fFileName;
 }
@@ -412,7 +411,7 @@ std::string SysFileElement::GetFullName() const
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns iterator for files in directory
 
-std::unique_ptr<RLevelIter> SysFileElement::GetChildsIter()
+std::unique_ptr<RLevelIter> RSysFile::GetChildsIter()
 {
    if (!R_ISDIR(fStat.fMode))
       return nullptr;
@@ -435,7 +434,7 @@ std::unique_ptr<RLevelIter> SysFileElement::GetChildsIter()
 /////////////////////////////////////////////////////////////////////////////////
 /// Returns file content of requested kind
 
-std::string SysFileElement::GetContent(const std::string &kind)
+std::string RSysFile::GetContent(const std::string &kind)
 {
    if ((GetContentKind(kind) == kText) && (RSysDirLevelIter::GetFileIcon(GetName()) == "sap-icon://document-text"s)) {
       std::ifstream t(GetFullName());
@@ -465,7 +464,7 @@ std::string SysFileElement::GetContent(const std::string &kind)
 /// Provide top entries for file system
 /// On windows it is list of existing drivers, on Linux it is "Files system" and "Home"
 
-std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir)
+std::string RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir)
 {
    std::string seldir = workdir;
 
@@ -482,19 +481,19 @@ std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RGroup> &comp, con
       while ((obj = iter()) != nullptr) {
          std::string name = obj->GetName();
          std::string dir = name + "\\"s;
-         comp->Add(std::make_shared<Browsable::RWrapper>(name, std::make_unique<SysFileElement>(dir)));
+         comp->Add(std::make_shared<Browsable::RWrapper>(name, std::make_unique<RSysFile>(dir)));
       }
       delete volumes;
 
    } else {
-      comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<SysFileElement>("/")));
+      comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<RSysFile>("/")));
 
       seldir = "/Files system"s + seldir;
 
       std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
 
       if (!homedir.empty())
-         comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<SysFileElement>(homedir)));
+         comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<RSysFile>(homedir)));
    }
 
    return seldir;
