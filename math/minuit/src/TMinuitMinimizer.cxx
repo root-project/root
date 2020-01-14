@@ -827,6 +827,10 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
    fMinosRun = true;
 
+   // retrieve parameters in case a new minimum has been found
+   if (fMinuit->fCstatu == "SUCCESSFUL")
+      RetrieveParams();
+
    double errParab = 0;
    double gcor = 0;
    // what returns if parameter fixed or constant or at limit ?
