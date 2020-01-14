@@ -461,7 +461,7 @@ std::string SysFileElement::GetContent(const std::string &kind)
 /// Provide top entries for file system
 /// On windows it is list of existing drivers, on Linux it is "Files system" and "Home"
 
-std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RComposite> &comp, const std::string &workdir)
+std::string SysFileElement::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir)
 {
    std::string seldir = workdir;
 

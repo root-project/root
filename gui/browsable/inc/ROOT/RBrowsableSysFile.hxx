@@ -97,7 +97,7 @@ public:
 
    std::string GetContent(const std::string &kind) override;
 
-   static std::string ProvideTopEntries(std::shared_ptr<RComposite> &comp, const std::string &workdir = "");
+   static std::string ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir = "");
 
 };
 

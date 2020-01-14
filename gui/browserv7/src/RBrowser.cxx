@@ -63,7 +63,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   auto comp = std::make_shared<Browsable::RComposite>("top","Root browser");
+   auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
 
    auto seldir = SysFileElement::ProvideTopEntries(comp);
 
