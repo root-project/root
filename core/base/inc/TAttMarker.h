@@ -31,6 +31,8 @@ public:
    virtual Color_t  GetMarkerColor() const {return fMarkerColor;} ///< Return the marker color
    virtual Style_t  GetMarkerStyle() const {return fMarkerStyle;} ///< Return the marker style
    virtual Size_t   GetMarkerSize()  const {return fMarkerSize;}  ///< Return the marker size
+   virtual Style_t  GetMarkerStyleBase() const;
+   virtual Width_t  GetMarkerLineWidth() const;
    virtual void     Modify();
    virtual void     ResetAttMarker(Option_t *toption="");
    virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);

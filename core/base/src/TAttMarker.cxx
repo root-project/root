@@ -35,6 +35,7 @@ The marker attributes are:
 
   - [Marker color](#M1)
   - [Marker style](#M2)
+    - [Marker line width](#M21)
   - [Marker size](#M3)
 
 ## <a name="M1"></a> Marker color
@@ -131,6 +132,30 @@ Begin_Macro
 }
 End_Macro
 
+### <a name="M21"></a> Marker line width
+
+The line width of a marker is not actually a marker attribute since it does
+only apply to open marker symbols and marker symbols consisting of lines. All
+of these marker symbols are redefined with thicker lines by style numbers
+starting from 50:
+
+~~~ {.cpp}
+   Marker numbers   Line width
+      50 -  67         2
+      68 -  85         3
+      86 - 103         4
+     104 - 121         5
+   ...
+~~~
+
+Begin_Macro
+{
+   TCanvas *c = new TCanvas("c","Marker line widths",0,0,600,266);
+   TMarker marker;
+   marker.DisplayMarkerLineWidths();
+}
+End_Macro
+
 ## <a name="M3"></a> Marker size
 
 Various marker sizes are shown in the figure below. The default marker size=1
@@ -212,6 +237,75 @@ void TAttMarker::Copy(TAttMarker &attmarker) const
    attmarker.fMarkerColor  = fMarkerColor;
    attmarker.fMarkerStyle  = fMarkerStyle;
    attmarker.fMarkerSize   = fMarkerSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the corresponding marker style with line width 1
+
+Style_t TAttMarker::GetMarkerStyleBase() const
+{
+   if (fMarkerStyle <= 49)
+      return fMarkerStyle;
+
+   switch ((fMarkerStyle - 50) % 18) {
+   case 0:
+      return 2;
+   case 1:
+      return 3;
+   case 2:
+      return 5;
+   case 3:
+      return 24;
+   case 4:
+      return 25;
+   case 5:
+      return 26;
+   case 6:
+      return 27;
+   case 7:
+      return 28;
+   case 8:
+      return 30;
+   case 9:
+      return 32;
+   case 10:
+      return 35;
+   case 11:
+      return 36;
+   case 12:
+      return 37;
+   case 13:
+      return 38;
+   case 14:
+      return 40;
+   case 15:
+      return 42;
+   case 16:
+      return 44;
+   case 17:
+      return 46;
+   default:
+      return fMarkerStyle;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the line width of the current marker style (0 = filled marker)
+
+Width_t TAttMarker::GetMarkerLineWidth() const
+{
+   if (fMarkerStyle >= 50)
+      return ((fMarkerStyle - 50) / 18) + 2;
+   else if (fMarkerStyle == 2 || fMarkerStyle == 3 || fMarkerStyle == 4
+	    || fMarkerStyle == 5 || fMarkerStyle == 24 || fMarkerStyle == 25
+	    || fMarkerStyle == 26 || fMarkerStyle == 27 || fMarkerStyle == 28
+	    || fMarkerStyle == 30 || fMarkerStyle == 31 || fMarkerStyle == 32
+	    || fMarkerStyle == 35 || fMarkerStyle == 36 || fMarkerStyle == 37
+	    || fMarkerStyle == 38 || fMarkerStyle == 40 || fMarkerStyle == 42
+	    || fMarkerStyle == 44 || fMarkerStyle == 46)
+      return 1;
+   else
+      return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

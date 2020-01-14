@@ -109,6 +109,8 @@ public:
    Color_t   GetMarkerColor() const;
    Style_t   GetMarkerStyle() const;
    Size_t    GetMarkerSize()  const;
+   Style_t   GetMarkerStyleBase() const;
+   Width_t   GetMarkerLineWidth() const;
    void      SetOpacity(Int_t percent);
    void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
    void      SetTextAlign(Short_t talign=11);

@@ -567,13 +567,14 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 
 void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
-   Int_t ms = abs(fMarkerStyle);
+   fMarkerStyle = TMath::Abs(fMarkerStyle);
+   Int_t ms = GetMarkerStyleBase();
 
    if (ms >= 6 && ms <= 19) ms = 20;
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
+   Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
    if (fMarkerStyle == 1) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
@@ -603,7 +604,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr("<g stroke=");
       SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
+      WriteReal(TMath::Max(1, Int_t(GetMarkerLineWidth())), kFALSE);
       PrintStr("\" fill=\"none\"");
       PrintStr(">");
    }
@@ -967,13 +968,14 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
 void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   Int_t ms = abs(fMarkerStyle);
+   fMarkerStyle = TMath::Abs(fMarkerStyle);
+   Int_t ms = GetMarkerStyleBase();
 
    if (ms >= 6 && ms <= 19) ms = 20;
    if (ms == 4) ms = 24;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize;
+   Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
    if (fMarkerStyle == 1) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
@@ -1003,7 +1005,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr("<g stroke=");
       SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(fLineWidth, kFALSE);
+      WriteReal(TMath::Max(1, Int_t(GetMarkerLineWidth())), kFALSE);
       PrintStr("\" fill=\"none\"");
       PrintStr(">");
    }
