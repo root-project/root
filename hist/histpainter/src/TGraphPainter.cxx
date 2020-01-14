@@ -2643,7 +2643,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       return;
    }
 
-   auto tg = (TGraphMultiErrors*) theGraph;
+   auto tg = (TGraphMultiErrors *)theGraph;
 
    Int_t NYErrors = tg->GetNYErrors();
    if (NYErrors <= 0) {
@@ -2677,8 +2677,8 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    for (Int_t i = filled; i <= NYErrors; i++)
       options[i] = "";
 
-   Double_t* xline = nullptr;
-   std::vector<Double_t*> yline(NYErrors);
+   Double_t *xline = nullptr;
+   std::vector<Double_t *> yline(NYErrors);
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2687,14 +2687,14 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[15] = {1., 1., 0.6, 0.6, 1., 1., 0.6, 0.5, 1., 0.6, 0.6, 1., 0.6, 1., 1.};
-   static Float_t cyy[15] = {1., 1., 1. , 1. , 1., 1., 1. , 1. , 1., 0.5, 0.6, 1., 1. , 1., 1.};
+   static Float_t cyy[15] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 0.5, 0.6, 1., 1., 1., 1.};
    Int_t theNpoints = tg->GetN();
-   Double_t* theX   = tg->GetX();
-   Double_t* theY   = tg->GetY();
-   Double_t* theExL = tg->GetEXlow();
-   Double_t* theExH = tg->GetEXhigh();
-   std::vector<Double_t*> theEyL(NYErrors);
-   std::vector<Double_t*> theEyH(NYErrors);
+   Double_t *theX = tg->GetX();
+   Double_t *theY = tg->GetY();
+   Double_t *theExL = tg->GetEXlow();
+   Double_t *theExH = tg->GetEXhigh();
+   std::vector<Double_t *> theEyL(NYErrors);
+   std::vector<Double_t *> theEyH(NYErrors);
 
    Bool_t theEyExists = kTRUE;
    for (Int_t j = 0; j < NYErrors; j++) {
@@ -2714,7 +2714,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    std::vector<Bool_t> Braticks(NYErrors);
    std::vector<Bool_t> Brackets(NYErrors);
    std::vector<Bool_t> EndLines(NYErrors);
-   std::vector<Char_t*> ArrowOpt(NYErrors);
+   std::vector<Char_t *> ArrowOpt(NYErrors);
    std::vector<Bool_t> Option5(NYErrors);
    std::vector<Bool_t> Option4(NYErrors);
    std::vector<Bool_t> Option3(NYErrors);
@@ -2728,35 +2728,35 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    for (Int_t j = 0; j < NYErrors; j++) {
       if (options[j + 1].Contains("s=")) {
-        sscanf(strstr(options[j + 1].Data(), "s="), "s=%lf", &Scale[j]);
-        options[j + 1].ReplaceAll(options[j + 1](ScaleRegExp), "");
+         sscanf(strstr(options[j + 1].Data(), "s="), "s=%lf", &Scale[j]);
+         options[j + 1].ReplaceAll(options[j + 1](ScaleRegExp), "");
       } else
-        Scale[j] = 1.;
+         Scale[j] = 1.;
 
       DrawErrors[j] = !options[j + 1].Contains("x");
-      AnyErrors    |=  DrawErrors[j];
-      Braticks[j]   =  options[j + 1].Contains("[]");
-      Brackets[j]   =  options[j + 1].Contains("||") || Braticks[j];
-      EndLines[j]   = !options[j + 1].Contains("z");
+      AnyErrors |= DrawErrors[j];
+      Braticks[j] = options[j + 1].Contains("[]");
+      Brackets[j] = options[j + 1].Contains("||") || Braticks[j];
+      EndLines[j] = !options[j + 1].Contains("z");
 
-      if      (options[j + 1].Contains("|>"))
-        ArrowOpt[j] = (Char_t*) "|>";
+      if (options[j + 1].Contains("|>"))
+         ArrowOpt[j] = (Char_t *)"|>";
       else if (options[j + 1].Contains(">"))
-        ArrowOpt[j] = (Char_t*) ">";
+         ArrowOpt[j] = (Char_t *)">";
       else
-        ArrowOpt[j] = nullptr;
+         ArrowOpt[j] = nullptr;
 
-      Option5[j]    = options[j + 1].Contains("5");
-      Option4[j]    = options[j + 1].Contains("4");
-      Option3[j]    = options[j + 1].Contains("3") || Option4[j];
-      AnyOption3   |= Option3[j];
-      Option2[j]    = options[j + 1].Contains("2") || Option5[j];
-      Option0[j]    = options[j + 1].Contains("0");
-      AnyOption0   |= Option0[j];
+      Option5[j] = options[j + 1].Contains("5");
+      Option4[j] = options[j + 1].Contains("4");
+      Option3[j] = options[j + 1].Contains("3") || Option4[j];
+      AnyOption3 |= Option3[j];
+      Option2[j] = options[j + 1].Contains("2") || Option5[j];
+      Option0[j] = options[j + 1].Contains("0");
+      AnyOption0 |= Option0[j];
 
-      NoErrorsX    &=  (Option3[j] || Option2[j]);
-      Option0X     |= !(Option3[j] || Option2[j]) && Option0[j];
-      DrawMarker   |= !(Brackets[j] || Option3[j] || Option2[j]);
+      NoErrorsX &= (Option3[j] || Option2[j]);
+      Option0X |= !(Option3[j] || Option2[j]) && Option0[j];
+      DrawMarker |= !(Brackets[j] || Option3[j] || Option2[j]);
    }
 
    Bool_t Draw0PointsX = !options[0].Contains("x0") && (gPad->GetLogx() == 0);
@@ -2764,14 +2764,16 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    options[0].ReplaceAll("x0", "");
    options[0].ReplaceAll("y0", "");
 
-   Bool_t DrawErrorsX  = !options[0].Contains("x");
-   Bool_t BraticksX    =  options[0].Contains("[]");
-   Bool_t BracketsX    =  options[0].Contains("||") || BraticksX;
-   Bool_t EndLinesX    = !options[0].Contains("z");
+   Bool_t DrawErrorsX = !options[0].Contains("x");
+   Bool_t BraticksX = options[0].Contains("[]");
+   Bool_t BracketsX = options[0].Contains("||") || BraticksX;
+   Bool_t EndLinesX = !options[0].Contains("z");
 
-   Char_t* ArrowOptX = nullptr;
-   if      (options[0].Contains("|>")) ArrowOptX = (Char_t*) "|>";
-   else if (options[0].Contains(">"))  ArrowOptX = (Char_t*) ">";
+   Char_t *ArrowOptX = nullptr;
+   if (options[0].Contains("|>"))
+      ArrowOptX = (Char_t *)"|>";
+   else if (options[0].Contains(">"))
+      ArrowOptX = (Char_t *)">";
 
    Double_t ScaleX = 1.;
    if (options[0].Contains("s=")) {
@@ -2784,7 +2786,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       return;
    }
 
-   Bool_t DrawAxis         = options[0].Contains("a");
+   Bool_t DrawAxis = options[0].Contains("a");
    Bool_t IndividualStyles = options[0].Contains("s");
 
    if (DrawAxis)
@@ -2796,30 +2798,35 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       x = gPad->XtoPad(theX[i]);
       y = gPad->YtoPad(theY[i]);
 
-      if ((x >= gPad->GetUxmin()) && (x <= gPad->GetUxmax()) && (y >= gPad->GetUymin()) && (y <= gPad->GetUymax()) && (Draw0PointsX || theX[i] != 0.) && (Draw0PointsY || theY[i] != 0.))
-        NPointsInside++;
+      if ((x >= gPad->GetUxmin()) && (x <= gPad->GetUxmax()) && (y >= gPad->GetUymin()) && (y <= gPad->GetUymax()) &&
+          (Draw0PointsX || theX[i] != 0.) && (Draw0PointsY || theY[i] != 0.))
+         NPointsInside++;
    }
 
    if (AnyOption3) {
-      xline = new Double_t[2*NPointsInside];
+      xline = new Double_t[2 * NPointsInside];
 
       if (!xline) {
-        Error("Paint", "too many points, out of memory");
-        return;
+         Error("Paint", "too many points, out of memory");
+         return;
       }
 
       if1 = 1;
-      if2 = 2*NPointsInside;
+      if2 = 2 * NPointsInside;
    }
 
    for (Int_t j = 0; j < NYErrors; j++) {
       if (Option3[j] && DrawErrors[j]) {
-        yline[j] = new Double_t[2*NPointsInside];
+         yline[j] = new Double_t[2 * NPointsInside];
 
-        if (!yline[j]) {
-           Error("Paint", "too many points, out of memory");
-           return;
-        }
+         if (!yline[j]) {
+            Error("Paint", "too many points, out of memory");
+            delete[] xline;
+            for (Int_t k = 0; k < j; k++)
+               if (yline[k])
+                  delete[] yline[k];
+            return;
+         }
       }
    }
 
@@ -2837,9 +2844,9 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(tg->GetFillColor());
    box.SetFillStyle(tg->GetFillStyle());
 
-   symbolsize  = tg->GetMarkerSize();
-   sbase       = symbolsize * kBASEMARKER;
-   Int_t mark  = tg->GetMarkerStyle();
+   symbolsize = tg->GetMarkerSize();
+   sbase = symbolsize * kBASEMARKER;
+   Int_t mark = tg->GetMarkerStyle();
    Double_t cx = 0.;
    Double_t cy = 0.;
 
@@ -2849,11 +2856,11 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    }
 
    // Define the offset of the error bars due to the symbol size
-   s2x =  gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
+   s2x = gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
    s2y = -gPad->PixeltoY(Int_t(0.5 * sbase)) + gPad->PixeltoY(0);
    auto dxend = Int_t(gStyle->GetEndErrorSize());
-   tx  =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty  = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   tx = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   ty = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6 * symbolsize * kBASEMARKER / gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, tg->TestBit(TGraph::kClipFrame));
@@ -2862,185 +2869,202 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
       x = gPad->XtoPad(theX[i]);
       y = gPad->YtoPad(theY[i]);
 
-      Bool_t isOutside = (x < gPad->GetUxmin()) || (x > gPad->GetUxmax()) || (y < gPad->GetUymin()) || (y > gPad->GetUymax());
+      Bool_t isOutside =
+         (x < gPad->GetUxmin()) || (x > gPad->GetUxmax()) || (y < gPad->GetUymin()) || (y > gPad->GetUymax());
 
       if ((isOutside && !AnyOption0) || (!Draw0PointsX && theX[i] == 0.) || (!Draw0PointsY && theY[i] == 0.))
-        continue;
+         continue;
 
       if (AnyOption3) {
-        if (isOutside) {
-           if (x < gPad->GetUxmin())
-              x = gPad->GetUxmin();
-           if (x > gPad->GetUxmax())
-              x = gPad->GetUxmax();
-           if (y < gPad->GetUymin())
-              y = gPad->GetUymin();
-           if (y > gPad->GetUymax())
-              y = gPad->GetUymax();
-        }
+         if (isOutside) {
+            if (x < gPad->GetUxmin())
+               x = gPad->GetUxmin();
+            if (x > gPad->GetUxmax())
+               x = gPad->GetUxmax();
+            if (y < gPad->GetUymin())
+               y = gPad->GetUymin();
+            if (y > gPad->GetUymax())
+               y = gPad->GetUymax();
+         }
 
-        xline[if1 - 1] = x;
-        xline[if2 - 1] = x;
+         xline[if1 - 1] = x;
+         xline[if2 - 1] = x;
 
-        if1++;
-        if2--;
+         if1++;
+         if2--;
       }
 
       for (Int_t j = 0; j < NYErrors; j++) {
-        if (!DrawErrors[j])
-           continue;
+         if (!DrawErrors[j])
+            continue;
 
-        //  draw the error rectangles
-        if (Option2[j] && (!isOutside || Option0[j])) {
-           if (IndividualStyles) {
-              box.SetLineWidth(tg->GetLineWidth(j));
-              box.SetLineColor(tg->GetLineColor(j));
-              box.SetFillColor(tg->GetFillColor(j));
-              box.SetFillStyle(tg->GetFillStyle(j));
-           }
+         //  draw the error rectangles
+         if (Option2[j] && (!isOutside || Option0[j])) {
+            if (IndividualStyles) {
+               box.SetLineWidth(tg->GetLineWidth(j));
+               box.SetLineColor(tg->GetLineColor(j));
+               box.SetFillColor(tg->GetFillColor(j));
+               box.SetFillStyle(tg->GetFillStyle(j));
+            }
 
-           x1b = gPad->XtoPad(theX[i] - Scale[j] * theExL[i]);
-           y1b = gPad->YtoPad(theY[i] - theEyL[j][i]);
-           x2b = gPad->XtoPad(theX[i] + Scale[j] * theExH[i]);
-           y2b = gPad->YtoPad(theY[i] + theEyH[j][i]);
-           if (x1b < gPad->GetUxmin())
-              x1b = gPad->GetUxmin();
-           if (x1b > gPad->GetUxmax())
-              x1b = gPad->GetUxmax();
-           if (y1b < gPad->GetUymin())
-              y1b = gPad->GetUymin();
-           if (y1b > gPad->GetUymax())
-              y1b = gPad->GetUymax();
-           if (x2b < gPad->GetUxmin())
-              x2b = gPad->GetUxmin();
-           if (x2b > gPad->GetUxmax())
-              x2b = gPad->GetUxmax();
-           if (y2b < gPad->GetUymin())
-              y2b = gPad->GetUymin();
-           if (y2b > gPad->GetUymax())
-              y2b = gPad->GetUymax();
-           if (Option5[j])
-              box.PaintBox(x1b, y1b, x2b, y2b, "l");
-           else
-              box.PaintBox(x1b, y1b, x2b, y2b);
-        }
+            x1b = gPad->XtoPad(theX[i] - Scale[j] * theExL[i]);
+            y1b = gPad->YtoPad(theY[i] - theEyL[j][i]);
+            x2b = gPad->XtoPad(theX[i] + Scale[j] * theExH[i]);
+            y2b = gPad->YtoPad(theY[i] + theEyH[j][i]);
+            if (x1b < gPad->GetUxmin())
+               x1b = gPad->GetUxmin();
+            if (x1b > gPad->GetUxmax())
+               x1b = gPad->GetUxmax();
+            if (y1b < gPad->GetUymin())
+               y1b = gPad->GetUymin();
+            if (y1b > gPad->GetUymax())
+               y1b = gPad->GetUymax();
+            if (x2b < gPad->GetUxmin())
+               x2b = gPad->GetUxmin();
+            if (x2b > gPad->GetUxmax())
+               x2b = gPad->GetUxmax();
+            if (y2b < gPad->GetUymin())
+               y2b = gPad->GetUymin();
+            if (y2b > gPad->GetUymax())
+               y2b = gPad->GetUymax();
+            if (Option5[j])
+               box.PaintBox(x1b, y1b, x2b, y2b, "l");
+            else
+               box.PaintBox(x1b, y1b, x2b, y2b);
+         }
 
-        //  keep points for fill area drawing
-        if (Option3[j]) {
-           if (!isOutside || Option0[j]) {
-              yline[j][if1 - 2] = gPad->YtoPad(theY[i] + theEyH[j][i]);
-              yline[j][if2]     = gPad->YtoPad(theY[i] - theEyL[j][i]);
-           } else {
-              yline[j][if1 - 2] = gPad->GetUymin();
-              yline[j][if2]     = gPad->GetUymin();
-           }
-        }
+         //  keep points for fill area drawing
+         if (Option3[j]) {
+            if (!isOutside || Option0[j]) {
+               yline[j][if1 - 2] = gPad->YtoPad(theY[i] + theEyH[j][i]);
+               yline[j][if2] = gPad->YtoPad(theY[i] - theEyL[j][i]);
+            } else {
+               yline[j][if1 - 2] = gPad->GetUymin();
+               yline[j][if2] = gPad->GetUymin();
+            }
+         }
 
-        if (IndividualStyles) {
-           tg->GetAttLine(j)->Modify();
+         if (IndividualStyles) {
+            tg->GetAttLine(j)->Modify();
 
-           arrow.SetLineWidth(tg->GetLineWidth(j));
-           arrow.SetLineColor(tg->GetLineColor(j));
-           arrow.SetFillColor(tg->GetFillColor(j));
-        }
+            arrow.SetLineWidth(tg->GetLineWidth(j));
+            arrow.SetLineColor(tg->GetLineColor(j));
+            arrow.SetFillColor(tg->GetFillColor(j));
+         }
 
-        ylow1 = y - s2y*cy;
-        ylow2 = gPad->YtoPad(theY[i] - theEyL[j][i]);
-        if (ylow2 < gPad->GetUymin())
-           ylow2 = gPad->GetUymin();
-        if (ylow2 < ylow1 && DrawErrors[j] && !Option2[j] && !Option3[j] && (!isOutside || Option0[j])) {
-           if (ArrowOpt[j])
-              arrow.PaintArrow(x, ylow1, x, ylow2, asize, ArrowOpt[j]);
-           else {
-              if (!Brackets[j])
-                gPad->PaintLine(x, ylow1, x, ylow2);
-              if (EndLines[j]) {
-                if (Braticks[j]) {
-                   xb[0] = x - tx; yb[0] = ylow2 + ty;
-                   xb[1] = x - tx; yb[1] = ylow2;
-                   xb[2] = x + tx; yb[2] = ylow2;
-                   xb[3] = x + tx; yb[3] = ylow2 + ty;
-                   gPad->PaintPolyLine(4, xb, yb);
-                } else
-                   gPad->PaintLine(x - tx, ylow2, x + tx, ylow2);
-              }
-           }
-        }
+         ylow1 = y - s2y * cy;
+         ylow2 = gPad->YtoPad(theY[i] - theEyL[j][i]);
+         if (ylow2 < gPad->GetUymin())
+            ylow2 = gPad->GetUymin();
+         if (ylow2 < ylow1 && DrawErrors[j] && !Option2[j] && !Option3[j] && (!isOutside || Option0[j])) {
+            if (ArrowOpt[j])
+               arrow.PaintArrow(x, ylow1, x, ylow2, asize, ArrowOpt[j]);
+            else {
+               if (!Brackets[j])
+                  gPad->PaintLine(x, ylow1, x, ylow2);
+               if (EndLines[j]) {
+                  if (Braticks[j]) {
+                     xb[0] = x - tx;
+                     yb[0] = ylow2 + ty;
+                     xb[1] = x - tx;
+                     yb[1] = ylow2;
+                     xb[2] = x + tx;
+                     yb[2] = ylow2;
+                     xb[3] = x + tx;
+                     yb[3] = ylow2 + ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  } else
+                     gPad->PaintLine(x - tx, ylow2, x + tx, ylow2);
+               }
+            }
+         }
 
-        yup1 = y + s2y*cy;
-        yup2 = gPad->YtoPad(theY[i] + theEyH[j][i]);
-        if (yup2 > gPad->GetUymax())
-           yup2 = gPad->GetUymax();
-        if (yup2 > yup1 && DrawErrors[j] && !Option2[j] && !Option3[j] && (!isOutside || Option0[j])) {
-           if (ArrowOpt[j])
-              arrow.PaintArrow(x, yup1, x, yup2, asize, ArrowOpt[j]);
-           else {
-              if (!Brackets[j])
-                gPad->PaintLine(x, yup1, x, yup2);
-              if (EndLines[j]) {
-                if (Braticks[j]) {
-                   xb[0] = x - tx; yb[0] = yup2 - ty;
-                   xb[1] = x - tx; yb[1] = yup2;
-                   xb[2] = x + tx; yb[2] = yup2;
-                   xb[3] = x + tx; yb[3] = yup2 - ty;
-                   gPad->PaintPolyLine(4, xb, yb);
-                } else
-                   gPad->PaintLine(x - tx, yup2, x + tx, yup2);
-              }
-           }
-        }
+         yup1 = y + s2y * cy;
+         yup2 = gPad->YtoPad(theY[i] + theEyH[j][i]);
+         if (yup2 > gPad->GetUymax())
+            yup2 = gPad->GetUymax();
+         if (yup2 > yup1 && DrawErrors[j] && !Option2[j] && !Option3[j] && (!isOutside || Option0[j])) {
+            if (ArrowOpt[j])
+               arrow.PaintArrow(x, yup1, x, yup2, asize, ArrowOpt[j]);
+            else {
+               if (!Brackets[j])
+                  gPad->PaintLine(x, yup1, x, yup2);
+               if (EndLines[j]) {
+                  if (Braticks[j]) {
+                     xb[0] = x - tx;
+                     yb[0] = yup2 - ty;
+                     xb[1] = x - tx;
+                     yb[1] = yup2;
+                     xb[2] = x + tx;
+                     yb[2] = yup2;
+                     xb[3] = x + tx;
+                     yb[3] = yup2 - ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  } else
+                     gPad->PaintLine(x - tx, yup2, x + tx, yup2);
+               }
+            }
+         }
       }
 
       if (DrawErrorsX) {
-        if (IndividualStyles) {
-           tg->TAttLine::Modify();
+         if (IndividualStyles) {
+            tg->TAttLine::Modify();
 
-           arrow.SetLineWidth(tg->GetLineWidth());
-           arrow.SetLineColor(tg->GetLineColor());
-           arrow.SetFillColor(tg->GetFillColor());
-        }
+            arrow.SetLineWidth(tg->GetLineWidth());
+            arrow.SetLineColor(tg->GetLineColor());
+            arrow.SetFillColor(tg->GetFillColor());
+         }
 
-        xl1 = x - s2x*cx;
-        xl2 = gPad->XtoPad(theX[i] - ScaleX * theExL[i]);
-        if (xl1 > xl2 && !NoErrorsX && (!isOutside || Option0X)) {
-           if (ArrowOptX)
-              arrow.PaintArrow(xl1, y, xl2, y, asize, ArrowOptX);
-           else {
-              if (!BracketsX)
-                gPad->PaintLine(xl1, y, xl2, y);
-              if (EndLinesX) {
-                if (BraticksX) {
-                   xb[0] = xl2 + tx; yb[0] = y - ty;
-                   xb[1] = xl2;      yb[1] = y - ty;
-                   xb[2] = xl2;      yb[2] = y + ty;
-                   xb[3] = xl2 + tx; yb[3] = y + ty;
-                   gPad->PaintPolyLine(4, xb, yb);
-                } else
-                   gPad->PaintLine(xl2, y - ty, xl2, y + ty);
-              }
-           }
-        }
+         xl1 = x - s2x * cx;
+         xl2 = gPad->XtoPad(theX[i] - ScaleX * theExL[i]);
+         if (xl1 > xl2 && !NoErrorsX && (!isOutside || Option0X)) {
+            if (ArrowOptX)
+               arrow.PaintArrow(xl1, y, xl2, y, asize, ArrowOptX);
+            else {
+               if (!BracketsX)
+                  gPad->PaintLine(xl1, y, xl2, y);
+               if (EndLinesX) {
+                  if (BraticksX) {
+                     xb[0] = xl2 + tx;
+                     yb[0] = y - ty;
+                     xb[1] = xl2;
+                     yb[1] = y - ty;
+                     xb[2] = xl2;
+                     yb[2] = y + ty;
+                     xb[3] = xl2 + tx;
+                     yb[3] = y + ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  } else
+                     gPad->PaintLine(xl2, y - ty, xl2, y + ty);
+               }
+            }
+         }
 
-        xr1 = x + s2x*cx;
-        xr2 = gPad->XtoPad(theX[i] + ScaleX * theExH[i]);
-        if (xr1 < xr2 && !NoErrorsX && (!isOutside || Option0X)) {
-           if (ArrowOptX)
-              arrow.PaintArrow(xr1, y, xr2, y, asize, ArrowOptX);
-           else {
-              if (!BracketsX)
-                gPad->PaintLine(xr1, y, xr2, y);
-              if (EndLinesX) {
-                if (BraticksX) {
-                   xb[0] = xr2 - tx; yb[0] = y - ty;
-                   xb[1] = xr2;      yb[1] = y - ty;
-                   xb[2] = xr2;      yb[2] = y + ty;
-                   xb[3] = xr2 - tx; yb[3] = y + ty;
-                   gPad->PaintPolyLine(4, xb, yb);
-                } else
-                   gPad->PaintLine(xr2, y - ty, xr2, y + ty);
-              }
-           }
-        }
+         xr1 = x + s2x * cx;
+         xr2 = gPad->XtoPad(theX[i] + ScaleX * theExH[i]);
+         if (xr1 < xr2 && !NoErrorsX && (!isOutside || Option0X)) {
+            if (ArrowOptX)
+               arrow.PaintArrow(xr1, y, xr2, y, asize, ArrowOptX);
+            else {
+               if (!BracketsX)
+                  gPad->PaintLine(xr1, y, xr2, y);
+               if (EndLinesX) {
+                  if (BraticksX) {
+                     xb[0] = xr2 - tx;
+                     yb[0] = y - ty;
+                     xb[1] = xr2;
+                     yb[1] = y - ty;
+                     xb[2] = xr2;
+                     yb[2] = y + ty;
+                     xb[3] = xr2 - tx;
+                     yb[3] = y + ty;
+                     gPad->PaintPolyLine(4, xb, yb);
+                  } else
+                     gPad->PaintLine(xr2, y - ty, xr2, y + ty);
+               }
+            }
+         }
       }
    }
 
@@ -3055,29 +3079,29 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    for (Int_t j = 0; j < NYErrors; j++) {
       if (Option3[j] && DrawErrors[j]) {
-        if (IndividualStyles) {
-           tg->GetAttFill(j)->Copy(*tgDummy);
-           tg->GetAttLine(j)->Copy(*tgDummy);
-        }
+         if (IndividualStyles) {
+            tg->GetAttFill(j)->Copy(*tgDummy);
+            tg->GetAttLine(j)->Copy(*tgDummy);
+         }
 
-        Int_t logx = gPad->GetLogx();
-        Int_t logy = gPad->GetLogy();
-        gPad->SetLogx(0);
-        gPad->SetLogy(0);
-        if (Option4[j])
-           PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "FC");
-        else
-           PaintGraph(tgDummy, 2*NPointsInside, xline, yline[j], "F");
-        gPad->SetLogx(logx);
-        gPad->SetLogy(logy);
-        delete [] yline[j];
+         Int_t logx = gPad->GetLogx();
+         Int_t logy = gPad->GetLogy();
+         gPad->SetLogx(0);
+         gPad->SetLogy(0);
+         if (Option4[j])
+            PaintGraph(tgDummy, 2 * NPointsInside, xline, yline[j], "FC");
+         else
+            PaintGraph(tgDummy, 2 * NPointsInside, xline, yline[j], "F");
+         gPad->SetLogx(logx);
+         gPad->SetLogy(logy);
+         delete[] yline[j];
       }
    }
 
    delete tgDummy;
 
    if (AnyOption3)
-      delete [] xline;
+      delete[] xline;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
