@@ -9,8 +9,9 @@
 #ifndef ROOT7_RDrawableProvider
 #define ROOT7_RDrawableProvider
 
-#include <ROOT/RBrowsable.hxx>
+#include <ROOT/Browsable/RHolder.hxx>
 
+#include <memory>
 #include <functional>
 #include <map>
 
@@ -48,8 +49,8 @@ protected:
 
 private:
 
-   struct StructV6 { RDrawableProvider *provider;  FuncV6_t func; };
-   struct StructV7 { RDrawableProvider *provider;  FuncV7_t func; };
+   struct StructV6 { RDrawableProvider *provider{nullptr};  FuncV6_t func; };
+   struct StructV7 { RDrawableProvider *provider{nullptr};  FuncV7_t func; };
 
    using MapV6_t = std::multimap<const TClass*, StructV6>;
    using MapV7_t = std::multimap<const TClass*, StructV7>;
