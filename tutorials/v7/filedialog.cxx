@@ -15,13 +15,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RFileDialog.hxx>
-
 // Show how RFileDialog can be used in sync and async modes
 // Normally file dialogs will be used inside other widgets as ui5 dialogs
 // By default, dialog starts in async mode - means macro immediately returns to command line
 // To start OpenFile dialog in sync mode, call `root "filedialog.cxx(1)" -q`.
 // Once file is selected, root execution will be stopped
+
+
+// macro must be here to let macro work on Windows
+R__LOAD_LIBRARY(libROOTBrowserv7)
+
+#include <ROOT/RFileDialog.hxx>
 
 
 using namespace ROOT::Experimental;
