@@ -145,163 +145,114 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
    return nullptr;
 }
 
+
+template<class Map_t, class Iterator_t>
+bool ScanProviderMap(Map_t &fmap, const TClass *cl, bool test_all, std::function<bool(Iterator_t &)> check_func)
+{
+   if (!cl)
+      return false;
+
+   TClass *testcl = const_cast<TClass *>(cl);
+   while (testcl) {
+      auto iter = fmap.find(testcl);
+      if (iter != fmap.end())
+         if (check_func(iter))
+            return true;
+
+      auto bases = testcl->GetListOfBases();
+
+      testcl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   if (test_all) {
+      auto iter = fmap.begin();
+      while (iter != fmap.end()) {
+         if (!iter->first && check_func(iter))
+            return true;
+         iter++;
+      }
+   }
+
+   return false;
+}
+
+
 /////////////////////////////////////////////////////////////////////////
 /// Create browsable element for the object
 /// Created element may take ownership over the object
 
 std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 {
-   if (!object)
-      return nullptr;
+   std::shared_ptr<RElement> res;
 
-   auto &bmap = GetBrowseMap();
+   if (object)
+      ScanProviderMap<BrowseMap_t,BrowseMap_t::iterator>(GetBrowseMap(), object->GetClass(), true,
+            [&res, &object] (BrowseMap_t::iterator &iter) -> bool {
+              res = iter->second.func(object);
+              return (res || !object) ? true : false;
+            }
+      );
 
-   auto cl = object->GetClass();
-   if (!cl)
-      return nullptr;
-
-   auto iter = bmap.find(cl);
-
-   if (iter != bmap.end()) {
-      auto res = iter->second.func(object);
-      if (res || !object) return res;
-   }
-
-   for (auto &pair : bmap)
-      if ((pair.first == nullptr) || (cl == pair.first)) {
-         auto res = pair.second.func(object);
-         if (res || !object) return res;
-      }
-
-   return nullptr;
+   return res;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Invoke drawing of object on TCanvas sub-pad
 /// All existing providers are checked, first checked are class matches (including direct parents)
 
-bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
+bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &object, const std::string &opt)
 {
-   if (!obj || !obj->GetClass())
+   if (!object || !object->GetClass())
       return false;
 
-   auto &map6 = GetDraw6Map();
+   auto draw_func = [subpad, &object, &opt](Draw6Map_t::iterator &iter) -> bool {
+      return iter->second.func(subpad, object, opt);
+   };
 
-   TClass *cl = const_cast<TClass *>(obj->GetClass());
-   while (cl) {
-      auto iter6 = map6.find(cl);
+   if (ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), false, draw_func))
+      return true;
 
-      if (iter6 != map6.end()) {
-         if (iter6->second.func(subpad, obj, opt))
-            return true;
-      }
-
-      auto bases = cl->GetListOfBases();
-
-      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
-   }
-
-   for (auto &pair : map6)
-      if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second.func(subpad, obj, opt))
-            return true;
-
-   // try to load necessary library and repeat action again
-   // TODO: need factory methods for that
-
-   if (obj->GetClass()->InheritsFrom("TLeaf"))
+   if (object->GetClass()->InheritsFrom("TLeaf"))
       gSystem->Load("libROOTTreeDrawProvider");
-   else if (obj->GetClass()->InheritsFrom(TObject::Class()))
+   else if (object->GetClass()->InheritsFrom(TObject::Class()))
       gSystem->Load("libROOTObjectDrawProvider");
    else
       return false;
 
-   cl = const_cast<TClass *>(obj->GetClass());
-   while (cl) {
-      auto iter6 = map6.find(cl);
-
-      if (iter6 != map6.end()) {
-         if (iter6->second.func(subpad, obj, opt))
-            return true;
-      }
-
-      auto bases = cl->GetListOfBases();
-
-      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
-   }
-
-   for (auto &pair : map6)
-      if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second.func(subpad, obj, opt))
-            return true;
-
-   return false;
+   return ScanProviderMap<Draw6Map_t, Draw6Map_t::iterator>(GetDraw6Map(), object->GetClass(), true, draw_func);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Invoke drawing of object on RCanvas sub-pad
 /// All existing providers are checked, first checked are class matches (including direct parents)
 
-bool RProvider::Draw7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
+bool RProvider::Draw7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &object, const std::string &opt)
 {
-   if (!obj || !obj->GetClass())
+   if (!object || !object->GetClass())
       return false;
 
-   auto &map7 = GetDraw7Map();
+   auto draw_func = [&subpad, &object, &opt](Draw7Map_t::iterator &iter) -> bool {
+      return iter->second.func(subpad, object, opt);
+   };
 
-   TClass *cl = const_cast<TClass *>(obj->GetClass());
-   while (cl) {
-      auto iter7 = map7.find(cl);
+   if (ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), object->GetClass(), false, draw_func))
+      return true;
 
-      if (iter7 != map7.end()) {
-         if (iter7->second.func(subpad, obj, opt))
-            return true;
-      }
-
-      auto bases = cl->GetListOfBases();
-
-      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
-   }
-
-   for (auto &pair : map7)
-      if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second.func(subpad, obj, opt))
-            return true;
-
-   // try to load necessary library and repeat action again
    // TODO: need factory methods for that
 
-   if (obj->GetClass()->InheritsFrom("TLeaf"))
+   if (object->GetClass()->InheritsFrom("TLeaf"))
       gSystem->Load("libROOTTreeDrawProvider");
-   else if (obj->GetClass()->InheritsFrom(TObject::Class()))
+   else if (object->GetClass()->InheritsFrom(TObject::Class()))
       gSystem->Load("libROOTObjectDrawProvider");
-   else if (obj->GetClass()->InheritsFrom("ROOT::Experimental::RH1D") || obj->GetClass()->InheritsFrom("ROOT::Experimental::RH2D") || obj->GetClass()->InheritsFrom("ROOT::Experimental::RH2D"))
+   else if (object->GetClass()->InheritsFrom("ROOT::Experimental::RH1D") ||
+            object->GetClass()->InheritsFrom("ROOT::Experimental::RH2D") ||
+            object->GetClass()->InheritsFrom("ROOT::Experimental::RH3D"))
       gSystem->Load("libROOTHistDrawProvider");
    else
       return false;
 
-   cl = const_cast<TClass *>(obj->GetClass());
-   while (cl) {
-      auto iter7 = map7.find(cl);
-
-      if (iter7 != map7.end()) {
-         if (iter7->second.func(subpad, obj, opt))
-            return true;
-      }
-
-      auto bases = cl->GetListOfBases();
-
-      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
-   }
-
-   for (auto &pair : map7)
-      if ((pair.first == obj->GetClass()) || !pair.first)
-         if (pair.second.func(subpad, obj, opt))
-            return true;
-
-   return false;
+   return ScanProviderMap<Draw7Map_t, Draw7Map_t::iterator>(GetDraw7Map(), object->GetClass(), true, draw_func);
 }
-
 
 /////////////////////////////////////////////////////////////////////
 /// Return icon name for the given class

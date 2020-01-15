@@ -288,19 +288,12 @@ public:
          return std::make_shared<TFolderElement>(object);
       });
 
-      auto coll_labmda = [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
+      RegisterBrowse(TCollection::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TCollectionElement>(object);
-      };
-
-      RegisterBrowse(TList::Class(), coll_labmda);
-      RegisterBrowse(TObjArray::Class(), coll_labmda);
+      });
 
       RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
-         if (object->CanCastTo<TFolder>())
-            return std::make_shared<TFolderElement>(object);
-         if (object->CanCastTo<TCollection>())
-            return std::make_shared<TCollectionElement>(object);
-         if (object->CanCastTo<TObject>() && !object->CanCastTo<TDirectory>()) // TODO: how to fix order of invoking
+         if (object->CanCastTo<TObject>())
             return std::make_shared<TObjectElement>(object);
          return nullptr;
       });
