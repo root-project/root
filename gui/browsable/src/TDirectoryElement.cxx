@@ -302,10 +302,8 @@ public:
          return std::make_shared<TDirectoryElement>("", const_cast<TFile*>(object->Get<TFile>()));
       });
 
-      RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
-         if (object->CanCastTo<TDirectory>())
-            return std::make_shared<TDirectoryElement>("", const_cast<TDirectory*>(object->Get<TDirectory>()));
-         return nullptr;
+      RegisterBrowse(TDirectory::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
+         return std::make_shared<TDirectoryElement>("", const_cast<TDirectory*>(object->Get<TDirectory>()));
       });
    }
 

@@ -28,10 +28,6 @@ public:
    {
       RegisterDraw6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
 
-         // do not handle TLeaf - needs special plugin
-         if (obj->GetClass()->InheritsFrom("TLeaf"))
-            return false;
-
          // try take object without ownership
          auto tobj = obj->get_object<TObject>();
          if (!tobj) {
@@ -60,11 +56,6 @@ public:
    RV7DrawProvider()
    {
       RegisterDraw7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
-
-         // do not handle TLeaf - needs special plugin
-         if (obj->GetClass()->InheritsFrom("TLeaf"))
-            return false;
-
          // here clear ownership is required
          // If it possible, TObject will be cloned by TObjectHolder
          auto tobj = obj->get_shared<TObject>();
