@@ -41,7 +41,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
 # provider for drawing of v7 histograms on RCanvas
 
 ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
-     src/RDrawableRHist.cxx
+     src/RHistDraw7Provider.cxx
   DEPENDENCIES
      ROOTBrowsable
      ROOTGpadv7
@@ -51,7 +51,7 @@ ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
 # provider for generic drawing of TObject on RCanvas/TCanvas
 
 ROOT_LINKER_LIBRARY(ROOTObjectDrawProvider
-     src/RDrawableTObject.cxx
+     src/TObjectDraw6Provider.cxx
   DEPENDENCIES
      ROOTBrowsable
      RIO
@@ -62,7 +62,7 @@ ROOT_LINKER_LIBRARY(ROOTObjectDrawProvider
 # provider for drawing of TLeaf on RCanvas/TCanvas
 
 ROOT_LINKER_LIBRARY(ROOTTreeDrawProvider
-     src/RDrawableTTree.cxx
+     src/TLeafDraw6Provider.cxx
   DEPENDENCIES
      ROOTBrowsable
      RIO
