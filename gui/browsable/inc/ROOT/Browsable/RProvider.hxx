@@ -74,6 +74,19 @@ private:
    static FileMap_t &GetFileMap();
    static Draw6Map_t &GetDraw6Map();
    static Draw7Map_t &GetDraw7Map();
+
+   template<class Map_t>
+   void CleanThis(Map_t &fmap)
+   {
+      auto fiter = fmap.begin();
+      while (fiter != fmap.end()) {
+         if (fiter->second.provider == this)
+            fiter = fmap.erase(fiter);
+         else
+            fiter++;
+      }
+   }
+
 };
 
 
