@@ -414,11 +414,17 @@ else()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
+# FIXME: move installation of PCMS in ROOT_GENERATE_DICTIONARY().
+# We are excluding directories, which are accidentaly copied via unxpected behaviour of install(DIRECTORY ..)
 install(
    DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING PATTERN "*.pcm"
-   PATTERN "*_rdict.pcm" EXCLUDE
+   PATTERN "JupyROOT" EXCLUDE
+   PATTERN "JsMVA" EXCLUDE
+   PATTERN "python*" EXCLUDE
+   PATTERN "cmake" EXCLUDE
+   PATTERN "pkgconfig" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
