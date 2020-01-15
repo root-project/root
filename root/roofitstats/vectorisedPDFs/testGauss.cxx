@@ -17,6 +17,7 @@
 #include "VectorisedPDFTests.h"
 
 #include "RooGaussian.h"
+#include "RooFormulaVar.h"
 
 class TestGauss : public PDFTest
 {
