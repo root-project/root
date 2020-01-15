@@ -43,15 +43,15 @@ public:
 
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
    static std::shared_ptr<RElement> Browse(std::unique_ptr<RHolder> &obj);
-   static bool Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt = "");
-   static bool Draw7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt = "");
+   static bool Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
+   static bool Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
 
 protected:
 
    using FileFunc_t = std::function<std::shared_ptr<RElement>(const std::string &)>;
    using BrowseFunc_t = std::function<std::shared_ptr<RElement>(std::unique_ptr<RHolder> &)>;
-   using Draw6Func_t = std::function<bool(TVirtualPad *, std::unique_ptr<Browsable::RHolder> &, const std::string &)>;
-   using Draw7Func_t = std::function<bool(std::shared_ptr<RPadBase> &, std::unique_ptr<Browsable::RHolder> &, const std::string &)>;
+   using Draw6Func_t = std::function<bool(TVirtualPad *, std::unique_ptr<RHolder> &, const std::string &)>;
+   using Draw7Func_t = std::function<bool(std::shared_ptr<ROOT::Experimental::RPadBase> &, std::unique_ptr<RHolder> &, const std::string &)>;
 
    void RegisterFile(const std::string &extension, FileFunc_t func);
    void RegisterBrowse(const TClass *cl, BrowseFunc_t func);

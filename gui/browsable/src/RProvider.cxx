@@ -200,7 +200,7 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 /// Invoke drawing of object on TCanvas sub-pad
 /// All existing providers are checked, first checked are class matches (including direct parents)
 
-bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &object, const std::string &opt)
+bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &object, const std::string &opt)
 {
    if (!object || !object->GetClass())
       return false;
@@ -226,7 +226,7 @@ bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &
 /// Invoke drawing of object on RCanvas sub-pad
 /// All existing providers are checked, first checked are class matches (including direct parents)
 
-bool RProvider::Draw7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &object, const std::string &opt)
+bool RProvider::Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &object, const std::string &opt)
 {
    if (!object || !object->GetClass())
       return false;

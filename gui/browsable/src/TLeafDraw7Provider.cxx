@@ -17,7 +17,7 @@ class TLeafDraw7Provider : public TLeafProvider {
 public:
    TLeafDraw7Provider()
    {
-      RegisterDraw7(TLeaf::Class(), [](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw7(TLeaf::Class(), [](std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
 
          auto hist = TLeafProvider::DrawLeaf(obj);
 
@@ -33,7 +33,7 @@ public:
          std::shared_ptr<TH1> shared;
          shared.reset(hist);
 
-         subpad->Draw<RObjectDrawable>(shared, opt);
+         subpad->Draw<ROOT::Experimental::RObjectDrawable>(shared, opt);
 
          return true;
       });

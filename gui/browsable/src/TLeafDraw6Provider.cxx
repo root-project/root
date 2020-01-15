@@ -16,7 +16,7 @@ class TLeafDraw6Provider : public TLeafProvider {
 public:
    TLeafDraw6Provider()
    {
-      RegisterDraw6(TLeaf::Class(), [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw6(TLeaf::Class(), [](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
 
          auto hist = TLeafProvider::DrawLeaf(obj);
 
