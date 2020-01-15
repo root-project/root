@@ -25,9 +25,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/TKeyItem.hxx
     ROOT/Browsable/TObjectHolder.hxx
     ROOT/Browsable/TObjectItem.hxx
-    ROOT/RDrawableProvider.hxx
   SOURCES
-    src/RDrawableProvider.cxx
     src/RElement.cxx
     src/RGroup.cxx
     src/RLevelIter.cxx

@@ -24,8 +24,6 @@
 
 #pragma link C++ class ROOT::Experimental::Browsable::RSysFile+;
 
-#pragma link C++ class ROOT::Experimental::RDrawableProvider+;
-
 #pragma link C++ class ROOT::Experimental::Browsable::TObjectHolder+;
 #pragma link C++ class ROOT::Experimental::Browsable::TObjectItem+;
 #pragma link C++ class ROOT::Experimental::Browsable::TKeyItem+;

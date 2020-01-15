@@ -25,7 +25,6 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RObjectDrawable.hxx>
-#include <ROOT/RDrawableProvider.hxx>
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RCanvas.hxx>
 
@@ -215,7 +214,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       auto obj = elem->GetObject();
 
       if (obj)
-         if (RDrawableProvider::DrawV6(canv, obj, drawingOptions)) {
+         if (RProvider::Draw6(canv, obj, drawingOptions)) {
             canv->ForceUpdate(); // force update async - do not wait for confirmation
             return "SLCTCANV:"s + canv->GetName();
          }
@@ -228,7 +227,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
       auto obj = elem->GetObject();
       if (obj)
-         if (RDrawableProvider::DrawV7(subpad, obj, drawingOptions)) {
+         if (RProvider::Draw7(subpad, obj, drawingOptions)) {
             rcanv->Modified();
             rcanv->Update(true);
             return "SLCTCANV:"s + rcanv->GetTitle();

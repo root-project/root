@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RDrawableProvider.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
 
 
 #include "TLeaf.h"
@@ -25,11 +25,11 @@ using namespace ROOT::Experimental;
 
 /** Provider for drawing of ROOT6 classes */
 
-class RV6DrawProviderTTree : public RDrawableProvider {
+class RV6DrawProviderTTree : public Browsable::RProvider {
 public:
    RV6DrawProviderTTree()
    {
-      RegisterV6(TLeaf::Class(), [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw6(TLeaf::Class(), [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
 
          // try take object without ownership
          auto tleaf = obj->get_object<TLeaf>();
@@ -70,11 +70,11 @@ public:
 
 /** Provider for drawing of ROOT7 classes */
 
-class RV7DrawProviderTTree : public RDrawableProvider {
+class RV7DrawProviderTTree : public Browsable::RProvider {
 public:
    RV7DrawProviderTTree()
    {
-      RegisterV7(TLeaf::Class(), [](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw7(TLeaf::Class(), [](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
 
          // try take object without ownership
          auto tleaf = obj->get_object<TLeaf>();

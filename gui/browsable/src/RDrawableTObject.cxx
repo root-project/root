@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RDrawableProvider.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
 
 #include "TObject.h"
 #include "TVirtualPad.h"
@@ -21,12 +21,12 @@ using namespace ROOT::Experimental;
 
 /** Provider for drawing of ROOT6 classes */
 
-class RV6DrawProvider : public RDrawableProvider {
+class RV6DrawProvider : public Browsable::RProvider {
 public:
 
    RV6DrawProvider()
    {
-      RegisterV6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
 
          // do not handle TLeaf - needs special plugin
          if (obj->GetClass()->InheritsFrom("TLeaf"))
@@ -55,11 +55,11 @@ public:
 
 /** Provider for drawing of ROOT7 classes */
 
-class RV7DrawProvider : public RDrawableProvider {
+class RV7DrawProvider : public Browsable::RProvider {
 public:
    RV7DrawProvider()
    {
-      RegisterV7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
 
          // do not handle TLeaf - needs special plugin
          if (obj->GetClass()->InheritsFrom("TLeaf"))
