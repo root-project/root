@@ -15,18 +15,18 @@
  *************************************************************************/
 
 
-#include <ROOT/RDrawableProvider.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/RHistDrawable.hxx>
 
 #include <ROOT/RCanvas.hxx>
 
 using namespace ROOT::Experimental;
 
-class RV7HistDrawProvider : public RDrawableProvider {
+class RV7HistDrawProvider : public Browsable::RProvider {
    template<class HistClass>
    void RegisterHistClass()
    {
-      RegisterV7(TClass::GetClass<HistClass>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &) -> bool {
+      RegisterDraw7(TClass::GetClass<HistClass>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &) -> bool {
          auto hist = obj->get_shared<HistClass>();
          if (!hist) return false;
 
