@@ -31,11 +31,8 @@
 #include <thread>
 #include <fstream>
 
-using namespace std::string_literals;
-
 using namespace ROOT::Experimental;
-
-using namespace ROOT::Experimental::Browsable;
+using namespace std::string_literals;
 
 /** \class RFileDialog
 \ingroup rbrowser
@@ -73,7 +70,7 @@ RFileDialog::RFileDialog(EDialogTypes kind, const std::string &title, const std:
    }
 
    auto comp = std::make_shared<Browsable::RGroup>("top", "Top file dialog element");
-   workdir = RSysFile::ProvideTopEntries(comp, workdir);
+   workdir = Browsable::RSysFile::ProvideTopEntries(comp, workdir);
    fBrowsable.SetTopElement(comp);
    fBrowsable.SetWorkingDirectory(workdir);
 
@@ -282,7 +279,7 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
       printf("Recv %s\n", arg.c_str());
 
    if (arg.compare(0, 7, "CHPATH:") == 0) {
-      auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
+      auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(arg.substr(7));
       if (path) fBrowsable.SetWorkingPath(*path);
 
       SendChPathMsg(connid);
@@ -296,7 +293,7 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
    } else if (arg.compare(0, 10, "DLGSELECT:") == 0) {
       // selected file name, if file exists - send request for confirmation
 
-      auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(10));
+      auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(arg.substr(10));
 
       if (!path) {
          R__ERROR_HERE("rbrowser") << "Fail to decode JSON " << arg.substr(10);

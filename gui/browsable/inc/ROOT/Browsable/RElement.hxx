@@ -16,10 +16,9 @@
 
 namespace ROOT {
 namespace Experimental {
+namespace Browsable {
 
 using RElementPath_t = std::vector<std::string>;
-
-namespace Browsable {
 
 class RLevelIter;
 
