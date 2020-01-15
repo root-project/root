@@ -17,6 +17,8 @@
 
 using namespace ROOT::Experimental;
 
+const RPalette::Discrete_t RPalette::kDiscrete = {};
+
 RPalette::RPalette(bool interpolate, bool knownNormalized, const std::vector<RPalette::OrdinalAndColor> &points)
    : fColors(points), fInterpolate(interpolate), fNormalized(knownNormalized)
 {

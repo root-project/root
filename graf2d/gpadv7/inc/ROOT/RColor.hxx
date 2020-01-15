@@ -179,13 +179,13 @@ public:
       ClearAuto();
    }
 
-   static constexpr RGB_t kRed{{255, 0, 0}};
-   static constexpr RGB_t kGreen{{0, 255, 0}};
-   static constexpr RGB_t kBlue{{0, 0, 255}};
-   static constexpr RGB_t kWhite{{255, 255, 255}};
-   static constexpr RGB_t kBlack{{0, 0, 0}};
-   static constexpr double kTransparent{0.};
-   static constexpr double kOpaque{1.};
+   static RGB_t kRed;
+   static RGB_t kGreen;
+   static RGB_t kBlue;
+   static RGB_t kWhite;
+   static RGB_t kBlack;
+   static double kTransparent;
+   static double kOpaque;
 
    friend bool operator==(const RColor &lhs, const RColor &rhs)
    {

@@ -10,13 +10,13 @@
 
 using namespace ROOT::Experimental;
 
-constexpr RColor::RGB_t RColor::kRed;
-constexpr RColor::RGB_t RColor::kGreen;
-constexpr RColor::RGB_t RColor::kBlue;
-constexpr RColor::RGB_t RColor::kWhite;
-constexpr RColor::RGB_t RColor::kBlack;
-constexpr double RColor::kTransparent;
-constexpr double RColor::kOpaque;
+RColor::RGB_t RColor::kRed = {255, 0, 0};
+RColor::RGB_t RColor::kGreen = {0, 255, 0};
+RColor::RGB_t RColor::kBlue = {0, 0, 255};
+RColor::RGB_t RColor::kWhite = {255, 255, 255};
+RColor::RGB_t RColor::kBlack = {0, 0, 0};
+double RColor::kTransparent = 0.;
+double RColor::kOpaque = 1.;
 
 ///////////////////////////////////////////////////////////////////////////
 /// Converts integer from 0 to 255 into hex format with two digits like 00

@@ -71,7 +71,7 @@ public:
 
    /// Tag value used to signal that the palette's colors should not be interpolated. Can be passed to the
    /// constructor: `RPalette palette(RPalette::kDiscrete, {{-100., RColor::kWhite}, {100., RColor::kRed}})`
-   static constexpr const Discrete_t kDiscrete{};
+   static const Discrete_t kDiscrete;
 
    RPalette() = default;
 
