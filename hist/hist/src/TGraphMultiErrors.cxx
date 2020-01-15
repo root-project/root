@@ -631,6 +631,8 @@ TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
       Int_t n = fNpoints * sizeof(Double_t);
       memcpy(fExL, tgme.fExL, n);
       memcpy(fExH, tgme.fExH, n);
+      memcpy(fEyLSum, tgme.fEyLSum, n);
+      memcpy(fEyHSum, tgme.fEyHSum, n);
 
       for (Int_t j = 0; j < fNYErrors; j++) {
          fEyL[j] = tgme.fEyL[j];
@@ -638,8 +640,6 @@ TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
          tgme.fAttFill[j].Copy(fAttFill[j]);
          tgme.fAttLine[j].Copy(fAttLine[j]);
       }
-
-      CalcYErrorsSum();
    }
    return *this;
 }
@@ -771,10 +771,15 @@ void TGraphMultiErrors::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t
       delete[] fExH;
       fExH = newarrays[3];
 
+      if (fEyLSum)
+         delete[] fEyLSum;
+      fEyLSum = newarrays[4];
+      if (fEyHSum)
+         delete[] fEyHSum;
+      fEyHSum = newarrays[5];
+
       delete[] newarrays;
    }
-
-   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -789,9 +794,13 @@ Bool_t TGraphMultiErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend
       if (arrays) {
          memmove(&arrays[2][obegin], &fExL[ibegin], n);
          memmove(&arrays[3][obegin], &fExH[ibegin], n);
+         memmove(&arrays[4][obegin], &fEyLSum[ibegin], n);
+         memmove(&arrays[5][obegin], &fEyHSum[ibegin], n);
       } else {
          memmove(&fExL[obegin], &fExL[ibegin], n);
          memmove(&fExH[obegin], &fExH[ibegin], n);
+         memmove(&fEyLSum[obegin], &fEyLSum[ibegin], n);
+         memmove(&fEyHSum[obegin], &fEyHSum[ibegin], n);
       }
 
       return kTRUE;
@@ -824,13 +833,10 @@ void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 
 void TGraphMultiErrors::CalcYErrorsSum() const
 {
-   if (fEyLSum)
-      delete[] fEyLSum;
-   if (fEyHSum)
-      delete[] fEyHSum;
-
-   fEyLSum = new Double_t[fNpoints];
-   fEyHSum = new Double_t[fNpoints];
+   if (!fEyLSum)
+      fEyLSum = new Double_t[fNpoints];
+   if (!fEyHSum)
+      fEyHSum = new Double_t[fNpoints];
 
    for (Int_t i = 0; i < fNpoints; i++) {
       fEyLSum[i] = GetErrorYlow(i);
@@ -898,13 +904,15 @@ void TGraphMultiErrors::AddYError(Int_t np, const Double_t *eyL, const Double_t 
    fAttLine.emplace_back();
 
    fNYErrors += 1;
+
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocate internal data structures for `size` points.
 Double_t **TGraphMultiErrors::Allocate(Int_t size)
 {
-   return AllocateArrays(4, size);
+   return AllocateArrays(6, size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1969,6 +1977,16 @@ void TGraphMultiErrors::SetEYhigh(Int_t e, Int_t np, const Double_t *eyH)
       else
          SetPointEYhigh(i, e, 0.);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the sum errors mode and recalculate summed errors
+void TGraphMultiErrors::SetSumErrorsMode(Int_t m)
+{
+   if (fSumErrorsMode == m)
+      return;
+   fSumErrorsMode = m;
+   CalcYErrorsSum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

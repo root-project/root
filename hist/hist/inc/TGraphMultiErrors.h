@@ -184,11 +184,7 @@ public:
    virtual void SetEYlow(Int_t e, Int_t np, const Double_t *eyL);
    virtual void SetEYhigh(Int_t e, Int_t np, const Double_t *eyH);
 
-   virtual void SetSumErrorsMode(Int_t m)
-   {
-      fSumErrorsMode = m;
-      CalcYErrorsSum();
-   }
+   virtual void SetSumErrorsMode(Int_t m);
 
    virtual void SetAttFill(Int_t e, TAttFill *taf);
    virtual void SetAttLine(Int_t e, TAttLine *tal);
