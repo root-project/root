@@ -1558,8 +1558,8 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total, Option_t*)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if both histogram are weighted. If they are weighted a true is returned  
-/// 
+/// Check if both histogram are weighted. If they are weighted a true is returned
+///
 Bool_t TEfficiency::CheckWeights(const TH1& pass,const TH1& total)
 {
    if (pass.GetSumw2N() == 0 && total.GetSumw2N() == 0) return false;
@@ -1571,17 +1571,17 @@ Bool_t TEfficiency::CheckWeights(const TH1& pass,const TH1& total)
    pass.GetStats(statpass);
    total.GetStats(stattotal);
 
-   double tolerance = (total.IsA() == TH1F::Class() ) ? 1.E-5 : 1.E-12; 
-   
+   double tolerance = (total.IsA() == TH1F::Class() ) ? 1.E-5 : 1.E-12;
+
    //require: sum of weights == sum of weights^2
    if(!TMath::AreEqualRel(statpass[0],statpass[1],tolerance) ||
       !TMath::AreEqualRel(stattotal[0],stattotal[1],tolerance) ) {
       return true;
    }
 
-   // histograms are not weighted 
+   // histograms are not weighted
    return false;
-   
+
 }
 
 
@@ -1676,6 +1676,14 @@ void TEfficiency::FillGraph(TGraphAsymmErrors * graph, Option_t * opt) const
    TAttFill::Copy(*graph);
    TAttMarker::Copy(*graph);
 
+   // copy axis labels if existing. Assume are there in the total histogram
+   if (fTotalHistogram->GetXaxis()->GetLabels() != nullptr) {
+      for (int ibin = 1; ibin <= fTotalHistogram->GetXaxis()->GetNbins(); ++ibin) {
+         // we need to find the right bin for the Histogram representing the xaxis of the graph
+         int grbin = graph->GetXaxis()->FindBin(fTotalHistogram->GetXaxis()->GetBinCenter(ibin));
+         graph->GetXaxis()->SetBinLabel(grbin, fTotalHistogram->GetXaxis()->GetBinLabel(ibin));
+      }
+   }
    // this method forces the graph to compute correctly the axis
    // according to the given points
    graph->GetHistogram();
@@ -1745,6 +1753,16 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
          bin = GetGlobalBin(i,j);
          hist->SetBinContent(bin,GetEfficiency(bin));
       }
+   }
+
+   // copy axis labels if existing. Assume are there in the total histogram
+   if (fTotalHistogram->GetXaxis()->GetLabels() != nullptr) {
+      for (int ibinx = 1; ibinx <= fTotalHistogram->GetXaxis()->GetNbins(); ++ibinx)
+         hist->GetXaxis()->SetBinLabel(ibinx, fTotalHistogram->GetXaxis()->GetBinLabel(ibinx));
+   }
+   if (fTotalHistogram->GetYaxis()->GetLabels() != nullptr) {
+      for (int ibiny = 1; ibiny <= fTotalHistogram->GetYaxis()->GetNbins(); ++ibiny)
+         hist->GetYaxis()->SetBinLabel(ibiny, fTotalHistogram->GetYaxis()->GetBinLabel(ibiny));
    }
 
    //copying style information
