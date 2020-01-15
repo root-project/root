@@ -8,17 +8,16 @@
 # CMakeLists.txt file for building ROOT gui/browserv7
 ############################################################################
 
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowserv7
   HEADERS
-    ROOT/RBrowsable.hxx
-    ROOT/RBrowserRequest.hxx
-    ROOT/RBrowserReply.hxx
     ROOT/RBrowser.hxx
+    ROOT/RBrowserData.hxx
+    ROOT/RBrowserReply.hxx
+    ROOT/RBrowserRequest.hxx
     ROOT/RFileDialog.hxx
   SOURCES
-    src/RBrowsable.cxx
     src/RBrowser.cxx
+    src/RBrowserData.cxx
     src/RFileDialog.cxx
   DEPENDENCIES
     ROOTBrowsable
