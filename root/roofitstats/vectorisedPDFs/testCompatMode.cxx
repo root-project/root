@@ -21,6 +21,7 @@
 #include "RooPolynomial.h"
 #include "TMath.h"
 #include "RooRandom.h"
+#include "RooFormulaVar.h"
 #include <math.h>
 
 using namespace std;

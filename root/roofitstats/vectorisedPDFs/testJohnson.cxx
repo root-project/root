@@ -18,6 +18,7 @@
 
 #include "RooJohnson.h"
 #include "RooAddition.h"
+#include "RooFormulaVar.h"
 
 class TestJohnson : public PDFTest
 {
