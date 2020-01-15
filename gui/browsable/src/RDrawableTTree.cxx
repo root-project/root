@@ -75,7 +75,6 @@ public:
    RV7DrawProviderTTree()
    {
       RegisterDraw7(TLeaf::Class(), [](std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
-
          // try take object without ownership
          auto tleaf = obj->get_object<TLeaf>();
          if (!tleaf)
@@ -84,7 +83,6 @@ public:
          auto ttree = tleaf->GetBranch()->GetTree();
          if (!ttree)
             return false;
-
 
          std::string expr = std::string(tleaf->GetName()) + ">>htemp_tree_draw";
 
@@ -111,7 +109,6 @@ public:
          shared.reset(htemp);
 
          subpad->Draw<RObjectDrawable>(shared, opt);
-
 
          return true;
       });
