@@ -17,7 +17,7 @@
 #define ROOT7_RFileDialog
 
 #include <ROOT/RWebWindow.hxx>
-#include <ROOT/RBrowsable.hxx>
+#include <ROOT/RBrowserData.hxx>
 
 #include <vector>
 #include <memory>
@@ -50,7 +50,7 @@ protected:
 
    EDialogTypes fKind{kOpenFile};      ///<! dialog kind OpenFile, SaveAs, NewFile
    std::string  fTitle;                ///<! title, when not specified default will be used
-   RBrowsable   fBrowsable;            ///<! central browsing element
+   RBrowserData   fBrowsable;            ///<! central browsing element
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window for file dialog
 

@@ -125,7 +125,7 @@ public:
 
    virtual ~TKeyElement() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of TKeyElement, includes key cycle */
    std::string GetName() const override
    {
       std::string name = fKey->GetName();
@@ -134,7 +134,7 @@ public:
       return name;
    }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of TKeyElement (optional) */
    std::string GetTitle() const override { return fKey->GetTitle(); }
 
    /** Create iterator for childs elements if any
@@ -243,7 +243,7 @@ public:
 
    virtual ~TDirectoryElement() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of TDirectoryElement */
    std::string GetName() const override
    {
       if (fDir)
@@ -257,7 +257,7 @@ public:
       return ""s;
    }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of TDirectoryElement */
    std::string GetTitle() const override
    {
       if (fDir)

@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RBrowsable.hxx>
+#include <ROOT/RBrowserData.hxx>
 
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
@@ -26,7 +26,7 @@ using namespace std::string_literals;
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
 
-void RBrowsable::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
+void RBrowserData::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 {
    fTopElement = elem;
 
@@ -36,7 +36,7 @@ void RBrowsable::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 /////////////////////////////////////////////////////////////////////
 /// set working directory relative to top element
 
-void RBrowsable::SetWorkingDirectory(const std::string &strpath)
+void RBrowserData::SetWorkingDirectory(const std::string &strpath)
 {
    auto path = DecomposePath(strpath);
 
@@ -46,7 +46,7 @@ void RBrowsable::SetWorkingDirectory(const std::string &strpath)
 /////////////////////////////////////////////////////////////////////
 /// set working directory relative to top element
 
-void RBrowsable::SetWorkingPath(const RElementPath_t &path)
+void RBrowserData::SetWorkingPath(const RElementPath_t &path)
 {
    fWorkingPath = path;
    fWorkElement = RElement::GetSubElement(fTopElement, path);
@@ -57,7 +57,7 @@ void RBrowsable::SetWorkingPath(const RElementPath_t &path)
 /////////////////////////////////////////////////////////////////////
 /// Reset all data correspondent to last request
 
-void RBrowsable::ResetLastRequest()
+void RBrowserData::ResetLastRequest()
 {
    fLastAllChilds = false;
    fLastSortedItems.clear();
@@ -72,7 +72,7 @@ void RBrowsable::ResetLastRequest()
 /// Returns array of names for each element in the path, first element either "/" or "."
 /// If returned array empty - it is error
 
-RElementPath_t RBrowsable::DecomposePath(const std::string &strpath)
+RElementPath_t RBrowserData::DecomposePath(const std::string &strpath)
 {
    RElementPath_t arr;
 
@@ -101,7 +101,7 @@ RElementPath_t RBrowsable::DecomposePath(const std::string &strpath)
 /////////////////////////////////////////////////////////////////////////
 /// Process browser request
 
-bool RBrowsable::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
+bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
    if (gDebug > 0)
       printf("REQ: Do decompose path '%s'\n",request.path.c_str());
@@ -183,7 +183,7 @@ bool RBrowsable::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserR
 /////////////////////////////////////////////////////////////////////////
 /// Process browser request, returns string with JSON of RBrowserReply data
 
-std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
+std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 {
    RBrowserReply reply;
 
@@ -199,7 +199,7 @@ std::string RBrowsable::ProcessRequest(const RBrowserRequest &request)
 /////////////////////////////////////////////////////////////////////////
 /// Returns element with path, specified as string
 
-std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &str)
+std::shared_ptr<Browsable::RElement> RBrowserData::GetElement(const std::string &str)
 {
    auto path = DecomposePath(str);
 
@@ -209,7 +209,7 @@ std::shared_ptr<Browsable::RElement> RBrowsable::GetElement(const std::string &s
 /////////////////////////////////////////////////////////////////////////
 /// Returns element with path, specified as RElementPath_t
 
-std::shared_ptr<Browsable::RElement> RBrowsable::GetElementFromTop(const RElementPath_t &path)
+std::shared_ptr<Browsable::RElement> RBrowserData::GetElementFromTop(const RElementPath_t &path)
 {
    return RElement::GetSubElement(fTopElement, path);
 }
