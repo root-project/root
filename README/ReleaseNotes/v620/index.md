@@ -123,6 +123,13 @@ typedefs (in particular `Double32_t`)
 * Prevent a situation in `TTreeFormula` when stale cached information was re-used.
 * Prevent a noticeable memory leak when reading uncompressed TTree.
 
+### RDataFrame
+
+- Improved CSV data source
+  * Support for 1.0e+10 syntax for type inference of double columns
+  * Empty lines are now skipped
+
+
 ## Histogram Libraries
 
 * Allow reading v5 TF1 that were stored memberwise in a TClonesArray.
