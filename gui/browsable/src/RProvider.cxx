@@ -55,44 +55,18 @@ RProvider::Draw7Map_t &RProvider::GetDraw7Map()
 
 //////////////////////////////////////////////////////////////////////////////////
 // Destructor
-/// Automatically unregister provider from global lists
+/// Automatically unregister provider from all maps
 
 RProvider::~RProvider()
 {
    // here to remove all correspondent entries
-   auto &fmap = GetFileMap();
+   CleanThis(GetFileMap());
 
-   for (auto fiter = fmap.begin();fiter != fmap.end();) {
-      if (fiter->second.provider == this)
-         fiter = fmap.erase(fiter);
-      else
-         fiter++;
-   }
+   CleanThis(GetBrowseMap());
 
-   auto &bmap = GetBrowseMap();
-   for (auto biter = bmap.begin(); biter != bmap.end();) {
-      if (biter->second.provider == this)
-         biter = bmap.erase(biter);
-      else
-         biter++;
-   }
+   CleanThis(GetDraw6Map());
 
-   auto &map6 = GetDraw6Map();
-   for (auto iter6 = map6.begin(); iter6 != map6.end();) {
-      if (iter6->second.provider == this)
-         iter6 = map6.erase(iter6);
-      else
-         iter6++;
-   }
-
-   auto &map7 = GetDraw7Map();
-   for (auto iter7 = map7.begin(); iter7 != map7.end();) {
-      if (iter7->second.provider == this)
-         iter7 = map7.erase(iter7);
-      else
-         iter7++;
-   }
-
+   CleanThis(GetDraw7Map());
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +110,7 @@ void RProvider::RegisterDraw6(const TClass *cl, Draw6Func_t func)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-// Register drawing function for v6 canvas
+// Register drawing function for v7 canvas
 
 void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
 {
@@ -147,7 +121,6 @@ void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
 
     bmap.emplace(cl, StructDraw7{this, func});
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////
 // remove provider from all registered lists
