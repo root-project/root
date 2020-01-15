@@ -11,20 +11,14 @@
 #include "TObject.h"
 #include "TVirtualPad.h"
 
-#include <ROOT/RCanvas.hxx>
-#include <ROOT/RObjectDrawable.hxx>
-
-
-// ============================================================================================
-
 using namespace ROOT::Experimental;
 
 /** Provider for drawing of ROOT6 classes */
 
-class RV6DrawProvider : public Browsable::RProvider {
+class TObjectDraw6Provider : public Browsable::RProvider {
 public:
 
-   RV6DrawProvider()
+   TObjectDraw6Provider()
    {
       RegisterDraw6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
 
@@ -46,31 +40,5 @@ public:
       });
    }
 
-} newRV6DrawProvider;
+} TObjectDraw6Provider;
 
-
-/** Provider for drawing of ROOT7 classes */
-
-class RV7DrawProvider : public Browsable::RProvider {
-public:
-   RV7DrawProvider()
-   {
-      RegisterDraw7(nullptr, [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
-         // here clear ownership is required
-         // If it possible, TObject will be cloned by TObjectHolder
-         auto tobj = obj->get_shared<TObject>();
-         if (!tobj) return false;
-
-         if (subpad->NumPrimitives() > 0) {
-            subpad->Wipe();
-            subpad->GetCanvas()->Modified();
-            subpad->GetCanvas()->Update(true);
-         }
-
-         subpad->Draw<RObjectDrawable>(tobj, opt);
-         return true;
-      });
-
-   }
-
-} newRV7DrawProvider;

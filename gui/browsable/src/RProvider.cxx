@@ -213,9 +213,9 @@ bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &
       return true;
 
    if (object->GetClass()->InheritsFrom("TLeaf"))
-      gSystem->Load("libROOTTreeDrawProvider");
+      gSystem->Load("libROOTLeafDraw6Provider");
    else if (object->GetClass()->InheritsFrom(TObject::Class()))
-      gSystem->Load("libROOTObjectDrawProvider");
+      gSystem->Load("libROOTObjectDraw6Provider");
    else
       return false;
 
@@ -241,9 +241,9 @@ bool RProvider::Draw7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsab
    // TODO: need factory methods for that
 
    if (object->GetClass()->InheritsFrom("TLeaf"))
-      gSystem->Load("libROOTTreeDrawProvider");
+      gSystem->Load("libROOTLeafDraw7Provider");
    else if (object->GetClass()->InheritsFrom(TObject::Class()))
-      gSystem->Load("libROOTObjectDrawProvider");
+      gSystem->Load("libROOTObjectDraw7Provider");
    else if (object->GetClass()->InheritsFrom("ROOT::Experimental::RH1D") ||
             object->GetClass()->InheritsFrom("ROOT::Experimental::RH2D") ||
             object->GetClass()->InheritsFrom("ROOT::Experimental::RH3D"))
