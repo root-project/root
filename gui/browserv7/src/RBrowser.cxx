@@ -51,8 +51,6 @@ using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
 
-using namespace ROOT::Experimental::Browsable;
-
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
 
@@ -68,14 +66,14 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
 
-   auto seldir = RSysFile::ProvideTopEntries(comp);
+   auto seldir = Browsable::RSysFile::ProvideTopEntries(comp);
 
-   std::unique_ptr<RHolder> rootfold = std::make_unique<TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
+   std::unique_ptr<Browsable::RHolder> rootfold = std::make_unique<Browsable::TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
    auto elem_root = Browsable::RProvider::Browse(rootfold);
    if (elem_root)
       comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
 
-   std::unique_ptr<RHolder> rootfiles = std::make_unique<TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
+   std::unique_ptr<Browsable::RHolder> rootfiles = std::make_unique<Browsable::TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
    auto elem_files = Browsable::RProvider::Browse(rootfiles);
    if (elem_files)
       comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files));
@@ -214,7 +212,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       auto obj = elem->GetObject();
 
       if (obj)
-         if (RProvider::Draw6(canv, obj, drawingOptions)) {
+         if (Browsable::RProvider::Draw6(canv, obj, drawingOptions)) {
             canv->ForceUpdate(); // force update async - do not wait for confirmation
             return "SLCTCANV:"s + canv->GetName();
          }
@@ -227,7 +225,7 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
       auto obj = elem->GetObject();
       if (obj)
-         if (RProvider::Draw7(subpad, obj, drawingOptions)) {
+         if (Browsable::RProvider::Draw7(subpad, obj, drawingOptions)) {
             rcanv->Modified();
             rcanv->Update(true);
             return "SLCTCANV:"s + rcanv->GetTitle();
@@ -462,7 +460,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
    } else if (arg == "GETWORKPATH") {
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 7, "CHPATH:") == 0) {
-      auto path = TBufferJSON::FromJSON<RElementPath_t>(arg.substr(7));
+      auto path = TBufferJSON::FromJSON<Browsable::RElementPath_t>(arg.substr(7));
       if (path) fBrowsable.SetWorkingPath(*path);
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (arg.compare(0, 6, "CHDIR:") == 0) {
