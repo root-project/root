@@ -14,19 +14,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/RHistDrawable.hxx>
 
 #include <ROOT/RCanvas.hxx>
 
-using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::Browsable;
 
-class RV7HistDrawProvider : public Browsable::RProvider {
+class RV7HistDrawProvider : public RProvider {
    template<class HistClass>
    void RegisterHistClass()
    {
-      RegisterDraw7(TClass::GetClass<HistClass>(), [] (std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &) -> bool {
+      RegisterDraw7(TClass::GetClass<HistClass>(), [] (std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &) -> bool {
          auto hist = obj->get_shared<HistClass>();
          if (!hist) return false;
 
@@ -46,8 +45,9 @@ public:
 
    RV7HistDrawProvider()
    {
-      RegisterHistClass<RH1D>();
-      RegisterHistClass<RH2D>();
-      RegisterHistClass<RH3D>();
+      RegisterHistClass<ROOT::Experimental::RH1D>();
+      RegisterHistClass<ROOT::Experimental::RH2D>();
+      RegisterHistClass<ROOT::Experimental::RH3D>();
    }
+
 } newRV7HistDrawProvider;

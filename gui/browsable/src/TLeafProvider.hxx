@@ -14,16 +14,16 @@
 #include "TH1.h"
 #include "TDirectory.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::Browsable;
 
 /** Provider for drawing of ROOT6 classes */
 
-class TLeafProvider : public Browsable::RProvider {
+class TLeafProvider : public RProvider {
 public:
 
    virtual ~TLeafProvider() = default;
 
-   static TH1 *DrawLeaf(std::unique_ptr<Browsable::RHolder> &obj)
+   static TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
    {
       auto tleaf = obj->get_object<TLeaf>();
       if (!tleaf)
