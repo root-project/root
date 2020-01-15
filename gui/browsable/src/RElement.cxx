@@ -10,7 +10,6 @@
 
 #include <ROOT/Browsable/RLevelIter.hxx>
 
-using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
 

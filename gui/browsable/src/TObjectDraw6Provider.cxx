@@ -11,16 +11,16 @@
 #include "TObject.h"
 #include "TVirtualPad.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::Browsable;
 
 /** Provider for drawing of ROOT6 classes */
 
-class TObjectDraw6Provider : public Browsable::RProvider {
+class TObjectDraw6Provider : public RProvider {
 public:
 
    TObjectDraw6Provider()
    {
-      RegisterDraw6(nullptr, [](TVirtualPad *pad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt) -> bool {
+      RegisterDraw6(nullptr, [](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
 
          // try take object without ownership
          auto tobj = obj->get_object<TObject>();
