@@ -19,9 +19,7 @@
 #include <regex>
 
 using namespace ROOT::Experimental;
-using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
-
 
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
@@ -46,10 +44,10 @@ void RBrowserData::SetWorkingDirectory(const std::string &strpath)
 /////////////////////////////////////////////////////////////////////
 /// set working directory relative to top element
 
-void RBrowserData::SetWorkingPath(const RElementPath_t &path)
+void RBrowserData::SetWorkingPath(const Browsable::RElementPath_t &path)
 {
    fWorkingPath = path;
-   fWorkElement = RElement::GetSubElement(fTopElement, path);
+   fWorkElement = Browsable::RElement::GetSubElement(fTopElement, path);
 
    ResetLastRequest();
 }
@@ -72,9 +70,9 @@ void RBrowserData::ResetLastRequest()
 /// Returns array of names for each element in the path, first element either "/" or "."
 /// If returned array empty - it is error
 
-RElementPath_t RBrowserData::DecomposePath(const std::string &strpath)
+Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath)
 {
-   RElementPath_t arr;
+   Browsable::RElementPath_t arr;
 
    if (strpath.empty())
       return arr;
@@ -110,7 +108,7 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
    if ((path != fLastPath) || !fLastElement) {
 
-      auto elem = RElement::GetSubElement(fWorkElement, path);
+      auto elem = Browsable::RElement::GetSubElement(fWorkElement, path);
       if (!elem) return false;
 
       ResetLastRequest();
@@ -203,14 +201,14 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetElement(const std::string 
 {
    auto path = DecomposePath(str);
 
-   return RElement::GetSubElement(fWorkElement, path);
+   return Browsable::RElement::GetSubElement(fWorkElement, path);
 }
 
 /////////////////////////////////////////////////////////////////////////
-/// Returns element with path, specified as RElementPath_t
+/// Returns element with path, specified as Browsable::RElementPath_t
 
-std::shared_ptr<Browsable::RElement> RBrowserData::GetElementFromTop(const RElementPath_t &path)
+std::shared_ptr<Browsable::RElement> RBrowserData::GetElementFromTop(const Browsable::RElementPath_t &path)
 {
-   return RElement::GetSubElement(fTopElement, path);
+   return Browsable::RElement::GetSubElement(fTopElement, path);
 }
 

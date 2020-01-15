@@ -34,17 +34,17 @@ class RBrowserData {
 
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element
 
-   RElementPath_t  fWorkingPath;                        ///<! path showed in Breadcrumb
+   Browsable::RElementPath_t  fWorkingPath;             ///<! path showed in Breadcrumb
    std::shared_ptr<Browsable::RElement> fWorkElement;   ///<! main element used for working in browser dialog
 
-   RElementPath_t fLastPath;                             ///<! path to last used element
+   Browsable::RElementPath_t fLastPath;                  ///<! path to last used element
    std::shared_ptr<Browsable::RElement> fLastElement;    ///<! last element used in request
    std::vector<std::unique_ptr<Browsable::RItem>> fLastItems; ///<! created browser items - used in requests
    bool fLastAllChilds{false};                           ///<! if all chlds were extracted
    std::vector<const Browsable::RItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
 
-   RElementPath_t DecomposePath(const std::string &path);
+   Browsable::RElementPath_t DecomposePath(const std::string &path);
 
    void ResetLastRequest();
 
@@ -60,14 +60,14 @@ public:
    void SetTopElement(std::shared_ptr<Browsable::RElement> elem);
 
    void SetWorkingDirectory(const std::string &strpath);
-   void SetWorkingPath(const RElementPath_t &path);
+   void SetWorkingPath(const Browsable::RElementPath_t &path);
 
-   const RElementPath_t &GetWorkingPath() const { return fWorkingPath; }
+   const Browsable::RElementPath_t &GetWorkingPath() const { return fWorkingPath; }
 
    std::string ProcessRequest(const RBrowserRequest &request);
 
    std::shared_ptr<Browsable::RElement> GetElement(const std::string &str);
-   std::shared_ptr<Browsable::RElement> GetElementFromTop(const RElementPath_t &path);
+   std::shared_ptr<Browsable::RElement> GetElementFromTop(const Browsable::RElementPath_t &path);
 };
 
 
