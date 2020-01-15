@@ -322,7 +322,7 @@ fi
 
 
 # Check if we are in build or installation directory
-if [ ! -d "CMakeFiles" ]; then
+if [ ! -d "$ROOTSYS/CMakeFiles" ]; then
    pyroot_dir=@CMAKE_INSTALL_FULL_PYROOTDIR@
 else
    pyroot_dir=@libdir@/python${ROOT_PYTHON_VERSION}
