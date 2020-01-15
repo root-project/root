@@ -6,8 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RBrowsable
-#define ROOT7_RBrowsable
+#ifndef ROOT7_RBrowserData
+#define ROOT7_RBrowserData
 
 #include <ROOT/Browsable/RElement.hxx>
 
@@ -21,7 +21,7 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class RBrowsable
+/** \class RBrowserData
 \ingroup rbrowser
 \brief Way to browse (hopefully) everything in ROOT
 \author Sergey Linev <S.Linev@gsi.de>
@@ -30,9 +30,9 @@ namespace Experimental {
 */
 
 
-class RBrowsable {
+class RBrowserData {
 
-   std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element for the RBrowsable
+   std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element
 
    RElementPath_t  fWorkingPath;                        ///<! path showed in Breadcrumb
    std::shared_ptr<Browsable::RElement> fWorkElement;   ///<! main element used for working in browser dialog
@@ -51,11 +51,11 @@ class RBrowsable {
    bool ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply);
 
 public:
-   RBrowsable() = default;
+   RBrowserData() = default;
 
-   RBrowsable(std::shared_ptr<Browsable::RElement> elem) { SetTopElement(elem); }
+   RBrowserData(std::shared_ptr<Browsable::RElement> elem) { SetTopElement(elem); }
 
-   virtual ~RBrowsable() = default;
+   virtual ~RBrowserData() = default;
 
    void SetTopElement(std::shared_ptr<Browsable::RElement> elem);
 

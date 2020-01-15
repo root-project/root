@@ -122,10 +122,10 @@ public:
 
    virtual ~TObjectElement() = default;
 
-   /** Name of RBrowsable, must be provided in derived classes */
+   /** Name of TObject */
    std::string GetName() const override { return fName; }
 
-   /** Title of RBrowsable (optional) */
+   /** Title of TObject */
    std::string GetTitle() const override { return fObj ? fObj->GetTitle() : ""; }
 
    /** Create iterator for childs elements if any */
