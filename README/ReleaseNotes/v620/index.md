@@ -255,6 +255,30 @@ The following builtins have been updated:
 
 ### Current PyROOT
 
+- Several changes for forward compatibility with experimental PyROOT and new Cppyy have been added:
+  * Template instantiation can be done with square brackets. The parenthesis syntax is deprecated.
+~~~ {.python}
+my_templated_function['int','double']()  # new syntax
+my_templated_function('int','double')()  # old sytax, throws a deprecation warning
+~~~
+  * When converting `None` to a null pointer in C++, a deprecation warning is issued.
+  * When using `buffer.SetSize` a deprecation warning is issued, the forward compatible alternative is `buffer.reshape`.
+  * When using `ROOT.Long` or `ROOT.Double`, a deprecation warning is issued in favour of their equivalent `ctypes` types
+(`c_long`, `c_int`, `c_double`)
+  * Added the forward compatible names `as_cobject` and `bind_object` for `AsCObject` and `BindObject`, respectively.
+  * nullptr is also accessible as `cppyy.nullptr`, not only as `cppyy.gbl.nullptr`.
+  * Pythonization functions (e.g. `add_pythonization`) are accessible via `cppyy.py`.
+  * Some attributes of Python proxies have been added with the name they have in the new Cppyy
+(`__creates__`, `__mempolicy__`, `__release_gil__` for function proxies, `__smartptr__` for object proxies).
+- The support for enums (both scoped and non-scoped) was improved. Now, when creating an enum from Python,
+its underlying type is obtained by PyROOT.
+- Added support for non-ASCII Python strings (e.g. UTF-8) to `std::string` and `C string`.
+- Added converters from `bytes` to `std::string` and to C string.
+- Added compatibility of STL iterators with GCC9.
+- Added support for templated methods with reference parameters.
+- Introduced two teardown modes: soft and hard. The soft one only clears the proxied objects, while the hard one also
+shuts down the interpreter.
+
 ### Experimental PyROOT
 
 - MultiPython: build and install PyROOT with multiple Python versions.
@@ -276,3 +300,16 @@ The following builtins have been updated:
   cmake --build .
   make install
   ~~~
+- Updated cppyy packages to the following versions:
+  * cppyy: cppyy-1.5.3
+  * cppyy_backend: clingwrapper-1.10.3
+  * CPyCppyy: CPyCppyy-1.9.3
+- Introduced two teardown modes: soft and hard. The soft one only clears the proxied objects, while the hard one also
+shuts down the interpreter.
+- A few changes for backward compatibility with current PyROOT have been added:
+  * Added `MakeNullPointer(klass)` as `bind_object(0,klass)`
+  * Provided `BindObject` and `AsCObject`
+- `ROOT.Long` and `ROOT.Double` are no longer in the API of PyROOT, since new Cppyy requires to use their equivalent
+`ctypes` types (`c_long`, `c_int`, `c_double`).
+- Added TPython.
+- Added support for `from ROOT import *` in Python2 (only).
