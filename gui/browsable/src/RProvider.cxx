@@ -10,6 +10,10 @@
 
 #include <ROOT/RLogger.hxx>
 
+#include "TBaseClass.h"
+#include "TList.h"
+#include "TSystem.h"
+
 using namespace ROOT::Experimental::Browsable;
 using namespace std::string_literals;
 
@@ -31,6 +35,23 @@ RProvider::FileMap_t &RProvider::GetFileMap()
    return sMap;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// Returns map of registered drawing functions for v6 canvas
+
+RProvider::Draw6Map_t &RProvider::GetDraw6Map()
+{
+   static RProvider::Draw6Map_t sMap;
+   return sMap;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Returns map of registered drawing functions for v7 canvas
+
+RProvider::Draw7Map_t &RProvider::GetDraw7Map()
+{
+   static RProvider::Draw7Map_t sMap;
+   return sMap;
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 // Destructor
@@ -55,6 +76,23 @@ RProvider::~RProvider()
       else
          biter++;
    }
+
+   auto &map6 = GetDraw6Map();
+   for (auto iter6 = map6.begin(); iter6 != map6.end();) {
+      if (iter6->second.provider == this)
+         iter6 = map6.erase(iter6);
+      else
+         iter6++;
+   }
+
+   auto &map7 = GetDraw7Map();
+   for (auto iter7 = map7.begin(); iter7 != map7.end();) {
+      if (iter7->second.provider == this)
+         iter7 = map7.erase(iter7);
+      else
+         iter7++;
+   }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +120,34 @@ void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
 
     bmap.emplace(cl, StructBrowse{this,func});
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// Register drawing function for v6 canvas
+
+void RProvider::RegisterDraw6(const TClass *cl, Draw6Func_t func)
+{
+    auto &bmap = GetDraw6Map();
+
+    if (cl && (bmap.find(cl) != bmap.end()))
+       R__ERROR_HERE("Browserv7") << "Draw v6 handler for class " << cl->GetName() << " already exists";
+
+    bmap.emplace(cl, StructDraw6{this, func});
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Register drawing function for v6 canvas
+
+void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
+{
+    auto &bmap = GetDraw7Map();
+
+    if (cl && (bmap.find(cl) != bmap.end()))
+       R__ERROR_HERE("Browserv7") << "Draw v7 handler for class " << cl->GetName() << " already exists";
+
+    bmap.emplace(cl, StructDraw7{this, func});
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // remove provider from all registered lists
@@ -136,6 +202,133 @@ std::shared_ptr<RElement> RProvider::Browse(std::unique_ptr<RHolder> &object)
 
    return nullptr;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Invoke drawing of object on TCanvas sub-pad
+/// All existing providers are checked, first checked are class matches (including direct parents)
+
+bool RProvider::Draw6(TVirtualPad *subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
+{
+   if (!obj || !obj->GetClass())
+      return false;
+
+   auto &map6 = GetDraw6Map();
+
+   TClass *cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter6 = map6.find(cl);
+
+      if (iter6 != map6.end()) {
+         if (iter6->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   for (auto &pair : map6)
+      if ((pair.first == obj->GetClass()) || !pair.first)
+         if (pair.second.func(subpad, obj, opt))
+            return true;
+
+   // try to load necessary library and repeat action again
+   // TODO: need factory methods for that
+
+   if (obj->GetClass()->InheritsFrom("TLeaf"))
+      gSystem->Load("libROOTTreeDrawProvider");
+   else if (obj->GetClass()->InheritsFrom(TObject::Class()))
+      gSystem->Load("libROOTObjectDrawProvider");
+   else
+      return false;
+
+   cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter6 = map6.find(cl);
+
+      if (iter6 != map6.end()) {
+         if (iter6->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   for (auto &pair : map6)
+      if ((pair.first == obj->GetClass()) || !pair.first)
+         if (pair.second.func(subpad, obj, opt))
+            return true;
+
+   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Invoke drawing of object on RCanvas sub-pad
+/// All existing providers are checked, first checked are class matches (including direct parents)
+
+bool RProvider::Draw7(std::shared_ptr<RPadBase> &subpad, std::unique_ptr<Browsable::RHolder> &obj, const std::string &opt)
+{
+   if (!obj || !obj->GetClass())
+      return false;
+
+   auto &map7 = GetDraw7Map();
+
+   TClass *cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter7 = map7.find(cl);
+
+      if (iter7 != map7.end()) {
+         if (iter7->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   for (auto &pair : map7)
+      if ((pair.first == obj->GetClass()) || !pair.first)
+         if (pair.second.func(subpad, obj, opt))
+            return true;
+
+   // try to load necessary library and repeat action again
+   // TODO: need factory methods for that
+
+   if (obj->GetClass()->InheritsFrom("TLeaf"))
+      gSystem->Load("libROOTTreeDrawProvider");
+   else if (obj->GetClass()->InheritsFrom(TObject::Class()))
+      gSystem->Load("libROOTObjectDrawProvider");
+   else if (obj->GetClass()->InheritsFrom("ROOT::Experimental::RH1D") || obj->GetClass()->InheritsFrom("ROOT::Experimental::RH2D") || obj->GetClass()->InheritsFrom("ROOT::Experimental::RH2D"))
+      gSystem->Load("libROOTHistDrawProvider");
+   else
+      return false;
+
+   cl = const_cast<TClass *>(obj->GetClass());
+   while (cl) {
+      auto iter7 = map7.find(cl);
+
+      if (iter7 != map7.end()) {
+         if (iter7->second.func(subpad, obj, opt))
+            return true;
+      }
+
+      auto bases = cl->GetListOfBases();
+
+      cl = bases && (bases->GetSize() > 0) ? dynamic_cast<TBaseClass *>(bases->First())->GetClassPointer() : nullptr;
+   }
+
+   for (auto &pair : map7)
+      if ((pair.first == obj->GetClass()) || !pair.first)
+         if (pair.second.func(subpad, obj, opt))
+            return true;
+
+   return false;
+}
+
 
 /////////////////////////////////////////////////////////////////////
 /// Return icon name for the given class
