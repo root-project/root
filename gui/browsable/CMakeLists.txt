@@ -48,26 +48,44 @@ ROOT_LINKER_LIBRARY(ROOTHistDrawProvider
      ROOTHistDraw
 )
 
-# provider for generic drawing of TObject on RCanvas/TCanvas
+# provider for generic drawing of TObject on TCanvas
 
-ROOT_LINKER_LIBRARY(ROOTObjectDrawProvider
+ROOT_LINKER_LIBRARY(ROOTObjectDraw6Provider
      src/TObjectDraw6Provider.cxx
   DEPENDENCIES
      ROOTBrowsable
-     RIO
      Gpad
+)
+
+# provider for generic drawing of TObject on RCanvas
+
+ROOT_LINKER_LIBRARY(ROOTObjectDraw7Provider
+     src/TObjectDraw7Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
      ROOTGpadv7
 )
 
-# provider for drawing of TLeaf on RCanvas/TCanvas
 
-ROOT_LINKER_LIBRARY(ROOTTreeDrawProvider
+# provider for drawing of TLeaf on TCanvas
+
+ROOT_LINKER_LIBRARY(ROOTLeafDraw6Provider
      src/TLeafDraw6Provider.cxx
   DEPENDENCIES
      ROOTBrowsable
-     RIO
      Tree
+     Hist
      Gpad
+)
+
+# provider for drawing of TLeaf on RCanvas
+
+ROOT_LINKER_LIBRARY(ROOTLeafDraw7Provider
+     src/TLeafDraw7Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     Tree
      Hist
      ROOTGpadv7
 )
+
