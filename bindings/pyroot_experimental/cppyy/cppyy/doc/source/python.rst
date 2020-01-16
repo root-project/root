@@ -23,7 +23,7 @@ Arguments and return types of ``PyObject*`` can be used, and passed on to
 CPython API calls (or through ``cpyext`` in PyPy).
 
 
-`Doc Strings`
+`Doc strings`
 -------------
 
 The documentation string of a method or function contains the C++

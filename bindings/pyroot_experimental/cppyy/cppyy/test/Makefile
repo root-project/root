@@ -4,6 +4,7 @@ dicts = advancedcppDict.so \
         cpp11featuresDict.so \
         crossinheritanceDict.so \
         datatypesDict.so \
+        doc_helperDict.so \
         example01Dict.so \
         fragileDict.so \
         operatorsDict.so \
@@ -15,7 +16,7 @@ dicts = advancedcppDict.so \
 all : $(dicts)
 
 genreflex_flags := $(shell genreflex --cppflags)
-cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC
+cppflags=$(shell cling-config --cppflags) $(genreflex_flags) -O3 -fPIC -I$(shell python -c 'import distutils.sysconfig as ds; print(ds.get_config_var("INCLUDEPY"))') -Wno-register
 
 PLATFORM := $(shell uname -s)
 ifeq ($(PLATFORM),Darwin)

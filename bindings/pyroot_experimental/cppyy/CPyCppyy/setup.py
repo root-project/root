@@ -39,7 +39,7 @@ def is_manylinux():
 
 def _get_link_libraries():
     if 'win32' in sys.platform:
-        return ['libcppyy_backend']
+        return ['libcppyy_backend', 'libCore']
     return []
 
 def _get_link_dirs():
@@ -118,7 +118,7 @@ class MyDistribution(Distribution):
 
 setup(
     name='CPyCppyy',
-    version='1.9.3',
+    version='1.10.2',
     description='Cling-based Python-C++ bindings for CPython',
     long_description=long_description,
 

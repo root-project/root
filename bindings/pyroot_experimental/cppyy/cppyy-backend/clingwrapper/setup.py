@@ -19,7 +19,7 @@ if '--force-bdist' in sys.argv:
     force_bdist = True
     sys.argv.remove('--force-bdist')
 
-requirements = ['cppyy-cling==6.18.2.*']
+requirements = ['cppyy-cling<6.18.3', 'cppyy-cling>=6.18.2.4']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -213,7 +213,7 @@ setup(
     author='PyPy Developers',
     author_email='pypy-dev@python.org',
 
-    version='1.10.3',
+    version='1.10.8',
 
     license='LBNL BSD',
 

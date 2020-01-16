@@ -95,6 +95,7 @@ static void meta_dealloc(CPPScope* scope)
     } else {
         delete scope->fImp.fCppObjects; scope->fImp.fCppObjects = nullptr;
     }
+    delete scope->fOperators;
     free(scope->fModuleName);
     return PyType_Type.tp_dealloc((PyObject*)scope);
 }
@@ -220,6 +221,7 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
         return nullptr;
 
     result->fFlags      = CPPScope::kNone;
+    result->fOperators  = nullptr;
     result->fModuleName = nullptr;
 
     if (raw && deref) {
@@ -270,9 +272,12 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
     }
 
 // maps for using namespaces and tracking objects
-    if (!Cppyy::IsNamespace(result->fCppType))
+    if (!Cppyy::IsNamespace(result->fCppType)) {
+        static Cppyy::TCppType_t exc_type = (Cppyy::TCppType_t)Cppyy::GetScope("std::exception");
+        if (Cppyy::IsSubtype(result->fCppType, exc_type))
+            result->fFlags |= CPPScope::kIsException;
         result->fImp.fCppObjects = new CppToPyMap_t;
-    else {
+    } else {
         result->fImp.fUsing = nullptr;
         result->fFlags |= CPPScope::kIsNamespace;
     }
@@ -283,6 +288,7 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
     }
     return (PyObject*)result;
 }
+
 
 //----------------------------------------------------------------------------
 static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
@@ -305,6 +311,10 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     std::vector<Utility::PyError_t> errors;
     Utility::FetchError(errors);
     attr = CreateScopeProxy(name, pyclass);
+    if (CPPScope_Check(attr) && (((CPPScope*)attr)->fFlags & CPPScope::kIsException)) {
+    // Instead of the CPPScope, return a fresh exception class derived from CPPExcInstance.
+        return CreateExcScopeProxy(attr, pyname, pyclass);
+    }
 
     CPPScope* klass = ((CPPScope*)pyclass);
     if (!attr) {

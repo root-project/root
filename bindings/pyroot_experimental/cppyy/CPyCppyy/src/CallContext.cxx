@@ -8,7 +8,7 @@ namespace CPyCppyy {
 
     CallContext::ECallFlags CallContext::sMemoryPolicy = CallContext::kUseStrict;
 // this is just a data holder for linking; actual value is set in CPyCppyyModule.cxx
-    CallContext::ECallFlags CallContext::sSignalPolicy = CallContext::kSafe;
+    CallContext::ECallFlags CallContext::sSignalPolicy = CallContext::kNone;
 
 } // namespace CPyCppyy
 
@@ -50,14 +50,12 @@ bool CPyCppyy::CallContext::SetMemoryPolicy(ECallFlags e)
 }
 
 //-----------------------------------------------------------------------------
-bool CPyCppyy::CallContext::SetSignalPolicy(ECallFlags e)
+bool CPyCppyy::CallContext::SetGlobalSignalPolicy(bool setProtected)
 {
 // Set the global signal policy, which determines whether a jmp address
 // should be saved to return to after a C++ segfault.
-    if (kFast == e || e == kSafe) {
-        sSignalPolicy = e;
-        return true;
-    }
-    return false;
+    bool old = sSignalPolicy == kProtected;
+    sSignalPolicy = setProtected ? kProtected : kNone;
+    return old;
 }
 

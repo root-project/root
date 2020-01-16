@@ -9,7 +9,6 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-
 // Bindings
 #include "CPPScope.h"
 #include "Cppyy.h"
@@ -28,7 +27,7 @@ class CPPInstance {
 public:
     enum EFlags {
         kDefault     = 0x0000,
-        kNoSmartConv = 0x0001,
+        kNoWrapConv  = 0x0001,
         kIsOwner     = 0x0002,
         kIsExtended  = 0x0004,
         kIsReference = 0x0008,
@@ -36,8 +35,9 @@ public:
         kIsValue     = 0x0020,
         kIsPtrPtr    = 0x0040,
         kIsSmartPtr  = 0x0080,
-        kHasLifeline = 0x0100,
-        kIsRegulated = 0x0200 };
+        kNoMemReg    = 0x0100,
+        kHasLifeline = 0x0200,
+        kIsRegulated = 0x0400 };
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
@@ -117,7 +117,11 @@ CPYCPPYY_IMPORT PyTypeObject CPPInstance_Type;
 template<typename T>
 inline bool CPPInstance_Check(T* object)
 {
-    return object && (PyObject*)object != Py_None && PyObject_TypeCheck(object, &CPPInstance_Type);
+// Short-circuit the type check by checking tp_new which all generated subclasses
+// of CPPInstance inherit.
+    return object && \
+        (Py_TYPE(object)->tp_new == CPPInstance_Type.tp_new || \
+         PyObject_TypeCheck(object, &CPPInstance_Type));
 }
 
 template<typename T>

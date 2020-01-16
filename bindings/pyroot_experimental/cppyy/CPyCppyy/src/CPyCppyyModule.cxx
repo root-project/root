@@ -3,6 +3,7 @@
 #include "CallContext.h"
 #include "Converters.h"
 #include "CPPDataMember.h"
+#include "CPPExcInstance.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
 #include "CPPScope.h"
@@ -159,9 +160,13 @@ struct CPyCppyy_tagCDataObject {       // non-public (but stable)
 } // unnamed namespace
 
 namespace CPyCppyy {
-    PyObject* gThisModule = nullptr;
-    PyObject* gPyTypeMap = nullptr;
+    PyObject* gThisModule    = nullptr;
+    PyObject* gPyTypeMap     = nullptr;
     PyObject* gNullPtrObject = nullptr;
+    PyObject* gBusException  = nullptr;
+    PyObject* gSegvException = nullptr;
+    PyObject* gIllException  = nullptr;
+    PyObject* gAbrtException = nullptr;
     std::map<std::string, std::vector<PyObject*>> gPythonizations;
     std::set<Cppyy::TCppType_t> gPinnedTypes;
 }
@@ -218,7 +223,7 @@ PyDictKeyEntry* CPyCppyyLookDictString(
 
 #else /* < 3.3 */
 
-inline PyDictEntry* OrgDictLookup(PyDictObject* mp, PyObject* key, Long_t hash)
+inline PyDictEntry* OrgDictLookup(PyDictObject* mp, PyObject* key, long hash)
 {
     return (*gDictLookupOrg)(mp, key, hash);
 }
@@ -226,7 +231,7 @@ inline PyDictEntry* OrgDictLookup(PyDictObject* mp, PyObject* key, Long_t hash)
 #define CPYCPPYY_ORGDICT_LOOKUP(mp, key, hash, value_addr, hashpos)           \
     OrgDictLookup(mp, key, hash)
 
-PyDictEntry* CPyCppyyLookDictString(PyDictObject* mp, PyObject* key, Long_t hash)
+PyDictEntry* CPyCppyyLookDictString(PyDictObject* mp, PyObject* key, long hash)
 #endif
 {
     static GblGetter gbl;
@@ -624,7 +629,7 @@ static PyObject* SetMemoryPolicy(PyObject*, PyObject* args)
     if (!PyArg_ParseTuple(args, const_cast<char*>("O!"), &PyInt_Type, &policy))
         return nullptr;
 
-    Long_t l = PyInt_AS_LONG(policy);
+    long l = PyInt_AS_LONG(policy);
     if (CallContext::SetMemoryPolicy((CallContext::ECallFlags)l)) {
         Py_RETURN_NONE;
     }
@@ -634,21 +639,19 @@ static PyObject* SetMemoryPolicy(PyObject*, PyObject* args)
 }
 
 //----------------------------------------------------------------------------
-static PyObject* SetSignalPolicy(PyObject*, PyObject* args)
+static PyObject* SetGlobalSignalPolicy(PyObject*, PyObject* args)
 {
 // Set the global signal policy, which determines whether a jmp address
 // should be saved to return to after a C++ segfault.
-    PyObject* policy = 0;
-    if (!PyArg_ParseTuple(args, const_cast<char*>("O!"), &PyInt_Type, &policy))
+    PyObject* setProtected = 0;
+    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &setProtected))
         return nullptr;
 
-    Long_t l = PyInt_AS_LONG(policy);
-    if (CallContext::SetSignalPolicy((CallContext::ECallFlags)l)) {
-        Py_RETURN_NONE;
+    if (CallContext::SetGlobalSignalPolicy(PyObject_IsTrue(setProtected))) {
+        Py_RETURN_TRUE;
     }
 
-    PyErr_Format(PyExc_ValueError, "Unknown policy %ld", l);
-    return nullptr;
+    Py_RETURN_FALSE;
 }
 
 //----------------------------------------------------------------------------
@@ -740,7 +743,7 @@ static PyMethodDef gCPyCppyyMethods[] = {
       METH_VARARGS, (char*)"Remove a pythonizor."},
     {(char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
       METH_VARARGS, (char*)"Determines object ownership model."},
-    {(char*) "SetSignalPolicy", (PyCFunction)SetSignalPolicy,
+    {(char*) "SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy,
       METH_VARARGS, (char*)"Trap signals in safe mode to prevent interpreter abort."},
     {(char*) "SetOwnership", (PyCFunction)SetOwnership,
       METH_VARARGS, (char*)"Modify held C++ object ownership."},
@@ -804,8 +807,12 @@ extern "C" void initlibcppyy()
 // setup interpreter
     PyEval_InitThreads();
 
-// prepare for lazyness
+// prepare for lazyness (the insert is needed to capture the most generic lookup
+// function, just in case ...)
     PyObject* dict = PyDict_New();
+    PyObject* notstring = PyInt_FromLong(5);
+    PyDict_SetItem(dict, notstring, notstring);
+    Py_DECREF(notstring);
 #if PY_VERSION_HEX >= 0x03030000
     gDictLookupOrg = (dict_lookup_func)((PyDictObject*)dict)->ma_keys->dk_lookup;
 #else
@@ -838,6 +845,10 @@ extern "C" void initlibcppyy()
 
 // inject object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPInstance_Type, "CPPInstance"))
+        CPYCPPYY_INIT_ERROR;
+
+// inject exception object proxy type
+    if (!Utility::InitProxy(gThisModule, &CPPExcInstance_Type, "CPPExcInstance"))
         CPYCPPYY_INIT_ERROR;
 
 // inject method proxy type
@@ -887,15 +898,24 @@ extern "C" void initlibcppyy()
     Py_INCREF(gNullPtrObject);
     PyModule_AddObject(gThisModule, (char*)"nullptr", gNullPtrObject);
 
+// C++-specific exceptions
+    PyObject* cppfatal = PyErr_NewException((char*)"cppyy.ll.FatalError", nullptr, nullptr);
+    PyModule_AddObject(gThisModule, (char*)"FatalError", cppfatal);
+
+    gBusException  = PyErr_NewException((char*)"cppyy.ll.BusError", cppfatal, nullptr);
+    PyModule_AddObject(gThisModule, (char*)"BusError", gBusException);
+    gSegvException = PyErr_NewException((char*)"cppyy.ll.SegmentationViolation", cppfatal, nullptr);
+    PyModule_AddObject(gThisModule, (char*)"SegmentationViolation", gSegvException);
+    gIllException  = PyErr_NewException((char*)"cppyy.ll.IllegalInstruction", cppfatal, nullptr);
+    PyModule_AddObject(gThisModule, (char*)"IllegalInstruction", gIllException);
+    gAbrtException = PyErr_NewException((char*)"cppyy.ll.AbortSignal", cppfatal, nullptr);
+    PyModule_AddObject(gThisModule, (char*)"AbortSignal", gAbrtException);
+
 // policy labels
     PyModule_AddObject(gThisModule, (char*)"kMemoryHeuristics",
         PyInt_FromLong((int)CallContext::kUseHeuristics));
     PyModule_AddObject(gThisModule, (char*)"kMemoryStrict",
         PyInt_FromLong((int)CallContext::kUseStrict));
-    PyModule_AddObject(gThisModule, (char*)"kSignalFast",
-        PyInt_FromLong((int)CallContext::kFast));
-    PyModule_AddObject(gThisModule, (char*)"kSignalSafe",
-        PyInt_FromLong((int)CallContext::kSafe));
 
 // gbl namespace is injected in cppyy.py
 

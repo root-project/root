@@ -2,7 +2,9 @@
 """
 
 __all__ = [
-    'make_interface',
+    'add_pythonization',
+    'remove_pythonization',
+    'pin_type',
     ]
 
 def _set_backend(backend):
@@ -28,11 +30,6 @@ def remove_pythonization(pythonizor, scope = ''):
 def pin_type(klass):
     return _backend._pin_type(klass)
 
-# TODO: move this to something like cppyy.lowlevel
-def cast(some_object, new_type):
-    return _backend.Cast(some_object, new_type)
-
-
 # exception pythonizations
 def add_exception_mapping(cpp_exception, py_exception):
     _backend.UserExceptions[cpp_exception] = py_exception
@@ -42,16 +39,12 @@ def add_exception_mapping(cpp_exception, py_exception):
 #--- Pythonization factories --------------------------------------------
 
 def set_gil_policy(match_class, match_method, release_gil=True):
-    return set_method_property(match_class, match_method, '_threaded', int(release_gil))
+    return set_method_property(match_class, match_method, '__release_gil__', int(release_gil))
 
 
 def set_ownership_policy(match_class, match_method, python_owns_result):
     return set_method_property(match_class, match_method, 
-                               '_creates', int(python_owns_result))
-
-def set_smart_ptr_policy(match_class, match_method, manage_smart_ptr=False):
-    return set_method_property(match_class, match_method, 
-                               '_manage_smart_ptr', bool(manage_smart_ptr))
+                               '__creates__', int(python_owns_result))
 
 
 # NB: Ideally, we'd use the version commented out below, but for now, we

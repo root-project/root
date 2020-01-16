@@ -31,7 +31,7 @@ py11_%.so: py11_%.cxx lib%.so
 	$(CXX) $(cppflags) -shared -std=c++11 -fPIC `python -m pybind11 --includes` py11_$*.cxx -o $@ -L. -l$*
 
 swig_%.py: %.h %.i
-	swig -python -c++ $*.i
+	swig -python -c++ -builtin $*.i
 
 _swig_%.so: swig_%.py lib%.so
 	$(CXX) $(cppflags) -shared `python-config --includes` -std=c++11 -fPIC $*_wrap.cxx -o $@ -L. -l$*

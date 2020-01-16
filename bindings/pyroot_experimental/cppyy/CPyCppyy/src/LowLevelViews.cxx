@@ -35,7 +35,7 @@ static void ll_dealloc(CPyCppyy::LowLevelView* pyobj)
 // Destruction requires the deletion of the converter (if any)
     PyMem_Free(pyobj->fBufInfo.shape);
     PyMem_Free(pyobj->fBufInfo.strides);
-    delete pyobj->fConverter;
+    if (pyobj->fConverter && pyobj->fConverter->HasState()) delete pyobj->fConverter;
     Py_TYPE(pyobj)->tp_free((PyObject*)pyobj);
 }
 
@@ -714,6 +714,12 @@ template<> struct typecode_traits<signed char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "signed char"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
+#if __cplusplus > 201402L
+template<> struct typecode_traits<std::byte> {
+    static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
+#endif
+template<> struct typecode_traits<const char*> {
+    static constexpr const char* format = "b"; static constexpr const char* name = "const char*"; };
 template<> struct typecode_traits<short> {
     static constexpr const char* format = "h"; static constexpr const char* name = "short"; };
 template<> struct typecode_traits<unsigned short> {
@@ -825,6 +831,9 @@ PyObject* CPyCppyy::CreateLowLevelView(type** address, Py_ssize_t* shape) { \
 CPPYY_IMPL_VIEW_CREATOR(bool);
 CPPYY_IMPL_VIEW_CREATOR(signed char);
 CPPYY_IMPL_VIEW_CREATOR(unsigned char);
+#if __cplusplus > 201402L
+CPPYY_IMPL_VIEW_CREATOR(std::byte);
+#endif
 CPPYY_IMPL_VIEW_CREATOR(short);
 CPPYY_IMPL_VIEW_CREATOR(unsigned short);
 CPPYY_IMPL_VIEW_CREATOR(int);
@@ -840,3 +849,7 @@ CPPYY_IMPL_VIEW_CREATOR(std::complex<float>);
 CPPYY_IMPL_VIEW_CREATOR(std::complex<double>);
 CPPYY_IMPL_VIEW_CREATOR(std::complex<int>);
 CPPYY_IMPL_VIEW_CREATOR(std::complex<long>);
+
+PyObject* CPyCppyy::CreateLowLevelView(const char** address, Py_ssize_t* shape) {
+    return CreateLowLevelViewT<const char*>(address, shape);
+}

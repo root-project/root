@@ -180,16 +180,16 @@ class TestREGRESSION:
         something = 5.0
 
         code = """
-#include "Python.h"
+            #include "Python.h"
 
-std::vector<float> some_foo_calling_python() {
-   auto pyobj = reinterpret_cast<PyObject*>(ADDRESS);
-   float f = (float)PyFloat_AsDouble(pyobj);
-   std::vector<float> v;
-   v.push_back(f);
-   return v;
-}
-""".replace("ADDRESS", str(id(something)))
+            std::vector<float> some_foo_calling_python() {
+              auto pyobj = reinterpret_cast<PyObject*>(ADDRESS);
+              float f = (float)PyFloat_AsDouble(pyobj);
+              std::vector<float> v;
+              v.push_back(f);
+              return v;
+            }
+            """.replace("ADDRESS", str(id(something)))
 
         cppyy.cppdef(code)
         cppyy.gbl.some_foo_calling_python()
@@ -288,14 +288,306 @@ std::vector<float> some_foo_calling_python() {
                 baz[0].data.push_back(3.14);
                 baz[1].data.push_back(2.73);
             }
+        };
+
+        class Foo {
+        public:
+            class Bar {
+            public:
+                Bar(): x(5) {}
+                int x;
+            } bar;
+
         }; }""")
 
         from cppyy.gbl import struct_direct_definition as sds
 
-        f = sds.Bar()
+        b = sds.Bar()
 
-        assert len(f.baz) == 2
-        assert len(f.baz[0].data) == 1
-        assert f.baz[0].data[0]   == 3.14
-        assert len(f.baz[1].data) == 1
-        assert f.baz[1].data[0]   == 2.73
+        assert len(b.baz) == 2
+        assert len(b.baz[0].data) == 1
+        assert b.baz[0].data[0]   == 3.14
+        assert len(b.baz[1].data) == 1
+        assert b.baz[1].data[0]   == 2.73
+
+        f = sds.Foo()
+        assert f.bar.x == 5
+
+    def test14_vector_vs_initializer_list(self):
+        """Prefer vector in template and initializer_list in formal arguments"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace vec_vs_init {
+           template<class T>
+           std::string nameit1(const T& t) {
+               return typeid(T).name();
+           }
+           template<class T>
+           std::string nameit2(T&& t) {
+               return typeid(T).name();
+           }
+           template<class T>
+           size_t sizeit(T&& t) {
+               return t.size();
+           }
+        }""")
+
+        nameit1 = cppyy.gbl.vec_vs_init.nameit1
+        assert 'vector' in nameit1(list(range(10)))
+        assert 'vector' in nameit1(cppyy.gbl.std.vector[int]())
+
+        nameit2 = cppyy.gbl.vec_vs_init.nameit2
+        assert 'vector' in nameit2(list(range(10)))
+        assert 'vector' in nameit2(cppyy.gbl.std.vector[int]())
+
+        sizeit = cppyy.gbl.vec_vs_init.sizeit
+        assert sizeit(list(range(10))) == 10
+
+    def test15_iterable_enum(self):
+        """Use template to iterate over an enum"""
+      # from: https://stackoverflow.com/questions/52459530/pybind11-emulate-python-enum-behaviour
+
+        import cppyy
+
+        cppyy.cppdef("""
+        template <typename Enum>
+        struct my_iter_enum {
+            struct iterator {
+                using value_type = Enum;
+                using difference_type = ptrdiff_t;
+                using reference = const Enum&;
+                using pointer = const Enum*;
+                using iterator_category = std::input_iterator_tag;
+
+                iterator(Enum value) : cur(value) {}
+
+                reference operator*() { return cur; }
+                pointer operator->() { return &cur; }
+                bool operator==(const iterator& other) { return cur == other.cur; }
+                bool operator!=(const iterator& other) { return !(*this == other); }
+                iterator& operator++() { if (cur != Enum::Unknown) cur = static_cast<Enum>(static_cast<std::underlying_type_t<Enum>>(cur) + 1); return *this; }
+                iterator operator++(int) { iterator other = *this; ++(*this); return other; }
+
+            private:
+                Enum cur;
+                int TODO_why_is_this_placeholder_needed; // JIT error? Too aggressive optimization?
+            };
+
+            iterator begin() {
+                return iterator(Enum::Black);
+            }
+
+            iterator end() {
+                return iterator(Enum::Unknown);
+            }
+        };
+
+        enum class MyColorEnum : char {
+            Black = 1,
+            Blue,
+            Red,
+            Yellow,
+            Unknown
+        };""")
+
+        Color = cppyy.gbl.my_iter_enum['MyColorEnum']
+        assert Color.iterator
+
+        c_iterable = Color()
+        assert c_iterable.begin().__deref__() == 1
+
+        all_enums = []
+        for c in c_iterable:
+            all_enums.append(int(c))
+        assert all_enums == list(range(1, 5))
+
+    def test16_operator_eq_pickup(self):
+        """Base class python-side operator== interered with derived one"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace SelectOpEq {
+        class Base {};
+
+        class Derived1 : public Base {
+        public:
+            bool operator==(Derived1&) { return true; }
+        };
+
+        class Derived2 : public Base {
+        public:
+            bool operator!=(Derived2&) { return true; }
+        }; }""")
+
+        soe = cppyy.gbl.SelectOpEq
+
+        soe.Base.__eq__ = lambda first, second: False
+        soe.Base.__ne__ = lambda first, second: False
+
+        a = soe.Derived1()
+        b = soe.Derived1()
+
+        assert a == b             # derived class' C++ operator== called
+
+        a = soe.Derived2()
+        b = soe.Derived2()
+
+        assert a != b             # derived class' C++ operator!= called
+
+    def test17_operator_plus_overloads(self):
+        """operator+(string, string) should return a string"""
+
+        import cppyy
+
+        a = cppyy.gbl.std.string("a")
+        b = cppyy.gbl.std.string("b")
+
+        assert a == 'a'
+        assert b == 'b'
+
+        assert type(a+b) == str
+        assert a+b == 'ab'
+
+    def test18_std_string_hash(self):
+        """Hashing of std::string"""
+
+        import cppyy
+
+        import cppyy
+
+        s = cppyy.gbl.std.string("text")
+        d = {}
+
+      # hashes of std::string larger than 2**31 would fail; run a couple of
+      # strings to check although it may still succeed by accident (and never
+      # was an issue on p3 anyway)
+        for s in ['abc', 'text', '321', 'stuff', 'very long string']:
+            d[s] = 1
+
+    def test19_signed_char_ref(self):
+        """Signed char executor was self-referencing"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        class SignedCharRefGetter {
+        public:
+            void setter(signed char sc) { m_c = sc; }
+            signed char& getter() { return m_c; }
+            signed char m_c;
+        };""")
+
+        obj = cppyy.gbl.SignedCharRefGetter()
+        obj.setter('c')
+
+        assert obj.getter() == 'c'
+
+    def test20_temporaries_and_vector(self):
+        """Extend a life line to references into a vector if needed"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            std::vector<std::string> get_some_temporary_vector() { return { "x", "y", "z" }; }
+        """)
+
+        l = [e for e in cppyy.gbl.get_some_temporary_vector()]
+        assert l == ['x', 'y', 'z']
+
+    def test21_initializer_list_and_temporary(self):
+        """Conversion rules when selecting intializer_list v.s. temporary"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        namespace regression_test21 {
+        std::string what_called = "";
+        class Foo {
+        public:
+            Foo() = default;
+            Foo(int i) {
+                what_called += "Foo(int)";
+            }
+            Foo(std::initializer_list<uint8_t> il) {
+                std::ostringstream os;
+                os << "Foo(il<size=" << il.size() << ">)";
+                what_called += os.str();
+            }
+        };
+
+        class Bar {
+        public:
+            Bar() = default;
+            Bar(int i) {
+                what_called = "Bar(int)";
+            }
+            Bar(std::initializer_list<uint8_t> il) {
+                std::ostringstream os;
+                os << "Bar(il<size=" << il.size() << ">)";
+                what_called += os.str();
+            }
+            Bar(Foo x) {
+                what_called += "Bar(Foo)";
+            }
+        }; }""")
+
+        r21 = cppyy.gbl.regression_test21
+
+        assert len(r21.what_called) == 0
+
+        r21.Bar(1)
+        assert r21.what_called == 'Bar(int)'
+
+        r21.what_called = ''
+        r21.Bar([1,2])  # used to call Bar(Foo x) through implicit conversion
+        assert r21.what_called == 'Bar(il<size=2>)'
+
+    def test22_copy_constructor(self):
+        """Copy construct an object into an empty (NULL) proxy"""
+
+        import cppyy, gc
+
+        cppyy.cppdef("""
+        namespace regression_test22 {
+        struct Countable {
+             static int s_count;
+             Countable() { ++s_count; }
+             Countable(const Countable&) { ++s_count; }
+             Countable& operator=(const Countable&) { return *this; }
+             ~Countable() { --s_count; }
+        };
+        int Countable::s_count = 0;
+        }""")
+
+        r22 = cppyy.gbl.regression_test22
+
+        assert r22.Countable.s_count == 0
+        c = r22.Countable()
+        assert r22.Countable.s_count == 1
+
+        raises(ReferenceError, c.__init__, r22.Countable())
+        gc.collect()
+        assert r22.Countable.s_count == 1
+
+        c.__assign__(r22.Countable())
+        gc.collect()
+        assert r22.Countable.s_count == 1
+
+        c.__destruct__()
+        assert r22.Countable.s_count == 0
+        c.__init__(r22.Countable())
+        gc.collect()
+        assert r22.Countable.s_count == 1
+
+        del c
+        gc.collect()
+        assert r22.Countable.s_count == 0
+
+        c = cppyy.bind_object(cppyy.nullptr, r22.Countable)
+        assert r22.Countable.s_count == 0
+        c.__init__(r22.Countable())
+        gc.collect()
+        assert r22.Countable.s_count == 1

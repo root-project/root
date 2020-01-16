@@ -1,6 +1,6 @@
 import py, os, sys
 from pytest import raises
-from .support import setup_make, pylong, pyunicode
+from .support import setup_make, pylong, pyunicode, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("datatypesDict"))
@@ -283,7 +283,11 @@ class TestLOWLEVEL:
 
         ctd = cppyy.gbl.CppyyTestData()
 
+        meth_types = ['bool', 'double']
+        if not IS_WINDOWS:
+            meth_types.append('long')
+
         i = ctypes.c_int(0);
         for ext in ['_r', '_p']:
-            for meth in ['bool', 'long', 'double']:
+            for meth in meth_types:
                 with raises(TypeError): getattr(ctd, 'set_'+meth+ext)(i)

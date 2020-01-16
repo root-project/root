@@ -93,7 +93,7 @@ namespace Cppyy {
     TCppObject_t  CallO(TCppMethod_t method, TCppObject_t self, size_t nargs, void* args, TCppType_t result_type);
 
     RPY_EXPORTED
-    TCppFuncAddr_t GetFunctionAddress(TCppMethod_t method);
+    TCppFuncAddr_t GetFunctionAddress(TCppMethod_t method, bool check_enabled=true);
 
 // handling of function argument buffer --------------------------------------
     RPY_EXPORTED

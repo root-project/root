@@ -161,7 +161,8 @@ static inline PyObject* HandleReturn(
     // if this new object falls inside self, make sure its lifetime is proper
         if (pymeth->fMethodInfo->fFlags & CallContext::kSetLifeline)
             ll_action = 1;
-        else if (CPPInstance_Check(pymeth->fSelf) && CPPInstance_Check(result)) {
+        else if (!(pymeth->fMethodInfo->fFlags & CallContext::kNeverLifeLine) && \
+                 CPPInstance_Check(pymeth->fSelf) && CPPInstance_Check(result)) {
         // if self was a by-value return and result is not, pro-actively protect result;
         // else if the return value falls within the memory of 'this', force a lifeline
             CPPInstance* cppself = (CPPInstance*)pymeth->fSelf;
@@ -179,6 +180,9 @@ static inline PyObject* HandleReturn(
             }
             if (ll_action) cppres->fFlags |= CPPInstance::kHasLifeline;    // for chaining
         }
+
+        if (!ll_action)
+            pymeth->fMethodInfo->fFlags |= CallContext::kNeverLifeLine;    // assume invariant semantics
     }
 
     if (ll_action) {
@@ -203,14 +207,14 @@ static PyObject* mp_name(CPPOverload* pymeth, void*)
     return CPyCppyy_PyText_FromString(pymeth->GetName().c_str());
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_module(CPPOverload* /* pymeth */, void*)
 {
     Py_INCREF(PyStrings::gThisModule);
     return PyStrings::gThisModule;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_doc(CPPOverload* pymeth, void*)
 {
 // Build python document string ('__doc__') from all C++-side overloads.
@@ -237,7 +241,7 @@ static PyObject* mp_doc(CPPOverload* pymeth, void*)
     return doc;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_meth_func(CPPOverload* pymeth, void*)
 {
 // Create a new method proxy to be returned.
@@ -254,7 +258,7 @@ static PyObject* mp_meth_func(CPPOverload* pymeth, void*)
     return (PyObject*)newPyMeth;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_meth_self(CPPOverload* pymeth, void*)
 {
 // Return the bound self, if any; in case of pseudo-function role, pretend
@@ -271,7 +275,7 @@ static PyObject* mp_meth_self(CPPOverload* pymeth, void*)
     Py_RETURN_NONE;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_meth_class(CPPOverload* pymeth, void*)
 {
 // Return scoping class; in case of pseudo-function role, pretend that there
@@ -287,14 +291,14 @@ static PyObject* mp_meth_class(CPPOverload* pymeth, void*)
     Py_RETURN_NONE;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_func_closure(CPPOverload* /* pymeth */, void*)
 {
 // Stub only, to fill out the python function interface.
     Py_RETURN_NONE;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_func_code(CPPOverload* pymeth, void*)
 {
 // Code details are used in module inspect to fill out interactive help()
@@ -367,7 +371,7 @@ static PyObject* mp_func_code(CPPOverload* pymeth, void*)
 #endif
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_func_defaults(CPPOverload* pymeth, void*)
 {
 // Create a tuple of default values, if there is only one method (otherwise
@@ -392,7 +396,7 @@ static PyObject* mp_func_defaults(CPPOverload* pymeth, void*)
     return defaults;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_func_globals(CPPOverload* /* pymeth */, void*)
 {
 // Return this function's global dict (hard-wired to be the cppyy module); used
@@ -402,7 +406,7 @@ static PyObject* mp_func_globals(CPPOverload* /* pymeth */, void*)
     return pyglobal;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static inline int set_flag(CPPOverload* pymeth, PyObject* value, CallContext::ECallFlags flag, const char* name)
 {
 // Generic setter of a (boolean) flag.
@@ -425,21 +429,21 @@ static inline int set_flag(CPPOverload* pymeth, PyObject* value, CallContext::EC
     return 0;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_getcreates(CPPOverload* pymeth, void*)
 {
 // Get '__creates__' boolean, which determines ownership of return values.
     return PyInt_FromLong((long)IsCreator(pymeth->fMethodInfo->fFlags));
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static int mp_setcreates(CPPOverload* pymeth, PyObject* value, void*)
 {
 // Set '__creates__' boolean, which determines ownership of return values.
     return set_flag(pymeth, value, CallContext::kIsCreator, "__creates__");
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_getmempolicy(CPPOverload* pymeth, void*)
 {
 // Get '_mempolicy' enum, which determines ownership of call arguments.
@@ -452,7 +456,7 @@ static PyObject* mp_getmempolicy(CPPOverload* pymeth, void*)
     return PyInt_FromLong(-1);
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static int mp_setmempolicy(CPPOverload* pymeth, PyObject* value, void*)
 {
 // Set '_mempolicy' enum, which determines ownership of call arguments.
@@ -472,52 +476,26 @@ static int mp_setmempolicy(CPPOverload* pymeth, PyObject* value, void*)
     return 0;
 }
 
-//-----------------------------------------------------------------------------
-static PyObject* mp_getlifeline(CPPOverload* pymeth, void*)
-{
-// Get '__set_lifeline__' boolean, which determines whether a lifeline should be
-// set on self from the return value.
-    return PyInt_FromLong(
-        (long)(pymeth->fMethodInfo->fFlags & CallContext::kSetLifeline));
+
+//----------------------------------------------------------------------------
+#define CPPYY_BOOLEAN_PROPERTY(name, flag, label)                            \
+static PyObject* mp_get##name(CPPOverload* pymeth, void*) {                  \
+    if (pymeth->fMethodInfo->fFlags & flag) {                                \
+        Py_RETURN_TRUE;                                                      \
+    }                                                                        \
+    Py_RETURN_FALSE;                                                         \
+}                                                                            \
+                                                                             \
+static int mp_set##name(CPPOverload* pymeth, PyObject* value, void*) {       \
+    return set_flag(pymeth, value, flag, label);                             \
 }
 
-//-----------------------------------------------------------------------------
-static int mp_setlifeline(CPPOverload* pymeth, PyObject* value, void*)
-{
-// Set '__set_lifeline__' boolean, which determines whether a lifeline should be
-// set on self from the return value.
-    return set_flag(pymeth, value, CallContext::kSetLifeline, "__set_lifeline__");
-}
+CPPYY_BOOLEAN_PROPERTY(lifeline, CallContext::kSetLifeline, "__set_lifeline__")
+CPPYY_BOOLEAN_PROPERTY(threaded, CallContext::kReleaseGIL,  "__release_gil__")
+CPPYY_BOOLEAN_PROPERTY(useffi,   CallContext::kUseFFI,      "__useffi__")
+CPPYY_BOOLEAN_PROPERTY(sig2exc,  CallContext::kProtected,   "__sig2exc__")
 
-//-----------------------------------------------------------------------------
-static PyObject* mp_getthreaded(CPPOverload* pymeth, void*)
-{
-// Get '__release_gil__' boolean, which determines whether the GIL will be released.
-    return PyInt_FromLong(
-        (long)(pymeth->fMethodInfo->fFlags & CallContext::kReleaseGIL));
-}
-
-//-----------------------------------------------------------------------------
-static int mp_setthreaded(CPPOverload* pymeth, PyObject* value, void*)
-{
-// Set '__release_gil__' boolean, which determines whether the GIL will be released.
-    return set_flag(pymeth, value, CallContext::kReleaseGIL, "__release_gil__");
-}
-
-//-----------------------------------------------------------------------------
-static PyObject* mp_getuseffi(CPPOverload*, void*)
-{
-    return PyInt_FromLong(0); // dummy (__useffi__ unused)
-}
-
-//-----------------------------------------------------------------------------
-static int mp_setuseffi(CPPOverload*, PyObject*, void*)
-{
-    return 0;                 // dummy (__useffi__ unused)
-}
-
-
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyGetSetDef mp_getset[] = {
     {(char*)"__name__",   (getter)mp_name,   nullptr, nullptr, nullptr},
     {(char*)"__module__", (getter)mp_module, nullptr, nullptr, nullptr},
@@ -547,6 +525,8 @@ static PyGetSetDef mp_getset[] = {
       (char*)"If true, releases GIL on call into C++", nullptr},
     {(char*)"__useffi__",          (getter)mp_getuseffi, (setter)mp_setuseffi,
       (char*)"not implemented", nullptr},
+    {(char*)"__sig2exc__",         (getter)mp_getsig2exc, (setter)mp_setsig2exc,
+      (char*)"If true, turn signals into Python exceptions", nullptr},
     {(char*)nullptr, nullptr, nullptr, nullptr, nullptr}
 };
 
@@ -567,6 +547,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
     const auto mempolicy = (mflags & (CallContext::kUseHeuristics | CallContext::kUseStrict));
     ctxt.fFlags |= mempolicy ? mempolicy : (uint64_t)CallContext::sMemoryPolicy;
     ctxt.fFlags |= (mflags & CallContext::kReleaseGIL);
+    ctxt.fFlags |= (mflags & CallContext::kProtected);
     if (IsConstructor(pymeth->fMethodInfo->fFlags)) ctxt.fFlags |= CallContext::kIsConstructor;
 
 // magic variable to prevent recursion passed by keyword?
@@ -574,12 +555,8 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
         if (PyDict_DelItem(kwds, PyStrings::gNoImplicit) == 0) {
             ctxt.fFlags |= CallContext::kNoImplicit;
             if (!PyDict_Size(kwds)) kwds = nullptr;
-            else {
-                PyErr_SetString(PyExc_TypeError, "keyword arguments are not yet supported");
-                return nullptr;
-            }
         } else
-           PyErr_Clear();
+            PyErr_Clear();
     }
 
 // simple case
@@ -698,7 +675,7 @@ static PyObject* mp_str(CPPOverload* cppinst)
      return CPyCppyy_PyText_FromString(s.str().c_str());
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static CPPOverload* mp_descrget(CPPOverload* pymeth, CPPInstance* pyobj, PyObject*)
 {
 // Descriptor; create and return a new bound method proxy (language requirement) if self
@@ -745,7 +722,7 @@ static CPPOverload* mp_new(PyTypeObject*, PyObject*, PyObject*)
     return pymeth;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static void mp_dealloc(CPPOverload* pymeth)
 {
 // Deallocate memory held by method proxy object.
@@ -767,7 +744,7 @@ static void mp_dealloc(CPPOverload* pymeth)
     }
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static Py_ssize_t mp_hash(CPPOverload* pymeth)
 {
 // Hash of method proxy object for insertion into dictionaries; with actual
@@ -775,7 +752,7 @@ static Py_ssize_t mp_hash(CPPOverload* pymeth)
     return _Py_HashPointer(pymeth->fMethodInfo);
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static int mp_traverse(CPPOverload* pymeth, visitproc visit, void* args)
 {
 // Garbage collector traverse of held python member objects.
@@ -785,7 +762,7 @@ static int mp_traverse(CPPOverload* pymeth, visitproc visit, void* args)
     return 0;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static int mp_clear(CPPOverload* pymeth)
 {
 // Garbage collector clear of held python member objects.
@@ -794,7 +771,7 @@ static int mp_clear(CPPOverload* pymeth)
     return 0;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static PyObject* mp_richcompare(CPPOverload* self, CPPOverload* other, int op)
 {
 // Rich set of comparison objects; only equals is defined.
@@ -961,7 +938,7 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
         fMethodInfo->fFlags |= CallContext::kIsCreator;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void CPyCppyy::CPPOverload::AdoptMethod(PyCallable* pc)
 {
 // Fill in the data of a freshly created method proxy.
@@ -969,7 +946,7 @@ void CPyCppyy::CPPOverload::AdoptMethod(PyCallable* pc)
     fMethodInfo->fFlags &= ~CallContext::kIsSorted;
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void CPyCppyy::CPPOverload::MergeOverload(CPPOverload* meth)
 {
     if (!HasMethods()) // if fresh method being filled: also copy flags
@@ -981,7 +958,7 @@ void CPyCppyy::CPPOverload::MergeOverload(CPPOverload* meth)
     meth->fMethodInfo->fMethods.clear();
 }
 
-//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 CPyCppyy::CPPOverload::MethodInfo_t::~MethodInfo_t()
 {
 // Destructor (this object is reference counted).

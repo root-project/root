@@ -36,8 +36,9 @@ def _load_helper(bkname):
             for loc in ['lib', 'bin']:
                 fpath = os.path.join(pkgpath, loc, dep+soext)
                 if os.path.exists(fpath):
-                    dep = fpath
-                    ctypes.CDLL(dep, ctypes.RTLD_GLOBAL)
+                    ldtype = ctypes.RTLD_GLOBAL
+                    if dep == 'libCling': ldtype = ctypes.RTLD_LOCAL
+                    ctypes.CDLL(fpath, ldtype)
                     break
         return ctypes.CDLL(os.path.join(pkgpath, 'lib', bkname), ctypes.RTLD_GLOBAL)
     except OSError:

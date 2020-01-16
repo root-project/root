@@ -683,6 +683,7 @@ class TestADVANCEDCPP:
         assert len(cppyy.gbl.my_global_array) == 500
         assert cppyy.gbl.my_global_string1 == "aap  noot  mies"
         assert cppyy.gbl.my_global_string2 == "zus jet teun"
+        assert list(cppyy.gbl.my_global_string3) == ["aap", "noot", "mies"]
         # TODO: currently fails b/c double** not understood as &double*
         #assert cppyy.gbl.my_global_ptr[0] == 1234.
 
@@ -706,10 +707,13 @@ class TestADVANCEDCPP:
         assert raises(Exception, t.throw_anything)
         assert raises(Exception, t.throw_exception)
 
+        caught = False
         try:
             t.throw_exception()
         except Exception as e:
-            "C++ function failed" in str(e)
+            assert "C++ function failed" in str(e)
+            caught = True
+        assert caught == True
 
     def test23_using(self):
         """Accessibility of using declarations"""
@@ -761,7 +765,8 @@ class TestADVANCEDCPP:
         assert str(ns.Printable1()) == "Printable1::operator<<"
         for tst in [(ns.Printable2,         "Cpp2PyPrinting::operator<<"),
                     (ns.Printable3,         "::operator<<(3)"),
-                    (cppyy.gbl.Printable4,  "::operator<<(4)")]:
+                    (cppyy.gbl.Printable4,  "::operator<<(4)"),
+                    (cppyy.gbl.Printable6,  "Printable6")]:
             assert str(tst[0]()) == tst[1]
             assert '__lshiftc__' in tst[0].__dict__
             assert tst[0].__lshiftc__

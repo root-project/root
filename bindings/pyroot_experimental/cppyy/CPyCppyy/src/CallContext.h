@@ -12,29 +12,34 @@ namespace CPyCppyy {
 // small number that allows use of stack for argument passing
 const int SMALL_ARGS_N = 8;
 
+#ifndef CPYCPPYY_PARAMETER
+#define CPYCPPYY_PARAMETER
 // general place holder for function parameters
 struct Parameter {
     union Value {
-        bool           fBool;
-        int8_t         fInt8;
-        uint8_t        fUInt8;
-        short          fShort;
-        unsigned short fUShort;
-        Int_t          fInt;
-        UInt_t         fUInt;
-        Long_t         fLong;
-        intptr_t       fIntPtr;
-        ULong_t        fULong;
-        Long64_t       fLLong;
-        ULong64_t      fULLong;
-        float          fFloat;
-        double         fDouble;
-        LongDouble_t   fLDouble;
-        void*          fVoidp;
+        bool                 fBool;
+        int8_t               fInt8;
+        uint8_t              fUInt8;
+        short                fShort;
+        unsigned short       fUShort;
+        int                  fInt;
+        unsigned int         fUInt;
+        long                 fLong;
+        intptr_t             fIntPtr;
+        unsigned long        fULong;
+        long long            fLLong;
+        unsigned long long   fULLong;
+        int64_t              fInt64;
+        uint64_t             fUInt64;
+        float                fFloat;
+        double               fDouble;
+        long double          fLDouble;
+        void*                fVoidp;
     } fValue;
     void* fRef;
     char  fTypeCode;
 };
+#endif // CPYCPPYY_PARAMETER
 
 // extra call information
 struct CallContext {
@@ -55,9 +60,10 @@ struct CallContext {
         kUseStrict      = 0x0080, // if method applies strict memory policy
         kReleaseGIL     = 0x0100, // if method should release the GIL
         kSetLifeline    = 0x0200, // if return value is part of 'this'
-        kFast           = 0x0400, // if method should NOT handle signals
-        kSafe           = 0x0800, // if method should return on signals
-        kIsPseudoFunc   = 0x1000, // internal, used for introspection
+        kNeverLifeLine  = 0x0400, // if the return value is never part of 'this'
+        kProtected      = 0x0800, // if method should return on signals
+        kUseFFI         = 0x1000, // not implemented
+        kIsPseudoFunc   = 0x2000, // internal, used for introspection
     };
 
 // memory handling
@@ -69,7 +75,7 @@ struct CallContext {
 
 // signal safety
     static ECallFlags sSignalPolicy;
-    static bool SetSignalPolicy(ECallFlags e);
+    static bool SetGlobalSignalPolicy(bool setProtected);
 
     Parameter* GetArgs(size_t sz) {
         if (sz != (size_t)-1) fNArgs = sz;

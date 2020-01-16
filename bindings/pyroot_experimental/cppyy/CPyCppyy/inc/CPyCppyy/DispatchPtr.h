@@ -1,5 +1,5 @@
-#ifndef CPYCPPYY_DISPATCHPTR
-#define CPYCPPYY_DISPATCHPTR
+#ifndef CPYCPPYY_DISPATCHPTR_H
+#define CPYCPPYY_DISPATCHPTR_H
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
@@ -20,7 +20,7 @@
 
 namespace CPyCppyy {
 
-class CPYCPPYY_CLASS_EXPORT DispatchPtr {
+class CPYCPPYY_CLASS_EXTERN DispatchPtr {
 public:
 // Default constructor: only ever created from C++, as by definition, creation
 // from the Python side makes the relevant Python instance available. Calls to
@@ -76,4 +76,4 @@ private:
 
 } // namespace CPyCppyy
 
-#endif // !CPYCPPYY_DISPATCHPTR
+#endif // !CPYCPPYY_DISPATCHPTR_H

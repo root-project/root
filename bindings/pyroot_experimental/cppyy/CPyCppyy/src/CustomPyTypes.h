@@ -86,9 +86,11 @@ extern PyTypeObject IndexIter_Type;
 
 class Converter;
 struct vectoriterobject : public indexiterobject {
-    CPyCppyy::Converter*     vi_converter;
     void*                    vi_data;
     Py_ssize_t               vi_stride;
+    CPyCppyy::Converter*     vi_converter;
+    Cppyy::TCppType_t        vi_klass;
+    int                      vi_flags;
 };
 
 extern PyTypeObject VectorIter_Type;

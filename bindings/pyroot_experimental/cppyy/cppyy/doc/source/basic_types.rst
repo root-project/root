@@ -1,7 +1,7 @@
 .. _basic_types:
 
 
-Basic Types
+Basic types
 ===========
 
 C++ has a far richer set of builtin types than Python.
@@ -82,6 +82,7 @@ These datatypes have completely different memory layouts, however, and the
 out consecutively in memory.
 Conversion thus requires type checks, memory allocation, and copies.
 This can be rather expensive.
+See the section on :ref:`STL <stl>`.
 
 
 `Arrays`

@@ -37,26 +37,33 @@ int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p);
 class TestMoving1 {          // for move ctors etc.
 public:
     static int s_move_counter;
+    static int s_instance_counter;
 
 public:
-    TestMoving1() {}
-    TestMoving1(TestMoving1&&) { ++s_move_counter; }
-    TestMoving1(const TestMoving1&) {}
+    TestMoving1() { ++s_instance_counter; }
+    TestMoving1(TestMoving1&&) { ++s_move_counter; ++s_instance_counter; }
+    TestMoving1(const TestMoving1&) { ++s_instance_counter; }
     TestMoving1& operator=(TestMoving1&&) { ++s_move_counter; return *this; }
     TestMoving1& operator=(TestMoving1&) { return *this; }
+    ~TestMoving1() { --s_instance_counter; }
 };
 
 class TestMoving2 {          // note opposite method order from TestMoving1
 public:
     static int s_move_counter;
+    static int s_instance_counter;
 
 public:
-    TestMoving2() {}
-    TestMoving2(const TestMoving2&) {}
-    TestMoving2(TestMoving2&& other) { ++s_move_counter; }
+    TestMoving2() { ++s_instance_counter; }
+    TestMoving2(const TestMoving1&) { ++s_instance_counter; }
+    TestMoving2(const TestMoving2&) { ++s_instance_counter; }
+    TestMoving2(TestMoving2&& other) { ++s_move_counter; ++s_instance_counter; }
     TestMoving2& operator=(TestMoving2&) { return *this; }
     TestMoving2& operator=(TestMoving2&&) { ++s_move_counter; return *this; }
+    ~TestMoving2() { --s_instance_counter; }
 };
+
+void implicit_converion_move(TestMoving2&&);
 
 
 //===========================================================================
@@ -95,5 +102,17 @@ namespace FunctionNS {
     struct FNTestStruct { FNTestStruct(int i) : t(i) {} int t; };
     std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc();
 }
+
+
+//===========================================================================
+struct StructWithHash {};    // for std::hash<> testing
+struct StructWithoutHash {};
+
+namespace std {
+    template<>
+    struct hash<StructWithHash> {
+        size_t operator()(const StructWithHash&) const { return 17; }
+    };
+} // namespace std
 
 #endif // c++11 and later

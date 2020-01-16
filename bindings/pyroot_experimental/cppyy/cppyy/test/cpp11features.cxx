@@ -25,7 +25,13 @@ int pass_shared_ptr(std::shared_ptr<TestSharedPtr> p) {
 
 // for move ctors etc.
 int TestMoving1::s_move_counter = 0;
+int TestMoving1::s_instance_counter = 0;
 int TestMoving2::s_move_counter = 0;
+int TestMoving2::s_instance_counter = 0;
+
+void implicit_converion_move(TestMoving2&&) {
+    /* empty */
+}
 
 
 // for std::function testing

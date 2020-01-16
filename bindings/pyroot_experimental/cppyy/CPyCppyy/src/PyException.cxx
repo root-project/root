@@ -1,6 +1,8 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "CPyCppyy/TPyException.h"
+#define CPYCPPYY_INTERNAL 1
+#include "CPyCppyy/PyException.h"
+#undef CPYCPPYY_INTERNAL
 
 
 //______________________________________________________________________________
@@ -17,19 +19,19 @@
 
 
 //- constructors/destructor --------------------------------------------------
-CPyCppyy::TPyException::TPyException()
+CPyCppyy::PyException::PyException()
 {
 // default constructor
 }
 
-CPyCppyy::TPyException::~TPyException() noexcept
+CPyCppyy::PyException::~PyException() noexcept
 {
 // destructor
 }
 
 
 //- public members -----------------------------------------------------------
-const char* CPyCppyy::TPyException::what() const noexcept
+const char* CPyCppyy::PyException::what() const noexcept
 {
 // Return reason for throwing this exception: a python exception was raised.
     return "python exception";

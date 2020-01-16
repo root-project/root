@@ -19,7 +19,19 @@
 
   <variable pattern="str_array_*" />
 
+  <namespace name="UnicodeAndSTL" />
+  <function pattern="UnicodeAndSTL::*" />
+
   <namespace name="StringViewTest" />
   <function pattern="StringViewTest::*" />
+
+  <class name="std::exception" />
+  <class name="MyError" />
+  <class name="YourError" />
+  <namespace name="ErrorNamespace" />
+  <class pattern="ErrorNamespace::*" />
+  <function pattern="ErrorNamespace::*" />
+
+  <function name="GetMyErrorCount" />
 
 </lcgdict>

@@ -1,7 +1,7 @@
 .. _type_conversions:
 
 
-Type Conversions
+Type conversions
 ================
 
 Most type conversions are done automatically, e.g. between Python ``str``

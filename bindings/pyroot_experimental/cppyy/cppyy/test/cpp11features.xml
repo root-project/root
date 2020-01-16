@@ -14,4 +14,7 @@
   <struct name="FunctionNS::FNTestStruct" />
   <function name="FunctionNS::FNCreateTestStructFunc()" />
 
+  <struct name="StructWithHash" />
+  <struct name="StructWithoutHash" />
+
 </lcgdict>

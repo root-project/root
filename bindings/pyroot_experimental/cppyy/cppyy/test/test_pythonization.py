@@ -224,6 +224,38 @@ class TestClassPYTHONIZATION:
         # associative  container, with 'index' a key, not a counter
         #raises(IndexError, d.__getitem__, 1)
 
+    def test09_cpp_side_pythonization(self):
+        """Use of C++ side pythonizations"""
+
+        import cppyy
+
+      # explicit pythonization
+        for kls in [cppyy.gbl.pyzables.WithCallback1, cppyy.gbl.pyzables.WithCallback2]:
+            w = kls(42)
+            assert hasattr(w, 'GetInt')
+            assert not hasattr(w, 'get_int')
+            assert w.GetInt() == 42
+
+            assert hasattr(w, 'SetInt')
+            assert not hasattr(w, 'set_int')
+            w.SetInt(17)
+            assert w.GetInt() == 17
+
+            assert kls.klass_name == kls.__cpp_name__
+
+      # up-the-hierarchy pythonization
+        w = cppyy.gbl.pyzables.WithCallback3(42)
+        assert hasattr(w, 'GetInt')
+        assert not hasattr(w, 'get_int')
+        assert w.GetInt() == 2*42
+
+        assert hasattr(w, 'SetInt')
+        assert not hasattr(w, 'set_int')
+        w.SetInt(17)
+        assert w.GetInt() == 4*17
+
+        assert cppyy.gbl.pyzables.WithCallback2.klass_name == 'pyzables::WithCallback3'
+
 
 ## actual test run
 if __name__ == '__main__':

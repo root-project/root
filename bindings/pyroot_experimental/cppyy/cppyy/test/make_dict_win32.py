@@ -1,5 +1,7 @@
 import glob, os, sys, subprocess
 
+USES_PYTHON_CAPI = set(('pythonizables',))
+
 fn = sys.argv[1]
 
 if fn == 'all':
@@ -9,6 +11,16 @@ if fn == 'all':
         if res != 0:
             sys.exit(res)
     sys.exit(0)
+else:
+    if fn[-4:] == '.cxx': fn = fn[:-4]
+    elif fn[-2:] == '.h': fn = fn[:-2]
+    if not os.path.exists(fn+'.h'):
+        print("file %s.h does not exist" % (fn,))
+        sys.exit(1)
+
+uses_python_capi = False
+if fn in USES_PYTHON_CAPI:
+    uses_python_capi = True
 
 if os.path.exists(fn+'Dict.dll'):
     dct_time = os.stat(fn+'Dict.dll').st_mtime
@@ -35,6 +47,14 @@ def get_config(what):
     cli_arg = subprocess.check_output(config_exec_args)
     return cli_arg.decode("utf-8").strip()
 
+def get_python_include_dir():
+    incdir = subprocess.check_output([sys.executable, '-c', "import sysconfig; print(sysconfig.get_path('include'))"])
+    return incdir.decode("utf-8").strip()
+
+def get_python_lib_dir():
+    libdir = subprocess.check_output([sys.executable, '-c', "import sysconfig; print(sysconfig.get_path('stdlib'))"])
+    return os.path.join(os.path.dirname(libdir.decode("utf-8").strip()), 'libs')
+
 # genreflex option
 #DICTIONARY_CMD = "genreflex {fn}.h --selection={fn}.xml --rootmap={fn}Dict.rootmap --rootmap-lib={fn}Dict.dll".format(fn=fn)
 
@@ -56,6 +76,8 @@ else:
     MACHINETYPE  = 'IX86'
 
 cppflags = get_config('cppflags')
+if uses_python_capi:
+    cppflags += ' -I"' + get_python_include_dir() + '"'
 BUILDOBJ_CMD_PART = "cl -O2 -nologo -TP -c -nologo " + cppflags + " -FIsehmap.h -Zc:__cplusplus -MD -GR -D_WINDOWS -DWIN32 " + PLATFORMFLAG + " -EHsc- -W3 -wd4141 -wd4291 -wd4244 -wd4049 -D_XKEYCHECK_H -D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER -DNOMINMAX -D_CRT_SECURE_NO_WARNINGS {fn}.cxx -Fo{fn}.obj"
 BUILDOBJ_CMD = BUILDOBJ_CMD_PART.format(fn=fn)
 if os.system(BUILDOBJ_CMD):
@@ -69,11 +91,14 @@ CREATEDEF_CMD = "python bindexplib.py {fn} {fn}Dict".format(fn=fn)
 if os.system(CREATEDEF_CMD):
     sys.exit(1)
 
-CREATELIB_CMD = "lib -nologo -MACHINE:" + MACHINETYPE + " -out:{fn}Dict.lib {fn}.obj {fn}_rflx.obj -def:{fn}Dict.def".format(fn=fn)
+ldflags = ''
+if uses_python_capi:
+    ldflags = ' /LIBPATH:"' + get_python_lib_dir() + '" '
+CREATELIB_CMD = ("lib -nologo -MACHINE:" + MACHINETYPE + " -out:{fn}Dict.lib {fn}.obj {fn}_rflx.obj -def:{fn}Dict.def " + ldflags).format(fn=fn)
 if os.system(CREATELIB_CMD):
     sys.exit(1)
 
-ldflags = get_config('ldflags')
+ldflags += get_config('ldflags')
 LINKDLL_CMD = ("link -nologo {fn}.obj {fn}_rflx.obj -DLL -out:{fn}Dict.dll {fn}Dict.exp " + ldflags).format(fn=fn)
 if os.system(LINKDLL_CMD):
     sys.exit(1)

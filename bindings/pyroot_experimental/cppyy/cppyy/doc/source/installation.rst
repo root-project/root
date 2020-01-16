@@ -3,7 +3,7 @@
 Installation
 ============
 
-``cppyy`` requires a (modern) C++ compiler.
+cppyy requires a (modern) C++ compiler.
 When installing through `conda-forge`_, ``conda`` will install the compiler
 for you, to match the other conda-forge packages.
 When using ``pip`` and the wheels from `PyPI`_, you minimally need gcc5,
@@ -12,11 +12,11 @@ When installing from source, the only requirement is full support for C++11
 (e.g. minimum gcc 4.8.1 on GNU/Linux), but older compilers than the ones
 listed for the wheels have not been tested.
 
-With CPython on Linux or Mac, probably by far the easiest way to install
-``cppyy``, is through conda-forge on `Anaconda`_ (or `miniconda`_).
+With CPython on Linux or MacOS, probably by far the easiest way to install
+cppyy, is through conda-forge on `Anaconda`_ (or `miniconda`_).
 A Windows recipe for ``conda`` is not available yet, but is forthcoming, so
 use ``pip`` for that platform for now (see below).
-PyPI always has the authoratative releases (conda-forge pulls the sources
+PyPI always has the authoritative releases (conda-forge pulls the sources
 from there), so conda-forge may sometimes lag PyPI.
 If you absolutely need the latest release, use PyPI or consider
 :ref:`building from source <building_from_source>`.
@@ -44,7 +44,7 @@ If you use the ``--user`` option to ``pip`` and use ``pip`` directly on the
 command line, instead of through ``python``, make sure that the ``PATH``
 envar points to the bin directory that will contain the installed entry
 points during the installation, as the build process needs them.
-You may also need to install ``wheel`` first, if you have an older version of
+You may also need to install ``wheel`` first if you have an older version of
 ``pip`` and/or do not use virtualenv (which installs wheel by default).
 Example::
 
@@ -52,16 +52,16 @@ Example::
  $ PATH=$HOME/.local/bin:$PATH python -m pip install cppyy --user
 
 
-Pre-compiled wheels on PyPI
----------------------------
+Wheels on PyPI
+--------------
 
 Wheels for the backend (``cppyy-cling``) are available on PyPI for GNU/Linux,
 MacOS-X, and MS Windows (both 32b and 64b).
 
 The Linux wheels are built on manylinux, but with gcc 5.5, not the 4.8.2 that
-ships with manylinux1, since ``cppyy`` exposes C++ APIs and g++ introduced
+ships with manylinux1, since cppyy exposes C++ APIs and g++ introduced
 ABI incompatibilities starting with its 5 series forward.
-Using 4.8.2 would have meant that any software using ``cppyy`` would have to
+Using 4.8.2 would have meant that any software using cppyy would have to
 be (re)compiled for the older gcc ABI, which the odds don't favor.
 Note that building cppyy fully with 4.8.2 (and requiring the old ABI across
 the board) does work.
@@ -72,8 +72,8 @@ There are no wheels for the ``CPyCppyy`` and ``cppyy`` packages, to allow
 the C++ standard chosen to match the local compiler.
 
 
-Combining conda and pip
------------------------
+pip with conda
+--------------
 
 Although installing ``cppyy`` through `conda-forge`_ is recommended, it is
 possible to build/install with ``pip`` under Anaconda/miniconda.
@@ -81,25 +81,23 @@ possible to build/install with ``pip`` under Anaconda/miniconda.
 Typical Python extensions only expose a C interface for use through the
 Python C-API, requiring only calling conventions (and the Python C-API
 version, of course) to match to be binary compatible.
-Here, ``cppyy`` differs because it exposes C++ APIs, among others as part of
-its bootstrap, meaning that it needs a C++ run-time that is ABI compatible
-with the C++ compiler that was used during build-time.
+Here, cppyy differs because it exposes C++ APIs: it thus requires a C++
+run-time that is ABI compatible with the C++ compiler that was used during
+build-time.
 
-There is a set of modern compilers available through conda-forge, but it is
-only intended to be used through ``conda-build``.
-In particular, it does not set up the corresponding run-time (it does install
-it, for use through rpath when building).
-For example, it adds the conda compilers to ``PATH`` but not their libraries
-to ``LD_LIBRARY_PATH`` (this for Mac and Linux; MS Windows uses ``PATH`` for
-both executables and libraries).
-The upshot is that you get the cond compilers and your system libraries mixed
-in the same environment, unless you set ``LD_LIBRARY_PATH`` yourself,
-e.g. by adding ``$CONDA_PREFIX/lib``.
-That is, however, not recommended per the conda documentation.
-Furthermore, the compilers pulled in from conda-forge are not their vanilla
-distributions: header files have been modified.
-This can lead to parsing problems if your system C library does not support
-C11, for example.
+A set of modern compilers is available through conda-forge, but are only
+intended for use with ``conda-build``.
+In particular, the corresponding run-time is installed (for use through rpath
+when building), but not set up.
+That is, the conda compilers are added to ``PATH`` but not their libraries
+to ``LD_LIBRARY_PATH`` (Mac, Linux; ``PATH`` for both on MS Windows).
+Thus, you get the conda compilers and your system libraries mixed in the same
+build environment, unless you set ``LD_LIBRARY_PATH`` (``PATH`` on Windows)
+explicitly, e.g. by adding ``$CONDA_PREFIX/lib``.
+Note that the conda documentation recommends against this.
+Furthermore, the compilers from conda-forge are not vanilla distributions:
+header files have been modified, which can can lead to parsing problems if
+your system C library does not support C11, for example.
 
 Nevertheless, with the above caveats, if your system C/C++ run-times are new
 enough, the following can be made to work::
@@ -111,8 +109,8 @@ enough, the following can be made to work::
  (WORK) [current compiler] $ python -m pip install cppyy
 
 
-Switching C++ standard with pip
--------------------------------
+C++ standard with pip
+---------------------
 
 The C++17 standard is the default for Mac and Linux (both PyPI and
 conda-forge); but it is C++14 for MS Windows (compiler limitation).
@@ -123,38 +121,28 @@ Note that the build will lower your choice if the compiler used does not
 support a newer standard.
 
 
-Installing from source
-----------------------
+Install from source
+-------------------
 .. _installation_from_source:
 
-The easiest way to install completely from source is again to use ``pip`` and
-simply tell it to use the source distribution.
+To build an existing release from source, tell ``pip`` to not download any
+binary wheels.
 Build-time only dependencies are ``cmake`` (for general build), ``python``
 (obviously, but also for LLVM), and a modern C++ compiler (one that supports
 at least C++11).
-Besides ``STDCXX`` to control the C++ standard version, you can use ``MAKE``
-to change the ``make`` command and ``MAKE_NPROCS`` to control the maximum
-number of parallel jobs.
-For example (using ``--verbose`` to see progress)::
+Use the envar ``STDCXX`` to control the C++ standard version; ``MAKE`` to
+change the ``make`` command, ``MAKE_NPROCS`` to control the maximum number of
+parallel jobs allowed, and ``VERBOSE=1`` to see full build/compile commands.
+Example (using ``--verbose`` to see ``pip`` progress)::
 
  $ STDCXX=17 MAKE_NPROCS=32 pip install --verbose cppyy --no-binary=cppyy-cling
-
-The wheel of ``cppyy-cling`` is reused by pip for all versions of CPython and
-PyPy, thus the long compilation is needed only once for all different
-versions of Python on the same machine.
-
-On MS Windows, some temporary path names may be too long, causing the build to
-fail.
-To resolve this issue, set the ``TMP`` and ``TEMP`` envars to something short,
-before building.
-For example::
-
- > set TMP=C:\TMP
- > set TEMP=C:\TMP
 
 Compilation of the backend, which contains a customized version of
 Clang/LLVM, can take a long time, so by default the setup script will use all
 cores (x2 if hyperthreading is enabled).
+Once built, however, the wheel of ``cppyy-cling`` is reused by pip for all
+versions of CPython and for PyPy, thus the long compilation is needed only
+once for all different versions of Python on the same machine.
 
 See the :ref:`section on repos <building_from_source>` for more
 details/options.
@@ -164,16 +152,16 @@ PyPy
 ----
 
 PyPy 5.7 and 5.8 have a built-in module ``cppyy``.
-You can still install the ``cppyy`` package, but the built-in module takes
+You can still install the cppyy package, but the built-in module takes
 precedence.
-To use ``cppyy``, first import a compatibility module::
+To use cppyy, first import a compatibility module::
 
  $ pypy
  [PyPy 5.8.0 with GCC 5.4.0] on linux2
  >>>> import cppyy_compat, cppyy
  >>>>
 
-You will have to set ``LD_LIBRARY_PATH`` appropriately if you get an
+You may have to set ``LD_LIBRARY_PATH`` appropriately if you get an
 ``EnvironmentError`` (it will indicate the needed directory).
 
 Note that your python interpreter (whether CPython or ``pypy-c``) may not have
@@ -181,13 +169,13 @@ been linked by the C++ compiler.
 This can lead to problems during loading of C++ libraries and program shutdown.
 In that case, re-linking is highly recommended.
 
-Older versions of PyPy (5.6.0 and earlier) have a built-in ``cppyy`` based on
-`Reflex`_, which is less feature-rich and no longer supported.
-However, both the :doc:`distribution tools <dictionaries>` and user-facing
-Python codes are very backwards compatible.
+Very old versions of PyPy (5.6.0 and earlier) have a built-in ``cppyy`` based
+on `Reflex`_, which is less feature-rich and no longer supported.
+However, both the :doc:`distribution utilities <utilities>` and user-facing
+Python codes are very backwards compatible, making migration straightforward.
 
 
-Precompiled Header
+Precompiled header
 ------------------
 
 For performance reasons (reduced memory and CPU usage), a precompiled header
@@ -203,7 +191,8 @@ what is active in the PCH.
 In principle, you can also change the C++ language standard by setting the
 appropriate flag on ``EXTRA_CLING_ARGS`` and rebuilding the PCH.
 However, if done at this stage, that disables some automatic conversion for
-C++ types that were introduced after C++11 (such as string_view and optional).
+C++ types that were introduced after C++11 (such as ``string_view`` and
+``optional``).
 
 If you want multiple PCHs living side-by-side, you can generate them
 yourself (note that the given path must be absolute)::

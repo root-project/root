@@ -100,8 +100,21 @@ gbl.std.move  = _backend.move
 #- add to the dynamic path as needed -----------------------------------------
 import os
 def add_default_paths():
+    gSystem = gbl.gSystem
+    if os.getenv('CONDA_PREFIX'):
+      # MacOS, Linux
+        lib_path = os.path.join(os.getenv('CONDA_PREFIX'), 'lib')
+        if os.path.exists(lib_path): gSystem.AddDynamicPath(lib_path)
+
+      # Windows
+        lib_path = os.path.join(os.getenv('CONDA_PREFIX'), 'Library', 'lib')
+        if os.path.exists(lib_path): gSystem.AddDynamicPath(lib_path)
+
+  # assuming that we are in PREFIX/lib/python/site-packages/cppyy, add PREFIX/lib to the search path
+    lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, os.path.pardir))
+    if os.path.exists(lib_path): gSystem.AddDynamicPath(lib_path)
+
     try:
-        gSystem = gbl.gSystem
         with open('/etc/ld.so.conf') as ldconf:
             for line in ldconf:
                 f = line.strip()

@@ -140,9 +140,11 @@ class TestCPP11FEATURES:
     def test06_move(self):
         """Move construction, assignment, and methods"""
 
-        import cppyy
+        import cppyy, gc
 
         def moveit(T):
+            assert T.s_instance_counter == 0
+
             from cppyy.gbl import std
 
           # move constructor
@@ -177,10 +179,23 @@ class TestCPP11FEATURES:
             i4.__assign__(std.move(i2))
             assert T.s_move_counter == 5
 
+            del i1, i2, i3, i4
+            gc.collect()
+            assert T.s_instance_counter == 0
+
       # order of moving and normal functions are reversed in 1, 2, for
       # overload resolution testing
         moveit(cppyy.gbl.TestMoving1)
         moveit(cppyy.gbl.TestMoving2)
+
+      # implicit conversion and move
+        assert cppyy.gbl.TestMoving1.s_instance_counter == 0
+        assert cppyy.gbl.TestMoving2.s_instance_counter == 0
+        cppyy.gbl.implicit_converion_move(cppyy.gbl.TestMoving1())
+        cppyy.gbl.implicit_converion_move(cppyy.gbl.TestMoving2())
+        gc.collect()
+        assert cppyy.gbl.TestMoving1.s_instance_counter == 0
+        assert cppyy.gbl.TestMoving2.s_instance_counter == 0
 
     def test07_initializer_list(self):
         """Initializer list construction"""
@@ -289,3 +304,18 @@ class TestCPP11FEATURES:
         t = FunctionNS.FNTestStruct(27)
         f = FunctionNS.FNCreateTestStructFunc()
         assert f(t) == 27
+
+    def test12_stdhash(self):
+        """Use of std::hash"""
+
+        import cppyy
+        from cppyy.gbl import StructWithHash, StructWithoutHash
+
+        for i in range(3):   # to test effect of caching
+            swo = StructWithoutHash()
+            assert hash(swo) == object.__hash__(swo)
+            assert hash(swo) == object.__hash__(swo)
+
+            sw = StructWithHash()
+            assert hash(sw)  == 17
+            assert hash(sw)  == 17

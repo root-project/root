@@ -1,6 +1,6 @@
 import py, os, sys
 from pytest import raises
-from .support import setup_make
+from .support import setup_make, IS_WINDOWS
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = str(currpath.join("fragileDict"))
@@ -46,7 +46,7 @@ class TestFRAGILE:
         assert fragile.B is fragile.B
         assert fragile.B == fragile.B
         assert fragile.B().check() == ord('B')
-        raises(AttributeError, getattr, fragile.B().gime_no_such(), "_cpp_proxy")
+        assert not fragile.B().gime_no_such()
 
         assert fragile.C is fragile.C
         assert fragile.C == fragile.C
@@ -409,3 +409,51 @@ class TestFRAGILE:
         assert not 'ESysConstants' in dd
         assert not 'kDoRed' in dd
 
+
+class TestSIGNALS:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.fragile = cppyy.load_reflection_info(cls.test_dct)
+
+    def test01_abortive_signals(self):
+        """Conversion from abortive signals to Python exceptions"""
+
+        import cppyy
+        import cppyy.ll
+
+        f = cppyy.gbl.fragile
+
+        assert issubclass(cppyy.ll.BusError,               cppyy.ll.FatalError)
+        assert issubclass(cppyy.ll.SegmentationViolation,  cppyy.ll.FatalError)
+        assert issubclass(cppyy.ll.IllegalInstruction,     cppyy.ll.FatalError)
+        assert issubclass(cppyy.ll.AbortSignal,            cppyy.ll.FatalError)
+
+        import os
+        os.putenv('CPPYY_CRASH_QUIET', '1')
+
+        with raises((cppyy.ll.SegmentationViolation, cppyy.ll.IllegalInstruction)):
+            with cppyy.ll.signals_as_exception():
+                f.segfault()
+
+        with raises(cppyy.ll.AbortSignal):
+            with cppyy.ll.signals_as_exception():
+                f.sigabort()
+
+      # can only recover once from each error on Windows, which is functionally
+      # enough, but precludes further testing here
+        if not IS_WINDOWS:
+            cppyy.ll.set_signals_as_exception(True)
+            with raises((cppyy.ll.SegmentationViolation, cppyy.ll.IllegalInstruction)):
+                f.segfault()
+            with raises(cppyy.ll.AbortSignal):
+                f.sigabort()
+            cppyy.ll.set_signals_as_exception(False)
+
+            f.segfault.__sig2exc__ = True
+            with raises((cppyy.ll.SegmentationViolation, cppyy.ll.IllegalInstruction)):
+                f.segfault()
+
+            f.sigabort.__sig2exc__ = True
+            with raises(cppyy.ll.AbortSignal):
+                f.sigabort()

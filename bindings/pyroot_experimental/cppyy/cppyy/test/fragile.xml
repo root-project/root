@@ -36,4 +36,7 @@
 
   <function pattern="fragile::f*" />
 
+  <function name="fragile::segfault" />
+  <function name="fragile::sigabort" />
+
 </lcgdict>

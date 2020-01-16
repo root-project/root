@@ -1,3 +1,7 @@
+#ifndef CPPYY_TEST_STLTYPES_H
+#define CPPYY_TEST_STLTYPES_H
+
+#include <exception>
 #include <list>
 #include <map>
 #include <string>
@@ -168,6 +172,21 @@ extern std::string str_array_3[3][2];
 extern std::string str_array_4[4][2][2];
 
 
+// helpers for mixing unicode and std::string
+namespace UnicodeAndSTL {
+    size_t get_size(std::string s);
+    size_t get_size_cr(const std::string& s);
+    size_t get_size_cc(const char* s);
+    size_t get_size_w(std::wstring s);
+    size_t get_size_wcr(const std::wstring& s);
+    std::string  get_string(std::string s);
+    std::string  get_string_cr(const std::string& s);
+    std::string  get_string_cc(const char* s);
+    std::wstring get_string_w(std::wstring s);
+    std::wstring get_string_wcr(const std::wstring& s);
+}
+
+
 // helpers for string_view testing
 #if __cplusplus > 201402L
 namespace StringViewTest {
@@ -175,3 +194,54 @@ namespace StringViewTest {
     std::string_view::size_type count_cr(const std::string_view& arg);
 }
 #endif
+
+
+// helper for exception base class testing
+class MyError : public std::exception {
+public:
+    static int s_count;
+    static int get_count();
+
+public:
+    explicit MyError(const std::string& msg);
+    MyError(const MyError&);
+#ifndef WIN32
+    MyError(const MyError&&) = delete;
+#endif
+    virtual ~MyError();
+    MyError& operator=(const MyError&) = default;
+    const char* what() const throw() override;
+
+private:
+    std::string fMsg;
+};
+
+int GetMyErrorCount();
+
+class YourError : public MyError {
+public:
+    explicit YourError(const std::string& msg);
+    YourError(const YourError& s);
+};
+
+namespace ErrorNamespace {
+
+class MyError : public std::exception {
+public:
+    explicit MyError(const std::string& msg);
+    const char* what() const throw() override;
+
+private:
+    std::string fMsg;
+};
+
+class YourError : public MyError {
+public:
+    using MyError::MyError;
+};
+
+void throw_error(int i);
+
+} // ErrorNamespace
+
+#endif // !CPPYY_TEST_STLTYPES_H

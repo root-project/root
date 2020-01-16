@@ -19,27 +19,37 @@ def main():
             break
         rc_idx += 1
 
+    linkdef = None
+    if sys.argv and 'linkdef.h' in sys.argv[-1].lower() or \
+            sys.argv[-1][-4:] == '.xml':
+        linkdef = sys.argv[-1]
+        sysargs = sys.argv[:-1]
+    else:
+        sysargs = sys.argv[:]
+
     if extra_flags is not None:
       # rootcling is picky about order ...
         args = list()
         try:
             check_idx = rc_idx+1
-            if sys.argv[check_idx].find('-v', 0, 2) == 0:
-                args.append(sys.argv[check_idx])
+            if sysargs[check_idx].find('-v', 0, 2) == 0:
+                args.append(sysargs[check_idx])
                 check_idx += 1
-            if sys.argv[check_idx] == '-f':
-                args += sys.argv[check_idx:check_idx+2]
+            if sysargs[check_idx] == '-f':
+                args += sysargs[check_idx:check_idx+2]
                 check_idx += 2
           # skip past either an output file or input header
-            while sys.argv[check_idx][0] != '-':
-                args.append(sys.argv[check_idx])
+            while sysargs[check_idx][0] != '-':
+                args.append(sysargs[check_idx])
                 check_idx += 1
         except IndexError:
             pass
         if args:
-            args = args + ['-cxxflags', extra_flags] + sys.argv[check_idx:]
+            args = args + ['-cxxflags', extra_flags] + sysargs[check_idx:]
         else:
-            args = sys.argv[rc_idx+1:] + ['-cxxflags', extra_flags]
+            args = sysargs[rc_idx+1:] + ['-cxxflags', extra_flags]
+        if linkdef:
+            args.append(linkdef)
     else:
        args = sys.argv[1:]
 
