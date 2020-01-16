@@ -1,5 +1,5 @@
-#ifndef CPYCPPYY_TPYARG
-#define CPYCPPYY_TPYARG
+#ifndef CPYCPPYY_TPYARG_H
+#define CPYCPPYY_TPYARG_H
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
@@ -20,7 +20,7 @@ typedef _object PyObject;
 #include "CPyCppyy/CommonDefs.h"
 
 
-class CPYCPPYY_CLASS_EXPORT TPyArg {
+class CPYCPPYY_CLASS_EXTERN TPyArg {
 public:
 // converting constructors
     TPyArg(PyObject*);
@@ -49,4 +49,4 @@ private:
     mutable PyObject* fPyObject;        //! converted C++ value as python object
 };
 
-#endif // !CPYCPPYY_TPYARG
+#endif // !CPYCPPYY_TPYARG_H

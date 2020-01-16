@@ -12,6 +12,7 @@ set(py_sources
   cppyy_backend/_rootcling.py
   cppyy_backend/bindings_utils.py
   cppyy_backend/loader.py
+  cppyy_backend/_get_cppflags.py
 )
 
 foreach(py_source ${py_sources})

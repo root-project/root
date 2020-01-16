@@ -130,4 +130,9 @@ typedef OpaqueType* OpaqueHandle_t;
 int create_handle(OpaqueHandle_t* handle);
 int destroy_handle(OpaqueHandle_t handle, intptr_t addr);
 
+
+// for signal -> exception testing
+void segfault();
+void sigabort();
+
 } // namespace fragile

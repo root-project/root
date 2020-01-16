@@ -392,6 +392,104 @@ class TestPYTHONIFY:
 
         assert cppyy.gbl.Lifeline.gime(42).get()[0].get()[0].get()[0].get()[0].x == 42
 
+    def test18_keywords(self):
+        """Use of keyword arguments"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace KeyWords {
+        struct A {
+ 	    A(std::initializer_list<int> vals) : fVals(vals) {}
+            std::vector<int> fVals;
+        };
+
+        struct B {
+	    B() = default;
+	    B(const A& in_A, const A& out_A) : fVal(42), fIn(in_A), fOut(out_A) {}
+            B(int val, const A& in_A, const A& out_A) : fVal(val), fIn(in_A), fOut(out_A) {}
+            int fVal;
+            A fIn, fOut;
+        };
+
+        int callme(int choice, int a, int b, int c) {
+            if (choice == 0) return a;
+            if (choice == 1) return b;
+            return c;
+        }
+
+        struct C {
+            int fChoice;
+        };
+
+        int callme_c(const C& o, int a, int b, int c) {
+            return callme(o.fChoice, a, b, c);
+        } }""")
+
+      # constructor and implicit conversion with keywords
+        A = cppyy.gbl.KeyWords.A
+        B = cppyy.gbl.KeyWords.B
+
+        def verify_b(b, val, ti, to):
+            assert b.fVal              == val
+            assert b.fIn.fVals.size()  == len(ti)
+            assert tuple(b.fIn.fVals)  == ti
+            assert b.fOut.fVals.size() == len(to)
+            assert tuple(b.fOut.fVals) == to
+
+        b = B(in_A=(256,), out_A=(32,))
+        verify_b(b, 42, (256,), (32,))
+
+        b = B(out_A=(32,), in_A=(256,))
+        verify_b(b, 42, (256,), (32,))
+
+        with raises(TypeError):
+            b = B(in_B=(256,), out_A=(32,))
+
+        b = B(17, in_A=(23,), out_A=(78,))
+        verify_b(b, 17, (23,), (78,))
+
+        with raises(TypeError):
+            b = B(17, val=23, out_A=(78,))
+
+        with raises(TypeError):
+            b = B(17, out_A=(78,)) 
+
+      # global function with keywords
+        callme = cppyy.gbl.KeyWords.callme
+        for i in range(3):
+            assert callme(i, a=1, b=2, c=3) == i+1
+            assert callme(i, b=2, c=3, a=1) == i+1
+            assert callme(i, c=3, a=1, b=2) == i+1
+
+        with raises(TypeError):
+            callme(0, a=1, b=2, d=3)
+
+        with raises(TypeError):
+            callme(0, 1, a=2, c=3)
+
+        with raises(TypeError):
+            callme(0, a=1, b=2)
+
+      # global function as method with keywords
+        c = cppyy.gbl.KeyWords.C()
+        cppyy.gbl.KeyWords.C.callme = cppyy.gbl.KeyWords.callme_c
+
+        for i in range(3):
+            c.fChoice = i
+            assert c.callme(a=1, b=2, c=3) == i+1
+            assert c.callme(b=2, c=3, a=1) == i+1
+            assert c.callme(c=3, a=1, b=2) == i+1
+
+        c.fChoice = 0
+        with raises(TypeError):
+            c.callme(a=1, b=2, d=3)
+
+        with raises(TypeError):
+            c.callme(1, a=2, c=3)
+
+        with raises(TypeError):
+            c.callme(a=1, b=2)
+
 
 class TestPYTHONIFY_UI:
     def setup_class(cls):

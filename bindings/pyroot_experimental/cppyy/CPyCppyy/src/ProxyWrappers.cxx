@@ -4,6 +4,7 @@
 #include "CPPClassMethod.h"
 #include "CPPConstructor.h"
 #include "CPPDataMember.h"
+#include "CPPExcInstance.h"
 #include "CPPFunction.h"
 #include "CPPGetSetItem.h"
 #include "CPPInstance.h"
@@ -52,13 +53,6 @@ typedef struct {
 static PyObject* CreateNewCppProxyClass(Cppyy::TCppScope_t klass, PyObject* pybases)
 {
 // Create a new python shadow class with the required hierarchy and meta-classes.
-    Py_XINCREF(pybases);
-    if (!pybases) {
-        pybases = PyTuple_New(1);
-        Py_INCREF((PyObject*)(void*)&CPPInstance_Type);
-        PyTuple_SET_ITEM(pybases, 0, (PyObject*)(void*)&CPPInstance_Type);
-    }
-
     PyObject* pymetabases = PyTuple_New(PyTuple_GET_SIZE(pybases));
     for (int i = 0; i < PyTuple_GET_SIZE(pybases); ++i) {
         PyObject* btype = (PyObject*)Py_TYPE(PyTuple_GetItem(pybases, i));
@@ -77,7 +71,6 @@ static PyObject* CreateNewCppProxyClass(Cppyy::TCppScope_t klass, PyObject* pyba
     Py_DECREF(args);
     if (!pymeta) {
         PyErr_Print();
-        Py_DECREF(pybases);
         return nullptr;
     }
 
@@ -92,7 +85,6 @@ static PyObject* CreateNewCppProxyClass(Cppyy::TCppScope_t klass, PyObject* pyba
 
     Py_DECREF(args);
     Py_DECREF(pymeta);
-    Py_DECREF(pybases);
 
     return pyclass;
 }
@@ -193,6 +185,8 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
 
     // translate operators
         std::string mtName = Utility::MapOperatorName(mtCppName, Cppyy::GetMethodNumArgs(method));
+        if (mtName.empty())
+            continue;
 
     // operator[]/() returning a reference type will be used for __setitem__
         bool isCall = mtName == "__call__";
@@ -209,21 +203,9 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
             }
         }
 
-    // public methods are normally visible, private methods are mangled python-wise
-    // note the overload implications which are name based, and note that genreflex
-    // does not create the interface methods for private/protected methods ...
-    // TODO: check whether Cling allows private method calling; otherwise delete this
-        if (!Cppyy::IsPublicMethod(method)) {
-            if (isConstructor)               // don't expose private ctors
-                continue;
-            else {                           // mangle private methods
-            // TODO: drop use of TClassEdit here ...
-            //            const std::string& clName = TClassEdit::ShortType(
-            //               Cppyy::GetFinalName(scope).c_str(), TClassEdit::kDropAlloc);
-                const std::string& clName = Cppyy::GetFinalName(scope);
-                mtName = "_" + clName + "__" + mtName;
-           }
-        }
+    // do not expose private methods as the Cling wrappers for them won't compile
+        if (!Cppyy::IsPublicMethod(method))
+            continue;
 
     // template members; handled by adding a dispatcher to the class
         bool storeOnTemplate =
@@ -265,7 +247,6 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
                      pysi = TemplateProxy_New(mtCppName, "__setitem__", pyclass);
                      PyObject_SetAttrString(pyclass, const_cast<char*>("__setitem__"), (PyObject*)pysi);
                 }
-
                 if (isTemplate) pysi->AdoptTemplate(new CPPSetItem(scope, method));
                 else pysi->AdoptMethod(new CPPSetItem(scope, method));
                 Py_XDECREF(pysi);
@@ -400,16 +381,13 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
 }
 
 //----------------------------------------------------------------------------
-static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
+static void CollectUniqueBases(Cppyy::TCppType_t klass, std::deque<std::string>& uqb)
 {
-// Build a tuple of python proxy classes of all the bases of the given 'klass'.
-
-    size_t nbases = Cppyy::GetNumBases(klass);
-
 // collect bases in acceptable mro order, while removing duplicates (this may
 // break the overload resolution in esoteric cases, but otherwise the class can
 // not be used at all, as CPython will refuse the mro).
-    std::deque<std::string> uqb;
+    size_t nbases = Cppyy::GetNumBases(klass);
+
     std::deque<Cppyy::TCppType_t> bids;
     for (size_t ibase = 0; ibase < nbases; ++ibase) {
         const std::string& name = Cppyy::GetBaseName(klass, ibase);
@@ -438,9 +416,16 @@ static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
         }
     // skipped if decision == 0 (not unique)
     }
+}
+
+static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
+{
+// Build a tuple of python proxy classes of all the bases of the given 'klass'.
+    std::deque<std::string> uqb;
+    CollectUniqueBases(klass, uqb);
 
 // allocate a tuple for the base classes, special case for first base
-    nbases = uqb.size();
+    size_t nbases = uqb.size();
 
     PyObject* pybases = PyTuple_New(nbases ? nbases : 1);
     if (!pybases)
@@ -451,7 +436,7 @@ static PyObject* BuildCppClassBases(Cppyy::TCppType_t klass)
         Py_INCREF((PyObject*)(void*)&CPPInstance_Type);
         PyTuple_SET_ITEM(pybases, 0, (PyObject*)(void*)&CPPInstance_Type);
     } else {
-        for (std::vector<std::string>::size_type ibase = 0; ibase < nbases; ++ibase) {
+        for (std::deque<std::string>::size_type ibase = 0; ibase < nbases; ++ibase) {
             PyObject* pyclass = CreateScopeProxy(uqb[ibase]);
             if (!pyclass) {
                 Py_DECREF(pybases);
@@ -724,6 +709,92 @@ PyObject* CPyCppyy::CreateScopeProxy(const std::string& name, PyObject* parent)
     return pyscope;
 }
 
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyObject* parent)
+{
+// To allow use of C++ exceptions in lieue of Python exceptions, they need to
+// derive from BaseException, which can not mix with the normal CPPInstance and
+// use of the meta-class. Instead, encapsulate them in a forwarding class that
+// derives from Pythons Exception class
+
+// start with creation of CPPExcInstance type base classes
+    std::deque<std::string> uqb;
+    CollectUniqueBases(((CPPScope*)pyscope)->fCppType, uqb);
+    size_t nbases = uqb.size();
+
+// Support for multiple bases actually can not actually work as-is: the reason
+// for deriving from BaseException is to guarantee the layout needed for storing
+// traces. If some other base is std::exception (as e.g. boost::bad_any_cast) or
+// also derives from std::exception, then there are two trace locations. OTOH,
+// if the other class is a non-exception type, then the exception class does not
+// need to derive from it because it can never be caught as that type forwarding
+// to the proxy will work as expected, through, which is good enough).
+//
+// The code below restricts the hierarchy to a single base class, picking the
+// "best" by filtering std::exception and non-exception bases.
+
+    PyObject* pybases = PyTuple_New(1);
+    if (nbases == 0) {
+        Py_INCREF((PyObject*)(void*)&CPPExcInstance_Type);
+        PyTuple_SET_ITEM(pybases, 0, (PyObject*)(void*)&CPPExcInstance_Type);
+    } else {
+        PyObject* best_base = nullptr;
+
+        for (std::deque<std::string>::size_type ibase = 0; ibase < nbases; ++ibase) {
+        // retrieve bases through their enclosing scope to guarantee treatment as
+        // exception classes and proper caching
+            const std::string& finalname = Cppyy::GetScopedFinalName(Cppyy::GetScope(uqb[ibase]));
+            const std::string& parentname = TypeManip::extract_namespace(finalname);
+            PyObject* base_parent = CreateScopeProxy(parentname);
+            if (!base_parent) {
+                Py_DECREF(pybases);
+                return nullptr;
+            }
+
+            PyObject* excbase = PyObject_GetAttrString(base_parent,
+                parentname.empty() ? finalname.c_str() : finalname.substr(parentname.size()+2, std::string::npos).c_str());
+            Py_DECREF(base_parent);
+            if (!excbase) {
+                Py_DECREF(pybases);
+                return nullptr;
+            }
+
+            if (PyType_IsSubtype((PyTypeObject*)excbase, &CPPExcInstance_Type)) {
+                Py_XDECREF(best_base);
+                best_base = excbase;
+                if (finalname != "std::exception")
+                    break;
+            } else {
+            // just skip: there will be at least one exception derived base class
+                Py_DECREF(excbase);
+            }
+        }
+
+        PyTuple_SET_ITEM(pybases, 0, best_base);
+    }
+
+    PyObject* args = Py_BuildValue((char*)"OO{}", pyname, pybases);
+
+// meta-class attributes (__cpp_name__, etc.) can not be resolved lazily so add
+// them directly instead in case they are needed
+    PyObject* dct = PyTuple_GET_ITEM(args, 2);
+    PyDict_SetItem(dct, PyStrings::gUnderlying, pyscope);
+    PyDict_SetItem(dct, PyStrings::gName,    PyObject_GetAttr(pyscope, PyStrings::gName));
+    PyDict_SetItem(dct, PyStrings::gCppName, PyObject_GetAttr(pyscope, PyStrings::gCppName));
+    PyDict_SetItem(dct, PyStrings::gModule,  PyObject_GetAttr(pyscope, PyStrings::gModule));
+
+// create the actual exception class
+    PyObject* exc_pyscope = PyType_Type.tp_new(&PyType_Type, args, nullptr);
+    Py_DECREF(args);
+    Py_DECREF(pybases);
+
+// cache the result for future lookups and return
+    PyType_Type.tp_setattro(parent, pyname, exc_pyscope);
+    return exc_pyscope;
+}
+
+
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
         Cppyy::TCppType_t klass, const unsigned flags)
@@ -743,7 +814,7 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     bool isValue = flags & CPPInstance::kIsValue;
 
 // TODO: make sure that a consistent address is used (may have to be done in BindCppObject)
-    if (address && !isValue /* always fresh */ && flags != CPPInstance::kNoSmartConv) {
+    if (address && !isValue /* always fresh */ && !(flags & (CPPInstance::kNoWrapConv|CPPInstance::kNoMemReg))) {
         PyObject* oldPyObject = MemoryRegulator::RetrievePyObject(
             isRef ? *(void**)address : address, pyclass);
 
@@ -755,7 +826,7 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     }
 
 // if smart, instantiate a Python-side object of the underlying type, carrying the smartptr
-    PyObject* smart_type = (flags != CPPInstance::kNoSmartConv && (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
+    PyObject* smart_type = (flags != CPPInstance::kNoWrapConv && (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
     if (smart_type) {
         pyclass = CreateScopeProxy(((CPPSmartClass*)smart_type)->fUnderlyingType);
         if (!pyclass) {
@@ -781,12 +852,17 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
         if (smart_type)
             pyobj->SetSmart(smart_type);
 
-    // do not register null pointers, references (?), or direct usage of smart pointers
-        if (address && !isRef && flags != CPPInstance::kNoSmartConv)
+    // do not register null pointers, references (?), or direct usage of smart pointers or iterators
+        if (address && !isRef && !(flags & (CPPInstance::kNoWrapConv|CPPInstance::kNoMemReg)))
             MemoryRegulator::RegisterPyObject(pyobj, pyobj->GetObject());
     }
 
-// successful completion
+// successful completion; wrap exception options to make them raiseable, normal return otherwise
+    if (((CPPClass*)pyclass)->fFlags & CPPScope::kIsException) {
+        PyObject* exc_obj = CPPExcInstance_Type.tp_new(&CPPExcInstance_Type, nullptr, nullptr);
+        ((CPPExcInstance*)exc_obj)->fCppInstance = (PyObject*)pyobj;
+        return exc_obj;
+    }
     return (PyObject*)pyobj;
 }
 

@@ -34,12 +34,19 @@ PyObject* CPyCppyy::CPPConstructor::Call(
     CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
 {
 // setup as necessary
-    if (!fIsInitialized && !this->Initialize(ctxt))
+    if (fArgsRequired == -1 && !this->Initialize(ctxt))
         return nullptr;                     // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
     if (!(args = this->PreProcessArgs(self, args, kwds)))
         return nullptr;
+
+    if (self->GetObject()) {
+        Py_DECREF(args);
+        PyErr_SetString(PyExc_ReferenceError,
+            "object already constructed; use __assign__ instead of __init__");
+        return nullptr;
+    }
 
 // translate the arguments
     if (!this->ConvertAndSetArgs(args, ctxt)) {

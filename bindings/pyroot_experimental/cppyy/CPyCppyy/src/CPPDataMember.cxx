@@ -153,7 +153,7 @@ static void pp_dealloc(CPPDataMember* pyprop)
 {
 // Deallocate memory held by this descriptor.
     using namespace std;
-    delete pyprop->fConverter;
+    if (pyprop->fConverter && pyprop->fConverter->HasState()) delete pyprop->fConverter;
     Py_XDECREF(pyprop->fName);    // never exposed so no GC necessary
 
     Py_TYPE(pyprop)->tp_free((PyObject*)pyprop);

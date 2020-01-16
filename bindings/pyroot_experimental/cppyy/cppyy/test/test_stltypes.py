@@ -1,6 +1,7 @@
+# -*- coding: UTF-8 -*-
 import py, os, sys
 from pytest import raises
-from .support import setup_make, pyunicode, maxvalue
+from .support import setup_make, pylong, pyunicode, maxvalue
 
 try:
     import __pypy__
@@ -14,6 +15,188 @@ test_dct = str(currpath.join("stltypesDict"))
 
 def setup_module(mod):
     setup_make("stltypes")
+
+
+# after CPython's Lib/test/seq_tests.py
+def iterfunc(seqn):
+    """Regular generator"""
+    for i in seqn:
+        yield i
+
+class Sequence:
+    """Sequence using __getitem__"""
+    def __init__(self, seqn):
+        self.seqn = seqn
+    def __getitem__(self, i):
+        return self.seqn[i]
+
+class IterFunc:
+    """Sequence using iterator protocol"""
+    def __init__(self, seqn):
+        self.seqn = seqn
+        self.i = 0
+    def __iter__(self):
+        return self
+    def __next__(self):
+        if self.i >= len(self.seqn): raise StopIteration
+        v = self.seqn[self.i]
+        self.i += 1
+        return v
+    next = __next__ # p2.7
+
+class IterGen:
+    """Sequence using iterator protocol defined with a generator"""
+    def __init__(self, seqn):
+        self.seqn = seqn
+        self.i = 0
+    def __iter__(self):
+        for val in self.seqn:
+            yield val
+
+class IterNextOnly:
+    """Missing __getitem__ and __iter__"""
+    def __init__(self, seqn):
+        self.seqn = seqn
+        self.i = 0
+    def __next__(self):
+        if self.i >= len(self.seqn): raise StopIteration
+        v = self.seqn[self.i]
+        self.i += 1
+        return v
+    next = __next__ # p2.7
+
+class IterNoNext:
+    """Iterator missing __next__()"""
+    def __init__(self, seqn):
+        self.seqn = seqn
+        self.i = 0
+    def __iter__(self):
+        return self
+
+class IterGenExc:
+    """Test propagation of exceptions"""
+    def __init__(self, seqn):
+        self.seqn = seqn
+        self.i = 0
+    def __iter__(self):
+        return self
+    def __next__(self):
+        3 // 0
+    next = __next__ # p2.7
+
+class IterFuncStop:
+    """Test immediate stop"""
+    def __init__(self, seqn):
+        pass
+    def __iter__(self):
+        return self
+    def __next__(self):
+        raise StopIteration
+    next = __next__ # p2.7
+
+from itertools import chain
+def itermulti(seqn):
+    """Test multiple tiers of iterators"""
+    return chain(map(lambda x:x, iterfunc(IterGen(Sequence(seqn)))))
+
+class LyingTuple(tuple):
+    def __iter__(self):
+        yield 1
+
+class LyingList(list):
+    def __iter__(self):
+        yield 1
+
+def constructors_cpython_test(type2test):
+    l0 = []
+    l1 = [0]
+    l2 = [0, 1]
+
+    u = type2test()
+    u0 = type2test(l0)
+    u1 = type2test(l1)
+    u2 = type2test(l2)
+
+    uu = type2test(u)
+    uu0 = type2test(u0)
+    uu1 = type2test(u1)
+    uu2 = type2test(u2)
+
+    v = type2test(tuple(u))
+    class OtherSeq:
+        def __init__(self, initseq):
+            self.__data = initseq
+        def __len__(self):
+            return len(self.__data)
+        def __getitem__(self, i):
+            return self.__data[i]
+    s = OtherSeq(u0)
+    v0 = type2test(s)
+    assert len(v0) == len(s)
+
+    # the following does not work for type-checked containers
+    #s = "this is also a sequence"
+    #vv = type2test(s)
+    #assert len(vv) == len(s)
+
+  # Create from various iteratables
+    # as above, can not put strings in type-checked containers
+    #for s in ("123", "", range(1000), ('do', 1.2), range(2000,2200,5)):
+    for s in (range(1000), range(2000,2200,5)):
+        for g in (Sequence, IterFunc, IterGen,
+                  itermulti, iterfunc):
+            assert type2test(g(s)) == type2test(s)
+        assert type2test(IterFuncStop(s))  ==  type2test()
+        # as above, no strings
+        #assert type2test(c for c in "123") == type2test("123")
+        raises(TypeError, type2test, IterNextOnly(s))
+        raises(TypeError, type2test, IterNoNext(s))
+        raises(ZeroDivisionError, type2test, IterGenExc(s))
+
+  # Issue #23757 (in CPython)
+    #assert type2test(LyingTuple((2,))) == type2test((1,))
+    #assert type2test(LyingList([2]))   == type2test([1])
+
+def getslice_cpython_test(type2test):
+    """Detailed slicing tests from CPython"""
+
+    l = [0, 1, 2, 3, 4]
+    u = type2test(l)
+
+    assert u[0:0]        == type2test()
+    assert u[1:2]        == type2test([1])
+    assert u[-2:-1]      == type2test([3])
+    assert u[-1000:1000] == u
+    assert u[1000:-1000] == type2test([])
+    assert u[:]          == u
+    assert u[1:None]     == type2test([1, 2, 3, 4])
+    assert u[None:3]     == type2test([0, 1, 2])
+
+  # Extended slices
+    assert u[::]          == u
+    assert u[::2]         == type2test([0, 2, 4])
+    assert u[1::2]        == type2test([1, 3])
+    assert u[::-1]        == type2test([4, 3, 2, 1, 0])
+    assert u[::-2]        == type2test([4, 2, 0])
+    assert u[3::-2]       == type2test([3, 1])
+    assert u[3:3:-2]      == type2test([])
+    assert u[3:2:-2]      == type2test([3])
+    assert u[3:1:-2]      == type2test([3])
+    assert u[3:0:-2]      == type2test([3, 1])
+    assert u[::-100]      == type2test([4])
+    assert u[100:-100:]   == type2test([])
+    assert u[-100:100:]   == u
+    assert u[100:-100:-1] == u[::-1]
+    assert u[-100:100:-1] == type2test([])
+    assert u[-pylong(100):pylong(100):pylong(2)] == type2test([0, 2, 4])
+
+  # Test extreme cases with long ints
+    a = type2test([0,1,2,3,4])
+    # the following two fail b/c PySlice_GetIndices succeeds w/o error, while
+    # returning an overflown value (list object uses different internal APIs)
+    #assert a[ -pow(2,128): 3 ] == type2test([0,1,2])
+    #assert a[ 3: pow(2,145) ]  == type2test([3,4])
+    assert a[3::maxvalue]      == type2test([3])
 
 
 class TestSTLVECTOR:
@@ -46,7 +229,10 @@ class TestSTLVECTOR:
             assert tv1.iterator is cppyy.gbl.std.vector(p_type).iterator
 
             #----- 
-            v = tv1(); v += range(self.N)
+            v = tv1()
+            assert not v
+            v += range(self.N)
+            assert v
             if p_type == int:
                 assert v.begin().__eq__(v.begin())
                 assert v.begin() == v.begin()
@@ -113,6 +299,7 @@ class TestSTLVECTOR:
         import cppyy
 
         v = cppyy.gbl.std.vector(int)()
+        assert not v
         for arg in v:
             pass
         v.__destruct__()
@@ -308,7 +495,7 @@ class TestSTLVECTOR:
         raises(TypeError, a.vector_pair, ll4)
 
     def test12_vector_lifeline(self):
-        """Check lifeline setting on vectors of objects."""
+        """Check lifeline setting on vectors of objects"""
 
         import cppyy
 
@@ -333,6 +520,87 @@ class TestSTLVECTOR:
         import gc
         gc.collect()
         assert cppyy.gbl.Lifeline.count == 0
+
+    def test13_vector_smartptr_iteration(self):
+        """Iteration over smart pointers"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace VectorOfShared {
+        struct X {
+            int y;
+            X() : y(0) {}
+            X(int y) : y(y) { }
+            std::vector<std::shared_ptr<X>> gimeVec() {
+                std::vector<std::shared_ptr<X>> result;
+                for (int i = 0; i < 10; ++i) {
+                    result.push_back(std::make_shared<X>(i));
+                }
+                return result;
+            }
+        }; }""")
+
+        test = cppyy.gbl.VectorOfShared.X()
+        result = test.gimeVec()
+        assert 'shared' in type(result).__cpp_name__
+        assert len(result) == 10
+
+        for i in range(len(result)):
+            assert result[i].y == i
+
+        i = 0
+        for res in result:
+            assert res.y == i
+            i += 1
+        assert i == len(result)
+
+    def test14_vector_of_vector_of_(self):
+        """Nested vectors"""
+
+        from cppyy.gbl.std import vector
+
+        vv = vector[vector[int]](((1, 2), [3, 4]))
+
+        assert len(vv) == 2
+        assert list(vv[0]) == [1, 2]
+        assert vv[0][0] == 1
+        assert vv[0][1] == 2
+        assert list(vv[1]) == [3, 4]
+        assert vv[1][0] == 3
+        assert vv[1][1] == 4
+
+    def test15_vector_slicing(self):
+        """Advanced test of vector slicing"""
+
+        from cppyy.gbl.std import vector
+
+        l = list(range(10))
+        v = vector[int](range(10))
+
+        assert list(v[2:2])    == l[2:2]
+        assert list(v[2:2:-1]) == l[2:2:-1]
+        assert list(v[2:5])    == l[2:5]
+        assert list(v[5:2])    == l[5:2]
+        assert list(v[2:5:-1]) == l[2:5:-1]
+        assert list(v[5:2:-1]) == l[5:2:-1]
+        assert list(v[2:5: 2]) == l[2:5: 2]
+        assert list(v[5:2: 2]) == l[5:2: 2]
+        assert list(v[2:5:-2]) == l[2:5:-2]
+        assert list(v[5:2:-2]) == l[5:2:-2]
+        assert list(v[2:5: 7]) == l[2:5: 7]
+        assert list(v[5:2: 7]) == l[5:2: 7]
+        assert list(v[2:5:-7]) == l[2:5:-7]
+        assert list(v[5:2:-7]) == l[5:2:-7]
+
+      # additional test from CPython's test suite
+        getslice_cpython_test(vector[int])
+
+    def test16_vector_construction(self):
+        """Vector construction following CPython's sequence"""
+
+        import cppyy
+
+        constructors_cpython_test(cppyy.gbl.std.vector[int])
 
 
 class TestSTLSTRING:
@@ -442,6 +710,38 @@ class TestSTLSTRING:
                 for k in range(2):
                     assert str_array_4[i][j][k] == vals[i*4+j*2+k]
 
+    def test05_stlstring_and_unicode(self):
+        """Mixing unicode and std::string"""
+
+        import cppyy
+
+        uas = cppyy.gbl.UnicodeAndSTL
+
+        actlen = len(u'ℕ'.encode(encoding='UTF-8'))
+        assert uas.get_size('ℕ')    == actlen
+        assert uas.get_size_cr('ℕ') == actlen
+        assert uas.get_size_cc('ℕ') == actlen
+
+        assert uas.get_size_w('ℕ')   == 1
+        assert uas.get_size_wcr('ℕ') == 1
+
+        assert str(uas.get_string('ℕ'))     == 'ℕ'
+        assert str(uas.get_string_cr('ℕ'))  == 'ℕ'
+        assert str(uas.get_string_cc('ℕ'))  == 'ℕ'
+
+        assert uas.get_string_w('ℕ').encode(encoding='UTF-8')   == 'ℕ'
+        assert uas.get_string_wcr('ℕ').encode(encoding='UTF-8') == 'ℕ'
+
+        bval = u'ℕ'.encode(encoding='UTF-8')
+        actlen = len(bval)
+        assert uas.get_size(bval)    == actlen
+        assert uas.get_size_cr(bval) == actlen
+        assert uas.get_size_cc(bval) == actlen
+
+        assert str(uas.get_string(bval))    == 'ℕ'
+        assert str(uas.get_string_cr(bval)) == 'ℕ'
+        assert str(uas.get_string_cc(bval)) == 'ℕ'
+
 
 class TestSTLLIST:
     def setup_class(cls):
@@ -470,8 +770,10 @@ class TestSTLLIST:
 
             #-----
             a = tl1()
+            assert not a
             for i in range(self.N):
                 a.push_back(i)
+            assert a
 
             assert len(a) == self.N
             assert 11 < self.N
@@ -492,6 +794,7 @@ class TestSTLLIST:
         from cppyy.gbl import std
 
         a = std.list(int)()
+        assert not a
         for arg in a:
             pass
 
@@ -559,9 +862,11 @@ class TestSTLMAP:
         std = cppyy.gbl.std
 
         a = std.map(std.string, int)()
+        assert not a
         for i in range(self.N):
             a[str(i)] = i
             assert a[str(i)] == i
+        assert a
 
         assert len(a) == self.N
 
@@ -572,6 +877,7 @@ class TestSTLMAP:
         std = cppyy.gbl.std
 
         m = std.map(int, int)()
+        assert not m
         for key, value in m:
             pass
 
@@ -811,7 +1117,8 @@ class TestSTLDEQUE:
         """Return by value of a deque used to crash"""
 
         import cppyy
-        assert cppyy.cppdef("std::deque<long double> f() { std::deque<long double> d ; return d ; }")
+        assert cppyy.cppdef("""std::deque<long double> f() {
+            std::deque<long double> d; d.push_back(0); return d ; }""")
         x = cppyy.gbl.f()
         assert x
         del x
@@ -948,3 +1255,159 @@ class TestSTLPAIR:
 
         assert a == 1
         assert b == 2
+
+
+class TestSTLEXCEPTION:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
+
+    def test01_basics(self):
+        """Test behavior of std::exception derived classes"""
+
+        import cppyy
+
+        assert issubclass(cppyy.gbl.std.exception, BaseException)
+        assert cppyy.gbl.std.exception is cppyy.gbl.std.exception
+
+        MyError = cppyy.gbl.MyError
+        assert MyError is cppyy.gbl.MyError
+        assert issubclass(MyError, BaseException)
+        assert issubclass(MyError, cppyy.gbl.std.exception)
+        assert MyError.__name__     == 'MyError'
+        assert MyError.__cpp_name__ == 'MyError'
+        assert MyError.__module__   == 'cppyy.gbl'
+
+        YourError = cppyy.gbl.YourError
+        assert YourError is cppyy.gbl.YourError
+        assert issubclass(YourError, MyError)
+        assert YourError.__name__     == 'YourError'
+        assert YourError.__cpp_name__ == 'YourError'
+        assert YourError.__module__   == 'cppyy.gbl'
+
+        MyError = cppyy.gbl.ErrorNamespace.MyError
+        assert MyError is not cppyy.gbl.MyError
+        assert MyError is cppyy.gbl.ErrorNamespace.MyError
+        assert issubclass(MyError, BaseException)
+        assert issubclass(MyError, cppyy.gbl.std.exception)
+        assert MyError.__name__     == 'MyError'
+        assert MyError.__cpp_name__ == 'ErrorNamespace::MyError'
+        assert MyError.__module__   == 'cppyy.gbl.ErrorNamespace'
+
+        YourError = cppyy.gbl.ErrorNamespace.YourError
+        assert YourError is not cppyy.gbl.YourError
+        assert YourError is cppyy.gbl.ErrorNamespace.YourError
+        assert issubclass(YourError, MyError)
+        assert YourError.__name__     == 'YourError'
+        assert YourError.__cpp_name__ == 'ErrorNamespace::YourError'
+        assert YourError.__module__   == 'cppyy.gbl.ErrorNamespace'
+
+    def test02_raising(self):
+        """Raise a C++ std::exception derived class as a Python excption"""
+
+        import cppyy
+
+        assert issubclass(cppyy.gbl.MyError, BaseException)
+
+        def raiseit(cls):
+            raise cls('Oops')
+
+        with raises(Exception):
+            raiseit(cppyy.gbl.MyError)
+
+        with raises(cppyy.gbl.MyError):
+            raiseit(cppyy.gbl.MyError)
+
+        try:
+            raiseit(cppyy.gbl.MyError)
+        except Exception as e:
+            assert e.what() == 'Oops'
+
+        try:
+            raiseit(cppyy.gbl.MyError)
+        except cppyy.gbl.MyError as e:
+            assert e.what() == 'Oops'
+
+        try:
+            raiseit(cppyy.gbl.YourError)
+        except cppyy.gbl.MyError as e:
+            assert e.what() == 'Oops'
+
+        try:
+            raiseit(cppyy.gbl.YourError)
+        except cppyy.gbl.YourError as e:
+            assert e.what() == 'Oops'
+
+    def test03_memory(self):
+        """Memory handling of C++ c// helper for exception base class testing"""
+
+        import cppyy, gc
+
+        MyError   = cppyy.gbl.MyError
+        YourError = cppyy.gbl.YourError
+
+        gc.collect()
+        assert cppyy.gbl.GetMyErrorCount() == 0
+
+        m = MyError('Oops')
+        assert cppyy.gbl.GetMyErrorCount() == 1
+        del m
+        gc.collect()
+        assert cppyy.gbl.GetMyErrorCount() == 0
+
+        def raiseit(cls):
+            raise cls('Oops')
+
+        def run_raiseit(t1, t2):
+            try:
+                raiseit(t1)
+            except t2 as e:
+                assert e.what() == 'Oops'
+                return
+            assert not "should not reach this point"
+
+        for t1, t2 in [(MyError,   Exception),
+                       (MyError,   MyError),
+                       (YourError, MyError),
+                       (YourError, YourError)]:
+            with raises(t2):
+                raiseit(t1)
+            gc.collect()
+            assert cppyy.gbl.GetMyErrorCount() == 0
+
+            run_raiseit(t1, t2)
+            gc.collect()
+            assert cppyy.gbl.GetMyErrorCount() == 0
+
+        gc.collect()
+        assert cppyy.gbl.GetMyErrorCount() == 0
+
+    def test04_from_cpp(self):
+        """Catch C++ exceptiosn from C++"""
+
+        import cppyy, gc
+
+        gc.collect()
+        assert cppyy.gbl.GetMyErrorCount() == 0
+
+        with raises(cppyy.gbl.MyError):
+            cppyy.gbl.ErrorNamespace.throw_error(0)
+
+        with raises(cppyy.gbl.MyError):
+            cppyy.gbl.ErrorNamespace.throw_error(1)
+
+        with raises(cppyy.gbl.YourError):
+            cppyy.gbl.ErrorNamespace.throw_error(1)
+
+        with raises(cppyy.gbl.ErrorNamespace.MyError):
+            cppyy.gbl.ErrorNamespace.throw_error(2)
+
+        with raises(cppyy.gbl.ErrorNamespace.MyError):
+            cppyy.gbl.ErrorNamespace.throw_error(3)
+
+        with raises(cppyy.gbl.ErrorNamespace.YourError):
+            cppyy.gbl.ErrorNamespace.throw_error(3)
+
+        gc.collect()
+        assert cppyy.gbl.GetMyErrorCount() == 0

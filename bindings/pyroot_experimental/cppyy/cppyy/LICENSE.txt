@@ -52,4 +52,4 @@ source code):
   Toby StClere-Smithe
   Stefan Wunsch
 
-Conda-forge recipes were provided by Julian Rueth.
+Conda-forge recipes were provided by Julian Rueth and Isuru Fernando.
