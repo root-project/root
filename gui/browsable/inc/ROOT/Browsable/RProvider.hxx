@@ -41,6 +41,7 @@ public:
 
    static std::string GetClassIcon(const std::string &classname);
 
+   static bool IsFileFormatSupported(const std::string &extension);
    static std::shared_ptr<RElement> OpenFile(const std::string &extension, const std::string &fullname);
    static std::shared_ptr<RElement> Browse(std::unique_ptr<RHolder> &obj);
    static bool Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
