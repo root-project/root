@@ -1526,22 +1526,22 @@ std::vector<RooSpan<const double>> RooVectorDataStore::getBatch(std::size_t firs
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the weights of all events in [first, last[.
-
-RooSpan<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std::size_t last) const
+/// Return the weights of all events in the range [first, first+len).
+/// If an array with weights is stored, a batch with these weights will be returned. If
+/// no weights are stored, an empty batch is returned. Use weight() to check if there's
+/// a constant weight.
+RooSpan<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std::size_t len) const
 {
   if (_extWgtArray) {
-    return RooSpan<const double>(_extWgtArray + first, _extWgtArray + last);
+    return RooSpan<const double>(_extWgtArray + first, _extWgtArray + len);
   }
 
 
   if (_wgtVar) {
-    return _wgtVar->getValBatch(first, last);
+    return _wgtVar->getValBatch(first, len);
   }
 
-  //TODO FIXME!
-  static double dummyWeight = 1.;
-  return RooSpan<const double>(&dummyWeight, 1);
+  return {};
 }
 
 

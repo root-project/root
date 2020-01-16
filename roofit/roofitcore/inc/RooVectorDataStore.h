@@ -80,7 +80,7 @@ public:
   virtual Bool_t isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
   virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const override;
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t last) const override;
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) override;

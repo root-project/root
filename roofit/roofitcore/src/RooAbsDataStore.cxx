@@ -215,17 +215,18 @@ void RooAbsDataStore::printMultiline(ostream& os, Int_t /*content*/, Bool_t verb
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the weights of the events in the range [first, last[.
+/// Get the weights of the events in the range [first, first+size).
 /// This is a slow default implementation that will fill a vector with every
-/// event retrieved one by one.
-/// Derived classes may just return the range of the original data.
+/// event retrieved one by one (even if the weight is constant).
+/// Derived classes should return a span pointing to the original data.
+///
+/// If weights are not stored contiguously, an empty batch may be returned.
+RooSpan<const double> RooAbsDataStore::getWeightBatch(std::size_t first, std::size_t len) const {
 
-RooSpan<const double> RooAbsDataStore::getWeightBatch(std::size_t first, std::size_t last) const {
+    std::vector<double> ret;
+    ret.reserve(len);
 
-    std::vector<double> ret;//TODO try to align storage
-    ret.reserve(last-first);
-
-    for (auto i = first; i < last; ++i) {
+    for (auto i = first; i < first+len; ++i) {
       ret.push_back(weight(i));
     }
 
