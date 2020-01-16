@@ -42,6 +42,7 @@
 #include "TStyle.h"
 #include "TROOT.h"
 #include "TEnv.h"
+#include "TMath.h"
 
 // To scale fonts to the same size as the TTF version
 const Float_t kScale = 0.93376068;
@@ -349,14 +350,21 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
    Quartz::SetLineColor(ctx, GetMarkerColor());//Can not fail (for coverity).
    Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, 1);
+   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetMarkerStyle()))));
 
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], GetMarkerSize() * drawable.fScaleFactor, GetMarkerStyle());
+   CGContextSetLineJoin(ctx, kCGLineJoinRound);
+   CGContextSetLineCap(ctx, kCGLineCapRound);
+
+   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(GetMarkerStyle())/2.)/4.;
+   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, TAttMarker::GetMarkerStyleBase(GetMarkerStyle()));
+
+   CGContextSetLineJoin(ctx, kCGLineJoinMiter);
+   CGContextSetLineCap(ctx, kCGLineCapButt);
 }
 
 

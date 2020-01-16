@@ -429,10 +429,12 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       WriteReal(fCurrentAlpha, kFALSE);
    }
 
-   if (fMarkerStyle == 23 || fMarkerStyle == 32) PrintStr(",rotate=180");
+   if (TAttMarker::GetMarkerStyleBase(fMarkerStyle) == 23 || TAttMarker::GetMarkerStyleBase(fMarkerStyle) == 32) PrintStr(",rotate=180");
 
-   PrintStr(Form("},mark size=%fpt,mark=",8./3.33*fMarkerSize));
-   switch (fMarkerStyle) {
+   PrintStr(Form("},mark size=%fpt", 8./3.33*(fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.)));
+   PrintStr(Form(", line width=%fpt", 4./3.33*TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)));
+   PrintStr(", mark=");
+   switch (TAttMarker::GetMarkerStyleBase(fMarkerStyle)) {
    case 1 :
       PrintStr("*");
       PrintStr(",mark size=1pt");

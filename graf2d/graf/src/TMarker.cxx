@@ -113,6 +113,43 @@ void TMarker::DisplayMarkerTypes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Display the table of markers with different line widths and their numbers.
+
+void TMarker::DisplayMarkerLineWidths()
+{
+   TMarker *marker = new TMarker();
+   marker->SetMarkerSize(3);
+   TText *text = new TText();
+   text->SetTextFont(62);
+   text->SetTextAlign(22);
+   text->SetTextSize(0.075);
+   char atext[] = "       ";
+   Double_t x = 0;
+   Double_t dx = 1/19.0;
+   for (Int_t i=1;i<19;i++) {
+      x += dx;
+      snprintf(atext,7,"%d",i+49);
+      marker->SetMarkerStyle(i+49);
+      marker->DrawMarker(x,0.19);
+      text->DrawText(x,0.08,atext);
+      snprintf(atext,7,"%d",i+67);
+      marker->SetMarkerStyle(i+67);
+      marker->DrawMarker(x,0.42);
+      text->DrawText(x,0.31,atext);
+      snprintf(atext,7,"%d",i+85);
+      marker->SetMarkerStyle(i+85);
+      marker->DrawMarker(x,0.65);
+      text->DrawText(x,0.54,atext);
+      snprintf(atext,7,"%d",i+103);
+      marker->SetMarkerStyle(i+103);
+      marker->DrawMarker(x,0.88);
+      text->DrawText(x,0.77,atext);
+   }
+   delete marker;
+   delete text;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from point px,py to a marker.
 ///
 ///  Compute the closest distance of approach from point px,py to this marker.
