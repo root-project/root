@@ -755,6 +755,14 @@ processing of these batches. There are no guarantees on the order the batches ar
 order entries of the dataset are processed. Note that this in turn means that, for multi-thread event loops, there is no
 guarantee on the order in which `Snapshot` will _write_ entries: they could be scrambled with respect to the input dataset.
 
+\warning RDataFrame will by default start as many threads as the hardware supports, using up **all** the resources on
+a machine. On a worker node of *e.g.* a batch cluster, this might not be desired if the machine is shared with other
+users. Therefore, **when running on shared computing resources**, use
+```
+ROOT::EnableImplicitMT(i)
+```
+replacing `i` with the number of CPUs/slots that were allocated for this job.
+
 ### Thread-safety of user-defined expressions
 RDataFrame operations such as `Histo1D` or `Snapshot` are guaranteed to work correctly in multi-thread event loops.
 User-defined expressions, such as strings or lambdas passed to `Filter`, `Define`, `Foreach`, `Reduce` or `Aggregate`
