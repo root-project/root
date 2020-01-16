@@ -29,7 +29,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py)
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py)
+endif()
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
@@ -88,7 +90,9 @@ if (dataframe)
 endif()
 
 # RTensor pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py)
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py)
+endif()
 
 # Passing Python callables to ROOT.TF
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
@@ -102,10 +106,14 @@ if(roofit)
 endif()
 
 # std::string_view backport in CPyCppyy
-ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
+endif()
 
 # Test wrapping Python callables for use in C++
-ROOT_ADD_PYUNITTEST(pyroot_cppcallable cppcallable.py)
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_cppcallable cppcallable.py)
+endif()
 
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
