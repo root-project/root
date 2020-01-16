@@ -46,11 +46,12 @@ namespace Browsable {
 
 
 #ifdef _MSC_VER
-bool IsWindowsLink(const std::string &path) 
+bool IsWindowsLink(const std::string &path)
 {
    return (path.length() > 4) && (path.rfind(".lnk") == path.length() - 4);
 }
 #endif
+
 
 /** \class RSysDirLevelIter
 \ingroup rbrowser
@@ -221,6 +222,15 @@ class RSysDirLevelIter : public RLevelIter {
       return TestDirEntry(name);
    }
 
+   std::string GetFileExtension(const std::string &fname) const
+   {
+      auto pos = fname.rfind(".");
+      if ((pos != std::string::npos) && (pos < fname.length() - 1) && (pos > 0))
+         return fname.substr(pos+1);
+
+      return ""s;
+   }
+
 public:
    explicit RSysDirLevelIter(const std::string &path = "") : fPath(path) { OpenDir(); }
 
@@ -242,8 +252,7 @@ public:
       if (R_ISDIR(fCurrentStat.fMode))
          return 1;
 
-      // TODO: should be factorized out
-      if ((fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length() - 5))
+      if (RProvider::IsFileFormatSupported(GetFileExtension(fCurrentName)))
          return 1;
 
       return 0;
@@ -339,9 +348,13 @@ public:
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override
    {
-      if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length() - 5)) {
-         auto elem = RProvider::OpenFile("root", FullDirName() + fCurrentName);
-         if (elem) return elem;
+      if (!R_ISDIR(fCurrentStat.fMode)) {
+         auto extension = GetFileExtension(fCurrentName);
+
+         if (RProvider::IsFileFormatSupported(extension)) {
+            auto elem = RProvider::OpenFile(extension, FullDirName() + fCurrentName);
+            if (elem) return elem;
+         }
       }
 
       return std::make_shared<RSysFile>(fCurrentStat, FullDirName(), fCurrentName);

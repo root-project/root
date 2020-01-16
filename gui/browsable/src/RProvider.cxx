@@ -123,7 +123,20 @@ void RProvider::RegisterDraw7(const TClass *cl, Draw7Func_t func)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-// remove provider from all registered lists
+// Returns true if file extension is supported
+
+bool RProvider::IsFileFormatSupported(const std::string &extension)
+{
+   if (extension.empty())
+      return false;
+
+   auto &fmap = GetFileMap();
+
+   return fmap.find(extension) != fmap.end();
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// Try to open file using provided extension.
 
 std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, const std::string &fullname)
 {
@@ -131,20 +144,14 @@ std::shared_ptr<RElement> RProvider::OpenFile(const std::string &extension, cons
 
    auto iter = fmap.find(extension);
 
-   if (iter != fmap.end()) {
-      auto res = iter->second.func(fullname);
-      if (res) return res;
-   }
-
-   for (auto &pair : fmap)
-      if ((pair.first == "*") || (pair.first == extension)) {
-         auto res = pair.second.func(fullname);
-         if (res) return res;
-      }
+   if (iter != fmap.end())
+      return iter->second.func(fullname);
 
    return nullptr;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// Template function to scan class entries, including parent object classes
 
 template<class Map_t, class Iterator_t>
 bool ScanProviderMap(Map_t &fmap, const TClass *cl, bool test_all, std::function<bool(Iterator_t &)> check_func)
