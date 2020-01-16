@@ -467,8 +467,8 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
 
 
   // Compute sum of event weights. First check if we need squared weights
-  const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(firstEvent, lastEvent);
-  //Make it obvious for the optimiser that the switch will never change while looping
+  const RooSpan<const double> eventWeights = _dataClone->getWeightBatch(firstEvent, lastEvent-firstEvent);
+  //Capture member for lambda:
   const bool retrieveSquaredWeights = _weightSq;
   auto retrieveWeight = [&eventWeights, retrieveSquaredWeights](std::size_t i) {
     if (retrieveSquaredWeights)
@@ -478,20 +478,21 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   };
 
   //Sum the event weights
-  ROOT::Math::KahanSum<double, 4u> kahanWeight;
-  if (eventWeights.size() == 1) {
-    kahanWeight.Add( (lastEvent - firstEvent) * retrieveWeight(0));
+  double sumOfWeights;
+  if (eventWeights.empty()) {
+    sumOfWeights = (lastEvent - firstEvent) * _dataClone->weight();
   } else {
+    ROOT::Math::KahanSum<double, 4u> kahanWeight;
     for (std::size_t i = 0; i < eventWeights.size(); ++i) {
       kahanWeight.AddIndexed(retrieveWeight(i), i);
     }
+    sumOfWeights = kahanWeight.Sum();
   }
-
 
   //Sum the probabilities
   ROOT::Math::KahanSum<double, 4u> kahanProb;
-  if (eventWeights.size() == 1) {
-    const double weight = retrieveWeight(0);
+  if (eventWeights.empty()) {
+    const double weight = _dataClone->weight();
     for (std::size_t i = 0; i < results.size(); ++i) {
       kahanProb.AddIndexed(-weight * results[i], i);
     }
@@ -502,7 +503,7 @@ std::tuple<double, double, double> RooNLLVar::computeBatched(std::size_t stepSiz
   }
 
 
-  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), kahanWeight.Sum()};
+  return std::tuple<double, double, double>{kahanProb.Sum(), kahanProb.Carry(), sumOfWeights};
 }
 
 
