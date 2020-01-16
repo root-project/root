@@ -7,7 +7,7 @@
    xmlns:table="sap.ui.table"
    xmlns:f="sap.ui.layout.form"
    height="100%">
-
+   <m:FlexBox  height="100%" direction="Column">
    <ObjectPageHeaderContent id="header" >
       <content>
         <layout:VerticalLayout>
@@ -26,29 +26,19 @@
                                           tooltip="toggle table edit"/>
 
          </layout:VerticalLayout>
-                        <!--
-                        <layout:VerticalLayout id="tableEdit" width="97%">
-                          <m:Input placeholder="Title" width="100%"/>
-                          <m:Input placeholder="Expression"  />
-                        <layout:HorizontalLayout>
-                          <m:Button text="Add"/>
-                          <m:Button text="Delete"/>
-                          <m:Button text="Modify"/>
-        </layout:HorizontalLayout>
-                        </layout:VerticalLayout>
-                -->
       </content>
-   </ObjectPageHeaderContent>
-
-        <m:VBox id="tbody" >
-          <table:Table id="table"
-              class="sapUiNoMarginTop"
-              selectionMode="None"
-              editable="false"
-              height="100%"
-              minAutoRowCount="15"
-              showColumnVisibilityMenu="true"
-              visibleRowCountMode="Auto"
-            />
-        </m:VBox>
+    </ObjectPageHeaderContent>
+    <table:Table
+        id="table"
+        height="100%"
+        class="sapUiNoMarginTop"
+        selectionMode="None"
+        editable="false"
+        showColumnVisibilityMenu="true"
+        visibleRowCountMode="Auto">
+      <table:layoutData>
+        <m:FlexItemData growFactor="1"/>
+      </table:layoutData>
+    </table:Table>
+  </m:FlexBox>
 </core:View>
