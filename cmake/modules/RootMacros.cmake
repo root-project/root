@@ -1064,7 +1064,7 @@ endfunction()
 #                                 LIBRARIES lib1 lib2          : linking flags such as dl, readline
 #                                 DEPENDENCIES lib1 lib2       : dependencies such as Core, MathCore
 #                                 BUILTINS builtin1 builtin2   : builtins like AFTERIMAGE
-#                                 LINKDEF LinkDef.h LinkDef2.h : linkdef files, default value is "LinkDef.h"
+#                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
 #                                 NO_CXXMODULE                 : don't generate a C++ module for this package
@@ -1072,8 +1072,8 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
-  set(oneValueArgs)
-  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
+  set(oneValueArgs LINKDEF)
+  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Check if we have any unparsed arguments
