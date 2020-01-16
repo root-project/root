@@ -247,7 +247,16 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       import array
       if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
-         addressofo = array.array( 'l', [o.IsA()._TClass__DynamicCast( o.IsA(), o )[0]] )
+         if self.exp_pyroot:
+            # New cppyy uses unsigned long to represent void* returns, as in DynamicCast.
+            # To prevent an overflow error when converting the Python integer returned by
+            # DynamicCast into a 4-byte signed long in 32 bits, we use unsigned long ('L')
+            # as type of the array.array.
+            array_t = 'L'
+         else:
+            # Old PyROOT returns Long_t buffers for void*
+            array_t = 'l'
+         addressofo = array.array( array_t, [o.IsA()._TClass__DynamicCast( o.IsA(), o )[0]] )
          self.assertEqual( addressofo.buffer_info()[0], Z.GimeAddressPtrPtr( addressofo ) )
 
       self.assertEqual( 0, Z.GimeAddressPtr( 0 ) );
