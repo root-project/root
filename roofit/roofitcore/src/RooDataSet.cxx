@@ -990,11 +990,9 @@ Double_t RooDataSet::weightSquared() const
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return event weights of all events in range
-
-RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t last) const {
-  return _dstore->getWeightBatch(first, last);
+// See base class.
+RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len) const {
+  return _dstore->getWeightBatch(first, len);
 }
 
 
