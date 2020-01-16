@@ -350,7 +350,7 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
    Quartz::SetLineColor(ctx, GetMarkerColor());//Can not fail (for coverity).
    Quartz::SetLineStyle(ctx, 1);
-   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(GetMarkerLineWidth())));
+   Quartz::SetLineWidth(ctx, TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetMarkerStyle()))));
 
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
@@ -360,8 +360,8 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    CGContextSetLineJoin(ctx, kCGLineJoinRound);
    CGContextSetLineCap(ctx, kCGLineCapRound);
 
-   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, GetMarkerStyleBase());
+   Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(GetMarkerStyle())/2.)/4.;
+   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, TAttMarker::GetMarkerStyleBase(GetMarkerStyle()));
 
    CGContextSetLineJoin(ctx, kCGLineJoinMiter);
    CGContextSetLineCap(ctx, kCGLineCapButt);

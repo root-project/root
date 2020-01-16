@@ -584,9 +584,9 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(GetMarkerLineWidth())));
+   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
-   Int_t ms = GetMarkerStyleBase();
+   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
    if (ms == 4)
       ms = 24;
@@ -596,7 +596,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       ms = 1;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.*fLineScale;
+   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale;
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {
@@ -900,9 +900,9 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(GetMarkerLineWidth())));
+   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
-   Int_t ms = GetMarkerStyleBase();
+   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
    if (ms == 4)
       ms = 24;
@@ -912,7 +912,7 @@ void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       ms = 1;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.*fLineScale;
+   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale;
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
      msize = 1.;
    } else if (fMarkerStyle == 6) {

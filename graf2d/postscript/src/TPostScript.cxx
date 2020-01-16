@@ -1105,9 +1105,9 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(GetMarkerLineWidth())));
+   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
-   markerstyle = GetMarkerStyleBase();
+   markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
    if (markerstyle == 1) strlcpy(chtemp, " m20",10);
    if (markerstyle == 2) strlcpy(chtemp, " m2",10);
@@ -1126,7 +1126,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.*fLineScale/4.;
+      Float_t symbolsize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale/4.;
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
@@ -1179,9 +1179,9 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(GetMarkerLineWidth())));
+   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
-   markerstyle = GetMarkerStyleBase();
+   markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
    if (markerstyle == 1) strlcpy(chtemp, " m20",10);
    if (markerstyle == 2) strlcpy(chtemp, " m2",10);
@@ -1200,7 +1200,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.*fLineScale/4.;
+      Float_t symbolsize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale/4.;
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());

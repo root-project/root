@@ -240,14 +240,15 @@ void TAttMarker::Copy(TAttMarker &attmarker) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the corresponding marker style with line width 1
+/// Internal helper function that returns the corresponding marker style with
+/// line width 1 for the given style.
 
-Style_t TAttMarker::GetMarkerStyleBase() const
+Style_t TAttMarker::GetMarkerStyleBase(Style_t style)
 {
-   if (fMarkerStyle <= 49)
-      return fMarkerStyle;
+   if (style <= 49)
+      return style;
 
-   switch ((fMarkerStyle - 50) % 18) {
+   switch ((style - 50) % 18) {
    case 0:
       return 2;
    case 1:
@@ -285,24 +286,23 @@ Style_t TAttMarker::GetMarkerStyleBase() const
    case 17:
       return 46;
    default:
-      return fMarkerStyle;
+      return style;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the line width of the current marker style (0 = filled marker)
+/// Internal helper function that returns the line width of the given marker
+/// style (0 = filled marker)
 
-Width_t TAttMarker::GetMarkerLineWidth() const
+Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
 {
-   if (fMarkerStyle >= 50)
-      return ((fMarkerStyle - 50) / 18) + 2;
-   else if (fMarkerStyle == 2 || fMarkerStyle == 3 || fMarkerStyle == 4
-	    || fMarkerStyle == 5 || fMarkerStyle == 24 || fMarkerStyle == 25
-	    || fMarkerStyle == 26 || fMarkerStyle == 27 || fMarkerStyle == 28
-	    || fMarkerStyle == 30 || fMarkerStyle == 31 || fMarkerStyle == 32
-	    || fMarkerStyle == 35 || fMarkerStyle == 36 || fMarkerStyle == 37
-	    || fMarkerStyle == 38 || fMarkerStyle == 40 || fMarkerStyle == 42
-	    || fMarkerStyle == 44 || fMarkerStyle == 46)
+   if (style >= 50)
+      return ((style - 50) / 18) + 2;
+   else if (style == 2 || style == 3 || style == 4 || style == 5
+	    || style == 24 || style == 25 || style == 26 || style == 27
+	    || style == 28 || style == 30 || style == 31 || style == 32
+	    || style == 35 || style == 36 || style == 37 || style == 38
+	    || style == 40 || style == 42 || style == 44 || style == 46)
       return 1;
    else
       return 0;

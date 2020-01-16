@@ -568,7 +568,7 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
    fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Int_t ms = GetMarkerStyleBase();
+   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
    if (ms == 4)
       ms = 24;
@@ -578,7 +578,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       ms = 1;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
+   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
@@ -608,7 +608,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr("<g stroke=");
       SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(TMath::Max(1, Int_t(GetMarkerLineWidth())), kFALSE);
+      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
       PrintStr(">");
    }
@@ -973,7 +973,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
    fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Int_t ms = GetMarkerStyleBase();
+   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
 
    if (ms == 4)
       ms = 24;
@@ -983,7 +983,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       ms = 1;
 
    // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
+   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
    if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
    if (fMarkerStyle == 6) msize = 0.02;
    if (fMarkerStyle == 7) msize = 0.04;
@@ -1013,7 +1013,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr("<g stroke=");
       SetColorAlpha(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteReal(TMath::Max(1, Int_t(GetMarkerLineWidth())), kFALSE);
+      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
       PrintStr(">");
    }

@@ -2436,12 +2436,12 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
    if (fMarkerStyle == markerstyle) return;
    static RXPoint shape[30];
    fMarkerStyle = TMath::Abs(markerstyle);
-   gMarkerLineWidth = TMath::Max(1, Int_t(GetMarkerLineWidth()));
+   gMarkerLineWidth = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle)));
    XSetLineAttributes((Display*)fDisplay, *gGCmark, gMarkerLineWidth,
                       gMarkerLineStyle, gMarkerCapStyle, gMarkerJoinStyle);
-   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(GetMarkerLineWidth()/2.)/4.;
+   Float_t MarkerSizeReduced = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
    Int_t im = Int_t(4*MarkerSizeReduced + 0.5);
-   markerstyle = GetMarkerStyleBase();
+   markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle == 2) {
       // + shaped marker
       shape[0].x = -im;  shape[0].y = 0;
