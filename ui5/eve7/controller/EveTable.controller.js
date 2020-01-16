@@ -197,7 +197,6 @@ sap.ui.define([
       },
 
       toggleTableEdit: function() {
-
          var header = this.getView().byId("header");
          if (!this.editor) {
             this.editor = new VerticalLayout("tableEdit", {"width":"100%"});
@@ -206,52 +205,110 @@ sap.ui.define([
 
             // expression row
             {
-               var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
-               var oModel = new JSONModel();
-               oModel.setData(collection.publicFunction);
-               // oModel.setData(aData);
-               this.getView().setModel(oModel);
-
-               var exprIn = new mInput("expression", {
-                                         width:"98%",
-                                         type : sap.m.InputType.Text,
-                                         placeholder: "Expression",
-                                         showSuggestion: true
-                                       });
+               var collection = this.mgr.GetElement(this.eveTable.fCollectionId);               
+               var exprIn = new sap.m.Input("inputExp", {
+    		  placeholder: "Start expression with \"i.\" to access object",
+    		  showValueHelp: true,
+    		  showTableSuggestionValueHelp: false,
+    		  width: "50%",
+    		  maxSuggestionWidth: "500px",
+    		  showSuggestion: true,
+    		  valueHelpRequest: function (oEvent) {
+    		     sap.m.MessageBox.alert("Value help requested");
+    		  },
+    		  suggestionItemSelected: function(oEvent){
+    		     var oItem = oEvent.getParameter("selectedRow");
+    		     console.log("sap.m.Input id with suggestion: selected item text is ------ " , oItem.getCells());
+                     // fill in title if empty
+                     var it = sap.ui.getCore().byId("titleEx");
+                     if ((it.getValue() && it.getValue().length) == false) {
+                        var v =  oItem.getCells()[0].getText().substring(2);
+                        var t = v.split("(");
+                        it.setValue(t[0]);
+                     }
+                     //fill in precision if empty
+                     var ip = sap.ui.getCore().byId("precisionEx");
+                     if ((ip.getValue() && ip.getValue().length) == false) {
+                        var p = oItem.getCells()[1].getText();
+                        if (p.startsWith("Int") || p.startsWith("int"))
+                           ip.setValue("0");
+                        else
+                           ip.setValue("3");
+                     }
+    		  },
+    		  suggestionColumns : [
+    		     new sap.m.Column({
+    			styleClass : "f",
+    			hAlign : "Begin",
+    			header : new sap.m.Label({
+                           text : "Funcname"
+    			})
+    		     }),
+    		     new sap.m.Column({
+    			hAlign : "Center",
+    			styleClass : "r",
+    			popinDisplay : "Inline",
+    			header : new sap.m.Label({
+    			   text : "Return"
+    			}),
+    			minScreenWidth : "Tablet",
+    			demandPopin : true
+    		     }),
+                     
+    		     new sap.m.Column({
+    			hAlign : "End",
+    			styleClass : "c",
+    			width : "30%",
+    			popinDisplay : "Inline",
+    			header : new sap.m.Label({
+                           text : "Class"
+    			}),
+    			minScreenWidth : "400px",
+    			demandPopin : true
+    		     })
+    		  ]
+    	       }).addStyleClass("inputRight");
+               
+               
                exprIn.setModel(oModel);
-               exprIn.bindAggregation("suggestionItems", "/", new coreItem({text: "{name}"}));
-               exprIn.setFilterFunction(function(sTerm, oItem) {
-                  // A case-insensitive 'string contains' style filter
-                  // console.log("filter sterm", sTerm);
-                  var base = sTerm;
-                  var n = base.lastIndexOf("i.");
-                  // console.log("last index ", n);
-                  if (n>=0) n+=2;
-                  var txt = base.substring(n,this.getFocusInfo().cursorPos );
-                  // console.log("suggest filter ", txt);
-                  // console.log("focus 1", this.getFocusInfo());
-
-                  return oItem.getText().match(new RegExp(txt, "i"));
-               });
+               
+    	       var oTableItemTemplate = new sap.m.ColumnListItem({
+    		  type : "Active",
+    		  vAlign : "Middle",
+    		  cells : [
+    		     new sap.m.Label({
+    			text : "{f}"
+    		     }),
+                     new sap.m.Label({
+    			text: "{r}"
+    		     }),
+                     new sap.m.Label({
+    			text : "{c}"
+    		     })
+    		  ]
+    	       });
+    	       var oModel = new sap.ui.model.json.JSONModel();
+               var oSuggestionData = collection.fPublicFunctions;
+               console.log("suggested data ",oSuggestionData );
+    	       oModel.setData(oSuggestionData);
+    	       exprIn.setModel(oModel);
+    	       exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
+               
                this.editor.addContent(exprIn);
             }
 
             // title & prec
             {
                var hl = new HorizontalLayout();
-               var titleIn = new mInput("title", {placeholder:"Title", tooltip:"title"});
+               var titleIn = new mInput("titleEx", {placeholder:"Title", tooltip:"column title"});
                titleIn.setWidth("98%");
                hl.addContent(titleIn);
-               //this.editor.addContent(titleIn);
 
-               var precIn = new mInput("precision", {placeholder:"Precision", type: sap.m.InputType.Number, constraints: {minimum:"0", maximum:"9"}});
-               // precIn.bindProperty("value", "abc>precision");
+               var precIn = new mInput("precisionEx", {placeholder:"Precision", type: sap.m.InputType.Number, constraints: {minimum:"0", maximum:"9"}});
                precIn.setWidth("100px");
-
                hl.addContent(precIn);
 
                this.editor.addContent(hl);
-
             }
 
             //  button actions
@@ -301,6 +358,10 @@ sap.ui.define([
          // console.log("MIR obj ", obj);
          //pthis.mgr.handle.Send(JSON.stringify(obj));
          pthis.mgr.SendMIR(obj);
+
+         // reset values
+         sap.ui.getCore().byId("titleEx").setValue("");
+         sap.ui.getCore().byId("precisionEx").setValue("");
       },
 
       collectionChanged: function(oEvent) {
