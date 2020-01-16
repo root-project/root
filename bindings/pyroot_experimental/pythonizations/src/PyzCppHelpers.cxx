@@ -59,9 +59,9 @@ std::string GetCppTypeFromNumpyType(const std::string& dtype) {
    } else if (dtype == "u4") {
       return "unsigned int";
    } else if (dtype == "i8") {
-      return "long";
+      return "Long64_t";
    } else if (dtype == "u8") {
-      return "unsigned long";
+      return "ULong64_t";
    } else if (dtype == "f4") {
       return "float";
    } else if (dtype == "f8") {
