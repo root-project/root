@@ -44,6 +44,14 @@ namespace ROOT {
 namespace Experimental {
 namespace Browsable {
 
+
+#ifdef _MSC_VER
+bool IsWindowsLink(const std::string &path) 
+{
+   return (path.length() > 4) && (path.rfind(".lnk") == path.length() - 4);
+}
+#endif
+
 /** \class RSysDirLevelIter
 \ingroup rbrowser
 
@@ -67,13 +75,11 @@ class RSysDirLevelIter : public RLevelIter {
 #ifdef _MSC_VER
       // on Windows path can be redirected via .lnk therefore get real path name before OpenDirectory,
       // otherwise such realname will not be known for us
-
-      if (fPath.rfind(".lnk") == fPath.length() - 4) {
+      if (IsWindowsLink(fPath)) {
          char *realWinPath = gSystem->ExpandPathName(fPath.c_str());
          if (realWinPath) fPath = realWinPath;
          delete [] realWinPath;
       }
-
 #endif
 
       fDir = gSystem->OpenDirectory(fPath.c_str());
@@ -143,9 +149,22 @@ class RSysDirLevelIter : public RLevelIter {
    /** Check if entry of that name exists */
    bool TestDirEntry(const std::string &name)
    {
-      std::string path = FullDirName() + name;
+      auto testname = name;
 
-      if (gSystem->GetPathInfo(path.c_str(), fCurrentStat)) {
+      auto path = FullDirName() + testname;
+
+      auto pathinfores = gSystem->GetPathInfo(path.c_str(), fCurrentStat);
+
+#ifdef _MSC_VER
+      if (pathinfores && !IsWindowsLink(path)) {
+         std::string lpath = path + ".lnk";
+         pathinfores = gSystem->GetPathInfo(lpath.c_str(), fCurrentStat);
+         if (!pathinfores) testname.append(".lnk");
+      }
+#endif
+
+      if (pathinfores) {
+
          if (fCurrentStat.fIsLink) {
             R__ERROR_HERE("Browserv7") << "Broken symlink of " << path;
          } else {
@@ -154,10 +173,9 @@ class RSysDirLevelIter : public RLevelIter {
          return false;
       }
 
-      fCurrentName = name;
-      fItemName = name;
+      fItemName = fCurrentName = testname;
 #ifdef _MSC_VER
-      if (fItemName.rfind(".lnk") == fItemName.length() - 4)
+      if (IsWindowsLink(fItemName))
          fItemName.resize(fItemName.length() - 4);
 #endif
       return true;
@@ -322,7 +340,6 @@ public:
    std::shared_ptr<RElement> GetElement() override
    {
       if (!R_ISDIR(fCurrentStat.fMode) && (fCurrentName.length() > 5) && (fCurrentName.rfind(".root") == fCurrentName.length() - 5)) {
-         printf("Opening file %s in directory %s\n", fCurrentName.c_str(), FullDirName().c_str());
          auto elem = RProvider::OpenFile("root", FullDirName() + fCurrentName);
          if (elem) return elem;
       }
@@ -420,7 +437,6 @@ RSysFile::RSysFile(const FileStat_t &stat, const std::string &dirname, const std
 
 /////////////////////////////////////////////////////////////////////////////////
 /// return file name
-/// in case of windows may exclude .lnk extension
 
 std::string RSysFile::GetName() const
 {
