@@ -454,4 +454,28 @@ public:
 
 } // namespace T_WithGreedyOverloads
 
+
+//===========================================================================
+// template with overloaded non-templated and templated setitem
+namespace TemplateWithSetItem {
+
+template <typename T>
+class MyVec {
+private:
+   std::vector<T> fData;
+
+public:
+   using size_type = typename std::vector<T>::size_type;
+
+   MyVec(size_type count) : fData(count) {}
+
+   T & operator[](size_type index) { return fData[index]; }
+
+   // The definition of this templated operator causes the issue
+   template <typename V>
+   MyVec operator[](const MyVec<V> &conds) const { return MyVec(2); }
+};
+
+} // namespace TemplateWithSetItem
+
 #endif // !CPPYY_TEST_TEMPLATES_H

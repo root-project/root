@@ -67,6 +67,10 @@ Global Interpreter Lock (GIL) release.
   whether generated wrappers or direct foreign functions should be used.
   This is for PyPy only; the flag has no effect on CPython.
 
+* ``__sig2exc__``: a flag that every C++ overload carries and determines
+  whether C++ signals (such as SIGABRT) should be converted into Python
+  exceptions.
+
 * ``__cppname__``: a string that every C++ bound class carries and contains
   the actual C++ name (as opposed to ``__name__`` which has the Python name).
   This can be useful for template instantiations, documentation, etc.

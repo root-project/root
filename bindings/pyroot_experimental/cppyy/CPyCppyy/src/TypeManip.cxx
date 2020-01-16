@@ -68,15 +68,21 @@ std::string CPyCppyy::TypeManip::remove_const(const std::string& cppname)
 {
 // Remove 'const' qualifiers from the given C++ name.
     std::string::size_type tmplt_start = cppname.find('<');
-    std::string::size_type tmplt_stop  = cppname.rfind('>');
-    if (tmplt_start != std::string::npos && tmplt_stop != std::string::npos) {
+    std::string::size_type type_stop   = cppname.rfind('>');
+    if (cppname.find("::", type_stop+1) != std::string::npos) // e.g. klass<T>::some_typedef
+        type_stop = cppname.find(' ', type_stop+1);
+    if (tmplt_start != std::string::npos) {
     // only replace const qualifying cppname, not in template parameters
         std::string pre = cppname.substr(0, tmplt_start);
         erase_const(pre);
-        std::string post = cppname.substr(tmplt_stop+1, std::string::npos);
-        erase_const(post);
+        std::string post = "";
+        if (type_stop != std::string::npos) {
+            post = cppname.substr(type_stop+1, std::string::npos);
+            erase_const(post);
+        }
 
-       return pre + cppname.substr(tmplt_start, tmplt_stop+1) + post;
+        type_stop = type_stop == std::string::npos ? std::string::npos : type_stop+1;
+        return pre + cppname.substr(tmplt_start, type_stop) + post;
     }
 
     std::string clean_name = cppname;
@@ -202,7 +208,7 @@ std::vector<std::string> CPyCppyy::TypeManip::extract_arg_types(const std::strin
     }
 
 // add last type
-    result.push_back(sig.substr(start, sig.size()-1-start));
+    result.push_back(sig.substr(start, sig.rfind(")")-start));
 
     return result;
 }

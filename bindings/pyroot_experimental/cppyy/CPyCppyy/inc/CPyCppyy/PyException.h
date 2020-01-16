@@ -1,9 +1,9 @@
-#ifndef CPYCPPYY_TPyException
-#define CPYCPPYY_TPyException
+#ifndef CPYCPPYY_PYEXCEPTION_H
+#define CPYCPPYY_PYEXCEPTION_H
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
-// TPyException                                                             //
+// PyException                                                             //
 //                                                                          //
 // Purpose: A C++ exception class for throwing python exceptions            //
 //          through C++ code.                                               //
@@ -35,13 +35,10 @@
 
 namespace CPyCppyy {
 
-class CPYCPPYY_CLASS_EXPORT TPyException : public std::exception {
+class CPYCPPYY_CLASS_EXTERN PyException : public std::exception {
 public:
-// default constructor
-    TPyException();
-
-// destructor
-    virtual ~TPyException() noexcept;
+    PyException();
+    virtual ~PyException() noexcept;
 
 // give reason for raised exception
     virtual const char* what() const noexcept;
@@ -49,4 +46,4 @@ public:
 
 } // namespace CPyCppyy
 
-#endif // !CPYCPPYY_TPyException
+#endif // !CPYCPPYY_PYEXCEPTION_H

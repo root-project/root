@@ -1,6 +1,8 @@
 // Bindings
 #include "CPyCppyy.h"
+#define CPYCPPYY_INTERNAL 1
 #include "CPyCppyy/TPyArg.h"
+#undef CPYCPPYY_INTERNAL
 
 
 //______________________________________________________________________________

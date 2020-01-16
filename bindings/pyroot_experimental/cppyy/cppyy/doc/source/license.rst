@@ -1,7 +1,7 @@
 License and copyright
 =====================
 
-Copyright (c) 2017-2019, The Regents of the University of California,
+Copyright (c) 2017-2020, The Regents of the University of California,
 through Lawrence Berkeley National Laboratory (subject to receipt of
 any required approvals from the U.S. Dept. of Energy). All rights
 reserved. Redistribution and use in source and binary forms, with or
@@ -51,19 +51,22 @@ the same conditions (except for some compatible licenses as retained in the
 source code):
 
   * CERN
+  * Simone Bacchio
   * Robert Bradshaw
   * Ellis Breen
   * Antonio Cuni
   * Aditi Dutta
   * Shaheed Haque
   * Jonsomi
+  * Max Kolin
   * Alvaro Moran
+  * Tarmo Pikaro
   * Matti Picus
   * Camille Scott
   * Toby StClere-Smithe
   * Stefan Wunsch
 
-Conda-forge recipes were provided by Julian Rueth.
+Conda-forge recipes were provided by Julian Rueth and Isuru Fernando.
 
 
 External code

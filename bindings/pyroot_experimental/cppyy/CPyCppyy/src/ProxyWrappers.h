@@ -14,6 +14,9 @@ PyObject* CreateScopeProxy(PyObject*, PyObject* args);
 PyObject* CreateScopeProxy(
     const std::string& scope_name, PyObject* parent = nullptr);
 
+// C++ exceptions form a special case b/c they have to derive from BaseException
+PyObject* CreateExcScopeProxy(PyObject* pyscope, PyObject* pyname, PyObject* parent);
+
 // bind a C++ object into a Python proxy object (flags are CPPInstance::Default)
 PyObject* BindCppObjectNoCast(Cppyy::TCppObject_t object,
     Cppyy::TCppType_t klass, const unsigned flags = 0);

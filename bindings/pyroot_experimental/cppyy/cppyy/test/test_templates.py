@@ -102,15 +102,13 @@ class TestTEMPLATES:
         assert type(ggsr(vector['int']([5])).m_retval) == float
         assert ggsr(vector['int']([5])).m_retval == 5.
         # float in, int out
-        # TODO: this now matches the earlier overload
-        #ggsr = cppyy.gbl.global_get_some_result['std::vector<float>, int']
-        #assert type(ggsr(vector['float']([0.3])).m_retval) == int
-        #assert ggsr(vector['float']([0.3])).m_retval == 0
+        ggsr = cppyy.gbl.global_get_some_result['std::vector<float>, int']
+        assert type(ggsr(vector['float']([0.3])).m_retval) == int
+        assert ggsr(vector['float']([0.3])).m_retval == 0
         # int in, int out
-        # TODO: same as above, matches earlier overload
-        #ggsr = cppyy.gbl.global_get_some_result['std::vector<int>, int']
-        #assert type(ggsr(vector['int']([5])).m_retval) == int
-        #assert ggsr(vector['int']([5])).m_retval == 5
+        ggsr = cppyy.gbl.global_get_some_result['std::vector<int>, int']
+        assert type(ggsr(vector['int']([5])).m_retval) == int
+        assert ggsr(vector['int']([5])).m_retval == 5
 
     def test04_variadic_function(self):
         """Call a variadic function"""
@@ -545,6 +543,16 @@ class TestTEMPLATES:
 
         for val in [2**64, -2**63-1]:
             raises(OverflowError, PassSomeInt, val)
+
+    def test22_overloaded_setitem(self):
+        """Template with overloaded non-templated and templated setitem"""
+
+        import cppyy
+
+        MyVec = cppyy.gbl.TemplateWithSetItem.MyVec
+
+        v = MyVec["float"](2)
+        v[0] = 1        # used to throw TypeError
 
 
 class TestTEMPLATED_TYPEDEFS:

@@ -5,6 +5,7 @@
 #include "PyCallable.h"
 
 // Standard
+#include <map>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,7 @@ protected:
     virtual PyObject* PreProcessArgs(CPPInstance*& self, PyObject* args, PyObject* kwds);
 
     bool      Initialize(CallContext* ctxt = nullptr);
+    PyObject* ProcessKeywords(PyObject* self, PyObject* args, PyObject* kwds);
     bool      ConvertAndSetArgs(PyObject* args, CallContext* ctxt = nullptr);
     PyObject* Execute(void* self, ptrdiff_t offset, CallContext* ctxt = nullptr);
 
@@ -61,8 +63,8 @@ private:
     void Copy_(const CPPMethod&);
     void Destroy_() const;
 
-    PyObject* CallFast(void*, ptrdiff_t, CallContext*);
-    PyObject* CallSafe(void*, ptrdiff_t, CallContext*);
+    PyObject* ExecuteFast(void*, ptrdiff_t, CallContext*);
+    PyObject* ExecuteProtected(void*, ptrdiff_t, CallContext*);
 
     bool InitConverters_();
 
@@ -75,14 +77,12 @@ private:
     Executor*           fExecutor;
 
 // call dispatch buffers
-    std::vector<Converter*> fConverters;
-
-// cached values
-    Py_ssize_t fArgsRequired;
+    std::vector<Converter*>     fConverters;
+    std::map<std::string, int>* fArgIndices;
 
 protected:
-// admin
-    bool fIsInitialized;
+// cached value that doubles as initialized flag (uninitialized if -1)
+    int fArgsRequired;
 };
 
 } // namespace CPyCppyy
