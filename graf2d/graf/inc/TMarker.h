@@ -65,6 +65,7 @@ public:
    virtual void         SetBBoxY2(const Int_t y);
 
    static  void     DisplayMarkerTypes();
+   static  void     DisplayMarkerLineWidths();
 
    ClassDef(TMarker,3)  //Marker
 };
