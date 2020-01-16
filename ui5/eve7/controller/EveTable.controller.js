@@ -10,7 +10,8 @@ sap.ui.define([
    'sap/m/Button',
    "sap/ui/core/ResizeHandler",
    "sap/ui/layout/VerticalLayout",
-   "sap/ui/layout/HorizontalLayout"
+   "sap/ui/layout/HorizontalLayout",
+   "sap/m/MessageBox"
 ], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column,
              mInput, mButton, ResizeHandler, VerticalLayout, HorizontalLayout) {
 
@@ -197,7 +198,7 @@ sap.ui.define([
       },
 
       toggleTableEdit: function() {
-         var header = this.getView().byId("header");
+         var header = sap.ui.getCore().byId("EveViewer21--header");
          if (!this.editor) {
             this.editor = new VerticalLayout("tableEdit", {"width":"100%"});
 
@@ -210,11 +211,11 @@ sap.ui.define([
     		  placeholder: "Start expression with \"i.\" to access object",
     		  showValueHelp: true,
     		  showTableSuggestionValueHelp: false,
-    		  width: "50%",
+    		  width: "100%",
     		  maxSuggestionWidth: "500px",
     		  showSuggestion: true,
     		  valueHelpRequest: function (oEvent) {
-    		     sap.m.MessageBox.alert("Value help requested");
+    		     sap.m.MessageBox.alert("Write any valid expression.\n Using \"i.\" convetion to access an object in collection. Below is an example:\ni.GetPdgCode() + 2");
     		  },
     		  suggestionItemSelected: function(oEvent){
     		     var oItem = oEvent.getParameter("selectedRow");
@@ -299,13 +300,13 @@ sap.ui.define([
 
             // title & prec
             {
-               var hl = new HorizontalLayout();
+               var hl = new HorizontalLayout( {"width":"100%"});
                var titleIn = new mInput("titleEx", {placeholder:"Title", tooltip:"column title"});
-               titleIn.setWidth("98%");
+             titleIn.setWidth("100%");
                hl.addContent(titleIn);
 
                var precIn = new mInput("precisionEx", {placeholder:"Precision", type: sap.m.InputType.Number, constraints: {minimum:"0", maximum:"9"}});
-               precIn.setWidth("100px");
+               precIn.setWidth("100%");
                hl.addContent(precIn);
 
                this.editor.addContent(hl);
