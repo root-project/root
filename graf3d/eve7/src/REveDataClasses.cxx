@@ -17,6 +17,7 @@
 #include "TMethodArg.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TBaseClass.h"
 
 #include "json.hpp"
 #include <sstream>
@@ -101,18 +102,71 @@ void REveDataCollection::ApplyFilter()
 
 Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
+   struct PubMethods
+   {
+      void FillJSON(TClass* c, nlohmann::json & arr)
+      {
+         TString  ctor = c->GetName(), dtor = "~";
+         {
+            int i = ctor.Last(':');
+            if (i != kNPOS)
+            {
+               ctor.Replace(0, i + 1, "");
+            }
+            dtor += ctor;
+         }
+
+         TMethod *meth;
+         TIter    next(c->GetListOfMethods());
+         while ((meth = (TMethod*) next()))
+         {
+            // Filter out ctor, dtor, some ROOT stuff.
+            {
+               TString m(meth->GetName());
+               if (m == ctor || m == dtor ||
+                   m == "Class" || m == "Class_Name" || m == "Class_Version" || m == "Dictionary" || m == "IsA" ||
+                   m == "DeclFileName" || m == "ImplFileName" || m == "DeclFileLine" || m == "ImplFileLine" ||
+                   m == "Streamer" || m == "StreamerNVirtual" || m == "ShowMembers" ||
+                   m == "CheckTObjectHashConsistency")
+               {
+                  continue;
+               }
+            }
+
+            TString     ms;
+            TMethodArg *ma;
+            TIter       next_ma(meth->GetListOfMethodArgs());
+            while ((ma = (TMethodArg*) next_ma()))
+            {
+               if ( ! ms.IsNull()) ms += ", ";
+
+               ms += ma->GetTypeName();
+               ms += " ";
+               ms += ma->GetName();
+            }
+            char* entry = Form("i.%s(%s)",meth->GetName(),ms.Data());
+            nlohmann::json jm ;
+            jm["f"] = entry;
+            jm["r"] = meth->GetReturnTypeName();
+            jm["c"] = c->GetName();
+            arr.push_back(jm);
+         }
+         {
+            TBaseClass *base;
+            TIter       blnext(c->GetListOfBases());
+            while ((base = (TBaseClass*) blnext()))
+            {
+               FillJSON(base->GetClassPointer(), arr);
+            }
+         }
+      }
+   };
+
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
    j["fFilterExpr"] = fFilterExpr.Data();
-   j["publicFunction"]  = nlohmann::json::array();
-
-   TIter x( fItemClass->GetListOfAllPublicMethods());
-   while (TObject *obj = x()) {
-      TMethod *method = dynamic_cast<TMethod *>(obj);
-
-      nlohmann::json m;
-      m["name"] = method->GetPrototype();
-      j["publicFunction"].push_back(m);
-   }
+   j["fPublicFunctions"]  = nlohmann::json::array();
+   PubMethods pm;
+   pm.FillJSON(fItemClass, j["fPublicFunctions"]);
 
    return ret;
 }
