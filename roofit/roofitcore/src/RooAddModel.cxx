@@ -651,7 +651,7 @@ Bool_t RooAddModel::checkObservables(const RooArgSet* nset) const
 {
   Bool_t ret(kFALSE) ;
 
-  for (unsigned int i = 0; i < _pdfList.size(); ++i) {
+  for (unsigned int i = 0; i < _coefList.size(); ++i) {
     auto pdf = &_pdfList[i];
     auto coef = &_coefList[i];
 
