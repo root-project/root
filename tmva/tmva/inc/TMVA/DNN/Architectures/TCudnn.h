@@ -183,6 +183,9 @@ public:
    static void FreeConvWorkspace(TWorkspace * workspace);
    static void FreePoolDropoutWorkspace(TWorkspace * workspace);
    static void FreeRNNWorkspace(TWorkspace *workspace);
+
+   static void InitializeRNNTensors(RNNLayer_t * layer);
+
    //____________________________________________________________________________
    //
    // Propagation
@@ -589,7 +592,7 @@ public:
    static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
 
    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
-   static void Rearrange(Tensor_t &out, const Tensor_t &in) { TCuda<AFloat>::Rearrange(out, in); }
+   static void Rearrange(Tensor_t &out, const Tensor_t &in);
 
    /** Backward pass for Recurrent Networks */
    static Matrix_t &RecurrentLayerBackward(Matrix_t &state_gradients_backward, // BxH
@@ -713,18 +716,17 @@ public:
       // printing of tensor
    static void PrintTensor( const Tensor_t & A, const std::string name = "tensor", bool = false);
 
-
+   static void PrintTensor4dDescriptor(TensorDescriptor_t descriptor);
+   static void PrintTensorNdDescriptor(TensorDescriptor_t descriptor, int n = 10);
 
    ///////////////////////////////////////////////////////////////////////////////
    /// extra functions defined only for CPU architecture !!!
    //////////////////////////////////////////////////////////////////////////////
 
    /** Sum rows of (m x n) matrix \p A and write the results into the first
-   * m elements in \p B.
-   */
-   static void SumRows(Matrix_t & B, const Matrix_t & A);
-
-
+    * m elements in \p B.
+    */
+   static void SumRows(Matrix_t &B, const Matrix_t &A);
 };
 
 
@@ -768,7 +770,7 @@ void TCudnn<AFloat>::CopyWeightsDiffArch(TCudaTensor<AFloat> &B, const  AMatrix 
    // we need to traspose for different layout
    if (B.GetLayout() == GetTensorLayout()  ) {
       // this is for CNN weights that are in row-major formats
-      assert(B.GetShape().size() == 4);  // weights shape should be 4
+      //assert(B.GetShape().size() == 4);  // weights shape should be 4
       tmp.T();
    }
    TCudaMatrix<AFloat> tmp2(tmp);
@@ -853,6 +855,34 @@ void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, co
       }
       std::cout << "\n";
    }
+}
+
+template <typename AFloat>
+void TCudnn<AFloat>::PrintTensor4dDescriptor(TensorDescriptor_t descriptor) {
+   int n, c, h, w = 0;
+   int s1, s2, s3, s4 = 0;
+   cudnnDataType_t dataType;
+   cudnnGetTensor4dDescriptor(descriptor, &dataType, &n, &c, &h, &w, &s1, &s2, &s3, &s4);
+   std::cout << "Descriptor for 4d tensor of shape  { " << n << " , " << c << " , " << h << " , " << w << " }"
+             << " and strides { " << s1 << " , " << s2 << " , " << s3 << " , " << s4 << " }" << std::endl;
+}
+template <typename AFloat>
+void TCudnn<AFloat>::PrintTensorNdDescriptor(TensorDescriptor_t descriptor, int ndim)
+{
+   int n = 0;
+   std::vector<int> dims(ndim);
+   std::vector<int> strides(ndim);
+   cudnnDataType_t dataType;
+   cudnnGetTensorNdDescriptor(descriptor, ndim, &dataType, &n, dims.data(), strides.data());
+   dims.resize(n);
+   strides.resize(n);
+   std::cout << "Descriptor for Nd tensor of dim = " << n << " shape  { ";
+   for (auto d : dims)
+      std::cout << d << " , ";
+   std::cout << "} and strides { ";
+   for (auto s : strides)
+      std::cout << s << " , ";
+   std::cout << " }" << std::endl;
 }
 
 // initialize the CNN options
