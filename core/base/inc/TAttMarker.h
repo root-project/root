@@ -40,6 +40,9 @@ public:
    virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;} ///< Set the marker style
    virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}  ///< Set the marker size
 
+   static Style_t GetMarkerStyleBase(Style_t style);
+   static Width_t GetMarkerLineWidth(Style_t style);
+
    ClassDef(TAttMarker,2);  //Marker attributes
 };
 

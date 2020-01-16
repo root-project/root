@@ -251,7 +251,7 @@ void MarkerPainter::DrawDot(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
 {
-   const Double_t im = 4 * gVirtualX->GetMarkerSize() + 0.5;
+   const Double_t im = 4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5;
    glBegin(GL_LINES);
 
    for (UInt_t i = 0; i < n; ++i) {
@@ -271,7 +271,7 @@ void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
 {
-   SCoord_t im = SCoord_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   SCoord_t im = SCoord_t(4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5);
    fStar[0].fX = -im;  fStar[0].fY = 0;
    fStar[1].fX =  im;  fStar[1].fY = 0;
    fStar[2].fX = 0  ;  fStar[2].fY = -im;
@@ -305,7 +305,7 @@ void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawX(UInt_t n, const TPoint *xy)const
 {
-   const Double_t im = 0.707 * (4 * gVirtualX->GetMarkerSize() + 0.5) + 0.5;
+   const Double_t im = 0.707 * (4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5) + 0.5;
 
    glBegin(GL_LINES);
 
@@ -358,7 +358,7 @@ void CalculateCircle(std::vector<TPoint> &circle, Double_t r, UInt_t pts);
 
 void MarkerPainter::DrawCircle(UInt_t n, const TPoint *xy)const
 {
-   Double_t r = 4 * gVirtualX->GetMarkerSize() + 0.5;
+   Double_t r = 4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5;
    if (r > 100.)
       r = 100.;//as in TGX11.
 
@@ -446,8 +446,9 @@ void MarkerPainter::DrawFullTrianlgeDown(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawDiamond(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t imx = Int_t(2.66 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4.00 * MarkerSizeReduced + 0.5);
+   const Int_t imx = Int_t(2.66 * MarkerSizeReduced + 0.5);
 
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -486,7 +487,7 @@ void MarkerPainter::DrawFullDiamond(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenTrianlgeDown(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im = Int_t(4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5);
 
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -503,8 +504,9 @@ void MarkerPainter::DrawOpenTrianlgeDown(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenCross(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t imx = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4.00 * MarkerSizeReduced + 0.5);
+   const Int_t imx = Int_t(1.33 * MarkerSizeReduced + 0.5);
 
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -618,11 +620,12 @@ void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenStar(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im1 = Int_t(0.66 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im3 = Int_t(2.66 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im4 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4.00 * MarkerSizeReduced + 0.5);
+   const Int_t im1 = Int_t(0.66 * MarkerSizeReduced + 0.5);
+   const Int_t im2 = Int_t(2.00 * MarkerSizeReduced + 0.5);
+   const Int_t im3 = Int_t(2.66 * MarkerSizeReduced + 0.5);
+   const Int_t im4 = Int_t(1.33 * MarkerSizeReduced + 0.5);
 
    for (UInt_t i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -647,7 +650,7 @@ void MarkerPainter::DrawOpenStar(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenSquareDiagonal(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im = Int_t(4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -670,7 +673,7 @@ void MarkerPainter::DrawOpenSquareDiagonal(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenDiamondCross(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im = Int_t(4. * (gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.) + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -693,8 +696,9 @@ void MarkerPainter::DrawOpenDiamondCross(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenThreeTriangles(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4. * MarkerSizeReduced + 0.5);
+   const Int_t im2 = Int_t(2. * MarkerSizeReduced + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -719,8 +723,9 @@ void MarkerPainter::DrawOpenThreeTriangles(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOctagonCross(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4. * MarkerSizeReduced + 0.5);
+   const Int_t im2 = Int_t(2. * MarkerSizeReduced + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -776,8 +781,9 @@ void MarkerPainter::DrawFullThreeTriangles(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenFourTrianglesX(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4. * MarkerSizeReduced + 0.5);
+   const Int_t im2 = Int_t(2. * MarkerSizeReduced + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -834,8 +840,9 @@ void MarkerPainter::DrawFullFourTrianglesX(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenDoubleDiamond(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im4 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4.00 * MarkerSizeReduced + 0.5);
+   const Int_t im4 = Int_t(1.33 * MarkerSizeReduced + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -913,8 +920,9 @@ void MarkerPainter::DrawFullDoubleDiamond(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenFourTrianglesPlus(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4. * MarkerSizeReduced + 0.5);
+   const Int_t im2 = Int_t(2. * MarkerSizeReduced + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
@@ -967,8 +975,9 @@ void MarkerPainter::DrawFullFourTrianglesPlus(UInt_t n, const TPoint *xy)const
 
 void MarkerPainter::DrawOpenCrossX(UInt_t n, const TPoint *xy)const
 {
-   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
-   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+   const Double_t MarkerSizeReduced = gVirtualX->GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(gVirtualX->GetMarkerStyle())/2.)/4.;
+   const Int_t im  = Int_t(4. * MarkerSizeReduced + 0.5);
+   const Int_t im2 = Int_t(2. * MarkerSizeReduced + 0.5);
 
    for (unsigned i = 0; i < n; ++i) {
       const Double_t x = xy[i].fX;
