@@ -1,6 +1,8 @@
 // Bindings
 #include "CPyCppyy.h"
-#include "CPyCppyy/TPyReturn.h"
+#define CPYCPPYY_INTERNAL 1
+#include "CPyCppyy/PyResult.h"
+#undef CPYCPPYY_INTERNAL
 
 #include "CPPInstance.h"
 
@@ -13,35 +15,24 @@
 //                        =============================
 //
 // Transport class for bringing objects from python (dynamically typed) to Cling
-// (statically typed). It is best to immediately cast a TPyReturn to the real
+// (statically typed). It is best to immediately cast a PyResult to the real
 // type, either implicitly (for builtin types) or explicitly (through a void*
-// cast for pointers to ROOT objects).
-//
-// Examples:
-//
-//  root [0] TBrowser* b = (void*)TPython::Eval("ROOT.TBrowser()");
-//  root [1] int i = TPython::Eval("1+1");
-//  root [2] i
-//  (int)2
-//  root [3] double d = TPython::Eval("1+3.1415");
-//  root [4] d
-//  (double)4.14150000000000063e+00
+// cast for pointers to C++ objects).
 
 
 //- constructors/destructor --------------------------------------------------
-TPyReturn::TPyReturn()
+CPyCppyy::PyResult::PyResult()
 {
-// Construct a TPyReturn object from Py_None.
+// Construct a PyResult object from Py_None.
     Py_INCREF(Py_None);
     fPyObject = Py_None;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 //----------------------------------------------------------------------------
-TPyReturn::TPyReturn(PyObject* pyobject)
+CPyCppyy::PyResult::PyResult(PyObject* pyobject)
 {
-// Construct a TPyReturn from a python object. The python object may represent
-// a ROOT object. Steals reference to given python object.
+// Construct a PyResult from a python object. The python object may represent
+// a C++ object. Steals reference to given python object.
     if (!pyobject) {
         Py_INCREF(Py_None);
         fPyObject = Py_None;
@@ -50,7 +41,7 @@ TPyReturn::TPyReturn(PyObject* pyobject)
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::TPyReturn(const TPyReturn& other)
+CPyCppyy::PyResult::PyResult(const PyResult& other)
 {
 // Copy constructor. Applies python object reference counting.
     Py_INCREF(other.fPyObject);
@@ -58,7 +49,7 @@ TPyReturn::TPyReturn(const TPyReturn& other)
 }
 
 //----------------------------------------------------------------------------
-TPyReturn& TPyReturn::operator=(const TPyReturn& other)
+CPyCppyy::PyResult& CPyCppyy::PyResult::operator=(const PyResult& other)
 {
 // Assignment operator. Applies python object reference counting.
     if (this != &other) {
@@ -71,7 +62,7 @@ TPyReturn& TPyReturn::operator=(const TPyReturn& other)
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::~TPyReturn()
+CPyCppyy::PyResult::~PyResult()
 {
 // Destructor. Reference counting for the held python object is in effect.
     Py_DECREF(fPyObject);
@@ -79,14 +70,14 @@ TPyReturn::~TPyReturn()
 
 
 //- public members -----------------------------------------------------------
-TPyReturn::operator char*() const
+CPyCppyy::PyResult::operator char*() const
 {
 // Cast python return value to C-style string (may fail).
     return (char*)((const char*)*this);
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator const char*() const
+CPyCppyy::PyResult::operator const char*() const
 {
 // Cast python return value to C-style string (may fail).
     if (fPyObject == Py_None)      // for void returns
@@ -102,7 +93,7 @@ TPyReturn::operator const char*() const
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator char() const
+CPyCppyy::PyResult::operator char() const
 {
 // Cast python return value to C++ char (may fail).
     std::string s = operator const char*();
@@ -113,7 +104,7 @@ TPyReturn::operator char() const
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator long() const
+CPyCppyy::PyResult::operator long() const
 {
 // Cast python return value to C++ long (may fail).
     long l = PyLong_AsLong(fPyObject);
@@ -125,7 +116,7 @@ TPyReturn::operator long() const
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator unsigned long() const
+CPyCppyy::PyResult::operator unsigned long() const
 {
 // Cast python return value to C++ unsigned long (may fail).
     unsigned long ul = PyLong_AsUnsignedLong(fPyObject);
@@ -137,7 +128,7 @@ TPyReturn::operator unsigned long() const
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator double() const
+CPyCppyy::PyResult::operator double() const
 {
 // Cast python return value to C++ double (may fail).
     double d = PyFloat_AsDouble(fPyObject);
@@ -149,9 +140,9 @@ TPyReturn::operator double() const
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator void*() const
+CPyCppyy::PyResult::operator void*() const
 {
-// Cast python return value to ROOT object with dictionary (may fail; note that
+// Cast python return value to C++ object with dictionary (may fail; note that
 // you have to use the void* converter, as CINT will not call any other).
     if (fPyObject == Py_None)
         return nullptr;
@@ -160,11 +151,11 @@ TPyReturn::operator void*() const
         ((CPyCppyy::CPPInstance*)fPyObject)->CppOwns();
         return ((CPyCppyy::CPPInstance*)fPyObject)->GetObject();
     } else
-        return fPyObject;               // borrows reference
+        return fPyObject;              // borrows reference
 }
 
 //----------------------------------------------------------------------------
-TPyReturn::operator PyObject*() const
+CPyCppyy::PyResult::operator PyObject*() const
 {
 // Direct return of the held PyObject; note the new reference.
     if (fPyObject == Py_None)

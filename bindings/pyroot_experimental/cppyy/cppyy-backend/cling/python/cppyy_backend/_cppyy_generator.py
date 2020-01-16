@@ -360,12 +360,12 @@ class CppyyGenerator(object):
                 if template_stack_index == -1:
                     template_info_stack.append(template_info)
                     info["type"] = template_info
+                    template_stack_index += 1
                 else:
                     #
                     # Non-first template_infos are just parameters.
                     #
                     template_info_stack[template_stack_index]["parameters"].append(template_info)
-                template_stack_index += 1
             elif child.kind == CursorKind.TYPE_REF:
                 if template_stack_index > -1:
                     #

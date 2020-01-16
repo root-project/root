@@ -19,10 +19,10 @@ The backend repo contains both the cppyy-cling (under "cling") and
 cppyy-backend (under "clingwrapper") packages.
 
 
+.. _building_from_source:
+
 Building from source
 --------------------
-
-.. _building_from_source:
 
 Except for cppyy-cling, the structure in the repositories follows a normal
 PyPA package and they are thus ready to build with `setuptools`_: simply
@@ -46,8 +46,8 @@ cores (x2 if hyperthreading is enabled).
 
 On MS Windows, some temporary path names may be too long, causing the build to
 fail.
-To resolve this issue, set the ``TMP`` and ``TEMP`` envars to something short,
-before building.
+To resolve this issue, point the ``TMP`` and ``TEMP`` envars to an existing
+directory with a short name before the build:
 For example::
 
  > set TMP=C:\TMP

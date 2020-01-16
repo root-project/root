@@ -29,6 +29,7 @@ bool CPyCppyy::gDictLookupActive = false;
 typedef std::map<std::string, std::string> TC2POperatorMapping_t;
 static TC2POperatorMapping_t gC2POperatorMapping;
 static std::set<std::string> gOpSkip;
+static std::set<std::string> gOpRemove;
 
 namespace {
 
@@ -42,7 +43,14 @@ namespace {
             gOpSkip.insert("[]");      // __s/getitem__, depends on return type
             gOpSkip.insert("+");       // __add__, depends on # of args (see __pos__)
             gOpSkip.insert("-");       // __sub__, id. (eq. __neg__)
-            gOpSkip.insert("+");       // __mul__, double meaning in C++
+            gOpSkip.insert("*");       // __mul__ or __deref__
+            gOpSkip.insert("++");      // __postinc__ or __preinc__
+            gOpSkip.insert("--");      // __postdec__ or __predec__
+
+            gOpRemove.insert("new");   // this and the following not handled at all
+            gOpRemove.insert("new[]");
+            gOpRemove.insert("delete");
+            gOpRemove.insert("delete[]");
 
             gC2POperatorMapping["[]"]  = "__getitem__";
             gC2POperatorMapping["()"]  = "__call__";
@@ -52,9 +60,12 @@ namespace {
             gC2POperatorMapping["<<"]  = "__lshift__";
             gC2POperatorMapping[">>"]  = "__rshift__";
             gC2POperatorMapping["&"]   = "__and__";
+            gC2POperatorMapping["&&"]  = "__dand__";
             gC2POperatorMapping["|"]   = "__or__";
+            gC2POperatorMapping["||"]  = "__dor__";
             gC2POperatorMapping["^"]   = "__xor__";
-            gC2POperatorMapping["~"]   = "__inv__";
+            gC2POperatorMapping["~"]   = "__invert__";
+            gC2POperatorMapping[","]   = "__comma__";
             gC2POperatorMapping["+="]  = "__iadd__";
             gC2POperatorMapping["-="]  = "__isub__";
             gC2POperatorMapping["*="]  = "__imul__";
@@ -231,91 +242,82 @@ bool CPyCppyy::Utility::AddToClass(PyObject* pyclass, const char* label, PyCalla
     return true;
 }
 
-//----------------------------------------------------------------------------
-bool CPyCppyy::Utility::AddBinaryOperator(PyObject* left, PyObject* right, const char* op,
-    const char* label, const char* alt, Cppyy::TCppScope_t scope)
-{
-// Install the named operator (op) into the left object's class if such a function
-// exists as a global overload; a label must be given if the operator is not in
-// gC2POperatorMapping (i.e. if it is ambiguous at the member level).
-
-// this should be a given, nevertheless ...
-    if (!CPPInstance_Check(left))
-        return false;
-
-// retrieve the class names to match the signature of any found global functions
-    std::string rcname = ClassName(right);
-    std::string lcname = ClassName(left);
-    PyObject* pyclass = (PyObject*)Py_TYPE(left);
-    bool result = AddBinaryOperator(pyclass, lcname, rcname, op, label, alt, scope);
-
-    return result;
-}
-
-//----------------------------------------------------------------------------
-bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const char* op,
-    const char* label, const char* alt, Cppyy::TCppScope_t scope)
-{
-// Install binary operator op in pyclass, working on two instances of pyclass.
-    std::string cname;
-    if (CPPScope_Check(pyclass))
-        cname = Cppyy::GetScopedFinalName(((CPPScope*)pyclass)->fCppType);
-    else {
-        PyObject* pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
-        cname = Cppyy::ResolveName(CPyCppyy_PyText_AsString(pyname));
-        Py_DECREF(pyname);
-    }
-
-    return AddBinaryOperator(pyclass, cname, cname, op, label, alt, scope);
-}
 
 //----------------------------------------------------------------------------
 static inline
 CPyCppyy::PyCallable* BuildOperator(const std::string& lcname, const std::string& rcname,
-    const char* op, Cppyy::TCppScope_t scope = Cppyy::gGlobalScope)
+    const char* op, Cppyy::TCppScope_t scope, bool reverse=false)
 {
 // Helper to find a function with matching signature in 'funcs'.
     std::string opname = "operator";
     opname += op;
 
-    bool isReverse = false;
     Cppyy::TCppIndex_t idx = Cppyy::GetGlobalOperator(scope, lcname, rcname, opname);
-    if (idx == (Cppyy::TCppIndex_t)-1) {
-        if (op[1] == '\0' && (op[0] == '*' || op[0] == '+')) { // TODO: bit operators?
-        // these are associative operators, so try reverse
-            isReverse = true;
-            idx = Cppyy::GetGlobalOperator(scope, rcname, lcname, opname);
-        }
-
-        if (idx == (Cppyy::TCppIndex_t)-1)
-            return nullptr;
-    }
+    if (idx == (Cppyy::TCppIndex_t)-1)
+        return nullptr;
 
     Cppyy::TCppMethod_t meth = Cppyy::GetMethod(scope, idx);
-    if (!isReverse)
+    if (!reverse)
         return new CPyCppyy::CPPFunction(scope, meth);
     return new CPyCppyy::CPPReverseBinary(scope, meth);
 }
 
-bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& lcname,
-    const std::string& rcname, const char* op, const char* label, const char* alt, Cppyy::TCppScope_t scope)
+//----------------------------------------------------------------------------
+CPyCppyy::PyCallable* CPyCppyy::Utility::FindUnaryOperator(PyObject* pyclass, const char* op)
 {
-// Find a global function with a matching signature and install the result on pyclass;
-// in addition, __gnu_cxx, std::__1, and __cppyy_internal are searched pro-actively (as
-// there's AFAICS no way to unearth using information).
+// Find a callable matching named operator (op) and klass arguments in the global
+// namespace or the klass' namespace.
+    if (!CPPScope_Check(pyclass))
+        return nullptr;
+
+    CPPClass* klass = (CPPClass*)pyclass;
+    const std::string& lcname = Cppyy::GetScopedFinalName(klass->fCppType);
+    Cppyy::TCppScope_t scope = Cppyy::GetScope(TypeManip::extract_namespace(lcname));
+    return FindBinaryOperator(lcname, "", op, scope, false);
+}
+
+//----------------------------------------------------------------------------
+CPyCppyy::PyCallable* CPyCppyy::Utility::FindBinaryOperator(PyObject* left, PyObject* right,
+    const char* op, Cppyy::TCppScope_t scope)
+{
+// Find a callable matching the named operator (op) and the (left, right)
+// arguments in the global or these objects' namespaces.
+
+    bool reverse = false;
+    if (!CPPInstance_Check(left)) {
+        if (CPPInstance_Check(right))
+           reverse = true;
+        else
+           return nullptr;
+    }
+
+// retrieve the class names to match the signature of any found global functions
+    const std::string& lcname = ClassName(left);
+    const std::string& rcname = ClassName(right);
+    return FindBinaryOperator(lcname, rcname, op, scope, reverse);
+}
+
+//----------------------------------------------------------------------------
+CPyCppyy::PyCallable* CPyCppyy::Utility::FindBinaryOperator(
+    const std::string& lcname, const std::string& rcname,
+    const char* op, Cppyy::TCppScope_t scope, bool reverse)
+{
+// Find a global function with a matching signature; search __gnu_cxx, std::__1,
+// and __cppyy_internal pro-actively (as there's AFAICS no way to unearth 'using'
+// information).
 
     if (rcname == "<unknown>" || lcname == "<unknown>")
-        return false;
+        return nullptr;
 
     PyCallable* pyfunc = 0;
 
     const std::string& lnsname = TypeManip::extract_namespace(lcname);
     if (!scope) scope = Cppyy::GetScope(lnsname);
     if (scope)
-        pyfunc = BuildOperator(lcname, rcname, op, scope);
+        pyfunc = BuildOperator(lcname, rcname, op, scope, reverse);
 
     if (!pyfunc && scope != Cppyy::gGlobalScope)      // search in global scope anyway
-        pyfunc = BuildOperator(lcname, rcname, op);
+        pyfunc = BuildOperator(lcname, rcname, op, Cppyy::gGlobalScope, reverse);
 
     if (!pyfunc) {
     // For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
@@ -324,7 +326,7 @@ bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& 
     //       namespace where the class is defined
         static Cppyy::TCppScope_t gnucxx = Cppyy::GetScope("__gnu_cxx");
         if (gnucxx)
-            pyfunc = BuildOperator(lcname, rcname, op, gnucxx);
+            pyfunc = BuildOperator(lcname, rcname, op, gnucxx, reverse);
     }
 
     if (!pyfunc) {
@@ -337,7 +339,7 @@ bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& 
  && lcname.find("__wrap_iter") == std::string::npos   // wrapper call does not compile
 #endif
         ) {
-            pyfunc = BuildOperator(lcname, rcname, op, std__1);
+            pyfunc = BuildOperator(lcname, rcname, op, std__1, reverse);
         }
     }
 
@@ -358,14 +360,7 @@ bool CPyCppyy::Utility::AddBinaryOperator(PyObject* pyclass, const std::string& 
         }
     }
 
-    if (pyfunc) {  // found a matching overload; add to class
-        bool ok = AddToClass(pyclass, label, pyfunc);
-        if (ok && alt)
-            return AddToClass(pyclass, alt, label);
-        return ok;
-    }
-
-    return false;
+    return pyfunc;
 }
 
 //----------------------------------------------------------------------------
@@ -528,14 +523,15 @@ void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
 // return value and argument type converters
     bool isVoid = (retType == "void");
     if (!isVoid)
-        code << "    CPYCPPYY_STATIC std::unique_ptr<CPyCppyy::Converter> retconv{CPyCppyy::CreateConverter(\""
-             << retType << "\")};\n";
+        code << "    CPYCPPYY_STATIC std::unique_ptr<CPyCppyy::Converter, std::function<void(CPyCppyy::Converter*)>> "
+                     "retconv{CPyCppyy::CreateConverter(\""
+             << retType << "\"), CPyCppyy::DestroyConverter};\n";
     if (nArgs) {
-        code << "    CPYCPPYY_STATIC std::vector<std::unique_ptr<CPyCppyy::Converter>> argcvs;\n"
+        code << "    CPYCPPYY_STATIC std::vector<std::unique_ptr<CPyCppyy::Converter, std::function<void(CPyCppyy::Converter*)>>> argcvs;\n"
              << "    if (argcvs.empty()) {\n"
              << "      argcvs.reserve(" << nArgs << ");\n";
         for (int i = 0; i < nArgs; ++i)
-            code << "      argcvs.emplace_back(CPyCppyy::CreateConverter(\"" << argtypes[i] << "\"));\n";
+            code << "      argcvs.emplace_back(CPyCppyy::CreateConverter(\"" << argtypes[i] << "\"), CPyCppyy::DestroyConverter);\n";
         code << "    }\n";
     }
 
@@ -557,7 +553,7 @@ void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
         }
         code << "    } catch(int) {\n"
              << "      for (auto pyarg : pyargs) Py_XDECREF(pyarg);\n"
-             << "      PyGILState_Release(state); throw CPyCppyy::TPyException{};\n"
+             << "      PyGILState_Release(state); throw CPyCppyy::PyException{};\n"
              << "    }\n";
     }
 }
@@ -576,7 +572,7 @@ void CPyCppyy::Utility::ConstructCallbackReturn(bool isVoid, int nArgs, std::ost
 #ifdef _WIN32
             " /* do nothing */ }\n"
 #else
-            " PyGILState_Release(state); throw CPyCppyy::TPyException{}; }\n"
+            " PyGILState_Release(state); throw CPyCppyy::PyException{}; }\n"
 #endif
             "    PyGILState_Release(state);\n"
             "    return";
@@ -724,11 +720,16 @@ std::string CPyCppyy::Utility::MapOperatorName(const std::string& name, bool bTa
         std::string::size_type start = 0, end = op.size();
         while (start < end && isspace(op[start])) ++start;
         while (start < end && isspace(op[end-1])) --end;
+        op = op.substr(start, end - start);
+
+    // certain operators should be removed completely (e.g. operator delete & friends)
+        if (gOpRemove.find(op) != gOpRemove.end())
+            return "";
 
     // check first if none, to prevent spurious deserializing downstream
         TC2POperatorMapping_t::iterator pop = gC2POperatorMapping.find(op);
         if (pop == gC2POperatorMapping.end() && gOpSkip.find(op) == gOpSkip.end()) {
-            op = Cppyy::ResolveName(op.substr(start, end - start));
+            op = Cppyy::ResolveName(op);
             pop = gC2POperatorMapping.find(op);
         }
 
@@ -817,12 +818,26 @@ std::string CPyCppyy::Utility::ClassName(PyObject* pyobj)
         PyErr_Clear();
         pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
     }
+
     if (pyname) {
         clname = CPyCppyy_PyText_AsString(pyname);
         Py_DECREF(pyname);
     } else
         PyErr_Clear();
     return clname;
+}
+
+
+//----------------------------------------------------------------------------
+CPyCppyy::Utility::PyOperators::~PyOperators()
+{
+    Py_XDECREF(fEq);
+    Py_XDECREF(fNe);
+    Py_XDECREF(fLAdd); Py_XDECREF(fRAdd);
+    Py_XDECREF(fSub);
+    Py_XDECREF(fLMul); Py_XDECREF(fRMul);
+    Py_XDECREF(fDiv);
+    Py_XDECREF(fHash);
 }
 
 
@@ -907,51 +922,14 @@ bool CPyCppyy::Utility::IncludePython()
 {
 // setup Python API for callbacks
     if (!includesDone) {
-        bool okay = Cppyy::Compile("#ifdef _WIN32\n"
-            "#pragma warning (disable : 4275)\n"
-            "#pragma warning (disable : 4251)\n"
-            "#pragma warning (disable : 4800)\n"
-            "#endif\n"
-            "#if defined(linux)\n"
-            "#include <stdio.h>\n"
-            "#ifdef _POSIX_C_SOURCE\n"
-            "#undef _POSIX_C_SOURCE\n"
-            "#endif\n"
-            "#ifdef _FILE_OFFSET_BITS\n"
-            "#undef _FILE_OFFSET_BITS\n"
-            "#endif\n"
-            "#ifdef _XOPEN_SOURCE\n"
-            "#undef _XOPEN_SOURCE\n"
-            "#endif\n"
-            "#endif\n"
-            "#include \"Python.h\"\n"
-            "#ifdef _WIN32\n"
-            "#define CPYCPPYY_STATIC\n"
-            "#define CPYCPPYY_IMPORT extern __declspec(dllimport)\n"
-            "#define CPYCPPYY_CLASS_IMPORT __declspec(dllimport)\n"
-            "#else\n"
-            "#define CPYCPPYY_IMPORT extern\n"
-            "#define CPYCPPYY_STATIC static\n"
-            "#define CPYCPPYY_CLASS_IMPORT\n"
-            "#endif\n"
-
-        // the following really should live in a header ...
-            "namespace CPyCppyy {\n"
-            "struct Parameter; struct CallContext;\n"
-            "class CPYCPPYY_CLASS_IMPORT Converter {\n"
-            "public:\n"
-            "  virtual ~Converter() {}\n"
-            "  virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) = 0;\n"
-            "  virtual PyObject* FromMemory(void* address);\n"
-            "  virtual bool ToMemory(PyObject* value, void* address);\n"
-            "};\n"
-            "CPYCPPYY_IMPORT Converter* CreateConverter(const std::string& fullType, Py_ssize_t* dims = nullptr);\n"
-            "}\n"
+        bool okay = Cppyy::Compile(
+        // basic API (converters etc.)
+            "#include \"CPyCppyy/API.h\"\n"
 
         // utilities from the CPyCppyy public API
             "#include \"CPyCppyy/DispatchPtr.h\"\n"
-            "#include \"CPyCppyy/TPyException.h\"\n"
-            );
+            "#include \"CPyCppyy/PyException.h\"\n"
+        );
         includesDone = okay;
     }
 

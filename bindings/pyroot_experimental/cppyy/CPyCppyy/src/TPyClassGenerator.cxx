@@ -4,7 +4,7 @@
 #include "TPyClassGenerator.h"
 #include "Utility.h"
 
-#include "CPyCppyy/TPyReturn.h"
+#include "CPyCppyy/PyResult.h"
 
 // TODO: not sure if any of this still makes sense ...
 #if 0

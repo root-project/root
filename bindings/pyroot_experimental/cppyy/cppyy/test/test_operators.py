@@ -225,3 +225,86 @@ class TestOPERATORS:
         from cppyy.gbl import TOIClass
 
         assert (TOIClass() < 1)
+
+    def test10_r_non_associative(self):
+        """Use of radd/rmul with non-associative types"""
+
+        import cppyy
+
+        # Note: calls are repeated to test caching, if any
+
+        a = cppyy.gbl.AssocADD(5.)
+        assert 5+a == 10.
+        assert a+5 == 10.
+        assert 5+a == 10.
+        assert a+5 == 10.
+
+        a = cppyy.gbl.NonAssocRADD(5.)
+        assert 5+a == 10.
+        assert 5+a == 10.
+        with raises(NotImplementedError):
+            v = a+5
+
+        a = cppyy.gbl.AssocMUL(5.)
+        assert 2*a == 10.
+        assert a*2 == 10.
+        assert 2*a == 10.
+        assert a*2 == 10.
+
+        m = cppyy.gbl.NonAssocRMUL(5.)
+        assert 2*m == 10.
+        assert 2*m == 10.
+        with raises(NotImplementedError):
+            v = m*2
+
+    def test11_overloaded_operators(self):
+        """Overloaded operator*/+-"""
+
+        import cppyy
+
+        v = cppyy.gbl.MultiLookup.Vector2(1, 2)
+        w = cppyy.gbl.MultiLookup.Vector2(3, 4)
+
+        u = v*2
+        assert u.x == 2.
+        assert u.y == 4.
+
+        assert v*w == 1*3 + 2*4
+
+        u = v/2
+        assert u.x == 0.5
+        assert u.y == 1.0
+
+        assert round(v/w - (1./3. + 2./4.), 8) == 0.
+
+        u = v+2
+        assert u.x == 3.
+        assert u.y == 4.
+
+        assert v+w == 1+3 + 2+4
+
+        u = v-2
+        assert u.x == -1.
+        assert u.y ==  0.
+
+        assert v-w == 1-3 + 2-4
+
+    def test12_unary_operators(self):
+        """Unary operator-+~"""
+
+        import cppyy
+
+        for cls in [cppyy.gbl.SomeGlobalNumber, cppyy.gbl.Unary.SomeNumber]:
+            n = cls(42)
+
+            assert (-n).i == -42
+            assert (+n).i ==  42
+            #assert (~n).i == ~42
+
+    def test13_comma_operator(self):
+        """Comma operator"""
+
+        import cppyy
+
+        c = cppyy.gbl.CommaOperator(1)
+        assert c.__comma__(2).__comma__(3).fInt == 6

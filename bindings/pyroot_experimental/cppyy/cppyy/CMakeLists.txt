@@ -13,6 +13,7 @@ set(py_sources
   cppyy/_typemap.py
   cppyy/_version.py
   cppyy/interactive.py
+  cppyy/ll.py
 )
 
 foreach(py_source ${py_sources})

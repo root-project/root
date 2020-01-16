@@ -1,5 +1,10 @@
 #include <memory>
+#include <string>
 #include <vector>
+
+// Python
+struct _object;
+typedef _object PyObject;
 
 
 namespace pyzables {
@@ -117,5 +122,48 @@ public:
 };
 
 class IndexableDerived : public IndexableBase {};
+
+
+//===========================================================================
+class WithCallback1 {
+public:
+    WithCallback1(int i);
+
+public:
+    int get_int();
+    void set_int(int i);
+
+private:
+    int m_int;
+
+public:
+    static void __cppyy_explicit_pythonize__(PyObject* klass, const std::string&);
+    static std::string klass_name;
+};
+
+class WithCallback2 {
+public:
+    WithCallback2(int i);
+
+public:
+    int get_int();
+    void set_int(int i);
+
+protected:
+    int m_int;
+
+public:
+    static void __cppyy_pythonize__(PyObject* klass, const std::string&);
+    static std::string klass_name;
+};
+
+class WithCallback3 : public WithCallback2 {
+public:
+    using WithCallback2::WithCallback2;
+
+public:
+    int get_int();
+    void set_int(int i);
+};
 
 } // namespace pyzables
