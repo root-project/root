@@ -522,8 +522,8 @@ TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLa
    if (inputSize != inputWidth) {
       Error("AddBasicRNNLayer","Inconsistent input size with input layout  - it should be %zu instead of %zu",inputSize, inputWidth);
    }
-   if (timeSteps != inputHeight || timeSteps != inputDepth) {
-      Error("AddBasicRNNLayer","Inconsistent time steps with input layout - it should be %zu instead of %zu",timeSteps, inputHeight);
+   if (timeSteps != inputHeight && timeSteps != inputDepth) {
+      Error("AddBasicRNNLayer","Inconsistent time steps with input layout - it should be %zu instead of %zu or %zu",timeSteps, inputHeight,inputDepth);
    }
 
    TBasicRNNLayer<Architecture_t> *basicRNNLayer =

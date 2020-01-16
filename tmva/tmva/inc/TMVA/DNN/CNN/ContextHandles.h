@@ -101,6 +101,7 @@ struct TRNNDescriptors : public TMVA::DNN::TDescriptors {
 
    LayerDescriptor_t LayerDescriptor;
    WeightsDescriptor_t WeightsDescriptor;
+   WeightsDescriptor_t WeightsGradDescriptor;
    HelperDescriptor_t HelperDescriptor;
 
    // for RNN need 4 vectors of tensor descriptors

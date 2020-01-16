@@ -161,19 +161,21 @@ public:
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
 
-   //____________________________________________________________________________
-   //
-   // Propagation
-   //____________________________________________________________________________
+   static void InitializeRNNTensors(RNNLayer_t */*layer*/) {}
 
-   /** @name Forward Propagation
-    * Low-level functions required for the forward propagation of activations
-    * through the network.
-    */
-   ///@{
-   /** Matrix-multiply \p input with the transpose of \pweights and
-    *  write the results into \p output. */
-   static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
+      //____________________________________________________________________________
+      //
+      // Propagation
+      //____________________________________________________________________________
+
+      /** @name Forward Propagation
+       * Low-level functions required for the forward propagation of activations
+       * through the network.
+       */
+      ///@{
+      /** Matrix-multiply \p input with the transpose of \pweights and
+       *  write the results into \p output. */
+      static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
 
    static void MultiplyTranspose(Tensor_t &output, const Tensor_t &input, const Matrix_t &weights) {
       Matrix_t output_matrix = output.GetMatrix();

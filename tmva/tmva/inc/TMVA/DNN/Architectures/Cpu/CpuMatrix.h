@@ -104,7 +104,9 @@ public:
 
    TCpuBuffer<AFloat>& GetBuffer() {return fBuffer;}
    const TCpuBuffer<AFloat>& GetBuffer() const {return fBuffer;}
-
+   // for compatible API with Tensor and Matrix in Cuda
+   TCpuBuffer<AFloat> &GetDeviceBuffer() { return fBuffer; }
+   const TCpuBuffer<AFloat> &GetDeviceBuffer() const { return fBuffer; }
 
    static const AFloat *GetOnePointer() { return fOnes.data(); }
 

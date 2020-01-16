@@ -159,6 +159,7 @@ public:
    static void FreeConvWorkspace(TWorkspace * & /*workspace*/) {}     ///< Only used for certain cudnn on-device memory
    static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/) {}
 
+   //static void InitializeRNNTensors(RNNLayer_t * /*layer*/) {}
 
    //____________________________________________________________________________
    //
