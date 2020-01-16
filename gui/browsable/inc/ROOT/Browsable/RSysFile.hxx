@@ -19,7 +19,12 @@ namespace ROOT {
 namespace Experimental {
 namespace Browsable {
 
+class RSysDirLevelIter;
+
 class RSysFile : public RElement {
+
+   friend class RSysDirLevelIter;
+
    FileStat_t fStat;       ///<! file stat object
    std::string fDirName;   ///<! fully-qualified directory name
    std::string fFileName;  ///<! file name in current dir
@@ -29,9 +34,7 @@ class RSysFile : public RElement {
 public:
    RSysFile(const std::string &filename);
 
-   RSysFile(const FileStat_t& stat, const std::string &dirname, const std::string &filename) : fStat(stat), fDirName(dirname), fFileName(filename)
-   {
-   }
+   RSysFile(const FileStat_t& stat, const std::string &dirname, const std::string &filename);
 
    virtual ~RSysFile() = default;
 
@@ -47,6 +50,8 @@ public:
    std::unique_ptr<RLevelIter> GetChildsIter() override;
 
    std::string GetContent(const std::string &kind) override;
+
+   static std::string GetFileIcon(const std::string &fname);
 
    static std::string ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir = "");
 
