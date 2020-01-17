@@ -39,10 +39,10 @@ private:
    std::unique_ptr<Internal::RDavixFileDes> fFileDes;
 
 protected:
-   void DoOpen() final;
-   size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
-   void DoReadV(RIOVec *ioVec, unsigned int nReq) final;
-   std::uint64_t DoGetSize() final;
+   void OpenImpl() final;
+   size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
+   void ReadVImpl(RIOVec *ioVec, unsigned int nReq) final;
+   std::uint64_t GetSizeImpl() final;
 
 public:
    RRawFileDavix(std::string_view url, RRawFile::ROptions options);
