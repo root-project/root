@@ -5236,58 +5236,74 @@ void TPad::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Redraw the frame axis
+///  Redraw the frame axis.
+///
 ///  Redrawing axis may be necessary in case of superimposed histograms
-///  when one or more histograms have a fill color
+///  when one or more histograms have a fill color.
+///
 ///  Instead of calling this function, it may be more convenient
-///  to call directly h1->Draw("sameaxis") where h1 is the pointer
+///  to call directly `h1->Draw("sameaxis")` where h1 is the pointer
 ///  to the first histogram drawn in the pad.
 ///
 ///  By default, if the pad has the options gridx or/and gridy activated,
 ///  the grid is not drawn by this function.
-///  if option="g" is specified, this will force the drawing of the grid
+///
+///  If option="g" is specified, this will force the drawing of the grid
 ///  on top of the picture
+///
+///  To redraw the axis tick marks do:
+/// ~~~ {.cpp}
+///   gPad->RedrawAxis();
+/// ~~~
+///  To redraw the axis grid do:
+/// ~~~ {.cpp}
+///   gPad->RedrawAxis("G");
+/// ~~~
+///  To redraw the axis tick marks and the axis grid do:
+/// ~~~ {.cpp}
+///   gPad->RedrawAxis();
+///   gPad->RedrawAxis("G");
+/// ~~~
 
 void TPad::RedrawAxis(Option_t *option)
 {
-   // get first histogram in the list of primitives
    TString opt = option;
    opt.ToLower();
 
    TPad *padsav = (TPad*)gPad;
    cd();
 
+   TH1 *hobj = nullptr;
+
+   // Get the first histogram drawing the axis in the list of primitives
    if (!fPrimitives) fPrimitives = new TList;
    TIter next(fPrimitives);
    TObject *obj;
    while ((obj = next())) {
       if (obj->InheritsFrom(TH1::Class())) {
-         TH1 *hobj = (TH1*)obj;
-         if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
-         else                   hobj->DrawCopy("sameaxis");
-         return;
+         hobj = (TH1*)obj;
+         break;
       }
       if (obj->InheritsFrom(TMultiGraph::Class())) {
          TMultiGraph *mg = (TMultiGraph*)obj;
-         if (mg) {
-            TH1F *h1f = mg->GetHistogram();
-            if (h1f) h1f->DrawCopy("sameaxis");
-         }
-         return;
+         if (mg) hobj = mg->GetHistogram();
+         break;
       }
       if (obj->InheritsFrom(TGraph::Class())) {
          TGraph *g = (TGraph*)obj;
-         if (g) g->GetHistogram()->DrawCopy("sameaxis");
-         return;
+         if (g) hobj = g->GetHistogram();
+         break;
       }
       if (obj->InheritsFrom(THStack::Class())) {
          THStack *hs = (THStack*)obj;
-         if (hs) {
-            TH1 *h1 = hs->GetHistogram();
-            if (h1) h1->DrawCopy("sameaxis");
-         }
-         return;
+         if (hs) hobj = hs->GetHistogram();
+         break;
       }
+   }
+
+   if (hobj) {
+      if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
+      else                   hobj->DrawCopy("sameaxis");
    }
 
    if (padsav) padsav->cd();
