@@ -3940,7 +3940,9 @@ const char *TSystem::GetMakeExe() const
 const char *TSystem::GetIncludePath()
 {
    fListPaths = fIncludePath;
+#ifndef _MSC_VER
    fListPaths.Append(" ").Append(gInterpreter->GetIncludePath());
+#endif
    return fListPaths;
 }
 
