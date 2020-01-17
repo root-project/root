@@ -340,15 +340,17 @@ find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
 find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser Google\ Chrome
-             PATHS "$ENV{PROGRAMFILES}/Google/Chrome/Application"
-             "$ENV{PROGRAMFILES\(X86\)}/Google/Chrome/Application")
+             PATH_SUFFIXES "Google/Chrome/Application"
+             PATHS "$ENV{PROGRAMFILES}"
+                   "$ENV{PROGRAMFILES\(X86\)}")
 if(CHROME_EXECUTABLE)
   set(chromeexe ${CHROME_EXECUTABLE})
 endif()
 
 find_program(FIREFOX_EXECUTABLE NAMES firefox firefox.exe
-             PATHS "$ENV{PROGRAMFILES}/Mozilla Firefox"
-             "$ENV{PROGRAMFILES\(X86\)}/Mozilla Firefox")
+             PATH_SUFFIXES "Mozilla Firefox"
+             PATHS "$ENV{PROGRAMFILES}"
+                  "$ENV{PROGRAMFILES\(X86\)}")
 if(FIREFOX_EXECUTABLE)
   set(firefoxexe ${FIREFOX_EXECUTABLE})
 endif()
