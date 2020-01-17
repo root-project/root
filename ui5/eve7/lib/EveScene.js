@@ -47,18 +47,13 @@ sap.ui.define([
          // MT ??? why?, it can really be anything, even just container Object3D
          obj3d._typename = "THREE.Mesh";
 
-         // XXXX Sanitize these members!!!
+         // add reference to a streamed eve element to obj3d
+         obj3d.eve_el = elem;
 
          // SL: this is just identifier for highlight, required to show items on other places, set in creator
          obj3d.geo_object = elem.fMasterId || elem.fElementId;
          obj3d.geo_name   = elem.fName; // used for highlight
-
-         obj3d.eve_el = elem;
          obj3d.scene  = this; // required for get changes when highlight/selection is changed
-
-         // AMT: reference needed in MIR callback
-         obj3d.eveId  = elem.fElementId;
-         obj3d.mstrId = elem.fMasterId;
 
          if (elem.render_data.matrix)
          {
@@ -302,7 +297,7 @@ sap.ui.define([
       let is_multi  = event && event.ctrlKey;
       let is_secsel = indx !== undefined;
 
-      let fcall = "NewElementPicked(" + (obj3d ? obj3d.eveId : 0) + `, ${is_multi}, ${is_secsel}`;
+      let fcall = "NewElementPicked(" + (obj3d ? obj3d.eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;
       if (is_secsel)
       {
          fcall += ", { " + (Array.isArray(indx) ? indx.join(", ") : indx) + " }";
@@ -321,7 +316,7 @@ sap.ui.define([
    EveScene.prototype.processElementHighlighted = function(obj3d, indx, evnt)
    {
       // Need check for duplicates before call server, else server will un-higlight highlighted element
-      // console.log("EveScene.prototype.processElementHighlighted", obj3d.eveId, indx, evnt);
+      // console.log("EveScene.prototype.processElementHighlighted", obj3d.eve_el.fElementId, indx, evnt);
       let is_multi  = false;
       let is_secsel = indx !== undefined;
 
@@ -335,7 +330,7 @@ sap.ui.define([
       if (a && (a.length == 1))
       {
          let h = a[0];
-         if (h.primary == obj3d.eveId || h.primary == obj3d.mstrId ) {
+         if (h.primary == obj3d.eve_el.fElementId || h.primary == obj3d.eve_el.fMasterId) {
             if (indx) {
                if (h.sec_idcs && h.sec_idcs[0] == indx) {
                   // console.log("EveScene.prototype.processElementHighlighted processElementHighlighted same index ");
@@ -349,7 +344,7 @@ sap.ui.define([
          }
       }
 
-      let fcall = "NewElementPicked(" + obj3d.eveId + `, ${is_multi}, ${is_secsel}`;
+      let fcall = "NewElementPicked(" + obj3d.eve_el.fElementId + `, ${is_multi}, ${is_secsel}`;
       if (is_secsel)
       {
          fcall += ", { " + (Array.isArray(indx) ? indx.join(", ") : indx) + " }";
