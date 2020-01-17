@@ -245,18 +245,26 @@ typedefs (in particular `Double32_t`)
 - The macros `REFLEX_GENERATE_DICTIONARY()` and `ROOT_GENERATE_DICTIONARY()` can
   now have custom extra dependencies added with the options `DEPENDS` and
   `EXTRA_DEPENDENCIES`, respectively.
+- CMake build types `DEBUGFULL`, `OPTIMIZED`, and `PROFILE` have been removed.
+  They were not in use and did not work in all platforms.
+- The default build type is now empty to ensure that `CXXFLAGS` set by the user
+  are always respected. If no flags are set, then the build type defaults to
+  release.
+- The version of Python that ROOT has been built with is now exported in the
+  CMake variable `${ROOT_PYTHON_VERSION}`, available after calling `find_package(ROOT)`.
 
 The following builtins have been updated:
 
+- CFITSIO 3.450
 - FFTW3 3.3.8
 - GSL 2.5
-- Intel TBB 2019 U8
+- Intel TBB 2019 U9
 - PCRE 8.43
 - OpenSSL 1.0.2s
 - Vdt 0.4.3
 - VecCore 0.6.0
 - XRootD 4.10.0
-
+- Zstd 1.4.0
 
 ## PyROOT
 
