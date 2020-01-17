@@ -100,7 +100,7 @@ public:
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
    // read
-   REveTableHandle::Entries_t &RefTableEntries(std::string cname) { return fSpecs[cname]; }
+   REveTableHandle::Entries_t &RefTableEntries(std::string cname);
 
    // filling
    REveTableHandle table(std::string className)
