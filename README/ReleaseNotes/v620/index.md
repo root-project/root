@@ -189,7 +189,11 @@ typedefs (in particular `Double32_t`)
 ## JavaScript ROOT
 - Provide monitoring capabilities for TGeoManager object. Now geomtry with some tracks can be displayed and
   updated in web browser, using THttpServer monitoring capability like histogram objects.
-
+- JSROOT graphics are now supported in the JupyterLab interface. They are activated in the same way as in
+  the classic Jupyter, i.e. by typing at the beginning of a notebook cell:
+~~~ {.python}
+%jsroot on
+~~~
 
 ## Tutorials
 - Add the "Legacy" category collecting the old tutorials which do not represent any more best practices
