@@ -320,3 +320,10 @@ shuts down the interpreter.
 `ctypes` types (`c_long`, `c_int`, `c_double`).
 - Added TPython.
 - Added support for `from ROOT import *` in Python2 (only).
+
+## TMVA
+ - Introduce `RTensor` class, a container for multi-dimensional arrays similar to NumPy arrays
+ - Add `AsTensor` to convert data from a `RDataFrame` to a `RTensor`
+ - Introduce a fast tree inference engine able to generate optimized inference code using just-in-time compilation of model parameters
+ - New experimental TMVA reader interface `RReader` following a sklearn-like API in C++ and Python
+ - New experimental interface for preprocessing methods (`RStandardScaler`)
