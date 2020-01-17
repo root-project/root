@@ -678,6 +678,10 @@ N: Ramon Medrano Llamas
 E: m3drano@gmail.com
 D: PROOF worker autodiscovery via Bonjour
 
+N: Emmanouil Michalainas
+E: emmichal@cern.ch
+D: RooFit SIMD functions
+
 N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
 D: port to IBM AIX with xlC v5.x

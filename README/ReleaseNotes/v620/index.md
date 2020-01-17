@@ -34,6 +34,7 @@ The following people have contributed to this new version:
  Philip Leindecker, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
+ Emmanouil Michalainas, AUTh,\
  Lorenzo Moneta, CERN/SFT,\
  Alja Mrak-Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
@@ -135,10 +136,89 @@ typedefs (in particular `Double32_t`)
 
 * Allow reading v5 TF1 that were stored memberwise in a TClonesArray.
 
-## Math Libraries
 
+## Math Libraries
+* [ROOT::Math::KahanSum](https://root.cern/doc/master/classROOT_1_1Math_1_1KahanSum.html) can use SIMD instructions for faster accumulation
 
 ## RooFit Libraries
+* **Documentation** Many improvements to the doxygen documentation of RooFit classes.
+* **Automatic legends for RooPlot** RooPlot now supports [BuildLegend](https://root.cern.ch/doc/master/classRooPlot.html#acd16cf22aca843f08ef405c93753c512) as a good starting point for a legend.
+* **Short prefits** In unbinned fits that take long, good starting values for parameters can be found
+by running a short prefit before the final fit. Passing `PrefitDataFraction(0.1)` to [`fitTo()`](https://root.cern.ch/doc/master/classRooAbsPdf.html#a8f802a3a93467d5b7b089e3ccaec0fa8)
+will *e.g.* run a prefit on 1% of the data.
+* **Iterating over categories** Category classes deriving from [RooAbsCategory](https://root.cern.ch/doc/master/classRooAbsCategory.html), *e.g.* [RooCategory](https://root.cern.ch/doc/master/classRooCategory.html)
+now support "natural" iterating using range-based for loops in C++ or Python loops:
+ 
+      import ROOT
+      cat = ROOT.RooCategory("cat", "cat")
+      cat.defineType("1Lep", 1)
+      cat.defineType("2Lep", 2)
+      for state in cat:
+        print(state.getVal(), state.GetName())
+
+      (1, '1Lep')
+      (2, '2Lep')
+* **Asymptotically correct parameter uncertainties**
+Added computation of asymptotically correct parameter uncertainties in likelihood fits with event weights. See [arXiv 1911.01303](https://arxiv.org/abs/1911.01303) and [rf611_weightedfits.C](https://root.cern/doc/master/rf611__weightedfits_8C.html).
+
+* **Barlow-Beeston tutorial**
+The tutorial [rf709_BarlowBeeston.C](https://root.cern/doc/master/rf709__BarlowBeeston_8C.html) has
+been added to RooFit to demonstrate how to incorporate Monte Carlo statistics as systematic
+uncertainties into a fit. It demonstrates both the "full" and the "light" method.
+
+* **RooFitMore for GSL** All parts of RooFit that use the GSL (PDFs and integrators) have been moved into the library
+`RooFitMore`. It gets enabled automatically with the `MathMore` library (`-Dmathmore=ON`, default).
+Note that `-lRooFitMore` might now be required when linking against RooFit.
+
+### Fast function evaluation and vectorisation
+A `BatchMode` for faster unbinned fits has been added. By loading data more efficiently,
+**unbinned likelihood computations can run about 3x faster** if the PDFs support it.
+To enable it, use
+```
+pdf.fitTo(data, RooFit::BatchMode());
+```
+Most unbinned PDFs that are shipped with RooFit have been updated to support this mode.
+
+In addition, if ROOT is compiled for a specific architecture, SIMD instructions can be used in PDF
+computations. This requires ROOT to be compiled with `-march=native` or *e.g.* `-mavx2` if the hardware
+supports it. For maximal performance, ROOT should also be configured with `-Dvdt=ON`.
+[VDT](https://github.com/dpiparo/vdt) is a library of fast math functions, which will automatically
+be used in RooFit when available.  
+Depending on the compiler, on the instruction set supported by the CPU and on what kind of PDFs are used,
+**PDF evaluations will speed up 5x to 16x**.  
+For details see [CHEP 2019](https://indico.cern.ch/event/773049/contributions/3476060/).
+
+### New RooFormulaVar / RooGenericPdf
+RooFormula has been updated to use ROOT's [TFormula](https://root.cern.ch/doc/master/classTFormula.html).
+This means that expressions passed to RooFormulaVar / RooGenericPdf are compiled with `-O2` optimisation
+level before they are evaluated. For complicated functions, this might improve the speed of the
+computation. Further, functions that are known to the interpreter can be used in the expression passed
+to a PDF. The following macro *e.g.* prints the expected result 5.4:
+```
+  double func(double x, double a) {
+    return a*x*x + 1.;
+  }
+  
+  void testRooFormulaWithClingFunction() {
+    RooRealVar x("x", "x", 2, -10, 10);
+    RooRealVar a("a", "a", 1.1, -10, 10);
+  
+    RooGenericPdf pdf("pdfWithExternalFunc", "func(x, a)", {a, x});
+    std::cout << pdf.getVal() << std::endl;
+  }
+```
+
+#### New PDFs added to RooFit
+* [RooHypatia2](https://root.cern.ch/doc/master/classRooHypatia2.html), featuring a hyperbolic, Crystal-ball-like core and two adjustable tails.
+* [RooWrapperPdf](https://root.cern.ch/doc/master/classRooWrapperPdf.html), a class that can convert any function (= not normalised) into a PDF by integrating and normalising it.
+
+
+### RooStats / HistFactory
+* To facilitate plotting of pre-fit model uncertainties, gamma parameters now have reasonable pre-fit uncertainties.
+* RooStats global config switches are now all accessible in one place,
+[`RooStats::GetGlobalRooStatsConfig()`](https://root.cern.ch/doc/master/namespaceRooStats.html#a827f04b74fab219d613f178fa24d0bc9).
+* Tools like ToyMCSampler and HypoTestInverter have been stabilised and better validate their inputs to
+prevent infinite loops or crashes.
 
 
 ## 2D Graphics Libraries
