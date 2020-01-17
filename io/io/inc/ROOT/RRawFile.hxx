@@ -131,7 +131,7 @@ protected:
    virtual void UnmapImpl(void *region, size_t nbytes);
 
    /// By default implemented as a loop of ReadAt calls but can be overwritten, e.g. XRootD or DAVIX implementations
-   virtual void DoReadV(RIOVec *ioVec, unsigned int nReq);
+   virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
 public:
    RRawFile(std::string_view url, ROptions options);

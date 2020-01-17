@@ -57,7 +57,11 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileDavix::Clone()
    return std::make_unique<RRawFileDavix>(fUrl, fOptions);
 }
 
+<<<<<<< HEAD
 std::uint64_t ROOT::Internal::RRawFileDavix::GetSizeImpl()
+=======
+std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::GetSizeImpl()
+>>>>>>> [rawfile] change method names from DoXyz() to XyzImpl()
 {
    struct stat buf;
    Davix::DavixError *err = nullptr;
@@ -88,7 +92,7 @@ size_t ROOT::Internal::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, st
    return static_cast<size_t>(retval);
 }
 
-void ROOT::Experimental::Detail::RRawFileDavix::DoReadV(RIOVec *ioVec, unsigned int nReq)
+void ROOT::Experimental::Detail::RRawFileDavix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
    Davix::DavixError *davixErr = NULL;
    Davix::DavIOVecInput in[nReq];
