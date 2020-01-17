@@ -142,6 +142,7 @@ TYPED_TEST_P(MathMoreStress, kGSLBRENT)
    this->RunRangedTest([](StatFunction dist) { dist.TestInverse1(RootFinder::kGSL_BRENT); });
 }
 
+#ifndef _MSC_VER
 TYPED_TEST_P(MathMoreStress, kGSLSTEFFENSON)
 {
    this->RunRangedTest([](StatFunction dist) { dist.TestInverse2(RootFinder::kGSL_STEFFENSON); });
@@ -149,6 +150,9 @@ TYPED_TEST_P(MathMoreStress, kGSLSTEFFENSON)
 
 REGISTER_TYPED_TEST_CASE_P(MathMoreStress, kADAPTIVESINGULAR, kGAUSS, TestDerivative, kBRENT, kGSLBRENT,
                            kGSLSTEFFENSON);
+#else
+REGISTER_TYPED_TEST_CASE_P(MathMoreStress, kADAPTIVESINGULAR, kGAUSS, TestDerivative, kBRENT, kGSLBRENT);
+#endif
 
 typedef testing::Types<BetaTestFactory, GammaTestFactory> Factories_t;
 
