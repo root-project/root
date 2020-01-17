@@ -30,11 +30,11 @@ sap.ui.define([
          this._render_html = false;
 
          this.mgr = data.mgr;
-         this.elementid = data.elementid;
+         this.eveViewerId = data.eveViewerId;
          this.kind = data.kind;
          
          this.bindTableColumns = true;
-         var element = this.mgr.GetElement(this.elementid);
+         var element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency
          for (var k=0;k<element.childs.length;++k) {
             var scene = element.childs[k];
@@ -46,7 +46,7 @@ sap.ui.define([
       locateEveTable: function()
       {
          this.eveTable = 0;
-         var element = this.mgr.GetElement(this.elementid);
+         var element = this.mgr.GetElement(this.eveViewerId);
          var sceneInfo = element.childs[0];
          var scene = this.mgr.GetElement(sceneInfo.fSceneId);
          // console.log(">>>table scene", scene);
@@ -148,7 +148,7 @@ sap.ui.define([
 
          for (var i = 0; i < clist.childs.length; i++)
          {
-            mData.itemx.push({"text" :clist.childs[i].fName, "key": clist.childs[i].fName, "elementId":clist.childs[i].fElementId });
+            mData.itemx.push({"text" :clist.childs[i].fName, "key": clist.childs[i].fName, "collectionEveId":clist.childs[i].fElementId });
          }
          oModel.setData(mData);
          this.getView().setModel(oModel, "collections");
@@ -176,21 +176,13 @@ sap.ui.define([
       },
 
       UpdateMgr : function(mgr) {
-         var elem = mgr.map[this.elementid];
+         var elem = mgr.map[this.eveViewerId];
          var scene = mgr.map[ elem.fMotherId];
          this.mgr = mgr;
       },
 
       onAfterRendering: function() {
          this._render_html = true;
-
-         // this.getView().$().css("overflow", "hidden");
-
-         // this.getView().$().parent().css("overflow", "hidden");
-
-         // only when rendering completed - register for modify events
-         var element = this.mgr.GetElement(this.elementid);
-
          this.checkScenes();
       },
 
@@ -370,7 +362,7 @@ sap.ui.define([
          var model = oEvent.oSource.getSelectedItem().getBindingContext("collections");
          var path = model.getPath();
          var entry = model.getProperty(path);
-         var coll = entry.elementId;
+         var coll = entry.collectionEveId;
          var mng =  this.viewInfo;
 
          var mir = "SetDisplayedCollection(" + coll + ")";

@@ -683,9 +683,3 @@ sap.ui.define([], function() {
    return EveManager;
 
 });
-
-// Matevz's notes ... here for lack of better ideas.
-//
-// 1. elementid, fElementId, eveId --> this is ultra confusing, decide and use consistently.
-//    Maybe also on the eve side. m_eid ?
-//    Ditto for fMasterId, mstrId, something else, probably

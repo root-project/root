@@ -81,7 +81,7 @@ sap.ui.define([
          if (moredata && moredata.mgr)
          {
             this.mgr        = moredata.mgr;
-            this.elementid  = moredata.elementid;
+            this.eveViewerId  = moredata.eveViewerId;
             this.kind       = moredata.kind;
             this.standalone = viewName;
 
@@ -96,7 +96,7 @@ sap.ui.define([
          else
          {
             this.mgr       = data.mgr;
-            this.elementid = data.elementid;
+            this.eveViewerId = data.eveViewerId;
             this.kind      = data.kind;
          }
 
@@ -134,7 +134,7 @@ sap.ui.define([
          }
          if ( ! found) return;
 
-         this.elementid = found.fElementId;
+         this.eveViewerId = found.fElementId;
          this.kind      = (found.fName == "Default Viewer") ? "3D" : "2D";
 
          this.checkViewReady();
@@ -151,7 +151,7 @@ sap.ui.define([
       // Checks if all initialization is performed and startup renderer.
       checkViewReady: function()
       {
-         if ( ! this._load_scripts || ! this._render_html || ! this.elementid)
+         if ( ! this._load_scripts || ! this._render_html || ! this.eveViewerId)
          {
             return;
          }
@@ -634,7 +634,7 @@ sap.ui.define([
          this.created_scenes = [];
 
          // only when rendering completed - register for modify events
-         let element = this.mgr.GetElement(this.elementid);
+         let element = this.mgr.GetElement(this.eveViewerId);
 
          // loop over scene and add dependency
          for (let scene of element.childs)

@@ -114,7 +114,7 @@ sap.ui.define(['sap/ui/core/Component',
                return new sap.ui.xmlview({
                   id: viewid,
                   viewName: vtype,
-                  viewData: { mgr: main.mgr, elementid: elem.fElementId, kind: elem.view_kind },
+                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind },
                   layoutData: oLd
                });
             });
