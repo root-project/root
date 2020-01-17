@@ -27,6 +27,7 @@ The following people have contributed to this new version:
  Massimiliano Galli, CERN/SFT and Unibo,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Hadrien Grasland, CNRS,\
  Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
  Desislava Kalaydjieva, CERN/SFT,\
@@ -135,6 +136,10 @@ typedefs (in particular `Double32_t`)
 ## Histogram Libraries
 
 * Allow reading v5 TF1 that were stored memberwise in a TClonesArray.
+* Make RHist bin iteration order consistent with that of THx.
+* Add RCoordArray constructor from std::array.
+* Remove thread-unsafe accessors of RHistConcurrentFill.
+* Fix Flush logic of buffered RHist wrappers.
 
 
 ## Math Libraries
