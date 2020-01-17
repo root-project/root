@@ -54,11 +54,11 @@ public:
       return std::make_unique<RRawFileMock>(fContent, fOptions);
    }
 
-   void DoOpen() final
+   void OpenImpl() final
    {
    }
 
-   size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final
+   size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final
    {
       fNumReadAt++;
       if (offset > fContent.length())
@@ -69,7 +69,7 @@ public:
       return slice.length();
    }
 
-   std::uint64_t DoGetSize() final { return fContent.size(); }
+   std::uint64_t GetSizeImpl() final { return fContent.size(); }
 
    int GetFeatures() const final { return kFeatureHasSize; }
 };

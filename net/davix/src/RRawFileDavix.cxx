@@ -58,7 +58,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail
    return std::make_unique<RRawFileDavix>(fUrl, fOptions);
 }
 
-std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::DoGetSize()
+std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::GetSizeImpl()
 {
    struct stat buf;
    Davix::DavixError *err = nullptr;
@@ -68,7 +68,7 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::DoGetSize()
    return buf.st_size;
 }
 
-void ROOT::Experimental::Detail::RRawFileDavix::DoOpen()
+void ROOT::Experimental::Detail::RRawFileDavix::OpenImpl()
 {
    Davix::DavixError *err = nullptr;
    fFileDes->fd = fFileDes->pos.open(nullptr, fUrl, O_RDONLY, &err);
@@ -79,7 +79,7 @@ void ROOT::Experimental::Detail::RRawFileDavix::DoOpen()
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
-size_t ROOT::Experimental::Detail::RRawFileDavix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    Davix::DavixError *err = nullptr;
    auto retval = fFileDes->pos.pread(fFileDes->fd, buffer, nbytes, offset, &err);
