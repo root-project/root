@@ -12,6 +12,8 @@
 #include "ROOT/RRawFileDavix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
+#include <TError.h>
+
 #include <stdexcept>
 
 #include <davix.hpp>
@@ -99,6 +101,7 @@ void ROOT::Experimental::Detail::RRawFileDavix::DoReadV(RIOVec *ioVec, unsigned 
       in[i].diov_buffer = ioVec[i].fBuffer;
       in[i].diov_offset = ioVec[i].fOffset;
       in[i].diov_size = ioVec[i].fSize;
+      R__ASSERT(ioVec[i].fSize > 0);
    }
 
    auto ret = fFileDes->pos.preadVec(fFileDes->fd, in, out, nReq, &davixErr);
