@@ -1,5 +1,5 @@
 #include "TPython.h"
-#include "CPyCppyy/TPyException.h"
+#include "CPyCppyy/PyException.h"
 #include "DllImport.h"
 
 extern "C" {
@@ -10,7 +10,7 @@ extern "C" {
 
 void ThrowPyException() {
    PyErr_SetString( PyExc_SyntaxError, "test error message" );
-   throw CPyCppyy::TPyException();
+   throw CPyCppyy::PyException();
 }
 
 
@@ -18,12 +18,12 @@ class MyThrowingClass {
 public:
    static void ThrowPyException( int ) {
       PyErr_SetString( PyExc_SyntaxError, "overloaded int test error message" );
-      throw CPyCppyy::TPyException();
+      throw CPyCppyy::PyException();
    }
 
    static void ThrowPyException( double ) {
       PyErr_SetString( PyExc_SyntaxError, "overloaded double test error message" );
-      throw CPyCppyy::TPyException();
+      throw CPyCppyy::PyException();
    }
 
 };

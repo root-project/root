@@ -417,11 +417,12 @@ class Regression14TPyException( MyTestCase ):
       """Load TPyException into python and make sure its usable"""
 
       if exp_pyroot:
-         # In exp PyROOT, TPyException belongs to the CPyCppyy namespace.
+         # In exp PyROOT, TPyException is called PyException and it belongs
+         # to the CPyCppyy namespace.
          # Also, it is not included in the PCH, so we need to include the
          # header first
-         ROOT.gInterpreter.Declare("#include \"CPyCppyy/TPyException.h\"")
-         e = ROOT.CPyCppyy.TPyException()
+         ROOT.gInterpreter.Declare("#include \"CPyCppyy/PyException.h\"")
+         e = ROOT.CPyCppyy.PyException()
       else:
          e = ROOT.PyROOT.TPyException()
       self.assert_( e )
