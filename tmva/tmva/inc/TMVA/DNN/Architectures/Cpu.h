@@ -121,12 +121,12 @@ public:
    /** Initialize CNN data/operator descriptors. Not used at the moment.*/
 
    static void InitializeBNormDescriptors(TDescriptors * & /*descriptors*/,
-                                          BNormLayer_t */*L = nullptr*/) {}
+                                          BNormLayer_t * /*L = nullptr*/) {}
 
    static void InitializeConvDescriptors(TDescriptors * & /*descriptors*/,
-                                         ConvLayer_t */*L = nullptr*/) {}
+                                         ConvLayer_t * /*L = nullptr*/) {}
    static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
-                                         PoolingLayer_t */*L = nullptr*/) {}
+                                         PoolingLayer_t * /*L = nullptr*/) {}
 
    static void InitializeActivationDescriptor(ActivationDescriptor_t &/*descriptors*/, EActivationFunction /*activFunc */ , double /*coef*/ = 0.0) {}
 
@@ -138,14 +138,14 @@ public:
    static void InitializeConvWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
-                                       ConvLayer_t */*L = nullptr*/) {}
+                                       ConvLayer_t * /*L = nullptr*/) {}
    static void InitializePoolDropoutWorkspace(TWorkspace * & /*workspace*/,
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
-                                       PoolingLayer_t */*L = nullptr*/) {}
+                                       PoolingLayer_t * /*L = nullptr*/) {}
 
-   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t */*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
-   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t */*L = nullptr*/) {}
+   static void FreeConvWorkspace(TWorkspace * & /*workspace*/, ConvLayer_t * /*L = nullptr*/) {}   ///< Only used for certain cudnn on-device memory
+   static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/, PoolingLayer_t * /*L = nullptr*/) {}
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
 
