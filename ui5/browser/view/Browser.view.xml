@@ -10,7 +10,7 @@
   <Page showSubHeader="false" showHeader="false" showFooter="false">
     <content>
       <tnt:ToolHeader asyncMode="true" height="40px" >
-        <Button id="burgerMenu" icon="sap-icon://menu2" type="Transparent" press="onFullScreenPressLandscape">
+        <Button id="burgerMenu" icon="sap-icon://menu2" type="Transparent">
           <layoutData>
             <OverflowToolbarLayoutData priority="NeverOverflow" />
           </layoutData>

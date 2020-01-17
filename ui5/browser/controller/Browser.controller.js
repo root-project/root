@@ -65,11 +65,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let pthis = this;
          let burgerMenu = pthis.getView().byId("burgerMenu");
 
-         let splitApp = pthis.getView().byId("SplitAppBrowser");
-         $(window).resize(() => {
-            console.log(splitApp.getMode());
-         });
-
          sap.ui.Device.orientation.attachHandler((mParams) => {
             burgerMenu.detachPress(pthis.onFullScreenPressLandscape, pthis);
             burgerMenu.detachPress(pthis.onFullScreenPressPortrait, pthis);
@@ -1126,8 +1121,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
 
       onFullScreenPressLandscape: function () {
+         console.log('click');
          let splitApp = this.getView().byId("SplitAppBrowser");
          let mode = splitApp.getMode();
+         console.log(mode);
          if(mode === "ShowHideMode") {
             splitApp.setMode("HideMode");
          } else {
