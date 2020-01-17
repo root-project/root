@@ -13,7 +13,7 @@ sap.ui.define([
    "sap/ui/layout/HorizontalLayout",
    "sap/m/MessageBox"
 ], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column,
-             mInput, mButton, ResizeHandler, VerticalLayout, HorizontalLayout) {
+             mInput, mButton, ResizeHandler, VerticalLayout, HorizontalLayout, MessageBox) {
 
    "use strict";
 
@@ -215,7 +215,7 @@ sap.ui.define([
     		  maxSuggestionWidth: "500px",
     		  showSuggestion: true,
     		  valueHelpRequest: function (oEvent) {
-    		     sap.m.MessageBox.alert("Write any valid expression.\n Using \"i.\" convetion to access an object in collection. Below is an example:\ni.GetPdgCode() + 2");
+                     MessageBox.alert("Write any valid expression.\n Using \"i.\" convetion to access an object in collection. Below is an example:\ni.GetPdgCode() + 2");
     		  },
     		  suggestionItemSelected: function(oEvent){
     		     var oItem = oEvent.getParameter("selectedRow");
