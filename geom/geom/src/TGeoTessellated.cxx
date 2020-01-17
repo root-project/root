@@ -31,81 +31,135 @@ for the composing faces.
 #include "TMath.h"
 #include "TRandom.h"
 
-ClassImp(TGeoTessellated);
+ClassImp(TGeoTessellated)
 
-
-/*
-bool TGeoFacet::Check()
+std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet)
 {
+   os << "{";
+   for (Int_t i = 0; i < facet.GetNvert(); ++i) {
+      os << facet.GetVertex(i);
+      if (i != facet.GetNvert()-1) os << ", ";
+   }
+   os << "}";
+   return os;
+}
+
+TGeoFacet::TGeoFacet(const TGeoFacet &other) : fVertices(other.fVertices), fNvert(other.fNvert), fShared(other.fShared)
+{
+   memcpy(fIvert, other.fIvert, 4 * sizeof(Int_t));
+   if (!fShared)
+      fVertices = new VertexVec_t(*other.fVertices);
+}
+
+const TGeoFacet &TGeoFacet::operator = (const TGeoFacet &other)
+{
+   if (&other != this) {
+      fVertices = other.fVertices;
+      fNvert    = other.fNvert;
+      fShared   = other.fShared;
+      if (!fShared)
+         fVertices = new VertexVec_t(*other.fVertices);
+   }
+   return *this;
+}
+
+TGeoVector3 TGeoFacet::ComputeNormal(bool &degenerated) const
+{
+   // Compute normal using non-zero segments
+   constexpr Double_t kTolerance = 1.e-10;
+   degenerated = true;
+   TGeoVector3 normal;
+   for (Int_t i = 0; i < fNvert - 1; ++i) {
+      TGeoVector3 e1 = GetVertex(i + 1) - GetVertex(i);
+      if (e1.Mag2() < kTolerance) continue;
+      for (Int_t j = i + 1; j < fNvert; ++j) {
+         TGeoVector3 e2 = GetVertex((j + 1) % fNvert) - GetVertex(j);
+         if (e2.Mag2() < kTolerance) continue;
+         normal = TGeoVector3::Cross(e1, e2);
+         // e1 and e2 may be colinear
+         if (normal.Mag2() < kTolerance) continue;
+         normal.Normalize();
+         degenerated = false;
+         break;
+      }
+      if (!degenerated) break;
+   }
+   return normal;
+}
+
+bool TGeoFacet::Check() const
+{
+   constexpr Double_t kTolerance = 1.e-10;
    Int_t nvert = fNvert;
    for (Int_t i = 0; i < fNvert; ++i) {
-      const TGeoVector3 vi(fVertices[(i + 1) % fNvert] - fVertices[i];
+      const TGeoVector3 vi(GetVertex((i + 1) % fNvert) - GetVertex(i));
       if (vi.Mag2() < kTolerance) {
         nvert--;
       }
-    }
+   }
 
-    if (nvert < 3) {
+   if (nvert < 3) {
       std::cout << "Tile degenerated: Length of sides of facet are too small." << std::endl;
       return false;
-    }
+   }
 
-    // Compute normal using non-zero segments
-
-    bool degenerated = true;
-    for (size_t i = 0; i < NVERT - 1; ++i) {
-      Vector3D<T> e1 = fVertices[i + 1] - fVertices[i];
-      if (e1.Mag2() < kTolerance) continue;
-      for (size_t j = i + 1; j < NVERT; ++j) {
-        Vector3D<T> e2 = fVertices[(j + 1) % NVERT] - fVertices[j];
-        if (e2.Mag2() < kTolerance) continue;
-        fNormal = e1.Cross(e2);
-        // e1 and e2 may be colinear
-        if (fNormal.Mag2() < kTolerance) continue;
-        fNormal.Normalize();
-        degenerated = false;
-        break;
-      }
-      if (!degenerated) break;
-    }
-
-    if (degenerated) {
-      std::cout << "Tile degenerated 2: Length of sides of facet are too small." << std::endl;
+   bool degenerated = true;
+   ComputeNormal(degenerated);
+   if (degenerated) {
+      std::cout << "Facet: " << *this << " is degenerated\n";
       return false;
-    }
+   }
 
-    // Compute side vectors
-    for (size_t i = 0; i < NVERT; ++i) {
-      Vector3D<T> e1 = fVertices[(i + 1) % NVERT] - fVertices[i];
-      if (e1.Mag2() < kTolerance) continue;
-      fSideVectors[i] = fNormal.Cross(e1).Normalized();
-      fDistance       = -fNormal.Dot(fVertices[i]);
-      for (size_t j = i + 1; j < i + NVERT; ++j) {
-        Vector3D<T> e2 = fVertices[(j + 1) % NVERT] - fVertices[j % NVERT];
-        if (e2.Mag2() < kTolerance)
-          fSideVectors[j % NVERT] = fSideVectors[(j - 1) % NVERT];
-        else
-          fSideVectors[j % NVERT] = fNormal.Cross(e2).Normalized();
-      }
-      break;
-    }
+   // Compute surface area
+   Double_t surfaceArea = 0.;
+   for (Int_t i = 1; i < fNvert - 1; ++i) {
+      TGeoVector3 e1 = GetVertex(i) - GetVertex(0);
+      TGeoVector3 e2 = GetVertex(i + 1) - GetVertex(0);
+      surfaceArea += 0.5 * TGeoVector3::Cross(e1, e2).Mag();
+   }
+   if (surfaceArea < kTolerance) {
+      std::cout << "Facet: " << *this << " has zero surface area\n";
+      return kFALSE;
+   }
 
-    // Compute surface area
-    fSurfaceArea = 0.;
-    for (size_t i = 1; i < NVERT - 1; ++i) {
-      Vector3D<T> e1 = fVertices[i] - fVertices[0];
-      Vector3D<T> e2 = fVertices[i + 1] - fVertices[0];
-      fSurfaceArea += 0.5 * (e1.Cross(e2)).Mag();
-    }
-    assert(fSurfaceArea > kTolerance * kTolerance);
+   // Center of the tile
+   /*
+   TGeoVector3 center;
+   for (Int_t i = 0; i < fNvert; ++i)
+      center += GetVertex(i);
+   center /= fNvert;
+   */
+   return true;
+}
 
-    // Center of the tile
-    for (size_t i = 0; i < NVERT; ++i)
-      fCenter += fVertices[i];
-    fCenter /= NVERT;
-    return true;
-  }
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a connected neighbour facet has compatible normal
+
+bool TGeoFacet::CheckNeighbour(const TGeoFacet $other) const
+{
+/*
+   // Find a connecting segment
+   Int_t line1[2], line2[2];
+   Int_t npoints = 0;
+   for (Int_t i = 0; i < fNvert; ++i) {
+      auto ivert = GetVertexIndex(i);
+      // Skip if next vertex is the same (degenerated)
+      if (ivert == GetVertexIndex((i+1) % fNvert) continue;
+      // Check if the other facet has the same vertex
+      for (Int_t j = 0; j < other.GetNvert(); ++j) {
+         if (ivert == other.GetVertexIndex(j)) {
+            line1[npoints] = i;
+            line2[npoints] = j;
+            if (++npoints == 2) {
+
+            }
+         }
+
 */
+   return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -120,9 +174,10 @@ TGeoTessellated::TGeoTessellated(const char *name, Int_t nfacets) : TGeoBBox(nam
 
 TGeoTessellated::TGeoTessellated(const TGeoTessellated &other) : TGeoBBox(other)
 {
-   fNvert   = other.fNvert;
-   fNfacets = other.fNfacets;
-   fFacets  = other.fFacets;
+   fNvert    = other.fNvert;
+   fNfacets  = other.fNfacets;
+   fVertices = other.fVertices;
+   fFacets   = other.fFacets;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,44 +187,144 @@ TGeoTessellated &TGeoTessellated::operator=(const TGeoTessellated &other)
 {
    if (&other != this) {
       TGeoBBox::operator=(other);
-      fNvert   = other.fNvert;
-      fNfacets = other.fNfacets;
-      fFacets  = other.fFacets;
+      fNvert    = other.fNvert;
+      fNfacets  = other.fNfacets;
+      fVertices = other.fVertices;
+      fFacets   = other.fFacets;
    }
    return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Function to be called after reading tessellated volumes from the geometry file
 
+void TGeoTessellated::AfterStreamer()
+{
+   // The pointer to the array of vertices is not streamed so update it to facets
+   for (auto facet : fFacets)
+      facet.SetVertices(&fVertices);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adding a triangular facet from vertex positions in absolute coordinates
 
-void TGeoTessellated::AddFacet(double x0, double y0, double z0,
-                               double x1, double y1, double z1,
-                               double x2, double y2, double z2)
+void TGeoTessellated::AddFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2)
 {
    if (GetNfacets() == fNfacets) {
       Error("AddFacet", "Already defined %d facets, cannot add more", fNfacets);
       return;
    }
    fNvert += 3;
-   fFacets.emplace_back(x0, y0, z0, x1, y1, z1, x2, y2, z2);
+   fNseg  += 3;
+   fFacets.emplace_back(pt0, pt1, pt2);
+   if (GetNfacets() == fNfacets)
+      Close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adding a quadrilateral facet from vertex positions in absolute coordinates
 
-void TGeoTessellated::AddFacet(double x0, double y0, double z0,
-                               double x1, double y1, double z1,
-                               double x2, double y2, double z2,
-                               double x3, double y3, double z3)
+void TGeoTessellated::AddFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2, const TGeoVector3 &pt3)
 {
    if (GetNfacets() == fNfacets) {
       Error("AddFacet", "Already defined %d facets, cannot add more", fNfacets);
       return;
    }
    fNvert += 4;
-   fFacets.emplace_back(x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3);
+   fNseg  += 4;
+   fFacets.emplace_back(pt0, pt1, pt2, pt3);
+   if (GetNfacets() == fNfacets)
+      Close();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Close the shape: calculate bounding box and compact vertices
+
+void TGeoTessellated::Close()
+{
+   // Compact the array of vertices
+   constexpr double tolerance = 1.e-10;
+   constexpr size_t ngrid = 10;
+   ComputeBBox();
+   double minExtent[3];
+   minExtent[0] = fOrigin[0] - fDX - tolerance;
+   minExtent[1] = fOrigin[1] - fDY - tolerance;
+   minExtent[2] = fOrigin[2] - fDZ - tolerance;
+
+   double invExtent[3];
+   invExtent[0] = 0.5 / (fDX + tolerance);
+   invExtent[1] = 0.5 / (fDY + tolerance);
+   invExtent[2] = 0.5 / (fDZ + tolerance);
+
+   auto AddVertex = [this](const Vertex_t &vertex)
+   {
+      // Check if vertex exists
+      Int_t ivert = 0;
+      for (const auto &current_vert : fVertices) {
+         if (current_vert == vertex) return ivert;
+         ivert++;
+      }
+      // Vertex new, just add it
+      fVertices.push_back(vertex);
+      return ivert;
+   };
+
+   auto GetHashIndex = [&, this](const Vertex_t &vertex)
+   {
+      // Get the hash index for a vertex in a 10x10x10 grid in the bounding box
+      Int_t index = 0;
+      for (int i = 0; i < 3; ++i) {
+         Int_t ind = ngrid * (vertex[i] - minExtent[i]) * invExtent[i]; // between [0, ngrid-1]
+         assert(ind < (Int_t)ngrid);
+         for (int j = i + 1; j < 3; ++j) ind *= ngrid;
+         index += ind;
+      }
+      return index;
+   };
+
+   // In case the number of vertices is small, just compare with all others
+   Int_t ind[4];
+   if (fNvert < 1000) {
+      for (auto &facet : fFacets) {
+         ind[3] = -1; // not used for triangular facets
+         for (int i = 0; i < facet.GetNvert(); ++i) {
+            // Check if vertex exists already
+            ind[i] = AddVertex(facet.GetVertex(i));
+         }
+         facet.SetVertices(&fVertices, ind[0], ind[1], ind[2], ind[3]);
+      }
+   } else {
+      // Use hash index for each vertex
+      using CellVec_t = std::vector<int>;
+      std::array<CellVec_t, ngrid * ngrid * ngrid> grid;
+      for (auto &facet : fFacets) {
+         ind[3] = -1; // not used for triangular facets
+         for (int i = 0; i < facet.GetNvert(); ++i) {
+            // Check if vertex exists already
+            const Vertex_t &vertex = facet.GetVertex(i);
+            Int_t hashind = GetHashIndex(vertex);
+            bool isAdded = false;
+            for (auto ivert : grid[hashind]) {
+               if (vertex == fVertices[ivert]) {
+                  ind[i] = ivert;
+                  isAdded = true;
+                  break;
+               }
+            }
+            if (!isAdded) {
+              fVertices.push_back(vertex);
+              ind[i] = fVertices.size() - 1;
+              grid[hashind].push_back(ind[i]);
+            }
+         }
+         facet.SetVertices(&fVertices, ind[0], ind[1], ind[2], ind[3]);
+      }
+   }
+   fNvert = fVertices.size();
+   // Check facets
+   for (auto &facet : fFacets) {
+      facet.Check();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,13 +333,14 @@ void TGeoTessellated::AddFacet(double x0, double y0, double z0,
 void TGeoTessellated::ComputeBBox()
 {
    const double kBig = TGeoShape::Big();
+   if (fVertices.size()) return;
    double vmin[3] = { kBig, kBig, kBig };
    double vmax[3] = { -kBig, -kBig, -kBig };
    for (const auto &facet : fFacets) {
-      for (int i = 0; i < facet.fNvert; ++i) {
+      for (int i = 0; i < facet.GetNvert(); ++i) {
          for (int j = 0; j < 3; ++j) {
-            vmin[j] = TMath::Min(vmin[j], facet.fVertices[i].operator[](j));
-            vmax[j] = TMath::Max(vmax[j], facet.fVertices[i].operator[](j));
+            vmin[j] = TMath::Min(vmin[j], facet.GetVertex(i).operator[](j));
+            vmax[j] = TMath::Max(vmax[j], facet.GetVertex(i).operator[](j));
          }
       }
    }
@@ -201,7 +357,7 @@ void TGeoTessellated::ComputeBBox()
 void TGeoTessellated::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
    nvert = fNvert;
-   nsegs = fNvert;
+   nsegs = fNseg;
    npols = GetNfacets();
 }
 
@@ -211,13 +367,15 @@ void TGeoTessellated::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) c
 
 TBuffer3D *TGeoTessellated::MakeBuffer3D() const
 {
-   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric, 8, 24, 12, 36, 6, 36);
+   const Int_t nvert = fNvert;
+   const Int_t nsegs = fNseg;
+   const Int_t npols = GetNfacets();
+   TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nvert, 3*nvert, nsegs, 3*nsegs, npols, 6*npols);
    if (buff)
    {
       SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
    }
-
    return buff;
 }
 
@@ -226,33 +384,28 @@ TBuffer3D *TGeoTessellated::MakeBuffer3D() const
 
 void TGeoTessellated::SetSegsAndPols(TBuffer3D &buff) const
 {
-   Int_t c = GetBasicColor();
+   const Int_t c = GetBasicColor();
+   Int_t *segs = buff.fSegs;
+   Int_t *pols = buff.fPols;
 
-   buff.fSegs[ 0] = c   ; buff.fSegs[ 1] = 0   ; buff.fSegs[ 2] = 1   ;
-   buff.fSegs[ 3] = c+1 ; buff.fSegs[ 4] = 1   ; buff.fSegs[ 5] = 2   ;
-   buff.fSegs[ 6] = c+1 ; buff.fSegs[ 7] = 2   ; buff.fSegs[ 8] = 3   ;
-   buff.fSegs[ 9] = c   ; buff.fSegs[10] = 3   ; buff.fSegs[11] = 0   ;
-   buff.fSegs[12] = c+2 ; buff.fSegs[13] = 4   ; buff.fSegs[14] = 5   ;
-   buff.fSegs[15] = c+2 ; buff.fSegs[16] = 5   ; buff.fSegs[17] = 6   ;
-   buff.fSegs[18] = c+3 ; buff.fSegs[19] = 6   ; buff.fSegs[20] = 7   ;
-   buff.fSegs[21] = c+3 ; buff.fSegs[22] = 7   ; buff.fSegs[23] = 4   ;
-   buff.fSegs[24] = c   ; buff.fSegs[25] = 0   ; buff.fSegs[26] = 4   ;
-   buff.fSegs[27] = c+2 ; buff.fSegs[28] = 1   ; buff.fSegs[29] = 5   ;
-   buff.fSegs[30] = c+1 ; buff.fSegs[31] = 2   ; buff.fSegs[32] = 6   ;
-   buff.fSegs[33] = c+3 ; buff.fSegs[34] = 3   ; buff.fSegs[35] = 7   ;
-
-   buff.fPols[ 0] = c   ; buff.fPols[ 1] = 4   ;  buff.fPols[ 2] = 0  ;
-   buff.fPols[ 3] = 9   ; buff.fPols[ 4] = 4   ;  buff.fPols[ 5] = 8  ;
-   buff.fPols[ 6] = c+1 ; buff.fPols[ 7] = 4   ;  buff.fPols[ 8] = 1  ;
-   buff.fPols[ 9] = 10  ; buff.fPols[10] = 5   ;  buff.fPols[11] = 9  ;
-   buff.fPols[12] = c   ; buff.fPols[13] = 4   ;  buff.fPols[14] = 2  ;
-   buff.fPols[15] = 11  ; buff.fPols[16] = 6   ;  buff.fPols[17] = 10 ;
-   buff.fPols[18] = c+1 ; buff.fPols[19] = 4   ;  buff.fPols[20] = 3  ;
-   buff.fPols[21] = 8   ; buff.fPols[22] = 7   ;  buff.fPols[23] = 11 ;
-   buff.fPols[24] = c+2 ; buff.fPols[25] = 4   ;  buff.fPols[26] = 0  ;
-   buff.fPols[27] = 3   ; buff.fPols[28] = 2   ;  buff.fPols[29] = 1  ;
-   buff.fPols[30] = c+3 ; buff.fPols[31] = 4   ;  buff.fPols[32] = 4  ;
-   buff.fPols[33] = 5   ; buff.fPols[34] = 6   ;  buff.fPols[35] = 7  ;
+   Int_t indseg = 0; // segment internal data index
+   Int_t indpol = 0; // polygon internal data index
+   Int_t sind   = 0; // segment index
+   for (const auto &facet : fFacets) {
+      auto nvert = facet.GetNvert();
+      pols[indpol++] = c;
+      pols[indpol++] = nvert;
+      for (auto j = 0; j < nvert; ++j) {
+         Int_t k = (j + 1) % nvert;
+         // segment made by next consecutive points
+         segs[indseg++] = c;
+         segs[indseg++] = facet.GetVertexIndex(j);
+         segs[indseg++] = facet.GetVertexIndex(k);
+         // add segment to current polygon and increment segment index
+         pols[indpol + nvert - j - 1] = sind++;
+      }
+      indpol += nvert;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,22 +413,11 @@ void TGeoTessellated::SetSegsAndPols(TBuffer3D &buff) const
 
 void TGeoTessellated::SetPoints(Double_t *points) const
 {
-   if (!points) return;
-   Double_t xmin,xmax,ymin,ymax,zmin,zmax;
-   xmin = -fDX+fOrigin[0];
-   xmax =  fDX+fOrigin[0];
-   ymin = -fDY+fOrigin[1];
-   ymax =  fDY+fOrigin[1];
-   zmin = -fDZ+fOrigin[2];
-   zmax =  fDZ+fOrigin[2];
-   points[ 0] = xmin; points[ 1] = ymin; points[ 2] = zmin;
-   points[ 3] = xmin; points[ 4] = ymax; points[ 5] = zmin;
-   points[ 6] = xmax; points[ 7] = ymax; points[ 8] = zmin;
-   points[ 9] = xmax; points[10] = ymin; points[11] = zmin;
-   points[12] = xmin; points[13] = ymin; points[14] = zmax;
-   points[15] = xmin; points[16] = ymax; points[17] = zmax;
-   points[18] = xmax; points[19] = ymax; points[20] = zmax;
-   points[21] = xmax; points[22] = ymin; points[23] = zmax;
+   Int_t ind = 0;
+   for (const auto &vertex : fVertices) {
+      vertex.CopyTo(&points[ind]);
+      ind += 3;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,22 +425,12 @@ void TGeoTessellated::SetPoints(Double_t *points) const
 
 void TGeoTessellated::SetPoints(Float_t *points) const
 {
-   if (!points) return;
-   Double_t xmin,xmax,ymin,ymax,zmin,zmax;
-   xmin = -fDX+fOrigin[0];
-   xmax =  fDX+fOrigin[0];
-   ymin = -fDY+fOrigin[1];
-   ymax =  fDY+fOrigin[1];
-   zmin = -fDZ+fOrigin[2];
-   zmax =  fDZ+fOrigin[2];
-   points[ 0] = xmin; points[ 1] = ymin; points[ 2] = zmin;
-   points[ 3] = xmin; points[ 4] = ymax; points[ 5] = zmin;
-   points[ 6] = xmax; points[ 7] = ymax; points[ 8] = zmin;
-   points[ 9] = xmax; points[10] = ymin; points[11] = zmin;
-   points[12] = xmin; points[13] = ymin; points[14] = zmax;
-   points[15] = xmin; points[16] = ymax; points[17] = zmax;
-   points[18] = xmax; points[19] = ymax; points[20] = zmax;
-   points[21] = xmax; points[22] = ymin; points[23] = zmax;
+   Int_t ind = 0;
+   for (const auto &vertex : fVertices) {
+      points[ind++] = vertex.x();
+      points[ind++] = vertex.y();
+      points[ind++] = vertex.z();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,10 +442,12 @@ const TBuffer3D & TGeoTessellated::GetBuffer3D(Int_t reqSections, Bool_t localFr
 
    FillBuffer3D(buffer, reqSections, localFrame);
 
-   // TODO: A box itself has has nothing more as already described
-   // by bounding box. How will viewer interpret?
+   const Int_t nvert = fNvert;
+   const Int_t nsegs = fNseg;
+   const Int_t npols = GetNfacets();
+
    if (reqSections & TBuffer3D::kRawSizes) {
-      if (buffer.SetRawSizes(8, 3*8, 12, 3*12, 6, 6*6)) {
+      if (buffer.SetRawSizes(nvert, 3*nvert, nsegs, 3*nsegs, npols, 6*npols)) {
          buffer.SetSectionsValid(TBuffer3D::kRawSizes);
       }
    }
