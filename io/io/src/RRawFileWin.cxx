@@ -42,7 +42,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail
    return std::make_unique<RRawFileWin>(fUrl, fOptions);
 }
 
-std::uint64_t ROOT::Experimental::Detail::RRawFileWin::DoGetSize()
+std::uint64_t ROOT::Experimental::Detail::RRawFileWin::GetSizeImpl()
 {
    Seek(0L, SEEK_END);
    long size = ftell(fFilePtr);
@@ -53,7 +53,7 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileWin::DoGetSize()
    return size;
 }
 
-void ROOT::Experimental::Detail::RRawFileWin::DoOpen()
+void ROOT::Experimental::Detail::RRawFileWin::OpenImpl()
 {
    fFilePtr = fopen(GetLocation(fUrl).c_str(), "rb");
    if (fFilePtr == nullptr)
@@ -65,7 +65,7 @@ void ROOT::Experimental::Detail::RRawFileWin::DoOpen()
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
-size_t ROOT::Experimental::Detail::RRawFileWin::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFileWin::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    Seek(offset, SEEK_SET);
    size_t res = fread(buffer, 1, nbytes, fFilePtr);

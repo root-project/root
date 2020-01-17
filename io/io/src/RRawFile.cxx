@@ -92,13 +92,13 @@ ROOT::Experimental::Detail::RRawFile::Create(std::string_view url, ROptions opti
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
-void *ROOT::Experimental::Detail::RRawFile::DoMap(size_t /* nbytes */, std::uint64_t /* offset */,
+void *ROOT::Experimental::Detail::RRawFile::MapImpl(size_t /* nbytes */, std::uint64_t /* offset */,
    std::uint64_t& /* mapdOffset */)
 {
    throw std::runtime_error("Memory mapping unsupported");
 }
 
-void ROOT::Experimental::Detail::RRawFile::DoUnmap(void * /* region */, size_t /* nbytes */)
+void ROOT::Experimental::Detail::RRawFile::UnmapImpl(void * /* region */, size_t /* nbytes */)
 {
    throw std::runtime_error("Memory mapping unsupported");
 }
@@ -114,11 +114,11 @@ std::string ROOT::Experimental::Detail::RRawFile::GetLocation(std::string_view u
 std::uint64_t ROOT::Experimental::Detail::RRawFile::GetSize()
 {
    if (!fIsOpen)
-      DoOpen();
+      OpenImpl();
    fIsOpen = true;
 
    if (fFileSize == kUnknownFileSize)
-      fFileSize = DoGetSize();
+      fFileSize = GetSizeImpl();
    return fFileSize;
 }
 
@@ -135,9 +135,9 @@ std::string ROOT::Experimental::Detail::RRawFile::GetTransport(std::string_view 
 void *ROOT::Experimental::Detail::RRawFile::Map(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
 {
    if (!fIsOpen)
-      DoOpen();
+      OpenImpl();
    fIsOpen = true;
-   return DoMap(nbytes, offset, mapdOffset);
+   return MapImpl(nbytes, offset, mapdOffset);
 }
 
 size_t ROOT::Experimental::Detail::RRawFile::Read(void *buffer, size_t nbytes)
@@ -150,13 +150,13 @@ size_t ROOT::Experimental::Detail::RRawFile::Read(void *buffer, size_t nbytes)
 size_t ROOT::Experimental::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    if (!fIsOpen)
-      DoOpen();
+      OpenImpl();
    R__ASSERT(fOptions.fBlockSize >= 0);
    fIsOpen = true;
 
    // "Large" reads are served directly, bypassing the cache
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
-      return DoReadAt(buffer, nbytes, offset);
+      return ReadAtImpl(buffer, nbytes, offset);
 
    if (fBufferSpace == nullptr) {
       fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
@@ -184,7 +184,7 @@ size_t ROOT::Experimental::Detail::RRawFile::ReadAt(void *buffer, size_t nbytes,
 
    /// The remaining bytes populate the newly promoted main buffer
    RBlockBuffer *thisBuffer = &fBlockBuffers[fBlockBufferIdx % kNumBlockBuffers];
-   size_t res = DoReadAt(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
+   size_t res = ReadAtImpl(thisBuffer->fBuffer, fOptions.fBlockSize, offset);
    thisBuffer->fBufferOffset = offset;
    thisBuffer->fBufferSize = res;
    size_t remainingBytes = std::min(res, nbytes);
@@ -235,5 +235,5 @@ void ROOT::Experimental::Detail::RRawFile::Unmap(void *region, size_t nbytes)
 {
    if (!fIsOpen)
       throw std::runtime_error("Cannot unmap, file not open");
-   DoUnmap(region, nbytes);
+   UnmapImpl(region, nbytes);
 }
