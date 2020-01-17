@@ -142,7 +142,7 @@ extern "C" void initlibROOTPythonizations()
    PyROOT::Init();
 
    // signal policy: don't abort interpreter in interactive mode
-   CallContext::SetSignalPolicy(gROOT->IsBatch() ? CallContext::kFast : CallContext::kSafe);
+   CallContext::SetGlobalSignalPolicy(!gROOT->IsBatch());
 
    // inject ROOT namespace for convenience
    PyModule_AddObject(gRootModule, (char *)"ROOT", CreateScopeProxy("ROOT"));
