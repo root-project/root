@@ -45,7 +45,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail
    return std::make_unique<RRawFileUnix>(fUrl, fOptions);
 }
 
-std::uint64_t ROOT::Experimental::Detail::RRawFileUnix::DoGetSize()
+std::uint64_t ROOT::Experimental::Detail::RRawFileUnix::GetSizeImpl()
 {
    struct stat info;
    int res = fstat(fFileDes, &info);
@@ -54,7 +54,7 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileUnix::DoGetSize()
    return info.st_size;
 }
 
-void *ROOT::Experimental::Detail::RRawFileUnix::DoMap(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
+void *ROOT::Experimental::Detail::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
 {
    static std::uint64_t szPageBitmap = sysconf(_SC_PAGESIZE) - 1;
    mapdOffset = offset & ~szPageBitmap;
@@ -66,7 +66,7 @@ void *ROOT::Experimental::Detail::RRawFileUnix::DoMap(size_t nbytes, std::uint64
    return result;
 }
 
-void ROOT::Experimental::Detail::RRawFileUnix::DoOpen()
+void ROOT::Experimental::Detail::RRawFileUnix::OpenImpl()
 {
    fFileDes = open(GetLocation(fUrl).c_str(), O_RDONLY);
    if (fFileDes < 0) {
@@ -88,7 +88,7 @@ void ROOT::Experimental::Detail::RRawFileUnix::DoOpen()
    }
 }
 
-size_t ROOT::Experimental::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Experimental::Detail::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    size_t total_bytes = 0;
    while (nbytes) {
@@ -109,7 +109,7 @@ size_t ROOT::Experimental::Detail::RRawFileUnix::DoReadAt(void *buffer, size_t n
    return total_bytes;
 }
 
-void ROOT::Experimental::Detail::RRawFileUnix::DoUnmap(void *region, size_t nbytes)
+void ROOT::Experimental::Detail::RRawFileUnix::UnmapImpl(void *region, size_t nbytes)
 {
    int rv = munmap(region, nbytes);
    if (rv != 0)
