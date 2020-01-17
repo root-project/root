@@ -76,6 +76,7 @@ target_compile_definitions(
     Minuit2Math
     PUBLIC
     ROOT_Math_VecTypes
+    MATHCORE_STANDALONE
     )
 
 target_link_libraries(Minuit2Math PUBLIC Minuit2Common)
