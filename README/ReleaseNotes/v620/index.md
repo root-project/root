@@ -133,6 +133,8 @@ typedefs (in particular `Double32_t`)
 ## Histogram Libraries
 
 * Allow reading v5 TF1 that were stored memberwise in a TClonesArray.
+* New class TGraphMultiErrors: A TGraph with asymmetric error bars and multiple y error
+  dimensions (author: Simon Spies).
 
 ## Math Libraries
 
@@ -142,15 +144,22 @@ typedefs (in particular `Double32_t`)
 
 ## 2D Graphics Libraries
 
- * Provide support of NDC coordinates for TArrow.
- * Fix interactive movement of TLine/TArrow objects when NDC coordinates are used
- * Provide TGraph::MovePoints() method
+ * Provide support of NDC coordinates for `TArrow`.
+ * Fix interactive movement of `TLine/TArrow` objects when NDC coordinates are used
+ * Provide `TGraph::MovePoints()` method
  * New options `RX`and `RY` for TMultiGraph in order to draw reverse axis along X and Y.
  * Combined with the option "Z" the option "CJUST" allows to draw the color palette
    with axis labels justified on the color boundaries (implemented by Otto Schaile).
  * The `TCanvas` Event Status Bar now displays the date and time when the mouse cursor
    is moved over a time axis (implemented by Otto Schaile).
- * Negative values were not painted with option "TEXT" for TH2Poly.
+ * Negative values were not painted with option "TEXT" for `TH2Poly`.
+ * The Z title was not properly set in `TEfficiency`.
+ * Implement `TImage:ls()`
+ * `TGraph2D`: X Y and Z titles were not saved by SavePrimitive.
+ * In some cases vertical hatches drawn by `TPad::PaintHatches` disappeared.
+ * Save the X and Y axis limits in `TMultiGraph::SavePrimitive`.
+ * Some markers did not match between PDF and PNG.
+ * The MaxDigits attribute was not imported from TAxis to TGaxis.
 
 
 ## 3D Graphics Libraries
@@ -214,6 +223,7 @@ typedefs (in particular `Double32_t`)
 ~~~ {.cpp}
    root[0] .help TTree::Draw
 ~~~
+- Change the layout of the ROOT reference.
 
 ## Build, Configuration and Testing Infrastructure
 
