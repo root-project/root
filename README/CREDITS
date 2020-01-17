@@ -334,6 +334,10 @@ N: Nikolai Gagunashvili
 E: nikolai@unak.is
 D: Reimplementation of TH1::Chi2Test
 
+N: Massimiliano Galli
+E: massimiliano.galli@cern.ch
+D: PyROOT, build system (multi-Python-version builds)
+
 N: Gerardo Ganis
 E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
@@ -561,6 +565,10 @@ D: PyROOT package, Cppyy package
 N: Kerry Lee
 E: kerry.t.lee@nasa.gov
 D: Contribution to TDatime::Set
+
+N: Philip Leindecker
+E: philip@leindecker.at
+D: JSROOT graphics in JupyterLab
 
 N: Josef Leydold
 E: leydold@statmath.wu-wien.ac.at
