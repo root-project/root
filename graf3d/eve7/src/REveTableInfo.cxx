@@ -9,10 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #include "TClass.h"
-#include <ROOT/REveTableInfo.hxx>
-#include <ROOT/REveManager.hxx>
+#include "TBaseClass.h"
 #include "TROOT.h"
 #include "TInterpreter.h"
+#include <ROOT/REveTableInfo.hxx>
+#include <ROOT/REveManager.hxx>
 
 #include "json.hpp"
 
@@ -69,6 +70,35 @@ void REveTableViewInfo::AddNewColumnToCurrentCollection(const std::string& expr,
    fConfigChanged = false;
 
    StampObjProps();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find column definitions for given class name.
+//  Look for definition also in base classes
+REveTableHandle::Entries_t& REveTableViewInfo::RefTableEntries(std::string cname)
+{
+   auto search = fSpecs.find(cname);
+   if (search != fSpecs.end())
+   {
+      return search->second;
+   }
+   else {
+      TClass* c = TClass::GetClass(cname.c_str());
+      TBaseClass *base;
+      TIter       blnext(c->GetListOfBases());
+      while ((base = (TBaseClass*) blnext()))
+      {
+         auto bs = fSpecs.find(base->GetName());
+         if (bs != fSpecs.end())
+         {
+            return bs->second;
+         }
+      }
+   }
+
+   // create new entry if not existing
+   return fSpecs[cname];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
