@@ -15,47 +15,84 @@
 #include "TGeoVector3.h"
 #include "TGeoBBox.h"
 
-struct TGeoFacet {
-   using Vertex_t = TGeoVector3;
-   Vertex_t fVertices[4];   // array of vertices
-   int      fNvert = 0;     // number of vertices (can be 3 or 4)
+class TGeoFacet {
+   using Vertex_t    = TGeoVector3;
+   using VertexVec_t = std::vector<Vertex_t>;
 
+private:
+   Int_t     fIvert[4]    = {0};       // Vertex indices in the array
+   VertexVec_t *fVertices = nullptr;   //! array of vertices
+   int       fNvert       = 0;         // number of vertices (can be 3 or 4)
+   bool      fShared      = false;     // Vector of vertices shared flag
+
+public:
    TGeoFacet() {}
+   TGeoFacet(const TGeoFacet &other);
+
+   ~TGeoFacet() { if (!fShared) delete fVertices; }
+
+   const TGeoFacet &operator = (const TGeoFacet &other);
+
    // Triangular facet
-   TGeoFacet(double x0, double y0, double z0,
-             double x1, double y1, double z1,
-             double x2, double y2, double z2)
+   TGeoFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2)
+      : fIvert{0, 1, 2}
    {
-      fVertices[0].Set(x0, y0, z0);
-      fVertices[1].Set(x1, y1, z1);
-      fVertices[2].Set(x2, y2, z2);
+      fVertices = new VertexVec_t;
+      fVertices->push_back(pt0);
+      fVertices->push_back(pt1);
+      fVertices->push_back(pt2);
       fNvert = 3;
    }
 
    // Quadrilateral facet
-   TGeoFacet(double x0, double y0, double z0,
-             double x1, double y1, double z1,
-             double x2, double y2, double z2,
-             double x3, double y3, double z3)
+   TGeoFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2, const TGeoVector3 &pt3)
+      : fIvert{0, 1, 2, 3}
    {
-      fVertices[0].Set(x0, y0, z0);
-      fVertices[1].Set(x1, y1, z1);
-      fVertices[2].Set(x2, y2, z2);
-      fVertices[3].Set(x3, y3, z3);
+      fVertices = new VertexVec_t;
+      fVertices->push_back(pt0);
+      fVertices->push_back(pt1);
+      fVertices->push_back(pt2);
+      fVertices->push_back(pt3);      
       fNvert = 4;
    }
+   
+   void SetVertices(VertexVec_t *vertices, int i0 = -1, int i1 = -1, int i2 = -1, int i3 = -1)
+   {
+      if (!fShared) delete fVertices;
+      fVertices = vertices;
+      if (i0 >= 0) {
+         fIvert[0] = i0;
+         fIvert[1] = i1;
+         fIvert[2] = i2;
+         fIvert[3] = i3;
+      }
+      fShared   = true;
+   }
+   
+   TGeoVector3 ComputeNormal(bool &degenerated) const;
+   Int_t GetNvert() const { return fNvert; }
 
-   //bool Check();
+   Vertex_t &GetVertex(int ivert) { return fVertices->operator[](fIvert[ivert]); }
+   const Vertex_t &GetVertex(int ivert) const { return fVertices->operator[](fIvert[ivert]); }
+
+   Int_t GetVertexIndex(int ivert) const { return fIvert[ivert]; }
+   
+   bool Check() const;
+   bool CheckNeighbour(const TGeoFacet $other) const;
 };
+
+std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet);
 
 class TGeoTessellated : public TGeoBBox
 {
-  using Vector3_t = TGeoVector3;
+  using Vertex_t = TGeoVector3;
 
 private:
    int fNfacets = 0;
    int fNvert   = 0;
-   std::vector<TGeoFacet> fFacets;
+   int fNseg    = 0;
+   std::vector<Vertex_t>  fVertices;        // List of vertices
+   std::vector<TGeoFacet> fFacets;          // List of facets
 
    virtual void FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const;
 public:
@@ -69,19 +106,18 @@ public:
    TGeoTessellated& operator=(const TGeoTessellated&);
    
    void ComputeBBox();
-   void Close() { ComputeBBox(); }
+   void Close();
 
-   void AddFacet(double x0, double y0, double z0,
-                 double x1, double y1, double z1,
-                 double x2, double y2, double z2);
-   void AddFacet(double x0, double y0, double z0,
-                 double x1, double y1, double z1,
-                 double x2, double y2, double z2,
-                 double x3, double y3, double z3);
+   void AddFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2);
+   void AddFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2, const TGeoVector3 &pt3);
+
    int  GetNfacets() const { return fFacets.size(); }
+   int  GetNsegments() const { return fNseg; }
    int  GetNvertices() const { return fNvert; }
    const TGeoFacet &GetFacet(Int_t i) { return fFacets[i]; }
 
+   virtual void          AfterStreamer();
+   virtual Int_t         DistancetoPrimitive(Int_t, Int_t) { return 99999; }
    virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const { return fNvert; }

@@ -12,6 +12,7 @@
 #ifndef ROOT_TGeoVector3
 #define ROOT_TGeoVector3
 
+#include <Riostream.h>
 #include <TMath.h>
 
 struct TGeoVector3 {
@@ -73,6 +74,9 @@ struct TGeoVector3 {
    double &z() { return fVec[2]; }
    double const &z() const { return fVec[2]; }
  
+   inline void CopyTo(double *dest) const
+   { dest[0] = fVec[0]; dest[1] = fVec[1]; dest[2] = fVec[2]; }
+
    void Set(double const &a, double const &b, double const &c)
    {
       fVec[0] = a;
@@ -153,13 +157,22 @@ struct TGeoVector3 {
    }
 };
 
-/*
-std::ostream &operator<<(std::ostream &os, TGeoVector3 const &vec)
+std::ostream &operator<<(std::ostream &os, TGeoVector3 const &vec);
+
+inline
+bool operator==(TGeoVector3 const &lhs, TGeoVector3 const &rhs)
 {
-   os << "(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
-   return os;
+  constexpr double kTolerance = 1.e-10;
+  return TMath::Abs(lhs[0] - rhs[0]) < kTolerance &&
+         TMath::Abs(lhs[1] - rhs[1]) < kTolerance &&
+         TMath::Abs(lhs[2] - rhs[2]) < kTolerance;
 }
-*/
+
+inline
+bool operator!=(TGeoVector3 const &lhs, TGeoVector3 const &rhs)
+{
+  return !(lhs == rhs);
+}
 
 #define TGEOVECTOR3_BINARY_OP(OPERATOR, INPLACE)                      \
 inline TGeoVector3 operator OPERATOR(const TGeoVector3 &lhs,          \

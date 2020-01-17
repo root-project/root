@@ -162,7 +162,8 @@ private:
    XMLNodePointer_t  Orb(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
    XMLNodePointer_t  Reflection(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
-   XMLNodePointer_t  Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr); //not really implemented: just approximation to a TGeoBBox
+   XMLNodePointer_t  Ellipsoid(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
+   XMLNodePointer_t  Tessellated(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr);
 
    //'structure' section
    XMLNodePointer_t  VolProcess(TXMLEngine* gdml, XMLNodePointer_t node);

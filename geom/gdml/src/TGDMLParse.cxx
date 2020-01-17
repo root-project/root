@@ -99,6 +99,7 @@ When most solids or volumes are added to the geometry they
 #include "TGeoEltu.h"
 #include "TGeoXtru.h"
 #include "TGeoScaledShape.h"
+#include "TGeoTessellated.h"
 #include "TGeoVolume.h"
 #include "TROOT.h"
 #include "TMath.h"
@@ -224,9 +225,9 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* polystr = "polycone";
    const char* hypestr = "hype";
    const char* trapstr = "trap";
-   const char* trdstr = "trd";
+   const char* trdstr  = "trd";
    const char* sphestr = "sphere";
-   const char* orbstr = "orb";
+   const char* orbstr  = "orb";
    const char* parastr = "para";
    const char* torustr = "torus";
    const char* hedrstr = "polyhedra";
@@ -242,6 +243,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
    const char* skinstr = "skinsurface";
    const char* bordstr = "bordersurface";
    const char* usrstr  = "userinfo";
+   const char* tslstr  = "tessellated";
    Bool_t hasIsotopes;
    Bool_t hasIsotopesExtended;
 
@@ -355,6 +357,8 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
       node = ElTube(gdml, node, attr);
    } else if ((strcmp(name, hedrstr)) == 0) {
       node = Polyhedra(gdml, node, attr);
+   } else if ((strcmp(name, tslstr)) == 0) {
+      node = Tessellated(gdml, node, attr);
    } else if ((strcmp(name, parbstr)) == 0) {
       node = Paraboloid(gdml, node, attr);
    } else if ((strcmp(name, subtstr)) == 0) {
@@ -4258,6 +4262,172 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine* gdml, XMLNodePointer_t node, XMLAt
       delete [] section[i];
    }
    delete [] section;
+   return node;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// In the solids section of the GDML file, a tessellated shape may be declared.
+/// When the tessellated keyword is found, this function is called, and the
+/// triangular/quadrangular facets are read, creating the corresponding 
+/// TGeoTessellated object stored in fsolmap map using the name
+/// as its key.
+
+XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
+{
+   TString lunit = fDefault_lunit.c_str();
+   TString name, vname, type;
+   TString tempattr;
+
+   while (attr != 0) {
+      tempattr = gdml->GetAttrName(attr);
+      tempattr.ToLower();
+      if (tempattr == "name") {
+         name = gdml->GetAttrValue(attr);
+      }
+      attr = gdml->GetNextAttr(attr);
+   }
+
+   if ((strcmp(fCurrentFile, fStartFile)) != 0) {
+      name = TString::Format("%s_%s", name.Data(), fCurrentFile);
+   }
+
+   //Start counting children
+
+   XMLNodePointer_t child = gdml->GetChild(node);
+   int nofacets = 0;
+
+   while (child != 0) {
+      tempattr = gdml->GetNodeName(child);
+      tempattr.ToLower();
+      if (tempattr == "triangular" || tempattr == "quadrangular" ) {
+         nofacets = nofacets + 1;
+      }
+      child = gdml->GetNext(child);
+   }
+   
+   TGeoTessellated *tsl = new TGeoTessellated(NameShort(name), nofacets);
+   TGeoTranslation *pos = nullptr;
+   TGeoVector3 vertices[4];
+
+   auto SetVertex = [&](int i, TGeoTranslation *trans)
+   {
+      const double *tr = trans->GetTranslation();
+      vertices[i].Set(tr[0], tr[1], tr[2]);
+   };
+
+   auto AddTriangularFacet = [&](bool relative)
+   {
+      if (relative) {
+         vertices[2] += vertices[0] + vertices[1];
+         vertices[1] += vertices[0];
+      }
+      tsl->AddFacet(vertices[0], vertices[1], vertices[2]);
+   };
+
+   auto AddQuadrangularFacet = [&](bool relative)
+   {
+      if (relative) {
+         vertices[3] += vertices[0] + vertices[1] + vertices[2];
+         vertices[2] += vertices[0] + vertices[1];
+         vertices[1] += vertices[0];
+      }
+      tsl->AddFacet(vertices[0], vertices[1], vertices[2], vertices[3]);
+   };
+
+   // Get facet attributes
+   child = gdml->GetChild(node);
+   while (child != 0) {
+      tempattr = gdml->GetNodeName(child);
+      tempattr.ToLower();
+      if (tempattr == "triangular") {
+         attr = gdml->GetFirstAttr(child);
+
+         while (attr != 0) {
+            tempattr = gdml->GetAttrName(attr);
+
+            if (tempattr == "vertex1") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(0, pos);
+            } 
+
+            else if (tempattr == "vertex2") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(1, pos);
+            } 
+
+            else if (tempattr == "vertex3") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(2, pos);
+            }
+
+            else if (tempattr == "type") {
+               type = gdml->GetAttrValue(attr);
+               type.ToLower();
+               bool relative = (type == "relative") ? true : false;
+               AddTriangularFacet(relative);
+            }
+
+            attr = gdml->GetNextAttr(attr);
+         }
+
+      }
+
+      else if (tempattr == "quadrangular") {
+         attr = gdml->GetFirstAttr(child);
+
+         while (attr != 0) {
+            tempattr = gdml->GetAttrName(attr);
+
+            if (tempattr == "vertex1") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(0, pos);
+            } 
+
+            else if (tempattr == "vertex2") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(1, pos);
+            } 
+
+            else if (tempattr == "vertex3") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(2, pos);
+            } 
+
+            else if (tempattr == "vertex4") {
+               vname = gdml->GetAttrValue(attr);
+               if (fposmap.find(vname.Data()) != fposmap.end()) pos = fposmap[vname.Data()];
+               else Fatal("Tessellated", "Vertex %s not defined", vname.Data());
+               SetVertex(3, pos);
+            } 
+
+            else if (tempattr == "type") {
+               type = gdml->GetAttrValue(attr);
+               type.ToLower();
+               bool relative = (type == "relative") ? true : false;
+               AddQuadrangularFacet(relative);
+            }
+
+            attr = gdml->GetNextAttr(attr);
+         }
+
+      }
+      child = gdml->GetNext(child);
+   }
+
+   fsolmap[name.Data()] = tsl;
+
    return node;
 }
 
