@@ -71,6 +71,7 @@ TEST_F(BulkApiTest, stdRead)
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");
    printf("TTreeReader: Total elapsed time (seconds) for standard APIs: %.2f\n", sw.RealTime());
+   delete hfile;
 }
 
 TEST_F(BulkApiTest, simpleRead)
@@ -112,6 +113,7 @@ TEST_F(BulkApiTest, simpleRead)
    sw.Stop();
    printf("GetEntriesSerialized: Successful read of all events.\n");
    printf("GetEntriesSerialized: Total elapsed time (seconds) for bulk APIs: %.2f\n", sw.RealTime());
+   delete hfile;
 }
 
 TEST_F(BulkApiTest, fastRead)
@@ -148,4 +150,5 @@ TEST_F(BulkApiTest, fastRead)
    sw.Stop();
    printf("TTreeReaderFast: Successful read of all events.\n");
    printf("TTreeReaderFast: Total elapsed time (seconds) for bulk APIs: %.2f\n", sw.RealTime());
+   delete hfile;
 }

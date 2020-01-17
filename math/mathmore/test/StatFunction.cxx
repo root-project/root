@@ -108,6 +108,7 @@ void StatFunction::TestInverse1(RootFinder::EType algoType)
    }
 }
 
+#ifndef _MSC_VER
 void StatFunction::TestInverse2(RootFinder::EType algoType)
 {
    int maxitr = 2000;
@@ -142,3 +143,4 @@ void StatFunction::TestInverse2(RootFinder::EType algoType)
       EXPECT_NEAR(q1, q2, fScaleInv * std::numeric_limits<double>::epsilon());
    }
 }
+#endif

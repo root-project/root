@@ -8,7 +8,7 @@
 TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
 {
    const auto ofileName = "tgraphmultierrorstest.root";
-   TFile f(ofileName, "RECREATE");
+   TFile *f = TFile::Open(ofileName, "RECREATE");
 
    Double_t x[]       = {0, 1, 2, 3, 4};
    Double_t y[]       = {0, 2, 4, 1, 3};
@@ -30,7 +30,7 @@ TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
    gme->Write("gme");
    delete gme;
 
-   gme = (TGraphMultiErrors*) f.Get("gme");
+   gme = (TGraphMultiErrors*) f->Get("gme");
 
    EXPECT_DOUBLE_EQ(gme->GetErrorY(0), 0.79056941504209488);
    EXPECT_DOUBLE_EQ(gme->GetErrorY(4), 1.5811388300841898);
@@ -67,6 +67,7 @@ TEST(TGraphMultiErrorsTests, tgraphmultierrorstest)
    EXPECT_DOUBLE_EQ(gme->GetErrorY(4), 2.5179356624028344);
 
    delete gme;
-   f.Close();
+   f->Close();
+   delete f;
    gSystem->Unlink(ofileName);
 }
