@@ -220,6 +220,9 @@ if (NOT ROOT_tmva_FOUND)
 else()
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
+  if(MSVC)
+    list(APPEND tmva_veto tmva/tmva103_Application.C tmva/envelope/classification.C)
+  endif()
 endif()
 
 if (NOT ROOT_pythia6_FOUND)
@@ -244,6 +247,9 @@ if(root7)
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
       )
+  if(MSVC)
+    list(APPEND root7_veto v7/box.cxx v7/draw*.cxx )
+  endif()
 endif()
 
 if(NOT root7)

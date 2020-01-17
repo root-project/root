@@ -191,6 +191,7 @@ static std::string MakeDepLibsPlatformIndependent(llvm::StringRef libs) {
    return llvm::StringRef(result).rtrim();
 }
 
+#ifndef _MSC_VER
 // Check the interface computing the dependencies of a given library.
 TEST_F(TClingTests, GetSharedLibDeps)
 {
@@ -223,6 +224,7 @@ TEST_F(TClingTests, GetSharedLibDeps)
    EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")),
                      "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library '   '\n");
 }
+#endif
 
 // Check the interface which interacts with the cling::LookupHelper.
 TEST_F(TClingTests, ClingLookupHelper) {

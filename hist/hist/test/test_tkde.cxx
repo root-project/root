@@ -132,6 +132,7 @@ struct  TestKDE  {
          gPad->SaveAs(gfname);
       }
       //f->Close();
+      delete f;
    }
    
 };

@@ -217,6 +217,7 @@ TEST(TreeProcessorMT, LimitNTasks_CheckClusters)
    ROOT::DisableImplicitMT();
 }
 
+#ifndef _MSC_VER
 TEST(TreeProcessorMT, PathName)
 {
    auto fname = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4mu.root";
@@ -228,3 +229,4 @@ TEST(TreeProcessorMT, PathName)
    p.Process(func);
    EXPECT_EQ(n.load(), 1499064U) << "Wrong number of events processed!\n";
 }
+#endif
