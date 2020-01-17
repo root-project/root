@@ -36,9 +36,9 @@ private:
    void Seek(long offset, int whence);
 
 protected:
-   void DoOpen() final;
-   size_t DoReadAt(void *buffer, size_t nbytes, std::uint64_t offset) final;
-   std::uint64_t DoGetSize() final;
+   void OpenImpl() final;
+   size_t ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset) final;
+   std::uint64_t GetSizeImpl() final;
 
 public:
    RRawFileWin(std::string_view url, RRawFile::ROptions options);
