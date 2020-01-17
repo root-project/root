@@ -31,6 +31,7 @@ The following people have contributed to this new version:
  Stephan Hageboeck, CERN/SFT,\
  Desislava Kalaydjieva, CERN/SFT,\
  Jan Knedlik, GSI,\
+ Philip Leindecker, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
