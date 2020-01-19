@@ -56,6 +56,7 @@ TGeoPgon               ->           <polyhedra ...>
 TGeoEltu               ->           <eltube ...>
 TGeoHype               ->           <hype ...>
 TGeoXtru               ->           <xtru ...>
+TGeoTessellated        ->           <tessellated ...>
 TGeoCompositeShape     ->           <union ...>            or
 -                      ->           <subtraction ...>      or
 -                      ->           <intersection ...>
@@ -1647,6 +1648,44 @@ XMLNodePointer_t TGDMLWrite::CreateElConeN(TGeoScaledShape * geoShape)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Creates "tessellated" (tessellated shape) node for GDML
+
+XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated * geoShape)
+{
+   // add all vertices to the define section
+   TString genname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
+   for (int i = 0; i < geoShape->GetNvertices(); ++i) {
+      auto vertex = geoShape->GetVertex(i);
+      TString posName = TString::Format("%s_%d", genname.Data(), i);
+      Xyz nodPos;
+      nodPos.x = vertex[0];
+      nodPos.y = vertex[1];
+      nodPos.z = vertex[2];
+      auto childN = CreatePositionN(posName.Data(), nodPos);
+      fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
+   }
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tessellated", nullptr);
+   fGdmlE->NewAttr(mainN, nullptr, "name", genname.Data());
+
+   XMLNodePointer_t childN;
+   for (Int_t it = 0; it < geoShape->GetNfacets(); it++) {
+      //add section child node
+      auto facet = geoShape->GetFacet(it);
+      bool triangular = facet.GetNvert() == 3;
+      TString ntype = (triangular) ? "triangular" : "quadrangular";
+      childN = fGdmlE->NewChild(nullptr, nullptr, ntype.Data(), nullptr);
+      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(0)));
+      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(1)));
+      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(2)));
+      if (!triangular)
+         fGdmlE->NewAttr(childN, nullptr, "vertex4", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(3)));
+      fGdmlE->NewAttr(childN, nullptr, "type", "ABSOLUTE");
+      fGdmlE->AddChild(mainN, childN);
+   }
+   return mainN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates common part of union intersection and subtraction nodes
 
 XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
@@ -2055,6 +2094,8 @@ XMLNodePointer_t TGDMLWrite::ChooseObject(TGeoShape *geoShape)
       solidN = CreateHypeN((TGeoHype*) geoShape);
    } else if (strcmp(clsname, "TGeoXtru") == 0) {
       solidN = CreateXtrusionN((TGeoXtru*) geoShape);
+   } else if (strcmp(clsname, "TGeoTessellated") == 0) {
+      solidN = CreateTessellatedN((TGeoTessellated*) geoShape);
    } else if (strcmp(clsname, "TGeoScaledShape") == 0) {
       TGeoScaledShape * geoscale = (TGeoScaledShape *) geoShape;
       TString scaleObjClsName = geoscale->GetShape()->ClassName();
