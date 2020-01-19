@@ -633,10 +633,8 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
   endif()
 
-  # For modules GCocoa and GQuartz we need objc context.
-  if (${library} MATCHES "(GCocoa|GQuartz)")
-    set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
-  else()
+  # For modules GCocoa and GQuartz we need objc and cplusplus context.
+  if (NOT ${library} MATCHES "(GCocoa|GQuartz)")
     set (modulemap_entry "${modulemap_entry}\n  requires cplusplus\n")
   endif()
   if (library_headers)
