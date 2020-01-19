@@ -4,14 +4,14 @@
 using namespace std;
 
 class Reconstructor {};
-class normal {};
+class Normal {};
 
 class Holder : public TObject {
 public:
-   vector<const normal*> v1;
+   vector<const Normal*> v1;
    vector<Reconstructor> v2;
-   //vector<normal *const> v3;
-   //vector<normal const*> v3;
+   //vector<Normal *const> v3;
+   //vector<Normal const*> v3;
 
    Holder() {};
    ~Holder() {};   

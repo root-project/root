@@ -248,16 +248,16 @@ class Regression05LoKiNamespace( MyTestCase ):
       struct TriggerResults {};
       struct Tag {};
 
-      template <typename T> struct Handle {};
+      template <typename T> struct HandleT {};
 
       struct Event {
-         template <typename T> int getByLabel(const Tag&, Handle<T>&) { return 0; }
+         template <typename T> int getByLabel(const Tag&, HandleT<T>&) { return 0; }
       };
       """)
 
       ev = ROOT.Event()
       tag = ROOT.Tag()
-      result = ROOT.Handle(ROOT.TriggerResults)()
+      result = ROOT.HandleT(ROOT.TriggerResults)()
 
       self.assertEqual(ev.getByLabel(tag, result), 0)
 
