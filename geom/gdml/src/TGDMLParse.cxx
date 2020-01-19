@@ -382,7 +382,7 @@ const char* TGDMLParse::ParseGDML(TXMLEngine* gdml, XMLNodePointer_t node)
               ((strcmp(name, "firstposition")) != 0) && ((strcmp(name, "firstpositionref")) != 0) &&
               ((strcmp(name, "firstrotation")) != 0) && ((strcmp(name, "firstrotationref")) != 0) &&
               ((strcmp(name, "section")) != 0) && ((strcmp(name, "world")) != 0) &&
-              ((strcmp(name, "isotope")) != 0)) {
+              ((strcmp(name, "isotope")) != 0) && ((strcmp(name, "triangular")) != 0) && ((strcmp(name, "quadrangular")) != 0)) {
       std::cout << "Error: Unsupported GDML Tag Used :" << name << ". Please Check Geometry/Schema." << std::endl;
    }
 
