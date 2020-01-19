@@ -46,13 +46,13 @@ The following people have contributed to this new version:
  Henry Schreiner, Princeton,\
  Oksana Shadura, Nebraska,\
  Simon Spies, GSI,\
+ Matevz Tadel, UCSD/CMS,\
  Yuka Takahashi, Princeton and CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
- Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,\
- Zhe Zhang, Nebraska,\
- Stefan Wunsch, CERN/SFT
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Stefan Wunsch, CERN/SFT,\
+ Zhe Zhang, Nebraska
 
 ## General
 
@@ -68,10 +68,10 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 ## Deprecation and Removal
 
  * rootcling flags `-cint`, `-gccxml`, `-p`, `-r` and `-c` have no effect
-   and will be removed. Please remove them from the rootcling invocations.
+   and will be removed in a future release. Please remove them from the rootcling invocations.
  * rootcling legacy cint flags `+P`, `+V` and `+STUB` have no effect and will be
-   removed. Please remove them from the rootcling invocations.
- * genreflex flag `--deep` has no effect and will be removed. Please remove it
+   removed in a future release. Please remove them from the rootcling invocations.
+ * genreflex flag `--deep` has no effect and will be removed in a future release. Please remove it
    from the genreflex invocation.
  * rootcling warns if it sees and unrecognized flag (usually coming from the
    CXXFLAGS of the build system). Please remove them from the invocation because
