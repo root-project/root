@@ -20,7 +20,7 @@ class TGeoFacet {
    using VertexVec_t = std::vector<Vertex_t>;
 
 private:
-   Int_t     fIvert[4]    = {0};       // Vertex indices in the array
+   int     fIvert[4]    = {0};       // Vertex indices in the array
    VertexVec_t *fVertices = nullptr;   //! array of vertices
    int       fNvert       = 0;         // number of vertices (can be 3 or 4)
    bool      fShared      = false;     // Vector of vertices shared flag
@@ -34,7 +34,7 @@ public:
    const TGeoFacet &operator = (const TGeoFacet &other);
 
    // Triangular facet
-   TGeoFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2)
+   TGeoFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2)
       : fIvert{0, 1, 2}
    {
       fVertices = new VertexVec_t;
@@ -45,7 +45,7 @@ public:
    }
 
    // Quadrilateral facet
-   TGeoFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2, const TGeoVector3 &pt3)
+   TGeoFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3)
       : fIvert{0, 1, 2, 3}
    {
       fVertices = new VertexVec_t;
@@ -69,16 +69,16 @@ public:
       fShared   = true;
    }
    
-   TGeoVector3 ComputeNormal(bool &degenerated) const;
-   Int_t GetNvert() const { return fNvert; }
+   Vertex_t ComputeNormal(bool &degenerated) const;
+   int GetNvert() const { return fNvert; }
 
    Vertex_t &GetVertex(int ivert) { return fVertices->operator[](fIvert[ivert]); }
    const Vertex_t &GetVertex(int ivert) const { return fVertices->operator[](fIvert[ivert]); }
 
-   Int_t GetVertexIndex(int ivert) const { return fIvert[ivert]; }
+   int GetVertexIndex(int ivert) const { return fIvert[ivert]; }
    
    bool Check() const;
-   bool CheckNeighbour(const TGeoFacet $other) const;
+   bool IsNeighbour(const TGeoFacet &other, bool &flip) const;
 };
 
 std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet);
@@ -94,11 +94,11 @@ private:
    std::vector<Vertex_t>  fVertices;        // List of vertices
    std::vector<TGeoFacet> fFacets;          // List of facets
 
-   virtual void FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const;
+   virtual void FillBuffer3D(TBuffer3D & buffer, int reqSections, Bool_t localFrame) const;
 public:
    // constructors
    TGeoTessellated() {}
-   TGeoTessellated(const char *name, Int_t nfacets);
+   TGeoTessellated(const char *name, int nfacets);
    // destructor
    virtual ~TGeoTessellated() {}
 
@@ -108,24 +108,25 @@ public:
    void ComputeBBox();
    void Close();
 
-   void AddFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2);
-   void AddFacet(const TGeoVector3 &pt0, const TGeoVector3 &pt1, const TGeoVector3 &pt2, const TGeoVector3 &pt3);
+   void AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2);
+   void AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3);
 
    int  GetNfacets() const { return fFacets.size(); }
    int  GetNsegments() const { return fNseg; }
    int  GetNvertices() const { return fNvert; }
-   const TGeoFacet &GetFacet(Int_t i) { return fFacets[i]; }
+   const TGeoFacet &GetFacet(int i) { return fFacets[i]; }
+   const Vertex_t &GetVertex(int i) { return fVertices[i]; }
 
    virtual void          AfterStreamer();
-   virtual Int_t         DistancetoPrimitive(Int_t, Int_t) { return 99999; }
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
-   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
-   virtual Int_t         GetNmeshVertices() const { return fNvert; }
+   virtual int           DistancetoPrimitive(int, int) { return 99999; }
+   virtual const TBuffer3D &GetBuffer3D(int reqSections, Bool_t localFrame) const;
+   virtual void          GetMeshNumbers(int &nvert, int &nsegs, int &npols) const;
+   virtual int           GetNmeshVertices() const { return fNvert; }
    virtual void          InspectShape() const {}
    virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          SavePrimitive(std::ostream &, Option_t *) {}
-   virtual void          SetPoints(Double_t *points) const;
-   virtual void          SetPoints(Float_t *points) const;
+   virtual void          SetPoints(double *points) const;
+   virtual void          SetPoints(float *points) const;
    virtual void          SetSegsAndPols(TBuffer3D &buff) const;
    virtual void          Sizeof3D() const {}
    
