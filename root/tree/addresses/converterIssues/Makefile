@@ -75,7 +75,7 @@ execReader.clog: execWriter.success
 ExtHit/ExtHitProjectDict.$(ObjSuf) ExtHit/ExtHitProjectSource.$(ObjSuf): $(ROOTCORELIBS)
 
 ExtHit/ExtHitProjectDict.cxx: ExtHit/ExtHitLinkDef.h
-	$(CMDECHO) cd ExtHit; rootcint -f ExtHitProjectDict.cxx -c ExtHitProjectHeaders.h ExtHitLinkDef.h
+	$(CMDECHO) cd ExtHit; rootcint -f ExtHitProjectDict.cxx ExtHitProjectHeaders.h ExtHitLinkDef.h
 
 ExtHit/ExtHit.$(DllSuf): ExtHit/ExtHitProjectDict.$(ObjSuf) ExtHit/ExtHitProjectSource.$(ObjSuf)  $(ROOT_LOC)/lib/libPhysics.so
 	$(BuildFromObjs)

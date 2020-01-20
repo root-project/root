@@ -145,7 +145,7 @@ infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_L
 	$(CMDECHO)$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT) 
-	$(CMDECHO)rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
+	$(CMDECHO)rootcint -f mydict.cc $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
 	$(CMDECHO)test `cat mydict.log | wc -l` == "1" -o  `cat mydict.log | wc -l` == "2"; # mydict.log should only have one or two line!
 
 ifeq ($(PLATFORM),win32)

@@ -169,17 +169,17 @@ Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
         @echo "Generating dictionary EventDict..."
-        @$(ROOTSYS)\bin\rootcint -f EventDict.$(SrcSuf) -c Event.h EventLinkDef.h
+        @$(ROOTSYS)\bin\rootcint -f EventDict.$(SrcSuf) Event.h EventLinkDef.h
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
         @echo "Generating dictionary HelloDict..."
-        @$(ROOTSYS)\bin\rootcint -f HelloDict.$(SrcSuf) -c Hello.h
+        @$(ROOTSYS)\bin\rootcint -f HelloDict.$(SrcSuf) Hello.h
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
         @echo "Generating dictionary AclockDict..."
-        @$(ROOTSYS)\bin\rootcint -f AclockDict.$(SrcSuf) -c Aclock.h
+        @$(ROOTSYS)\bin\rootcint -f AclockDict.$(SrcSuf) Aclock.h
 
 .$(SrcSuf).$(ObjSuf):
         $(CXX) $(CXXFLAGS) $(CXXOPT) -c $<

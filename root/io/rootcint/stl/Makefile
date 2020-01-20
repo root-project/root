@@ -33,14 +33,14 @@ RCTEST_DICT = $(subst .h,_dict.cxx,$(RCTEST_H))
 RCTEST_DICTO = $(subst .cxx,.$(ObjSuf),$(RCTEST_DICT))
 
 $(RCTEST_DICT) : %_dict.cxx : %.h %LinkDef.h
-	$(CMDECHO) rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ $^
 
 MAPTEST_C = map1.C map2.C
 MAPTEST_DICT =  $(subst .C,_dict.cxx,$(MAPTEST_C))
 MAPTEST_DICTO = $(subst .cxx,.$(ObjSuf),$(MAPTEST_DICT))
 
 $(MAPTEST_DICT) : %_dict.cxx : %.C emptyLinkdef.h
-	$(CMDECHO) rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ $^
 
 rootcintStlTest : $(RCTEST_DICTO) $(MAPTEST_DICTO)
 

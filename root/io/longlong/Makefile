@@ -18,7 +18,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 longlongdict.C: Class.h $(ROOTCINT)
-	$(CMDECHO)rootcint -f longlongdict.C -c Class.h linkdef.h
+	$(CMDECHO)rootcint -f longlongdict.C Class.h linkdef.h
 
 longlongtest: longlongdict.C
 	$(CMDECHO) test ! `(cat longlongdict.C | grep -v G__letLonglong | grep "long long"  > /dev/null) && echo $?`

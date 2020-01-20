@@ -18,4 +18,4 @@ id_cxx.$(DllSuf): id.cxx buildId.C
 #	$(CMDECHO) $(CALLROOTEXE) -l -b -q buildId.C > id.log 2&1
 
 idDict.cxx: id.cxx
-	$(CMDECHO) rootcint -f idDict.cxx -c id.cxx LinkDef.h
+	$(CMDECHO) rootcint -f idDict.cxx id.cxx LinkDef.h

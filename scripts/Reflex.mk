@@ -20,10 +20,10 @@ endif
 	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log 2>&1 || (cat $@.log && exit 1)
 
 %_cling.cpp: %.h %LinkDef.h $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f $@ -c $*.h $*LinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
+	$(CMDECHO) rootcint -f $@ $*.h $*LinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
 
 %_cling.cpp: %.h %_linkdef.h $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f $@ -c $*.h $*_linkdef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
+	$(CMDECHO) rootcint -f $@ $*.h $*_linkdef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
 
 lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(BuildFromObj)

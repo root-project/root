@@ -38,6 +38,6 @@ main_C.$(DllSuf) : main.$(ObjSuf) fooDict.$(ObjSuf) barDict.$(ObjSuf) foo.$(ObjS
 	$(BuildFromObjs)
 
 %Dict.C: %.h $(ROOTCINT)
-	$(CMDECHO) rootcint -f $@ -c $<+
+	$(CMDECHO) rootcint -f $@ $<+
 
 

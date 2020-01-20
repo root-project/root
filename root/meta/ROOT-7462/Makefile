@@ -16,12 +16,12 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 instlib.cxx:
-	$(CMDECHO) rootcling -f instlib.cxx -c -s instlib.so -rml instlib.so -rmf instlib.rootmap instGood.cxx linkdef.h
+	$(CMDECHO) rootcling -f instlib.cxx -s instlib.so -rml instlib.so -rmf instlib.rootmap instGood.cxx linkdef.h
 
 # Custom rule required here, as we must make *sure* that there is no rootmap
 # file generated/left over.
 inst2lib.cxx:
-	$(CMDECHO) rootcling -f inst2lib.cxx -c -s inst2lib.so instGood.cxx secondLinkdef.h
+	$(CMDECHO) rootcling -f inst2lib.cxx -s inst2lib.so instGood.cxx secondLinkdef.h
 
 instlib.$(DllSuf): instlib.$(ObjSuf)
 	$(BuildFromObj)

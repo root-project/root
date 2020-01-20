@@ -65,7 +65,7 @@ rootcint: DataCint.cc DataCint.$(ObjSuf)
 DataCint.cc: LinkDef.h $(CINTLIST)
 	$(CMDECHO)$(RM) DataCint.*
 #	$(CMDECHO)echo "Generating DataCint dictionary ..." $(CXXSORUCE)
-	$(CMDECHO)rootcint -f DataCint.cc -c -I. $(CINTLIST) LinkDef.h
+	$(CMDECHO)rootcint -f DataCint.cc -I. $(CINTLIST) LinkDef.h
 
 DataCint.$(ObjSuf): DataCint.cc
 

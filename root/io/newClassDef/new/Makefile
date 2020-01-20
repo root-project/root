@@ -44,7 +44,7 @@ newTest.log : Run.C $(SHARED_LIBS)
 #@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h $(ROOTCINT)
-	$(CMDECHO)rootcint -f $@ -c $(filter %.h,$^) 
+	$(CMDECHO)rootcint -f $@ $(filter %.h,$^) 
 
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf) $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)

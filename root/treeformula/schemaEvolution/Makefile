@@ -79,11 +79,11 @@ MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
 #	$(CMDECHO)echo "Generating dictionary $@..."
-	$(CMDECHO)rootcint -f $@ -c $^
+	$(CMDECHO)rootcint -f $@ $^
 
 EventDict_2.$(SrcSuf): Event_2.h EventLinkDef.h
 #	$(CMDECHO)echo "Generating dictionary $@..."
-	$(CMDECHO)rootcint -f $@ -c $^
+	$(CMDECHO)rootcint -f $@ $^
 
 $(EVENTSO):     $(EVENTO)
 ifeq ($(ARCH),aix)

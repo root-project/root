@@ -16,7 +16,7 @@ tests: dicto
 CLEAN_TARGETS += *.build.log TeleDictTmp* MyClassDictTmp*
 
 MyClassDict.C: Header.h Linkdef.h $(ROOTCINT)
-	$(CMDECHO) rootcint -f MyClassDict.C -c Header.h Linkdef.h
+	$(CMDECHO) rootcint -f MyClassDict.C Header.h Linkdef.h
 
 TeleDict.C: Tele.h TeleLinkdef.h $(ROOTCINT)
 	$(CMDECHO) test ! `(rootcint -f TeleDict.C Tele.h TeleLinkdef.h >TeleDict.log 2>&1 )`  && touch TeleDict.C 

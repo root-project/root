@@ -46,6 +46,6 @@ ifeq ($(FAIL),)
 endif
 
 dict.C: testing.C
-	$(CMDECHO) rootcint -f dict.C -c testing.C LinkDef.h
+	$(CMDECHO) rootcint -f dict.C testing.C LinkDef.h
 
 

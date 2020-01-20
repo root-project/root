@@ -66,7 +66,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 customConstructorDict.cc : customConstructor.C linkdef.h $(ROOTCINT)
-	$(CMDECHO) rootcint -f customConstructorDict.cc -c customConstructor.C linkdef.h
+	$(CMDECHO) rootcint -f customConstructorDict.cc customConstructor.C linkdef.h
 
 customConstructorDict.$(ObjSuf): customConstructorDict.cc 
 

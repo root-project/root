@@ -24,7 +24,7 @@ test: main Run.C
 	@echo "All test succeeded in `pwd`"
 
 $(DICTS) : %dict.C : %.h %linkdef.h
-	rootcint -f $@ -c $^
+	rootcint -f $@ $^
 
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)

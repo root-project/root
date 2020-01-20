@@ -103,10 +103,10 @@ endif
 atlasFlushed/atlasFlushedProjectDict1.$(ObjSuf) atlasFlushed/atlasFlushedProjectDict2.$(ObjSuf) atlasFlushed/atlasFlushedProjectSource.$(ObjSuf): $(ROOTCORELIBS)
 
 atlasFlushed/atlasFlushedProjectDict1.cxx: atlasFlushed/atlasFlushedLinkDef1.h
-	$(CMDECHO) cd atlasFlushed; rootcint -f atlasFlushedProjectDict1.cxx -c atlasFlushedProjectHeaders.h atlasFlushedLinkDef1.h
+	$(CMDECHO) cd atlasFlushed; rootcint -f atlasFlushedProjectDict1.cxx atlasFlushedProjectHeaders.h atlasFlushedLinkDef1.h
 
 atlasFlushed/atlasFlushedProjectDict2.cxx: atlasFlushed/atlasFlushedLinkDef2.h
-	$(CMDECHO) cd atlasFlushed ; rootcint -f atlasFlushedProjectDict2.cxx -c atlasFlushedProjectHeaders.h atlasFlushedLinkDef2.h
+	$(CMDECHO) cd atlasFlushed ; rootcint -f atlasFlushedProjectDict2.cxx atlasFlushedProjectHeaders.h atlasFlushedLinkDef2.h
 
 atlasFlushed/atlasFlushed.$(DllSuf): atlasFlushed/atlasFlushedProjectDict1.$(ObjSuf) atlasFlushed/atlasFlushedProjectDict2.$(ObjSuf) atlasFlushed/atlasFlushedProjectSource.$(ObjSuf)
 	$(BuildFromObjs)

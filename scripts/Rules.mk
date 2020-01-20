@@ -164,7 +164,7 @@ endif
 
 .PHONY: valgrind perftrack
 $(ROOTTEST_LOC)scripts/pt_data_dict.cpp: $(ROOTTEST_LOC)scripts/pt_data.h $(ROOTTEST_LOC)scripts/pt_Linkdef.h
-	$(CMDECHO)rootcint -f $@ -c $^
+	$(CMDECHO)rootcint -f $@ $^
 
 $(ROOTTEST_LOC)scripts/pt_collector: $(ROOTTEST_LOC)scripts/pt_collector.cpp $(ROOTTEST_LOC)scripts/pt_data_dict.cpp
 	$(CMDECHO)$(CXX) -g $^ -Wall `root-config --cflags` `root-config --libs` -o $@

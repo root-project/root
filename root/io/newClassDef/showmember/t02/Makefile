@@ -803,32 +803,32 @@ EventLinkDef.h: $(shell which rootcint) $(ROOT_LOC)/include/Rtypes.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@rootcint -f $@ $^
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@rootcint -f $@ $^
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@rootcint -f $@ $^
 
 Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@rootcint -f $@ $^
 
 TBench.$(ObjSuf): TBench.h
 TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@rootcint -f $@ $^
 
 guiviewer.$(ObjSuf): guiviewer.h
 guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 	@echo "Generating dictionary $@..."
-	@rootcint -f $@ -c $^
+	@rootcint -f $@ $^
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<

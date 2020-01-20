@@ -49,7 +49,7 @@ infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_L
 	$(CC) -g -o infodriver $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
 mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT)
-	rootcint -f mydict.cc -c RootData.h RootCaloHit.h LinkDef.h
+	rootcint -f mydict.cc RootData.h RootCaloHit.h LinkDef.h
 
 .cc.o:
 	g++ -v

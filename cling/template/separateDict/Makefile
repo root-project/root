@@ -39,7 +39,7 @@ Slave1Dict.C: MyClass.hh Slave1LinkDef.hh
 Slave2Dict.C: MyClass.hh Slave2LinkDef.hh
 
 %Dict.C:
-	$(CMDECHO)rootcint -f $@ -c $^ 
+	$(CMDECHO)rootcint -f $@ $^ 
 
 %Dict.$(ObjSuf): %Dict.C	
 	$(CMDECHO)$(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@ > $@_build.log 2>&1

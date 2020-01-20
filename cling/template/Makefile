@@ -21,12 +21,12 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 typenameTest:
-	$(CMDECHO)rootcint -f typenameTestDict.C -c -D__CINT2__ typenameTest.C linkdef.h 
+	$(CMDECHO)rootcint -f typenameTestDict.C -D__CINT2__ typenameTest.C linkdef.h 
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 	$(CMDECHO) echo "this is fixed by cling."
 else
-	$(CMDECHO)rootcint -f typenameTestDict.C -c typenameTest.C linkdef.h 
+	$(CMDECHO)rootcint -f typenameTestDict.C typenameTest.C linkdef.h 
 endif
 
 operator1:
@@ -41,17 +41,17 @@ endif
 
 
 simpleSeparateDict: 
-	$(CMDECHO)rootcint -f masterDict.C -c master.h masterLinkDef.h
-	$(CMDECHO)rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
+	$(CMDECHO)rootcint -f masterDict.C master.h masterLinkDef.h
+	$(CMDECHO)rootcint -f slaveDict.C slave.h slaveLinkDef.h
 
 forwardDecl: forwardDict.C
 
 forwardDict.C: forward.C 
-	$(CMDECHO)rootcint -f forwardDict.C -c forward.C linkdef.h
+	$(CMDECHO)rootcint -f forwardDict.C forward.C linkdef.h
 
 
 constructorDict.C: constructor.hh 
-	$(CMDECHO) rootcint -f constructorDict.C -c constructor.hh linkdef.h
+	$(CMDECHO) rootcint -f constructorDict.C constructor.hh linkdef.h
 
 constructorTest: constructorDict.o
 

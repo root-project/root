@@ -1,6 +1,6 @@
 To see the problem do the following:
 
-   rootcint -f baddict.C -c -DBAD mycl.C LinkDef.h
+   rootcint -f baddict.C -DBAD mycl.C LinkDef.h
 
 then build the library, for example
 
@@ -17,7 +17,7 @@ Then in root:
 
 The correct behavior can be demonstrated as:
 
-   rootcint -f gooddict.C -c mycl.C LinkDef.h
+   rootcint -f gooddict.C mycl.C LinkDef.h
    KCC --no_exceptions -o myclgood.so -I$ROOTSYS/include  gooddict.C 
 
    root [] .L myclgood.so

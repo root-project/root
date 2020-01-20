@@ -23,7 +23,7 @@ test: main Run.C
 	root -q -l -b Run.C
 
 $(DICTS) : %dict.C : %.h %linkdef.h
-	rootcint -f $@ -c $^
+	rootcint -f $@ $^
 
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)

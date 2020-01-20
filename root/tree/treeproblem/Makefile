@@ -29,7 +29,7 @@ endif
 #	$(BuildFromObjs)
 
 FooDict.cxx: Foo.h
-	$(CMDECHO) rootcint -f FooDict.cxx -c Foo.h+
+	$(CMDECHO) rootcint -f FooDict.cxx Foo.h+
 
 Foo.cxx : Foo.h
 

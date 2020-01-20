@@ -22,7 +22,7 @@ defaultArgTest: dict.cc mylist_C.so
 	$(CMDECHO) echo mytest > /dev/null
 
 dict.cc: mylist.C $(ROOTCINT)
-	$(CMDECHO) rootcint -f dict.cc -c mylist.C LinkDef.h
+	$(CMDECHO) rootcint -f dict.cc mylist.C LinkDef.h
 
 mylist_C.so:
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b build.C > build.log 2>&1
