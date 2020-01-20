@@ -15,4 +15,5 @@ endif()
 ROOT_ADD_GTEST(CoreBaseTests
   TNamedTests.cxx
   TQObjectTests.cxx
+  TExceptionHandlerTests.cxx
   LIBRARIES Core Cling RIO ${dllib})
