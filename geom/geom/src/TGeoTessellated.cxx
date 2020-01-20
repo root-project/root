@@ -444,7 +444,7 @@ TBuffer3D *TGeoTessellated::MakeBuffer3D() const
    const int nvert = fNvert;
    const int nsegs = fNseg;
    const int npols = GetNfacets();
-   auto *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nvert, 3 * nvert, nsegs, 3 * nsegs, npols, 6 * npols);
+   auto buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nvert, 3 * nvert, nsegs, 3 * nsegs, npols, 6 * npols);
    if (buff) {
       SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
