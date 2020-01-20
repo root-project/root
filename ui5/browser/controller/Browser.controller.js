@@ -73,6 +73,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
             } else {
                burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
+
+               this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+               this.getView().byId('expandMaster').setVisible(false);
             }
          });
 
@@ -80,6 +83,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
          } else {
             burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
+            this.getView().byId('expandMaster').setVisible(false);
          }
 
         this.globalId = 1;
@@ -802,6 +806,45 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Terminal =============== */
       /* ======================================== */
 
+      /* ========================================== */
+      /* =============== ToolHeader =============== */
+      /* ========================================== */
+
+      onFullScreenPressLandscape: function () {
+         let splitApp = this.getView().byId("SplitAppBrowser");
+         let mode = splitApp.getMode();
+         if(mode === "ShowHideMode") {
+            splitApp.setMode("HideMode");
+         } else {
+            splitApp.setMode("ShowHideMode");
+         }
+      },
+
+      onFullScreenPressPortrait: function () {
+         let splitApp = this.getView().byId("SplitAppBrowser");
+         if(splitApp.isMasterShown()) {
+            splitApp.hideMaster();
+         } else {
+            splitApp.showMaster();
+         }
+      },
+
+      onExpandMaster: function () {
+         this.getView().byId('expandMaster').setVisible(false);
+         this.getView().byId('shrinkMaster').setVisible(true);
+         this.getView().byId('masterPage').getParent().addStyleClass('masterExpanded');
+      },
+
+      onShrinkMaster: function () {
+         this.getView().byId('expandMaster').setVisible(true);
+         this.getView().byId('shrinkMaster').setVisible(false);
+         this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+      },
+
+      /* ========================================== */
+      /* =============== ToolHeader =============== */
+      /* ========================================== */
+
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
@@ -1117,29 +1160,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // JSROOT.CallBack(call_back, true);
          });
       },
-
-
-
-      onFullScreenPressLandscape: function () {
-         console.log('click');
-         let splitApp = this.getView().byId("SplitAppBrowser");
-         let mode = splitApp.getMode();
-         console.log(mode);
-         if(mode === "ShowHideMode") {
-            splitApp.setMode("HideMode");
-         } else {
-            splitApp.setMode("ShowHideMode");
-         }
-      },
-
-      onFullScreenPressPortrait: function () {
-         let splitApp = this.getView().byId("SplitAppBrowser");
-         if(splitApp.isMasterShown()) {
-            splitApp.hideMaster();
-         } else {
-            splitApp.showMaster();
-         }
-      }
 
    });
 
