@@ -23,16 +23,11 @@ RooVectorDataStore is the abstract base class for data collection that
 use a TTree as internal storage mechanism
 **/
 
+#include "RooVectorDataStore.h"
+
 #include "RooFit.h"
 #include "RooMsgService.h"
-#include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
-
-#include "Riostream.h"
-#include "TTree.h"
-#include "TChain.h"
-#include "TDirectory.h"
-#include "TROOT.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
@@ -40,6 +35,11 @@ use a TTree as internal storage mechanism
 #include "RooHistError.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
+
+#include "TTree.h"
+#include "TChain.h"
+#include "TDirectory.h"
+#include "TROOT.h"
 
 #include <iomanip>
 using namespace std ;
@@ -720,9 +720,9 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   //
 
   // Redirect formula servers to source data row
-  RooFormulaVar* selectClone(0) ;
+  std::unique_ptr<RooFormulaVar> selectClone;
   if (select) {
-    selectClone = (RooFormulaVar*) select->cloneTree() ;
+    selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
     selectClone->recursiveRedirectServers(*ads->get()) ;
     selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
   }
@@ -733,19 +733,19 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   // Loop over events in source tree   
   Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
 
-  Bool_t isTDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
-  Bool_t isVDS = dynamic_cast<const RooVectorDataStore*>(ads) ;
+  auto TDS = dynamic_cast<const RooTreeDataStore*>(ads);
+  auto VDS = dynamic_cast<const RooVectorDataStore*>(ads);
 
   // Check if weight is being renamed - if so set flag to enable special handling in copy loop
   Bool_t weightRename(kFALSE) ;
   Bool_t newWeightVar = _wgtVar ? _wgtVar->getAttribute("NewWeight") : kFALSE ;
 
-  if (_wgtVar && isVDS && ((RooVectorDataStore*)(ads))->_wgtVar) {
+  if (_wgtVar && VDS && ((RooVectorDataStore*)(ads))->_wgtVar) {
     if (string(_wgtVar->GetName())!=((RooVectorDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
       weightRename=kTRUE ;
     }
   }
-  if (_wgtVar && isTDS && ((RooTreeDataStore*)(ads))->_wgtVar) {
+  if (_wgtVar && TDS && ((RooTreeDataStore*)(ads))->_wgtVar) {
     if (string(_wgtVar->GetName())!=((RooTreeDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
       weightRename=kTRUE ;
     }
@@ -757,24 +757,23 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   }
 
   reserve(numEntries() + (nevent - nStart));
-  for(Int_t i=nStart; i < nevent ; ++i) {
+  for (Int_t i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
-    
+
     // Does this event pass the cuts?
     if (selectClone && selectClone->getVal()==0) {
       continue ; 
     }
 
-
-    if (isTDS) {
-      _varsww.assignValueOnly(((RooTreeDataStore*)ads)->_varsww) ;
+    if (TDS) {
+      _varsww.assignValueOnly(TDS->_varsww) ;
       if (weightRename) {
-	_wgtVar->setVal(((RooTreeDataStore*)ads)->_wgtVar->getVal()) ;
+        _wgtVar->setVal(TDS->_wgtVar->getVal()) ;
       }
-    } else if (isVDS) {
-      _varsww.assignValueOnly(((RooVectorDataStore*)ads)->_varsww) ;
+    } else if (VDS) {
+      _varsww.assignValueOnly(VDS->_varsww) ;
       if (weightRename) {
-	_wgtVar->setVal(((RooVectorDataStore*)ads)->_wgtVar->getVal()) ;
+        _wgtVar->setVal(VDS->_wgtVar->getVal()) ;
       }
     } else {
       _varsww.assignValueOnly(*ads->get()) ;
@@ -788,16 +787,14 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
       if (!allValid)
         break ;
     }
+
     if (!allValid) {
       continue ;
     }
-    
-    //_cachedVars = ((RooTreeDataStore*)ads)->_cachedVars ;
-    fill() ;
-   }
 
-  delete selectClone ;
-  
+    fill() ;
+  }
+
   SetTitle(ads->GetTitle());
 }
 
