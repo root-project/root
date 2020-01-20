@@ -4307,7 +4307,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node
    
    TGeoTessellated *tsl = new TGeoTessellated(NameShort(name), nofacets);
    TGeoTranslation *pos = nullptr;
-   TGeoVector3 vertices[4];
+   Tessellated::Vertex_t vertices[4];
 
    auto SetVertex = [&](int i, TGeoTranslation *trans)
    {

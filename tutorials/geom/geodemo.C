@@ -1646,10 +1646,10 @@ void tessellated()
    gGeoManager->SetTopVolume(top);
    TGeoTessellated *tsl = new TGeoTessellated("triaconthaedron", 30);
    const Double_t sqrt5 = TMath::Sqrt(5.);
-   std::vector<TGeoVector3> vert;
+   std::vector<Tessellated::Vertex_t> vert;
    vert.reserve(120);
-   vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 1, -1); 
-   vert.emplace_back(1, 1, -1); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5)); 
+   vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 0, 0.5 * (-1 - sqrt5)); vert.emplace_back(-1, 1, -1);
+   vert.emplace_back(1, 1, -1); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0, 0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5)); vert.emplace_back(1, 0, 0.5 * (-1 - sqrt5));
    vert.emplace_back(1, 1, -1); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0.5 * (-1 + sqrt5),  0.5 * (1 + sqrt5), 0); vert.emplace_back(0.5 * (1 + sqrt5), 1, 0);
    vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), 1);
    vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (1 + sqrt5), 0); vert.emplace_back(0, 0.5 * (1 + sqrt5), -1); vert.emplace_back(-1, 1, -1); vert.emplace_back(0.5 * (-1 - sqrt5), 1, 0);
@@ -1678,7 +1678,6 @@ void tessellated()
    vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1); vert.emplace_back(0.5 * (1 - sqrt5), 0.5 * (-1 - sqrt5), 0); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0);
    vert.emplace_back(1, -1, -1); vert.emplace_back(0.5 * (1 + sqrt5), -1, 0); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0); vert.emplace_back(0, 0.5 * (-1 - sqrt5), -1);
    vert.emplace_back(0.5 * (1 + sqrt5), -1, 0); vert.emplace_back(1, -1, 1); vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1); vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0);
-
 
    tsl->AddFacet(vert[0], vert[1], vert[2], vert[3]);
    tsl->AddFacet(vert[4], vert[7], vert[6], vert[5]);

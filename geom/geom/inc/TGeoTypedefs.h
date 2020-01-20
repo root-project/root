@@ -1,5 +1,5 @@
 // @(#)root/geom:$Id$
-// Author: Andrei Gheata   15/01/2020
+// Author: Andrei Gheata   20/01/2020
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,15 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class  TGeoVector3
-\ingroup Geometry_classes
-Simple 3-vector representation
-*/
+/// Typedefs used by the geometry group
+#include <vector>
 
-#include "TGeoVector3.h"
+namespace Tessellated {
 
-std::ostream &operator<<(std::ostream &os, ROOT::Geom::Vertex_t const &vec)
-{
-   os << "{" << vec[0] << ", " << vec[1] << ", " << vec[2] << "}";
-   return os;
-}
+  using Vertex_t    = ROOT::Geom::Vertex_t;
+  using VertexVec_t = std::vector<Vertex_t>;
+
+} // namespace Tessellated
