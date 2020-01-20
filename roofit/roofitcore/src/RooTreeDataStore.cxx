@@ -56,6 +56,7 @@ RooAbsData::convertToVectorStore().
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooHistError.h"
+#include "RooHelpers.h"
 
 #include <iomanip>
 using namespace std ;
@@ -572,15 +573,18 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   ads->get(0) ;
 
   // Loop over events in source tree   
-  RooAbsArg* arg = 0;
-  TIterator* destIter = _varsww.createIterator() ;
   Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
-  Bool_t allValid ;
 
   Bool_t isTDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
   if (isTDS) {
     ((RooTreeDataStore*)(ads))->resetBuffers() ;
   }
+
+  std::vector<std::string> ranges;
+  if (rangeName) {
+   ranges = RooHelpers::tokenise(rangeName, ",");
+  }
+
   for(Int_t i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
 
@@ -596,16 +600,13 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
       _varsww.assignValueOnly(*ads->get()) ;
     }
 
-    destIter->Reset() ;
     // Check that all copied values are valid
-    allValid=kTRUE ;
-    while((arg=(RooAbsArg*)destIter->Next())) {
-      if (!arg->isValid() || (rangeName && !arg->inRange(rangeName))) {
-	//cout << "arg " << arg->GetName() << " is not valid" << endl ;
-	//arg->Print("v") ;
-	allValid=kFALSE ;
-	break ;
-      }
+    bool allValid = true;
+    for (const auto arg : _varsww) {
+      allValid = arg->isValid() && (ranges.empty() || std::any_of(ranges.begin(), ranges.end(),
+          [arg](const std::string& range){return arg->inRange(range.c_str());}) );
+      if (!allValid)
+        break ;
     }
     //cout << "RooTreeData::loadValues(" << GetName() << ") allValid = " << (allValid?"T":"F") << endl ;
     if (!allValid) {
@@ -615,7 +616,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
     _cachedVars = ((RooTreeDataStore*)ads)->_cachedVars ;
     fill() ;
    }
-  delete destIter ;
+
   if (isTDS) {
     ((RooTreeDataStore*)(ads))->restoreAlternateBuffers() ;
   }
