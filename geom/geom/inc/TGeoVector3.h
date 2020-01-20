@@ -9,61 +9,64 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGeoVector3
-#define ROOT_TGeoVector3
+#ifndef ROOT_Vertex_t
+#define ROOT_Vertex_t
 
 #include <Riostream.h>
 #include <TMath.h>
 
-struct TGeoVector3 {
+namespace ROOT {
+namespace Geom {
+
+struct Vertex_t {
    double fVec[3] = {0.};
- 
-   TGeoVector3(const double x, const double y, const double z)
+
+   Vertex_t(const double x, const double y, const double z)
    {
       fVec[0] = x;
       fVec[1] = y;
       fVec[2] = z;
    }
 
-   TGeoVector3(const double a = 0.)
+   Vertex_t(const double a = 0.)
    {
       fVec[0] = a;
       fVec[1] = a;
       fVec[2] = a;
    }
 
-   TGeoVector3(TGeoVector3 const &other)
+   Vertex_t(Vertex_t const &other)
    {
       fVec[0] = other[0];
       fVec[1] = other[1];
       fVec[2] = other[2];
    }
-  
+
    double &operator[](const int index) { return fVec[index]; }
    double const &operator[](const int index) const { return fVec[index]; }
 
    // Inplace binary operators
 
-#define TGEOVECTOR3_INPLACE_BINARY_OP(OPERATOR)                       \
-   inline TGeoVector3 &operator OPERATOR(const TGeoVector3 &other)    \
-   {                                                                  \
-      fVec[0] OPERATOR other.fVec[0];                                 \
-      fVec[1] OPERATOR other.fVec[1];                                 \
-      fVec[2] OPERATOR other.fVec[2];                                 \
-      return *this;                                                   \
-   }                                                                  \
-   inline TGeoVector3 &operator OPERATOR(const double &scalar)        \
-   {                                                                  \
-      fVec[0] OPERATOR scalar;                                        \
-      fVec[1] OPERATOR scalar;                                        \
-      fVec[2] OPERATOR scalar;                                        \
-      return *this;                                                   \
+#define Vertex_t_INPLACE_BINARY_OP(OPERATOR)                    \
+   inline Vertex_t &operator OPERATOR(const Vertex_t &other) \
+   {                                                               \
+      fVec[0] OPERATOR other.fVec[0];                              \
+      fVec[1] OPERATOR other.fVec[1];                              \
+      fVec[2] OPERATOR other.fVec[2];                              \
+      return *this;                                                \
+   }                                                               \
+   inline Vertex_t &operator OPERATOR(const double &scalar)     \
+   {                                                               \
+      fVec[0] OPERATOR scalar;                                     \
+      fVec[1] OPERATOR scalar;                                     \
+      fVec[2] OPERATOR scalar;                                     \
+      return *this;                                                \
    }
-   TGEOVECTOR3_INPLACE_BINARY_OP(+=)
-   TGEOVECTOR3_INPLACE_BINARY_OP(-=)
-   TGEOVECTOR3_INPLACE_BINARY_OP(*=)
-   TGEOVECTOR3_INPLACE_BINARY_OP(/=)
-#undef TGEOVECTOR3_INPLACE_BINARY_OP
+   Vertex_t_INPLACE_BINARY_OP(+=)
+   Vertex_t_INPLACE_BINARY_OP(-=)
+   Vertex_t_INPLACE_BINARY_OP(*=)
+   Vertex_t_INPLACE_BINARY_OP(/=)
+#undef Vertex_t_INPLACE_BINARY_OP
 
    double &x() { return fVec[0]; }
    double const &x() const { return fVec[0]; }
@@ -73,9 +76,13 @@ struct TGeoVector3 {
 
    double &z() { return fVec[2]; }
    double const &z() const { return fVec[2]; }
- 
+
    inline void CopyTo(double *dest) const
-   { dest[0] = fVec[0]; dest[1] = fVec[1]; dest[2] = fVec[2]; }
+   {
+      dest[0] = fVec[0];
+      dest[1] = fVec[1];
+      dest[2] = fVec[2];
+   }
 
    void Set(double const &a, double const &b, double const &c)
    {
@@ -86,7 +93,6 @@ struct TGeoVector3 {
 
    void Set(const double a) { Set(a, a, a); }
 
-
    /// \Return the length squared perpendicular to z direction
    double Perp2() const { return fVec[0] * fVec[0] + fVec[1] * fVec[1]; }
 
@@ -94,13 +100,13 @@ struct TGeoVector3 {
    double Perp() const { return TMath::Sqrt(Perp2()); }
 
    /// The dot product of two vector objects
-   static double Dot(TGeoVector3 const &left, TGeoVector3 const &right)
+   static double Dot(Vertex_t const &left, Vertex_t const &right)
    {
       return left[0] * right[0] + left[1] * right[1] + left[2] * right[2];
    }
 
    /// The dot product of two vector
-   double Dot(TGeoVector3 const &right) const { return Dot(*this, right); }
+   double Dot(Vertex_t const &right) const { return Dot(*this, right); }
 
    /// \return Squared magnitude of the vector.
    double Mag2() const { return Dot(*this, *this); }
@@ -115,7 +121,7 @@ struct TGeoVector3 {
    /// Normalizes the vector by dividing each entry by the length.
    void Normalize() { *this *= (1. / Length()); }
 
-   //TGeoVector3 Normalized() const { return TGeoVector3(*this) * (1. / Length()); }
+   // Vertex_t Normalized() const { return Vertex_t(*this) * (1. / Length()); }
 
    // checks if vector is normalized
    bool IsNormalized() const
@@ -132,74 +138,68 @@ struct TGeoVector3 {
    double Theta() const { return TMath::ACos(fVec[2] / Mag()); }
 
    /// The cross (vector) product of two Vector3D<T> objects
-   static TGeoVector3 Cross(TGeoVector3 const &left, TGeoVector3 const &right)
+   static Vertex_t Cross(Vertex_t const &left, Vertex_t const &right)
    {
-      return TGeoVector3(left[1] * right[2] - left[2] * right[1], left[2] * right[0] - left[0] * right[2],
+      return Vertex_t(left[1] * right[2] - left[2] * right[1], left[2] * right[0] - left[0] * right[2],
                          left[0] * right[1] - left[1] * right[0]);
    }
 
-   TGeoVector3 Abs() const
-   {
-      return TGeoVector3(TMath::Abs(fVec[0]), TMath::Abs(fVec[1]), TMath::Abs(fVec[2]));
-   }
+   Vertex_t Abs() const { return Vertex_t(TMath::Abs(fVec[0]), TMath::Abs(fVec[1]), TMath::Abs(fVec[2])); }
 
-   double Min() const { return TMath::Min(TMath::Min(fVec[0], fVec[1]) , fVec[2]); }
+   double Min() const { return TMath::Min(TMath::Min(fVec[0], fVec[1]), fVec[2]); }
 
-   double Max() const { return TMath::Max(TMath::Max(fVec[0], fVec[1]) , fVec[2]); }
+   double Max() const { return TMath::Max(TMath::Max(fVec[0], fVec[1]), fVec[2]); }
 
-   TGeoVector3 Unit() const
+   Vertex_t Unit() const
    {
       constexpr double kMinimum = std::numeric_limits<double>::min();
       const double mag2 = Mag2();
-      TGeoVector3 output(*this);
+      Vertex_t output(*this);
       output /= TMath::Sqrt(mag2 + kMinimum);
       return output;
    }
 };
 
-std::ostream &operator<<(std::ostream &os, TGeoVector3 const &vec);
-
-inline
-bool operator==(TGeoVector3 const &lhs, TGeoVector3 const &rhs)
+inline bool operator==(Vertex_t const &lhs, Vertex_t const &rhs)
 {
-  constexpr double kTolerance = 1.e-10;
-  return TMath::Abs(lhs[0] - rhs[0]) < kTolerance &&
-         TMath::Abs(lhs[1] - rhs[1]) < kTolerance &&
-         TMath::Abs(lhs[2] - rhs[2]) < kTolerance;
+   constexpr double kTolerance = 1.e-10;
+   return TMath::Abs(lhs[0] - rhs[0]) < kTolerance && TMath::Abs(lhs[1] - rhs[1]) < kTolerance &&
+          TMath::Abs(lhs[2] - rhs[2]) < kTolerance;
 }
 
-inline
-bool operator!=(TGeoVector3 const &lhs, TGeoVector3 const &rhs)
+inline bool operator!=(Vertex_t const &lhs, Vertex_t const &rhs)
 {
-  return !(lhs == rhs);
+   return !(lhs == rhs);
 }
 
-#define TGEOVECTOR3_BINARY_OP(OPERATOR, INPLACE)                      \
-inline TGeoVector3 operator OPERATOR(const TGeoVector3 &lhs,          \
-                                     const TGeoVector3 &rhs)          \
-{                                                                     \
-   TGeoVector3 result(lhs);                                           \
-   result INPLACE rhs;                                                \
-   return result;                                                     \
-}                                                                     \
-inline TGeoVector3 operator OPERATOR(TGeoVector3 const &lhs,          \
-                                     const double rhs)                \
-{                                                                     \
-   TGeoVector3 result(lhs);                                           \
-   result INPLACE rhs;                                                \
-   return result;                                                     \
-}                                                                     \
-inline TGeoVector3 operator OPERATOR(const double lhs,                \
-                                     TGeoVector3 const &rhs)          \
-{                                                                     \
-   TGeoVector3 result(lhs);                                           \
-   result INPLACE rhs;                                                \
-   return result;                                                     \
-}
-TGEOVECTOR3_BINARY_OP(+, +=)
-TGEOVECTOR3_BINARY_OP(-, -=)
-TGEOVECTOR3_BINARY_OP(*, *=)
-TGEOVECTOR3_BINARY_OP(/, /=)
-#undef TGEOVECTOR3_BINARY_OP
+#define Vertex_t_BINARY_OP(OPERATOR, INPLACE)                                        \
+   inline Vertex_t operator OPERATOR(const Vertex_t &lhs, const Vertex_t &rhs) \
+   {                                                                                    \
+      Vertex_t result(lhs);                                                          \
+      result INPLACE rhs;                                                               \
+      return result;                                                                    \
+   }                                                                                    \
+   inline Vertex_t operator OPERATOR(Vertex_t const &lhs, const double rhs)       \
+   {                                                                                    \
+      Vertex_t result(lhs);                                                          \
+      result INPLACE rhs;                                                               \
+      return result;                                                                    \
+   }                                                                                    \
+   inline Vertex_t operator OPERATOR(const double lhs, Vertex_t const &rhs)       \
+   {                                                                                    \
+      Vertex_t result(lhs);                                                          \
+      result INPLACE rhs;                                                               \
+      return result;                                                                    \
+   }
+Vertex_t_BINARY_OP(+, +=)
+Vertex_t_BINARY_OP(-, -=)
+Vertex_t_BINARY_OP(*, *=)
+Vertex_t_BINARY_OP(/, /=)
+#undef Vertex_t_BINARY_OP
+
+} // namespace Geom
+} // namespace ROOT
+
+std::ostream &operator<<(std::ostream &os, ROOT::Geom::Vertex_t const &vec);
 
 #endif
