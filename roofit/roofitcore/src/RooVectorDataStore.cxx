@@ -39,6 +39,7 @@ use a TTree as internal storage mechanism
 #include "RooNameSet.h"
 #include "RooHistError.h"
 #include "RooTrace.h"
+#include "RooHelpers.h"
 
 #include <iomanip>
 using namespace std ;
@@ -756,10 +757,7 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   ads->get(0) ;
 
   // Loop over events in source tree   
-  RooAbsArg* arg = 0;
-  TIterator* destIter = _varsww.createIterator() ;
   Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
-  Bool_t allValid ;
 
   Bool_t isTDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
   Bool_t isVDS = dynamic_cast<const RooVectorDataStore*>(ads) ;
@@ -777,6 +775,11 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
     if (string(_wgtVar->GetName())!=((RooTreeDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
       weightRename=kTRUE ;
     }
+  }
+
+  std::vector<std::string> ranges;
+  if (rangeName) {
+   ranges = RooHelpers::tokenise(rangeName, ",");
   }
 
   reserve(numEntries() + (nevent - nStart));
@@ -803,14 +806,13 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
       _varsww.assignValueOnly(*ads->get()) ;
     }
 
-    destIter->Reset() ;
     // Check that all copied values are valid
-    allValid=kTRUE ;
-    while((arg=(RooAbsArg*)destIter->Next())) {
-      if (!arg->isValid() || (rangeName && !arg->inRange(rangeName))) {
-	allValid=kFALSE ;
-	break ;
-      }
+    bool allValid = true;
+    for (const auto arg : _varsww) {
+      allValid = arg->isValid() && (ranges.empty() || std::any_of(ranges.begin(), ranges.end(),
+          [arg](const std::string& range){return arg->inRange(range.c_str());}) );
+      if (!allValid)
+        break ;
     }
     if (!allValid) {
       continue ;
@@ -820,7 +822,6 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
     fill() ;
    }
 
-  delete destIter ;  
   delete selectClone ;
   
   SetTitle(ads->GetTitle());
