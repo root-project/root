@@ -1539,7 +1539,7 @@ if(cuda OR tmva-gpu)
     endif()
 
     enable_language(CUDA)
-    
+
     ### look for package CuDNN
     find_package(CuDNN)
 
@@ -1549,7 +1549,7 @@ if(cuda OR tmva-gpu)
       message(STATUS "CuDNN library not found")
     endif()
 
-    
+
   elseif(fail-on-missing)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
@@ -1704,7 +1704,7 @@ if(webgui)
   ExternalProject_Add(
      OPENUI5
      URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
-     URL_HASH SHA256=984d221d6a3246732ca75cc38de0d974b887f4bd6beb9346133face602398696
+     URL_HASH SHA256=b264661fb397906714b8253fc3a32ecb6ac0da575cc01ce61636354e6bfccf3c
      CONFIGURE_COMMAND ""
      BUILD_COMMAND ""
      INSTALL_COMMAND ""
