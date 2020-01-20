@@ -15,7 +15,17 @@
             <OverflowToolbarLayoutData priority="NeverOverflow" />
           </layoutData>
         </Button>
-        <Image height="35px" src="https://raw.githubusercontent.com/root-project/root/master/etc/notebook/kernels/root/logo-64x64.png" />
+        <Button id="expandMaster" icon="sap-icon://full-screen" type="Transparent" press="onExpandMaster">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+        <Button id="shrinkMaster" icon="sap-icon://exit-full-screen" type="Transparent" press="onShrinkMaster" visible="false">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+        <Image height="35px" src="rootui5sys/browser/logo.png" />
         <Text text="ROOT 7" wrapping="false" />
         <ToolbarSpacer>
           <layoutData>
@@ -38,7 +48,7 @@
         <SplitApp id="SplitAppBrowser" defaultTransitionNameDetail="slide" defaultTransitionNameMaster="slide">
 
           <masterPages>
-            <Page showFooter="true" navButtonPress="onNavBack" showNavButton="false">
+            <Page id="masterPage" showFooter="true" navButtonPress="onNavBack" showNavButton="false">
               <customHeader>
                 <Toolbar width="100%">
                   <SearchField placeholder="Filter" liveChange="onSearch" />
