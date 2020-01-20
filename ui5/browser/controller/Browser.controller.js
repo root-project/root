@@ -241,10 +241,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                new ToolHeader({
                   height: "40px",
                   content: [
-                     new FileUploader({
-                        change: [this.onChangeFile, this],
-                        style: "Transparent",
-                     }),
                      new Button(ID + "Run", {
                         text: "Run",
                         tooltip: "Run Current Macro",
