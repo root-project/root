@@ -271,7 +271,7 @@ void TGeoTessellated::Close()
 {
    // Compact the array of vertices
    constexpr double tolerance = 1.e-10;
-   constexpr size_t ngrid = 10;
+   constexpr int ngrid = 10;
    ComputeBBox();
    double minExtent[3];
    minExtent[0] = fOrigin[0] - fDX - tolerance;
@@ -296,11 +296,11 @@ void TGeoTessellated::Close()
       return ivert;
    };
 
-   auto GetHashIndex = [&, this](const Vertex_t &vertex) {
+   auto GetHashIndex = [&](const Vertex_t &vertex) {
       // Get the hash index for a vertex in a 10x10x10 grid in the bounding box
       int index = 0;
       for (int i = 0; i < 3; ++i) {
-         int ind = ngrid * (vertex[i] - minExtent[i]) * invExtent[i]; // between [0, ngrid-1]
+         int ind = int(ngrid * (vertex[i] - minExtent[i]) * invExtent[i]); // between [0, ngrid-1]
          assert(ind < (int)ngrid);
          for (int j = i + 1; j < 3; ++j)
             ind *= ngrid;
@@ -310,10 +310,9 @@ void TGeoTessellated::Close()
    };
 
    // In case the number of vertices is small, just compare with all others
-   int ind[4];
+   int ind[4] = {-1, -1, -1, -1};
    if (fNvert < 1000) {
       for (auto &facet : fFacets) {
-         ind[3] = -1; // not used for triangular facets
          for (int i = 0; i < facet.GetNvert(); ++i) {
             // Check if vertex exists already
             ind[i] = AddVertex(facet.GetVertex(i));
@@ -325,7 +324,6 @@ void TGeoTessellated::Close()
       using CellVec_t = std::vector<int>;
       std::array<CellVec_t, ngrid * ngrid * ngrid> grid;
       for (auto &facet : fFacets) {
-         ind[3] = -1; // not used for triangular facets
          for (int i = 0; i < facet.GetNvert(); ++i) {
             // Check if vertex exists already
             const Vertex_t &vertex = facet.GetVertex(i);
@@ -446,7 +444,7 @@ TBuffer3D *TGeoTessellated::MakeBuffer3D() const
    const int nvert = fNvert;
    const int nsegs = fNseg;
    const int npols = GetNfacets();
-   TBuffer3D *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nvert, 3 * nvert, nsegs, 3 * nsegs, npols, 6 * npols);
+   auto *buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nvert, 3 * nvert, nsegs, 3 * nsegs, npols, 6 * npols);
    if (buff) {
       SetPoints(buff->fPnts);
       SetSegsAndPols(*buff);
@@ -537,23 +535,4 @@ const TBuffer3D &TGeoTessellated::GetBuffer3D(int reqSections, Bool_t localFrame
    }
 
    return buffer;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Fills the supplied buffer, with sections in desired frame
-/// See TBuffer3D.h for explanation of sections, frame etc.
-
-void TGeoTessellated::FillBuffer3D(TBuffer3D &buffer, int reqSections, Bool_t localFrame) const
-{
-   TGeoShape::FillBuffer3D(buffer, reqSections, localFrame);
-
-   if (reqSections & TBuffer3D::kBoundingBox) {
-      double halfLengths[3] = {fDX, fDY, fDZ};
-      buffer.SetAABoundingBox(fOrigin, halfLengths);
-
-      if (!buffer.fLocalFrame) {
-         TransformPoints(buffer.fBBVertex[0], 8);
-      }
-      buffer.SetSectionsValid(TBuffer3D::kBoundingBox);
-   }
 }
