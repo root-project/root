@@ -71,6 +71,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             if (mParams.landscape) {
                burgerMenu.attachPress(pthis.onFullScreenPressLandscape, pthis);
+               this.getView().byId('expandMaster').setVisible(true);
             } else {
                burgerMenu.attachPress(pthis.onFullScreenPressPortrait, pthis);
 
