@@ -106,7 +106,6 @@ if(MSVC)
       __std_reverse_trivially_swappable_8
       __std_terminate
       ??2@YAPAXI@Z
-      ??2@YAPAXIPAX@Z
       ??3@YAXPAX@Z
       ??3@YAXPAXI@Z
       ??_U@YAPAXI@Z
