@@ -86,40 +86,40 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 ## Core Libraries
 
 * Speed-up startup, in particular in case of no or poor network accesibility, by avoiding
-a network access that was used as input to generate a globally unique ID for the current
-process.
- * This network access is replaced by a passive scan of the network interface. This
-reduces somewhat the uniqueness of the unique ID as the IP address is no longer
-guaranteed by the DNS server to be unique.   Note that this was already the case when
-the network access (used to look up the hostname and its IP address) failed.
+  a network access that was used as input to generate a globally unique ID for the current
+  process.
+* This network access is replaced by a passive scan of the network interface. This
+  reduces somewhat the uniqueness of the unique ID as the IP address is no longer
+  guaranteed by the DNS server to be unique.   Note that this was already the case when
+  the network access (used to look up the hostname and its IP address) failed.
 
 
 ## I/O Libraries
 
-* TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
+ * TFile: A new bit `TFile::kReproducible` was introduced. It can be enabled by
   specifying the `"reproducible"` url option when creating the file:
-~~~ {.cpp}
-      TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
-~~~
-   Unlike regular `TFile`s, the content of such file has reproducible binary
-   content when writing exactly same data. This achieved by writing pre-defined
-   values for creation and modification date of TKey/TDirectory objects and null
-   value for TUUID objects inside TFile. As drawback, TRef objects stored in such
-   file cannot be read correctly.
+
+       TFile *f = TFile::Open("name.root?reproducible","RECREATE","File title");
+  Unlike regular `TFile`s, the content of such file has reproducible binary
+  content when writing exactly same data. This achieved by writing pre-defined
+  values for creation and modification date of TKey/TDirectory objects and null
+  value for TUUID objects inside TFile. As drawback, TRef objects stored in such
+  file cannot be read correctly.
+
 * Significantly improved the scaling of hadd tear-down/cleanup-phase in the presence
-of large number histograms and in the presence of large number of directories.
+  of large number histograms and in the presence of large number of directories.
 * TMemFile: Apply customization of minimal block size also to the first block.
 * Add renaming rule for instances of the math classes from `genvector` and `smatrix` to
-instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
-instances for any other floating point type.
+  instance for one floating point type (`float`, `double`, `Double32_t`, `Float16_t`) to
+  instances for any other floating point type.
 * Corrected the application of  `I/O customization rules` when the target classes contained
-typedefs (in particular `Double32_t`)
+  typedefs (in particular `Double32_t`)
 * Prevent splitting of objects when a `Streamer Function` was explicitly attached to their
-`TClass`.
+ `TClass`.
 * In hadd fix verbose level arg parsing
 * Allow user to change the type of the content of a TClonesArray.
 * Avoid deleted memory access in `MakeProject` and in handling of
-`I/O customization rules`.
+ `I/O customization rules`.
 
 ## TTree Libraries
 
@@ -140,20 +140,24 @@ typedefs (in particular `Double32_t`)
 * Add RCoordArray constructor from std::array.
 * Remove thread-unsafe accessors of RHistConcurrentFill.
 * Fix Flush logic of buffered RHist wrappers.
-
+* New class TGraphMultiErrors: A TGraph with asymmetric error bars and multiple y error
+  dimensions (author: Simon Spies).
 
 ## Math Libraries
 * [ROOT::Math::KahanSum](https://root.cern/doc/master/classROOT_1_1Math_1_1KahanSum.html) can use SIMD instructions for faster accumulation
 
 ## RooFit Libraries
 * **Documentation** Many improvements to the doxygen documentation of RooFit classes.
+
 * **Automatic legends for RooPlot** RooPlot now supports [BuildLegend](https://root.cern.ch/doc/master/classRooPlot.html#acd16cf22aca843f08ef405c93753c512) as a good starting point for a legend.
+
 * **Short prefits** In unbinned fits that take long, good starting values for parameters can be found
 by running a short prefit before the final fit. Passing `PrefitDataFraction(0.1)` to [`fitTo()`](https://root.cern.ch/doc/master/classRooAbsPdf.html#a8f802a3a93467d5b7b089e3ccaec0fa8)
 will *e.g.* run a prefit on 1% of the data.
+
 * **Iterating over categories** Category classes deriving from [RooAbsCategory](https://root.cern.ch/doc/master/classRooAbsCategory.html), *e.g.* [RooCategory](https://root.cern.ch/doc/master/classRooCategory.html)
 now support "natural" iterating using range-based for loops in C++ or Python loops:
- 
+
       import ROOT
       cat = ROOT.RooCategory("cat", "cat")
       cat.defineType("1Lep", 1)
@@ -188,9 +192,9 @@ In addition, if ROOT is compiled for a specific architecture, SIMD instructions 
 computations. This requires ROOT to be compiled with `-march=native` or *e.g.* `-mavx2` if the hardware
 supports it. For maximal performance, ROOT should also be configured with `-Dvdt=ON`.
 [VDT](https://github.com/dpiparo/vdt) is a library of fast math functions, which will automatically
-be used in RooFit when available.  
+be used in RooFit when available.
 Depending on the compiler, on the instruction set supported by the CPU and on what kind of PDFs are used,
-**PDF evaluations will speed up 5x to 16x**.  
+**PDF evaluations will speed up 5x to 16x**.
 For details see [CHEP 2019](https://indico.cern.ch/event/773049/contributions/3476060/).
 
 ### New RooFormulaVar / RooGenericPdf
@@ -203,11 +207,11 @@ to a PDF. The following macro *e.g.* prints the expected result 5.4:
   double func(double x, double a) {
     return a*x*x + 1.;
   }
-  
+
   void testRooFormulaWithClingFunction() {
     RooRealVar x("x", "x", 2, -10, 10);
     RooRealVar a("a", "a", 1.1, -10, 10);
-  
+
     RooGenericPdf pdf("pdfWithExternalFunc", "func(x, a)", {a, x});
     std::cout << pdf.getVal() << std::endl;
   }
@@ -228,15 +232,22 @@ prevent infinite loops or crashes.
 
 ## 2D Graphics Libraries
 
- * Provide support of NDC coordinates for TArrow.
- * Fix interactive movement of TLine/TArrow objects when NDC coordinates are used
- * Provide TGraph::MovePoints() method
+ * Provide support of NDC coordinates for `TArrow`.
+ * Fix interactive movement of `TLine/TArrow` objects when NDC coordinates are used.
+ * Provide `TGraph::MovePoints()` method.
  * New options `RX`and `RY` for TMultiGraph in order to draw reverse axis along X and Y.
  * Combined with the option "Z" the option "CJUST" allows to draw the color palette
    with axis labels justified on the color boundaries (implemented by Otto Schaile).
  * The `TCanvas` Event Status Bar now displays the date and time when the mouse cursor
    is moved over a time axis (implemented by Otto Schaile).
- * Negative values were not painted with option "TEXT" for TH2Poly.
+ * Negative values were not painted with option "TEXT" for `TH2Poly`.
+ * The Z title was not properly set in `TEfficiency`.
+ * Implement `TImage:ls()`
+ * `TGraph2D`: X Y and Z titles were not saved by SavePrimitive.
+ * In some cases vertical hatches drawn by `TPad::PaintHatches` disappeared.
+ * Save the X and Y axis limits in `TMultiGraph::SavePrimitive`.
+ * Some markers did not match between PDF and PNG.
+ * The MaxDigits attribute was not imported from TAxis to TGaxis.
 
 
 ## 3D Graphics Libraries
@@ -297,13 +308,14 @@ prevent infinite loops or crashes.
 - The Reference Guide can now be accessed directly from the ROOT prompt thanks to
   a great extension (implemented by Desislava Kalaydjieva) of the `.help` command.
   For example to access the Reference Guide for `TTree` it is enough to type:
-~~~ {.cpp}
-   root[0] .help TTree
-~~~
+
+      root[0] .help TTree
+
   To open the reference guide for a function/member:
-~~~ {.cpp}
-   root[0] .help TTree::Draw
-~~~
+
+      root[0] .help TTree::Draw
+
+- Change the layout of the ROOT reference.
 
 ## Build, Configuration and Testing Infrastructure
 
