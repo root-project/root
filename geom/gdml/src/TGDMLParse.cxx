@@ -4278,7 +4278,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node
    TString name, vname, type;
    TString tempattr;
 
-   while (attr != 0) {
+   while (attr != nullptr) {
       tempattr = gdml->GetAttrName(attr);
       tempattr.ToLower();
       if (tempattr == "name") {
@@ -4296,7 +4296,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node
    XMLNodePointer_t child = gdml->GetChild(node);
    int nofacets = 0;
 
-   while (child != 0) {
+   while (child != nullptr) {
       tempattr = gdml->GetNodeName(child);
       tempattr.ToLower();
       if (tempattr == "triangular" || tempattr == "quadrangular" ) {
@@ -4305,12 +4305,13 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node
       child = gdml->GetNext(child);
    }
    
-   TGeoTessellated *tsl = new TGeoTessellated(NameShort(name), nofacets);
+   auto *tsl = new TGeoTessellated(NameShort(name), nofacets);
    TGeoTranslation *pos = nullptr;
    Tessellated::Vertex_t vertices[4];
 
    auto SetVertex = [&](int i, TGeoTranslation *trans)
    {
+      if (trans == nullptr) return;
       const double *tr = trans->GetTranslation();
       vertices[i].Set(tr[0], tr[1], tr[2]);
    };
@@ -4336,13 +4337,13 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node
 
    // Get facet attributes
    child = gdml->GetChild(node);
-   while (child != 0) {
+   while (child != nullptr) {
       tempattr = gdml->GetNodeName(child);
       tempattr.ToLower();
       if (tempattr == "triangular") {
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
 
             if (tempattr == "vertex1") {
@@ -4381,7 +4382,7 @@ XMLNodePointer_t TGDMLParse::Tessellated(TXMLEngine* gdml, XMLNodePointer_t node
       else if (tempattr == "quadrangular") {
          attr = gdml->GetFirstAttr(child);
 
-         while (attr != 0) {
+         while (attr != nullptr) {
             tempattr = gdml->GetAttrName(attr);
 
             if (tempattr == "vertex1") {
