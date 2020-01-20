@@ -1,6 +1,6 @@
 /*
-bash$ rootcint -f dict.cc -c -DGOOD cmspb.C Linkdef.h 
-bash$ rootcint -f dict.cc -c cmspb.C Linkdef.h 
+bash$ rootcint -f dict.cc -DGOOD cmspb.C Linkdef.h 
+bash$ rootcint -f dict.cc cmspb.C Linkdef.h 
 Internal error: G__mark_linked_tagnum() Illegal tagnum -1
 Segmentation fault (core dumped)
 */

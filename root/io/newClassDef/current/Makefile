@@ -33,7 +33,7 @@ currentTest: current_test.log
 	$(CMDECHO) diff -b -u current_test.ref current_test.log 
 
 $(DICTS) : %dict.C : %.h %linkdef.h $(ROOTCINT)
-	$(CMDECHO)rootcint -f $@ -c $(filter %.h,$^)
+	$(CMDECHO)rootcint -f $@ $(filter %.h,$^)
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)  $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)
 	$(BuildFromObjs)

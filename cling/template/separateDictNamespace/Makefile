@@ -45,7 +45,7 @@ Slave1Dict.C: Slave1.hh Master.hh Slave1LinkDef.hh
 Slave2Dict.C: Master.hh Slave2.hh Slave2LinkDef.hh
 
 %Dict.C:
-	$(CMDECHO)rootcint -f $@ -c $^ 
+	$(CMDECHO)rootcint -f $@ $^ 
 
 %Dict.$(ObjSuf): %Dict.C	
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -DCINTOBJECT -I. $(ROOTCFLAGS) -c $< -o $@

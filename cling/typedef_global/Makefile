@@ -22,7 +22,7 @@ myclbad.$(DllSuf) : badDict.$(ObjSuf)
 	$(BuildFromObj)
 
 badDict.C : bad.h mycl.C LinkDef.h
-	$(CMDECHO) rootcint -f badDict.C -c bad.h mycl.C LinkDef.h
+	$(CMDECHO) rootcint -f badDict.C bad.h mycl.C LinkDef.h
 
 
 scopeTest2 : scopeTest2_timestamp
@@ -34,5 +34,5 @@ myclgood.$(DllSuf) : goodDict.$(ObjSuf)
 	$(BuildFromObj)
 
 goodDict.C : mycl.C LinkDef.h
-	$(CMDECHO) rootcint -f goodDict.C -c mycl.C LinkDef.h
+	$(CMDECHO) rootcint -f goodDict.C mycl.C LinkDef.h
 

@@ -50,10 +50,10 @@ ifeq ($(ClingWorkAroundNoDotNamespace),)
 endif
 
 scopeDict.cxx: scopeProblem.C
-	$(CMDECHO) rootcint -f scopeDict.cxx -c scopeProblem.C linkdef.h
+	$(CMDECHO) rootcint -f scopeDict.cxx scopeProblem.C linkdef.h
 
 scopeDict2.cxx: multiScope.C
-	$(CMDECHO) rootcint -f $@ -c $< linkdef.h
+	$(CMDECHO) rootcint -f $@ $< linkdef.h
 
 multiScope: scopeDict2.o
 

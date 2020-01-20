@@ -63,7 +63,7 @@ endif
 lib%_dictCINT.so:
 	@echo -e "[i] generating dictionaly: $@"
 	@$(CXX) -M -x c++ $(patsubst $(CINTV),%.h,$@) | sed -e 's/$(patsubst $(CINTV),%.o,$@):/$@: $(patsubst $(CINTV),%LinkDef.h,$@)/' > $(patsubst %.so,%.d,$@)
-	@rootcint -f $(patsubst $(CINTV),%_dictCINT.cxx,$@) -c $(patsubst $(CINTV),%.h,$@) $(patsubst $(CINTV),%LinkDef.h,$@)
+	@rootcint -f $(patsubst $(CINTV),%_dictCINT.cxx,$@) $(patsubst $(CINTV),%.h,$@) $(patsubst $(CINTV),%LinkDef.h,$@)
 	@echo -e "[i] building dictionary"
 	@$(CXX) -shared $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $(patsubst $(CINTV),%_dictCINT.cxx,$@)
 

@@ -5,7 +5,7 @@ include ../../Rules.mk
 
 
 MyClassesDict.cxx: MyClasses.h LinkDef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f MyClassesDict.cxx -c MyClasses.h LinkDef.h
+	rootcint -f MyClassesDict.cxx MyClasses.h LinkDef.h
 
 mytest$(ExeSuf): MyClassesDict.$(ObjSuf) mytest.$(ObjSuf)
 	$(LD)  $^ $(LDFLAGS) $(ROOTLIBS) $(OutPutOpt)$@

@@ -37,7 +37,7 @@ staticConstTest.log : staticConst.C
 StaticDataMemberDict : runStaticDataMemberDict.C
 
 runStaticDataMemberDict.C : runStaticDataMember.h runStaticDataMember_linkdef.h
-	$(CMDECHO)rootcint -f runStaticDataMemberDict.C -c runStaticDataMember.h runStaticDataMember_linkdef.h
+	$(CMDECHO)rootcint -f runStaticDataMemberDict.C runStaticDataMember.h runStaticDataMember_linkdef.h
 
 ifeq (,$(strip $(FAIL)))
 StaticDataMember :

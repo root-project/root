@@ -3,7 +3,7 @@
 /*
 
 
-rootcint -f Simple_dict.cpp -c -p -D"SCHEMA_CHANGE" Simple.h Simple_LinkDef.h
+rootcint -f Simple_dict.cpp -p -D"SCHEMA_CHANGE" Simple.h Simple_LinkDef.h
 cl.exe /c /DLL /MD /Z7 /GR /GX /D"SCHEMA_CHANGE" Simple_dict.cpp /I"%ROOTSYS%/include"
 link.exe Simple_dict.obj /libpath:"%ROOTSYS%\lib" libCint.lib libCore.lib /DLL -out:SimpleChange.dll
 

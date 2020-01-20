@@ -18,7 +18,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
 FooDict.cxx : Foo.h
-	$(CMDECHO)rootcint -f FooDict.cxx -c Foo.h+
+	$(CMDECHO)rootcint -f FooDict.cxx Foo.h+
 
 reader:reader.C
 	$(CMDECHO)$(CXX) -c -g `root-config --cflags` $<  

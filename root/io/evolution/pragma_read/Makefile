@@ -23,10 +23,10 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 v1/%_v1_cling.cpp: v1/%.h v1/%LinkDef.h $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f $@ -c v1/$*.h v1/$*LinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
+	$(CMDECHO) rootcint -f $@ v1/$*.h v1/$*LinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
 
 v2/%_v2_cling.cpp: v2/%.h v2/%LinkDef.h $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f $@ -c v2/$*.h v2/$*LinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
+	$(CMDECHO) rootcint -f $@ v2/$*.h v2/$*LinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
 
 libTest%.$(DllSuf):%/AliAODForwardMult_v1_cling.$(ObjSuf) %/AliAODForwardMult.$(ObjSuf)
 	$(CMDECHO) cp $*/AliAODForwardMult_$*_cling$(PcmSuf) .

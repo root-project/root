@@ -37,7 +37,7 @@ ifeq ($(FAIL),)
 endif
 
 MasterDict.C: MyClass.hh MasterLinkDef.hh $(ROOTCINT)
-	$(CMDECHO) rootcint -f $@ -c MyClass.hh MasterLinkDef.hh
+	$(CMDECHO) rootcint -f $@ MyClass.hh MasterLinkDef.hh
 
 libmaster.$(DllSuf): MasterDict.o MyClass.o
 	$(LD) $(SOFLAGS) $(LDFLAGS) $^ -o $@

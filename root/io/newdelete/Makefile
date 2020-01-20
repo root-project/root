@@ -25,7 +25,7 @@ output: Classes.$(DllSuf) runClasses.C  $(ROOTCORELIBS) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXE) -l -b -q runClasses.C > output 2>&1
 
 ClassesDict.cxx:  Classes.h LinkDef.h $(ROOTCINT)
-	$(CMDECHO) rootcint -f ClassesDict.cxx -c Classes.h LinkDef.h
+	$(CMDECHO) rootcint -f ClassesDict.cxx Classes.h LinkDef.h
 
 Classes.$(DllSuf): ClassesDict.$(ObjSuf) Classes.$(ObjSuf) $(ROOTCORELIBS) $(ROOTV) $(ROOTCINT)
 	$(BuildFromObjs)

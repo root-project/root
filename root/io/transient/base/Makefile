@@ -67,7 +67,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 base_cling.cpp: base.h baseLinkDef.h $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f $@ -rmf libbase.rootmap -rml libbase -c base.h baseLinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
+	$(CMDECHO) rootcint -f $@ -rmf libbase.rootmap -rml libbase base.h baseLinkDef.h  > $@.log 2>&1 || (cat $@.log && exit 1)
 
 libbase.$(DllSuf): base_cling.$(ObjSuf) testobjectderived.$(ObjSuf) testobject.$(ObjSuf) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(BuildFromObjs)

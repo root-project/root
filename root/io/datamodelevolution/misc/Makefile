@@ -84,7 +84,7 @@ postobj: postobj.log
 execReadOrderClass.clog: execWriteOrderClass.success
 
 arr_cint.cpp: arrayRules.h arrayRulesLinkDef.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f arr_cint.cpp -c arrayRules.h arrayRulesLinkDef.h > arr_cint.log 2>&1 || handleError.sh --cmd='rootcint -f arr_cint.cxx -c arrayRules.h ArrayRulesLinkDef.h' --result=$$? --log=arr_cint.log --test=$@  
+	$(CMDECHO) rootcint -f arr_cint.cpp arrayRules.h arrayRulesLinkDef.h > arr_cint.log 2>&1 || handleError.sh --cmd='rootcint -f arr_cint.cxx arrayRules.h ArrayRulesLinkDef.h' --result=$$? --log=arr_cint.log --test=$@  
 
 arr_rflx.cpp: arrayRules.h arrayRulesSelection.xml $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) genreflex arrayRules.h -o arr_rflx.cpp -s arrayRulesSelection.xml > arr_rflx.log 2>&1 || handleError.sh --cmd='genreflex arrayRules.h -o arr_rflx.cxx -s arrayRulesSelection.xml' --result=$$? --log=arr_rflx.log --test=$@ 

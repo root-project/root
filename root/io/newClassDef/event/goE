@@ -1,5 +1,5 @@
 g++ -g -Wall -fPIC -I$ROOTSYS/include -c MainEvent.cxx
-rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
+rootcint -f EventDict.cxx Event.h EventLinkDef.h
 g++ -g -Wall -fPIC -I$ROOTSYS/include -c EventDict.cxx 
 g++ -g -Wall -fPIC -I$ROOTSYS/include -c Event.cxx
 g++ -shared -O Event.o EventDict.o -o  libEvent.so

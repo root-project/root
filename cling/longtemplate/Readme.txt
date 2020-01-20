@@ -1,5 +1,5 @@
 #With gcc 3.1 on linux, the following crashed:
-rootcint -f crashDict.C -c SkyMap.hh CrashLinkDef.hh 
+rootcint -f crashDict.C SkyMap.hh CrashLinkDef.hh 
 
 #and then the following was happening:
 g++ --shared -o libcxx.so crashDict.C -I$ROOTSYS/include && root.exe

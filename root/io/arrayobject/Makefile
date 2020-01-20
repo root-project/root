@@ -37,7 +37,7 @@ RealArraySave.log: foo_C.$(DllSuf) bar_C.$(DllSuf) main_C.$(DllSuf) $(ROOT_LOC)/
 #	g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
 
 %Dict.C: %.h %Linkdef.h
-	$(CMDECHO) rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ $^
 
 
 ptrArr: ptrArr.log

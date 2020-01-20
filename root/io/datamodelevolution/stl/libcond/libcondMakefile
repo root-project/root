@@ -36,7 +36,7 @@ libcondHeaders =  DataHeaderElement_p5.h DataHeader_p5.h HepGeom__Transform3D.h 
    DetCondKeyTrans.h libcondLinkDef.h libcondProjectHeaders.h
 
 libcondProjectDict.cxx: $(libcondHeaders) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) rootcint -f libcondProjectDict.cxx -c libcondProjectHeaders.h libcondLinkDef.h > $@.log 2>&1 || (cat $@.log && exit 1)
+	$(CMDECHO) rootcint -f libcondProjectDict.cxx libcondProjectHeaders.h libcondLinkDef.h > $@.log 2>&1 || (cat $@.log && exit 1)
 
 libcondProjectSource.$(ObjSuf): libcondProjectDict.cxx
 

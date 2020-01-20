@@ -24,7 +24,7 @@ all: libMyData.so fillTree
 
 
 Data_Cint.cxx: Data.h
-	rootcint -v4 -f Data_Cint.cxx -c Data.h DataLinkDef.h
+	rootcint -v4 -f Data_Cint.cxx Data.h DataLinkDef.h
 
 libMyData.so: Data_Cint.o Data.o
 	$(CXX) -g -shared -Wl,-soname,libMyData.so -o libMyData.so.0.0  Data_Cint.o Data.o 

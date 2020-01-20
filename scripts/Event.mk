@@ -1,5 +1,5 @@
 EventDict.cxx: Event.h EventLinkDef.h $(ROOTCINT) 
-	$(CMDECHO) rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
+	$(CMDECHO) rootcint -f EventDict.cxx Event.h EventLinkDef.h
 
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)

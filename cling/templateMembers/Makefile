@@ -36,14 +36,14 @@ templateConstructorTest: templateConstructorTest.log
 	$(CMDECHO) diff -wb templateConstructorTest.log templateConstructorTest.ref
 
 opdict.cxx: operator.C linkdef.h
-	$(CMDECHO) rootcint -f $@ -c $^ > opdict.build.log 2>&1
+	$(CMDECHO) rootcint -f $@ $^ > opdict.build.log 2>&1
 
 operatorTest: opdict.$(ObjSuf)
 
 
 
 templateMembersDict.cxx: templateMembersClasses.h templateMembersLinkdef.h
-	$(CMDECHO) rootcint -v4 -f templateMembersDict.cxx -c templateMembersClasses.h templateMembersLinkdef.h 2>>templateMembers.build.log
+	$(CMDECHO) rootcint -v4 -f templateMembersDict.cxx templateMembersClasses.h templateMembersLinkdef.h 2>>templateMembers.build.log
 
 templateMembers_C.$(DllSuf): templateMembersDict.cxx
 

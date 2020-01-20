@@ -18,10 +18,10 @@ clone:
 else
 clone: tester
 endif
-	
+
 
 RtObjDict.C: RtObj.h RtObjLinkDef.h $(ROOTCINT)
-	$(CMDECHO)rootcint -f RtObjDict.C -c RtObj.h RtObjLinkDef.h
+	$(CMDECHO)rootcint -f RtObjDict.C RtObj.h RtObjLinkDef.h
 
 .C.o:
 	$(CMDECHO)$(CXX) $(CXXFLAGS) -c $<
