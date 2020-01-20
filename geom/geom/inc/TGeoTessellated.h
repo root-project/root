@@ -99,8 +99,6 @@ private:
    std::vector<Vertex_t> fVertices; // List of vertices
    std::vector<TGeoFacet> fFacets;  // List of facets
 
-   virtual void FillBuffer3D(TBuffer3D &buffer, int reqSections, Bool_t localFrame) const;
-
 public:
    // constructors
    TGeoTessellated() {}
