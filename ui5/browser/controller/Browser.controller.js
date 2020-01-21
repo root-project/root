@@ -77,6 +77,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
                this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
                this.getView().byId('expandMaster').setVisible(false);
+               this.getView().byId('shrinkMaster').setVisible(false);
             }
          });
 
