@@ -65,6 +65,7 @@ struct RNTuple {
    /// Currently unused, reserved for later use
    std::uint64_t fReserved = 0;
 
+   /// The canonical, member-wise equality test
    bool operator ==(const RNTuple &other) const {
       return fVersion == other.fVersion &&
          fSize == other.fSize &&
