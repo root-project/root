@@ -55,11 +55,11 @@ TEST(MiniFile, Raw)
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
 
    char buf;
-   reader.ReadBlob(&buf, 1, offBlob);
+   reader.ReadBuffer(&buf, 1, offBlob);
    EXPECT_EQ(blob, buf);
-   reader.ReadBlob(&buf, 1, offHeader);
+   reader.ReadBuffer(&buf, 1, offHeader);
    EXPECT_EQ(header, buf);
-   reader.ReadBlob(&buf, 1, offFooter);
+   reader.ReadBuffer(&buf, 1, offFooter);
    EXPECT_EQ(footer, buf);
 }
 
@@ -85,11 +85,11 @@ TEST(MiniFile, Stream)
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
 
    char buf;
-   reader.ReadBlob(&buf, 1, offBlob);
+   reader.ReadBuffer(&buf, 1, offBlob);
    EXPECT_EQ(blob, buf);
-   reader.ReadBlob(&buf, 1, offHeader);
+   reader.ReadBuffer(&buf, 1, offHeader);
    EXPECT_EQ(header, buf);
-   reader.ReadBlob(&buf, 1, offFooter);
+   reader.ReadBuffer(&buf, 1, offFooter);
    EXPECT_EQ(footer, buf);
 
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
@@ -121,11 +121,11 @@ TEST(MiniFile, Proper)
    EXPECT_EQ(offFooter, ntuple.fSeekFooter);
 
    char buf;
-   reader.ReadBlob(&buf, 1, offBlob);
+   reader.ReadBuffer(&buf, 1, offBlob);
    EXPECT_EQ(blob, buf);
-   reader.ReadBlob(&buf, 1, offHeader);
+   reader.ReadBuffer(&buf, 1, offHeader);
    EXPECT_EQ(header, buf);
-   reader.ReadBlob(&buf, 1, offFooter);
+   reader.ReadBuffer(&buf, 1, offFooter);
    EXPECT_EQ(footer, buf);
 }
 
@@ -164,17 +164,17 @@ TEST(MiniFile, Multi)
    EXPECT_EQ(offFooter2, ntuple2.fSeekFooter);
 
    char buf;
-   reader.ReadBlob(&buf, 1, offBlob1);
+   reader.ReadBuffer(&buf, 1, offBlob1);
    EXPECT_EQ(blob1, buf);
-   reader.ReadBlob(&buf, 1, offHeader1);
+   reader.ReadBuffer(&buf, 1, offHeader1);
    EXPECT_EQ(header1, buf);
-   reader.ReadBlob(&buf, 1, offFooter1);
+   reader.ReadBuffer(&buf, 1, offFooter1);
    EXPECT_EQ(footer1, buf);
-   reader.ReadBlob(&buf, 1, offBlob2);
+   reader.ReadBuffer(&buf, 1, offBlob2);
    EXPECT_EQ(blob2, buf);
-   reader.ReadBlob(&buf, 1, offHeader2);
+   reader.ReadBuffer(&buf, 1, offHeader2);
    EXPECT_EQ(header2, buf);
-   reader.ReadBlob(&buf, 1, offFooter2);
+   reader.ReadBuffer(&buf, 1, offFooter2);
    EXPECT_EQ(footer2, buf);
 }
 

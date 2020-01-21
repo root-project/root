@@ -890,7 +890,7 @@ ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(Detail::RRawFile 
 ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
 {
    char ident[4];
-   ReadBlob(ident, 4, 0);
+   ReadBuffer(ident, 4, 0);
    if (std::string(ident, 4) == "root")
       return GetNTupleProper(ntupleName);
    fIsRaw = true;
@@ -901,35 +901,35 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
 ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
 {
    RTFHeader fileHeader;
-   ReadBlob(&fileHeader, sizeof(fileHeader), 0);
+   ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
 
    RTFKey key;
    RTFString name;
-   ReadBlob(&key, sizeof(key), fileHeader.fBEGIN);
+   ReadBuffer(&key, sizeof(key), fileHeader.fBEGIN);
    auto offset = fileHeader.fBEGIN + key.fKeyLen;
-   ReadBlob(&name, 1, offset);
+   ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
-   ReadBlob(&name, 1, offset);
+   ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
    RTFFile file;
-   ReadBlob(&file, sizeof(file), offset);
+   ReadBuffer(&file, sizeof(file), offset);
 
    RUInt32BE nKeys;
    offset = file.GetSeekKeys(key.fVersion);
-   ReadBlob(&key, sizeof(key), offset);
+   ReadBuffer(&key, sizeof(key), offset);
    offset += key.fKeyLen;
-   ReadBlob(&nKeys, sizeof(nKeys), offset);
+   ReadBuffer(&nKeys, sizeof(nKeys), offset);
    offset += sizeof(nKeys);
    bool found = false;
    for (unsigned int i = 0; i < nKeys; ++i) {
-      ReadBlob(&key, sizeof(key), offset);
+      ReadBuffer(&key, sizeof(key), offset);
       auto offsetNextKey = offset + key.fKeyLen;
 
       offset += key.GetHeaderSize();
-      ReadBlob(&name, 1, offset);
+      ReadBuffer(&name, 1, offset);
       offset += name.GetSize();
-      ReadBlob(&name, 1, offset);
-      ReadBlob(&name, name.GetSize(), offset);
+      ReadBuffer(&name, 1, offset);
+      ReadBuffer(&name, name.GetSize(), offset);
       if (std::string_view(name.fData, name.fLName) == ntupleName) {
          found = true;
          break;
@@ -938,31 +938,31 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
    }
    R__ASSERT(found);
 
-   ReadBlob(&key, sizeof(key), key.GetSeekKey());
+   ReadBuffer(&key, sizeof(key), key.GetSeekKey());
    offset = key.GetSeekKey() + key.fKeyLen;
    RTFNTuple ntuple;
-   ReadBlob(&ntuple, sizeof(ntuple), offset);
+   ReadBuffer(&ntuple, sizeof(ntuple), offset);
    return ntuple.ToRNTuple();
 }
 
 ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleRaw(std::string_view ntupleName)
 {
    RRawFileHeader fileHeader;
-   ReadBlob(&fileHeader, sizeof(fileHeader), 0);
+   ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
    RTFString name;
    auto offset = sizeof(fileHeader);
-   ReadBlob(&name, 1, offset);
-   ReadBlob(&name, name.GetSize(), offset);
+   ReadBuffer(&name, 1, offset);
+   ReadBuffer(&name, name.GetSize(), offset);
    R__ASSERT(std::string_view(name.fData, name.fLName) == ntupleName);
    offset += name.GetSize();
 
    RTFNTuple ntuple;
-   ReadBlob(&ntuple, sizeof(ntuple), offset);
+   ReadBuffer(&ntuple, sizeof(ntuple), offset);
    return ntuple.ToRNTuple();
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileReader::ReadBlob(void *buffer, size_t nbytes, std::uint64_t offset)
+void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    auto nread = fFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
