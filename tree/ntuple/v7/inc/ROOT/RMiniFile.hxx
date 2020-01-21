@@ -111,7 +111,7 @@ public:
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RNTuple GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer
-   void ReadBlob(void *buffer, size_t nbytes, std::uint64_t offset);
+   void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 };
 
 

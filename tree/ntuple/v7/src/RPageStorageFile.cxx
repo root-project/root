@@ -227,13 +227,13 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
 
    auto buffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fLenHeader]);
    auto zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fNBytesHeader]);
-   fReader.ReadBlob(zipBuffer.get(), fNTuple.fNBytesHeader, fNTuple.fSeekHeader);
+   fReader.ReadBuffer(zipBuffer.get(), fNTuple.fNBytesHeader, fNTuple.fSeekHeader);
    fDecompressor(zipBuffer.get(), fNTuple.fNBytesHeader, fNTuple.fLenHeader, buffer.get());
    descBuilder.SetFromHeader(buffer.get());
 
    buffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fLenFooter]);
    zipBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[fNTuple.fNBytesFooter]);
-   fReader.ReadBlob(zipBuffer.get(), fNTuple.fNBytesFooter, fNTuple.fSeekFooter);
+   fReader.ReadBuffer(zipBuffer.get(), fNTuple.fNBytesFooter, fNTuple.fSeekFooter);
    fDecompressor(zipBuffer.get(), fNTuple.fNBytesFooter, fNTuple.fLenFooter, buffer.get());
    descBuilder.AddClustersFromFooter(buffer.get());
 
@@ -267,7 +267,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    auto pageSize = pageInfo.fLocator.fBytesOnStorage;
    auto pageBuffer = new unsigned char[
       std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements))];
-   fReader.ReadBlob(pageBuffer, pageInfo.fLocator.fBytesOnStorage, pageInfo.fLocator.fPosition);
+   fReader.ReadBuffer(pageBuffer, pageInfo.fLocator.fBytesOnStorage, pageInfo.fLocator.fPosition);
 
    const auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
    if (pageSize != bytesOnStorage) {
