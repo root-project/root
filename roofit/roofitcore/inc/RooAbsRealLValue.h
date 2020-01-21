@@ -40,7 +40,6 @@ public:
   virtual void setVal(Double_t value)=0;
   virtual RooAbsArg& operator=(const RooAbsReal& other) ;
   virtual RooAbsArg& operator=(Double_t newValue);
-  virtual RooAbsArg& operator=(Int_t ival) { return operator=((Double_t)ival) ; }
 
   // Implementation of RooAbsLValue
   virtual void setBin(Int_t ibin, const char* rangeName=0) ;

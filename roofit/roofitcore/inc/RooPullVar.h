@@ -16,11 +16,10 @@
 #ifndef ROO_PULL_VAR
 #define ROO_PULL_VAR
 
-#include "RooAbsReal.h"
+#include "RooProxy.h"
+#include "RooRealVar.h"
 #include "RooRealProxy.h"
 
-class RooRealVar;
-class RooAbsReal ;
 
 class RooPullVar : public RooAbsReal {
 public:
@@ -35,7 +34,7 @@ public:
 
 protected:
 
-  RooRealVarProxy _meas ;
+  RooProxy<RooRealVar> _meas ;
   RooRealProxy _true ;
 
   Double_t evaluate() const;
