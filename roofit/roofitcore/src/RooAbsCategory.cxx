@@ -93,7 +93,7 @@ RooAbsCategory::~RooAbsCategory()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return index number of current state
 
-Int_t RooAbsCategory::getIndex() const
+RooAbsCategory::value_type RooAbsCategory::getIndex() const
 {
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
@@ -150,7 +150,7 @@ RooCatType RooAbsCategory::traceEval() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Equality operator with a integer (compares with state index number)
 
-Bool_t RooAbsCategory::operator==(Int_t index) const
+Bool_t RooAbsCategory::operator==(RooAbsCategory::value_type index) const
 {
   return (index==getIndex()) ;
 }
@@ -196,7 +196,7 @@ Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if state with given index is defined
 
-Bool_t RooAbsCategory::isValidIndex(Int_t index) const
+Bool_t RooAbsCategory::isValidIndex(RooAbsCategory::value_type index) const
 {
   return lookupType(index,kFALSE)?kTRUE:kFALSE ;
 }
@@ -220,7 +220,7 @@ Bool_t RooAbsCategory::isValidLabel(const char* label) const
 const RooCatType* RooAbsCategory::defineType(const char* label)
 {
   // Find lowest unused index
-  Int_t index(-1) ;
+  RooAbsCategory::value_type index(-1) ;
   while(lookupType(++index,kFALSE)) ;
 
   // Assign this index to given label
@@ -232,7 +232,7 @@ const RooCatType* RooAbsCategory::defineType(const char* label)
 /// Internal version of defineType that does not check if type
 /// already exists
 
-const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, Int_t index)
+const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, RooAbsCategory::value_type index)
 {
   _types.push_back(new RooCatType(label, index));
 
@@ -247,7 +247,7 @@ const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, Int_t i
 ////////////////////////////////////////////////////////////////////////////////
 /// Define new state with given name and index number.
 
-const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
+const RooCatType* RooAbsCategory::defineType(const char* label, RooAbsCategory::value_type index)
 {
   if (isValidIndex(index)) {
     coutE(InputArguments) << "RooAbsCategory::defineType(" << GetName() << "): index "
@@ -303,7 +303,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
 ////////////////////////////////////////////////////////////////////////////////
 /// Find our type corresponding to the specified index, or return 0 for no match.
 
-const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
+const RooCatType* RooAbsCategory::lookupType(RooAbsCategory::value_type index, Bool_t printError) const
 {
   for (const auto type : _types) {
     if(*type == index) return type; // delegate comparison to RooCatType
@@ -328,7 +328,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
 
   // Try if label represents integer number
   char* endptr ;
-  Int_t idx=strtol(label,&endptr,10)  ;
+  RooAbsCategory::value_type idx=strtol(label,&endptr,10)  ;
   if (endptr==label+strlen(label)) {
     for (const auto type : _types) {
        if(*type == idx) return type; // delegate comparison to RooCatType
