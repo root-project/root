@@ -40,40 +40,6 @@ class RPageSink;
 class RPageSource;
 }
 
-namespace Detail {
-
-// clang-format off
-/**
-\class ROOT::Experimental::RNTuple
-\ingroup NTuple
-\brief The RNTuple represents a live dataset, whose structure is defined by an RNTupleModel
-
-RNTuple connects the static information of the RNTupleModel to a source or sink on physical storage.
-Reading and writing requires use of the corresponding derived class RNTupleReader or RNTupleWriter.
-RNTuple writes only complete entries (rows of the data set).  The entry itself is not kept within the
-RNTuple, which allows for multiple concurrent entries for the same RNTuple.  Besides reading an entire entry,
-the RNTuple can expose views that read only specific fields.
-*/
-// clang-format on
-class RNTuple {
-protected:
-   std::unique_ptr<RNTupleModel> fModel;
-   /// The number of entries is constant for reading and reflects the sum of Fill() operations when writing
-   NTupleSize_t fNEntries;
-
-   /// Only the derived RNTupleReader and RNTupleWriter can be instantiated
-   explicit RNTuple(std::unique_ptr<RNTupleModel> model);
-
-public:
-   RNTuple(const RNTuple&) = delete;
-   RNTuple& operator =(const RNTuple&) = delete;
-   ~RNTuple();
-
-   RNTupleModel* GetModel() { return fModel.get(); }
-}; // RNTuple
-
-} // namespace Detail
-
 
 /**
  * Listing of the different options that can be printed by RNTupleReader::GetInfo()
@@ -104,9 +70,11 @@ only a subset of the fields in the ntuple. The ntuple model is used when reading
 Individual fields can be read as well by instantiating a tree view.
 */
 // clang-format on
-class RNTupleReader : public Detail::RNTuple {
+class RNTupleReader {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
+   /// Needs to be destructed before fSource
+   std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
 
    void ConnectModel();
@@ -132,8 +100,8 @@ public:
 
 
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
-                                             std::string_view ntupleName,
-                                             std::string_view storage);
+                                              std::string_view ntupleName,
+                                              std::string_view storage);
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage);
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
@@ -143,7 +111,8 @@ public:
    std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
-   NTupleSize_t GetNEntries() const { return fNEntries; }
+   RNTupleModel *GetModel() { return fModel.get(); }
+   NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
@@ -164,7 +133,7 @@ public:
       }
    }
 
-   RNTupleGlobalRange GetViewRange() { return RNTupleGlobalRange(0, fNEntries); }
+   RNTupleGlobalRange GetViewRange() { return RNTupleGlobalRange(0, GetNEntries()); }
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
@@ -180,7 +149,7 @@ public:
    }
 
    RIterator begin() { return RIterator(0); }
-   RIterator end() { return RIterator(fNEntries); }
+   RIterator end() { return RIterator(GetNEntries()); }
 
    void EnableMetrics() { fMetrics.Enable(); }
 };
@@ -197,12 +166,15 @@ writes data into the corresponding column page buffers.  Writing of the buffers 
 triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception is thrown.
 */
 // clang-format on
-class RNTupleWriter : public Detail::RNTuple {
+class RNTupleWriter {
 private:
    static constexpr NTupleSize_t kDefaultClusterSizeEntries = 64000;
    std::unique_ptr<Detail::RPageSink> fSink;
+   /// Needs to be destructed before fSink
+   std::unique_ptr<RNTupleModel> fModel;
    NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
+   NTupleSize_t fNEntries;
 
 public:
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,

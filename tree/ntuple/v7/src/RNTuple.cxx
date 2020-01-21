@@ -31,18 +31,6 @@
 #include <TError.h>
 
 
-ROOT::Experimental::Detail::RNTuple::RNTuple(std::unique_ptr<ROOT::Experimental::RNTupleModel> model)
-   : fModel(std::move(model))
-   , fNEntries(0)
-{
-}
-
-ROOT::Experimental::Detail::RNTuple::~RNTuple()
-{
-}
-
-//------------------------------------------------------------------------------
-
 void ROOT::Experimental::RNTupleReader::ConnectModel() {
    std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> fieldPtr2Id;
    fieldPtr2Id[fModel->GetRootField()] = fSource->GetDescriptor().FindFieldId("", kInvalidDescriptorId);
@@ -58,32 +46,28 @@ void ROOT::Experimental::RNTupleReader::ConnectModel() {
 ROOT::Experimental::RNTupleReader::RNTupleReader(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RNTuple(std::move(model))
-   , fSource(std::move(source))
+   : fSource(std::move(source))
+   , fModel(std::move(model))
    , fMetrics("RNTupleReader")
 {
    fSource->Attach();
    ConnectModel();
-   fNEntries = fSource->GetNEntries();
    fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> source)
-   : ROOT::Experimental::Detail::RNTuple(nullptr)
-   , fSource(std::move(source))
+   : fSource(std::move(source))
+   , fModel(nullptr)
    , fMetrics("RNTupleReader")
 {
    fSource->Attach();
    fModel = fSource->GetDescriptor().GenerateModel();
    ConnectModel();
-   fNEntries = fSource->GetNEntries();
    fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader()
 {
-   // needs to be destructed before the page source
-   fModel = nullptr;
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::Open(
@@ -192,10 +176,11 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> sink)
-   : ROOT::Experimental::Detail::RNTuple(std::move(model))
-   , fSink(std::move(sink))
+   : fSink(std::move(sink))
+   , fModel(std::move(model))
    , fClusterSizeEntries(kDefaultClusterSizeEntries)
    , fLastCommitted(0)
+   , fNEntries(0)
 {
    fSink->Create(*fModel.get());
 }
@@ -204,8 +189,6 @@ ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
    CommitCluster();
    fSink->CommitDataset();
-   // needs to be destructed before the page sink
-   fModel = nullptr;
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWriter::Recreate(
