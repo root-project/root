@@ -134,9 +134,9 @@ private:
 #ifdef NDEBUG
     return static_cast<RooAbsRealLValue*>(_arg);
 #else
-    auto arg = dynamic_cast<RooAbsRealLValue*>(_arg);
-    assert(arg);
-    return arg;
+    auto theArg = dynamic_cast<RooAbsRealLValue*>(_arg);
+    assert(theArg);
+    return theArg;
 #endif
   }
 
