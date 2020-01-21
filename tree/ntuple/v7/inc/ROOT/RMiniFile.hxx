@@ -43,6 +43,9 @@ The class points to the header and footer keys, which in turn have the reference
 Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
 Byte offset references in the RNTuple header and footer reference directly the data part of page records,
 skipping the TFile key part.
+
+While the class is central to anchoring an RNTuple in a TFile, it is an internal detail not exposed to users.
+Note that there is no user-facing RNTuple class but RNTupleReader and RNTupleWriter.
 */
 // clang-format on
 struct RNTuple {
