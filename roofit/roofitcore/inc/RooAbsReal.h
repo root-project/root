@@ -58,6 +58,8 @@ class TH3F;
 
 class RooAbsReal : public RooAbsArg {
 public:
+  using value_type = double;
+
   // Constructors, assignment etc
   RooAbsReal() ;
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;

@@ -34,11 +34,9 @@ partitions in parallel executing processes and a posteriori
 combined in the main thread.
 **/
 
+#include "RooAbsTestStatistic.h"
 
 #include "RooFit.h"
-#include "Riostream.h"
-
-#include "RooAbsTestStatistic.h"
 #include "RooAbsPdf.h"
 #include "RooSimultaneous.h"
 #include "RooAbsData.h"
@@ -48,9 +46,12 @@ combined in the main thread.
 #include "RooRealMPFE.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
-#include "TTimeStamp.h"
 #include "RooProdPdf.h"
 #include "RooRealSumPdf.h"
+#include "RooAbsCategoryLValue.h"
+
+#include "TTimeStamp.h"
+
 #include <string>
 
 using namespace std;

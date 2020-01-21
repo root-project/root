@@ -56,6 +56,26 @@ The following people have contributed to this new version:
 
 ## RooFit Libraries
 
+### Type safe proxies to RooFit objects
+RooFit's proxy classes have been modernised. The new class `RooProxy` allows for access to other RooFit objects
+similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
+accessed like this:
+    RooAbsArg* absArg = realProxy.absArg();
+    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg);
+    assert(pdf); // This should work, but the proxy doesn't have a way to check
+    pdf->fitTo(...);
+That is, a `RooRealProxy` stores a pointer to a RooAbsArg, and this pointer has to be casted. There was no type
+safety, *i.e.* any object deriving from RooAbsArg could be stored in that proxy, and the user had to take care
+of ensuring the correct types.
+Now, if the class uses
+    RooProxy<RooAbsPdf> pdfProxy;
+instead of
+    RooRealProxy realProxy;
+the above code can be simplified to
+    pdfProxy->fitTo(...);
+
+Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooProxy.html) for `RooProxy` for
+more information on how to modernise old code.
 
 ## 2D Graphics Libraries
 

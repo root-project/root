@@ -61,7 +61,7 @@ protected:
 
   friend class RooConvGenContext ;
   friend class RooAddModel ;
-  RooLVarProxy x ;                   // Dependent/convolution variable
+  RooProxy<RooAbsRealLValue> x;                   // Dependent/convolution variable
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 //  Bool_t traceEvalHook(Double_t value) const ;

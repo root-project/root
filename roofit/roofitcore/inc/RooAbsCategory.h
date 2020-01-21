@@ -19,6 +19,7 @@
 #include "RooAbsArg.h"
 #include "RooCatType.h"
 #include "TIterator.h"
+#include "RooSpan.h"
 
 class TTree ;
 class RooArgSet ;
@@ -28,6 +29,9 @@ class RooVectorDataStore ;
 
 class RooAbsCategory : public RooAbsArg {
 public:
+  /// The type used to denote a specific category state.
+  using value_type = int;
+
   // Constructors, assignment etc.
   RooAbsCategory() : _byteValue(0), _treeVar(false) { };
   RooAbsCategory(const char *name, const char *title);
@@ -35,19 +39,23 @@ public:
   virtual ~RooAbsCategory();
   
   // Value accessors
-  virtual Int_t getIndex() const ;
+  virtual value_type getIndex() const ;
+  /// Retrieve a batch of category values for events in the range [begin, begin+batchSize).
+  virtual RooSpan<const value_type> getValBatch(std::size_t /*begin*/, std::size_t /*batchSize*/) const {
+    throw std::logic_error("Batch values are not implemented for RooAbsCategory.");
+  }
   virtual const char* getLabel() const ;
-  Bool_t operator==(Int_t index) const ;
-  Bool_t operator!=(Int_t index) {  return !operator==(index);}
+  Bool_t operator==(value_type index) const ;
+  Bool_t operator!=(value_type index) {  return !operator==(index);}
   Bool_t operator==(const char* label) const ;
   Bool_t operator!=(const char* label) { return !operator==(label);}
   virtual Bool_t operator==(const RooAbsArg& other) const ;
   Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
   virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
   
-  Bool_t isValidIndex(Int_t index) const ;
+  Bool_t isValidIndex(value_type index) const ;
   Bool_t isValidLabel(const char* label) const ;  
-  const RooCatType* lookupType(Int_t index, Bool_t printError=kFALSE) const ;
+  const RooCatType* lookupType(value_type index, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const char* label, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const RooCatType& type, Bool_t printError=kFALSE) const ;
   /// \deprecated Iterator over types. Use range-based for loops instead.
@@ -103,8 +111,8 @@ protected:
 
   // Type definition management
   const RooCatType* defineType(const char* label) ;
-  const RooCatType* defineType(const char* label, Int_t index) ;
-  const RooCatType* defineTypeUnchecked(const char* label, Int_t index) ;
+  const RooCatType* defineType(const char* label, value_type index) ;
+  const RooCatType* defineTypeUnchecked(const char* label, value_type index) ;
   const RooCatType* getOrdinal(UInt_t n, const char* rangeName=0) const;
   void clearTypes() ;
 
