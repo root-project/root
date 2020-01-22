@@ -34,6 +34,7 @@ The following people have contributed to this new version:
  Jan Knedlik, GSI,\
  Philip Leindecker, CERN/SFT,\
  Sergey Linev, GSI,\
+ Alfonso Luis Castano Marin, UMU,\
  Pere Mato, CERN/SFT,\
  Emmanouil Michalainas, AUTh,\
  Lorenzo Moneta, CERN/SFT,\
@@ -120,6 +121,23 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 * Allow user to change the type of the content of a TClonesArray.
 * Avoid deleted memory access in `MakeProject` and in handling of
  `I/O customization rules`.
+
+### Compression algorithms
+
+* Added a new compression algorithm ZSTD [https://github.com/facebook/zstd.git], a dictionary-type algorithm (LZ77) with large search window and fast implementations of entropy coding stage, using either very fast Finite State Entropy (tANS) or Huffman coding. ZSTD offers a *better compression ratio* and *faster decompression speed* comparing to ZLIB. Its decompression speed is 2x faster then ZLIB and at least 6x faster comparing to LZMA. ZSTD provides a wide range of compression levels, and after evaluation we recommend to use for your purposes compression level 5 (or 6). 
+  To use ZSTD please use next settings:
+  ```
+   root [1] _file0->SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm::kZSTD)
+   root [2] _file0->SetCompressionLevel(ROOT::RCompressionSetting::ELevel::kDefaultZSTD)
+  ```
+  or
+  ```
+  root [3] _file0->SetCompressionSettings(505)
+  ```
+  or
+  ```
+  root [3] _file0->SetCompressionSettings(ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose)
+  ```
 
 ## TTree Libraries
 
@@ -367,6 +385,7 @@ The following builtins have been updated:
 - VecCore 0.6.0
 - XRootD 4.10.0
 - Zstd 1.4.0
+- LZ4 1.9.2
 
 ## PyROOT
 
