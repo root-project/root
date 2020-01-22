@@ -111,6 +111,14 @@ public:
    static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) {
       return Tensor_t( buffer, {c,h*w,n}, GetTensorLayout());
    }
+   static Tensor_t CreateTensor(size_t b, size_t t, size_t w)
+   {
+      return Tensor_t({t, w, b}, GetTensorLayout());
+   }
+   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t b, size_t t, size_t w)
+   {
+      return Tensor_t(buffer, {t, w, b}, GetTensorLayout());
+   }
    // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes
    // this function is used by the optimizers to stgore intermidiate weights representations
    static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
@@ -403,6 +411,7 @@ public:
    static void InitializeUniform(Matrix_t & A);
    static void InitializeIdentity(Matrix_t & A);
    static void InitializeZero(Matrix_t & A);
+   static void InitializeZero(Tensor_t &A);
    static void InitializeGlorotNormal(Matrix_t & A);
    static void InitializeGlorotUniform(Matrix_t & A);
 
@@ -635,8 +644,8 @@ public:
                           RNNWorkspace_t &/* workspace */, bool /* isTraining */) {}
 
    static void RNNBackward(const Tensor_t &/* x */, const Matrix_t &/* hx */, const Matrix_t &/* cx */, const Tensor_t &/* y */,
-                           const Tensor_t &/* dy */, const Matrix_t &/* dhy */, const Matrix_t &/* dcy */, const Matrix_t &/* weights */,
-                           Tensor_t &/* dx */, Matrix_t &/* dhx */, Matrix_t &/* dcx */, Matrix_t &/* dw */, const RNNDescriptors_t &/* desc */,
+                           const Tensor_t &/* dy */, const Matrix_t &/* dhy */, const Matrix_t &/* dcy */, const Tensor_t &/* weights */,
+                           Tensor_t &/* dx */, Matrix_t &/* dhx */, Matrix_t &/* dcx */, Tensor_t &/* dw */, const RNNDescriptors_t &/* desc */,
                            RNNWorkspace_t &/* workspace */) {}
    ///@}
 

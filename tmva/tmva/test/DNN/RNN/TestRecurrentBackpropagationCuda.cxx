@@ -24,7 +24,8 @@ int main()
 
    bool fail = false;
    if (debug) {
-      fail |= testRecurrentBackpropagation<Architecture_t>(2, 1, 3, 4, 1e-5, {true, true, false}, true);
+      //fail |= testRecurrentBackpropagation<Architecture_t>(2, 1, 1, 3, 1e-5, {true, true, false}, true);
+      fail |= testRecurrentBackpropagation<Architecture_t>(2, 1, 4, 5, 1e-5, {true, true, false}, true);
       return fail;
    }
 

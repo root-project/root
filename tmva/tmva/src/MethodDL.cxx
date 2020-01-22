@@ -936,6 +936,7 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
    int inputSize = 0;
    int timeSteps = 0;
    bool rememberState = false;
+   bool returnSequence = false;
 
    // Split layer details
    TObjArray *subStrings = layerString.Tokenize(delim);
@@ -965,17 +966,22 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
             TString strrememberState(token->GetString());
             rememberState = (bool) strrememberState.Atoi();
          } break;
+         case 5: // return full output sequence (1 or 0)
+         {
+            TString str(token->GetString());
+            returnSequence = (bool)str.Atoi();
+         } break;
       }
       ++idxToken;
    }
 
    // Add the recurrent layer, initialize the weights and biases and copy
    TBasicRNNLayer<Architecture_t> *basicRNNLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize,
-                                                                        timeSteps, rememberState);
+                                                                        timeSteps, rememberState, returnSequence);
    basicRNNLayer->Initialize();
 
    // Add same layer to fNet
-   if (fBuildNet) fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
+   if (fBuildNet) fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
 
    //TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
 
@@ -2261,12 +2267,14 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          // read RNN layer info
          size_t  stateSize,inputSize, timeSteps = 0;
          int rememberState= 0;
+         int returnSequence = 0;
          gTools().ReadAttr(layerXML, "StateSize", stateSize);
          gTools().ReadAttr(layerXML, "InputSize", inputSize);
          gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
          gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         gTools().ReadAttr(layerXML, "ReturnSequence", returnSequence);
 
-         fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
+         fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
 
       }
        // BatchNorm Layer
