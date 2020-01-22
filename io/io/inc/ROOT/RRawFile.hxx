@@ -164,7 +164,7 @@ public:
    /// Returns the size of the file
    std::uint64_t GetSize();
 
-   /// Opens the file if necessary and calls DoReadV
+   /// Opens the file if necessary and calls ReadVImpl
    void ReadV(RIOVec *ioVec, unsigned int nReq);
 
    /// Memory mapping according to POSIX standard; in particular, new mappings of the same range replace older ones.
