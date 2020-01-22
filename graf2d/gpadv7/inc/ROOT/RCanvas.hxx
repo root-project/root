@@ -115,7 +115,7 @@ public:
    void Run(double tm = 0.);
 
    /// Save canvas in image file
-   bool SaveAs(const std::string &filename, int width = 800, int height = 600);
+   bool SaveAs(const std::string &filename);
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }
