@@ -197,15 +197,15 @@ TEST(RNTupleShow, Empty)
    }
    auto model2 = RNTupleModel::Create();
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
-   
+
    std::ostringstream os;
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
-   std::string fString{"The NTuple is empty.\n"};
+   std::string fString{"{}\n"};
    EXPECT_EQ(fString, os.str());
-   
+
    std::ostringstream os1;
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
-   std::string fString1{"The NTuple is empty.\n"};
+   std::string fString1{"{}\n"};
    EXPECT_EQ(fString1, os1.str());
 }
 
@@ -226,7 +226,7 @@ TEST(RNTupleShow, BasicTypes)
       auto fieldbool = model->MakeField<bool>("boolean");
       auto fieldchar = model->MakeField<uint8_t>("uint8");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      
+
       *fieldPt = 5.0f;
       *fielddb = 9.99;
       *fieldint = -4;
@@ -236,7 +236,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldbool = true;
       *fieldchar = 97;
       ntuple->Fill();
-      
+
       *fieldPt = 8.5f;
       *fielddb = 9.998;
       *fieldint = -94;
@@ -257,7 +257,7 @@ TEST(RNTupleShow, BasicTypes)
    auto fieldbool = model2->MakeField<bool>("boolean");
    auto fieldchar = model2->MakeField<uint8_t>("uint8");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
-   
+
    std::ostringstream os;
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
@@ -272,7 +272,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint8\": 'a'\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
-   
+
    std::ostringstream os1;
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
@@ -287,7 +287,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint8\": 'b'\n"
       + "}\n" };
    EXPECT_EQ(fString1, os1.str());
-   
+
    std::ostringstream os2;
    ntuple2->Show(10, ROOT::Experimental::ENTupleFormat::kJSON, os2);
    std::string fString2{ "Index exceeds maximum number of entries. (2)\n" };
@@ -305,12 +305,12 @@ TEST(RNTupleShow, VectorFields)
       auto fieldFloatVecVec = model->MakeField<std::vector<std::vector<float>>>("floatVecVec");
       auto fieldBoolVecVec = model->MakeField<std::vector<std::vector<bool>>>("booleanVecVec");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      
+
       *fieldIntVec = std::vector<int>{4, 5, 6};
       *fieldFloatVecVec = std::vector<std::vector<float>>{std::vector<float>{0.1, 0.2}, std::vector<float>{1.1, 1.2}};
       *fieldBoolVecVec = std::vector<std::vector<bool>>{std::vector<bool>{false, true, false}, std::vector<bool>{false, true}, std::vector<bool>{true, false, false }};
       ntuple->Fill();
-      
+
       fieldIntVec->emplace_back(7);
       fieldFloatVecVec->emplace_back(std::vector<float>{2.2, 2.3});
       fieldBoolVecVec->emplace_back(std::vector<bool>{false, true});
@@ -321,7 +321,7 @@ TEST(RNTupleShow, VectorFields)
    auto fieldFloatVecVec = model2->MakeField<std::vector<std::vector<float>>>("floatVecVec");
    auto fieldBoolVecVec = model2->MakeField<std::vector<std::vector<bool>>>("booleanVecVec");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
-   
+
    std::ostringstream os;
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
@@ -331,7 +331,7 @@ TEST(RNTupleShow, VectorFields)
       + "  \"booleanVecVec\": {{ false, true, false }, { false, true }, { true, false, false }}\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
-   
+
    std::ostringstream os1;
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
@@ -358,7 +358,7 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       auto arrayOfArray = model->MakeField<std::array<std::array<bool, 2>, 3>>("ArrayOfArray");
       auto arrayVecfield = model->MakeField<std::vector<std::array<float, 2>>>("VecOfArray");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      
+
       *Intarrayfield = {1, 3};
       *Floatarrayfield = {3.5f, 4.6f, 5.7f};
       *Vecarrayfield = {std::vector<double>{1, 2}, std::vector<double>{4, 5}, std::vector<double>{7, 8, 9}, std::vector<double>{11} };
@@ -367,7 +367,7 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       *arrayOfArray = { std::array<bool,2>{ true, false }, std::array<bool,2>{ false, true }, std::array<bool,2>{ false, false } };
       *arrayVecfield = { std::array<float, 2>{ 0, 1 }, std::array<float, 2>{ 2, 3 }, std::array<float, 2>{ 4, 5 } };
       ntuple->Fill();
-      
+
       *Intarrayfield = {2, 5};
       *Floatarrayfield = {2.3f, 5.7f, 11.13f};
       *Vecarrayfield = {std::vector<double>{17, 19}, std::vector<double>{23, 29}, std::vector<double>{31, 37, 41}, std::vector<double>{43} };
@@ -386,7 +386,7 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
    auto arrayOfArray = model2->MakeField<std::array<std::array<bool, 2>, 3>>("ArrayOfArray");
    auto arrayVecfield = model2->MakeField<std::vector<std::array<float, 2>>>("VecOfArray");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
-   
+
    std::ostringstream os;
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
@@ -400,7 +400,7 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       + "  \"VecOfArray\": {[ 0, 1 ], [ 2, 3 ], [ 4, 5 ]}\n"
       + "}\n"};
    EXPECT_EQ(fString, os.str());
-   
+
    std::ostringstream os1;
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
@@ -427,7 +427,7 @@ TEST(RNTupleShow, ObjectFields)
       auto customStructVec = model->MakeField<std::vector<CustomStruct>>("CustomStructVec");
       auto customStructArray = model->MakeField<std::array<CustomStruct, 2>>("CustomStructArray");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      
+
       *customStructfield = CustomStruct{4.1f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String"};
       *customStructVec = {
          CustomStruct{4.2f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example2String"},
@@ -439,7 +439,7 @@ TEST(RNTupleShow, ObjectFields)
       CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}
       };
       ntuple->Fill();
-      
+
       *customStructfield = CustomStruct{5.1f, std::vector<float>{3.1f, 3.2f, 3.3f}, std::vector<std::vector<float>>{{4.1f, 4.2f, 4.3f}, {5.1f, 5.2f, 5.3f}}, "AnotherString"};
       *customStructVec = {
          CustomStruct{5.2f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example5String"},
@@ -457,7 +457,7 @@ TEST(RNTupleShow, ObjectFields)
    auto customStructVec = model2->MakeField<std::vector<CustomStruct>>("CustomStructVec");
    auto customStructArray = model2->MakeField<std::array<CustomStruct, 2>>("CustomStructArray");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
-   
+
    std::ostringstream os;
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
@@ -505,7 +505,7 @@ TEST(RNTupleShow, ObjectFields)
       + "  ]\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
-   
+
    std::ostringstream os1;
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
