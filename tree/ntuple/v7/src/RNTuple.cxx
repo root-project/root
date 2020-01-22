@@ -118,7 +118,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
    //prepVisitor traverses through all fields to gather information needed for printing.
    RPrepareVisitor prepVisitor(0, 0);
    //printVisitor traverses through all fields to do the actual printing.
-   RPrintVisitor printVisitor(output);
+   RPrintSchemaVisitor printVisitor(output);
    switch (what) {
    case ENTupleInfo::kSummary:
       for (int i = 0; i < (width/2 + width%2 - 4); ++i)
@@ -162,16 +162,24 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
       return;
    }
 
-   if (index >= fNEntries) {
-      throw std::runtime_error(std::string("index exceeds maximum number of entries. (") +
-                               std::to_string(fNEntries) + ")");
-   }
+   auto entry = fModel->CreateEntry();
+   LoadEntry(index, entry.get());
 
    RValueVisitor visitor(output, this, index, false, 0);
+
    switch(format) {
-      case ENTupleFormat::kJSON:
-         GetModel()->GetRootField()->TraverseValueVisitor(visitor, 0);
+      case ENTupleFormat::kJSON: {
+         output << "{";
+         bool isEmpty = true;
+         for (auto val : *entry) {
+
+            isEmpty = false;
+         }
+         if (!isEmpty)
+            output << std::endl;
+         output << "}";
          break;
+      }
       default:
          // Unhandled case, internal error
          R__ASSERT(false);

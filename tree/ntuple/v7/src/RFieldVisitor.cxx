@@ -38,22 +38,22 @@ void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase & 
 }
 
 
-//---------------------------- RPrintVisitor -----------------------------------
+//---------------------------- RPrintSchemaVisitor -----------------------------
 
 
-void ROOT::Experimental::RPrintVisitor::SetDeepestLevel(int d)
+void ROOT::Experimental::RPrintSchemaVisitor::SetDeepestLevel(int d)
 {
    fDeepestLevel = d;
    fFlagForVerticalLines.resize(d - 1);
 }
 
-void ROOT::Experimental::RPrintVisitor::SetNumFields(int n)
+void ROOT::Experimental::RPrintSchemaVisitor::SetNumFields(int n)
 {
    fNumFields = n;
    SetAvailableSpaceForStrings();
 }
 
-std::string ROOT::Experimental::RPrintVisitor::MakeKeyString(const Detail::RFieldBase &field, int level)
+std::string ROOT::Experimental::RPrintSchemaVisitor::MakeKeyString(const Detail::RFieldBase &field, int level)
 {
    std::string result{""};
    if (level == 1) {
@@ -78,14 +78,14 @@ std::string ROOT::Experimental::RPrintVisitor::MakeKeyString(const Detail::RFiel
    return result;
 }
 
-std::string ROOT::Experimental::RPrintVisitor::MakeValueString(const Detail::RFieldBase &field)
+std::string ROOT::Experimental::RPrintSchemaVisitor::MakeValueString(const Detail::RFieldBase &field)
 {
    std::string nameAndType{field.GetName() + " (" + field.GetType() + ")"};
    return nameAndType;
 }
 
 // Entire function only prints 1 Line, when if statement is disregarded.
-void ROOT::Experimental::RPrintVisitor::VisitField(const Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBase &field, int level)
 {
    if (level == 1) {
       for (int i = 0; i < fWidth; ++i) {

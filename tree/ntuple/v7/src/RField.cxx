@@ -200,7 +200,7 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
    child->fParent = this;
-   child->SetOrder(fSubFields.size()+1);
+   child->fOrder = fSubFields.size() + 1;
    fSubFields.emplace_back(std::move(child));
 }
 
@@ -220,7 +220,8 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 
 void ROOT::Experimental::Detail::RFieldBase::TraverseVisitor(RNTupleVisitor &visitor, int level) const
 {
-   // The level is passed as a parameter so that AcceptVisitor() can access to the relative level of the field instead of the absolute one.
+   // The level is passed as a parameter so that AcceptVisitor() can access to the relative level of the field
+   // instead of the absolute one.
    this->AcceptVisitor(visitor, level);
    ++level;
    for (const auto &fieldPtr: fSubFields) {
