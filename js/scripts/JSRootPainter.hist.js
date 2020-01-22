@@ -1631,8 +1631,8 @@
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;
-      if (this.Axis && d.check("RX")) this.RevX = true;
-      if (this.Axis && d.check("RY")) this.RevY = true;
+      if ((this.Axis || this.Color) && d.check("RX")) this.RevX = true;
+      if ((this.Axis || this.Color) && d.check("RY")) this.RevY = true;
 
       if (d.check('B1')) { this.BarStyle = 1; this.BaseLine = 0; this.Hist = false; this.need_fillcol = true; }
       if (d.check('B')) { this.BarStyle = 1; this.Hist = false; this.need_fillcol = true; }
@@ -6024,7 +6024,7 @@
                ttrect.attr("x", p.x1)
                      .attr("width", p.x2-p.x1)
                      .attr("y", p.yy1)
-                     .attr("height", p.yy2- p.yy1)
+                     .attr("height", p.yy2-p.yy1)
                      .style("opacity", "0.7")
                      .property("current_bin", i);
          }
@@ -6038,14 +6038,25 @@
       }
 
       var i, j, binz = 0, colindx = null,
-          i1, i2, j1, j2, x1, x2, y1, y2;
+          i1, i2, j1, j2, x1, x2, y1, y2,
+          pmain = this.frame_painter();
 
       // search bins position
-      for (i = h.i1; i < h.i2; ++i)
-         if ((pnt.x>=h.grx[i]) && (pnt.x<=h.grx[i+1])) break;
+      if (pmain.reverse_x) {
+         for (i = h.i1; i < h.i2; ++i)
+            if ((pnt.x<=h.grx[i]) && (pnt.x>=h.grx[i+1])) break;
+      } else {
+         for (i = h.i1; i < h.i2; ++i)
+            if ((pnt.x>=h.grx[i]) && (pnt.x<=h.grx[i+1])) break;
+      }
 
-      for (j = h.j1; j < h.j2; ++j)
-         if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) break;
+      if (pmain.reverse_y) {
+         for (j = h.j1; j < h.j2; ++j)
+            if ((pnt.y<=h.gry[j+1]) && (pnt.y>=h.gry[j])) break;
+      } else {
+         for (j = h.j1; j < h.j2; ++j)
+            if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) break;
+      }
 
       if ((i < h.i2) && (j < h.j2)) {
 
@@ -6062,7 +6073,16 @@
             x1 = Math.round(x1 + dx*h.xbar1);
             y2 = Math.round(y1 + dy*h.ybar2);
             y1 = Math.round(y1 + dy*h.ybar1);
-            if ((pnt.x<x1) || (pnt.x>=x2) || (pnt.y<y1) || (pnt.y>=y2)) match = false;
+            if (pmain.reverse_x) {
+               if ((pnt.x>x1) || (pnt.x<=x2)) match = false;
+            } else {
+               if ((pnt.x<x1) || (pnt.x>=x2)) match = false;
+            }
+            if (pmain.reverse_y) {
+               if ((pnt.y>y1) || (pnt.y<=y2)) match = false;
+            } else {
+               if ((pnt.y<y1) || (pnt.y>=y2)) match = false;
+            }
          }
 
          binz = histo.getBinContent(i+1,j+1);
@@ -6096,7 +6116,7 @@
          res.changed = true;
       } else {
          if (ttrect.empty())
-            ttrect = this.draw_g.append("svg:rect")
+            ttrect = this.draw_g.append("svg:path")
                                 .attr("class","tooltip_bin h1bin")
                                 .style("pointer-events","none");
 
@@ -6125,10 +6145,7 @@
          res.changed = ttrect.property("current_bin") !== binid;
 
          if (res.changed)
-            ttrect.attr("x", x1)
-                  .attr("width", x2 - x1)
-                  .attr("y", y1)
-                  .attr("height", y2 - y1)
+            ttrect.attr("d", "M"+x1+","+y1 + "h"+(x2-x1) + "v"+(y2-y1) + "h"+(x1-x2) + "z")
                   .style("opacity", "0.7")
                   .property("current_bin", binid);
 

@@ -2179,8 +2179,8 @@
       d3.event.preventDefault();
       this.clearInteractiveElements();
 
-      var itemx = { name: "x", ignore: false },
-          itemy = { name: "y", ignore: !this.AllowDefaultYZooming() },
+      var itemx = { name: "x", reverse: this.reverse_x, ignore: false },
+          itemy = { name: "y", reverse: this.reverse_y, ignore: !this.AllowDefaultYZooming() },
           cur = d3.mouse(this.svg_frame().node()),
           w = this.frame_width(), h = this.frame_height();
 
@@ -2250,6 +2250,8 @@
       }
 
       if (item.min >= item.max) return;
+
+      if (item.reverse) dmin = 1 - dmin;
 
       if ((dmin>0) && (dmin<1)) {
          if (this['log'+item.name]) {
@@ -3746,7 +3748,7 @@
    }
 
    TPadPainter.prototype.AddButton = function(_btn, _tooltip, _funcname, _keyname) {
-      if (!JSROOT.gStyle.ToolBar) return;
+      if (!JSROOT.gStyle.ToolBar || JSROOT.BatchMode) return;
 
       if (!this._buttons) this._buttons = [];
       // check if there are duplications
@@ -4308,6 +4310,28 @@
       return painter;
    }
 
+   function drawPadSnapshot(divid, snap, opt) {
+
+      var painter = new TCanvasPainter(null);
+      painter.normal_canvas = false;
+      painter.batch_mode = JSROOT.BatchMode;
+
+      painter.SetDivId(divid, -1); // just assign id
+      painter.CreateCanvasSvg(0);
+      painter.SetDivId(divid);  // now add to painters list
+
+      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
+      if (JSROOT.gStyle.ContextMenu)
+         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
+
+      if (painter.enlarge_main('verify'))
+         painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
+
+      painter.RedrawPadSnap(snap, function() { painter.ShowButtons(); painter.DrawingReady(); });
+
+      return painter;
+   }
+
    // JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPadDisplayItem", icon: "img_canvas", func: drawPad, opt: "" });
 
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
@@ -4325,6 +4349,7 @@
    JSROOT.v7.drawFrame = drawFrame;
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawCanvas = drawCanvas;
+   JSROOT.v7.drawPadSnapshot = drawPadSnapshot;
 
    return JSROOT;
 
