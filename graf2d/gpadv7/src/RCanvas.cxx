@@ -130,16 +130,21 @@ void ROOT::Experimental::RCanvas::Hide()
 //////////////////////////////////////////////////////////////////////////
 /// Create image file for the canvas
 /// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg) and PNG (extension .png)
-/// \param async specifies if file can be created asynchronous to the caller thread
-/// When operation completed, callback function is called
 
-void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
+bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, int width, int height)
 {
    if (!fPainter)
       fPainter = Internal::RVirtualCanvasPainter::Create(*this);
 
-   if (!fModified)
-      fModified = 1; // 0 is special value, means no changes and no drawings
+   if (!fPainter)
+      return false;
+
+   return fPainter->ProduceBatchOutput(filename, width, height);
+
+/*
+
+   if (fModified == 0)
+      fModified = 1;
 
    // TODO: for the future one have to ensure only batch connection is updated
    Update(); // ensure that snapshot is created
@@ -152,6 +157,7 @@ void ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, bool async
       fPainter->DoWhenReady("PNG", filename, async, callback);
    else if ((filename.find(".jpg") != std::string::npos) || (filename.find(".jpeg") != std::string::npos))
       fPainter->DoWhenReady("JPEG", filename, async, callback);
+*/
 }
 
 //////////////////////////////////////////////////////////////////////////
