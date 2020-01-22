@@ -79,7 +79,6 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
   _funcClone = 0 ;
 
   _normSet = 0 ;
-  _dataClone = 0 ;
   _projDeps = 0 ;
 
   _origFunc = 0 ;
@@ -121,7 +120,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
     _funcCloneSet = 0 ;
     _funcClone = 0 ;
     _normSet = 0 ;
-    _dataClone = 0 ;
     _projDeps = 0 ;    
     _origFunc = 0 ;
     _origData = 0 ;
@@ -149,7 +147,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     _funcCloneSet = 0 ;
     _funcClone = 0 ;
     _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;   
-    _dataClone = 0 ;
     _projDeps = 0 ;    
     _origFunc = 0 ;
     _origData = 0 ;
@@ -722,12 +719,10 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   cout << "RAOTS::setDataSlave(" << this << ") START" << endl ;
 /// Change dataset that is used to given one. If cloneData is kTRUE, a clone of
 /// in the input dataset is made.  If the test statistic was constructed with
-/// a range specification on the data, the cloneData argument is ignore and
+/// a range specification on the data, the cloneData argument is ignored and
 /// the data is always cloned.
-
 Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData, Bool_t ownNewData) 
 { 
 

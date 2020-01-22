@@ -75,7 +75,7 @@ protected:
 
   RooArgSet*  _normSet ; // Pointer to set with observables used for normalization
   RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function
-  RooAbsData* _dataClone ; // Pointer to internal clone if input data
+  RooAbsData* _dataClone{nullptr}; // Pointer to internal clone if input data
   RooAbsReal* _funcClone ; // Pointer to internal clone of input function
   RooArgSet*  _projDeps ; // Set of projected observable
   Bool_t      _ownData  ; // Do we own the dataset
