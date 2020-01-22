@@ -76,19 +76,19 @@ public:
 
 
 /**
- * Listing of the different options that can be returned by RNTupleReader::GetInfo()
+ * Listing of the different options that can be printed by RNTupleReader::GetInfo()
  */
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
    kStorageDetails, // size on storage, page sizes, compression factor, etc.
    kMetrics, // internals performance counters, requires that EnableMetrics() was called
 };
-   
+
 /**
-* Listing of the different options that can be returned by RNTupleReader::Show()
-*/
+ * Listing of the different entry output formats of RNTupleReader::Show()
+ */
 enum class ENTupleFormat {
-   kJSON,      // prints a single entry/row in JSON format.
+   kJSON, // prints a single entry/row in JSON format.
 };
 
 
@@ -147,10 +147,11 @@ public:
    const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
-   void PrintInfo(const ENTupleInfo format = ENTupleInfo::kSummary, std::ostream &output = std::cout);
+   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
 
-   /// Shows the values of the i-th entry/row, where i = index. format = ENTupleInfo::kJSON
-   /// (default) prints the output in JSON-like format.
+   /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
+   /// prints the output in JSON format.
+   /// Uses the visitor pattern to traverse through each field of the given entry.
    void Show(NTupleSize_t index, const ENTupleFormat format = ENTupleFormat::kJSON, std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
