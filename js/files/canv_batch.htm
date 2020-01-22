@@ -1,0 +1,20 @@
+<!--  file used in batch mode to produce images with headless chrome -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <title></title>
+   <script src="$jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
+</head>
+
+<body style="margin:0; padding:0; overflow:hidden">
+  <div id="drawing" style="width:$widthpx; height:$heightpx; overflow:hidden; margin:0; padding:0"></div>
+</body>
+
+<script type='text/javascript'>
+   JSROOT.BatchMode = true;
+   JSROOT.draw("drawing", JSROOT.JSONR_unref($draw_object), "");
+</script>
+</html>
+

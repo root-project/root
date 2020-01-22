@@ -131,7 +131,7 @@ void ROOT::Experimental::RCanvas::Hide()
 /// Create image file for the canvas
 /// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg) and PNG (extension .png)
 
-bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, int width, int height)
+bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
 {
    if (!fPainter)
       fPainter = Internal::RVirtualCanvasPainter::Create(*this);
@@ -139,7 +139,10 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename, int width,
    if (!fPainter)
       return false;
 
-   return fPainter->ProduceBatchOutput(filename, width, height);
+   auto width = fSize[0].fVal;
+   auto height = fSize[1].fVal;
+
+   return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
 
 /*
 
