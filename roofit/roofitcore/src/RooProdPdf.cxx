@@ -241,8 +241,9 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
 ///
 /// <table>
 /// <tr><th> Argument                 <th> Description
-/// <tr><td> `Conditional(pdfSet,depSet)` <td> Add PDF to product with condition that it
+/// <tr><td> `Conditional(pdfSet,depSet,depsAreCond=false)` <td> Add PDF to product with condition that it
 /// only be normalized over specified observables. Any remaining observables will be conditional observables.
+/// (Setting `depsAreCond` to true inverts this, so the observables in depSet will be the conditional observables.)
 /// </table>
 ///
 /// For example, given a PDF \f$ F(x,y) \f$ and \f$ G(y) \f$,
