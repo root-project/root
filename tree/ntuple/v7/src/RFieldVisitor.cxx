@@ -26,7 +26,20 @@
 #include <string>
 #include <vector>
 
-//---------------------------- RPrintVisitor ------------------------------------
+
+//----------------------------- RPrepareVisitor --------------------------------
+
+
+void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase & /*field*/, int level)
+{
+   ++fNumFields;
+   if (level > fDeepestLevel)
+      fDeepestLevel = level;
+}
+
+
+//---------------------------- RPrintVisitor -----------------------------------
+
 
 void ROOT::Experimental::RPrintVisitor::SetDeepestLevel(int d)
 {
@@ -85,15 +98,6 @@ void ROOT::Experimental::RPrintVisitor::VisitField(const Detail::RFieldBase &fie
    fOutput << " : ";
    fOutput << RNTupleFormatter::FitString(MakeValueString(field), fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
-}
-
-//---------------------- RPrepareVisitor -------------------------------
-
-void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase & /*field*/, int level)
-{
-   ++fNumFields;
-   if (level > fDeepestLevel)
-      fDeepestLevel = level;
 }
 
 //------------------------ RValueVisitor --------------------------------
@@ -312,7 +316,7 @@ void ROOT::Experimental::RValueVisitor::VisitStringField(const RField<std::strin
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUIntField(const RField<std::uint32_t> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitUInt32Field(const RField<std::uint32_t> &field, int level)
 {
    if (fPrintOnlyValue) {
       auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field));
@@ -425,7 +429,7 @@ void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &fie
 }
 
 // See RValueVisitor::VisitVectorField for comments
-void ROOT::Experimental::RValueVisitor::VisitBoolVecField(const RField<std::vector<bool>> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(const RField<std::vector<bool>> &field, int level)
 {
    if (fPrintOnlyValue) {
       fOutput << "{ ";
@@ -553,9 +557,10 @@ std::size_t ROOT::Experimental::RValueVisitor::ConvertClusterIndexToGlobalIndex(
    return globalIndex;
 }
 
-//------------------------ RNTupleFormatter -----------------------------
 
-// Returns std::string of form "SubFieldofRootFieldName. ... .ParentFieldName.FieldName"
+//---------------------------- RNTupleFormatter --------------------------------
+
+
 std::string ROOT::Experimental::RNTupleFormatter::FieldHierarchy(const Detail::RFieldBase &field)
 {
    std::string qualifiedName{field.GetName()};
@@ -569,7 +574,6 @@ std::string ROOT::Experimental::RNTupleFormatter::FieldHierarchy(const Detail::R
    return qualifiedName;
 }
 
-// E.g. ("ExampleString" , space= 8) => "Examp..."
 std::string ROOT::Experimental::RNTupleFormatter::FitString(const std::string &str, int availableSpace)
 {
    int strSize{static_cast<int>(str.size())};
@@ -580,7 +584,6 @@ std::string ROOT::Experimental::RNTupleFormatter::FitString(const std::string &s
    return std::string(str, 0, availableSpace - 3) + "...";
 }
 
-// Returns std::string of form "1" or "2.1.1"
 std::string
 ROOT::Experimental::RNTupleFormatter::HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
 {
