@@ -463,7 +463,7 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
 
 void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
 {
-   visitor.VisitUIntField(*this, level);
+   visitor.VisitUInt32Field(*this, level);
 }
 
 //------------------------------------------------------------------------------
@@ -762,7 +762,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(const Detail::R
 
 void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RNTupleVisitor &visitor, int level) const
 {
-   visitor.VisitBoolVecField(*this, level);
+   visitor.VisitVectorBoolField(*this, level);
 }
 
 

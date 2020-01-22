@@ -75,18 +75,9 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::Detail::RFieldFuse; // to connect the columns to a page storage
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
+
 private:
-   /// The field name relative to its parent field
-   std::string fName;
-   /// The C++ type captured by this field
-   std::string fType;
-   /// The role of this field in the data model structure
-   ENTupleStructure fStructure;
-   /// For fixed sized arrays, the array length
-   std::size_t fNRepetitions;
-   /// A field on a trivial type that maps as-is to a single column
-   bool fIsSimple;
-   /// Describes where the field is located inside the ntuple.
+   /// Describes where the field is located inside the ntuple schema.
    struct RLevelInfo {
    private:
       /// Tells how deep the field is in the ntuple. Rootfield has fLevel 0, direct subfield of Rootfield has fLevel 1, etc.
@@ -97,7 +88,7 @@ private:
       int fNumSiblingFields = 1;
       /// Children refers to elements of fSubField
       int fNumChildren = 0;
-      
+
    public:
       RLevelInfo() = default;
       RLevelInfo(const RFieldBase *field) : RLevelInfo() {
@@ -134,8 +125,20 @@ private:
          return fNumChildren;
       }
    };
+
+   /// The field name relative to its parent field
+   std::string fName;
+   /// The C++ type captured by this field
+   std::string fType;
+   /// The role of this field in the data model structure
+   ENTupleStructure fStructure;
+   /// For fixed sized arrays, the array length
+   std::size_t fNRepetitions;
+   /// A field on a trivial type that maps as-is to a single column
+   bool fIsSimple;
    /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
    int fOrder = 1;
+
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
