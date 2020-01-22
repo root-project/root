@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <string>
