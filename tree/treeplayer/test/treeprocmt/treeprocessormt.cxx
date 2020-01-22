@@ -217,7 +217,7 @@ TEST(TreeProcessorMT, LimitNTasks_CheckClusters)
    ROOT::DisableImplicitMT();
 }
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(_ENABLE_BROKEN_TESTS)
 TEST(TreeProcessorMT, PathName)
 {
    auto fname = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4mu.root";

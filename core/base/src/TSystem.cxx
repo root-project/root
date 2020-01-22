@@ -3941,6 +3941,12 @@ const char *TSystem::GetIncludePath()
 {
    fListPaths = fIncludePath;
 #ifndef _MSC_VER
+   // FIXME: This is a temporary fix for the following error with ACLiC
+   // (and this is apparently not needed anyway):
+   // 48: input_line_12:8:38: error: use of undeclared identifier 'IC'
+   // 48: "C:/Users/bellenot/build/debug/etc" -IC:/Users/bellenot/build/debug/etc//cling -IC:/Users/bellenot/build/debug/include"",
+   // 48:                                      ^
+   // 48: Error in <ACLiC>: Dictionary generation failed!
    fListPaths.Append(" ").Append(gInterpreter->GetIncludePath());
 #endif
    return fListPaths;

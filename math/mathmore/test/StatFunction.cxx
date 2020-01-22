@@ -109,6 +109,7 @@ void StatFunction::TestInverse1(RootFinder::EType algoType)
 }
 
 #ifndef _MSC_VER
+// FIXME: This code generates compilation errors in Math/Functor.h(182) on Windows
 void StatFunction::TestInverse2(RootFinder::EType algoType)
 {
    int maxitr = 2000;
