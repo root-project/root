@@ -191,7 +191,7 @@ static std::string MakeDepLibsPlatformIndependent(llvm::StringRef libs) {
    return llvm::StringRef(result).rtrim();
 }
 
-#if !defined(_MSC_VER) || defined(_ENABLE_BROKEN_TESTS)
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 // Check the interface computing the dependencies of a given library.
 TEST_F(TClingTests, GetSharedLibDeps)
 {
