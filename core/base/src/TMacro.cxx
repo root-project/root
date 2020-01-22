@@ -327,14 +327,14 @@ Int_t TMacro::Merge(TCollection *list)
    TMD5 *thischecksum = Checksum();
    TIter macros(list);
 
-   while (TObject* obj = macros()) {
+   while (TObject *obj = macros()) {
       if (!obj)
          continue;
 
       if (!obj->IsA()->InheritsFrom(TMacro::Class()))
          continue;
 
-      TMacro* m = (TMacro*) obj;
+      auto m = (TMacro*) obj;
       TMD5 *checksum = m->Checksum();
       if (!(*thischecksum == *checksum))
          Warning("Merge", Form("TMacro objects with name %s have different file content!", GetName()));
