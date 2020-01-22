@@ -4445,7 +4445,7 @@ void TFile::IncrementFileCounter() { fgFileCounter++; }
 Bool_t TFile::SetCacheFileDir(std::string_view cachedir, Bool_t operatedisconnected,
                               Bool_t forcecacheread )
 {
-   TString cached = cachedir;
+   TString cached{cachedir};
    if (!cached.EndsWith("/"))
       cached += "/";
 
