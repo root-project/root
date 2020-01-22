@@ -19,7 +19,7 @@
 ///  \ingroup Roofitcore
 ///
 ///  RooAbsAnaConvPdf is the base class for PDFs that represent a
-///  physics model that can be analytically convolved with a resolution model
+///  physics model that can be analytically convolved with a resolution model.
 ///
 ///  To achieve factorization between the physics model and the resolution
 ///  model, each physics model must be able to be written in the form

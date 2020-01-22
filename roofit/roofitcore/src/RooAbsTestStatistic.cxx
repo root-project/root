@@ -622,7 +622,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 ////////////////////////////////////////////////////////////////////////////////
 /// Change dataset that is used to given one. If cloneData is kTRUE, a clone of
 /// in the input dataset is made.  If the test statistic was constructed with
-/// a range specification on the data, the cloneData argument is ignore and
+/// a range specification on the data, the cloneData argument is ignored and
 /// the data is always cloned.
 Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData) 
 { 
