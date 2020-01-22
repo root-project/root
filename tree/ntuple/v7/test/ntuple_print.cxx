@@ -1,9 +1,7 @@
-#include "CustomStruct.hxx"
-
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+
 #include <TFile.h>
 
 #include "gtest/gtest.h"
@@ -12,7 +10,8 @@
 #include <sstream>
 #include <vector>
 
-using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
+#include "CustomStruct.hxx"
+
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
@@ -343,10 +342,10 @@ TEST(RNTupleShow, VectorFields)
    EXPECT_EQ(fString1, os1.str());
 }
 
-TEST(RNTupleShow, stdArrayAndClusterSize)
+TEST(RNTupleShow, ArrayFields)
 {
    std::string rootFileName{"test_ntuple_show_array.root"};
-   std::string ntupleName{"ArrayAndClusterNTuple"};
+   std::string ntupleName{"Arrays"};
    FileRaii fileGuard(rootFileName);
    {
       auto model = RNTupleModel::Create();
@@ -354,7 +353,6 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       auto Floatarrayfield = model->MakeField<std::array<float, 3>>("FloatArray");
       auto Vecarrayfield = model->MakeField<std::array<std::vector<double>, 4>>("ArrayOfVec");
       auto StringArray = model->MakeField<std::array<std::string, 2>>("stringArray");
-      auto ClusterSize = model->MakeField<ClusterSize_t>("ClusterSizeField");
       auto arrayOfArray = model->MakeField<std::array<std::array<bool, 2>, 3>>("ArrayOfArray");
       auto arrayVecfield = model->MakeField<std::vector<std::array<float, 2>>>("VecOfArray");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
@@ -363,7 +361,6 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       *Floatarrayfield = {3.5f, 4.6f, 5.7f};
       *Vecarrayfield = {std::vector<double>{1, 2}, std::vector<double>{4, 5}, std::vector<double>{7, 8, 9}, std::vector<double>{11} };
       *StringArray = {"First", "Second"};
-      *ClusterSize = ClusterSize_t(44);
       *arrayOfArray = { std::array<bool,2>{ true, false }, std::array<bool,2>{ false, true }, std::array<bool,2>{ false, false } };
       *arrayVecfield = { std::array<float, 2>{ 0, 1 }, std::array<float, 2>{ 2, 3 }, std::array<float, 2>{ 4, 5 } };
       ntuple->Fill();
@@ -372,7 +369,6 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       *Floatarrayfield = {2.3f, 5.7f, 11.13f};
       *Vecarrayfield = {std::vector<double>{17, 19}, std::vector<double>{23, 29}, std::vector<double>{31, 37, 41}, std::vector<double>{43} };
       *StringArray = {"Third", "Fourth"};
-      *ClusterSize = ClusterSize_t(32);
       *arrayOfArray = { std::array<bool,2>{ true, true }, std::array<bool,2>{ false, true }, std::array<bool,2>{ true, true } };
       *arrayVecfield = { std::array<float, 2>{ 6, 7 }, std::array<float, 2>{ 8, 9 } };
       ntuple->Fill();
@@ -382,7 +378,6 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
    auto Floatarrayfield = model2->MakeField<std::array<float, 3>>("FloatArray");
    auto Vecarrayfield = model2->MakeField<std::array<std::vector<double>, 4>>("ArrayOfVec");
    auto StringArray = model2->MakeField<std::array<std::string, 2>>("stringArray");
-   auto ClusterSize = model2->MakeField<ClusterSize_t>("ClusterSizeField");
    auto arrayOfArray = model2->MakeField<std::array<std::array<bool, 2>, 3>>("ArrayOfArray");
    auto arrayVecfield = model2->MakeField<std::vector<std::array<float, 2>>>("VecOfArray");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
@@ -395,7 +390,6 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       + "  \"FloatArray\": [3.5, 4.6, 5.7],\n"
       + "  \"ArrayOfVec\": [{ 1, 2 }, { 4, 5 }, { 7, 8, 9 }, { 11 }],\n"
       + "  \"stringArray\": [\"First\", \"Second\"],\n"
-      + "  \"ClusterSizeField\": 44,\n"
       + "  \"ArrayOfArray\": [[ true, false ], [ false, true ], [ false, false ]],\n"
       + "  \"VecOfArray\": {[ 0, 1 ], [ 2, 3 ], [ 4, 5 ]}\n"
       + "}\n"};
@@ -409,7 +403,6 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
       + "  \"FloatArray\": [2.3, 5.7, 11.13],\n"
       + "  \"ArrayOfVec\": [{ 17, 19 }, { 23, 29 }, { 31, 37, 41 }, { 43 }],\n"
       + "  \"stringArray\": [\"Third\", \"Fourth\"],\n"
-      + "  \"ClusterSizeField\": 32,\n"
       + "  \"ArrayOfArray\": [[ true, true ], [ false, true ], [ true, true ]],\n"
       + "  \"VecOfArray\": {[ 6, 7 ], [ 8, 9 ]}\n"
       + "}\n"};
@@ -419,7 +412,7 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
 TEST(RNTupleShow, ObjectFields)
 {
    std::string rootFileName{"test_ntuple_show_object.root"};
-   std::string ntupleName{"ClassContainingNTuple"};
+   std::string ntupleName{"Objects"};
    FileRaii fileGuard(rootFileName);
    {
       auto model = RNTupleModel::Create();
