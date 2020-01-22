@@ -57,6 +57,9 @@ public:
    /// perform special action when drawing is ready
    virtual void DoWhenReady(const std::string &, const std::string &, bool, CanvasCallback_t) = 0;
 
+   /// produce file output in batch mode like png, jpeg, svg or pdf
+   virtual bool ProduceBatchOutput(const std::string &, int, int) = 0;
+
    virtual void NewDisplay(const std::string &where) = 0;
 
    virtual int NumDisplays() const = 0;
