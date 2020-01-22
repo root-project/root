@@ -272,7 +272,7 @@ public:
    TString(const std::string &s);
    TString(char c);
    TString(char c, Ssiz_t s);
-   TString(const std::string_view &sub);
+   explicit TString(const std::string_view &sub);
    TString(const TSubString &sub);
 
    virtual ~TString();
