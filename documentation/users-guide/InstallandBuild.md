@@ -78,7 +78,13 @@ $ mkdir build
 $ cd build
 ```
 
-  3. Setup and run ROOT
+  3. Run cmake and make
+``` {.cpp}
+$ cmake ../root
+$ make -j8
+```
+
+  4. Setup and run ROOT
 ``` {.cpp}
 $ source bin/thisroot.sh
 $ root
