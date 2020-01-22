@@ -473,7 +473,7 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   if (EndsWith(".jpg") || EndsWith(".jpeg") || EndsWith(".png") || EndsWith(".gif")) {
+   if (EndsWith(".png") || EndsWith(".pdf")) {
 
       TString origin = TROOT::GetDataDir() + "/js/files/canv_batch.htm";
       if (gSystem->ExpandPathName(origin)) {
@@ -523,7 +523,10 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       args.SetHeadless(true);
       args.SetSize(width, height);
       args.SetUrl("file://"s + html_name.Data());
-      args.SetExtraArgs("--screenshot="s + fname);
+      if (EndsWith(".pdf"))
+         args.SetExtraArgs("--print-to-pdf="s + fname);
+      else
+         args.SetExtraArgs("--screenshot="s + fname);
 
       // remove target image file - we use it as detection when chrome is ready
       gSystem->Unlink(fname.c_str());
@@ -555,17 +558,18 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       return true;
    }
 
-   if (EndsWith(".pdf")) {
-      std::ofstream ofs(fname);
-      ofs << "future PDF " << fname;
-      return true;
-   }
-
    if (EndsWith(".svg")) {
       std::ofstream ofs(fname);
       ofs << "future SVG " << fname;
       return true;
    }
+
+   if (EndsWith(".jpeg") || EndsWith(".jpg") || EndsWith(".gif")) {
+      std::ofstream ofs(fname);
+      ofs << "future image " << fname;
+      return true;
+   }
+
 
    return false;
 }
