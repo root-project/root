@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 
+#include <exception>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -287,10 +288,7 @@ TEST(RNTupleShow, BasicTypes)
       + "}\n" };
    EXPECT_EQ(fString1, os1.str());
 
-   std::ostringstream os2;
-   ntuple2->Show(10, ROOT::Experimental::ENTupleFormat::kJSON, os2);
-   std::string fString2{ "Index exceeds maximum number of entries. (2)\n" };
-   EXPECT_EQ(fString2, os2.str());
+   EXPECT_THROW(ntuple2->Show(2), std::runtime_error);
 }
 
 TEST(RNTupleShow, VectorFields)
