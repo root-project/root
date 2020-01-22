@@ -25,11 +25,12 @@ template <typename AFloat>
 void TCudnn<AFloat>::InitializeRNNTensors(RNNLayer_t *layer)
 {
    // initialization of the RNN tensors for setting the right layout (ROW major)
+   size_t timeSteps = (layer->IsReturnSequence()) ? layer->GetTimeSteps() : 1;
    layer->GetOutput() =
-      Tensor_t(layer->GetOutput().GetDeviceBuffer(), {layer->GetBatchSize(), layer->GetTimeSteps(), layer->GetStateSize()},
-               GetTensorLayout());
+      Tensor_t(layer->GetOutput().GetDeviceBuffer(),
+               {layer->GetBatchSize(), timeSteps, layer->GetStateSize()}, GetTensorLayout());
    layer->GetActivationGradients() =
-      Tensor_t(layer->GetActivationGradients().GetDeviceBuffer(), {layer->GetBatchSize(), layer->GetTimeSteps(), layer->GetStateSize()},
+      Tensor_t(layer->GetActivationGradients().GetDeviceBuffer(), {layer->GetBatchSize(), timeSteps, layer->GetStateSize()},
                GetTensorLayout());
 
    // make the weight tensors in the right layout (Row-major)
@@ -37,6 +38,14 @@ void TCudnn<AFloat>::InitializeRNNTensors(RNNLayer_t *layer)
                                       {layer->GetStateSize(), layer->GetStateSize()}, GetTensorLayout());
    layer->GetWeightsInput() = Tensor_t(layer->GetWeightsInput().GetDeviceBuffer(),
                                       {layer->GetStateSize(), layer->GetInputSize()}, GetTensorLayout());
+   layer->GetBiasesState() = Tensor_t(layer->GetBiasesState().GetDeviceBuffer(),
+                                       {layer->GetStateSize(),   1 }, GetTensorLayout());
+
+   layer->GetX() = Tensor_t({layer->GetTimeSteps(), layer->GetBatchSize(), layer->GetInputSize() }, GetTensorLayout());
+   layer->GetY() = Tensor_t({layer->GetTimeSteps(), layer->GetBatchSize(), layer->GetStateSize() }, GetTensorLayout());
+
+   layer->GetDX() = Tensor_t({layer->GetTimeSteps(), layer->GetBatchSize(), layer->GetInputSize() }, GetTensorLayout());
+   layer->GetDY() = Tensor_t({layer->GetTimeSteps(), layer->GetBatchSize(), layer->GetStateSize() }, GetTensorLayout());
 }
 //____________________________________________________________________________
 template <typename AFloat>
@@ -57,7 +66,9 @@ void TCudnn<AFloat>::InitializeRNNDescriptors(TDescriptors * & descriptors, RNNL
    // get size of droput states
    CUDNNCHECK(cudnnDropoutGetStatesSize(handle, &dropoutStateSize));
 
-   unsigned long long seed = GetRandomGenerator().Integer(INT_MAX);
+   //unsigned long long seed = GetRandomGenerator().Integer(INT_MAX);
+   // use GetSeed to avoid generating other numbers which will break sequence
+   unsigned long long seed = GetRandomGenerator().GetSeed();
 
    CUDNNCHECK(cudnnSetDropoutDescriptor(rnnDescriptors->HelperDescriptor, handle, dropoutProb, dropoutStates,
                                         dropoutStateSize, seed));
@@ -160,9 +171,12 @@ void TCudnn<AFloat>::InitializeRNNDescriptors(TDescriptors * & descriptors, RNNL
    CUDNNCHECK(cudnnSetFilterNdDescriptor(rnnDescriptors->WeightsGradDescriptor, mathPrec, CUDNN_TENSOR_NCHW, 3, dimW));
 
    // resize now weights tensor
+   auto &weightTensor = layer->GetWeightsTensor();
+   auto &weightGradTensor = layer->GetWeightGradientsTensor();
+
    size_t nW = dimW[0];
-   Tensor_t weightTensor = Tensor_t( {nW, 1, 1}, GetTensorLayout(), 0, 0);
-   Tensor_t weightGradTensor = Tensor_t({ nW, 1, 1}, GetTensorLayout(), 0, 0);
+   weightTensor = Tensor_t( {nW, 1, 1}, GetTensorLayout(), 0, 0);
+   weightGradTensor = Tensor_t({ nW, 1, 1}, GetTensorLayout(), 0, 0);
 
    // initialize now RNN weights from RNNLayer:WeightInput, RNNLayer::WeightState and RNNLayer::BiasesState
 
@@ -193,9 +207,9 @@ void TCudnn<AFloat>::InitializeRNNDescriptors(TDescriptors * & descriptors, RNNL
             // copy from GetStateWeights (tensor is state x state)
             int wsize = layer->GetWeightsInput().GetSize();
 
-            std::cout << "input weight size = " << wsize << "  { " << layer->GetWeightsInput().GetNrows() << "  "
-                      << layer->GetWeightsInput().GetNcols() << "} should be " << filterDimA[1] << " x "
-                      << filterDimA[2] << std::endl;
+            // std::cout << "input weight size = " << wsize << "  { " << layer->GetWeightsInput().GetNrows() << "  "
+            //           << layer->GetWeightsInput().GetNcols() << "} should be " << filterDimA[1] << " x "
+            //           << filterDimA[2] << std::endl;
 
             //PrintTensor(layer->GetWeightsInput(), "Weight input");
 
@@ -209,9 +223,9 @@ void TCudnn<AFloat>::InitializeRNNDescriptors(TDescriptors * & descriptors, RNNL
             // copy from GetStateWeights (tensor is state x state)
             int wsize = layer->GetWeightsState().GetSize();
 
-            std::cout << "state weight size = " << wsize << "  { " << layer->GetWeightsState().GetNrows() << " , "
-                      << layer->GetWeightsState().GetNcols() << "}  should be " << filterDimA[1] << " x " << filterDimA[2]
-                      << std::endl;
+            // std::cout << "state weight size = " << wsize << "  { " << layer->GetWeightsState().GetNrows() << " , "
+            //           << layer->GetWeightsState().GetNcols() << "}  should be " << filterDimA[1] << " x " << filterDimA[2]
+            //           << std::endl;
 
             //PrintTensor(layer->GetWeightsState(), "Weight state");
 
@@ -239,9 +253,9 @@ void TCudnn<AFloat>::InitializeRNNDescriptors(TDescriptors * & descriptors, RNNL
             // copy from GetStateWeights (tensor is state x state)
             int wsize = layer->GetBiasesState().GetSize();
 
-            std::cout << "state bias " << wsize << "  { " << layer->GetBiasesState().GetNrows() << "  "
-                      << layer->GetBiasesState().GetNcols() << "}  should be " << filterDimA[1] << " x " << filterDimA[2]
-                      << std::endl;
+            // std::cout << "state bias " << wsize << "  { " << layer->GetBiasesState().GetNrows() << "  "
+            //           << layer->GetBiasesState().GetNcols() << "}  should be " << filterDimA[1] << " x " << filterDimA[2]
+            //           << std::endl;
 
             //PrintTensor(layer->GetBiasesState(), "Bias state");
 
@@ -275,13 +289,47 @@ void TCudnn<AFloat>::InitializeRNNDescriptors(TDescriptors * & descriptors, RNNL
 
    //PrintTensor(weightTensor, "Full WeightTensor");
 
-   // now we resize RNN::Layer GetWeights and RNNLayer::GetWeightGradients to the right tensors
-   auto &weightVector = layer->GetWeights();
-   weightVector.resize(1);
-   weightVector[0] = weightTensor;
-   auto &weightGradVector = layer->GetWeightGradients();
-   weightGradVector.resize(1);
-   weightGradVector[0] = weightGradTensor;
+   // the weight tensor in Cudnn is stored as
+   // weights input + weights state + bias state
+   auto &weightsInput = layer->GetWeightsInput();
+   auto &weightsState = layer->GetWeightsState();
+   auto &biasesState  = layer->GetBiasesState();
+
+   auto &weightInputGrad = layer->GetWeightInputGradients();
+   auto &weightStateGrad = layer->GetWeightStateGradients();
+   auto &biasStateGrad = layer->GetBiasStateGradients();
+
+   size_t offset_state = weightsInput.GetSize();
+   size_t offset_bias_state = offset_state + weightsState.GetSize();
+
+   assert(weightTensor(0,0,0) == weightsInput(0,0));
+   assert(weightTensor(offset_state,0,0) == weightsState(0,0));
+   assert(weightTensor(offset_bias_state,0,0) == biasesState(0,0));
+
+   // now we set the right buffers for the tensor weights and gradients
+   weightsInput = Tensor_t(weightTensor.GetDeviceBuffer().GetSubBuffer(0, weightsInput.GetSize()),
+                           weightsInput.GetShape(), GetTensorLayout(), 0, 0);
+   weightsState = Tensor_t(weightTensor.GetDeviceBuffer().GetSubBuffer(offset_state, weightsState.GetSize()),
+                           weightsState.GetShape(), GetTensorLayout(), 0, 0);
+   biasesState = Tensor_t(weightTensor.GetDeviceBuffer().GetSubBuffer(offset_bias_state, biasesState.GetSize()),
+                          biasesState.GetShape(), GetTensorLayout(), 0, 0);
+
+   weightInputGrad = Tensor_t(weightGradTensor.GetDeviceBuffer().GetSubBuffer(0, weightInputGrad.GetSize()),
+                               weightInputGrad.GetShape(), GetTensorLayout(), 0, 0);
+   weightStateGrad =
+      Tensor_t(weightGradTensor.GetDeviceBuffer().GetSubBuffer(offset_state, weightStateGrad.GetSize()),
+               weightStateGrad.GetShape(), GetTensorLayout(), 0, 0);
+   biasStateGrad =
+      Tensor_t(weightGradTensor.GetDeviceBuffer().GetSubBuffer(offset_bias_state, biasStateGrad.GetSize()),
+               biasStateGrad.GetShape(), GetTensorLayout(), 0, 0);
+
+   // auto &weightVector = layer->GetWeights();
+   // weightVector.resize(1);
+   // weightVector[0] = weightTensor;
+   // auto &weightGradVector = layer->GetWeightGradients();
+   // weightGradVector.resize(1);
+   // weightGradVector[0] = weightGradTensor;
+
 
    descriptors = rnnDescriptors;
 }

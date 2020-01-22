@@ -164,12 +164,13 @@ void TCudnn<AFloat>::InitializeGlorotUniform(TCudaTensor<AFloat> & A)
    Double_t range = sqrt(6.0 /( (Double_t) n +  (Double_t) m) );
 
    //std::cout << "Initialize Glorot uniform for tensor " << n << "," << m << " ";
-   //A.PrintShape();
+   A.PrintShape();
 
    size_t nsize = A.GetSize();
    TCudaHostBuffer<AFloat> xhost(nsize);
    for (size_t i = 0; i < nsize; i++) {
       xhost[i] = rand.Uniform(-range, range);
+      //std::cout << " i " << xhost[i] << "  " << range << std::endl;
    }
    A.GetDeviceBuffer().CopyFrom(xhost);
 
@@ -203,7 +204,7 @@ template<typename AFloat>
 void TCudnn<AFloat>::InitializeZero(TCudaTensor<AFloat> & A)
 {
    // use fast zero initialization on the device
-   A.Zero();
+   cudaMemset(A.GetDataPointer(), 0, sizeof(AFloat) * A.GetSize());
 }
 
 } // namespace DNN

@@ -175,7 +175,8 @@ template<typename AFloat>
 TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
 {
    // this should work only for size 2 or 4 tensors
-   if (fNDim == 2 || (fNDim == 3 && GetFirstSize() == 1)) {
+   if (GetLayout() == MemoryLayout::ColumnMajor &&
+       (fNDim == 2 || (fNDim == 3 && GetFirstSize() == 1)) ) {
 //         return TCudaMatrix<AFloat>(fElementBuffer, GetHSize(), GetWSize());
       TCudaMatrix<AFloat> temp = GetMatrix();
       return temp;

@@ -74,6 +74,7 @@ private:
    size_t fTimeSteps;              ///< Timesteps for RNN
    size_t fStateSize;              ///< Hidden state size of RNN
    bool   fRememberState;          ///< Remember state in next pass
+   bool fReturnSequence = false;    ///< Return in output full sequence or just last element
 
    DNN::EActivationFunction fF;  ///< Activation function of the hidden state
 
@@ -96,11 +97,16 @@ private:
    TDescriptors *fDescriptors = nullptr; ///< Keeps all the RNN descriptors
    TWorkspace   *fWorkspace = nullptr;   // workspace needed for GPU computation (CudNN)
 
+   Tensor_t fX; // tensors used internally for the forward and backward pass
+   Tensor_t fY;
+   Tensor_t fDx;
+   Tensor_t fDy;
+
 public:
 
    /** Constructor */
    TBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
-                  size_t timeSteps, bool rememberState = false,
+                  size_t timeSteps, bool rememberState = false, bool returnSequence = false,
                   DNN::EActivationFunction f = DNN::EActivationFunction::kTanh,
                   bool training = true, DNN::EInitialization fA = DNN::EInitialization::kZero);
 
@@ -159,6 +165,7 @@ public:
    size_t GetStateSize() const { return fStateSize; }
    size_t GetInputSize() const { return this->GetInputWidth(); }
    inline bool IsRememberState()  const {return fRememberState;}
+   inline bool IsReturnSequence() const { return fReturnSequence; }
    inline DNN::EActivationFunction GetActivationFunction()  const {return fF;}
    Matrix_t        & GetState()            {return fState;}  // RNN Hidden state
    const Matrix_t & GetState()       const  {return fState;}
@@ -186,6 +193,11 @@ public:
    const Tensor_t &GetWeightsTensor() const { return fWeightsTensor; }
    Tensor_t &GetWeightGradientsTensor() { return fWeightGradientsTensor; }
    const Tensor_t &GetWeightGradientsTensor() const { return fWeightGradientsTensor; }
+
+   Tensor_t &GetX() { return fX; }
+   Tensor_t &GetY() { return fY; }
+   Tensor_t &GetDX() { return fDx; }
+   Tensor_t &GetDY() { return fDy; }
 };
 
 //______________________________________________________________________________
@@ -194,13 +206,13 @@ public:
 //______________________________________________________________________________
 template <typename Architecture_t>
 TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize, size_t timeSteps,
-                                               bool rememberState, DNN::EActivationFunction f, bool /*training*/,
+                                               bool rememberState, bool returnSequence, DNN::EActivationFunction f, bool /*training*/,
                                                DNN::EInitialization fA)
    // TODO inputDepth and outputDepth changed to batchSize??
-   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 2,
-                                   {stateSize, stateSize}, {inputSize, stateSize}, 1, {stateSize}, {1}, batchSize,
-                                   timeSteps, stateSize, fA),
-     fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fF(f), fState(batchSize, stateSize),
+   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, (returnSequence) ? timeSteps : 1 ,
+                                   stateSize, 2, {stateSize, stateSize}, {inputSize, stateSize}, 1, {stateSize}, {1},
+                                   batchSize, (returnSequence) ? timeSteps : 1, stateSize, fA),
+     fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fReturnSequence(returnSequence), fF(f), fState(batchSize, stateSize),
      fCellState(batchSize, stateSize), fWeightsInput(this->GetWeightsAt(0)), fWeightsState(this->GetWeightsAt(1)),
      fBiases(this->GetBiasesAt(0)), fDerivatives(timeSteps, batchSize, stateSize), // create tensor time x bs x S
      fWeightInputGradients(this->GetWeightGradientsAt(0)), fWeightStateGradients(this->GetWeightGradientsAt(1)),
@@ -213,12 +225,12 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
 template <typename Architecture_t>
 TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(const TBasicRNNLayer &layer)
    : VGeneralLayer<Architecture_t>(layer), fTimeSteps(layer.fTimeSteps), fStateSize(layer.fStateSize),
-     fRememberState(layer.fRememberState), fF(layer.GetActivationFunction()),
-     fState(layer.GetBatchSize(), layer.GetStateSize()), fCellState(layer.GetBatchSize(), layer.GetStateSize()), fWeightsInput(this->GetWeightsAt(0)),
-     fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)),
-     fDerivatives( layer.GetDerivatives().GetShape() ), fWeightInputGradients(this->GetWeightGradientsAt(0)),
+     fRememberState(layer.fRememberState), fReturnSequence(layer.fReturnSequence), fF(layer.GetActivationFunction()),
+     fState(layer.GetBatchSize(), layer.GetStateSize()), fCellState(layer.GetBatchSize(), layer.GetStateSize()),
+     fWeightsInput(this->GetWeightsAt(0)), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)),
+     fDerivatives(layer.GetDerivatives().GetShape()), fWeightInputGradients(this->GetWeightGradientsAt(0)),
      fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0)),
-     fWeightsTensor( {0} ),  fWeightGradientsTensor( {0} )
+     fWeightsTensor({0}), fWeightGradientsTensor({0})
 {
 
    Architecture_t::Copy(fDerivatives, layer.GetDerivatives() );
@@ -310,8 +322,8 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
       size_t inputSize = input.GetStrides()[1];
       assert(inputSize == this->GetInputSize() );
 
-      Tensor_t x( {fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout());
-      Tensor_t y( {fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
+      Tensor_t & x = this->fX;
+      Tensor_t & y = this->fY;
       Architecture_t::Rearrange(x, input);
 
       const auto &weights = this->GetWeightsAt(0);
@@ -330,16 +342,23 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
 
       Architecture_t::RNNForward(x, hx, cx, weights, y, hy, cy, rnnDesc, rnnWork, isTraining);
 
-      Architecture_t::Rearrange(this->GetOutput(), y);    // swap B and T from y to Output
+      if (fReturnSequence) {
+         Architecture_t::Rearrange(this->GetOutput(), y);    // swap B and T from y to Output
+      }
+      else {
+         // tmp is a reference to y (full cudnn output)
+         Tensor_t tmp = (y.At(y.GetShape()[0] - 1)).Reshape({y.GetShape()[1], 1, y.GetShape()[2]});
+         Architecture_t::Copy(this->GetOutput(), tmp);
+      }
 
-      // Tensor_t & output = this->GetOutput();
-      // output = y;
-      //if (output.GetLayout() != Architecture_t::GetTensorLayout() ) {
-         //output = Tensor_t( output.GetDeviceBuffer(), {fTimeSteps, this->GetBatchSize(), fStateSize} );
-         //output = y;
-      //}
+         // Tensor_t & output = this->GetOutput();
+         // output = y;
+         // if (output.GetLayout() != Architecture_t::GetTensorLayout() ) {
+         // output = Tensor_t( output.GetDeviceBuffer(), {fTimeSteps, this->GetBatchSize(), fStateSize} );
+         // output = y;
+         //}
 
-      return;
+         return;
    }
 
    // FORWARD for CPU architecture
@@ -362,7 +381,18 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
       Matrix_t arrOutput_m = arrOutput.At(t).GetMatrix();
       Architecture_t::Copy(arrOutput_m, fState);
    }
-   Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
+
+   if (fReturnSequence)
+      Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
+   else {
+      // get T[end[]]
+      Tensor_t tmp = arrOutput.At( fTimeSteps - 1); // take last time step
+      assert(tmp.GetSize() == this->GetOutput().GetSize());
+      tmp = Tensor_t(tmp.GetDeviceBuffer(), this->GetOutput().GetShape(), Architecture_t::GetTensorLayout());
+      Architecture_t::Copy(this->GetOutput(), tmp);
+      // keep array output
+      fY = arrOutput;
+   }
 }
 
 //______________________________________________________________________________
@@ -398,28 +428,52 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    //BACKWARD for CUDNN
    if (Architecture_t::IsCudnn() ) {
 
+      Tensor_t &x = this->fX;
+      Tensor_t &y = this->fY;
+      Tensor_t &dx = this->fDy;
+      Tensor_t &dy = this->fDy;
+
       // input size is stride[1] of input tensor that is B x T x inputSize
       size_t inputSize = activations_backward.GetStrides()[1];  // input tensor
       assert(inputSize == this->GetInputSize() );
 
-      Tensor_t x({fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout());
-      Tensor_t y({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
+      // Tensor_t x({fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout());
+      // Tensor_t y({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
       // Tensor_t dx = (gradients_backward.GetSize() != 0)
       //    ? Tensor_t({fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout()) : Tensor_t({0});
       // always have a valid dx since it is needed to compute before dw
-      Tensor_t dx({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
-      Tensor_t dy({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
+      // Tensor_t dx({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
+
+      // Tensor_t dy({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
 
       Architecture_t::Rearrange(x, activations_backward);
-      Architecture_t::Rearrange(y, this->GetOutput());
+
+      if (!fReturnSequence) {
+
+         //Architecture_t::InitializeZero(dy);
+         Architecture_t::InitializeZero(dy);
+
+         //Tensor_t tmp1 = y.At(y.GetShape()[0] - 1).Reshape({y.GetShape()[1], 1, y.GetShape()[2]});
+         Tensor_t tmp2 = dy.At(dy.GetShape()[0] - 1).Reshape({dy.GetShape()[1], 1, dy.GetShape()[2]});
+
+         //Architecture_t::Copy(tmp1, this->GetOutput());
+         Architecture_t::Copy(tmp2, this->GetActivationGradients());
+      }
+      else {
+         Architecture_t::Rearrange(y, this->GetOutput());
+         Architecture_t::Rearrange(dy, this->GetActivationGradients());
+      }
 
       //Architecture_t::PrintTensor(this->GetOutput(), "output before bwd");
 
-      Architecture_t::Rearrange(dy, this->GetActivationGradients());
+
 
       // for cudnn Matrix_t and Tensor_t are same type
-      const auto &weights = this->GetWeightsAt(0);
-      auto &weightGradients = this->GetWeightGradientsAt(0);
+      const auto &weights = this->GetWeightsTensor();
+      auto &weightGradients = this->GetWeightGradientsTensor();
+
+      //const auto &weights = this->GetWeightsAt(0);
+      //auto &weightGradients = this->GetWeightGradientsAt(0);
 
       // Tensor_t cx({1}); // not used for normal RNN
       // Tensor_t cy({1}); // not used for normal RNN
@@ -476,12 +530,25 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    DNN::initialize<Architecture_t>(initState,   DNN::EInitialization::kZero);
 
    Tensor_t arr_output (  fTimeSteps, this->GetBatchSize(), fStateSize);
-   //for (size_t t = 0; t < fTimeSteps; ++t) arr_output.emplace_back(this->GetBatchSize(), fStateSize);
-   Architecture_t::Rearrange(arr_output, this->GetOutput());
+   Tensor_t arr_actgradients(fTimeSteps, this->GetBatchSize(), fStateSize);
 
-   Tensor_t arr_actgradients ( fTimeSteps, this->GetBatchSize(), fStateSize);
-   //for (size_t t = 0; t < fTimeSteps; ++t) arr_actgradients.emplace_back(this->GetBatchSize(), fStateSize);
-   Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
+   if (fReturnSequence) {
+      Architecture_t::Rearrange(arr_output, this->GetOutput());
+      Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
+   } else {
+      //
+      arr_output = fY;
+      //Architecture_t::InitializeZero(arr_output);
+      //Tensor_t tmp_out = arr_output.At(arr_output.GetShape()[0] - 1);
+      //tmp_out = Tensor_t(tmp_out.GetDeviceBuffer(), this->GetOutput().GetShape(), Architecture_t::GetTensorLayout());
+      //Architecture_t::Copy(tmp_out, this->GetOutput());
+
+      Architecture_t::InitializeZero(arr_actgradients);
+      Tensor_t tmp_grad = arr_actgradients.At( fTimeSteps-1);
+      assert(tmp_grad.GetSize() == this->GetActivationGradients().GetSize() );
+      tmp_grad = Tensor_t(tmp_grad.GetDeviceBuffer(), this->GetActivationGradients().GetShape(),Architecture_t::GetTensorLayout());
+      Architecture_t::Copy(tmp_grad, this->GetActivationGradients());
+   }
 
    // reinitialize weights and biases gradients to 0
    fWeightInputGradients.Zero();
@@ -560,6 +627,7 @@ void TBasicRNNLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->IsRememberState()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->IsReturnSequence()));
 
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "InputWeights", this -> GetWeightsAt(0));
