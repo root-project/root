@@ -346,25 +346,38 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 #endif
 
 #ifdef _MSC_VER
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $url");
+   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url");
 #else
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --incognito $url");
+   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --incognito $geometry $url");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --incognito --app=\'$url\' &");
 #endif
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Replace $geometry placeholder with geometry settings
+/// Also RWebDisplayArgs::GetExtraArgs() are appended
+
 void ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
 {
-   std::string size, pos;
+   std::string geometry;
    if ((args.GetWidth() > 0) || (args.GetHeight() > 0))
-      size = "--window-size="s + std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800) + ","s +
+      geometry = "--window-size="s + std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800) + ","s +
                                  std::to_string(args.GetHeight() > 0 ? args.GetHeight() : 600);
-   if ((args.GetX() >= 0) || (args.GetY() >= 0))
-      pos = " --window-position="s + std::to_string(args.GetX() >= 0 ? args.GetX() : 0) + ","s +
-                                      std::to_string(args.GetY() >= 0 ? args.GetY() : 0);
 
-   exec = std::regex_replace(exec, std::regex("\\$geometry"), size + pos);
+   if ((args.GetX() >= 0) || (args.GetY() >= 0)) {
+      if (!geometry.empty()) geometry.append(" ");
+      geometry.append("--window-position="s + std::to_string(args.GetX() >= 0 ? args.GetX() : 0) + ","s +
+                                           std::to_string(args.GetY() >= 0 ? args.GetY() : 0));
+   }
+
+   if (!args.GetExtraArgs().empty()) {
+      if (!geometry.empty()) geometry.append(" ");
+      geometry.append(args.GetExtraArgs());
+   }
+
+   exec = std::regex_replace(exec, std::regex("\\$geometry"), geometry);
 }
 
 
