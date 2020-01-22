@@ -37,7 +37,9 @@ int main() {
    bool fail = false;
    if (debug) {
       //fail |=   testRecurrentBackpropagation<TCpu<Scalar_t>>(2, 1, 1, 2, 1e-5, {true, false, false}, true);
-      fail |= testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 1, 1, 1, 1e-5, {true, true, false}, true);
+      //fail |= testRecurrentBackpropagation<TCpu<Scalar_t>>(1, 1, 1, 1, 1e-5, {true, true, false}, true);
+      //fail |= testRecurrentBackpropagation<TCpu<Scalar_t>>(2, 3, 4, 5, 1e-5, {false, true, false}, true);
+      fail |= testRecurrentBackpropagation<TCpu<Scalar_t>>(2, 1, 4, 5, 1e-5, {true, true, false}, true);
       return fail;
    }
 

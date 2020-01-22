@@ -128,6 +128,16 @@ public:
       return Tensor_t( buffer, {n,c,h,w}, GetTensorLayout(), 0, 0);
    }
 
+   static Tensor_t CreateTensor(size_t n, size_t c, size_t w)
+   {
+      return Tensor_t({n, c, w}, GetTensorLayout(), 0, 0);
+   }
+
+   static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t w)
+   {
+      return Tensor_t(buffer, {n, c, w}, GetTensorLayout(), 0, 0);
+   }
+
    static bool IsCudnn() { return true; }
 
    // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes
@@ -740,15 +750,25 @@ void TCudnn<AFloat>::CopyDiffArch(TCudaTensor<AFloat> &B,
    // should add static assert that A has not to be same type as B
 
    // this copying tensors from different architectures
-   if (B.GetLayout() == GetTensorLayout() ) {
-      assert(B.GetShape().size() == 4);
-      for (size_t i = 0; i < A.GetFirstSize(); ++i) {
-         TMatrixT<AFloat> matIn = A.At(i).GetMatrix(); // this convert tensor (B,D,HW) in  (D,HW)i -> (D,HW)i
-         // TMAtrix has the correct layout (row-wise) no need to traspose in this case
-         TCudaTensor<AFloat> tmpOut = B.At(i); // matrix (D,HW)
-         // copy will copy the buffer
-         TCudaTensor<AFloat> tmpIn(matIn.GetMatrixArray(), tmpOut.GetShape(), tmpOut.GetLayout());
-         Copy(tmpOut, tmpIn);
+   if (B.GetLayout() == GetTensorLayout()) {
+      if ( B.GetShape().size() == 4) {
+         assert(B.GetShape().size() == 4);
+         size_t firstSize = (A.GetLayout() == GetTensorLayout()) ? A.GetShape()[0] : A.GetShape().back();
+         for (size_t i = 0; i < firstSize; ++i) {
+            TMatrixT<AFloat> matIn = A.At(i).GetMatrix(); // this convert tensor (B,D,HW) in  (D,HW)i -> (D,HW)i
+            // TMAtrix has the correct layout (row-wise) no need to traspose in this case
+            TCudaTensor<AFloat> tmpOut = B.At(i); // matrix (D,HW)
+            // copy will copy the buffer
+            TCudaTensor<AFloat> tmpIn(matIn.GetMatrixArray(), tmpOut.GetShape(), tmpOut.GetLayout());
+            Copy(tmpOut, tmpIn);
+         }
+      }
+      else {
+         // for RNN weights
+         TMatrixT<AFloat> tmp = A;
+         TCudaMatrix<AFloat> tmp2(tmp);
+         TCudaTensor<AFloat> tA(tmp2);
+         Copy(B, tA);
       }
    } else {
       // case of same layout (column major)

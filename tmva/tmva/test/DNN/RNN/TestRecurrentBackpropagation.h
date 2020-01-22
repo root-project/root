@@ -105,7 +105,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    using Scalar_t = typename Architecture::Scalar_t;
 
    //std::vector<Matrix_t<Double_t>> XRef(batchSize, Matrix_t<Double_t>(timeSteps, inputSize));    // B x T x D
-   Tensor_t XArch ( {batchSize, timeSteps, inputSize}, Architecture::GetTensorLayout()); // B x T x D
+   Tensor_t XArch = Architecture::CreateTensor ( batchSize, timeSteps, inputSize); // B x T x D
 
    // for random input (default)
    if (randomInput) {
@@ -134,8 +134,6 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
             }
          }
       }
-      gRandom->SetSeed(1); // for weights initizialization
-      Architecture::SetRandomSeed(111);
    }
    if (debug) printTensor<Architecture>(XArch,"input");
 
@@ -160,13 +158,18 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       std::cout << " and an extra RNN";
    std::cout << std::endl;
 
-   Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   RNNLayer_t* rnnlayer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false, TMVA::DNN::EActivationFunction::kSigmoid);  // don't use tanh in test due to limited vdt precision
+   bool returnSequence = addExtraRNN;
+   TMVA::DNN::EActivationFunction f = TMVA::DNN::EActivationFunction::kSigmoid;
+
+   Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
+             EInitialization::kGlorotUniform);
+   RNNLayer_t* rnnlayer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false, returnSequence, f);  // don't use tanh in test due to limited vdt precision
    //size_t input2 = stateSize;
-   if (addExtraRNN) rnn.AddBasicRNNLayer(stateSize, stateSize, timeSteps, false,
+   if (addExtraRNN) rnn.AddBasicRNNLayer(stateSize, stateSize, timeSteps, false, false, // do not return state at end
                                          TMVA::DNN::EActivationFunction::kRelu);
    //layer->Print();
-   rnn.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
+   rnn.AddReshapeLayer(1, 1, stateSize, true);
+   //rnn.AddReshapeLayer(1, 1, timeStep * stateSize, true);
 
    DenseLayer_t * dlayer1 = nullptr;
    DenseLayer_t * dlayer2 = nullptr;
@@ -179,10 +182,10 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
 
    rnn.Print();
 
-   if (! Architecture::IsCudnn()) {
-      auto &wi = rnnlayer->GetWeightsInput();
-      if (debug)
-         printTensor<Architecture>(wi, "Input weights");
+   // if (! Architecture::IsCudnn()) {
+   auto &wi = rnnlayer->GetWeightsInput();
+   if (debug)
+      printTensor<Architecture>(wi, "Input weights");
 #if 0
    for (int i = 0; i < stateSize; ++i) {
       for (int j = 0; j < inputSize; ++j) {
@@ -192,9 +195,9 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    }
 #endif
 
-      auto &wh = rnnlayer->GetWeightsState();
-      if (debug)
-         printTensor<Architecture>(wh, "State weights");
+   auto &wh = rnnlayer->GetWeightsState();
+   if (debug)
+      printTensor<Architecture>(wh, "State weights");
 #if 0
    for (int i = 0; i < stateSize; ++i) {
       for (int j = 0; j < stateSize; ++j) {
@@ -203,9 +206,9 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
          wh(i,i) = 0.5;
    }
 #endif
-      auto &b = rnnlayer->GetBiasesState();
-      if (debug)
-         b.Print();
+   auto &b = rnnlayer->GetBiasesState();
+   if (debug)
+      printTensor<Architecture>(b, "State Bias weights");
 #if 0
    for (int i = 0; i < (size_t) b.GetNrows(); ++i) {
       for (int j = 0; j < (size_t) b.GetNcols(); ++j) {
@@ -213,12 +216,12 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       }
    }
 #endif
-   }
-   else {
-      auto &wi = rnnlayer->GetWeightsAt(0);
-      if (debug)
-         printTensor<Architecture>(wi, "RNN weights");
-   }
+   //}
+   // else {
+   // auto &wi = rnnlayer->GetWeightsAt(0);
+   // if (debug)
+   //    printTensor<Architecture>(wi, "RNN weights");
+   // }
 
    printTensor<Architecture>(rnn.GetLayers().back()->GetWeightsAt(0), "weight last layer (DENSE)");
 
@@ -306,8 +309,8 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       }
 
       // for Cudnn all weights are collapsed in one
-      if (Architecture::IsCudnn())
-         continue;
+      // if (Architecture::IsCudnn())
+      //    continue;
 
       // if other layers (not RNN) continue
       if (layer->GetWeights().size() == 1)

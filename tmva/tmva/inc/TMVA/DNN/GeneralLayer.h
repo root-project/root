@@ -52,6 +52,7 @@ class VGeneralLayer {
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
 
+
 protected:
    size_t fBatchSize; ///< Batch size used for training and evaluation
 
