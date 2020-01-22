@@ -20,7 +20,7 @@ std::vector<void *> RRootDS::GetColumnReadersImpl(std::string_view name, const s
    const auto &colTypeId = ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
    if (id != colTypeId) {
       std::string err = "The type of column \"";
-      err += name;
+      err += std::string(name);
       err += "\" is ";
       err += colTypeName;
       err += " but a different one has been selected.";
@@ -59,7 +59,7 @@ std::string RRootDS::GetTypeName(std::string_view colName) const
 {
    if (!HasColumn(colName)) {
       std::string e = "The dataset does not have column ";
-      e += colName;
+      e += std::string(colName);
       throw std::runtime_error(e);
    }
    // TODO: we need to factor out the routine for the branch alone...

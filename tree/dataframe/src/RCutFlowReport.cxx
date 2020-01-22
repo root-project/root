@@ -39,7 +39,7 @@ const TCutInfo &RCutFlowReport::operator[](std::string_view cutName)
    const auto it = std::find_if(fCutInfos.begin(), ciItEnd, pred);
    if (ciItEnd == it) {
       std::string err = "Cannot find a cut called \"";
-      err += cutName;
+      err += std::string(cutName);
       err += "\". Available named cuts are: \n";
       for (auto &&ci : fCutInfos) {
          err += " - " + ci.GetName() + "\n";

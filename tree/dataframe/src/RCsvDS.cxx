@@ -159,7 +159,7 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
    if ((colType == 'd' && typeid(double) != ti) || (colType == 'l' && typeid(Long64_t) != ti) ||
        (colType == 's' && typeid(std::string) != ti) || (colType == 'b' && typeid(bool) != ti)) {
       std::string err = "The type selected for column \"";
-      err += colName;
+      err += std::string(colName);
       err += "\" does not correspond to column type, which is ";
       err += fgColTypeMap.at(colType);
       throw std::runtime_error(err);
@@ -271,7 +271,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
          FillHeaders(line);
       } else {
          std::string msg = "Error reading headers of CSV file ";
-         msg += fileName;
+         msg += std::string(fileName);
          throw std::runtime_error(msg);
       }
    }
@@ -296,7 +296,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
       fStream.seekg(fDataPos);
    } else {
       std::string msg = "Could not infer column types of CSV file ";
-      msg += fileName;
+      msg += std::string(fileName);
       throw std::runtime_error(msg);
    }
 }
@@ -402,7 +402,7 @@ RCsvDS::ColType_t RCsvDS::GetType(std::string_view colName) const
 {
    if (!HasColumn(colName)) {
       std::string msg = "The dataset does not have column ";
-      msg += colName;
+      msg += std::string(colName);
       throw std::runtime_error(msg);
    }
 

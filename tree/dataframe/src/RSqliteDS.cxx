@@ -501,7 +501,7 @@ RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, con
        (type == ETypes::kBlob && typeid(std::vector<unsigned char>) != ti) ||
        (type == ETypes::kNull && typeid(void *) != ti)) {
       std::string errmsg = "The type selected for column \"";
-      errmsg += name;
+      errmsg += std::string(name);
       errmsg += "\" does not correspond to column type, which is ";
       errmsg += GetTypeName(name);
       throw std::runtime_error(errmsg);
