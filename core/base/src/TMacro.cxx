@@ -337,11 +337,11 @@ Int_t TMacro::Merge(TCollection *list)
       auto m = (TMacro*) obj;
       TMD5 *checksum = m->Checksum();
       if (!(*thischecksum == *checksum))
-         Warning("Merge", Form("TMacro objects with name %s have different file content!", GetName()));
+         Warning("Merge", "TMacro objects with name %s have different file content!", GetName());
       delete checksum;
 
       if (fParams.CompareTo(m->GetParams()) != 0)
-         Warning("Merge", Form("TMacro objects with name %s have different default parameters!", GetName()));
+         Warning("Merge", "TMacro objects with name %s have different default parameters!", GetName());
 
       n++;
    }
