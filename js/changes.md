@@ -1,5 +1,9 @@
 # JSROOT changelog
 
+## Changes in dev
+1. Support RX and RY drawing option together with COL of TH2
+
+
 ## Changes in 5.8.0
 1. Many TGeo-related changes:
    - use TGeoManager::fVisLevel in geometry painter
