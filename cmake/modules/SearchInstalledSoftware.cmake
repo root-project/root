@@ -511,16 +511,16 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   # If so, it will be passed to find_package(Python) below. Otherwise,
   # check what `python` points to: Python 2 or 3:
   if(NOT PYTHON_EXECUTABLE)
-    find_program(PYTHON_BINARY_IN_PATH "python")
-    if(PYTHON_BINARY_IN_PATH)
-      execute_process(COMMAND ${PYTHON_BINARY_IN_PATH} -c "import sys;print(sys.version_info[0])"
-                      OUTPUT_VARIABLE PYTHON_PREFER_VERSION
-                      ERROR_VARIABLE PYTHON_PREFER_VERSION_ERR)
-      if(PYTHON_PREFER_VERSION_ERR)
-        message(WARNING "Unable to determine version of ${PYTHON_BINARY_IN_PATH}: ${PYTHON_PREFER_VERSION_ERR}")
-      endif()
-      string(STRIP "${PYTHON_PREFER_VERSION}" PYTHON_PREFER_VERSION)
+    find_program(PYTHON_EXECUTABLE "python")
+  endif()
+  if(PYTHON_EXECUTABLE)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.version_info[0])"
+                    OUTPUT_VARIABLE PYTHON_PREFER_VERSION
+                    ERROR_VARIABLE PYTHON_PREFER_VERSION_ERR)
+    if(PYTHON_PREFER_VERSION_ERR)
+      message(WARNING "Unable to determine version of ${PYTHON_EXECUTABLE}: ${PYTHON_PREFER_VERSION_ERR}")
     endif()
+    string(STRIP "${PYTHON_PREFER_VERSION}" PYTHON_PREFER_VERSION)
   endif()
 
   if(python)
