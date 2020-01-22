@@ -33,16 +33,22 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleVisitor
+\class ROOT::Experimental::Detail::RFieldVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
 
-RNTupleVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance
+RFieldVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance
 by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit from it will be visited. The level
 carries the hierarchy information about the tree of sub fields, starting with 0 for the root field.
 */
 // clang-format on
-class RNTupleVisitor {
+class RFieldVisitor {
+   friend class RFieldValue;
+
+protected:
+   /// Set to itself from RFieldValue::AcceptVisitor
+   RFieldValue fValue;
+
 public:
    virtual void VisitField(const Detail::RFieldBase &field, int level) = 0;
    virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
@@ -72,7 +78,7 @@ public:
  Currently used for RPrintSchemaVisitor in RNTupleReader::Print() to collect information about levels, max depth etc.
 */
 // clang-format on
-class RPrepareVisitor : public Detail::RNTupleVisitor {
+class RPrepareVisitor : public Detail::RFieldVisitor {
 private:
    int fDeepestLevel;
    int fNumFields;
@@ -95,7 +101,7 @@ public:
 This visitor is used by RNTupleReader::Print()
 */
 // clang-format on
-class RPrintSchemaVisitor : public Detail::RNTupleVisitor {
+class RPrintSchemaVisitor : public Detail::RFieldVisitor {
 private:
    /// Where to write the printout to
    std::ostream &fOutput;
@@ -187,7 +193,7 @@ Each visit outputs the entry of a single field JSON formatted. Used by RNTupleRe
  * obtained from the upper level vector and array fields.
  */
 
-class RValueVisitor : public Detail::RNTupleVisitor {
+class RValueVisitor : public Detail::RFieldVisitor {
 private:
    RNTupleReader *fReader;
    /// The output is directed to fOutput which may differ from std::cout.
@@ -228,15 +234,16 @@ public:
    std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
 };
 
-//class REntryVisitor : public Detail::RNTupleVisitor {
+
+//class RPrintValueVisitor : public Detail::RFieldVisitor {
 //private:
 //   /// The output is directed to fOutput which may differ from std::cout.
 //   std::ostream &fOutput;
 //   /// Points to the memory with the data corresponing to the field
-//   RFieldValue fValue;
+//   Detail::RFieldValue fData;
 //
 //public:
-//   RValueVisitor(std::ostream &output, RFieldValue)
+//   RPrintValueVisitor(std::ostream &output, RFieldValue)
 //      : fReader{reader}, fOutput{output}, fIndex{index}, fPrintOnlyValue{onlyValue}, fCollectionIndex{collectionIndex}
 //   {
 //   }

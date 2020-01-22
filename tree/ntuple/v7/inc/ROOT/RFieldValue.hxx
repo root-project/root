@@ -26,6 +26,7 @@ namespace Experimental {
 namespace Detail {
 
 class RFieldBase;
+class RFieldVisitor;
 
 // clang-format off
 /**
@@ -80,6 +81,8 @@ public:
 
    void* GetRawPtr() const { return fRawPtr; }
    RFieldBase* GetField() const { return fField; }
+
+   void AcceptVisitor(RFieldVisitor &visitor) const;
 };
 
 } // namespace Detail
