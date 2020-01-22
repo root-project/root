@@ -35,8 +35,10 @@ namespace Detail {
 \class ROOT::Experimental::Detail::RNTupleVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
-     
- RNTupleVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance by the RPrintVisitor class. The RFieldBase Class and classes which inherit from it will be visited.
+
+RNTupleVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance
+by the RPrintVisitor class. The RFieldBase class and classes which inherit from it will be visited. The level
+carries the hierarchy information about the tree of sub fields, starting with 0 for the root field.
 */
 // clang-format on
 class RNTupleVisitor {
@@ -45,24 +47,26 @@ public:
    virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
    virtual void VisitArrayField(const RFieldArray &field, int level) { VisitField(field, level); }
    virtual void VisitBoolField(const RField<bool> &field, int level) { VisitField(field, level); }
-   virtual void VisitBoolVecField(const RField<std::vector<bool>> &field, int level) { VisitField(field, level); }
    virtual void VisitClassField(const RFieldClass &field, int level) { VisitField(field, level); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) { VisitField(field, level); }
    virtual void VisitDoubleField(const RField<double> &field, int level) { VisitField(field, level); }
    virtual void VisitFloatField(const RField<float> &field, int level) { VisitField(field, level); }
    virtual void VisitIntField(const RField<int> &field, int level) { VisitField(field, level); }
    virtual void VisitStringField(const RField<std::string> &field, int level) { VisitField(field, level); }
-   virtual void VisitUIntField(const RField<std::uint32_t> &field, int level) { VisitField(field, level); }
+   virtual void VisitUInt32Field(const RField<std::uint32_t> &field, int level) { VisitField(field, level); }
    virtual void VisitUInt64Field(const RField<std::uint64_t> &field, int level) { VisitField(field, level); }
    virtual void VisitUInt8Field(const RField<std::uint8_t> &field, int level) { VisitField(field, level); }
    virtual void VisitVectorField(const RFieldVector &field, int level) { VisitField(field, level); }
+   virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) { VisitField(field, level); }
 };
 } // namespace Detail
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::RPrepareVisitor
 \ingroup NTuple
-\brief Visitor used for a prepare run to collect information needed by another visitor class.
+\brief Visitor used for a pre-processing run to collect information needed by another visitor class.
 
  Currently used for RPrintVisitor in RNTupleReader::Print() to collect information about levels, maximal depth etc.
 */
@@ -80,19 +84,21 @@ public:
    int GetNumFields() const { return fNumFields; }
 };
 
+
 // clang-format off
 /**
 \class ROOT::Experimental::RPrintVisitor
 \ingroup NTuple
 \brief Contains settings for printing and prints a summary of an RField instance.
-     
- Instances of this class are currently only invoked by RNTupleReader::Print() -> RFieldBase::AcceptVisitor()
+
+This visitor is used by RNTupleReader::Print()
 */
 // clang-format on
 class RPrintVisitor : public Detail::RNTupleVisitor {
 private:
    /// Where to write the printout to
    std::ostream &fOutput;
+   /// To render the output, use an asterix (*) by default to draw table lines and boundaries
    char fFrameSymbol;
    /// Indicates maximal number of allowed characters per line
    int fWidth;
@@ -115,9 +121,9 @@ private:
    std::string MakeValueString(const Detail::RFieldBase &field);
 
 public:
-   RPrintVisitor(std::ostream &out = std::cout, char fillSymbol = '*', int width = 80, int deepestLevel = 1,
+   RPrintVisitor(std::ostream &out = std::cout, char frameSymbol = '*', int width = 80, int deepestLevel = 1,
                  int numFields = 1)
-      : fOutput{out}, fFrameSymbol{fillSymbol}, fWidth{width}, fDeepestLevel{deepestLevel}, fNumFields{numFields}
+      : fOutput{out}, fFrameSymbol{frameSymbol}, fWidth{width}, fDeepestLevel{deepestLevel}, fNumFields{numFields}
    {
       SetAvailableSpaceForStrings();
    }
@@ -149,13 +155,15 @@ public:
       fAvailableSpaceValueString = fWidth - 6 - fAvailableSpaceKeyString;
    }
 };
+
+
 // clang-format off
 /**
 \class ROOT::Experimental::RValueVisitor
 \ingroup NTuple
-\brief Traverses through an ntuple to display its entries.
+\brief Traverses through the fields of an ntuple entry the values.
 
-Each visit outputs the entry of a single field as in a .json file. Used when RNTupleReader::Show() is called to show a single entry.
+Each visit outputs the entry of a single field JSON formatted. Used by RNTupleReader::Show().
 */
 // clang-format on
 
@@ -172,8 +180,8 @@ Each visit outputs the entry of a single field as in a .json file. Used when RNT
  *
  * How it works:
  * For every field type its appropriate visitor is called.
- * For Objects, it doesn't print any values and lets its subfields print the values.
- * For Vectors and Arrays the values are obtained from the most bottom level field where a basic data type is stored.
+ * For objects, it doesn't print any values and lets its subfields print the values.
+ * For vectors and arrays the values are obtained from the most bottom level field where a basic data type is stored.
  *    The index from which the data should be read from the most bottom level field and how long a vector/array is is
  * obtained from the upper level vector and array fields.
  */
@@ -185,7 +193,7 @@ private:
    std::ostream &fOutput;
    /// The fIndex-th element should be displayed.
    std::int32_t fIndex;
-   /// Used when priting the value of a std::array and std::vector field. It tells the visitor to only print the value
+   /// Used when printing the value of a std::array and std::vector field. It tells the visitor to only print the value
    /// of the subfield and not create a new line for each element in the array/vector.
    bool fPrintOnlyValue;
    /// When printing the contents of a std::array or std::vector, this index is used to get the values in its itemField.
@@ -201,17 +209,17 @@ public:
    void VisitRootField(const RFieldRoot & /*fField*/, int /*level*/) final {}
    void VisitArrayField(const RFieldArray &field, int level) final;
    void VisitBoolField(const RField<bool> &field, int level) final;
-   void VisitBoolVecField(const RField<std::vector<bool>> &field, int level) final;
    void VisitClassField(const RFieldClass &field, int level) final;
    void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) final;
    void VisitDoubleField(const RField<double> &field, int level) final;
    void VisitFloatField(const RField<float> &field, int level) final;
    void VisitIntField(const RField<int> &field, int level) final;
    void VisitStringField(const RField<std::string> &field, int level) final;
-   void VisitUIntField(const RField<std::uint32_t> &field, int level) final;
+   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
    void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
    void VisitVectorField(const RFieldVector &field, int level) final;
+   void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) final;
    std::ostream &GetOutput() { return fOutput; }
    /// Get startIndex from next non-vector/non-array itemfield
    void SetCollectionIndex(const Detail::RFieldBase &field);
@@ -219,19 +227,23 @@ public:
    std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
 };
 
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleFormatter
 \ingroup NTuple
 \brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintVisitor::VisitField()
-    
- The functions in this class format strings which are displayed when RNTupleReader::PrintInfo() or RNTupleReader::Show() is called.
+
+The functions in this class format strings which are displayed by RNTupleReader::PrintInfo() and RNTupleReader::Show().
 */
 // clang-format on
 class RNTupleFormatter {
 public:
+   // Returns a nested field with its parent fields, like "SubFieldofRootFieldName. ... .ParentFieldName.FieldName"
    static std::string FieldHierarchy(const Detail::RFieldBase &field);
+   // Can abbreviate long strings, e.g. ("ExampleString" , space= 8) => "Examp..."
    static std::string FitString(const std::string &str, int availableSpace);
+   // Returns std::string of form "1" or "2.1.1"
    static std::string HierarchialFieldOrder(const Detail::RFieldBase &field);
 };
 
