@@ -186,7 +186,7 @@ EXPECT_EQ(fString, os.str());
 
 TEST(RNTupleShow, Empty)
 {
-   std::string rootFileName{"empty.root"};
+   std::string rootFileName{"test_ntuple_show_empty.root"};
    std::string ntupleName{"EmptyNTuple"};
    FileRaii fileGuard(rootFileName);
    {
@@ -212,7 +212,7 @@ TEST(RNTupleShow, Empty)
 
 TEST(RNTupleShow, BasicTypes)
 {
-   std::string rootFileName{"basictypes.root"};
+   std::string rootFileName{"test_ntuple_show_basictypes.root"};
    std::string ntupleName{"SimpleTypesNtuple"};
    FileRaii fileGuard(rootFileName);
    {
@@ -296,7 +296,7 @@ TEST(RNTupleShow, BasicTypes)
 
 TEST(RNTupleShow, VectorFields)
 {
-   std::string rootFileName{"ShowVector.root"};
+   std::string rootFileName{"test_ntuple_show_vector.root"};
    std::string ntupleName{"VecNTuple"};
    FileRaii fileGuard(rootFileName);
    {
@@ -345,7 +345,7 @@ TEST(RNTupleShow, VectorFields)
 
 TEST(RNTupleShow, stdArrayAndClusterSize)
 {
-   std::string rootFileName{"arrayAndCluster.root"};
+   std::string rootFileName{"test_ntuple_show_array.root"};
    std::string ntupleName{"ArrayAndClusterNTuple"};
    FileRaii fileGuard(rootFileName);
    {
@@ -418,7 +418,7 @@ TEST(RNTupleShow, stdArrayAndClusterSize)
 
 TEST(RNTupleShow, ObjectFields)
 {
-   std::string rootFileName{"ShowObject.root"};
+   std::string rootFileName{"test_ntuple_show_object.root"};
    std::string ntupleName{"ClassContainingNTuple"};
    FileRaii fileGuard(rootFileName);
    {
