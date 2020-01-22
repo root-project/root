@@ -63,7 +63,7 @@ ROOT_ADD_TEST(test-check-nullptr
   COMMAND ${ROOT_root_CMD} -b -q -l -e "int*ptr=(int*)0" -e "*ptr"
   PASSREGEX "dereference null pointer")
 
-if(NOT MSVC)
+if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_TEST(test-check-invalidptr
     COMMAND ${ROOT_root_CMD} -b -q -l -e "int*ptr=(int*)1" -e "*ptr"
     PASSREGEX "invalid memory address")
@@ -402,24 +402,24 @@ if (NOT cxxmodules)
   # the current test will not require the VecCore (as in the textual case).
   # Alternatively, we can trace the origin of the fatal error and try to remap
   # the source locations.
-    if(MSVC)
-        set(build_generator_args --build-generator ${CMAKE_GENERATOR})
-        if(CMAKE_GENERATOR_PLATFORM)
-          list(APPEND build_generator_args --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
-        endif()
-        if(CMAKE_GENERATOR_TOOLSET)
-          list(APPEND build_generator_args --build-generator-toolset ${CMAKE_GENERATOR_TOOLSET})
-        endif()
-        ROOT_ADD_TEST(test-periodic-build
-        COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
-          --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-      )
-    else()
-      ROOT_ADD_TEST(test-periodic-build
-        COMMAND
-          env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-          ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
-          --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-      )
+  if(MSVC)
+    set(build_generator_args --build-generator ${CMAKE_GENERATOR})
+    if(CMAKE_GENERATOR_PLATFORM)
+      list(APPEND build_generator_args --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
     endif()
+    if(CMAKE_GENERATOR_TOOLSET)
+      list(APPEND build_generator_args --build-generator-toolset ${CMAKE_GENERATOR_TOOLSET})
+    endif()
+    ROOT_ADD_TEST(test-periodic-build
+      COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
+        --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+    )
+  else()
+    ROOT_ADD_TEST(test-periodic-build
+      COMMAND
+        env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+        ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
+        --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+    )
   endif()
+endif()
