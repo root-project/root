@@ -136,10 +136,12 @@ private:
    std::size_t fNRepetitions;
    /// A field on a trivial type that maps as-is to a single column
    bool fIsSimple;
-   /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
-   int fOrder = 1;
 
 protected:
+   /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
+   /// TODO(jblomer): review if this is needed
+   int fOrder = 1;
+
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
@@ -227,7 +229,6 @@ public:
          DoAppend(value);
          return;
       }
-      //printf("Appending simple value for %lu %s\n", *(unsigned long *)(value.GetRawPtr()), fName.c_str());
       fPrincipalColumn->Append(value.fMappedElement);
    }
 
@@ -254,6 +255,7 @@ public:
    /// Perform housekeeping tasks for global to cluster-local index translation
    virtual void CommitCluster() {}
 
+   /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
    std::string GetName() const { return fName; }
@@ -272,8 +274,9 @@ public:
    RIterator begin();
    RIterator end();
 
-   /// Used for the visitor design pattern, see for example RNTupleReader::Print()
+   /// Visit the entire subtree of fields tree starting from the current field
    virtual void TraverseVisitor(RNTupleVisitor &visitor, int level = 0) const;
+   /// Visit the current field only
    virtual void AcceptVisitor(RNTupleVisitor &visitor, int level) const;
    void FirstSubFieldAcceptVisitor(RNTupleVisitor &visitor, int level) const {
       if (fSubFields.size() && fSubFields[0])
@@ -285,7 +288,6 @@ public:
    RLevelInfo GetLevelInfo() const {
       return RLevelInfo(this);
    }
-   void SetOrder(int o) { fOrder = o; }
 };
 
 // clang-format off
@@ -310,7 +312,7 @@ public:
 /// The container field for an ntuple model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
 public:
-   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { SetOrder(-1); }
+   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { fOrder = -1; }
    RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
