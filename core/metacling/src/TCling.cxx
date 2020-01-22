@@ -1439,9 +1439,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // e.g. because of an RPATH build.
       fInterpreter->getDynamicLibraryManager()->addSearchPath(TROOT::GetLibDir().Data());
    }
-
-   // We are set up. EnableAutoLoading() is checking for fromRootCling.
-   EnableAutoLoading();
 }
 
 
@@ -1469,6 +1466,9 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
+
+   // We are set up. EnableAutoLoading() is checking for fromRootCling.
+   EnableAutoLoading();
 }
 
 void TCling::ShutDown()
@@ -2927,6 +2927,13 @@ void TCling::EnableAutoLoading()
 {
    if (IsFromRootCling())
       return;
+
+   // Read the rules before enabling the auto loading to not inadvertently
+   // load the libraries for the classes concerned even-though the user is
+   // *not* using them.
+   // Note this call must happen before the first call to LoadLibraryMap.
+   assert(GetRootMapFiles() == 0 && "Must be called before LoadLibraryMap!");
+   TClass::ReadRules(); // Read the default customization rules ...
 
    LoadLibraryMap();
    SetClassAutoloading(true);
