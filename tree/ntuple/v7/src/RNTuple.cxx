@@ -20,6 +20,7 @@
 #include "ROOT/RPageStorage.hxx"
 
 #include <algorithm>
+#include <exception>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -102,7 +103,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage));
 }
 
-void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo format, std::ostream &output)
+void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
 {
    // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out from the terminal.
    char frameSymbol = '*';
@@ -118,7 +119,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo format, std:
    RPrepareVisitor prepVisitor(0, 0);
    //printVisitor traverses through all fields to do the actual printing.
    RPrintVisitor printVisitor(output);
-   switch (format) {
+   switch (what) {
    case ENTupleInfo::kSummary:
       for (int i = 0; i < (width/2 + width%2 - 4); ++i)
             output << frameSymbol;
@@ -153,17 +154,17 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo format, std:
    }
 }
 
-// Uses the visitor design pattern to traverse through each field. The visitor prints a line with an entry for each field it visited.
+
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
 {
    if (GetModel()->GetRootField()->GetLevelInfo().GetNumChildren() == 0) {
       output << "{}" << std::endl;
       return;
    }
-   // index starts at zero, fNEntries starts at 1.
+
    if (index >= fNEntries) {
-      output << "Index exceeds maximum number of entries. (" << fNEntries << ")" << std::endl;
-      return;
+      throw std::runtime_error(std::string("index exceeds maximum number of entries. (") +
+                               std::to_string(fNEntries) + ")");
    }
 
    RValueVisitor visitor(output, this, index, false, 0);
