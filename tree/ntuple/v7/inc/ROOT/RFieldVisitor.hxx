@@ -17,6 +17,7 @@
 #define ROOT7_RFieldVisitor
 
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <algorithm>
@@ -37,7 +38,7 @@ namespace Detail {
 \brief Abstract base class for classes implementing the visitor design pattern.
 
 RNTupleVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance
-by the RPrintVisitor class. The RFieldBase class and classes which inherit from it will be visited. The level
+by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit from it will be visited. The level
 carries the hierarchy information about the tree of sub fields, starting with 0 for the root field.
 */
 // clang-format on
@@ -68,7 +69,7 @@ public:
 \ingroup NTuple
 \brief Visitor used for a pre-processing run to collect information needed by another visitor class.
 
- Currently used for RPrintVisitor in RNTupleReader::Print() to collect information about levels, maximal depth etc.
+ Currently used for RPrintSchemaVisitor in RNTupleReader::Print() to collect information about levels, max depth etc.
 */
 // clang-format on
 class RPrepareVisitor : public Detail::RNTupleVisitor {
@@ -87,14 +88,14 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RPrintVisitor
+\class ROOT::Experimental::RPrintSchemaVisitor
 \ingroup NTuple
 \brief Contains settings for printing and prints a summary of an RField instance.
 
 This visitor is used by RNTupleReader::Print()
 */
 // clang-format on
-class RPrintVisitor : public Detail::RNTupleVisitor {
+class RPrintSchemaVisitor : public Detail::RNTupleVisitor {
 private:
    /// Where to write the printout to
    std::ostream &fOutput;
@@ -121,8 +122,8 @@ private:
    std::string MakeValueString(const Detail::RFieldBase &field);
 
 public:
-   RPrintVisitor(std::ostream &out = std::cout, char frameSymbol = '*', int width = 80, int deepestLevel = 1,
-                 int numFields = 1)
+   RPrintSchemaVisitor(std::ostream &out = std::cout, char frameSymbol = '*', int width = 80, int deepestLevel = 1,
+                       int numFields = 1)
       : fOutput{out}, fFrameSymbol{frameSymbol}, fWidth{width}, fDeepestLevel{deepestLevel}, fNumFields{numFields}
    {
       SetAvailableSpaceForStrings();
@@ -227,12 +228,46 @@ public:
    std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
 };
 
+//class REntryVisitor : public Detail::RNTupleVisitor {
+//private:
+//   /// The output is directed to fOutput which may differ from std::cout.
+//   std::ostream &fOutput;
+//   /// Points to the memory with the data corresponing to the field
+//   RFieldValue fValue;
+//
+//public:
+//   RValueVisitor(std::ostream &output, RFieldValue)
+//      : fReader{reader}, fOutput{output}, fIndex{index}, fPrintOnlyValue{onlyValue}, fCollectionIndex{collectionIndex}
+//   {
+//   }
+//   void VisitField(const Detail::RFieldBase &field, int level) final;
+//   void VisitRootField(const RFieldRoot & /*fField*/, int /*level*/) final {}
+//   void VisitArrayField(const RFieldArray &field, int level) final;
+//   void VisitBoolField(const RField<bool> &field, int level) final;
+//   void VisitClassField(const RFieldClass &field, int level) final;
+//   void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) final;
+//   void VisitDoubleField(const RField<double> &field, int level) final;
+//   void VisitFloatField(const RField<float> &field, int level) final;
+//   void VisitIntField(const RField<int> &field, int level) final;
+//   void VisitStringField(const RField<std::string> &field, int level) final;
+//   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) final;
+//   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
+//   void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
+//   void VisitVectorField(const RFieldVector &field, int level) final;
+//   void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) final;
+//   std::ostream &GetOutput() { return fOutput; }
+//   /// Get startIndex from next non-vector/non-array itemfield
+//   void SetCollectionIndex(const Detail::RFieldBase &field);
+//   // Necessary to convert RClusterIndexes obtained from RFieldVector::GetCollectionInfo()
+//   std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
+//};
+
 
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleFormatter
 \ingroup NTuple
-\brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintVisitor::VisitField()
+\brief Contains helper functions for RNTupleReader::PrintInfo() and RPrintSchemaVisitor::VisitField()
 
 The functions in this class format strings which are displayed by RNTupleReader::PrintInfo() and RNTupleReader::Show().
 */
