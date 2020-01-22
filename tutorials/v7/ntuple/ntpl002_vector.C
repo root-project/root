@@ -121,8 +121,8 @@ void Read()
 
    // Quick overview of the ntuple's key meta-data
    ntuple->PrintInfo();
-   
-   std::cout << "The entry No.42 in JSON format:" << std::endl;
+
+   std::cout << "Entry number 42 in JSON format:" << std::endl;
    ntuple->Show(41);
    // In a future version of RNTuple, there will be support for ntuple->Scan()
 
