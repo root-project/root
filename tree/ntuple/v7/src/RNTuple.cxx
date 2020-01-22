@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include <TError.h>
 #include <TFile.h>
 #include <ROOT/RPageStorageRoot.hxx>
 
@@ -148,7 +149,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo format, std:
       break;
    default:
       // Unhandled case, internal error
-      assert(false);
+      R__ASSERT(false);
    }
 }
 
@@ -156,7 +157,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo format, std:
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
 {
    if (GetModel()->GetRootField()->GetLevelInfo().GetNumChildren() == 0) {
-      output << "The NTuple is empty." << std::endl;
+      output << "{}" << std::endl;
       return;
    }
    // index starts at zero, fNEntries starts at 1.
@@ -164,7 +165,7 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
       output << "Index exceeds maximum number of entries. (" << fNEntries << ")" << std::endl;
       return;
    }
-      
+
    RValueVisitor visitor(output, this, index, false, 0);
    switch(format) {
       case ENTupleFormat::kJSON:
@@ -172,7 +173,7 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
          break;
       default:
          // Unhandled case, internal error
-         assert(false);
+         R__ASSERT(false);
    }
 }
 //------------------------------------------------------------------------------
