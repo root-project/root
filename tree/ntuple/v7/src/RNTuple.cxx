@@ -130,7 +130,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       // FitString defined in RFieldVisitor.cxx
       output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width-13) << frameSymbol << std::endl; // prints line with name of ntuple
       output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13) << frameSymbol << std::endl;  // prints line with number of entries
-      GetModel()->GetRootField()->AcceptSchemaVisitor(prepVisitor, 0);
+      GetModel()->GetRootField()->AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
       printVisitor.SetWidth(width);
@@ -140,7 +140,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
-      GetModel()->GetRootField()->AcceptSchemaVisitor(printVisitor, 0);
+      GetModel()->GetRootField()->AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
       output << std::endl;
@@ -168,7 +168,7 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
          output << "{" << std::endl;
          for (auto iValue = entry->begin(); iValue != entry->end(); ) {
             RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
-            iValue->GetField()->AcceptValueVisitor(visitor);
+            iValue->GetField()->AcceptVisitor(visitor);
 
             if (++iValue == entry->end()) {
                output << std::endl;
