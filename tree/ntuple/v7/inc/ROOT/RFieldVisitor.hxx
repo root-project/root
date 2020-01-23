@@ -33,32 +33,76 @@ namespace Detail {
 
 // clang-format off
 /**
+\class ROOT::Experimental::RVisitorRank
+\ingroup NTuple
+\brief Describes where the visitor is located during the traversal.
+
+Used by the visitors to act upon first/last children when iterating the tree of fields or values
+*/
+// clang-format on
+class RVisitorRank {
+private:
+   /// Tells how deep the field is in the ntuple. Root field has fLevel 0, direct subfields of root have fLevel 1, etc.
+   unsigned int fLevel;
+   /// First child of parent has fOrder 0, the next fOrder 1, etc. If there is no parent, fOrder is -1
+   int fOrder;
+   /// The field itself is also included in this number.
+   unsigned int fNumSiblings;
+   /// Children refers to elements of fSubField
+   unsigned int fNumChildren;
+
+public:
+   RVisitorRank(unsigned int lvl, unsigned int ord, unsigned int nSiblings, unsigned int nChildren)
+      : fLevel(lvl), fOrder(ord), fNumSiblings(nSiblings), fNumChildren(nChildren)
+   {
+   }
+   unsigned int GetLevel() const { return fLevel; }
+   int GetOrder() const { return fOrder; }
+   unsigned int GetNumSiblings() const { return fNumSiblings; }
+   unsigned int GetNumChildren() const { return fNumChildren; }
+   bool IsFirstSibling() const;
+   bool IsLastSibling() const;
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Detail::RSchemaVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
 
 RSchemaVisitor::VisitField() is invoked by RFieldBase::AcceptSchemaVisitor(). VisitField() is inherited for instance
-by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit from it will be visited. The level
-carries the hierarchy information about the tree of sub fields, starting with 0 for the root field.
+by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit from it will be visited.
 */
 // clang-format on
 class RSchemaVisitor {
 public:
-   virtual void VisitField(const Detail::RFieldBase &field, int level) = 0;
-   virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
-   virtual void VisitArrayField(const RFieldArray &field, int level) { VisitField(field, level); }
-   virtual void VisitBoolField(const RField<bool> &field, int level) { VisitField(field, level); }
-   virtual void VisitClassField(const RFieldClass &field, int level) { VisitField(field, level); }
-   virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) { VisitField(field, level); }
-   virtual void VisitDoubleField(const RField<double> &field, int level) { VisitField(field, level); }
-   virtual void VisitFloatField(const RField<float> &field, int level) { VisitField(field, level); }
-   virtual void VisitIntField(const RField<int> &field, int level) { VisitField(field, level); }
-   virtual void VisitStringField(const RField<std::string> &field, int level) { VisitField(field, level); }
-   virtual void VisitUInt32Field(const RField<std::uint32_t> &field, int level) { VisitField(field, level); }
-   virtual void VisitUInt64Field(const RField<std::uint64_t> &field, int level) { VisitField(field, level); }
-   virtual void VisitUInt8Field(const RField<std::uint8_t> &field, int level) { VisitField(field, level); }
-   virtual void VisitVectorField(const RFieldVector &field, int level) { VisitField(field, level); }
-   virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) { VisitField(field, level); }
+   virtual void VisitField(const Detail::RFieldBase &field, const RVisitorRank &rank) = 0;
+   virtual void VisitRootField(const RFieldRoot &field, const RVisitorRank &rank) = 0;
+   virtual void VisitArrayField(const RFieldArray &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitBoolField(const RField<bool> &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitClassField(const RFieldClass &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field, const RVisitorRank &rank) {
+      VisitField(field, rank);
+   }
+   virtual void VisitDoubleField(const RField<double> &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitFloatField(const RField<float> &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitIntField(const RField<int> &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitStringField(const RField<std::string> &field, const RVisitorRank &rank) {
+      VisitField(field, rank);
+   }
+   virtual void VisitUInt32Field(const RField<std::uint32_t> &field, const RVisitorRank &rank) {
+      VisitField(field, rank);
+   }
+   virtual void VisitUInt64Field(const RField<std::uint64_t> &field, const RVisitorRank &rank) {
+      VisitField(field, rank);
+   }
+   virtual void VisitUInt8Field(const RField<std::uint8_t> &field, const RVisitorRank &rank) {
+      VisitField(field, rank);
+   }
+   virtual void VisitVectorField(const RFieldVector &field, const RVisitorRank &rank) { VisitField(field, rank); }
+   virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field, const RVisitorRank &rank) {
+      VisitField(field, rank);
+   }
 };
 } // namespace Detail
 
@@ -74,15 +118,16 @@ public:
 // clang-format on
 class RPrepareVisitor : public Detail::RSchemaVisitor {
 private:
-   int fDeepestLevel;
-   int fNumFields;
+   unsigned int fDeepestLevel;
+   unsigned int fNumFields;
 
 public:
-   RPrepareVisitor(int deepestLevel = 0, int numFields = 0) : fDeepestLevel{deepestLevel}, fNumFields{numFields} {}
-   void VisitField(const Detail::RFieldBase &field, int level) final;
-   void VisitRootField(const RFieldRoot & /*field*/, int /*level*/) final {}
-   int GetDeepestLevel() const { return fDeepestLevel; }
-   int GetNumFields() const { return fNumFields; }
+   RPrepareVisitor(unsigned int deepestLevel = 0, unsigned int numFields = 0)
+      : fDeepestLevel{deepestLevel}, fNumFields{numFields} {}
+   void VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank) final;
+   void VisitRootField(const RFieldRoot & /*field*/, const Detail::RVisitorRank & /*rank*/) final {}
+   unsigned int GetDeepestLevel() const { return fDeepestLevel; }
+   unsigned int GetNumFields() const { return fNumFields; }
 };
 
 
@@ -117,7 +162,7 @@ private:
    // *     |__Field <- no '|' in position 1 and 2
    std::vector<bool> fFlagForVerticalLines;
    /// KeyString refers to the left side containing the word "Field" and its hierarchial order
-   std::string MakeKeyString(const Detail::RFieldBase &field, int level);
+   std::string MakeKeyString(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank);
    /// ValueString refers to the right side containing the type and name
    std::string MakeValueString(const Detail::RFieldBase &field);
 
@@ -129,8 +174,8 @@ public:
       SetAvailableSpaceForStrings();
    }
    /// Prints summary of Field
-   void VisitField(const Detail::RFieldBase &field, int level) final;
-   void VisitRootField(const RFieldRoot & /*field*/, int /*level*/) final{};
+   void VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank) final;
+   void VisitRootField(const RFieldRoot & /*field*/, const Detail::RVisitorRank & /*rank*/) final{};
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
    void SetDeepestLevel(int d);
@@ -206,21 +251,21 @@ public:
       : fReader{reader}, fOutput{output}, fIndex{index}, fPrintOnlyValue{onlyValue}, fCollectionIndex{collectionIndex}
    {
    }
-   void VisitField(const Detail::RFieldBase &field, int level) final;
-   void VisitRootField(const RFieldRoot & /*fField*/, int /*level*/) final {}
-   void VisitArrayField(const RFieldArray &field, int level) final;
-   void VisitBoolField(const RField<bool> &field, int level) final;
-   void VisitClassField(const RFieldClass &field, int level) final;
-   void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) final;
-   void VisitDoubleField(const RField<double> &field, int level) final;
-   void VisitFloatField(const RField<float> &field, int level) final;
-   void VisitIntField(const RField<int> &field, int level) final;
-   void VisitStringField(const RField<std::string> &field, int level) final;
-   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) final;
-   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
-   void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
-   void VisitVectorField(const RFieldVector &field, int level) final;
-   void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) final;
+   void VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank) final;
+   void VisitRootField(const RFieldRoot & /*fField*/, const Detail::RVisitorRank & /*rank*/) final {}
+   void VisitArrayField(const RFieldArray &field, const Detail::RVisitorRank &rank) final;
+   void VisitBoolField(const RField<bool> &field, const Detail::RVisitorRank &rank) final;
+   void VisitClassField(const RFieldClass &field, const Detail::RVisitorRank &rank) final;
+   void VisitClusterSizeField(const RField<ClusterSize_t> &field, const Detail::RVisitorRank &rank) final;
+   void VisitDoubleField(const RField<double> &field, const Detail::RVisitorRank &rank) final;
+   void VisitFloatField(const RField<float> &field, const Detail::RVisitorRank &rank) final;
+   void VisitIntField(const RField<int> &field, const Detail::RVisitorRank &rank) final;
+   void VisitStringField(const RField<std::string> &field, const Detail::RVisitorRank &rank) final;
+   void VisitUInt32Field(const RField<std::uint32_t> &field, const Detail::RVisitorRank &rank) final;
+   void VisitUInt64Field(const RField<std::uint64_t> &field, const Detail::RVisitorRank &rank) final;
+   void VisitUInt8Field(const RField<std::uint8_t> &field, const Detail::RVisitorRank &rank) final;
+   void VisitVectorField(const RFieldVector &field, const Detail::RVisitorRank &rank) final;
+   void VisitVectorBoolField(const RField<std::vector<bool>> &field, const Detail::RVisitorRank &rank) final;
    std::ostream &GetOutput() { return fOutput; }
    /// Get startIndex from next non-vector/non-array itemfield
    void SetCollectionIndex(const Detail::RFieldBase &field);
@@ -228,37 +273,37 @@ public:
    std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
 };
 
-// clang-format off
-/**
-\class ROOT::Experimental::RPrintValueVisitor
-\ingroup NTuple
-\brief Renders a JSON value corresponding to the field. Needs to be used with RFieldValue::AcceptSchemaVisitor()
-*/
-// clang-format on
-class RPrintValueVisitor : public Detail::RSchemaVisitor {
-private:
-   /// The output is directed to fOutput which may differ from std::cout.
-   std::ostream &fOutput;
-
-public:
-   RPrintValueVisitor(std::ostream &output) : fOutput{output} {}
-
-   void VisitField(const Detail::RFieldBase &field, int level) final;
-   void VisitRootField(const RFieldRoot & /*fField*/, int /*level*/) final {}
-   void VisitArrayField(const RFieldArray &field, int level) final;
-   void VisitBoolField(const RField<bool> &field, int level) final;
-   void VisitClassField(const RFieldClass &field, int level) final;
-   void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) final;
-   void VisitDoubleField(const RField<double> &field, int level) final;
-   void VisitFloatField(const RField<float> &field, int level) final;
-   void VisitIntField(const RField<int> &field, int level) final;
-   void VisitStringField(const RField<std::string> &field, int level) final;
-   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) final;
-   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
-   void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
-   void VisitVectorField(const RFieldVector &field, int level) final;
-   void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) final;
-};
+//// clang-format off
+///**
+//\class ROOT::Experimental::RPrintValueVisitor
+//\ingroup NTuple
+//\brief Renders a JSON value corresponding to the field. Needs to be used with RFieldValue::AcceptSchemaVisitor()
+//*/
+//// clang-format on
+//class RPrintValueVisitor : public Detail::RSchemaVisitor {
+//private:
+//   /// The output is directed to fOutput which may differ from std::cout.
+//   std::ostream &fOutput;
+//
+//public:
+//   RPrintValueVisitor(std::ostream &output) : fOutput{output} {}
+//
+//   void VisitField(const Detail::RFieldBase &field, RFieldLevel level) final;
+//   void VisitRootField(const RFieldRoot & /*fField*/, RFieldLevel /*level*/) final {}
+//   void VisitArrayField(const RFieldArray &field, RFieldLevel level) final;
+//   void VisitBoolField(const RField<bool> &field, RFieldLevel level) final;
+//   void VisitClassField(const RFieldClass &field, RFieldLevel level) final;
+//   void VisitClusterSizeField(const RField<ClusterSize_t> &field, RFieldLevel level) final;
+//   void VisitDoubleField(const RField<double> &field, RFieldLevel level) final;
+//   void VisitFloatField(const RField<float> &field, RFieldLevel level) final;
+//   void VisitIntField(const RField<int> &field, RFieldLevel level) final;
+//   void VisitStringField(const RField<std::string> &field, RFieldLevel level) final;
+//   void VisitUInt32Field(const RField<std::uint32_t> &field, RFieldLevel level) final;
+//   void VisitUInt64Field(const RField<std::uint64_t> &field, RFieldLevel level) final;
+//   void VisitUInt8Field(const RField<std::uint8_t> &field, RFieldLevel level) final;
+//   void VisitVectorField(const RFieldVector &field, RFieldLevel level) final;
+//   void VisitVectorBoolField(const RField<std::vector<bool>> &field, RFieldLevel level) final;
+//};
 
 
 // clang-format off
@@ -273,7 +318,8 @@ The functions in this class format strings which are displayed by RNTupleReader:
 class RNTupleFormatter {
 public:
    // Returns a nested field with its parent fields, like "SubFieldofRootFieldName. ... .ParentFieldName.FieldName"
-   static std::string FieldHierarchy(const Detail::RFieldBase &field);
+   // TODO(jblomer): remove me
+   static std::string FieldHierarchy(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank);
    // Can abbreviate long strings, e.g. ("ExampleString" , space= 8) => "Examp..."
    static std::string FitString(const std::string &str, int availableSpace);
    // Returns std::string of form "1" or "2.1.1"
