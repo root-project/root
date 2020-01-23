@@ -196,6 +196,12 @@ void ROOT::Experimental::Detail::RFieldBase::DestroyValue(const RFieldValue &val
       free(value.GetRawPtr());
 }
 
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::Detail::RFieldBase::SplitValue(const RFieldValue & /*value*/) const
+{
+   return std::vector<RFieldValue>();
+}
+
 void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
@@ -243,7 +249,12 @@ void ROOT::Experimental::Detail::RFieldBase::AcceptSchemaVisitor(Detail::RSchema
    visitor.VisitField(*this, GetSchemaRank(level));
 }
 
-void ROOT::Experimental::Detail::RFieldBase::TraverseValueVisitor(RValueVisitor &visitor, int level) const
+void ROOT::Experimental::Detail::RFieldBase::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
+{
+   visitor.VisitField(*this);
+}
+
+void ROOT::Experimental::Detail::RFieldBase::TraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const
 {
    // subfields of a std::vector (kCollection) and std::array shouldn't be displayed
    if (fParent && (GetParent()->GetStructure() == ENTupleStructure::kCollection
@@ -292,7 +303,7 @@ void ROOT::Experimental::Detail::RFieldBase::TraverseValueVisitor(RValueVisitor 
 }
 
 /// When printing an array or vector of objects, only the contents in the subfields should be displayed -> skip top level field
-void ROOT::Experimental::Detail::RFieldBase::NotVisitTopFieldTraverseValueVisitor(RValueVisitor &visitor, int level) const
+void ROOT::Experimental::Detail::RFieldBase::NotVisitTopFieldTraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const
 {
    ++level;
    for (const auto &fieldPtr: fSubFields) {
@@ -301,22 +312,22 @@ void ROOT::Experimental::Detail::RFieldBase::NotVisitTopFieldTraverseValueVisito
 }
 
 
-ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::begin()
+ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::begin()
 {
-   if (fSubFields.empty()) return RIterator(this, -1);
-   return RIterator(this->fSubFields[0].get(), 0);
+   if (fSubFields.empty()) return RSchemaIterator(this, -1);
+   return RSchemaIterator(this->fSubFields[0].get(), 0);
 }
 
-ROOT::Experimental::Detail::RFieldBase::RIterator ROOT::Experimental::Detail::RFieldBase::end()
+ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::end()
 {
-   return RIterator(this, -1);
+   return RSchemaIterator(this, -1);
 }
 
 
 //-----------------------------------------------------------------------------
 
 
-void ROOT::Experimental::Detail::RFieldBase::RIterator::Advance()
+void ROOT::Experimental::Detail::RFieldBase::RSchemaIterator::Advance()
 {
    auto itr = fStack.rbegin();
    if (!itr->fFieldPtr->fSubFields.empty()) {
@@ -430,6 +441,12 @@ void ROOT::Experimental::RField<float>::DoGenerateColumns()
 void ROOT::Experimental::RField<float>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
 {
    visitor.VisitFloatField(*this, GetSchemaRank(level));
+}
+
+
+void ROOT::Experimental::RField<float>::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
+{
+   visitor.VisitFloatField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -704,6 +721,19 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldVector::Captur
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RFieldVector::SplitValue(const Detail::RFieldValue &value) const
+{
+   auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
+   R__ASSERT((vec->size() % fItemSize) == 0);
+   auto nItems = vec->size() / fItemSize;
+   std::vector<Detail::RFieldValue> result;
+   for (unsigned i = 0; i < nItems; ++i) {
+      result.emplace_back(fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize)));
+   }
+   return result;
+}
+
 void ROOT::Experimental::RFieldVector::CommitCluster()
 {
    fNWritten = 0;
@@ -712,6 +742,12 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
 void ROOT::Experimental::RFieldVector::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
 {
    visitor.VisitVectorField(*this, GetSchemaRank(level));
+}
+
+
+void ROOT::Experimental::RFieldVector::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
+{
+   visitor.VisitVectorField(*this);
 }
 
 
