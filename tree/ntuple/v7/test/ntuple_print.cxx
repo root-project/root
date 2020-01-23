@@ -401,18 +401,6 @@ TEST(RNTupleShow, Objects)
       CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}
       };
       ntuple->Fill();
-
-      *customStructfield = CustomStruct{5.1f, std::vector<float>{3.1f, 3.2f, 3.3f}, std::vector<std::vector<float>>{{4.1f, 4.2f, 4.3f}, {5.1f, 5.2f, 5.3f}}, "AnotherString"};
-      *customStructVec = {
-         CustomStruct{5.2f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example5String"},
-         CustomStruct{5.3f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.3f}}, "Example6String"},
-         CustomStruct{5.4f, std::vector<float>{0.1f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example7String"}
-      };
-      *customStructArray = {
-      CustomStruct{5.5f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f}}, "AnotherString3"},
-      CustomStruct{5.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString4"}
-      };
-      ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
    auto customStructfield = model2->MakeField<CustomStruct>("CustomStruct");
@@ -424,95 +412,20 @@ TEST(RNTupleShow, Objects)
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
       + "{\n"
-      + "  \"CustomStruct\": \n"
-      + "  {\n"
+      + "  \"CustomStruct\": {\n"
       + "    \"a\": 4.1,\n"
-      + "    \"v1\": {0.1, 0.2, 0.3},\n"
-      + "    \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
+      + "    \"v1\": [0.1, 0.2, 0.3],\n"
+      + "    \"v2\": [[1.1, 1.2, 1.3], [2.1, 2.2, 2.3]],\n"
       + "    \"s\": \"Example1String\"\n"
-      + "  }\n"
-      + "  \"CustomStructVec\": {\n"
-      + "    {\n"
-      + "      \"a\": 4.2,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
-      + "      \"s\": \"Example2String\"\n"
-      + "    }, \n"
-      + "    {\n"
-      + "      \"a\": 4.3,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.3 }},\n"
-      + "      \"s\": \"Example3String\"\n"
-      + "    }, \n"
-      + "    {\n"
-      + "      \"a\": 4.4,\n"
-      + "      \"v1\": {0.1, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
-      + "      \"s\": \"Example4String\"\n"
-      + "    }\n"
       + "  },\n"
-      + "  \"CustomStructArray\": [\n"
-      + "    {\n"
-      + "      \"a\": 4.5,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
-      + "      \"s\": \"AnotherString1\"\n"
-      + "    }, \n"
-      + "    {\n"
-      + "      \"a\": 4.6,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.3 }},\n"
-      + "      \"s\": \"AnotherString2\"\n"
-      + "    }\n"
-      + "  ]\n"
+      + "  \"CustomStructVec\": [{\"a\": 4.2, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
+      +      "\"s\": \"Example2String\"}, {\"a\": 4.3, \"v1\": [0.1, 0.2, 0.3], "
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"Example3String\"}, "
+      +      "{\"a\": 4.4, \"v1\": [0.1, 0.3], \"v2\": [[1.1, 1.2, 1.3], [2.1, 2.2, 2.3]], "
+      +      "\"s\": \"Example4String\"}],\n"
+      + "  \"CustomStructArray\": [{\"a\": 4.5, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
+      +      "\"s\": \"AnotherString1\"}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\"}]\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
-
-   std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
-   std::string fString1{ std::string("")
-      + "{\n"
-      + "  \"CustomStruct\": \n"
-      + "  {\n"
-      + "    \"a\": 5.1,\n"
-      + "    \"v1\": {3.1, 3.2, 3.3},\n"
-      + "    \"v2\": {{ 4.1, 4.2, 4.3 }, { 5.1, 5.2, 5.3 }},\n"
-      + "    \"s\": \"AnotherString\"\n"
-      + "  }\n"
-      + "  \"CustomStructVec\": {\n"
-      + "    {\n"
-      + "      \"a\": 5.2,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
-      + "      \"s\": \"Example5String\"\n"
-      + "    }, \n"
-      + "    {\n"
-      + "      \"a\": 5.3,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.3 }},\n"
-      + "      \"s\": \"Example6String\"\n"
-      + "    }, \n"
-      + "    {\n"
-      + "      \"a\": 5.4,\n"
-      + "      \"v1\": {0.1, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.2, 2.3 }},\n"
-      + "      \"s\": \"Example7String\"\n"
-      + "    }\n"
-      + "  },\n"
-      + "  \"CustomStructArray\": [\n"
-      + "    {\n"
-      + "      \"a\": 5.5,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.3 }, { 2.1, 2.2 }},\n"
-      + "      \"s\": \"AnotherString3\"\n"
-      + "    }, \n"
-      + "    {\n"
-      + "      \"a\": 5.6,\n"
-      + "      \"v1\": {0.1, 0.2, 0.3},\n"
-      + "      \"v2\": {{ 1.1, 1.2, 1.3 }, { 2.1, 2.3 }},\n"
-      + "      \"s\": \"AnotherString4\"\n"
-      + "    }\n"
-      + "  ]\n"
-      + "}\n" };
-   EXPECT_EQ(fString1, os1.str());
 }

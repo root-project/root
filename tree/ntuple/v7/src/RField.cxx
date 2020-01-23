@@ -559,6 +559,22 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldClass::Capture
    return Detail::RFieldValue(true /* captureFlat */, this, where);
 }
 
+
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RFieldClass::SplitValue(const Detail::RFieldValue &value) const
+{
+   TIter next(fClass->GetListOfDataMembers());
+   unsigned i = 0;
+   std::vector<Detail::RFieldValue> result;
+   while (auto dataMember = static_cast<TDataMember *>(next())) {
+      auto memberValue = fSubFields[i]->CaptureValue(value.Get<unsigned char>() + dataMember->GetOffset());
+      result.emplace_back(memberValue);
+      i++;
+   }
+   return result;
+}
+
+
 size_t ROOT::Experimental::RFieldClass::GetValueSize() const
 {
    return fClass->GetClassSize();
