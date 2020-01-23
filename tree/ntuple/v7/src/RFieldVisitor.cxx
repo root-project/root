@@ -118,9 +118,67 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(
    fOutput << fFrameSymbol << std::endl;
 }
 
-//------------------------ RValueVisitor --------------------------------
 
-void ROOT::Experimental::RValueVisitor::VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
+//--------------------------- RPrintValueVisitor -------------------------------
+
+void ROOT::Experimental::RPrintValueVisitor::PrintIndent()
+{
+   if (fPrintOptions.fPrintSingleLine)
+      return;
+
+   for (unsigned int i = 0; i < fLevel; ++i)
+      fOutput << "  ";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::PrintName(const Detail::RFieldBase &field)
+{
+   if (fPrintOptions.fPrintName)
+      fOutput << "\"" << field.GetName() << "\": ";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitField(const Detail::RFieldBase &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << "\"<unsupported type: " << field.GetType() << ">\"";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitFloatField(const RField<float> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<float>();
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RFieldVector &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << "[";
+   auto elems = field.SplitValue(fValue);
+   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+      RPrintOptions options;
+      options.fPrintSingleLine = true;
+      options.fPrintName = false;
+      RPrintValueVisitor elemVisitor(*iValue, fOutput, 0 /* level */, options);
+      iValue->GetField()->AcceptValueVisitor(elemVisitor);
+
+      if (++iValue == elems.end())
+         break;
+      else
+         fOutput << ", ";
+   }
+   fOutput << "]";
+}
+
+
+//------------------------ RRemoveMeVisitor --------------------------------
+
+void ROOT::Experimental::RRemoveMeVisitor::VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << "no support for " << field.GetType();
@@ -136,7 +194,7 @@ void ROOT::Experimental::RValueVisitor::VisitField(const Detail::RFieldBase &fie
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitArrayField(const RFieldArray &field, const Detail::RVisitorRank &rank)
 {
    // When fPrintOnlyValue is true, int level gets a new meaning. It is used in VisitVectorField for multidimentional
    // vectors and array of vectors.
@@ -184,7 +242,7 @@ void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field
    fPrintOnlyValue = false;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitBoolField(const RField<bool> &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitBoolField(const RField<bool> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field, rank));
@@ -213,13 +271,13 @@ void ROOT::Experimental::RValueVisitor::VisitBoolField(const RField<bool> &field
 }
 
 // Visited when encountering a field with a custom object with dictionary.
-void ROOT::Experimental::RValueVisitor::VisitClassField(const RFieldClass &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitClassField(const RFieldClass &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << std::endl;
       // Create new RValueVisitor to have 2 different fCollectionIndexes (allows to display vector of objects which
       // contain vectors themselves)
-      RValueVisitor visitor(fOutput, fReader, rank.GetLevel() /*fIndex*/, false, 0);
+      RRemoveMeVisitor visitor(fOutput, fReader, rank.GetLevel() /*fIndex*/, false, 0);
       field.NotVisitTopFieldTraverseValueVisitor(visitor, rank.GetLevel());
       return;
    }
@@ -233,7 +291,7 @@ void ROOT::Experimental::RValueVisitor::VisitClassField(const RFieldClass &field
    return;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitClusterSizeField(const RField<ROOT::Experimental::ClusterSize_t> &field,
+void ROOT::Experimental::RRemoveMeVisitor::VisitClusterSizeField(const RField<ROOT::Experimental::ClusterSize_t> &field,
                                                               const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
@@ -254,7 +312,7 @@ void ROOT::Experimental::RValueVisitor::VisitClusterSizeField(const RField<ROOT:
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitDoubleField(const RField<double> &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitDoubleField(const RField<double> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field, rank));
@@ -274,7 +332,7 @@ void ROOT::Experimental::RValueVisitor::VisitDoubleField(const RField<double> &f
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitFloatField(const RField<float> &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitFloatField(const RField<float> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field, rank));
@@ -294,7 +352,7 @@ void ROOT::Experimental::RValueVisitor::VisitFloatField(const RField<float> &fie
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitIntField(const RField<int> &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitIntField(const RField<int> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       auto view = fReader->GetView<std::int32_t>(RNTupleFormatter::FieldHierarchy(field, rank));
@@ -314,7 +372,7 @@ void ROOT::Experimental::RValueVisitor::VisitIntField(const RField<int> &field, 
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitStringField(
+void ROOT::Experimental::RRemoveMeVisitor::VisitStringField(
    const RField<std::string> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
@@ -335,7 +393,7 @@ void ROOT::Experimental::RValueVisitor::VisitStringField(
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUInt32Field(
+void ROOT::Experimental::RRemoveMeVisitor::VisitUInt32Field(
    const RField<std::uint32_t> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
@@ -356,7 +414,7 @@ void ROOT::Experimental::RValueVisitor::VisitUInt32Field(
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUInt64Field(
+void ROOT::Experimental::RRemoveMeVisitor::VisitUInt64Field(
    const RField<std::uint64_t> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
@@ -377,7 +435,7 @@ void ROOT::Experimental::RValueVisitor::VisitUInt64Field(
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUInt8Field(
+void ROOT::Experimental::RRemoveMeVisitor::VisitUInt8Field(
    const RField<std::uint8_t> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
@@ -398,7 +456,7 @@ void ROOT::Experimental::RValueVisitor::VisitUInt8Field(
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &field, const Detail::RVisitorRank &rank)
+void ROOT::Experimental::RRemoveMeVisitor::VisitVectorField(const RFieldVector &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << "{ ";
@@ -451,7 +509,7 @@ void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &fie
 }
 
 // See RValueVisitor::VisitVectorField for comments
-void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(
+void ROOT::Experimental::RRemoveMeVisitor::VisitVectorBoolField(
    const RField<std::vector<bool>> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
@@ -511,7 +569,7 @@ void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(
 // array of vector:  itemFieldIndex
 //                   SubFieldPtr->GetCollectionInfo(fIndex * fLength1, &clusterIndex, &nItems)
 //                   itemFieldIndex = ConvertClusterIndexToGlobalIndex(clusterIndex)
-void ROOT::Experimental::RValueVisitor::SetCollectionIndex(const Detail::RFieldBase &field)
+void ROOT::Experimental::RRemoveMeVisitor::SetCollectionIndex(const Detail::RFieldBase &field)
 {
    const Detail::RFieldBase *fieldPtr = &field;
    const Detail::RFieldBase *childPtr = field.GetFirstChild();
@@ -570,7 +628,7 @@ void ROOT::Experimental::RValueVisitor::SetCollectionIndex(const Detail::RFieldB
    return;
 }
 
-std::size_t ROOT::Experimental::RValueVisitor::ConvertClusterIndexToGlobalIndex(RClusterIndex clusterIndex) const
+std::size_t ROOT::Experimental::RRemoveMeVisitor::ConvertClusterIndexToGlobalIndex(RClusterIndex clusterIndex) const
 {
    auto &desc = fReader->GetDescriptor();
    std::size_t globalIndex = static_cast<std::size_t>(clusterIndex.GetIndex());

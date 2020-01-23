@@ -52,13 +52,14 @@ class RCollectionNTuple;
 class REntry;
 class RFieldCollection;
 class RNTupleModel;
-class RValueVisitor;
+class RRemoveMeVisitor;
 
 namespace Detail {
 
 class RFieldFuse;
 class RSchemaVisitor;
 class RPageStorage;
+class RValueVisitor;
 class RVisitorRank;
 
 // clang-format off
@@ -123,10 +124,10 @@ protected:
    RVisitorRank GetSchemaRank(unsigned int visitLevel) const;
 
 public:
-   /// Iterates over the sub fields in depth-first search order
-   class RIterator : public std::iterator<std::forward_iterator_tag, Detail::RFieldBase> {
+   /// Iterates over the sub tree of fields in depth-first search order
+   class RSchemaIterator : public std::iterator<std::forward_iterator_tag, Detail::RFieldBase> {
    private:
-      using iterator = RIterator;
+      using iterator = RSchemaIterator;
       struct Position {
          Position() : fFieldPtr(nullptr), fIdxInParent(-1) { }
          Position(pointer fieldPtr, int idxInParent) : fFieldPtr(fieldPtr), fIdxInParent(idxInParent) { }
@@ -136,9 +137,9 @@ public:
       /// The stack of nodes visited when walking down the tree of fields
       std::vector<Position> fStack;
    public:
-      RIterator() { fStack.emplace_back(Position()); }
-      RIterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
-      ~RIterator() {}
+      RSchemaIterator() { fStack.emplace_back(Position()); }
+      RSchemaIterator(pointer val, int idxInParent) { fStack.emplace_back(Position(val, idxInParent)); }
+      ~RSchemaIterator() {}
       /// Given that the iterator points to a valid field which is not the end iterator, go to the next field
       /// in depth-first search order
       void Advance();
@@ -176,6 +177,10 @@ public:
    virtual void DestroyValue(const RFieldValue &value, bool dtorOnly = false);
    /// Creates a value from a memory location with an already constructed object
    virtual RFieldValue CaptureValue(void *where) = 0;
+   /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
+   /// correct variant or all the elements of a collection.  The default implementation assumes no sub values
+   /// and returns an empty vector.
+   virtual std::vector<RFieldValue> SplitValue(const RFieldValue &value) const;
    /// The number of bytes taken by a value of the appropriate type
    virtual size_t GetValueSize() const = 0;
    /// For many types, the alignment requirement is equal to the size; otherwise override.
@@ -222,8 +227,8 @@ public:
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
-   const RFieldBase* GetParent() const { return fParent; }
-   const RFieldBase* GetFirstChild() const;
+   const RFieldBase *GetParent() const { return fParent; }
+   const RFieldBase *GetFirstChild() const;
    bool IsSimple() const { return fIsSimple; }
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
@@ -231,19 +236,22 @@ public:
    /// Indicates an evolution of the C++ type itself
    virtual RNTupleVersion GetTypeVersion() const { return RNTupleVersion(); }
 
-   RIterator begin();
-   RIterator end();
+   RSchemaIterator begin();
+   RSchemaIterator end();
 
    /// Visit the entire subtree of fields tree starting from the current field
    virtual void TraverseSchema(RSchemaVisitor &visitor, int level = 0) const;
    /// Visit the current field only
    virtual void AcceptSchemaVisitor(RSchemaVisitor &visitor, int level) const;
+
+   virtual void AcceptValueVisitor(RValueVisitor &visitor) const;
+
    void FirstSubFieldAcceptVisitor(RSchemaVisitor &visitor, int level) const {
       if (fSubFields.size() && fSubFields[0])
          fSubFields[0]->AcceptSchemaVisitor(visitor, level);
    }
-   virtual void TraverseValueVisitor(RValueVisitor &visitor, int level) const;
-   virtual void NotVisitTopFieldTraverseValueVisitor(RValueVisitor &visitor, int level) const;
+   virtual void TraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const;
+   virtual void NotVisitTopFieldTraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const;
 };
 
 // clang-format off
@@ -332,10 +340,12 @@ public:
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
    void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptValueVisitor(Detail::RValueVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
@@ -587,6 +597,7 @@ public:
    }
    size_t GetValueSize() const final { return sizeof(float); }
    void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptValueVisitor(Detail::RValueVisitor &visitor) const final;
 };
 
 
