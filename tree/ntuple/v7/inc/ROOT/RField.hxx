@@ -57,7 +57,7 @@ class RValueVisitor;
 namespace Detail {
 
 class RFieldFuse;
-class RFieldVisitor;
+class RSchemaVisitor;
 class RPageStorage;
 
 // clang-format off
@@ -275,12 +275,12 @@ public:
    RIterator end();
 
    /// Visit the entire subtree of fields tree starting from the current field
-   virtual void TraverseVisitor(RFieldVisitor &visitor, int level = 0) const;
+   virtual void TraverseSchema(RSchemaVisitor &visitor, int level = 0) const;
    /// Visit the current field only
-   virtual void AcceptVisitor(RFieldVisitor &visitor, int level) const;
-   void FirstSubFieldAcceptVisitor(RFieldVisitor &visitor, int level) const {
+   virtual void AcceptSchemaVisitor(RSchemaVisitor &visitor, int level) const;
+   void FirstSubFieldAcceptVisitor(RSchemaVisitor &visitor, int level) const {
       if (fSubFields.size() && fSubFields[0])
-         fSubFields[0]->AcceptVisitor(visitor, level);
+         fSubFields[0]->AcceptSchemaVisitor(visitor, level);
    }
    virtual void TraverseValueVisitor(RValueVisitor &visitor, int level) const;
    virtual void NotVisitTopFieldTraverseValueVisitor(RValueVisitor &visitor, int level) const;
@@ -323,7 +323,7 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 /// The field for a class with dictionary
@@ -336,6 +336,7 @@ protected:
    void DoAppend(const Detail::RFieldValue& value) final;
    void DoReadGlobal(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void DoReadInCluster(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+
 public:
    RFieldClass(std::string_view fieldName, std::string_view className);
    RFieldClass(RFieldClass&& other) = default;
@@ -350,7 +351,7 @@ public:
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const override;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const override;
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -378,7 +379,7 @@ public:
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
@@ -414,7 +415,7 @@ public:
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 #if __cplusplus >= 201703L
@@ -554,7 +555,7 @@ public:
    void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 
@@ -592,7 +593,7 @@ public:
          Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(bool); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -629,7 +630,7 @@ public:
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 
@@ -667,7 +668,7 @@ public:
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -704,7 +705,7 @@ public:
          Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -741,7 +742,7 @@ public:
          Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -778,7 +779,7 @@ public:
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 template <>
@@ -815,7 +816,7 @@ public:
          Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 
@@ -860,7 +861,7 @@ public:
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
    void CommitCluster() final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
 };
 
 
@@ -998,7 +999,7 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void CommitCluster() final { fNWritten = 0; }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor, int level) const final;
+   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
