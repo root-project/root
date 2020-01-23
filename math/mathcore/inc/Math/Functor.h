@@ -178,7 +178,7 @@ public:
    ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
-   BaseFunc * Clone() const { return Copy(); }
+   auto Clone() const { return Copy(); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const {

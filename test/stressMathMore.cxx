@@ -385,6 +385,7 @@ int StatFunction::TestInverse2(RootFinder::EType algoType) {
    double reltol = 1.E-12;
    //NFuncTest = 10;
 
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS) || (defined(_MSC_VER) && !defined(__CLING__))
    // scan all values from 0.05 to 0.95  to avoid problem at the border of definitions
    double x1 = 0.05; double x2 = 0.95;
    double dx = (x2-x1)/NFuncTest;
@@ -419,10 +420,9 @@ int StatFunction::TestInverse2(RootFinder::EType algoType) {
          std::cout << std::endl;
       }
       iret |= ret;
-
    }
+#endif
    return iret;
-
 }
 
 // test intergal. derivative and inverse(Rootfinder)
