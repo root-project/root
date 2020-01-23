@@ -54,6 +54,8 @@ struct RCompressionSetting {
          kUseGeneralPurpose = 101,
          /// Use the setting that results in the smallest files; very slow read and write
          kUseSmallest = 207,
+         /// Use the new recommended general-purpose setting; it is a best trade-off between compression ratio/decompression speed
+         kUseAnalysisTradeoff = 505,
       };
    };
    struct ELevel { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
