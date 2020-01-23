@@ -24,16 +24,16 @@
 #include "TMVA/DNN/DeepNet.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::GRU;
+using namespace TMVA::DNN::RNN;
 
 //______________________________________________________________________________
 /* Prints out Tensor, printTensor1(A, matrix) */
 template <typename Architecture>
-auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const std::string & name = "matrix")
+auto printTensor1(const typename Architecture::Tensor_t &A, const std::string & name = "matrix")
 -> void
 {
    std::cout << name << "\n";
-   for (size_t l = 0; l < A.size(); ++l) {
+   for (size_t l = 0; l < A.GetFirstSize(); ++l) {
       for (size_t i = 0; i < (size_t) A[l].GetNrows(); ++i) {
          for (size_t j = 0; j < (size_t) A[l].GetNcols(); ++j) {
             std::cout << A[l](i, j) << " ";
@@ -43,6 +43,8 @@ auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const s
       std::cout << "********\n";
   } 
 }
+
+
 
 //______________________________________________________________________________
 /* Prints out Matrix, printMatrix1(A, matrix) */
@@ -71,7 +73,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
 -> Double_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
-   using Tensor_t = std::vector<Matrix_t>;
+   using Tensor_t = typename Architecture::Tensor_t;
    using GRULayer_t = TBasicGRULayer<Architecture>;
    using Net_t = TDeepNet<Architecture>;
 
@@ -84,25 +86,28 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    //______________________________________________________________________________
 
    // Defining inputs.
-   Tensor_t XRef(timeSteps, Matrix_t(batchSize, inputSize));  // T x B x D
+   Tensor_t XRef;
    Tensor_t XArch, arr_XArch;
 
 
-   for (size_t i = 0; i < batchSize; ++i) {
-      arr_XArch.emplace_back(timeSteps, inputSize); // B x T x D
-   }
+   XRef = Architecture::CreateTensor( timeSteps,batchSize, inputSize);
+   XArch = Architecture::CreateTensor( batchSize, timeSteps,inputSize);
+   arr_XArch = Architecture::CreateTensor( timeSteps,batchSize, inputSize);
+   
    
    for (size_t i = 0; i < timeSteps; ++i) {
-      randomMatrix(XRef[i]);
-      XArch.emplace_back(XRef[i]);
+      Matrix_t m = XRef[i];
+      randomMatrix(m);
    }
 
-   Architecture::Rearrange(arr_XArch, XArch); // B x T x D
+   Architecture::Copy(arr_XArch, XRef); // B x T x D
+   Architecture::Rearrange( XArch, XRef);  // Copy from XRef to XArch 
 
    Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
    GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps);
 
    layer->Initialize();
+   layer->Print();
 
    /*! unpack weights for each gate. */
    Matrix_t weightsReset = layer->GetWeightsResetGate();         // H x D
@@ -130,15 +135,14 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    Matrix_t updateTmp(batchSize, stateSize);
    Matrix_t Tmp(batchSize, stateSize);
 
-   gru.Forward(arr_XArch);
+   gru.Forward(XArch);
 
    Tensor_t outputArch = layer->GetOutput();
 
-   Tensor_t arr_outputArch;
-   for (size_t t = 0; t < timeSteps; ++t) {
-      arr_outputArch.emplace_back(batchSize, stateSize); // T x B x H
-   }
+   Tensor_t arr_outputArch = Architecture::CreateTensor( timeSteps,batchSize, stateSize);
  
+   //Architecture::PrintTensor(outputArch,"GRU output");
+
    Architecture::Rearrange(arr_outputArch, outputArch); // B x T x H
 
    Double_t maximumError = 0.0;
@@ -189,12 +193,19 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
 
       TMatrixT<Double_t> output = arr_outputArch[t]; 
       Double_t error = maximumRelativeError(output, hiddenState);
-      std::cout << "Time " << t << " Error: " << error << "\n";
+      std::cout << "Time " << t << " Delta: " << error << "\n";
 
       maximumError = std::max(error, maximumError);
    }
 
-   return maximumError;
+   if (maximumError > 0.01)  
+      std::cout << "ERROR: - GRU Forward pass test failed !  - Max dev is ";
+         // " bs = " << batchSize << " timeSteps = " << timeSteps 
+         // << " inputSize = " << inputSize << " outputSize = " << stateSize << std::endl;
+   else 
+      std::cout << " Test GRU forward passed ! -   Max dev is ";
+ 
+   return maximumError; 
 }
 
 #endif // TMVA_TEST_DNN_TEST_RNN_TEST_GRU_FWDPASS_H

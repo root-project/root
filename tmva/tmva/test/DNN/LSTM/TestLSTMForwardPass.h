@@ -24,16 +24,16 @@
 #include "TMVA/DNN/DeepNet.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::LSTM;
+using namespace TMVA::DNN::RNN;
 
 //______________________________________________________________________________
 /* Prints out Tensor, printTensor1(A, matrix) */
 template <typename Architecture>
-auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const std::string & name = "matrix")
+auto printTensor1(const typename Architecture::Tensor_t &A, const std::string & name = "matrix")
 -> void
 {
    std::cout << name << "\n";
-   for (size_t l = 0; l < A.size(); ++l) {
+   for (size_t l = 0; l < A.GetFirstSize(); ++l) {
       for (size_t i = 0; i < (size_t) A[l].GetNrows(); ++i) {
          for (size_t j = 0; j < (size_t) A[l].GetNcols(); ++j) {
             std::cout << A[l](i, j) << " ";
@@ -71,7 +71,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
 -> Double_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
-   using Tensor_t = std::vector<Matrix_t>;
+   using Tensor_t = typename Architecture::Tensor_t;
    using LSTMLayer_t = TBasicLSTMLayer<Architecture>;
    using Net_t = TDeepNet<Architecture>;
 
@@ -84,20 +84,20 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    //______________________________________________________________________________
 
    // Defining inputs.
-   Tensor_t XRef(timeSteps, Matrix_t(batchSize, inputSize));  // T x B x D
-   Tensor_t XArch, arr_XArch;
-
-
-   for (size_t i = 0; i < batchSize; ++i) {
-      arr_XArch.emplace_back(timeSteps, inputSize); // B x T x D
-   }
+   Tensor_t XRef = Architecture::CreateTensor( timeSteps,batchSize, inputSize);
+   Tensor_t arr_XArch = Architecture::CreateTensor( batchSize, timeSteps,inputSize);
+   Tensor_t XArch = Architecture::CreateTensor( timeSteps,batchSize, inputSize);
+   
    
    for (size_t i = 0; i < timeSteps; ++i) {
-      randomMatrix(XRef[i]);
-      XArch.emplace_back(XRef[i]);
+      Matrix_t m = XRef[i];
+      randomMatrix(m);
    }
 
-   Architecture::Rearrange(arr_XArch, XArch); // B x T x D
+   Architecture::Copy(XArch, XRef); // Copy from XRef to XArch
+   Architecture::Rearrange( arr_XArch, XRef);  // rearrange to B x T x D  
+
+
 
    Net_t lstm(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
    LSTMLayer_t* layer = lstm.AddBasicLSTMLayer(stateSize, inputSize, timeSteps);
@@ -140,10 +140,8 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
 
    Tensor_t outputArch = layer->GetOutput();
 
-   Tensor_t arr_outputArch;
-   for (size_t t = 0; t < timeSteps; ++t) {
-      arr_outputArch.emplace_back(batchSize, stateSize); // T x B x H
-   }
+   Tensor_t arr_outputArch = Architecture::CreateTensor( timeSteps, batchSize, stateSize);
+
 
    Architecture::Rearrange(arr_outputArch, outputArch); // B x T x H
 

@@ -234,6 +234,12 @@ public:
 
       TCpuTensor<AFloat> At(size_t i) const { return (const_cast<TCpuTensor<AFloat> &>(*this)).At(i); }
 
+      // for compatibility with old tensor (std::vector<matrix>)
+      TCpuMatrix<AFloat> operator[](size_t i) const {
+         assert(this->GetMemoryLayout() == MemoryLayout::ColumnMajor );  
+         return At(i).GetMatrix(); 
+      }
+
       // set all the tensor contents to zero
       void Zero()
       {

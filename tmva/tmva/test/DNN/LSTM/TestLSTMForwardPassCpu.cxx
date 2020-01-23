@@ -18,7 +18,7 @@
 #include "TestLSTMForwardPass.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::LSTM;
+using namespace TMVA::DNN::RNN;
 
 int main() {
 

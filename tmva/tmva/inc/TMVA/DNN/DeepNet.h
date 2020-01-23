@@ -43,8 +43,8 @@
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
 #include "TMVA/DNN/RNN/RNNLayer.h"
-#include "TMVA/DNN/LSTM/LSTMLayer.h"
-#include "TMVA/DNN/GRU/GRULayer.h" 
+#include "TMVA/DNN/RNN/LSTMLayer.h"
+#include "TMVA/DNN/RNN/GRULayer.h" 
 
 #ifdef HAVE_DAE
 #include "TMVA/DNN/DAE/CompressionLayer.h"
@@ -62,8 +62,7 @@ namespace DNN {
 
    using namespace CNN;
    using namespace RNN;
-   using namespace LSTM;
-   using namespace GRU;
+  
    //using namespace DAE;
 
 /** \class TDeepNet

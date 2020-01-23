@@ -41,7 +41,7 @@ namespace TMVA
 {
 namespace DNN
 {
-namespace GRU
+namespace RNN
 {
 
 //______________________________________________________________________________
@@ -60,7 +60,7 @@ public:
 
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
-   using Tensor_t = std::vector<Matrix_t>;
+   using Tensor_t = typename Architecture_t::Tensor_t;
 
   
 
@@ -136,9 +136,7 @@ public:
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
-                 const Tensor_t &activations_backward,
-                 std::vector<Matrix_t> &inp1,
-                 std::vector<Matrix_t> &inp2);
+                 const Tensor_t &activations_backward);
     
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -387,8 +385,8 @@ auto inline TBasicGRULayer<Architecture_t>::ResetGate(const Matrix_t &input, Mat
    Architecture_t::MultiplyTranspose(fResetValue, input, fWeightsResetGate);
    Architecture_t::ScaleAdd(fResetValue, tmpState);
    Architecture_t::AddRowWise(fResetValue, fResetGateBias);
-   DNN::evaluateDerivative<Architecture_t>(dr, fRst, fResetValue);
-   DNN::evaluate<Architecture_t>(fResetValue, fRst);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(dr, fRst, fResetValue);
+   DNN::evaluateMatrix<Architecture_t>(fResetValue, fRst);
 }
 
  //______________________________________________________________________________
@@ -405,8 +403,8 @@ auto inline TBasicGRULayer<Architecture_t>::UpdateGate(const Matrix_t &input, Ma
    Architecture_t::MultiplyTranspose(fUpdateValue, input, fWeightsUpdateGate);
    Architecture_t::ScaleAdd(fUpdateValue, tmpState);
    Architecture_t::AddRowWise(fUpdateValue, fUpdateGateBias);
-   DNN::evaluateDerivative<Architecture_t>(du, fUpd, fUpdateValue);
-   DNN::evaluate<Architecture_t>(fUpdateValue, fUpd);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(du, fUpd, fUpdateValue);
+   DNN::evaluateMatrix<Architecture_t>(fUpdateValue, fUpd);
 }
 
  //______________________________________________________________________________
@@ -424,8 +422,8 @@ auto inline TBasicGRULayer<Architecture_t>::CandidateValue(const Matrix_t &input
    Architecture_t::MultiplyTranspose(fCandidateValue, input, fWeightsCandidate);
    Architecture_t::ScaleAdd(fCandidateValue, tmp);
    Architecture_t::AddRowWise(fCandidateValue, fCandidateBias);
-   DNN::evaluateDerivative<Architecture_t>(dc, fCan, fCandidateValue);
-   DNN::evaluate<Architecture_t>(fCandidateValue, fCan);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(dc, fCan, fCandidateValue);
+   DNN::evaluateMatrix<Architecture_t>(fCandidateValue, fCan);
 }
 
  //______________________________________________________________________________
@@ -438,16 +436,16 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool /* isT
    // T : time size
    // B : batch size
 
-   Tensor_t arrInput;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
-   }
+   Tensor_t arrInput ( fTimeSteps, this->GetBatchSize(), this->GetInputWidth());
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
+   // }
    Architecture_t::Rearrange(arrInput, input); // B x T x D
 
-   Tensor_t arrOutput;
-   for (size_t t = 0; t < fTimeSteps;++t) {
-      arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
-   }
+   Tensor_t arrOutput ( fTimeSteps, this->GetBatchSize(), fStateSize );
+   // for (size_t t = 0; t < fTimeSteps;++t) {
+   //    arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
+   // }
   
    if (!this->fRememberState) {
       InitState(DNN::EInitialization::kZero);
@@ -466,7 +464,8 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool /* isT
       Architecture_t::Copy(this->GetCandidateGateTensorAt(t), fCandidateValue);
        
       CellForward(fUpdateValue, fCandidateValue);
-      Architecture_t::Copy(arrOutput[t], fState);
+      Matrix_t arrOutputMt = arrOutput[t];
+      Architecture_t::Copy(arrOutputMt, fState);
    }
 
    Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
@@ -493,9 +492,7 @@ auto inline TBasicGRULayer<Architecture_t>::CellForward(Matrix_t &updateGateValu
 //____________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backward,           // B x T x D
-                                                      const Tensor_t &activations_backward,   // B x T x D
-                                                      std::vector<Matrix_t> & /*inp1*/,
-                                                      std::vector<Matrix_t> & /*inp2*/)
+                                                      const Tensor_t &activations_backward)   // B x T x D
 -> void
 {
    // gradients_backward is activationGradients of layer before it, which is input layer.
@@ -506,39 +503,39 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
 
    // if dummy is false gradients_backward will be written back on the matrix
    bool dummy = false;
-   if (gradients_backward.size() == 0 || gradients_backward[0].GetNrows() == 0 || gradients_backward[0].GetNcols() == 0) {
+   if (gradients_backward.GetSize() == 0 || gradients_backward[0].GetNrows() == 0 || gradients_backward[0].GetNcols() == 0) {
       dummy = true;
    }
 
-   Tensor_t arr_gradients_backward;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
-   }
+   Tensor_t arr_gradients_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
+   // }
    
    //Architecture_t::Rearrange(arr_gradients_backward, gradients_backward); // B x T x D
    // activations_backward is input.
-   Tensor_t arr_activations_backward;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
-   }
+   Tensor_t arr_activations_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
+   // }
    Architecture_t::Rearrange(arr_activations_backward, activations_backward); // B x T x D
 
    /*! For backpropagation, we need to calculate loss. For loss, output must be known.
     *  We obtain outputs during forward propagation and place the results in arr_output tensor. */
-   Tensor_t arr_output;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_output.emplace_back(this->GetBatchSize(), fStateSize); // B x H
-   }
+   Tensor_t arr_output ( fTimeSteps, this->GetBatchSize(), fStateSize);
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_output.emplace_back(this->GetBatchSize(), fStateSize); // B x H
+   // }
    Architecture_t::Rearrange(arr_output, this->GetOutput());
 
    Matrix_t initState(this->GetBatchSize(), fStateSize); // B x H
    DNN::initialize<Architecture_t>(initState, DNN::EInitialization::kZero); // B x H
 
    // This will take partial derivative of state[t] w.r.t state[t-1]
-   Tensor_t arr_actgradients;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_actgradients.emplace_back(this->GetBatchSize(), fStateSize);
-   }
+   Tensor_t arr_actgradients ( fTimeSteps, this->GetBatchSize(), fStateSize);
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_actgradients.emplace_back(this->GetBatchSize(), fStateSize);
+   // }
    Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
 
    /*! There are total 8 different weight matrices and 4 bias vectors.
@@ -565,19 +562,21 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       Architecture_t::ScaleAdd(state_gradients_backward, arr_actgradients[t-1]);
       if (t > 1) {
          const Matrix_t &prevStateActivations = arr_output[t-2];
+         Matrix_t dx = arr_gradients_backward[t-1];
          // During forward propagation, each gate value calculates their gradients.
          CellBackward(state_gradients_backward, prevStateActivations, 
                       this->GetResetGateTensorAt(t-1), this->GetUpdateGateTensorAt(t-1),
                       this->GetCandidateGateTensorAt(t-1),   
-                      arr_activations_backward[t-1], arr_gradients_backward[t-1],
+                      arr_activations_backward[t-1], dx ,
                       fDerivativesReset[t-1], fDerivativesUpdate[t-1],
                       fDerivativesCandidate[t-1]);
       } else {
          const Matrix_t &prevStateActivations = initState;
+         Matrix_t dx = arr_gradients_backward[t-1];
          CellBackward(state_gradients_backward, prevStateActivations, 
                       this->GetResetGateTensorAt(t-1), this->GetUpdateGateTensorAt(t-1),
                       this->GetCandidateGateTensorAt(t-1),   
-                      arr_activations_backward[t-1], arr_gradients_backward[t-1],
+                      arr_activations_backward[t-1], dx ,
                       fDerivativesReset[t-1], fDerivativesUpdate[t-1],
                       fDerivativesCandidate[t-1]);
         }
@@ -632,7 +631,7 @@ auto TBasicGRULayer<Architecture_t>::Print() const
    std::cout << " (NInput = " << this->GetInputSize();  // input size 
    std::cout << ", NState = " << this->GetStateSize();  // hidden state size
    std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
-   std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
+   std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
 }
 
 //______________________________________________________________________________

@@ -31,14 +31,14 @@
 #include "TRandom3.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::LSTM;
+using namespace TMVA::DNN::RNN;
 
 template <typename Architecture>
-auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
+auto printTensor1(const typename Architecture::Tensor_t &A, const std::string name = "matrix")
 -> void
 {
   std::cout << name << "\n";
-  for (size_t l = 0; l < A.size(); ++l) {
+  for (size_t l = 0; l < A.GetFirstSize(); ++l) {
       for (size_t i = 0; i < A[l].GetNrows(); ++i) {
         for (size_t j = 0; j < A[l].GetNcols(); ++j) {
             std::cout << A[l](i, j) << " ";
@@ -73,20 +73,22 @@ auto testFullLSTM(size_t batchSize, size_t stateSize,
 -> void
 {
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   using Tensor_t   = typename Architecture::Tensor_t;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t   = typename Architecture::Scalar_t; 
  
    // check, denselayer takes only first one as input, 
    // so make sure time = 1, in the current case
    size_t timeSteps = 1;
-   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
-   Tensor_t XArch;
+   Tensor_t XRef = Architecture::CreateTensor(batchSize,timeSteps, inputSize);    // B x T x D
+   Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
    Matrix_t YArch(batchSize, outputSize);             
    for (size_t i = 0; i < batchSize; ++i) {
-      randomMatrix(XRef[i]);
+      Matrix_t mRef = XArch[i];
+      randomMatrix(mRef);
+      //????
       std::cerr << "Copying output into input\n";
-      XArch.emplace_back(XRef[i]);
+      Architecture::Copy(XArch,XRef);
       for (size_t j = 0; j < outputSize; ++j) {
          YArch(i, j) = XArch[i](0, j);
       }
@@ -125,7 +127,7 @@ auto testFullLSTM2(size_t batchSize, size_t stateSize,
 -> void
 {
    using Matrix_t   = typename Architecture::Matrix_t;
-   using Tensor_t   = std::vector<Matrix_t>;
+   using Tensor_t   = typename Architecture::Tensor_t;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t   = typename Architecture::Scalar_t;
 
@@ -134,8 +136,10 @@ auto testFullLSTM2(size_t batchSize, size_t stateSize,
    TRandom3 rndm(seed); 
    size_t timeSteps = 5;
   
-   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
-   Tensor_t XArch;
+
+   Tensor_t XRef = Architecture::CreateTensor(batchSize,timeSteps, inputSize);    // B x T x D
+   Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
+   
    Matrix_t YArch(batchSize, 1);             
    for (size_t i = 0; i < batchSize; ++i) {
       // provide input data and labels Yarch
@@ -150,8 +154,9 @@ auto testFullLSTM2(size_t batchSize, size_t stateSize,
          }
       }
       //std::cerr << "Copying output into input\n";
-      XArch.emplace_back(XRef[i]);
+      Architecture::Copy(XArch,XRef);
    }
+
 
    bool useRegularization = false;
    double weightDecay = (useRegularization) ? 1. : 0; 

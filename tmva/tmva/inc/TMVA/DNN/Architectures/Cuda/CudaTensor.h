@@ -328,6 +328,12 @@ public:
       return TCudaMatrix<AFloat>();
    }
 
+   // for backeard compatibility with old tensor
+   TCudaMatrix<AFloat> operator[](size_t i) const {
+      assert(GetLayout() == MemoryLayout::ColumnMajor ); 
+      return At(i).GetMatrix(); 
+   }
+
 
 
    static inline std::vector<std::size_t> ComputeStridesFromShape(const std::vector<std::size_t> &shape,
