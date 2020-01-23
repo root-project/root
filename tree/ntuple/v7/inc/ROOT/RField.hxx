@@ -52,15 +52,12 @@ class RCollectionNTuple;
 class REntry;
 class RFieldCollection;
 class RNTupleModel;
-class RRemoveMeVisitor;
 
 namespace Detail {
 
 class RFieldFuse;
-class RSchemaVisitor;
+class RFieldVisitor;
 class RPageStorage;
-class RValueVisitor;
-class RVisitorRank;
 
 // clang-format off
 /**
@@ -91,12 +88,6 @@ private:
    bool fIsSimple;
 
 protected:
-   /// Describes the field position in the parent's list of children. First subfield of parent has fOrder 0,
-   /// the next fOrder 1, etc. Set by RFieldBase::Attach()
-   /// If there is no parent field, fOrder is -1.
-   /// TODO(jblomer): initialize with -1, make private
-   int fOrder = 1;
-
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
    /// Sub fields point to their mother field
@@ -118,10 +109,6 @@ protected:
    virtual void DoReadInCluster(const RClusterIndex &clusterIndex, RFieldValue *value) {
       DoReadGlobal(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
    }
-
-   /// Creates a visitor rank based on fOrder and fSubFields that describes the position of the field in the
-   /// schema tree.  The level of the field is provided because traversal can start at a sub tree.
-   RVisitorRank GetSchemaRank(unsigned int visitLevel) const;
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
@@ -221,8 +208,6 @@ public:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
-   // TODO(jblomer): remove me
-   int GetOrder() const { return fOrder; }
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
@@ -241,17 +226,7 @@ public:
    RSchemaIterator begin();
    RSchemaIterator end();
 
-   /// Visit the current field only
-   virtual void AcceptSchemaVisitor(RSchemaVisitor &visitor, int level) const;
-
-   virtual void AcceptValueVisitor(RValueVisitor &visitor) const;
-
-   void FirstSubFieldAcceptVisitor(RSchemaVisitor &visitor, int level) const {
-      if (fSubFields.size() && fSubFields[0])
-         fSubFields[0]->AcceptSchemaVisitor(visitor, level);
-   }
-   virtual void TraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const;
-   virtual void NotVisitTopFieldTraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const;
+   virtual void AcceptVisitor(RFieldVisitor &visitor) const;
 };
 
 // clang-format off
@@ -276,7 +251,7 @@ public:
 /// The container field for an ntuple model, which itself has no physical representation
 class RFieldRoot : public Detail::RFieldBase {
 public:
-   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { fOrder = -1; }
+   RFieldRoot() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
    RFieldBase* Clone(std::string_view newName);
 
    void DoGenerateColumns() final {}
@@ -287,7 +262,7 @@ public:
 
    /// Generates managed values for the top-level sub fields
    REntry* GenerateEntry();
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class with dictionary
@@ -315,7 +290,7 @@ public:
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const override;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
 /// The generic field for a (nested) std::vector<Type> except for std::vector<bool>
@@ -344,8 +319,7 @@ public:
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
-   void AcceptValueVisitor(Detail::RValueVisitor &visitor) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
@@ -381,7 +355,7 @@ public:
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 #if __cplusplus >= 201703L
@@ -521,7 +495,7 @@ public:
    void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 
@@ -559,7 +533,7 @@ public:
          Detail::RColumnElement<bool, EColumnType::kBit>(static_cast<bool*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(bool); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -596,8 +570,7 @@ public:
          Detail::RColumnElement<float, EColumnType::kReal32>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
-   void AcceptValueVisitor(Detail::RValueVisitor &visitor) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 
@@ -635,7 +608,7 @@ public:
          Detail::RColumnElement<double, EColumnType::kReal64>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -672,7 +645,7 @@ public:
          Detail::RColumnElement<std::uint8_t, EColumnType::kByte>(static_cast<std::uint8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -709,7 +682,7 @@ public:
          Detail::RColumnElement<std::int32_t, EColumnType::kInt32>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -746,7 +719,7 @@ public:
          Detail::RColumnElement<std::uint32_t, EColumnType::kInt32>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -783,7 +756,7 @@ public:
          Detail::RColumnElement<std::uint64_t, EColumnType::kInt64>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 
@@ -828,7 +801,7 @@ public:
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
    void CommitCluster() final;
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 
@@ -966,7 +939,7 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void CommitCluster() final { fNWritten = 0; }
-   void AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }

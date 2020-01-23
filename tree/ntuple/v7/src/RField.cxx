@@ -206,16 +206,7 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> child)
 {
    child->fParent = this;
-   child->fOrder = fSubFields.size() + 1;
    fSubFields.emplace_back(std::move(child));
-}
-
-
-ROOT::Experimental::Detail::RVisitorRank
-ROOT::Experimental::Detail::RFieldBase::GetSchemaRank(unsigned int visitLevel) const
-{
-   unsigned int nSiblings = fParent ? fParent->fSubFields.size() : 0;
-   return RVisitorRank(visitLevel, fOrder, nSiblings, fSubFields.size());
 }
 
 
@@ -245,72 +236,9 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 }
 
 
-void ROOT::Experimental::Detail::RFieldBase::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
-{
-   visitor.VisitField(*this, GetSchemaRank(level));
-}
-
-
-void ROOT::Experimental::Detail::RFieldBase::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
+void ROOT::Experimental::Detail::RFieldBase::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitField(*this);
-}
-
-void ROOT::Experimental::Detail::RFieldBase::TraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const
-{
-   // subfields of a std::vector (kCollection) and std::array shouldn't be displayed
-   if (fParent && (GetParent()->GetStructure() == ENTupleStructure::kCollection
-      || GetParent()->GetType().compare(0, 11, "std::array<") == 0))
-      return;
-
-   if (this->GetOrder() == 1)
-   {
-      for (int i = 1; i < level; ++i) visitor.GetOutput() << "  ";
-      visitor.GetOutput() << '{' << std::endl;
-   }
-
-   this->AcceptSchemaVisitor(visitor, level);
-   ++level;
-   for (const auto &fieldPtr: fSubFields) {
-      fieldPtr->TraverseValueVisitor(visitor, level);
-   }
-
-   // Close bracket for last field among siblings
-   if (this->GetOrder() == static_cast<int>(fSubFields.size()))
-   {
-      for(int i = 1; i < level-1; ++i)
-         visitor.GetOutput() << "  ";
-      visitor.GetOutput() << '}';
-      // for a certain special case (*), do not start a newline
-      // (*) When there is an array or vector of objects a ',' after a '{' is desired. Example:
-      // ObjVec:{
-      //          {
-      //             7.0,
-      //             4
-      //          },             <- no newline after '}'
-      //          {
-      //             8.9,
-      //             8
-      //          }
-      //        }
-      if (GetParent()->GetParent()) {
-         std::string grandParentType = GetParent()->GetParent()->GetType();
-         if ((grandParentType.compare(0, 12, "std::vector<") != 0) && (grandParentType.compare(0, 11, "std::array<") != 0)) {
-            visitor.GetOutput() << std::endl;
-         }
-      } else {
-         visitor.GetOutput() << std::endl;
-      }
-   }
-}
-
-/// When printing an array or vector of objects, only the contents in the subfields should be displayed -> skip top level field
-void ROOT::Experimental::Detail::RFieldBase::NotVisitTopFieldTraverseValueVisitor(RRemoveMeVisitor &visitor, int level) const
-{
-   ++level;
-   for (const auto &fieldPtr: fSubFields) {
-      fieldPtr->TraverseValueVisitor(visitor, level);
-   }
 }
 
 
@@ -319,6 +247,7 @@ ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Deta
    if (fSubFields.empty()) return RSchemaIterator(this, -1);
    return RSchemaIterator(this->fSubFields[0].get(), 0);
 }
+
 
 ROOT::Experimental::Detail::RFieldBase::RSchemaIterator ROOT::Experimental::Detail::RFieldBase::end()
 {
@@ -375,9 +304,9 @@ ROOT::Experimental::REntry* ROOT::Experimental::RFieldRoot::GenerateEntry()
    return entry;
 }
 
-void ROOT::Experimental::RFieldRoot::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RFieldRoot::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitRootField(*this, GetSchemaRank(level));
+   visitor.VisitRootField(*this);
 }
 
 
@@ -392,10 +321,9 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::DoGenerateCo
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptSchemaVisitor(
-   Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitClusterSizeField(*this, GetSchemaRank(level));
+   visitor.VisitClusterSizeField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -408,9 +336,9 @@ void ROOT::Experimental::RField<std::uint8_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<std::uint8_t>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitUInt8Field(*this, GetSchemaRank(level));
+   visitor.VisitUInt8Field(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -424,9 +352,9 @@ void ROOT::Experimental::RField<bool>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<bool>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitBoolField(*this, GetSchemaRank(level));
+   visitor.VisitBoolField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -440,18 +368,14 @@ void ROOT::Experimental::RField<float>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<float>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
-{
-   visitor.VisitFloatField(*this, GetSchemaRank(level));
-}
-
-
-void ROOT::Experimental::RField<float>::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
+void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitFloatField(*this);
 }
 
+
 //------------------------------------------------------------------------------
+
 
 void ROOT::Experimental::RField<double>::DoGenerateColumns()
 {
@@ -461,9 +385,9 @@ void ROOT::Experimental::RField<double>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<double>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitDoubleField(*this, GetSchemaRank(level));
+   visitor.VisitDoubleField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -476,9 +400,9 @@ void ROOT::Experimental::RField<std::int32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<std::int32_t>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitIntField(*this, GetSchemaRank(level));
+   visitor.VisitIntField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -491,9 +415,9 @@ void ROOT::Experimental::RField<std::uint32_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<std::uint32_t>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitUInt32Field(*this, GetSchemaRank(level));
+   visitor.VisitUInt32Field(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -506,9 +430,9 @@ void ROOT::Experimental::RField<std::uint64_t>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
-void ROOT::Experimental::RField<std::uint64_t>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitUInt64Field(*this, GetSchemaRank(level));
+   visitor.VisitUInt64Field(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -553,9 +477,9 @@ void ROOT::Experimental::RField<std::string>::CommitCluster()
    fIndex = 0;
 }
 
-void ROOT::Experimental::RField<std::string>::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitStringField(*this, GetSchemaRank(level));
+   visitor.VisitStringField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -640,9 +564,9 @@ size_t ROOT::Experimental::RFieldClass::GetValueSize() const
    return fClass->GetClassSize();
 }
 
-void ROOT::Experimental::RFieldClass::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RFieldClass::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitClassField(*this, GetSchemaRank(level));
+   visitor.VisitClassField(*this);
 }
 
 //------------------------------------------------------------------------------
@@ -741,13 +665,7 @@ void ROOT::Experimental::RFieldVector::CommitCluster()
    fNWritten = 0;
 }
 
-void ROOT::Experimental::RFieldVector::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
-{
-   visitor.VisitVectorField(*this, GetSchemaRank(level));
-}
-
-
-void ROOT::Experimental::RFieldVector::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
+void ROOT::Experimental::RFieldVector::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
 }
@@ -809,10 +727,9 @@ void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(const Detail::R
       free(vec);
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::AcceptSchemaVisitor(
-   Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitVectorBoolField(*this, GetSchemaRank(level));
+   visitor.VisitVectorBoolField(*this);
 }
 
 
@@ -891,9 +808,9 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::Capture
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
-void ROOT::Experimental::RFieldArray::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
+void ROOT::Experimental::RFieldArray::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitArrayField(*this, GetSchemaRank(level));
+   visitor.VisitArrayField(*this);
 }
 
 //------------------------------------------------------------------------------
