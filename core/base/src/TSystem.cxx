@@ -1040,8 +1040,8 @@ const char *TSystem::DirName(const char *pathname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert from a Unix pathname to a local pathname. E.g. from `/user/root` to
-/// `\user\root`.
+/// Convert from a local pathname to a Unix pathname. E.g. from `\user\root` to
+/// `/user/root`.
 
 const char *TSystem::UnixPathName(const char *name)
 {
