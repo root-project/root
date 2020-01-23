@@ -608,6 +608,16 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
                gROOT->SetEditorMode();
             }
          }
+      } else {
+         if (mode == kPolyLine) {
+            fgPolyLine = new TGraph(1);
+            fgPolyLine->ResetBit(TGraph::kClipFrame);
+         } else { // TCutG case
+            fgPolyLine = (TGraph*) new TCutG("CUTG",1);
+         }
+         fgPolyLine->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
+         gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+         fgPolyLine->Draw("L");
       }
       break;
 
@@ -626,6 +636,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->Update();
          gROOT->SetEditorMode();
       }
+      fgPolyLine = 0;
       break;
 
    case kMouseMotion:
@@ -636,16 +647,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
                                        gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
          gPad->Modified();
          gPad->Update();
-      } else {
-         if (mode == kPolyLine) {
-            fgPolyLine = new TGraph(1);
-            fgPolyLine->ResetBit(TGraph::kClipFrame);
-         } else { // TCutG case
-            fgPolyLine = (TGraph*) new TCutG("CUTG",1);
-         }
-         fgPolyLine->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                                 gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
-         fgPolyLine->Draw("L");
+
       }
       break;
    }
@@ -708,7 +710,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
 
       if (mode == kMarker) {
          TMarker *marker;
-         marker = new TMarker(x,y,gStyle->GetMarkerStyle());
+         marker = new TMarker(x,y,28);
          gPad->GetCanvas()->Selected(gPad, marker, kButton1Down);
          marker->Draw();
          gROOT->SetEditorMode();
