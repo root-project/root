@@ -461,7 +461,6 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       return true;
    }
 
-
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
    TString jsrootsysdflt;
    if (!jsrootsys) {
@@ -517,16 +516,20 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
 
       printf("Will be running HTML: %s size %d\n", html_name.Data(), (int) filecont.length());
 
+      TString tgtfilename = fname.c_str();
+      if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
+         gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
+
       ROOT::Experimental::RWebDisplayArgs args;
       args.SetBrowserKind(ROOT::Experimental::RWebDisplayArgs::kChrome);
       args.SetStandalone(true);
       args.SetHeadless(true);
       args.SetSize(width, height);
-      args.SetUrl("file://"s + html_name.Data());
+      args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
       if (EndsWith(".pdf"))
-         args.SetExtraArgs("--print-to-pdf="s + fname);
+         args.SetExtraArgs("--print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
-         args.SetExtraArgs("--screenshot="s + fname);
+         args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
       // remove target image file - we use it as detection when chrome is ready
       gSystem->Unlink(fname.c_str());
@@ -539,7 +542,7 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       }
 
       int cnt = 0; // timeout about 10 sec
-      while (gSystem->AccessPathName(fname.c_str())) {
+      while (gSystem->AccessPathName(tgtfilename.Data())) {
          gSystem->ProcessEvents();
          gSystem->Sleep(100);
          if (++cnt > 100) break;
