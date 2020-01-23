@@ -1467,7 +1467,7 @@
          if (tframe) this.createAttFill({ attr: tframe });
          else if (pad && pad.fFrameFillColor) this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
          else if (pad) this.createAttFill({ attr: pad });
-         else this.createAttFill({ pattern: 1001, color: 0});
+         else this.createAttFill({ pattern: 1001, color: 0 });
 
          // force white color for the canvas frame
          if (!tframe && this.fillatt.empty() && this.pad_painter() && this.pad_painter().iscan)
