@@ -263,8 +263,6 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
       return std::make_unique<RWebBrowserHandle>(url, rmdir, pid);
 
-      // return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
-
 #else
 
       if (fProg.empty()) {
@@ -272,7 +270,8 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
          return nullptr;
       }
 
-      exec = "wmic process call create \""s + fProg + exec + "\" | find \"ProcessId\" "s;
+      // use UnixPathName to simplify handling of backslashes
+      exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + exec + "' | find \"ProcessId\" "s;
       std::string process_id = gSystem->GetFromPipe(exec.c_str());
       std::stringstream ss(process_id);
       std::string tmp;
@@ -287,18 +286,13 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
       // add processid and rm dir
       return std::make_unique<RWebBrowserHandle>(url, rmdir, pid);
-
-      //return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 #endif
    }
 
 #ifdef _MSC_VER
    std::vector<char *> argv;
    std::string firstarg = fProg;
-   auto slashpos = firstarg.rfind("\\");
-   if (slashpos != std::string::npos)
-      firstarg.erase(0, slashpos + 1);
-   slashpos = firstarg.rfind("/");
+   auto slashpos = firstarg.find_last_of("/\\");
    if (slashpos != std::string::npos)
       firstarg.erase(0, slashpos + 1);
    argv.push_back((char *)firstarg.c_str());
@@ -367,11 +361,12 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 void ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
 {
    std::string geometry;
-   if ((args.GetWidth() > 0) || (args.GetHeight() > 0))
-      geometry = "--window-size="s + std::to_string(args.GetWidth() > 0 ? args.GetWidth() : 800) + ","s +
-                                 std::to_string(args.GetHeight() > 0 ? args.GetHeight() : 600);
+   if ((args.GetWidth() > 0) && (args.GetHeight() > 0))
+      geometry = "--window-size="s + std::to_string(args.GetWidth())
+                                   + (args.IsHeadless() ? "x"s : ","s)
+                                   + std::to_string(args.GetHeight());
 
-   if ((args.GetX() >= 0) || (args.GetY() >= 0)) {
+   if (((args.GetX() >= 0) || (args.GetY() >= 0)) && !args.IsHeadless()) {
       if (!geometry.empty()) geometry.append(" ");
       geometry.append("--window-position="s + std::to_string(args.GetX() >= 0 ? args.GetX() : 0) + ","s +
                                            std::to_string(args.GetY() >= 0 ? args.GetY() : 0));
