@@ -239,7 +239,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint64\": 44444444444,\n"
       + "  \"string\": \"TestString\",\n"
       + "  \"boolean\": true,\n"
-      + "  \"uint8\": 'a'\n"
+      + "  \"uint8\": 97\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
 
@@ -254,7 +254,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint64\": 2299994967294,\n"
       + "  \"string\": \"TestString2\",\n"
       + "  \"boolean\": false,\n"
-      + "  \"uint8\": 'b'\n"
+      + "  \"uint8\": 98\n"
       + "}\n" };
    EXPECT_EQ(fString1, os1.str());
 
@@ -262,7 +262,7 @@ TEST(RNTupleShow, BasicTypes)
    EXPECT_DEATH(ntuple2->Show(2), ".*");
 }
 
-TEST(RNTupleShow, VectorFields)
+TEST(RNTupleShow, Vectors)
 {
    std::string rootFileName{"test_ntuple_show_vector.root"};
    std::string ntupleName{"VecNTuple"};
@@ -294,9 +294,9 @@ TEST(RNTupleShow, VectorFields)
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
    std::string fString{ std::string("")
       + "{\n"
-      + "  \"intVec\": {4, 5, 6},\n"
-      + "  \"floatVecVec\": {{ 0.1, 0.2 }, { 1.1, 1.2 }},\n"
-      + "  \"booleanVecVec\": {{ false, true, false }, { false, true }, { true, false, false }}\n"
+      + "  \"intVec\": [4, 5, 6],\n"
+      + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2]],\n"
+      + "  \"booleanVecVec\": [[false, true, false], [false, true], [true, false, false]]\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
 
@@ -304,14 +304,14 @@ TEST(RNTupleShow, VectorFields)
    ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
    std::string fString1{ std::string("")
       + "{\n"
-      + "  \"intVec\": {4, 5, 6, 7},\n"
-      + "  \"floatVecVec\": {{ 0.1, 0.2 }, { 1.1, 1.2 }, { 2.2, 2.3 }},\n"
-      + "  \"booleanVecVec\": {{ false, true, false }, { false, true }, { true, false, false }, { false, true }}\n"
+      + "  \"intVec\": [4, 5, 6, 7],\n"
+      + "  \"floatVecVec\": [[0.1, 0.2], [1.1, 1.2], [2.2, 2.3]],\n"
+      + "  \"booleanVecVec\": [[false, true, false], [false, true], [true, false, false], [false, true]]\n"
       + "}\n" };
    EXPECT_EQ(fString1, os1.str());
 }
 
-TEST(RNTupleShow, ArrayFields)
+TEST(RNTupleShow, Arrays)
 {
    std::string rootFileName{"test_ntuple_show_array.root"};
    std::string ntupleName{"Arrays"};
@@ -357,10 +357,10 @@ TEST(RNTupleShow, ArrayFields)
       + "{\n"
       + "  \"IntArray\": [1, 3],\n"
       + "  \"FloatArray\": [3.5, 4.6, 5.7],\n"
-      + "  \"ArrayOfVec\": [{ 1, 2 }, { 4, 5 }, { 7, 8, 9 }, { 11 }],\n"
+      + "  \"ArrayOfVec\": [[1, 2], [4, 5], [7, 8, 9], [11]],\n"
       + "  \"stringArray\": [\"First\", \"Second\"],\n"
-      + "  \"ArrayOfArray\": [[ true, false ], [ false, true ], [ false, false ]],\n"
-      + "  \"VecOfArray\": {[ 0, 1 ], [ 2, 3 ], [ 4, 5 ]}\n"
+      + "  \"ArrayOfArray\": [[true, false], [false, true], [false, false]],\n"
+      + "  \"VecOfArray\": [[0, 1], [2, 3], [4, 5]]\n"
       + "}\n"};
    EXPECT_EQ(fString, os.str());
 
@@ -370,15 +370,15 @@ TEST(RNTupleShow, ArrayFields)
       + "{\n"
       + "  \"IntArray\": [2, 5],\n"
       + "  \"FloatArray\": [2.3, 5.7, 11.13],\n"
-      + "  \"ArrayOfVec\": [{ 17, 19 }, { 23, 29 }, { 31, 37, 41 }, { 43 }],\n"
+      + "  \"ArrayOfVec\": [[17, 19], [23, 29], [31, 37, 41], [43]],\n"
       + "  \"stringArray\": [\"Third\", \"Fourth\"],\n"
-      + "  \"ArrayOfArray\": [[ true, true ], [ false, true ], [ true, true ]],\n"
-      + "  \"VecOfArray\": {[ 6, 7 ], [ 8, 9 ]}\n"
+      + "  \"ArrayOfArray\": [[true, true], [false, true], [true, true]],\n"
+      + "  \"VecOfArray\": [[6, 7], [8, 9]]\n"
       + "}\n"};
    EXPECT_EQ(fString1, os1.str());
 }
 
-TEST(RNTupleShow, ObjectFields)
+TEST(RNTupleShow, Objects)
 {
    std::string rootFileName{"test_ntuple_show_object.root"};
    std::string ntupleName{"Objects"};

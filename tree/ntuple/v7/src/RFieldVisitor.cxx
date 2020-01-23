@@ -124,23 +124,7 @@ void ROOT::Experimental::RPrintValueVisitor::PrintName(const Detail::RFieldBase 
 }
 
 
-void ROOT::Experimental::RPrintValueVisitor::VisitField(const Detail::RFieldBase &field)
-{
-   PrintIndent();
-   PrintName(field);
-   fOutput << "\"<unsupported type: " << field.GetType() << ">\"";
-}
-
-
-void ROOT::Experimental::RPrintValueVisitor::VisitFloatField(const RField<float> &field)
-{
-   PrintIndent();
-   PrintName(field);
-   fOutput << *fValue.Get<float>();
-}
-
-
-void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RFieldVector &field)
+void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const Detail::RFieldBase &field)
 {
    PrintIndent();
    PrintName(field);
@@ -159,6 +143,121 @@ void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RFieldVector
          fOutput << ", ";
    }
    fOutput << "]";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitField(const Detail::RFieldBase &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << "\"<unsupported type: " << field.GetType() << ">\"";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitBoolField(const RField<bool> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   if (*fValue.Get<bool>())
+      fOutput << "true";
+   else
+      fOutput << "false";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitDoubleField(const RField<double> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<double>();
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitFloatField(const RField<float> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<float>();
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<int>();
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitStringField(const RField<std::string> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   // TODO(jblomer): escape double quotes
+   fOutput << "\"" << *fValue.Get<std::string>() << "\"";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt8Field(const RField<std::uint8_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << static_cast<int>(*fValue.Get<std::uint8_t>());
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt32Field(const RField<std::uint32_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::uint32_t>();
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::uint64_t> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << *fValue.Get<std::uint64_t>();
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RFieldArray &field)
+{
+   PrintCollection(field);
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RFieldClass &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << "{";
+//   for (auto iValue = entry->begin(); iValue != entry->end(); ) {
+//      output << std::endl;
+//      RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
+//      iValue->GetField()->AcceptVisitor(visitor);
+//
+//      if (++iValue == entry->end()) {
+//         output << std::endl;
+//         break;
+//      } else {
+//         output << ",";
+//      }
+//   }
+   fOutput << "}";
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RFieldVector &field)
+{
+   PrintCollection(field);
+}
+
+
+void ROOT::Experimental::RPrintValueVisitor::VisitVectorBoolField(const RField<std::vector<bool>> &field)
+{
+   PrintCollection(field);
 }
 
 

@@ -185,6 +185,7 @@ private:
 
    void PrintIndent();
    void PrintName(const Detail::RFieldBase &field);
+   void PrintCollection(const Detail::RFieldBase &field);
 
 public:
    RPrintValueVisitor(const Detail::RFieldValue &value,
@@ -194,8 +195,20 @@ public:
       : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options) {}
 
    void VisitField(const Detail::RFieldBase &field) final;
+
+   void VisitBoolField(const RField<bool> &field) final;
+   void VisitDoubleField(const RField<double> &field) final;
    void VisitFloatField(const RField<float> &field) final;
+   void VisitIntField(const RField<int> &field) final;
+   void VisitStringField(const RField<std::string> &field) final;
+   void VisitUInt8Field(const RField<std::uint8_t> &field) final;
+   void VisitUInt32Field(const RField<std::uint32_t> &field) final;
+   void VisitUInt64Field(const RField<std::uint64_t> &field) final;
+
+   void VisitArrayField(const RFieldArray &field) final;
+   void VisitClassField(const RFieldClass &field) final;
    void VisitVectorField(const RFieldVector &field) final;
+   void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
 };
 
 

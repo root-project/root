@@ -719,6 +719,25 @@ void ROOT::Experimental::RField<std::vector<bool>>::DoGenerateColumns()
    fPrincipalColumn = fColumns[0].get();
 }
 
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const Detail::RFieldValue& value) const
+{
+   const static bool trueValue = true;
+   const static bool falseValue = false;
+
+   auto typedValue = value.Get<std::vector<bool>>();
+   auto count = typedValue->size();
+   std::vector<Detail::RFieldValue> result;
+   for (unsigned i = 0; i < count; ++i) {
+      if ((*typedValue)[i])
+         result.emplace_back(fSubFields[0]->CaptureValue(const_cast<bool *>(&trueValue)));
+      else
+         result.emplace_back(fSubFields[0]->CaptureValue(const_cast<bool *>(&falseValue)));
+   }
+   return result;
+}
+
+
 void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
    auto vec = static_cast<std::vector<bool>*>(value.GetRawPtr());
@@ -806,6 +825,18 @@ void ROOT::Experimental::RFieldArray::DestroyValue(const Detail::RFieldValue& va
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RFieldArray::CaptureValue(void *where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, where);
+}
+
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RFieldArray::SplitValue(const Detail::RFieldValue &value) const
+{
+   auto arrayPtr = value.Get<unsigned char>();
+   std::vector<Detail::RFieldValue> result;
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
+      result.emplace_back(itemValue);
+   }
+   return result;
 }
 
 void ROOT::Experimental::RFieldArray::AcceptVisitor(Detail::RFieldVisitor &visitor) const

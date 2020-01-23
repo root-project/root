@@ -165,8 +165,9 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
 
    switch(format) {
       case ENTupleFormat::kJSON: {
-         output << "{" << std::endl;
+         output << "{";
          for (auto iValue = entry->begin(); iValue != entry->end(); ) {
+            output << std::endl;
             RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
             iValue->GetField()->AcceptVisitor(visitor);
 
@@ -174,7 +175,7 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
                output << std::endl;
                break;
             } else {
-               output << "," << std::endl;
+               output << ",";
             }
          }
          output << "}" << std::endl;
