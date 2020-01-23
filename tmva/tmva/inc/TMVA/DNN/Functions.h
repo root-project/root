@@ -140,6 +140,24 @@ inline void evaluateDerivative(typename Architecture_t::Tensor_t & B,
         break;
     }
 }
+
+// matrix version of the function (for backward comp.)
+template<typename Architecture_t>
+inline void evaluateMatrix( typename Architecture_t::Matrix_t &A,
+                        EActivationFunction f)  
+{
+    typename Architecture_t::Tensor_t t(A); 
+    evaluate<Architecture_t>(t,f); 
+}
+
+template<typename Architecture_t>
+inline void evaluateDerivativeMatrix( typename Architecture_t::Matrix_t &B,
+                        EActivationFunction f,
+                        const typename Architecture_t::Matrix_t & A)
+{
+    typename Architecture_t::Tensor_t t(B); 
+    evaluateDerivative<Architecture_t>(t,f, typename Architecture_t::Tensor_t(A)); 
+}
 //______________________________________________________________________________
 //
 //  Output Functions

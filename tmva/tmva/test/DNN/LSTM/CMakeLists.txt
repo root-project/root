@@ -10,16 +10,16 @@ set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 # LSTM - Forward Reference
-ROOT_EXECUTABLE(testLSTMForwardPass TestLSTMForwardPass.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-LSTM-Forward COMMAND testLSTMForwardPass)
+#ROOT_EXECUTABLE(testLSTMForwardPass TestLSTMForwardPass.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-LSTM-Forward COMMAND testLSTMForwardPass)
 
 # LSTM - Backpropagation Reference
-ROOT_EXECUTABLE(testLSTMBackpropagation TestLSTMBackpropagation.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-LSTM-Backpropagation COMMAND testLSTMBackpropagation)
+#ROOT_EXECUTABLE(testLSTMBackpropagation TestLSTMBackpropagation.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-LSTM-Backpropagation COMMAND testLSTMBackpropagation)
 
 # LSTM - Full Test Reference
-ROOT_EXECUTABLE(testFullLSTM TestFullLSTM.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-LSTM-FullLSTM COMMAND testFullLSTM)
+#ROOT_EXECUTABLE(testFullLSTM TestFullLSTM.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-LSTM-FullLSTM COMMAND testFullLSTM)
 
 
 #--- CUDA tests. ---------------------------

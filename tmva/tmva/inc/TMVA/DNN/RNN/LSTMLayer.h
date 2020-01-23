@@ -41,7 +41,7 @@ namespace TMVA
 {
 namespace DNN
 {
-namespace LSTM
+namespace RNN
 {
 
 //______________________________________________________________________________
@@ -60,7 +60,7 @@ public:
 
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
-   using Tensor_t = std::vector<Matrix_t>;
+   using Tensor_t = typename Architecture_t::Tensor_t;
 
   
 
@@ -147,9 +147,7 @@ public:
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
-                 const Tensor_t &activations_backward,
-                 std::vector<Matrix_t> &inp1,
-                 std::vector<Matrix_t> &inp2);
+                 const Tensor_t &activations_backward);
     
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -459,8 +457,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::InputGate(const Matrix_t &input, Ma
    Architecture_t::MultiplyTranspose(fInputValue, input, fWeightsInputGate);
    Architecture_t::ScaleAdd(fInputValue, tmpState);
    Architecture_t::AddRowWise(fInputValue, fInputGateBias);
-   DNN::evaluateDerivative<Architecture_t>(di, fInp, fInputValue);
-   DNN::evaluate<Architecture_t>(fInputValue, fInp);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(di, fInp, fInputValue);
+   DNN::evaluateMatrix<Architecture_t>(fInputValue, fInp);
 }
 
  //______________________________________________________________________________
@@ -477,8 +475,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::ForgetGate(const Matrix_t &input, M
    Architecture_t::MultiplyTranspose(fForgetValue, input, fWeightsForgetGate);
    Architecture_t::ScaleAdd(fForgetValue, tmpState);
    Architecture_t::AddRowWise(fForgetValue, fForgetGateBias);
-   DNN::evaluateDerivative<Architecture_t>(df, fFor, fForgetValue);
-   DNN::evaluate<Architecture_t>(fForgetValue, fFor);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(df, fFor, fForgetValue);
+   DNN::evaluateMatrix<Architecture_t>(fForgetValue, fFor);
 }
 
  //______________________________________________________________________________
@@ -495,8 +493,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::CandidateValue(const Matrix_t &inpu
    Architecture_t::MultiplyTranspose(fCandidateValue, input, fWeightsCandidate);
    Architecture_t::ScaleAdd(fCandidateValue, tmpState);
    Architecture_t::AddRowWise(fCandidateValue, fCandidateBias);
-   DNN::evaluateDerivative<Architecture_t>(dc, fCan, fCandidateValue);
-   DNN::evaluate<Architecture_t>(fCandidateValue, fCan);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(dc, fCan, fCandidateValue);
+   DNN::evaluateMatrix<Architecture_t>(fCandidateValue, fCan);
 }
 
  //______________________________________________________________________________
@@ -513,8 +511,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::OutputGate(const Matrix_t &input, M
    Architecture_t::MultiplyTranspose(fOutputValue, input, fWeightsOutputGate);
    Architecture_t::ScaleAdd(fOutputValue, tmpState);
    Architecture_t::AddRowWise(fOutputValue, fOutputGateBias);
-   DNN::evaluateDerivative<Architecture_t>(dout, fOut, fOutputValue);
-   DNN::evaluate<Architecture_t>(fOutputValue, fOut);
+   DNN::evaluateDerivativeMatrix<Architecture_t>(dout, fOut, fOutputValue);
+   DNN::evaluateMatrix<Architecture_t>(fOutputValue, fOut);
 }
 
 
@@ -529,16 +527,17 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
    // T : time size
    // B : batch size
 
-   Tensor_t arrInput;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
-   }
+   Tensor_t arrInput( fTimeSteps, this->GetBatchSize(), this->GetInputWidth());
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
+   // }
    Architecture_t::Rearrange(arrInput, input); // B x T x D
 
-   Tensor_t arrOutput;
-   for (size_t t = 0; t < fTimeSteps;++t) {
-      arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
-   }
+   Tensor_t arrOutput ( fTimeSteps, this->GetBatchSize(), fStateSize);
+   // for (size_t t = 0; t < fTimeSteps;++t) {
+   //    arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
+   // }
+
   
    if (!this->fRememberState) {
       InitState(DNN::EInitialization::kZero);
@@ -548,10 +547,11 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
     *  next hidden state and next cell state. */
    for (size_t t = 0; t < fTimeSteps; ++t) {
       /* Feed forward network: value of each gate being computed at each timestep t. */
-      InputGate(arrInput[t], fDerivativesInput[t]);
-      ForgetGate(arrInput[t], fDerivativesForget[t]);
-      CandidateValue(arrInput[t], fDerivativesCandidate[t]);
-      OutputGate(arrInput[t], fDerivativesOutput[t]);
+      Matrix_t arrInputMt = arrInput[t];
+      InputGate(arrInputMt, fDerivativesInput[t]);
+      ForgetGate(arrInputMt, fDerivativesForget[t]);
+      CandidateValue(arrInputMt, fDerivativesCandidate[t]);
+      OutputGate(arrInputMt, fDerivativesOutput[t]);
 
       Architecture_t::Copy(this->GetInputGateTensorAt(t), fInputValue);
       Architecture_t::Copy(this->GetForgetGateTensorAt(t), fForgetValue);
@@ -559,10 +559,12 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
       Architecture_t::Copy(this->GetOutputGateTensorAt(t), fOutputValue);
        
       CellForward(fInputValue, fForgetValue, fCandidateValue, fOutputValue);
-      Architecture_t::Copy(arrOutput[t], fState);
+      Matrix_t arrOutputMt = arrOutput[t];
+      Architecture_t::Copy(arrOutputMt, fState);
       Architecture_t::Copy(this->GetCellTensorAt(t), fCell);
    }
 
+   // check if full output needs to be returned
    Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
 }
 
@@ -583,7 +585,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValu
     
    // Update hidden state.
    const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();
-   DNN::evaluate<Architecture_t>(cache, fAT);
+   DNN::evaluateMatrix<Architecture_t>(cache, fAT);
 
    /*! The Hadamard product of output_gate_value . tanh(cell_state)
     *  will be copied to next hidden state (passed to next LSTM cell)
@@ -595,9 +597,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValu
  //____________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,           // B x T x D
-                                                      const Tensor_t &activations_backward,   // B x T x D
-                                                      std::vector<Matrix_t> & /*inp1*/,
-                                                      std::vector<Matrix_t> & /*inp2*/)
+                                                      const Tensor_t &activations_backward)   // B x T x D
 -> void
 {
    // gradients_backward is activationGradients of layer before it, which is input layer.
@@ -612,40 +612,40 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
    // if dummy is false gradients_backward will be written back on the matrix
    bool dummy = false;
-   if (gradients_backward.size() == 0 || gradients_backward[0].GetNrows() == 0 || gradients_backward[0].GetNcols() == 0) {
+   if (gradients_backward.GetSize() == 0 || gradients_backward[0].GetNrows() == 0 || gradients_backward[0].GetNcols() == 0) {
       dummy = true;
    }
 
 
-   Tensor_t arr_gradients_backward;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
-   }
+   Tensor_t arr_gradients_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
+   // }
    
    //Architecture_t::Rearrange(arr_gradients_backward, gradients_backward); // B x T x D
    // activations_backward is input.
-   Tensor_t arr_activations_backward;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
-   }
+   Tensor_t arr_activations_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
+   // }
    Architecture_t::Rearrange(arr_activations_backward, activations_backward); // B x T x D
 
    /*! For backpropagation, we need to calculate loss. For loss, output must be known.
     *  We obtain outputs during forward propagation and place the results in arr_output tensor. */
-   Tensor_t arr_output;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_output.emplace_back(this->GetBatchSize(), fStateSize); // B x H
-   }
+   Tensor_t arr_output (  fTimeSteps, this->GetBatchSize(), fStateSize);
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_output.emplace_back(this->GetBatchSize(), fStateSize); // B x H
+   // }
    Architecture_t::Rearrange(arr_output, this->GetOutput());
 
    Matrix_t initState(this->GetBatchSize(), fCellSize); // B x H
    DNN::initialize<Architecture_t>(initState, DNN::EInitialization::kZero); // B x H
 
    // This will take partial derivative of state[t] w.r.t state[t-1]
-   Tensor_t arr_actgradients;
-   for (size_t t = 0; t < fTimeSteps; ++t) {
-      arr_actgradients.emplace_back(this->GetBatchSize(), fCellSize);
-   }
+   Tensor_t arr_actgradients (  fTimeSteps, this->GetBatchSize(), fStateSize);
+   // for (size_t t = 0; t < fTimeSteps; ++t) {
+   //    arr_actgradients.emplace_back(this->GetBatchSize(), fCellSize);
+   // }
    Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
 
    /*! There are total 8 different weight matrices and 4 bias vectors.
@@ -679,21 +679,23 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
          const Matrix_t &prevStateActivations = arr_output[t-2];
          const Matrix_t &prevCellActivations = this->GetCellTensorAt(t-2);
          // During forward propagation, each gate value calculates their gradients.
+         Matrix_t dx = arr_gradients_backward[t-1];
          CellBackward(state_gradients_backward, cell_gradients_backward, 
          	          prevStateActivations, prevCellActivations,
                       this->GetInputGateTensorAt(t-1), this->GetForgetGateTensorAt(t-1),
                       this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1),  
-                      arr_activations_backward[t-1], arr_gradients_backward[t-1],
+                      arr_activations_backward[t-1], dx,
                       fDerivativesInput[t-1], fDerivativesForget[t-1],
                       fDerivativesCandidate[t-1], fDerivativesOutput[t-1], t-1);
       } else {
          const Matrix_t &prevStateActivations = initState;
          const Matrix_t &prevCellActivations = initState;
+         Matrix_t dx = arr_gradients_backward[t-1];
          CellBackward(state_gradients_backward, cell_gradients_backward, 
          	          prevStateActivations, prevCellActivations, 
                       this->GetInputGateTensorAt(t-1), this->GetForgetGateTensorAt(t-1),
                       this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1), 
-                      arr_activations_backward[t-1], arr_gradients_backward[t-1],
+                      arr_activations_backward[t-1], dx,
                       fDerivativesInput[t-1], fDerivativesForget[t-1],
                       fDerivativesCandidate[t-1], fDerivativesOutput[t-1], t-1);
         }
@@ -725,12 +727,12 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellBackward(Matrix_t & state_gradi
    // cell gradient for current time step
    const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();   
    Matrix_t cell_gradient(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
-   DNN::evaluateDerivative<Architecture_t>(cell_gradient, fAT, this->GetCellTensorAt(t));
+   DNN::evaluateDerivativeMatrix<Architecture_t>(cell_gradient, fAT, this->GetCellTensorAt(t));
 
    // cell tanh value for current time step
    Matrix_t cell_tanh(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
    Architecture_t::Copy(cell_tanh, this->GetCellTensorAt(t));
-   DNN::evaluate<Architecture_t>(cell_tanh, fAT);
+   DNN::evaluateMatrix<Architecture_t>(cell_tanh, fAT);
 
    return Architecture_t::LSTMLayerBackward(state_gradients_backward, cell_gradients_backward,
                                             fWeightsInputGradients, fWeightsForgetGradients, fWeightsCandidateGradients,
@@ -763,7 +765,7 @@ auto TBasicLSTMLayer<Architecture_t>::Print() const
    std::cout << " (NInput = " << this->GetInputSize();  // input size 
    std::cout << ", NState = " << this->GetStateSize();  // hidden state size
    std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
-   std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
+   std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
 }
 
  //______________________________________________________________________________
