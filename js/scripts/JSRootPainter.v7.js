@@ -2706,7 +2706,7 @@
                                    .property('leftside', JSROOT.gStyle.ToolBarSide == 'left')
                                    .property('vertical', JSROOT.gStyle.ToolBarVert);
 
-         if (JSROOT.gStyle.ContextMenu)
+         if (JSROOT.gStyle.ContextMenu && !JSROOT.BatchMode)
             svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
 
          factor = 0.66;
@@ -2723,7 +2723,7 @@
          }
       }
 
-      // this.createAttFill({ attr: this.pad });
+      this.createAttFill({ pattern: 1001, color: 0 });
 
       if ((rect.width<=lmt) || (rect.height<=lmt)) {
          svg.style("display", "none");
@@ -2761,10 +2761,10 @@
          .property('draw_width', rect.width)
          .property('draw_height', rect.height);
 
-      //svg.select(".canvas_fillrect")
-      //   .attr("width", rect.width)
-      //   .attr("height", rect.height)
-      //   .call(this.fillatt.func);
+      svg.select(".canvas_fillrect")
+         .attr("width", rect.width)
+         .attr("height", rect.height)
+         .call(this.fillatt.func);
 
       this._fast_drawing = JSROOT.gStyle.SmallPad && ((rect.width < JSROOT.gStyle.SmallPad.width) || (rect.height < JSROOT.gStyle.SmallPad.height));
 
@@ -4311,24 +4311,11 @@
    }
 
    function drawPadSnapshot(divid, snap, opt) {
-
       var painter = new TCanvasPainter(null);
       painter.normal_canvas = false;
-      painter.batch_mode = JSROOT.BatchMode;
-
+      painter.batch_mode = true;
       painter.SetDivId(divid, -1); // just assign id
-      painter.CreateCanvasSvg(0);
-      painter.SetDivId(divid);  // now add to painters list
-
-      painter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "CanvasSnapShot", "Ctrl PrintScreen");
-      if (JSROOT.gStyle.ContextMenu)
-         painter.AddButton(JSROOT.ToolbarIcons.question, "Access context menus", "PadContextMenus");
-
-      if (painter.enlarge_main('verify'))
-         painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
-
       painter.RedrawPadSnap(snap, function() { painter.ShowButtons(); painter.DrawingReady(); });
-
       return painter;
    }
 

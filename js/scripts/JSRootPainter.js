@@ -6651,6 +6651,10 @@
 
             var svg = main.html();
 
+            console.log('SVG length', svg.length);
+            console.log('SVG start', svg.substr(0, 500));
+            console.log('SVG end', svg.substr(svg.length - 500));
+
             if (JSROOT.nodejs)
                svg = svg.replace(/xlink_href_nodejs=/g,"xlink:href=");
 
@@ -6672,7 +6676,7 @@
       }
 
       if (!JSROOT.nodejs) {
-         build(d3.select(window.document).append("div").style("visible", "hidden"));
+         build(d3.select('body').append("div").style("visible", "hidden"));
       } else if (JSROOT.nodejs_document) {
          build(JSROOT.nodejs_window.d3.select('body').append('div'));
       } else {
