@@ -279,6 +279,16 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
          return nullptr;
       }
 
+      if (!args.GetRedirectOutput().empty()) {
+         // use simple redirection, not found solution with wmic
+
+         exec = "\""s + gSystem->UnixPathName(fProg.c_str()) + "\" "s + exec + " > "s + args.GetRedirectOutput();
+
+         gSystem->Exec(exec.c_str());
+
+         return std::make_unique<RWebBrowserHandle>(url, rmdir);
+      }
+
       // use UnixPathName to simplify handling of backslashes
       exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + exec + "' | find \"ProcessId\" "s;
       std::string process_id = gSystem->GetFromPipe(exec.c_str());
