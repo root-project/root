@@ -27,14 +27,30 @@
 #include <vector>
 
 
+//------------------------------- RVisitorRank ---------------------------------
+
+bool ROOT::Experimental::Detail::RVisitorRank::IsFirstSibling() const
+{
+   return (fOrder <= 1);
+}
+
+bool ROOT::Experimental::Detail::RVisitorRank::IsLastSibling() const
+{
+   if (fOrder < 0)
+      return true;
+   return (static_cast<unsigned int>(fOrder) == fNumSiblings);
+}
+
+
 //----------------------------- RPrepareVisitor --------------------------------
 
 
-void ROOT::Experimental::RPrepareVisitor::VisitField(const Detail::RFieldBase & /*field*/, int level)
+void ROOT::Experimental::RPrepareVisitor::VisitField(
+   const Detail::RFieldBase & /*field*/, const Detail::RVisitorRank &rank)
 {
    ++fNumFields;
-   if (level > fDeepestLevel)
-      fDeepestLevel = level;
+   if (rank.GetLevel() > fDeepestLevel)
+      fDeepestLevel = rank.GetLevel();
 }
 
 
@@ -53,19 +69,20 @@ void ROOT::Experimental::RPrintSchemaVisitor::SetNumFields(int n)
    SetAvailableSpaceForStrings();
 }
 
-std::string ROOT::Experimental::RPrintSchemaVisitor::MakeKeyString(const Detail::RFieldBase &field, int level)
+std::string ROOT::Experimental::RPrintSchemaVisitor::MakeKeyString(
+   const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
 {
    std::string result{""};
-   if (level == 1) {
+   if (rank.GetLevel() == 1) {
       result += "Field ";
-      result += std::to_string(field.GetLevelInfo().GetOrder());
+      result += std::to_string(rank.GetOrder());
    } else {
-      if (field.GetLevelInfo().GetOrder() == field.GetLevelInfo().GetNumSiblings()) {
-         fFlagForVerticalLines.at(level - 2) = false;
+      if (rank.IsLastSibling()) {
+         fFlagForVerticalLines.at(rank.GetLevel() - 2) = false;
       } else {
-         fFlagForVerticalLines.at(level - 2) = true;
+         fFlagForVerticalLines.at(rank.GetLevel() - 2) = true;
       }
-      for (int i = 0; i < level - 2; ++i) {
+      for (unsigned int i = 0; i < rank.GetLevel() - 2; ++i) {
          if (fFlagForVerticalLines.at(i)) {
             result += "| ";
          } else {
@@ -85,16 +102,17 @@ std::string ROOT::Experimental::RPrintSchemaVisitor::MakeValueString(const Detai
 }
 
 // Entire function only prints 1 Line, when if statement is disregarded.
-void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RPrintSchemaVisitor::VisitField(
+   const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
 {
-   if (level == 1) {
+   if (rank.GetLevel() == 1) {
       for (int i = 0; i < fWidth; ++i) {
          fOutput << fFrameSymbol;
       }
       fOutput << std::endl;
    }
    fOutput << fFrameSymbol << ' ';
-   fOutput << RNTupleFormatter::FitString(MakeKeyString(field, level), fAvailableSpaceKeyString);
+   fOutput << RNTupleFormatter::FitString(MakeKeyString(field, rank), fAvailableSpaceKeyString);
    fOutput << " : ";
    fOutput << RNTupleFormatter::FitString(MakeValueString(field), fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
@@ -102,23 +120,23 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBas
 
 //------------------------ RValueVisitor --------------------------------
 
-void ROOT::Experimental::RValueVisitor::VisitField(const Detail::RFieldBase &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << "no support for " << field.GetType();
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": no support for " << field.GetType();
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field, const Detail::RVisitorRank &rank)
 {
    // When fPrintOnlyValue is true, int level gets a new meaning. It is used in VisitVectorField for multidimentional
    // vectors and array of vectors.
@@ -139,7 +157,7 @@ void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": [";
    // Get startIndex from next non-vector/non-array itemfield.
@@ -155,21 +173,21 @@ void ROOT::Experimental::RValueVisitor::VisitArrayField(const RFieldArray &field
 
    if (field.GetFirstChild()->GetStructure() == ENTupleStructure::kRecord) {
       fOutput << std::endl;
-      for (int i = 0; i < level; ++i)
+      for (unsigned int i = 0; i < rank.GetLevel(); ++i)
          fOutput << "  ";
    }
    fOutput << "]";
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 
    fPrintOnlyValue = false;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitBoolField(const RField<bool> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitBoolField(const RField<bool> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field, rank));
       if (view(fCollectionIndex) == 0) {
          fOutput << "false";
       } else {
@@ -178,35 +196,35 @@ void ROOT::Experimental::RValueVisitor::VisitBoolField(const RField<bool> &field
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<bool>(RNTupleFormatter::FieldHierarchy(field, rank));
    if (view(fIndex) == 0) {
       fOutput << "false";
    } else {
       fOutput << "true";
    }
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
 // Visited when encountering a field with a custom object with dictionary.
-void ROOT::Experimental::RValueVisitor::VisitClassField(const RFieldClass &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitClassField(const RFieldClass &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << std::endl;
       // Create new RValueVisitor to have 2 different fCollectionIndexes (allows to display vector of objects which
       // contain vectors themselves)
-      RValueVisitor visitor(fOutput, fReader, level /*fIndex*/, false, 0);
-      field.NotVisitTopFieldTraverseValueVisitor(visitor, field.GetLevelInfo().GetLevel());
+      RValueVisitor visitor(fOutput, fReader, rank.GetLevel() /*fIndex*/, false, 0);
+      field.NotVisitTopFieldTraverseValueVisitor(visitor, rank.GetLevel());
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": " << std::endl;
    // A custom object (represented by RFieldClass) should let its subfields display
@@ -216,173 +234,177 @@ void ROOT::Experimental::RValueVisitor::VisitClassField(const RFieldClass &field
 }
 
 void ROOT::Experimental::RValueVisitor::VisitClusterSizeField(const RField<ROOT::Experimental::ClusterSize_t> &field,
-                                                              int level)
+                                                              const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<ClusterSize_t>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<ClusterSize_t>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << view(fCollectionIndex);
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<ClusterSize_t>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<ClusterSize_t>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << view(fIndex);
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitDoubleField(const RField<double> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitDoubleField(const RField<double> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << view(fCollectionIndex);
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<double>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << view(fIndex);
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitFloatField(const RField<float> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitFloatField(const RField<float> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << view(fCollectionIndex);
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<float>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << view(fIndex);
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitIntField(const RField<int> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitIntField(const RField<int> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<std::int32_t>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<std::int32_t>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << view(fCollectionIndex);
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<int>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<int>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << view(fIndex);
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitStringField(const RField<std::string> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitStringField(
+   const RField<std::string> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<std::string>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<std::string>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << "\"" << view(fCollectionIndex) << "\"";
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<std::string>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<std::string>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << "\"" << view(fIndex) << "\"";
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUInt32Field(const RField<std::uint32_t> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitUInt32Field(
+   const RField<std::uint32_t> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << view(fCollectionIndex);
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<std::uint32_t>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << view(fIndex);
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUInt64Field(const RField<std::uint64_t> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitUInt64Field(
+   const RField<std::uint64_t> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<std::uint64_t>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<std::uint64_t>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << view(fCollectionIndex);
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<std::uint64_t>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<std::uint64_t>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << view(fIndex);
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitUInt8Field(const RField<std::uint8_t> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitUInt8Field(
+   const RField<std::uint8_t> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
-      auto view = fReader->GetView<std::uint8_t>(RNTupleFormatter::FieldHierarchy(field));
+      auto view = fReader->GetView<std::uint8_t>(RNTupleFormatter::FieldHierarchy(field, rank));
       fOutput << "'" << view(fCollectionIndex) << "'";
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": ";
 
-   auto view = fReader->GetView<std::uint8_t>(RNTupleFormatter::FieldHierarchy(field));
+   auto view = fReader->GetView<std::uint8_t>(RNTupleFormatter::FieldHierarchy(field, rank));
    fOutput << "'" << view(fIndex) << "'";
 
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 }
 
-void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << "{ ";
       RClusterIndex dummyCluster;
       ClusterSize_t nItems;
-      field.GetCollectionInfo(level, &dummyCluster, &nItems);
+      field.GetCollectionInfo(rank.GetLevel(), &dummyCluster, &nItems);
 
       for (std::size_t i = 0; i < nItems - 1; ++i) {
          // The level parameter has a different meaning when fPrintOnlyValue = true. i + dummyCluster.GetIndex() is used
@@ -397,7 +419,7 @@ void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &fie
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": {";
 
@@ -417,11 +439,11 @@ void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &fie
    // Cosmetics for case where a vector of objects should be displayed.
    if (field.GetFirstChild()->GetStructure() == ENTupleStructure::kRecord) {
       fOutput << std::endl;
-      for (int i = 0; i < level; ++i)
+      for (unsigned int i = 0; i < rank.GetLevel(); ++i)
          fOutput << "  ";
    }
    fOutput << "}";
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fOutput << std::endl;
 
@@ -429,13 +451,14 @@ void ROOT::Experimental::RValueVisitor::VisitVectorField(const RFieldVector &fie
 }
 
 // See RValueVisitor::VisitVectorField for comments
-void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(const RField<std::vector<bool>> &field, int level)
+void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(
+   const RField<std::vector<bool>> &field, const Detail::RVisitorRank &rank)
 {
    if (fPrintOnlyValue) {
       fOutput << "{ ";
       RClusterIndex dummyIndex;
       ClusterSize_t nItems;
-      field.GetCollectionInfo(level, &dummyIndex, &nItems);
+      field.GetCollectionInfo(rank.GetLevel(), &dummyIndex, &nItems);
 
       for (std::size_t i = 0; i < nItems - 1; ++i) {
          field.FirstSubFieldAcceptVisitor(*this, i + dummyIndex.GetIndex() /* level*/);
@@ -448,7 +471,7 @@ void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(const RField<std::v
       return;
    }
 
-   for (int i = 0; i < level; ++i)
+   for (unsigned int i = 0; i < rank.GetLevel(); ++i)
       fOutput << "  ";
    fOutput << "\"" << field.GetName() << "\": {";
 
@@ -465,11 +488,11 @@ void ROOT::Experimental::RValueVisitor::VisitVectorBoolField(const RField<std::v
 
    if (field.GetFirstChild()->GetStructure() == ENTupleStructure::kRecord) {
       fOutput << std::endl;
-      for (int i = 0; i < level; ++i)
+      for (unsigned int i = 0; i < rank.GetLevel(); ++i)
          fOutput << "  ";
    }
    fOutput << "}";
-   if (field.GetLevelInfo().GetNumSiblings() != field.GetLevelInfo().GetOrder())
+   if (!rank.IsLastSibling())
       fOutput << ',';
    fPrintOnlyValue = false;
 }
@@ -561,13 +584,14 @@ std::size_t ROOT::Experimental::RValueVisitor::ConvertClusterIndexToGlobalIndex(
 //---------------------------- RNTupleFormatter --------------------------------
 
 
-std::string ROOT::Experimental::RNTupleFormatter::FieldHierarchy(const Detail::RFieldBase &field)
+std::string ROOT::Experimental::RNTupleFormatter::FieldHierarchy(
+   const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
 {
    std::string qualifiedName{field.GetName()};
    if (!field.GetParent())
       return qualifiedName;
    const Detail::RFieldBase *parentField{field.GetParent()};
-   for (int i = field.GetLevelInfo().GetLevel(); i > 1; --i) {
+   for (int i = rank.GetLevel(); i > 1; --i) {
       qualifiedName = parentField->GetName() + "." + qualifiedName;
       parentField = parentField->GetParent();
    }
@@ -587,12 +611,12 @@ std::string ROOT::Experimental::RNTupleFormatter::FitString(const std::string &s
 std::string
 ROOT::Experimental::RNTupleFormatter::HierarchialFieldOrder(const ROOT::Experimental::Detail::RFieldBase &field)
 {
-   std::string hierarchialOrder{std::to_string(field.GetLevelInfo().GetOrder())};
+   std::string hierarchialOrder{std::to_string(field.GetOrder())};
    const Detail::RFieldBase *parentPtr{field.GetParent()};
    // To avoid having the index of the RootField (-1) in the return value, it is checked if the grandparent is a nullptr
    // (in that case RootField is parent)
-   while (parentPtr && (parentPtr->GetLevelInfo().GetOrder() != -1)) {
-      hierarchialOrder = std::to_string(parentPtr->GetLevelInfo().GetOrder()) + "." + hierarchialOrder;
+   while (parentPtr && (parentPtr->GetOrder() != -1)) {
+      hierarchialOrder = std::to_string(parentPtr->GetOrder()) + "." + hierarchialOrder;
       parentPtr = parentPtr->GetParent();
    }
    return hierarchialOrder;
