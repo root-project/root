@@ -256,7 +256,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
          R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
-         return 0;
+         return nullptr;
       }
 
       // add processid and rm dir
@@ -266,19 +266,24 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       // return win.AddProcId(batch_mode, key, std::string("pid:") + std::to_string((int)pid) + rmdir);
 
 #else
-      std::string tmp;
-      char c;
-      int pid;
-      if (!fProg.empty()) {
-         exec = "wmic process call create \""s + fProg + exec;
-      } else {
-         R__ERROR_HERE("WebDisplay") << "No Web browser found in Program Files!";
+
+      if (fProg.empty()) {
+         R__ERROR_HERE("WebDisplay") << "No Web browser found";
          return nullptr;
       }
-      exec.append("\" | find \"ProcessId\" ");
+
+      exec = "wmic process call create \""s + fProg + exec + "\" | find \"ProcessId\" "s;
       std::string process_id = gSystem->GetFromPipe(exec.c_str());
       std::stringstream ss(process_id);
+      std::string tmp;
+      char c;
+      int pid = 0;
       ss >> tmp >> c >> pid;
+
+      if (pid <= 0) {
+         R__ERROR_HERE("WebDisplay") << "Fail to launch " << fProg;
+         return nullptr;
+      }
 
       // add processid and rm dir
       return std::make_unique<RWebBrowserHandle>(url, rmdir, pid);
