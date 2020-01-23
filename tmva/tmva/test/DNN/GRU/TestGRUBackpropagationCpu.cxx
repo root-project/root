@@ -19,7 +19,7 @@
 #include "TROOT.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::GRU;
+using namespace TMVA::DNN::RNN;
 
 int main() {
    std::cout << "Testing GRU backward pass\n";

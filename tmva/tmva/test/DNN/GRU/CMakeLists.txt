@@ -10,16 +10,16 @@ set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 # GRU - Forward Reference
-ROOT_EXECUTABLE(testGRUForwardPass TestGRUForwardPass.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-GRU-Forward COMMAND testGRUForwardPass)
+#ROOT_EXECUTABLE(testGRUForwardPass TestGRUForwardPass.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-GRU-Forward COMMAND testGRUForwardPass)
 
 # GRU - Backpropagation Reference
-ROOT_EXECUTABLE(testGRUBackpropagation TestGRUBackpropagation.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-GRU-Backpropagation COMMAND testGRUBackpropagation)
+#ROOT_EXECUTABLE(testGRUBackpropagation TestGRUBackpropagation.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-GRU-Backpropagation COMMAND testGRUBackpropagation)
 
 # GRU - Full Test Reference
-ROOT_EXECUTABLE(testFullGRU TestFullGRU.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-GRU-FullGRU COMMAND testFullGRU)
+#ROOT_EXECUTABLE(testFullGRU TestFullGRU.cxx LIBRARIES ${Libraries})
+#ROOT_ADD_TEST(TMVA-DNN-GRU-FullGRU COMMAND testFullGRU)
 
 
 #--- CUDA tests. ---------------------------

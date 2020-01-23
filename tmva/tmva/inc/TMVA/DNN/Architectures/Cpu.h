@@ -227,16 +227,16 @@ public:
    //                      const TCpuMatrix<Scalar_t> & weights,
    //                      const TCpuMatrix<Scalar_t> & activationBackward);
    /** Backward pass for Recurrent Networks */
-   static Matrix_t & RecurrentLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward, // BxH
-                                            TCpuMatrix<Scalar_t> & input_weight_gradients,
-                                            TCpuMatrix<Scalar_t> & state_weight_gradients,
-                                            TCpuMatrix<Scalar_t> & bias_gradients,
-                                            TCpuMatrix<Scalar_t> & df, //DxH
-                                            const TCpuMatrix<Scalar_t> & state, // BxH
-                                            const TCpuMatrix<Scalar_t> & weights_input, // HxD 
-                                            const TCpuMatrix<Scalar_t> & weights_state, // HxH
-                                            const TCpuMatrix<Scalar_t> & input,  // BxD
-                                            TCpuMatrix<Scalar_t> & input_gradient);
+   // static Matrix_t & RecurrentLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward, // BxH
+   //                                          TCpuMatrix<Scalar_t> & input_weight_gradients,
+   //                                          TCpuMatrix<Scalar_t> & state_weight_gradients,
+   //                                          TCpuMatrix<Scalar_t> & bias_gradients,
+   //                                          TCpuMatrix<Scalar_t> & df, //DxH
+   //                                          const TCpuMatrix<Scalar_t> & state, // BxH
+   //                                          const TCpuMatrix<Scalar_t> & weights_input, // HxD 
+   //                                          const TCpuMatrix<Scalar_t> & weights_state, // HxH
+   //                                          const TCpuMatrix<Scalar_t> & input,  // BxD
+   //                                          TCpuMatrix<Scalar_t> & input_gradient);
 	
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward,

@@ -18,7 +18,7 @@
 #include "TestLSTMBackpropagation.h"
 
 using namespace TMVA::DNN;
-using namespace TMVA::DNN::LSTM;
+using namespace TMVA::DNN::RNN;
 
 int main() {
    std::cout << "Testing LSTM backward pass\n";

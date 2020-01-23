@@ -319,8 +319,7 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
    if (Architecture_t::IsCudnn()) {
 
       // input size is stride[1] of input tensor that is B x T x inputSize
-      size_t inputSize = input.GetStrides()[1];
-      assert(inputSize == this->GetInputSize() );
+      assert(input.GetStrides()[1] == this->GetInputSize() );
 
       Tensor_t & x = this->fX;
       Tensor_t & y = this->fY;
@@ -434,8 +433,7 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       Tensor_t &dy = this->fDy;
 
       // input size is stride[1] of input tensor that is B x T x inputSize
-      size_t inputSize = activations_backward.GetStrides()[1];  // input tensor
-      assert(inputSize == this->GetInputSize() );
+      assert(activations_backward.GetStrides()[1] == this->GetInputSize() );
 
       // Tensor_t x({fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout());
       // Tensor_t y({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
