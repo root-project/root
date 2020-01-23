@@ -65,87 +65,58 @@ TEST(RNtuplePrint, FullString)
    EXPECT_EQ(fString, os.str());
 }
 
-TEST(RNtuplePrint, IntPrint)
+TEST(RNtuplePrint, Int)
 {
    std::stringstream os;
    RPrintSchemaVisitor visitor(os);
    RField<int> testField("intTest");
    testField.AcceptSchemaVisitor(visitor, 1);
    std::string expected{std::string("")
-       + "********************************************************************************\n"
        + "* Field 1   : intTest (std::int32_t)                                           *\n"};
    EXPECT_EQ(expected, os.str());
 }
 
-TEST(RNtuplePrint, FloatPrint)
-{
-   std::stringstream os;
-   RPrintSchemaVisitor visitor(os);
-   RField<float> testField("floatTest");
-   testField.AcceptSchemaVisitor(visitor, 1);
-   std::string expected{std::string("")
-       + "********************************************************************************\n"
-       + "* Field 1   : floatTest (float)                                                *\n"};
-   EXPECT_EQ(expected, os.str());
-
-}
-
-TEST(RNtuplePrint, FloatTraverse)
+TEST(RNtuplePrint, Float)
 {
    std::stringstream os;
    RPrintSchemaVisitor visitor(os, 'a');
    RField<float> testField("floatTest");
-   testField.TraverseSchema(visitor, 1);
+   testField.AcceptSchemaVisitor(visitor, 0);
    std::string expected{std::string("")
-       + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
        + "a Field 1   : floatTest (float)                                                a\n"};
    EXPECT_EQ(expected, os.str());
 }
 
-TEST(RNtuplePrint, VecAccept)
-{
-   std::stringstream os;
-   RPrintSchemaVisitor visitor(os, 'a');
-   RField<std::vector<float>> testField("floatTest");
-   testField.AcceptSchemaVisitor(visitor, 1);
-   std::string expected{std::string("")
-       + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n"
-       + "a Field 1   : floatTest (std::vector<float>)                                   a\n"};
-   EXPECT_EQ(expected, os.str());
-}
-
-TEST(RNtuplePrint, VecTraverse)
+TEST(RNtuplePrint, Vector)
 {
    std::stringstream os;
    RPrepareVisitor prepVisitor;
    RField<std::vector<float>> testField("floatVecTest");
-   testField.TraverseSchema(prepVisitor, 1);
+   testField.AcceptSchemaVisitor(prepVisitor, 0);
    RPrintSchemaVisitor visitor(os, '$');
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
    visitor.SetNumFields(prepVisitor.GetNumFields());
-   testField.TraverseSchema(visitor, 1);
+   testField.AcceptSchemaVisitor(visitor, 0);
    std::string expected{std::string("")
-       + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n"
        + "$ Field 1       : floatVecTest (std::vector<float>)                            $\n"
-       + "$ |__Field 1.1  : float (float)                                                $\n"};
+       + "$   Field 1.1   : float (float)                                                $\n"};
    EXPECT_EQ(expected, os.str());
 }
 
-TEST(RNtuplePrint, VecVecTraverse)
+TEST(RNtuplePrint, VectorNested)
 {
    std::stringstream os;
    RPrepareVisitor prepVisitor;
    RField<std::vector<std::vector<float>>> testField("floatVecVecTest");
-   testField.TraverseSchema(prepVisitor, 1);
+   testField.AcceptSchemaVisitor(prepVisitor, 1);
    RPrintSchemaVisitor visitor(os, 'x');
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
    visitor.SetNumFields(prepVisitor.GetNumFields());
-   testField.TraverseSchema(visitor, 1);
+   testField.AcceptSchemaVisitor(visitor, 0);
    std::string expected{std::string("")
-       + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n"
        + "x Field 1           : floatVecVecTest (std::vector<std::vector<float>>)        x\n"
-       + "x |__Field 1.1      : std::vector<float> (std::vector<float>)                  x\n"
-       + "x   |__Field 1.1.1  : float (float)                                            x\n"};
+       + "x   Field 1.1       : std::vector<float> (std::vector<float>)                  x\n"
+       + "x     Field 1.1.1   : float (float)                                            x\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -154,16 +125,15 @@ TEST(RNtuplePrint, NarrowManyEntriesVecVecTraverse)
    std::stringstream os;
    RPrepareVisitor prepVisitor;
    RField<std::vector<std::vector<float>>> testField("floatVecVecTest");
-   testField.TraverseSchema(prepVisitor, 1);
-   RPrintSchemaVisitor visitor(os, ' ', 30);
+   testField.AcceptSchemaVisitor(prepVisitor, 1);
+   RPrintSchemaVisitor visitor(os, ' ', 25);
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());
    visitor.SetNumFields(prepVisitor.GetNumFields());
-   testField.TraverseSchema(visitor, 1);
+   testField.AcceptSchemaVisitor(visitor, 0);
    std::string expected{std::string("")
-       + "                              \n"
-       + "  Field 1         : floatV... \n"
-       + "  |__Field 1.1    : std::v... \n"
-       + "    |__Field 1... : float ... \n"};
+       + "  Field 1    : floatV... \n"
+       + "    Field... : std::v... \n"
+       + "      Fie... : float ... \n"};
    EXPECT_EQ(expected, os.str());
 }
 

@@ -219,6 +219,17 @@ ROOT::Experimental::Detail::RFieldBase::GetSchemaRank(unsigned int visitLevel) c
 }
 
 
+std::vector<const ROOT::Experimental::Detail::RFieldBase *>
+ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
+{
+   std::vector<const RFieldBase *> result;
+   for (const auto &f : fSubFields) {
+      result.emplace_back(f.get());
+   }
+   return result;
+}
+
+
 const ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::Detail::RFieldBase::GetFirstChild() const
 {
    if (fSubFields.size())
@@ -233,21 +244,12 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    }
 }
 
-void ROOT::Experimental::Detail::RFieldBase::TraverseSchema(RSchemaVisitor &visitor, int level) const
-{
-   // The level is passed as a parameter so that AcceptSchemaVisitor() can access to the relative level of the field
-   // instead of the absolute one.
-   this->AcceptSchemaVisitor(visitor, level);
-   ++level;
-   for (const auto &fieldPtr: fSubFields) {
-      fieldPtr->TraverseSchema(visitor, level);
-   }
-}
 
 void ROOT::Experimental::Detail::RFieldBase::AcceptSchemaVisitor(Detail::RSchemaVisitor &visitor, int level) const
 {
    visitor.VisitField(*this, GetSchemaRank(level));
 }
+
 
 void ROOT::Experimental::Detail::RFieldBase::AcceptValueVisitor(Detail::RValueVisitor &visitor) const
 {

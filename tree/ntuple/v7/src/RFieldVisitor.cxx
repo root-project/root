@@ -46,11 +46,23 @@ bool ROOT::Experimental::Detail::RVisitorRank::IsLastSibling() const
 
 
 void ROOT::Experimental::RPrepareVisitor::VisitField(
-   const Detail::RFieldBase & /*field*/, const Detail::RVisitorRank &rank)
+   const Detail::RFieldBase &field, const Detail::RVisitorRank & /*rank*/)
 {
-   ++fNumFields;
-   if (rank.GetLevel() > fDeepestLevel)
-      fDeepestLevel = rank.GetLevel();
+   auto subFields = field.GetSubFields();
+   for (auto f : subFields) {
+      RPrepareVisitor visitor;
+      f->AcceptSchemaVisitor(visitor, 0);
+      fNumFields += visitor.fNumFields;
+      fDeepestLevel = std::max(fDeepestLevel, 1 + visitor.fDeepestLevel);
+   }
+}
+
+
+void ROOT::Experimental::RPrepareVisitor::VisitRootField(const RFieldRoot &field, const Detail::RVisitorRank &rank)
+{
+   VisitField(field, rank);
+   fNumFields--;
+   fDeepestLevel--;
 }
 
 
@@ -69,53 +81,45 @@ void ROOT::Experimental::RPrintSchemaVisitor::SetNumFields(int n)
    SetAvailableSpaceForStrings();
 }
 
-std::string ROOT::Experimental::RPrintSchemaVisitor::MakeKeyString(
-   const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
-{
-   std::string result{""};
-   if (rank.GetLevel() == 1) {
-      result += "Field ";
-      result += std::to_string(rank.GetOrder());
-   } else {
-      if (rank.IsLastSibling()) {
-         fFlagForVerticalLines.at(rank.GetLevel() - 2) = false;
-      } else {
-         fFlagForVerticalLines.at(rank.GetLevel() - 2) = true;
-      }
-      for (unsigned int i = 0; i < rank.GetLevel() - 2; ++i) {
-         if (fFlagForVerticalLines.at(i)) {
-            result += "| ";
-         } else {
-            result += "  ";
-         }
-      }
-      result += "|__Field ";
-      result += RNTupleFormatter::HierarchialFieldOrder(field);
-   }
-   return result;
-}
-
-std::string ROOT::Experimental::RPrintSchemaVisitor::MakeValueString(const Detail::RFieldBase &field)
-{
-   std::string nameAndType{field.GetName() + " (" + field.GetType() + ")"};
-   return nameAndType;
-}
-
-// Entire function only prints 1 Line, when if statement is disregarded.
 void ROOT::Experimental::RPrintSchemaVisitor::VisitField(
-   const Detail::RFieldBase &field, const Detail::RVisitorRank &rank)
+   const Detail::RFieldBase &field, const Detail::RVisitorRank &/*rank*/)
 {
-   if (rank.GetLevel() == 1) {
-      for (int i = 0; i < fWidth; ++i) {
-         fOutput << fFrameSymbol;
-      }
-      fOutput << std::endl;
-   }
    fOutput << fFrameSymbol << ' ';
-   fOutput << RNTupleFormatter::FitString(MakeKeyString(field, rank), fAvailableSpaceKeyString);
+
+   std::string key = fTreePrefix;
+   key += "Field " + fFieldNoPrefix + std::to_string(fFieldNo);
+   fOutput << RNTupleFormatter::FitString(key, fAvailableSpaceKeyString);
    fOutput << " : ";
-   fOutput << RNTupleFormatter::FitString(MakeValueString(field), fAvailableSpaceValueString);
+
+   std::string value = field.GetName() + " (" + field.GetType() + ")";
+   fOutput << RNTupleFormatter::FitString(value, fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
+
+   auto subFields = field.GetSubFields();
+   auto fieldNo = 1;
+   for (auto iField = subFields.begin(); iField != subFields.end(); ) {
+      RPrintSchemaVisitor visitor(*this);
+      visitor.fFieldNo = fieldNo++;
+      visitor.fCurrentLevel++;
+      visitor.fFieldNoPrefix += std::to_string(fFieldNo) + ".";
+
+      auto f = *iField;
+      ++iField;
+      // TODO(jblomer): implement tree drawing
+      visitor.fTreePrefix += "  ";
+      f->AcceptSchemaVisitor(visitor, 0);
+   }
+}
+
+
+void ROOT::Experimental::RPrintSchemaVisitor::VisitRootField(
+   const RFieldRoot &field, const Detail::RVisitorRank &/*rank*/)
+{
+   auto subFields = field.GetSubFields();
+   for (auto f : subFields) {
+      RPrintSchemaVisitor visitor(*this);
+      f->AcceptSchemaVisitor(visitor, 0);
+   }
 }
 
 
