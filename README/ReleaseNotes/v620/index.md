@@ -251,7 +251,17 @@ prevent infinite loops or crashes.
 
 
 ## 3D Graphics Libraries
-
+### Technology preview release of EVE-7: a server-client implementation of TEve for ROOT-7.
+  * Visualization of simple physics objects
+     * points, tracks, jets, line-sets, vertex ellipsoid, and generic geometrical shapes
+   * Support for handling of physics object collections -- a container of objects of a given class 
+     * physics items can be represented in all views:
+         * graphical views of any type (3D, RhoZ and RhoPhi)
+         * table views with possibility to edit content dynamically
+     * coherent selection of collection items across all instantiated views
+ * To try it out:
+     * build with `-DCMAKE_CXX_STANDARD="17" -Dhttp="ON" -Droot7="ON"`
+     * see examples in `tutorials/eve7`
 
 ## Geometry Libraries
 
