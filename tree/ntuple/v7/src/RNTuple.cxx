@@ -160,19 +160,21 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
    auto entry = fModel->CreateEntry();
    LoadEntry(index, entry.get());
 
-   RValueVisitor visitor(output, this, index, false, 0);
-
    switch(format) {
       case ENTupleFormat::kJSON: {
-         output << "{";
-         bool isEmpty = true;
-         for (auto val : *entry) {
+         output << "{" << std::endl;
+         for (auto iValue = entry->begin(); iValue != entry->end(); ) {
+            RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
+            iValue->GetField()->AcceptValueVisitor(visitor);
 
-            isEmpty = false;
+            if (++iValue == entry->end()) {
+               output << std::endl;
+               break;
+            } else {
+               output << "," << std::endl;
+            }
          }
-         if (!isEmpty)
-            output << std::endl;
-         output << "}";
+         output << "}" << std::endl;
          break;
       }
       default:
@@ -180,7 +182,10 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
          R__ASSERT(false);
    }
 }
+
+
 //------------------------------------------------------------------------------
+
 
 ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    std::unique_ptr<ROOT::Experimental::RNTupleModel> model,
