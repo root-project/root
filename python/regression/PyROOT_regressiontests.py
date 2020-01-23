@@ -322,7 +322,7 @@ class Regression08CheckEnumExactMatch( MyTestCase ):
          self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.Long(ROOT.marsupilami) ) )
 
 
-### test pythonization of TVector3 ===========================================
+### test pythonization and operators of TVector3 ===========================================
 class Regression09TVector3Pythonize( MyTestCase ):
    def test1TVector3( self ):
       """Verify TVector3 pythonization"""
@@ -334,6 +334,14 @@ class Regression09TVector3Pythonize( MyTestCase ):
       self.assertEqual( w.x(), 2*v.x() )
       self.assertEqual( w.y(), 2*v.y() )
       self.assertEqual( w.z(), 2*v.z() )
+
+   def test2TVector3(self):
+      """Verify that using one operator* overload does not mask the others"""
+      # ROOT-10278
+      if exp_pyroot:
+         v = TVector3(1., 2., 3.)
+         v*2
+         self.assertEqual(v*v, 14.0)
 
 
 ### test pythonization coral::AttributeList iterators ========================
