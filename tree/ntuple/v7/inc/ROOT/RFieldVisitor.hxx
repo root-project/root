@@ -144,14 +144,14 @@ public:
 // clang-format on
 class RPrepareVisitor : public Detail::RSchemaVisitor {
 private:
-   unsigned int fDeepestLevel;
-   unsigned int fNumFields;
+   unsigned int fDeepestLevel = 1;
+   unsigned int fNumFields = 1;
 
 public:
-   RPrepareVisitor(unsigned int deepestLevel = 0, unsigned int numFields = 0)
-      : fDeepestLevel{deepestLevel}, fNumFields{numFields} {}
+   RPrepareVisitor() = default;
    void VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank) final;
-   void VisitRootField(const RFieldRoot & /*field*/, const Detail::RVisitorRank & /*rank*/) final {}
+   void VisitRootField(const RFieldRoot &field, const Detail::RVisitorRank &rank) final;
+
    unsigned int GetDeepestLevel() const { return fDeepestLevel; }
    unsigned int GetNumFields() const { return fNumFields; }
 };
@@ -187,10 +187,10 @@ private:
    // *   |__Field 2 <- no '|' in position 1
    // *     |__Field <- no '|' in position 1 and 2
    std::vector<bool> fFlagForVerticalLines;
-   /// KeyString refers to the left side containing the word "Field" and its hierarchial order
-   std::string MakeKeyString(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank);
-   /// ValueString refers to the right side containing the type and name
-   std::string MakeValueString(const Detail::RFieldBase &field);
+   int fCurrentLevel = 0;
+   int fFieldNo = 1;
+   std::string fTreePrefix;
+   std::string fFieldNoPrefix;
 
 public:
    RPrintSchemaVisitor(std::ostream &out = std::cout, char frameSymbol = '*', int width = 80, int deepestLevel = 1,
@@ -201,7 +201,7 @@ public:
    }
    /// Prints summary of Field
    void VisitField(const Detail::RFieldBase &field, const Detail::RVisitorRank &rank) final;
-   void VisitRootField(const RFieldRoot & /*field*/, const Detail::RVisitorRank & /*rank*/) final{};
+   void VisitRootField(const RFieldRoot &field, const Detail::RVisitorRank &rank) final;
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
    void SetDeepestLevel(int d);

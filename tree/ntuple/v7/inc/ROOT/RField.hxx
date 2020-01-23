@@ -228,6 +228,8 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase *GetParent() const { return fParent; }
+   std::vector<const RFieldBase *> GetSubFields() const;
+   // TODO(jblomer): remove me
    const RFieldBase *GetFirstChild() const;
    bool IsSimple() const { return fIsSimple; }
 
@@ -239,8 +241,6 @@ public:
    RSchemaIterator begin();
    RSchemaIterator end();
 
-   /// Visit the entire subtree of fields tree starting from the current field
-   virtual void TraverseSchema(RSchemaVisitor &visitor, int level = 0) const;
    /// Visit the current field only
    virtual void AcceptSchemaVisitor(RSchemaVisitor &visitor, int level) const;
 
