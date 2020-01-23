@@ -33,22 +33,16 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RFieldVisitor
+\class ROOT::Experimental::Detail::RSchemaVisitor
 \ingroup NTuple
 \brief Abstract base class for classes implementing the visitor design pattern.
 
-RFieldVisitor::VisitField() is invoked by RFieldBase::AcceptVisitor(). VisitField() is inherited for instance
+RSchemaVisitor::VisitField() is invoked by RFieldBase::AcceptSchemaVisitor(). VisitField() is inherited for instance
 by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit from it will be visited. The level
 carries the hierarchy information about the tree of sub fields, starting with 0 for the root field.
 */
 // clang-format on
-class RFieldVisitor {
-   friend class RFieldValue;
-
-protected:
-   /// Set to itself from RFieldValue::AcceptVisitor
-   RFieldValue fValue;
-
+class RSchemaVisitor {
 public:
    virtual void VisitField(const Detail::RFieldBase &field, int level) = 0;
    virtual void VisitRootField(const RFieldRoot &field, int level) = 0;
@@ -78,7 +72,7 @@ public:
  Currently used for RPrintSchemaVisitor in RNTupleReader::Print() to collect information about levels, max depth etc.
 */
 // clang-format on
-class RPrepareVisitor : public Detail::RFieldVisitor {
+class RPrepareVisitor : public Detail::RSchemaVisitor {
 private:
    int fDeepestLevel;
    int fNumFields;
@@ -101,7 +95,7 @@ public:
 This visitor is used by RNTupleReader::Print()
 */
 // clang-format on
-class RPrintSchemaVisitor : public Detail::RFieldVisitor {
+class RPrintSchemaVisitor : public Detail::RSchemaVisitor {
 private:
    /// Where to write the printout to
    std::ostream &fOutput;
@@ -193,7 +187,7 @@ Each visit outputs the entry of a single field JSON formatted. Used by RNTupleRe
  * obtained from the upper level vector and array fields.
  */
 
-class RValueVisitor : public Detail::RFieldVisitor {
+class RValueVisitor : public Detail::RSchemaVisitor {
 private:
    RNTupleReader *fReader;
    /// The output is directed to fOutput which may differ from std::cout.
@@ -234,40 +228,37 @@ public:
    std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RPrintValueVisitor
+\ingroup NTuple
+\brief Renders a JSON value corresponding to the field. Needs to be used with RFieldValue::AcceptSchemaVisitor()
+*/
+// clang-format on
+class RPrintValueVisitor : public Detail::RSchemaVisitor {
+private:
+   /// The output is directed to fOutput which may differ from std::cout.
+   std::ostream &fOutput;
 
-//class RPrintValueVisitor : public Detail::RFieldVisitor {
-//private:
-//   /// The output is directed to fOutput which may differ from std::cout.
-//   std::ostream &fOutput;
-//   /// Points to the memory with the data corresponing to the field
-//   Detail::RFieldValue fData;
-//
-//public:
-//   RPrintValueVisitor(std::ostream &output, RFieldValue)
-//      : fReader{reader}, fOutput{output}, fIndex{index}, fPrintOnlyValue{onlyValue}, fCollectionIndex{collectionIndex}
-//   {
-//   }
-//   void VisitField(const Detail::RFieldBase &field, int level) final;
-//   void VisitRootField(const RFieldRoot & /*fField*/, int /*level*/) final {}
-//   void VisitArrayField(const RFieldArray &field, int level) final;
-//   void VisitBoolField(const RField<bool> &field, int level) final;
-//   void VisitClassField(const RFieldClass &field, int level) final;
-//   void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) final;
-//   void VisitDoubleField(const RField<double> &field, int level) final;
-//   void VisitFloatField(const RField<float> &field, int level) final;
-//   void VisitIntField(const RField<int> &field, int level) final;
-//   void VisitStringField(const RField<std::string> &field, int level) final;
-//   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) final;
-//   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
-//   void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
-//   void VisitVectorField(const RFieldVector &field, int level) final;
-//   void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) final;
-//   std::ostream &GetOutput() { return fOutput; }
-//   /// Get startIndex from next non-vector/non-array itemfield
-//   void SetCollectionIndex(const Detail::RFieldBase &field);
-//   // Necessary to convert RClusterIndexes obtained from RFieldVector::GetCollectionInfo()
-//   std::size_t ConvertClusterIndexToGlobalIndex(RClusterIndex cluterIndex) const;
-//};
+public:
+   RPrintValueVisitor(std::ostream &output) : fOutput{output} {}
+
+   void VisitField(const Detail::RFieldBase &field, int level) final;
+   void VisitRootField(const RFieldRoot & /*fField*/, int /*level*/) final {}
+   void VisitArrayField(const RFieldArray &field, int level) final;
+   void VisitBoolField(const RField<bool> &field, int level) final;
+   void VisitClassField(const RFieldClass &field, int level) final;
+   void VisitClusterSizeField(const RField<ClusterSize_t> &field, int level) final;
+   void VisitDoubleField(const RField<double> &field, int level) final;
+   void VisitFloatField(const RField<float> &field, int level) final;
+   void VisitIntField(const RField<int> &field, int level) final;
+   void VisitStringField(const RField<std::string> &field, int level) final;
+   void VisitUInt32Field(const RField<std::uint32_t> &field, int level) final;
+   void VisitUInt64Field(const RField<std::uint64_t> &field, int level) final;
+   void VisitUInt8Field(const RField<std::uint8_t> &field, int level) final;
+   void VisitVectorField(const RFieldVector &field, int level) final;
+   void VisitVectorBoolField(const RField<std::vector<bool>> &field, int level) final;
+};
 
 
 // clang-format off
