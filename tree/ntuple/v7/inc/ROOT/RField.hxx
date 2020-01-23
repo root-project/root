@@ -59,6 +59,7 @@ namespace Detail {
 class RFieldFuse;
 class RSchemaVisitor;
 class RPageStorage;
+class RVisitorRank;
 
 // clang-format off
 /**
@@ -77,55 +78,6 @@ class RFieldBase {
    friend class ROOT::Experimental::RFieldCollection; // to change the field names when collections are attached
 
 private:
-   /// Describes where the field is located inside the ntuple schema.
-   struct RLevelInfo {
-   private:
-      /// Tells how deep the field is in the ntuple. Rootfield has fLevel 0, direct subfield of Rootfield has fLevel 1, etc.
-      int fLevel = 1;
-      /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::fOrder
-      int fOrder = 1;
-      /// The field itself is also included in this number.
-      int fNumSiblingFields = 1;
-      /// Children refers to elements of fSubField
-      int fNumChildren = 0;
-
-   public:
-      RLevelInfo() = default;
-      RLevelInfo(const RFieldBase *field) : RLevelInfo() {
-         fLevel = GetLevel(field);
-         fOrder = GetOrder(field);
-         fNumSiblingFields = GetNumSiblings(field);
-         fNumChildren = GetNumChildren(field);
-      }
-      int GetNumSiblings(const RFieldBase *field = nullptr) const {
-         if (field && field->GetParent())
-            return static_cast<int>(field->GetParent()->fSubFields.size());
-         return fNumSiblingFields;
-      }
-      int GetLevel(const RFieldBase *field = nullptr) const {
-         if (!field)
-            return fLevel;
-         int level{0};
-         const RFieldBase *parentPtr{field->GetParent()};
-         while (parentPtr) {
-            parentPtr = parentPtr->GetParent();
-            ++level;
-         }
-         return level;
-      }
-      int GetOrder(const RFieldBase *field = nullptr) const {
-         if (field)
-            return field->fOrder;
-         return fOrder;
-      }
-      int GetNumChildren(const RFieldBase *field = nullptr) const {
-         if (field) {
-            return static_cast<int>(field->fSubFields.size());
-         }
-         return fNumChildren;
-      }
-   };
-
    /// The field name relative to its parent field
    std::string fName;
    /// The C++ type captured by this field
@@ -138,8 +90,10 @@ private:
    bool fIsSimple;
 
 protected:
-   /// First subfield of parentfield has fOrder 1, the next fOrder 2, etc. Value set by RFieldBase::Attach()
-   /// TODO(jblomer): review if this is needed
+   /// Describes the field position in the parent's list of children. First subfield of parent has fOrder 0,
+   /// the next fOrder 1, etc. Set by RFieldBase::Attach()
+   /// If there is no parent field, fOrder is -1.
+   /// TODO(jblomer): initialize with -1, make private
    int fOrder = 1;
 
    /// Collections and classes own sub fields
@@ -163,6 +117,10 @@ protected:
    virtual void DoReadInCluster(const RClusterIndex &clusterIndex, RFieldValue *value) {
       DoReadGlobal(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
    }
+
+   /// Creates a visitor rank based on fOrder and fSubFields that describes the position of the field in the
+   /// schema tree.  The level of the field is provided because traversal can start at a sub tree.
+   RVisitorRank GetSchemaRank(unsigned int visitLevel) const;
 
 public:
    /// Iterates over the sub fields in depth-first search order
@@ -258,6 +216,8 @@ public:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
+   // TODO(jblomer): remove me
+   int GetOrder() const { return fOrder; }
    std::string GetName() const { return fName; }
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
@@ -284,10 +244,6 @@ public:
    }
    virtual void TraverseValueVisitor(RValueVisitor &visitor, int level) const;
    virtual void NotVisitTopFieldTraverseValueVisitor(RValueVisitor &visitor, int level) const;
-
-   RLevelInfo GetLevelInfo() const {
-      return RLevelInfo(this);
-   }
 };
 
 // clang-format off
