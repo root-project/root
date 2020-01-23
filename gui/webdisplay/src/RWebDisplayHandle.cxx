@@ -109,7 +109,7 @@ public:
    {
 #ifdef _MSC_VER
       if (fHasPid)
-         gSystem->Exec(("taskkill /F /PID "s + std::to_string(fPid)).c_str());
+         gSystem->Exec(("taskkill /F /PID "s + std::to_string(fPid) + " >NUL 2>NUL").c_str());
       std::string rmdir = "rmdir /S /Q ";
 #else
       if (fHasPid)
@@ -250,10 +250,19 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
          argv.push_back((char *)fargs->At(n)->GetName());
       argv.push_back(nullptr);
 
+      posix_spawn_file_actions_t action;
+      posix_spawn_file_actions_init(&action);
+      if (!args.GetRedirectOutput().empty())
+         if (posix_spawn_file_actions_addopen (&action, 1 /*STDOUT_FILENO*/, args.GetRedirectOutput().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644) != 0) {
+            R__ERROR_HERE("WebDisplay") << "Fail to redirect output for spawn process";
+            return nullptr;
+         }
+
+
       R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << fProg << " " << exec;
 
       pid_t pid;
-      int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
+      int status = posix_spawn(&pid, argv[0], &action, nullptr, argv.data(), nullptr);
       if (status != 0) {
          R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
          return nullptr;

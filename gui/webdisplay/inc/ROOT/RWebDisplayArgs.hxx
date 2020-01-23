@@ -47,6 +47,7 @@ protected:
    EBrowserKind fKind{kNative};   ///<! id of web browser used for display
    std::string fUrl;              ///<! URL to display
    std::string fExtraArgs;        ///<! extra arguments which will be append to exec string
+   std::string fRedirectOutput;   ///<! filename where browser output should be redirected
    bool fHeadless{false};         ///<! is browser runs in headless mode
    bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
@@ -145,6 +146,9 @@ public:
 
    void SetExtraArgs(const std::string &args) { fExtraArgs = args; }
    const std::string &GetExtraArgs() const { return fExtraArgs; }
+
+   void SetRedirectOutput(const std::string &fname = "") { fRedirectOutput = fname; }
+   const std::string &GetRedirectOutput() const { return fRedirectOutput; }
 
    /// set custom executable to start web browser
    void SetCustomExec(const std::string &exec);

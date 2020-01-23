@@ -16,12 +16,25 @@
 </head>
 
 <body style="margin:0; padding:0; overflow:hidden">
-  <div id="drawing" style="width:$widthpx; height:$heightpx; overflow:hidden; margin:0; padding:0"></div>
+  <div id="drawing" style="width:$draw_widthpx; height:$draw_heightpx; overflow:hidden; margin:0; padding:0"></div>
 </body>
+
+<script id="data" type='text/javascript'>
+   var main_object = JSROOT.JSONR_unref($draw_object);
+</script>
 
 <script type='text/javascript'>
    JSROOT.BatchMode = true;
-   JSROOT.draw("drawing", JSROOT.JSONR_unref($draw_object), "");
+
+   if ("$draw_kind" == "draw") {
+      JSROOT.draw("drawing", main_object, "", function(painter) {
+      });
+   } else if ("$draw_kind" == "svg") {
+      JSROOT.MakeSVG({ object: main_object, width: $draw_width, height: $draw_height, option: "" }, function(res) {
+         d3.select("#data").remove();
+         d3.select("#drawing").attr("style", null).html(res);
+      });
+   }
 </script>
 </html>
 

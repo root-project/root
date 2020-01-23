@@ -472,109 +472,172 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   if (EndsWith(".png") || EndsWith(".pdf")) {
+   std::string draw_kind;
 
-      TString origin = TROOT::GetDataDir() + "/js/files/canv_batch.htm";
-      if (gSystem->ExpandPathName(origin)) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to find " << origin;
+   if (EndsWith(".png") || EndsWith(".pdf"))
+      draw_kind = "draw";
+   else if (EndsWith(".svg"))
+      draw_kind = "svg";
+   else if (EndsWith(".jpg") || EndsWith(".jpeg"))
+      draw_kind = "jpg";
+   else
+      return false;
+
+   TString origin = TROOT::GetDataDir() + "/js/files/canv_batch.htm";
+   if (gSystem->ExpandPathName(origin)) {
+      R__ERROR_HERE("CanvasPainter") << "Fail to find " << origin;
+      return false;
+   }
+
+   auto filecont = THttpServer::ReadFileContent(origin.Data());
+   if (filecont.empty()) {
+      R__ERROR_HERE("CanvasPainter") << "Fail to read content of " << origin;
+      return false;
+   }
+
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_width"), std::to_string(width));
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_height"), std::to_string(height));
+
+   if (strstr(jsrootsys,"http://") || strstr(jsrootsys,"https://") || strstr(jsrootsys,"file://"))
+      filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), jsrootsys);
+   else
+      filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
+
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
+
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
+
+
+   TString dump_name;
+   if (draw_kind != "draw") {
+      dump_name = "canvasdump";
+      FILE *df = gSystem->TempFileName(dump_name);
+      if (!df) {
+         R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for dump-dom";
          return false;
       }
+      fputs("placeholder", df);
+      fclose(df);
+   }
 
-      auto filecont = THttpServer::ReadFileContent(origin.Data());
-      if (filecont.empty()) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to read content of " << origin;
-         return false;
-      }
+   TString tmp_name("canvasbody");
+   FILE *hf = gSystem->TempFileName(tmp_name);
+   if (!hf) {
+      R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for batch job";
+      return false;
+   }
+   fputs(filecont.c_str(), hf);
+   fclose(hf);
 
-      filecont = std::regex_replace(filecont, std::regex("\\$width"), std::to_string(width));
-      filecont = std::regex_replace(filecont, std::regex("\\$height"), std::to_string(height));
+   TString html_name = tmp_name + ".html";
 
-      if (strstr(jsrootsys,"http://") || strstr(jsrootsys,"https://") || strstr(jsrootsys,"file://"))
-         filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), jsrootsys);
-      else
-         filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
+   if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
+      R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file into .html";
+      gSystem->Unlink(tmp_name.Data());
+      return false;
+   }
 
-      filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
+   R__DEBUG_HERE("CanvasPainter") << "Using " << html_name << " content_len " << filecont.length() << " to produce batch image " << fname;
 
+   TString tgtfilename = fname.c_str();
+   if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
+      gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
-      TString tmp_name("canvasbody");
-      FILE *hf = gSystem->TempFileName(tmp_name);
-      if (!hf) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for batch job";
-         return false;
-      }
-      fputs(filecont.c_str(), hf);
-      fclose(hf);
+   TString wait_file_name;
 
-      TString html_name = tmp_name + ".html";
+   ROOT::Experimental::RWebDisplayArgs args;
+   args.SetBrowserKind(ROOT::Experimental::RWebDisplayArgs::kChrome);
+   args.SetStandalone(true);
+   args.SetHeadless(true);
+   args.SetSize(width, height);
+   args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
+   if (draw_kind == "draw") {
 
-      if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file into .html";
-         gSystem->Unlink(tmp_name.Data());
-         return false;
-      }
+      wait_file_name = tgtfilename;
 
-      printf("Will be running HTML: %s size %d\n", html_name.Data(), (int) filecont.length());
-
-      TString tgtfilename = fname.c_str();
-      if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
-         gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
-
-      ROOT::Experimental::RWebDisplayArgs args;
-      args.SetBrowserKind(ROOT::Experimental::RWebDisplayArgs::kChrome);
-      args.SetStandalone(true);
-      args.SetHeadless(true);
-      args.SetSize(width, height);
-      args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
       if (EndsWith(".pdf"))
          args.SetExtraArgs("--print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
-      // remove target image file - we use it as detection when chrome is ready
-      gSystem->Unlink(fname.c_str());
+   } else {
+      // require temporary output file
+      args.SetExtraArgs("--dump-dom");
+      args.SetRedirectOutput(dump_name.Data());
 
-      auto handle = ROOT::Experimental::RWebDisplayHandle::Display(args);
+      wait_file_name = dump_name;
 
-      if (!handle) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to start chrome to produce image " << fname;
+      gSystem->Unlink(dump_name.Data());
+      // printf("Redirect to %s\n", dump_name.Data());
+   }
+
+   // remove target image file - we use it as detection when chrome is ready
+   gSystem->Unlink(tgtfilename.Data());
+
+   auto handle = ROOT::Experimental::RWebDisplayHandle::Display(args);
+
+   if (!handle) {
+      R__ERROR_HERE("CanvasPainter") << "Fail to start chrome to produce image " << fname;
+      return false;
+   }
+
+   int cnt = 0;
+   Long_t lastFileSize = 0;
+   while (cnt < 100) {
+      if (!gSystem->AccessPathName(wait_file_name.Data())) {
+         Long_t id{0}, size{0}, flags{0}, modtime{0};
+         if (!gSystem->GetPathInfo(wait_file_name.Data(), &id, &size, &flags, &modtime)) {
+            if (size > 100) {
+               if (size == lastFileSize) {
+                  // printf("File size already %ld - done!!!\n", (long) size);
+                  break;
+               } else {
+                  lastFileSize = size;
+               }
+            }
+         }
+      }
+
+      gSystem->ProcessEvents();
+      gSystem->Sleep(100);
+      ++cnt; // timeout about 10 sec
+   }
+
+   // delete temporary HTML file
+   gSystem->Unlink(html_name.Data());
+
+   if (cnt >= 100) {
+      R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;
+      return false;
+   } else {
+      R__DEBUG_HERE("CanvasPainter") << "Create file " << fname << "  cnt " << cnt;
+   }
+
+   if (draw_kind != "draw") {
+
+      auto dumpcont = THttpServer::ReadFileContent(dump_name.Data());
+
+      gSystem->Unlink(dump_name.Data());
+
+      if (dumpcont.length() < 100) {
+         R__ERROR_HERE("CanvasPainter") << "Fail to dump HTML code into " << dump_name;
          return false;
       }
 
-      int cnt = 0; // timeout about 10 sec
-      while (gSystem->AccessPathName(tgtfilename.Data())) {
-         gSystem->ProcessEvents();
-         gSystem->Sleep(100);
-         if (++cnt > 100) break;
-      }
 
-      // delete temporary file
-      gSystem->Unlink(html_name.Data());
+      auto p1 = dumpcont.find("<svg");
+      auto p2 = dumpcont.rfind("</svg>");
 
-      if (cnt > 100) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;
-         return false;
+      std::ofstream ofs(tgtfilename);
+      if ((p1 != std::string::npos) && (p2 != std::string::npos) && p1 < p2) {
+         ofs << dumpcont.substr(p1,p2-p1+6);
       } else {
-         R__DEBUG_HERE("CanvasPainter") << "Create file " << fname << "  cnt " << cnt;
+         ofs << "Failure!!!\n" << dumpcont;
+         return false;
       }
-
-      return true;
    }
 
-   if (EndsWith(".svg")) {
-      std::ofstream ofs(fname);
-      ofs << "future SVG " << fname;
-      return true;
-   }
-
-   if (EndsWith(".jpeg") || EndsWith(".jpg") || EndsWith(".gif")) {
-      std::ofstream ofs(fname);
-      ofs << "future image " << fname;
-      return true;
-   }
-
-
-   return false;
+   return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
