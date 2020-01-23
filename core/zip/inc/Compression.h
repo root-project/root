@@ -47,7 +47,7 @@ struct RCompressionSetting {
          /// Use the global compression setting for this process; may be affected by rootrc.
          kUseGlobal = 0,
          /// Use the compile-time default setting
-         kUseCompiledDefault = 404,
+         kUseCompiledDefault = 101,
          /// Use the default analysis setting; fast reading but poor compression ratio
          kUseAnalysis = 404,
          /// Use the recommended general-purpose setting; moderate read / write speed and compression ratio
