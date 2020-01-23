@@ -233,18 +233,27 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RFieldClass &
    PrintIndent();
    PrintName(field);
    fOutput << "{";
-//   for (auto iValue = entry->begin(); iValue != entry->end(); ) {
-//      output << std::endl;
-//      RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
-//      iValue->GetField()->AcceptVisitor(visitor);
-//
-//      if (++iValue == entry->end()) {
-//         output << std::endl;
-//         break;
-//      } else {
-//         output << ",";
-//      }
-//   }
+   auto elems = field.SplitValue(fValue);
+   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+      if (!fPrintOptions.fPrintSingleLine)
+         fOutput << std::endl;
+
+      RPrintOptions options;
+      options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
+      RPrintValueVisitor visitor(*iValue, fOutput, fLevel + 1, options);
+      iValue->GetField()->AcceptVisitor(visitor);
+
+      if (++iValue == elems.end()) {
+         if (!fPrintOptions.fPrintSingleLine)
+            fOutput << std::endl;
+         break;
+      } else {
+         fOutput << ",";
+         if (fPrintOptions.fPrintSingleLine)
+           fOutput << " ";
+      }
+   }
+   PrintIndent();
    fOutput << "}";
 }
 
