@@ -178,7 +178,12 @@ public:
    ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
+#ifdef _MSC_VER
+   // FIXME: try to remove this #ifdef after llvm upgrade
    auto Clone() const { return Copy(); }
+#else
+   BaseFunc * Clone() const { return Copy(); }
+#endif
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const {
