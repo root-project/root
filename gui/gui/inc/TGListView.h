@@ -224,8 +224,7 @@ public:
 
    virtual void AddItem(TGLVEntry *item)
                   { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); fTotal++; }
-   virtual void SelectEntry(TGLVEntry *item)
-                  { ActivateItem(item->GetFrameElement()); }
+   virtual void SelectEntry(TGLVEntry *item);
 
    virtual void  SetListView(TGListView *lv) { fListView = lv; }
    virtual void  RemoveItemWithData(void *userData);

@@ -1144,6 +1144,23 @@ TGDimension TGLVContainer::GetPageDimension() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Select the TGLVEntry given as argument and de-select the previous one if
+/// the container is not in multi-selection mode.
+
+void TGLVContainer::SelectEntry(TGLVEntry *item)
+{
+   // select (activate) the item passed as argument and deactivate the currently
+   // active one if not in multi-select mode
+
+   if ( !fMultiSelect ) {
+      TGFrameElement *old = fLastActiveEl;
+      if (old)
+         DeActivateItem(old);
+   }
+   ActivateItem(item->GetFrameElement());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create a list view widget.
 
 TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
