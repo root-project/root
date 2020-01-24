@@ -97,11 +97,8 @@ TGResourcePool::TGResourcePool(TGClient *client)
    TString mime_file = ".root.mimes";
    gSystem->PrependPathName(gSystem->HomeDirectory(), mime_file);
    mime_file = gEnv->GetValue("Gui.MimeTypeFile", mime_file.Data());
-   char *mf = gSystem->ExpandPathName(mime_file.Data());
-   if (mf) {
-      mime_file = mf;
-      delete [] mf;
-   }
+   gSystem->ExpandPathName(mime_file);
+
    if (gSystem->AccessPathName(mime_file, kReadPermission)) {
       mime_file = "root.mimes";
       gSystem->PrependPathName(TROOT::GetEtcDir(), mime_file);
