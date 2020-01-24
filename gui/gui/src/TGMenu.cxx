@@ -2207,22 +2207,25 @@ void TGPopupMenu::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
             outext[i]=0;
             if (mentry->fShortcut) {
                snprintf(shortcut, 80, "\\t%s", mentry->GetShortcutText());
-            }
-            else {
+            } else {
                memset(shortcut, 0, 80);
             }
 
-            out << "   " << GetName() << "->AddEntry(" << quote
-                << gSystem->ExpandPathName(gSystem->UnixPathName(outext)) // can be a file name
-                << shortcut
-                << quote << "," << mentry->GetEntryId();
+            {
+               TString entrytext = gSystem->UnixPathName(outext);
+               gSystem->ExpandPathName(entrytext);
+               out << "   " << GetName() << "->AddEntry(" << quote
+                   << entrytext // can be a file name
+                   << shortcut
+                   << quote << "," << mentry->GetEntryId();
+            }
             if (mentry->fUserData) {
                out << "," << mentry->fUserData;
             }
             if (mentry->fPic) {
-               out << ",gClient->GetPicture(" << quote
-                   << gSystem->ExpandPathName(gSystem->UnixPathName(mentry->fPic->GetName()))
-                   << quote << ")";
+               TString picname = gSystem->UnixPathName(mentry->fPic->GetName());
+               gSystem->ExpandPathName(picname);
+               out << ",gClient->GetPicture(" << quote << picname << quote << ")";
             }
             out << ");" << std::endl;
             delete [] outext;
