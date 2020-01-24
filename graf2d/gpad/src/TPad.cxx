@@ -4823,26 +4823,23 @@ static Bool_t ContainsTImage(TList *li)
 
 void TPad::Print(const char *filenam, Option_t *option)
 {
-   TString psname, fs1, fs2;
+   TString psname, fs1 = filenam;
    const char *filename;
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
    // of the file name (see help) they must be removed before doing ExpandPathName.
-   fs1 = filenam;
    if (fs1.EndsWith("[")) {
       fs1.Replace((fs1.Length()-1),1," ");
-      fs2 = gSystem->ExpandPathName(fs1.Data());
-      fs2.Replace((fs2.Length()-1),1,"[");
+      gSystem->ExpandPathName(fs1);
+      fs1.Replace((fs1.Length()-1),1,"[");
    } else if (fs1.EndsWith("]")) {
       fs1.Replace((fs1.Length()-1),1," ");
-      fs2 = gSystem->ExpandPathName(fs1.Data());
-      fs2.Replace((fs2.Length()-1),1,"]");
+      gSystem->ExpandPathName(fs1);
+      fs1.Replace((fs1.Length()-1),1,"]");
    } else {
-      char* exppath = gSystem->ExpandPathName(fs1.Data());
-      fs2 = exppath;
-      delete [] exppath;
+      gSystem->ExpandPathName(fs1);
    }
-   filename = fs2.Data();
+   filename = fs1.Data();
 
    // Set the default option as "Postscript" (Should be a data member of TPad)
    const char *opt_default="ps";
