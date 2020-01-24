@@ -543,7 +543,7 @@ Int_t TPackMgr::GetDownloadDir(TString &dldir)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show available packages
-/// 
+///
 
 void TPackMgr::Show(const char *title)
 {
@@ -768,14 +768,15 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
    Int_t rc = 0;
 
    Info("Install", "installing %s ...", parpath);
-   const char *par = gSystem->ExpandPathName(parpath);
+   TString par = parpath;
+   gSystem->ExpandPathName(par);
 
    // Does par exists?
-   if (gSystem->AccessPathName(par, kReadPermission)) {
-      Error("Install", "%s is invalid", par);
+   if (gSystem->AccessPathName(par.Data(), kReadPermission)) {
+      Error("Install", "%s is invalid", par.Data());
       return -1;
    }
-   TString parname = gSystem->BaseName(par);
+   TString parname = gSystem->BaseName(par.Data());
    TString pack = parname(0, parname.Last('.'));
    TString dest = TString::Format("%s/%s", fDir.Data(), parname.Data());
    TString psrc = par, ssrc;
@@ -820,11 +821,11 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
          install = kTRUE;
       } else {
          if (!md5) {
-            TFile::EFileType ft = TFile::GetType(par);
+            TFile::EFileType ft = TFile::GetType(par.Data());
             if (ft == TFile::kWeb || ft == TFile::kNet) {
                psrc.Form("%s/%s", dldir.Data(), parname.Data());
-               if (!TFile::Cp(par, psrc)) {
-                  Error("Install", "could not retrieve %s", par);
+               if (!TFile::Cp(par.Data(), psrc)) {
+                  Error("Install", "could not retrieve %s", par.Data());
                   return -1;
                }
             }
@@ -928,7 +929,7 @@ TPackMgr *TPackMgr::GetPackMgr(const char *pack, TPackMgr *packmgr)
 /// Get the full path to PAR, looking also in the global dirs.
 /// Returns -1 if not found, 0 if available in global dirs, 1 if it can be
 /// uploaded from the local package dir.
-/// For the cases >= 0, par is filled with the path of the PAR file 
+/// For the cases >= 0, par is filled with the path of the PAR file
 
 Int_t TPackMgr::FindParPath(TPackMgr *packmgr, const char *pack, TString &par)
 {

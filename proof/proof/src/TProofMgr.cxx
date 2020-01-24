@@ -998,7 +998,8 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
       return ds;
    }
 
-   TString inpath(gSystem->ExpandPathName(srcfiles));
+   TString inpath = srcfiles;
+   gSystem->ExpandPathName(inpath);
 
    FileStat_t fst;
    if (gSystem->GetPathInfo(inpath.Data(), fst)) {

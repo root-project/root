@@ -131,7 +131,8 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
          if (csl) {
             csl->fPerfIdx = perfidx;
             csl->fImage = image;
-            csl->fWorkDir = gSystem->ExpandPathName(workdir);
+            csl->fWorkDir = workdir;
+            gSystem->ExpandPathName(csl->fWorkDir);
             TString fullord = TString(gProofServ->GetOrdinal()) + "." + ((Long_t) ord);
             csl->fOrdinal = fullord.Data();
             claims.Add(csl);
