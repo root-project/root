@@ -60,10 +60,16 @@ def pythonization(lazy = True):
 for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
     module = importlib.import_module(pyz.__name__ + '.' + module_name)
 
+# Check if we are in the IPython shell
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins # Py2
+_is_ipython = hasattr(builtins, '__IPYTHON__')
+
 # Configure ROOT facade module
 import sys
 from ._facade import ROOTFacade
-_is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
 sys.modules[__name__] = ROOTFacade(sys.modules[__name__], _is_ipython)
 
 # Configuration for usage from Jupyter notebooks

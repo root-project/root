@@ -132,7 +132,7 @@ class ROOTFacade(types.ModuleType):
 
     def _finalSetup(self):
         # Setup interactive usage from Python
-        self.__dict__['app'] = PyROOTApplication(self.PyConfig)
+        self.__dict__['app'] = PyROOTApplication(self.PyConfig, self._is_ipython)
         if not self.gROOT.IsBatch():
             self.app.init_graphics()
 
