@@ -81,7 +81,6 @@ ClassImp(RooProdPdf);
 /// Default constructor
 
 RooProdPdf::RooProdPdf() :
-  _curNormSet(0),
   _cutOff(0),
   _extendedIndex(-1),
   _useDefaultGen(kFALSE),
@@ -450,28 +449,17 @@ RooProdPdf::~RooProdPdf()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Overload getVal() to intercept normalization set for use in evaluate()
-
-Double_t RooProdPdf::getValV(const RooArgSet* set) const
-{
-  _curNormSet = (RooArgSet*)set ;
-  return RooAbsPdf::getValV(set) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of object
 
 Double_t RooProdPdf::evaluate() const
 {
   Int_t code ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code) ;
+  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(_normSet, 0, &code) ;
 
   // If cache doesn't have our configuration, recalculate here
   if (!cache) {
-    code = getPartIntList(_curNormSet, nullptr) ;
-    cache = (CacheElem*) _cacheMgr.getObj(_curNormSet,0,&code) ;
+    code = getPartIntList(_normSet, nullptr) ;
+    cache = (CacheElem*) _cacheMgr.getObj(_normSet, 0, &code) ;
   }
 
 
@@ -517,12 +505,12 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
 
 RooSpan<double> RooProdPdf::evaluateBatch(std::size_t begin, std::size_t size) const {
   int code;
-  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(_curNormSet, nullptr, &code));
+  auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(_normSet, nullptr, &code));
 
   // If cache doesn't have our configuration, recalculate here
   if (!cache) {
-    code = getPartIntList(_curNormSet, nullptr);
-    cache = static_cast<CacheElem*>(_cacheMgr.getObj(_curNormSet, nullptr, &code));
+    code = getPartIntList(_normSet, nullptr);
+    cache = static_cast<CacheElem*>(_cacheMgr.getObj(_normSet, nullptr, &code));
   }
 
   if (cache->_isRearranged) {
