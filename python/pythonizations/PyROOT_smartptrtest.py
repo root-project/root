@@ -106,6 +106,15 @@ class TestClassSMARTPTRS:
             assert type(mine._get_smart_ptr()) == cppyy.gbl.std.shared_ptr(MyShareable)
         assert mine.say_hi() == "Hi!"
 
+    def test04_reset(self):
+        # ROOT-10245
+        import ROOT
+
+        ROOT.gROOT.ProcessLine('std::shared_ptr<TObject> optr(new TObject());')
+        o2 = ROOT.TObject()
+        ROOT.optr.__smartptr__().reset(o2)
+        assert ROOT.optr == o2
+
 
 ## actual test run
 if __name__ == '__main__':
