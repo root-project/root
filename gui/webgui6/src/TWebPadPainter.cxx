@@ -19,7 +19,6 @@
 #include "TBufferJSON.h"
 
 #include <ROOT/RMakeUnique.hxx>
-#include <ROOT/RWebDisplayHandle.hxx>
 
 
 /** \class TWebPadPainter
@@ -297,13 +296,7 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
 
 void TWebPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t gtype) const
 {
-   if ((gtype != TImage::kPng) && (gtype != TImage::kJpeg)) return;
-
-   TCanvas *c = dynamic_cast<TCanvas *> (pad);
-   if (!c) return;
-
-   auto json = TWebCanvas::CreateCanvasJSON(c, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
-
-   ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), c->GetWw(), c->GetWh());
+   if ((gtype == TImage::kPng) || (gtype == TImage::kJpeg))
+      TWebCanvas::ProduceImage(pad->GetCanvas(), fileName);
 }
 

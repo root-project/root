@@ -173,6 +173,8 @@ public:
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
+   static bool ProduceImage(TCanvas *c, const char *filename, Int_t width = 0, Int_t height = 0);
+
    ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
 };
 
