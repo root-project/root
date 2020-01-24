@@ -26,15 +26,18 @@
 <script type='text/javascript'>
    JSROOT.BatchMode = true;
 
-   if ("$draw_kind" == "draw") {
-      JSROOT.draw("drawing", main_object, "", function(painter) {
-      });
-   } else if ("$draw_kind" == "svg") {
-      JSROOT.MakeSVG({ object: main_object, width: $draw_width, height: $draw_height, option: "" }, function(res) {
-         d3.select("#data").remove();
-         d3.select("#drawing").attr("style", null).html(res);
-      });
-   }
+   JSROOT.draw("drawing", main_object, "", function(painter) {
+      d3.select("#data").remove();
+      if ("$draw_kind" != "draw")
+         painter.ProduceImage(true, "$draw_kind", function(res) {
+            var elem = d3.select("#drawing").attr("style", null);
+            if ("$draw_kind" == "svg")
+               elem.html(res);
+            else
+               elem.append("img").attr("src", res);
+        });
+   });
 </script>
+
 </html>
 
