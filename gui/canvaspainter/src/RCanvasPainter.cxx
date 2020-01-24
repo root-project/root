@@ -585,37 +585,14 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       return false;
    }
 
-   int cnt = 0;
-   Long_t lastFileSize = 0;
-   while (cnt < 100) {
-      if (!gSystem->AccessPathName(wait_file_name.Data())) {
-         Long_t id{0}, size{0}, flags{0}, modtime{0};
-         if (!gSystem->GetPathInfo(wait_file_name.Data(), &id, &size, &flags, &modtime)) {
-            if (size > 100) {
-               if (size == lastFileSize) {
-                  // printf("File size already %ld - done!!!\n", (long) size);
-                  break;
-               } else {
-                  lastFileSize = size;
-               }
-            }
-         }
-      }
-
-      gSystem->ProcessEvents();
-      gSystem->Sleep(100);
-      ++cnt; // timeout about 10 sec
-   }
-
    // delete temporary HTML file
    gSystem->Unlink(html_name.Data());
 
-   if (cnt >= 100) {
+   if (gSystem->AccessPathName(wait_file_name.Data())) {
       R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;
       return false;
-   } else {
-      R__DEBUG_HERE("CanvasPainter") << "Create file " << fname << "  cnt " << cnt;
    }
+   R__DEBUG_HERE("CanvasPainter") << "Create file " << fname;
 
    if (draw_kind != "draw") {
 
