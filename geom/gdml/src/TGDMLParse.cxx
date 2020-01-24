@@ -554,7 +554,7 @@ XMLNodePointer_t TGDMLParse::QuantityProcess(TXMLEngine *gdml, XMLNodePointer_t 
 XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString name = "";
-   Int_t coldim = 0;
+   Int_t coldim = 1;
    std::string values;
    TString tempattr;
 
@@ -1504,7 +1504,8 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine *gdml, XMLNodePointer_t node,
          if (gDebug >= 2)
             Info("TGDMLParse", "Re-use existing material-mixture: %s", mix->GetName());
       } else {
-         Error("TGDMLParse", "WARNING! Inconsistent material definitions between GDML and TGeoManager");
+         Fatal("TGDMLParse", "WARNING! Inconsistent material definitions between GDML and TGeoManager");
+         return child;
       }
       if (properties.GetSize()) {
          TNamed *property;
@@ -3330,6 +3331,10 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
       numplanes = numplanes + 1;
       child = gdml->GetNext(child);
    }
+   if (numplanes < 2) {
+      Fatal("Polycone", "Found less than 2 planes for polycone %s", name.Data());
+      return child;
+   }
 
    int cols;
    int i;
@@ -3453,6 +3458,10 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
    while (child != 0) {
       numplanes = numplanes + 1;
       child = gdml->GetNext(child);
+   }
+   if (numplanes < 2) {
+      Fatal("Polyhedra", "Found less than 2 planes for polyhedra %s", name.Data());
+      return child;
    }
 
    int cols;
@@ -4039,6 +4048,11 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
       }
 
       child = gdml->GetNext(child);
+   }
+
+   if (nosects < 2 || noverts < 3) {
+      Fatal("Xtru", "Invalid number of sections/vertices found forxtru %s", name.Data());
+      return child;
    }
 
    // Build the dynamic arrays..
