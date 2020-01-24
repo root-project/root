@@ -1951,13 +1951,14 @@ void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    }
 
    char quote = '"';
-   const char *picname = fPic->GetName();
+   TString picname = gSystem->UnixPathName(fPic->GetName());
+   gSystem->ExpandPathName(picname);
 
    out <<"   TGPictureButton *";
 
    out << GetName() << " = new TGPictureButton(" << fParent->GetName()
        << ",gClient->GetPicture(" << quote
-       << gSystem->ExpandPathName(gSystem->UnixPathName(picname)) << quote << ")";
+       << picname << quote << ")";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {
