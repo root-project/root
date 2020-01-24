@@ -6,6 +6,7 @@
 ///
 /// \author Andrei Gheata
 
+#include <TROOT.h>
 #include <TColor.h>
 #include <TDatime.h>
 #include <TRandom3.h>
@@ -28,7 +29,11 @@ void visualizeWavefrontObj(const char *dot_obj_file="teddy.obj", bool check = fa
 {
    // Input a file in .obj format (https://en.wikipedia.org/wiki/Wavefront_.obj_file)
    // The file should have a single object inside, only vertex and faces information is used
+   
    TString name = dot_obj_file;
+   TString sfile = gROOT->GetTutorialsDir();
+   sfile += "/geom/";
+   sfile += name;
    name.ReplaceAll(".obj", "");
    gROOT->GetListOfCanvases()->Delete();
    if (gGeoManager)
@@ -39,7 +44,7 @@ void visualizeWavefrontObj(const char *dot_obj_file="teddy.obj", bool check = fa
    TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 10, 10, 10);
    gGeoManager->SetTopVolume(top);
 
-   auto *tsl = TGeoTessellated::ImportFromObjFormat(dot_obj_file, check);
+   auto *tsl = TGeoTessellated::ImportFromObjFormat(sfile.Data(), check);
    tsl->ResizeCenter(5.);
 
    TGeoVolume *vol = new TGeoVolume(name, tsl, med);
@@ -47,5 +52,5 @@ void visualizeWavefrontObj(const char *dot_obj_file="teddy.obj", bool check = fa
    vol->SetLineWidth(2);
    top->AddNode(vol, 1);
    gGeoManager->CloseGeometry();
-   top->Draw("ogl");
+   if (!gROOT->IsBatch()) top->Draw("ogl");
 }
