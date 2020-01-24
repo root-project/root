@@ -942,3 +942,20 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    c->SetBatch(isbatch);
    return res;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create image using batch (headless) capability of Chrome browser
+/// Supported png, jpeg, svg, pdf folmats
+
+bool TWebCanvas::ProduceImage(TCanvas *c, const char *fileName, Int_t width, Int_t height)
+{
+   if (!c)
+      return false;
+
+   auto json = TWebCanvas::CreateCanvasJSON(c, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
+   if (!json.Length())
+      return false;
+
+   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width ? width : c->GetWw(), height ? height : c->GetWh());
+}
+
