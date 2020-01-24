@@ -47,8 +47,12 @@ namespace TStreamerInfoActions
 {
    bool IsDefaultVector(TVirtualCollectionProxy &proxy)
    {
-      return ((proxy.GetCollectionType() == ROOT::kSTLvector && !(proxy.GetProperties() & TVirtualCollectionProxy::kCustomAlloc))
-              || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) );
+      const auto props = proxy.GetProperties();
+      const bool isVector = proxy.GetCollectionType() == ROOT::kSTLvector;
+      const bool hasDefaultAlloc = !(props & TVirtualCollectionProxy::kCustomAlloc);
+      const bool isEmulated = props & TVirtualCollectionProxy::kIsEmulated;
+
+      return isEmulated || (isVector && hasDefaultAlloc);
    }
 
    template <typename From>
