@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_geom
 /// Macro allowing to vizualize tessellations from Wavefront's .obj format.
-/// Usage: 
 ///
 /// \macro_code
 ///
@@ -25,7 +24,7 @@ int randomColor()
 }
 
 //______________________________________________________________________________
-void visualizeWavefrontObj(const char *dot_obj_file, bool check = false)
+void visualizeWavefrontObj(const char *dot_obj_file="teddy.obj", bool check = false)
 {
    // Input a file in .obj format (https://en.wikipedia.org/wiki/Wavefront_.obj_file)
    // The file should have a single object inside, only vertex and faces information is used
