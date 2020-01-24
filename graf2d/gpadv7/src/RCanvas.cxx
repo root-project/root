@@ -37,6 +37,9 @@ static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvase
 
 } // namespace
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Returns list of created canvases
+
 const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> ROOT::Experimental::RCanvas::GetCanvases()
 {
    std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
@@ -52,11 +55,17 @@ bool ROOT::Experimental::RCanvas::IsModified() const
    return fPainter ? fPainter->IsCanvasModified(fModified) : fModified;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////
+/// Update canvas
+
 void ROOT::Experimental::RCanvas::Update(bool async, CanvasCallback_t callback)
 {
    if (fPainter)
       fPainter->CanvasUpdated(fModified, async, callback);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+/// Create new canvas instance
 
 std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create(const std::string &title)
 {
@@ -139,11 +148,16 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
    if (!fPainter)
       return false;
 
+   if (fModified == 0)
+      fModified = 1;
+
+   // ensure that snapshot is created
+   fPainter->CanvasUpdated(fModified, false, nullptr);
+
    auto width = fSize[0].fVal;
    auto height = fSize[1].fVal;
 
    return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
-
 /*
 
    if (fModified == 0)
