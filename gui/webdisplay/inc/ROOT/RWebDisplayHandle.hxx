@@ -90,6 +90,8 @@ public:
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);
+
+   static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600);
 };
 
 }
