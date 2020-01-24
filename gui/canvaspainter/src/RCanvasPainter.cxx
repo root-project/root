@@ -445,6 +445,8 @@ void ROOT::Experimental::RCanvasPainter::DoWhenReady(const std::string &name, co
 
 bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int height)
 {
+   if (fSnapshot.empty()) return false;
+
    std::string _fname = fname;
    std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
 
@@ -452,12 +454,9 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
       return (_fname.length() > suffix.length()) ? (0 == _fname.compare (_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
-   fJsonComp = 0;
-   auto json = CreateSnapshot(fCanvas);
-
    if (EndsWith(".json")) {
       std::ofstream ofs(fname);
-      ofs << json;
+      ofs << fSnapshot;
       return true;
    }
 
@@ -509,7 +508,7 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
 
    filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
 
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), fSnapshot);
 
 
    TString dump_name;
