@@ -293,7 +293,6 @@ void TGToolBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    char quote = '"';
 
    int i = 0;
-   const char *picname;
 
    TGFrameElement *f;
    TIter next(GetList());
@@ -306,11 +305,10 @@ void TGToolBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          }
 
          TGPictureButton *pb = (TGPictureButton *)f->fFrame;
-         picname = pb->GetPicture()->GetName();
+         TString picname = gSystem->UnixPathName(pb->GetPicture()->GetName());
+         gSystem->ExpandPathName(picname);
 
-         out << "   t.fPixmap = " << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(picname))
-             << quote << ";" << std::endl;
+         out << "   t.fPixmap = " << quote << picname << quote << ";" << std::endl;
          out << "   t.fTipText = " << quote
              << pb->GetToolTip()->GetText()->GetString() << quote << ";" << std::endl;
          if (pb->GetState() == kButtonDown) {
