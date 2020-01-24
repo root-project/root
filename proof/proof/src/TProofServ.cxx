@@ -1046,10 +1046,10 @@ Int_t TProofServ::CatMotd()
 
    // get last modification time of the file ~/proof/.prooflast
    lastname = TString(GetWorkDir()) + "/.prooflast";
-   char *last = gSystem->ExpandPathName(lastname.Data());
+   gSystem->ExpandPathName(lastname);
    Long64_t size;
    Long_t id, flags, modtime, lasttime = 0;
-   if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
+   if (gSystem->GetPathInfo(lastname.Data(), &id, &size, &flags, &lasttime) == 1)
       lasttime = 0;
 
    // show motd at least once per day
@@ -1078,10 +1078,9 @@ Int_t TProofServ::CatMotd()
    }
 
    if (lasttime)
-      gSystem->Unlink(last);
-   Int_t fd = creat(last, 0600);
+      gSystem->Unlink(lastname.Data());
+   Int_t fd = creat(lastname.Data(), 0600);
    if (fd >= 0) close(fd);
-   delete [] last;
 
    return 0;
 }
@@ -1510,7 +1509,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                ProcessLine(str);
                if (hasfn) {
                   gSystem->ChangeDirectory(ocwd);
-                  fCacheLock->Unlock();                 
+                  fCacheLock->Unlock();
                }
             }
 
@@ -2907,9 +2906,7 @@ Int_t TProofServ::Setup()
    }
 
    // Goto to the main PROOF working directory
-   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-   fWorkDir = workdir;
-   delete [] workdir;
+   gSystem->ExpandPathName(fWorkDir);
    if (gProofDebugLevel > 0)
       Info("Setup", "working directory set to %s", fWorkDir.Data());
 
