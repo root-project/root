@@ -22,9 +22,11 @@ class PyROOTApplication(object):
     Configures the interactive usage of ROOT from Python.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, is_ipython):
         # Construct a TApplication for PyROOT
         InitApplication(config.IgnoreCommandLineOptions)
+
+        self._is_ipython = is_ipython
 
     @staticmethod
     def _ipython_config():
@@ -71,9 +73,7 @@ class PyROOTApplication(object):
     def init_graphics(self):
         """Configure ROOT graphics to be used interactively"""
 
-        is_ipython = hasattr(__builtins__, '__IPYTHON__') or 'IPython' in sys.modules
-
-        if is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
+        if self._is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
             self._ipython_config()
         else:
             self._inputhook_config()
