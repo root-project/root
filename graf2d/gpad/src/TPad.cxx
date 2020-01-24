@@ -4824,7 +4824,6 @@ static Bool_t ContainsTImage(TList *li)
 void TPad::Print(const char *filenam, Option_t *option)
 {
    TString psname, fs1 = filenam;
-   const char *filename;
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
    // of the file name (see help) they must be removed before doing ExpandPathName.
@@ -4839,26 +4838,24 @@ void TPad::Print(const char *filenam, Option_t *option)
    } else {
       gSystem->ExpandPathName(fs1);
    }
-   filename = fs1.Data();
 
    // Set the default option as "Postscript" (Should be a data member of TPad)
-   const char *opt_default="ps";
+   const char *opt_default = "ps";
 
-   Int_t lenfil =  filename ? strlen(filename) : 0;
-   TString opt = (!option) ? opt_default : option;
+   TString opt = !option ? opt_default : option;
    Bool_t image = kFALSE;
 
-   if ( !lenfil )  {
+   if (!fs1.Length())  {
       psname = GetName();
       psname += opt;
    } else {
-      psname = filename;
+      psname = fs1;
    }
 
    // lines below protected against case like c1->SaveAs( "../ps/cs.ps" );
    if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) {
       psname = GetName();
-      psname.Append(filename);
+      psname.Append(fs1);
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
