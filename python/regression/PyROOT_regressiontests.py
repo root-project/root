@@ -512,6 +512,21 @@ class Regression19TGLVertex3(MyTestCase):
          vertexEnd = scatteringPoint + glvec3
          vertexEnd = scatteringPoint + glvec3
 
+### Getting and setting configuration options of gEnv ================
+class Regression20gEnv(MyTestCase):
+   def test1GetSetValue(self):
+      """Set a value with gEnv and retrieve it afterwards"""
+      # ROOT-10155
+      if exp_pyroot:
+         from ROOT import gEnv
+
+         optname = "SomeOption"
+         defval = -1
+         self.assertEqual(gEnv.GetValue(optname, defval), defval)
+         newval = 0
+         gEnv.SetValue(optname, newval)
+         self.assertEqual(gEnv.GetValue(optname, defval), newval)
+
 
 ## actual test run
 if __name__ == '__main__':
