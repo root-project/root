@@ -474,12 +474,16 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
 
    std::string draw_kind;
 
-   if (EndsWith(".png") || EndsWith(".pdf"))
+   if (EndsWith(".pdf") || EndsWith("shot.png"))
       draw_kind = "draw";
    else if (EndsWith(".svg"))
       draw_kind = "svg";
+   else if (EndsWith(".png"))
+      draw_kind = "png";
    else if (EndsWith(".jpg") || EndsWith(".jpeg"))
-      draw_kind = "jpg";
+      draw_kind = "jpeg";
+   else if (EndsWith(".webp"))
+      draw_kind = "webp";
    else
       return false;
 
@@ -624,16 +628,35 @@ bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &f
          return false;
       }
 
+      if (draw_kind == "svg") {
+         auto p1 = dumpcont.find("<svg");
+         auto p2 = dumpcont.rfind("</svg>");
 
-      auto p1 = dumpcont.find("<svg");
-      auto p2 = dumpcont.rfind("</svg>");
-
-      std::ofstream ofs(tgtfilename);
-      if ((p1 != std::string::npos) && (p2 != std::string::npos) && p1 < p2) {
-         ofs << dumpcont.substr(p1,p2-p1+6);
+         std::ofstream ofs(tgtfilename);
+         if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+            ofs << dumpcont.substr(p1,p2-p1+6);
+         } else {
+            R__ERROR_HERE("CanvasPainter") << "Fail to extract SVG from HTML dump " << dump_name;
+            ofs << "Failure!!!\n" << dumpcont;
+            return false;
+         }
       } else {
-         ofs << "Failure!!!\n" << dumpcont;
-         return false;
+
+         auto p1 = dumpcont.find(";base64,");
+         auto p2 = dumpcont.rfind("></div>");
+
+         if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+
+            auto base64 = dumpcont.substr(p1+8, p2-p1-9);
+            auto binary = TBase64::Decode(base64.c_str());
+
+            std::ofstream ofs(tgtfilename, std::ios::binary);
+            ofs.write(binary.Data(), binary.Length());
+         } else {
+            R__ERROR_HERE("CanvasPainter") << "Fail to extract image from dump HTML code " << dump_name;
+
+            return false;
+         }
       }
    }
 
