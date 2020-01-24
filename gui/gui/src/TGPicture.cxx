@@ -88,9 +88,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    ext.ToLower();
 
    if (ext.Length()) { // ".xpm", ".gif" etc
-      char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
-      pname = pxname;
-      delete [] pxname;
+      pname = gSystem->UnixPathName(pname);
+      gSystem->ExpandPathName(pname);
    }
 
    TGPicture *pic = (TGPicture *)fPicList->FindObject(pname);
@@ -146,9 +145,8 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
    ext.ToLower();
 
    if (ext.Length()) { // ".xpm", ".gif" etc
-      char *pxname = gSystem->ExpandPathName(gSystem->UnixPathName(pname));
-      pname = pxname;
-      delete [] pxname;
+      pname = gSystem->UnixPathName(pname);
+      gSystem->ExpandPathName(pname);
    }
 
    const char *hname = TGPicture::HashName(pname, new_width, new_height);
