@@ -204,11 +204,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    else if (args.IsStandalone())
       exec = fExec;
    else
-#ifdef _MSC_VER
-      exec = "$prog $url";
-#else
       exec = "$prog $url &";
-#endif
 
    if (exec.empty())
       return nullptr;
@@ -250,19 +246,10 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
          argv.push_back((char *)fargs->At(n)->GetName());
       argv.push_back(nullptr);
 
-      posix_spawn_file_actions_t action;
-      posix_spawn_file_actions_init(&action);
-      if (!args.GetRedirectOutput().empty())
-         if (posix_spawn_file_actions_addopen (&action, 1 /*STDOUT_FILENO*/, args.GetRedirectOutput().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644) != 0) {
-            R__ERROR_HERE("WebDisplay") << "Fail to redirect output for spawn process";
-            return nullptr;
-         }
-
-
       R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << fProg << " " << exec;
 
       pid_t pid;
-      int status = posix_spawn(&pid, argv[0], &action, nullptr, argv.data(), nullptr);
+      int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
          R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
          return nullptr;
@@ -277,16 +264,6 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       if (fProg.empty()) {
          R__ERROR_HERE("WebDisplay") << "No Web browser found";
          return nullptr;
-      }
-
-      if (!args.GetRedirectOutput().empty()) {
-         // use simple redirection, not found solution with wmic
-
-         exec = "\""s + gSystem->UnixPathName(fProg.c_str()) + "\" "s + exec + " > "s + args.GetRedirectOutput();
-
-         gSystem->Exec(exec.c_str());
-
-         return std::make_unique<RWebBrowserHandle>(url, rmdir);
       }
 
       // use UnixPathName to simplify handling of backslashes
@@ -309,21 +286,32 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    }
 
 #ifdef _MSC_VER
-   std::vector<char *> argv;
-   std::string firstarg = fProg;
-   auto slashpos = firstarg.find_last_of("/\\");
-   if (slashpos != std::string::npos)
-      firstarg.erase(0, slashpos + 1);
-   argv.push_back((char *)firstarg.c_str());
 
-   std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
-   for (Int_t n = 1; n <= fargs->GetLast(); ++n)
-      argv.push_back((char *)fargs->At(n)->GetName());
-   argv.push_back(nullptr);
+   if (exec.rfind("&") == exec.length() - 1) {
 
-   R__DEBUG_HERE("WebDisplay") << "Showing web window in " << fProg << " with:\n" << exec;
+      // if last symbol is &, use _spawn to detach execution
+      exec.resize(exec.length() - 1);
 
-   _spawnv(_P_NOWAIT, fProg.c_str(), argv.data());
+      std::vector<char *> argv;
+      std::string firstarg = fProg;
+      auto slashpos = firstarg.find_last_of("/\\");
+      if (slashpos != std::string::npos)
+         firstarg.erase(0, slashpos + 1);
+      argv.push_back((char *)firstarg.c_str());
+
+      std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
+      for (Int_t n = 1; n <= fargs->GetLast(); ++n)
+         argv.push_back((char *)fargs->At(n)->GetName());
+      argv.push_back(nullptr);
+
+      R__DEBUG_HERE("WebDisplay") << "Showing web window in " << fProg << " with:\n" << exec;
+
+      _spawnv(_P_NOWAIT, fProg.c_str(), argv.data());
+
+      return std::make_unique<RWebBrowserHandle>(url, rmdir);
+   }
+
+   std::string prog = "\""s + gSystem->UnixPathName(fProg.c_str()) + "\""s;
 
 #else
 
@@ -333,12 +321,19 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
    std::string prog = fProg;
 #endif
 
+#endif
+
    exec = std::regex_replace(exec, std::regex("\\$prog"), prog);
+
+   if (!args.GetRedirectOutput().empty()) {
+      auto p = exec.length();
+      if (exec.rfind("&") == p-1) --p;
+      exec.insert(p, " >"s + args.GetRedirectOutput() + " "s);
+   }
 
    R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
 
    gSystem->Exec(exec.c_str());
-#endif
 
    // add rmdir if required
    return std::make_unique<RWebBrowserHandle>(url, rmdir);
@@ -364,10 +359,12 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 #endif
 
 #ifdef _MSC_VER
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url");
+   // fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
+
+   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
+   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url &"); // & in windows mean usage of spawn
 #else
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork:--headless --incognito $geometry $url");
+   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --incognito $geometry $url");
    fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --incognito --app=\'$url\' &");
 #endif
 }
@@ -444,10 +441,10 @@ ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : Browse
 #ifdef _MSC_VER
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
-   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url");
+   // fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url &");
 #else
-   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:--headless --private-window --no-remote $profile $url");
+   // fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:--headless --private-window --no-remote $profile $url");
    fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog --private-window \'$url\' &");
 #endif
 }
