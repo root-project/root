@@ -1577,7 +1577,8 @@ void TGTextView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      fn = gSystem->ExpandPathName(gSystem->UnixPathName(filename));
+      fn = gSystem->UnixPathName(filename);
+      gSystem->ExpandPathName(fn);
    } else {
       fn = TString::Format("Txt%s", GetName()+5);
       txt->Save(fn.Data());
