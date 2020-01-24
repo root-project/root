@@ -1088,14 +1088,14 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
       delete [] s;
       itm = parent;
    }
-   dirname = gSystem->ExpandPathName(dirname.Data());
+   gSystem->ExpandPathName(dirname);
 #ifdef R__WIN32
    // only handle .lnk files on Windows
    while (dirname.Contains(".lnk")) {
       Ssiz_t idx = dirname.Index(".lnk") + 4;
       TString resolved = dirname;
       resolved.Remove(idx);
-      resolved = gSystem->ExpandPathName(resolved.Data());
+      gSystem->ExpandPathName(resolved);
       dirname = resolved.Append(dirname.Remove(0, idx));
    }
 #endif
@@ -1206,7 +1206,8 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    Bool_t is_link = kFALSE;
    if (!gSystem->GetPathInfo(item->GetText(), sbuf) && sbuf.fIsLink) {
       is_link = kTRUE;
-      fullpath = gSystem->ExpandPathName(item->GetText());
+      fullpath = item->GetText();
+      gSystem->ExpandPathName(fullpath);
    }
 
    if (fNewBrowser)
@@ -1398,13 +1399,15 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                   itm = fListTree->AddItem(item, fname, pic, pic);
                   if (pic != fFileIcon)
                      fClient->FreePicture(pic);
-                  if (sbuf.fIsLink)
-                     itm->SetUserData(new TObjString(TString::Format("file://%s\r\n",
-                                      gSystem->ExpandPathName(file->GetName()))), kTRUE);
-                  else
+                  if (sbuf.fIsLink) {
+                     TString fullname = file->GetName();
+                     gSystem->ExpandPathName(fullname);
+                     itm->SetUserData(new TObjString(TString::Format("file://%s\r\n",fullname.Data())), kTRUE);
+                  } else {
                      itm->SetUserData(new TObjString(TString::Format("file://%s/%s\r\n",
                                       gSystem->UnixPathName(file->GetTitle()),
                                       file->GetName())), kTRUE);
+                  }
                   itm->SetDNDSource(kTRUE);
                   if (size && modtime) {
                      char *tiptext = FormatFileInfo(fname.Data(), size, modtime);
