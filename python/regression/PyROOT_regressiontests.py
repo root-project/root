@@ -498,6 +498,21 @@ Base* g() { return new Derived(); }
       self.assertEqual( type(ROOT.RG18.g()), ROOT.RG18.Derived )
 
 
+### operator+ of TGLVertex3 ================
+class Regression19TGLVertex3(MyTestCase):
+   def test1OperatorPlus(self):
+      """Try invoking TGLVertex3::operator+ twice"""
+      # ROOT-10166
+      if exp_pyroot:
+         from ROOT import TGLVertex3, TGLVector3
+
+         scatteringPoint = TGLVertex3(2., 3., 0.2)
+         glvec3 = TGLVector3(1,2,3)
+
+         vertexEnd = scatteringPoint + glvec3
+         vertexEnd = scatteringPoint + glvec3
+
+
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner
