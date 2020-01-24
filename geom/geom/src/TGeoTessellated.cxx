@@ -19,6 +19,7 @@ for the composing faces.
 */
 
 #include "Riostream.h"
+#include <sstream>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -33,7 +34,7 @@ for the composing faces.
 
 ClassImp(TGeoTessellated)
 
-using Vertex_t = Tessellated::Vertex_t;
+   using Vertex_t = Tessellated::Vertex_t;
 
 std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet)
 {
@@ -69,7 +70,7 @@ const TGeoFacet &TGeoFacet::operator=(const TGeoFacet &other)
 Vertex_t TGeoFacet::ComputeNormal(bool &degenerated) const
 {
    // Compute normal using non-zero segments
-   constexpr double kTolerance = 1.e-10;
+   constexpr double kTolerance = 1.e-20;
    degenerated = true;
    Vertex_t normal;
    for (int i = 0; i < fNvert - 1; ++i) {
@@ -126,6 +127,25 @@ bool TGeoFacet::Check() const
    return true;
 }
 
+int TGeoFacet::CompactFacet(Vertex_t *vert, int nvertices)
+{
+   // Compact the common vertices and return new facet
+   if (nvertices < 2)
+      return nvertices;
+   int nvert = nvertices;
+   int i = 0;
+   while (i < nvert) {
+      if (vert[(i + 1) % nvert] == vert[i]) {
+         // shift last vertices left by one element
+         for (int j = i + 2; j < nvert; ++j)
+            vert[j - 1] = vert[j];
+         nvert--;
+      }
+      i++;
+   }
+   return nvert;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if a connected neighbour facet has compatible normal
 
@@ -148,6 +168,7 @@ bool TGeoFacet::IsNeighbour(const TGeoFacet &other, bool &flip) const
                bool order1 = line1[1] == line1[0] + 1;
                bool order2 = line2[1] == (line2[0] + 1) % other.GetNvert();
                flip = (order1 == order2);
+               return neighbour;
             }
          }
       }
@@ -156,12 +177,24 @@ bool TGeoFacet::IsNeighbour(const TGeoFacet &other, bool &flip) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Constructor. In case nfacets is zero, it is user's responsibility to
+/// call CloseShape once all faces are defined.
 
 TGeoTessellated::TGeoTessellated(const char *name, int nfacets) : TGeoBBox(name, 0, 0, 0)
 {
    fNfacets = nfacets;
-   fFacets.reserve(nfacets);
+   if (nfacets)
+      fFacets.reserve(nfacets);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor providing directly the array of vertices. Facets have to be added
+/// providing vertex indices rather than coordinates.
+
+TGeoTessellated::TGeoTessellated(const char *name, const std::vector<Vertex_t> &vertices) : TGeoBBox(name, 0, 0, 0)
+{
+   fVertices = vertices;
+   fNvert = fVertices.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,8 +202,11 @@ TGeoTessellated::TGeoTessellated(const char *name, int nfacets) : TGeoBBox(name,
 
 TGeoTessellated::TGeoTessellated(const TGeoTessellated &other) : TGeoBBox(other)
 {
-   fNvert = other.fNvert;
    fNfacets = other.fNfacets;
+   fNvert = other.fNvert;
+   fNseg = other.fNseg;
+   fDefined = other.fDefined;
+   fClosedBody = other.fClosedBody;
    fVertices = other.fVertices;
    fFacets = other.fFacets;
 }
@@ -183,7 +219,9 @@ TGeoTessellated &TGeoTessellated::operator=(const TGeoTessellated &other)
    if (&other != this) {
       TGeoBBox::operator=(other);
       fNvert = other.fNvert;
-      fNfacets = other.fNfacets;
+      fNseg = other.fNseg;
+      fDefined = other.fDefined;
+      fClosedBody = other.fClosedBody;
       fVertices = other.fVertices;
       fFacets = other.fFacets;
    }
@@ -198,60 +236,74 @@ void TGeoTessellated::AfterStreamer()
    // The pointer to the array of vertices is not streamed so update it to facets
    for (auto facet : fFacets)
       facet.SetVertices(&fVertices);
+   fDefined = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adding a triangular facet from vertex positions in absolute coordinates
 
-void TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2)
+bool TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2)
 {
-   if (GetNfacets() == fNfacets) {
-      Error("AddFacet", "Already defined %d facets, cannot add more", fNfacets);
-      return;
+   if (fDefined) {
+      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
+      return false;
    }
+
    Vertex_t vert[3];
    vert[0] = pt0;
    vert[1] = pt1;
    vert[2] = pt2;
-   // Protect against adding degenerated facets
-   for (int i = 0; i < 3; ++i) {
-      if (vert[(i + 1) % 3] == vert[i]) {
-         Error("AddFacet", "Triangular facet at index %d degenerated. Not adding.", GetNfacets());
-         return;
-      }
+   int nvert = TGeoFacet::CompactFacet(vert, 3);
+   if (nvert < 3) {
+      Error("AddFacet", "Triangular facet at index %d degenerated. Not adding.", GetNfacets());
+      return false;
    }
    fNvert += 3;
    fNseg += 3;
    fFacets.emplace_back(pt0, pt1, pt2);
-   if (GetNfacets() == fNfacets)
-      Close();
+
+   if (fNfacets > 0 && GetNfacets() == fNfacets)
+      CloseShape();
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adding a triangular facet from indices of vertices
+
+bool TGeoTessellated::AddFacet(int i0, int i1, int i2)
+{
+   if (fDefined) {
+      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
+      return false;
+   }
+   if (fVertices.size() == 0) {
+      Error("AddFacet", "Shape %s Cannot add facets by indices without vertices. Not adding", GetName());
+      return false;
+   }
+
+   fNseg += 3;
+   fFacets.emplace_back(&fVertices, 3, i0, i1, i2);
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adding a quadrilateral facet from vertex positions in absolute coordinates
 
-void TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3)
+bool TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3)
 {
-   if (GetNfacets() == fNfacets) {
-      Error("AddFacet", "Already defined %d facets, cannot add more", fNfacets);
-      return;
+   if (fDefined) {
+      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
+      return false;
    }
    Vertex_t vert[4];
    vert[0] = pt0;
    vert[1] = pt1;
    vert[2] = pt2;
    vert[3] = pt3;
-   int nvert = 4;
-   for (int i = 0; i < 4; ++i) {
-      if (vert[(i + 1) % 4] == vert[i]) {
-         if (nvert == 3) {
-            Error("AddFacet", "Quadrilateral facet at index %d degenerated. Not adding.", GetNfacets());
-            return;
-         }
-         for (int j = i + 2; j < nvert; ++j)
-            vert[j - 1] = vert[j];
-         nvert--;
-      }
+   int nvert = TGeoFacet::CompactFacet(vert, 4);
+   if (nvert < 3) {
+      Error("AddFacet", "Quadrilateral facet at index %d degenerated. Not adding.", GetNfacets());
+      return false;
    }
 
    fNvert += nvert;
@@ -260,18 +312,39 @@ void TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const V
       fFacets.emplace_back(vert[0], vert[1], vert[2]);
    else
       fFacets.emplace_back(vert[0], vert[1], vert[2], vert[3]);
-   if (GetNfacets() == fNfacets)
-      Close();
+
+   if (fNfacets > 0 && GetNfacets() == fNfacets)
+      CloseShape(false);
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adding a quadrilateral facet from indices of vertices
+
+bool TGeoTessellated::AddFacet(int i0, int i1, int i2, int i3)
+{
+   if (fDefined) {
+      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
+      return false;
+   }
+   if (fVertices.size() == 0) {
+      Error("AddFacet", "Shape %s Cannot add facets by indices without vertices. Not adding", GetName());
+      return false;
+   }
+
+   fNseg += 4;
+   fFacets.emplace_back(&fVertices, 4, i0, i1, i2, i3);
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close the shape: calculate bounding box and compact vertices
 
-void TGeoTessellated::Close()
+void TGeoTessellated::CloseShape(bool check, bool fixFlipped, bool verbose)
 {
    // Compact the array of vertices
    constexpr double tolerance = 1.e-10;
-   constexpr int ngrid = 10;
+   constexpr int ngrid = 100;
    ComputeBBox();
    double minExtent[3];
    minExtent[0] = fOrigin[0] - fDX - tolerance;
@@ -282,6 +355,19 @@ void TGeoTessellated::Close()
    invExtent[0] = 0.5 / (fDX + tolerance);
    invExtent[1] = 0.5 / (fDY + tolerance);
    invExtent[2] = 0.5 / (fDZ + tolerance);
+
+   if (fVertices.size() > 0) {
+      fDefined = true;
+      if (!check)
+         return;
+
+      // Check facets
+      for (auto &facet : fFacets) {
+         facet.Check();
+      }
+      fClosedBody = CheckClosure(fixFlipped, verbose);
+      return;
+   }
 
    auto AddVertex = [this](const Vertex_t &vertex) {
       // Check if vertex exists
@@ -313,23 +399,25 @@ void TGeoTessellated::Close()
    int ind[4] = {-1, -1, -1, -1};
    if (fNvert < 1000) {
       for (auto &facet : fFacets) {
-         for (int i = 0; i < facet.GetNvert(); ++i) {
+         int nvert = facet.GetNvert();
+         for (int i = 0; i < nvert; ++i) {
             // Check if vertex exists already
             ind[i] = AddVertex(facet.GetVertex(i));
          }
-         facet.SetVertices(&fVertices, ind[0], ind[1], ind[2], ind[3]);
+         facet.SetVertices(&fVertices, nvert, ind[0], ind[1], ind[2], ind[3]);
       }
    } else {
       // Use hash index for each vertex
       using CellVec_t = std::vector<int>;
-      std::array<CellVec_t, ngrid * ngrid * ngrid> grid;
+      auto grid = new std::array<CellVec_t, ngrid * ngrid * ngrid>;
       for (auto &facet : fFacets) {
-         for (int i = 0; i < facet.GetNvert(); ++i) {
+         int nvert = facet.GetNvert();
+         for (int i = 0; i < nvert; ++i) {
             // Check if vertex exists already
             const Vertex_t &vertex = facet.GetVertex(i);
             int hashind = GetHashIndex(vertex);
             bool isAdded = false;
-            for (auto ivert : grid[hashind]) {
+            for (auto ivert : grid->operator[](hashind)) {
                if (vertex == fVertices[ivert]) {
                   ind[i] = ivert;
                   isAdded = true;
@@ -339,19 +427,32 @@ void TGeoTessellated::Close()
             if (!isAdded) {
                fVertices.push_back(vertex);
                ind[i] = fVertices.size() - 1;
-               grid[hashind].push_back(ind[i]);
+               grid->operator[](hashind).push_back(ind[i]);
             }
          }
-         facet.SetVertices(&fVertices, ind[0], ind[1], ind[2], ind[3]);
+         facet.SetVertices(&fVertices, nvert, ind[0], ind[1], ind[2], ind[3]);
       }
+      delete grid;
    }
    fNvert = fVertices.size();
+   fNfacets = fFacets.size();
+   fDefined = true;
+   if (!check)
+      return;
+
    // Check facets
    for (auto &facet : fFacets) {
       facet.Check();
    }
 
-   // Check if we have flipped facets
+   fClosedBody = CheckClosure(fixFlipped, verbose);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check closure of the solid and check/fix flipped normals
+
+bool TGeoTessellated::CheckClosure(bool fixFlipped, bool verbose)
+{
    int *nn = new int[fNfacets];
    bool *flipped = new bool[fNfacets];
    bool hasorphans = false;
@@ -382,22 +483,35 @@ void TGeoTessellated::Close()
          hasorphans = true;
    }
 
-   if (hasorphans) {
-      Warning("Check", "Tessellated solid %s has following not fully connected facets:", GetName());
+   if (hasorphans && verbose) {
+      Error("Check", "Tessellated solid %s has following not fully connected facets:", GetName());
       for (int icrt = 0; icrt < fNfacets; ++icrt) {
          if (nn[icrt] < fFacets[icrt].GetNvert())
             std::cout << icrt << " (" << fFacets[icrt].GetNvert() << " edges, " << nn[icrt] << " neighbours)\n";
       }
    }
+   fClosedBody = !hasorphans;
+   int nfixed = 0;
    if (hasflipped) {
-      Warning("Check", "Tessellated solid %s has following facets with flipped normals:", GetName());
+      if (verbose)
+         Warning("Check", "Tessellated solid %s has following facets with flipped normals:", GetName());
       for (int icrt = 0; icrt < fNfacets; ++icrt) {
-         if (flipped[icrt])
-            std::cout << icrt << "\n";
+         if (flipped[icrt]) {
+            if (verbose)
+               std::cout << icrt << "\n";
+            if (fixFlipped) {
+               fFacets[icrt].Flip();
+               nfixed++;
+            }
+         }
       }
+      if (nfixed && verbose)
+         Info("Check", "Automatically flipped %d facets to match first defined facet", nfixed);
    }
    delete[] nn;
    delete[] flipped;
+
+   return !hasorphans;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -406,8 +520,6 @@ void TGeoTessellated::Close()
 void TGeoTessellated::ComputeBBox()
 {
    const double kBig = TGeoShape::Big();
-   if (fVertices.size())
-      return;
    double vmin[3] = {kBig, kBig, kBig};
    double vmax[3] = {-kBig, -kBig, -kBig};
    for (const auto &facet : fFacets) {
@@ -450,6 +562,15 @@ TBuffer3D *TGeoTessellated::MakeBuffer3D() const
       SetSegsAndPols(*buff);
    }
    return buff;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Prints basic info
+
+void TGeoTessellated::Print(Option_t *) const
+{
+   std::cout << "=== Tessellated shape " << GetName() << " having " << GetNvertices() << " vertices and "
+             << GetNfacets() << " facets\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -507,6 +628,29 @@ void TGeoTessellated::SetPoints(Float_t *points) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Resize the shape by scaling vertices within maxsize and center to origin
+
+void TGeoTessellated::ResizeCenter(double maxsize)
+{
+   using Vector3_t = Vertex_t;
+
+   if (!fDefined) {
+      Error("ResizeCenter", "Not all faces are defined");
+      return;
+   }
+   Vector3_t origin(fOrigin[0], fOrigin[1], fOrigin[2]);
+   double maxedge = TMath::Max(TMath::Max(fDX, fDY), fDZ);
+   double scale = maxsize / maxedge;
+   for (size_t i = 0; i < fVertices.size(); ++i) {
+      fVertices[i] = scale * (fVertices[i] - origin);
+   }
+   fOrigin[0] = fOrigin[1] = fOrigin[2] = 0;
+   fDX *= scale;
+   fDY *= scale;
+   fDZ *= scale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fills a static 3D buffer and returns a reference.
 
 const TBuffer3D &TGeoTessellated::GetBuffer3D(int reqSections, Bool_t localFrame) const
@@ -535,4 +679,136 @@ const TBuffer3D &TGeoTessellated::GetBuffer3D(int reqSections, Bool_t localFrame
    }
 
    return buffer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reads a single tessellated solid from an .obj file.
+
+TGeoTessellated *TGeoTessellated::ImportFromObjFormat(const char *objfile, bool check, bool verbose)
+{
+   using namespace std;
+
+   vector<Vertex_t> vertices;
+   vector<string> sfacets;
+
+   struct FacetInd_t {
+      int i0 = -1;
+      int i1 = -1;
+      int i2 = -1;
+      int i3 = -1;
+      int nvert = 0;
+      FacetInd_t(int a, int b, int c)
+      {
+         i0 = a;
+         i1 = b;
+         i2 = c;
+         nvert = 3;
+      };
+      FacetInd_t(int a, int b, int c, int d)
+      {
+         i0 = a;
+         i1 = b;
+         i2 = c;
+         i3 = d;
+         nvert = 4;
+      };
+   };
+
+   vector<FacetInd_t> facets;
+   // List of geometric vertices, with (x, y, z [,w]) coordinates, w is optional and defaults to 1.0.
+   // struct vtx_t { double x = 0; double y = 0; double z = 0; double w = 1; };
+
+   // Texture coordinates in u, [,v ,w]) coordinates, these will vary between 0 and 1. v, w are optional and default to
+   // 0.
+   // struct tex_t { double u; double v; double w; };
+
+   // List of vertex normals in (x,y,z) form; normals might not be unit vectors.
+   // struct vn_t { double x; double y; double z; };
+
+   // Parameter space vertices in ( u [,v] [,w] ) form; free form geometry statement
+   // struct vp_t { double u; double v; double w; };
+
+   // Faces are defined using lists of vertex, texture and normal indices which start at 1.
+   // Polygons such as quadrilaterals can be defined by using more than three vertex/texture/normal indices.
+   //     f v1//vn1 v2//vn2 v3//vn3 ...
+
+   // Records starting with the letter "l" specify the order of the vertices which build a polyline.
+   //     l v1 v2 v3 v4 v5 v6 ...
+
+   string line;
+   int ind[4] = {0};
+   ifstream file(objfile);
+   if (!file.is_open()) {
+      ::Error("TGeoTessellated::ImportFromObjFormat", "Unable to open %s", objfile);
+      return nullptr;
+   }
+
+   while (getline(file, line)) {
+      stringstream ss(line);
+      string tag;
+
+      // We ignore everything which is not a vertex or a face
+      if (line.rfind("v", 0) == 0 && line.rfind("vt", 0) != 0 && line.rfind("vn", 0) != 0 && line.rfind("vn", 0) != 0) {
+         // Decode the vertex
+         double pos[4] = {0, 0, 0, 1};
+         ss >> tag >> pos[0] >> pos[1] >> pos[2] >> pos[3];
+         vertices.emplace_back(pos[0] * pos[3], pos[1] * pos[3], pos[2] * pos[3]);
+      }
+
+      else if (line.rfind("f", 0) == 0) {
+         // Decode the face
+         ss >> tag;
+         string word;
+         sfacets.clear();
+         while (ss >> word)
+            sfacets.push_back(word);
+         if (sfacets.size() > 4 || sfacets.size() < 3) {
+            ::Error("TGeoTessellated::ImportFromObjFormat", "Detected face having unsupported %zu faces",
+                    sfacets.size());
+            return nullptr;
+         }
+         int nvert = 0;
+         for (auto sword : sfacets) {
+            stringstream ssword(sword);
+            string token;
+            getline(ssword, token, '/'); // just need the vertex index, which is the first token
+            // Convert string token to integer
+
+            ind[nvert++] = stoi(token) - 1;
+            if (ind[nvert - 1] < 0) {
+               ::Error("TGeoTessellated::ImportFromObjFormat", "Unsupported relative vertex index definition in %s",
+                       objfile);
+               return nullptr;
+            }
+         }
+         if (nvert == 3)
+            facets.emplace_back(ind[0], ind[1], ind[2]);
+         else
+            facets.emplace_back(ind[0], ind[1], ind[2], ind[3]);
+      }
+   }
+
+   int nvertices = (int)vertices.size();
+   int nfacets = (int)facets.size();
+   if (nfacets < 3) {
+      ::Error("TGeoTessellated::ImportFromObjFormat", "Not enough faces detected in %s", objfile);
+      return nullptr;
+   }
+
+   string sobjfile(objfile);
+   if (verbose)
+      std::cout << "Read " << nvertices << " vertices and " << nfacets << " facets from " << sobjfile << endl;
+
+   auto tsl = new TGeoTessellated(sobjfile.erase(sobjfile.find_last_of('.')).c_str(), vertices);
+
+   for (int i = 0; i < nfacets; ++i) {
+      auto facet = facets[i];
+      if (facet.nvert == 3)
+         tsl->AddFacet(facet.i0, facet.i1, facet.i2);
+      else
+         tsl->AddFacet(facet.i0, facet.i1, facet.i2, facet.i3);
+   }
+   tsl->CloseShape(check, true, verbose);
+   tsl->Print();
+   return tsl;
 }

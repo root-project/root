@@ -59,17 +59,26 @@ public:
       fNvert = 4;
    }
 
-   void SetVertices(VertexVec_t *vertices, int i0 = -1, int i1 = -1, int i2 = -1, int i3 = -1)
+   TGeoFacet(VertexVec_t *vertices, int nvert, int i0 = -1, int i1 = -1, int i2 = -1, int i3 = -1)
+   {
+      fShared = true;
+      SetVertices(vertices, nvert, i0, i1, i2, i3);
+   }
+
+   static int CompactFacet(Vertex_t *vert, int nvertices);
+
+   void SetVertices(VertexVec_t *vertices, int nvert = 0, int i0 = -1, int i1 = -1, int i2 = -1, int i3 = -1)
    {
       if (!fShared)
          delete fVertices;
       fVertices = vertices;
-      if (i0 >= 0) {
+      if (nvert > 0) {
          fIvert[0] = i0;
          fIvert[1] = i1;
          fIvert[2] = i2;
          fIvert[3] = i3;
       }
+      fNvert = nvert;
       fShared = true;
    }
 
@@ -82,6 +91,12 @@ public:
    int GetVertexIndex(int ivert) const { return fIvert[ivert]; }
 
    bool Check() const;
+   void Flip()
+   {
+      int iv = fIvert[0];
+      fIvert[0] = fIvert[2];
+      fIvert[2] = iv;
+   }
    bool IsNeighbour(const TGeoFacet &other, bool &flip) const;
 };
 
@@ -90,19 +105,22 @@ std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet);
 class TGeoTessellated : public TGeoBBox {
 
 public:
-  using Vertex_t = Tessellated::Vertex_t;
+   using Vertex_t = Tessellated::Vertex_t;
 
 private:
-   int fNfacets = 0;
-   int fNvert = 0;
-   int fNseg = 0;
+   int fNfacets = 0;                // Number of facets
+   int fNvert = 0;                  // Number of vertices
+   int fNseg = 0;                   // Number of segments
+   bool fDefined = false;           //! Shape fully defined
+   bool fClosedBody = false;        // The faces are making a closed body
    std::vector<Vertex_t> fVertices; // List of vertices
    std::vector<TGeoFacet> fFacets;  // List of facets
 
 public:
    // constructors
    TGeoTessellated() {}
-   TGeoTessellated(const char *name, int nfacets);
+   TGeoTessellated(const char *name, int nfacets = 0);
+   TGeoTessellated(const char *name, const std::vector<Vertex_t> &vertices);
    // destructor
    virtual ~TGeoTessellated() {}
 
@@ -110,14 +128,19 @@ public:
    TGeoTessellated &operator=(const TGeoTessellated &);
 
    void ComputeBBox();
-   void Close();
+   void CloseShape(bool check = true, bool fixFlipped = true, bool verbose = true);
 
-   void AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2);
-   void AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3);
+   bool AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2);
+   bool AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3);
+   bool AddFacet(int i1, int i2, int i3);
+   bool AddFacet(int i1, int i2, int i3, int i4);
 
    int GetNfacets() const { return fFacets.size(); }
    int GetNsegments() const { return fNseg; }
    int GetNvertices() const { return fNvert; }
+   bool IsClosedBody() const { return fClosedBody; }
+   bool IsDefined() const { return fDefined; }
+
    const TGeoFacet &GetFacet(int i) { return fFacets[i]; }
    const Vertex_t &GetVertex(int i) { return fVertices[i]; }
 
@@ -128,11 +151,27 @@ public:
    virtual int GetNmeshVertices() const { return fNvert; }
    virtual void InspectShape() const {}
    virtual TBuffer3D *MakeBuffer3D() const;
+   virtual void Print(Option_t *option = "") const;
    virtual void SavePrimitive(std::ostream &, Option_t *) {}
    virtual void SetPoints(double *points) const;
    virtual void SetPoints(float *points) const;
    virtual void SetSegsAndPols(TBuffer3D &buff) const;
    virtual void Sizeof3D() const {}
+
+   /// Resize and center the shape in a box of size maxsize
+   void ResizeCenter(double maxsize);
+
+   /// Flip all facets
+   void FlipFacets()
+   {
+      for (auto facet : fFacets)
+         facet.Flip();
+   }
+
+   bool CheckClosure(bool fixFlipped = true, bool verbose = true);
+
+   /// Reader from .obj format
+   static TGeoTessellated *ImportFromObjFormat(const char *objfile, bool check = false, bool verbose = false);
 
    ClassDef(TGeoTessellated, 1) // tessellated shape class
 };

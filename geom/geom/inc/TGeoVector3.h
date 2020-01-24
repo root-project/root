@@ -55,13 +55,14 @@ struct Vertex_t {
       fVec[2] OPERATOR scalar;                               \
       return *this;                                          \
    }
-   Vertex_t_INPLACE_BINARY_OP(+=)
-   Vertex_t_INPLACE_BINARY_OP(-=)
-   Vertex_t_INPLACE_BINARY_OP(*=)
-   Vertex_t_INPLACE_BINARY_OP(/=)
+   Vertex_t_INPLACE_BINARY_OP(+=) Vertex_t_INPLACE_BINARY_OP(-=) Vertex_t_INPLACE_BINARY_OP(*=)
+      Vertex_t_INPLACE_BINARY_OP(/=)
 #undef Vertex_t_INPLACE_BINARY_OP
 
-   double &x() { return fVec[0]; }
+         double &x()
+   {
+      return fVec[0];
+   }
    double const &x() const { return fVec[0]; }
 
    double &y() { return fVec[1]; }
@@ -134,7 +135,7 @@ struct Vertex_t {
    static Vertex_t Cross(Vertex_t const &left, Vertex_t const &right)
    {
       return Vertex_t(left[1] * right[2] - left[2] * right[1], left[2] * right[0] - left[0] * right[2],
-                         left[0] * right[1] - left[1] * right[0]);
+                      left[0] * right[1] - left[1] * right[0]);
    }
 
    Vertex_t Abs() const { return Vertex_t(TMath::Abs(fVec[0]), TMath::Abs(fVec[1]), TMath::Abs(fVec[2])); }
@@ -155,7 +156,7 @@ struct Vertex_t {
 
 inline bool operator==(Vertex_t const &lhs, Vertex_t const &rhs)
 {
-   constexpr double kTolerance = 1.e-10;
+   constexpr double kTolerance = 1.e-8;
    return TMath::Abs(lhs[0] - rhs[0]) < kTolerance && TMath::Abs(lhs[1] - rhs[1]) < kTolerance &&
           TMath::Abs(lhs[2] - rhs[2]) < kTolerance;
 }
@@ -184,10 +185,7 @@ inline bool operator!=(Vertex_t const &lhs, Vertex_t const &rhs)
       result INPLACE rhs;                                                      \
       return result;                                                           \
    }
-Vertex_t_BINARY_OP(+, +=)
-Vertex_t_BINARY_OP(-, -=)
-Vertex_t_BINARY_OP(*, *=)
-Vertex_t_BINARY_OP(/, /=)
+Vertex_t_BINARY_OP(+, +=) Vertex_t_BINARY_OP(-, -=) Vertex_t_BINARY_OP(*, *=) Vertex_t_BINARY_OP(/, /=)
 #undef Vertex_t_BINARY_OP
 
 } // namespace Geom
