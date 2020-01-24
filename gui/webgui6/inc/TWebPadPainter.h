@@ -86,9 +86,9 @@ public:
    void     CopyDrawable(Int_t, Int_t, Int_t) override {}
    void     DestroyDrawable(Int_t) override {}
    void     SelectDrawable(Int_t) override {}
-   //jpg, png, bmp, gif output.
-   void     SaveImage(TVirtualPad *, const char *, Int_t) const override {}
 
+   //jpg, png, bmp, gif output.
+   void     SaveImage(TVirtualPad *, const char *, Int_t) const override;
 
    //TASImage support (noop for a non-gl pad).
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
