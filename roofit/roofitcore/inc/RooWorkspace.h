@@ -85,7 +85,7 @@ public:
   Bool_t writeYML(std::ostream& os);
 protected:
   template<class T> void exportTree(T& t) const;
-  template<class T> void importTree(T& t) const;  
+  template<class T> void importTree(T& t);  
 public:
 
   // Transaction management interface for multi-step import operations

@@ -3106,7 +3106,50 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
 #include <c4/yml/std/string.hpp>
 template<> void RooWorkspace::exportTree(c4::yml::NodeRef& n) const {
 }
-template<> void RooWorkspace::importTree(c4::yml::NodeRef& n) const {
+namespace {
+  inline const char* key(const c4::yml::NodeRef& n){
+    std::stringstream ss;
+    ss << n.key();
+    return ss.str().c_str();
+  }
+  inline const char* val_s(const c4::yml::NodeRef& n){
+    std::stringstream ss;    
+    ss << n.val();
+    return ss.str().c_str();
+  }
+  inline double val_d(const c4::yml::NodeRef& n){
+    float d;
+    c4::atof(n.val(),&d);
+    return d;    
+  }
+  inline int val_i(const c4::yml::NodeRef& n){
+    int i;
+    c4::atoi(n.val(),&i);
+    return i;
+  }
+  inline bool val_b(const c4::yml::NodeRef& n){
+    int i;
+    c4::atoi(n.val(),&i);
+    return i;
+  }      
+}
+  
+template<> void RooWorkspace::importTree(c4::yml::NodeRef& n) {
+  for(const auto& c:n.children()){
+    if(c.has_child("createParameterList")){
+      for(const auto& p:c["createParameterList"].children()){
+        std::string name(::key(p));
+        double val(p.has_child("value") ? ::val_d(p["value"]) : 1.);
+        RooRealVar v(name.c_str(),name.c_str(),val);
+        if(p.has_child("low"))    v.setMin     (::val_d(p["low"]));
+        if(p.has_child("high"))   v.setMax     (::val_d(p["high"]));
+        if(p.has_child("relErr")) v.setError   (v.getVal()*::val_d(p["relErr"]));
+        if(p.has_child("err"))    v.setError   (           ::val_d(p["err"]));
+        if(p.has_child("const"))  v.setConstant(::val_b(p["const"]));
+        this->import(v);
+      }
+    }
+  }
 }
 
 #endif
@@ -3167,7 +3210,6 @@ Bool_t RooWorkspace::importJSON( const char* filename ) {
 Bool_t RooWorkspace::importYML( std::istream& is ) {
 #ifdef INCLUDE_RYML
   std::string s(std::istreambuf_iterator<char>(is), {});
-  std::cout << s.c_str() << std::endl;
   ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
   c4::yml::NodeRef n = t.rootref();
   this->importTree(n);  
