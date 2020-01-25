@@ -79,11 +79,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
 )
 
 if(yml)
-  FIND_PACKAGE(rapidyaml)
+  FIND_PACKAGE(ryml)
   SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DINCLUDE_RYML")
-  target_include_directories(HistFactory PRIVATE ${RAPIDYAML_INCLUDE_DIRS})
-  target_link_libraries(HistFactory PRIVATE ${RAPIDYAML_LIBRARIES})
-  target_link_directories(HistFactory PRIVATE ${RAPIDYAML_LIBRARY_DIRS})  
+  target_include_directories(HistFactory PRIVATE ${RYML_INCLUDE_DIRS})
+  target_link_libraries(HistFactory PRIVATE -lc4core -lryml)
+  target_link_directories(HistFactory PRIVATE ${RYML_LIB_DIR})  
 endif()
 
 ROOT_EXECUTABLE(hist2workspace
