@@ -470,4 +470,12 @@ if(vdt AND NOT builtin_vdt)
   target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
 endif()
 
+if(yml)
+  FIND_PACKAGE(ryml)
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DINCLUDE_RYML")
+  target_include_directories(RooFitCore PRIVATE ${RYML_INCLUDE_DIRS})
+  target_link_libraries(RooFitCore PRIVATE -lc4core -lryml)
+  target_link_directories(RooFitCore PRIVATE ${RYML_LIB_DIR})  
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
