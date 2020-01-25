@@ -384,8 +384,8 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    // Clang needs Tag's complete definition. Can we parse it?
    if (fIsAutoLoadingRecursively || fIsAutoParsingSuspended) return false;
 
-   if (findInGlobalModuleIndex(Tag->getDeclName(), /*loadFirstMatchOnly*/ false))
-      return true;
+   // if (findInGlobalModuleIndex(Tag->getDeclName(), /*loadFirstMatchOnly*/false))
+   //    return true;
 
    Sema &SemaR = m_Interpreter->getSema();
 
