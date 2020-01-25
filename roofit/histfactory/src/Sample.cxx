@@ -391,17 +391,15 @@ namespace c4 { namespace yml {
 }
 namespace RooStats { namespace HistFactory {
     template<> void RooStats::HistFactory::Sample::Export(c4::yml::NodeRef& n) const {
-      auto name = c4::to_csubstr(fName);            
-      auto s = n[name];
+      auto s = n[c4::to_csubstr(fName)];
       s |= c4::yml::MAP;
-
+      
       if(fOverallSysList.size() > 0){
         auto overallSys = s["overallSystematics"];
-        overallSys |= c4::yml::SEQ;
-        for(auto& sys:fOverallSysList){
-          auto node = overallSys.append_child();
+        overallSys |= c4::yml::MAP;
+        for(const auto& sys:fOverallSysList){
+          auto node = overallSys[c4::to_csubstr(sys.GetName())];
           node |= c4::yml::MAP;        
-          node << sys.GetName();
           node["parameter"] << std::string("alpha_")+sys.GetName();
           node["low"] << sys.GetLow();
           node["high"] << sys.GetHigh();
@@ -412,19 +410,17 @@ namespace RooStats { namespace HistFactory {
         auto normFactors = s["normFactors"];
         normFactors |= c4::yml::SEQ;
         for(auto& sys:fNormFactorList){
-          auto node = normFactors.append_child();
-          node << sys.GetName();
+          normFactors.append_child() << sys.GetName();
         }
       }
 
       if(fHistoSysList.size()>0){
         auto histoSys = s["histogramSystematics"];
-        histoSys |= c4::yml::SEQ;
+        histoSys |= c4::yml::MAP;
         for(size_t i=0; i<fHistoSysList.size(); ++i){
           auto sys = fHistoSysList[i];
-          auto node = histoSys.append_child();
+          auto node = histoSys[c4::to_csubstr(sys.GetName())];
           node |= c4::yml::MAP;        
-          node << sys.GetName();
           node["parameter"] << std::string("alpha_")+sys.GetName();
           node["dataLow"] << *(sys.GetHistoLow());
           node["dataHigh"] << *(sys.GetHistoHigh());

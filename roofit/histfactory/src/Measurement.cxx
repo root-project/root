@@ -337,36 +337,31 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   // parameters
   
   auto parlist = meas["createParameterList"];
-  parlist |= c4::yml::SEQ;
+  parlist |= c4::yml::MAP;
   
-  auto lumi = parlist.append_child();
+  auto lumi = parlist["Lumi"];
   lumi |= c4::yml::MAP;  
-  lumi << "Lumi";
   lumi["value"] << fLumi;  
   lumi["relErr"] << fLumiRelErr;
 
-  for(auto par:fPOI){
-    auto node = parlist.append_child();
+  for(const auto& par:fPOI){
+    auto node = parlist[c4::to_csubstr(par)];
     node |= c4::yml::MAP;    
-    node << par;
     if(fParamValues.find(par) != fParamValues.end()){
       node["value"] << fParamValues.at(par);
     }    
   }
-  for(auto par:fConstantParams){
-    if(par == "Lumi") continue;
-    auto node = parlist.append_child();
+  for(const auto& par:fConstantParams){
+    auto node = parlist[c4::to_csubstr(par)];
     node |= c4::yml::MAP;    
-    node << par;
     if(fParamValues.find(par)!=fParamValues.end()){
       node["value"] << fParamValues.at(par);
     }
   }
 
-  for(auto norm:normfactors){
-    auto node = parlist.append_child();
+  for(const auto& norm:normfactors){
+    auto node = parlist[c4::to_csubstr(norm.second.GetName())];
     node |= c4::yml::MAP;
-    node << norm.second.GetName();
     node["value"] << norm.second.GetVal();        
     node["low"] << norm.second.GetLow();
     node["high"] << norm.second.GetHigh();
@@ -376,11 +371,10 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   // pdfs
   
   auto pdflist = meas["createPdfList"];
-  pdflist |= c4::yml::SEQ;
+  pdflist |= c4::yml::MAP;
   
-  auto sim = pdflist.append_child();
+  auto sim = pdflist["simultaneous"];
   sim |= c4::yml::MAP;  
-  sim << "simultaneous";
   auto simdict = sim["dict"];
   simdict |= c4::yml::MAP;  
   simdict["InterpolationScheme"] << fInterpolationScheme;  
@@ -391,10 +385,9 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
     c.Export(ch);
   }
 
-  for(auto sys:constraints){
-    auto node = pdflist.append_child();
+  for(const auto& sys:constraints){
+    auto node = pdflist[c4::to_csubstr(sys.first)];
     node |= c4::yml::MAP;
-    node << sys.first;
     node["type"] << RooStats::HistFactory::Constraint::Name(sys.second);
     if(sys.second == RooStats::HistFactory::Constraint::Gaussian){
       node["x"] << std::string("alpha_")+sys.first;
@@ -403,28 +396,24 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
     }
   }
   
-  for(auto sys:fGammaSyst){
-    auto node = pdflist.append_child();
+  for(const auto& sys:fGammaSyst){
+    auto node = pdflist[c4::to_csubstr(sys.first)];
     node |= c4::yml::MAP;
-    node << sys.first;
     node["value"] << sys.second;    
   }
   for(auto sys:fUniformSyst){
-    auto node = pdflist.append_child();
+    auto node = pdflist[c4::to_csubstr(sys.first)];
     node |= c4::yml::MAP;
-    node << sys.first;
     node["value"] << sys.second;    
   }
   for(auto sys:fLogNormSyst){
-    auto node = pdflist.append_child();
+    auto node = pdflist[c4::to_csubstr(sys.first)];    
     node |= c4::yml::MAP;
-    node << sys.first;
     node["value"] << sys.second;    
   }
   for(auto sys:fNoSyst){
-    auto node = pdflist.append_child();
+    auto node = pdflist[c4::to_csubstr(sys.first)];    
     node |= c4::yml::MAP;    
-    node << sys.first;
     node["value"] << sys.second;
   }
 
@@ -440,7 +429,7 @@ void RooStats::HistFactory::Measurement::PrintJSON( std::ostream& os ) {
   c4::yml::NodeRef n = t.rootref();
   n |= c4::yml::MAP;
   this->Export(n);
-  os << t;
+  os << c4::yml::as_json(t);
 #else
   std::cerr << "JSON export only support with rapidyaml!" << std::endl;
 #endif
