@@ -3094,3 +3094,94 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
+
+
+#ifdef INCLUDE_RYML
+#include <ryml.hpp>
+#include <c4/yml/std/map.hpp>
+#include <c4/yml/std/string.hpp>
+template<> void RooWorkspace::exportTree(c4::yml::NodeRef& n) const {
+}
+template<> void RooWorkspace::importTree(c4::yml::NodeRef& n) const {
+}
+
+#endif
+
+Bool_t RooWorkspace::writeJSON( std::ostream& os ) {
+#ifdef INCLUDE_RYML  
+  ryml::Tree t;
+  c4::yml::NodeRef n = t.rootref();
+  n |= c4::yml::MAP;
+  this->exportTree(n);
+  os << t;
+  return true;
+#else
+  std::cerr << "JSON export only support with rapidyaml!" << std::endl;
+  return false;
+#endif
+}
+Bool_t RooWorkspace::writeJSON( const char* filename ) {
+  std::ofstream out(filename);
+  return this->writeJSON(out);
+}
+
+Bool_t RooWorkspace::writeYML( std::ostream& os ) {
+#ifdef INCLUDE_RYML  
+  ryml::Tree t;
+  c4::yml::NodeRef n = t.rootref();
+  n |= c4::yml::MAP;
+  this->exportTree(n);
+  os << t;
+  return true;
+#else
+  std::cerr << "YAML export only support with rapidyaml!" << std::endl;
+  return false;
+#endif
+}
+Bool_t RooWorkspace::writeYML( const char* filename ) {
+  std::ofstream out(filename);
+  return this->writeYML(out);
+}
+
+Bool_t RooWorkspace::importJSON( std::istream& is ) {
+#ifdef INCLUDE_RYML
+  std::string s(std::istreambuf_iterator<char>(is), {});
+  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));  
+  c4::yml::NodeRef n = t.rootref();
+  this->importTree(n);
+  return true;
+#else
+  std::cerr << "JSON import only support with rapidyaml!" << std::endl;
+  return false;
+#endif
+}
+Bool_t RooWorkspace::importJSON( const char* filename ) {
+  std::ifstream out(filename);
+  return this->importJSON(out);
+}
+
+Bool_t RooWorkspace::importYML( std::istream& is ) {
+#ifdef INCLUDE_RYML
+  std::string s(std::istreambuf_iterator<char>(is), {});
+  std::cout << s.c_str() << std::endl;
+  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
+  c4::yml::NodeRef n = t.rootref();
+  this->importTree(n);  
+  return true;
+#else
+  std::cerr << "YAML import only support with rapidyaml!" << std::endl;
+  return false;
+#endif
+}
+Bool_t RooWorkspace::importYML( const char* filename ) {
+  std::ifstream out(filename);
+  return this->importYML(out);
+}
+
+
+
+
