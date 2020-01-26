@@ -3104,8 +3104,11 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
 #include <ryml.hpp>
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
-template<> void RooWorkspace::exportTree(c4::yml::NodeRef& n) const {
-}
+
+#include <RooDataHist.h>
+#include <RooHistFunc.h>
+#include <RooRealSumPdf.h>
+#include <RooSimultaneous.h>
 namespace {
   inline const char* key(const c4::yml::NodeRef& n){
     std::stringstream ss;
@@ -3131,26 +3134,221 @@ namespace {
     int i;
     c4::atoi(n.val(),&i);
     return i;
-  }      
-}
-  
-template<> void RooWorkspace::importTree(c4::yml::NodeRef& n) {
-  for(const auto& c:n.children()){
-    if(c.has_child("createParameterList")){
-      for(const auto& p:c["createParameterList"].children()){
-        std::string name(::key(p));
-        double val(p.has_child("value") ? ::val_d(p["value"]) : 1.);
-        RooRealVar v(name.c_str(),name.c_str(),val);
-        if(p.has_child("low"))    v.setMin     (::val_d(p["low"]));
-        if(p.has_child("high"))   v.setMax     (::val_d(p["high"]));
-        if(p.has_child("relErr")) v.setError   (v.getVal()*::val_d(p["relErr"]));
-        if(p.has_child("err"))    v.setError   (           ::val_d(p["err"]));
-        if(p.has_child("const"))  v.setConstant(::val_b(p["const"]));
-        this->import(v);
+  }
+  inline void genIndicesHelper(std::vector<std::vector<int> >& combinations, RooArgList& vars, size_t curridx){
+    if(curridx == vars.size()){
+      std::vector<int> indices(curridx);
+      for(size_t i=0; i<curridx; ++i){
+        RooRealVar* v = (RooRealVar*)(vars.at(i));
+        indices[i] = v->getBinning().binNumber(v->getVal());
+      }
+      combinations.push_back(indices);
+    } else {
+      RooRealVar* v = (RooRealVar*)(vars.at(curridx));
+      for(int i=0; i<v->numBins(); ++i){      
+        v->setVal(v->getBinning().binCenter(i));
+        ::genIndicesHelper(combinations,vars,curridx+1);
       }
     }
   }
+  inline std::vector<std::vector<int> > genIndices(RooArgList& vars){
+    std::vector<std::vector<int> > combinations;
+    ::genIndicesHelper(combinations,vars,0);
+    return combinations;
+  }
+  inline std::string genPrefix(const c4::yml::NodeRef& p,bool trailing_underscore){
+    std::string prefix;
+    if(p.has_child("namespaces")){
+      for(auto ns:p["namespaces"]){
+        if(prefix.size() > 0) prefix+="_";
+        prefix += ::val_s(ns);
+      }
+    }
+    if(trailing_underscore) prefix += "_";
+    return prefix;
+  }
+  
+  inline RooDataHist* readData(const c4::yml::NodeRef& n,const std::string& namecomp,const std::string& obsnamecomp){
+    std::map<std::string,const c4::yml::NodeRef*> vars;
+    if(!n.has_child("binning")) throw "no binning given";
+    auto bounds = n["binning"];
+    if(bounds.has_child("nbins")){
+      vars["obs_x_"+obsnamecomp] = &bounds;
+    } else {
+      for(const auto& p:bounds.children()){
+        vars[::key(p)] = &p;      
+      }
+    }
+    RooArgList varlist;
+    for(auto v:vars){
+      std::string name(v.first);
+      auto val = *v.second;
+      if(!val.has_child("nbins")) throw "no nbins given";
+      if(!val.has_child("min"))   throw "no nbins given";
+      if(!val.has_child("max"))   throw "no nbins given";
+      double nbins = ::val_i(val["nbins"]);      
+      double min   = ::val_d(val["min"]);
+      double max   = ::val_d(val["max"]);
+      RooRealVar* var = new RooRealVar(name.c_str(),name.c_str(),min);
+      var->setMin(min);
+      var->setMax(max);
+      var->setConstant(true);
+      var->setBins(nbins);
+      varlist.add(*var);
+    }
+    RooDataHist* dh = new RooDataHist(("dataHist_"+namecomp).c_str(),namecomp.c_str(),varlist);
+    auto bins = genIndices(varlist);
+    if(!n.has_child("counts")) throw "no counts given";
+    if(n["counts"].num_children() != bins.size()) throw "inconsistent bin numbers";
+    for(size_t ibin=0; ibin<bins.size(); ++ibin){
+      for(size_t i = 0; i<bins[ibin].size(); ++i){
+        RooRealVar* v = (RooRealVar*)(varlist.at(i));
+        v->setVal(v->getBinning().binCenter(bins[ibin][i]));
+      }
+      dh->add(varlist,::val_d(n["counts"][ibin]));
+    }
+    return dh;
+  }
 }
+
+template<> void RooWorkspace::importDependants(const c4::yml::NodeRef& n);
+
+template<> void RooWorkspace::importFunctions(const c4::yml::NodeRef& n) {
+  for(const auto& p:n.children()){
+    std::string prefix = ::genPrefix(p,false);
+    std::string name(prefix + "_" + ::key(p));
+    if(!p.has_child("type")){
+      coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no type given for '" << name << "', skipping." << std::endl;
+      continue;
+    }    
+    std::string functype(::val_s(p["type"]));
+    this->importDependants(p);    
+    if(functype=="histogram"){
+      if(!p.has_child("data")){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") function '" << name << "' is of histogram type, but does not define a 'data' key, skipping.";
+        continue;
+      }
+      try {
+        RooDataHist* dh = ::readData(p["data"],name,prefix);
+        RooHistFunc hf(name.c_str(),::key(p),*(dh->get()),*dh);
+        this->import(hf);
+        delete dh;
+      } catch (const char* s){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") function '" << name << "' is of histogram type, but 'data' is not a valid definition. " << s << ". skipping." << std::endl;
+        continue;        
+      }
+    } 
+  }
+}
+
+template<> void RooWorkspace::importPdfs(const c4::yml::NodeRef& n) {
+  for(const auto& p:n.children()){
+    std::string prefix = ::genPrefix(p,false);
+    std::string name(::key(p));
+    if(!p.has_child("type")){
+      coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no type given for '" << name << "', skipping." << std::endl;
+      continue;
+    }
+    std::string pdftype(::val_s(p["type"]));
+    this->importDependants(p);
+    if(pdftype=="sum"){
+      RooArgList funcs;
+      RooArgList coefs;
+      if(!p.has_child("sum")){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no sum components of '" << name << "', skipping." << std::endl;
+        continue;        
+      }
+      for(auto comp:p["sum"]){
+        std::string fprefix;
+        std::string fname(::val_s(comp));
+        if(p.has_child("functions")){
+          auto funcdefs = p["functions"];
+          if(funcdefs.has_child(c4::to_csubstr(fname.c_str()))){
+            fprefix = ::genPrefix(funcdefs[c4::to_csubstr(fname.c_str())],true);
+          }
+        }
+        RooAbsReal* f = this->function((fprefix+fname).c_str());
+        if(!f){
+          coutE(InputArguments) << "RooWorkspace(" << GetName() << ") unable to obtain component '" << fname << "' of '" << name << "', skipping." << std::endl;
+          continue;
+        }
+        RooConstVar* c = new RooConstVar("1","1",1.);
+        funcs.add(*f);
+        coefs.add(*c);        
+      }
+      RooRealSumPdf sum(name.c_str(),name.c_str(),funcs,coefs);
+      this->import(sum);
+    } else if(pdftype=="simultaneous"){
+      if(!p.has_child("channels")){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no channel components of '" << name << "', skipping." << std::endl;
+        continue;        
+      }
+      std::map< std::string, RooAbsPdf *> components;
+      RooCategory cat("indexCat","indexCat");
+      for(auto comp:p["channels"]){
+        std::string pdfname(::val_s(comp));
+        RooAbsPdf* pdf = this->pdf(pdfname.c_str());
+        if(!pdf){
+          coutE(InputArguments) << "RooWorkspace(" << GetName() << ") unable to obtain component '" << pdfname << "' of '" << name << "', skipping." << std::endl;
+          continue;
+        }
+        components[pdfname] = pdf;
+        cat.defineType(pdfname.c_str());
+      }
+      RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
+      this->import(simpdf);      
+    } else if(pdftype=="Gaussian"){
+      if(!p.has_child("x")){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") Gaussian '" << name << "' misses 'x', skipping." << std::endl;
+        continue;
+      }
+      std::string x = ::val_s(p["x"]);
+      if(!p.has_child("mean")){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") Gaussian '" << name << "' misses 'mean', skipping." << std::endl;
+        continue;
+      }
+      std::string mean = ::val_s(p["mean"]);
+      if(!p.has_child("sigma")){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") Gaussian '" << name << "' misses 'sigma', skipping." << std::endl;
+        continue;
+      }
+      std::string sigma = ::val_s(p["sigma"]);
+      std::string s = "RooGaussian::"+name+"("+x+","+mean+","+sigma+")";
+      if(!this->factory(s.c_str())){
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") failed to create Gaussian '" << name << "', skipping." << std::endl;
+      }
+    } else {
+      coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no handling for pdftype '" << pdftype << "' implemented, skipping." << std::endl;
+    }
+  }
+}
+
+template<> void RooWorkspace::importParameters(const c4::yml::NodeRef& n) {
+  for(const auto& p:n.children()){
+    std::string name(::key(p));
+    double val(p.has_child("value") ? ::val_d(p["value"]) : 1.);
+    RooRealVar v(name.c_str(),name.c_str(),val);
+    if(p.has_child("min"))    v.setMin     (::val_d(p["min"]));
+    if(p.has_child("max"))    v.setMax     (::val_d(p["max"]));
+    if(p.has_child("relErr")) v.setError   (v.getVal()*::val_d(p["relErr"]));
+    if(p.has_child("err"))    v.setError   (           ::val_d(p["err"]));
+    if(p.has_child("const"))  v.setConstant(::val_b(p["const"]));
+    this->import(v);
+  }  
+}
+
+template<> void RooWorkspace::importDependants(const c4::yml::NodeRef& n) {
+  if(n.has_child("parameters")){
+    this->importParameters(n["parameters"]);
+  }
+  if(n.has_child("functions")){
+    this->importFunctions(n["functions"]);
+  }    
+  if(n.has_child("pdfs")){
+    this->importPdfs(n["pdfs"]);
+  }
+}
+
 
 #endif
 
@@ -3159,7 +3357,7 @@ Bool_t RooWorkspace::writeJSON( std::ostream& os ) {
   ryml::Tree t;
   c4::yml::NodeRef n = t.rootref();
   n |= c4::yml::MAP;
-  this->exportTree(n);
+  //  this->exportTree(n);
   os << t;
   return true;
 #else
@@ -3177,7 +3375,7 @@ Bool_t RooWorkspace::writeYML( std::ostream& os ) {
   ryml::Tree t;
   c4::yml::NodeRef n = t.rootref();
   n |= c4::yml::MAP;
-  this->exportTree(n);
+  //  this->exportTree(n);
   os << t;
   return true;
 #else
@@ -3195,7 +3393,7 @@ Bool_t RooWorkspace::importJSON( std::istream& is ) {
   std::string s(std::istreambuf_iterator<char>(is), {});
   ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));  
   c4::yml::NodeRef n = t.rootref();
-  this->importTree(n);
+  this->importDependants(n);
   return true;
 #else
   std::cerr << "JSON import only support with rapidyaml!" << std::endl;
@@ -3212,7 +3410,7 @@ Bool_t RooWorkspace::importYML( std::istream& is ) {
   std::string s(std::istreambuf_iterator<char>(is), {});
   ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
   c4::yml::NodeRef n = t.rootref();
-  this->importTree(n);  
+  this->importDependants(n);  
   return true;
 #else
   std::cerr << "YAML import only support with rapidyaml!" << std::endl;

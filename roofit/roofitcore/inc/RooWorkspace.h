@@ -84,8 +84,11 @@ public:
   Bool_t writeJSON(std::ostream& os);
   Bool_t writeYML(std::ostream& os);
 protected:
-  template<class T> void exportTree(T& t) const;
-  template<class T> void importTree(T& t);  
+  template<class T> void importFunctions(const T& n);
+  template<class T> void importPdfs(const T& n);
+  template<class T> void importParameters(const T& n);
+  template<class T> void importDependants(const T& n);
+  
 public:
 
   // Transaction management interface for multi-step import operations

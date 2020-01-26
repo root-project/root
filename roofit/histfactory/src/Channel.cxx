@@ -169,16 +169,23 @@ namespace RooStats { namespace HistFactory {
       auto name = c4::to_csubstr(fName);      
       auto ch = n[name];
       ch |= c4::yml::MAP;
+      ch["type"] << "sum";      
 
       auto tags = ch["dict"];
       tags |= c4::yml::MAP;
       tags["statErrorRelThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
       tags["statErrorConstraintType"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
       
-      auto samples = ch["sum"];
+      auto samples = ch["functions"];
       samples |= c4::yml::MAP;
+      auto sum = ch["sum"];
+      sum |= c4::yml::SEQ;      
       for(const auto& s:fSamples){
         s.Export(samples);
+        auto ns = samples.last_child()["namespaces"];
+        ns |= c4::yml::SEQ;
+        ns.append_child() << name;
+        sum.append_child() << s.GetName();
       }
     }
   }

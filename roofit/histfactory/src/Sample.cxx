@@ -341,6 +341,7 @@ namespace c4 { namespace yml {
   void write(c4::yml::NodeRef *n, const TH1& h){
     *n |= c4::yml::MAP;
     auto bounds = (*n)["binning"];
+    bounds |= c4::yml::MAP;
     auto weights = (*n)["counts"];
     weights |= c4::yml::SEQ;    
     auto errors = (*n)["errors"];    
@@ -352,16 +353,12 @@ namespace c4 { namespace yml {
         errors.append_child() << h.GetBinError(i);        
       }    
     } else {
-      bounds |= c4::yml::SEQ;
-      auto x = bounds.append_child();
-      x << "x";
+      auto x = bounds["x"];
       write(&x,*(h.GetXaxis()));
-      auto y = bounds.append_child();
-      y << "y";
+      auto y = bounds["y"];
       write(&y,*(h.GetYaxis()));      
       if(h.GetDimension()>2){
-        auto z = bounds.append_child();
-        z << "z";
+        auto z = bounds["z"];
         write(&z,*(h.GetZaxis()));              
       }
       for(size_t i=1; i<=h.GetNbinsX(); ++i){
@@ -393,6 +390,7 @@ namespace RooStats { namespace HistFactory {
     template<> void RooStats::HistFactory::Sample::Export(c4::yml::NodeRef& n) const {
       auto s = n[c4::to_csubstr(fName)];
       s |= c4::yml::MAP;
+      s["type"] << "histogram";
       
       if(fOverallSysList.size() > 0){
         auto overallSys = s["overallSystematics"];

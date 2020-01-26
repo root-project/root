@@ -290,29 +290,41 @@ namespace RooStats { namespace HistFactory {
 }
 
 namespace c4 { namespace yml {
-  template<class T> void read(c4::yml::NodeRef const& n, vector<T> *v){
-    for(size_t i=0; i<n.num_children(); ++i){
-      T e;
-      n[i]>>e;
-      v->push_back(e);
+    template<class T> void read(c4::yml::NodeRef const& n, vector<T> *v){
+      for(size_t i=0; i<n.num_children(); ++i){
+        T e;
+        n[i]>>e;
+        v->push_back(e);
+      }
+    }
+    
+    template<class T> void write(c4::yml::NodeRef *n, vector<T> const& v){
+      *n |= c4::yml::SEQ;
+      for(auto e:v){
+        n->append_child() << e;
+      }
     }
   }
-  
-  template<class T> void write(c4::yml::NodeRef *n, vector<T> const& v){
-    *n |= c4::yml::SEQ;
-    for(auto e:v){
-      n->append_child() << e;
-    }
-  }
-  }}  
+}
+
+namespace {
+  std::vector<std::string> _strcache;
+}
 
 template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) const {
   for(const auto& ch:this->fChannels){
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }
-  
-  auto meas = n[c4::to_csubstr(this->GetName())];
-  meas |= c4::yml::MAP;
+
+  auto parlist = n["parameters"];
+  parlist |= c4::yml::MAP;
+
+  auto pdflist = n["pdfs"];
+  pdflist |= c4::yml::MAP;
+
+  auto sim = pdflist[c4::to_csubstr(this->GetName())];
+  sim |= c4::yml::MAP;
+  sim["type"] << "simultaneous";
 
   // collect information
   std::map<std::string,RooStats::HistFactory::Constraint::Type> constraints;
@@ -336,9 +348,6 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
 
   // parameters
   
-  auto parlist = meas["createParameterList"];
-  parlist |= c4::yml::MAP;
-  
   auto lumi = parlist["Lumi"];
   lumi |= c4::yml::MAP;  
   lumi["value"] << fLumi;  
@@ -351,38 +360,40 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
       node["value"] << fParamValues.at(par);
     }    
   }
-  for(const auto& par:fConstantParams){
-    auto node = parlist[c4::to_csubstr(par)];
+  for(const auto& par:fParamValues){
+    auto node = parlist[c4::to_csubstr(par.first)];
     node |= c4::yml::MAP;    
-    if(fParamValues.find(par)!=fParamValues.end()){
-      node["value"] << fParamValues.at(par);
+    node["value"] << par.second;
+    if(std::find(fConstantParams.begin(),fConstantParams.end(),par.first) != fConstantParams.end()){
+      node["const"] << 1;
     }
   }
-
+  
+  
   for(const auto& norm:normfactors){
     auto node = parlist[c4::to_csubstr(norm.second.GetName())];
     node |= c4::yml::MAP;
     node["value"] << norm.second.GetVal();        
-    node["low"] << norm.second.GetLow();
-    node["high"] << norm.second.GetHigh();
-    node["const"] << norm.second.GetConst();        
+    node["min"] << norm.second.GetLow();
+    node["max"] << norm.second.GetHigh();
+    if(norm.second.GetConst()){
+      node["const"] << norm.second.GetConst();
+    }
   }
   
   // pdfs
   
-  auto pdflist = meas["createPdfList"];
-  pdflist |= c4::yml::MAP;
-  
-  auto sim = pdflist["simultaneous"];
-  sim |= c4::yml::MAP;  
   auto simdict = sim["dict"];
   simdict |= c4::yml::MAP;  
   simdict["InterpolationScheme"] << fInterpolationScheme;  
   
-  auto ch = sim["channels"];
-  ch |= c4::yml::MAP;
+  auto ch = sim["pdfs"];
+  ch |= c4::yml::MAP;  
+  auto chlist = sim["channels"];  
+  chlist |= c4::yml::SEQ;
   for(const auto& c:fChannels){
     c.Export(ch);
+    chlist.append_child() << c.GetName();
   }
 
   for(const auto& sys:constraints){
@@ -390,7 +401,15 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
     node |= c4::yml::MAP;
     node["type"] << RooStats::HistFactory::Constraint::Name(sys.second);
     if(sys.second == RooStats::HistFactory::Constraint::Gaussian){
-      node["x"] << std::string("alpha_")+sys.first;
+      std::string xname = std::string("alpha_")+sys.first;
+      _strcache.push_back(xname);
+      auto xpar = parlist[c4::to_csubstr(_strcache[_strcache.size()-1])];
+      xpar |= c4::yml::MAP;
+      xpar["value"] << 0;      
+      xpar["max"] << 5.;
+      xpar["min"] << -5.;
+      xpar["err"] << 1;            
+      node["x"] << xname;
       node["mean"] << "0.";
       node["sigma"] << "1.";
     }
@@ -418,7 +437,9 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   }
 
   if(fFunctionObjects.size() > 0){
-    meas["createFunctionList"] << fFunctionObjects;
+    auto funclist = n["functions"];
+    funclist |= c4::yml::MAP;    
+    funclist << fFunctionObjects;
   }
 }
 #endif
