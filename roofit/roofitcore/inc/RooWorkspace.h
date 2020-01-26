@@ -83,6 +83,10 @@ public:
   Bool_t writeYML(const char* fileName) ;
   Bool_t writeJSON(std::ostream& os);
   Bool_t writeYML(std::ostream& os);
+  
+  static void loadFactoryExpressions(const std::string& fname);
+  static void clearFactoryExpressions();
+  static void printFactoryExpressions();
 protected:
   template<class T> void importFunctions(const T& n);
   template<class T> void importPdfs(const T& n);

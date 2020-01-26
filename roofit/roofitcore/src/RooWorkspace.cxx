@@ -3209,7 +3209,14 @@ namespace {
     }
     return dh;
   }
+  struct RYML_Factory_Expression {
+    std::string classname;
+    std::vector<std::string> arguments;
+  };
+  std::map<std::string,RYML_Factory_Expression> _rymlFactoryExpressions;
+  
 }
+
 
 template<> void RooWorkspace::importDependants(const c4::yml::NodeRef& n);
 
@@ -3284,7 +3291,7 @@ template<> void RooWorkspace::importPdfs(const c4::yml::NodeRef& n) {
         continue;        
       }
       std::map< std::string, RooAbsPdf *> components;
-      RooCategory cat("indexCat","indexCat");
+      RooCategory cat("channelCat","channelCat");
       for(auto comp:p["channels"]){
         std::string pdfname(::val_s(comp));
         RooAbsPdf* pdf = this->pdf(pdfname.c_str());
@@ -3297,28 +3304,32 @@ template<> void RooWorkspace::importPdfs(const c4::yml::NodeRef& n) {
       }
       RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
       this->import(simpdf);      
-    } else if(pdftype=="Gaussian"){
-      if(!p.has_child("x")){
-        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") Gaussian '" << name << "' misses 'x', skipping." << std::endl;
-        continue;
-      }
-      std::string x = ::val_s(p["x"]);
-      if(!p.has_child("mean")){
-        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") Gaussian '" << name << "' misses 'mean', skipping." << std::endl;
-        continue;
-      }
-      std::string mean = ::val_s(p["mean"]);
-      if(!p.has_child("sigma")){
-        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") Gaussian '" << name << "' misses 'sigma', skipping." << std::endl;
-        continue;
-      }
-      std::string sigma = ::val_s(p["sigma"]);
-      std::string s = "RooGaussian::"+name+"("+x+","+mean+","+sigma+")";
-      if(!this->factory(s.c_str())){
-        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") failed to create Gaussian '" << name << "', skipping." << std::endl;
-      }
     } else {
-      coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no handling for pdftype '" << pdftype << "' implemented, skipping." << std::endl;
+      auto expr = _rymlFactoryExpressions.find(pdftype);
+      if(expr!= _rymlFactoryExpressions.end()){
+        bool ok = true;
+        bool first = true;
+        std::stringstream expression;
+        expression << expr->second.classname << "::" << name << "(";
+        for(auto k:expr->second.arguments){
+          if(!p.has_child(c4::to_substr(k))){
+            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") factory expression for '" << expr->first << "' maps to class '" << expr->second.classname << "', which expects key '" << k << "' missing from input for object '" << name << "', skipping." << std::endl;
+            ok=false;
+            break;
+          }
+          if(!first) expression << ",";
+          first = false;
+          expression << ::val_s(p[c4::to_substr(k)]);
+        }
+        expression << ")";
+        if(ok){
+          if(!this->factory(expression.str().c_str())){
+            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") failed to create " << expr->second.classname << " '" << name << "', skipping." << std::endl;
+          }
+        }
+      } else {
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no handling for pdftype '" << pdftype << "' implemented, skipping." << std::endl;
+      }
     }
   }
 }
@@ -3351,6 +3362,44 @@ template<> void RooWorkspace::importDependants(const c4::yml::NodeRef& n) {
 
 
 #endif
+
+void RooWorkspace::loadFactoryExpressions(const std::string& fname){
+#ifdef INCLUDE_RYML    
+  std::ifstream infile(fname);
+  std::string line;
+  while (std::getline(infile, line)){
+    std::istringstream iss(line);
+    std::string key;
+    iss >> key;
+    RYML_Factory_Expression ex;    
+    iss >> ex.classname;
+    while(iss.good()){
+      std::string value;
+      iss >> value;
+      ex.arguments.push_back(value);
+    }
+    _rymlFactoryExpressions[key] = ex;
+  }
+#endif
+}
+void RooWorkspace::clearFactoryExpressions(){
+#ifdef INCLUDE_RYML    
+  _rymlFactoryExpressions.clear();
+#endif
+}
+void RooWorkspace::printFactoryExpressions(){
+#ifdef INCLUDE_RYML    
+  for(auto it:_rymlFactoryExpressions){
+    std::cout << it.first;
+    std::cout << " " << it.second.classname;    
+    for(auto v:it.second.arguments){
+      std::cout << " " << v;
+    }
+    std::cout << std::endl;
+  }
+#endif
+}
+
 
 Bool_t RooWorkspace::writeJSON( std::ostream& os ) {
 #ifdef INCLUDE_RYML  
