@@ -167,6 +167,7 @@ public:
    Bool_t            ChangeDirectory(const char *path) override;
    const char       *GetDirEntry(void *dirp) override;
    const char       *DirName(const char *pathname) override;
+   std::string       GetDirName(const char *pathname) override;
    void              FreeDirectory(void *dirp) override;
    void             *OpenDirectory(const char *name) override;
    const char       *WorkingDirectory(char driveletter);
