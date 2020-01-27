@@ -34,7 +34,7 @@ GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText,
    gClient->GetColorByName("red", col);
 
    // add pictures
-   TString theLeftLogoFilename = StrDup(gProgPath);
+   TString theLeftLogoFilename = gProgPath;
    theLeftLogoFilename.Append("/icons/left.xpm");
    fLeftIconPicture = (TGPicture *)gClient->GetPicture(theLeftLogoFilename);
    fLeftIcon = new TGIcon(this, fLeftIconPicture,
@@ -43,7 +43,7 @@ GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText,
    fLeftLogoLayout = new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0);
    AddFrame(fLeftIcon, fLeftLogoLayout);
 
-   TString theRightLogoFilename = StrDup(gProgPath);
+   TString theRightLogoFilename = gProgPath;
    theRightLogoFilename.Append("/anim/anim01.xpm");
    fRightIconPicture = (TGPicture *)gClient->GetPicture(theRightLogoFilename);
    fRightIcon = new TGIcon(this, fRightIconPicture,
@@ -75,7 +75,7 @@ GTitleFrame::GTitleFrame(const TGWindow *p, const char *mainText,
 void GTitleFrame::ChangeRightLogo(Int_t frame)
 {
    Char_t name[12];
-   TString theRightLogoFilename = StrDup(gProgPath);
+   TString theRightLogoFilename = gProgPath;
    sprintf(name,"%02d.xpm",frame);
    theRightLogoFilename.Append("/anim/anim");
    theRightLogoFilename.Append(name);

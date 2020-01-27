@@ -38,7 +38,7 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    Char_t *root_date = Form("%s %d %4d",months[imonth-1],iday,iyear);
    fVFrame  = new TGVerticalFrame(this, w, wh1, 0);
 
-   TString theLogoFilename = StrDup(gProgPath);
+   TString theLogoFilename = gProgPath;
    theLogoFilename.Append("/icons/mclogo01.xpm");
 
    fIconPicture = (TGPicture *)gClient->GetPicture(theLogoFilename);
