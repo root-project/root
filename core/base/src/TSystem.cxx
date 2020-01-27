@@ -1026,6 +1026,40 @@ const char *TSystem::DirName(const char *pathname)
    return ".";
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the directory name in pathname.
+/// DirName of /user/root is /user.
+/// DirName of /user/root/ is also /user.
+/// In case no dirname is specified "." is returned.
+
+std::string TSystem::GetDirName(const char *pathname)
+{
+   if (!pathname || !strchr(pathname, '/'))
+      return ".";
+
+   auto pathlen = strlen(pathname);
+
+   const char *r = pathname + pathlen - 1;
+   // First skip the trailing '/'
+   while ((r > pathname) && (*r == '/'))
+      --r;
+   // Then find the next non slash
+   while ((r > pathname) && (*r != '/'))
+      --r;
+
+   // Then skip duplicate slashes
+   // Note the 'r>buf' is a strict comparison to allows '/topdir' to return '/'
+   while ((r > pathname) && (*r == '/'))
+      --r;
+   // If all was cut away, we encountered a rel. path like 'subdir/'
+   // and ended up at '.'.
+   if ((r == pathname) && (*r != '/'))
+      return ".";
+
+   return std::string(pathname, r + 1 - pathname);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert from a local pathname to a Unix pathname. E.g. from `\user\root` to
 /// `/user/root`.

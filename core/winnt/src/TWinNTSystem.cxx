@@ -2412,6 +2412,36 @@ const char *TWinNTSystem::DirName(const char *pathname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the directory name in pathname. DirName of c:/user/root is /user.
+/// DirName of c:/user/root/ is /user/root.
+
+std::string TWinNTSystem::GetDirName(const char *pathname)
+{
+   // Create a buffer to keep the path name
+   if (pathname) {
+      if (strchr(pathname, '/') || strchr(pathname, '\\')) {
+         const char *rslash = strrchr(pathname, '/');
+         const char *bslash = strrchr(pathname, '\\');
+         const char *r = std::max(rslash, bslash);
+         const char *ptr = pathname;
+         while (ptr <= r) {
+            if (*ptr == ':') {
+               // Windows path may contain a drive letter
+               // For NTFS ":" may be a "stream" delimiter as well
+               pathname =  ptr + 1;
+               break;
+            }
+            ptr++;
+         }
+         int len =  r - pathname;
+         if (len > 0)
+            return std::string(pathname, len);
+      }
+   }
+   return "";
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'
 ///
 ///   Input:
