@@ -2377,7 +2377,7 @@ const char *TWinNTSystem::DirName(const char *pathname)
 /// Return the directory name in pathname. DirName of c:/user/root is /user.
 /// DirName of c:/user/root/ is /user/root.
 
-std::string TWinNTSystem::GetDirName(const char *pathname)
+TString TWinNTSystem::GetDirName(const char *pathname)
 {
    // Create a buffer to keep the path name
    if (pathname) {
@@ -2397,7 +2397,7 @@ std::string TWinNTSystem::GetDirName(const char *pathname)
          }
          int len =  r - pathname;
          if (len > 0)
-            return std::string(pathname, len);
+            return TString(pathname, len);
       }
    }
    return "";

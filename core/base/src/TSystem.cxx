@@ -895,17 +895,17 @@ int TSystem::mkdir(const char *name, Bool_t recursive)
    if (recursive) {
       TString safeName = name; // local copy in case 'name' is output from
                                // TSystem::DirName as it uses static buffers
-      TString dirname = DirName(safeName);
-      if (!dirname.Length()) {
+      TString dirname = GetDirName(safeName.Data());
+      if (dirname.IsNull()) {
          // well we should not have to make the root of the file system!
          // (and this avoid infinite recursions!)
          return -1;
       }
-      if (AccessPathName(dirname, kFileExists)) {
-         int res = mkdir(dirname, kTRUE);
+      if (AccessPathName(dirname.Data(), kFileExists)) {
+         int res = mkdir(dirname.Data(), kTRUE);
          if (res) return res;
       }
-      if (!AccessPathName(safeName, kFileExists)) {
+      if (!AccessPathName(safeName.Data(), kFileExists)) {
          return -1;
       }
    }
@@ -959,7 +959,7 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
    TString io;
    TString realname = SplitAclicMode(name, aclicMode, arguments, io);
 
-   TString fileLocation = DirName(realname);
+   TString fileLocation = GetDirName(realname);
 
    TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
    incPath.Append(":").Prepend(" ");
@@ -993,19 +993,19 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
 const char *TSystem::DirName(const char *pathname)
 {
    auto res = GetDirName(pathname);
-   if (res.empty() || (res == "."))
+   if (res.IsNull() || (res == "."))
       return ".";
 
    R__LOCKGUARD2(gSystemMutex);
 
-   static std::size_t len = 0;
+   static Ssiz_t len = 0;
    static char *buf = nullptr;
-   if (res.length() > len) {
+   if (res.Length() >= len) {
       if (buf) delete [] buf;
-      len = res.length() + 50;
+      len = res.Length() + 50;
       buf = new char [len];
    }
-   strncpy(buf, pathname, len);
+   strncpy(buf, res.Data(), len);
    return buf;
 }
 
@@ -1015,7 +1015,7 @@ const char *TSystem::DirName(const char *pathname)
 /// DirName of /user/root/ is also /user.
 /// In case no dirname is specified "." is returned.
 
-std::string TSystem::GetDirName(const char *pathname)
+TString TSystem::GetDirName(const char *pathname)
 {
    if (!pathname || !strchr(pathname, '/'))
       return ".";
@@ -1039,7 +1039,7 @@ std::string TSystem::GetDirName(const char *pathname)
    if ((r == pathname) && (*r != '/'))
       return ".";
 
-   return std::string(pathname, r + 1 - pathname);
+   return TString(pathname, r + 1 - pathname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1925,11 +1925,11 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
       }
       if (!system) {
          // Mark the library in $ROOTSYS/lib as system.
-         const char *dirname = DirName(path);
-         system = R__MatchFilename(TROOT::GetLibDir(), dirname);
+         TString dirname = GetDirName(path);
+         system = R__MatchFilename(TROOT::GetLibDir(), dirname.Data());
 
          if (!system) {
-            system = R__MatchFilename(TROOT::GetBinDir(), dirname);
+            system = R__MatchFilename(TROOT::GetBinDir(), dirname.Data());
          }
       }
 
@@ -2974,7 +2974,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    library = gSystem->UnixPathName(library);
    TString filename_fullpath = library;
 
-   TString file_dirname = DirName( filename_fullpath );
+   TString file_dirname = GetDirName( filename_fullpath );
    // For some probably good reason, DirName on Windows returns the 'name' of
    // the directory, omitting the drive letter (even if there was one). In
    // consequence the result is not useable as a 'root directory', we need to
@@ -3013,7 +3013,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString libname_ext ( libname );
    libname_ext +=  "." + fSoExt;
 
-   TString lib_dirname = DirName( library );
+   TString lib_dirname = GetDirName( library );
    // For some probably good reason, DirName on Windows returns the 'name' of
    // the directory, omitting the drive letter (even if there was one). In
    // consequence the result is not useable as a 'root directory', we need to
