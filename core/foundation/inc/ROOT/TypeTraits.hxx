@@ -94,6 +94,8 @@ class IsSmartOrDumbPtr<std::unique_ptr<P>> : public std::true_type {
 };
 
 /// Check for container traits.
+///
+/// Note that this trait selects std::string as container.
 template <typename T>
 struct IsContainer {
    using Test_t = typename std::decay<T>::type;
