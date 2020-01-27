@@ -1048,11 +1048,6 @@ TWinNTSystem::~TWinNTSystem()
    // Clean up the WinSocket connectios
    ::WSACleanup();
 
-   if (fDirNameBuffer) {
-      delete [] fDirNameBuffer;
-      fDirNameBuffer = nullptr;
-   }
-
    if (gGlobalEvent) {
       ::ResetEvent(gGlobalEvent);
       ::CloseHandle(gGlobalEvent);
@@ -2374,41 +2369,8 @@ TList *TWinNTSystem::GetVolumes(Option_t *opt) const
 
 const char *TWinNTSystem::DirName(const char *pathname)
 {
-   // Delete old buffer
-   if (fDirNameBuffer) {
-      // delete [] fDirNameBuffer;   // FIXME: this is memory leak!!!
-      fDirNameBuffer = nullptr;
-   }
-
-   // Create a buffer to keep the path name
-   if (pathname) {
-      if (strchr(pathname, '/') || strchr(pathname, '\\')) {
-         const char *rslash = strrchr(pathname, '/');
-         const char *bslash = strrchr(pathname, '\\');
-         const char *r = (std::max)(rslash, bslash);
-         const char *ptr = pathname;
-         while (ptr <= r) {
-            if (*ptr == ':') {
-               // Windows path may contain a drive letter
-               // For NTFS ":" may be a "stream" delimiter as well
-               pathname =  ptr + 1;
-               break;
-            }
-            ptr++;
-         }
-         int len =  r - pathname;
-         if (len > 0) {
-            fDirNameBuffer = new char[len+1];
-            memcpy(fDirNameBuffer, pathname, len);
-            fDirNameBuffer[len] = 0;
-         }
-      }
-   }
-   if (!fDirNameBuffer) {
-      fDirNameBuffer = new char[1];
-      *fDirNameBuffer = '\0'; // Set the empty default response
-   }
-   return fDirNameBuffer;
+   fDirNameBuffer = GetDirName(pathname);
+   return fDirNameBuffer.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
