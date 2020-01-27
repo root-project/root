@@ -11,7 +11,7 @@
 /**
   \defgroup proof PROOF
 
-  Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees. 
+  Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees.
 
 */
 
@@ -21,7 +21,7 @@
 
   The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
   the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
-  and handling of results. 
+  and handling of results.
 
 */
 
@@ -1010,7 +1010,7 @@ Int_t TProof::GetSandbox(TString &sb, Bool_t assert, const char *rc)
    if (sb == ".") {
       sb = gSystem->pwd();
    } else if (sb == "..") {
-      sb = gSystem->DirName(gSystem->pwd());
+      sb = gSystem->GetDirName(gSystem->pwd());
    }
    gSystem->ExpandPathName(sb);
 
@@ -1511,7 +1511,7 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
    // Packages
    TList *packs = gProofServ ? gProofServ->GetEnabledPackages() : GetEnabledPackages();
    if (packs && packs->GetSize() > 0) {
-      TIter nxp(packs);      
+      TIter nxp(packs);
       TPair *pck = 0;
       while ((pck = (TPair *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
@@ -1773,7 +1773,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
 void TProof::Close(Option_t *opt)
 {
    {  std::lock_guard<std::recursive_mutex> lock(fCloseMutex);
-   
+
       fValid = kFALSE;
       if (fSlaves) {
          if (fIntHandler)
@@ -4996,10 +4996,10 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
       // Output file
       if (!outfile.IsNull()) {
          if (!outfile.BeginsWith("master:")) {
-            if (gSystem->AccessPathName(gSystem->DirName(outfile.Data()), kWritePermission)) {
+            if (gSystem->AccessPathName(gSystem->GetDirName(outfile.Data()), kWritePermission)) {
                Warning("HandleOutputOptions",
                      "directory '%s' for the output file does not exists or is not writable:"
-                     " saving to master", gSystem->DirName(outfile.Data()));
+                     " saving to master", gSystem->GetDirName(outfile.Data()).Data());
                outfile.Form("master:%s", gSystem->BaseName(outfile.Data()));
             } else {
                if (!IsLite()) {
@@ -7225,7 +7225,7 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
    s.Form("PROOF just went more parallel (%d additional worker%s, %d worker%s total)",
       nAddedWorkers, (nAddedWorkers == 1) ? "" : "s",
       nTotalWorkers, (nTotalWorkers == 1) ? "" : "s");
-   if (gProofServ) gProofServ->SendAsynMessage(s);   
+   if (gProofServ) gProofServ->SendAsynMessage(s);
    Info("GoMoreParallel", "%s", s.Data());
 
    return nTotalWorkers;
@@ -8265,7 +8265,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    }
   if (gDebug > 0)
       Info("EnablePackage", "using check version option: %d", chkveropt);
-   
+
    if (BuildPackage(pac, opt, chkveropt, workers) == -1)
       return -1;
 
@@ -8569,7 +8569,7 @@ void TProof::AssertMacroPath(const char *macro)
 {
    static TString macrop(gROOT->GetMacroPath());
    if (macro && strlen(macro) > 0) {
-      TString dirn(gSystem->DirName(macro));
+      TString dirn = gSystem->GetDirName(macro);
       if (!macrop.Contains(dirn)) {
          macrop += TString::Format("%s:", dirn.Data());
          gROOT->SetMacroPath(macrop);
@@ -8657,7 +8657,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
             }
             // Create the additional include statement
             if (!notOnClient) {
-               TString dirn(gSystem->DirName(fn));
+               TString dirn = gSystem->GetDirName(fn);
                if (addincs.IsNull()) {
                   addincs.Form("-I%s", dirn.Data());
                } else if (!addincs.Contains(dirn)) {
@@ -8722,7 +8722,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 
          // Update the macro path
          TString mp(TROOT::GetMacroPath());
-         TString np(gSystem->DirName(macro));
+         TString np = gSystem->GetDirName(macro);
          if (!np.IsNull()) {
             np += ":";
             if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
@@ -11365,14 +11365,14 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
    }
    if (gDebug > 0)
       Info("ModifyWorkerLists", "ord: '%s' (add: %d, save: %d)", ord, add, save);
-   
+
    Int_t nwc = 0;
    Bool_t restoring = !strcmp(ord, "restore") ? kTRUE : kFALSE;
    if (IsEndMaster()) {
       if (restoring) {
          // We are asked to restore the previous settings
          nwc = RestoreActiveList();
-      } else { 
+      } else {
          if (save) SaveActiveList();
       }
    }
@@ -11793,8 +11793,7 @@ void TProof::SaveWorkerInfo()
    }
 
    // Create or truncate the file first
-   TString fnwrk = TString::Format("%s/.workers",
-                                   gSystem->DirName(gProofServ->GetSessionDir()));
+   TString fnwrk = gSystem->GetDirName(gProofServ->GetSessionDir())+"/.workers";
    FILE *fwrk = fopen(fnwrk.Data(),"w");
    if (!fwrk) {
       Error("SaveWorkerInfo",

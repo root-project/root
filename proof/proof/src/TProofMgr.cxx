@@ -937,7 +937,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
 
          // Now replace the subdirs, if required
          if (dirph.GetSize() > 0)
-            TProofMgr::ReplaceSubdirs(gSystem->DirName(furl->GetFile()), fdst, dirph);
+            TProofMgr::ReplaceSubdirs(gSystem->GetDirName(furl->GetFile()), fdst, dirph);
 
          // Check double slashes in the file field (Turl sets things correctly inside)
          TUrl u(fdst);

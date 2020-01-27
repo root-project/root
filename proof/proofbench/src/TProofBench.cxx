@@ -1400,7 +1400,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       } else {
          fnr = gSystem->BaseName(ur.GetFile());
          // We need to set the basedir
-         TString bdir(gSystem->DirName(fnroot));
+         TString bdir = gSystem->GetDirName(fnroot);
          bdir += "/<fn>";
          fProof->SetParameter("PROOF_BenchmarkBaseDir", bdir.Data());
          // Flag as remote, if so

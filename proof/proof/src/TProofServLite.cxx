@@ -522,7 +522,7 @@ Int_t TProofServLite::SetupOnFork(const char *ord)
       fLogFileDes = -1;
    }
 
-   TString sdir = gSystem->DirName(fSessionDir.Data());
+   TString sdir = gSystem->GetDirName(fSessionDir.Data());
    RedirectOutput(sdir.Data(), "a");
    // If for some reason we failed setting a redirection file for the logs
    // we cannot continue

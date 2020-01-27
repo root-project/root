@@ -144,7 +144,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
       // For local files, the user is allowed to create files under the specified directory.
       // If this is not the case, the file is rooted automatically to the assigned dir which
       // is the datadir for dataset creation runs, and the working dir for merging runs
-      TString dirPath = gSystem->DirName(fFileName);
+      TString dirPath = gSystem->GetDirName(fFileName);
       fFileName = gSystem->BaseName(fFileName);
       if (AssertDir(dirPath) != 0)
          Error("Init", "problems asserting path '%s'", dirPath.Data());
@@ -518,7 +518,7 @@ Int_t TProofOutputFile::AssertDir(const char *dirpath)
    TList subPaths;
    while (existsPath != "/" && existsPath != "." && gSystem->AccessPathName(existsPath)) {
       subPaths.AddFirst(new TObjString(gSystem->BaseName(existsPath)));
-      existsPath = gSystem->DirName(existsPath);
+      existsPath = gSystem->GetDirName(existsPath);
    }
    subPaths.SetOwner(kTRUE);
    FileStat_t st;

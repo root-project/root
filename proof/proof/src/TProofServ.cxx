@@ -2974,7 +2974,7 @@ Int_t TProofServ::SetupCommon()
          TString compiler = COMPILER;
          if (compiler.Index("is ") != kNPOS)
             compiler.Remove(0, compiler.Index("is ") + 3);
-         compiler = gSystem->DirName(compiler);
+         compiler = gSystem->GetDirName(compiler);
          if (icomp == 1) {
             if (!bindir.IsNull()) bindir += ":";
             bindir += compiler;

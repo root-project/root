@@ -1614,7 +1614,7 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
 
    // Update the macro path
    TString mp(TROOT::GetMacroPath());
-   TString np(gSystem->DirName(name));
+   TString np = gSystem->GetDirName(name);
    if (!np.IsNull()) {
       np += ":";
       if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
@@ -1826,7 +1826,7 @@ Int_t TProofLite::CleanupSandbox()
 
    TSortedList *olddirs = new TSortedList(kFALSE);
 
-   TString sandbox = gSystem->DirName(fWorkDir.Data());
+   TString sandbox = gSystem->GetDirName(fWorkDir.Data());
 
    void *dirp = gSystem->OpenDirectory(sandbox);
    if (dirp) {

@@ -462,10 +462,10 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
          status = "Ok";
          if (hmiss.FindObject(fne)) status = "Failed";
          if (fFileInfoVrs == 0)
-            ent.Form("'%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->DirName(fne),
+            ent.Form("'%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->GetDirName(fne).Data(),
                      qid, status.Data());
          else
-            ent.Form("'%s','%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->DirName(fne),
+            ent.Form("'%s','%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->GetDirName(fne).Data(),
                      qid, begin, status.Data());
          values.Add(new TObjString(ent.Data()));
       } else if ((dsete = dynamic_cast<TDSet *>(o))) {
@@ -479,10 +479,10 @@ Int_t TProofMonSenderSQL::SendFileInfo(TDSet *dset, TList *missing,
             status = "Ok";
             if (hmiss.FindObject(fne)) status = "Failed";
             if (fFileInfoVrs == 0)
-               ent.Form("'%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->DirName(fne),
+               ent.Form("'%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->GetDirName(fne).Data(),
                         qid, status.Data());
             else
-               ent.Form("'%s','%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->DirName(fne),
+               ent.Form("'%s','%s','%s','%s','%s'", gSystem->BaseName(fne), gSystem->GetDirName(fne).Data(),
                         qid, begin, status.Data());
             values.Add(new TObjString(ent.Data()));
          }
