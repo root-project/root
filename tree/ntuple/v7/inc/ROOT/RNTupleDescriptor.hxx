@@ -319,6 +319,8 @@ public:
    /// We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's without libCore
    /// Serializes the global ntuple information as well as the column and field schemata
    /// Returns the number of bytes and fills buffer if it is not nullptr.
+   /// TODO(jblomer): instead of runtime testing for nullptr, there should be a template for the case where
+   /// only the size of the buffer is required.
    std::uint32_t SerializeHeader(void* buffer) const;
    /// Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
    std::uint32_t SerializeFooter(void* buffer) const;
