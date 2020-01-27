@@ -61,6 +61,24 @@ protected:
    /// Default construct a RAxisBase (for use by derived classes for I/O)
    RAxisBase() = default;
 
+   /// Virtual destructor needed in this inheritance-based design
+   virtual ~RAxisBase() = default;
+
+   /// Construct a RAxisBase.
+   ///
+   ///\param[in] title - axis title used for graphics and text representation.
+   ///\param[in] nbins - number of bins in this axis, including under- and
+   /// overflow bins.
+   RAxisBase(std::string_view title, int nbins) noexcept
+      : fNBins(nbins), fTitle(title)
+   {}
+
+   /// Construct a RAxisBase.
+   ///
+   ///\param[in] nbins - number of bins in this axis, including under- and
+   /// overflow bins.
+   RAxisBase(int nbins) noexcept: RAxisBase("", nbins) {}
+
    /// Given rawbin (<0 for underflow, >= GetNBinsNoOver() for overflow), determine the
    /// actual bin number taking into account how over/underflow should be
    /// handled.
@@ -180,24 +198,11 @@ public:
    /// Extra bins for each EAxisOverflow value.
    constexpr static const int kNOverflowBins[4] = {0, 1, 1, 2};
 
-   /// Construct a RAxisBase.
-   ///
-   ///\param[in] title - axis title used for graphics and text representation.
-   ///\param[in] nbins - number of bins in this axis, excluding under- and
-   /// overflow bins.
-   ///\param[in] canGrow - whether this axis can extend its range.
-   RAxisBase(std::string_view title, int nbinsNoOver, bool canGrow) noexcept
-      : fNBins(nbinsNoOver + (canGrow ? 0 : 2)), fTitle(title), fCanGrow(canGrow)
-   {}
-
-   /// Construct a RAxisBase.
-   ///
-   ///\param[in] nbins - number of bins in this axis, excluding under- and
-   /// overflow bins.
-   ///\param[in] canGrow - whether this axis can extend its range.
-   RAxisBase(int nbinsNoOver, bool canGrow) noexcept: RAxisBase("", nbinsNoOver, canGrow) {}
-
+   /// Get the axis's title
    const std::string &GetTitle() const { return fTitle; }
+
+   /// Whether this axis can grow (and thus has no overflow bins).
+   virtual bool CanGrow() const noexcept = 0;
 
    /// Get the number of bins, excluding under- and overflow.
    int GetNBinsNoOver() const noexcept { return fNBins - GetNOverflowBins(); }
@@ -208,7 +213,7 @@ public:
    /// Get the number of over- and underflow bins: 0 for growable axes, 2 otherwise.
    int GetNOverflowBins() const noexcept
    {
-      if (fCanGrow)
+      if (CanGrow())
          return 0;
       else
          return 2;
@@ -247,7 +252,6 @@ public:
 private:
    unsigned int fNBins;   ///< Number of bins including under- and overflow.
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
-   bool fCanGrow = false; ///< Whether this axis can grow (and thus has no overflow bins).
 };
 
 ///\name RAxisBase::const_iterator comparison operators
@@ -315,7 +319,7 @@ private:
    /// Represents a `RAxisEquidistant` with `nbins` from `from` to `to`, and
    /// axis title.
    explicit RAxisConfig(std::string_view title, int nbins, double from, double to, EKind kind)
-      : RAxisBase(title, nbins, kind == kGrow), fKind(kind), fBinBorders(2)
+      : RAxisBase(title, nbins + ((kind == kGrow) ? 0 : 2)), fKind(kind), fBinBorders(2)
    {
       if (from > to)
          std::swap(to, from);
@@ -353,7 +357,7 @@ public:
 
    /// Represents a `RAxisIrregular` with `binborders` and title.
    RAxisConfig(std::string_view title, const std::vector<double> &binborders)
-      : RAxisBase(title, binborders.size() - 1, false /*canGrow*/), fKind(kIrregular), fBinBorders(binborders)
+      : RAxisBase(title, binborders.size() + 1), fKind(kIrregular), fBinBorders(binborders)
    {}
 
    /// Represents a `RAxisIrregular` with `binborders`.
@@ -361,7 +365,7 @@ public:
 
    /// Represents a `RAxisIrregular` with `binborders` and title.
    RAxisConfig(std::string_view title, std::vector<double> &&binborders) noexcept
-      : RAxisBase(title, binborders.size() - 1, false /*canGrow*/), fKind(kIrregular),
+      : RAxisBase(title, binborders.size() + 1), fKind(kIrregular),
         fBinBorders(std::move(binborders))
    {}
 
@@ -370,7 +374,7 @@ public:
 
    /// Represents a `RAxisLabels` with `labels` and title.
    RAxisConfig(std::string_view title, const std::vector<std::string_view> &labels)
-      : RAxisBase(title, labels.size(), true /*canGrow*/), fKind(kLabels), fLabels(labels.begin(), labels.end())
+      : RAxisBase(title, labels.size()), fKind(kLabels), fLabels(labels.begin(), labels.end())
    {}
 
    /// Represents a `RAxisLabels` with `labels`.
@@ -378,11 +382,28 @@ public:
 
    /// Represents a `RAxisLabels` with `labels` and title.
    RAxisConfig(std::string_view title, std::vector<std::string> &&labels)
-      : RAxisBase(title, labels.size(), true /*canGrow*/), fKind(kLabels), fLabels(std::move(labels))
+      : RAxisBase(title, labels.size()), fKind(kLabels), fLabels(std::move(labels))
    {}
 
    /// Represents a `RAxisLabels` with `labels`.
    RAxisConfig(std::vector<std::string> &&labels): RAxisConfig("", std::move(labels)) {}
+
+   /// Whether this axis can grow depends on which constructor was called
+   bool CanGrow() const noexcept final override {
+      switch(fKind) {
+         case kEquidistant:
+         case kIrregular:
+            return false;
+
+         case kGrow:
+         case kLabels:
+            return true;
+
+         case kNumKinds:
+            R__ERROR_HERE("HIST") << "Impossible axis kind!";
+      }
+      return false;
+   }
 
    /// Get the axis kind represented by this `RAxisConfig`.
    EKind GetKind() const noexcept { return fKind; }
@@ -423,7 +444,7 @@ protected:
    /// \param high - the high axis range. Any coordinate above that is considered
    ///   as overflow. The last bin's higher edge is at this value.
    explicit RAxisEquidistant(std::string_view title, int nbinsNoOver, double low, double high, bool canGrow) noexcept
-      : RAxisBase(title, nbinsNoOver, canGrow), fLow(low), fInvBinWidth(GetInvBinWidth(nbinsNoOver, low, high))
+      : RAxisBase(title, nbinsNoOver + (canGrow ? 0 : 2)), fLow(low), fInvBinWidth(GetInvBinWidth(nbinsNoOver, low, high))
    {}
 
    /// Initialize a RAxisEquidistant.
@@ -477,7 +498,7 @@ public:
    }
 
    /// This axis cannot grow.
-   static bool CanGrow() noexcept { return false; }
+   bool CanGrow() const noexcept override { return false; }
 
    /// Get the low end of the axis range.
    double GetMinimum() const noexcept { return fLow; }
@@ -577,7 +598,7 @@ public:
    int Grow(int toBin);
 
    /// This axis kind can increase its range.
-   bool CanGrow() const { return true; }
+   bool CanGrow() const noexcept final override { return true; }
 };
 
 /**
@@ -603,7 +624,7 @@ public:
    /// Construct a RAxisIrregular from a vector of bin borders.
    /// \note The bin borders must be sorted in increasing order!
    explicit RAxisIrregular(const std::vector<double> &binborders)
-      : RAxisBase(binborders.size() - 1, CanGrow()), fBinBorders(binborders)
+      : RAxisBase(binborders.size() + 1), fBinBorders(binborders)
    {
 #ifdef R__DO_RANGE_CHECKS
       if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
@@ -616,7 +637,7 @@ public:
    /// Faster, noexcept version taking an rvalue of binborders. The compiler will
    /// know when it can take this one.
    explicit RAxisIrregular(std::vector<double> &&binborders) noexcept
-      : RAxisBase(binborders.size() - 1, CanGrow()), fBinBorders(std::move(binborders))
+      : RAxisBase(binborders.size() + 1), fBinBorders(std::move(binborders))
    {
 #ifdef R__DO_RANGE_CHECKS
       if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
@@ -627,7 +648,7 @@ public:
    /// Construct a RAxisIrregular from a vector of bin borders.
    /// \note The bin borders must be sorted in increasing order!
    explicit RAxisIrregular(std::string_view title, const std::vector<double> &binborders)
-      : RAxisBase(title, binborders.size() - 1, CanGrow()), fBinBorders(binborders)
+      : RAxisBase(title, binborders.size() + 1), fBinBorders(binborders)
    {
 #ifdef R__DO_RANGE_CHECKS
       if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
@@ -640,7 +661,7 @@ public:
    /// Faster, noexcept version taking an rvalue of binborders. The compiler will
    /// know when it can take this one.
    explicit RAxisIrregular(std::string_view title, std::vector<double> &&binborders) noexcept
-      : RAxisBase(title, binborders.size() - 1, CanGrow()), fBinBorders(std::move(binborders))
+      : RAxisBase(title, binborders.size() + 1), fBinBorders(std::move(binborders))
    {
 #ifdef R__DO_RANGE_CHECKS
       if (!std::is_sorted(fBinBorders.begin(), fBinBorders.end()))
@@ -710,7 +731,7 @@ public:
    }
 
    /// This axis cannot be extended.
-   static bool CanGrow() noexcept { return false; }
+   bool CanGrow() const noexcept final override { return false; }
 
    /// Access to the bin borders used by this axis.
    const std::vector<double> &GetBinBorders() const noexcept { return fBinBorders; }
