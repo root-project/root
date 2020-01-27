@@ -2341,6 +2341,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
       if (curvol) {
          TNamed *drive = (TNamed *)curvol->At(0);
          item = FindChildByName(0, TString::Format("%s\\", drive->GetName()));
+         delete curvol;
       }
    }
    TGListTreeItem *diritem = 0;
