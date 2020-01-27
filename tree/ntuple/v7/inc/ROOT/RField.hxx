@@ -214,8 +214,6 @@ public:
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase *GetParent() const { return fParent; }
    std::vector<const RFieldBase *> GetSubFields() const;
-   // TODO(jblomer): remove me
-   const RFieldBase *GetFirstChild() const;
    bool IsSimple() const { return fIsSimple; }
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
