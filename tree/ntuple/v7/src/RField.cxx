@@ -221,13 +221,6 @@ ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 }
 
 
-const ROOT::Experimental::Detail::RFieldBase* ROOT::Experimental::Detail::RFieldBase::GetFirstChild() const
-{
-   if (fSubFields.size())
-      return fSubFields[0].get();
-   return nullptr;
-}
-
 void ROOT::Experimental::Detail::RFieldBase::Flush() const
 {
    for (auto& column : fColumns) {
