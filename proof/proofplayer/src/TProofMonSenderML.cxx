@@ -466,7 +466,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
          if (hmiss.FindObject(fne)) status = 0;
          // Prepare the parameters list
          nm_lnf->SetTitle(gSystem->BaseName(fne));
-         nm_path->SetTitle(gSystem->DirName(fne));
+         nm_path->SetTitle(gSystem->GetDirName(fne));
          pi_status->SetVal(status);
          fneh.Form("file_%x", TString(TUrl(fne.Data()).GetFile()).Hash());
          if (!(rc = fWriter->SendParameters(&values, fneh.Data()))) break;
@@ -482,7 +482,7 @@ Int_t TProofMonSenderML::SendFileInfo(TDSet *dset, TList *missing,
             if (hmiss.FindObject(fne)) status = 0;
             // Prepare the parameters list
             nm_lnf->SetTitle(gSystem->BaseName(fne));
-            nm_path->SetTitle(gSystem->DirName(fne));
+            nm_path->SetTitle(gSystem->GetDirName(fne));
             pi_status->SetVal(status);
             fneh.Form("file_%x", TString(TUrl(fne.Data()).GetFile()).Hash());
             if (!(rc = fWriter->SendParameters(&values, fneh.Data()))) break;
