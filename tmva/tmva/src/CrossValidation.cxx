@@ -514,7 +514,7 @@ TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold,
    TFile *foldOutputFile = nullptr;
 
    if (fFoldFileOutput && fOutputFile != nullptr) {
-      TString path = std::string("") + gSystem->DirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
+      TString path = gSystem->GetDirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
       foldOutputFile = TFile::Open(path, "RECREATE");
       Log() << kINFO << "Creating fold output at:" << path << Endl;
       fFoldFactory = std::make_unique<TMVA::Factory>(fJobName, foldOutputFile, fCvFactoryOptions);

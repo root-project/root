@@ -119,7 +119,7 @@ TString TMVA::MethodCrossValidation::GetWeightFileNameForFold(UInt_t iFold) cons
    }
 
    TString foldStr = Form("fold%i", iFold + 1);
-   TString fileDir = gSystem->DirName(GetWeightFileName());
+   TString fileDir = gSystem->GetDirName(GetWeightFileName());
    TString weightfile = fileDir + "/" + fJobName + "_" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
 
    return weightfile;
