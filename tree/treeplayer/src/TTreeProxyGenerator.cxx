@@ -1585,7 +1585,7 @@ namespace Internal {
          return;
       }
 
-      TString fileLocation = gSystem->DirName(fScript);
+      TString fileLocation = gSystem->GetDirName(fScript);
 
       TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
       incPath.Append(":").Prepend(" ");
@@ -1596,16 +1596,16 @@ namespace Internal {
       incPath.Prepend(fileLocation+":.:");
 
       const char *filename = gSystem->Which(incPath,fScript);
-      if (filename==0) {
+      if (!filename) {
          Error("WriteProxy","Can not find the user's script: %s",fScript.Data());
          return;
       }
-      const char *cutfilename = 0;
+      const char *cutfilename = nullptr;
       if (fCutScript.Length()) {
-         fileLocation = gSystem->DirName(fCutScript);
+         fileLocation = gSystem->GetDirName(fCutScript);
          incPath.Prepend(fileLocation+":.:");
          cutfilename = gSystem->Which(incPath,fCutScript);
-         if (cutfilename==0) {
+         if (!cutfilename) {
             Error("WriteProxy","Can not find the user's cut script: %s",fCutScript.Data());
             delete [] filename;
             return;
