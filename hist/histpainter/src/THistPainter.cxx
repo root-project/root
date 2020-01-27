@@ -653,8 +653,8 @@ Example:
 
 print fit probability, parameter names/values and errors.
 
-1. When `v" = 1` is specified, only the non-fixed parameters are shown.
-2. When `v" = 2` all parameters are shown.
+1. When `v = 1` is specified, only the non-fixed parameters are shown.
+2. When `v = 2` all parameters are shown.
 
 Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent
 to `gStyle->SetOptFit(111)`
