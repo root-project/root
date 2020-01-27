@@ -82,7 +82,7 @@ void TMVAClassificationCategoryApplication()
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
    //
-   TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
+   TString fname = gSystem->GetDirName(__FILE__) + "/data/";
    // if directory data not found try using tutorials dir
    if (gSystem->AccessPathName( fname + "toy_sigbkg_categ_offset.root"  )) {
       fname = gROOT->GetTutorialDir() + "/tmva/data/";

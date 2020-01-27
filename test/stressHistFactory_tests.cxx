@@ -261,7 +261,7 @@ private:
     TString cmd = "tar -xf ";
     TString tarFile = fTestDirectory + "/HistFactoryTest.tar";
     cmd.Append(tarFile);
-    gSystem->ChangeDirectory(gSystem->DirName(tarFile));
+    gSystem->ChangeDirectory(gSystem->GetDirName(tarFile));
 
     return (gSystem->Exec(cmd) == 0);
   }

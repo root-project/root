@@ -33,7 +33,7 @@ Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
    if (gROOT->IsBatch() || !(gClient))
       return kCannotRunScript;
    TString pwd(gSystem->pwd());
-   if (!gSystem->cd(gSystem->DirName(macro)))
+   if (!gSystem->cd(gSystem->GetDirName(macro)))
       return kScriptDirNotFound;
    Int_t err = 0;
    TString cmd(".x ");

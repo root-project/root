@@ -36,7 +36,7 @@ void run_h1analysis(int type = 0, const char * h1dir = 0) {
    chain.Add("$H1/dstarp1b.root");
    chain.Add("$H1/dstarp2.root");
 
-   TString selectionMacro = TString(gSystem->DirName(__FILE__) ) + "/h1analysis.C";
+   TString selectionMacro = gSystem->GetDirName(__FILE__) + "/h1analysis.C";
 
    if (type == 0)
       chain.Process(selectionMacro);

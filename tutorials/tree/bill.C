@@ -123,7 +123,7 @@ void billtr(const char *billtname, Int_t compress) {
 
 void bill() {
 
-   TString dir = gSystem->DirName(gSystem->UnixPathName(__FILE__));
+   TString dir = gSystem->GetDirName(gSystem->UnixPathName(__FILE__));
    TString bill = dir + "/bill.root";
    TString billt = dir + "/billt.root";
 

@@ -51,7 +51,7 @@ void testUnfold6()
   ofstream dtdFile("tunfoldbinning.dtd");
   TUnfoldBinningXML::WriteDTD(dtdFile);
   dtdFile.close();
-  TString dir = gSystem->UnixPathName(gSystem->DirName(__FILE__));
+  TString dir = gSystem->UnixPathName(gSystem->GetDirName(__FILE__));
   Int_t error=parser.ParseFile(dir+"/testUnfold6binning.xml");
   if(error) cout<<"error="<<error<<" from TDOMParser\n";
   TXMLDocument const *XMLdocument=parser.GetXMLDocument();
