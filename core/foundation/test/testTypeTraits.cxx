@@ -4,6 +4,7 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -45,6 +46,7 @@ TEST(TypeTraits, IsContainer)
    static_assert(IsContainer<std::vector<int>>::value, "");
    static_assert(IsContainer<std::vector<bool>>::value, "");
    static_assert(IsContainer<std::tuple<int, int>>::value == false, "");
+   static_assert(IsContainer<std::string>::value, "");
 }
 
 /******** helper objects ***********/
