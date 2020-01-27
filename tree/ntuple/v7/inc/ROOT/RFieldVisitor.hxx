@@ -28,7 +28,6 @@
 
 namespace ROOT {
 namespace Experimental {
-class RNTupleReader;
 namespace Detail {
 
 
@@ -109,16 +108,6 @@ private:
    int fNumFields;
    int fAvailableSpaceKeyString;
    int fAvailableSpaceValueString;
-   /// Keeps track when | is used for the tree-like structure.
-   // E.g. in
-   // * | | |__Field
-   // * | |__Field 2
-   // * |   |__Field <- '|' in position 1, but no '|' in position 2
-   // * |__Field 2.4
-   // *   |__Field 2 <- no '|' in position 1
-   // *     |__Field <- no '|' in position 1 and 2
-   std::vector<bool> fFlagForVerticalLines;
-   int fCurrentLevel = 0;
    int fFieldNo = 1;
    std::string fTreePrefix;
    std::string fFieldNoPrefix;
