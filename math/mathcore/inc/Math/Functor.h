@@ -179,7 +179,8 @@ public:
 
    // clone of the function handler (use copy-ctor)
 #if defined(_MSC_VER) && !defined(__CLING__)
-   // FIXME: try to remove this #ifdef after llvm upgrade
+   // FIXME: this is a work-around for a compiler error with VS 2019 (16.4.3)
+   // try to remove this #ifdef when updating Visual Studio
    auto Clone() const { return Copy(); }
 #else
    BaseFunc * Clone() const { return Copy(); }
