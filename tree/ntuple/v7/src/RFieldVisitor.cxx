@@ -56,7 +56,6 @@ void ROOT::Experimental::RPrepareVisitor::VisitRootField(const RFieldRoot &field
 void ROOT::Experimental::RPrintSchemaVisitor::SetDeepestLevel(int d)
 {
    fDeepestLevel = d;
-   fFlagForVerticalLines.resize(d - 1);
 }
 
 void ROOT::Experimental::RPrintSchemaVisitor::SetNumFields(int n)
@@ -83,7 +82,6 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBas
    for (auto iField = subFields.begin(); iField != subFields.end(); ) {
       RPrintSchemaVisitor visitor(*this);
       visitor.fFieldNo = fieldNo++;
-      visitor.fCurrentLevel++;
       visitor.fFieldNoPrefix += std::to_string(fFieldNo) + ".";
 
       auto f = *iField;
