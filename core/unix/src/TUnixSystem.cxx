@@ -291,7 +291,7 @@ struct TUtmpContent {
             return ue;
          ue++;
       }
-      return 0;
+      return nullptr;
    }
 
    int ReadUtmpFile()
@@ -760,7 +760,7 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
 
 TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 {
-   if (!h) return 0;
+   if (!h) return nullptr;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -805,7 +805,7 @@ void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   if (!h) return 0;
+   if (!h) return nullptr;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -1382,7 +1382,7 @@ const char *TUnixSystem::GetDirEntry(void *dirp)
    if (dirp)
       return UnixGetdirentry(dirp);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1489,10 +1489,10 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
 
    if (fd == -1) {
       SysError("TempFileName", "%s", base.Data());
-      return 0;
+      return nullptr;
    } else {
       FILE *fp = fdopen(fd, "w+");
-      if (fp == 0)
+      if (!fp)
          SysError("TempFileName", "converting filedescriptor (%d)", fd);
       return fp;
    }
@@ -1512,7 +1512,8 @@ const char *TUnixSystem::PrependPathName(const char *dir, TString& name)
       return name.Data();
    }
 
-   if (!dir || !dir[0]) dir = "/";
+   if (!dir || !dir[0])
+      dir = "/";
    else if (dir[strlen(dir) - 1] != '/')
       name.Prepend('/');
    name.Prepend(dir);
@@ -1834,7 +1835,7 @@ char *TUnixSystem::ExpandPathName(const char *path)
 {
    TString patbuf = path;
    if (ExpandPathName(patbuf))
-      return 0;
+      return nullptr;
    return StrDup(patbuf.Data());
 }
 
@@ -1900,10 +1901,10 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
       if (show != "")
          Printf("%s <not found>", show.Data());
       wfil = "";
-      return 0;
+      return nullptr;
    }
 
-   if (search == 0)
+   if (!search)
       search = ".";
 
    TString apwd(gSystem->WorkingDirectory());
@@ -1945,7 +1946,7 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
    if (show != "")
       Printf("%s <not found>", show.Data());
    wfil = "";
-   return 0;
+   return nullptr;
 }
 
 //---- Users & Groups ----------------------------------------------------------
@@ -2027,7 +2028,7 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
       gUserInfo[uid] = *ug;
       return ug;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2057,7 +2058,7 @@ UserGroup_t *TUnixSystem::GetGroupInfo(Int_t gid)
       gr->fGroup = grp->gr_name;
       return gr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2815,12 +2816,12 @@ const char *TUnixSystem::GetLinkedLibraries()
       return linkedLibs;
 
    if (once)
-      return 0;
+      return nullptr;
 
 #if !defined(R__MACOSX)
    const char *exe = GetExePath();
    if (!exe || !*exe)
-      return 0;
+      return nullptr;
 #endif
 
 #if defined(R__MACOSX)
@@ -2907,7 +2908,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    once = kTRUE;
 
    if (linkedLibs.IsNull())
-      return 0;
+      return nullptr;
 
    return linkedLibs;
 }
@@ -2967,7 +2968,7 @@ void TUnixSystem::AddTimer(TTimer *ti)
 
 TTimer *TUnixSystem::RemoveTimer(TTimer *ti)
 {
-   if (!ti) return 0;
+   if (!ti) return nullptr;
 
    R__LOCKGUARD2(gSystemMutex);
 
@@ -3931,7 +3932,7 @@ const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *m
          return mydir;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3954,10 +3955,10 @@ void *TUnixSystem::UnixOpendir(const char *dir)
    const char *edir = StripOffProto(dir, "file:");
 
    if (stat(edir, &finfo) < 0)
-      return 0;
+      return nullptr;
 
    if (!S_ISDIR(finfo.st_mode))
-      return 0;
+      return nullptr;
 
    return (void*) opendir(edir);
 }
@@ -3985,13 +3986,13 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
    if (dirp) {
       for (;;) {
          dp = readdir(dirp);
-         if (dp == 0)
-            return 0;
+         if (!dp)
+            return nullptr;
          if (REAL_DIR_ENTRY(dp))
             return dp->d_name;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 //---- files -------------------------------------------------------------------
@@ -4702,7 +4703,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
       if (!quiet)
          Error("FindDynamicLibrary",
                "%s does not exist in %s", searchFor.Data(), GetDynamicPath());
-      return 0;
+      return nullptr;
    }
    static const char* exts[] = {
       ".so", ".dll", ".dylib", ".sl", ".dl", ".a", 0 };
@@ -4722,7 +4723,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
             "%s[.so | .dll | .dylib | .sl | .dl | .a] does not exist in %s",
             searchFor.Data(), GetDynamicPath());
 
-   return 0;
+   return nullptr;
 }
 
 //---- System, CPU and Memory info ---------------------------------------------
