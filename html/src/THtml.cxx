@@ -1468,13 +1468,18 @@ void THtml::Convert(const char *filename, const char *title,
    CreateListOfClasses("*");
 
    const char *dir;
+   TString dfltdir;
 
    // if it's not defined, make the "examples" as a default directory
    if (!*dirname) {
       gSystem->ExpandPathName(fPathInfo.fOutputDir);
-      dir = gSystem->ConcatFileName(fPathInfo.fOutputDir, "examples");
-   } else
+      char *tmp0 = gSystem->ConcatFileName(fPathInfo.fOutputDir, "examples");
+      dfltdir = tmp0;
+      delete [] tmp0;
+      dir = dfltdir.Data();
+   } else {
       dir = dirname;
+   }
 
    // create directory if necessary
    if (gSystem->AccessPathName(dir))
@@ -1489,9 +1494,8 @@ void THtml::Convert(const char *filename, const char *title,
       return;
    }
 
-   TString realFilename(cRealFilename);
+   TString realFilename = cRealFilename;
    delete[] cRealFilename;
-   cRealFilename = 0;
 
    // open source file
    std::ifstream sourceFile;
@@ -1518,9 +1522,7 @@ void THtml::Convert(const char *filename, const char *title,
       Warning("Convert", "Output requested but cannot initialize graphics: GUI  and GL windows not be available");
    output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput, context, fGClient);
 
-   if (tmp1)
-      delete[]tmp1;
-   tmp1 = 0;
+   delete [] tmp1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
