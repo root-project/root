@@ -131,7 +131,7 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TFileSysEntry* fse,
    }
 
    // take the directory name without "/" or leading "."
-   out_modulename = gSystem->DirName(filename);
+   out_modulename = gSystem->GetDirName(filename);
 
    while (out_modulename[0] == '.')
       out_modulename.Remove(0, 1);
@@ -483,7 +483,7 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
          possiblePath += "src/";
       out_filename = possiblePath + "/" + possibleFileName;
    } else {
-      possiblePath = gSystem->DirName(clfile);
+      possiblePath = gSystem->GetDirName(clfile);
       possibleFileName = gSystem->BaseName(clfile);
    }
 
@@ -627,7 +627,7 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    const TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(incBase);
    if (!bucket) return false;
 
-   TString alldir(gSystem->DirName(included));
+   TString alldir = gSystem->GetDirName(included);
    TObjArray* arrSubDirs = alldir.Tokenize("/");
    TIter iEntry(bucket);
    TFileSysEntry* entry = 0;
@@ -1746,8 +1746,8 @@ void THtml::CreateListOfClasses(const char* filter)
       if (!module) {
          bool moduleSelected = cdi->IsSelected();
 
-         TString parentModuleName(gSystem->DirName(modulename));
-         TModuleDocInfo* super = 0;
+         TString parentModuleName = gSystem->GetDirName(modulename);
+         TModuleDocInfo* super = nullptr;
          if (parentModuleName.Length() && parentModuleName != ".") {
             super = (TModuleDocInfo*) fDocEntityInfo.fModules.FindObject(parentModuleName);
             if (!super) {
