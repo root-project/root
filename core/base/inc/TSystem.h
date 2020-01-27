@@ -202,14 +202,13 @@ struct ProcInfo_t {
 };
 
 struct RedirectHandle_t {
-   TString   fFile;        // File where the output was redirected
-   TString   fStdOutTty;   // tty associated with stdout, if any (e.g. from ttyname(...))
-   TString   fStdErrTty;   // tty associated with stderr, if any (e.g. from ttyname(...))
-   Int_t     fStdOutDup;   // Duplicated descriptor for stdout
-   Int_t     fStdErrDup;   // Duplicated descriptor for stderr
-   Int_t     fReadOffSet;  // Offset where to start reading the file (used by ShowOutput(...))
-   RedirectHandle_t(const char *n = 0) : fFile(n), fStdOutTty(), fStdErrTty(), fStdOutDup(-1),
-                                         fStdErrDup(-1), fReadOffSet(-1) { }
+   TString   fFile;            // File where the output was redirected
+   TString   fStdOutTty;       // tty associated with stdout, if any (e.g. from ttyname(...))
+   TString   fStdErrTty;       // tty associated with stderr, if any (e.g. from ttyname(...))
+   Int_t     fStdOutDup{-1};   // Duplicated descriptor for stdout
+   Int_t     fStdErrDup{-1};   // Duplicated descriptor for stderr
+   Int_t     fReadOffSet{-1};  // Offset where to start reading the file (used by ShowOutput(...))
+   RedirectHandle_t(const char *n = nullptr) : fFile(n) { }
    void Reset() { fFile = ""; fStdOutTty = ""; fStdErrTty = "";
                   fStdOutDup = -1; fStdErrDup = -1; fReadOffSet = -1; }
 };
@@ -324,8 +323,8 @@ protected:
    TString &GetLastErrorString();             //Last system error message (thread local).
    const TString &GetLastErrorString() const; //Last system error message (thread local).
 
-   TSystem               *FindHelper(const char *path, void *dirptr = 0);
-   virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
+   TSystem               *FindHelper(const char *path, void *dirptr = nullptr);
+   virtual Bool_t         ConsistentWith(const char *path, void *dirptr = nullptr);
    virtual const char    *ExpandFileName(const char *fname);
    virtual Bool_t         ExpandFileName(TString &fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
@@ -418,20 +417,20 @@ public:
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
    virtual std::string     GetWorkingDirectory() const;
-   virtual const char     *HomeDirectory(const char *userName = 0);
-   virtual std::string     GetHomeDirectory(const char *userName = 0) const;
+   virtual const char     *HomeDirectory(const char *userName = nullptr);
+   virtual std::string     GetHomeDirectory(const char *userName = nullptr) const;
    virtual int             mkdir(const char *name, Bool_t recursive = kFALSE);
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
-   virtual FILE           *TempFileName(TString &base, const char *dir = 0);
+   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr);
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);
    virtual const char     *DirName(const char *pathname);
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
-   virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = 0);
+   virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = nullptr);
    virtual const char     *PrependPathName(const char *dir, TString& name);
    virtual Bool_t          ExpandPathName(TString &path);
    virtual char           *ExpandPathName(const char *path);
@@ -455,14 +454,14 @@ public:
    virtual TList          *GetVolumes(Option_t *) const { return 0; }
 
    //---- Users & Groups
-   virtual Int_t           GetUid(const char *user = 0);
-   virtual Int_t           GetGid(const char *group = 0);
+   virtual Int_t           GetUid(const char *user = nullptr);
+   virtual Int_t           GetGid(const char *group = nullptr);
    virtual Int_t           GetEffectiveUid();
    virtual Int_t           GetEffectiveGid();
    virtual UserGroup_t    *GetUserInfo(Int_t uid);
-   virtual UserGroup_t    *GetUserInfo(const char *user = 0);
+   virtual UserGroup_t    *GetUserInfo(const char *user = nullptr);
    virtual UserGroup_t    *GetGroupInfo(Int_t gid);
-   virtual UserGroup_t    *GetGroupInfo(const char *group = 0);
+   virtual UserGroup_t    *GetGroupInfo(const char *group = nullptr);
 
    //---- Environment Manipulation
    virtual void            Setenv(const char *name, const char *value);
@@ -475,7 +474,7 @@ public:
    virtual void            Closelog();
 
    //---- Standard Output redirection
-   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = 0);
+   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = nullptr);
    virtual void            ShowOutput(RedirectHandle_t *h);
 
    //---- Dynamic Loading
