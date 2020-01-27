@@ -1617,11 +1617,10 @@ void TRootBrowserLite::DisplayDirectory()
    if (fListLevel) {
       // disable/enable up level navigation
       TGButton *btn = fToolBar->GetButton(kOneLevelUp);
-      const char *dirname = gSystem->DirName(p);
-      Bool_t disableUp;
+      TString dirname = gSystem->GetDirName(p);
 
       TObject *obj = (TObject*)fListLevel->GetUserData();
-      disableUp = (strlen(dirname) == 1) && (*dirname == '/');
+      Bool_t disableUp = dirname == "/";
 
       // normal file directory
       if (disableUp && (obj) && (obj->IsA() == TSystemDirectory::Class())) {
@@ -1945,7 +1944,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fClient->NeedRedraw(fLt, kTRUE);
                      } else {
                         obj = (TObject *)fListLevel->GetUserData();
-                        if (obj) ToSystemDirectory(gSystem->DirName(obj->GetTitle()));
+                        if (obj) ToSystemDirectory(gSystem->GetDirName(obj->GetTitle()));
                      }
                      break;
                   }
@@ -2574,7 +2573,6 @@ void TRootBrowserLite::Checked(TObject *obj, Bool_t checked)
 void TRootBrowserLite::IconBoxAction(TObject *obj)
 {
    Bool_t browsable = kFALSE;
-   const char *dirname = 0;
    if (obj) {
 
       TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
@@ -2621,7 +2619,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
                   fListLevel = 0;
                }
             } else {
-               dirname = gSystem->DirName(gSystem->pwd());
+               TString dirname = gSystem->GetDirName(gSystem->pwd());
                ToSystemDirectory(dirname);
                return;
             }
@@ -2630,7 +2628,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
 
       if (obj && obj->IsFolder()) {
          fIconBox->RemoveAll();
-         TGListTreeItem *itm = 0;
+         TGListTreeItem *itm = nullptr;
 
          if (fListLevel) {
             fLt->OpenItem(fListLevel);

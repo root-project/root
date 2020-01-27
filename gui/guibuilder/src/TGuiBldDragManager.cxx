@@ -6304,7 +6304,7 @@ void TGuiBldDragManager::ChangeImage(TGIcon *fr)
       }
    } else {
       fr->SetImage(img);
-      fr->SetImagePath(gSystem->DirName(fname.Data()));
+      fr->SetImagePath(gSystem->GetDirName(fname.Data()));
    }
 
    root->SetEditable(kTRUE);

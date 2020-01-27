@@ -1118,7 +1118,7 @@ TString TGFileBrowser::DirName(TGListTreeItem* item)
    _splitpath(fullpath.Data(), winDrive, winDir, winName, winExt);
    dirname = TString::Format("%s%s", winDrive, winDir);
 #else
-   dirname = gSystem->DirName(fullpath);
+   dirname = gSystem->GetDirName(fullpath);
 #endif
    return dirname;
 }

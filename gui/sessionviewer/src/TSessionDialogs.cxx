@@ -1078,7 +1078,7 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
       return;
    if (strstr(fileName,"*.")) {
       // wildcarding case
-      void *filesDir = gSystem->OpenDirectory(gSystem->DirName(fileName));
+      void *filesDir = gSystem->OpenDirectory(gSystem->GetDirName(fileName));
       const char* ent;
       TString filesExp(gSystem->BaseName(fileName));
       filesExp.ReplaceAll("*",".*");
@@ -1086,10 +1086,10 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
       while ((ent = gSystem->GetDirEntry(filesDir))) {
          TString entryString(ent);
          if (entryString.Index(rg) != kNPOS &&
-             gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(fileName),
+             gSystem->AccessPathName(Form("%s/%s", gSystem->GetDirName(fileName).Data(),
                 ent), kReadPermission) == kFALSE) {
             TString text = TString::Format("%s/%s",
-               gSystem->UnixPathName(gSystem->DirName(fileName)), ent);
+               gSystem->UnixPathName(gSystem->GetDirName(fileName)), ent);
             if (!fLVContainer->FindItem(text.Data())) {
                TGLVEntry *entry = new TGLVEntry(fLVContainer, text.Data(), text.Data());
                entry->SetPictures(gClient->GetPicture("rootdb_t.xpm"),
@@ -1123,7 +1123,7 @@ void TUploadDataSetDlg::AddFiles(TList *fileList)
    TIter next(fileList);
    while ((el = (TObjString *) next())) {
       TString fileName = TString::Format("%s/%s",
-                  gSystem->UnixPathName(gSystem->DirName(el->GetString())),
+                  gSystem->UnixPathName(gSystem->GetDirName(el->GetString())),
                   gSystem->BaseName(el->GetString()));
       // single file
       if (!fLVContainer->FindItem(fileName.Data())) {

@@ -823,7 +823,7 @@ void TGTextEditor::ExecuteMacro()
    TString savdir = gSystem->WorkingDirectory();
    TString tmpfile = gSystem->BaseName(fFilename.Data());
    tmpfile += "_exec";
-   gSystem->ChangeDirectory(gSystem->DirName(fFilename.Data()));
+   gSystem->ChangeDirectory(gSystem->GetDirName(fFilename.Data()).Data());
    fTextEdit->SaveFile(tmpfile.Data(), kFALSE);
    gROOT->SetExecutingMacro(kTRUE);
    gROOT->Macro(tmpfile.Data());
