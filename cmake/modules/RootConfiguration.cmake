@@ -595,6 +595,9 @@ configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptio
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/mimes.unix.in ${CMAKE_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
+# We need to have class.rules during configuration time to avoid silent error during generation of dictionary:
+# Error in <TClass::ReadRules()>: Cannot find rules
+configure_file(${CMAKE_SOURCE_DIR}/etc/class.rules ${CMAKE_BINARY_DIR}/etc/class.rules COPYONLY)
 
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
 ROOT_GET_OPTIONS(ROOT_ALL_OPTIONS)
