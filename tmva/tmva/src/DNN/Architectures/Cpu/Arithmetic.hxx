@@ -22,12 +22,14 @@
 #include "TMVA/DNN/Architectures/Reference.h"
 #endif
 
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 
 //#include "tbb/tbb.h"
 
 #pragma GCC diagnostic pop
+#endif
 
 namespace TMVA
 {
