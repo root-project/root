@@ -178,7 +178,7 @@ public:
    ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__CLING__)
    // FIXME: try to remove this #ifdef after llvm upgrade
    auto Clone() const { return Copy(); }
 #else
