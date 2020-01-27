@@ -70,19 +70,19 @@ public:
    typedef Bool_t (*ThreadMsgFunc_t)(MSG*);
 
 private:
-   struct group     *fGroups;           // Groups on local computer
-   struct passwd    *fPasswords;        // Users on local computer
-   int               fNbUsers;          // Number of users on local computer
-   int               fNbGroups;         // Number of groups on local computer
-   int               fActUser;          // Index of actual user in User list
-   Bool_t            fGroupsInitDone;   // Flag used for Users and Groups initialization
-   Bool_t            fFirstFile;        // Flag used by OpenDirectory/GetDirEntry
+   struct group     *fGroups{nullptr};           // Groups on local computer
+   struct passwd    *fPasswords{nullptr};        // Users on local computer
+   int               fNbUsers{0};                // Number of users on local computer
+   int               fNbGroups{0};               // Number of groups on local computer
+   int               fActUser{-1};               // Index of actual user in User list
+   Bool_t            fGroupsInitDone{kFALSE};    // Flag used for Users and Groups initialization
+   Bool_t            fFirstFile{kFALSE};         // Flag used by OpenDirectory/GetDirEntry
 
-   HANDLE            fhProcess;         // Handle of the current process
-   void             *fGUIThreadHandle;  // handle of GUI server (aka command) thread
-   ULong_t           fGUIThreadId;      // id of GUI server (aka command) thread
-   char             *fDirNameBuffer;    // The string buffer to hold path name
-   WIN32_FIND_DATA   fFindFileData;     // Structure to look for files (aka OpenDir under UNIX)
+   HANDLE            fhProcess;                  // Handle of the current process
+   void             *fGUIThreadHandle{nullptr};  // handle of GUI server (aka command) thread
+   ULong_t           fGUIThreadId{0};            // id of GUI server (aka command) thread
+   char             *fDirNameBuffer{nullptr};    // The string buffer to hold path name
+   WIN32_FIND_DATA   fFindFileData;              // Structure to look for files (aka OpenDir under UNIX)
 
    Bool_t            DispatchTimers(Bool_t mode);
    Bool_t            CheckDescriptors();
@@ -173,19 +173,19 @@ public:
    const char       *WorkingDirectory() override;
    std::string       GetWorkingDirectory() const override;
    const char       *HomeDirectory(const char *userName=0) override;
-   std::string       GetHomeDirectory(const char *userName=0) const override;
+   std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
-   FILE             *TempFileName(TString &base, const char *dir = 0) override;
+   FILE             *TempFileName(TString &base, const char *dir = nullptr) override;
 
    //---- Users & Groups ---------------------------------------
-   Int_t             GetUid(const char *user = 0) override;
-   Int_t             GetGid(const char *group = 0) override;
+   Int_t             GetUid(const char *user = nullptr) override;
+   Int_t             GetGid(const char *group = nullptr) override;
    Int_t             GetEffectiveUid() override;
    Int_t             GetEffectiveGid() override;
    UserGroup_t      *GetUserInfo(Int_t uid) override;
-   UserGroup_t      *GetUserInfo(const char *user = 0) override;
+   UserGroup_t      *GetUserInfo(const char *user = nullptr) override;
    UserGroup_t      *GetGroupInfo(Int_t gid) override;
-   UserGroup_t      *GetGroupInfo(const char *group = 0) override;
+   UserGroup_t      *GetGroupInfo(const char *group = nullptr) override;
 
    //---- Paths & Files ----------------------------------------
    const char        DriveName(const char *pathname="/");
@@ -212,7 +212,7 @@ public:
    TList            *GetVolumes(Option_t *opt = "") const override;
 
    //---- Standard Output redirection --------------------------
-   Int_t             RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = 0) override;
+   Int_t             RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = nullptr) override;
 
    //---- Dynamic Loading --------------------------------------
    void              AddDynamicPath(const char *dir) override;
