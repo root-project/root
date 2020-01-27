@@ -81,7 +81,7 @@ private:
    HANDLE            fhProcess;                  // Handle of the current process
    void             *fGUIThreadHandle{nullptr};  // handle of GUI server (aka command) thread
    ULong_t           fGUIThreadId{0};            // id of GUI server (aka command) thread
-   char             *fDirNameBuffer{nullptr};    // The string buffer to hold path name
+   std::string       fDirNameBuffer;             // The string buffer to hold path name
    WIN32_FIND_DATA   fFindFileData;              // Structure to look for files (aka OpenDir under UNIX)
 
    Bool_t            DispatchTimers(Bool_t mode);
