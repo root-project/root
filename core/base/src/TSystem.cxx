@@ -209,7 +209,6 @@ Bool_t TSystem::Init()
 void TSystem::SetProgname(const char *name)
 {
    delete [] gProgName;
-
    gProgName = StrDup(name);
 }
 
