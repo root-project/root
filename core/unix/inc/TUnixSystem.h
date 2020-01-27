@@ -40,7 +40,7 @@ protected:
    static int          UnixMakedir(const char *name);
    static void        *UnixOpendir(const char *name);
    static const char  *UnixGetdirentry(void *dir);
-   static const char  *UnixHomedirectory(const char *user = 0);
+   static const char  *UnixHomedirectory(const char *user = nullptr);
    static const char  *UnixHomedirectory(const char *user, char *path, char *mydir);
    static Long64_t     UnixNow();
    static int          UnixWaitchild();
@@ -127,10 +127,10 @@ public:
    Bool_t            ChangeDirectory(const char *path) override;
    const char       *WorkingDirectory() override;
    std::string       GetWorkingDirectory() const override;
-   const char       *HomeDirectory(const char *userName = 0) override;
-   std::string       GetHomeDirectory(const char *userName = 0) const override;
+   const char       *HomeDirectory(const char *userName = nullptr) override;
+   std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
-   FILE             *TempFileName(TString &base, const char *dir = 0) override;
+   FILE             *TempFileName(TString &base, const char *dir = nullptr) override;
 
    //---- Paths & Files ----------------------------------------
    const char       *PrependPathName(const char *dir, TString& name) override;
@@ -152,14 +152,14 @@ public:
    const char       *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists) override;
 
    //---- Users & Groups ---------------------------------------
-   Int_t             GetUid(const char *user = 0) override;
-   Int_t             GetGid(const char *group = 0) override;
+   Int_t             GetUid(const char *user = nullptr) override;
+   Int_t             GetGid(const char *group = nullptr) override;
    Int_t             GetEffectiveUid() override;
    Int_t             GetEffectiveGid() override;
    UserGroup_t      *GetUserInfo(Int_t uid) override;
-   UserGroup_t      *GetUserInfo(const char *user = 0) override;
+   UserGroup_t      *GetUserInfo(const char *user = nullptr) override;
    UserGroup_t      *GetGroupInfo(Int_t gid) override;
-   UserGroup_t      *GetGroupInfo(const char *group = 0) override;
+   UserGroup_t      *GetGroupInfo(const char *group = nullptr) override;
 
    //---- Environment Manipulation -----------------------------
    const char       *Getenv(const char *name) override;
@@ -173,7 +173,7 @@ public:
 
    //---- Standard Output redirection --------------------------
    Int_t             RedirectOutput(const char *name, const char *mode = "a",
-                                    RedirectHandle_t *h = 0) override;
+                                    RedirectHandle_t *h = nullptr) override;
 
    //---- Dynamic Loading --------------------------------------
    void              AddDynamicPath(const char *lib) override;
