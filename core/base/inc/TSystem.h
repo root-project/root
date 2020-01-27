@@ -426,7 +426,7 @@ public:
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);
    virtual const char     *DirName(const char *pathname);
-   virtual std::string     GetDirName(const char *pathname);
+   virtual TString         GetDirName(const char *pathname);
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
    virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = nullptr);
