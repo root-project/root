@@ -9,7 +9,7 @@ void test_tmpi()
    Int_t hitam = 200;
    Int_t hitbm = 100;
 
-   TMPIFile *newfile = new TMPIFile("test_tmpifile.root", "RECREATE", N_collectors);
+   TMPIFile *newfile = new TMPIFile("sync_rate.root", "RECREATE", N_collectors);
    gRandom->SetSeed(gRandom->GetSeed() + newfile->GetMPIGlobalRank());
 
    if (newfile->IsCollector()) {
