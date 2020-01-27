@@ -846,6 +846,7 @@ void TClassTree::ScanClasses(Int_t iclass)
       }
    }
    delete [] cname;
+   delete [] sourceName;
    sourceFile.close();
 }
 
