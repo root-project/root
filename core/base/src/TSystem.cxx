@@ -992,40 +992,22 @@ Bool_t TSystem::IsFileInIncludePath(const char *name, char **fullpath)
 
 const char *TSystem::DirName(const char *pathname)
 {
-   if (pathname && strchr(pathname, '/')) {
-      R__LOCKGUARD2(gSystemMutex);
+   auto res = GetDirName(pathname);
+   if (res.empty() || (res == "."))
+      return ".";
 
-      static int len = 0;
-      static char *buf = 0;
-      int pathlen = strlen(pathname);
-      if (pathlen > len) {
-         delete [] buf;
-         len = pathlen;
-         buf = new char [len+1];
-      }
-      strcpy(buf, pathname);
+   R__LOCKGUARD2(gSystemMutex);
 
-      char *r = buf+pathlen-1;
-      // First skip the trailing '/'
-      while ( r>buf && *(r)=='/') { --r; }
-      // Then find the next non slash
-      while ( r>buf && *(r)!='/') { --r; }
-      // Then skip duplicate slashes
-      // Note the 'r>buf' is a strict comparison to allows '/topdir' to return '/'
-      while ( r>buf && *(r)=='/') { --r; }
-      // If all was cut away, we encountered a rel. path like 'subdir/'
-      // and ended up at '.'.
-      if (r==buf && *(r)!='/') {
-         return ".";
-      }
-      // And finally terminate the string to drop off the filename
-      *(r+1) = '\0';
-
-      return buf;
+   static std::size_t len = 0;
+   static char *buf = nullptr;
+   if (res.length() > len) {
+      if (buf) delete [] buf;
+      len = res.length() + 50;
+      buf = new char [len];
    }
-   return ".";
+   strncpy(buf, pathname, len);
+   return buf;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the directory name in pathname.
