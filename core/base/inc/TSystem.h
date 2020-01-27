@@ -274,52 +274,52 @@ public:
    };
 
 protected:
-   TFdSet          *fReadmask;         //!Files that should be checked for read events
-   TFdSet          *fWritemask;        //!Files that should be checked for write events
-   TFdSet          *fReadready;        //!Files with reads waiting
-   TFdSet          *fWriteready;       //!Files with writes waiting
-   TFdSet          *fSignals;          //!Signals that were trapped
-   Int_t            fNfd;              //Number of fd's in masks
-   Int_t            fMaxrfd;           //Largest fd in read mask
-   Int_t            fMaxwfd;           //Largest fd in write mask
-   Int_t            fSigcnt;           //Number of pending signals
-   TString          fWdpath;           //Working directory
-   TString          fHostname;         //Hostname
-   Bool_t           fInsideNotify;     //Used by DispatchTimers()
-   Int_t            fBeepFreq;         //Used by Beep()
-   Int_t            fBeepDuration;     //Used by Beep()
+   TFdSet          *fReadmask{nullptr};         //!Files that should be checked for read events
+   TFdSet          *fWritemask{nullptr};        //!Files that should be checked for write events
+   TFdSet          *fReadready{nullptr};        //!Files with reads waiting
+   TFdSet          *fWriteready{nullptr};       //!Files with writes waiting
+   TFdSet          *fSignals{nullptr};          //!Signals that were trapped
+   Int_t            fNfd{0};                    //Number of fd's in masks
+   Int_t            fMaxrfd{-1};                //Largest fd in read mask
+   Int_t            fMaxwfd{-1};                //Largest fd in write mask
+   Int_t            fSigcnt{0};                 //Number of pending signals
+   TString          fWdpath;                    //Working directory
+   TString          fHostname;                  //Hostname
+   Bool_t           fInsideNotify{kFALSE};      //Used by DispatchTimers()
+   Int_t            fBeepFreq{0};               //Used by Beep()
+   Int_t            fBeepDuration{0};           //Used by Beep()
 
-   Bool_t           fInControl;        //True if in eventloop
-   Bool_t           fDone;             //True if eventloop should be finished
-   Int_t            fLevel;            //Level of nested eventloops
+   Bool_t           fInControl{kFALSE};         //True if in eventloop
+   Bool_t           fDone{kFALSE};              //True if eventloop should be finished
+   Int_t            fLevel{0};                  //Level of nested eventloops
 
-   TSeqCollection  *fTimers;           //List of timers
-   TSeqCollection  *fSignalHandler;    //List of signal handlers
-   TSeqCollection  *fFileHandler;      //List of file handlers
-   TSeqCollection  *fStdExceptionHandler; //List of std::exception handlers
-   TSeqCollection  *fOnExitList;       //List of items to be cleaned-up on exit
+   TSeqCollection  *fTimers{nullptr};           //List of timers
+   TSeqCollection  *fSignalHandler{nullptr};    //List of signal handlers
+   TSeqCollection  *fFileHandler{nullptr};      //List of file handlers
+   TSeqCollection  *fStdExceptionHandler{nullptr}; //List of std::exception handlers
+   TSeqCollection  *fOnExitList{nullptr};       //List of items to be cleaned-up on exit
 
-   TString          fListLibs;         //List shared libraries, cache used by GetLibraries
+   TString          fListLibs;                  //List shared libraries, cache used by GetLibraries
 
-   TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
-   TString          fBuildCompiler;    // Compiler used to build this ROOT
-   TString          fBuildCompilerVersion; //Compiler version used to build this ROOT
-   TString          fBuildNode;        //Detailed information where ROOT was built
-   TString          fBuildDir;         //Location where to build ACLiC shared library and use as scratch area.
-   TString          fFlagsDebug;       //Flags for debug compilation
-   TString          fFlagsOpt;         //Flags for optimized compilation
-   TString          fListPaths;        //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
-   TString          fIncludePath;      //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
-   TString          fLinkedLibs;       //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
-   TString          fSoExt;            //Extension of shared library (.so, .sl, .a, .dll, etc.)
-   TString          fObjExt;           //Extension of object files (.o, .obj, etc.)
-   EAclicMode       fAclicMode;        //Whether the compilation should be done debug or opt
-   TString          fMakeSharedLib;    //Directive used to build a shared library
-   TString          fMakeExe;          //Directive used to build an executable
-   TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC (see EACLiCProperties)
-   Int_t            fAclicProperties;  //Various boolean flag for change ACLiC's behavior.
-   TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
-   TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
+   TString          fBuildArch;                 //Architecture for which ROOT was built (passed to ./configure)
+   TString          fBuildCompiler;             // Compiler used to build this ROOT
+   TString          fBuildCompilerVersion;      //Compiler version used to build this ROOT
+   TString          fBuildNode;                 //Detailed information where ROOT was built
+   TString          fBuildDir;                  //Location where to build ACLiC shared library and use as scratch area.
+   TString          fFlagsDebug;                //Flags for debug compilation
+   TString          fFlagsOpt;                  //Flags for optimized compilation
+   TString          fListPaths;                 //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
+   TString          fIncludePath;               //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
+   TString          fLinkedLibs;                //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
+   TString          fSoExt;                     //Extension of shared library (.so, .sl, .a, .dll, etc.)
+   TString          fObjExt;                    //Extension of object files (.o, .obj, etc.)
+   EAclicMode       fAclicMode{kDefault};       //Whether the compilation should be done debug or opt
+   TString          fMakeSharedLib;             //Directive used to build a shared library
+   TString          fMakeExe;                   //Directive used to build an executable
+   TString          fLinkdefSuffix;             //Default suffix for linkdef files to be used by ACLiC (see EACLiCProperties)
+   Int_t            fAclicProperties{0};        //Various boolean flag for change ACLiC's behavior.
+   TSeqCollection  *fCompiled{nullptr};         //List of shared libs from compiled macros to be deleted
+   TSeqCollection  *fHelpers{nullptr};          //List of helper classes for alternative file/directory access
 
    TString &GetLastErrorString();             //Last system error message (thread local).
    const TString &GetLastErrorString() const; //Last system error message (thread local).
@@ -337,8 +337,8 @@ protected:
    }
 
 private:
-   TSystem(const TSystem&);              // not implemented
-   TSystem& operator=(const TSystem&);   // not implemented
+   TSystem(const TSystem&) = delete;              // not implemented
+   TSystem& operator=(const TSystem&) = delete;   // not implemented
    Bool_t ExpandFileName(const char *fname, char *xname, const int kBufSize);
 
 public:
