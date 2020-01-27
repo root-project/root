@@ -971,11 +971,9 @@ Bool_t TWinNTSystem::HandleConsoleEvent()
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor
 
-TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System"),
-fGUIThreadHandle(0), fGUIThreadId(0)
+TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 {
    fhProcess = ::GetCurrentProcess();
-   fDirNameBuffer = 0;
 
    WSADATA WSAData;
    int initwinsock = 0;
@@ -1052,7 +1050,7 @@ TWinNTSystem::~TWinNTSystem()
 
    if (fDirNameBuffer) {
       delete [] fDirNameBuffer;
-      fDirNameBuffer = 0;
+      fDirNameBuffer = nullptr;
    }
 
    if (gGlobalEvent) {
@@ -1168,7 +1166,7 @@ const char *TWinNTSystem::BaseName(const char *name)
          }
       } else {
          Error("BaseName", "name = 0");
-         return 0;
+         return nullptr;
       }
       char *cp;
       char *bslash = (char *)strrchr(&symbol[idx],'\\');
@@ -1181,7 +1179,7 @@ const char *TWinNTSystem::BaseName(const char *name)
       return &symbol[idx];
    }
    Error("BaseName", "name = 0");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1191,9 +1189,9 @@ const char *TWinNTSystem::BaseName(const char *name)
 void TWinNTSystem::SetProgname(const char *name)
 {
    ULong_t  idot = 0;
-   char *dot = 0;
+   char *dot = nullptr;
    char *progname;
-   char *fullname = 0; // the program name with extension
+   char *fullname = nullptr; // the program name with extension
 
   // On command prompt the progname can be supplied with no extension (under Windows)
    ULong_t namelen=name ? strlen(name) : 0;
@@ -1208,7 +1206,7 @@ void TWinNTSystem::SetProgname(const char *name)
       dot = strrchr(progname, '.');
       idot = dot ? (ULong_t)(dot - progname) : strlen(progname);
 
-      char *which = 0;
+      char *which = nullptr;
 
       if (IsAbsoluteFileName(fullname) && !AccessPathName(fullname)) {
          which = StrDup(fullname);
@@ -1342,7 +1340,7 @@ void TWinNTSystem::AddFileHandler(TFileHandler *h)
 
 TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 {
-   if (!h) return 0;
+   if (!h) return nullptr;
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
@@ -1386,7 +1384,7 @@ void TWinNTSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TWinNTSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   if (!h) return 0;
+   if (!h) return nullptr;
 
    int sig = h->GetSignal();
 
@@ -1953,7 +1951,7 @@ const char *TWinNTSystem::GetDirEntry(void *dirp)
          return (const char *)fFindFileData.cFileName;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2069,10 +2067,9 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       if (_stati64(entry, &finfo) < 0) {
          delete [] entry;
          delete [] dir;
-         return 0;
+         return nullptr;
       }
-   }
-   else {
+   } else {
       strlcpy(entry, dir,nche);
       if ((entry[strlen(dir)-1] == '/') || (entry[strlen(dir)-1] == '\\' )) {
          if(!PathIsRoot(entry))
@@ -2081,7 +2078,7 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       if (_stati64(entry, &finfo) < 0) {
          delete [] entry;
          delete [] dir;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -2100,17 +2097,17 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
          ((TWinNTSystem *)gSystem)->Error( "Unable to find' for reading:", entry);
          delete [] entry;
          delete [] dir;
-         return 0;
+         return nullptr;
       }
       delete [] entry;
       delete [] dir;
       fFirstFile = kTRUE;
       return searchFile;
-   } else {
-      delete [] entry;
-      delete [] dir;
-      return 0;
    }
+
+   delete [] entry;
+   delete [] dir;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2160,7 +2157,7 @@ const char *TWinNTSystem::WorkingDirectory(char driveletter)
 
 char *TWinNTSystem::GetWorkingDirectory(char driveletter) const
 {
-   char *wdpath = 0;
+   char *wdpath = nullptr;
    char drive = driveletter ? toupper( driveletter ) - 'A' + 1 : 0;
 
    // don't use cache as user can call chdir() directly somewhere else
@@ -2170,7 +2167,7 @@ char *TWinNTSystem::GetWorkingDirectory(char driveletter) const
    if (!(wdpath = ::_getdcwd( (int)drive, wdpath, kMAXPATHLEN))) {
       free(wdpath);
       Warning("WorkingDirectory", "getcwd() failed");
-      return 0;
+      return nullptr;
    }
 
    return wdpath;
@@ -2201,7 +2198,7 @@ std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 
 void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) const
 {
-   const char *h = 0;
+   const char *h = nullptr;
    if (!(h = ::getenv("home"))) h = ::getenv("HOME");
 
    if (h) {
@@ -2379,8 +2376,8 @@ const char *TWinNTSystem::DirName(const char *pathname)
 {
    // Delete old buffer
    if (fDirNameBuffer) {
-      // delete [] fDirNameBuffer;
-      fDirNameBuffer = 0;
+      // delete [] fDirNameBuffer;   // FIXME: this is memory leak!!!
+      fDirNameBuffer = nullptr;
    }
 
    // Create a buffer to keep the path name
@@ -2898,7 +2895,7 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
 {
    const char *patbuf = (const char *)patbuf0;
    const char *p;
-   char   *cmd = 0;
+   char   *cmd = nullptr;
    char  *q;
 
    Int_t old_level = gErrorIgnoreLevel;
@@ -3015,7 +3012,8 @@ char *TWinNTSystem::ExpandPathName(const char *path)
    else
       strlcpy(newpath, path, MAX_PATH);
    TString patbuf = newpath;
-   if (ExpandPathName(patbuf)) return 0;
+   if (ExpandPathName(patbuf))
+      return nullptr;
 
    return StrDup(patbuf.Data());
 }
@@ -3073,9 +3071,9 @@ const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessM
    // Check whether this infile has the absolute path first
    if (IsAbsoluteFileName(infile.Data()) ) {
       if (!AccessPathName(infile.Data(), mode))
-      return infile.Data();
+         return infile.Data();
       infile = "";
-      return 0;
+      return nullptr;
    }
    TString exsearch(search);
    gSystem->ExpandPathName(exsearch);
@@ -3096,7 +3094,7 @@ const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessM
    // Check access
    struct stat finfo;
    char name[kMAXPATHLEN];
-   char *lpFilePart = 0;
+   char *lpFilePart = nullptr;
    if (::SearchPath(exsearch.Data(), infile.Data(), NULL, kMAXPATHLEN, name, &lpFilePart) &&
        ::access(name, mode) == 0 && stat(name, &finfo) == 0 &&
        finfo.st_mode & S_IFREG) {
@@ -3107,7 +3105,7 @@ const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessM
       return infile.Data();
    }
    infile = "";
-   return 0;
+   return nullptr;
 }
 
 //---- Users & Groups ----------------------------------------------------------
@@ -3548,7 +3546,7 @@ Int_t TWinNTSystem::GetUid(const char *user)
    if (!user || !user[0])
       return fPasswords[fActUser].pw_uid;
    else {
-      struct passwd *pwd = 0;
+      struct passwd *pwd = nullptr;
       for(int i=0;i<fNbUsers;i++) {
          if (!stricmp (user, fPasswords[i].pw_name)) {
             pwd = &fPasswords[i];
@@ -3616,7 +3614,7 @@ Int_t TWinNTSystem::GetGid(const char *group)
    if (!group || !group[0])
       return fPasswords[fActUser].pw_gid;
    else {
-      struct group *grp = 0;
+      struct group *grp = nullptr;
       for(int i=0;i<fNbGroups;i++) {
          if (!stricmp (group, fGroups[i].gr_name)) {
             grp = &fGroups[i];
@@ -3715,7 +3713,7 @@ UserGroup_t *TWinNTSystem::GetUserInfo(Int_t uid)
       ug->fGroup    = pwd->pw_group;
       return ug;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3762,7 +3760,7 @@ UserGroup_t *TWinNTSystem::GetGroupInfo(Int_t gid)
       gr->fUid = 0;
       return gr;
    }
-   struct group *grp = 0;
+   struct group *grp = nullptr;
    for(int i=0;i<fNbGroups;i++) {
       if (gid == fGroups[i].gr_gid) {
          grp = &fGroups[i];
@@ -3776,8 +3774,7 @@ UserGroup_t *TWinNTSystem::GetGroupInfo(Int_t gid)
       gr->fGroup = grp->gr_name;
       return gr;
    }
-   return 0;
-
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4071,13 +4068,13 @@ const char *TWinNTSystem::FindDynamicLibrary(TString &sLib, Bool_t quiet)
    int len = sLib.Length();
    if (len > 4 && (!stricmp(sLib.Data()+len-4, ".dll"))) {
       if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission))
-         return sLib;
+         return sLib.Data();
    } else {
       TString sLibDll(sLib);
       sLibDll += ".dll";
       if (gSystem->FindFile(GetDynamicPath(), sLibDll, kReadPermission)) {
          sLibDll.Swap(sLib);
-         return sLib;
+         return sLib.Data();
       }
    }
 
@@ -4086,7 +4083,7 @@ const char *TWinNTSystem::FindDynamicLibrary(TString &sLib, Bool_t quiet)
             "%s does not exist in %s,\nor has wrong file extension (.dll)",
              sLib.Data(), GetDynamicPath());
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4113,7 +4110,7 @@ const char *TWinNTSystem::GetLinkedLibraries()
    char winName[256];
    char winExt[256];
 
-   if (!gApplication) return 0;
+   if (!gApplication) return nullptr;
 
    static Bool_t once = kFALSE;
    static TString linkedLibs;
@@ -4122,13 +4119,13 @@ const char *TWinNTSystem::GetLinkedLibraries()
       return linkedLibs;
 
    if (once)
-      return 0;
+      return nullptr;
 
    char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
                               kExecutePermission);
    if (!exe) {
       once = kTRUE;
-      return 0;
+      return nullptr;
    }
 
    HANDLE hFile, hMapping;
@@ -4136,18 +4133,18 @@ const char *TWinNTSystem::GetLinkedLibraries()
 
    if((hFile = CreateFile(exe,GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
       delete [] exe;
-      return 0;
+      return nullptr;
    }
    if(!(hMapping = CreateFileMapping(hFile,0,PAGE_READONLY|SEC_COMMIT,0,0,0))) {
       CloseHandle(hFile);
       delete [] exe;
-      return 0;
+      return nullptr;
    }
    if(!(basepointer = MapViewOfFile(hMapping,FILE_MAP_READ,0,0,0))) {
       CloseHandle(hMapping);
       CloseHandle(hFile);
       delete [] exe;
-      return 0;
+      return nullptr;
    }
 
    int sect;
@@ -4163,29 +4160,29 @@ const char *TWinNTSystem::GetLinkedLibraries()
 
    if(dos_head->e_magic!='ZM') {
       delete [] exe;
-      return 0;
+      return nullptr;
    }  // verify DOS-EXE-Header
    // after end of DOS-EXE-Header: offset to PE-Header
    pheader = (struct header *)((char*)dos_head + dos_head->e_lfanew);
 
    if(IsBadReadPtr(pheader,sizeof(struct header))) { // start of PE-Header
       delete [] exe;
-      return 0;
+      return nullptr;
    }
    if(pheader->signature!=IMAGE_NT_SIGNATURE) {      // verify PE format
       switch((unsigned short)pheader->signature) {
          case IMAGE_DOS_SIGNATURE:
             delete [] exe;
-            return 0;
+            return nullptr;
          case IMAGE_OS2_SIGNATURE:
             delete [] exe;
-            return 0;
+            return nullptr;
          case IMAGE_OS2_SIGNATURE_LE:
             delete [] exe;
-            return 0;
+            return nullptr;
          default: // unknown signature
             delete [] exe;
-            return 0;
+            return nullptr;
       }
    }
 #define isin(address,start,length) ((address)>=(start) && (address)<(start)+(length))
@@ -4243,7 +4240,7 @@ const char *TWinNTSystem::GetLinkedLibraries()
    once = kTRUE;
 
    if (linkedLibs.IsNull())
-      return 0;
+      return nullptr;
 
    return linkedLibs;
 }
@@ -4331,7 +4328,7 @@ void TWinNTSystem::AddTimer(TTimer *ti)
 
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
-   if (!ti) return 0;
+   if (!ti) return nullptr;
 
    TTimer *t = TSystem::RemoveTimer(ti);
    return t;
@@ -4496,7 +4493,7 @@ Int_t TWinNTSystem::Select(TList *act, Long_t to)
    TFdSet rd, wr;
    Int_t mxfd = -1;
    TIter next(act);
-   TFileHandler *h = 0;
+   TFileHandler *h = nullptr;
    while ((h = (TFileHandler *) next())) {
       Int_t fd = h->GetFd();
       if (h->HasReadInterest())
@@ -5533,10 +5530,10 @@ static const char *GetWindowsVersion()
    SYSTEM_INFO si;
    PGNSI pGNSI;
    BOOL bOsVersionInfoEx;
-   static char *strReturn = 0;
+   static char *strReturn = nullptr;
    char temp[512];
 
-   if (strReturn == 0)
+   if (!strReturn)
       strReturn = new char[2048];
    else
       return strReturn;
