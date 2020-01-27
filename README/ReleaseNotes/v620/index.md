@@ -73,6 +73,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
    the warning will become a hard error in the next releases.
  * The empty headers `Gtypes.h` and `Htypes.h` are deprecated. Please include
    `Rtypes.h`
+ * TInterpreter::EnableAutoLoading currently does nothing and is deprecated.
 
 ### Deprecated packages
 
