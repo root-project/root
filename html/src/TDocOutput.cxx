@@ -333,7 +333,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
 
    Int_t numReuseCanvases = 0;
    if (includeOutput && !(includeOutput & THtml::kForceOutput)) {
-      void* dirHandle = gSystem->OpenDirectory(gSystem->DirName(htmlFilename));
+      void* dirHandle = gSystem->OpenDirectory(gSystem->GetDirName(htmlFilename));
       if (dirHandle) {
          FileStat_t infile_stat;
          if (!gSystem->GetPathInfo(infilename, infile_stat)) {
@@ -359,10 +359,10 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
                 && outfile_stat.fMtime > infile_stat.fMtime) {
                // the first canvas file exists and it is newer than the script, so we reuse
                // the canvas files. We need to know how many there are:
-               dirHandle = gSystem->OpenDirectory(gSystem->DirName(htmlFilename));
+               dirHandle = gSystem->OpenDirectory(gSystem->GetDirName(htmlFilename));
                TString stem(gSystem->BaseName(outfilename));
                stem += "_";
-               TString dir(gSystem->DirName(htmlFilename));
+               TString dir = gSystem->GetDirName(htmlFilename);
                while ((outfile = gSystem->GetDirEntry(dirHandle))) {
                   if (strncmp(outfile, stem, stem.Length()))
                      continue;
@@ -410,7 +410,7 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             TPMERegexp reOutFile(baseInFileName + "_[[:digit:]]+\\.png");
 
             // remove all files matching what saveScriptOutput.C could produce:
-            void* outdirH = gSystem->OpenDirectory(gSystem->DirName(outfilename));
+            void* outdirH = gSystem->OpenDirectory(gSystem->GetDirName(outfilename));
             if (outdirH) {
                // the directory exists.
                const char* outdirE = 0;
@@ -425,11 +425,11 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
             gSystem->Exec(TString::Format("ROOT_HIST=0 root.exe -l -q %s $ROOTSYS/etc/html/saveScriptOutput.C\\(\\\"%s\\\",\\\"%s\\\",%d\\)",
                           gROOT->IsBatch() ? "-b" : "",
                           infilename,
-                          gSystem->DirName(outfilename),
+                          gSystem->GetDirName(outfilename).Data(),
                           includeOutput & THtml::kCompiledOutput));
 
             // determine how many output files were created:
-            outdirH = gSystem->OpenDirectory(gSystem->DirName(outfilename));
+            outdirH = gSystem->OpenDirectory(gSystem->GetDirName(outfilename));
             if (outdirH) {
                // the directory exists.
                const char* outdirE = 0;
@@ -443,20 +443,20 @@ void TDocOutput::Convert(std::istream& in, const char* infilename,
          } else {
             // run in this ROOT process
             TString pwd(gSystem->pwd());
-            gSystem->cd(gSystem->DirName(infilename));
+            gSystem->cd(gSystem->GetDirName(infilename));
 
-            TList* gClientGetListOfWindows = 0;
-            TObject* gClientGetDefaultRoot = 0;
+            TList* gClientGetListOfWindows = nullptr;
+            TObject* gClientGetDefaultRoot = nullptr;
             std::set<TObject*> previousWindows;
             if (gclient) {
                gROOT->ProcessLine(TString::Format("*((TList**)0x%lx) = ((TGClient*)0x%lx)->GetListOfWindows();",
                                                   (ULong_t)&gClientGetListOfWindows, (ULong_t)gclient));
                gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGClient*)0x%lx)->GetDefaultRoot();",
                                                   (ULong_t)&gClientGetDefaultRoot, (ULong_t)gclient));
-               TObject* win = 0;
+               TObject *win = nullptr;
                TIter iWin(gClientGetListOfWindows);
                while((win = iWin())) {
-                  TObject* winGetParent = 0;
+                  TObject *winGetParent = nullptr;
                   gROOT->ProcessLine(TString::Format("*((TObject**)0x%lx) = ((TGWindow*)0x%lx)->GetParent();",
                                                      (ULong_t)&winGetParent, (ULong_t)win));
                   if (winGetParent == gClientGetDefaultRoot)
