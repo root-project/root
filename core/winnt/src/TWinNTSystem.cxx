@@ -1233,7 +1233,7 @@ void TWinNTSystem::SetProgname(const char *name)
          // Warning("SetProgname",
          //   "Cannot find this program named \"%s\" (Did you create a TApplication? Is this program in your %%PATH%%?)",
          //   fullname);
-         gProgPath = WorkingDirectory();
+         gProgPath = StrDup(WorkingDirectory());
       }
 
       // Cut the extension for progname off
@@ -2193,7 +2193,7 @@ std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 {
    char mydir[kMAXPATHLEN] = "./";
    FillWithHomeDirectory(userName, mydir);
-   return std::string(mydir); 
+   return std::string(mydir);
 }
 
 //////////////////////////////////////////////////////////////////////////////
