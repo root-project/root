@@ -1730,14 +1730,17 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
             UInt_t w = sz;
             UInt_t h = sz;
 
-            if (img->GetWidth() > img->GetHeight()) {
-               h = (img->GetHeight()*sz)/img->GetWidth();
+            auto imgw = img->GetWidth();
+            auto imgh = img->GetHeight();
+
+            if (imgw > imgh) {
+               h = (imgh*sz) / (imgw > 0 ? imgw : 1);
             } else {
-               w = (img->GetWidth()*sz)/img->GetHeight();
+               w = (imgw*sz) / (imgh > 0 ? imgh : 1);
             }
 
-            w = w < 54 ? 54 : w;
-            h = h < 54 ? 54 : h;
+            w = (w < 54) ? 54 : w;
+            h = (h < 54) ? 54 : h;
 
             img->Scale(w, h);
             img->Merge(img, "tint");   // contrasting
