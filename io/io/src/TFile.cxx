@@ -2576,7 +2576,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       // Create a PAR file
       parname = gSystem->BaseName(dirname);
       if (parname.EndsWith(".par")) parname.ReplaceAll(".par","");
-      pardir = gSystem->DirName(dirname);
+      pardir = gSystem->GetDirName(dirname);
       // Cleanup or prepare the dirs
       TString path, filepath;
       void *dir = gSystem->OpenDirectory(pardir);
@@ -3739,7 +3739,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
          TString cachefilepathbasedir;
          cachefilepath = fgCacheFileDir;
          cachefilepath += fileurl.GetFile();
-         cachefilepathbasedir = gSystem->DirName(cachefilepath);
+         cachefilepathbasedir = gSystem->GetDirName(cachefilepath);
          if ((gSystem->mkdir(cachefilepathbasedir, kTRUE) < 0) &&
                (gSystem->AccessPathName(cachefilepathbasedir, kFileExists))) {
             ::Warning("TFile::OpenFromCache","you want to read through a cache, but I "

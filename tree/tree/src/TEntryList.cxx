@@ -1452,8 +1452,8 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
    }
    // Apply to ourselves
    Bool_t newobjs = kTRUE;
-   TString path = gSystem->DirName(fFileName), com;
-   TObjString *objs = 0;
+   TString path = gSystem->GetDirName(fFileName), com;
+   TObjString *objs = nullptr;
    TIter nxr(xrl);
    while ((objs = (TObjString *) nxr())) {
       Int_t rc = 0;
