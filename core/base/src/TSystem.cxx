@@ -104,6 +104,16 @@ ClassImp(TSystem);
 
 TVirtualMutex* gSystemMutex = nullptr;
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Strip off protocol string from specified path
+
+const char *TSystem::StripOffProto(const char *path, const char *proto)
+{
+   return !strncmp(path, proto, strlen(proto)) ? path + strlen(proto) : path;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new OS interface.
 
