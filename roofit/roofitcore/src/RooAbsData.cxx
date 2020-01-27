@@ -823,7 +823,7 @@ Int_t RooAbsData::defaultPrintContents(Option_t* /*opt*/) const
 /// \param[in] cutRange If specified, calculate inside the range named 'cutRange' (also applies cut spec)
 /// \return \f$ \frac{\left< \left( X - \left< X \right> \right)^n \right>}{\sigma^n} \f$,  where n = order.
 
-Double_t RooAbsData::standMoment(RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
+Double_t RooAbsData::standMoment(const RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
 {
   // Hardwire invariant answer for first and second moment
   if (order==1) return 0 ;
@@ -842,7 +842,7 @@ Double_t RooAbsData::standMoment(RooRealVar &var, Double_t order, const char* cu
 /// \return \f$ \left< \left( X - \left< X \right> \right)^n \right> \f$ of order \f$n\f$.
 ///
 
-Double_t RooAbsData::moment(RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
+Double_t RooAbsData::moment(const RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
 {
   Double_t offset = order>1 ? moment(var,1,cutSpec,cutRange) : 0 ;
   return moment(var,order,offset,cutSpec,cutRange) ;
@@ -855,7 +855,7 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, const char* cutSpec
 /// the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
 /// and/or are inside the range named 'cutRange'
 
-Double_t RooAbsData::moment(RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
+Double_t RooAbsData::moment(const RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
 {
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
@@ -899,7 +899,7 @@ Double_t RooAbsData::moment(RooRealVar &var, Double_t order, Double_t offset, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method to check if given RooRealVar maps to a RooRealVar in this dataset
 
-RooRealVar* RooAbsData::dataRealVar(const char* methodname, RooRealVar& extVar) const
+RooRealVar* RooAbsData::dataRealVar(const char* methodname, const RooRealVar& extVar) const
 {
   // Lookup variable in dataset
   RooRealVar *xdata = (RooRealVar*) _vars.find(extVar.GetName());
@@ -918,7 +918,7 @@ RooRealVar* RooAbsData::dataRealVar(const char* methodname, RooRealVar& extVar) 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method to calculate single correlation and covariance elements
 
-Double_t RooAbsData::corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const
+Double_t RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const
 {
   // Lookup variable in dataset
   RooRealVar *xdata = dataRealVar(corr?"correlation":"covariance",x) ;
@@ -1070,7 +1070,7 @@ TMatrixDSym* RooAbsData::corrcovMatrix(const RooArgList& vars, const char* cutSp
 /// cut specification expression 'cutSpec' and/or are inside the
 /// range named 'cutRange'
 
-RooRealVar* RooAbsData::meanVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
+RooRealVar* RooAbsData::meanVar(const RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
   // Create a new variable with appropriate strings. The error is calculated as
   // RMS/Sqrt(N) which is generally valid.
@@ -1106,7 +1106,7 @@ RooRealVar* RooAbsData::meanVar(RooRealVar &var, const char* cutSpec, const char
 /// cut specification expression 'cutSpec' and/or are inside the
 /// range named 'cutRange'
 
-RooRealVar* RooAbsData::rmsVar(RooRealVar &var, const char* cutSpec, const char* cutRange) const
+RooRealVar* RooAbsData::rmsVar(const RooRealVar &var, const char* cutSpec, const char* cutRange) const
 {
   // Create a new variable with appropriate strings. The error is calculated as
   // RMS/(2*Sqrt(N)) which is only valid if the variable has a Gaussian distribution.
@@ -2116,7 +2116,7 @@ Roo1DTable* RooAbsData::table(const RooAbsCategory& cat, const char* cuts, const
 /// observable 'var' in this dataset. If the return value is kTRUE and error
 /// occurred
 
-Bool_t RooAbsData::getRange(RooRealVar& var, Double_t& lowest, Double_t& highest, Double_t marginFrac, Bool_t symMode) const
+Bool_t RooAbsData::getRange(const RooRealVar& var, double& lowest, double& highest, double marginFrac, bool symMode) const
 {
   // Lookup variable in dataset
   RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
