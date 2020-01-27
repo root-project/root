@@ -102,7 +102,7 @@ Bool_t TProcessEventTimer::ProcessEvents()
 
 ClassImp(TSystem);
 
-TVirtualMutex* gSystemMutex = 0;
+TVirtualMutex* gSystemMutex = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new OS interface.
@@ -159,7 +159,7 @@ TSystem::~TSystem()
    }
 
    if (gSystem == this)
-      gSystem = 0;
+      gSystem = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +279,7 @@ void TSystem::ResetErrno()
 
 void TSystem::RemoveOnExit(TObject *obj)
 {
-   if (fOnExitList == 0)
+   if (!fOnExitList)
       fOnExitList = new TOrdCollection;
    if (fOnExitList->FindObject(obj) == 0)
       fOnExitList->Add(obj);
@@ -458,7 +458,7 @@ TTime TSystem::Now()
 
 void TSystem::AddTimer(TTimer *ti)
 {
-   if (ti && fTimers && (fTimers->FindObject(ti) == 0))
+   if (ti && fTimers && (fTimers->FindObject(ti) == nullptr))
       fTimers->Add(ti);
 }
 
@@ -472,7 +472,7 @@ TTimer *TSystem::RemoveTimer(TTimer *ti)
       TTimer *tr = (TTimer*) fTimers->Remove(ti);
       return tr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -484,7 +484,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
    if (!fTimers) return -1;
 
    TOrdCollectionIter it((TOrdCollection*)fTimers);
-   TTimer *t, *to = 0;
+   TTimer *t, *to = nullptr;
    Long64_t tt, tnow = Now();
    Long_t   timeout = -1;
 
@@ -519,7 +519,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
 void TSystem::AddSignalHandler(TSignalHandler *h)
 {
-   if (h && fSignalHandler && (fSignalHandler->FindObject(h) == 0))
+   if (h && fSignalHandler && (fSignalHandler->FindObject(h) == nullptr))
       fSignalHandler->Add(h);
 }
 
@@ -532,7 +532,7 @@ TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
    if (fSignalHandler)
       return (TSignalHandler *)fSignalHandler->Remove(h);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -554,7 +554,7 @@ TFileHandler *TSystem::RemoveFileHandler(TFileHandler *h)
    if (fFileHandler)
       return (TFileHandler *)fFileHandler->Remove(h);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -611,7 +611,7 @@ TStdExceptionHandler *TSystem::RemoveStdExceptionHandler(TStdExceptionHandler *e
    if (fStdExceptionHandler)
       return (TStdExceptionHandler *)fStdExceptionHandler->Remove(eh);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -650,7 +650,7 @@ int TSystem::Exec(const char*)
 FILE *TSystem::OpenPipe(const char*, const char*)
 {
    AbstractMethod("OpenPipe");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,7 +740,7 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       if (!GetDirPtr()) {
          TUrl url(path, kTRUE);
          if (!strcmp(url.GetProtocol(), "file"))
-            return 0;
+            return nullptr;
       }
    }
 
@@ -751,7 +751,7 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
          return helper;
 
    if (!path)
-      return 0;
+      return nullptr;
 
    // create new helper
    TRegexp re("^root.*:");  // also roots, rootk, etc
@@ -760,12 +760,12 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       // (x)rootd daemon ...
       if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
          if (h->LoadPlugin() == -1)
-            return 0;
+            return nullptr;
          helper = (TSystem*) h->ExecPlugin(2, path, kFALSE);
       }
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       helper = (TSystem*) h->ExecPlugin(0);
    }
 
@@ -811,16 +811,16 @@ int TSystem::MakeDirectory(const char*)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a directory. Returns 0 if directory does not exist.
 
-void *TSystem::OpenDirectory(const char*)
+void *TSystem::OpenDirectory(const char *)
 {
    AbstractMethod("OpenDirectory");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Free a directory.
 
-void TSystem::FreeDirectory(void*)
+void TSystem::FreeDirectory(void *)
 {
    AbstractMethod("FreeDirectory");
 }
@@ -828,16 +828,16 @@ void TSystem::FreeDirectory(void*)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a directory entry. Returns 0 if no more entries.
 
-const char *TSystem::GetDirEntry(void*)
+const char *TSystem::GetDirEntry(void *)
 {
    AbstractMethod("GetDirEntry");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change directory.
 
-Bool_t TSystem::ChangeDirectory(const char*)
+Bool_t TSystem::ChangeDirectory(const char *)
 {
    AbstractMethod("ChangeDirectory");
    return kFALSE;
@@ -848,7 +848,7 @@ Bool_t TSystem::ChangeDirectory(const char*)
 
 const char *TSystem::WorkingDirectory()
 {
-   return 0;
+   return  nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -862,9 +862,9 @@ std::string TSystem::GetWorkingDirectory() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the user's home directory.
 
-const char *TSystem::HomeDirectory(const char*)
+const char *TSystem::HomeDirectory(const char *)
 {
-   return 0;
+   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -920,7 +920,7 @@ const char *TSystem::BaseName(const char *name)
       return name;
    }
    Error("BaseName", "name = 0");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1042,7 +1042,7 @@ char *TSystem::ConcatFileName(const char *dir, const char *name)
 const char *TSystem::PrependPathName(const char *, TString&)
 {
    AbstractMethod("PrependPathName");
-   return 0;
+   return nullptr;
 }
 
 
@@ -1245,7 +1245,7 @@ Bool_t TSystem::ExpandPathName(TString&)
 
 char *TSystem::ExpandPathName(const char *)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1443,7 +1443,7 @@ int TSystem::GetFsInfo(const char *, Long_t *, Long_t *, Long_t *, Long_t *)
 const char *TSystem::TempDirectory() const
 {
    AbstractMethod("TempDirectory");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1458,7 +1458,7 @@ const char *TSystem::TempDirectory() const
 FILE *TSystem::TempFileName(TString &, const char *)
 {
    AbstractMethod("TempFileName");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1497,7 +1497,7 @@ int TSystem::Utime(const char *, Long_t, Long_t)
 const char *TSystem::FindFile(const char *, TString&, EAccessMode)
 {
    AbstractMethod("FindFile");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1508,7 +1508,8 @@ char *TSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
    TString wfilString(wfil);
    FindFile(search, wfilString, mode);
-   if (wfilString.IsNull()) return 0;
+   if (wfilString.IsNull())
+      return nullptr;
    return StrDup(wfilString.Data());
 }
 
@@ -1559,7 +1560,7 @@ Int_t TSystem::GetEffectiveGid()
 UserGroup_t *TSystem::GetUserInfo(Int_t /*uid*/)
 {
    AbstractMethod("GetUserInfo");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1570,7 +1571,7 @@ UserGroup_t *TSystem::GetUserInfo(Int_t /*uid*/)
 UserGroup_t *TSystem::GetUserInfo(const char * /*user*/)
 {
    AbstractMethod("GetUserInfo");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1583,7 +1584,7 @@ UserGroup_t *TSystem::GetUserInfo(const char * /*user*/)
 UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
 {
    AbstractMethod("GetGroupInfo");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1596,7 +1597,7 @@ UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
 UserGroup_t *TSystem::GetGroupInfo(const char * /*group*/)
 {
    AbstractMethod("GetGroupInfo");
-   return 0;
+   return nullptr;
 }
 
 //---- environment manipulation ------------------------------------------------
@@ -1623,7 +1624,7 @@ void TSystem::Unsetenv(const char *name)
 const char *TSystem::Getenv(const char*)
 {
    AbstractMethod("Getenv");
-   return 0;
+   return nullptr;
 }
 
 //---- System Logging ----------------------------------------------------------
@@ -1695,7 +1696,7 @@ void TSystem::ShowOutput(RedirectHandle_t *h)
    }
 
    // Open the file
-   FILE *f = 0;
+   FILE *f = nullptr;
    if (!(f = fopen(h->fFile.Data(), "r"))) {
       Error("ShowOutput", "file '%s' cannot be open", h->fFile.Data());
       return;
@@ -1753,7 +1754,7 @@ void TSystem::AddDynamicPath(const char *)
 const char* TSystem::GetDynamicPath()
 {
    AbstractMethod("GetDynamicPath");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1993,7 +1994,7 @@ char *TSystem::DynamicPathName(const char *lib, Bool_t quiet /*=kFALSE*/)
    TString sLib(lib);
    if (FindDynamicLibrary(sLib, quiet))
       return StrDup(sLib);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2005,7 +2006,7 @@ char *TSystem::DynamicPathName(const char *lib, Bool_t quiet /*=kFALSE*/)
 const char *TSystem::FindDynamicLibrary(TString&, Bool_t)
 {
    AbstractMethod("FindDynamicLibrary");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2341,7 +2342,7 @@ int TSystem::GetServiceByName(const char *)
 char *TSystem::GetServiceByPort(int)
 {
    AbstractMethod("GetServiceByPort");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3984,8 +3985,10 @@ const char *TSystem::GetObjExt() const
 void TSystem::SetBuildDir(const char* build_dir, Bool_t isflat)
 {
    fBuildDir = build_dir;
-   if (isflat) fAclicProperties |= (kFlatBuildDir & kBitMask);
-   else fAclicProperties &= ~(kFlatBuildDir & kBitMask);
+   if (isflat)
+      fAclicProperties |= (kFlatBuildDir & kBitMask);
+   else
+      fAclicProperties &= ~(kFlatBuildDir & kBitMask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4210,37 +4213,37 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
       bool inString = false;
       Ssiz_t posArgBegin = posArgEnd - 1;
       for (; parenNestCount && posArgBegin >= 0; --posArgBegin) {
-	 // Escaped if the previous character is a `\` - but not if it
-	 // itself is preceded by a `\`!
-	 if (posArgBegin > 0 && filenameCopy[posArgBegin] == '\\' &&
-	     (posArgBegin == 1 || filenameCopy[posArgBegin - 1] != '\\')) {
-	    // skip escape.
-	    --posArgBegin;
-	    continue;
-	 }
-	 switch (filenameCopy[posArgBegin]) {
-	 case ')':
-	    if (!inString)
-	       ++parenNestCount;
-	    break;
-	 case '(':
-	    if (!inString)
-	       --parenNestCount;
-	    break;
-	 case '"': inString = !inString; break;
-	 }
+         // Escaped if the previous character is a `\` - but not if it
+         // itself is preceded by a `\`!
+         if (posArgBegin > 0 && filenameCopy[posArgBegin] == '\\' &&
+             (posArgBegin == 1 || filenameCopy[posArgBegin - 1] != '\\')) {
+            // skip escape.
+            --posArgBegin;
+            continue;
+         }
+         switch (filenameCopy[posArgBegin]) {
+         case ')':
+            if (!inString)
+               ++parenNestCount;
+            break;
+         case '(':
+            if (!inString)
+               --parenNestCount;
+            break;
+         case '"': inString = !inString; break;
+         }
       }
       if (parenNestCount || inString) {
-	 Error("SplitAclicMode", "Cannot parse argument in %s", filename);
+         Error("SplitAclicMode", "Cannot parse argument in %s", filename);
       } else {
-	 arguments = filenameCopy(posArgBegin + 1, posArgEnd - 1);
-	 fname[posArgBegin + 1] = 0;
+         arguments = filenameCopy(posArgBegin + 1, posArgEnd - 1);
+         fname[posArgBegin + 1] = 0;
       }
    }
 
    // strip off I/O redirect tokens from filename
    {
-      char *s2   = 0;
+      char *s2   = nullptr;
       char *s3;
       s2 = strstr(fname, ">>");
       if (!s2) s2 = strstr(fname, "2>");
