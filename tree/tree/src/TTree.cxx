@@ -8569,7 +8569,7 @@ void TTree::SetCircular(Long64_t maxEntries)
       //a file, reset the compression level to the file compression level
       if (fDirectory) {
          TFile* bfile = fDirectory->GetFile();
-         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          if (bfile) {
             compress = bfile->GetCompressionSettings();
          }
