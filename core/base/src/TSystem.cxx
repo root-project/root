@@ -55,14 +55,14 @@ allows a simple partial implementation for new OS'es.
 #include <io.h>
 #endif
 
-const char *gRootDir;
-const char *gProgName;
-const char *gProgPath;
+const char *gRootDir = nullptr;
+const char *gProgName = nullptr;
+const char *gProgPath = nullptr;
 
-TSystem      *gSystem   = 0;
-TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+TSystem      *gSystem   = nullptr;
+TFileHandler *gXDisplay = nullptr;  // Display server event handler, set in TGClient
 
-static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
+static Int_t *gLibraryVersion    = nullptr;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
@@ -232,6 +232,9 @@ Bool_t TSystem::Init()
 
 void TSystem::SetProgname(const char *name)
 {
+   if (gProgName)
+      delete [] gProgName;
+
    gProgName = StrDup(name);
 }
 
