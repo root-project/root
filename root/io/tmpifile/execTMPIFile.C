@@ -1,4 +1,4 @@
-void test_tmpi()
+void exec_tmpi()
 {
    Int_t N_collectors = 2;
    Int_t sync_rate = 10;
@@ -9,7 +9,7 @@ void test_tmpi()
    Int_t hitam = 200;
    Int_t hitbm = 100;
 
-   TMPIFile *newfile = new TMPIFile("test_tmpifile.root", "RECREATE", N_collectors);
+   TMPIFile *newfile = new TMPIFile("exec_tmpifile.root", "RECREATE", N_collectors);
    gRandom->SetSeed(gRandom->GetSeed() + newfile->GetMPIGlobalRank());
 
    if (newfile->IsCollector()) {
@@ -52,7 +52,7 @@ void test_tmpi()
 
 int execTMPIFile()
 {
-   test_tmpi();
+   exec_tmpi();
 
    return 0;
 }
