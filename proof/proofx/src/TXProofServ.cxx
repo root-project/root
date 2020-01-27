@@ -708,7 +708,7 @@ Int_t TXProofServ::Setup()
       fTopSessionTag = "";
       // Try to extract it from log file path (for backward compatibility)
       if (gSystem->Getenv("ROOTPROOFLOGFILE")) {
-         fTopSessionTag = gSystem->DirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
+         fTopSessionTag = gSystem->GetDirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
          Ssiz_t lstl;
          if ((lstl = fTopSessionTag.Last('/')) != kNPOS) fTopSessionTag.Remove(0, lstl + 1);
          if (fTopSessionTag.BeginsWith("session-")) {

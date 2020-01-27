@@ -1510,7 +1510,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                ProcessLine(str);
                if (hasfn) {
                   gSystem->ChangeDirectory(ocwd);
-                  fCacheLock->Unlock();                 
+                  fCacheLock->Unlock();
                }
             }
 
@@ -2977,7 +2977,7 @@ Int_t TProofServ::SetupCommon()
          TString compiler = COMPILER;
          if (compiler.Index("is ") != kNPOS)
             compiler.Remove(0, compiler.Index("is ") + 3);
-         compiler = gSystem->DirName(compiler);
+         compiler = gSystem->GetDirName(compiler);
          if (icomp == 1) {
             if (!bindir.IsNull()) bindir += ":";
             bindir += compiler;

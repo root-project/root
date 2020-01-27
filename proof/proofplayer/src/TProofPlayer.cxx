@@ -982,7 +982,7 @@ Int_t TProofPlayer::AssertSelector(const char *selector_file)
          gSystem->ChangeDirectory(ocwd);
          gProofServ->GetCacheLock()->Unlock();
       }
- 
+
       if (!fSelector) {
          Error("AssertSelector", "cannot load: %s", selector_file );
         return -1;
@@ -1831,7 +1831,7 @@ void TProofPlayerRemote::SetMerging(Bool_t on)
             fQuery->SetMergeTime(rt);
             fQuery->SetNumMergers(fNumMergers);
          } else {
-            // In a standard client we save the transfer-to-client time 
+            // In a standard client we save the transfer-to-client time
             fQuery->SetRecvTime(rt);
          }
          PDB(kGlobal,2) fQuery->Print("F");
@@ -3069,7 +3069,7 @@ Bool_t TProofPlayerRemote::SendSelector(const char* selector_file)
 
    // Update the macro path
    TString mp(TROOT::GetMacroPath());
-   TString np(gSystem->DirName(selec));
+   TString np = gSystem->GetDirName(selec);
    if (!np.IsNull()) {
       np += ":";
       if (!mp.BeginsWith(np) && !mp.Contains(":"+np)) {
@@ -3211,11 +3211,11 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
             // The ordinal
             pf->SetWorkerOrdinal("0");
             // The dir
-            pf->SetDir(gSystem->DirName(pf->GetOutputFileName()));
+            pf->SetDir(gSystem->GetDirName(pf->GetOutputFileName()));
             // The filename and raw dir
             TUrl u(pf->GetOutputFileName(), kTRUE);
             pf->SetFileName(gSystem->BaseName(u.GetFile()));
-            pf->SetDir(gSystem->DirName(u.GetFile()), kTRUE);
+            pf->SetDir(gSystem->GetDirName(u.GetFile()), kTRUE);
             // Notify the output path
             Printf("\nOutput file: %s", pf->GetOutputFileName());
          }
@@ -4202,7 +4202,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if (e == 0) {
-      PDB(kPacketizer,2) 
+      PDB(kPacketizer,2)
          Info("GetNextPacket","%s: done!", slave->GetOrdinal());
    } else if (e == (TDSetElement*) -1) {
       PDB(kPacketizer,2)
