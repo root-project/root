@@ -761,14 +761,14 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       for (it = unknown.begin(); it != unknown.end(); ++it) {
          TClass* cl = TClass::GetClass(it->c_str());
          if (cl && cl->GetDeclFileName()) {
-            TString header(gSystem->BaseName(cl->GetDeclFileName()));
-            TString dir(gSystem->DirName(cl->GetDeclFileName()));
+            TString header = gSystem->BaseName(cl->GetDeclFileName());
+            TString dir = gSystem->GetDirName(cl->GetDeclFileName());
             TString dirbase(gSystem->BaseName(dir));
             while (dirbase.Length() && dirbase != "."
                    && dirbase != "include" && dirbase != "inc"
                    && dirbase != "prec_stl") {
                gSystem->PrependPathName(dirbase, header);
-               dir = gSystem->DirName(dir);
+               dir = gSystem->GetDirName(dir);
             }
             fileContent += TString("#include \"") + header + "\"\n";
          }

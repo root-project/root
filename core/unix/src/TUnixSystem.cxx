@@ -464,8 +464,8 @@ static void SetRootSys()
          if (!gSystem->Getenv("ROOTSYS"))
             ::SysError("TUnixSystem::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
       } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+         TString rs = gSystem->GetDirName(respath);
+         gSystem->Setenv("ROOTSYS", gSystem->GetDirName(rs.Data()).Data());
       }
    }
 #ifdef ROOTPREFIX
@@ -507,8 +507,8 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
          if (!gSystem->Getenv("ROOTSYS"))
             ::SysError("TUnixSystem::DylibAdded", "error getting realpath of libCore, please set ROOTSYS in the shell");
       } else {
-         TString rs = gSystem->DirName(respath);
-         gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
+         TString rs = gSystem->GetDirName(respath);
+         gSystem->Setenv("ROOTSYS", gSystem->GetDirName(rs.Data()).Data());
       }
    }
 #ifdef ROOTPREFIX
