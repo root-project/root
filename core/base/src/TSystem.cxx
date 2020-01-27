@@ -107,34 +107,10 @@ TVirtualMutex* gSystemMutex = 0;
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new OS interface.
 
-TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAclicProperties(0)
+TSystem::TSystem(const char *name, const char *title) : TNamed(name, title)
 {
    if (gSystem && name[0] != '-' && strcmp(name, "Generic"))
       Error("TSystem", "only one instance of TSystem allowed");
-
-   fOnExitList          = 0;
-   fSignalHandler       = 0;
-   fFileHandler         = 0;
-   fStdExceptionHandler = 0;
-   fTimers              = 0;
-   fCompiled            = 0;
-   fHelpers             = 0;
-   fInsideNotify        = kFALSE;
-   fBeepDuration        = 0;
-   fBeepFreq            = 0;
-   fReadmask            = 0;
-   fWritemask           = 0;
-   fReadready           = 0;
-   fWriteready          = 0;
-   fSignals             = 0;
-   fDone                = kFALSE;
-   fAclicMode           = kDefault;
-   fInControl           = kFALSE;
-   fLevel               = 0;
-   fMaxrfd              = -1;
-   fMaxwfd              = -1;
-   fNfd                 = 0;
-   fSigcnt              = 0;
 
    if (!gLibraryVersion) {
       gLibraryVersion = new Int_t [gLibraryVersionMax];
