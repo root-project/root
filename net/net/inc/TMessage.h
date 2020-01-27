@@ -83,7 +83,7 @@ public:
    Int_t    GetCompressionSettings() const;
    void     SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
    void     SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
-   void     SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   void     SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    Int_t    Compress();
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
