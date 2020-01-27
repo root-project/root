@@ -34,7 +34,6 @@ private:
    void FillWithCwd(char *cwd) const;
 
 protected:
-   const char    *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE) override;
    const char    *GetLinkedLibraries() override;
 
    // static functions providing semi-low level interface to raw Unix
@@ -180,6 +179,7 @@ public:
    void              AddDynamicPath(const char *lib) override;
    const char       *GetDynamicPath() override;
    void              SetDynamicPath(const char *lib) override;
+   const char       *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE) override;
    Func_t            DynFindSymbol(const char *module, const char *entry) override;
    int               Load(const char *module, const char *entry = "", Bool_t system = kFALSE) override;
    void              Unload(const char *module) override;
