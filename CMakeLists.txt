@@ -220,7 +220,7 @@ foreach(artifact_file ${artifact_files})
   # target below will interfere.
   if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
       COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
       DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
     list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
