@@ -162,7 +162,7 @@ TList *TRemoteObject::Browse()
             if (!strcmp(fname.Data(), "."))
                sdirpath = name;
             else if (!strcmp(fname.Data(), ".."))
-               sdirpath = gSystem->DirName(name);
+               sdirpath = gSystem->GetDirName(name);
             else {
                sdirpath =  name;
                if (!sdirpath.EndsWith("/"))

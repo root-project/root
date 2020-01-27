@@ -95,7 +95,7 @@ TList *TSystemDirectory::GetListOfFiles() const
          if (file[0] == '.' && file[1] == '\0')
             sdirpath = GetTitle();
          else if (file[0] == '.' && file[1] == '.' && file[2] == '.')
-            sdirpath = gSystem->DirName(GetTitle());
+            sdirpath = gSystem->GetDirName(GetTitle());
          else {
             sdirpath = GetTitle();
             if (!sdirpath.EndsWith("/"))
@@ -172,7 +172,7 @@ void TSystemDirectory::Browse(TBrowser *b)
          if (!strcmp(file, "."))
             sdirpath = name;
          else if (!strcmp(file, ".."))
-            sdirpath = gSystem->DirName(name);
+            sdirpath = gSystem->GetDirName(name);
          else {
             sdirpath =  name;
             if (!sdirpath.EndsWith("/"))
