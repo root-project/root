@@ -1702,11 +1702,16 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
          TSystemFile *sf = (TSystemFile*)obj;
          const TGPicture *pic, *spic;
 
-         TIconBoxThumb *thumb = 0;
-         TString path = gSystem->IsAbsoluteFileName(sf->GetName()) ? sf->GetName() :
-                        gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
+         TString path;
+         if (gSystem->IsAbsoluteFileName(sf->GetName())) {
+            path = sf->GetName();
+         } else {
+            char *buf = gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
+            path = buf;
+            delete [] buf;
+         }
 
-         thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path);
+         TIconBoxThumb *thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path.Data());
 
          if (thumb) {
             spic = thumb->fSmall;
