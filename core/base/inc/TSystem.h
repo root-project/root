@@ -331,9 +331,7 @@ protected:
    virtual const char    *GetLinkedLibraries();
    virtual void           DoBeep(Int_t /*freq*/=-1, Int_t /*duration*/=-1) const { printf("\a"); fflush(stdout); }
 
-   static const char *StripOffProto(const char *path, const char *proto) {
-      return !strncmp(path, proto, strlen(proto)) ? path + strlen(proto) : path;
-   }
+   static const char     *StripOffProto(const char *path, const char *proto);
 
 private:
    TSystem(const TSystem&) = delete;              // not implemented
