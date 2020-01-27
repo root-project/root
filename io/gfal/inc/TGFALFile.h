@@ -35,7 +35,7 @@ private:
 
 public:
    TGFALFile(const char *url, Option_t *option="",
-             const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+             const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    ~TGFALFile();
 
    Bool_t  ReadBuffer(char *buf, Int_t len);
