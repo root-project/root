@@ -1467,8 +1467,19 @@ void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
 
-   // We are set up. EnableAutoLoading() is checking for fromRootCling.
-   EnableAutoLoading();
+   // We are set up. Enable ROOT's AutoLoading.
+   if (IsFromRootCling())
+      return;
+
+   // Read the rules before enabling the auto loading to not inadvertently
+   // load the libraries for the classes concerned even-though the user is
+   // *not* using them.
+   // Note this call must happen before the first call to LoadLibraryMap.
+   assert(GetRootMapFiles() == 0 && "Must be called before LoadLibraryMap!");
+   TClass::ReadRules(); // Read the default customization rules ...
+
+   LoadLibraryMap();
+   SetClassAutoloading(true);
 }
 
 void TCling::ShutDown()
@@ -2925,18 +2936,11 @@ bool TCling::Declare(const char* code)
 
 void TCling::EnableAutoLoading()
 {
-   if (IsFromRootCling())
-      return;
-
-   // Read the rules before enabling the auto loading to not inadvertently
-   // load the libraries for the classes concerned even-though the user is
-   // *not* using them.
-   // Note this call must happen before the first call to LoadLibraryMap.
-   assert(GetRootMapFiles() == 0 && "Must be called before LoadLibraryMap!");
-   TClass::ReadRules(); // Read the default customization rules ...
-
-   LoadLibraryMap();
-   SetClassAutoloading(true);
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,21,00)
+   Warning("EnableAutoLoading()", "Call to deprecated interface does nothing. Please remove the call.");
+#else
+# error "Remove this deprecated code"
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
