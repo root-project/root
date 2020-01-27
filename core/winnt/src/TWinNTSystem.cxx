@@ -1212,12 +1212,12 @@ void TWinNTSystem::SetProgname(const char *name)
       if (which) {
          TString dirname;
          char driveletter = DriveName(which);
-         const char *d = DirName(which);
+         TString d = GetDirName(which);
 
          if (driveletter) {
-            dirname.Form("%c:%s", driveletter, d);
+            dirname.Form("%c:%s", driveletter, d.Data());
          } else {
-            dirname.Form("%s", d);
+            dirname = d;
          }
 
          gProgPath = StrDup(dirname);
@@ -1857,7 +1857,7 @@ Bool_t TWinNTSystem::CheckDescriptors()
 int TWinNTSystem::mkdir(const char *name, Bool_t recursive)
 {
    if (recursive) {
-      TString dirname = DirName(name);
+      TString dirname = GetDirName(name);
       if (dirname.Length() == 0) {
          // well we should not have to make the root of the file system!
          // (and this avoid infinite recursions!)
