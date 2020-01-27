@@ -1242,6 +1242,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 /// <tr><td> `Minos(const RooArgSet& set)`     <td>  Only run MINOS on given subset of arguments
 /// <tr><td> `Save(Bool_t flag)`               <td>  Flag controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`            <td>  Set Minuit strategy (0 to 2, default is 1)
+/// <tr><td> `EvalErrorWall(bool flag=true)    <td>  When parameters are in disallowed regions (e.g. PDF is negative), return very high value to fitter
+///                                                  to force it out of that region. This can, however, mean that the fitter gets lost in this region. If
+///                                                  this happens, try switching it off.
 /// <tr><td> `FitOptions(const char* optStr)`  <td>  \deprecated Steer fit with classic options string (for backward compatibility).
 ///                                                \attention Use of this option excludes use of any of the new style steering options.
 ///
