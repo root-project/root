@@ -234,3 +234,81 @@ TEST(TreeProcessorMT, PathName)
    EXPECT_EQ(n.load(), 1499064U) << "Wrong number of events processed!\n";
 }
 #endif
+
+TEST(TreeProcessorMT, TreeWithFriendTree)
+{
+   std::vector<std::string> fileNames = {"TreeWithFriendTree_Tree.root", "TreeWithFriendTree_Friend.root"};
+   for (auto &name : fileNames) {
+      TFile f(name.c_str(), "RECREATE");
+      TTree t("treeName", "treeTitle");
+      t.Write();
+      f.Close();
+   }
+
+   ROOT::EnableThreadSafety();
+   auto procLambda = [](TTreeReader &r) {
+      while (r.Next())
+         ;
+   };
+
+   auto f1 = TFile::Open(fileNames[0].c_str());
+   auto t1 = (TTree *)f1->Get("treeName");
+
+   auto f2 = TFile::Open(fileNames[1].c_str());
+   auto t2 = (TTree *)f2->Get("treeName");
+
+   t1->AddFriend(t2);
+
+   ROOT::TTreeProcessorMT tp(*t1);
+   tp.Process(procLambda);
+
+   DeleteFiles(fileNames);
+}
+
+TEST(TreeProcessorMT, ChainWithFriendChain)
+{
+   std::vector<std::string> fileNames = {"ChainWithFriendChain_Tree1.root", "ChainWithFriendChain_Tree2.root", "ChainWithFriendChain_Friend1.root", "ChainWithFriendChain_Friend2.root"};
+   for (auto &name : fileNames) {
+      TFile f(name.c_str(), "RECREATE");
+      TTree t("treeName", "treeTitle");
+      t.Write();
+      f.Close();
+   }
+
+   ROOT::EnableThreadSafety();
+   auto procLambda = [](TTreeReader &r) {
+      while (r.Next())
+         ;
+   };
+
+   // Version 1: Use tree name in constructor
+   TChain c1("treeName");
+   c1.AddFile(fileNames[0].c_str());
+   c1.AddFile(fileNames[1].c_str());
+
+   TChain c2("treeName");
+   c2.AddFile(fileNames[2].c_str());
+   c2.AddFile(fileNames[3].c_str());
+
+   c1.AddFriend(&c2);
+
+   ROOT::TTreeProcessorMT tp1(c1);
+   tp1.Process(procLambda);
+
+   // Version 2: Use tree name in AddFile
+   TChain c3;
+   c3.AddFile((fileNames[0] + "/treeName").c_str());
+   c3.AddFile((fileNames[1] + "/treeName").c_str());
+
+   TChain c4;
+   c4.AddFile((fileNames[2] + "/treeName").c_str());
+   c4.AddFile((fileNames[3] + "/treeName").c_str());
+
+   c3.AddFriend(&c4);
+
+   ROOT::TTreeProcessorMT tp2(c3);
+   tp2.Process(procLambda);
+
+   // Clean-up
+   DeleteFiles(fileNames);
+}
