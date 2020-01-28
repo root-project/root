@@ -172,7 +172,29 @@ void DiagnosticsEngine::DiagStateMap::append(SourceManager &SrcMgr,
        Offset = F->ParentOffset, F = F->Parent) {
     F->HasLocalTransitions = true;
     auto &Last = F->StateTransitions.back();
-    assert(Last.Offset <= Offset && "state transitions added out of order");
+    if (Last.Offset > Offset) {
+      // Deal with a state change induce by recursive parsing.  The first parsing is
+      // suspended and a (recursive) parsing is started between associated (in the upper/outer
+      // file) with a newer line (hence greater offset).  After the end of the recursive
+      // parsing, we go back to the first parsing and any state change will done 'earlier'
+      // and trigger:
+      //   assert(Last.Offset <= Offset && "state transitions added out of order");
+      auto OnePastIt = std::upper_bound(
+        F->StateTransitions.begin(), F->StateTransitions.end(), Offset,
+        [](unsigned Offset, const DiagStatePoint &P) {
+          return Offset < P.Offset;
+        });
+      if (OnePastIt == F->StateTransitions.begin() || (OnePastIt[-1].Offset != Offset)) {
+        F->StateTransitions.insert( OnePastIt, {State, Offset});
+      } else {
+        auto &Prev = OnePastIt[-1];
+        if (Prev.State == State)
+          break;
+        Prev.State = State;
+        continue;
+      }
+      continue;
+    }
 
     if (Last.Offset == Offset) {
       if (Last.State == State)
