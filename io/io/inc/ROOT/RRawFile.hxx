@@ -20,10 +20,7 @@
 #include <string>
 
 namespace ROOT {
-namespace Experimental {
 namespace Detail {
-
-class RRawFile;
 
 /**
  * \class RRawFile RRawFile.hxx
@@ -180,10 +177,9 @@ public:
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string &line);
-};
+}; // class RRawFile
 
 } // namespace Detail
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
