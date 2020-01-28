@@ -328,26 +328,37 @@ Internal::FriendInfo TTreeProcessorMT::GetFriendInfo(TTree &tree)
 
    for (auto fr : *friends) {
       const auto frTree = static_cast<TFriendElement *>(fr)->GetTree();
+      const bool isChain = frTree->IsA() == TChain::Class();
 
-      // Check if friend tree has an alias
-      const auto realName = frTree->GetName();
-      const auto alias = tree.GetFriendAlias(frTree);
-      if (alias) {
-         friendNames.emplace_back(std::make_pair(realName, std::string(alias)));
-      } else {
-         friendNames.emplace_back(std::make_pair(realName, ""));
-      }
-
-      // Store the file names of the friend tree
       friendFileNames.emplace_back();
       auto &fileNames = friendFileNames.back();
-      const bool isChain = tree.IsA() == TChain::Class();
+
+      // Check if friend tree/chain has an alias
+      const auto alias_c = tree.GetFriendAlias(frTree);
+      const std::string alias = alias_c != nullptr ? alias_c : "";
+
       if (isChain) {
-         const auto frChain = static_cast<TChain *>(frTree);
-         for (auto f : *(frChain->GetListOfFiles())) {
+         // Note that each TChainElement returned by chain.GetListOfFiles has a name
+         // equal to the tree name of this TChain and a title equal to the filename.
+         // Accessing the information like this ensures that we get the correct
+         // filenames and treenames if the treename is given as part of the filename
+         // via chain.AddFile(file.root/myTree) and as well if the tree name is given
+         // in the constructor via TChain(myTree) and a file is added later by chain.AddFile(file.root).
+
+         // Get name of the trees building the chain
+         const auto chainFiles = static_cast<TChain*>(frTree)->GetListOfFiles();
+         const auto realName = chainFiles->First()->GetName();
+         friendNames.emplace_back(std::make_pair(realName, alias));
+         // Get filenames stored in the title member
+         for (auto f : *chainFiles) {
             fileNames.emplace_back(f->GetTitle());
          }
       } else {
+         // Get name of the tree
+         const auto realName = frTree->GetName();
+         friendNames.emplace_back(std::make_pair(realName, alias));
+
+         // Get filename
          const auto f = frTree->GetCurrentFile();
          if (!f)
             throw std::runtime_error("Friend trees with no associated file are not supported.");
