@@ -38,10 +38,6 @@ ROOT::Internal::RRawFileWin::~RRawFileWin()
 }
 
 std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileWin::Clone() const
-{
-   return std::make_unique<RRawFileWin>(fUrl, fOptions);
-}
-
 std::uint64_t ROOT::Internal::RRawFileWin::GetSizeImpl()
 {
    Seek(0L, SEEK_END);

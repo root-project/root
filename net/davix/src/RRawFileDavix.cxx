@@ -12,8 +12,6 @@
 #include "ROOT/RRawFileDavix.hxx"
 #include "ROOT/RMakeUnique.hxx"
 
-#include <TError.h>
-
 #include <stdexcept>
 
 #include <davix.hpp>
@@ -57,11 +55,7 @@ std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileDavix::Clone()
    return std::make_unique<RRawFileDavix>(fUrl, fOptions);
 }
 
-<<<<<<< HEAD
 std::uint64_t ROOT::Internal::RRawFileDavix::GetSizeImpl()
-=======
-std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::GetSizeImpl()
->>>>>>> [rawfile] change method names from DoXyz() to XyzImpl()
 {
    struct stat buf;
    Davix::DavixError *err = nullptr;
@@ -90,27 +84,4 @@ size_t ROOT::Internal::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, st
       throw std::runtime_error("Cannot read from '" + fUrl + "', error: " + err->getErrMsg());
    }
    return static_cast<size_t>(retval);
-}
-
-void ROOT::Experimental::Detail::RRawFileDavix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
-{
-   Davix::DavixError *davixErr = NULL;
-   Davix::DavIOVecInput in[nReq];
-   Davix::DavIOVecOuput out[nReq];
-
-   for (unsigned int i = 0; i < nReq; ++i) {
-      in[i].diov_buffer = ioVec[i].fBuffer;
-      in[i].diov_offset = ioVec[i].fOffset;
-      in[i].diov_size = ioVec[i].fSize;
-      R__ASSERT(ioVec[i].fSize > 0);
-   }
-
-   auto ret = fFileDes->pos.preadVec(fFileDes->fd, in, out, nReq, &davixErr);
-   if (ret < 0) {
-      throw std::runtime_error("Cannot do vector read from '" + fUrl + "', error: " + davixErr->getErrMsg());
-   }
-
-   for (unsigned int i = 0; i < nReq; ++i) {
-      ioVec[i].fOutBytes = out[i].diov_size;
-   }
 }

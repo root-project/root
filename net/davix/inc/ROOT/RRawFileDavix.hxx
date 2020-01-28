@@ -24,6 +24,7 @@ namespace Internal {
 
 struct RDavixFileDes;
 
+
 /**
  * \class RRawFileDavix RRawFileDavix.hxx
  *
