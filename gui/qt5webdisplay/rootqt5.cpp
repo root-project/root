@@ -83,6 +83,7 @@ protected:
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
       {
+         // up to know headless mode not supported by QWebEngine
          if (args.IsHeadless())
             return nullptr;
 
@@ -138,19 +139,9 @@ protected:
 
          auto handle = std::make_unique<RQt5WebDisplayHandle>(fullurl.toLatin1().constData());
 
-         if (args.IsHeadless()) {
-            RootWebPage *page = new RootWebPage();
-            #if QT_VERSION >= 0x050700
-            page->settings()->resetAttribute(QWebEngineSettings::WebGLEnabled);
-            page->settings()->resetAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled);
-            #endif
-            page->settings()->resetAttribute(QWebEngineSettings::PluginsEnabled);
-            page->load(QUrl(fullurl));
-         } else {
-            RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
-            view->load(QUrl(fullurl));
-            view->show();
-         }
+         RootWebView *view = new RootWebView(qparent, args.GetWidth(), args.GetHeight(), args.GetX(), args.GetY());
+         view->load(QUrl(fullurl));
+         view->show();
 
          return handle;
       }
