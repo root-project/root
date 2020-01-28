@@ -210,7 +210,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    const RNTupleReadOptions &options)
    : RPageSourceFile(ntupleName, options)
 {
-   fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path));
+   fFile = std::unique_ptr<ROOT::Detail::RRawFile>(ROOT::Detail::RRawFile::Create(path));
    R__ASSERT(fFile);
    fReader = Internal::RMiniFileReader(fFile.get());
 }
