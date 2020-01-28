@@ -534,7 +534,7 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
    }
 
    if ((args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
-      R__ERROR_HERE("WebDisplay") << "Neither Chrome nor Firefox browser cannot be started to provide display";
+      // R__ERROR_HERE("WebDisplay") << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
    }
 
@@ -715,7 +715,7 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    auto handle = ROOT::Experimental::RWebDisplayHandle::Display(args);
 
    if (!handle) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to start chrome to produce image " << fname;
+      R__DEBUG_HERE("CanvasPainter") << "Cannot start Chrome to produce image " << fname;
       return false;
    }
 
