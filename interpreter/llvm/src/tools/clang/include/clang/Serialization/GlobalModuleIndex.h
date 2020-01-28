@@ -45,6 +45,7 @@ namespace serialization {
 using llvm::SmallVector;
 using llvm::SmallVectorImpl;
 using llvm::StringRef;
+using llvm::StringSet;
 using serialization::ModuleFile;
 
 /// \brief A global index for a set of module files, providing information about
@@ -159,6 +160,8 @@ public:
   /// \param ModuleFiles Will be populated with the set of module files that
   /// have been indexed.
   void getKnownModules(SmallVectorImpl<ModuleFile *> &ModuleFiles);
+
+  void getKnownModuleFileNames(StringSet<> &ModuleFiles);
 
   /// \brief Retrieve the set of module files on which the given module file
   /// directly depends.
