@@ -20,12 +20,12 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
-namespace Detail {
 
 namespace Internal {
 struct RDavixFileDes;
 }
+
+namespace Detail {
 
 /**
  * \class RRawFileDavix RRawFileDavix.hxx
@@ -51,7 +51,6 @@ public:
 };
 
 } // namespace Detail
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

@@ -22,8 +22,6 @@ constexpr int kDefaultBlockSize = 128 * 1024; // Read in relatively large 128k b
 } // anonymous namespace
 
 namespace ROOT {
-namespace Experimental {
-namespace Detail {
 namespace Internal {
 
 struct RDavixFileDes {
@@ -38,27 +36,25 @@ struct RDavixFileDes {
 };
 
 } // namespace Internal
-} // namespace Detail
-} // namespace Experimental
 } // namespace ROOT
 
-ROOT::Experimental::Detail::RRawFileDavix::RRawFileDavix(std::string_view url, ROptions options)
+ROOT::Detail::RRawFileDavix::RRawFileDavix(std::string_view url, ROptions options)
    : RRawFile(url, options), fFileDes(new Internal::RDavixFileDes())
 {
 }
 
-ROOT::Experimental::Detail::RRawFileDavix::~RRawFileDavix()
+ROOT::Detail::RRawFileDavix::~RRawFileDavix()
 {
    if (fFileDes->fd != nullptr)
       fFileDes->pos.close(fFileDes->fd, nullptr);
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RRawFile> ROOT::Experimental::Detail::RRawFileDavix::Clone() const
+std::unique_ptr<ROOT::Detail::RRawFile> ROOT::Detail::RRawFileDavix::Clone() const
 {
    return std::make_unique<RRawFileDavix>(fUrl, fOptions);
 }
 
-std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::GetSizeImpl()
+std::uint64_t ROOT::Detail::RRawFileDavix::GetSizeImpl()
 {
    struct stat buf;
    Davix::DavixError *err = nullptr;
@@ -68,7 +64,7 @@ std::uint64_t ROOT::Experimental::Detail::RRawFileDavix::GetSizeImpl()
    return buf.st_size;
 }
 
-void ROOT::Experimental::Detail::RRawFileDavix::OpenImpl()
+void ROOT::Detail::RRawFileDavix::OpenImpl()
 {
    Davix::DavixError *err = nullptr;
    fFileDes->fd = fFileDes->pos.open(nullptr, fUrl, O_RDONLY, &err);
@@ -79,7 +75,7 @@ void ROOT::Experimental::Detail::RRawFileDavix::OpenImpl()
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
-size_t ROOT::Experimental::Detail::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Detail::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    Davix::DavixError *err = nullptr;
    auto retval = fFileDes->pos.pread(fFileDes->fd, buffer, nbytes, offset, &err);

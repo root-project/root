@@ -194,9 +194,9 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    const RNTupleReadOptions &options)
    : RPageSourceRaw(ntupleName, options)
 {
-   fFile = std::unique_ptr<RRawFile>(RRawFile::Create(path));
+   fFile = std::unique_ptr<ROOT::Detail::RRawFile>(ROOT::Detail::RRawFile::Create(path));
    R__ASSERT(fFile);
-   R__ASSERT(fFile->GetFeatures() & RRawFile::kFeatureHasSize);
+   R__ASSERT(fFile->GetFeatures() & ROOT::Detail::RRawFile::kFeatureHasSize);
 }
 
 
@@ -219,7 +219,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceRaw
 {
    unsigned char postscript[RNTupleDescriptor::kNBytesPostscript];
    auto fileSize = fFile->GetSize();
-   R__ASSERT(fileSize != RRawFile::kUnknownFileSize);
+   R__ASSERT(fileSize != ROOT::Detail::RRawFile::kUnknownFileSize);
    R__ASSERT(fileSize >= RNTupleDescriptor::kNBytesPostscript);
    auto offset = fileSize - RNTupleDescriptor::kNBytesPostscript;
    Read(postscript, RNTupleDescriptor::kNBytesPostscript, offset);

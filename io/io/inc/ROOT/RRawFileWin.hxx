@@ -20,7 +20,6 @@
 #include <cstdio>
 
 namespace ROOT {
-namespace Experimental {
 namespace Detail {
 
 /**
@@ -48,7 +47,6 @@ public:
 };
 
 } // namespace Detail
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
