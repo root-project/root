@@ -1075,7 +1075,8 @@ static bool IsFromRootCling() {
   return foundSymbol;
 }
 
-static std::string GetModuleNameAsString(clang::Module *M, const clang::Preprocessor &PP)
+/// Checks if there is an ASTFile on disk for the given module \c M.
+static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP)
 {
    const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
 
@@ -1083,11 +1084,7 @@ static std::string GetModuleNameAsString(clang::Module *M, const clang::Preproce
    if (!HSOpts.PrebuiltModulePaths.empty())
       // Load the module from *only* in the prebuilt module path.
       ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, /*ModuleMapPath*/"", /*UsePrebuiltPath*/ true);
-   if (ModuleFileName.empty()) return "";
-
-   std::string ModuleName = llvm::sys::path::filename(ModuleFileName);
-   // Return stem of the filename
-   return std::string(llvm::sys::path::stem(ModuleName));
+   return !ModuleFileName.empty();
 }
 
 static bool HaveFullGlobalModuleIndex = false;
@@ -1115,11 +1112,10 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
       bool RecreateIndex = false;
       for (ModuleMap::module_iterator I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
          Module *TheModule = I->second;
-         // We do want the index only of the prebuilt modules
-         std::string ModuleName = GetModuleNameAsString(TheModule, PP);
-         if (ModuleName.empty())
+         // We want the index only of the prebuilt modules.
+         if (!HasASTFileOnDisk(TheModule, PP))
             continue;
-         LoadModule(ModuleName, interp);
+         LoadModule(TheModule->Name, interp);
          RecreateIndex = true;
       }
       if (RecreateIndex) {
