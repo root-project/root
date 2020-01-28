@@ -124,7 +124,7 @@ TGApplication::TGApplication(const char *appClassName,
 
 TGApplication::~TGApplication()
 {
-   delete fDisplay;
+   delete [] fDisplay;
    delete fClient;
 }
 
