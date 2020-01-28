@@ -469,6 +469,9 @@ protected:
          //   return nullptr;
          // }
 
+         if (args.IsHeadless())
+            return nullptr;
+
          if (fCefApp) {
             if (gHandlingServer != args.GetHttpServer()) {
                R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
