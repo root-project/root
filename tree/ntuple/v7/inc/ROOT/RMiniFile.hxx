@@ -27,11 +27,12 @@
 class TFile;
 
 namespace ROOT {
-namespace Experimental {
 
 namespace Detail {
 class RRawFile;
 }
+
+namespace Experimental {
 
 // clang-format off
 /**
@@ -100,7 +101,7 @@ RNTuple data keys.
 class RMiniFileReader {
 private:
    /// The raw file used to read byte ranges
-   Detail::RRawFile *fRawFile = nullptr;
+   ROOT::Detail::RRawFile *fRawFile = nullptr;
    /// Indicates whether the file is a TFile container or an RNTuple bare file
    bool fIsBare = false;
    /// Used when the file container turns out to be a bare file
@@ -111,7 +112,7 @@ private:
 public:
    RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
-   explicit RMiniFileReader(Detail::RRawFile *rawFile);
+   explicit RMiniFileReader(ROOT::Detail::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RNTuple GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer

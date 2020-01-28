@@ -895,7 +895,7 @@ struct RTFileControlBlock {
 } // namespace Internal
 
 
-ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(Detail::RRawFile *rawFile)
+ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Detail::RRawFile *rawFile)
    : fRawFile(rawFile)
 {
 }

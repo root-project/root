@@ -31,6 +31,11 @@
 class TFile;
 
 namespace ROOT {
+
+namespace Detail {
+class RRawFile;
+}
+
 namespace Experimental {
 namespace Detail {
 
@@ -118,7 +123,7 @@ private:
    /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
    RNTupleDecompressor fDecompressor;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
-   std::unique_ptr<RRawFile> fFile;
+   std::unique_ptr<ROOT::Detail::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
    Internal::RMiniFileReader fReader;
 

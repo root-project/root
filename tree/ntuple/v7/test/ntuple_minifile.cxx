@@ -12,7 +12,7 @@ using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
 using RNTuple = ROOT::Experimental::RNTuple;
-using RRawFile = ROOT::Experimental::Detail::RRawFile;
+using RRawFile = ROOT::Detail::RRawFile;
 
 namespace {
 
