@@ -23,8 +23,8 @@
 //#pragma once
 
 //////////////////////////////////////////////////////////////////////
-// This class implements the LSTM layer. LSTM is a variant of vanilla 
-// RNN which is capable of learning long range dependencies. 
+// This class implements the LSTM layer. LSTM is a variant of vanilla
+// RNN which is capable of learning long range dependencies.
 //////////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_LSTM_LAYER
@@ -62,7 +62,7 @@ public:
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Tensor_t = typename Architecture_t::Tensor_t;
 
-  
+
 
 private:
 
@@ -135,54 +135,54 @@ public:
 
    /*! Initialize the hidden state and cell state method. */
    void InitState(DNN::EInitialization m = DNN::EInitialization::kZero);
-    
-   /*! Computes the next hidden state 
+
+   /*! Computes the next hidden state
     *  and next cell state with given input matrix. */
    void Forward(Tensor_t &input, bool isTraining = true);
 
    /*! Forward for a single cell (time unit) */
-   void CellForward(Matrix_t &inputGateValues, Matrix_t &forgetGateValues,
-                     Matrix_t &candidateValues, Matrix_t &outputGateValues);
+   void CellForward(Matrix_t &inputGateValues, const Matrix_t &forgetGateValues,
+                  const Matrix_t &candidateValues, const Matrix_t &outputGateValues);
 
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
                  const Tensor_t &activations_backward);
-    
+
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
-    
+
    /*! Backward for a single time unit
     *  a the corresponding call to Forward(...). */
    Matrix_t & CellBackward(Matrix_t & state_gradients_backward,
                            Matrix_t & cell_gradients_backward,
                            const Matrix_t & precStateActivations, const Matrix_t & precCellActivations,
-                           const Matrix_t & input_gate, const Matrix_t & forget_gate,   
+                           const Matrix_t & input_gate, const Matrix_t & forget_gate,
                            const Matrix_t & candidate_gate, const Matrix_t & output_gate,
                            const Matrix_t & input, Matrix_t & input_gradient,
                            Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout, size_t t);
 
    /*! Decides the values we'll update (NN with Sigmoid) */
    void InputGate(const Matrix_t &input, Matrix_t &di);
-    
+
    /*! Forgets the past values (NN with Sigmoid) */
    void ForgetGate(const Matrix_t &input, Matrix_t &df);
-    
+
    /*! Decides the new candidate values (NN with Tanh) */
    void CandidateValue(const Matrix_t &input, Matrix_t &dc);
-    
+
    /*! Computes output values (NN with Sigmoid) */
    void OutputGate(const Matrix_t &input, Matrix_t &dout);
-    
+
    /*! Prints the info about the layer */
    void Print() const;
-    
+
    /*! Writes the information and the weights about the layer in an XML node. */
    void AddWeightsXMLTo(void *parent) override;
-    
+
    /*! Read the information and the weights about the layer from XML node. */
    void ReadWeightsFromXML(void *parent) override;
-    
+
    /*! Getters */
    size_t GetInputSize()               const { return this->GetInputWidth(); }
    size_t GetTimeSteps()               const { return fTimeSteps; }
@@ -190,7 +190,7 @@ public:
    size_t GetCellSize()                const { return fCellSize; }
 
    inline bool DoesRememberState()       const { return fRememberState; }
-   
+
    inline DNN::EActivationFunction     GetActivationFunctionF1()        const { return fF1; }
    inline DNN::EActivationFunction     GetActivationFunctionF2()        const { return fF2; }
 
@@ -262,7 +262,7 @@ public:
    std::vector<Matrix_t>             & GetCellTensor()                          { return cell_value; }
    const Matrix_t                    & GetCellTensorAt(size_t i)          const { return cell_value[i]; }
    Matrix_t                          & GetCellTensorAt(size_t i)                { return cell_value[i]; }
-   
+
    const Matrix_t                   & GetInputGateBias()         const { return fInputGateBias; }
    Matrix_t                         & GetInputGateBias()               { return fInputGateBias; }
    const Matrix_t                   & GetForgetGateBias()        const { return fForgetGateBias; }
@@ -308,8 +308,8 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(size_t batchSize, size_t stateS
                                                  bool rememberState, DNN::EActivationFunction f1, DNN::EActivationFunction f2,
                                                  bool /* training */, DNN::EInitialization fA)
    : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 8,
-                                   {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize, stateSize, stateSize}, 
-                                   {inputSize, stateSize, inputSize, stateSize, inputSize, stateSize, inputSize, stateSize}, 
+                                   {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize, stateSize, stateSize},
+                                   {inputSize, stateSize, inputSize, stateSize, inputSize, stateSize, inputSize, stateSize},
                                    4, {stateSize, stateSize, stateSize, stateSize}, {1, 1, 1, 1}, batchSize, timeSteps, stateSize, fA),
    fStateSize(stateSize),
    fCellSize(stateSize),
@@ -364,7 +364,7 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(size_t batchSize, size_t stateS
  //______________________________________________________________________________
 template <typename Architecture_t>
 TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(const TBasicLSTMLayer &layer)
-   : VGeneralLayer<Architecture_t>(layer), 
+   : VGeneralLayer<Architecture_t>(layer),
       fStateSize(layer.fStateSize),
       fCellSize(layer.fCellSize),
       fTimeSteps(layer.fTimeSteps),
@@ -400,18 +400,18 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(const TBasicLSTMLayer &layer)
       fCandidateBiasGradients(this->GetBiasGradientsAt(2)),
       fWeightsOutputGradients(this->GetWeightGradientsAt(6)),
       fWeightsOutputStateGradients(this->GetWeightGradientsAt(7)),
-      fOutputBiasGradients(this->GetBiasGradientsAt(3)) 
+      fOutputBiasGradients(this->GetBiasGradientsAt(3))
 {
    for (size_t i = 0; i < fTimeSteps; ++i) {
       fDerivativesInput.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesInput[i], layer.GetInputDerivativesAt(i));
-        
+
       fDerivativesForget.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesForget[i], layer.GetForgetDerivativesAt(i));
-        
+
       fDerivativesCandidate.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesCandidate[i], layer.GetCandidateDerivativesAt(i));
-        
+
       fDerivativesOutput.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesOutput[i], layer.GetOutputDerivativesAt(i));
 
@@ -430,7 +430,7 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(const TBasicLSTMLayer &layer)
       cell_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(cell_value[i], layer.GetCellTensorAt(i));
    }
-    
+
    // Gradient matrices not copied
    Architecture_t::Copy(fState, layer.GetState());
    Architecture_t::Copy(fCell, layer.GetCell());
@@ -535,10 +535,10 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
 
    Tensor_t arrOutput ( fTimeSteps, this->GetBatchSize(), fStateSize);
    // for (size_t t = 0; t < fTimeSteps;++t) {
-   //    arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
+   //    arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H
    // }
 
-  
+
    if (!this->fRememberState) {
       InitState(DNN::EInitialization::kZero);
    }
@@ -557,7 +557,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
       Architecture_t::Copy(this->GetForgetGateTensorAt(t), fForgetValue);
       Architecture_t::Copy(this->GetCandidateGateTensorAt(t), fCandidateValue);
       Architecture_t::Copy(this->GetOutputGateTensorAt(t), fOutputValue);
-       
+
       CellForward(fInputValue, fForgetValue, fCandidateValue, fOutputValue);
       Matrix_t arrOutputMt = arrOutput[t];
       Architecture_t::Copy(arrOutputMt, fState);
@@ -570,11 +570,11 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool /* is
 
  //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValues, Matrix_t &forgetGateValues,
-                                                         Matrix_t &candidateValues, Matrix_t &outputGateValues)
+auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValues, const Matrix_t &forgetGateValues,
+                                                         const Matrix_t &candidateValues, const Matrix_t &outputGateValues)
 -> void
 {
-    
+
    // Update cell state.
    Architecture_t::Hadamard(fCell, forgetGateValues);
    Architecture_t::Hadamard(inputGateValues, candidateValues);
@@ -582,7 +582,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellForward(Matrix_t &inputGateValu
 
    Matrix_t cache(fCell.GetNrows(), fCell.GetNcols());
    Architecture_t::Copy(cache, fCell);
-    
+
    // Update hidden state.
    const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();
    DNN::evaluateMatrix<Architecture_t>(cache, fAT);
@@ -621,7 +621,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
    // for (size_t t = 0; t < fTimeSteps; ++t) {
    //    arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
    // }
-   
+
    //Architecture_t::Rearrange(arr_gradients_backward, gradients_backward); // B x T x D
    // activations_backward is input.
    Tensor_t arr_activations_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
@@ -680,10 +680,10 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
          const Matrix_t &prevCellActivations = this->GetCellTensorAt(t-2);
          // During forward propagation, each gate value calculates their gradients.
          Matrix_t dx = arr_gradients_backward[t-1];
-         CellBackward(state_gradients_backward, cell_gradients_backward, 
+         CellBackward(state_gradients_backward, cell_gradients_backward,
          	          prevStateActivations, prevCellActivations,
                       this->GetInputGateTensorAt(t-1), this->GetForgetGateTensorAt(t-1),
-                      this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1),  
+                      this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1),
                       arr_activations_backward[t-1], dx,
                       fDerivativesInput[t-1], fDerivativesForget[t-1],
                       fDerivativesCandidate[t-1], fDerivativesOutput[t-1], t-1);
@@ -691,10 +691,10 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
          const Matrix_t &prevStateActivations = initState;
          const Matrix_t &prevCellActivations = initState;
          Matrix_t dx = arr_gradients_backward[t-1];
-         CellBackward(state_gradients_backward, cell_gradients_backward, 
-         	          prevStateActivations, prevCellActivations, 
+         CellBackward(state_gradients_backward, cell_gradients_backward,
+         	          prevStateActivations, prevCellActivations,
                       this->GetInputGateTensorAt(t-1), this->GetForgetGateTensorAt(t-1),
-                      this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1), 
+                      this->GetCandidateGateTensorAt(t-1), this->GetOutputGateTensorAt(t-1),
                       arr_activations_backward[t-1], dx,
                       fDerivativesInput[t-1], fDerivativesForget[t-1],
                       fDerivativesCandidate[t-1], fDerivativesOutput[t-1], t-1);
@@ -712,20 +712,20 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 template <typename Architecture_t>
 auto inline TBasicLSTMLayer<Architecture_t>::CellBackward(Matrix_t & state_gradients_backward,
                                                           Matrix_t & cell_gradients_backward,
-                                                          const Matrix_t & precStateActivations, const Matrix_t & precCellActivations, 
-                                                          const Matrix_t & input_gate, const Matrix_t & forget_gate,   
+                                                          const Matrix_t & precStateActivations, const Matrix_t & precCellActivations,
+                                                          const Matrix_t & input_gate, const Matrix_t & forget_gate,
                                                           const Matrix_t & candidate_gate, const Matrix_t & output_gate,
                                                           const Matrix_t & input, Matrix_t & input_gradient,
                                                           Matrix_t &di, Matrix_t &df, Matrix_t &dc, Matrix_t &dout,
                                                           size_t t)
 -> Matrix_t &
-{   
+{
    /*! Call here LSTMLayerBackward() to pass parameters i.e. gradient
     *  values obtained from each gate during forward propagation. */
 
-    
+
    // cell gradient for current time step
-   const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();   
+   const DNN::EActivationFunction fAT = this->GetActivationFunctionF2();
    Matrix_t cell_gradient(this->GetCellTensorAt(t).GetNrows(), this->GetCellTensorAt(t).GetNcols());
    DNN::evaluateDerivativeMatrix<Architecture_t>(cell_gradient, fAT, this->GetCellTensorAt(t));
 
@@ -738,18 +738,18 @@ auto inline TBasicLSTMLayer<Architecture_t>::CellBackward(Matrix_t & state_gradi
                                             fWeightsInputGradients, fWeightsForgetGradients, fWeightsCandidateGradients,
                                             fWeightsOutputGradients, fWeightsInputStateGradients, fWeightsForgetStateGradients,
                                             fWeightsCandidateStateGradients, fWeightsOutputStateGradients, fInputBiasGradients, fForgetBiasGradients,
-                                            fCandidateBiasGradients, fOutputBiasGradients, di, df, dc, dout, 
+                                            fCandidateBiasGradients, fOutputBiasGradients, di, df, dc, dout,
                                             precStateActivations, precCellActivations,
                                             input_gate, forget_gate, candidate_gate, output_gate,
                                             fWeightsInputGate, fWeightsForgetGate, fWeightsCandidate, fWeightsOutputGate,
                                             fWeightsInputGateState, fWeightsForgetGateState, fWeightsCandidateState,
-                                            fWeightsOutputGateState, input, input_gradient, 
+                                            fWeightsOutputGateState, input, input_gradient,
                                             cell_gradient, cell_tanh);
 }
-	
+
  //______________________________________________________________________________
 template <typename Architecture_t>
-auto TBasicLSTMLayer<Architecture_t>::InitState(DNN::EInitialization /* m */) 
+auto TBasicLSTMLayer<Architecture_t>::InitState(DNN::EInitialization /* m */)
 -> void
 {
    DNN::initialize<Architecture_t>(this->GetState(),  DNN::EInitialization::kZero);
@@ -762,7 +762,7 @@ auto TBasicLSTMLayer<Architecture_t>::Print() const
 -> void
 {
    std::cout << " LSTM Layer: \t ";
-   std::cout << " (NInput = " << this->GetInputSize();  // input size 
+   std::cout << " (NInput = " << this->GetInputSize();  // input size
    std::cout << ", NState = " << this->GetStateSize();  // hidden state size
    std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
    std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
@@ -770,18 +770,18 @@ auto TBasicLSTMLayer<Architecture_t>::Print() const
 
  //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicLSTMLayer<Architecture_t>::AddWeightsXMLTo(void *parent) 
+auto inline TBasicLSTMLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 -> void
 {
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "LSTMLayer");
-    
+
    // Write all other info like outputSize, cellSize, inputSize, timeSteps, rememberState
    gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "CellSize", gTools().StringFromInt(this->GetCellSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
-   
+
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "InputWeights", this->GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "InputStateWeights", this->GetWeightsAt(1));
@@ -799,7 +799,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 
  //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicLSTMLayer<Architecture_t>::ReadWeightsFromXML(void *parent) 
+auto inline TBasicLSTMLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 -> void
 {
 	// Read weights and biases
