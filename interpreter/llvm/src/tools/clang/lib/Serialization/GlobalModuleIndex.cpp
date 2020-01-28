@@ -269,6 +269,13 @@ GlobalModuleIndex::getKnownModules(SmallVectorImpl<ModuleFile *> &ModuleFiles) {
   }
 }
 
+void GlobalModuleIndex::getKnownModuleFileNames(StringSet<> &ModuleFiles) {
+  ModuleFiles.clear();
+  for (unsigned I = 0, N = Modules.size(); I != N; ++I) {
+    ModuleFiles[Modules[I].FileName];
+  }
+}
+
 void GlobalModuleIndex::getModuleDependencies(
        ModuleFile *File,
        SmallVectorImpl<ModuleFile *> &Dependencies) {

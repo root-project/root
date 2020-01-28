@@ -1076,7 +1076,7 @@ static bool IsFromRootCling() {
 }
 
 /// Checks if there is an ASTFile on disk for the given module \c M.
-static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP)
+static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP, std::string *FullFileName = nullptr)
 {
    const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
 
@@ -1084,6 +1084,9 @@ static bool HasASTFileOnDisk(clang::Module *M, const clang::Preprocessor &PP)
    if (!HSOpts.PrebuiltModulePaths.empty())
       // Load the module from *only* in the prebuilt module path.
       ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, /*ModuleMapPath*/"", /*UsePrebuiltPath*/ true);
+   if (FullFileName)
+      *FullFileName = ModuleFileName;
+
    return !ModuleFileName.empty();
 }
 
@@ -1170,6 +1173,34 @@ static void RegisterCommonCxxModules(cling::Interpreter &clingInterp)
       LoadModules(FIXMEModules, clingInterp);
 
       loadGlobalModuleIndex(SourceLocation(), clingInterp);
+      clang::CompilerInstance &CI = *clingInterp.getCI();
+      if (GlobalModuleIndex *GlobalIndex = CI.getModuleManager()->getGlobalIndex()) {
+         llvm::StringSet<> KnownModuleFileNames;
+         GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
+
+         clang::Preprocessor &PP = CI.getPreprocessor();
+         ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
+         for (auto I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
+            clang::Module *M = I->second;
+            assert(M);
+
+            // We want to load only already created modules.
+            std::string FullASTFilePath;
+            if (!HasASTFileOnDisk(M, PP, &FullASTFilePath))
+               continue;
+
+            if (KnownModuleFileNames.count(FullASTFilePath))
+               continue;
+
+            if (!M->IsMissingRequirement) {
+               if (gDebug > 2)
+                  ::Info("TCling::__RegisterCommonCxxModules", "Preloading %s because it is not in GMI. \n",
+                         M->Name.data());
+
+               LoadModule(M->Name, clingInterp);
+            }
+         }
+      }
    }
 
    // Check that the gROOT macro was exported by any core module.
