@@ -26,12 +26,16 @@
 #include <memory>
 
 namespace ROOT {
+
+namespace Detail {
+class RRawFile;
+}
+
 namespace Experimental {
 namespace Detail {
 
 class RPageAllocatorHeap;
 class RPagePool;
-class RRawFile;
 
 // clang-format off
 /**
@@ -102,7 +106,7 @@ private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
-   std::unique_ptr<RRawFile> fFile;
+   std::unique_ptr<ROOT::Detail::RRawFile> fFile;
 
    RNTupleMetrics fMetrics;
    RNTuplePlainCounter *fCtrNRead = nullptr;
