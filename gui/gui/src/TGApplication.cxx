@@ -42,7 +42,7 @@ ClassImp(TGApplication);
 
 TGApplication::TGApplication(const char *appClassName,
                              int *argc, char **argv, void*, int)
-   : TApplication(), fDisplay(0), fClient(0)
+   : TApplication()
 {
    if (gApplication) {
       Error("TGApplication", "only one instance of TGApplication allowed");
@@ -68,7 +68,7 @@ TGApplication::TGApplication(const char *appClassName,
 
    LoadGraphicsLibs();
 
-   if (!fDisplay) gSystem->SetDisplay();
+   if (fDisplay.IsNull()) gSystem->SetDisplay();
    fClient = new TGClient(fDisplay);
 
    if (fClient->IsZombie()) {
@@ -124,7 +124,6 @@ TGApplication::TGApplication(const char *appClassName,
 
 TGApplication::~TGApplication()
 {
-   delete [] fDisplay;
    delete fClient;
 }
 
@@ -175,9 +174,9 @@ void TGApplication::GetOptions(Int_t *argc, char **argv)
    for (i = 0; i < *argc; i++) {
       if (!strcmp(argv[i], "-display")) {
          if (argv[i+1] && strlen(argv[i+1]) && argv[i+1][0] != '-') {
-            fDisplay = StrDup(argv[i+1]);
-            argv[i]   = 0;
-            argv[i+1] = 0;
+            fDisplay = argv[i+1];
+            argv[i]   = nullptr;
+            argv[i+1] = nullptr;
             i++;
          }
       }
