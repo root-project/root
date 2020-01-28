@@ -42,7 +42,7 @@ auto printTensor(const typename Architecture::Tensor_t &A, const std::string nam
         std::cout << "\n";
       }
       std::cout << "********\n";
-  } 
+  }
 }
 
 template <typename Architecture>
@@ -87,11 +87,11 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
                        size_t k, size_t i, typename Architecture::Scalar_t xvalue) -> typename Architecture::Scalar_t
 {
     using Scalar_t = typename Architecture::Scalar_t;
- 
+
     Scalar_t prev_value = net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0);
     net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = xvalue;
     Scalar_t res = net.Loss(X, Y, W, false, false);
-    net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = prev_value; 
+    net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = prev_value;
     return res;
 }
 
@@ -103,40 +103,40 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
                                   std::vector<bool> options = {}, bool debug = false)
 
 {
-   bool failed = false; 
-   if (options.size() == 0) options = std::vector<bool>(4); 
+   bool failed = false;
+   if (options.size() == 0) options = std::vector<bool>(4);
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
    bool addExtraLSTM = options[2];
-   
+
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;
-   using LSTMLayer_t = TBasicLSTMLayer<Architecture>; 
-   using DenseLayer_t = TDenseLayer<Architecture>; 
+   using LSTMLayer_t = TBasicLSTMLayer<Architecture>;
+   using DenseLayer_t = TDenseLayer<Architecture>;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
-   
-   Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
-   
 
-   // for random input (default) 
-   if (randomInput) { 
+   Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
+
+
+   // for random input (default)
+   if (randomInput) {
    for (size_t i = 0; i < batchSize; ++i) {
-         auto  mat = XArch[i];  
+         auto  mat = XArch[i];
          for (size_t l = 0; l < (size_t) XArch[i].GetNrows(); ++l) {
             for (size_t m = 0; m < (size_t) XArch[i].GetNcols(); ++m) {
                mat(l, m) = gRandom->Uniform(-1,1);
                //XArch[i](0, 0) = 0.5;
                //XArch[i](1, 0) = 0.5;
             }
-         } 
+         }
       }
    }
-   else { 
-      R__ASSERT(inputSize <= 6); 
-      R__ASSERT(timeSteps <= 3); 
-      R__ASSERT(batchSize <= 1); 
+   else {
+      R__ASSERT(inputSize <= 6);
+      R__ASSERT(timeSteps <= 3);
+      R__ASSERT(batchSize <= 1);
       double x_input[] = {-1,   1,  -2,  2, -3,  3 ,
                           -0.5, 0.5,-0.8,0.9, -2, 1.5,
                           -0.2, 0.1,-0.5,0.4, -1, 1.};
@@ -156,8 +156,8 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
    if (debug) printTensor<Architecture>(XArch,"input");
 
    size_t outputSize = timeSteps*stateSize;
-   if (addDenseLayer) outputSize = 1; 
-   
+   if (addDenseLayer) outputSize = 1;
+
    Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
    //randomMatrix(Y);
    for (size_t i = 0; i < (size_t) Y.GetNrows(); ++i) {
@@ -196,9 +196,34 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
 
    lstm.Initialize();
 
-lstm.Forward(XArch);
-lstm.Backward(XArch, Y, weights);
+   if (debug)
+      Architecture::PrintTensor(XArch,"input");
 
+   auto lstmLayer = lstm.GetLayerAt(0);
+
+   if (debug) {
+      for (size_t i = 0; i < lstmLayer->GetWeights().size(); ++i)
+         Architecture::PrintTensor(Tensor_t(lstmLayer->GetWeightsAt(i)),
+                                   std::string(TString::Format("LSTM weights - %d", i).Data()));
+   }
+
+   lstm.Forward(XArch);
+
+   if (debug)
+      Architecture::PrintTensor(lstmLayer->GetOutput(), "output forward");
+
+   lstm.Backward(XArch, Y, weights);
+
+   std::cout << "after backward ! " << std::endl;
+
+   if (debug) {
+      Architecture::PrintTensor(lstmLayer->GetActivationGradients(), "dy");
+      // Architecture::PrintTensor(lstmLayer->GetActivationGradients,"dx");
+
+      for (size_t i = 0; i < lstmLayer->GetWeights().size(); ++i)
+         Architecture::PrintTensor(Tensor_t(lstmLayer->GetWeightGradientsAt(i)),
+                                   std::string(TString::Format("LSTM weight Gradients - %d", i).Data()));
+   }
 
    if (debug)  {
       auto & out = layer->GetOutput();
@@ -211,12 +236,12 @@ lstm.Backward(XArch, Y, weights);
       }
    }
 
-   
+
    Scalar_t maximum_error = 0.0;
-   std::string maxerrorType; 
+   std::string maxerrorType;
 
    ROOT::Math::RichardsonDerivator deriv;
-   
+
 
    // Weights Input Gate, k = 0
 
@@ -235,7 +260,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType; 
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -248,7 +273,7 @@ lstm.Backward(XArch, Y, weights);
 
          if (error >= maximum_error) {
             maximum_error = error;
-            maxerrorType = errorType; 
+            maxerrorType = errorType;
          }
       }
    }
@@ -259,11 +284,11 @@ lstm.Backward(XArch, Y, weights);
       std::cerr << "\e[31m Error \e[39m in weights input gate gradients" << std::endl;
       failed = true;
    }
-   
-   // Weights Input Gate State, k = 1
-   maximum_error = 0; 
 
-  
+   // Weights Input Gate State, k = 1
+   maximum_error = 0;
+
+
    auto & Wis = layer->GetWeightsAt(1);
    auto & dWis = layer->GetWeightGradientsAt(1);
    for (size_t i = 0; i < (size_t) Wis.GetNrows(); ++i) {
@@ -279,7 +304,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -289,8 +314,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights input gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -304,7 +329,7 @@ lstm.Backward(XArch, Y, weights);
    }
 
     // Weights Forget Gate State, k = 2
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wf = layer->GetWeightsAt(2);
    auto & dWf = layer->GetWeightGradientsAt(2);
    for (size_t i = 0; i < (size_t) Wf.GetNrows(); ++i) {
@@ -318,7 +343,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -328,8 +353,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights forget gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -343,7 +368,7 @@ lstm.Backward(XArch, Y, weights);
    }
 
     // Weights Forget Gate State, k = 3
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wfs = layer->GetWeightsAt(3);
    auto & dWfs = layer->GetWeightGradientsAt(3);
    for (size_t i = 0; i < (size_t) Wfs.GetNrows(); ++i) {
@@ -357,7 +382,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -367,8 +392,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights forget gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -383,7 +408,7 @@ lstm.Backward(XArch, Y, weights);
 
 
    // Weights Candidate Gate k = 4
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wc = layer->GetWeightsAt(4);
    auto & dWc = layer->GetWeightGradientsAt(4);
    for (size_t i = 0; i < (size_t) Wc.GetNrows(); ++i) {
@@ -397,7 +422,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -407,8 +432,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights candidate gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -423,7 +448,7 @@ lstm.Backward(XArch, Y, weights);
 
 
    // Weights Candidate Gate State, k = 5
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wcs = layer->GetWeightsAt(5);
    auto & dWcs = layer->GetWeightGradientsAt(5);
    for (size_t i = 0; i < (size_t) Wcs.GetNrows(); ++i) {
@@ -437,7 +462,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -447,8 +472,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights candidate gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -463,7 +488,7 @@ lstm.Backward(XArch, Y, weights);
 
 
    // Weights Output Gate, k = 6
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wo = layer->GetWeightsAt(6);
    auto & dWo = layer->GetWeightGradientsAt(6);
    for (size_t i = 0; i < (size_t) Wo.GetNrows(); ++i) {
@@ -477,7 +502,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -487,8 +512,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights output gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -502,7 +527,7 @@ lstm.Backward(XArch, Y, weights);
    }
 
    // Weights Output Gate State, k = 7
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wos = layer->GetWeightsAt(7);
    auto & dWos = layer->GetWeightGradientsAt(7);
    for (size_t i = 0; i < (size_t) Wos.GetNrows(); ++i) {
@@ -516,7 +541,7 @@ lstm.Backward(XArch, Y, weights);
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -526,8 +551,8 @@ lstm.Backward(XArch, Y, weights);
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights output gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -542,7 +567,7 @@ lstm.Backward(XArch, Y, weights);
 
 
    // testing input gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto &Bi = layer->GetBiasesAt(0);
    auto &dBi = layer->GetBiasGradientsAt(0);
    for (size_t i = 0;  i < (size_t) Bi.GetNrows(); ++i) {
@@ -555,7 +580,7 @@ lstm.Backward(XArch, Y, weights);
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -565,8 +590,8 @@ lstm.Backward(XArch, Y, weights);
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "input gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
@@ -579,7 +604,7 @@ lstm.Backward(XArch, Y, weights);
    }
 
    // testing foget gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Bf = layer->GetBiasesAt(1);
    auto & dBf = layer->GetBiasGradientsAt(1);
    for (size_t i = 0;  i < (size_t) Bf.GetNrows(); ++i) {
@@ -592,7 +617,7 @@ lstm.Backward(XArch, Y, weights);
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -602,8 +627,8 @@ lstm.Backward(XArch, Y, weights);
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "Forget gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
@@ -616,7 +641,7 @@ lstm.Backward(XArch, Y, weights);
    }
 
    // testing candidate gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Bc = layer->GetBiasesAt(2);
    auto & dBc = layer->GetBiasGradientsAt(2);
    for (size_t i = 0;  i < (size_t) Bc.GetNrows(); ++i) {
@@ -629,7 +654,7 @@ lstm.Backward(XArch, Y, weights);
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -639,8 +664,8 @@ lstm.Backward(XArch, Y, weights);
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "Candidate gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
@@ -653,7 +678,7 @@ lstm.Backward(XArch, Y, weights);
    }
 
    // testing output gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Bo = layer->GetBiasesAt(3);
    auto & dBo = layer->GetBiasGradientsAt(3);
    for (size_t i = 0;  i < (size_t) Bo.GetNrows(); ++i) {
@@ -666,7 +691,7 @@ lstm.Backward(XArch, Y, weights);
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -676,8 +701,8 @@ lstm.Backward(XArch, Y, weights);
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "Output gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }

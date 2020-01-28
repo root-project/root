@@ -1011,7 +1011,7 @@ void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
-         case 1:  // state size 
+         case 1:  // state size
          {
             TString strstateSize(token->GetString());
             stateSize = strstateSize.Atoi();
@@ -1039,7 +1039,7 @@ void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
    TBasicLSTMLayer<Architecture_t> *basicLSTMLayer = deepNet.AddBasicLSTMLayer(stateSize, inputSize,
                                                                         timeSteps, rememberState);
    basicLSTMLayer->Initialize();
-    
+
    // Add same layer to fNet
    if (fBuildNet) fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState);
 }
@@ -1065,7 +1065,7 @@ void MethodDL::ParseGruLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
-         case 1:  // state size 
+         case 1:  // state size
          {
             TString strstateSize(token->GetString());
             stateSize = strstateSize.Atoi();
@@ -1093,7 +1093,7 @@ void MethodDL::ParseGruLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
    TBasicGRULayer<Architecture_t> *basicGRULayer = deepNet.AddBasicGRULayer(stateSize, inputSize,
                                                                         timeSteps, rememberState);
    basicGRULayer->Initialize();
-    
+
    // Add same layer to fNet
    if (fBuildNet) fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState);
 }
@@ -2371,33 +2371,33 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
          // read RNN layer info
          size_t  stateSize,inputSize, timeSteps = 0;
-         int rememberState= 0;   
+         int rememberState= 0;
          gTools().ReadAttr(layerXML, "StateSize", stateSize);
          gTools().ReadAttr(layerXML, "InputSize", inputSize);
          gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
          gTools().ReadAttr(layerXML, "RememberState", rememberState );
-         
+
          fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState);
-         
+
       }
       // GRU Layer
       else if (layerName == "GRULayer") {
 
          // read RNN layer info
          size_t  stateSize,inputSize, timeSteps = 0;
-         int rememberState= 0;   
+         int rememberState= 0;
          gTools().ReadAttr(layerXML, "StateSize", stateSize);
          gTools().ReadAttr(layerXML, "InputSize", inputSize);
          gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
          gTools().ReadAttr(layerXML, "RememberState", rememberState );
-         
+
          fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState);
       }
       // BatchNorm Layer
-      else if (layerName == "BatchNormLayer") {   
+      else if (layerName == "BatchNormLayer") {
          // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
          fNet->AddBatchNormLayer(0., 0.0);
-      }      
+      }
       // read eventually weights and biases
       fNet->GetLayers().back()->ReadWeightsFromXML(layerXML);
 

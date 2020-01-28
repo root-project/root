@@ -23,8 +23,8 @@
 //#pragma once
 
 //////////////////////////////////////////////////////////////////////
-// This class implements the GRU layer. GRU is a variant of vanilla 
-// RNN which is capable of learning long range dependencies. 
+// This class implements the GRU layer. GRU is a variant of vanilla
+// RNN which is capable of learning long range dependencies.
 //////////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_GRU_LAYER
@@ -62,7 +62,7 @@ public:
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Tensor_t = typename Architecture_t::Tensor_t;
 
-  
+
 
 private:
 
@@ -96,11 +96,11 @@ private:
    std::vector<Matrix_t> reset_gate_value;      ///< Reset gate value for every time step
    std::vector<Matrix_t> update_gate_value;     ///< Update gate value for every time step
    std::vector<Matrix_t> candidate_gate_value;  ///< Candidate gate value for every time step
-  
+
    std::vector<Matrix_t> fDerivativesReset;     ///< First fDerivatives of the activations reset gate
    std::vector<Matrix_t> fDerivativesUpdate;    ///< First fDerivatives of the activations update gate
    std::vector<Matrix_t> fDerivativesCandidate; ///< First fDerivatives of the activations candidate gate
-   
+
    Matrix_t &fWeightsResetGradients;            ///< Gradients w.r.t the reset gate - input weights
    Matrix_t &fWeightsResetStateGradients;       ///< Gradients w.r.t the reset gate - hidden state weights
    Matrix_t &fResetBiasGradients;               ///< Gradients w.r.t the reset gate - bias weights
@@ -125,8 +125,8 @@ public:
 
    /*! Initialize the hidden state and cell state method. */
    void InitState(DNN::EInitialization m = DNN::EInitialization::kZero);
-    
-   /*! Computes the next hidden state 
+
+   /*! Computes the next hidden state
     *  and next cell state with given input matrix. */
    void Forward(Tensor_t &input, bool isTraining = true);
 
@@ -137,44 +137,44 @@ public:
     *  call to Forward(...). */
    void Backward(Tensor_t &gradients_backward,
                  const Tensor_t &activations_backward);
-    
+
    /* Updates weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
-    
+
    /*! Backward for a single time unit
     *  a the corresponding call to Forward(...). */
    Matrix_t & CellBackward(Matrix_t & state_gradients_backward,
                            const Matrix_t & precStateActivations,
-                           const Matrix_t & reset_gate, const Matrix_t & update_gate,   
-                           const Matrix_t & candidate_gate, 
+                           const Matrix_t & reset_gate, const Matrix_t & update_gate,
+                           const Matrix_t & candidate_gate,
                            const Matrix_t & input, Matrix_t & input_gradient,
                            Matrix_t &dr, Matrix_t &du, Matrix_t &dc);
-    
+
    /*! Decides the values we'll update (NN with Sigmoid) */
    void ResetGate(const Matrix_t &input, Matrix_t &di);
-    
+
    /*! Forgets the past values (NN with Sigmoid) */
    void UpdateGate(const Matrix_t &input, Matrix_t &df);
-    
+
    /*! Decides the new candidate values (NN with Tanh) */
    void CandidateValue(const Matrix_t &input, Matrix_t &dc);
-       
+
    /*! Prints the info about the layer */
    void Print() const;
-    
+
    /*! Writes the information and the weights about the layer in an XML node. */
    void AddWeightsXMLTo(void *parent) override;
-    
+
    /*! Read the information and the weights about the layer from XML node. */
    void ReadWeightsFromXML(void *parent) override;
-    
+
    /*! Getters */
    size_t GetInputSize()               const { return this->GetInputWidth(); }
    size_t GetTimeSteps()               const { return fTimeSteps; }
    size_t GetStateSize()               const { return fStateSize; }
 
    inline bool DoesRememberState()       const { return fRememberState; }
-   
+
    inline DNN::EActivationFunction     GetActivationFunctionF1()        const { return fF1; }
    inline DNN::EActivationFunction     GetActivationFunctionF2()        const { return fF2; }
 
@@ -194,7 +194,7 @@ public:
    Matrix_t                          & GetWeightsCandidate()                    { return fWeightsCandidate; }
    const Matrix_t                    & GetWeightsUpdateGate()             const { return fWeightsUpdateGate; }
    Matrix_t                          & GetWeightsUpdateGate()                   { return fWeightsUpdateGate; }
-   
+
    const Matrix_t                    & GetWeightsResetGateState()         const { return fWeightsResetGateState; }
    Matrix_t                          & GetWeightsResetGateState()               { return fWeightsResetGateState; }
    const Matrix_t                    & GetWeightsUpdateGateState()        const { return fWeightsUpdateGateState; }
@@ -214,7 +214,7 @@ public:
    std::vector<Matrix_t>             & GetDerivativesCandidate()                 { return fDerivativesCandidate; }
    const Matrix_t                    & GetCandidateDerivativesAt(size_t i) const { return fDerivativesCandidate[i]; }
    Matrix_t                          & GetCandidateDerivativesAt(size_t i)       { return fDerivativesCandidate[i]; }
-   
+
    const std::vector<Matrix_t>       & GetResetGateTensor()              const { return reset_gate_value; }
    std::vector<Matrix_t>             & GetResetGateTensor()                    { return reset_gate_value; }
    const Matrix_t                    & GetResetGateTensorAt(size_t i)    const { return reset_gate_value[i]; }
@@ -227,8 +227,8 @@ public:
    std::vector<Matrix_t>             & GetCandidateGateTensor()                 { return candidate_gate_value; }
    const Matrix_t                    & GetCandidateGateTensorAt(size_t i) const { return candidate_gate_value[i]; }
    Matrix_t                          & GetCandidateGateTensorAt(size_t i)       { return candidate_gate_value[i]; }
-  
-   
+
+
 
    const Matrix_t                   & GetResetGateBias()         const { return fResetGateBias; }
    Matrix_t                         & GetResetGateBias()               { return fResetGateBias; }
@@ -236,7 +236,7 @@ public:
    Matrix_t                         & GetUpdateGateBias()              { return fUpdateGateBias; }
    const Matrix_t                   & GetCandidateBias()         const { return fCandidateBias; }
    Matrix_t                         & GetCandidateBias()               { return fCandidateBias; }
-   
+
    const Matrix_t                   & GetWeightsResetGradients()        const { return fWeightsResetGradients; }
    Matrix_t                         & GetWeightsResetGradients()              { return fWeightsResetGradients; }
    const Matrix_t                   & GetWeightsResetStateGradients()   const { return fWeightsResetStateGradients; }
@@ -269,8 +269,8 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSiz
                                                  bool rememberState, DNN::EActivationFunction f1, DNN::EActivationFunction f2,
                                                  bool /* training */, DNN::EInitialization fA)
    : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 6,
-                                   {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize}, 
-                                   {inputSize, stateSize, inputSize, stateSize, inputSize, stateSize}, 
+                                   {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize},
+                                   {inputSize, stateSize, inputSize, stateSize, inputSize, stateSize},
                                    3, {stateSize, stateSize, stateSize}, {1, 1, 1}, batchSize, timeSteps, stateSize, fA),
    fStateSize(stateSize),
    fTimeSteps(timeSteps),
@@ -313,7 +313,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSiz
  //______________________________________________________________________________
 template <typename Architecture_t>
 TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
-   : VGeneralLayer<Architecture_t>(layer), 
+   : VGeneralLayer<Architecture_t>(layer),
       fStateSize(layer.fStateSize),
       fTimeSteps(layer.fTimeSteps),
       fRememberState(layer.fRememberState),
@@ -345,13 +345,13 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
    for (size_t i = 0; i < fTimeSteps; ++i) {
       fDerivativesReset.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesReset[i], layer.GetResetDerivativesAt(i));
-        
+
       fDerivativesUpdate.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesUpdate[i], layer.GetUpdateDerivativesAt(i));
-        
+
       fDerivativesCandidate.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(fDerivativesCandidate[i], layer.GetCandidateDerivativesAt(i));
-        
+
       reset_gate_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(reset_gate_value[i], layer.GetResetGateTensorAt(i));
 
@@ -361,7 +361,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
       candidate_gate_value.emplace_back(layer.GetBatchSize(), layer.GetStateSize());
       Architecture_t::Copy(candidate_gate_value[i], layer.GetCandidateGateTensorAt(i));
    }
-    
+
    // Gradient matrices not copied
    Architecture_t::Copy(fState, layer.GetState());
 
@@ -370,7 +370,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
    Architecture_t::Copy(fCandidateValue, layer.GetCandidateValue());
    Architecture_t::Copy(fUpdateValue, layer.GetUpdateGateValue());
 }
- 
+
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicGRULayer<Architecture_t>::ResetGate(const Matrix_t &input, Matrix_t &dr)
@@ -444,9 +444,9 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool /* isT
 
    Tensor_t arrOutput ( fTimeSteps, this->GetBatchSize(), fStateSize );
    // for (size_t t = 0; t < fTimeSteps;++t) {
-   //    arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
+   //    arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H
    // }
-  
+
    if (!this->fRememberState) {
       InitState(DNN::EInitialization::kZero);
    }
@@ -456,14 +456,22 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool /* isT
    for (size_t t = 0; t < fTimeSteps; ++t) {
       /* Feed forward network: value of each gate being computed at each timestep t. */
       ResetGate(arrInput[t], fDerivativesReset[t]);
-      UpdateGate(arrInput[t], fDerivativesUpdate[t]);
-      CandidateValue(arrInput[t], fDerivativesCandidate[t]);
-   
       Architecture_t::Copy(this->GetResetGateTensorAt(t), fResetValue);
+      UpdateGate(arrInput[t], fDerivativesUpdate[t]);
       Architecture_t::Copy(this->GetUpdateGateTensorAt(t), fUpdateValue);
+
+      CandidateValue(arrInput[t], fDerivativesCandidate[t]);
       Architecture_t::Copy(this->GetCandidateGateTensorAt(t), fCandidateValue);
-       
+
+      // std::cout << "iteration time " << t << std::endl;
+      // Architecture_t::PrintTensor(this->GetResetGateTensorAt(t), "reset");
+      // Architecture_t::PrintTensor(this->GetUpdateGateTensorAt(t), "update");
+      // Architecture_t::PrintTensor(this->GetCandidateGateTensorAt(t), "candidate");
+
       CellForward(fUpdateValue, fCandidateValue);
+
+      // Architecture_t::PrintTensor(Tensor_t(fState), "state output");
+
       Matrix_t arrOutputMt = arrOutput[t];
       Architecture_t::Copy(arrOutputMt, fState);
    }
@@ -475,7 +483,10 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool /* isT
 template <typename Architecture_t>
 auto inline TBasicGRULayer<Architecture_t>::CellForward(Matrix_t &updateGateValues, Matrix_t &candidateValues)
 -> void
-{ 
+{
+   Architecture_t::Hadamard(fState, updateGateValues);
+
+   // this will reuse content of updateGateValues
    Matrix_t tmp(updateGateValues); // H X 1
    for (size_t j = 0; j < (size_t) tmp.GetNcols(); j++) {
       for (size_t i = 0; i < (size_t) tmp.GetNrows(); i++) {
@@ -485,7 +496,6 @@ auto inline TBasicGRULayer<Architecture_t>::CellForward(Matrix_t &updateGateValu
 
    // Update state
    Architecture_t::Hadamard(candidateValues, tmp);
-   Architecture_t::Hadamard(fState, updateGateValues);
    Architecture_t::ScaleAdd(fState, candidateValues);
 }
 
@@ -511,7 +521,7 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    // for (size_t t = 0; t < fTimeSteps; ++t) {
    //    arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
    // }
-   
+
    //Architecture_t::Rearrange(arr_gradients_backward, gradients_backward); // B x T x D
    // activations_backward is input.
    Tensor_t arr_activations_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
@@ -564,18 +574,18 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
          const Matrix_t &prevStateActivations = arr_output[t-2];
          Matrix_t dx = arr_gradients_backward[t-1];
          // During forward propagation, each gate value calculates their gradients.
-         CellBackward(state_gradients_backward, prevStateActivations, 
+         CellBackward(state_gradients_backward, prevStateActivations,
                       this->GetResetGateTensorAt(t-1), this->GetUpdateGateTensorAt(t-1),
-                      this->GetCandidateGateTensorAt(t-1),   
+                      this->GetCandidateGateTensorAt(t-1),
                       arr_activations_backward[t-1], dx ,
                       fDerivativesReset[t-1], fDerivativesUpdate[t-1],
                       fDerivativesCandidate[t-1]);
       } else {
          const Matrix_t &prevStateActivations = initState;
          Matrix_t dx = arr_gradients_backward[t-1];
-         CellBackward(state_gradients_backward, prevStateActivations, 
+         CellBackward(state_gradients_backward, prevStateActivations,
                       this->GetResetGateTensorAt(t-1), this->GetUpdateGateTensorAt(t-1),
-                      this->GetCandidateGateTensorAt(t-1),   
+                      this->GetCandidateGateTensorAt(t-1),
                       arr_activations_backward[t-1], dx ,
                       fDerivativesReset[t-1], fDerivativesUpdate[t-1],
                       fDerivativesCandidate[t-1]);
@@ -592,31 +602,31 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicGRULayer<Architecture_t>::CellBackward(Matrix_t & state_gradients_backward,
-                                                          const Matrix_t & precStateActivations,  
-                                                          const Matrix_t & reset_gate, const Matrix_t & update_gate,   
-                                                          const Matrix_t & candidate_gate, 
+                                                          const Matrix_t & precStateActivations,
+                                                          const Matrix_t & reset_gate, const Matrix_t & update_gate,
+                                                          const Matrix_t & candidate_gate,
                                                           const Matrix_t & input, Matrix_t & input_gradient,
                                                           Matrix_t &dr, Matrix_t &du, Matrix_t &dc)
 -> Matrix_t &
-{   
+{
    /*! Call here GRULayerBackward() to pass parameters i.e. gradient
     *  values obtained from each gate during forward propagation. */
    return Architecture_t::GRULayerBackward(state_gradients_backward,
                                            fWeightsResetGradients, fWeightsUpdateGradients, fWeightsCandidateGradients,
                                            fWeightsResetStateGradients, fWeightsUpdateStateGradients,
                                            fWeightsCandidateStateGradients, fResetBiasGradients, fUpdateBiasGradients,
-                                           fCandidateBiasGradients, dr, du, dc, 
+                                           fCandidateBiasGradients, dr, du, dc,
                                            precStateActivations,
-                                           reset_gate, update_gate, candidate_gate, 
+                                           reset_gate, update_gate, candidate_gate,
                                            fWeightsResetGate, fWeightsUpdateGate, fWeightsCandidate,
                                            fWeightsResetGateState, fWeightsUpdateGateState, fWeightsCandidateState,
                                            input, input_gradient);
 }
-	
+
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TBasicGRULayer<Architecture_t>::InitState(DNN::EInitialization /* m */) 
+auto TBasicGRULayer<Architecture_t>::InitState(DNN::EInitialization /* m */)
 -> void
 {
    DNN::initialize<Architecture_t>(this->GetState(),  DNN::EInitialization::kZero);
@@ -628,7 +638,7 @@ auto TBasicGRULayer<Architecture_t>::Print() const
 -> void
 {
    std::cout << " GRU Layer: \t ";
-   std::cout << " (NInput = " << this->GetInputSize();  // input size 
+   std::cout << " (NInput = " << this->GetInputSize();  // input size
    std::cout << ", NState = " << this->GetStateSize();  // hidden state size
    std::cout << ", NTime  = " << this->GetTimeSteps() << " )";  // time size
    std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " )\n";
@@ -636,17 +646,17 @@ auto TBasicGRULayer<Architecture_t>::Print() const
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicGRULayer<Architecture_t>::AddWeightsXMLTo(void *parent) 
+auto inline TBasicGRULayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 -> void
 {
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "GRULayer");
-    
+
    // Write all other info like outputSize, cellSize, inputSize, timeSteps, rememberState
    gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
-   
+
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "ResetWeights", this->GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "ResetStateWeights", this->GetWeightsAt(1));
@@ -661,7 +671,7 @@ auto inline TBasicGRULayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 
  //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicGRULayer<Architecture_t>::ReadWeightsFromXML(void *parent) 
+auto inline TBasicGRULayer<Architecture_t>::ReadWeightsFromXML(void *parent)
 -> void
 {
 	// Read weights and biases

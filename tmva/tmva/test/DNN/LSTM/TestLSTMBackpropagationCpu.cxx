@@ -17,6 +17,8 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestLSTMBackpropagation.h"
 #include "TROOT.h"
+#include "TMath.h"
+
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
@@ -25,25 +27,32 @@ int main() {
    std::cout << "Testing LSTM backward pass\n";
 
    //ROOT::EnableImplicitMT(1);
-   
+
+   gRandom->SetSeed(12345);
+   TCpu<double>::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
+
    using Scalar_t = Double_t;
 
    // timesteps, batchsize, statesize, inputsize  { fixed input, with dense layer, with extra LSTM }
 
    testLSTMBackpropagation<TCpu<Scalar_t>>(2, 1, 1, 2, 1e-5);
 
-   testLSTMBackpropagation<TCpu<Scalar_t>>(1, 2, 3, 2, 1e-5); 
+
+
+   testLSTMBackpropagation<TCpu<Scalar_t>>(1, 2, 3, 2, 1e-5);
+
 
    testLSTMBackpropagation<TCpu<Scalar_t>>(2, 3, 4, 5, 1e-5);
+
 
    testLSTMBackpropagation<TCpu<Scalar_t>>(4, 2, 10, 5, 1e-5);
 
    testLSTMBackpropagation<TCpu<Scalar_t>>(5, 64, 10, 5, 1e-5);
-   // using a fixed input 
+   // using a fixed input
    testLSTMBackpropagation<TCpu<Scalar_t>>(3, 1, 10, 5, 1e-5, {true});
-   // with a dense layer 
+   // with a dense layer
    testLSTMBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 20, 1e-5, {false, true});
-   // with an additional LSTM layer 
+   // with an additional LSTM layer
    testLSTMBackpropagation<TCpu<Scalar_t>>(4, 32, 10, 5, 1e-5, {false, true, true});
 
 
