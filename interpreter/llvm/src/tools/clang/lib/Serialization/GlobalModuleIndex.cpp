@@ -300,7 +300,7 @@ bool GlobalModuleIndex::lookupIdentifier(StringRef Name, HitSet &Hits) {
     = *static_cast<IdentifierIndexTable *>(IdentifierIndex);
   IdentifierIndexTable::iterator Known = Table.find(Name);
   if (Known == Table.end()) {
-    return true;
+    return false;
   }
 
   SmallVector<unsigned, 2> ModuleIDs = *Known;
@@ -326,7 +326,7 @@ bool GlobalModuleIndex::lookupIdentifier(StringRef Name, FileNameHitSet &Hits) {
       *static_cast<IdentifierIndexTable *>(IdentifierIndex);
   IdentifierIndexTable::iterator Known = Table.find(Name);
   if (Known == Table.end()) {
-    return true;
+    return false;
   }
 
   SmallVector<unsigned, 2> ModuleIDs = *Known;
