@@ -42,7 +42,22 @@ auto printTensor(const typename Architecture::Tensor_t &A, const std::string nam
         std::cout << "\n";
       }
       std::cout << "********\n";
-  } 
+  }
+}
+
+template <typename Architecture>
+auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix") -> void
+{
+   std::cout << name << "\n";
+   for (size_t l = 0; l < A.size(); ++l) {
+      for (size_t i = 0; i < (size_t)A[l].GetNrows(); ++i) {
+         for (size_t j = 0; j < (size_t)A[l].GetNcols(); ++j) {
+            std::cout << A[l](i, j) << " ";
+         }
+         std::cout << "\n";
+      }
+      std::cout << "********\n";
+   }
 }
 
 template <typename Architecture>
@@ -87,11 +102,11 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Tenso
                        size_t k, size_t i, typename Architecture::Scalar_t xvalue) -> typename Architecture::Scalar_t
 {
     using Scalar_t = typename Architecture::Scalar_t;
- 
+
     Scalar_t prev_value = net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0);
     net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = xvalue;
     Scalar_t res = net.Loss(X, Y, W, false, false);
-    net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = prev_value; 
+    net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) = prev_value;
     return res;
 }
 
@@ -103,40 +118,40 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
                                   std::vector<bool> options = {}, bool debug = false)
 
 {
-   bool failed = false; 
-   if (options.size() == 0) options = std::vector<bool>(4); 
+   bool failed = false;
+   if (options.size() == 0) options = std::vector<bool>(4);
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
    bool addExtraGRU = options[2];
-   
+
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;;
-   using GRULayer_t = TBasicGRULayer<Architecture>; 
-   using DenseLayer_t = TDenseLayer<Architecture>; 
+   using GRULayer_t = TBasicGRULayer<Architecture>;
+   using DenseLayer_t = TDenseLayer<Architecture>;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
 
    Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
-   
 
-   // for random input (default) 
-   if (randomInput) { 
+
+   // for random input (default)
+   if (randomInput) {
    for (size_t i = 0; i < batchSize; ++i) {
-         auto  mat = XArch[i];  
+         auto  mat = XArch[i];
          for (size_t l = 0; l < (size_t) XArch[i].GetNrows(); ++l) {
             for (size_t m = 0; m < (size_t) XArch[i].GetNcols(); ++m) {
                mat(l, m) = gRandom->Uniform(-1,1);
                //XArch[i](0, 0) = 0.5;
                //XArch[i](1, 0) = 0.5;
             }
-         } 
+         }
       }
    }
-   else { 
-      R__ASSERT(inputSize <= 6); 
-      R__ASSERT(timeSteps <= 3); 
-      R__ASSERT(batchSize <= 1); 
+   else {
+      R__ASSERT(inputSize <= 6);
+      R__ASSERT(timeSteps <= 3);
+      R__ASSERT(batchSize <= 1);
       double x_input[] = {-1,   1,  -2,  2, -3,  3 ,
                           -0.5, 0.5,-0.8,0.9, -2, 1.5,
                           -0.2, 0.1,-0.5,0.4, -1, 1.};
@@ -151,18 +166,18 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
             }
          }
       }
-      gRandom->SetSeed(1); // for weights initizialization
+      //gRandom->SetSeed(1); // for weights initizialization
    }
    if (debug) printTensor<Architecture>(XArch,"input");
 
    size_t outputSize = timeSteps*stateSize;
-   if (addDenseLayer) outputSize = 1; 
-   
+   if (addDenseLayer) outputSize = 1;
+
    Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
    //randomMatrix(Y);
    for (size_t i = 0; i < (size_t) Y.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Y.GetNcols(); ++j) {
-         Y(i, j) = gRandom->Integer(2);
+         Y(i, j) = 1; //gRandom->Integer(2);
          //Y(0, 0) = 1;
          //Y(0, 1) = 1;
       }
@@ -181,7 +196,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       std::cout << " and an extra GRU";
    std::cout << std::endl;
 
-   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kIdentity);
    GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps);
    //size_t input2 = stateSize;
    if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps);
@@ -201,6 +216,10 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    gru.Backward(XArch, Y, weights);
 
    if (debug)  {
+      std::cout << "GRU weights *****************************************************" << std::endl;
+      printTensor<Architecture>(layer->GetWeights(), "GRU-weighst");
+      std::cout << "*****************************************************************" << std::endl << std::endl;
+
       auto & out = layer->GetOutput();
       printTensor<Architecture>(out,"output");
       if (dlayer1) {
@@ -212,10 +231,10 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    }
 
    Scalar_t maximum_error = 0.0;
-   std::string maxerrorType; 
+   std::string maxerrorType;
 
    ROOT::Math::RichardsonDerivator deriv;
- 
+
    // Weights Reset Gate, k = 0
 
    auto & Wi = layer->GetWeightsAt(0);
@@ -233,7 +252,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType; 
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -246,7 +265,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          if (error >= maximum_error) {
             maximum_error = error;
-            maxerrorType = errorType; 
+            maxerrorType = errorType;
          }
       }
    }
@@ -257,11 +276,11 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       std::cerr << "\e[31m Error \e[39m in weights reset gate gradients" << std::endl;
       failed = true;
    }
-   
-   // Weights Reset Gate State, k = 1
-   maximum_error = 0; 
 
-  
+   // Weights Reset Gate State, k = 1
+   maximum_error = 0;
+
+
    auto & Wis = layer->GetWeightsAt(1);
    auto & dWis = layer->GetWeightGradientsAt(1);
    for (size_t i = 0; i < (size_t) Wis.GetNrows(); ++i) {
@@ -277,7 +296,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -287,8 +306,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights reset gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -302,7 +321,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    }
 
     // Weights Update gate, k = 2
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wf = layer->GetWeightsAt(2);
    auto & dWf = layer->GetWeightGradientsAt(2);
    for (size_t i = 0; i < (size_t) Wf.GetNrows(); ++i) {
@@ -316,7 +335,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -326,8 +345,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights update gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -341,7 +360,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    }
 
     // Weights Update Gate State, k = 3
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wfs = layer->GetWeightsAt(3);
    auto & dWfs = layer->GetWeightGradientsAt(3);
    for (size_t i = 0; i < (size_t) Wfs.GetNrows(); ++i) {
@@ -355,7 +374,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -365,8 +384,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights update gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -381,7 +400,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
 
    // Weights Candidate Gate k = 4
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wc = layer->GetWeightsAt(4);
    auto & dWc = layer->GetWeightGradientsAt(4);
    for (size_t i = 0; i < (size_t) Wc.GetNrows(); ++i) {
@@ -395,7 +414,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -405,8 +424,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights candidate gate gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -421,7 +440,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
 
    // Weights Candidate Gate State, k = 5
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Wcs = layer->GetWeightsAt(5);
    auto & dWcs = layer->GetWeightGradientsAt(5);
    for (size_t i = 0; i < (size_t) Wcs.GetNrows(); ++i) {
@@ -435,7 +454,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
          // Compute the relative error if dy != 0.
          Scalar_t error;
-         std::string errorType;  
+         std::string errorType;
          if (std::fabs(dy_ref) > 1e-15) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
@@ -445,8 +464,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
          }
 
          if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
          }
          if (debug) std::cout << "Weights candidate gate-state gradient (" << i << "," << j << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
       }
@@ -461,7 +480,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
 
    // testing reset gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto &Bi = layer->GetBiasesAt(0);
    auto &dBi = layer->GetBiasGradientsAt(0);
    for (size_t i = 0;  i < (size_t) Bi.GetNrows(); ++i) {
@@ -474,7 +493,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -484,8 +503,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "reset gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
@@ -498,7 +517,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    }
 
    // testing update gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Bf = layer->GetBiasesAt(1);
    auto & dBf = layer->GetBiasGradientsAt(1);
    for (size_t i = 0;  i < (size_t) Bf.GetNrows(); ++i) {
@@ -511,7 +530,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -521,8 +540,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "Update gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
@@ -535,7 +554,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    }
 
    // testing candidate gate bias gradients
-   maximum_error = 0; 
+   maximum_error = 0;
    auto & Bc = layer->GetBiasesAt(2);
    auto & dBc = layer->GetBiasGradientsAt(2);
    for (size_t i = 0;  i < (size_t) Bc.GetNrows(); ++i) {
@@ -548,7 +567,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
       // Compute the relative error if dy != 0.
       Scalar_t error;
-      std::string errorType;  
+      std::string errorType;
       if (std::fabs(dy_ref) > 1e-15) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
@@ -558,8 +577,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       }
 
       if ( error >= maximum_error) {
-            maximum_error = error; 
-            maxerrorType = errorType; 
+            maximum_error = error;
+            maxerrorType = errorType;
       }
       if (debug) std::cout << "Candidate gate bias gradient (" << i << ") : (comp, ref) " << dy << " , " << dy_ref << std::endl;
    }
