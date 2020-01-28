@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental::Detail;
+using namespace ROOT::Detail;
 
 TEST(RRawFileDavix, Idle)
 {
