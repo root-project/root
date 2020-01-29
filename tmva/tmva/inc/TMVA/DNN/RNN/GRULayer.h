@@ -62,7 +62,13 @@ public:
    using Scalar_t = typename Architecture_t::Scalar_t;
    using Tensor_t = typename Architecture_t::Tensor_t;
 
+   using LayerDescriptor_t = typename Architecture_t::RecurrentDescriptor_t;
+   using WeightsDescriptor_t = typename Architecture_t::FilterDescriptor_t;
+   using TensorDescriptor_t = typename Architecture_t::TensorDescriptor_t;
+   using HelperDescriptor_t = typename Architecture_t::DropoutDescriptor_t;
 
+   using RNNWorkspace_t = typename Architecture_t::RNNWorkspace_t;
+   using RNNDescriptors_t = typename Architecture_t::RNNDescriptors_t;
 
 private:
 
@@ -70,6 +76,7 @@ private:
    size_t fTimeSteps;                           ///< Timesteps for GRU
 
    bool fRememberState;                         ///< Remember state in next pass
+   bool fReturnSequence = true;                 ///< Return in output full sequence or just last element
 
    DNN::EActivationFunction fF1;                ///< Activation function: sigmoid
    DNN::EActivationFunction fF2;                ///< Activaton function: tanh
@@ -111,6 +118,21 @@ private:
    Matrix_t &fWeightsCandidateStateGradients;   ///< Gradients w.r.t the candidate gate - hidden state weights
    Matrix_t &fCandidateBiasGradients;           ///< Gradients w.r.t the candidate gate - bias weights
 
+   Matrix_t fCell;                              ///< EMpty matrix for GRU
+
+   // Tensor representing all weights (used by cuDNN)
+   Tensor_t fWeightsTensor;         ///< Tensor for all weights
+   Tensor_t fWeightGradientsTensor; ///< Tensor for all weight gradients
+
+   // tensors used internally for the forward and backward pass
+   Tensor_t fX;  ///<  cached input tensor as T x B x I
+   Tensor_t fY;  ///<  cached output tensor as T x B x S
+   Tensor_t fDx; ///< cached   gradient on the input (output of backward)   as T x B x I
+   Tensor_t fDy; ///< cached  activation gradient (input of backward)   as T x B x S
+
+   TDescriptors *fDescriptors = nullptr; ///< Keeps all the RNN descriptors
+   TWorkspace *fWorkspace = nullptr;     // workspace needed for GPU computation (CudNN)
+
 public:
 
    /*! Constructor */
@@ -122,6 +144,10 @@ public:
 
    /*! Copy Constructor */
    TBasicGRULayer(const TBasicGRULayer &);
+
+   /*! Initialize the weights according to the given initialization
+    **  method. */
+   virtual void Initialize();
 
    /*! Initialize the hidden state and cell state method. */
    void InitState(DNN::EInitialization m = DNN::EInitialization::kZero);
@@ -174,6 +200,7 @@ public:
    size_t GetStateSize()               const { return fStateSize; }
 
    inline bool DoesRememberState()       const { return fRememberState; }
+   inline bool IsReturnSequence() const { return fReturnSequence; }
 
    inline DNN::EActivationFunction     GetActivationFunctionF1()        const { return fF1; }
    inline DNN::EActivationFunction     GetActivationFunctionF2()        const { return fF2; }
@@ -187,6 +214,8 @@ public:
 
    const Matrix_t                    & GetState()                   const { return fState; }
    Matrix_t                          & GetState()                         { return fState; }
+   const Matrix_t                    &GetCell()                     const { return fCell; }
+   Matrix_t                          & GetCell()                          { return  fCell; }
 
    const Matrix_t                    & GetWeightsResetGate()              const { return fWeightsResetGate; }
    Matrix_t                          & GetWeightsResetGate()                    { return fWeightsResetGate; }
@@ -256,6 +285,15 @@ public:
    const Matrix_t                   & GetCandidateBiasGradients()         const { return fCandidateBiasGradients; }
    Matrix_t                         & GetCandidateBiasGradients()               { return fCandidateBiasGradients; }
 
+   Tensor_t &GetWeightsTensor() { return fWeightsTensor; }
+   const Tensor_t &GetWeightsTensor() const { return fWeightsTensor; }
+   Tensor_t &GetWeightGradientsTensor() { return fWeightGradientsTensor; }
+   const Tensor_t &GetWeightGradientsTensor() const { return fWeightGradientsTensor; }
+
+   Tensor_t &GetX() { return fX; }
+   Tensor_t &GetY() { return fY; }
+   Tensor_t &GetDX() { return fDx; }
+   Tensor_t &GetDY() { return fDy; }
 };
 
 
@@ -270,7 +308,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSiz
                                                  bool /* training */, DNN::EInitialization fA)
    : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 6,
                                    {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize},
-                                   {inputSize, stateSize, inputSize, stateSize, inputSize, stateSize},
+                                   {inputSize, inputSize, inputSize, stateSize, stateSize, stateSize},
                                    3, {stateSize, stateSize, stateSize}, {1, 1, 1}, batchSize, timeSteps, stateSize, fA),
    fStateSize(stateSize),
    fTimeSteps(timeSteps),
@@ -308,6 +346,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSiz
       update_gate_value.emplace_back(batchSize, stateSize);
       candidate_gate_value.emplace_back(batchSize, stateSize);
    }
+   Architecture_t::InitializeGRUTensors(this);
 }
 
  //______________________________________________________________________________
@@ -324,21 +363,21 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
       fCandidateValue(layer.GetBatchSize(), layer.GetStateSize()),
       fState(layer.GetBatchSize(), layer.GetStateSize()),
       fWeightsResetGate(this->GetWeightsAt(0)),
-      fWeightsResetGateState(this->GetWeightsAt(1)),
+      fWeightsResetGateState(this->GetWeightsAt(3)),
       fResetGateBias(this->GetBiasesAt(0)),
-      fWeightsUpdateGate(this->GetWeightsAt(2)),
-      fWeightsUpdateGateState(this->GetWeightsAt(3)),
+      fWeightsUpdateGate(this->GetWeightsAt(1)),
+      fWeightsUpdateGateState(this->GetWeightsAt(4)),
       fUpdateGateBias(this->GetBiasesAt(1)),
-      fWeightsCandidate(this->GetWeightsAt(4)),
+      fWeightsCandidate(this->GetWeightsAt(2)),
       fWeightsCandidateState(this->GetWeightsAt(5)),
       fCandidateBias(this->GetBiasesAt(2)),
       fWeightsResetGradients(this->GetWeightGradientsAt(0)),
-      fWeightsResetStateGradients(this->GetWeightGradientsAt(1)),
+      fWeightsResetStateGradients(this->GetWeightGradientsAt(3)),
       fResetBiasGradients(this->GetBiasGradientsAt(0)),
-      fWeightsUpdateGradients(this->GetWeightGradientsAt(2)),
-      fWeightsUpdateStateGradients(this->GetWeightGradientsAt(3)),
+      fWeightsUpdateGradients(this->GetWeightGradientsAt(1)),
+      fWeightsUpdateStateGradients(this->GetWeightGradientsAt(4)),
       fUpdateBiasGradients(this->GetBiasGradientsAt(1)),
-      fWeightsCandidateGradients(this->GetWeightGradientsAt(4)),
+      fWeightsCandidateGradients(this->GetWeightGradientsAt(2)),
       fWeightsCandidateStateGradients(this->GetWeightGradientsAt(5)),
       fCandidateBiasGradients(this->GetBiasGradientsAt(2))
 {
@@ -369,6 +408,18 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
    Architecture_t::Copy(fResetValue, layer.GetResetGateValue());
    Architecture_t::Copy(fCandidateValue, layer.GetCandidateValue());
    Architecture_t::Copy(fUpdateValue, layer.GetUpdateGateValue());
+
+   Architecture_t::InitializeGRUTensors(this);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TBasicGRULayer<Architecture_t>::Initialize()
+{
+   VGeneralLayer<Architecture_t>::Initialize();
+
+   Architecture_t::InitializeGRUDescriptors(fDescriptors, this);
+   Architecture_t::InitializeGRUWorkspace(fWorkspace, fDescriptors, this);
 }
 
 //______________________________________________________________________________
@@ -428,9 +479,43 @@ auto inline TBasicGRULayer<Architecture_t>::CandidateValue(const Matrix_t &input
 
  //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool /* isTraining = true */)
+auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining )
 -> void
 {
+   // for Cudnn
+   if (Architecture_t::IsCudnn()) {
+
+      // input size is stride[1] of input tensor that is B x T x inputSize
+      assert(input.GetStrides()[1] == this->GetInputSize());
+
+      Tensor_t &x = this->fX;
+      Tensor_t &y = this->fY;
+      Architecture_t::Rearrange(x, input);
+
+      const auto &weights = this->GetWeightsAt(0);
+
+      auto &hx = this->fState;
+      auto &cx = this->fCell;
+      // use same for hy and cy
+      auto &hy = this->fState;
+      auto &cy = this->fCell;
+
+      auto rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
+      auto rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+
+      Architecture_t::RNNForward(x, hx, cx, weights, y, hy, cy, rnnDesc, rnnWork, isTraining);
+
+      if (fReturnSequence) {
+         Architecture_t::Rearrange(this->GetOutput(), y); // swap B and T from y to Output
+      } else {
+         // tmp is a reference to y (full cudnn output)
+         Tensor_t tmp = (y.At(y.GetShape()[0] - 1)).Reshape({y.GetShape()[1], 1, y.GetShape()[2]});
+         Architecture_t::Copy(this->GetOutput(), tmp);
+      }
+
+      return;
+   }
+
    // D : input size
    // H : state size
    // T : time size
@@ -505,6 +590,63 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
                                                       const Tensor_t &activations_backward)   // B x T x D
 -> void
 {
+   // BACKWARD for CUDNN
+   if (Architecture_t::IsCudnn()) {
+
+      Tensor_t &x = this->fX;
+      Tensor_t &y = this->fY;
+      Tensor_t &dx = this->fDy;
+      Tensor_t &dy = this->fDy;
+
+      // input size is stride[1] of input tensor that is B x T x inputSize
+      assert(activations_backward.GetStrides()[1] == this->GetInputSize());
+
+
+      Architecture_t::Rearrange(x, activations_backward);
+
+      if (!fReturnSequence) {
+
+         // Architecture_t::InitializeZero(dy);
+         Architecture_t::InitializeZero(dy);
+
+         // Tensor_t tmp1 = y.At(y.GetShape()[0] - 1).Reshape({y.GetShape()[1], 1, y.GetShape()[2]});
+         Tensor_t tmp2 = dy.At(dy.GetShape()[0] - 1).Reshape({dy.GetShape()[1], 1, dy.GetShape()[2]});
+
+         // Architecture_t::Copy(tmp1, this->GetOutput());
+         Architecture_t::Copy(tmp2, this->GetActivationGradients());
+      } else {
+         Architecture_t::Rearrange(y, this->GetOutput());
+         Architecture_t::Rearrange(dy, this->GetActivationGradients());
+      }
+
+      // Architecture_t::PrintTensor(this->GetOutput(), "output before bwd");
+
+      // for cudnn Matrix_t and Tensor_t are same type
+      const auto &weights = this->GetWeightsTensor();
+      auto &weightGradients = this->GetWeightGradientsTensor();
+
+      // hx is fState
+      auto &hx = this->GetState();
+      auto &cx = this->GetCell();
+      // use same for hy and cy
+      auto &dhy = hx;
+      auto &dcy = cx;
+      auto &dhx = hx;
+      auto &dcx = cx;
+
+      auto rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
+      auto rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+
+      Architecture_t::RNNBackward(x, hx, cx, y, dy, dhy, dcy, weights, dx, dhx, dcx, weightGradients, rnnDesc, rnnWork);
+
+      // Architecture_t::PrintTensor(this->GetOutput(), "output after bwd");
+
+      if (gradients_backward.GetSize() != 0)
+         Architecture_t::Rearrange(gradients_backward, dx);
+
+      return;
+   }
+
    // gradients_backward is activationGradients of layer before it, which is input layer.
    // Currently, gradients_backward is for input(x) and not for state.
    // For the state it can be:

@@ -196,7 +196,6 @@ void TCudnn<AFloat>::InitializeIdentity(TCudaTensor<AFloat> & A)
    }
    TCudaMatrix<AFloat> mB = B;
    A.GetDeviceBuffer() = mB.GetDeviceBuffer();
-   PrintTensor(A,"A after init Identity");
 }
 
 //______________________________________________________________________________

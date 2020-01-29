@@ -46,7 +46,7 @@ auto printTensor(const typename Architecture::Tensor_t &A, const std::string nam
 }
 
 template <typename Architecture>
-auto printTensor(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+auto printMatrix(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
 -> void
 {
   std::cout << name << "\n";
@@ -207,7 +207,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
                                    std::string(TString::Format("LSTM weights - %d", i).Data()));
    }
 
-   lstm.Forward(XArch);
+   lstm.Forward(XArch, true);
 
    if (debug)
       Architecture::PrintTensor(lstmLayer->GetOutput(), "output forward");
