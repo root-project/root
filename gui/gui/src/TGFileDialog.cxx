@@ -29,15 +29,14 @@
 
 #include "TGFileDialog.h"
 #include "TGLabel.h"
-#include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGComboBox.h"
 #include "TGListView.h"
 #include "TGFSContainer.h"
 #include "TGFSComboBox.h"
 #include "TGMsgBox.h"
-#include "TSystem.h"
 #include "TGInputDialog.h"
+#include "TSystem.h"
 #include "TObjString.h"
 
 #include <sys/stat.h>
@@ -57,7 +56,7 @@ enum EFileFialog {
 static const char *gDefTypes[] = { "All files",     "*",
                                    "ROOT files",    "*.root",
                                    "ROOT macros",   "*.C",
-                                    0,               0 };
+                                    nullptr,         nullptr };
 
 static TGFileInfo gInfo;
 
@@ -71,9 +70,19 @@ TGFileInfo::~TGFileInfo()
 {
    delete [] fFilename;
    delete [] fIniDir;
+   DeleteFileNamesList();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delete file names list
+
+void TGFileInfo::DeleteFileNamesList()
+{
    if (fFileNamesList) {
       fFileNamesList->Delete();
       delete fFileNamesList;
+      fFileNamesList = nullptr;
    }
 }
 
@@ -84,11 +93,7 @@ void TGFileInfo::SetMultipleSelection(Bool_t option)
 {
    if ( fMultipleSelection != option ) {
       fMultipleSelection = option;
-      if (fFileNamesList) {
-         fFileNamesList->Delete();
-         delete fFileNamesList;
-         fFileNamesList = nullptr;
-      }
+      DeleteFileNamesList();
       if (fMultipleSelection)
          fFileNamesList = new TList();
    }
@@ -140,14 +145,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    if (!file_info) {
       Error("TGFileDialog", "file_info argument not set");
       fFileInfo = &gInfo;
-      if (fFileInfo->fIniDir) {
-         delete [] fFileInfo->fIniDir;
-         fFileInfo->fIniDir = 0;
-      }
-      if (fFileInfo->fFilename) {
-         delete [] fFileInfo->fFilename;
-         fFileInfo->fFilename = 0;
-      }
+      fFileInfo->SetIniDir(nullptr);
+      fFileInfo->SetFilename(nullptr);
       fFileInfo->fFileTypeIdx = 0;
    } else
       fFileInfo = file_info;
@@ -156,7 +155,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       fFileInfo->fFileTypes = gDefTypes;
 
    if (!fFileInfo->fIniDir)
-      fFileInfo->fIniDir = StrDup(".");
+      fFileInfo->SetIniDir(".");
 
    TGHorizontalFrame *fHtop = new TGHorizontalFrame(this, 10, 10);
 
@@ -293,9 +292,9 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    //TGDimension fw = fTypes->GetListBox()->GetContainer()->GetDefaultSize();
    //fTypes->GetListBox()->Resize(fw.fWidth, fw.fHeight);
 
-   if (fFileInfo->fFilename && fFileInfo->fFilename[0])
+   if (fFileInfo->fFilename && fFileInfo->fFilename[0]) {
       fTbfname->AddText(0, fFileInfo->fFilename);
-   else {
+   } else {
       fTbfname->Clear();
       if (dlg_type == kFDSave) {
          fTbfname->AddText(0, "unnamed");
@@ -394,13 +393,8 @@ TGFileDialog::~TGFileDialog()
 
 void TGFileDialog::CloseWindow()
 {
-   if (fFileInfo->fFilename)
-      delete [] fFileInfo->fFilename;
-   fFileInfo->fFilename = 0;
-   if (fFileInfo->fFileNamesList != 0) {
-      fFileInfo->fFileNamesList->Delete();
-      fFileInfo->fFileNamesList = 0;
-   }
+   fFileInfo->SetFilename(nullptr);
+   fFileInfo->DeleteFileNamesList();
    DeleteWindow();
 }
 
@@ -411,8 +405,7 @@ void TGFileDialog::CloseWindow()
 namespace {
    static inline void pExpandUnixPathName(TGFileInfo &file_info) {
       char *tmpPath = gSystem->ExpandPathName(file_info.fFilename);
-      delete [] file_info.fFilename;
-      file_info.fFilename = StrDup(gSystem->UnixPathName(tmpPath));
+      file_info.SetFilename(gSystem->UnixPathName(tmpPath));
       delete[] tmpPath;
    }
 }
@@ -457,15 +450,12 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            return kTRUE;
                      }
                      if (fFileInfo->fMultipleSelection) {
-                        if (fFileInfo->fFilename)
-                           delete [] fFileInfo->fFilename;
-                        fFileInfo->fFilename = 0;
-                     }
-                     else {
-                        if (fFileInfo->fFilename)
-                           delete [] fFileInfo->fFilename;
+                        fFileInfo->SetFilename(nullptr);
+                     } else {
+                        fFileInfo->SetFilename(nullptr);
+                        // FIXME: once appropriate gSystem method exists, use SetFilename here
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
-                           fFileInfo->fFilename = StrDup(fTbfname->GetString());
+                           fFileInfo->SetFilename(fTbfname->GetString());
                         else
                            fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                           fTbfname->GetString());
@@ -479,15 +469,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   case kIDF_CANCEL:
-                     if (fFileInfo->fFilename)
-                        delete [] fFileInfo->fFilename;
-                     fFileInfo->fFilename = 0;
+                     fFileInfo->SetFilename(nullptr);
                      if (fFc->GetDisplayStat())
                         fFc->SetDisplayStat(kFALSE);
-                     if (fFileInfo->fFileNamesList != 0) {
-                        fFileInfo->fFileNamesList->Delete();
-                        fFileInfo->fFileNamesList = 0;
-                     }
+                     fFileInfo->DeleteFileNamesList();
                      DeleteWindow();
                      return kTRUE;   //no need to redraw fFc
                      break;
@@ -495,8 +480,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kIDF_CDUP:
                      fFc->ChangeDirectory("..");
                      fTreeLB->Update(fFc->GetDirectory());
-                     if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
-                     fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                     fFileInfo->SetIniDir(fFc->GetDirectory());
                      if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
                         gSystem->cd(fFc->GetDirectory());
                      }
@@ -553,8 +537,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if (e) {
                         fFc->ChangeDirectory(e->GetPath()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
-                        if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
-                        fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                        fFileInfo->SetIniDir(fFc->GetDirectory());
                         if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
                            gSystem->cd(fFc->GetDirectory());
                         }
@@ -599,10 +582,9 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         TList *tmp = fFc->GetSelectedItems();
                         TObjString *el;
                         TIter next(tmp);
-                        if ( fFileInfo->fFileNamesList != 0 ) {
+                        if (fFileInfo->fFileNamesList) {
                            fFileInfo->fFileNamesList->Delete();
-                        }
-                        else {
+                        } else {
                            fFileInfo->fFileNamesList = new TList();
                         }
                         while ((el = (TObjString *) next())) {
@@ -628,8 +610,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if (f && R_ISDIR(f->GetType())) {
                         fFc->ChangeDirectory(f->GetItemName()->GetString());
                         fTreeLB->Update(fFc->GetDirectory());
-                        if (fFileInfo->fIniDir) delete [] fFileInfo->fIniDir;
-                        fFileInfo->fIniDir = StrDup(fFc->GetDirectory());
+                        fFileInfo->SetIniDir(fFc->GetDirectory());
                         if (strcmp(gSystem->WorkingDirectory(),fFc->GetDirectory())) {
                            gSystem->cd(fFc->GetDirectory());
                         }
@@ -646,10 +627,10 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            if (ret == kMBNo)
                               return kTRUE;
                         }
-                        if (fFileInfo->fFilename)
-                           delete [] fFileInfo->fFilename;
+                        fFileInfo->SetFilename(nullptr);
+                        // FIXME: once appropriate gSystem method exists, use SetFilename here
                         if (gSystem->IsAbsoluteFileName(fTbfname->GetString()))
-                           fFileInfo->fFilename = StrDup(fTbfname->GetString());
+                           fFileInfo->SetFilename(fTbfname->GetString());
                         else
                            fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                                           fTbfname->GetString());
@@ -706,8 +687,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         return kTRUE;
                   }
                }
-               if (fFileInfo->fFilename)
-                  delete [] fFileInfo->fFilename;
+               fFileInfo->SetFilename(nullptr);
+               // FIXME: once appropriate gSystem method exists, use SetFilename here
                fFileInfo->fFilename = gSystem->ConcatFileName(fFc->GetDirectory(),
                                                               fTbfname->GetString());
                pExpandUnixPathName(*fFileInfo);
