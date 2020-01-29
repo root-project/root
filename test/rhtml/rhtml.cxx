@@ -448,7 +448,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = filetypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this,
                                          kFDOpen, &fi);
                         dir = fi.fIniDir;

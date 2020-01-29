@@ -1991,7 +1991,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         static TString dir(".");
                         TGFileInfo info;
                         info.fFileTypes = gOpenTypes;
-                        info.fIniDir    = StrDup(dir);
+                        info.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
                         if (!info.fFilename) return kTRUE;
                         dir = info.fIniDir;
@@ -2019,7 +2019,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         static TString dir(".");
                         TGFileInfo info;
                         info.fFileTypes = gMacroTypes;
-                        info.fIniDir    = StrDup(dir);
+                        info.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
                         if (!info.fFilename) return kTRUE;
                         dir = info.fIniDir;

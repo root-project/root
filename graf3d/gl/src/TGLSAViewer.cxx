@@ -755,7 +755,7 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
             {
                TGFileInfo fi;
                fi.fFileTypes   = gGLSaveAsTypes;
-               fi.fIniDir      = StrDup(fDirName);
+               fi.SetIniDir(fDirName);
                fi.fFileTypeIdx = fTypeIdx;
                fi.fOverwrite   = fOverwrite;
                new TGFileDialog(gClient->GetDefaultRoot(), fFrame, kFDSave, &fi);
