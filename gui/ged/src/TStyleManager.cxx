@@ -918,7 +918,7 @@ void TStyleManager::DoExport()
    char* tmpFileName;
    const char* tmpBaseName;
    do {
-      fCurMacro->fFilename = StrDup(newName.Data());
+      fCurMacro->SetFilename(newName.Data());
 
       // Open a dialog to ask the user to choose an output file.
       new TGFileDialog(gClient->GetRoot(), this, kFDSave, fCurMacro);
@@ -931,7 +931,7 @@ void TStyleManager::DoExport()
    if (tmpBaseName != 0) {
       // Export the style.
       fCurSelStyle->SaveSource(gSystem->UnixPathName(tmpFileName));
-      fCurMacro->fFilename = StrDup(tmpBaseName);
+      fCurMacro->SetFilename(tmpBaseName);
       fStyleChanged = kFALSE;
    }
 
@@ -1013,7 +1013,7 @@ void TStyleManager::DoImportCanvas()
       CreateMacro();
       TString newName;
       newName.Form("Style_%s.C", fCurSelStyle->GetName());
-      fCurMacro->fFilename = StrDup(newName.Data());
+      fCurMacro->SetFilename(newName.Data());
       fCurSelStyle->SaveSource(gSystem->UnixPathName(fCurMacro->fFilename));
    } else {
       BuildList(fCurSelStyle);
@@ -1027,10 +1027,9 @@ void TStyleManager::CreateMacro()
 {
    if (fCurMacro) delete fCurMacro;
    fCurMacro = new TGFileInfo();
-   TString dir(".");
    fCurMacro->fFileTypes = kFiletypes;
-   fCurMacro->fIniDir    = StrDup(dir);
-   fCurMacro->fFilename  = 0;
+   fCurMacro->SetIniDir(".");
+   fCurMacro->SetFilename(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4336,12 +4335,12 @@ void TStyleManager::DoImportMacro(Bool_t create)
       if (!create) {
          TString newName;
          newName.Form("Style_%s.C", fCurSelStyle->GetName());
-         fCurMacro->fFilename = StrDup(newName.Data());
+         fCurMacro->SetFilename(newName.Data());
       }
       new TGFileDialog(gClient->GetRoot(), this, kFDOpen, fCurMacro);
-      if (fCurMacro->fFilename != 0) {
+      if (fCurMacro->fFilename) {
          gROOT->ProcessLine(Form(".x %s", fCurMacro->fFilename));
-         fCurMacro->fFilename = StrDup(gSystem->BaseName(fCurMacro->fFilename));
+         fCurMacro->SetFilename(gSystem->BaseName(fCurMacro->fFilename));
       }
    }
 
