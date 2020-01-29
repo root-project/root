@@ -430,18 +430,14 @@ static const char *GetExePath()
       if (!gApplication)
          return exepath;
       TString p = gApplication->Argv(0);
-      if (p.BeginsWith("/"))
+      if (p.BeginsWith("/")) {
          exepath = p;
-      else if (p.Contains("/")) {
+      } else if (p.Contains("/")) {
          exepath = gSystem->WorkingDirectory();
          exepath += "/";
          exepath += p;
-      } else {
-         char *exe = gSystem->Which(gSystem->Getenv("PATH"), p, kExecutePermission);
-         if (exe) {
-            exepath = exe;
-            delete [] exe;
-         }
+      } else if (gSystem->FindFile(gSystem->Getenv("PATH"), p, kExecutePermission)) {
+         exepath = p;
       }
 #endif
    }

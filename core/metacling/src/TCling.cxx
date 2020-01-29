@@ -5618,21 +5618,19 @@ Int_t TCling::ReloadAllSharedLibraryMaps()
          return -1;
       }
       rootMapBaseStr += ".rootmap";
-      const char* rootMap = gSystem->Which(gSystem->GetDynamicPath(), rootMapBaseStr);
-      if (!rootMap) {
+      TString rootMap = rootMapBaseStr;
+
+      if (!gSystem->FindFile(gSystem->GetDynamicPath(), rootMap)) {
          Error("ReloadAllSharedLibraryMaps", "Could not find rootmap %s in path", rootMapBaseStr.Data());
-         delete[] rootMap;
          delete sharedLibL;
          return -1;
       }
       const Int_t status = LoadLibraryMap(rootMap);
       if (status < 0) {
-         Error("ReloadAllSharedLibraryMaps", "Error loading map %s", rootMap);
-         delete[] rootMap;
+         Error("ReloadAllSharedLibraryMaps", "Error loading map %s", rootMap.Data());
          delete sharedLibL;
          return -1;
       }
-      delete[] rootMap;
    }
    delete sharedLibL;
    return 0;
@@ -5640,7 +5638,7 @@ Int_t TCling::ReloadAllSharedLibraryMaps()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unload the library map entries coming from all the loaded shared libraries.
-/// Returns 0 if succesful
+/// Returns 0 if successful
 
 Int_t TCling::UnloadAllSharedLibraryMaps()
 {

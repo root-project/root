@@ -2680,11 +2680,11 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    adddictdep += ": ";
 #if defined(R__HAS_CLING_DICTVERSION)
    {
-      char *clingdictversion = gSystem->Which(incPath,"clingdictversion.h");
-      if (clingdictversion) {
+      TString clingdictversion = "clingdictversion.h";
+
+      if (gSystem->FindFile(incPath, clingdictversion)) {
          R__AddPath(adddictdep,clingdictversion);
          adddictdep += " ";
-         delete [] clingdictversion;
       } else {
          R__AddPath(adddictdep,rootsysInclude+"/clingdictversion.h ");
       }
@@ -2698,10 +2698,10 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
 
       for (unsigned int h=0; h < sizeof(dictHeaders)/sizeof(dictHeaders[0]); ++h)
       {
-         char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
-         if (rootVersion) {
-            R__AddPath(adddictdep,rootVersion);
-            delete [] rootVersion;
+         TString rootVersion = dictHeaders[h];
+
+         if (gSystem->FindFile(incPath, rootVersion)) {
+            R__AddPath(adddictdep, rootVersion);
          } else {
             R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
          }
@@ -2710,11 +2710,10 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    }
    {
       // Add dependency on rootcling.
-      char *rootCling = gSystem->Which(gSystem->Getenv("PATH"),"rootcling");
-      if (rootCling) {
+      TString rootCling = "rootcling";
+      if (gSystem->FindFile(gSystem->Getenv("PATH"),rootCling)) {
          R__AddPath(adddictdep,rootCling);
          adddictdep += " ";
-         delete [] rootCling;
       }
    }
    adddictdep += " >> \""+depfilename+"\"";

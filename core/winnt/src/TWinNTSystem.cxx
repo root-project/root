@@ -4111,9 +4111,9 @@ const char *TWinNTSystem::GetLinkedLibraries()
    if (once)
       return nullptr;
 
-   char *exe = gSystem->Which(Getenv("PATH"), gApplication->Argv(0),
-                              kExecutePermission);
-   if (!exe) {
+   TString exe = gApplication->Argv(0);
+
+   if (!gSystem->FindFile(Getenv("PATH"), exe, kExecutePermission)) {
       once = kTRUE;
       return nullptr;
    }
@@ -4121,19 +4121,16 @@ const char *TWinNTSystem::GetLinkedLibraries()
    HANDLE hFile, hMapping;
    void *basepointer;
 
-   if((hFile = CreateFile(exe,GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
-      delete [] exe;
+   if((hFile = CreateFile(exe.Data(),GENERIC_READ,FILE_SHARE_READ,0,OPEN_EXISTING,FILE_FLAG_SEQUENTIAL_SCAN,0))==INVALID_HANDLE_VALUE) {
       return nullptr;
    }
    if(!(hMapping = CreateFileMapping(hFile,0,PAGE_READONLY|SEC_COMMIT,0,0,0))) {
       CloseHandle(hFile);
-      delete [] exe;
       return nullptr;
    }
    if(!(basepointer = MapViewOfFile(hMapping,FILE_MAP_READ,0,0,0))) {
       CloseHandle(hMapping);
       CloseHandle(hFile);
-      delete [] exe;
       return nullptr;
    }
 
@@ -4149,29 +4146,23 @@ const char *TWinNTSystem::GetLinkedLibraries()
    const IMAGE_SECTION_HEADER * section_header;
 
    if(dos_head->e_magic!='ZM') {
-      delete [] exe;
       return nullptr;
    }  // verify DOS-EXE-Header
    // after end of DOS-EXE-Header: offset to PE-Header
    pheader = (struct header *)((char*)dos_head + dos_head->e_lfanew);
 
    if(IsBadReadPtr(pheader,sizeof(struct header))) { // start of PE-Header
-      delete [] exe;
       return nullptr;
    }
    if(pheader->signature!=IMAGE_NT_SIGNATURE) {      // verify PE format
       switch((unsigned short)pheader->signature) {
          case IMAGE_DOS_SIGNATURE:
-            delete [] exe;
             return nullptr;
          case IMAGE_OS2_SIGNATURE:
-            delete [] exe;
             return nullptr;
          case IMAGE_OS2_SIGNATURE_LE:
-            delete [] exe;
             return nullptr;
          default: // unknown signature
-            delete [] exe;
             return nullptr;
       }
    }
@@ -4224,8 +4215,6 @@ const char *TWinNTSystem::GetLinkedLibraries()
    UnmapViewOfFile(basepointer);
    CloseHandle(hMapping);
    CloseHandle(hFile);
-
-   delete [] exe;
 
    once = kTRUE;
 

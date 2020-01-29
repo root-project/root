@@ -269,10 +269,13 @@ void TApplication::InitializeGraphics()
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                        TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+   TString ttfont = "arialbd.ttf";
+
    // Check for use of DFSG - fonts
-   if (!ttfont)
-      ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+   if (!gSystem->FindFile(ttpath, ttfont, kReadPermission)) {
+      ttfont = "FreeSansBold.ttf";
+      gSystem->FindFile(ttpath, ttfont, kReadPermission);
+   }
 
 #if !defined(R__WIN32)
    if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
@@ -290,7 +293,6 @@ void TApplication::InitializeGraphics()
       }
    }
 #endif
-   delete [] ttfont;
 
    // Create WM dependent application environment
    if (fAppImp)
@@ -543,14 +545,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             } else {
                TString mode,fargs,io;
                TString fname = gSystem->SplitAclicMode(dir,mode,fargs,io);
-               char *mac;
+               TString mac = fname;
                if (!fFiles) fFiles = new TObjArray;
-               if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
-                                         kReadPermission))) {
+               if (gSystem->FindFile(TROOT::GetMacroPath(), mac, kReadPermission)) {
                   // if file add to list of files to be processed
                   fFiles->Add(new TObjString(argv[i]));
                   argv[i] = null;
-                  delete [] mac;
                } else {
                   // if file add an invalid entry to list of files to be processed
                   fFiles->Add(new TNamed("NOT FOUND!", argv[i]));
@@ -1399,49 +1399,44 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    if (!strncmp(line, ".which", 6)) {
       char *fn  = Strip(line+7);
       char *s = strtok(fn, "+("); // this method does not need to be reentrant
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), s, kReadPermission);
-      if (!mac)
+      TString mac = s;
+
+      if (!gSystem->FindFile(TROOT::GetMacroPath(), mac, kReadPermission))
          Printf("No macro %s in path %s", s, TROOT::GetMacroPath());
       else
-         Printf("%s", mac);
+         Printf("%s", mac.Data());
       delete [] fn;
-      delete [] mac;
-      return mac ? 1 : 0;
+      return (mac.Length() > 0) ? 1 : 0;
    }
 
    if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2)) {
-      TString aclicMode;
-      TString arguments;
-      TString io;
+      TString aclicMode, arguments, io;
       TString fname = gSystem->SplitAclicMode(line+3, aclicMode, arguments, io);
-
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
+      TString mac = fname;
       if (arguments.Length()) {
          Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
                  line[1]);
       }
       Long_t retval = 0;
-      if (!mac)
+      if (!gSystem->FindFile(TROOT::GetMacroPath(), mac, kReadPermission)) {
          Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
                TROOT::GetMacroPath());
-      else {
+      } else {
          TString cmd(line+1);
          Ssiz_t posSpace = cmd.Index(' ');
          if (posSpace == -1) cmd.Remove(1);
          else cmd.Remove(posSpace);
          TString tempbuf;
          if (sync) {
-            tempbuf.Form(".%s %s%s%s", cmd.Data(), mac, aclicMode.Data(),io.Data());
+            tempbuf.Form(".%s %s%s%s", cmd.Data(), mac.Data(), aclicMode.Data(),io.Data());
             retval = gInterpreter->ProcessLineSynch(tempbuf,
                                                    (TInterpreter::EErrorCode*)err);
          } else {
-            tempbuf.Form(".%s %s%s%s", cmd.Data(), mac, aclicMode.Data(),io.Data());
+            tempbuf.Form(".%s %s%s%s", cmd.Data(), mac.Data(), aclicMode.Data(),io.Data());
             retval = gInterpreter->ProcessLine(tempbuf,
                                               (TInterpreter::EErrorCode*)err);
          }
       }
-
-      delete [] mac;
 
       InitializeGraphics();
 
@@ -1489,27 +1484,23 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
 
    if (!file || !*file) return 0;
 
-   TString aclicMode;
-   TString arguments;
-   TString io;
+   TString aclicMode, arguments, io;
    TString fname = gSystem->SplitAclicMode(file, aclicMode, arguments, io);
+   TString exnam = fname;
 
-   char *exnam = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
-   if (!exnam) {
+   if (!gSystem->FindFile(TROOT::GetMacroPath(), exnam, kReadPermission)) {
       ::Error("TApplication::ExecuteFile", "macro %s not found in path %s", fname.Data(),
               TROOT::GetMacroPath());
-      delete [] exnam;
       if (error)
          *error = (Int_t)TInterpreter::kRecoverable;
       return 0;
    }
 
-   ::std::ifstream macro(exnam, std::ios::in);
+   ::std::ifstream macro(exnam.Data(), std::ios::in);
    if (!macro.good()) {
-      ::Error("TApplication::ExecuteFile", "%s no such file", exnam);
+      ::Error("TApplication::ExecuteFile", "%s no such file", exnam.Data());
       if (error)
          *error = (Int_t)TInterpreter::kRecoverable;
-      delete [] exnam;
       return 0;
    }
 
@@ -1607,7 +1598,6 @@ again:
       retval = gInterpreter->ProcessLineSynch(tempbuf,(TInterpreter::EErrorCode*)error);
    }
 
-   delete [] exnam;
    return retval;
 }
 

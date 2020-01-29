@@ -2264,16 +2264,14 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
       terr = &lerr;
 
    if (fInterpreter) {
-      TString aclicMode;
-      TString arguments;
-      TString io;
+      TString aclicMode, arguments, io;
       TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
 
       if (arguments.Length()) {
          Warning("LoadMacro", "argument(%s) ignored in %s", arguments.Data(), GetMacroPath());
       }
-      char *mac = gSystem->Which(GetMacroPath(), fname, kReadPermission);
-      if (!mac) {
+      TString mac = fname;
+      if (!gSystem->FindFile(GetMacroPath(), mac, kReadPermission)) {
          if (!check)
             Error("LoadMacro", "macro %s not found in path %s", fname.Data(), GetMacroPath());
          *terr = TInterpreter::kFatal;
@@ -2288,7 +2286,6 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
                err = -1;
          }
       }
-      delete [] mac;
    }
    return err;
 }
@@ -2307,13 +2304,11 @@ Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
    Long_t result = 0;
 
    if (fInterpreter) {
-      TString aclicMode;
-      TString arguments;
-      TString io;
+      TString aclicMode, arguments, io;
       TString fname = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);
+      TString mac = fname;
 
-      char *mac = gSystem->Which(GetMacroPath(), fname, kReadPermission);
-      if (!mac) {
+      if (!gSystem->FindFile(GetMacroPath(), mac, kReadPermission)) {
          Error("Macro", "macro %s not found in path %s", fname.Data(), GetMacroPath());
          if (error)
             *error = TInterpreter::kFatal;
@@ -2324,7 +2319,6 @@ Long_t TROOT::Macro(const char *filename, Int_t *error, Bool_t padUpdate)
          fname += io;
          result = gInterpreter->ExecuteMacro(fname, (TInterpreter::EErrorCode*)error);
       }
-      delete [] mac;
 
       if (padUpdate && gPad)
          gPad->Update();
