@@ -87,7 +87,7 @@ public:
 				 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
 				 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
 
-  static const char* decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, const char* defVal, const RooCmdArg& arg1, 
+  static std::string decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, const char* defVal, const RooCmdArg& arg1,
 					 const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
 					 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
 					 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
