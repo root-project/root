@@ -820,7 +820,7 @@ void TestMainFrame::HandleMenu(Int_t id)
             static TString dir(".");
             TGFileInfo fi;
             fi.fFileTypes = filetypes;
-            fi.fIniDir    = StrDup(dir);
+            fi.SetIniDir(dir);
             printf("fIniDir = %s\n", fi.fIniDir);
             new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
             printf("Open file: %s (dir: %s)\n", fi.fFilename, fi.fIniDir);
