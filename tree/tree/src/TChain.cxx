@@ -2096,14 +2096,15 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
                                Bool_t) const
 {
    Ssiz_t pIdx = kNPOS;
-   filename = name;
+   filename.Clear();
    treename.Clear();
    query.Clear();
    suffix.Clear();
 
    // General case
    TUrl url(name, kTRUE);
-
+   filename = url.GetUrl();
+   
    TString fn = url.GetFile();
    // Extract query, if any
    if (url.GetOptions() && (strlen(url.GetOptions()) > 0))
