@@ -25,7 +25,11 @@ include_directories(${ROOT_INCLUDE_DIRS})
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND)
 
-    SET(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
+   set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+
+   CUDA_ADD_EXECUTABLE(testLSTMBackpropagationCuda TestLSTMBackpropagationCuda.cxx)
+   target_link_libraries(testLSTMBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+   ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCuda COMMAND testLSTMBackpropagationCuda)
 
 endif (CUDA_FOUND)
 

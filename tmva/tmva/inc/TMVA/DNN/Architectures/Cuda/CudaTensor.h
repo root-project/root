@@ -330,8 +330,8 @@ public:
 
    // for backeard compatibility with old tensor
    TCudaMatrix<AFloat> operator[](size_t i) const {
-      assert(GetLayout() == MemoryLayout::ColumnMajor ); 
-      return At(i).GetMatrix(); 
+      //assert(GetLayout() == MemoryLayout::ColumnMajor );
+      return At(i).GetMatrix();
    }
 
 

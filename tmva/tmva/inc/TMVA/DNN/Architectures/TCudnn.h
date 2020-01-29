@@ -31,6 +31,8 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 #include "TMVA/DNN/RNN/RNNLayer.h"
+#include "TMVA/DNN/RNN/LSTMLayer.h"
+#include "TMVA/DNN/RNN/GRULayer.h"
 
 #include "cudnn.h"
 #include "Cuda/CudaBuffers.h"
@@ -100,8 +102,16 @@ public:
    using PoolingWorkspace_t      = CNN::TCNNWorkspace<PoolingLayer_t>;
 
    using RNNLayer_t              = RNN::TBasicRNNLayer<TCudnn<AFloat>>;
-   using RNNDescriptors_t        = RNN::TRNNDescriptors<RNNLayer_t>;
-   using RNNWorkspace_t          = RNN::TRNNWorkspace<RNNLayer_t>;
+   using RNNDescriptors_t        = RNN::TRNNDescriptors<TCudnn<AFloat>>;
+   using RNNWorkspace_t          = RNN::TRNNWorkspace<TCudnn<AFloat>>;
+
+   using LSTMLayer_t             = RNN::TBasicLSTMLayer<TCudnn<AFloat>>;
+   // using LSTMDescriptors_t       = RNN::TRNNDescriptors<LSTMLayer_t>;
+   // using LSTMWorkspace_t         = RNN::TRNNWorkspace<LSTMLayer_t>;
+
+   using GRULayer_t              = RNN::TBasicGRULayer<TCudnn<AFloat>>;
+   // using GRUDescriptors_t        = RNN::TRNNDescriptors<GRULayer_t>;
+   // using GRUWorkspace_t          = RNN::TRNNWorkspace<GRULayer_t>;
 
    // template <typename AFloat>
    // using ConvDescriptors_t = CNN::TCNNDescriptors<CNN::TConvLayer<TCudnn<AFloat>>>;
@@ -162,7 +172,20 @@ public:
    static void InitializePoolDescriptors(TDescriptors * & descriptors,
                                         PoolingLayer_t *L = nullptr);
 
-   static void InitializeRNNDescriptors(TDescriptors *&descriptors, RNNLayer_t *L = nullptr);
+   static void InitializeRNNDescriptors(TDescriptors *&descriptors, RNNLayer_t *layer)
+   {
+      InitializeRecurrentDescriptors<RNNLayer_t>(descriptors, layer);
+   }
+   static void InitializeLSTMDescriptors(TDescriptors *&descriptors, LSTMLayer_t *layer) {
+      InitializeRecurrentDescriptors<LSTMLayer_t>(descriptors, layer);
+   }
+   static void InitializeGRUDescriptors(TDescriptors *&descriptors, GRULayer_t *layer) {
+      InitializeRecurrentDescriptors<GRULayer_t>(descriptors, layer);
+   }
+   template<typename RNNLayer>
+   static void InitializeRecurrentDescriptors(TDescriptors *&descriptors, RNNLayer *L);
+   // static void InitializeRNNDescriptors(TDescriptors *&descriptors, LSTMLayer_t *L = nullptr);
+   // static void InitializeRNNDescriptors(TDescriptors *&descriptors, GRULayer_t *L = nullptr);
 
    static void InitializeActivationDescriptor(ActivationDescriptor_t & descriptors, EActivationFunction activFunc, double coef = 0.0);
 
@@ -187,14 +210,33 @@ public:
                                        TDescriptors * & descriptors,
                                        const DNN::CNN::TConvParams & params,
                                        PoolingLayer_t *L = nullptr);
-   static void InitializeRNNWorkspace(TWorkspace *&workspace, TDescriptors *&descriptors,
-                                             RNNLayer_t *L = nullptr);
+
+   static void InitializeRNNWorkspace(TWorkspace *&workspace, TDescriptors *&descriptors, RNNLayer_t *layer)
+   {
+      InitializeRecurrentWorkspace<RNNLayer_t>(workspace, descriptors, layer);
+   }
+   static void InitializeLSTMWorkspace(TWorkspace *&workspace, TDescriptors *&descriptors, LSTMLayer_t *layer)
+   {
+      InitializeRecurrentWorkspace<LSTMLayer_t>(workspace, descriptors, layer);
+   }
+   static void InitializeGRUWorkspace(TWorkspace *&workspace, TDescriptors *&descriptors, GRULayer_t *layer)
+   {
+      InitializeRecurrentWorkspace<GRULayer_t>(workspace, descriptors, layer);
+   }
+   template<typename RNNLayer>
+   static void InitializeRecurrentWorkspace(TWorkspace *&workspace, TDescriptors *&descriptors,
+                                             RNNLayer *layer);
 
    static void FreeConvWorkspace(TWorkspace * workspace);
    static void FreePoolDropoutWorkspace(TWorkspace * workspace);
    static void FreeRNNWorkspace(TWorkspace *workspace);
 
-   static void InitializeRNNTensors(RNNLayer_t * layer);
+   // tensor inizialization for recurrent networks
+   static void InitializeRNNTensors(RNNLayer_t *layer) { InitializeRecurrentTensors<RNNLayer_t>(layer); }
+   static void InitializeLSTMTensors(LSTMLayer_t *layer) { InitializeRecurrentTensors<LSTMLayer_t>(layer); }
+   static void InitializeGRUTensors(GRULayer_t *layer) { InitializeRecurrentTensors<GRULayer_t>(layer); }
+   template <typename RNNLayer>
+   static void InitializeRecurrentTensors(RNNLayer *layer);
 
    //____________________________________________________________________________
    //
@@ -300,16 +342,22 @@ public:
    // No cudnn implementation for the following activation functions
    //
    //static void SymmetricRelu(Tensor_t & B);
-   static void SymmetricReluDerivative(Tensor_t & B,
-                                       const Tensor_t & A) {}
 
-   //static void SoftSign(Tensor_t & B);
-   static void SoftSignDerivative(Tensor_t & B,
-                                  const Tensor_t & A) {}
+   // implmentations not used by Cudnn
+   static void Relu(Tensor_t &) {}
+   static void Sigmoid(Tensor_t &) {}
+   static void Tanh(Tensor_t &) {}
+   static void SymmetricRelu(Tensor_t &) {}
+   static void SoftSign(Tensor_t &) {}
+   static void Gauss(Tensor_t &) {}
 
-   //static void Gauss(Tensor_t & B);
-   static void GaussDerivative(Tensor_t & B,
-                               const Tensor_t & A) {}
+   static void IdentityDerivative(Tensor_t &, const Tensor_t &) {}
+   static void ReluDerivative(Tensor_t &, const Tensor_t &) {}
+   static void SigmoidDerivative(Tensor_t &, const Tensor_t &) {}
+   static void TanhDerivative(Tensor_t &, const Tensor_t &) {}
+   static void SymmetricReluDerivative(Tensor_t & , const Tensor_t & ) {}
+   static void SoftSignDerivative(Tensor_t & , const Tensor_t & ) {}
+   static void GaussDerivative(Tensor_t & ,  const Tensor_t & ) {}
    ///@}
 
    //____________________________________________________________________________
@@ -604,20 +652,6 @@ public:
    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
    static void Rearrange(Tensor_t &out, const Tensor_t &in);
 
-   /** Backward pass for Recurrent Networks */
-   static Matrix_t &RecurrentLayerBackward(Matrix_t &state_gradients_backward, // BxH
-                                           Matrix_t & /* input_weight_gradients */, Matrix_t &/* state_weight_gradients */,
-                                           Matrix_t &/* bias_gradients */,
-                                           Matrix_t &/* df */,                  // DxH
-                                           const Matrix_t &/* state */,         // BxH
-                                           const Matrix_t &/* weights_input */, // HxD
-                                           const Matrix_t &/* weights_state */, // HxH
-                                           const Matrix_t &/* input */,         // BxD
-                                           Matrix_t &/* input_gradient */)
-   {
-      return state_gradients_backward;
-   }
-
    // RNN functions
    static void RNNForward(const Tensor_t &x, const Tensor_t &hx, const Tensor_t &cx, const Tensor_t &weights,
                            Tensor_t &y, Tensor_t &hy, Tensor_t &cy, const RNNDescriptors_t &descr,
@@ -626,6 +660,62 @@ public:
    static void RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Tensor_t &cx, const Tensor_t &y, const Tensor_t &dy,
                     const Tensor_t &dhy, const Tensor_t &dcy, const Tensor_t &weights, Tensor_t &dx, Tensor_t &dhx,
                     Tensor_t &dcx, Tensor_t &dw, const RNNDescriptors_t &desc, RNNWorkspace_t &workspace);
+
+
+   // Backward pass for Recurrent Networks functions used by another architectures
+   //******************************************************************************************
+   static Matrix_t &RecurrentLayerBackward(Matrix_t &state_gradients_backward, // BxH
+                                           Matrix_t & /* input_weight_gradients */,
+                                           Matrix_t & /* state_weight_gradients */, Matrix_t & /* bias_gradients */,
+                                           Matrix_t & /* df */,                  // DxH
+                                           const Matrix_t & /* state */,         // BxH
+                                           const Matrix_t & /* weights_input */, // HxD
+                                           const Matrix_t & /* weights_state */, // HxH
+                                           const Matrix_t & /* input */,         // BxD
+                                           Matrix_t & /* input_gradient */)
+   {
+      return state_gradients_backward;
+   }
+   static Matrix_t &LSTMLayerBackward(
+      Matrix_t & state_gradients_backward , Matrix_t & /*cell_gradients_backward*/,
+      Matrix_t & /*input_weight_gradients*/, Matrix_t & /*forget_weight_gradients*/,
+      Matrix_t & /*candidate_weight_gradients*/, Matrix_t & /*output_weight_gradients*/,
+      Matrix_t & /*input_state_weight_gradients*/, Matrix_t & /*forget_state_weight_gradients*/,
+      Matrix_t & /*candidate_state_weight_gradients*/,
+      Matrix_t & /*output_state_weight_gradients*/, Matrix_t & /*input_bias_gradients*/,
+      Matrix_t & /*forget_bias_gradients*/, Matrix_t & /*candidate_bias_gradients*/,
+      Matrix_t & /*output_bias_gradients*/, Matrix_t & /*di*/, Matrix_t & /*df*/,
+      Matrix_t & /*dc*/, Matrix_t & /*dout*/,
+      const Matrix_t & /*precStateActivations*/, const Matrix_t & /*precCellActivations*/,
+      const Matrix_t & /*fInput*/, const Matrix_t & /*fForget*/,
+      const Matrix_t & /*fCandidate*/, const Matrix_t & /*fOutput*/,
+      const Matrix_t & /*weights_input*/, const Matrix_t & /*weights_forget*/,
+      const Matrix_t & /*weights_candidate*/, const Matrix_t & /*weights_output*/,
+      const Matrix_t & /*weights_input_state*/, const Matrix_t & /*weights_forget_state*/,
+      const Matrix_t & /*weights_candidate_state*/, const Matrix_t & /*weights_output_state*/,
+      const Matrix_t & /*input*/, Matrix_t & /*input_gradient*/,
+      Matrix_t & /*cell_gradient*/, Matrix_t & /*cell_tanh*/)
+   {
+      return state_gradients_backward;
+   }
+
+   /** Backward pass for GRU Network */
+   static Matrix_t &GRULayerBackward(
+      Matrix_t &  state_gradients_backward, Matrix_t & /*reset_weight_gradients*/,
+      Matrix_t & /*update_weight_gradients*/, Matrix_t & /*candidate_weight_gradients*/,
+      Matrix_t & /*reset_state_weight_gradients*/, Matrix_t & /*update_state_weight_gradients*/,
+      Matrix_t & /*candidate_state_weight_gradients*/, Matrix_t & /*reset_bias_gradients*/,
+      Matrix_t & /*update_bias_gradients*/, Matrix_t & /*candidate_bias_gradients*/,
+      Matrix_t & /*dr*/, Matrix_t & /*du*/, Matrix_t & /*dc*/,
+      const Matrix_t & /*precStateActivations*/, const Matrix_t & /*fReset*/,
+      const Matrix_t & /*fUpdate*/, const Matrix_t & /*fCandidate*/,
+      const Matrix_t & /*weights_reset*/, const Matrix_t & /*weights_update*/,
+      const Matrix_t & /*weights_candidate*/, const Matrix_t & /*weights_reset_state*/,
+      const Matrix_t & /*weights_update_state*/, const Matrix_t & /*weights_candidate_state*/,
+      const Matrix_t & /*input*/, Matrix_t & /*input_gradient*/)
+   {
+      return state_gradients_backward;
+   }
 
    ///@}
 

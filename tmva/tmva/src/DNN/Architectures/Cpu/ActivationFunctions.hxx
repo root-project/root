@@ -20,7 +20,7 @@
 #ifdef R__HAS_VDT
 #include "vdt/tanh.h"
 #define TANH_IMPL_X   vdt::fast_tanhf(x)
-#else 
+#else
 #define TANH_IMPL_X    tanh(x)
 #endif
 
@@ -32,8 +32,8 @@ namespace DNN
 
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct, 
-                                             const ActivationDescriptor_t /* activationDescr */,  
+void TCpu<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction activFunct,
+                                             const ActivationDescriptor_t /* activationDescr */,
                                              const double /* coef */, const AFloat /*alpha */, const AFloat /*beta*/)
 {
    // scaling and translation is not yet implemented
@@ -41,7 +41,7 @@ void TCpu<AFloat>::ActivationFunctionForward(Tensor_t & X, EActivationFunction a
 }
 //______________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & /* Y */,  
+void TCpu<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & /* Y */,
                                                 const Tensor_t & dY, const Tensor_t & X,
                                                 EActivationFunction activFunct,
                                                 const ActivationDescriptor_t /* activationDescr */,
@@ -50,7 +50,7 @@ void TCpu<AFloat>::ActivationFunctionBackward(Tensor_t & dX, const Tensor_t & /*
    // scaling and translation not yet implemented
    // output tensor (Y) could also be used to speed up derivative calculation
    // compute dx = f'(x)
-   TMVA::DNN::evaluateDerivative<TCpu<AFloat>>(dX, activFunct, X); 
+   TMVA::DNN::evaluateDerivative<TCpu<AFloat>>(dX, activFunct, X);
     // Compute element-wise product.  dx = f'(x) * dY
    Hadamard(dX, dY);
 }
