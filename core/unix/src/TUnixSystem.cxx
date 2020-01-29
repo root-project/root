@@ -276,7 +276,7 @@ struct TUtmpContent {
    STRUCT_UTMP *fUtmpContents;
    UInt_t       fEntries; // Number of entries in utmp file.
 
-   TUtmpContent() : fUtmpContents(0), fEntries(0) {}
+   TUtmpContent() : fUtmpContents(nullptr), fEntries(0) {}
    ~TUtmpContent() { free(fUtmpContents); }
 
    STRUCT_UTMP *SearchUtmpEntry(const char *tty)

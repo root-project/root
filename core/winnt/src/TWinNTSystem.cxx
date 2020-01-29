@@ -1064,11 +1064,8 @@ TWinNTSystem::~TWinNTSystem()
 
 Bool_t TWinNTSystem::Init()
 {
-   const char *dir = 0;
-
-   if (TSystem::Init()) {
+   if (TSystem::Init())
       return kTRUE;
-   }
 
    fReadmask = new TFdSet;
    fWritemask = new TFdSet;

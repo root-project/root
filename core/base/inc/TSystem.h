@@ -32,7 +32,6 @@
 #endif
 
 #include "TNamed.h"
-#include "TString.h"
 #include "TInetAddress.h"
 #include "TTimer.h"
 #include "ThreadLocalStorage.h"
@@ -109,7 +108,7 @@ enum EFileModeMask {
    kS_IXGRP  = 00010,     // group has execute permission
    kS_IRWXO  = 00007,     // mask for permissions for others (not in group)
    kS_IROTH  = 00004,     // others have read permission
-   kS_IWOTH  = 00002,     // others have write permisson
+   kS_IWOTH  = 00002,     // others have write permission
    kS_IXOTH  = 00001      // others have execute permission
 };
 
@@ -269,7 +268,7 @@ class TSystem : public TNamed {
 public:
    enum EAclicMode { kDefault, kDebug, kOpt };
    enum EAclicProperties {
-      kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created subdirectories
+      kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created sub-directories
    };
 
 protected:
@@ -411,7 +410,7 @@ public:
    virtual void           *OpenDirectory(const char *name);
    virtual void            FreeDirectory(void *dirp);
    virtual const char     *GetDirEntry(void *dirp);
-   virtual void           *GetDirPtr() const { return 0; }
+   virtual void           *GetDirPtr() const { return nullptr; }
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
    virtual std::string     GetWorkingDirectory() const;
@@ -521,7 +520,7 @@ public:
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual void            AddIncludePath(const char *includePath);
    virtual void            AddLinkedLibs(const char *linkedLib);
-   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "", UInt_t dirmode = 0);
+   virtual int             CompileMacro(const char *filename, Option_t *opt = "", const char *library_name = "", const char *build_dir = "", UInt_t dirmode = 0);
    virtual Int_t           GetAclicProperties() const;
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildCompiler() const;
