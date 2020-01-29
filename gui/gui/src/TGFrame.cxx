@@ -1512,7 +1512,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
       TGFileInfo fi;
       TGMainFrame *main = (TGMainFrame*)GetMainFrame();
       fi.fFileTypes = gSaveMacroTypes;
-      fi.fIniDir    = StrDup(dir);
+      fi.SetIniDir(dir);
       fi.fOverwrite = overwr;
       new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
       if (!fi.fFilename) return kFALSE;

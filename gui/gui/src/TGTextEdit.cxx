@@ -393,7 +393,7 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
          static Bool_t overwr = kFALSE;
          TGFileInfo fi;
          fi.fFileTypes = gFiletypes;
-         fi.fIniDir    = StrDup(dir);
+         fi.SetIniDir(dir);
          fi.fOverwrite = overwr;
          new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
          overwr = fi.fOverwrite;

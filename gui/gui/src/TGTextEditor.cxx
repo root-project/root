@@ -584,7 +584,7 @@ Bool_t TGTextEditor::SaveFileAs()
    static Bool_t overwr = kFALSE;
    TGFileInfo fi;
    fi.fFileTypes = ed_filetypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
    new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
    gSystem->ChangeDirectory(workdir.Data());

@@ -360,10 +360,10 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
       case kMenuPopup:
       case kMenuLabel:
       case kMenuEntry:
-         if ((entry->GetStatus() & kMenuActiveMask) && 
+         if ((entry->GetStatus() & kMenuActiveMask) &&
              entry->GetType() != kMenuLabel) {
             if (entry->GetStatus() & kMenuEnableMask) {
-               gVirtualX->FillRectangle(fId, 
+               gVirtualX->FillRectangle(fId,
                               TRootGuiBuilder::GetPopupHlghtGC()->GetGC(),
                               entry->GetEx()+1, entry->GetEy(),
                               fMenuWidth-6, h - 1);
@@ -392,19 +392,19 @@ void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
             }
 
             entry->GetLabel()->Draw(fId,
-                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC : 
+                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC :
                             GetShadowGC()(), tx, ty);
             if (entry->GetShortcut())
                entry->GetShortcut()->Draw(fId,
-                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC : 
+                           (entry->GetStatus() & kMenuEnableMask) ? fSelGC :
                            GetShadowGC()(), fMenuWidth - tw, ty);
          } else {
             if ( entry->GetType() != kMenuLabel) {
-               gVirtualX->FillRectangle(fId, 
+               gVirtualX->FillRectangle(fId,
                            TRootGuiBuilder::GetBgndGC()->GetGC(),
                            entry->GetEx()+1, entry->GetEy()-1, tx-4, h);
 
-               gVirtualX->FillRectangle(fId, 
+               gVirtualX->FillRectangle(fId,
                            TRootGuiBuilder::GetPopupBgndGC()->GetGC(),
                            tx-1, entry->GetEy()-1, fMenuWidth-tx-1, h);
             } else { // we need some special background for labels
@@ -1558,7 +1558,7 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    TString fname;
 
    fi.fFileTypes = gSaveMacroTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    root->SetEditable(kFALSE);
@@ -1626,7 +1626,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    root->SetEditable(kFALSE);
 
    fi.fFileTypes = gSaveMacroTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
 
    new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);

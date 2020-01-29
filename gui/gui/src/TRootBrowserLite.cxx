@@ -1811,7 +1811,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = gOpenTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.SetIniDir(dir);
                         new TGFileDialog(fClient->GetDefaultRoot(), this,
                                          kFDOpen,&fi);
                         dir = fi.fIniDir;
