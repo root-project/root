@@ -13,12 +13,15 @@
 
 #include "TVirtualTableInterface.h"
 
+#include "TString.h"
+
 class TGSimpleTableInterface : public TVirtualTableInterface {
 
 private:
    Double_t **fData; // Pointer to 2 dimensional array of Double_t
    UInt_t fNRows;
    UInt_t fNColumns;
+   TString fBuffer;
 
 protected:
 
@@ -27,14 +30,14 @@ public:
                           UInt_t ncolumns = 2);
    virtual ~TGSimpleTableInterface();
 
-   virtual Double_t    GetValue(UInt_t row, UInt_t column);
-   virtual const char *GetValueAsString(UInt_t row, UInt_t column);
-   virtual const char *GetRowHeader(UInt_t row);
-   virtual const char *GetColumnHeader(UInt_t column);
-   virtual UInt_t      GetNRows() { return fNRows; }
-   virtual UInt_t      GetNColumns() { return fNColumns; }
+   Double_t    GetValue(UInt_t row, UInt_t column) override;
+   const char *GetValueAsString(UInt_t row, UInt_t column) override;
+   const char *GetRowHeader(UInt_t row) override;
+   const char *GetColumnHeader(UInt_t column) override;
+   UInt_t      GetNRows() override { return fNRows; }
+   UInt_t      GetNColumns() override { return fNColumns; }
 
-   ClassDef(TGSimpleTableInterface, 0) // Interface to data in a 2D array of Double_t
+   ClassDefOverride(TGSimpleTableInterface, 0) // Interface to data in a 2D array of Double_t
 };
 
 #endif
