@@ -100,7 +100,7 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;
    using RNNLayer_t = TBasicRNNLayer<Architecture>;
-   using DenseLayer_t = TDenseLayer<Architecture>;
+   //using DenseLayer_t = TDenseLayer<Architecture>;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
@@ -159,11 +159,11 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    std::cout << std::endl;
 
    bool returnSequence = addExtraRNN;
-   TMVA::DNN::EActivationFunction f = TMVA::DNN::EActivationFunction::kSigmoid;
+   TMVA::DNN::EActivationFunction afunc = TMVA::DNN::EActivationFunction::kSigmoid;
 
    Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
              EInitialization::kGlorotUniform);
-   RNNLayer_t* rnnlayer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false, returnSequence, f);  // don't use tanh in test due to limited vdt precision
+   RNNLayer_t* rnnlayer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false, returnSequence, afunc);  // don't use tanh in test due to limited vdt precision
    //size_t input2 = stateSize;
    if (addExtraRNN) rnn.AddBasicRNNLayer(stateSize, stateSize, timeSteps, false, false, // do not return state at end
                                          TMVA::DNN::EActivationFunction::kRelu);
@@ -171,11 +171,11 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
    rnn.AddReshapeLayer(1, 1, stateSize, true);
    //rnn.AddReshapeLayer(1, 1, timeStep * stateSize, true);
 
-   DenseLayer_t * dlayer1 = nullptr;
-   DenseLayer_t * dlayer2 = nullptr;
+   // DenseLayer_t * dlayer1 = nullptr;
+   // DenseLayer_t * dlayer2 = nullptr;
    if (addDenseLayer) {
       //dlayer1 = rnn.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kSigmoid);
-      dlayer2 = rnn.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
+      rnn.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
    }
 
    rnn.Initialize();
@@ -258,8 +258,8 @@ bool testRecurrentBackpropagation(size_t timeSteps, size_t batchSize, size_t sta
       layer->Print();
       std::cout << "************************************* \n\n";
 
-      auto &dy = layer->GetActivationGradients();
-      printTensor<Architecture>(dy, "dy for layer");
+      auto &dyi = layer->GetActivationGradients();
+      printTensor<Architecture>(dyi, "dy for layer");
 
       if (layer->GetWeights().size() == 0)
          continue;

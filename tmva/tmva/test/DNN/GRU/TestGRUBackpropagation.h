@@ -61,7 +61,7 @@ auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const st
 }
 
 template <typename Architecture>
-auto printTensor(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+auto printMatrix(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
 -> void
 {
   std::cout << name << "\n";
@@ -196,7 +196,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       std::cout << " and an extra GRU";
    std::cout << std::endl;
 
-   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kIdentity);
+   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
    GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps);
    //size_t input2 = stateSize;
    if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps);
@@ -212,7 +212,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
 
    gru.Initialize();
-   gru.Forward(XArch);
+   gru.Forward(XArch, true);
    gru.Backward(XArch, Y, weights);
 
    if (debug)  {

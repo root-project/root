@@ -21,6 +21,7 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
+#include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/BatchNormLayer.h"
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
@@ -88,6 +89,7 @@ public:
 
    using EmptyDescriptor_t = DummyDescriptor; // Used if a descriptor is not needed in a class
 
+   using GenLayer_t = VGeneralLayer<TCpu<AReal>>;
    using BNormLayer_t            = TBatchNormLayer<TCpu<AReal>>;
    using BNormDescriptors_t      = TDNNGenDescriptors<BNormLayer_t>;
    //using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;
@@ -98,9 +100,10 @@ public:
    using PoolingDescriptors_t    = CNN::TCNNDescriptors<PoolingLayer_t>;
    using PoolingWorkspace_t      = CNN::TCNNWorkspace<PoolingLayer_t>;
 
-   using RNNLayer_t = RNN::TBasicRNNLayer<TCpu<AReal>>;
-   using RNNDescriptors_t = RNN::TRNNDescriptors<RNNLayer_t>;
-   using RNNWorkspace_t = RNN::TRNNWorkspace<RNNLayer_t>;
+   //using RNNLayer_t = RNN::TBasicRNNLayer<TCpu<AReal>>;
+   using RNNDescriptors_t = RNN::TRNNDescriptors<TCpu<AReal>>;
+   using RNNWorkspace_t = RNN::TRNNWorkspace<TCpu<AReal>>;
+
 
    static TMVA::Experimental::MemoryLayout GetTensorLayout() { return TMVA::Experimental::MemoryLayout::ColumnMajor; }
 
@@ -142,7 +145,9 @@ public:
                                          ConvLayer_t * /*L = nullptr*/) {}
    static void InitializePoolDescriptors(TDescriptors * & /*descriptors*/,
                                          PoolingLayer_t * /*L = nullptr*/) {}
-   static void InitializeRNNDescriptors(TDescriptors *& /*descriptors*/, RNNLayer_t * /*L = nullptr*/) {}
+   static void InitializeRNNDescriptors(TDescriptors *& /*descriptors*/, GenLayer_t * /*L*/) {}
+   static void InitializeLSTMDescriptors(TDescriptors *& /*descriptors*/, GenLayer_t * /*L*/) {}
+   static void InitializeGRUDescriptors(TDescriptors *& /*descriptors*/, GenLayer_t * /*L*/) {}
 
    static void InitializeActivationDescriptor(ActivationDescriptor_t &/*descriptors*/, EActivationFunction /*activFunc */ , double /*coef*/ = 0.0) {}
 
@@ -160,7 +165,9 @@ public:
                                        TDescriptors * & /*descriptors*/,
                                        const DNN::CNN::TConvParams & /*params*/,
                                        PoolingLayer_t * /*L = nullptr*/) {}
-   static void InitializeRNNWorkspace(TWorkspace *& /*workspace*/ , TDescriptors *& /*descriptors*/, RNNLayer_t * /*L = nullptr*/)  {}
+   static void  InitializeRNNWorkspace(TWorkspace *& /*workspace*/, TDescriptors *& /*descriptors*/, GenLayer_t * /*L*/) {}
+   static void  InitializeLSTMWorkspace(TWorkspace *& /*workspace*/, TDescriptors *& /*descriptors*/, GenLayer_t * /*L*/){}
+   static void InitializeGRUWorkspace(TWorkspace *& /*workspace*/, TDescriptors *& /*descriptors*/, GenLayer_t * /*L*/){}
 
    static void FreeConvWorkspace(TWorkspace * & /*workspace*/) {}   ///< Only used for certain cudnn on-device memory
    static void FreePoolDropoutWorkspace(TWorkspace * & /*workspace*/) {}
@@ -168,21 +175,23 @@ public:
 
    static void ReleaseDescriptor(ActivationDescriptor_t &  /* activationDescr */) {}
 
-   static void InitializeRNNTensors(RNNLayer_t */*layer*/) {}
+   static void InitializeRNNTensors(GenLayer_t * /*layer*/)   {}
+   static void InitializeLSTMTensors(GenLayer_t * /*layer*/) {}
+   static void InitializeGRUTensors(GenLayer_t * /*layer*/) {}
 
-      //____________________________________________________________________________
-      //
-      // Propagation
-      //____________________________________________________________________________
+   //____________________________________________________________________________
+   //
+   // Propagation
+   //____________________________________________________________________________
 
-      /** @name Forward Propagation
-       * Low-level functions required for the forward propagation of activations
-       * through the network.
-       */
-      ///@{
-      /** Matrix-multiply \p input with the transpose of \pweights and
-       *  write the results into \p output. */
-      static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
+   /** @name Forward Propagation
+    * Low-level functions required for the forward propagation of activations
+    * through the network.
+    */
+   ///@{
+   /** Matrix-multiply \p input with the transpose of \pweights and
+    *  write the results into \p output. */
+   static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
 
    static void MultiplyTranspose(Tensor_t &output, const Tensor_t &input, const Matrix_t &weights) {
       Matrix_t output_matrix = output.GetMatrix();
@@ -233,11 +242,11 @@ public:
    //                                          TCpuMatrix<Scalar_t> & bias_gradients,
    //                                          TCpuMatrix<Scalar_t> & df, //DxH
    //                                          const TCpuMatrix<Scalar_t> & state, // BxH
-   //                                          const TCpuMatrix<Scalar_t> & weights_input, // HxD 
+   //                                          const TCpuMatrix<Scalar_t> & weights_input, // HxD
    //                                          const TCpuMatrix<Scalar_t> & weights_state, // HxH
    //                                          const TCpuMatrix<Scalar_t> & input,  // BxD
    //                                          TCpuMatrix<Scalar_t> & input_gradient);
-	
+
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward,
 			                              TCpuMatrix<Scalar_t> & cell_gradients_backward,
@@ -302,7 +311,7 @@ public:
                                       const TCpuMatrix<Scalar_t> & weights_update_state,
                                       const TCpuMatrix<Scalar_t> & weights_candidate_state,
                                       const TCpuMatrix<Scalar_t> & input,
-                                      TCpuMatrix<Scalar_t> & input_gradient);  
+                                      TCpuMatrix<Scalar_t> & input_gradient);
 
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
