@@ -71,6 +71,7 @@ public:
 
    void SetFilename(const char *fname);
    void SetIniDir(const char *inidir);
+   void DeleteFileNamesList();
 
    void SetMultipleSelection(Bool_t option);
 };
