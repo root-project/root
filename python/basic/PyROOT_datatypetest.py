@@ -1001,44 +1001,40 @@ class TestClassDATATYPES:
     def test23_pyunicode_to_stlstring(self):
         """Test conversion from Python Unicode str with non-ASCII
         characters to STL string"""
-        if not self.exp_pyroot:
-            import ROOT
+        import ROOT
 
-            res = ROOT.f_stlstring('ℕ')
-            assert res._0 == 'ℕ'
-            assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
+        res = ROOT.f_stlstring('ℕ')
+        assert res._0 == 'ℕ'
+        assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
 
     def test24_pybytes_to_stlstring(self):
         """Test conversion from Python bytes to STL string"""
-        if not self.exp_pyroot:
-            import ROOT
+        import ROOT
 
-            bytes_val = u'ℕ'.encode(encoding='UTF-8')
-            res = ROOT.f_stlstring(bytes_val)
-            assert res._0 == 'ℕ'
-            assert res._1 == len(bytes_val)
+        bytes_val = u'ℕ'.encode(encoding='UTF-8')
+        res = ROOT.f_stlstring(bytes_val)
+        assert res._0 == 'ℕ'
+        assert res._1 == len(bytes_val)
 
     def test25_pyunicode_to_cstring(self):
         """Test conversion from Python unicode str with non-ASCII
         characters to C string (const and non-const)"""
-        if not self.exp_pyroot:
-            import ROOT
+        import ROOT
 
-            for res in ROOT.f_cstring('ℕ'), ROOT.f_constcstring('ℕ'):
-                assert res._0 == 'ℕ'
-                assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
+        for res in ROOT.f_cstring('ℕ'), ROOT.f_constcstring('ℕ'):
+            assert res._0 == 'ℕ'
+            assert res._1 == len(u'ℕ'.encode(encoding='UTF-8'))
 
     def test26_pybytes_to_cstring(self):
         """Test conversion from Python bytes to C string
         (const and non-const) """
-        if not self.exp_pyroot:
-            import ROOT
+        import ROOT
 
-            bytes_val = u'ℕ'.encode(encoding='UTF-8')
+        bytes_val = u'ℕ'.encode(encoding='UTF-8')
 
-            for res in ROOT.f_cstring(bytes_val), ROOT.f_constcstring(bytes_val):
-                assert res._0 == 'ℕ'
-                assert res._1 == len(bytes_val)
+        for res in ROOT.f_cstring(bytes_val), ROOT.f_constcstring(bytes_val):
+            assert res._0 == 'ℕ'
+            assert res._1 == len(bytes_val)
 
 
 ## actual test run
