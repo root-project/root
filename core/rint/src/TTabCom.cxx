@@ -520,17 +520,15 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
    if (!fpEnvVars) {
       TString outf = ".TTabCom-";
       FILE *fout = gSystem->TempFileName(outf);
-      if (!fout) return 0;
+      if (!fout) return nullptr;
       fclose(fout);
       TString cmd;
 
 #ifndef WIN32
-      char *env = gSystem->Which(gSystem->Getenv("PATH"), "env", kExecutePermission);
-      if (!env)
-         return 0;
-      cmd = env;
+      cmd = "env";
+      if (!gSystem->FindFile(gSystem->Getenv("PATH"), cmd, kExecutePermission))
+         return nullptr;
       cmd += " > ";
-      delete [] env;
 #else
       cmd = "set > ";
 #endif
@@ -544,7 +542,7 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
          Error("TTabCom::GetListOfEnvVars", "could not open file \"%s\"",
                outf.Data());
          gSystem->Unlink(outf);
-         return 0;
+         return nullptr;
       }
       // parse, add
       fpEnvVars = new TContainer;

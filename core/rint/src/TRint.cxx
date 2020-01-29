@@ -189,13 +189,11 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    }
 
    // Load user functions
-   const char *logon;
-   logon = gEnv->GetValue("Rint.Load", (char*)0);
+   const char *logon = gEnv->GetValue("Rint.Load", (char *)nullptr);
    if (logon) {
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
-      if (mac)
+      TString fname = logon;
+      if (gSystem->FindFile(TROOT::GetMacroPath(), fname, kReadPermission))
          ProcessLine(Form(".L %s",logon), kTRUE);
-      delete [] mac;
    }
 
    // Execute logon macro
@@ -323,12 +321,11 @@ void TRint::ExecLogon()
    }
 
    // execute also the logon macro specified by "Rint.Logon"
-   const char *logon = gEnv->GetValue("Rint.Logon", (char*)0);
+   const char *logon = gEnv->GetValue("Rint.Logon", (char *)nullptr);
    if (logon) {
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
-      if (mac)
+      TString fname = logon;
+      if (gSystem->FindFile(TROOT::GetMacroPath(), fname, kReadPermission))
          ProcessFile(logon);
-      delete [] mac;
    }
 }
 
@@ -678,16 +675,14 @@ void TRint::Terminate(Int_t status)
       gSystem->ExitLoop();
    } else {
       delete gTabCom;
-      gTabCom = 0;
+      gTabCom = nullptr;
 
       //Execute logoff macro
-      const char *logoff;
-      logoff = gEnv->GetValue("Rint.Logoff", (char*)0);
+      const char *logoff = gEnv->GetValue("Rint.Logoff", (char *)nullptr);
       if (logoff && !NoLogOpt()) {
-         char *mac = gSystem->Which(TROOT::GetMacroPath(), logoff, kReadPermission);
-         if (mac)
+         TString fname = logoff;
+         if (gSystem->FindFile(TROOT::GetMacroPath(), fname, kReadPermission))
             ProcessFile(logoff);
-         delete [] mac;
       }
 
       TApplication::Terminate(status);
