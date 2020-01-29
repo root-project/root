@@ -17,6 +17,27 @@ class PyROOTConfiguration(object):
         self.ShutDown = True
 
 
+class _gROOTWrapper(object):
+    """Internal class to manage lookups of gROOT in the facade.
+       This wrapper calls _finalSetup on the facade when it
+       receives a lookup, unless the lookup is for SetBatch.
+       This allows to evaluate the command line parameters
+       before checking if batch mode is on in _finalSetup
+    """
+
+    def __init__(self, facade):
+        self.__dict__['_facade'] = facade
+        self.__dict__['_gROOT'] = gROOT
+
+    def __getattr__( self, name ):
+        if name != 'SetBatch' and self._facade.__dict__['gROOT'] != self._gROOT:
+            self._facade._finalSetup()
+        return getattr(self._gROOT, name)
+
+    def __setattr__(self, name, value):
+        return setattr(self._gROOT, name, value)
+
+
 class ROOTFacade(types.ModuleType):
     """Facade class for ROOT module"""
 
@@ -32,7 +53,7 @@ class ROOTFacade(types.ModuleType):
         self.__file__ = module.__file__
 
         # Inject gROOT global
-        self.gROOT = gROOT
+        self.gROOT = _gROOTWrapper(self)
 
         # Expose some functionality from CPyCppyy extension module
         self._cppyy_exports = [ 'nullptr', 'bind_object', 'as_cobject',
@@ -131,6 +152,9 @@ class ROOTFacade(types.ModuleType):
                     raise AttributeError(str(err))
 
     def _finalSetup(self):
+        # Prevent this method from being re-entered through the gROOT wrapper
+        self.__dict__['gROOT'] = gROOT
+
         # Setup interactive usage from Python
         self.__dict__['app'] = PyROOTApplication(self.PyConfig, self._is_ipython)
         if not self.gROOT.IsBatch():
