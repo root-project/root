@@ -546,8 +546,10 @@ public:
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
    virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
-   virtual void            RecursiveRemove(TObject *obj);
+   virtual void            RegisterExternalFriend(TFriendElement *) {}
+   virtual void            RemoveExternalFriend(TFriendElement *) {}
    virtual void            RemoveFriend(TTree*);
+   virtual void            RecursiveRemove(TObject *obj);
    virtual void            Reset(Option_t* option = "");
    virtual void            ResetAfterMerge(TFileMergeInfo *);
    virtual void            ResetBranchAddress(TBranch *);
