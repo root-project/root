@@ -71,7 +71,7 @@ TGFileInfo::~TGFileInfo()
 {
    delete [] fFilename;
    delete [] fIniDir;
-   if ( fFileNamesList != 0 ) {
+   if (fFileNamesList) {
       fFileNamesList->Delete();
       delete fFileNamesList;
    }
@@ -92,6 +92,18 @@ void TGFileInfo::SetMultipleSelection(Bool_t option)
          fFileNamesList = 0;
       }
    }
+}
+
+void TGFileInfo::SetFilename(const char *fname)
+{
+   delete [] fFilename;
+   fFilename = fname ? StrDup(fname) : nullptr;
+}
+
+void TGFileInfo::SetIniDir(const char *inidir)
+{
+   delete [] fIniDir;
+   fIniDir = inidir ? StrDup(inidir) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
