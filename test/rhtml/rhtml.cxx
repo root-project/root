@@ -102,9 +102,9 @@ const char *HtmlError[] = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGHtmlBrowser constructor.
+/// TGHtmlBrowserTest constructor.
 
-TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, UInt_t h)
+TGHtmlBrowserTest::TGHtmlBrowserTest(const char *filename, const TGWindow *p, UInt_t w, UInt_t h)
              : TGMainFrame(p, w, h)
 {
    SetCleanup(kDeepCleanup);
@@ -153,31 +153,31 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fBack->SetStyle(gClient->GetStyle());
    fBack->SetToolTipText("Go Back");
    fHorizontalFrame->AddFrame(fBack, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fBack->Connect("Clicked()", "TGHtmlBrowser", this, "Back()");
+   fBack->Connect("Clicked()", "TGHtmlBrowserTest", this, "Back()");
 
    fForward = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoForward.gif"));
    fForward->SetStyle(gClient->GetStyle());
    fForward->SetToolTipText("Go Forward");
    fHorizontalFrame->AddFrame(fForward, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fForward->Connect("Clicked()", "TGHtmlBrowser", this, "Forward()");
+   fForward->Connect("Clicked()", "TGHtmlBrowserTest", this, "Forward()");
 
    fReload = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("ReloadPage.gif"));
    fReload->SetStyle(gClient->GetStyle());
    fReload->SetToolTipText("Reload Page");
    fHorizontalFrame->AddFrame(fReload, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fReload->Connect("Clicked()", "TGHtmlBrowser", this, "Reload()");
+   fReload->Connect("Clicked()", "TGHtmlBrowserTest", this, "Reload()");
 
    fStop = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("StopLoading.gif"));
    fStop->SetStyle(gClient->GetStyle());
    fStop->SetToolTipText("Stop Loading");
    fHorizontalFrame->AddFrame(fStop, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fStop->Connect("Clicked()", "TGHtmlBrowser", this, "Stop()");
+   fStop->Connect("Clicked()", "TGHtmlBrowserTest", this, "Stop()");
 
    fHome = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoHome.gif"));
    fHome->SetStyle(gClient->GetStyle());
    fHome->SetToolTipText("Go to ROOT HomePage\n  (http://root.cern.ch)");
    fHorizontalFrame->AddFrame(fHome, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fHome->Connect("Clicked()", "TGHtmlBrowser", this, "Selected(=\"http://root.cern.ch/drupal/\")");
+   fHome->Connect("Clicked()", "TGHtmlBrowserTest", this, "Selected(=\"http://root.cern.ch/drupal/\")");
 
    // combo box
    fURLBuf   = new TGTextBuffer(256);
@@ -185,13 +185,13 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fURL      = fComboBox->GetTextEntry();
    fURLBuf   = fURL->GetBuffer();
    fComboBox->Resize(200, fURL->GetDefaultHeight());
-   fURL->Connect("ReturnPressed()", "TGHtmlBrowser", this, "URLChanged()");
+   fURL->Connect("ReturnPressed()", "TGHtmlBrowserTest", this, "URLChanged()");
 
    fComboBox->AddEntry(filename,1);
    fURL->SetText(filename);
 
    fComboBox->Select(0);
-   fComboBox->Connect("Selected(char *)", "TGHtmlBrowser", this, "Selected(char *)");
+   fComboBox->Connect("Selected(char *)", "TGHtmlBrowserTest", this, "Selected(char *)");
 
    fHorizontalFrame->AddFrame(fComboBox, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX,2,2,2,2));
 
@@ -209,8 +209,8 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fStatusBar->SetParts(partsusBar,2);
    AddFrame(fStatusBar, new TGLayoutHints(kLHintsBottom | kLHintsExpandX));
 
-   fHtml->Connect("MouseOver(char *)", "TGHtmlBrowser", this, "MouseOver(char *)");
-   fHtml->Connect("MouseDown(char *)", "TGHtmlBrowser", this, "MouseDown(char *)");
+   fHtml->Connect("MouseOver(char *)", "TGHtmlBrowserTest", this, "MouseOver(char *)");
+   fHtml->Connect("MouseDown(char *)", "TGHtmlBrowserTest", this, "MouseDown(char *)");
 
    Selected(filename);
 
@@ -221,9 +221,9 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Close TGHtmlBrowser window.
+/// Close TGHtmlBrowserTest window.
 
-void TGHtmlBrowser::CloseWindow()
+void TGHtmlBrowserTest::CloseWindow()
 {
    Cleanup();
    delete this;
@@ -268,7 +268,7 @@ static char *ReadRemote(const char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open (browse) selected URL.
 
-void TGHtmlBrowser::Selected(const char *uri)
+void TGHtmlBrowserTest::Selected(const char *uri)
 {
    char *buf = 0;
    FILE *f;
@@ -341,18 +341,19 @@ void TGHtmlBrowser::Selected(const char *uri)
 ////////////////////////////////////////////////////////////////////////////////
 /// URL combobox has changed.
 
-void TGHtmlBrowser::URLChanged()
+void TGHtmlBrowserTest::URLChanged()
 {
    const char *string = fURL->GetText();
    if (string) {
-      Selected(StrDup(gSystem->UnixPathName(string)));
+      TString buf = gSystem->UnixPathName(string);
+      Selected(buf.Data());
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle "Back" navigation button.
 
-void TGHtmlBrowser::Back()
+void TGHtmlBrowserTest::Back()
 {
    Int_t index = 0;
    const char *string = fURL->GetText();
@@ -373,7 +374,7 @@ void TGHtmlBrowser::Back()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle "Forward" navigation button.
 
-void TGHtmlBrowser::Forward()
+void TGHtmlBrowserTest::Forward()
 {
    Int_t index = 0;
    const char *string = fURL->GetText();
@@ -394,7 +395,7 @@ void TGHtmlBrowser::Forward()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle "Reload" navigation button.
 
-void TGHtmlBrowser::Reload()
+void TGHtmlBrowserTest::Reload()
 {
    const char *string = fURL->GetText();
    if (string)
@@ -404,14 +405,14 @@ void TGHtmlBrowser::Reload()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle "Reload" navigation button.
 
-void TGHtmlBrowser::Stop()
+void TGHtmlBrowserTest::Stop()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle "MouseOver" TGHtml signal.
 
-void TGHtmlBrowser::MouseOver(char *url)
+void TGHtmlBrowserTest::MouseOver(char *url)
 {
    fStatusBar->SetText(url, 0);
 }
@@ -419,7 +420,7 @@ void TGHtmlBrowser::MouseOver(char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle "MouseDown" TGHtml signal.
 
-void TGHtmlBrowser::MouseDown(char *url)
+void TGHtmlBrowserTest::MouseDown(char *url)
 {
    Selected(url);
 }
@@ -427,7 +428,7 @@ void TGHtmlBrowser::MouseDown(char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process Events.
 
-Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGHtmlBrowserTest::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
@@ -453,8 +454,8 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                                          kFDOpen, &fi);
                         dir = fi.fIniDir;
                         if (fi.fFilename) {
-                           Selected(StrDup(Form("file://%s",
-                              gSystem->UnixPathName(fi.fFilename))));
+                           TString buf = TString::Format("file://%s", gSystem->UnixPathName(fi.fFilename));
+                           Selected(buf.Data());
                         }
                      }
                      break;
@@ -518,7 +519,7 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
-   new TGHtmlBrowser("http://root.cern.ch/drupal/");
+   new TGHtmlBrowserTest("http://root.cern/");
    theApp.Run();
    return 0;
 }
