@@ -73,6 +73,7 @@ TChain::TChain()
 , fFiles(0)
 , fStatus(0)
 , fProofChain(0)
+, fExternalFriends(0)
 {
    fTreeOffset = new Long64_t[fTreeOffsetLen];
    fFiles = new TObjArray(fTreeOffsetLen);
@@ -147,6 +148,7 @@ TChain::TChain(const char* name, const char* title)
 , fFiles(0)
 , fStatus(0)
 , fProofChain(0)
+, fExternalFriends(0)
 {
    //
    //*-*
@@ -183,6 +185,13 @@ TChain::~TChain()
       gROOT->GetListOfCleanups()->Remove(this);
    }
 
+   if (fExternalFriends) {
+      using namespace ROOT::Detail;
+      for(auto fetree : TRangeStaticCast<TFriendElement>(*fExternalFriends))
+         fetree->Reset();
+      fExternalFriends->Clear("nodelete");
+      SafeDelete(fExternalFriends);
+   }
    SafeDelete(fProofChain);
    fStatus->Delete();
    delete fStatus;
@@ -1322,48 +1331,24 @@ Long64_t TChain::LoadTree(Long64_t entry)
       if (fFriends) {
          // The current tree has not changed but some of its friends might.
          //
-         // An alternative would move this code to each of
-         // the functions calling LoadTree (and to overload a few more).
          TIter next(fFriends);
          TFriendLock lock(this, kLoadTree);
          TFriendElement* fe = 0;
-         TFriendElement* fetree = 0;
-         Bool_t needUpdate = kFALSE;
          while ((fe = (TFriendElement*) next())) {
-            TObjLink* lnk = 0;
-            if (fTree->GetListOfFriends()) {
-               lnk = fTree->GetListOfFriends()->FirstLink();
-            }
-            fetree = 0;
-            while (lnk) {
-               TObject* obj = lnk->GetObject();
-               if (obj->TestBit(TFriendElement::kFromChain) && obj->GetName() && !strcmp(fe->GetName(), obj->GetName())) {
-                  fetree = (TFriendElement*) obj;
-                  break;
-               }
-               lnk = lnk->Next();
-            }
             TTree* at = fe->GetTree();
-            if (at->InheritsFrom(TChain::Class())) {
-               Int_t oldNumber = ((TChain*) at)->GetTreeNumber();
-               TTree* old = at->GetTree();
-               TTree* oldintree = fetree ? fetree->GetTree() : 0;
-               at->LoadTreeFriend(entry, this);
-               Int_t newNumber = ((TChain*) at)->GetTreeNumber();
-               if ((oldNumber != newNumber) || (old != at->GetTree()) || (oldintree && (oldintree != at->GetTree()))) {
-                  // We can not compare just the tree pointers because
-                  // they could be reused. So we compare the tree
-                  // number instead.
+            // If the tree is a
+            // direct friend of the chain, it should be scanned
+            // used the chain entry number and NOT the tree entry
+            // number (treeReadEntry) hence we do:
+            at->LoadTreeFriend(entry, this);
+         }
+         Bool_t needUpdate = kFALSE;
+         if (fTree->GetListOfFriends()) {
+            for(auto fetree : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fTree->GetListOfFriends())) {
+               if (fetree->IsUpdated()) {
                   needUpdate = kTRUE;
-                  fTree->RemoveFriend(oldintree);
-                  fTree->AddFriend(at->GetTree(), fe->GetName())->SetBit(TFriendElement::kFromChain);
+                  fetree->ResetUpdated();
                }
-            } else {
-               // else we assume it is a simple tree If the tree is a
-               // direct friend of the chain, it should be scanned
-               // used the chain entry number and NOT the tree entry
-               // number (treeReadEntry) hence we redo:
-               at->LoadTreeFriend(entry, this);
             }
          }
          if (needUpdate) {
@@ -1411,8 +1396,13 @@ Long64_t TChain::LoadTree(Long64_t entry)
       return treeReadEntry;
    }
 
-   // Delete the current tree and open the new tree.
+   if (fExternalFriends) {
+      for(auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
+         external_fe->MarkUpdated();
+      }
+   }
 
+   // Delete the current tree and open the new tree.
    TTreeCache* tpf = 0;
    // Delete file unless the file owns this chain!
    // FIXME: The "unless" case here causes us to leak memory.
@@ -1626,7 +1616,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
          t->LoadTreeFriend(entry, this);
          TTree* friend_t = t->GetTree();
          if (friend_t) {
-            fTree->AddFriend(friend_t, fe->GetName())->SetBit(TFriendElement::kFromChain);
+            auto localfe = fTree->AddFriend(t, fe->GetName());
+            localfe->SetBit(TFriendElement::kFromChain);
+            t->RegisterExternalFriend(localfe);
          }
       }
    }
@@ -2247,6 +2239,17 @@ void TChain::RecursiveRemove(TObject *obj)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Record a TFriendElement that we need to warn when the chain switches to
+/// a new file (typically this is because this chain is a friend of another
+/// TChain)
+
+void TChain::RegisterExternalFriend(TFriendElement *fe)
+{
+   if (!fExternalFriends)
+      fExternalFriends = new TList();
+   fExternalFriends->Add(fe);
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 
