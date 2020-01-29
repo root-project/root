@@ -2340,7 +2340,7 @@ Bool_t TGuiBldDragManager::HandleKey(Event_t *event)
    CloseMenus();
 
    fi.fFileTypes = gSaveMacroTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
@@ -3308,7 +3308,7 @@ Bool_t TGuiBldDragManager::Save(const char *file)
       TGFileInfo fi;
 
       fi.fFileTypes = gSaveMacroTypes;
-      fi.fIniDir    = StrDup(dir);
+      fi.SetIniDir(dir);
       fi.fOverwrite = overwr;
       new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
 
@@ -3379,7 +3379,7 @@ Bool_t TGuiBldDragManager::SaveFrame(const char *file)
       TGFileInfo fi;
 
       fi.fFileTypes = gSaveMacroTypes;
-      fi.fIniDir    = StrDup(dir);
+      fi.SetIniDir(dir);
       fi.fOverwrite = overwr;
       new TGFileDialog(fClient->GetDefaultRoot(), frame, kFDSave, &fi);
 
@@ -5994,7 +5994,7 @@ void TGuiBldDragManager::ChangePicture(TGPictureButton *fr)
    TString fname;
 
    fi.fFileTypes = gImageTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
@@ -6273,7 +6273,7 @@ void TGuiBldDragManager::ChangeImage(TGIcon *fr)
    TString fname;
 
    fi.fFileTypes = gImageTypes;
-   fi.fIniDir    = StrDup(dir);
+   fi.SetIniDir(dir);
    fi.fOverwrite = overwr;
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
