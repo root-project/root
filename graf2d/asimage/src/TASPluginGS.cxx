@@ -48,14 +48,13 @@ ClassImp(TASPluginGS);
 TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 {
 #ifndef WIN32
-   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gs", kExecutePermission);
+   fInterpreter = "gs";
+   gSystem->FindFile(gSystem->Getenv("PATH"), fInterpreter, kExecutePermission);
 #else
-   fInterpreter = gSystem->Which(gSystem->Getenv("PATH"), "gswin32c.exe", kExecutePermission);
-   if (fInterpreter) {
+   fInterpreter = "gswin32c.exe";
+   if (gSystem->FindFile(gSystem->Getenv("PATH"), fInterpreter, kExecutePermission))
       // which returned path may include blanks, like "Program Files" which popen does not like
-      delete [] fInterpreter;
-      fInterpreter = StrDup("gswin32c.exe");
-   }
+      fInterpreter = "gswin32c.exe";
 #endif
 }
 
@@ -64,8 +63,6 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 
 TASPluginGS::~TASPluginGS()
 {
-   delete [] fInterpreter;
-   fInterpreter = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,14 +70,14 @@ TASPluginGS::~TASPluginGS()
 
 ASImage *TASPluginGS::File2ASImage(const char *filename)
 {
-   if (!fInterpreter) {
+   if (fInterpreter.IsNull()) {
       Warning("File2ASImage", "GhostScript is not available");
-      return 0;
+      return nullptr;
    }
 
    if (gSystem->AccessPathName(filename)) {
       Warning("File2ASImage", "input file %s is not accessible", filename);
-      return 0;
+      return nullptr;
    }
 
    TString ext = (strrchr(filename, '.') + 1);
@@ -96,7 +93,7 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
       FILE *fd = fopen(filename, "r");
       if (!fd) {
          Warning("File2ASImage", "input file %s is not readable", filename);
-         return 0;
+         return nullptr;
       }
 
       do {
@@ -127,7 +124,7 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    FILE *in = gSystem->OpenPipe(cmd.Data(), popen_flags);
 
    if (!in) {
-      return 0;
+      return nullptr;
    }
 
    const UInt_t kBuffLength = 32768;

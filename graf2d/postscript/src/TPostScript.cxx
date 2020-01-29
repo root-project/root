@@ -1624,26 +1624,22 @@ void TPostScript::FontEmbed(void)
 
    for (Int_t fontid = 1; fontid < 30; fontid++) {
       if (fontid != 15 && MustEmbed[fontid-1]) {
-         const char *filename = gEnv->GetValue(
-                                               fonttable[fontid][0], fonttable[fontid][1]);
-         char *ttfont = gSystem->Which(ttpath, filename, kReadPermission);
-         if (!ttfont) {
+         const char *filename = gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]);
+         TString ttfont = filename;
+         if (!gSystem->FindFile(ttpath, ttfont, kReadPermission)) {
             Error("TPostScript::FontEmbed",
                   "font %d (filename `%s') not found in path",
                   fontid, filename);
+         } else if (FontEmbedType2(ttfont)) {
+            // nothing
+         } else if (FontEmbedType1(ttfont)) {
+            // nothing
+         } else if (FontEmbedType42(ttfont)) {
+            // nothing
          } else {
-            if (FontEmbedType2(ttfont)) {
-               // nothing
-            } else if(FontEmbedType1(ttfont)) {
-               // nothing
-            } else if(FontEmbedType42(ttfont)) {
-               // nothing
-            } else {
-               Error("TPostScript::FontEmbed",
-                     "failed to embed font %d (filename `%s')",
-                     fontid, filename);
-            }
-            delete [] ttfont;
+            Error("TPostScript::FontEmbed",
+                  "failed to embed font %d (filename `%s')",
+                  fontid, filename);
          }
       }
    }

@@ -385,8 +385,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    const char *basename = gSystem->BaseName(fontname);
 
    // check if font is in cache
-   int i;
-   for (i = 0; i < fgFontCount; i++) {
+   for (int i = 0; i < fgFontCount; i++) {
       if (!strcmp(fgFontName[i], basename)) {
          if (italic) {
             if (i==fgSymbItaFontIdx) {
@@ -414,9 +413,9 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                        TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
+   TString ttfont = fontname;
 
-   if (!ttfont) {
+   if (!gSystem->FindFile(ttpath, ttfont, kReadPermission)) {
       Error("TTF::SetTextFont", "font file %s not found in path", fontname);
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
@@ -429,9 +428,8 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 
    FT_Face  tface = 0;
 
-   if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
-      Error("TTF::SetTextFont", "error loading font %s", ttfont);
-      delete [] ttfont;
+   if (FT_New_Face(fgLibrary, ttfont.Data(), 0, &tface)) {
+      Error("TTF::SetTextFont", "error loading font %s", ttfont.Data());
       if (tface) FT_Done_Face(tface);
       if (fgFontCount) {
          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
@@ -441,8 +439,6 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
          return 1;
       }
    }
-
-   delete [] ttfont;
 
    fgFontName[fgFontCount] = StrDup(basename);
    fgCurFontIdx            = fgFontCount;
@@ -536,9 +532,9 @@ void TTF::SetTextFont(Font_t fontnumber)
       // to see which fontset we have available
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                           TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
-      if (ttfont) {
-         delete [] ttfont;
+      TString ttfont = gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]);
+
+      if (gSystem->FindFile(ttpath, ttfont, kReadPermission)) {
          thisset = 0;
       } else {
          // try backup free font

@@ -2598,9 +2598,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
 
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                        TROOT::GetTTFFontDir());
-   char *tmpstr = gSystem->Which(ttpath, fn, kReadPermission);
-   fn = tmpstr;
-   delete [] tmpstr;
+   gSystem->FindFile(ttpath, fn, kReadPermission);
 
    if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
       ttfont = kTRUE;

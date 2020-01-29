@@ -178,7 +178,7 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 {
    int fontid = fontnumber / 10;
 
-   const char *fontname=0;
+   const char *fontname = nullptr;
    if (fontid == 0)  fontname = "arialbd.ttf";
    if (fontid == 1)  fontname = "timesi.ttf";
    if (fontid == 2)  fontname = "timesbd.ttf";
@@ -198,7 +198,10 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
    // try to load font (font must be in Root.TTFontPath resource)
    const char *ttpath = gEnv->GetValue("Root.TTFontPath",
                                        TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
+
+   TString ttfont = fontname;
+
+   gSystem->FindFile(ttpath, ttfont, kReadPermission);
 
    if (fGLTextFont) delete fGLTextFont;
 
@@ -208,5 +211,4 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 
    if (!fGLTextFont->FaceSize(1))
       Error("SetGLTextFont","Cannot set FTGL::FaceSize");
-   delete [] ttfont;
 }

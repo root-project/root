@@ -451,18 +451,14 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
    FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
    if (it == fFontMap.end())
    {
-      TString ttpath, file;
-      ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
-      {
-         //For extenede we have both ttf and otf.
-         char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?
-                                   ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf" :
-                                   ((TObjString*)fgFontFileArray[fileID])->String());
-         file = fp;
-         delete [] fp;
-      }
+      TString ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
 
-      FTFont* ftfont = 0;
+      TString file = ((TObjString*)fgFontFileArray[fileID])->String();
+      if (fileID < fgExtendedFontStart) file.Append(".ttf");
+
+      gSystem->FindFile(ttpath, file);
+
+      FTFont *ftfont = nullptr;
       switch (mode)
       {
          case TGLFont::kBitmap:

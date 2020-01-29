@@ -789,15 +789,14 @@ void TClassTree::ScanClasses(Int_t iclass)
    if (!cl->GetImplFileName() || !cl->GetImplFileName()[0])
       return;
 
-   const char *source = gSystem->BaseName( gSystem->UnixPathName(cl->GetImplFileName()));
-   char *sourceName = gSystem->Which( fSourceDir.Data(), source , kReadPermission );
-   if (!sourceName) return;
-   Int_t ncn = strlen(fCnames[iclass]->Data())+2;
-   char *cname = new char[ncn+1];
-   snprintf(cname,ncn,"%s::",fCnames[iclass]->Data());
-       // open source file
+   TString sourceName = gSystem->BaseName( gSystem->UnixPathName(cl->GetImplFileName()));
+   if (!gSystem->FindFile( fSourceDir.Data(), sourceName, kReadPermission ))
+      return;
+   TString cname = TString::Format("%s::", fCnames[iclass]->Data());
+
+   // open source file
    std::ifstream sourceFile;
-   sourceFile.open( sourceName, std::ios::in );
+   sourceFile.open( sourceName.Data(), std::ios::in );
    Int_t nlines = 0;
    if( sourceFile.good() ) {
       const Int_t kMAXLEN=1500;
@@ -810,7 +809,7 @@ void TClassTree::ScanClasses(Int_t iclass)
          char *cc = strstr(line,"::");
          if (cc) {
             *cc = 0;
-            if (!strncmp(&line[nblank],cname,ncn)) break;  //reach class member function
+            if (!strncmp(&line[nblank],cname.Data(),cname.Length())) break;  //reach class member function
             Int_t nl = strlen(&line[nblank]);
             if (!strncmp(&line[nblank],cc+2,nl))   break;  //reach any class constructor
          }
@@ -845,8 +844,6 @@ void TClassTree::ScanClasses(Int_t iclass)
          }
       }
    }
-   delete [] cname;
-   delete [] sourceName;
    sourceFile.close();
 }
 
