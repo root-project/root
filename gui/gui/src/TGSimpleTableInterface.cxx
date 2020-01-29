@@ -53,10 +53,8 @@ Double_t TGSimpleTableInterface::GetValue(UInt_t row, UInt_t column)
    if ((row > fNRows) || (column > fNColumns)) {
       Error("TGSimpleTableInterface","Non existing value requested.");
       return 0;
-   } else {
-      Double_t temp = fData[row][column];
-      return temp;
    }
+   return fData[row][column];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +64,8 @@ const char *TGSimpleTableInterface::GetValueAsString(UInt_t row, UInt_t column)
 {
    // FIXME use template string for string format instead of hardcoded format
 
-   return StrDup(TString::Format("%5.2f", GetValue(row, column)));
+   fBuffer.Form("%5.2f", GetValue(row, column));
+   return fBuffer.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +73,8 @@ const char *TGSimpleTableInterface::GetValueAsString(UInt_t row, UInt_t column)
 
 const char *TGSimpleTableInterface::GetRowHeader(UInt_t row)
 {
-   return StrDup(TString::Format("DRow %d", row));
+   fBuffer.Form("DRow %d", row);
+   return fBuffer.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,5 +82,6 @@ const char *TGSimpleTableInterface::GetRowHeader(UInt_t row)
 
 const char *TGSimpleTableInterface::GetColumnHeader(UInt_t column)
 {
-   return StrDup(TString::Format("DCol %d", column));
+   fBuffer.Form("DCol %d", column);
+   return fBuffer.Data();
 }
