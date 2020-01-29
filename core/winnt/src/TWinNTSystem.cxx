@@ -3046,7 +3046,8 @@ int TWinNTSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find location of file in a search path.
-/// User must delete returned string. Returns 0 in case file is not found.
+/// Returns nullptr in case file is not found or name of found file.
+/// TString infile object is modified and contains name of found file (or will be emptied)
 
 const char *TWinNTSystem::FindFile(const char *search, TString& infile, EAccessMode mode)
 {
