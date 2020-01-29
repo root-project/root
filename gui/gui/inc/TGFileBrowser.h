@@ -38,8 +38,7 @@ public:
    typedef std::list<TGListTreeItem*> sLTI_t;
    typedef sLTI_t::iterator           sLTI_i;
    typedef sLTI_t::reverse_iterator   sLTI_ri;
-   typedef std::map<TGListTreeItem*, const char *> mFiltered_t;
-   typedef mFiltered_t::iterator      mFiltered_i;
+   typedef std::map<TGListTreeItem*, std::string> mFiltered_t;
 
 protected:
    TRootBrowser      *fNewBrowser;        // Pointer back to the Browser
