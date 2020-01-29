@@ -2119,7 +2119,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
 
    // General case
    TUrl url(name, kTRUE);
-   filename = url.GetUrl();
+   filename = (strcmp(url.GetProtocol(), "file")) ? url.GetUrl() : url.GetFileAndOptions();
    
    TString fn = url.GetFile();
    // Extract query, if any
