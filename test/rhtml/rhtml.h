@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGHtmlBrowser
-#define ROOT_TGHtmlBrowser
+#ifndef ROOT_TGHtmlBrowserTest
+#define ROOT_TGHtmlBrowserTest
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGHtmlBrowser                                                        //
+// TGHtmlBrowserTest                                                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -31,7 +31,7 @@ class TGTextEntry;
 class TGPictureButton;
 class TGHtml;
 
-class TGHtmlBrowser : public TGMainFrame {
+class TGHtmlBrowserTest : public TGMainFrame {
 
 protected:
 
@@ -55,9 +55,9 @@ protected:
    Int_t              fNbFavorites;       // number of favorites in the menu
 
 public:
-   TGHtmlBrowser(const char *filename = 0, const TGWindow *p = 0,
+   TGHtmlBrowserTest(const char *filename = 0, const TGWindow *p = 0,
                  UInt_t w = 900, UInt_t h = 600);
-   virtual ~TGHtmlBrowser() { ; }
+   virtual ~TGHtmlBrowserTest() { ; }
 
    virtual void      CloseWindow();
    virtual Bool_t    ProcessMessage(Long_t msg, Long_t parm1, Long_t);
@@ -70,7 +70,7 @@ public:
    void              MouseOver(char *);
    void              MouseDown(char *);
 
-   ClassDef(TGHtmlBrowser, 0) // very simple html browser
+   ClassDef(TGHtmlBrowserTest, 0) // very simple html browser
 };
 
 #endif
