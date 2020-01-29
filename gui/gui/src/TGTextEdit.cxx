@@ -49,12 +49,12 @@ static const char *gFiletypes[] = { "All files",     "*",
                                     "Text files",    "*.txt",
                                     "ROOT macros",   "*.C",
                                     0,               0 };
-static char *gPrinter      = 0;
-static char *gPrintCommand = 0;
+static char *gPrinter      = nullptr;
+static char *gPrintCommand = nullptr;
 
 
-TGGC *TGTextEdit::fgCursor0GC;
-TGGC *TGTextEdit::fgCursor1GC;
+TGGC *TGTextEdit::fgCursor0GC = nullptr;
+TGGC *TGTextEdit::fgCursor1GC = nullptr;
 
 
 ///////////////////////////////////////////////////////////////////////////////
