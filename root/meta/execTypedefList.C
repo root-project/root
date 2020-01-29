@@ -9,7 +9,7 @@ int check(const char *name, const char *target)
    TCollection *l = gROOT->GetListOfTypes();
 
    dobj = l->FindObject(name);
-   if (!dobj) { 
+   if (!dobj) {
       fprintf(stderr,"Couldn't find the TDataType for %s\n",name);
       return 1;
    }
@@ -53,7 +53,7 @@ int check_missing(const char *name)
    TCollection *l = gROOT->GetListOfTypes();
 
    dobj = l->FindObject(name);
-   if (dobj) { 
+   if (dobj) {
       fprintf(stderr,"Surpringly found the TDataType for %s typedef to %s\n",
               name,((TDataType*)dobj)->GetTypeName().Data());
       return 1;
@@ -61,13 +61,13 @@ int check_missing(const char *name)
    return 0;
 }
 
-int check_exist(const char *name) 
+int check_exist(const char *name)
 {
    TObject *dobj;
    TCollection *l = gROOT->GetListOfTypes();
 
    dobj = l->FindObject(name);
-   if (!dobj) { 
+   if (!dobj) {
       fprintf(stderr,"Couldn't find the TDataType for %s\n",name);
       return 1;
    }
@@ -126,7 +126,7 @@ int execTypedefList() {
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
 
    // The iterator typedef is now desugared.
-   // res = check("vector<myNamespace::MyClass*>::const_iterator","vector<myNamespace::MyClass*>::const_iterator"); if (res) return res; 
+   // res = check("vector<myNamespace::MyClass*>::const_iterator","vector<myNamespace::MyClass*>::const_iterator"); if (res) return res;
 
    res = check_target("std::map<std::string, int>::key_type","string"); if (res) return res;
    res = check_target("std::map<std::string, int>::value_type","pair<const string,int>"); if (res) return res;
@@ -134,7 +134,7 @@ int execTypedefList() {
    // res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
 
    res = check_file("typelist.v5.txt",349); if (res) return res;
-   res = check_file("typelist.v6.txt",1467); if (res) return res;
+   res = check_file("typelist.v6.txt",1466); if (res) return res;
 
    return 0;
 }

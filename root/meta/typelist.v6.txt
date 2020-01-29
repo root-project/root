@@ -978,7 +978,6 @@ TGenCollectionProxy::Proxies_t
 TGenCollectionProxy::Sizing_t
 TGenCollectionProxy::Staged_t
 TGenMapStreamer
-TGFileBrowser::mFiltered_i
 TGFileBrowser::mFiltered_t
 TGFileBrowser::sLTI_i
 TGFileBrowser::sLTI_ri
