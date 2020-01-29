@@ -293,6 +293,7 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
     delete [] argv;
 #else
 // TODO: fix this to work like above ...
+    (void)args;
 #endif
 
 // actual script execution
