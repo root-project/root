@@ -84,21 +84,27 @@ void TGFileInfo::SetMultipleSelection(Bool_t option)
 {
    if ( fMultipleSelection != option ) {
       fMultipleSelection = option;
-      if ( fMultipleSelection == kTRUE )
-         fFileNamesList = new TList();
-      else {
+      if (fFileNamesList) {
          fFileNamesList->Delete();
          delete fFileNamesList;
-         fFileNamesList = 0;
+         fFileNamesList = nullptr;
       }
+      if (fMultipleSelection)
+         fFileNamesList = new TList();
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set file name
 
 void TGFileInfo::SetFilename(const char *fname)
 {
    delete [] fFilename;
    fFilename = fname ? StrDup(fname) : nullptr;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set directory name
 
 void TGFileInfo::SetIniDir(const char *inidir)
 {
