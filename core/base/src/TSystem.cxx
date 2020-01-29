@@ -30,13 +30,10 @@ allows a simple partial implementation for new OS'es.
 #include "TClass.h"
 #include "TClassTable.h"
 #include "TEnv.h"
-#include "TBrowser.h"
-#include "TString.h"
 #include "TOrdCollection.h"
 #include "TObject.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
-#include "TTimer.h"
 #include "TObjString.h"
 #include "TError.h"
 #include "TPluginManager.h"
@@ -290,7 +287,7 @@ void TSystem::RemoveOnExit(TObject *obj)
 {
    if (!fOnExitList)
       fOnExitList = new TOrdCollection;
-   if (fOnExitList->FindObject(obj) == 0)
+   if (!fOnExitList->FindObject(obj))
       fOnExitList->Add(obj);
 }
 
@@ -550,7 +547,7 @@ TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
 
 void TSystem::AddFileHandler(TFileHandler *h)
 {
-   if (h && fFileHandler && (fFileHandler->FindObject(h) == 0))
+   if (h && fFileHandler && !fFileHandler->FindObject(h))
       fFileHandler->Add(h);
 }
 
@@ -607,7 +604,7 @@ void TSystem::IgnoreInterrupt(Bool_t ignore)
 
 void TSystem::AddStdExceptionHandler(TStdExceptionHandler *eh)
 {
-   if (eh && fStdExceptionHandler && (fStdExceptionHandler->FindObject(eh) == 0))
+   if (eh && fStdExceptionHandler && !fStdExceptionHandler->FindObject(eh))
       fStdExceptionHandler->Add(eh);
 }
 
@@ -744,7 +741,7 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       fHelpers = new TOrdCollection;
 
    TPluginHandler *h;
-   TSystem *helper = 0;
+   TSystem *helper = nullptr;
    if (path) {
       if (!GetDirPtr()) {
          TUrl url(path, kTRUE);
@@ -2894,9 +2891,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (strchr(opt,'c')!=0) {
          loadLib = kFALSE;
       }
-      withInfo = strchr(opt, 's') == 0;
-      verbose = strchr(opt, 'v') != 0;
-      internalDebug = strchr(opt, 'd') != 0;
+      withInfo = strchr(opt, 's') == nullptr;
+      verbose = strchr(opt, 'v') != nullptr;
+      internalDebug = strchr(opt, 'd') != nullptr;
    }
    if (mode==kDefault) {
       TString rootbuild = ROOTBUILD;
