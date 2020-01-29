@@ -1723,7 +1723,8 @@ void TGRootIDE::DirChanged()
 {
    const char *string = fDir->GetText();
    if (string) {
-      DirSelected(StrDup(string));
+      TString buf = string;
+      DirSelected(buf.Data());
    }
 }
 
@@ -1849,7 +1850,8 @@ void TGRootIDE::URLChanged()
 {
    const char *string = fURL->GetText();
    if (string) {
-      Selected(StrDup(gSystem->UnixPathName(string)));
+      TString buf = gSystem->UnixPathName(string);
+      Selected(buf.Data());
    }
 }
 
