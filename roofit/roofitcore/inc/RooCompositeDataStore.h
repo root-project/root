@@ -93,7 +93,8 @@ public:
   virtual void recalculateCache(const RooArgSet* /*proj*/, Int_t /*firstEvent*/, Int_t /*lastEvent*/, Int_t /*stepSize*/, Bool_t /*skipZeroWeights*/) ;
   virtual Bool_t hasFilledCache() const ;
   
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) ;
+  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
+      std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max());
 
   virtual void forceCacheUpdate() ;
   

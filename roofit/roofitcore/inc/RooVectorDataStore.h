@@ -52,7 +52,7 @@ public:
 
   RooVectorDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
 		     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-		     Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
+		     std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
 
   virtual ~RooVectorDataStore() ;
 
@@ -117,7 +117,7 @@ public:
 
   const RooVectorDataStore* cache() const { return _cache ; }
 
-  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) override;
+  void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
   
   void dump() override;
 
@@ -246,7 +246,7 @@ public:
       *_nativeBuf = *(_vec.begin() + idx) ;
     }
 
-    Int_t size() const { return _vec.size() ; }
+    std::size_t size() const { return _vec.size() ; }
 
     void resize(Int_t siz) {
       if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(Double_t))) {
@@ -537,7 +537,7 @@ public:
     inline void getNative(Int_t idx) const { 
       _nativeBuf->assignFast(*(_vec0+idx)) ;
     }
-    Int_t size() const { return _vec.size() ; }
+    std::size_t size() const { return _vec.size() ; }
 
     void resize(Int_t siz) {
       if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(RooCatType))) {

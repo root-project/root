@@ -879,7 +879,7 @@ RooAbsData* RooDataHist::cacheClone(const RooAbsArg* newCacheOwner, const RooArg
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
-				   Int_t nStart, Int_t nStop, Bool_t /*copyCache*/)
+    std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/)
 {
   checkInit() ;
   RooArgSet* myVarSubset = (RooArgSet*) _vars.selectCommon(varSubset) ;
@@ -899,11 +899,10 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
     cloneVar->attachDataSet(*this) ;
   }
 
-  Int_t i ;
   Double_t lo,hi ;
-  Int_t nevt = nStop < numEntries() ? nStop : numEntries() ;
+  const std::size_t nevt = nStop < static_cast<std::size_t>(numEntries()) ? nStop : static_cast<std::size_t>(numEntries());
   TIterator* vIter = get()->createIterator() ;
-  for (i=nStart ; i<nevt ; i++) {
+  for (auto i=nStart; i<nevt ; i++) {
     const RooArgSet* row = get(i) ;
 
     Bool_t doSelect(kTRUE) ;

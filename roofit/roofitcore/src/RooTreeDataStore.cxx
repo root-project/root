@@ -558,7 +558,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
 ///
 
 void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select, 
-				  const char* rangeName, Int_t nStart, Int_t nStop)  
+				  const char* rangeName, std::size_t nStart, std::size_t nStop)
 {
   // Redirect formula servers to source data row
   std::unique_ptr<RooFormulaVar> selectClone;
@@ -572,7 +572,8 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   ads->get(0) ;
 
   // Loop over events in source tree   
-  Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
+  const auto numEntr = static_cast<std::size_t>(ads->numEntries());
+  std::size_t nevent = nStop < numEntr ? nStop : numEntr;
 
   auto TDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
   if (TDS) {
@@ -584,7 +585,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
    ranges = RooHelpers::tokenise(rangeName, ",");
   }
 
-  for(Int_t i=nStart; i < nevent ; ++i) {
+  for (auto i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
 
     // Does this event pass the cuts?

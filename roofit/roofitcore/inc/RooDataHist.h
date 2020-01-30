@@ -156,7 +156,7 @@ protected:
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 	      const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
-	                Int_t nStart=0, Int_t nStop=2000000000, Bool_t copyCache=kTRUE) ;
+	                std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) ;
   Double_t interpolateDim(RooRealVar& dim, const RooAbsBinning* binning, Double_t xval, Int_t intOrder, Bool_t correctForBinSize, Bool_t cdfBoundaries) ;
   void calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;
