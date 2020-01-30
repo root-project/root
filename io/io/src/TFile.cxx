@@ -652,6 +652,7 @@ void TFile::Init(Bool_t create)
          // humm fBEGIN is wrong ....
          Error("Init","file %s has an incorrect header length (%lld) or incorrect end of file length (%lld)",
                GetName(),fBEGIN,fEND);
+         delete [] header;
          goto zombie;
       }
       fSeekDir = fBEGIN;
@@ -673,6 +674,7 @@ void TFile::Init(Bool_t create)
          // humm fBEGIN is wrong ....
          Error("Init","file %s has an incorrect header length (%lld) or incorrect end of file length (%lld)",
               GetName(),fBEGIN+nbytes,fEND);
+         delete [] header;
          goto zombie;
       }
       if (nbytes+fBEGIN > kBEGIN+200) {
