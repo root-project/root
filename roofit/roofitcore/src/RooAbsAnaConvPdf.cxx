@@ -318,7 +318,7 @@ Bool_t RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the convolution variable instance used in the resolution model
 
-const RooRealVar* RooAbsAnaConvPdf::convVar() const
+RooAbsRealLValue* RooAbsAnaConvPdf::convVar()
 {
   RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
   if (!conv) return 0 ;  
