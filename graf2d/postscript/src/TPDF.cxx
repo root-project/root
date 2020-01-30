@@ -2796,6 +2796,7 @@ void TPDF::WriteCompressedBuffer()
    err = deflateInit(&stream, Z_DEFAULT_COMPRESSION);
    if (err != Z_OK) {
       Error("WriteCompressedBuffer", "error in deflateInit (zlib)");
+      delete [] out;
       return;
    }
 
@@ -2803,6 +2804,7 @@ void TPDF::WriteCompressedBuffer()
    if (err != Z_STREAM_END) {
       deflateEnd(&stream);
       Error("WriteCompressedBuffer", "error in deflate (zlib)");
+      delete [] out;
       return;
    }
 
