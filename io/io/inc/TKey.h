@@ -103,7 +103,7 @@ protected:
    virtual void        ReadBuffer(char *&buffer);
            void        ReadKeyBuffer(char *&buffer);
    virtual Bool_t      ReadFile();
-   virtual void        SetBuffer() { fBuffer = new char[fNbytes];}
+   virtual void        SetBuffer() { DeleteBuffer(); fBuffer = new char[fNbytes];}
    virtual void        SetParent(const TObject *parent);
            void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
    virtual Int_t       Sizeof() const;
