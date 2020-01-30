@@ -983,14 +983,14 @@ bool TClingLookupHelper__ExistingTypeCheck(const std::string &tname,
       // Check if the scope is in the list of classes
       if (auto scope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
          auto enumTable = dynamic_cast<const THashList *>(scope->GetListOfEnums(false));
-         if (enumTable && enumTable->THashList::FindObject(enName)) return true;
+         if (enumTable && enumTable->THashList::FindObject(enName)) { delete [] scopeName; return true; }
       }
       // It may still be in one of the loaded protoclasses
       else if (auto scope = static_cast<TProtoClass *>(gClassTable->GetProtoNorm(scopeName))) {
          auto listOfEnums = scope->GetListOfEnums();
          if (listOfEnums) { // it could be null: no enumerators in the protoclass
             auto enumTable = dynamic_cast<const THashList *>(listOfEnums);
-            if (enumTable && enumTable->THashList::FindObject(enName)) return true;
+            if (enumTable && enumTable->THashList::FindObject(enName)) { delete [] scopeName; return true; }
          }
       }
       delete [] scopeName;
