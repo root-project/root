@@ -2532,22 +2532,20 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    Int_t i,nch;
    UInt_t ncols = 8;   // by default first 8 columns are printed only
    std::ofstream out;
-   Int_t lenfile = 0;
-   char * fname = 0;
+   const char *fname = nullptr;
+   TString fownname;
    if (fScanRedirect) {
       fTree->SetScanField(0);  // no page break if Scan is redirected
-      fname = (char *) fScanFileName;
-      if (!fname) fname = (char*)"";
-      lenfile = strlen(fname);
+      fname = fScanFileName;
+      if (!fname) fname = "";
+      Int_t lenfile = strlen(fname);
       if (!lenfile) {
-         Int_t nch2 = strlen(fTree->GetName());
-         fname = new char[nch2+10];
-         strlcpy(fname, fTree->GetName(),nch2+10);
-         strlcat(fname, "-scan.dat",nch2+10);
+         fownname = fTree->GetName();
+         fownname.Append("-scan.dat");
+         fname = fownname.Data();
       }
       out.open(fname, std::ios::out);
       if (!out.good ()) {
-         if (!lenfile) delete [] fname;
          Error("Scan","Can not open file for redirection");
          return 0;
       }
