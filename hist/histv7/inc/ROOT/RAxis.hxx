@@ -215,6 +215,7 @@ public:
    constexpr static const int kIgnoreBin = -1;
 
    /// Extra bins for each EAxisOverflow value.
+   // FIXME: Purpose needs clarification
    constexpr static const int kNOverflowBins[4] = {0, 1, 1, 2};
 
    /// Get the axis's title
@@ -554,6 +555,9 @@ public:
    /// returns 0.5.
    double GetBinTo(int bin) const noexcept { return GetBinFrom(bin + 1); }
 
+   /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
+   /// return the bin for which this is a low edge. If it's not a bin edge,
+   /// return -1.
    int GetBinIndexForLowEdge(double x) const noexcept;
 };
 
@@ -971,6 +975,7 @@ enum class EAxisCompatibility {
    kIncompatible
 };
 
+/// Whether (and how) the source axis can be merged into the target axis.
 EAxisCompatibility CanMap(RAxisEquidistant &target, RAxisEquidistant &source) noexcept;
 ///\}
 

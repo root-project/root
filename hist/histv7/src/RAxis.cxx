@@ -19,9 +19,6 @@
 
 constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
 
-/// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
-/// return the bin for which this is a low edge. If it's not a bin edge, return
-/// -1.
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
@@ -46,7 +43,6 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
    return binIdx;
 }
 
-/// Whether (and how) the source axis can be merged into the target axis.
 ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(RAxisEquidistant &target,
                                                                   RAxisEquidistant &source) noexcept
 {
