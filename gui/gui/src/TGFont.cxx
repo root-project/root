@@ -1985,6 +1985,7 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
 
       fa->fPointsize = strtol(s, &end, 0);
       if ((errno == ERANGE) || (end == s)) {
+         delete[] str;
          return kFALSE;
       }
    }
