@@ -1582,6 +1582,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opCurlyCurly==-1) { // }{ not found
          // arguments missing for \frac
          fError = "Missing denominator for #frac";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       Double_t height = GetHeight()*spec.fSize/8;
@@ -1614,6 +1615,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opCurlyCurly==-1) { // }{ not found
          // arguments missing for \splitline
          fError = "Missing second line for #splitline";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       Double_t height = GetHeight()*spec.fSize/8;
@@ -1689,6 +1691,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opSquareCurly==-1) {
          // color number is not specified
          fError = "Missing color number. Syntax is #color[(Int_t)nb]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       TextSpec_t newSpec = spec;
@@ -1699,6 +1702,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          delete[] nb;
          // color number is invalid
          fError = "Invalid color number. Syntax is #color[(Int_t)nb]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       delete[] nb;
@@ -1712,6 +1716,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opSquareCurly==-1) {
          // font number is not specified
          fError = "Missing font number. Syntax is #font[nb]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       TextSpec_t newSpec = spec;
@@ -1722,6 +1727,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          delete[] nb;
          // font number is invalid
          fError = "Invalid font number. Syntax is #font[(Int_t)nb]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       delete[] nb;
@@ -1735,6 +1741,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opSquareCurly==-1) {
          // horizontal shift is not specified
          fError = "Missing horizontal shift number. Syntax is #kern[dx]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       Char_t *dxc = new Char_t[opSquareCurly-opKern-5];
@@ -1745,6 +1752,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          delete[] dxc;
          // horizontal shift number is invalid
          fError = "Invalid horizontal shift number. Syntax is #kern[(Float_t)dx]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       delete[] dxc;
@@ -1763,6 +1771,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opSquareCurly==-1) {
          // vertical shift is not specified
          fError = "Missing vertical shift number. Syntax is #lower[dy]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       Char_t *dyc = new Char_t[opSquareCurly-opLower-6];
@@ -1773,6 +1782,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          delete[] dyc;
          // vertical shift number is invalid
          fError = "Invalid vertical shift number. Syntax is #lower[(Float_t)dy]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       delete[] dyc;
@@ -1791,6 +1801,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
       if (opSquareCurly==-1) {
          // scale factor is not specified
          fError = "Missing scale factor. Syntax is #scale[(Double_t)nb]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       TextSpec_t newSpec = spec;
@@ -1801,6 +1812,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
          delete[] nb;
          // scale factor is invalid
          fError = "Invalid scale factor. Syntax is #factor[(Double_t)nb]{ ... }";
+         delete[] text;
          return TLatexFormSize(0,0,0);
       }
       newSpec.fSize *= spec.fSize;
