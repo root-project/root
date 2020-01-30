@@ -1626,7 +1626,6 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
     return kTRUE ;
   }
-  const char* implpath=0 ;
 
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
   // (We also need a default ctor of abstract classes, but cannot check that through is interface
@@ -1640,7 +1639,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 
   // *** PHASE 2 *** Check if declaration and implementation files can be located
 
-  char* declpath = 0 ;
+  char *declpath = nullptr, *implpath = nullptr;
 
   // Check if header file can be found in specified location
   // If not, scan through list of 'class declaration' paths in RooWorkspace
@@ -1657,8 +1656,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	break ;
       }
       // cleanup and continue ;
-      delete[] declpath ;
-      declpath=0 ;
+      delete [] declpath;
+      declpath = nullptr;
 
       ++diter ;
     }
@@ -1703,8 +1702,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	break ;
       }
       // cleanup and continue ;
-      delete[] implpath ;
-      implpath=0 ;
+      delete [] implpath;
+      implpath = nullptr;
 
       ++iiter ;
     }
@@ -1727,8 +1726,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	}
       }
       ooccoutW(_wspace,ObjectHandling) << ". To fix this problem add the required directory to the search "
-				       << "path using RooWorkspace::addClassImplImportDir(const char* dir)" << endl ;
-      return kFALSE ;
+				       << "path using RooWorkspace::addClassImplImportDir(const char* dir)" << endl;
+      delete [] declpath;
+      return kFALSE;
     }
   }
 
@@ -1764,6 +1764,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     if (!fdecl) {
       oocoutE(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
 				      << ") ERROR opening declaration file " <<  declfile << endl ;
+      delete[] implpath;
+      delete[] declpath;
       return kFALSE ;
     }
 
@@ -1821,6 +1823,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     if (!fimpl) {
       oocoutE(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
 				      << ") ERROR opening implementation file " <<  implfile << endl ;
+      delete[] implpath;
+      delete[] declpath;
       return kFALSE ;
     }
 
@@ -1971,13 +1975,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   }
 
   // Cleanup
-  if (implpath) {
-    delete[] implpath ;
-  }
-  if (declpath) {
-    delete[] declpath ;
-  }
-
+  delete[] implpath;
+  delete[] declpath;
 
   return kTRUE ;
 }
