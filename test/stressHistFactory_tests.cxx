@@ -50,7 +50,7 @@ public:
 
   ~PdfComparison()
   {
-     // delete temmporary directory if in not verbose mode
+     // delete temporary directory if in not verbose mode
      if (_verb == 0) {
         TString cmd = "rm -rf ";
         cmd += fTestDirectory;
@@ -253,7 +253,9 @@ private:
 
   Bool_t CopyTestFiles()
   {
-    return (gSystem->CopyFile(gSystem->ExpandPathName("$ROOTSYS/test/HistFactoryTest.tar"),(fTestDirectory + "/HistFactoryTest.tar").Data(),kTRUE) == 0);
+     TString src = "$ROOTSYS/test/HistFactoryTest.tar";
+     gSystem->ExpandPathName(src);
+     return (gSystem->CopyFile(src, fTestDirectory + "/HistFactoryTest.tar", kTRUE) == 0);
   }
 
   Bool_t UnpackTestFiles()
