@@ -294,13 +294,16 @@ void TFileDrawMap::DrawObject()
    if (cbasket) {
       *cbasket = 0;
       char *cbranch = (char*)strstr(info,", branch=");
-      if (!cbranch) return;
+      if (!cbranch) { delete [] info; return; }
       *cbranch = 0;
       cbranch += 9;
       TTree *tree = (TTree*)fFile->Get(info);
       if (tree) tree->Draw(cbranch);
+      delete [] info;
       return;
    }
+
+   delete [] info;
 
    // other objects
    TObject *obj = GetObject();
@@ -348,10 +351,15 @@ TObject *TFileDrawMap::GetObject()
    char *info = new char[fName.Length()+1];
    strlcpy(info,fName.Data(),fName.Length()+1);
    char *colon = strstr(info,"::");
-   if (!colon) return 0;
+   if (!colon) {
+      delete [] info;
+      return nullptr;
+   }
    colon--;
    *colon = 0;
-   return fFile->Get(info);
+   auto res = fFile->Get(info);
+   delete [] info;
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
