@@ -175,6 +175,7 @@ public:
          ret += d;
          return ret;
       }
+      friend const_iterator operator+(int d, const_iterator rhs) noexcept;
 
       // i - 2
       const_iterator operator-(int d) noexcept
@@ -184,11 +185,23 @@ public:
          return ret;
       }
 
+      // i - j
+      int operator-(const const_iterator& j) noexcept
+      {
+         return fCursor - j.fCursor;
+      }
+
+      // i[2]
+      int operator[](int d) noexcept
+      {
+         return fCursor + d;
+      }
+
       // *i
-      const int *operator*() const noexcept { return &fCursor; }
+      int operator*() const noexcept { return fCursor; }
 
       // i->
-      int operator->() const noexcept { return fCursor; }
+      const int *operator->() const noexcept { return &fCursor; }
 
       friend bool operator<(const_iterator lhs, const_iterator rhs) noexcept;
       friend bool operator>(const_iterator lhs, const_iterator rhs) noexcept;
@@ -271,8 +284,14 @@ private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
 };
 
-///\name RAxisBase::const_iterator comparison operators
+///\name RAxisBase::const_iterator external operators
 ///\{
+
+/// 2 + i
+inline RAxisBase::const_iterator operator+(int d, RAxisBase::const_iterator rhs) noexcept
+{
+   return rhs + d;
+}
 
 /// i < j
 inline bool operator<(RAxisBase::const_iterator lhs, RAxisBase::const_iterator rhs) noexcept
