@@ -198,16 +198,15 @@ void TSelectorDraw::Begin(TTree *tree)
    Double_t xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0;
 
    fObject  = 0;
-   char *hname = 0;
-   char *hnamealloc = 0;
+   char *hname = nullptr;
+   TString hnamealloc;
    i = 0;
    if (varexp0 && strlen(varexp0)) {
       for (UInt_t k = strlen(varexp0) - 1; k > 0; k--) {
          if (varexp0[k] == '>' && varexp0[k-1] == '>') {
             i = (int)(&(varexp0[k-1]) - varexp0);    //  length of varexp0 before ">>"
-            hnamealloc = new char[strlen(&(varexp0[k+1])) + 1];
-            hname = hnamealloc;
-            strcpy(hname, &(varexp0[k+1]));
+            hnamealloc = &(varexp0[k+1]);   // use TString to copy value of the
+            hname = (char *) hnamealloc.Data();
             break;
          }
       }
@@ -376,7 +375,6 @@ void TSelectorDraw::Begin(TTree *tree)
          if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
-            delete[] hnamealloc;
             delete[] varexp;
             return;
          }
@@ -400,7 +398,6 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
-               delete[] hnamealloc;
                delete[] varexp;
                return;
             }
@@ -440,7 +437,6 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
-               delete[] hnamealloc;
                delete[] varexp;
                return;
             }
@@ -453,7 +449,6 @@ void TSelectorDraw::Begin(TTree *tree)
                      // We have been asked to reset the input list!!
                      // Let's set it aside for now ...
                      Abort("Input and output lists are the same!");
-                     delete[] hnamealloc;
                      delete[] varexp;
                      return;
                   }
@@ -484,19 +479,16 @@ void TSelectorDraw::Begin(TTree *tree)
    if (!CompileVariables(varexp, realSelection.GetTitle())) {
       abrt.Form("Variable compilation failed: {%s,%s}", varexp, realSelection.GetTitle());
       Abort(abrt);
-      delete[] hnamealloc;
       delete[] varexp;
       return;
    }
    if (fDimension > 4 && !(optpara || optcandle || opt5d || opt.Contains("goff"))) {
       Abort("Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
-      delete[] hnamealloc;
       delete[] varexp;
       return;
    }
    if (fDimension < 2 && (optpara || optcandle)) {
       Abort("The options \"para\" and \"candle\" require at least 2 variables.");
-      delete[] hnamealloc;
       delete[] varexp;
       return;
    }
@@ -540,7 +532,6 @@ void TSelectorDraw::Begin(TTree *tree)
       gROOT->MakeDefCanvas();
       if (!gPad) {
          Abort("Creation of default canvas failed");
-         delete[] hnamealloc;
          delete[] varexp;
          return;
       }
@@ -916,7 +907,6 @@ void TSelectorDraw::Begin(TTree *tree)
       else            fAction = 6;
    }
    if (varexp) delete[] varexp;
-   if (hnamealloc) delete[] hnamealloc;
    for (i = 0; i < fValSize; ++i)
       fVarMultiple[i] = kFALSE;
    fSelectMultiple = kFALSE;
