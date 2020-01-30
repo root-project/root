@@ -1055,10 +1055,8 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title, Bool_t return
       workname[size] = 0;
       TDirectory *tmpdir;
       GetObject(workname,tmpdir);
-      if (!tmpdir) {
+      if (!tmpdir)
          tmpdir = mkdir(workname,title);
-         if (!tmpdir) return nullptr;
-      }
       delete[] workname;
       if (!tmpdir) return nullptr;
       if (!newdir) newdir = tmpdir;
