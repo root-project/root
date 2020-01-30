@@ -497,11 +497,14 @@ void SetRootSys()
          if (s) *s = 0;
       } else {
          // There was no slashes at all let now change ROOTSYS
+         delete [] ep;
          return;
       }
 
-      if (!gBuildingROOT)
+      if (!gBuildingROOT) {
+         delete [] ep;
          return; // don't mess with user's ROOTSYS.
+      }
 
       int ncha = strlen(ep) + 10;
       char *env = new char[ncha];
@@ -517,6 +520,7 @@ void SetRootSys()
       }
 
       putenv(env);
+      // intentionally not call delete [] env, while GLIBC keep use pointer
       delete [] ep;
    }
 }
