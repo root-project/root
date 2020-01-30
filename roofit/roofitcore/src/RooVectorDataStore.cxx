@@ -334,7 +334,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
 
 RooVectorDataStore::RooVectorDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
 			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
+			 std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
 
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _varsww(vars),
@@ -713,7 +713,7 @@ void RooVectorDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Err
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select, const char* rangeName, Int_t nStart, Int_t nStop) 
+void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select, const char* rangeName, std::size_t nStart, std::size_t nStop)
 {
   // Load values from dataset 't' into this data collection, optionally
   // selecting events using 'select' RooFormulaVar
@@ -731,7 +731,8 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   ads->get(0) ;
 
   // Loop over events in source tree   
-  Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
+  const auto numEntr = static_cast<std::size_t>(ads->numEntries());
+  const std::size_t nevent = nStop < numEntr ? nStop : numEntr;
 
   auto TDS = dynamic_cast<const RooTreeDataStore*>(ads);
   auto VDS = dynamic_cast<const RooVectorDataStore*>(ads);
@@ -757,7 +758,7 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   }
 
   reserve(numEntries() + (nevent - nStart));
-  for (Int_t i=nStart; i < nevent ; ++i) {
+  for(auto i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
 
     // Does this event pass the cuts?
@@ -982,7 +983,7 @@ RooAbsDataStore* RooVectorDataStore::merge(const RooArgSet& allVars, list<RooAbs
 {
   RooVectorDataStore* mergedStore = new RooVectorDataStore("merged","merged",allVars) ;
 
-  Int_t nevt = dstoreList.front()->numEntries() ;
+  const auto nevt = dstoreList.front()->numEntries();
   mergedStore->reserve(nevt);
   for (int i=0 ; i<nevt ; i++) {
 

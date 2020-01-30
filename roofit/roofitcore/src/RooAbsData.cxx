@@ -389,7 +389,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   pc.defineString("cutSpec","CutSpec",0,"") ;
   pc.defineObject("cutVar","CutVar",0,0) ;
   pc.defineInt("evtStart","EventRange",0,0) ;
-  pc.defineInt("evtStop","EventRange",1,2000000000) ;
+  pc.defineInt("evtStop","EventRange",1,std::numeric_limits<int>::max()) ;
   pc.defineObject("varSel","SelectVars",0,0) ;
   pc.defineMutex("CutVar","CutSpec") ;
 
@@ -404,7 +404,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   const char* cutSpec = pc.getString("cutSpec",0,kTRUE) ;
   RooFormulaVar* cutVar = static_cast<RooFormulaVar*>(pc.getObject("cutVar",0)) ;
   Int_t nStart = pc.getInt("evtStart",0) ;
-  Int_t nStop = pc.getInt("evtStop",2000000000) ;
+  Int_t nStop = pc.getInt("evtStop",std::numeric_limits<int>::max()) ;
   RooArgSet* varSet = static_cast<RooArgSet*>(pc.getObject("varSel")) ;
   const char* name = pc.getString("name",0,kTRUE) ;
   const char* title = pc.getString("title",0,kTRUE) ;
@@ -461,7 +461,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
 RooAbsData* RooAbsData::reduce(const char* cut)
 {
   RooFormulaVar cutVar(cut,cut,*get()) ;
-  return reduceEng(*get(),&cutVar,0,0,2000000000,kFALSE) ;
+  return reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -471,7 +471,7 @@ RooAbsData* RooAbsData::reduce(const char* cut)
 
 RooAbsData* RooAbsData::reduce(const RooFormulaVar& cutVar)
 {
-  return reduceEng(*get(),&cutVar,0,0,2000000000,kFALSE) ;
+  return reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -496,9 +496,9 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
 
   if (cut && strlen(cut)>0) {
     RooFormulaVar cutVar(cut, cut, *get(), false);
-    return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
+    return reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
   }
-  return reduceEng(varSubset2,0,0,0,2000000000,kFALSE) ;
+  return reduceEng(varSubset2,0,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -523,7 +523,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
   }
   delete iter ;
 
-  return reduceEng(varSubset2,&cutVar,0,0,2000000000,kFALSE) ;
+  return reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
