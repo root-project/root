@@ -460,7 +460,7 @@ negotia:
                "unable to get user name for UsrPwd authentication");
       }
 
-   }   
+   }
 
    // Stop timer
    if (alarm) alarm->Stop();
@@ -531,6 +531,7 @@ negotia:
             char *answer = new char[len];
             int nrec = fSocket->Recv(answer, len, kind);  // returns user
             if (nrec < 0) {
+               delete[] answer; // delete buffer while it exit switch() scope
                action = 0;
                rc = kFALSE;
                break;
