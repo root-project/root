@@ -116,7 +116,8 @@ public:
   virtual const TTree* tree() const { return 0 ; }
   virtual void dump() {} 
 
-  virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) = 0 ;
+  virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
+      std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) = 0 ;
 
   virtual void forceCacheUpdate() {} ;
   

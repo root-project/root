@@ -802,7 +802,7 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
 		       const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-		       Int_t nStart, Int_t nStop, Bool_t copyCache, const char* wgtVarName) :
+		       std::size_t nStart, std::size_t nStop, Bool_t copyCache, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
    _dstore =
@@ -914,7 +914,7 @@ void RooDataSet::initialize(const char* wgtVarName)
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
 RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange, 
-				  Int_t nStart, Int_t nStop, Bool_t copyCache)
+				  std::size_t nStart, std::size_t nStop, Bool_t copyCache)
 {
   checkInit() ;
 
