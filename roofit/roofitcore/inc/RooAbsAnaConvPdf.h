@@ -75,7 +75,12 @@ public:
                                        const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
   virtual Bool_t changeModel(const RooResolutionModel& newModel) ;
 
-  const RooRealVar* convVar() const ;  //  Convolution variable 
+  /// Retrieve the convolution variable.
+  RooAbsRealLValue* convVar();
+  /// Retrieve the convolution variable.
+  const RooAbsRealLValue* convVar() const {
+    return const_cast<RooAbsAnaConvPdf*>(this)->convVar();
+  }
 
 protected:
   Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;
