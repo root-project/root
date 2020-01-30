@@ -376,6 +376,7 @@ void TSelectorDraw::Begin(TTree *tree)
          if (!fOldHistogram && oldObject && !oldObject->InheritsFrom(TH1::Class())) {
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
+            delete[] hnamealloc;
             delete[] varexp;
             return;
          }
@@ -399,6 +400,7 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
+               delete[] hnamealloc;
                delete[] varexp;
                return;
             }
@@ -438,6 +440,8 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
+               delete[] hnamealloc;
+               delete[] varexp;
                return;
             }
             if (!evlist) {
@@ -449,6 +453,7 @@ void TSelectorDraw::Begin(TTree *tree)
                      // We have been asked to reset the input list!!
                      // Let's set it aside for now ...
                      Abort("Input and output lists are the same!");
+                     delete[] hnamealloc;
                      delete[] varexp;
                      return;
                   }
@@ -479,16 +484,19 @@ void TSelectorDraw::Begin(TTree *tree)
    if (!CompileVariables(varexp, realSelection.GetTitle())) {
       abrt.Form("Variable compilation failed: {%s,%s}", varexp, realSelection.GetTitle());
       Abort(abrt);
+      delete[] hnamealloc;
       delete[] varexp;
       return;
    }
    if (fDimension > 4 && !(optpara || optcandle || opt5d || opt.Contains("goff"))) {
       Abort("Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
+      delete[] hnamealloc;
       delete[] varexp;
       return;
    }
    if (fDimension < 2 && (optpara || optcandle)) {
       Abort("The options \"para\" and \"candle\" require at least 2 variables.");
+      delete[] hnamealloc;
       delete[] varexp;
       return;
    }
@@ -532,6 +540,7 @@ void TSelectorDraw::Begin(TTree *tree)
       gROOT->MakeDefCanvas();
       if (!gPad) {
          Abort("Creation of default canvas failed");
+         delete[] hnamealloc;
          delete[] varexp;
          return;
       }
