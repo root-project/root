@@ -87,16 +87,22 @@ protected:
    /// \return Returns the bin number adjusted for potential over- and underflow
    /// bins. Returns kIgnoreBin if the axis cannot handle the over- / underflow,
    /// in which case `status` will tell how to deal with this overflow.
+   ///
    int AdjustOverflowBinNumber(double rawbin) const
    {
+      // Underflow: Put in underflow bin if any, otherwise ignore
       if (rawbin < 0)
-         return 0;
-      // Take underflow into account.
-      ++rawbin;
+         return CanGrow() ? kIgnoreBin : GetUnderflowBin();
 
+      // Account for the presence of underflow bin, if any
+      if (!CanGrow())
+         ++rawbin;
+
+      // Overflow: Put in overflow bin if any, otherwise ignore
       if (rawbin >= GetNBins())
-         return GetNBins() - 1;
+         return CanGrow() ? kIgnoreBin : GetOverflowBin();
 
+      // Bin index is in range and has been corrected for over/underflow
       return (int)rawbin;
    }
 
@@ -219,12 +225,23 @@ public:
          return 2;
    };
 
-   /// Get the bin index for the underflow bin.
-   int GetUnderflowBin() const noexcept { return 0; }
+   /// Get the bin index for the underflow bin (or the last bin outside range
+   /// if CanGrow()).
+   int GetUnderflowBin() const noexcept {
+      if (CanGrow())
+         return -1;
+      else
+         return 0;
+   }
 
    /// Get the bin index for the underflow bin (or the next bin outside range
    /// if CanGrow()).
-   int GetOverflowBin() const noexcept { return GetNBinsNoOver() + 1; }
+   int GetOverflowBin() const noexcept {
+      if (CanGrow())
+         return GetNBins();
+      else
+         return GetNBins() - 1;
+   }
 
    /// Whether the bin index is referencing a bin lower than the axis range.
    bool IsUnderflowBin(int bin) const noexcept { return bin <= GetUnderflowBin(); }
@@ -236,17 +253,17 @@ public:
    ///\{
 
    /// Get a const_iterator pointing to the first non-underflow bin.
-   const_iterator begin() const noexcept { return const_iterator{1}; }
+   const_iterator begin() const noexcept { return const_iterator{GetUnderflowBin() + 1}; }
 
-   /// Get a const_iterator pointing the underflow bin.
+   /// Get a const_iterator pointing the first bin, whether underflow or not
    const_iterator begin_with_underflow() const noexcept { return const_iterator{0}; }
 
    /// Get a const_iterator pointing right beyond the last non-overflow bin
-   /// (i.e. pointing to the overflow bin).
+   /// (i.e. pointing to the overflow bin, if any).
    const_iterator end() const noexcept { return const_iterator{GetOverflowBin()}; }
 
-   /// Get a const_iterator pointing right beyond the overflow bin.
-   const_iterator end_with_overflow() const noexcept { return const_iterator{GetOverflowBin() + 1}; }
+   /// Get a const_iterator pointing right beyond the last bin, whether overflow or not
+   const_iterator end_with_overflow() const noexcept { return const_iterator{GetNBins()}; }
    ///\}
 
 private:
@@ -501,10 +518,10 @@ public:
    bool CanGrow() const noexcept override { return false; }
 
    /// Get the low end of the axis range.
-   double GetMinimum() const noexcept { return fLow; }
+   double GetMinimum() const noexcept { return GetBinTo(GetUnderflowBin()); }
 
    /// Get the high end of the axis range.
-   double GetMaximum() const noexcept { return fLow + GetNBinsNoOver() / fInvBinWidth; }
+   double GetMaximum() const noexcept { return GetBinFrom(GetOverflowBin()); }
 
    /// Get the width of the bins
    double GetBinWidth() const noexcept { return 1. / fInvBinWidth; }
@@ -515,12 +532,12 @@ public:
    /// Get the bin center for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.25.
-   double GetBinCenter(int bin) const noexcept { return fLow + (bin - 0.5) / fInvBinWidth; }
+   double GetBinCenter(int bin) const noexcept { return fLow + (bin - *begin() + 0.5) / fInvBinWidth; }
 
    /// Get the low bin border for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.
-   double GetBinFrom(int bin) const noexcept { return fLow + (bin - 1) / fInvBinWidth; }
+   double GetBinFrom(int bin) const noexcept { return fLow + (bin - *begin()) / fInvBinWidth; }
 
    /// Get the high bin border for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
