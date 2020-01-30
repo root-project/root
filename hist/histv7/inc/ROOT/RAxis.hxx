@@ -337,7 +337,7 @@ properties of all possible axis types, together with the type of the axis.
 
 RODO: that's what a variant will be invented for!
 */
-class RAxisConfig: public RAxisBase {
+class RAxisConfig {
 public:
    enum EKind {
       kEquidistant, ///< represents a RAxisEquidistant
@@ -348,14 +348,16 @@ public:
    };
 
 private:
+   std::string fTitle;
+   size_t fNBinsNoOver;
    EKind fKind;                      ///< The kind of axis represented by this configuration
    std::vector<double> fBinBorders;  ///< Bin borders of the RAxisIrregular
    std::vector<std::string> fLabels; ///< Bin labels for a RAxisLabels
 
-   /// Represents a `RAxisEquidistant` with `nbins` from `from` to `to`, and
-   /// axis title.
+   /// Represents a `RAxisEquidistant` or `RAxisGrow` with `nbins` (excluding over- and
+   /// underflow bins) from `from` to `to`, with an axis title.
    explicit RAxisConfig(std::string_view title, int nbins, double from, double to, EKind kind)
-      : RAxisBase(title, nbins + ((kind == kGrow) ? 0 : 2)), fKind(kind), fBinBorders(2)
+      : fTitle(title), fNBinsNoOver(nbins), fKind(kind), fBinBorders(2)
    {
       if (from > to)
          std::swap(to, from);
@@ -393,7 +395,7 @@ public:
 
    /// Represents a `RAxisIrregular` with `binborders` and title.
    RAxisConfig(std::string_view title, const std::vector<double> &binborders)
-      : RAxisBase(title, binborders.size() + 1), fKind(kIrregular), fBinBorders(binborders)
+      : fTitle(title), fNBinsNoOver(binborders.size() - 1), fKind(kIrregular), fBinBorders(binborders)
    {}
 
    /// Represents a `RAxisIrregular` with `binborders`.
@@ -401,7 +403,7 @@ public:
 
    /// Represents a `RAxisIrregular` with `binborders` and title.
    RAxisConfig(std::string_view title, std::vector<double> &&binborders) noexcept
-      : RAxisBase(title, binborders.size() + 1), fKind(kIrregular),
+      : fTitle(title), fNBinsNoOver(binborders.size() - 1), fKind(kIrregular),
         fBinBorders(std::move(binborders))
    {}
 
@@ -410,7 +412,7 @@ public:
 
    /// Represents a `RAxisLabels` with `labels` and title.
    RAxisConfig(std::string_view title, const std::vector<std::string_view> &labels)
-      : RAxisBase(title, labels.size()), fKind(kLabels), fLabels(labels.begin(), labels.end())
+      : fTitle(title), fNBinsNoOver(labels.size()), fKind(kLabels), fLabels(labels.begin(), labels.end())
    {}
 
    /// Represents a `RAxisLabels` with `labels`.
@@ -418,31 +420,20 @@ public:
 
    /// Represents a `RAxisLabels` with `labels` and title.
    RAxisConfig(std::string_view title, std::vector<std::string> &&labels)
-      : RAxisBase(title, labels.size()), fKind(kLabels), fLabels(std::move(labels))
+      : fTitle(title), fNBinsNoOver(labels.size()), fKind(kLabels), fLabels(std::move(labels))
    {}
 
    /// Represents a `RAxisLabels` with `labels`.
    RAxisConfig(std::vector<std::string> &&labels): RAxisConfig("", std::move(labels)) {}
 
-   /// Whether this axis can grow depends on which constructor was called
-   bool CanGrow() const noexcept final override {
-      switch(fKind) {
-         case kEquidistant:
-         case kIrregular:
-            return false;
-
-         case kGrow:
-         case kLabels:
-            return true;
-
-         case kNumKinds:
-            R__ERROR_HERE("HIST") << "Impossible axis kind!";
-      }
-      return false;
-   }
+   /// Get the axis's title
+   const std::string &GetTitle() const { return fTitle; }
 
    /// Get the axis kind represented by this `RAxisConfig`.
    EKind GetKind() const noexcept { return fKind; }
+
+   /// Get the number of bins, excluding under- and overflow.
+   int GetNBinsNoOver() const noexcept { return fNBinsNoOver; }
 
    /// Get the bin borders; non-empty if the GetKind() == kIrregular.
    const std::vector<double> &GetBinBorders() const noexcept { return fBinBorders; }
