@@ -39,6 +39,7 @@ set(py_sources
   ROOT/pythonization/_tfile.py
   ROOT/pythonization/_tgraph.py
   ROOT/pythonization/_th1.py
+  ROOT/pythonization/_th2.py
   ROOT/pythonization/_titer.py
   ROOT/pythonization/_tobject.py
   ROOT/pythonization/_tobjstring.py
