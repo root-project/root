@@ -746,9 +746,7 @@ Int_t TXProofServ::Setup()
    }
 
    // Goto to the main PROOF working directory
-   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-   fWorkDir = workdir;
-   delete [] workdir;
+   gSystem->ExpandPathName(fWorkDir);
    if (gProofDebugLevel > 0)
       Info("Setup", "working directory set to %s", fWorkDir.Data());
 
