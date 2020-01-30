@@ -513,7 +513,7 @@ public:
    {}
 
    /// Convert to RAxisConfig.
-   operator RAxisConfig() const { return RAxisConfig(GetNBinsNoOver(), GetMinimum(), GetMaximum()); }
+   operator RAxisConfig() const { return RAxisConfig(GetTitle(), GetNBinsNoOver(), GetMinimum(), GetMaximum()); }
 
    /// Find the bin index for the given coordinate.
    /// \note Passing a bin border coordinate can either return the bin above or
@@ -596,7 +596,7 @@ public:
    explicit RAxisGrow(int nbins, double low, double high) noexcept: RAxisEquidistant(nbins, low, high, CanGrow()) {}
 
    /// Convert to RAxisConfig.
-   operator RAxisConfig() const { return RAxisConfig(RAxisConfig::Grow, GetNBinsNoOver(), GetMinimum(), GetMaximum()); }
+   operator RAxisConfig() const { return RAxisConfig(GetTitle(), RAxisConfig::Grow, GetNBinsNoOver(), GetMinimum(), GetMaximum()); }
 
    /// Grow this axis to make the "virtual bin" toBin in-range. This keeps the
    /// non-affected axis limit unchanged, and extends the other axis limit such
@@ -697,7 +697,7 @@ public:
    }
 
    /// Convert to RAxisConfig.
-   operator RAxisConfig() const { return RAxisConfig(GetBinBorders()); }
+   operator RAxisConfig() const { return RAxisConfig(GetTitle(), GetBinBorders()); }
 
    /// Find the bin index corresponding to coordinate x. If the coordinate is
    /// below the axis range, return 0. If it is above, return N + 1 for an axis
@@ -808,6 +808,9 @@ public:
 
    /// Construct a RAxisLables from a `vector` of `string`s
    explicit RAxisLabels(const std::vector<std::string> &labels): RAxisLabels("", labels) {}
+
+   /// Convert to RAxisConfig.
+   operator RAxisConfig() const { return RAxisConfig(GetTitle(), GetBinLabels()); }
 
    /// Get the bin index with label.
    int GetBinIndex(const std::string &label)
