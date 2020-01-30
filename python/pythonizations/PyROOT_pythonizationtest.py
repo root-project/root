@@ -133,6 +133,15 @@ class TestClassROOT_PYTHONIZATIONS:
         f.w.var("x").setVal(6)
         assert f.w.var("x").getVal() == 6   # uncached would give 5
 
+    def test03_th2(self):
+        """GetBinErrorUp and GetBinErrorLow overloads obtained with using decls"""
+
+        # ROOT-10109
+        import ROOT
+        h = ROOT.TH2D()
+        assert h.GetBinErrorUp(1)  == 0.
+        assert h.GetBinErrorLow(1) == 0.
+
 
 ## actual test run
 if __name__ == '__main__':
