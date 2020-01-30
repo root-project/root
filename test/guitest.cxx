@@ -1778,7 +1778,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
    TString dirname = item->GetText();
 
    while ((parent=item->GetParent())) {
-      dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
+      gSystem->PrependPathName(parent->GetText(),dirname);
       item = parent;
    }
 
