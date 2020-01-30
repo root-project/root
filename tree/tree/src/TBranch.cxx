@@ -968,6 +968,7 @@ Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
             s = new char[maxsize];
             fEntryBuffer->ReadString(s, maxsize); // Reads at most maxsize - 1 characters, plus null at end
          }
+         delete[] s;
       } else {
          fEntryBuffer->SetBufferOffset(objectStart);
       }
