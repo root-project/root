@@ -387,9 +387,7 @@ Int_t TApplicationServer::Setup()
    fWorkDir = gSystem->WorkingDirectory();
    if (strlen(fUrl.GetFile()) > 0) {
       fWorkDir = fUrl.GetFile();
-      char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-      fWorkDir = workdir;
-      delete [] workdir;
+      gSystem->ExpandPathName(fWorkDir);
    }
 
    // Go to working dir
