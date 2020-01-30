@@ -28,6 +28,7 @@ class TestClasSTLVECTOR:
         cls.test_dct = "StlTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = 13
+        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
     def test01_builtin_vector_type(self):
         """Test access to a vector<int> (part of cintdlls)"""
@@ -90,6 +91,14 @@ class TestClasSTLVECTOR:
         assert len(a) == 0
         for arg in a:
             pass
+
+        if self.exp_pyroot:
+            # ROOT-10118
+            # In current Cppyy, STL containers evaluate to True
+            # if they contain at least one element
+            assert not a
+            a.push_back(0)
+            assert a
 
     def test05_pushback_iterables_with_iadd(self):
         """Test usage of += of iterable on push_back-able container"""
