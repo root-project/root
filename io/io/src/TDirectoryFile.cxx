@@ -479,8 +479,11 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
       // this file.
       if (GetFile()) {
          auto url = GetFile()->GetEndpointUrl();
-         if (f && 0 == url->Compare(f->GetFile()->GetEndpointUrl()))
-            return GetDirectory(s+1,printError,funcname);
+         if (f && 0 == url->Compare(f->GetFile()->GetEndpointUrl())) {
+            result = GetDirectory(s+1,printError,funcname);
+            delete [] path;
+            return result;
+         }
       }
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
