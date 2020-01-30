@@ -1195,12 +1195,11 @@ void TGRootIDE::CompileMacro()
    TString pathtmp = Form("%s/ride.%d.log", gSystem->TempDirectory(), fPid);
    gSystem->RedirectOutput(pathtmp.Data(), "a");
 
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                gSystem->BaseName(fFilename.Data()));
+   TString tmpfile = gSystem->BaseName(fFilename.Data());
+   gSystem->PrependPathName(gSystem->TempDirectory(), tmpfile);
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gSystem->CompileMacro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete tmpfile;
 
    gSystem->RedirectOutput(0);
    fTextView->LoadFile(pathtmp.Data());
@@ -1242,13 +1241,12 @@ void TGRootIDE::ExecuteMacro()
    TString pathtmp = Form("%s/ride.%d.log", gSystem->TempDirectory(), fPid);
    gSystem->RedirectOutput(pathtmp.Data(), "a");
 
-   char *tmpfile = gSystem->ConcatFileName(gSystem->TempDirectory(),
-                                gSystem->BaseName(fFilename.Data()));
+   TString tmpfile = gSystem->BaseName(fFilename.Data());
+   gSystem->PrependPathName(gSystem->TempDirectory(), tmpfile);
    gROOT->SetExecutingMacro(kTRUE);
    fTextEdit->SaveFile(tmpfile, kFALSE);
    gROOT->Macro(tmpfile);
    gSystem->Unlink(tmpfile);
-   delete tmpfile;
    gROOT->SetExecutingMacro(kFALSE);
    gSystem->RedirectOutput(0);
    fTextView->LoadFile(pathtmp.Data());
