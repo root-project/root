@@ -527,6 +527,24 @@ class Regression20gEnv(MyTestCase):
          gEnv.SetValue(optname, newval)
          self.assertEqual(gEnv.GetValue(optname, defval), newval)
 
+### Reuse of Python proxies in attribute lookups ================
+class Regression21ReuseProxies(MyTestCase):
+   def test1ReuseProxies(self):
+      """Test that Python proxies are reused in attribute lookups"""
+      # ROOT-8843
+      if exp_pyroot:
+         import ROOT
+         ROOT.gInterpreter.LoadText("struct A { A* otherA=nullptr;};")
+         a1 = ROOT.A()
+         a2 = ROOT.A()
+         a1.otherA = a2
+         a3 = a1.otherA
+         self.assertEqual(a3, a2)
+         val = 4
+         a3.b = val
+         self.assertEqual(a2.b, val)
+         self.assertEqual(a1.otherA.b, val)
+
 
 ## actual test run
 if __name__ == '__main__':
