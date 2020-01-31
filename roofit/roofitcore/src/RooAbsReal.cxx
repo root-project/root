@@ -309,7 +309,7 @@ RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t max
   }
 
   //TODO check and wait if computation is running?
-  if (_batchData.status(begin, maxSize) < BatchHelpers::BatchData::kReady) {
+  if (_batchData.status(begin) < BatchHelpers::BatchData::kReady) {
     auto ret = evaluateBatch(begin, maxSize);
     maxSize = ret.size();
     _batchData.setStatus(begin, maxSize, BatchHelpers::BatchData::kReady);
@@ -4867,7 +4867,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// \return     Span pointing to the results. The memory is held by the object, on which this
 /// function is called.
 RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize) const {
-  assert(_batchData.status(begin, maxSize) != BatchHelpers::BatchData::kReadyAndConstant);
+  assert(_batchData.status(begin) != BatchHelpers::BatchData::kReadyAndConstant);
 
   RooArgSet allLeafs;
   leafNodeServerList(&allLeafs);
@@ -4978,7 +4978,7 @@ void RooAbsReal::checkBatchComputation(std::size_t evtNo, const RooArgSet* normS
     }
   }
 
-  if (!_allBatchesDirty && _batchData.status(evtNo, 1) >= BatchHelpers::BatchData::kReady) {
+  if (!_allBatchesDirty && _batchData.status(evtNo) >= BatchHelpers::BatchData::kReady) {
     RooSpan<const double> batch = _batchData.getBatch(evtNo, 1);
     RooSpan<const double> enclosingBatch = _batchData.getBatch(evtNo-1, 3);
     const double batchVal = batch[0];
