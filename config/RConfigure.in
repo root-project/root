@@ -35,6 +35,7 @@
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
 #@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/
 #@hasstodstringview@ R__HAS_STOD_STRING_VIEW /**/
+#@hasopplusequalstringview@ R__HAS_OP_EQUAL_PLUS_STRING_VIEW /**/
 #@hasstdapply@ R__HAS_STD_APPLY /**/
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
 #@hasstdindexsequence@ R__HAS_STD_INDEX_SEQUENCE /**/
