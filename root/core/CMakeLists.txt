@@ -6,6 +6,9 @@ ROOTTEST_ADD_TEST(stringView
                   MACRO  stringView.C
                   OUTREF stringView.ref)
 
+ROOTTEST_ADD_TEST(base64
+                  MACRO  base64.C
+                  OUTREF base64.ref)
 
 ROOTTEST_ADD_TEST(assertHumanReadable
                   MACRO assertHumanReadable.cxx+
@@ -14,7 +17,7 @@ ROOTTEST_ADD_TEST(assertHumanReadable
 
 ROOTTEST_ADD_TEST(assertROOT7244
                   MACRO assertROOT7244.C
-                  COPY_TO_BUILDDIR subdir_ROOT7244/TheFile.h 
+                  COPY_TO_BUILDDIR subdir_ROOT7244/TheFile.h
                   )
 
 ROOTTEST_ADD_TEST(assertROOT8542
