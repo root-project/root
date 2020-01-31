@@ -765,6 +765,7 @@ TTree::TTree()
 , fIndex()
 , fTreeIndex(0)
 , fFriends(0)
+, fExternalFriends(0)
 , fPerfStats(0)
 , fUserInfo(0)
 , fPlayer(0)
@@ -845,6 +846,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */,
 , fIndex()
 , fTreeIndex(0)
 , fFriends(0)
+, fExternalFriends(0)
 , fPerfStats(0)
 , fUserInfo(0)
 , fPlayer(0)
@@ -946,6 +948,13 @@ TTree::~TTree()
    // FIXME: We must consider what to do with the reset of these if we are a clone.
    delete fPlayer;
    fPlayer = 0;
+   if (fExternalFriends) {
+      using namespace ROOT::Detail;
+      for(auto fetree : TRangeStaticCast<TFriendElement>(*fExternalFriends))
+         fetree->Reset();
+      fExternalFriends->Clear("nodelete");
+      SafeDelete(fExternalFriends);
+   }
    if (fFriends) {
       fFriends->Delete();
       delete fFriends;
@@ -1312,7 +1321,7 @@ TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
          Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent tree: %lld", treename, file->GetName(), t->GetEntries(), fEntries);
       }
-   } else {
+  } else {
       Warning("AddFriend", "unknown tree '%s' in file '%s'", treename, file->GetName());
    }
    return fe;
@@ -1340,6 +1349,7 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
       Warning("AddFriend", "FriendElement '%s' in file '%s' has less entries %lld than its parent tree: %lld",
               tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(), fEntries);
    }
+   tree->RegisterExternalFriend(fe);
    return fe;
 }
 
@@ -6300,26 +6310,14 @@ Long64_t TTree::LoadTree(Long64_t entry)
                continue;
             }
             TTree* friendTree = fe->GetTree();
-            if (friendTree == 0) {
-               // Somehow we failed to retrieve the friend TTree.
-            } else if (friendTree->IsA() == TTree::Class()) {
-               // Friend is actually a tree.
+            if (friendTree) {
                if (friendTree->LoadTreeFriend(entry, this) >= 0) {
                   friendHasEntry = kTRUE;
                }
-            } else {
-               // Friend is actually a chain.
-               // FIXME: This logic should be in the TChain override.
-               Int_t oldNumber = friendTree->GetTreeNumber();
-               if (friendTree->LoadTreeFriend(entry, this) >= 0) {
-                  friendHasEntry = kTRUE;
-               }
-               Int_t newNumber = friendTree->GetTreeNumber();
-               if (oldNumber != newNumber) {
-                  // We can not just compare the tree pointers because they could be reused.
-                  // So we compare the tree number instead.
-                  needUpdate = kTRUE;
-               }
+            }
+            if (fe->IsUpdated()) {
+               needUpdate = kTRUE;
+               fe->ResetUpdated();
             }
          } // for each friend
       }
@@ -7687,6 +7685,18 @@ void TTree::Refresh()
    fDirectory->Append(this);
    delete tree;
    tree = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Record a TFriendElement that we need to warn when the chain switches to
+/// a new file (typically this is because this chain is a friend of another
+/// TChain)
+
+void TTree::RegisterExternalFriend(TFriendElement *fe)
+{
+   if (!fExternalFriends)
+      fExternalFriends = new TList();
+   fExternalFriends->Add(fe);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
