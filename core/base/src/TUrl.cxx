@@ -619,6 +619,9 @@ void TUrl::ParseOptions() const
    if (fOptionsMap) return;
 
    TString urloptions = GetOptions();
+   if (urloptions.IsNull())
+      return;
+
    TObjArray *objOptions = urloptions.Tokenize("&");
    for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
       TString loption = ((TObjString *) objOptions->At(n))->GetName();
@@ -650,7 +653,7 @@ const char *TUrl::GetValueFromOptions(const char *key) const
    if (!key) return nullptr;
    ParseOptions();
    TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : nullptr;
-   return (option ? ((TObjString*)fOptionsMap->GetValue(key))->GetName(): nullptr);
+   return option ? option->GetName() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -662,7 +665,7 @@ Int_t TUrl::GetIntValueFromOptions(const char *key) const
    if (!key) return -1;
    ParseOptions();
    TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : nullptr;
-   return (option ? (atoi(((TObjString*)fOptionsMap->GetValue(key))->GetName())) : -1);
+   return option ? atoi(option->GetName()) : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -673,9 +676,7 @@ Bool_t TUrl::HasOption(const char *key) const
    if (!key) return kFALSE;
    ParseOptions();
 
-   if (fOptionsMap && fOptionsMap->FindObject(key))
-      return kTRUE;
-   return kFALSE;
+   return fOptionsMap && fOptionsMap->FindObject(key);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
