@@ -347,7 +347,7 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxSize,
     const RooArgSet* normSet) const
 {
-  // Some PDFs do preprocessing here:
+  // Some PDFs do preprocessing here, e.g. of the norm
   getValV(normSet);
 
   if (_allBatchesDirty || _operMode == ADirty) {
@@ -369,15 +369,9 @@ RooSpan<const double> RooAbsPdf::getValBatch(std::size_t begin, std::size_t maxS
   }
 
 
-  // Process change in last data set used
-  Bool_t nsetChanged(kFALSE) ;
-  if (normSet != _normSet || _norm == nullptr) {
-    nsetChanged = syncNormalization(normSet) ;
-  }
-
   // TODO wait if batch is computing?
-  if (_batchData.status(begin, maxSize) <= BatchHelpers::BatchData::kDirty
-      || nsetChanged || _norm->isValueDirty()) {
+  if (_batchData.status(begin, normSet, BatchHelpers::BatchData::kgetVal) <= BatchHelpers::BatchData::kDirty
+      || _norm->isValueDirty()) {
 
     auto outputs = evaluateBatch(begin, maxSize);
     maxSize = outputs.size();
@@ -753,7 +747,8 @@ RooSpan<const double> RooAbsPdf::getLogValBatch(std::size_t begin, std::size_t m
     logBatchComputationErrors(pdfValues, begin);
   }
 
-  auto output = _batchData.makeWritableBatchUnInit(begin, pdfValues.size());
+  auto output = _batchData.makeWritableBatchUnInit(begin, pdfValues.size(),
+      normSet, BatchHelpers::BatchData::kgetLogVal);
 
   for (std::size_t i = 0; i < pdfValues.size(); ++i) { //CHECK_VECTORISE
     const double prob = pdfValues[i];
