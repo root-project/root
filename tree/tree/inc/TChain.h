@@ -44,7 +44,6 @@ protected:
    TObjArray   *fFiles;            ///< -> List of file names containing the trees (TChainElement, owned)
    TList       *fStatus;           ///< -> List of active/inactive branches (TChainElement, owned)
    TChain      *fProofChain;       ///<! chain proxy when going to be processed by PROOF
-   TList       *fExternalFriends;  ///<! List of TFriendsElement pointing to us and need to be notified of LoadTree.  Content not owned.
 
 private:
    TChain(const TChain&);            // not implemented
@@ -132,8 +131,6 @@ public:
    virtual Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    virtual void      RecursiveRemove(TObject *obj);
-   virtual void      RegisterExternalFriend(TFriendElement *);
-   virtual void      RemoveExternalFriend(TFriendElement *fe) { if (fExternalFriends) fExternalFriends->Remove((TObject*)fe); }
    virtual void      RemoveFriend(TTree*);
    virtual void      Reset(Option_t *option="");
    virtual void      ResetAfterMerge(TFileMergeInfo *);

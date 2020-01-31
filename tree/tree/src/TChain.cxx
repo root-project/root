@@ -73,7 +73,6 @@ TChain::TChain()
 , fFiles(0)
 , fStatus(0)
 , fProofChain(0)
-, fExternalFriends(0)
 {
    fTreeOffset = new Long64_t[fTreeOffsetLen];
    fFiles = new TObjArray(fTreeOffsetLen);
@@ -148,7 +147,6 @@ TChain::TChain(const char* name, const char* title)
 , fFiles(0)
 , fStatus(0)
 , fProofChain(0)
-, fExternalFriends(0)
 {
    //
    //*-*
@@ -185,13 +183,6 @@ TChain::~TChain()
       gROOT->GetListOfCleanups()->Remove(this);
    }
 
-   if (fExternalFriends) {
-      using namespace ROOT::Detail;
-      for(auto fetree : TRangeStaticCast<TFriendElement>(*fExternalFriends))
-         fetree->Reset();
-      fExternalFriends->Clear("nodelete");
-      SafeDelete(fExternalFriends);
-   }
    SafeDelete(fProofChain);
    fStatus->Delete();
    delete fStatus;
@@ -709,6 +700,7 @@ TFriendElement* TChain::AddFriend(const char* chain, TFile* dummy)
 
 TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* warn = kFALSE */)
 {
+   if (!chain) return nullptr;
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,alias);
    R__ASSERT(fe);
@@ -727,6 +719,7 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* war
    if (!t) {
       Warning("AddFriend","Unknown TChain %s",chain->GetName());
    }
+   chain->RegisterExternalFriend(fe);
    return fe;
 }
 
@@ -1618,7 +1611,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
          if (friend_t) {
             auto localfe = fTree->AddFriend(t, fe->GetName());
             localfe->SetBit(TFriendElement::kFromChain);
-            t->RegisterExternalFriend(localfe);
          }
       }
    }
@@ -2239,17 +2231,6 @@ void TChain::RecursiveRemove(TObject *obj)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Record a TFriendElement that we need to warn when the chain switches to
-/// a new file (typically this is because this chain is a friend of another
-/// TChain)
-
-void TChain::RegisterExternalFriend(TFriendElement *fe)
-{
-   if (!fExternalFriends)
-      fExternalFriends = new TList();
-   fExternalFriends->Add(fe);
-}
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 

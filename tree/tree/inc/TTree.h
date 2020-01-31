@@ -118,6 +118,7 @@ protected:
    TArrayI        fIndex;                 ///<  Index of sorted values
    TVirtualIndex *fTreeIndex;             ///<  Pointer to the tree Index (if any)
    TList         *fFriends;               ///<  pointer to list of friend elements
+   TList         *fExternalFriends;       ///<! List of TFriendsElement pointing to us and need to be notified of LoadTree.  Content not owned.
    TVirtualPerfStats *fPerfStats;         ///<! pointer to the current perf stats object
    TList         *fUserInfo;              ///<  pointer to a list of user objects associated to this Tree
    TVirtualTreePlayer *fPlayer;           ///<! Pointer to current Tree player
@@ -546,8 +547,8 @@ public:
    virtual Long64_t        ReadFile(const char* filename, const char* branchDescriptor = "", char delimiter = ' ');
    virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
-   virtual void            RegisterExternalFriend(TFriendElement *) {}
-   virtual void            RemoveExternalFriend(TFriendElement *) {}
+   virtual void            RegisterExternalFriend(TFriendElement *);
+   virtual void            RemoveExternalFriend(TFriendElement *fe) { if (fExternalFriends) fExternalFriends->Remove((TObject*)fe); }
    virtual void            RemoveFriend(TTree*);
    virtual void            RecursiveRemove(TObject *obj);
    virtual void            Reset(Option_t* option = "");

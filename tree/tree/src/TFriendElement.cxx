@@ -170,7 +170,7 @@ TTree *TFriendElement::DisConnect()
 {
    // At this point, if the condition is not meant, fTree is usually already
    // deleted (hence the need for a local bit describing fTree)
-   if (TestBit(kFromChain) && fTree)
+   if (fTree)
       fTree->RemoveExternalFriend(this);
    if (fOwnFile) delete fFile;
    fFile = 0;
@@ -226,6 +226,9 @@ TTree *TFriendElement::GetTree()
 
    // This could be a memory tree or chain
    fTree = dynamic_cast<TTree*>( gROOT->FindObject(GetTreeName()) );
+
+   if (fTree)
+      fTree->RegisterExternalFriend(this);
 
    return fTree;
 }
