@@ -14,10 +14,10 @@
 
  QR Decomposition class
 
- Decompose  a general (m x n) matrix A into A = fQ fR H   where
+ Decompose  a general (m x n) matrix A into A = fQ' fR H   where
 
 ~~~
-  fQ : (m x n) - orthogonal matrix
+  fQ : (m x n) - internal Q' matrix (not orthoginal)
   fR : (n x n) - upper triangular matrix
   H  : HouseHolder matrix which is stored through
   fUp: (n) - vector with Householder up's
@@ -27,12 +27,19 @@
   If row/column index of A starts at (rowLwb,colLwb) then
   the decomposed matrices start from :
 ~~~
-  fQ  : (rowLwb,0)
+  fQ'  : (rowLwb,0)
   fR  : (0,colLwb)
   and the decomposed vectors start from :
   fUp : (0)
   fW  : (0)
 ~~~
+
+   In order to get thw QR dcomposition of A (i.e. A = QR )
+   The orthoginal matrix Q needs to be computed from the internal Q' and
+   the up's and beta's vector defining the Householder transformation
+
+   The orthogonal Q matrix is returned to the user by calling the
+   function TDecompQRH::GetOrthogonalMatrix()
 
  Errors arise from formation of reflectors i.e. singularity .
  Note it attempts to handle the cases where the nRow <= nCol .
@@ -499,6 +506,38 @@ void TDecompQRH::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// For a matrix A(m,n), return the OtrhogonalMatrix Q such as
+///    A = Q * R
+///
+///  Note that this Q is not th einternal fQ matrix obtained in the QRH decomposition, but can be computed
+///  from the fQ and the up and beta vector's defining the Householder transformation
+
+TMatrixD TDecompQRH::GetOrthogonalMatrix() const
+{
+   // apply HouseHolder transformation starting from the identity
+   // Calculate  Q.b; it was checked nQRow == nQCol
+
+   const Int_t nRow = this->GetNrows();
+   const Int_t nCol = this->GetNcols();
+   // remmber nCol <= nRow
+   TMatrixD orthogQ(nRow, nCol);
+   // start from identity matrix
+   for (int i = 0; i < nCol; ++i)
+      orthogQ(i, i) = 1;
+
+
+   // apply the HouseHolder transformations for each column of Q
+   for (int j = 0; j < nCol; ++j) {
+      TMatrixDColumn b = TMatrixDColumn(orthogQ, j);
+      int nQRow = fQ.GetNrows();
+      for (Int_t k = nQRow - 1; k >= 0; k--) {
+         const TVectorD qc_k = TMatrixDColumn_const(fQ, k);
+         ApplyHouseHolder(qc_k, fUp(k), fW(k), k, k + 1, b);
+      }
+   }
+   return orthogQ;
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// For a matrix A(m,n), its inverse A_inv is defined as A * A_inv = A_inv * A = unit
 /// The user should always supply a matrix of size (m x m) !
