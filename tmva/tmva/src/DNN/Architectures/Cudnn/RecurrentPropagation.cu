@@ -526,7 +526,7 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
    cudnnRNNDescriptor_t rnnDesc = desc.LayerDescriptor;
 
    // initial state and cell state will be set to zero
-   bool isLSTM = (cx.GetSize() > 0);
+   bool isLSTM = (cx.GetSize() > 0) && rememberState;
 
    // Perform forward training
    if (isTraining) {
@@ -565,7 +565,8 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
 
 {
    bool rememberState = false;
-   bool isLSTM = (cx.GetSize() > 0);
+   bool rememberStateGrad = false;
+   bool isLSTM = (cx.GetSize() > 0) && rememberState;
    int seqLength = x.GetShape()[0];
    cudnnRNNDescriptor_t rnnDesc = desc.LayerDescriptor;
    cudnnHandle_t cudnnHandle = x.GetCudnnHandle();
@@ -576,7 +577,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    //cudnnStatus_t status;
    cudnnStatus_t status = cudnnRNNBackwardData(
       cudnnHandle, rnnDesc, seqLength, desc.yDesc.data(), y.GetDataPointer(), desc.dyDesc.data(), dy.GetDataPointer(),
-      dhy.GetTensorDescriptor(), (rememberState) ? dhy.GetDataPointer() : nullptr,
+      dhy.GetTensorDescriptor(), (rememberStateGrad) ? dhy.GetDataPointer() : nullptr,
       (isLSTM) ? dcy.GetTensorDescriptor() : dhy.GetTensorDescriptor(), (isLSTM) ? dcy.GetDataPointer() : nullptr,      // dcy
       desc.WeightsDescriptor, weights.GetDataPointer(), hx.GetTensorDescriptor(),
       (rememberState) ? hx.GetDataPointer() : nullptr, (isLSTM) ? cx.GetTensorDescriptor() : hx.GetTensorDescriptor(),
