@@ -40,6 +40,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/SFT,\
  Alja Mrak-Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
+ Joana Niermann, CERN-SFT, \
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
@@ -53,6 +54,7 @@ The following people have contributed to this new version:
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/ATLAS,\
  Stefan Wunsch, CERN/SFT,\
+ Luca Zampieri, CERN-SFT, \
  Zhe Zhang, Nebraska
 
 ## General
@@ -466,3 +468,4 @@ shuts down the interpreter.
  - Introduce a fast tree inference engine able to generate optimized inference code using just-in-time compilation of model parameters
  - New experimental TMVA reader interface `RReader` following a sklearn-like API in C++ and Python
  - New experimental interface for preprocessing methods (`RStandardScaler`)
+ - New GPU implmentation of convolutional layer using the cuDNN library. It is used as default when the cuDNN library is installed in the system 
