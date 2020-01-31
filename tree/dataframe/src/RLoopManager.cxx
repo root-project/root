@@ -515,6 +515,8 @@ void RLoopManager::Run()
    }
 
    CleanUpNodes();
+
+   fNRuns++;
 }
 
 /// Return the list of default columns -- empty if none was provided when constructing the RDataFrame

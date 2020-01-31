@@ -422,6 +422,20 @@ TEST_P(RDFSimpleTests, GetNSlots)
    EXPECT_EQ(NSLOTS, ROOT::Internal::RDF::GetNSlots());
 }
 
+TEST_P(RDFSimpleTests, GetNRuns)
+{
+   RDataFrame df(3);
+   EXPECT_EQ(df.GetNRuns(), 0u);
+
+   auto sum1 = df.Sum("rdfentry_");
+   sum1.GetValue();
+   EXPECT_EQ(df.GetNRuns(), 1u);
+
+   auto sum2 = df.Sum("rdfentry_");
+   sum2.GetValue();
+   EXPECT_EQ(df.GetNRuns(), 2u);
+}
+
 TEST_P(RDFSimpleTests, CArraysFromTree)
 {
    auto filename = "dataframe_simple_3.root";

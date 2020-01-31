@@ -118,6 +118,7 @@ class RLoopManager : public RNodeBase {
    /// A unique ID that identifies the computation graph that starts with this RLoopManager.
    /// Used, for example, to jit objects in a namespace reserved for this computation graph
    const unsigned int fID = GetNextID();
+   unsigned int fNRuns{0}; ///< Number of event loops run
 
    std::vector<RCustomColumnBase *> fCustomColumns; ///< Non-owning container of all custom columns created so far.
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
@@ -174,6 +175,7 @@ public:
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetID() const { return fID; }
+   unsigned int GetNRuns() const { return fNRuns; }
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) {}
