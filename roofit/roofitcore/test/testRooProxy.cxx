@@ -114,7 +114,7 @@ TEST(RooProxy, CategoryProxyBatchAccess) {
 }
 
 
-TEST(RooProxy, RealProxy) {
+TEST(RooProxy, RealProxyBatchAccess) {
   RooCategory myCat("myCat", "A category");
   RooRealVar x("x", "x", -10, 10);
   DummyClass dummy(myCat, x);
@@ -125,31 +125,41 @@ TEST(RooProxy, RealProxy) {
     xData = i;
     data.fill();
   }
-  data.attachBuffers(dummy);
 
-  auto theBatch = dummy.var->getValBatch(0, 100);
+  auto dummyObservables = dummy.getObservables(data);
+  data.attachBuffers(*dummyObservables);
+
+  auto theBatch = dummy.var->getValBatch(0, 10);
   ASSERT_FALSE(theBatch.empty());
   EXPECT_EQ(theBatch.size(), 10ul);
   EXPECT_EQ(theBatch[2], 2.);
+  EXPECT_EQ(theBatch[9], 9.);
+
+  auto largerBatch = dummy.var.getValBatch(0, 100);
+  EXPECT_EQ(largerBatch.size(), 10ul);
+
+  dummy.var = 1.337;
+  EXPECT_EQ(dummy.var * 1., 1.337);
 }
 
 
-TEST(RooProxy, PdfProxy) {
+TEST(RooProxy, PdfProxyBatchAccess) {
   RooCategory myCat("myCat", "A category");
   RooRealVar x("x", "x", -10, 10);
   RooGenericPdf generic("generic", "generic", "1.+x", x);
   DummyClass dummy(myCat, x, &generic);
-  dummy.Print("T");
 
   RooDataSet data("data", "data", x);
+  RooRealVar& xData = dynamic_cast<RooRealVar&>((*data.get())["x"]);
   for (unsigned int i=0; i < 10; ++i) {
-    x = i;
+    xData = i;
     data.fill();
   }
-  data.attachBuffers(dummy);
+  data.attachBuffers(*dummy.getVariables());
 
-  auto theBatch = dummy.pdf->getValBatch(0, 100);
+  auto theBatch = dummy.pdf->getValBatch(0, 10);
   ASSERT_FALSE(theBatch.empty());
   EXPECT_EQ(theBatch.size(), 10ul);
   EXPECT_EQ(theBatch[2], 3.);
+  EXPECT_EQ(theBatch[9], 10.);
 }
