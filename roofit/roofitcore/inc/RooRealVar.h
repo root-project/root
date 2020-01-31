@@ -50,8 +50,14 @@ public:
   
   // Parameter value and error accessors
   virtual Double_t getValV(const RooArgSet* nset=0) const ;
-  RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize,
-      const RooArgSet* = nullptr) const;
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Return batch of data starting at `begin`.
+  /// \param begin First event to return.
+  /// \param batchSize Size of the batch.
+  /// \return Span with event data. If not attached to a data store, empty batch. The batch will be shorter if data store ends.
+  RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize, const RooArgSet* = nullptr) const final {
+    return _batchData.getBatch(begin, batchSize);
+  }
 
   virtual void setVal(Double_t value);
   inline Double_t getError() const { return _error>=0?_error:0. ; }
