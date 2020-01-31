@@ -27,9 +27,9 @@ if (CUDA_FOUND)
 
    set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
 
-   CUDA_ADD_EXECUTABLE(testGRUBackpropagationCuda TestGRUBackpropagationCuda.cxx)
-   target_link_libraries(testGRUBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
-   ROOT_ADD_TEST(TMVA-DNN-GRU-BackpropagationCuda COMMAND testGRUBackpropagationCuda)
+   CUDA_ADD_EXECUTABLE(testGRUBackpropagationCudnn TestGRUBackpropagationCudnn.cxx)
+   target_link_libraries(testGRUBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+   ROOT_ADD_TEST(TMVA-DNN-GRU-BackpropagationCudnn COMMAND testGRUBackpropagationCudnn)
 
 endif (CUDA_FOUND)
 
