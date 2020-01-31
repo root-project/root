@@ -20,15 +20,15 @@ protocols and to pack binary data in HTTP messages.
 
 #include "TBase64.h"
 
+#include <ROOT/RConfig.hxx>
+
 ClassImp(TBase64);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base64 encoding of 3 bytes from in.
 /// Output (4 bytes) saved in out (not null terminated).
-/// Returns 0 on success, -1 if input or output arrays are
-/// not defined.
 
-static int ToB64low(const char *in, char *out, int mod)
+static void ToB64low(const char *in, char *out, int mod)
 {
    static char b64ref[64] = {
       'A','B','C','D','E','F','G','H','I','J',
@@ -41,10 +41,12 @@ static int ToB64low(const char *in, char *out, int mod)
       '+','/'
    };
 
-   if (!in || !out)
-      return -1;
-
-   if (mod == 1) {
+   if (R__likely(mod > 2)) {
+      *out++ = b64ref[ (int)(0x3F & (in[0] >> 2)) ];
+      *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
+      *out++ = b64ref[ 0x3F & ((0x3C & (in[1] << 2)) | (0x03 & (in[2] >> 6))) ];
+      *out++ = b64ref[ 0x3F & in[2] ];
+   } else if (mod == 1) {
       *out++ = b64ref[ 0x3F & (in[0] >> 2) ];
       *out++ = b64ref[ 0x3F & (0x30 & (in[0] << 4)) ];
       *out++ = '=';
@@ -54,22 +56,15 @@ static int ToB64low(const char *in, char *out, int mod)
       *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
       *out++ = b64ref[ 0x3F & (0x3C & (in[1] << 2)) ];
       *out++ = '=';
-   } else {
-      *out++ = b64ref[ (int)(0x3F & (in[0] >> 2)) ];
-      *out++ = b64ref[ 0x3F & ((0x30 & (in[0] << 4)) | (0x0F & (in[1] >> 4))) ];
-      *out++ = b64ref[ 0x3F & ((0x3C & (in[1] << 2)) | (0x03 & (in[2] >> 6))) ];
-      *out++ = b64ref[ 0x3F & in[2] ];
    }
-
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base64 decoding of 4 bytes from in.
-/// Output (3 bytes) returned in out.
+/// Output (3 bytes) appended to out.
 /// No check for base64-ness of input characters.
 
-static int FromB64low(const char *in, TString &out)
+static void FromB64low(const char *in, TString &out)
 {
    static int b64inv[256] = {
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -90,22 +85,19 @@ static int FromB64low(const char *in, TString &out)
       -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
    };
 
-   UInt_t i0 = (UInt_t)(in[0]);
-   UInt_t i1 = (UInt_t)(in[1]);
-   UInt_t i2 = (UInt_t)(in[2]);
-   UInt_t i3 = (UInt_t)(in[3]);
-   if (in[3] != '=') {
+   const UInt_t i0 = (UInt_t)(in[0]);
+   const UInt_t i1 = (UInt_t)(in[1]);
+   const UInt_t i2 = (UInt_t)(in[2]);
+   const UInt_t i3 = (UInt_t)(in[3]);
+   if (R__likely(in[3] != '=')) {
       out.Append((char)(0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4)));
       out.Append((char)(0xF0 & (b64inv[i1] << 4)) | (0x0F & (b64inv[i2] >> 2)));
       out.Append((char)(0xC0 & (b64inv[i2] << 6)) | (0x3F &  b64inv[i3]));
-      return 3;
    } else if (in[2] == '=') {
       out.Append((char)(0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4)));
-      return 1;
    } else {
       out.Append((char)(0xFC & (b64inv[i0] << 2)) | (0x03 & (b64inv[i1] >> 4)));
       out.Append((char)(0xF0 & (b64inv[i1] << 4)) | (0x0F & (b64inv[i2] >> 2)));
-      return 2;
    }
 }
 
@@ -122,15 +114,12 @@ TString TBase64::Encode(const char *data)
 
 TString TBase64::Encode(const char *data, Int_t len)
 {
-   TString ret(len * 2);
+   TString ret((len < 8) ? 16 : (int) (len * 1.25 + 8)); // every 3 bytes coded in 4 base64
 
-   int mod = 0;
-   char oo[5] = {0};
+   char oo[4];
    for (int i = 0; i < len; i += 3) {
-      mod = len-i;
-      ToB64low(data+i, oo, mod);
-      oo[4] = 0;
-      ret += oo;
+      ToB64low(data+i, oo, len-i);
+      ret.Append(oo, 4);
    }
    return ret;
 }
