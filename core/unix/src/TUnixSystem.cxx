@@ -2857,8 +2857,8 @@ const char *TUnixSystem::GetLinkedLibraries()
       char* longerexe = new char[lenexe + 5];
       strlcpy(longerexe, exe,lenexe+5);
       strlcat(longerexe, ".exe",lenexe+5);
-      // delete [] exe; // dead code, but operation is not allowed
       exe = longerexe;  // memory leak
+      #error "unsupported platform, fix memory leak to use it"
    }
    TRegexp sovers = "\\.so\\.[0-9]+";
 #else
