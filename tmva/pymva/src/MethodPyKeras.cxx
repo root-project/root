@@ -455,14 +455,17 @@ void MethodPyKeras::Train() {
       PyObject* stra=PyDict_GetItemString(fLocalNS, "copy_string");
       if(!stra) break;
 #if PY_MAJOR_VERSION < 3   // for Python2
-      const char *name = PyBytes_AsString(stra);
+      const char *stra_name = PyBytes_AsString(stra);
+      // need to add string delimiter for Python2
+      TString sname = TString::Format("'%s'",stra_name);
+      const char * name = sname.Data(); 
 #else   // for Python3
       PyObject* repr = PyObject_Repr(stra);
       PyObject* str = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
       const char *name = PyBytes_AsString(str);
 #endif
 
-      std::cout << "Getting his:" << iHis << " name = " << name << std::endl;
+      Log() << kINFO << "Getting training history for item:" << iHis << " name = " << name << Endl;
       PyRunString(TString::Format("for i,p in enumerate(history.history[%s]):\n   HistoryOutput[i]=p\n",name),
                   TString::Format("Failed to get %s from training history",name));
       for (size_t i=0; i<fHistory.size(); i++)
