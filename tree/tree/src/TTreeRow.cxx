@@ -102,6 +102,8 @@ void TTreeRow::Close(Option_t *)
    if (fFields) delete [] fFields;
    fColumnCount = 0;
    fOriginal = 0;
+   fRow = nullptr;
+   fFields = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,6 +162,7 @@ void TTreeRow::SetRow(const Int_t *fields, const char *row)
    Int_t nch    = fields[fColumnCount-1];
    fFields      = new Int_t[fColumnCount];
    fOriginal    = 0;
+   if (fRow) delete [] fRow;
    fRow         = new char[nch];
    for (Int_t i=0;i<fColumnCount;i++) fFields[i] = fields[i];
    memcpy(fRow,row,nch);
