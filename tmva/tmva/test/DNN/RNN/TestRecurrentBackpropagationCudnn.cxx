@@ -13,9 +13,11 @@ int main()
    bool debug = true;
    std::cout << "Testing RNN backward pass\n";
 
+   ROOT::EnableImplicitMT(1);
+
    using Scalar_t = Double_t;
 
-   using Architecture_t = TCuda<Scalar_t>;
+   using Architecture_t = TCudnn<Scalar_t>;
 
    gRandom->SetSeed(12345);
    Architecture_t::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
