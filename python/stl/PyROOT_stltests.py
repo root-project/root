@@ -137,6 +137,17 @@ class TestClasSTLVECTOR:
         assert type(p) == PR_Test.Derived
         assert PR_Test.checkType(p) == PR_Test.checkType(PR_Test.Derived())
 
+    def test07_vector_bool_iter(self):
+        """Iteration over a vector<bool>"""
+        # ROOT-9397
+        if self.exp_pyroot:
+            from cppyy.gbl import std
+            v = std.vector[bool]()
+            l = [True, False]
+            for b in l:
+                v.push_back(b)
+            assert [ b for b in v ] == l
+
 
 ### STL list test case =======================================================
 class TestClasSTLLIST:
