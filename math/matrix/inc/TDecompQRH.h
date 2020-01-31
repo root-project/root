@@ -58,6 +58,9 @@ public :
    virtual const TVectorD &GetW     ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fW; }
 
+   TMatrixD GetOrthogonalMatrix() const;
+   const TMatrixD &GetTriangularMatrix() const { return fR; }
+
    virtual       void      SetMatrix(const TMatrixD &a);
 
    virtual Bool_t   Decompose  ();
