@@ -519,6 +519,22 @@ else()
   set(hasstodstringview undef)
 endif()
 
+if(found_stdstringview)
+  CHECK_CXX_SOURCE_COMPILES("#include <string_view>
+     int main() { std::string s; std::string_view v; s += v; return 0;}" found_opplusequal_stringview)
+elseif(found_stdexpstringview)
+  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
+     int main() { std::string s; std::experimental::string_view v; s += v; return 0;}" found_opplusequal_stringview)
+else()
+  set(found_opplusequal_stringview false)
+endif()
+
+if(found_opplusequal_stringview)
+  set(hasopplusequalstringview define)
+else()
+  set(hasopplusequalstringview undef)
+endif()
+
 CHECK_CXX_SOURCE_COMPILES("#include <tuple>
 int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
 if(found_stdapply)
