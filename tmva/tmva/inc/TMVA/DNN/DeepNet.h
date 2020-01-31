@@ -44,7 +44,7 @@
 
 #include "TMVA/DNN/RNN/RNNLayer.h"
 #include "TMVA/DNN/RNN/LSTMLayer.h"
-#include "TMVA/DNN/RNN/GRULayer.h" 
+#include "TMVA/DNN/RNN/GRULayer.h"
 
 #ifdef HAVE_DAE
 #include "TMVA/DNN/DAE/CompressionLayer.h"
@@ -62,7 +62,7 @@ namespace DNN {
 
    using namespace CNN;
    using namespace RNN;
-  
+
    //using namespace DAE;
 
 /** \class TDeepNet
@@ -569,25 +569,27 @@ TBasicLSTMLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicLSTM
                                                                                       size_t timeSteps, bool rememberState)
 {
    // should check if input and time size are consistent
-   size_t inputHeight, inputWidth;
+   size_t inputHeight, inputWidth, inputDepth;
    if (fLayers.size() == 0) {
       inputHeight = this->GetInputHeight();
       inputWidth = this->GetInputWidth();
+      inputDepth = this->GetInputDepth();
    } else {
       Layer_t *lastLayer = fLayers.back();
       inputHeight = lastLayer->GetHeight();
       inputWidth = lastLayer->GetWidth();
+      inputDepth = lastLayer->GetDepth();
    }
    if (inputSize != inputWidth) {
       Error("AddBasicLSTMLayer", "Inconsistent input size with input layout  - it should be %zu instead of %zu", inputSize, inputWidth);
    }
-   if (timeSteps != inputHeight) {
+   if (timeSteps != inputHeight && timeSteps != inputDepth) {
       Error("AddBasicLSTMLayer", "Inconsistent time steps with input layout - it should be %zu instead of %zu", timeSteps, inputHeight);
    }
 
    TBasicLSTMLayer<Architecture_t> *basicLSTMLayer =
       new TBasicLSTMLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
-                                         DNN::EActivationFunction::kSigmoid, 
+                                         DNN::EActivationFunction::kSigmoid,
                                          DNN::EActivationFunction::kTanh,
                                          fIsTraining, this->GetInitialization());
    fLayers.push_back(basicLSTMLayer);
@@ -608,25 +610,27 @@ TBasicGRULayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicGRULa
                                                                                       size_t timeSteps, bool rememberState)
 {
    // should check if input and time size are consistent
-   size_t inputHeight, inputWidth;
+   size_t inputHeight, inputWidth, inputDepth;
    if (fLayers.size() == 0) {
       inputHeight = this->GetInputHeight();
       inputWidth = this->GetInputWidth();
+      inputDepth = this->GetInputDepth();
    } else {
       Layer_t *lastLayer = fLayers.back();
       inputHeight = lastLayer->GetHeight();
       inputWidth = lastLayer->GetWidth();
+      inputDepth = lastLayer->GetDepth();
    }
    if (inputSize != inputWidth) {
       Error("AddBasicGRULayer", "Inconsistent input size with input layout  - it should be %zu instead of %zu", inputSize, inputWidth);
    }
-   if (timeSteps != inputHeight) {
+   if (timeSteps != inputHeight && timeSteps != inputDepth) {
       Error("AddBasicGRULayer", "Inconsistent time steps with input layout - it should be %zu instead of %zu", timeSteps, inputHeight);
    }
 
    TBasicGRULayer<Architecture_t> *basicGRULayer =
       new TBasicGRULayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
-                                         DNN::EActivationFunction::kSigmoid, 
+                                         DNN::EActivationFunction::kSigmoid,
                                          DNN::EActivationFunction::kTanh,
                                          fIsTraining, this->GetInitialization());
    fLayers.push_back(basicGRULayer);
@@ -639,7 +643,7 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicGRULayer(TBasicGRULayer<Architec
 {
    fLayers.push_back(basicGRULayer);
 }
-  
+
 
 
 //DAE
