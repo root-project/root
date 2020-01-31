@@ -564,7 +564,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool  isTr
       // hx is fState - tensor are of right shape
       auto &hx = this->fState;
       //auto &cx = this->fCell;
-      auto cx = Matrix_t();
+      auto &cx = this->fCell; // pass an empty cell state
       // use same for hy and cy
       auto &hy = this->fState;
       auto &cy = this->fCell;
@@ -667,7 +667,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
       Tensor_t &x = this->fX;
       Tensor_t &y = this->fY;
-      Tensor_t &dx = this->fDy;
+      Tensor_t &dx = this->fDx;
       Tensor_t &dy = this->fDy;
 
       // input size is stride[1] of input tensor that is B x T x inputSize
@@ -708,7 +708,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
       // hx is fState
       auto &hx = this->GetState();
-      auto cx = Matrix_t();
+      auto &cx = this->GetCell();
       //auto &cx = this->GetCell();
       // use same for hy and cy
       auto &dhy = hx;

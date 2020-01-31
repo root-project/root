@@ -589,7 +589,7 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
 
       Tensor_t &x = this->fX;
       Tensor_t &y = this->fY;
-      Tensor_t &dx = this->fDy;
+      Tensor_t &dx = this->fDx;
       Tensor_t &dy = this->fDy;
 
       // input size is stride[1] of input tensor that is B x T x inputSize
