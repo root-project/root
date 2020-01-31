@@ -27,9 +27,9 @@ if (CUDA_FOUND)
 
    set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
 
-   CUDA_ADD_EXECUTABLE(testLSTMBackpropagationCuda TestLSTMBackpropagationCuda.cxx)
-   target_link_libraries(testLSTMBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
-   ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCuda COMMAND testLSTMBackpropagationCuda)
+   CUDA_ADD_EXECUTABLE(testLSTMBackpropagationCudnn TestLSTMBackpropagationCudnn.cxx)
+   target_link_libraries(testLSTMBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+   ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCudnn COMMAND testLSTMBackpropagationCudnn)
 
 endif (CUDA_FOUND)
 

@@ -753,24 +753,19 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
 
    Tensor_t arr_gradients_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
-   // for (size_t t = 0; t < fTimeSteps; ++t) {
-   //    arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
-   // }
+
 
    //Architecture_t::Rearrange(arr_gradients_backward, gradients_backward); // B x T x D
    // activations_backward is input.
    Tensor_t arr_activations_backward ( fTimeSteps, this->GetBatchSize(), this->GetInputSize());
-   // for (size_t t = 0; t < fTimeSteps; ++t) {
-   //    arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
-   // }
+
+
    Architecture_t::Rearrange(arr_activations_backward, activations_backward); // B x T x D
 
    /*! For backpropagation, we need to calculate loss. For loss, output must be known.
     *  We obtain outputs during forward propagation and place the results in arr_output tensor. */
    Tensor_t arr_output (  fTimeSteps, this->GetBatchSize(), fStateSize);
-   // for (size_t t = 0; t < fTimeSteps; ++t) {
-   //    arr_output.emplace_back(this->GetBatchSize(), fStateSize); // B x H
-   // }
+
    Architecture_t::Rearrange(arr_output, this->GetOutput());
 
    Matrix_t initState(this->GetBatchSize(), fCellSize); // B x H
@@ -778,9 +773,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
    // This will take partial derivative of state[t] w.r.t state[t-1]
    Tensor_t arr_actgradients (  fTimeSteps, this->GetBatchSize(), fStateSize);
-   // for (size_t t = 0; t < fTimeSteps; ++t) {
-   //    arr_actgradients.emplace_back(this->GetBatchSize(), fCellSize);
-   // }
+
    Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
 
    /*! There are total 8 different weight matrices and 4 bias vectors.

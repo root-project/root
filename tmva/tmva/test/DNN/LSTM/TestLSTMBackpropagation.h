@@ -204,7 +204,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
    if (debug) {
       for (size_t i = 0; i < lstmLayer->GetWeights().size(); ++i)
          Architecture::PrintTensor(Tensor_t(lstmLayer->GetWeightsAt(i)),
-                                   std::string(TString::Format("LSTM weights - %d", i).Data()));
+                                   std::string(TString::Format("LSTM weights - %d",(int) i).Data()));
    }
 
    lstm.Forward(XArch, true);
@@ -222,7 +222,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
 
       for (size_t i = 0; i < lstmLayer->GetWeights().size(); ++i)
          Architecture::PrintTensor(Tensor_t(lstmLayer->GetWeightGradientsAt(i)),
-                                   std::string(TString::Format("LSTM weight Gradients - %d", i).Data()));
+                                   std::string(TString::Format("LSTM weight Gradients - %d", (int) i).Data()));
    }
 
    if (debug)  {

@@ -85,11 +85,11 @@ public:
    using AlgorithmHelper_t       = DummyConvolutionBwdFilterAlgo;
    using AlgorithmDataType_t     = DummyDataType;
    using ReduceTensorDescriptor_t = DummyDataType;
-   using RecurrentDescriptor_t = DummyDataType;
+   using RecurrentDescriptor_t    = DummyDataType;
 
    using EmptyDescriptor_t = DummyDescriptor; // Used if a descriptor is not needed in a class
 
-   using GenLayer_t = VGeneralLayer<TCpu<AReal>>;
+   using GenLayer_t              = VGeneralLayer<TCpu<AReal>>;
    using BNormLayer_t            = TBatchNormLayer<TCpu<AReal>>;
    using BNormDescriptors_t      = TDNNGenDescriptors<BNormLayer_t>;
    //using BNormWorkspace_t        = CNN::TCNNWorkspace<BNormLayer_t>;
