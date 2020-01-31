@@ -321,13 +321,14 @@ template <typename Architecture_t>
 void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) // B x T x D
 {
 
-   Tensor_t &x = this->fX;
-   Tensor_t &y = this->fY;
-   Architecture_t::Rearrange(x, input);
 
    // for Cudnn
    if (Architecture_t::IsCudnn()) {
 
+      Tensor_t &x = this->fX;
+      Tensor_t &y = this->fY;
+
+      Architecture_t::Rearrange(x, input);
 
       const auto &weights = this->GetWeightsAt(0);
       // Tensor_t cx({1}); // not used for normal RNN
