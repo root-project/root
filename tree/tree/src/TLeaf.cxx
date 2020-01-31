@@ -169,6 +169,7 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
 
    Int_t *retval = new Int_t[events];
    if (R__unlikely(!retval || !fLeafCount)) {
+      delete [] retval;
       return nullptr;
    }
 
@@ -178,6 +179,7 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
    if (!countValues || ((Int_t)countValues->size()) < events) {
       Error("GenerateOffsetArrayBase", "The leaf %s could not retrieve enough entries from its branch count (%s), ask for %d and got %ld",
             GetName(), fLeafCount->GetName(), events, (long)(countValues ? countValues->size() : -1));
+      delete [] retval;
       return nullptr;
    }
 
