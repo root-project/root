@@ -107,6 +107,7 @@ TUrl::~TUrl()
 
 void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
 {
+   delete fOptionsMap;
    fOptionsMap = nullptr;
 
    if (!url || !url[0]) {
@@ -373,6 +374,7 @@ TUrl &TUrl::operator=(const TUrl &rhs)
       fPort       = rhs.fPort;
       fFileOA     = rhs.fFileOA;
       fHostFQ     = rhs.fHostFQ;
+      delete fOptionsMap;
       fOptionsMap = nullptr;
    }
    return *this;
@@ -631,7 +633,7 @@ void TUrl::ParseOptions() const
          fOptionsMap->Add(new TObjString(key), new TObjString(value));
       } else {
          TString key = ((TObjString *) objTags->At(0))->GetName();
-         fOptionsMap->Add(new TObjString(key), 0);
+         fOptionsMap->Add(new TObjString(key), nullptr);
       }
       delete objTags;
    }
