@@ -1,10 +1,11 @@
 #include "TBase64.h"
 
 #include <iostream>
-using namespace std;
 
-void base64()
+int base64()
 {
+   int res = 0;
+
    TString binary1 = "This is test binary";
 
    TString coded = TBase64::Encode(binary1.Data(), binary1.Length());
@@ -13,11 +14,12 @@ void base64()
 
    TString binary2 = TBase64::Decode(coded);
 
-   if (binary1 == binary2)
+   if (binary1 == binary2) {
       std::cout << "base64: coding1 match" << std::endl;
-   else
+   } else {
       std::cout << "base64: coding1 mismatch" << std::endl;
-
+      res = 1;
+   }
 
    binary1 = "Other test string";
 
@@ -27,8 +29,12 @@ void base64()
 
    binary2 = TBase64::Decode(coded);
 
-   if (binary1 == binary2)
+   if (binary1 == binary2) {
       std::cout << "base64: coding2 match" << std::endl;
-   else
+   } else {
       std::cout << "base64: coding2 mismatch" << std::endl;
+      res = 2;
+   }
+
+   return res;
 }
