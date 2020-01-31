@@ -175,7 +175,7 @@ private:
    /// A simple file can either be written as TFile container or as NTuple raw file
    bool fIsRaw = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
-   /// writers can concurrently operate on the same file iff they use a proper TFile object for writing.
+   /// writers can operate on the same file if (and only if) they use a proper TFile object for writing.
    std::string fNTupleName;
    /// The file name without parent directory; only required when writing with a C file stream
    std::string fFileName;
