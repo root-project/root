@@ -1255,7 +1255,8 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [WORKING_DIR dir] [COPY_TO_BUILDDIR files]
 #                        [BUILD target] [PROJECT project]
 #                        [PASSREGEX exp] [FAILREGEX epx]
-#                        [PASSRC code])
+#                        [PASSRC code]
+#                        [LABELS label1 label2])
 #
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
@@ -1489,7 +1490,7 @@ endfunction()
 # function ROOT_ADD_GTEST(<testsuite> source1 source2... COPY_TO_BUILDDIR file1 file2 LIBRARIES)
 #
 function(ROOT_ADD_GTEST test_suite)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES;LABELS" ${ARGN})
   include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
@@ -1509,6 +1510,9 @@ function(ROOT_ADD_GTEST test_suite)
   if(ARG_WILLFAIL)
     set(willfail WILLFAIL)
   endif()
+  if(ARG_LABELS)
+    set(labels "LABELS ${ARG_LABELS}")
+  endif()
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(
@@ -1517,6 +1521,7 @@ function(ROOT_ADD_GTEST test_suite)
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
     COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
     ${willfail}
+    ${labels}
   )
 endfunction()
 
