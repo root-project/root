@@ -350,20 +350,15 @@ TBasicLSTMLayer<Architecture_t>::TBasicLSTMLayer(size_t batchSize, size_t stateS
      fStateSize(stateSize), fCellSize(stateSize), fTimeSteps(timeSteps), fRememberState(rememberState), fF1(f1),
      fF2(f2), fInputValue(batchSize, stateSize), fCandidateValue(batchSize, stateSize),
      fForgetValue(batchSize, stateSize), fOutputValue(batchSize, stateSize), fState(batchSize, stateSize),
-     fCell(batchSize, stateSize), fWeightsInputGate(this->GetWeightsAt(0)),
-     fWeightsInputGateState(this->GetWeightsAt(1)), fInputGateBias(this->GetBiasesAt(0)),
-     fWeightsForgetGate(this->GetWeightsAt(2)), fWeightsForgetGateState(this->GetWeightsAt(3)),
-     fForgetGateBias(this->GetBiasesAt(1)), fWeightsCandidate(this->GetWeightsAt(4)),
-     fWeightsCandidateState(this->GetWeightsAt(5)), fCandidateBias(this->GetBiasesAt(2)),
-     fWeightsOutputGate(this->GetWeightsAt(6)), fWeightsOutputGateState(this->GetWeightsAt(7)),
-     fOutputGateBias(this->GetBiasesAt(3)), fWeightsInputGradients(this->GetWeightGradientsAt(0)),
-     fWeightsInputStateGradients(this->GetWeightGradientsAt(1)), fInputBiasGradients(this->GetBiasGradientsAt(0)),
-     fWeightsForgetGradients(this->GetWeightGradientsAt(2)),
-     fWeightsForgetStateGradients(this->GetWeightGradientsAt(3)), fForgetBiasGradients(this->GetBiasGradientsAt(1)),
-     fWeightsCandidateGradients(this->GetWeightGradientsAt(4)),
-     fWeightsCandidateStateGradients(this->GetWeightGradientsAt(5)),
-     fCandidateBiasGradients(this->GetBiasGradientsAt(2)), fWeightsOutputGradients(this->GetWeightGradientsAt(6)),
-     fWeightsOutputStateGradients(this->GetWeightGradientsAt(7)), fOutputBiasGradients(this->GetBiasGradientsAt(3))
+     fCell(batchSize, stateSize),
+     fWeightsInputGate(this->GetWeightsAt(0)), fWeightsInputGateState(this->GetWeightsAt(4)), fInputGateBias(this->GetBiasesAt(0)),
+     fWeightsForgetGate(this->GetWeightsAt(1)), fWeightsForgetGateState(this->GetWeightsAt(5)),fForgetGateBias(this->GetBiasesAt(1)),
+     fWeightsCandidate(this->GetWeightsAt(2)), fWeightsCandidateState(this->GetWeightsAt(6)), fCandidateBias(this->GetBiasesAt(2)),
+     fWeightsOutputGate(this->GetWeightsAt(3)), fWeightsOutputGateState(this->GetWeightsAt(7)), fOutputGateBias(this->GetBiasesAt(3)),
+     fWeightsInputGradients(this->GetWeightGradientsAt(0)), fWeightsInputStateGradients(this->GetWeightGradientsAt(4)), fInputBiasGradients(this->GetBiasGradientsAt(0)),
+     fWeightsForgetGradients(this->GetWeightGradientsAt(1)), fWeightsForgetStateGradients(this->GetWeightGradientsAt(5)), fForgetBiasGradients(this->GetBiasGradientsAt(1)),
+     fWeightsCandidateGradients(this->GetWeightGradientsAt(2)),fWeightsCandidateStateGradients(this->GetWeightGradientsAt(6)), fCandidateBiasGradients(this->GetBiasGradientsAt(2)),
+     fWeightsOutputGradients(this->GetWeightGradientsAt(3)), fWeightsOutputStateGradients(this->GetWeightGradientsAt(7)), fOutputBiasGradients(this->GetBiasGradientsAt(3))
 {
    for (size_t i = 0; i < timeSteps; ++i) {
       fDerivativesInput.emplace_back(batchSize, stateSize);
