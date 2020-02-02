@@ -3109,6 +3109,9 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
 #include <RooHistFunc.h>
 #include <RooRealSumPdf.h>
 #include <RooSimultaneous.h>
+#include <RooProduct.h>
+#include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooStats/HistFactory/FlexibleInterpVar.h>
 namespace {
   inline const char* key(const c4::yml::NodeRef& n){
     std::stringstream ss;
@@ -3210,10 +3213,11 @@ namespace {
     return dh;
   }
   struct RYML_Factory_Expression {
-    std::string classname;
+    TClass* tclass;
     std::vector<std::string> arguments;
   };
-  std::map<std::string,RYML_Factory_Expression> _rymlFactoryExpressions;
+  std::map<std::string,RYML_Factory_Expression> _rymlPdfFactoryExpressions;
+  std::map<std::string,RYML_Factory_Expression> _rymlFuncFactoryExpressions;  
   
 }
 
@@ -3237,12 +3241,94 @@ template<> void RooWorkspace::importFunctions(const c4::yml::NodeRef& n) {
       }
       try {
         RooDataHist* dh = ::readData(p["data"],name,prefix);
-        RooHistFunc hf(name.c_str(),::key(p),*(dh->get()),*dh);
-        this->import(hf);
-        delete dh;
+        RooHistFunc* hf = new RooHistFunc(("hist_"+name).c_str(),::key(p),*(dh->get()),*dh);
+        RooArgSet prodElems;
+        prodElems.addOwned(*hf);
+        if(p.has_child("normfactors")){
+          for(auto nf:p["normfactors"].children()){
+            std::string nfname(::val_s(nf));
+            RooAbsReal* r = this->var(nfname.c_str());
+            if(!r){
+              coutE(InputArguments) << "RooWorkspace(" << GetName() << ") unable to find normalization factor '" << nfname << "', skipping.";
+              continue;
+            } else {
+              prodElems.add(*r);
+            }
+          }
+        }
+        if(p.has_child("overallSystematics")){
+          RooArgList nps;
+          std::vector<double> low;
+          std::vector<double> high;
+          for(auto sys:p["overallSystematics"].children()){
+            std::string sysname(::val_s(sys["parameter"]));
+            RooAbsReal* r = this->var(sysname.c_str());
+            if(!r){
+              coutE(InputArguments) << "RooWorkspace(" << GetName() << ") unable to find nuisance parameter '" << sysname << "', skipping.";
+              continue;
+            } else {
+              nps.add(*r);
+              low.push_back(::val_d(sys["low"]));
+              high.push_back(::val_d(sys["high"]));
+            }
+          }
+          RooStats::HistFactory::FlexibleInterpVar* v = new RooStats::HistFactory::FlexibleInterpVar(("overallSys_"+name).c_str(),("overallSys_"+name).c_str(),nps,1.,low,high);
+          prodElems.addOwned(*v);
+        }
+        if(p.has_child("histogramSystematics")){
+          RooArgList nps;
+          RooArgList low;
+          RooArgList high;            
+          for(auto sys:p["overallSystematics"].children()){
+            std::string sysname(::val_s(sys["parameter"]));
+            RooAbsReal* r = this->var(sysname.c_str());
+            if(!r){
+              coutE(InputArguments) << "RooWorkspace(" << GetName() << ") unable to find nuisance parameter '" << sysname << "', skipping.";
+              continue;
+            } else {
+              nps.add(*r);
+              RooDataHist* dh_low = ::readData(p["dataLow"],sysname+"Low_"+name,prefix);
+              RooHistFunc hf_low((sysname+"Low_"+name).c_str(),::key(p),*(dh_low->get()),*dh_low);              
+              low.add(hf_low);
+              RooDataHist* dh_high = ::readData(p["dataHigh"],sysname+"High_"+name,prefix);
+              RooHistFunc hf_high((sysname+"High_"+name).c_str(),::key(p),*(dh_high->get()),*dh_high);              
+              high.add(hf_high);              
+            }
+          }
+          PiecewiseInterpolation* v = new PiecewiseInterpolation(("histoSys_"+name).c_str(),("histoSys_"+name).c_str(),*hf,nps,low,high,true);
+          prodElems.addOwned(*v);
+        }                
+        RooProduct prod(name.c_str(),name.c_str(),prodElems);
+        this->import(prod);
       } catch (const char* s){
         coutE(InputArguments) << "RooWorkspace(" << GetName() << ") function '" << name << "' is of histogram type, but 'data' is not a valid definition. " << s << ". skipping." << std::endl;
         continue;        
+      }
+    } else {
+      auto expr = _rymlFuncFactoryExpressions.find(functype);
+      if(expr!= _rymlFuncFactoryExpressions.end()){
+        bool ok = true;
+        bool first = true;
+        std::stringstream expression;
+        expression << expr->second.tclass->GetName() << "::" << name << "(";
+        for(auto k:expr->second.arguments){
+          if(!p.has_child(c4::to_substr(k))){
+            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") factory expression for '" << expr->first << "' maps to class '" << expr->second.tclass->GetName() << "', which expects key '" << k << "' missing from input for object '" << name << "', skipping." << std::endl;
+            ok=false;
+            break;
+          }
+          if(!first) expression << ",";
+          first = false;
+          expression << ::val_s(p[c4::to_substr(k)]);
+        }
+        expression << ")";
+        if(ok){
+          if(!this->factory(expression.str().c_str())){
+            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
+          }
+        }
+      } else {
+        coutE(InputArguments) << "RooWorkspace(" << GetName() << ") no handling for functype '" << functype << "' implemented, skipping." << std::endl;
       }
     } 
   }
@@ -3305,15 +3391,15 @@ template<> void RooWorkspace::importPdfs(const c4::yml::NodeRef& n) {
       RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
       this->import(simpdf);      
     } else {
-      auto expr = _rymlFactoryExpressions.find(pdftype);
-      if(expr!= _rymlFactoryExpressions.end()){
+      auto expr = _rymlPdfFactoryExpressions.find(pdftype);
+      if(expr!= _rymlPdfFactoryExpressions.end()){
         bool ok = true;
         bool first = true;
         std::stringstream expression;
-        expression << expr->second.classname << "::" << name << "(";
+        expression << expr->second.tclass->GetName() << "::" << name << "(";
         for(auto k:expr->second.arguments){
           if(!p.has_child(c4::to_substr(k))){
-            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") factory expression for '" << expr->first << "' maps to class '" << expr->second.classname << "', which expects key '" << k << "' missing from input for object '" << name << "', skipping." << std::endl;
+            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") factory expression for '" << expr->first << "' maps to class '" << expr->second.tclass->GetName() << "', which expects key '" << k << "' missing from input for object '" << name << "', skipping." << std::endl;
             ok=false;
             break;
           }
@@ -3324,7 +3410,7 @@ template<> void RooWorkspace::importPdfs(const c4::yml::NodeRef& n) {
         expression << ")";
         if(ok){
           if(!this->factory(expression.str().c_str())){
-            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") failed to create " << expr->second.classname << " '" << name << "', skipping." << std::endl;
+            coutE(InputArguments) << "RooWorkspace(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
           }
         }
       } else {
@@ -3371,32 +3457,54 @@ void RooWorkspace::loadFactoryExpressions(const std::string& fname){
     std::istringstream iss(line);
     std::string key;
     iss >> key;
-    RYML_Factory_Expression ex;    
-    iss >> ex.classname;
-    while(iss.good()){
-      std::string value;
-      iss >> value;
-      ex.arguments.push_back(value);
+    TString classname;
+    iss >> classname;
+    TClass* c = TClass::GetClass(classname);
+    if(!c){
+      std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
+    } else {
+      RYML_Factory_Expression ex;
+      ex.tclass = c;
+      while(iss.good()){
+        std::string value;
+        iss >> value;
+        ex.arguments.push_back(value);
+      }
+      if(c->InheritsFrom(RooAbsPdf::Class())){
+        _rymlPdfFactoryExpressions[key] = ex;
+      } else if(c->InheritsFrom(RooAbsReal::Class())){
+        _rymlFuncFactoryExpressions[key] = ex;        
+      } else {
+        std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
+      }
     }
-    _rymlFactoryExpressions[key] = ex;
   }
 #endif
 }
 void RooWorkspace::clearFactoryExpressions(){
 #ifdef INCLUDE_RYML    
-  _rymlFactoryExpressions.clear();
+  _rymlPdfFactoryExpressions.clear();
+  _rymlFuncFactoryExpressions.clear();
 #endif
 }
 void RooWorkspace::printFactoryExpressions(){
 #ifdef INCLUDE_RYML    
-  for(auto it:_rymlFactoryExpressions){
+  for(auto it:_rymlPdfFactoryExpressions){
     std::cout << it.first;
-    std::cout << " " << it.second.classname;    
+    std::cout << " " << it.second.tclass->GetName();    
     for(auto v:it.second.arguments){
       std::cout << " " << v;
     }
     std::cout << std::endl;
   }
+  for(auto it:_rymlFuncFactoryExpressions){
+    std::cout << it.first;
+    std::cout << " " << it.second.tclass->GetName();    
+    for(auto v:it.second.arguments){
+      std::cout << " " << v;
+    }
+    std::cout << std::endl;
+  }  
 #endif
 }
 
