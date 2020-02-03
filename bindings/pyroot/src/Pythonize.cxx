@@ -2797,6 +2797,9 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddUsingToClass( pyclass, "createChi2" );
       Utility::AddUsingToClass( pyclass, "chi2FitTo" );
    }
+   else if ( name == "RooDataSet" ) {
+      Utility::AddUsingToClass( pyclass, "createHistogram" );
+   }
 // Same for TH2
    else if ( name == "TH2" ) {
       Utility::AddUsingToClass( pyclass, "GetBinErrorUp" );
