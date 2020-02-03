@@ -972,14 +972,14 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Internal::RMiniFileWriter::RFileSimple::~RFileSimple()
+ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::~RFileSimple()
 {
    if (fFile)
       fclose(fFile);
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileWriter::RFileSimple::Write(
+void ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Write(
    const void *buffer, size_t nbytes, std::int64_t offset)
 {
    R__ASSERT(fFile);
@@ -995,7 +995,7 @@ void ROOT::Experimental::Internal::RMiniFileWriter::RFileSimple::Write(
 }
 
 
-std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::RFileSimple::WriteKey(
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::WriteKey(
    const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset,
    std::uint64_t directoryOffset,
    const std::string &className,
@@ -1024,7 +1024,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::RFileSimple::WriteK
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void ROOT::Experimental::Internal::RMiniFileWriter::RFileProper::Write(
+void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(
    const void *buffer, size_t nbytes, std::int64_t offset)
 {
    R__ASSERT(fFile);
@@ -1034,7 +1034,7 @@ void ROOT::Experimental::Internal::RMiniFileWriter::RFileProper::Write(
 }
 
 
-std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::RFileProper::WriteKey(
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(
    const void *buffer, size_t nbytes, size_t len)
 {
    std::uint64_t offsetKey;
@@ -1065,19 +1065,19 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::RFileProper::WriteK
 ////////////////////////////////////////////////////////////////////////////////
 
 
-ROOT::Experimental::Internal::RMiniFileWriter::RMiniFileWriter(std::string_view name)
+ROOT::Experimental::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name)
    : fNTupleName(name)
    , fControlBlock(std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>())
 {
 }
 
 
-ROOT::Experimental::Internal::RMiniFileWriter::~RMiniFileWriter()
+ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter()
 {
 }
 
 
-ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMiniFileWriter::Recreate(
+ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(
    std::string_view ntupleName, std::string_view path, int defaultCompression, ENTupleContainerFormat containerFormat)
 {
    std::string fileName(path);
@@ -1088,7 +1088,7 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
    FILE *fileStream = fopen(std::string(path.data(), path.size()).c_str(), "wb");
    R__ASSERT(fileStream);
 
-   auto writer = new RMiniFileWriter(ntupleName);
+   auto writer = new RNTupleFileWriter(ntupleName);
    writer->fFileSimple.fFile = fileStream;
    writer->fFileName = fileName;
 
@@ -1108,28 +1108,28 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
 }
 
 
-ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMiniFileWriter::Recreate(
+ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(
    std::string_view ntupleName, std::string_view path, std::unique_ptr<TFile> &file)
 {
    file = std::unique_ptr<TFile>(TFile::Open(std::string(path.data(), path.size()).c_str(), "RECREATE"));
    R__ASSERT(file && !file->IsZombie());
 
-   auto writer = new RMiniFileWriter(ntupleName);
+   auto writer = new RNTupleFileWriter(ntupleName);
    writer->fFileProper.fFile = file.get();
    return writer;
 }
 
 
-ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMiniFileWriter::Append(
+ROOT::Experimental::Internal::RNTupleFileWriter *ROOT::Experimental::Internal::RNTupleFileWriter::Append(
    std::string_view ntupleName, TFile &file)
 {
-   auto writer = new RMiniFileWriter(ntupleName);
+   auto writer = new RNTupleFileWriter(ntupleName);
    writer->fFileProper.fFile = &file;
    return writer;
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileWriter::Commit()
+void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
    if (fFileSimple) {
       if (fIsBare) {
@@ -1170,7 +1170,7 @@ void ROOT::Experimental::Internal::RMiniFileWriter::Commit()
 }
 
 
-std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)
 {
    std::uint64_t offset;
    if (fFileSimple) {
@@ -1187,7 +1187,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteBlob(const voi
 }
 
 
-std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteNTupleHeader(
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteNTupleHeader(
    const void *data, size_t nbytes, size_t lenHeader)
 {
    auto offset = WriteBlob(data, nbytes, lenHeader);
@@ -1198,7 +1198,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteNTupleHeader(
 }
 
 
-std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteNTupleFooter(
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteNTupleFooter(
    const void *data, size_t nbytes, size_t lenFooter)
 {
    auto offset = WriteBlob(data, nbytes, lenFooter);
@@ -1209,7 +1209,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteNTupleFooter(
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileWriter::WriteBareFileSkeleton(int defaultCompression)
+void ROOT::Experimental::Internal::RNTupleFileWriter::WriteBareFileSkeleton(int defaultCompression)
 {
    RBareFileHeader bareHeader;
    bareHeader.fCompress = defaultCompression;
@@ -1223,7 +1223,7 @@ void ROOT::Experimental::Internal::RMiniFileWriter::WriteBareFileSkeleton(int de
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileWriter::WriteTFileSkeleton(int defaultCompression)
+void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompression)
 {
    RTFString strTFile{"TFile"};
    RTFString strFileName{fFileName};

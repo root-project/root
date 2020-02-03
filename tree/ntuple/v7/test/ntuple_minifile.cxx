@@ -10,7 +10,7 @@
 
 using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
-using RMiniFileWriter = ROOT::Experimental::Internal::RMiniFileWriter;
+using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
 using RNTuple = ROOT::Experimental::RNTuple;
 using RRawFile = ROOT::Experimental::Detail::RRawFile;
 
@@ -38,8 +38,8 @@ TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
-   auto writer = std::unique_ptr<RMiniFileWriter>(
-      RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kBare));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kBare));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -68,8 +68,8 @@ TEST(MiniFile, Stream)
 {
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
-   auto writer = std::unique_ptr<RMiniFileWriter>(
-      RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -104,7 +104,7 @@ TEST(MiniFile, Proper)
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
    std::unique_ptr<TFile> file;
-   auto writer = std::unique_ptr<RMiniFileWriter>(RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
 
    char header = 'h';
    char footer = 'f';
@@ -136,8 +136,8 @@ TEST(MiniFile, Multi)
 
    std::unique_ptr<TFile> file;
    auto writer1 =
-      std::unique_ptr<RMiniFileWriter>(RMiniFileWriter::Recreate("FirstNTuple", fileGuard.GetPath(), file));
-   auto writer2 = std::unique_ptr<RMiniFileWriter>(RMiniFileWriter::Append("SecondNTuple", *file));
+      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("FirstNTuple", fileGuard.GetPath(), file));
+   auto writer2 = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("SecondNTuple", *file));
 
    char header1 = 'h';
    char footer1 = 'f';
@@ -182,12 +182,12 @@ TEST(MiniFile, Multi)
 TEST(MiniFile, Failures)
 {
    // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(RMiniFileWriter::Recreate("MyNTuple", "/can/not/open", 0, ENTupleContainerFormat::kTFile), ".*");
+   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, ENTupleContainerFormat::kTFile), ".*");
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
-   auto writer = std::unique_ptr<RMiniFileWriter>(
-      RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
