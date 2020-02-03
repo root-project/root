@@ -8,11 +8,17 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TROOT.h"
 #include "TInterpreter.h"
+#include "TMethod.h"
+#include "TMethodArg.h"
+
 #include <ROOT/REveTableInfo.hxx>
+#include <ROOT/REveDataClasses.hxx>
 #include <ROOT/REveManager.hxx>
 
 #include "json.hpp"
@@ -78,6 +84,47 @@ void REveTableViewInfo::AddNewColumnToCurrentCollection(const std::string& expr,
 //  Look for definition also in base classes
 REveTableHandle::Entries_t& REveTableViewInfo::RefTableEntries(std::string cname)
 {
+   struct SimpleMethodFill
+   {
+      void fill(REveTableHandle::Entries_t& entries, TClass* c)
+      {
+         TMethod *meth;
+         TIter    next(c->GetListOfMethods());
+         while ((meth = (TMethod*) next())) {
+            // take only methods without arguments
+            if (!meth->GetListOfMethodArgs()->First())
+            {
+               std::string mn = meth->GetName();
+               std::string exp = "i." + mn + "()";
+
+               // ?? AMT is thre a better way to get detect numeric types
+               std::string r  = meth->GetReturnTypeName();
+               if ( r == "int"    || r == "Int_t" ||
+                    r == "uint" || r == "UInt_t")
+               {
+                  entries.push_back(REveTableEntry(mn, 0, exp));
+               }
+               else if( r == "double" || r == "Double_t" ||
+                        r == "float"  || r == "Float_t" )
+               {
+                  entries.push_back(REveTableEntry(mn, 0, exp));
+               }
+            }
+         }
+
+
+
+         // look in the base classes
+         TBaseClass *base;
+         TIter       blnext(c->GetListOfBases());
+         while ((base = (TBaseClass*) blnext()))
+         {
+            fill(entries, base->GetClassPointer());
+         }
+
+      }
+   };
+
    auto search = fSpecs.find(cname);
    if (search != fSpecs.end())
    {
@@ -98,6 +145,8 @@ REveTableHandle::Entries_t& REveTableViewInfo::RefTableEntries(std::string cname
    }
 
    // create new entry if not existing
+   SimpleMethodFill methodFinder;
+   methodFinder.fill(fSpecs[cname], TClass::GetClass(cname.c_str()));
    return fSpecs[cname];
 }
 
