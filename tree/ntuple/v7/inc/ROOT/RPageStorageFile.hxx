@@ -44,7 +44,7 @@ class RPagePool;
 \ingroup NTuple
 \brief Storage provider that write ntuple pages into a file
 
-The written file can be either in ROOT format or in raw format.
+The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
 class RPageSinkFile : public RPageSink {
@@ -87,7 +87,7 @@ public:
 /**
 \class ROOT::Experimental::Detail::RPageAllocatorFile
 \ingroup NTuple
-\brief Manages pages read from a raw file
+\brief Manages pages read from a the file
 */
 // clang-format on
 class RPageAllocatorFile {

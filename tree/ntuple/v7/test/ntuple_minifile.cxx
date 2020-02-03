@@ -39,7 +39,7 @@ TEST(MiniFile, Raw)
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
    auto writer = std::unique_ptr<RMiniFileWriter>(
-      RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kRaw));
+      RMiniFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kBare));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';

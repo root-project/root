@@ -830,8 +830,8 @@ struct RTFNTuple {
    }
 };
 
-/// The raw file global header
-struct RRawFileHeader {
+/// The bare file global header
+struct RBareFileHeader {
    char fMagic[7]{ 'r', 'n', 't', 'u', 'p', 'l', 'e' };
    RUInt32BE fRootVersion{(ROOT_VERSION_CODE >> 16) * 10000 +
                           ((ROOT_VERSION_CODE & 0xFF00) >> 8) * 100 +
@@ -883,7 +883,7 @@ struct RTFileControlBlock {
 
 
 ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(Detail::RRawFile *rawFile)
-   : fFile(rawFile)
+   : fRawFile(rawFile)
 {
 }
 
@@ -893,8 +893,8 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
    ReadBuffer(ident, 4, 0);
    if (std::string(ident, 4) == "root")
       return GetNTupleProper(ntupleName);
-   fIsRaw = true;
-   return GetNTupleRaw(ntupleName);
+   fIsBare = true;
+   return GetNTupleBare(ntupleName);
 }
 
 
@@ -945,9 +945,9 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
    return ntuple.ToRNTuple();
 }
 
-ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleRaw(std::string_view ntupleName)
+ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
 {
-   RRawFileHeader fileHeader;
+   RBareFileHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
    RTFString name;
    auto offset = sizeof(fileHeader);
@@ -964,7 +964,7 @@ ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::GetNT
 
 void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   auto nread = fFile->ReadAt(buffer, nbytes, offset);
+   auto nread = fRawFile->ReadAt(buffer, nbytes, offset);
    R__ASSERT(nread == nbytes);
 }
 
@@ -1096,9 +1096,9 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
    case ENTupleContainerFormat::kTFile:
       writer->WriteTFileSkeleton(defaultCompression);
       break;
-   case ENTupleContainerFormat::kRaw:
-      writer->fIsRaw = true;
-      writer->WriteRawFileSkeleton(defaultCompression);
+   case ENTupleContainerFormat::kBare:
+      writer->fIsBare = true;
+      writer->WriteBareFileSkeleton(defaultCompression);
       break;
    default:
       R__ASSERT(false && "Internal error: unhandled container format");
@@ -1132,7 +1132,7 @@ ROOT::Experimental::Internal::RMiniFileWriter *ROOT::Experimental::Internal::RMi
 void ROOT::Experimental::Internal::RMiniFileWriter::Commit()
 {
    if (fFileSimple) {
-      if (fIsRaw) {
+      if (fIsBare) {
          fFileSimple.Write(&fControlBlock->fNTuple, fControlBlock->fNTuple.GetSize(), fControlBlock->fSeekNTuple);
          fflush(fFileSimple.fFile);
          return;
@@ -1174,7 +1174,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteBlob(const voi
 {
    std::uint64_t offset;
    if (fFileSimple) {
-      if (fIsRaw) {
+      if (fIsBare) {
          offset = fFileSimple.fFilePos;
          fFileSimple.Write(data, nbytes);
       } else {
@@ -1209,11 +1209,11 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileWriter::WriteNTupleFooter(
 }
 
 
-void ROOT::Experimental::Internal::RMiniFileWriter::WriteRawFileSkeleton(int defaultCompression)
+void ROOT::Experimental::Internal::RMiniFileWriter::WriteBareFileSkeleton(int defaultCompression)
 {
-   RRawFileHeader rawHeader;
-   rawHeader.fCompress = defaultCompression;
-   fFileSimple.Write(&rawHeader, sizeof(rawHeader), 0);
+   RBareFileHeader bareHeader;
+   bareHeader.fCompress = defaultCompression;
+   fFileSimple.Write(&bareHeader, sizeof(bareHeader), 0);
    RTFString ntupleName{fNTupleName};
    fFileSimple.Write(&ntupleName, ntupleName.GetSize());
 

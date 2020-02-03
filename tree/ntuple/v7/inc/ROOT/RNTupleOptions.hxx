@@ -30,7 +30,7 @@ namespace Experimental {
 // clang-format on
 enum class ENTupleContainerFormat {
   kTFile, // ROOT TFile
-  kRaw, // Raw file
+  kBare, // A thin envelope supporting a single RNTuple only
 };
 
 

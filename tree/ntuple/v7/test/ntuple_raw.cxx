@@ -49,7 +49,7 @@ TEST(RNTuple, Basics)
 
    {
       RNTupleWriteOptions options;
-      options.SetContainerFormat(ENTupleContainerFormat::kRaw);
+      options.SetContainerFormat(ENTupleContainerFormat::kBare);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       ntuple->Fill();
       ntuple->CommitCluster();
@@ -83,7 +83,7 @@ TEST(RNTuple, Extended)
    double chksumWrite = 0.0;
    {
       RNTupleWriteOptions options;
-      options.SetContainerFormat(ENTupleContainerFormat::kRaw);
+      options.SetContainerFormat(ENTupleContainerFormat::kBare);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
