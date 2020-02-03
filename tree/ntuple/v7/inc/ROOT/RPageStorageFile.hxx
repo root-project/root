@@ -55,7 +55,7 @@ private:
    RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   std::unique_ptr<Internal::RMiniFileWriter> fWriter;
+   std::unique_ptr<Internal::RNTupleFileWriter> fWriter;
    /// Byte offset of the first page of the current cluster
    std::uint64_t fClusterMinOffset = std::uint64_t(-1);
    /// Byte offset of the end of the last page of the current cluster

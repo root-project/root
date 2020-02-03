@@ -121,17 +121,17 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RMiniFileWriter
+\class ROOT::Experimental::Internal::RNTupleFileWriter
 \ingroup NTuple
-\brief Write RNTuple data blocks in a TFile container
+\brief Write RNTuple data blocks in a TFile or a bare file container
 
 The writer can create a new TFile container for an RNTuple or add an RNTuple to an existing TFile.
 Creating a single RNTuple in a new TFile container can be done with a C file stream without a TFile class.
-Updaing an existing TFile requires a proper TFile object.  Also, writing a remote file requires a proper TFile object.
+Updating an existing TFile requires a proper TFile object.  Also, writing a remote file requires a proper TFile object.
 A stand-alone version of RNTuple can remove the TFile based writer.
 */
 // clang-format on
-class RMiniFileWriter {
+class RNTupleFileWriter {
 private:
    struct RFileProper {
       TFile *fFile = nullptr;
@@ -184,7 +184,7 @@ private:
    /// Header and footer location of the ntuple, written on Commit()
    RNTuple ntuple;
 
-   explicit RMiniFileWriter(std::string_view name);
+   explicit RNTupleFileWriter(std::string_view name);
 
    /// For a TFile container written by a C file stream, write the records that constitute an empty file
    void WriteTFileSkeleton(int defaultCompression);
@@ -194,20 +194,20 @@ private:
 public:
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
-   static RMiniFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
-                                    ENTupleContainerFormat containerFormat);
+   static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
+                                      ENTupleContainerFormat containerFormat);
    /// Create or truncate the local or remote file given by path with the new empty RNTuple identified by ntupleName.
    /// Creates a new TFile object for writing and hands over ownership of the object to the user.
-   static RMiniFileWriter *Recreate(std::string_view ntupleName, std::string_view path,
-                                    std::unique_ptr<TFile> &file);
+   static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path,
+                                      std::unique_ptr<TFile> &file);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
-   static RMiniFileWriter *Append(std::string_view ntupleName, TFile &file);
+   static RNTupleFileWriter *Append(std::string_view ntupleName, TFile &file);
 
-   RMiniFileWriter(const RMiniFileWriter &other) = delete;
-   RMiniFileWriter(RMiniFileWriter &&other) = delete;
-   RMiniFileWriter &operator =(const RMiniFileWriter &other) = delete;
-   RMiniFileWriter &operator =(RMiniFileWriter &&other) = delete;
-   ~RMiniFileWriter();
+   RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
+   RNTupleFileWriter(RNTupleFileWriter &&other) = delete;
+   RNTupleFileWriter &operator =(const RNTupleFileWriter &other) = delete;
+   RNTupleFileWriter &operator =(RNTupleFileWriter &&other) = delete;
+   ~RNTupleFileWriter();
 
    /// Writes the compressed header and registeres its location; lenHeader is the size of the uncompressed header.
    std::uint64_t WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
