@@ -75,10 +75,13 @@ void addPoints()
 
    auto ps1 = getPointSet(20, 100);
    ps1->SetName("Points_1");
+   ps1->SetTitle("Points_1 title"); // used as tooltip
+
    pntHolder->AddElement(ps1);
 
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetName("Points_2");
+   ps2->SetTitle("Points_2 title"); // used as tooltip
    pntHolder->AddElement(ps2);
 
    event->AddElement(pntHolder);
@@ -114,6 +117,7 @@ void addTracks()
       track->MakeTrack();
       track->SetMainColor(kBlue);
       track->SetName(Form("RandomTrack_%d", i));
+      track->SetTitle(Form("RandomTrack_%d title", i)); // used as tooltip
       trackHolder->AddElement(track);
    }
 
@@ -131,6 +135,7 @@ void addJets()
    for (int i = 0; i < N_Jets; i++)
    {
       auto jet = new REX::REveJetCone(Form("Jet_%d", i));
+      jet->SetTitle(Form("Jet_%d title", i)); // used as tooltip
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
