@@ -47,6 +47,7 @@ private:
    bool fPPOldFlag = false;
    bool fPPChanged = false;
    bool fIsCodeGening = false;
+   bool fIsLoadingModule = false;
 
 public:
    TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen);
@@ -130,5 +131,5 @@ private:
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);
    bool tryInjectImplicitAutoKeyword(clang::LookupResult &R, clang::Scope *S);
-   bool findInGlobalModuleIndex(clang::DeclarationName Name, bool loadFirstMatchOnly = true) const;
+   bool findInGlobalModuleIndex(clang::DeclarationName Name, bool loadFirstMatchOnly = true);
 };
