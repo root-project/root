@@ -146,6 +146,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       geom.addAttribute( 'position', new THREE.BufferAttribute( buf, 3 )  );
       var line = new THREE.LineSegments(geom, lineMaterial);
 
+      // required for the dashed material
+      if (track.fLineStyle != 1)
+         line.computeLineDistances();
+
       line.hightlightWidthScale = 2;
 
       line.get_ctrl = function() { return new EveElemControl(this); }
