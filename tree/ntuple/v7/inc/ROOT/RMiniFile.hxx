@@ -100,11 +100,11 @@ RNTuple data keys.
 class RMiniFileReader {
 private:
    /// The raw file used to read byte ranges
-   Detail::RRawFile *fFile = nullptr;
-   /// Indicates whether the file is a TFile container or an RNTuple raw file
-   bool fIsRaw = false;
-   /// Used when the file turns out to be a raw file
-   RNTuple GetNTupleRaw(std::string_view ntupleName);
+   Detail::RRawFile *fRawFile = nullptr;
+   /// Indicates whether the file is a TFile container or an RNTuple bare file
+   bool fIsBare = false;
+   /// Used when the file container turns out to be a bare file
+   RNTuple GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
    RNTuple GetNTupleProper(std::string_view ntupleName);
 
@@ -172,8 +172,8 @@ private:
    RFileProper fFileProper;
    /// For simple use cases, survives without libRIO dependency
    RFileSimple fFileSimple;
-   /// A simple file can either be written as TFile container or as NTuple raw file
-   bool fIsRaw = false;
+   /// A simple file can either be written as TFile container or as NTuple bare file
+   bool fIsBare = false;
    /// The identifier of the RNTuple; A single writer object can only write a single RNTuple but multiple
    /// writers can operate on the same file if (and only if) they use a proper TFile object for writing.
    std::string fNTupleName;
@@ -188,8 +188,8 @@ private:
 
    /// For a TFile container written by a C file stream, write the records that constitute an empty file
    void WriteTFileSkeleton(int defaultCompression);
-   /// For a raw file, which is necessarily wriiten C file stream, write file header
-   void WriteRawFileSkeleton(int defaultCompression);
+   /// For a bare file, which is necessarily written by a C file stream, write file header
+   void WriteBareFileSkeleton(int defaultCompression);
 
 public:
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
