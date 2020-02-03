@@ -284,7 +284,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    return tryResolveAtRuntimeInternal(R, S);
 }
 
-bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/) const
+bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/)
 {
    const CompilerInstance *CI = m_Interpreter->getCI();
    const LangOptions &LangOpts = CI->getPreprocessor().getLangOpts();
@@ -312,7 +312,9 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    if (Index->lookupIdentifier(Name.getAsString(), FoundModules)) {
       for (auto FileName : FoundModules) {
          StringRef ModuleName = llvm::sys::path::stem(*FileName);
+         fIsLoadingModule = true;
          m_Interpreter->loadModule(ModuleName);
+         fIsLoadingModule = false;
          if (loadFirstMatchOnly)
             break;
       }
@@ -326,6 +328,9 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
       // init error or rootcling
       return false;
    }
+
+   if (fIsLoadingModule)
+      return false;
 
    if (!IsAutoLoadingEnabled() || fIsAutoLoadingRecursively) return false;
 
@@ -380,6 +385,9 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       // init error or rootcling
       return false;
    }
+
+   if (fIsLoadingModule)
+      return false;
 
    // Clang needs Tag's complete definition. Can we parse it?
    if (fIsAutoLoadingRecursively || fIsAutoParsingSuspended) return false;
