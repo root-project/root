@@ -28,6 +28,7 @@ set(py_sources
   ROOT/pythonization/_rbdt.py
   ROOT/pythonization/_rooabscollection.py
   ROOT/pythonization/_roodatahist.py
+  ROOT/pythonization/_roodataset.py
   ROOT/pythonization/_rvec.py
   ROOT/pythonization/_stl_vector.py
   ROOT/pythonization/_tarray.py
