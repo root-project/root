@@ -430,24 +430,52 @@ sap.ui.define([
       onToggleOpenState: function(oEvent) {
       },
 
-      onMouseEnter: function(oEvent) {
-         /*
-         var items = this.getView().byId("tree").getItems(), item = null;
-         for (var n = 0; n < items.length; ++n)
-            if (items[n].getId() == oEvent.target.id) {
-               item = items[n]; break;
+      processHighlight: function(kind, evid, force) {
+
+         if (!force) {
+            if (this._trigger_timer)
+               clearTimeout(this._trigger_timer);
+
+            this._trigger_timer = setTimeout(this.processHighlight.bind(this,kind,evid,true), 200);
+            return;
+         }
+
+         delete this._trigger_timer;
+
+         var objid = 0;
+
+         if (kind != "leave") {
+            var tree = this.getView().byId("tree"),
+                items = tree.getItems(true),         item = null;
+            for (var n = 0; n < items.length; ++n)
+               if (items[n].getId() == evid) {
+                  item = items[n]; break;
+               }
+
+            if (item) {
+               var path = item.getBindingContext("treeModel").getPath();
+               var ttt = item.getBindingContext("treeModel").getProperty(path);
+               objid = ttt.id;
             }
+         }
 
-         // var item = this.getView().byId(oEvent.target.id).getControl();
+         // FIXME: provide more generic code which should
+         this.mgr.SendMIR({ "mir":        "NewElementPicked(" + objid + ",false,false)",
+                            "fElementId": this.mgr.global_highlight_id,
+                            "class":      "ROOT::Experimental::REveSelection"
+                          });
 
-         if (!item) return;
-
-         var path = item.getBindingContext("treeModel").getPath();
-
-         var ttt = item.getBindingContext("treeModel").getProperty(path);
-
-*/
       },
+
+      onMouseEnter: function(oEvent) {
+         this.processHighlight("enter", oEvent.target.id);
+      },
+
+      onMouseLeave: function(oEvent) {
+         this.processHighlight("leave");
+      },
+
+
       GetSelectionColor:function(selection_obj)
       {
          return selection_obj.fName == "Global Highlight" ? "rgb(230, 230, 230)" : "rgb(66, 124, 172)";
@@ -481,25 +509,6 @@ sap.ui.define([
             if (cc == color)
                item.$().css("background-color", "");
          }
-      },
-      onMouseLeave: function(oEvent) {
-         // actual call will be performed 100ms later and can be overwritten
-/*
-         var items = this.getView().byId("tree").getItems(), item = null;
-         for (var n = 0; n < items.length; ++n)
-            if (items[n].getId() == oEvent.target.id) {
-               item = items[n]; break;
-            }
-
-         // var item = this.getView().byId(oEvent.target.id).getControl();
-
-         if (!item) return;
-
-         var path = item.getBindingContext("treeModel").getPath();
-
-         var ttt = item.getBindingContext("treeModel").getProperty(path);
-
-*/
       },
 
       toggleEditor: function() {
