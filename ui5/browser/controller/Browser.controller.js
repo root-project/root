@@ -90,6 +90,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         this.globalId = 1;
         this.nextElem = "";
+        this.DBLCLKRun = false;
 
          this.websocket = this.getView().getViewData().conn_handle;
 
@@ -621,6 +622,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
       },
 
+      settingsDBLCLKRun: function(oEvent) {
+         this.DBLCLKRun = oEvent.getSource().getSelected();
+      },
+
       /* ============================================= */
       /* =============== Settings menu =============== */
       /* ============================================= */
@@ -843,6 +848,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== ToolHeader =============== */
       /* ========================================== */
 
+      isMacro: function(path) {
+         let split = path.split('/');
+         const last = split[split.length-1];
+         split = last.split('.');
+         const ext = split[split.length-1].toLowerCase();
+
+         switch (ext) {
+            case 'c':
+            case 'cpp':
+            case  'cxx':
+               return true;
+            default:
+               return false
+         }
+      },
+
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
@@ -852,6 +873,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       sendDblClick: function (fullpath, opt) {
+         if(this.DBLCLKRun) {
+            if(this.isMacro(fullpath)) {
+               return this.websocket.Send("RUNMACRO:" + fullpath);
+            }
+         }
          this.websocket.Send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
       },
 
