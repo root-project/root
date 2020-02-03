@@ -115,6 +115,7 @@ void addTracks()
       p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
       auto track = new REX::REveTrack(p, 1, prop);
       track->MakeTrack();
+      if (i % 4 == 3) track->SetLineStyle(2); // enabled dashed style for some tracks
       track->SetMainColor(kBlue);
       track->SetName(Form("RandomTrack_%d", i));
       track->SetTitle(Form("RandomTrack_%d title", i)); // used as tooltip
