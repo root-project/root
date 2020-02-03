@@ -15,13 +15,13 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-// 
+//
 // Class RooXYChi2Var implements a simple chi^2 calculation from a unbinned
 // dataset with values x,y with errors on y (and optionally on x) and a function.
 // The function can be either a RooAbsReal, or an extended RooAbsPdf where
 // the function value is calculated as the probability density times the
 // expected number of events
-// The chi^2 is calculated as 
+// The chi^2 is calculated as
 //
 //              / (Data[y]-) - func \+2
 //  Sum[point] |  ------------------ |
@@ -53,7 +53,7 @@ ClassImp(RooXYChi2Var);
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
 
-RooXYChi2Var::RooXYChi2Var() 
+RooXYChi2Var::RooXYChi2Var()
 {
   _funcInt = 0 ;
   _rrvIter = _rrvArgs.createIterator() ;
@@ -76,7 +76,7 @@ RooXYChi2Var::RooXYChi2Var()
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
+  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0),
   _extended(kFALSE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -104,11 +104,11 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
+  RooAbsOptTestStatistic(name,title,func,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0),
   _extended(kFALSE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
-  _funcInt(0)  
+  _funcInt(0)
 {
   _extended = kFALSE ;
   _yvar = (RooRealVar*) _dataClone->get()->find(yvar.GetName()) ;
@@ -135,7 +135,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsReal& func
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
+  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0),
   _extended(kTRUE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -169,7 +169,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
 ///
 
 RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& xydata, RooRealVar& yvar, Bool_t integrate) :
-  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0), 
+  RooAbsOptTestStatistic(name,title,extPdf,xydata,RooArgSet(),0,0,1,RooFit::Interleave,0,0),
   _extended(kTRUE),
   _integrate(integrate),
   _intConfig(*defaultIntegratorConfig()),
@@ -188,7 +188,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPd
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) : 
+RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
   RooAbsOptTestStatistic(other,name),
   _extended(other._extended),
   _integrate(other._integrate),
@@ -197,7 +197,7 @@ RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
 {
   _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : 0 ;
   initialize() ;
-  
+
 }
 
 
@@ -224,14 +224,16 @@ void RooXYChi2Var::initialize()
 
   // Define alternate numeric integrator configuration for bin integration
   // We expect bin contents to very only very slowly so a non-adaptive
-  // Gauss-Kronrod integrator is expected to perform well.
+  // Gauss-Kronrod integrator is expected to perform well (if MathMore is available
   _intConfig.setEpsRel(1e-7) ;
   _intConfig.setEpsAbs(1e-7) ;
+#ifdef R__HAS_MATHMORE
   _intConfig.method1D().setLabel("RooGaussKronrodIntegrator1D") ;
+#endif
   _intConfig.methodND().setLabel("RooAdaptiveIntegratorND") ;
 
   initIntegrator() ;
-  
+
 }
 
 
@@ -249,7 +251,7 @@ void RooXYChi2Var::initIntegrator()
       _binList.push_back(&x->getBinning("bin",kFALSE,kTRUE)) ;
     }
   }
-  
+
 }
 
 
@@ -279,13 +281,13 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
   while((var=(RooRealVar*)_rrvIter->Next())) {
 
     if (var->hasAsymError()) {
-      
+
       // Get value at central X
       Double_t cxval = var->getVal() ;
       Double_t xerrLo = -var->getAsymErrorLo() ;
       Double_t xerrHi = var->getAsymErrorHi() ;
       Double_t xerr = (xerrLo+xerrHi)/2 ;
-      
+
       // Get value at X-eps
       var->setVal(cxval - xerr/100) ;
       Double_t fxmin = fy() ;
@@ -293,12 +295,12 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
       // Get value at X+eps
       var->setVal(cxval + xerr/100) ;
       Double_t fxmax = fy() ;
-      
+
       // Calculate slope
       Double_t slope = (fxmax-fxmin)/(2*xerr/100.) ;
-      
+
 //       cout << "xerrHi = " << xerrHi << " xerrLo = " << xerrLo << " slope = " << slope << endl ;
-      
+
       // Asymmetric X error, decide which one to use
       if ((ydata>cxval && fxmax>fxmin) || (ydata<=cxval && fxmax<=fxmin)) {
 	// Use right X error
@@ -307,7 +309,7 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
 	// Use left X error
 	ret += pow(xerrLo*slope,2) ;
       }
-      
+
     } else if (var->hasError()) {
 
       // Get value at central X
@@ -321,7 +323,7 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
       // Get value at X+eps
       var->setVal(cxval + xerr/100) ;
       Double_t fxmax = fy() ;
-      
+
       // Calculate slope
       Double_t slope = (fxmax-fxmin)/(2*xerr/100.) ;
 
@@ -329,10 +331,10 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
 //       var->Print() ;
 
 //       cout << var->GetName() << " xerr = " << xerr << " slope = " << slope << endl ;
-            
+
       // Symmetric X error
       ret += pow(xerr*slope,2) ;
-    }    
+    }
   }
   return ret ;
 }
@@ -345,7 +347,7 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
 ///
 /// If integration is required, the function value integrated
 /// over the bin volume divided by the bin volume is returned,
-/// otherwise the value at the bin center is returned. 
+/// otherwise the value at the bin center is returned.
 /// The bin volume is defined by the error on the 'X' coordinates
 ///
 /// If an extended p.d.f. is used as function, its value is
@@ -371,11 +373,11 @@ Double_t RooXYChi2Var::fy() const
     Double_t ret = _funcInt->getVal() ;
     return ret / volume ;
   }
-  if (_extended) {      
+  if (_extended) {
     RooAbsPdf* pdf = (RooAbsPdf*) _funcClone ;
     // Multiply with expected number of events
     yfunc *= pdf->expectedEvents(_dataClone->get()) ;
-  }      
+  }
   return yfunc ;
 }
 
@@ -394,10 +396,10 @@ Double_t RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t las
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize,kFALSE ) ;
 
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
-    
+
     // get the data values for this event
     xydata->get(i);
-    
+
     if (!xydata->valid()) {
       continue ;
     }
@@ -427,14 +429,14 @@ Double_t RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t las
     // Pick upper or lower error bar depending on sign of external error
     Double_t eInt = (eExt>0) ? eyhi : eylo ;
 
-    // Add contributions due to error in x coordinates    
+    // Add contributions due to error in x coordinates
     Double_t eIntX2 = _integrate ? 0 : xErrorContribution(ydata) ;
 
 //     cout << "fy = " << yfunc << " eExt = " << eExt << " eInt = " << eInt << " eIntX2 = " << eIntX2 << endl ;
 
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {
-      coutE(Eval) << "RooXYChi2Var::RooXYChi2Var(" << GetName() << ") INFINITY ERROR: data point " << i 
+      coutE(Eval) << "RooXYChi2Var::RooXYChi2Var(" << GetName() << ") INFINITY ERROR: data point " << i
 		  << " has zero error, but function is not zero (f=" << yfunc << ")" << endl ;
       return 0 ;
     }
@@ -453,12 +455,9 @@ Double_t RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t las
 
 
 
-RooArgSet RooXYChi2Var::requiredExtraObservables() const 
+RooArgSet RooXYChi2Var::requiredExtraObservables() const
 {
   // Inform base class that observable yvar cannot be optimized away from the dataset
   if (_yvar) return RooArgSet(*_yvar) ;
   return RooArgSet() ;
 }
-
-
-

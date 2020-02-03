@@ -64,7 +64,11 @@ void rf901_numintconfig()
    // Construct a custom configuration which uses the adaptive Gauss-Kronrod technique
    // for closed 1D integrals
    RooNumIntConfig customConfig(*RooAbsReal::defaultIntegratorConfig());
+#ifdef R__HAS_MATHMORE
    customConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
+#else
+   Warning("rf901_numintconfig","ROOT is built without Mathmore (GSL) support. Cannot use RooAdaptiveGaussKronrodIntegrator1D");
+#endif
 
    // Calculate integral over landau with custom integral specification
    RooAbsReal *intLandau2 = landau.createIntegral(x, NumIntConfig(customConfig));
@@ -83,6 +87,7 @@ void rf901_numintconfig()
    cout << " [3] int_dx landau(x) = " << val3 << endl;
 
    // Another possibility: Change global default for 1D numeric integration strategy on finite domains
+#ifdef R__HAS_MATHMORE
    RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 
    // A d j u s t i n g   p a r a m e t e r s   o f   a   s p e c i f i c   t e c h n i q u e
@@ -99,4 +104,6 @@ void rf901_numintconfig()
 
    // Example of how to print set of possible values for "method" category
    customConfig.getConfigSection("RooAdaptiveGaussKronrodIntegrator1D").find("method")->Print("v");
+#endif
+
 }

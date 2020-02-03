@@ -59,7 +59,9 @@ print(" [1] int_dx landau(x) = ", val)  # setprecision(15)
 # for closed 1D integrals
 customConfig = ROOT.RooNumIntConfig(
     ROOT.RooAbsReal.defaultIntegratorConfig())
-customConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
+integratorGKNotExisting = customConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
+if (integratorGKNotExisting) :
+   print("WARNING: RooAdaptiveGaussKronrodIntegrator is not existing because ROOT is built without Mathmore support")
 
 # Calculate integral over landau with custom integral specification
 intLandau2 = landau.createIntegral(
@@ -82,25 +84,26 @@ print(" [3] int_dx landau(x) = ", val3)
 
 # Another possibility: Change global default for 1D numeric integration
 # strategy on finite domains
-ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel(
-    "RooAdaptiveGaussKronrodIntegrator1D")
+if (not integratorGKNotExisting) :
+   ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel(
+       "RooAdaptiveGaussKronrodIntegrator1D")
 
 # Adjusting parameters of a speficic technique
 # ---------------------------------------------------------------------------------------
 
 # Adjust maximum number of steps of ROOT.RooIntegrator1D in the global
 # default configuration
-ROOT.RooAbsReal.defaultIntegratorConfig().getConfigSection(
-    "RooIntegrator1D").setRealValue("maxSteps", 30)
+   ROOT.RooAbsReal.defaultIntegratorConfig().getConfigSection(
+       "RooIntegrator1D").setRealValue("maxSteps", 30)
 
 # Example of how to change the parameters of a numeric integrator
 # (Each config section is a ROOT.RooArgSet with ROOT.RooRealVars holding real-valued parameters
 #  and ROOT.RooCategories holding parameters with a finite set of options)
-customConfig.getConfigSection(
-    "RooAdaptiveGaussKronrodIntegrator1D").setRealValue("maxSeg", 50)
-customConfig.getConfigSection(
-    "RooAdaptiveGaussKronrodIntegrator1D").setCatLabel("method", "15Points")
+   customConfig.getConfigSection(
+       "RooAdaptiveGaussKronrodIntegrator1D").setRealValue("maxSeg", 50)
+   customConfig.getConfigSection(
+       "RooAdaptiveGaussKronrodIntegrator1D").setCatLabel("method", "15Points")
 
 # Example of how to print set of possible values for "method" category
-customConfig.getConfigSection(
-    "RooAdaptiveGaussKronrodIntegrator1D").find("method").Print("v")
+   customConfig.getConfigSection(
+       "RooAdaptiveGaussKronrodIntegrator1D").find("method").Print("v")
