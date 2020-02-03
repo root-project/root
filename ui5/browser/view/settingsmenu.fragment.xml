@@ -56,6 +56,13 @@
           </Panel>
         </content>
       </ViewSettingsCustomTab>
+      <ViewSettingsCustomTab icon="sap-icon://action-settings" >
+        <content>
+          <VBox>
+            <CheckBox text="Double click to run macro" select="settingsDBLCLKRun" />
+          </VBox>
+        </content>
+      </ViewSettingsCustomTab>
       <ViewSettingsCustomTab icon="sap-icon://add-equipment" >
         <content>
           <Text text="Other setting tab, that you can implement" />
