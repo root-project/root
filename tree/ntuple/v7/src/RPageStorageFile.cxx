@@ -43,7 +43,7 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
 
-   fWriter = std::unique_ptr<Internal::RMiniFileWriter>(Internal::RMiniFileWriter::Recreate(
+   fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(Internal::RNTupleFileWriter::Recreate(
       ntupleName, path, options.GetCompression(), options.GetContainerFormat()));
 }
 
@@ -57,7 +57,7 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
 
-   fWriter = std::unique_ptr<Internal::RMiniFileWriter>(Internal::RMiniFileWriter::Append(ntupleName, file));
+   fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(Internal::RNTupleFileWriter::Append(ntupleName, file));
 }
 
 
@@ -69,7 +69,8 @@ ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile(std::string_view ntuple
 {
    R__WARNING_HERE("NTuple") << "The RNTuple file format will change. " <<
       "Do not store real data with this version of RNTuple!";
-   fWriter = std::unique_ptr<Internal::RMiniFileWriter>(Internal::RMiniFileWriter::Recreate(ntupleName, path, file));
+   fWriter = std::unique_ptr<Internal::RNTupleFileWriter>(
+      Internal::RNTupleFileWriter::Recreate(ntupleName, path, file));
 }
 
 
