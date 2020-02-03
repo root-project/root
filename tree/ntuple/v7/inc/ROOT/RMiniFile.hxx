@@ -147,6 +147,8 @@ private:
       FILE *fFile = nullptr;
       /// Keeps track of the seek offset
       std::uint64_t fFilePos = 0;
+      /// Keeps track of TFile control structures, which need to be updated on committing the data set
+      std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
 
       RFileSimple() = default;
       RFileSimple(const RFileSimple &other) = delete;
@@ -179,10 +181,8 @@ private:
    std::string fNTupleName;
    /// The file name without parent directory; only required when writing with a C file stream
    std::string fFileName;
-   /// Keeps track of TFile control structures, which need to be updated on committing the data set
-   std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
    /// Header and footer location of the ntuple, written on Commit()
-   RNTuple ntuple;
+   RNTuple fNTupleAnchor;
 
    explicit RNTupleFileWriter(std::string_view name);
 
