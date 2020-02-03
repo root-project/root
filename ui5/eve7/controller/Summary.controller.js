@@ -225,7 +225,8 @@ sap.ui.define([
             visible: "{treeModel>fVisible}",
             type: "{treeModel>fType}",
             highlight: "{treeModel>fHighlight}",
-            background: "{treeModel>fBackground}"
+            background: "{treeModel>fBackground}",
+            tooltip: "{treeModel>fTitle}"
          });
          oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
          oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
@@ -777,7 +778,7 @@ sap.ui.define([
          for (var n=0;n<src.length;++n) {
             var elem = src[n];
 
-            var newelem = { fName: elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "" };
+            var newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "" };
 
             if (this.canEdit(elem))
                newelem.fType = "DetailAndActive";
