@@ -224,57 +224,83 @@ void test_axis_base(const RAxisBase& axis,
   EXPECT_EQ(axis.GetTitle(), title);
   EXPECT_EQ(axis.CanGrow(), can_grow);
   EXPECT_EQ(axis.GetNBinsNoOver(), n_bins_no_over);
+
   const int n_overflow_bins = can_grow ? 0 : 2;
   EXPECT_EQ(axis.GetNOverflowBins(), n_overflow_bins);
   EXPECT_EQ(axis.GetNBins(), n_bins_no_over + n_overflow_bins);
+
   const int underflow_bin = can_grow ? -1 : 0;
   EXPECT_EQ(axis.GetUnderflowBin(), underflow_bin);
   EXPECT_EQ(axis.IsUnderflowBin(underflow_bin-1), true);
   EXPECT_EQ(axis.IsUnderflowBin(underflow_bin), true);
   EXPECT_EQ(axis.IsUnderflowBin(underflow_bin+1), false);
-  const int overflow_bin = can_grow ? n_bins_no_over : n_bins_no_over + 1;
+
+  const int overflow_bin = underflow_bin + n_bins_no_over + 1;
   EXPECT_EQ(axis.GetOverflowBin(), overflow_bin);
   EXPECT_EQ(axis.IsOverflowBin(overflow_bin-1), false);
   EXPECT_EQ(axis.IsOverflowBin(overflow_bin), true);
   EXPECT_EQ(axis.IsOverflowBin(overflow_bin+1), true);
+
   EXPECT_EQ(*axis.begin(), underflow_bin+1);
   EXPECT_EQ(*axis.begin_with_underflow(), 0);
   EXPECT_EQ(*axis.end(), overflow_bin);
   EXPECT_EQ(*axis.end_with_overflow(), n_bins_no_over + n_overflow_bins);
 }
 
+// Common test items for RAxisEquidistant child classes
+void test_axis_equidistant(const RAxisEquidistant& axis,
+                           std::string_view title,
+                           bool can_grow,
+                           int n_bins_no_over,
+                           double minimum,
+                           double maximum) {
+  test_axis_base(axis, title, can_grow, n_bins_no_over);
+
+  EXPECT_DOUBLE_EQ(axis.GetMinimum(), minimum);
+  EXPECT_DOUBLE_EQ(axis.GetMaximum(), maximum);
+  const double bin_width = (maximum - minimum) / n_bins_no_over;
+  EXPECT_DOUBLE_EQ(axis.GetBinWidth(), bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetInverseBinWidth(), 1.0/bin_width);
+
+  const int underflow_findbin_res = can_grow ? RAxisBase::kIgnoreBin : 0;
+  EXPECT_EQ(axis.FindBin(minimum-100*bin_width), underflow_findbin_res);
+  EXPECT_EQ(axis.FindBin(minimum-0.01*bin_width), underflow_findbin_res);
+  const int first_bin = can_grow ? 0 : 1;
+  EXPECT_EQ(axis.FindBin(minimum+0.01*bin_width), first_bin);
+  EXPECT_EQ(axis.FindBin(minimum+0.99*bin_width), first_bin);
+  EXPECT_EQ(axis.FindBin(minimum+1.01*bin_width), first_bin+1);
+  const int last_bin = first_bin + n_bins_no_over - 1;
+  EXPECT_EQ(axis.FindBin(maximum-0.01*bin_width), last_bin);
+  const int overflow_findbin_res = can_grow ? RAxisBase::kIgnoreBin : last_bin+1;
+  EXPECT_EQ(axis.FindBin(maximum+0.01*bin_width), overflow_findbin_res);
+  EXPECT_EQ(axis.FindBin(maximum+100*bin_width), overflow_findbin_res);
+
+  // NOTE: Result of GetBinFrom on underflow bins, GetBinTo on overflow bins and
+  //       GetBinCenter on either is considered unspecified for now. If we do
+  //       ultimately decide to specify this behavior, please add a test here.
+  if (!can_grow) {
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), minimum);
+  }
+  EXPECT_DOUBLE_EQ(axis.GetBinFrom(first_bin), minimum);
+  EXPECT_DOUBLE_EQ(axis.GetBinCenter(first_bin), minimum+0.5*bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinTo(first_bin), minimum+bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinFrom(first_bin+1), minimum+bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinCenter(first_bin+1), minimum+1.5*bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinTo(first_bin+1), minimum+2*bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinFrom(last_bin), maximum-bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinCenter(last_bin), maximum-0.5*bin_width);
+  EXPECT_DOUBLE_EQ(axis.GetBinTo(last_bin), maximum);
+  if (!can_grow) {
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(n_bins_no_over+1), maximum);
+  }
+  // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
+}
+
 // TODO: Deduplicate common test elements
 
 TEST(AxisTest, Equidistant) {
   auto test = [](const RAxisEquidistant& axis, std::string_view title) {
-    test_axis_base(axis, title, false, 10);
-
-    EXPECT_EQ(axis.FindBin(-100), 0);
-    EXPECT_EQ(axis.FindBin(1.19), 0);
-    EXPECT_EQ(axis.FindBin(1.21), 1);
-    EXPECT_EQ(axis.FindBin(1.41), 1);
-    EXPECT_EQ(axis.FindBin(1.43), 2);
-    EXPECT_EQ(axis.FindBin(3.39), 10);
-    EXPECT_EQ(axis.FindBin(3.41), 11);
-    EXPECT_EQ(axis.FindBin(1000), 11);
-    EXPECT_EQ(axis.GetMinimum(), 1.2);
-    EXPECT_DOUBLE_EQ(axis.GetMaximum(), 3.4);
-    EXPECT_DOUBLE_EQ(axis.GetBinWidth(), 0.22);
-    EXPECT_DOUBLE_EQ(axis.GetInverseBinWidth(), 1/0.22);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(1), 1.2);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(1), 1.31);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(1), 1.42);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(2), 1.42);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(2), 1.53);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(2), 1.64);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(10), 3.18);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(10), 3.29);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(10), 3.4);
-    // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
-    //
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44 - 1e-7), 2);
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44), 2);
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44 + 1e-7), 2);
+    test_axis_equidistant(axis, title, false, 10, 1.2, 3.4);
 
     RAxisConfig cfg(axis);
     EXPECT_EQ(cfg.GetTitle(), title);
@@ -313,34 +339,7 @@ TEST(AxisTest, Growable) {
   auto test = [](RAxisGrow& axis, std::string_view title) {
     const RAxisGrow& caxis = axis;
 
-    test_axis_base(caxis, title, true, 10);
-
-    EXPECT_EQ(caxis.FindBin(-100), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(caxis.FindBin(1.19), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(caxis.FindBin(1.21), 0);
-    EXPECT_EQ(caxis.FindBin(1.41), 0);
-    EXPECT_EQ(caxis.FindBin(1.43), 1);
-    EXPECT_EQ(caxis.FindBin(3.39), 9);
-    EXPECT_EQ(caxis.FindBin(3.41), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(caxis.FindBin(1000), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(caxis.GetMinimum(), 1.2);
-    EXPECT_DOUBLE_EQ(caxis.GetMaximum(), 3.4);
-    EXPECT_DOUBLE_EQ(caxis.GetBinWidth(), 0.22);
-    EXPECT_DOUBLE_EQ(caxis.GetInverseBinWidth(), 1/0.22);
-    EXPECT_DOUBLE_EQ(caxis.GetBinFrom(0), 1.2);
-    EXPECT_DOUBLE_EQ(caxis.GetBinCenter(0), 1.31);
-    EXPECT_DOUBLE_EQ(caxis.GetBinTo(0), 1.42);
-    EXPECT_DOUBLE_EQ(caxis.GetBinFrom(1), 1.42);
-    EXPECT_DOUBLE_EQ(caxis.GetBinCenter(1), 1.53);
-    EXPECT_DOUBLE_EQ(caxis.GetBinTo(1), 1.64);
-    EXPECT_DOUBLE_EQ(caxis.GetBinFrom(9), 3.18);
-    EXPECT_DOUBLE_EQ(caxis.GetBinCenter(9), 3.29);
-    EXPECT_DOUBLE_EQ(caxis.GetBinTo(9), 3.4);
-    // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
-    //
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44 - 1e-7), 1);
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44), 1);
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44 + 1e-7), 1);
+    test_axis_equidistant(caxis, title, true, 10, 1.2, 3.4);
 
     RAxisConfig cfg(caxis);
     EXPECT_EQ(cfg.GetTitle(), title);
@@ -436,37 +435,7 @@ TEST(AxisTest, Labels) {
       // labels are added. This is by design, according to the RAxisLabels docs.
       // The configuration would be updated on Grow(), but we can't test Grow()
       // right now since it isn't implemented yet...
-      test_axis_base(caxis, title, true, 5);
-
-      // NOTE: Needed because RAxisLabels::GetBinCenter() shadows
-      //       RAxisEquidistant::GetBinCenter()...
-      auto& eaxis = static_cast<const RAxisEquidistant&>(caxis);
-      EXPECT_EQ(caxis.FindBin(-100), RAxisBase::kIgnoreBin);
-      EXPECT_EQ(caxis.FindBin(-0.1), RAxisBase::kIgnoreBin);
-      EXPECT_EQ(caxis.FindBin(0.01), 0);
-      EXPECT_EQ(caxis.FindBin(0.99), 0);
-      EXPECT_EQ(caxis.FindBin(1.01), 1);
-      EXPECT_EQ(caxis.FindBin(4.99), 4);
-      EXPECT_EQ(caxis.FindBin(5.01), RAxisBase::kIgnoreBin);
-      EXPECT_EQ(caxis.FindBin(1000), RAxisBase::kIgnoreBin);
-      EXPECT_EQ(caxis.GetMinimum(), 0);
-      EXPECT_EQ(caxis.GetMaximum(), 5);
-      EXPECT_EQ(caxis.GetBinWidth(), 1);
-      EXPECT_EQ(caxis.GetInverseBinWidth(), 1);
-      EXPECT_DOUBLE_EQ(caxis.GetBinFrom(0), 0);
-      EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(0), 0.5);
-      EXPECT_DOUBLE_EQ(caxis.GetBinTo(0), 1);
-      EXPECT_DOUBLE_EQ(caxis.GetBinFrom(1), 1);
-      EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(1), 1.5);
-      EXPECT_DOUBLE_EQ(caxis.GetBinTo(1), 2);
-      EXPECT_DOUBLE_EQ(caxis.GetBinFrom(4), 4);
-      EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(4), 4.5);
-      EXPECT_DOUBLE_EQ(caxis.GetBinTo(4), 5);
-      // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
-      //
-      // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1 - 1e-7), 1);
-      // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1), 1);
-      // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1 + 1e-7), 1);
+      test_axis_equidistant(caxis, title, true, 5, 0.0, 5.0);
 
       EXPECT_EQ(caxis.GetBinLabels().size(), expected_labels.size());
       for (size_t i = 0; i < expected_labels.size(); ++i) {
