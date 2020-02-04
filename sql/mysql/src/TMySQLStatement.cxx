@@ -275,8 +275,6 @@ void TMySQLStatement::FreeBuffers()
    if (fBuffer) {
       for (Int_t n=0; n<fNumBuffers;n++) {
          free(fBuffer[n].fMem);
-         if (fBuffer[n].fStrBuffer)
-            delete[] fBuffer[n].fStrBuffer;
       }
       delete[] fBuffer;
    }
@@ -310,7 +308,7 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
       fBuffer[n].fSign = kFALSE;
       fBuffer[n].fResLength = 0;
       fBuffer[n].fResNull = false;
-      fBuffer[n].fStrBuffer = nullptr;
+      fBuffer[n].fStrBuffer.clear();
       fBuffer[n].fFieldName.clear();
    }
 }
@@ -331,10 +329,7 @@ const char *TMySQLStatement::ConvertToString(Int_t npar)
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
       return (const char *) addr;
 
-   if (!fBuffer[npar].fStrBuffer)
-      fBuffer[npar].fStrBuffer = new char[100];
-
-   char *buf = fBuffer[npar].fStrBuffer;
+   char buf[100];
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
@@ -382,7 +377,10 @@ const char *TMySQLStatement::ConvertToString(Int_t npar)
       default:
          return nullptr;
    }
-   return buf;
+
+   fBuffer[npar].fStrBuffer = buf;
+
+   return fBuffer[npar].fStrBuffer.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -726,7 +724,7 @@ Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULo
    fBuffer[npar].fSize = 0;
    fBuffer[npar].fResLength = 0;
    fBuffer[npar].fResNull = false;
-   fBuffer[npar].fStrBuffer = nullptr;
+   fBuffer[npar].fStrBuffer.clear();
 
    ULong64_t allocsize = 0;
 
