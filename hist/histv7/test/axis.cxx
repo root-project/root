@@ -447,80 +447,121 @@ TEST(AxisTest, Irregular) {
 }
 
 TEST(AxisTest, Labels) {
-  auto test = [](const RAxisLabels& axis, std::string_view title) {
-    EXPECT_EQ(axis.GetTitle(), title);
-    EXPECT_EQ(axis.CanGrow(), true);
-    EXPECT_EQ(axis.GetNBinsNoOver(), 5);
-    EXPECT_EQ(axis.GetNBins(), 5);
-    EXPECT_EQ(axis.GetNOverflowBins(), 0);
-    EXPECT_EQ(axis.GetUnderflowBin(), -1);
-    EXPECT_EQ(axis.IsUnderflowBin(-1), true);
-    EXPECT_EQ(axis.IsUnderflowBin(0), false);
-    EXPECT_EQ(axis.IsUnderflowBin(1), false);
-    EXPECT_EQ(axis.GetOverflowBin(), 5);
-    EXPECT_EQ(axis.IsOverflowBin(4), false);
-    EXPECT_EQ(axis.IsOverflowBin(5), true);
-    EXPECT_EQ(axis.IsOverflowBin(6), true);
-    EXPECT_EQ(*axis.begin(), 0);
-    EXPECT_EQ(*axis.begin_with_underflow(), 0);
-    EXPECT_EQ(*axis.end(), 5);
-    EXPECT_EQ(*axis.end_with_overflow(), 5);
+  auto test = [](RAxisLabels& axis, std::string_view title) {
+    // Checks which only require a const RAxisLabels&, can also be used to
+    // assess state invariance after calling mutator methods which shouldn't
+    // have mutated anything _else_ than their intended target.
+    auto const_tests = [&title](const RAxisLabels& caxis,
+                                const auto& expected_labels) {
+      // Notice that the RAxisBase configuration is _not_ updated when new
+      // labels are added. This is by design, according to the RAxisLabels docs.
+      // The configuration would be updated on Grow(), but we can't test Grow()
+      // right now since it isn't implemented yet...
+      EXPECT_EQ(caxis.GetTitle(), title);
+      EXPECT_EQ(caxis.CanGrow(), true);
+      EXPECT_EQ(caxis.GetNBinsNoOver(), 5);
+      EXPECT_EQ(caxis.GetNBins(), 5);
+      EXPECT_EQ(caxis.GetNOverflowBins(), 0);
+      EXPECT_EQ(caxis.GetUnderflowBin(), -1);
+      EXPECT_EQ(caxis.IsUnderflowBin(-1), true);
+      EXPECT_EQ(caxis.IsUnderflowBin(0), false);
+      EXPECT_EQ(caxis.IsUnderflowBin(1), false);
+      EXPECT_EQ(caxis.GetOverflowBin(), 5);
+      EXPECT_EQ(caxis.IsOverflowBin(4), false);
+      EXPECT_EQ(caxis.IsOverflowBin(5), true);
+      EXPECT_EQ(caxis.IsOverflowBin(6), true);
+      EXPECT_EQ(*caxis.begin(), 0);
+      EXPECT_EQ(*caxis.begin_with_underflow(), 0);
+      EXPECT_EQ(*caxis.end(), 5);
+      EXPECT_EQ(*caxis.end_with_overflow(), 5);
 
-    // NOTE: Needed because RAxisLabels::GetBinCenter() shadows
-    //       RAxisEquidistant::GetBinCenter()...
-    auto& eaxis = static_cast<const RAxisEquidistant&>(axis);
-    EXPECT_EQ(axis.FindBin(-100), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.FindBin(-0.1), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.FindBin(0.01), 0);
-    EXPECT_EQ(axis.FindBin(0.99), 0);
-    EXPECT_EQ(axis.FindBin(1.01), 1);
-    EXPECT_EQ(axis.FindBin(4.99), 4);
-    EXPECT_EQ(axis.FindBin(5.01), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.FindBin(1000), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.GetMinimum(), 0);
-    EXPECT_EQ(axis.GetMaximum(), 5);
-    EXPECT_EQ(axis.GetBinWidth(), 1);
-    EXPECT_EQ(axis.GetInverseBinWidth(), 1);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(0), 0);
-    EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(0), 0.5);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), 1);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(1), 1);
-    EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(1), 1.5);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(1), 2);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(4), 4);
-    EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(4), 4.5);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(4), 5);
-    // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
-    //
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1 - 1e-7), 1);
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1), 1);
-    // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1 + 1e-7), 1);
+      // NOTE: Needed because RAxisLabels::GetBinCenter() shadows
+      //       RAxisEquidistant::GetBinCenter()...
+      auto& eaxis = static_cast<const RAxisEquidistant&>(caxis);
+      EXPECT_EQ(caxis.FindBin(-100), RAxisBase::kIgnoreBin);
+      EXPECT_EQ(caxis.FindBin(-0.1), RAxisBase::kIgnoreBin);
+      EXPECT_EQ(caxis.FindBin(0.01), 0);
+      EXPECT_EQ(caxis.FindBin(0.99), 0);
+      EXPECT_EQ(caxis.FindBin(1.01), 1);
+      EXPECT_EQ(caxis.FindBin(4.99), 4);
+      EXPECT_EQ(caxis.FindBin(5.01), RAxisBase::kIgnoreBin);
+      EXPECT_EQ(caxis.FindBin(1000), RAxisBase::kIgnoreBin);
+      EXPECT_EQ(caxis.GetMinimum(), 0);
+      EXPECT_EQ(caxis.GetMaximum(), 5);
+      EXPECT_EQ(caxis.GetBinWidth(), 1);
+      EXPECT_EQ(caxis.GetInverseBinWidth(), 1);
+      EXPECT_DOUBLE_EQ(caxis.GetBinFrom(0), 0);
+      EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(0), 0.5);
+      EXPECT_DOUBLE_EQ(caxis.GetBinTo(0), 1);
+      EXPECT_DOUBLE_EQ(caxis.GetBinFrom(1), 1);
+      EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(1), 1.5);
+      EXPECT_DOUBLE_EQ(caxis.GetBinTo(1), 2);
+      EXPECT_DOUBLE_EQ(caxis.GetBinFrom(4), 4);
+      EXPECT_DOUBLE_EQ(eaxis.GetBinCenter(4), 4.5);
+      EXPECT_DOUBLE_EQ(caxis.GetBinTo(4), 5);
+      // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
+      //
+      // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1 - 1e-7), 1);
+      // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1), 1);
+      // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1 + 1e-7), 1);
 
-    // TODO: Test specifics of RAxisLabels interface
+      EXPECT_EQ(caxis.GetBinLabels().size(), expected_labels.size());
+      for (size_t i = 0; i < expected_labels.size(); ++i) {
+        EXPECT_EQ(caxis.GetBinLabels()[i], expected_labels[i]);
+      }
 
-    RAxisConfig cfg(axis);
-    EXPECT_EQ(cfg.GetTitle(), title);
-    EXPECT_EQ(cfg.GetNBinsNoOver(), 5);
-    EXPECT_EQ(cfg.GetKind(), RAxisConfig::kLabels);
-    EXPECT_EQ(cfg.GetBinBorders().size(), 0u);
-    EXPECT_EQ(cfg.GetBinLabels().size(), 5u);
-    EXPECT_EQ(cfg.GetBinLabels()[0], "abc");
-    EXPECT_EQ(cfg.GetBinLabels()[1], "de");
-    EXPECT_EQ(cfg.GetBinLabels()[2], "fghi");
-    EXPECT_EQ(cfg.GetBinLabels()[3], "j");
-    EXPECT_EQ(cfg.GetBinLabels()[4], "klmno");
+      RAxisConfig cfg(caxis);
+      EXPECT_EQ(cfg.GetTitle(), title);
+      EXPECT_EQ(cfg.GetNBinsNoOver(), expected_labels.size());
+      EXPECT_EQ(cfg.GetKind(), RAxisConfig::kLabels);
+      EXPECT_EQ(cfg.GetBinBorders().size(), 0u);
+      EXPECT_EQ(cfg.GetBinLabels().size(), expected_labels.size());
+      for (size_t i = 0; i < expected_labels.size(); ++i) {
+        EXPECT_EQ(cfg.GetBinLabels()[i], expected_labels[i]);
+      }
+    };
+    const_tests(axis, labels);
+
+    // Bin queries aren't const in general, but should effectively be when
+    // querying bins which already exist.
+    EXPECT_EQ(axis.GetBinIndex("abc"), 0);
+    EXPECT_EQ(axis.GetBinIndex("de"), 1);
+    EXPECT_EQ(axis.GetBinIndex("fghi"), 2);
+    EXPECT_EQ(axis.GetBinIndex("j"), 3);
+    EXPECT_EQ(axis.GetBinIndex("klmno"), 4);
+    EXPECT_EQ(axis.GetBinCenter("abc"), 0.5);
+    EXPECT_EQ(axis.GetBinCenter("de"), 1.5);
+    EXPECT_EQ(axis.GetBinCenter("fghi"), 2.5);
+    EXPECT_EQ(axis.GetBinCenter("j"), 3.5);
+    EXPECT_EQ(axis.GetBinCenter("klmno"), 4.5);
+    const_tests(axis, labels);
 
     // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented
+
+    // Now let's add some new bins
+    auto new_labels = labels;
+    EXPECT_EQ(axis.GetBinIndex("pq"), 5);
+    new_labels.push_back("pq");
+    const_tests(axis, new_labels);
+    EXPECT_EQ(axis.GetBinCenter("pq"), 5.5);
+    const_tests(axis, new_labels);
+    EXPECT_EQ(axis.GetBinCenter("rst"), 6.5);
+    new_labels.push_back("rst");
+    const_tests(axis, new_labels);
+    EXPECT_EQ(axis.GetBinIndex("rst"), 6);
+    const_tests(axis, new_labels);
   };
 
   {
     SCOPED_TRACE("Labeled axis w/o title");
-    test(RAxisLabels(labels), "");
+    RAxisLabels axis(labels);
+    test(axis, "");
   }
 
   {
     SCOPED_TRACE("Labeled axis with title");
-    test(RAxisLabels("RITLE_L2", labels), "RITLE_L2");
+    RAxisLabels axis("RITLE_L2", labels);
+    test(axis, "RITLE_L2");
   }
 }
 
