@@ -85,9 +85,6 @@ const char* TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
 
 TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
 {
-   fEnv = 0;
-   fConn = 0;
-
    if (gDebug>0) {
       // this code is necessary to guarantee, that libclntsh.so will be
       // linked to libOracle.so.
@@ -114,7 +111,7 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
    }
 
    const char *conn_str = url.GetFile();
-   if (conn_str!=0)
+   if (conn_str)
      if (*conn_str == '/') conn_str++; //skip leading "/" if appears
 
    try {
@@ -176,7 +173,7 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Statement");
-      return 0;
+      return nullptr;
    }
 
    try {
@@ -188,7 +185,7 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
 
    } CatchError("Statement")
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,15 +198,15 @@ TSQLResult *TOracleServer::Query(const char *sql)
 
    if (!sql || !*sql) {
       SetError(-1, "no query string specified","Query");
-      return 0;
+      return nullptr;
    }
 
    try {
       oracle::occi::Statement *stmt = fConn->createStatement();
 
       // NOTE: before special COUNT query was executed to define number of
-      // rows in result set. Now it is not requried, while TOracleResult class
-      // will automatically fetch all rows from resultset when
+      // rows in result set. Now it is not required, while TOracleResult class
+      // will automatically fetch all rows from result set when
       // GetRowCount() will be called first time.
       // It is better do not use GetRowCount() to avoid unnecessary memory usage.
 
@@ -222,11 +219,11 @@ TSQLResult *TOracleServer::Query(const char *sql)
       return res;
    } CatchError("Query")
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Execute sql command wich does not produce any result set.
+/// Execute sql command which does not produce any result set.
 /// Return kTRUE if successful
 
 Bool_t TOracleServer::Exec(const char* sql)
@@ -238,7 +235,7 @@ Bool_t TOracleServer::Exec(const char* sql)
       return kFALSE;
    }
 
-   oracle::occi::Statement *stmt = 0;
+   oracle::occi::Statement *stmt = nullptr;
 
    Bool_t res = kFALSE;
 
@@ -290,16 +287,16 @@ TList* TOracleServer::GetTablesList(const char* wild)
       cmd+=Form(" WHERE table_name LIKE '%s'", wild);
 
    TSQLStatement* stmt = Statement(cmd);
-   if (stmt==0) return 0;
+   if (!stmt) return nullptr;
 
-   TList* lst = 0;
+   TList *lst = nullptr;
 
    if (stmt->Process()) {
       stmt->StoreResult();
       while (stmt->NextResultRow()) {
          const char* tablename = stmt->GetString(0);
-         if (tablename==0) continue;
-         if (lst==0) {
+         if (!tablename) continue;
+         if (!lst) {
             lst = new TList;
             lst->SetOwner(kTRUE);
          }
@@ -320,7 +317,7 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
 {
    CheckConnect("GetTableInfo",0);
 
-   if ((tablename==0) || (*tablename==0)) return 0;
+   if (!tablename || (*tablename==0)) return nullptr;
 
    TString table(tablename);
    table.ToUpper();
@@ -328,14 +325,14 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
    sql.Form("SELECT COLUMN_NAME, DATA_TYPE, DATA_LENGTH, DATA_PRECISION, DATA_SCALE, NULLABLE, CHAR_COL_DECL_LENGTH FROM user_tab_columns WHERE table_name = '%s' ORDER BY COLUMN_ID", table.Data());
 
    TSQLStatement* stmt = Statement(sql.Data(), 10);
-   if (stmt==0) return 0;
+   if (!stmt) return nullptr;
 
    if (!stmt->Process()) {
       delete stmt;
-      return 0;
+      return nullptr;
    }
 
-   TList* lst = 0;
+   TList *lst = nullptr;
 
    stmt->StoreResult();
 
@@ -421,7 +418,7 @@ TSQLTableInfo *TOracleServer::GetTableInfo(const char* tablename)
                             data_scale,
                             data_sign);
 
-      if (lst==0) lst = new TList;
+      if (!lst) lst = new TList;
       lst->Add(info);
    }
 
@@ -444,7 +441,7 @@ TSQLResult *TOracleServer::GetColumns(const char * /*dbname*/, const char *table
 //  make no sense, while method is not implemented
 //   if (SelectDataBase(dbname) != 0) {
 //      SetError(-1, "Database is not connected","GetColumns");
-//      return 0;
+//      return nullptr;
 //   }
 
    TString sql;
@@ -480,7 +477,7 @@ TSQLResult *TOracleServer::GetDataBases(const char * /*wild*/)
 {
    CheckConnect("GetDataBases",0);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
