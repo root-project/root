@@ -296,8 +296,6 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
   // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
 }
 
-// TODO: Deduplicate common test elements
-
 TEST(AxisTest, Equidistant) {
   auto test = [](const RAxisEquidistant& axis, std::string_view title) {
     test_axis_equidistant(axis, title, false, 10, 1.2, 3.4);
@@ -350,7 +348,9 @@ TEST(AxisTest, Growable) {
     EXPECT_DOUBLE_EQ(cfg.GetBinBorders()[1], 3.4);
     EXPECT_EQ(cfg.GetBinLabels().size(), 0u);
 
-    // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented
+    // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented.
+    //        Once it's implemented, please factor out commonalities with
+    //        the RAxisLabels test.
   };
 
   {
@@ -468,7 +468,9 @@ TEST(AxisTest, Labels) {
     EXPECT_EQ(axis.GetBinCenter("klmno"), 4.5);
     const_tests(axis, labels);
 
-    // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented
+    // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented.
+    //        Once it's implemented, please factor out commonalities with
+    //        the RAxisGrow test.
 
     // Now let's add some new bins
     auto new_labels = labels;
