@@ -89,7 +89,7 @@ REveTableHandle::Entries_t& REveTableViewInfo::RefTableEntries(std::string cname
       void fill(REveTableHandle::Entries_t& entries, TClass* c)
       {
          TMethod *meth;
-         TIter    next(c->GetListOfMethods());
+         TIter    next(c->GetListOfAllPublicMethods());
          while ((meth = (TMethod*) next())) {
             // take only methods without arguments
             if (!meth->GetListOfMethodArgs()->First())
@@ -97,22 +97,22 @@ REveTableHandle::Entries_t& REveTableViewInfo::RefTableEntries(std::string cname
                std::string mn = meth->GetName();
                std::string exp = "i." + mn + "()";
 
-               // ?? AMT is thre a better way to get detect numeric types
-               std::string r  = meth->GetReturnTypeName();
-               if ( r == "int"    || r == "Int_t" ||
-                    r == "uint" || r == "UInt_t")
-               {
-                  entries.push_back(REveTableEntry(mn, 0, exp));
-               }
-               else if( r == "double" || r == "Double_t" ||
-                        r == "float"  || r == "Float_t" )
-               {
-                  entries.push_back(REveTableEntry(mn, 0, exp));
+               TDataType* dt  = gROOT->GetType(meth->GetReturnTypeName());
+               if (dt) {
+                  int t = dt->GetType();
+                  if (
+                      t == EDataType::kInt_t  || t == EDataType::kUInt_t   ||
+                      t == EDataType::kLong_t ||  t == EDataType::kULong_t ||
+                      t == EDataType::kLong64_t ||  t == EDataType::kULong64_t ||
+                      t == EDataType::kBool_t )
+                     entries.push_back(REveTableEntry(mn, 0, exp));
+                  else if (
+                           t == EDataType::kFloat_t  ||
+                           t == EDataType::kDouble_t ||  t == EDataType::kDouble32_t )
+                     entries.push_back(REveTableEntry(mn, 3, exp));
                }
             }
          }
-
-
 
          // look in the base classes
          TBaseClass *base;
