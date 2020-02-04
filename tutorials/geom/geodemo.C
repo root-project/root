@@ -34,6 +34,7 @@
 #include "TGeoArb8.h"
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoTessellated.h"
 #include "TGeoPhysicalNode.h"
 
 Bool_t comments = kTRUE;
