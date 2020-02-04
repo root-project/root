@@ -51,39 +51,39 @@
 class TMySQLServer : public TSQLServer {
 
 protected:
-   MYSQL     *fMySQL;    // connection to MySQL server
-   TString    fInfo;     // server info string
+   MYSQL     *fMySQL{nullptr};   // connection to MySQL server
+   TString    fInfo;             // server info string
 
 public:
    TMySQLServer(const char *db, const char *uid, const char *pw);
    ~TMySQLServer();
 
-   void           Close(Option_t *opt="");
-   TSQLResult    *Query(const char *sql);
-   Bool_t         Exec(const char* sql);
-   TSQLStatement *Statement(const char *sql, Int_t = 100);
-   Bool_t         HasStatement() const;
-   Int_t          SelectDataBase(const char *dbname);
-   TSQLResult    *GetDataBases(const char *wild = 0);
-   TSQLResult    *GetTables(const char *dbname, const char *wild = 0);
-   TList         *GetTablesList(const char* wild = 0);
-   TSQLTableInfo *GetTableInfo(const char* tablename);
-   TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = 0);
-   Int_t          GetMaxIdentifierLength() { return 64; }
-   Int_t          CreateDataBase(const char *dbname);
-   Int_t          DropDataBase(const char *dbname);
-   Int_t          Reload();
-   Int_t          Shutdown();
-   const char    *ServerInfo();
+   void           Close(Option_t *opt="") final;
+   TSQLResult    *Query(const char *sql) final;
+   Bool_t         Exec(const char* sql) final;
+   TSQLStatement *Statement(const char *sql, Int_t = 100) final;
+   Bool_t         HasStatement() const final;
+   Int_t          SelectDataBase(const char *dbname) final;
+   TSQLResult    *GetDataBases(const char *wild = nullptr) final;
+   TSQLResult    *GetTables(const char *dbname, const char *wild = nullptr) final;
+   TList         *GetTablesList(const char* wild = nullptr) final;
+   TSQLTableInfo *GetTableInfo(const char* tablename) final;
+   TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = nullptr) final;
+   Int_t          GetMaxIdentifierLength() final { return 64; }
+   Int_t          CreateDataBase(const char *dbname) final;
+   Int_t          DropDataBase(const char *dbname) final;
+   Int_t          Reload() final;
+   Int_t          Shutdown() final;
+   const char    *ServerInfo() final;
 
-   Bool_t         StartTransaction();
-   Bool_t         Commit();
-   Bool_t         Rollback();
+   Bool_t         StartTransaction() final;
+   Bool_t         Commit() final;
+   Bool_t         Rollback() final;
 
-   Bool_t         PingVerify();
-   Int_t          Ping();
+   Bool_t         PingVerify() final;
+   Int_t          Ping() final;
 
-   ClassDef(TMySQLServer,0)  // Connection to MySQL server
+   ClassDefOverride(TMySQLServer,0)  // Connection to MySQL server
 };
 
 #endif
