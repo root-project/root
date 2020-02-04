@@ -284,6 +284,18 @@ TEST(AxisTest, Equidistant) {
     SCOPED_TRACE("Equidistant axis with title");
     test(RAxisEquidistant("RITLE_E2", 10, 1.2, 3.4), "RITLE_E2");
   }
+
+  // Only RAxisEquidistant currently has an equality operator defined
+  RAxisEquidistant axis1("Title", 12, 3.4, 5.6);
+  EXPECT_EQ(axis1, RAxisEquidistant("Ritle", 12, 3.4, 5.6));
+
+  // Title is ignored by the equality operator
+  EXPECT_EQ(axis1, RAxisEquidistant("Ritl", 12, 3.4, 5.6));
+
+  // Everything else is taken into account by the equality operator
+  EXPECT_NE(axis1, RAxisEquidistant("Ritle", 13, 3.4, 5.6));
+  EXPECT_NE(axis1, RAxisEquidistant("Ritle", 12, 3.5, 5.6));
+  EXPECT_NE(axis1, RAxisEquidistant("Ritle", 12, 3.4, 5.7));
 }
 
 TEST(AxisTest, Growable) {
