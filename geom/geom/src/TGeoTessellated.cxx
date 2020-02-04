@@ -202,37 +202,6 @@ TGeoTessellated::TGeoTessellated(const char *name, const std::vector<Vertex_t> &
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-TGeoTessellated::TGeoTessellated(const TGeoTessellated &other) : TGeoBBox(other)
-{
-   fNfacets = other.fNfacets;
-   fNvert = other.fNvert;
-   fNseg = other.fNseg;
-   fDefined = other.fDefined;
-   fClosedBody = other.fClosedBody;
-   fVertices = other.fVertices;
-   fFacets = other.fFacets;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator
-
-TGeoTessellated &TGeoTessellated::operator=(const TGeoTessellated &other)
-{
-   if (&other != this) {
-      TGeoBBox::operator=(other);
-      fNvert = other.fNvert;
-      fNseg = other.fNseg;
-      fDefined = other.fDefined;
-      fClosedBody = other.fClosedBody;
-      fVertices = other.fVertices;
-      fFacets = other.fFacets;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Function to be called after reading tessellated volumes from the geometry file
 
 void TGeoTessellated::AfterStreamer()
