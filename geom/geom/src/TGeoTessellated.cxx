@@ -51,18 +51,22 @@ std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet)
 TGeoFacet::TGeoFacet(const TGeoFacet &other) : fVertices(other.fVertices), fNvert(other.fNvert), fShared(other.fShared)
 {
    memcpy(fIvert, other.fIvert, 4 * sizeof(int));
-   if (!fShared)
+   if (!fShared && other.fVertices)
       fVertices = new VertexVec_t(*other.fVertices);
 }
 
 const TGeoFacet &TGeoFacet::operator=(const TGeoFacet &other)
 {
    if (&other != this) {
-      fVertices = other.fVertices;
+      if (!fShared)
+         delete fVertices;
       fNvert = other.fNvert;
       fShared = other.fShared;
-      if (!fShared)
+      memcpy(fIvert, other.fIvert, 4 * sizeof(int));
+      if (!fShared && other.fVertices)
          fVertices = new VertexVec_t(*other.fVertices);
+      else
+         fVertices = other.fVertices;
    }
    return *this;
 }
