@@ -848,22 +848,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== ToolHeader =============== */
       /* ========================================== */
 
-      isMacro: function(path) {
-         let split = path.split('/');
-         const last = split[split.length-1];
-         split = last.split('.');
-         const ext = split[split.length-1].toLowerCase();
-
-         switch (ext) {
-            case 'c':
-            case 'cpp':
-            case  'cxx':
-               return true;
-            default:
-               return false
-         }
-      },
-
       /** @brief Assign the "double click" event handler to each row */
       assignRowHandlers: function () {
          var rows = this.byId("treeTable").getRows();
