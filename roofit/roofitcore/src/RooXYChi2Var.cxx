@@ -224,7 +224,7 @@ void RooXYChi2Var::initialize()
 
   // Define alternate numeric integrator configuration for bin integration
   // We expect bin contents to very only very slowly so a non-adaptive
-  // Gauss-Kronrod integrator is expected to perform well (if MathMore is available
+  // Gauss-Kronrod integrator is expected to perform well (if RooFitMore is available)
   _intConfig.setEpsRel(1e-7) ;
   _intConfig.setEpsAbs(1e-7) ;
 #ifdef R__HAS_MATHMORE
