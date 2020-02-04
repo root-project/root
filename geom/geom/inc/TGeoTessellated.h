@@ -124,9 +124,6 @@ public:
    // destructor
    virtual ~TGeoTessellated() {}
 
-   TGeoTessellated(const TGeoTessellated &);
-   TGeoTessellated &operator=(const TGeoTessellated &);
-
    void ComputeBBox();
    void CloseShape(bool check = true, bool fixFlipped = true, bool verbose = true);
 
