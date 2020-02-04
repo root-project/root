@@ -34,8 +34,8 @@ class TOracleStatement : public TSQLStatement {
 protected:
 
    struct TBufferRec {
-      char* strbuf{nullptr};
-      Long_t strbufsize{-1};
+      void *membuf{nullptr};
+      Long_t bufsize{-1};
       std::string namebuf;
    };
 
