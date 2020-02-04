@@ -9,10 +9,8 @@
 # @author Vladimir Ilievski
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
 
-set(Libraries Core MathCore Matrix TMVA)
+set(Libraries TMVA)
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)

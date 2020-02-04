@@ -9,10 +9,8 @@
 # @author Saurav Shekhar
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
 
-set(Libraries Core MathCore Matrix TMVA)
+set(Libraries TMVA)
 
 if (CUDA_FOUND AND  tmva-gpu)
 include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
