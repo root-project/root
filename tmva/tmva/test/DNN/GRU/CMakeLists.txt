@@ -3,10 +3,8 @@
 # @author Surya S Dwivedi
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
 
-set(Libraries Core MathCore Matrix TMVA)
+set(Libraries TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
 # GRU - Forward Reference
