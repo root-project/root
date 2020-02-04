@@ -24,8 +24,8 @@ struct PGresult;
 class TPgSQLResult : public TSQLResult {
 
 private:
-   PGresult   *fResult;      // query result (rows)
-   ULong_t     fCurrentRow;  // info to result row
+   PGresult   *fResult{nullptr};      // query result (rows)
+   ULong_t     fCurrentRow{0};        // info to result row
 
    Bool_t  IsValid(Int_t field);
 
@@ -33,12 +33,12 @@ public:
    TPgSQLResult(void *result);
    ~TPgSQLResult();
 
-   void        Close(Option_t *opt="");
-   Int_t       GetFieldCount();
-   const char *GetFieldName(Int_t field);
-   TSQLRow    *Next();
+   void        Close(Option_t *opt="") final;
+   Int_t       GetFieldCount() final;
+   const char *GetFieldName(Int_t field) final;
+   TSQLRow    *Next() final;
 
-   ClassDef(TPgSQLResult, 0)  // PgSQL query result
+   ClassDefOverride(TPgSQLResult, 0)  // PgSQL query result
 };
 
 #endif
