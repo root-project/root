@@ -38,15 +38,15 @@ class TList;
 class TOracleResult : public TSQLResult {
 
 private:
-   oracle::occi::Connection*fConn;        // connection to Oracle
-   oracle::occi::Statement *fStmt;        // executed statement
-   oracle::occi::ResultSet *fResult;      // query result (rows)
-   std::vector<oracle::occi::MetaData> *fFieldInfo;   // info for each field in the row
-   Int_t                  fFieldCount;  // num of fields in resultset
-   UInt_t                 fUpdateCount; // for dml query, mutual exclusive with above
-   Int_t                  fResultType;  // 0 - nothing; 1 - Select; 2 - table metainfo, 3 - update counter
-   TList                 *fPool;        // array of results, produced when number of rows are requested
-   std::string           fNameBuffer; // buffer for GetFieldName() argument
+   oracle::occi::Connection   *fConn{nullptr};               // connection to Oracle
+   oracle::occi::Statement    *fStmt{nullptr};               // executed statement
+   oracle::occi::ResultSet    *fResult{nullptr};             // query result (rows)
+   std::vector<oracle::occi::MetaData> *fFieldInfo{nullptr}; // info for each field in the row
+   Int_t                       fFieldCount{0};               // num of fields in resultset
+   UInt_t                      fUpdateCount{0};              // for dml query, mutual exclusive with above
+   Int_t                       fResultType{0};               // 0 - nothing; 1 - Select; 2 - table metainfo, 3 - update counter
+   TList                      *fPool{nullptr};               // array of results, produced when number of rows are requested
+   std::string                 fNameBuffer;                  // buffer for GetFieldName() argument
 
    Bool_t  IsValid(Int_t field);
 
@@ -62,15 +62,15 @@ public:
    TOracleResult(oracle::occi::Connection *conn, const char *tableName);
    ~TOracleResult();
 
-   void        Close(Option_t *opt="");
-   Int_t       GetFieldCount();
-   const char *GetFieldName(Int_t field);
-   virtual Int_t GetRowCount() const;
-   TSQLRow    *Next();
+   void        Close(Option_t *opt="") final;
+   Int_t       GetFieldCount() final;
+   const char *GetFieldName(Int_t field) final;
+   Int_t       GetRowCount() const final;
+   TSQLRow    *Next() final;
 
-   Int_t       GetUpdateCount() { return fUpdateCount; }
+   Int_t       GetUpdateCount() const { return fUpdateCount; }
 
-   ClassDef(TOracleResult,0)  // Oracle query result
+   ClassDefOverride(TOracleResult,0)  // Oracle query result
 };
 
 #endif
