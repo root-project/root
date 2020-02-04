@@ -17,30 +17,24 @@
 
 /** \class RooLagrangianMorphing
     \ingroup Roofit
-
 Class RooLagrangianMorphing is a implementation of the method of Effective
 Lagrangian Morphing, descibed in ATL-PHYS-PUB-2015-047.
-
 Effective Lagrangian Morphing is a method to construct a continuous signal
 model in the coupling parameter space. Basic assumption is that shape and
 cross section of a physical distribution is proportional to it's
-squared matrix element. 
-
+squared matrix element.
 The signal model is constructed by a weighted sum over N input distributions.
 The calculation of the weights is based on Matrix Elements evaluated for the
 different input scenarios.
-
 The number of input files depends on the number of couplings in production
 and decay vertices, and also whether the decay and production vertices
 describe the same process or not.
-
 While the RooLagrangianMorphing implementation in principle supports
 arbitrary effective lagrangian models, a few specific derived classes
 are available to provide increased convenience for use with the
 Higgs Characterisation Model described in 'http://arxiv.org/abs/1306.6464'
 as well as the Standard Model Effective Field Theory (SMEFT) described in
 'https://arxiv.org/abs/1706.08945'
-
 **/
 
 // uncomment to force UBLAS multiprecision matrices
@@ -103,7 +97,7 @@ as well as the Standard Model Effective Field Theory (SMEFT) described in
 templateClassImp(RooLagrangianMorphing::RooLagrangianBase)
 ClassImpT(RooLagrangianMorphing::RooLagrangianMorphBase,T)
 
-// #define _DEBUG_
+ #define _DEBUG_
 
 ///////////////////////////////////////////////////////////////////////////////
 // PREPROCESSOR MAGIC /////////////////////////////////////////////////////////
@@ -153,7 +147,7 @@ struct is_specialization<Ref<Args...>, Ref>: std::true_type {};
 
 template<class MatrixT>
 inline size_t size(const MatrixT& matrix);
-template <> inline size_t size<TMatrixD> (const TMatrixD& mat)i
+template <> inline size_t size<TMatrixD> (const TMatrixD& mat)
 {
   return mat.GetNrows();
 }
@@ -361,18 +355,18 @@ inline double invertMatrix(const Matrix& matrix, Matrix& inverse)
 ///////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  struct HistFuncAccessor : protected RooHistFunc	{
+  struct HistFuncAccessor : protected RooHistFunc    {
     static RooAbsCollection* getObservables(RooHistFunc *hf){
       return &((HistFuncAccessor*)hf)->_histObsList;
     }
   };
-  struct ParamHistFuncAccessor : protected RooParamHistFunc	{
+  struct ParamHistFuncAccessor : protected RooParamHistFunc    {
     static RooAbsCollection* getObservables(RooParamHistFunc *hf){
       return &((ParamHistFuncAccessor*)hf)->_p;
     }
   };
 }
-	
+    
 ////////////////////////////////////////////////////////////////////////////////
 /// convert a TH1 into a RooDataHist
 
@@ -415,7 +409,7 @@ void RooLagrangianMorphing::printDataHistogram(RooDataHist* hist, RooRealVar* ob
 // LOCAL FUNCTIONS AND DEFINITIONS //////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 /// anonymous namespace to prohibit use of these functions outside the class itself
-namespace 
+namespace
 {
   ///////////////////////////////////////////////////////////////////////////////
   // HELPERS ////////////////////////////////////////////////////////////////////
@@ -581,7 +575,7 @@ namespace
   ///////////////////////////////////////////////////////////////////////////////
   /// convert a TH1* param hist into the corresponding ParamSet object
 
-  inline void printClients(const RooAbsArg* obj)i
+  inline void printClients(const RooAbsArg* obj)
   {
     TIterator* itr = obj->clientIterator();
     TObject* x;
@@ -602,7 +596,7 @@ namespace
     while((x = itr->Next())){
       std::cout << "  " << x << " " << x->ClassName() << " " << x->GetName() << std::endl;
     }
-  }  
+  }
   
   ///////////////////////////////////////////////////////////////////////////////
   /// retrieve a param_hist from a certain subfolder 'name' of the file
@@ -747,6 +741,17 @@ namespace
   }
 
   ///////////////////////////////////////////////////////////////////////////////
+  /// extract the couplings from a given set of vertices and copy them to a new one
+
+  template< class T1, class T2, typename std::enable_if<is_specialization<T1,std::vector>::value,T1>::type* = nullptr>
+  inline void extractVertices(const T1& inVec, T2& outVec)
+  {
+    for(const auto& v:inVec){
+      outVec.push_back(v);
+    }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
   /// find and, if necessary, create a parameter from a list
 
   template< class T >
@@ -786,7 +791,7 @@ namespace
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// set parameter values first set all values to defaultVal (if value not 
+  /// set parameter values first set all values to defaultVal (if value not
   /// present in param_card then it should be 0)
 
   inline bool setParam(RooRealVar* p, double val, bool force)
@@ -813,7 +818,7 @@ namespace
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// set parameter values first set all values to defaultVal (if value not 
+  /// set parameter values first set all values to defaultVal (if value not
   /// present in param_card then it should be 0)
 
   template<class T1, class T2>
@@ -830,7 +835,7 @@ namespace
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// set parameter values first set all values to defaultVal (if value not 
+  /// set parameter values first set all values to defaultVal (if value not
   /// present in param_card then it should be 0)
 
   template<class T1, class T2>
@@ -859,7 +864,7 @@ namespace
   }
  
   ////////////////////////////////////////////////////////////////////////////////
-  /// set parameter values first set all values to defaultVal (if value not 
+  /// set parameter values first set all values to defaultVal (if value not
   /// present in param_card then it should be 0)
  
   template<class T>
@@ -984,7 +989,7 @@ namespace
       auto it = list_hf.find(sample);
       if(it != list_hf.end()){
         RooHistFunc* hf = (RooHistFunc*)(physics.at(it->second));
-        hf->setValueDirty(); 
+        hf->setValueDirty();
         RooDataHist* dh = &(hf->dataHist());
         RooLagrangianMorphing::setDataHistogram(hist,&var,dh);
       } else {
@@ -1000,7 +1005,7 @@ namespace
         
         // generate the mean value
         TString histname = makeValidName(TString::Format("dh_%s_%s",sample.c_str(),name));
-        TString funcname = makeValidName(TString::Format("phys_%s_%s",sample.c_str(),name));        
+        TString funcname = makeValidName(TString::Format("phys_%s_%s",sample.c_str(),name));
         RooDataHist* dh = RooLagrangianMorphing::makeDataHistogram(hist,&var,histname);
         // add it to the list
         RooHistFunc* hf = new RooHistFunc(funcname,funcname,var,*dh);
@@ -1074,11 +1079,11 @@ namespace
       if(!xsection){
         std::stringstream errstr;
         errstr << "Error: unable to retrieve cross section '" << varname << "' from folder '" << sample << "'. contents are:";
-				TIter next(folder->GetListOfFolders()->begin());
-				TFolder* f;
-				while ((f = (TFolder*)next())) {
-					errstr << " " << f->GetName();
-				}
+                TIter next(folder->GetListOfFolders()->begin());
+                TFolder* f;
+                while ((f = (TFolder*)next())) {
+                    errstr << " " << f->GetName();
+                }
         ERROR(errstr.str());
       }
 
@@ -1304,7 +1309,7 @@ namespace
 
   template<class List>
   inline FormulaList buildFormulas(const char* mfname,const RooLagrangianMorphing::ParamMap& inputParameters, const RooLagrangianMorphing::FlagMap& inputFlags, const MorphFuncPattern& morphfunc, const RooArgList& couplings, const List& flags, const std::vector<List*>& nonInterfering)
-  { 
+  {
     // example vbf hww:
     //                        Operators kSM,  kHww, kAww, kHdwR,kHzz, kAzz
     // std::vector<bool> vertexProd  = {true, true, true, true, true, true };
@@ -1349,7 +1354,7 @@ namespace
     }
 
     RooFIter itr2(flags.fwdIterator());
-    RooAbsReal* obj1; 
+    RooAbsReal* obj1;
     while((obj1 = dynamic_cast<RooAbsReal*>(itr2.next()))){
       int nZero = 0;
       int nNonZero = 0;
@@ -1358,7 +1363,7 @@ namespace
         if(flag != sampleit->second.end()){
           if(flag->second == 0.) nZero++;
           else nNonZero++;
-          //          std::cout << "flag found " << obj->GetName() << ", value = " << flag->second <<  std::endl;          
+          //          std::cout << "flag found " << obj->GetName() << ", value = " << flag->second <<  std::endl;
         } else {
           //          std::cout << "flag not found " << obj->GetName() << std::endl;
         }
@@ -1522,11 +1527,11 @@ namespace
         numbers.add(*constVal);
         formulalist.add(*formula);
         formulaidx++;
-        title <<" + "<<double(val) << "*(" << formula->GetTitle()<<")";        
+        title <<" + "<<double(val) << "*(" << formula->GetTitle()<<")";
       }
       RooRealSumFunc* sampleformula = new RooRealSumFunc(name_full.Data(),title.str().c_str(),numbers,formulalist);
 #endif
-      weights.add(*sampleformula);      
+      weights.add(*sampleformula);
       sampleidx++;
     }
     DEBUG("done building sample weights");
@@ -1554,7 +1559,7 @@ namespace
       sampleidx++;
     }
     return weights;
-  }  
+  }
 }
 
 
@@ -1567,7 +1572,7 @@ namespace
 /// create the couplings needed for ggF vertices
 
 RooArgSet RooLagrangianMorphing::makeHCggFCouplings(RooAbsCollection& operators)
-{ 
+{
   DEBUG("creating ggF couplings");
   RooArgSet prodCouplings("ggF");
   RooAbsArg& cosa = get(operators,"cosa",1);
@@ -1648,7 +1653,6 @@ RooArgSet RooLagrangianMorphing::makeHCHllCouplings(RooAbsCollection& operators)
   return decCouplings;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Standard Model Effective Field Theory //////////////////////////////////////
 // https://arxiv.org/pdf/1709.06492.pdf ///////////////////////////////////////
@@ -1700,9 +1704,9 @@ RooArgSet RooLagrangianMorphing::makeSMEFTvbfCouplings(RooAbsCollection& operato
 ////////////////////////////////////////////////////////////////////////////////
 /// create the couplings needed for SMEFT ttH
 
-RooArgSet RooLagrangianMorphing::makeSMEFTtthCouplings(RooAbsCollection& operators) {
-  return ::makeSMEFTCouplings(operators,"ttH",{"Hd","Hq1","uu1","HWB","uWAbs","Hl3","uu","H","ud1","uGAbs","qd1","uBAbs","HDD","qd8","qq11","Hq3","qu1","HB","Hu","qu8","qq3","q     q1","uHAbs","HG","qq31","ud8","HW"});
-}
+//RooArgSet RooLagrangianMorphing::makeSMEFTtthCouplings(RooAbsCollection& operators) {
+//  return ::makeSMEFTCouplings(operators,"ttH",{"Hd","Hq1","uu1","HWB","uWAbs","Hl3","uu","H","ud1","uGAbs","qd1","uBAbs","HDD","qd8","qq11","Hq3","qu1","HB","Hu","qu8","qq3","q     q1","uHAbs","HG","qq31","ud8","HW"});
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// create the couplings needed for SMEFT H->WW
@@ -1714,7 +1718,7 @@ RooArgSet RooLagrangianMorphing::makeSMEFTHWWCouplings(RooAbsCollection& operato
 ////////////////////////////////////////////////////////////////////////////////
 /// create the couplings needed for SMEFT H->yy
 
-RooArgSet RooLagrangianMorphing::makeSMEFTgyyCouplings(RooAbsCollection& operators) {
+RooArgSet RooLagrangianMorphing::makeSMEFTHyyCouplings(RooAbsCollection& operators) {
   return ::makeSMEFTCouplings(operators,"Hyy",{"HB"});
 }
 
@@ -1750,7 +1754,7 @@ public:
   {
     RooArgList args(*_sumFunc);
     args.add(_weights);
-    args.add(_couplings);        
+    args.add(_couplings);
     for(auto it:_formulas){
       args.add(*(it.second));
     }
@@ -1886,7 +1890,7 @@ public:
       RooAbsReal* obj = (RooAbsReal*)(physics.at(storage.at(prodname.Data())));
       if(!obj) ERROR("unable to access physics object for " << prodname);
       RooAbsReal* weight = (RooAbsReal*)(this->_weights.at(i));
-      if(!weight) ERROR("unable to access weight object for " << prodname);      
+      if(!weight) ERROR("unable to access weight object for " << prodname);
       prodname.Append("_");
       prodname.Append(name);
       RooArgList prodElems(*weight,*obj);
@@ -1899,7 +1903,7 @@ public:
         sumElements.add(*max);
       } else {
         sumElements.add(*prod);
-	      }
+          }
       scaleElements.add(*(binWidth));
       i++;
     }
@@ -1911,13 +1915,13 @@ public:
     
     DEBUG("ownership handling");
     DEBUG("... adding observable");
-    if(!observable) ERROR("unable to access observable");    
+    if(!observable) ERROR("unable to access observable");
     morphfunc->addServer(*observable);
     DEBUG("... adding bin width");
     if(!binWidth) ERROR("unable to access bin width");
     morphfunc->addServer(*binWidth);
     DEBUG("... adding params");
-    if(operators.getSize() < 1) ERROR("no operators listed");    
+    if(operators.getSize() < 1) ERROR("no operators listed");
     morphfunc->addServerList(operators);
     DEBUG("... adding weights");
     if(this->_weights.getSize() < 1) ERROR("unable to access weight objects");
@@ -1926,11 +1930,11 @@ public:
     DEBUG("... adding temporary objects");
     morphfunc->addOwnedComponents(sumElements);
     morphfunc->addServerList(sumElements);
-    morphfunc->addServerList(scaleElements);    
+    morphfunc->addServerList(scaleElements);
 
-#ifdef USE_UBLAS    
+#ifdef USE_UBLAS
     std::cout.precision(std::numeric_limits<double>::digits);
-#endif 
+#endif
 #ifdef DEBUG_
     morphfunc->Print();
 #endif
@@ -1960,7 +1964,7 @@ public:
     DEBUG("building morphing function");
     #ifdef _DEBUG_
     DEBUG("observable: " << func->getObservable()->GetName());
-    DEBUG("binWidth: " << func->getBinWidth()->GetName());    
+    DEBUG("binWidth: " << func->getBinWidth()->GetName());
     #endif
     
     setParams(func->_flags,1);
@@ -1989,7 +1993,7 @@ public:
     cache->_inverse = inverse;
     cache->_condition = NaN;
 
-    DEBUG("building morphing function");        
+    DEBUG("building morphing function");
     setParams(func->_flags,1);
     cache->buildMorphingFunction(func->GetName(),func->_paramCards,func->_sampleMap,func->_physics,
                                  func->_allowNegativeYields,func->getObservable(),func->getBinWidth());
@@ -2065,7 +2069,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<T>::insert(RooWorkspace* ws)
 /// length of floating point digits precision supported by implementation
 
 double RooLagrangianMorphing::implementedPrecision()
-{ 
+{
   return RooLagrangianMorphing::SuperFloatPrecision::digits10;
 }
 
@@ -2127,7 +2131,7 @@ RooRealVar* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setupObservable
   // obtain the observable
   if (!obsExists){
     if(mode && mode->InheritsFrom(TH1::Class())){
-      DEBUG("getObservable: creating new multi-bin observable object " << obsname);      
+      DEBUG("getObservable: creating new multi-bin observable object " << obsname);
       TH1* hist = (TH1*)(inputExample);
       obs = new RooRealVar(obsname,obsname,hist->GetXaxis()->GetXmin(),hist->GetXaxis()->GetXmax());
       obs->setBins(hist->GetNbinsX());
@@ -2141,7 +2145,7 @@ RooRealVar* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setupObservable
     DEBUG("getobservable: recycling existing observable object " << this->_observables.at(0));
     if (strcmp(obsname,obs->GetName())!=0 ) {
       std::cerr << "WARNING: name of existing observable " << this->_observables.at(0)->GetName() << " does not match expected name " << obsname << std::endl ;
-    }     
+    }
   }
 
   
@@ -2169,7 +2173,7 @@ inline void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::updateSampleWei
 {
 #ifdef USE_MULTIPRECISION_LC
   int sampleidx = 0;
-  auto cache = this->getCache(_curNormSet);  
+  auto cache = this->getCache(_curNormSet);
   const size_t n(size(cache->_inverse));
   for(auto sampleit=this->_paramCards.begin(); sampleit!=this->_paramCards.end(); ++sampleit){
     const std::string sample(sampleit->first);
@@ -2206,7 +2210,7 @@ template<class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::readParameters(TDirectory* f)
 {
   this->_paramCards = readValues<double>(f,this->_folderNames,"param_card",true);
-  this->_flagValues = readValues<int>(f,this->_folderNames,"flags",false);  
+  this->_flagValues = readValues<int>(f,this->_folderNames,"flags",false);
 }
 
 
@@ -2220,7 +2224,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::collectInputs(TDirecto
     
   TFolder* base = dynamic_cast<TFolder*>(file->Get(this->_baseFolder.c_str()));
   TObject* obj = findObject(base,this->_objFilter);
-  if(!obj) ERROR("unable to locate object '"<<this->_objFilter<<"' in folder '" << base << "'!");    
+  if(!obj) ERROR("unable to locate object '"<<this->_objFilter<<"' in folder '" << base << "'!");
   TClass* mode = TClass::GetClass(obj->ClassName());
 
   RooRealVar* observable = this->setupObservable(this->_obsName.c_str(),mode,obj);
@@ -2229,16 +2233,16 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::collectInputs(TDirecto
     collectHistograms(this->GetName(), file, this->_sampleMap,this->_physics,*observable, this->_objFilter, _baseFolder, this->_paramCards);
   } else if(mode->InheritsFrom(RooHistFunc::Class()) || mode->InheritsFrom(RooParamHistFunc::Class())){
 //  else if(mode->InheritsFrom(RooHistFunc::Class()) || mode->InheritsFrom(RooParamHistFunc::Class()) || mode->InheritsFrom(PiecewiseInterpolation::Class())){
-    DEBUG("using RooHistFunc");      
+    DEBUG("using RooHistFunc");
     collectRooAbsReal(this->GetName(), file, this->_sampleMap,this->_physics, this->_objFilter, this->_paramCards);
   } else if(mode->InheritsFrom(TParameter<double>::Class())){
-    DEBUG("using TParameter<double>");      
+    DEBUG("using TParameter<double>");
     collectCrosssections<double>(this->GetName(), file, this->_sampleMap,this->_physics, this->_objFilter, _baseFolder, this->_paramCards);
   } else if(mode->InheritsFrom(TParameter<float>::Class())){
-    DEBUG("using TParameter<float>");      
+    DEBUG("using TParameter<float>");
     collectCrosssections<float>(this->GetName(), file, this->_sampleMap,this->_physics, this->_objFilter, _baseFolder, this->_paramCards);
   } else if(mode->InheritsFrom(TPair::Class())){
-    DEBUG("using TPair<double>");            
+    DEBUG("using TPair<double>");
     collectCrosssectionsTPair(this->GetName(), file, this->_sampleMap,this->_physics, this->_objFilter, _baseFolder, this->_paramCards);
   } else {
     ERROR("cannot morph objects of class '"<<mode->GetName()<<"'!");
@@ -2292,13 +2296,54 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::addFolders(const RooAr
   }
 }
 
+RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig() 
+//_operators ("operators", "set of operators", this, kTRUE,kFALSE)
+{
+  std::cout << "INSIDE ROOLAGRANGIANMORPHCONFIG" << std::endl;
+}
+ 
+RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& couplings){
+  extractCouplings(couplings,_couplings);
+} 
+
+RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
+  extractCouplings(prodCouplings,_prodCouplings);
+  extractCouplings(decCouplings,_decCouplings);
+} 
+
+void RooLagrangianMorphing::RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& couplings){
+//  this->_couplings = couplings;
+  extractCouplings(couplings,_couplings);
+}
+
+void RooLagrangianMorphing::RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
+  extractCouplings(prodCouplings,_prodCouplings);
+  extractCouplings( decCouplings,_decCouplings);
+}
+
+template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setDiagrams(const std::vector<std::vector<T> >& diagrams)
+{
+  for(const auto& v:diagrams){
+    extractVertices(v,_diagrams);
+  }
+}
+
+template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setVertices(const std::vector<T >& vertices)
+{
+  extractVertices(vertices, _vertices);
+}
+
+RooLagrangianMorphing::RooLagrangianMorphConfig::~RooLagrangianMorphConfig()
+{
+  DEBUG("destructor called");
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// protected constructor with proper arguments
 
 template<class Base>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title,
-                                                                            const char* fileName, const char* obsName, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
+RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
   Base(name,title),
+  RooLagrangianMorphConfig(config),
   _cacheMgr(this,10,kTRUE,kTRUE),
   _fileName(fileName),
   _obsName(obsName),
@@ -2310,7 +2355,8 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(cons
   _binWidths  ("binWidths",  "set of binWidth objects",this,kTRUE,kFALSE),
   _curNormSet(0)
 {
-  DEBUG("argument constructor called: " << this);  
+  std::cout << "INSIDE ROOLAGRANGIANMORPHBASE" << std::endl;
+  DEBUG("argument constructor called: " << this);
   this->printAuthors();
   this->addFolders(folders);
   this->init();
@@ -2321,384 +2367,120 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(cons
 /// protected constructor with proper arguments
 
 template<class Base>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title,
-                                                                            const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,"",folders,objFilter,allowNegativeYields) {}
-
+RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
+  RooLagrangianMorphBase(name,title,fileName,obsName,config,"",folders,objFilter,allowNegativeYields) {
+  DEBUG("constructor: name,title,filename,obsname,config,folders,objfilter,allowNegativeYields");
+//  this->disableInterferences(this->_nonInterfering);
+  this->setup(false);
+}
 ////////////////////////////////////////////////////////////////////////////////
-// protected constructor with proper arguments
+/// constructor with proper arguments
+template<class Base>
+RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title,const char *fileName, const char *obsName, const RooLagrangianMorphConfig& config, const char *objFilter, bool allowNegativeYields) :
+  RooLagrangianMorphBase(name,title,fileName,obsName,config,"",RooArgList(),objFilter,allowNegativeYields)
+{
+  DEBUG("constructor: name,title,filename,obsname,config,objfilter,allowNegativeYields");
+  this->setup(false);
+}
 
 template<class Base>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title,
-                                                                            const char* fileName, const char* obsName, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,"",RooArgList(),objFilter,allowNegativeYields) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
+RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName,const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields):
+  RooLagrangianMorphBase(name,title,fileName,obsName,RooLagrangianMorphConfig(),basefolder,folders,objFilter,allowNegativeYields)
+{}
 template<class Base>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,prodCouplings,decCouplings,basefolder,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(prodCouplings,operators);
-  extractOperators(decCouplings,operators);
-  this->setup(operators,prodCouplings,decCouplings, false);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> 
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,prodCouplings,decCouplings,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(prodCouplings,operators);
-  extractOperators(decCouplings,operators);
-  this->setup(operators,prodCouplings,decCouplings, false);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> 
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,prodCouplings,decCouplings,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(prodCouplings,operators);
-  extractOperators(decCouplings,operators);
-  this->setup(operators,prodCouplings, decCouplings, false);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> 
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,prodCouplings,decCouplings,nonInterfering,basefolder,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(prodCouplings,operators);
-  extractOperators(decCouplings,operators);
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,prodCouplings,decCouplings, false);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> 
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,prodCouplings,decCouplings,nonInterfering,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(prodCouplings,operators);
-  extractOperators(decCouplings,operators);
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,prodCouplings,decCouplings, false);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> 
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,prodCouplings,decCouplings,nonInterfering,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(prodCouplings,operators);
-  extractOperators(decCouplings,operators);
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,prodCouplings, decCouplings, false);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,vertices,basefolder,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(vertices,operators);
-  this->setup(operators,vertices, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const char*, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,vertices,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(vertices,operators);
-  this->setup(operators,vertices, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper argument
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,vertices,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(vertices,operators);
-  this->setup(operators,vertices, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,vertices,nonInterfering,basefolder,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(vertices,operators);
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,vertices, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,vertices,nonInterfering,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(vertices,operators);
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,vertices, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,vertices,nonInterfering,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(vertices,operators);
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,vertices, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const std::vector<std::vector<const char*> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const std::vector<std::vector<const char*> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<RooArgList>&, const std::vector<std::vector<const char*> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<RooArgSet> &, const std::vector<std::vector<const char*> >&, const char*, bool);
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,diagrams,basefolder,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(diagrams,operators);
-  this->setup(operators,diagrams, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const char*, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper argument
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,diagrams,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(diagrams,operators);
-  this->setup(operators,diagrams, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper argument
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,diagrams,objFilter,allowNegativeYields");
-  RooArgList operators;
-  extractOperators(diagrams,operators);
-  this->setup(operators,diagrams, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,diagrams,nonInterfering,basefolder,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  for(const auto& v:diagrams){
-    extractOperators(v,operators);
-  }
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,diagrams, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const std::vector<std::vector<const char*> >&, const char*, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,diagrams,nonInterfering,folders,objFilter,allowNegativeYields");
-  RooArgList operators;
-  for(const auto& v:diagrams){
-    extractOperators(v,operators);
-  }
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,diagrams, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const std::vector<std::vector<const char*> >&, const RooArgList&, const char*, bool);
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-
-template<class Base> template<class T>
-RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter, bool allowNegativeYields) :
-  RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields)
-{
-  DEBUG("constructor: name,title,filename,obsname,diagrams,nonInterfering,objFilter,allowNegativeYields");
-  RooArgList operators;
-  for(const auto& v:diagrams){
-    extractOperators(v,operators);
-  }
-  this->disableInterferences(nonInterfering);
-  this->setup(operators,diagrams, false);
-}
-
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const std::vector<std::vector<const char*> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const std::vector<std::vector<const char*> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgList>(const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgList> >&, const std::vector<std::vector<const char*> >&, const char*, bool);
-template RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>::RooLagrangianMorphBase<RooArgSet> (const char *, const char *, const char*, const char*, const std::vector<std::vector<RooArgSet> > &, const std::vector<std::vector<const char*> >&, const char*, bool);
-
-
+RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter, bool allowNegativeYields):
+  RooLagrangianMorphBase(name,title,fileName,obsName,RooLagrangianMorphConfig(),"",folders,objFilter,allowNegativeYields)
+{}
 ////////////////////////////////////////////////////////////////////////////////
 /// setup this instance with the given set of operators and vertices
 /// if own=true, the class will own the operatorsemplate <class Base>
 
-void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(const RooArgSet& operators, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, bool own)
+
+template <class Base> template<class T>
+void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
 {
-  DEBUG("setup(ops,prod,decay,"<<own<<") called");
+ if (this->_diagrams.size() > 0){
+  this->_ownParameters = own;
+  RooArgList operators;
+  for(const auto& v:this->_diagrams){
+    extractOperators(v,operators);
+  }
+    if(own){
+      this->_operators.addOwned(operators);
+    } else {
+      this->_operators.add(operators);
+    }
+    for(size_t j=0; j<this->_diagrams.size(); ++j){
+      std::vector<RooListProxy*> vertices;
+      for(size_t i=0; i<this->_diagrams[j].size(); i++){
+        std::stringstream name;
+        name << "!vertex" << i;
+        std::stringstream title;
+        title << "set of couplings in the vertex " << i;
+        vertices.push_back(new RooListProxy(name.str().c_str(),title.str().c_str(),this,kTRUE,kFALSE));
+        if(own){
+          vertices[i]->addOwned(this->_diagrams[j][i]);
+        } else {
+          vertices[i]->add(this->_diagrams[j][i]);
+        } 
+      }
+      this->_diagrams.push_back(vertices);
+    }
+    if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
+  }
+  else {
+    if(this->_vertices.size() > 0){
+      std::vector<std::vector<T> > diagrams;
+      RooArgList operators;
+      extractOperators(this->_vertices,operators);
+      diagrams.push_back(this->_vertices);
+      this->setup<T>(operators,diagrams,own);
+    }
+  }
+}
+
+template <class Base> 
+void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
+{
+  DEBUG("setup(ops,config"<<own<<") called");
   this->_ownParameters = own;
   std::vector<RooListProxy*> vertices;
-  vertices.push_back(new RooListProxy("!production","set of couplings in the production vertex",this,kTRUE,kFALSE));
-  vertices.push_back(new RooListProxy("!decay",     "set of couplings in the decay vertex",     this,kTRUE,kFALSE));
-  if(own){
-    DEBUG("adding own operators");
-    this->_operators.addOwned(operators);
-    vertices[0]->addOwned(prodCouplings);
-    vertices[1]->addOwned(decCouplings);
-  } else {
-    DEBUG("adding non-own operators");
-    this->_operators.add(operators);
-    vertices[0]->add(prodCouplings);
-    vertices[1]->add(decCouplings);
+  RooArgList operators;
+
+  if(this->_couplings.size() > 0){
+    extractOperators(this->_couplings, operators);
+    vertices.push_back(new RooListProxy("!couplings",     "set of couplings in the vertex",     this,kTRUE,kFALSE));
+    if(own){
+      DEBUG("adding own operators");
+      this->_operators.addOwned(operators);
+      vertices[0]->addOwned(this->_couplings);
+    } else {
+      DEBUG("adding non-own operators");
+      this->_operators.add(operators);
+      vertices[0]->add(this->_couplings);
+    }
+  }
+
+  if(this->_prodCouplings.size() > 0 && this->_decCouplings.size() > 0){
+    extractOperators(this->_prodCouplings, operators);
+    extractOperators(this->_decCouplings, operators);
+    vertices.push_back(new RooListProxy("!production","set of couplings in the production vertex",this,kTRUE,kFALSE));
+    vertices.push_back(new RooListProxy("!decay",     "set of couplings in the decay vertex",     this,kTRUE,kFALSE));
+    if(own){
+      DEBUG("adding own operators");
+      this->_operators.addOwned(operators);
+      vertices[0]->addOwned(this->_prodCouplings);
+      vertices[1]->addOwned(this->_decCouplings);
+    } else {
+      DEBUG("adding non-own operators");
+      this->_operators.add(operators);
+      vertices[0]->add(this->_prodCouplings);
+      vertices[1]->add(this->_decCouplings);
+    }
   }
   this->_diagrams.push_back(vertices);
   if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// setup this instance with the given set of operators and vertices
-/// if own=true, the class will own the operators
-
-template <class Base>
-void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(const RooArgSet& operators, const RooAbsCollection& couplings, bool own)
-{
-  DEBUG("setup(ops,couplings,"<<own<<") called");
-  this->_ownParameters = own;
-  std::vector<RooListProxy*> vertices;
-  vertices.push_back(new RooListProxy("!couplings",     "set of couplings in the vertex",     this,kTRUE,kFALSE));
-  if(own){
-    DEBUG("adding own operators");
-    this->_operators.addOwned(operators);
-    vertices[0]->addOwned(couplings);
-  } else {
-    DEBUG("adding non-own operators");
-    this->_operators.add(operators);
-    vertices[0]->add(couplings);
-  }
-  this->_diagrams.push_back(vertices);
-  if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// disable interference between the listed operators
 
@@ -2745,11 +2527,11 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::init()
   RooRealVar* nNP0 = new RooRealVar("nNP0","nNP0",1.,0,1.);
   nNP0->setStringAttribute("NP","0");
   nNP0->setConstant(true);
-  this->_flags.add(*nNP0);  
+  this->_flags.add(*nNP0);
   RooRealVar* nNP1 = new RooRealVar("nNP1","nNP1",1.,0,1.);
   nNP1->setStringAttribute("NP","1");
   nNP1->setConstant(true);
-  this->_flags.add(*nNP1);  
+  this->_flags.add(*nNP1);
   RooRealVar* nNP2 = new RooRealVar("nNP2","nNP2",1.,0,1.);
   nNP2->setStringAttribute("NP","2");
   nNP2->setConstant(true);
@@ -2765,50 +2547,6 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::init()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// setup this instance with the given set of operators and vertices
-/// if own=true, the class will own the operators
-
-template <class Base> template<class T>
-void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(const RooArgSet& operators, const std::vector<T>& vertices, bool own)
-{
-  std::vector<std::vector<T> > diagrams;
-  diagrams.push_back(vertices);
-  this->setup<T>(operators,diagrams,own);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// setup this instance with the given set of operators and vertices
-/// if own=true, the class will own the operators
-
-template <class Base> template<class T>
-void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(const RooArgSet& operators, const std::vector<std::vector<T> >& diagrams, bool own)
-{
-  this->_ownParameters = own;
-  if(own){
-    this->_operators.addOwned(operators);
-  } else {
-    this->_operators.add(operators);
-  }
-  for(size_t j=0; j<diagrams.size(); ++j){
-    std::vector<RooListProxy*> vertices;
-    for(size_t i=0; i<diagrams[j].size(); i++){
-      std::stringstream name;
-      name << "!vertex" << i;
-      std::stringstream title;
-      title << "set of couplings in the vertex " << i;
-      vertices.push_back(new RooListProxy(name.str().c_str(),title.str().c_str(),this,kTRUE,kFALSE));
-      if(own){
-        vertices[i]->addOwned(diagrams[j][i]);
-      } else {
-        vertices[i]->add(diagrams[j][i]);
-      }
-    }
-    this->_diagrams.push_back(vertices);
-  }
-  if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// copy constructor
 
 template <class Base>
@@ -2818,7 +2556,7 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(cons
   _scale(other._scale),
   _fileName(other._fileName),
   _obsName(other._obsName),
-  _objFilter(other._objFilter),  
+  _objFilter(other._objFilter),
   _baseFolder(other._baseFolder),
   _allowNegativeYields(other._allowNegativeYields),
   _folderNames(other._folderNames),
@@ -2853,7 +2591,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setScale(double val)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get energy scale of the EFT expansion 
+/// get energy scale of the EFT expansion
 
 template <class Base>
 double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getScale()
@@ -2866,7 +2604,7 @@ double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getScale()
 
 template <class Base>
 RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase() :
-  _operators  ("operators",  "set of operators",        this,kTRUE,kFALSE),  
+  _operators  ("operators",  "set of operators",        this,kTRUE,kFALSE),
   _observables("observables","set of observables",      this,kTRUE,kFALSE),
   _binWidths  ("binWidths",  "set of bin width objects",this,kTRUE,kFALSE)
 {
@@ -2890,7 +2628,7 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::~RooLagrangianMorphBase()
 
 template <class Base>
 TObject* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::clone(const char* newname) const
-{ 
+{
   return new RooLagrangianMorphBase(*this,newname);
 }
 
@@ -3021,7 +2759,7 @@ std::map<std::string,std::string> RooLagrangianMorphing::createWeightStrings(con
     ERROR("input matrix is empty, please provide suitable input samples!");
   }
   Matrix inverse(::diagMatrix(size(matrix)));
-  double condition __attribute__((unused)) = (double)(invertMatrix(matrix,inverse));  
+  double condition __attribute__((unused)) = (double)(invertMatrix(matrix,inverse));
   auto retval = buildSampleWeightStrings(inputs,formulas,inverse);
   for(auto f:formulas){
     delete f.second;
@@ -3042,7 +2780,7 @@ RooArgSet RooLagrangianMorphing::createWeights(const RooLagrangianMorphing::Para
     ERROR("input matrix is empty, please provide suitable input samples!");
   }
   Matrix inverse(::diagMatrix(size(matrix)));
-  double condition __attribute__((unused)) = (double)(invertMatrix(matrix,inverse));  
+  double condition __attribute__((unused)) = (double)(invertMatrix(matrix,inverse));
   RooArgSet retval;
   ::buildSampleWeights(retval,(const char*)NULL /* name */,inputs,formulas,inverse);
   return retval;
@@ -3277,7 +3015,7 @@ typename RooLagrangianMorphing::RooLagrangianMorphBase<Base>::CacheElem* RooLagr
     DEBUG("creating cache from getCache function for " << this);
     #ifdef _DEBUG_
     ::printClients(this);
-    ::printServers(this);    
+    ::printServers(this);
     #endif
     
     DEBUG("current storage has size " << this->_sampleMap.size());
@@ -3419,7 +3157,7 @@ bool RooLagrangianMorphing::RooLagrangianMorphBase<Base>::hasParameter(const cha
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setParameterConstant(const char* name, bool constant) const
-{  
+{
   RooRealVar* param = this->getParameter(name);
   if(param){
     return param->setConstant(constant);
@@ -3475,7 +3213,7 @@ RooLagrangianMorphing::ParamSet RooLagrangianMorphing::RooLagrangianMorphBase<Ba
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setParameters(const RooArgList* list)
-{ 
+{
   RooFIter itr(list->fwdIterator());
   TObject* obj;
   while((obj = itr.next())){
@@ -3494,7 +3232,7 @@ RooRealVar* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getObservable()
   if(this->_observables.getSize() < 1){
     ERROR("observable not available!");
     return NULL;
-  }  
+  }
   return static_cast<RooRealVar*>(this->_observables.at(0));
 }
 
@@ -3566,7 +3304,7 @@ TH1* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::createTH1(const std::s
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// count the number of formulas that correspond to the current parameter set 
+/// count the number of formulas that correspond to the current parameter set
 
 template <class Base>
 int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::countContributingFormulas() const{
@@ -3607,7 +3345,7 @@ bool RooLagrangianMorphing::RooLagrangianMorphBase<Base>::isParameterUsed(const 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// check if there is any morphing power provided for the given coupling
-/// morphing power is provided as soon as any two samples provide 
+/// morphing power is provided as soon as any two samples provide
 /// different, non-zero values for this coupling
 
 template <class Base>
@@ -3634,7 +3372,7 @@ bool RooLagrangianMorphing::RooLagrangianMorphBase<Base>::isCouplingUsed(const c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print all the parameters and their values in the given sample to the console 
+/// print all the parameters and their values in the given sample to the console
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printParameters(const char* samplename) const
@@ -3662,7 +3400,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printSamples() const
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// print the current phyiscs values 
+/// print the current phyiscs values
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printPhysics() const
@@ -3675,7 +3413,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printPhysics() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the number of parameters in this morphing function 
+/// return the number of parameters in this morphing function
 
 template <class Base>
 int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::nParameters() const
@@ -3684,7 +3422,7 @@ int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::nParameters() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  return the number of samples in this morphing function 
+///  return the number of samples in this morphing function
 
 template <class Base>
 int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::nSamples() const
@@ -3693,7 +3431,7 @@ int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::nSamples() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the number of samples in this morphing function 
+/// return the number of samples in this morphing function
 
 template <class Base>
 int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::nPolynomials() const
@@ -3705,7 +3443,7 @@ int RooLagrangianMorphing::RooLagrangianMorphBase<Base>::nPolynomials() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print the contributing smaples and their respective weights 
+/// print the contributing smaples and their respective weights
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printEvaluation() const
@@ -3778,7 +3516,7 @@ RooLagrangianMorphing::ParamSet RooLagrangianMorphing::RooLagrangianMorphBase<Ba
 
 template <class Base>
 RooLagrangianMorphing::ParamSet RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getParameters() const
-{ 
+{
   return getParams(this->_operators);
 }
 
@@ -3792,7 +3530,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setParameters(const Pa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// reset all the flags 
+/// reset all the flags
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::resetFlags() {
@@ -3800,7 +3538,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::resetFlags() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// pdf is self-normalized 
+/// pdf is self-normalized
 
 Bool_t RooLagrangianMorphPdf::selfNormalized() const
 {
@@ -3808,7 +3546,7 @@ Bool_t RooLagrangianMorphPdf::selfNormalized() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the pdf 
+/// get the pdf
 
 RooRealSumPdf* RooLagrangianMorphPdf::getPdf() const
 {
@@ -3817,7 +3555,7 @@ RooRealSumPdf* RooLagrangianMorphPdf::getPdf() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get a standalone clone of the pdf that does not depend on this object 
+/// get a standalone clone of the pdf that does not depend on this object
 
 RooRealSumPdf* RooLagrangianMorphPdf::clonePdf() const
 {
@@ -3828,7 +3566,7 @@ RooRealSumPdf* RooLagrangianMorphPdf::clonePdf() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the func 
+/// get the func
 
 RooRealSumFunc* RooLagrangianMorphFunc::getFunc() const
 {
@@ -3837,7 +3575,7 @@ RooRealSumFunc* RooLagrangianMorphFunc::getFunc() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get a standalone clone of the func that does not depend on this object 
+/// get a standalone clone of the func that does not depend on this object
 
 RooRealSumFunc* RooLagrangianMorphFunc::cloneFunc() const
 {
@@ -3848,7 +3586,7 @@ RooRealSumFunc* RooLagrangianMorphFunc::cloneFunc() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return extended mored capabilities 
+/// return extended mored capabilities
 
 RooAbsPdf::ExtendMode RooLagrangianMorphPdf::extendMode() const
 {
@@ -3865,7 +3603,7 @@ Double_t RooLagrangianMorphPdf::expectedEvents(const RooArgSet* nset) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the number of expected events for the current parameter set 
+/// return the number of expected events for the current parameter set
 
 Double_t RooLagrangianMorphPdf::expectedEvents() const
 {
@@ -3884,7 +3622,7 @@ Double_t RooLagrangianMorphPdf::expectedEvents(const RooArgSet& nset) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return the expected uncertainity for the current parameter set 
+/// return the expected uncertainity for the current parameter set
 
 template <class Base>
 double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::expectedUncertainty() const
@@ -3919,7 +3657,7 @@ double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::expectedUncertainty(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print the parameters and their current values 
+/// print the parameters and their current values
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printParameters() const
@@ -3941,7 +3679,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printParameters() cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// print the flags and their current values 
+/// print the flags and their current values
 
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printFlags() const
@@ -3969,7 +3707,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printCouplings() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retrive the lsit of bin boundaries 
+/// retrive the lsit of bin boundaries
 
 template <class Base>
 std::list<Double_t>* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
@@ -3978,7 +3716,7 @@ std::list<Double_t>* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::binBou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// retrive the sample Hint 
+/// retrive the sample Hint
 
 template <class Base>
 std::list<Double_t>* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
@@ -3987,7 +3725,7 @@ std::list<Double_t>* RooLagrangianMorphing::RooLagrangianMorphBase<Base>::plotSa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// call getVal on the internal function 
+/// call getVal on the internal function
 
 template <class Base>
 Double_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getValV(const RooArgSet* set) const
@@ -3998,7 +3736,7 @@ Double_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getValV(const RooA
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// call getVal on the internal function 
+/// call getVal on the internal function
 
 template <class Base>
 Double_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::evaluate() const
@@ -4010,7 +3748,7 @@ Double_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// check if this PDF is a binned distribution in the given observable 
+/// check if this PDF is a binned distribution in the given observable
 
 template <class Base>
 Bool_t  RooLagrangianMorphing::RooLagrangianMorphBase<Base>::isBinnedDistribution(const RooArgSet& obs) const
@@ -4028,7 +3766,7 @@ Bool_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::checkObservables(con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Force analytical integration for a particle observalbe 
+/// Force analytical integration for a particle observalbe
 
 template<class Base>
 Bool_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::forceAnalyticalInt(const RooAbsArg &arg) const
@@ -4037,7 +3775,7 @@ Bool_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::forceAnalyticalInt(c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the mat 
+/// Retrieve the mat
 
 template<class Base>
 Int_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet, const char *rangeName) const
@@ -4046,7 +3784,7 @@ Int_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getAnalyticalIntegral
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients 
+/// Retrieve the matrix of coefficients
 
 
 template<class Base>
@@ -4056,7 +3794,7 @@ Double_t RooLagrangianMorphing::RooLagrangianMorphBase<Base>::analyticalIntegral
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients 
+/// Retrieve the matrix of coefficients
 
 
 template<class Base>
@@ -4066,7 +3804,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::printMetaArgs(std::ost
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients 
+/// Retrieve the matrix of coefficients
 
 
 template<class Base>
@@ -4076,7 +3814,7 @@ RooAbsArg::CacheMode RooLagrangianMorphing::RooLagrangianMorphBase<Base>::canNod
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients 
+/// Retrieve the matrix of coefficients
 
 
 template<class Base>
@@ -4086,7 +3824,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setCacheAndTrackHints(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients 
+/// Retrieve the matrix of coefficients
 
 template <class Base>
 TMatrixD RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getMatrix() const
@@ -4097,7 +3835,7 @@ TMatrixD RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getMatrix() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the matrix of coefficients after inversion 
+/// Retrieve the matrix of coefficients after inversion
 
 template <class Base>
 TMatrixD RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getInvertedMatrix() const
@@ -4108,12 +3846,12 @@ TMatrixD RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getInvertedMatrix(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reterieve the condition of the coefficient matrix. If the condition number 
+/// Reterieve the condition of the coefficient matrix. If the condition number
 /// is very large, then the matrix is ill-conditioned and is almost singular.
 /// The computation of the inverse is prone to large numerical errors
 
 template <class Base>
-double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getCondition() const 
+double RooLagrangianMorphing::RooLagrangianMorphBase<Base>::getCondition() const
 {
   auto cache = getCache(_curNormSet);
   if(!cache) ERROR("unable to retrieve cache!");

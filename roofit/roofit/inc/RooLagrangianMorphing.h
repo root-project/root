@@ -9,7 +9,7 @@
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
- * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  *****************************************************************************/
 
 #ifndef ROO_LAGRANGIAN_MORPH
@@ -37,7 +37,7 @@ class TFolder;
 
 namespace RooLagrangianMorphing {
   typedef std::map<const std::string,double> ParamSet;
-  typedef std::map<const std::string,int> FlagSet;  
+  typedef std::map<const std::string,int> FlagSet;
   typedef std::map<const std::string,RooLagrangianMorphing::ParamSet > ParamMap;
   typedef std::map<const std::string,RooLagrangianMorphing::FlagSet > FlagMap;
   extern bool gAllowExceptions;
@@ -59,8 +59,8 @@ namespace RooLagrangianMorphing {
   // these are a couple of helper functions for use with the Standard Model Effective Field Theory (SMEFT) Model
   // arXiv: 1709.06492
   RooArgSet makeSMEFTCouplings(RooAbsCollection& operators);
-  RooArgSet makeSMEFTggFCouplings(RooAbsCollection& operators);
-  RooArgSet makeSMEFTVBFCouplings(RooAbsCollection& operators);
+  RooArgSet makeSMEFTggfCouplings(RooAbsCollection& operators);
+  RooArgSet makeSMEFTvbfCouplings(RooAbsCollection& operators);
   RooArgSet makeSMEFTHWWCouplings(RooAbsCollection& operators);
   RooArgSet makeSMEFTHyyCouplings(RooAbsCollection& operators);
   
@@ -77,44 +77,54 @@ namespace RooLagrangianMorphing {
   int countSamples(int nprod, int ndec, int nboth);
 
   TPair* makeCrosssectionContainer(double xs, double unc);
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::string>& couplings);  
+  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::string>& couplings);
   std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<std::vector<std::string> >& vertices);
   std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings);
-  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& flagValues, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering);    
+  std::map<std::string,std::string> createWeightStrings(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& flagValues, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering);
   RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& inputFlags, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering);
   RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings);
 
+  class RooLagrangianMorphConfig {
+  public:
+    RooLagrangianMorphConfig();
+    RooLagrangianMorphConfig(const RooAbsCollection& couplings);
+    RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
+
+    void setCouplings(const RooAbsCollection& couplings);
+    void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
+    template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
+    template <class T> void setVertices(const std::vector<T>& vertices);
+    template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
+
+    virtual ~RooLagrangianMorphConfig();
+  
+  protected:
+    RooListProxy _operators;
+    std::vector<RooListProxy*> _vertices;
+    std::vector<std::vector<RooListProxy*> > _diagrams;
+    RooListProxy _couplings;
+    RooListProxy _prodCouplings;
+    RooListProxy _decCouplings;
+    std::vector<RooListProxy*> _nonInterfering;
+  };
   // some helpers to make the template mapping work
   template<class Base> struct Internal;
   template<> struct Internal<RooAbsReal> { typedef RooRealSumFunc Type; };
   template<> struct Internal<RooAbsPdf>  { typedef RooRealSumPdf  Type; };
  
   template<class Base>
-  class RooLagrangianMorphBase : public Base {
+  class RooLagrangianMorphBase : public Base, public RooLagrangianMorphConfig {
     using InternalType = typename Internal<Base>::Type;
   public:
     RooLagrangianMorphBase();
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* objFilter, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* objFilter, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* objFilter = 0, bool allowNegativeYields=true);
+//  template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
+//    template<class T> RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* objFilter, bool allowNegativeYields=true);
+    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* objFilter = 0, bool allowNegativeYields=true);
+    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
+    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
+    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true);
     RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
     RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true);
-    RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true);
     RooLagrangianMorphBase(const RooLagrangianMorphBase& other, const char *newName);
  
     virtual ~RooLagrangianMorphBase();
@@ -192,15 +202,11 @@ namespace RooLagrangianMorphing {
   protected:
 
     class CacheElem;
-
     void init();
     void printAuthors() const;
-
-    void setup(const RooArgSet& operators, const RooAbsCollection& couplings, bool ownParams = true);
-    void setup(const RooArgSet& operators, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, bool ownParams = true);
-    template<class T> void setup(const RooArgSet& operators, const std::vector<T>& vertices, bool ownParams = true);
-    template<class T> void setup(const RooArgSet& operators, const std::vector<std::vector<T> >& vertices, bool ownParams = true);
-    bool _ownParameters = false; 
+    void setup(bool ownParams = true);
+    template<class T> void setup( bool ownParams = true);
+    bool _ownParameters = false;
   
     void disableInterference(const std::vector<const char*>& nonInterfering);
     void disableInterferences(const std::vector<std::vector<const char*> >& nonInterfering);
@@ -243,17 +249,16 @@ namespace RooLagrangianMorphing {
     bool _allowNegativeYields;
     std::vector<std::string>  _folderNames;
     ParamMap _paramCards;
-    FlagMap _flagValues;    
+    FlagMap _flagValues;
     std::map<std::string,int>  _sampleMap;
     RooListProxy _physics;
     RooListProxy _operators;
-    RooListProxy _observables ; 
-    RooListProxy _binWidths ; 
+    RooListProxy _observables ;
+    RooListProxy _binWidths ;
     RooListProxy _flags;
-    std::vector<std::vector<RooListProxy*> > _diagrams;
-    std::vector<RooListProxy*> _nonInterfering;
+    //std::vector<std::vector<RooListProxy*> > _diagrams;
 
-    mutable const RooArgSet* _curNormSet ; //! 
+    mutable const RooArgSet* _curNormSet ; //!
 
   public:
 
@@ -270,13 +275,13 @@ namespace RooLagrangianMorphing {
     // specifically, it expects as an input a TFile (or TDirectory)
     // with the following layout:
     //
-    // TDirectory 
+    // TDirectory
     //  |-sample1
     //  | |-param_card     // a TH1 which encodes the EFT parameter values used for this sample
-    //  | | histogram      // a TH1 with a distribution of some physical observable 
+    //  | | histogram      // a TH1 with a distribution of some physical observable
     //  | |-subfolder1     // a subfolder (optional)
-    //  | | |-histogram1   // another TH1 with a distribution of some physical observable 
-    //  | | |-histogram2   // another TH1 with a distribution of some physical observalbe 
+    //  | | |-histogram1   // another TH1 with a distribution of some physical observable
+    //  | | |-histogram2   // another TH1 with a distribution of some physical observalbe
     //  | | ...            // more of these
     //  |-sample2
     //  | |-param_card     // a TH1 which encodes the EFT parameter values used for this sample
@@ -305,60 +310,33 @@ namespace RooLagrangianMorphing {
 
 class RooLagrangianMorphFunc : public RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal> {
 public:
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* objFilter, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,nonInterfering,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,nonInterfering,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,nonInterfering,objFilter,allowNegativeYields){}
+/*  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,basefolder,folders,objFilter,allowNegativeYields){}
   template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* objFilter, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,nonInterfering,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,nonInterfering,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,nonInterfering,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,nonInterfering,basefolder,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,nonInterfering,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,nonInterfering,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,basefolder,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,objFilter,allowNegativeYields){}
+*/
+  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName,const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,config,basefolder,folders,objFilter,allowNegativeYields){}
+  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,config,folders,objFilter,allowNegativeYields){}
+  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields){}
   RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields){}
   RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields){}
+
   RooLagrangianMorphFunc(const RooLagrangianMorphFunc& other, const char* name) : RooLagrangianMorphBase(other,name){}
   RooLagrangianMorphFunc() : RooLagrangianMorphBase(){}
-  
   RooRealSumFunc* getFunc() const;
   RooRealSumFunc* cloneFunc() const;
   ClassDefOverride(RooLagrangianMorphFunc,2)
 };
 class RooLagrangianMorphPdf : public RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf> {
 public:
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* objFilter, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,nonInterfering,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,nonInterfering,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,nonInterfering,objFilter,allowNegativeYields){}
+/*  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<std::vector<T> >& diagrams, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,diagrams,basefolder,folders,objFilter,allowNegativeYields){}
   template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const char* objFilter, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,nonInterfering,basefolder,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,nonInterfering,folders,objFilter,allowNegativeYields){}
-  template<class T> RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const std::vector<T>& vertices, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,vertices,nonInterfering,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,nonInterfering,basefolder,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,nonInterfering,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const std::vector<std::vector<const char*> >& nonInterfering, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,nonInterfering,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,basefolder,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,prodCouplings,decCouplings,objFilter,allowNegativeYields){}
+*/ 
+  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,config,basefolder,folders,objFilter,allowNegativeYields){}
+  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName,const RooLagrangianMorphConfig& config, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,config,folders,objFilter,allowNegativeYields){}
+  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields){}
   RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields){}
   RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,folders,objFilter,allowNegativeYields){}
-  RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,objFilter,allowNegativeYields){}
   RooLagrangianMorphPdf(const RooLagrangianMorphPdf& other, const char* name) : RooLagrangianMorphBase(other,name){}
   RooLagrangianMorphPdf() : RooLagrangianMorphBase(){}
-
   virtual RooAbsPdf::ExtendMode extendMode() const override;
   virtual Double_t expectedEvents(const RooArgSet* nset) const override;
   virtual Double_t expectedEvents(const RooArgSet& nset) const override;
@@ -371,13 +349,13 @@ public:
 
 
 
-#define MAKE_ROOLAGRANGIANMORPH(BASE,CLASSNAME) public:			\
+#define MAKE_ROOLAGRANGIANMORPH(BASE,CLASSNAME) public:            \
   CLASSNAME(const char *name, const char *title, const char* fileName, const char* obsName, const char* basefolder, const RooArgList& folders, const char* objFilter=0, bool allowNegativeYields=true): RooLagrangianMorph ## BASE(name,title,fileName,obsName,basefolder,folders,objFilter,allowNegativeYields) {this->makeCouplings();}; \
   CLASSNAME(const char *name, const char *title, const char* fileName, const char* obsName, const RooArgList& folders, const char* objFilter=0, bool allowNegativeYields=true) : RooLagrangianMorph ## BASE(name,title,fileName,obsName,folders,objFilter,allowNegativeYields){this->makeCouplings();}; \
   CLASSNAME(const char *name, const char *title, const char* fileName, const char* obsName, const char* objFilter=0, bool allowNegativeYields=true) : RooLagrangianMorph ## BASE(name,title,fileName,obsName,objFilter,allowNegativeYields){this->makeCouplings();}; \
   CLASSNAME(const CLASSNAME& other, const char* newname) : RooLagrangianMorph ## BASE(other,newname){ }; \
   CLASSNAME():RooLagrangianMorph ## BASE(){ };                          \
-  virtual ~CLASSNAME(){};						\
+  virtual ~CLASSNAME(){};                        \
   virtual TObject* clone(const char* newname) const override { return new CLASSNAME(*this,newname); };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,7 +368,7 @@ class RooHCggfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
+//    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
   }
 };
 class RooHCggfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -399,7 +377,7 @@ class RooHCggfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
+//    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
   }
 };
 
@@ -409,7 +387,7 @@ class RooHCvbfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
+//    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
   }
 };
 class RooHCvbfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -418,37 +396,41 @@ class RooHCvbfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
+    this->setCouplings(RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+    this->setup(true);
   }
 };
 
 class RooHCggfZZMorphFunc : public RooLagrangianMorphFunc {
   MAKE_ROOLAGRANGIANMORPH(Func,RooHCggfZZMorphFunc)
-  ClassDefOverride(RooHCggfZZMorphFunc,1) 
+  ClassDefOverride(RooHCggfZZMorphFunc,1)
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfZZ");
-    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
+//    RooLagrangianMorphConfig config;
+    this->setCouplings(RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+    this->setup(true);
   }
 };
 class RooHCggfZZMorphPdf : public RooLagrangianMorphPdf {
   MAKE_ROOLAGRANGIANMORPH(Pdf,RooHCggfZZMorphPdf)
-  ClassDefOverride(RooHCggfZZMorphPdf,1) 
+  ClassDefOverride(RooHCggfZZMorphPdf,1)
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfZZ");
-    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
+    RooLagrangianMorphConfig config;
+    config.setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+    this->setup(true);
   }
 };
-
 class RooHCvbfZZMorphFunc : public RooLagrangianMorphFunc {
   MAKE_ROOLAGRANGIANMORPH(Func,RooHCvbfZZMorphFunc)
   ClassDefOverride(RooHCvbfZZMorphFunc,1)
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfZZ");
-    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
-  }  
+  //  this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
+  }
 };
 class RooHCvbfZZMorphPdf : public RooLagrangianMorphPdf {
   MAKE_ROOLAGRANGIANMORPH(Pdf,RooHCvbfZZMorphPdf)
@@ -456,8 +438,8 @@ class RooHCvbfZZMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfZZ");
-    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
-  }  
+  //  this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
+  }
 };
 
 class RooHCvbfMuMuMorphFunc : public RooLagrangianMorphFunc {
@@ -466,8 +448,8 @@ class RooHCvbfMuMuMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfMuMu");
-    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas),true);
-  }    
+  //  this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas),true);
+  }
 };
 class RooHCvbfMuMuMorphPdf : public RooLagrangianMorphPdf {
   MAKE_ROOLAGRANGIANMORPH(Pdf,RooHCvbfMuMuMorphPdf)
@@ -475,21 +457,21 @@ class RooHCvbfMuMuMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfMuMu");
-    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas),true);
-  }    
+ //   this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas),true);
+  }
 };
 
 #ifndef __CINT__
 ClassImp(RooHCggfWWMorphFunc)
-ClassImp(RooHCvbfWWMorphFunc) 
-ClassImp(RooHCggfZZMorphFunc) 
-ClassImp(RooHCvbfZZMorphFunc) 
-ClassImp(RooHCvbfMuMuMorphFunc) 
+ClassImp(RooHCvbfWWMorphFunc)
+ClassImp(RooHCggfZZMorphFunc)
+ClassImp(RooHCvbfZZMorphFunc)
+ClassImp(RooHCvbfMuMuMorphFunc)
 ClassImp(RooHCggfWWMorphPdf)
-ClassImp(RooHCvbfWWMorphPdf) 
-ClassImp(RooHCggfZZMorphPdf) 
-ClassImp(RooHCvbfZZMorphPdf) 
-ClassImp(RooHCvbfMuMuMorphPdf) 
+ClassImp(RooHCvbfWWMorphPdf)
+ClassImp(RooHCggfZZMorphPdf)
+ClassImp(RooHCvbfZZMorphPdf)
+ClassImp(RooHCvbfMuMuMorphPdf)
 #endif
 
 
@@ -502,8 +484,10 @@ class RooSMEFTggfMorphFunc : public RooLagrangianMorphFunc {
   ClassDefOverride(RooSMEFTggfMorphFunc,1)
   protected:
   void makeCouplings(){
+    RooLagrangianMorphConfig config;
     RooArgSet kappas("ggf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),true);
+    config.setCouplings(RooLagrangianMorphing::makeSMEFTggfCouplings(kappas));
+    this->setup(true);
   }
 };
 class RooSMEFTggfMorphPdf : public RooLagrangianMorphPdf {
@@ -512,7 +496,7 @@ class RooSMEFTggfMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfMorphFunc : public RooLagrangianMorphFunc {
@@ -521,7 +505,7 @@ class RooSMEFTvbfMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfMorphPdf : public RooLagrangianMorphPdf {
@@ -530,7 +514,7 @@ class RooSMEFTvbfMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbf");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
   }
 };
 
@@ -540,7 +524,7 @@ class RooSMEFTggfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 class RooSMEFTggfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -549,7 +533,7 @@ class RooSMEFTggfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 
@@ -559,7 +543,7 @@ class RooSMEFTvbfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -568,29 +552,28 @@ class RooSMEFTvbfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 
 #ifndef __CINT__
 ClassImp(RooSMEFTggfMorphFunc)
-ClassImp(RooSMEFTvbfMorphFunc) 
-ClassImp(RooSMEFTzhlepMorphFunc)
-ClassImp(RooSMEFTwhlepMorphFunc)
-ClassImp(RooSMEFTtthMorphFunc)
+ClassImp(RooSMEFTvbfMorphFunc)
+//ClassImp(RooSMEFTzhlepMorphFunc)
+//ClassImp(RooSMEFTwhlepMorphFunc)
+//ClassImp(RooSMEFTtthMorphFunc)
 
 ClassImp(RooSMEFTggfMorphPdf)
-ClassImp(RooSMEFTvbfMorphPdf) 
-ClassImp(RooSMEFTzhlepMorphPdf)
-ClassImp(RooSMEFTwhlepMorphPdf)
-ClassImp(RooSMEFTtthMorphPdf)
+ClassImp(RooSMEFTvbfMorphPdf)
+//ClassImp(RooSMEFTzhlepMorphPdf)
+//ClassImp(RooSMEFTwhlepMorphPdf)
+//ClassImp(RooSMEFTtthMorphPdf)
 
 ClassImp(RooSMEFTggfWWMorphFunc)
-ClassImp(RooSMEFTvbfWWMorphFunc) 
+ClassImp(RooSMEFTvbfWWMorphFunc)
 
 ClassImp(RooSMEFTggfWWMorphPdf)
 ClassImp(RooSMEFTvbfWWMorphPdf)
 #endif
 
 #endif
-
