@@ -318,65 +318,72 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
 
 const char *TMySQLStatement::ConvertToString(Int_t npar)
 {
-   if (fBuffer[npar].fResNull) return nullptr;
+   if (fBuffer[npar].fResNull)
+      return nullptr;
 
    void *addr = fBuffer[npar].fMem;
    Bool_t sig = fBuffer[npar].fSign;
 
-   if (!addr) return nullptr;
+   if (!addr)
+      return nullptr;
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
       return (const char *) addr;
 
-   char buf[100];
+   const int kSize = 100;
+   char buf[kSize];
+   int len = 0;
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
-         if (sig) snprintf(buf,100,"%d",*((int*) addr));
-             else snprintf(buf,100,"%u",*((unsigned int*) addr));
+         if (sig) len = snprintf(buf, kSize, "%d",*((int*) addr));
+             else len = snprintf(buf, kSize, "%u",*((unsigned int*) addr));
          break;
       case MYSQL_TYPE_LONGLONG:
-         if (sig) snprintf(buf,100,"%lld",*((Long64_t*) addr)); else
-                  snprintf(buf,100,"%llu",*((ULong64_t*) addr));
+         if (sig) len = snprintf(buf, kSize, "%lld",*((Long64_t*) addr)); else
+                  len = snprintf(buf, kSize, "%llu",*((ULong64_t*) addr));
          break;
       case MYSQL_TYPE_SHORT:
-         if (sig) snprintf(buf,100,"%hd",*((short*) addr)); else
-                  snprintf(buf,100,"%hu",*((unsigned short*) addr));
+         if (sig) len = snprintf(buf, kSize, "%hd",*((short*) addr)); else
+                  len = snprintf(buf, kSize, "%hu",*((unsigned short*) addr));
          break;
       case MYSQL_TYPE_TINY:
-         if (sig) snprintf(buf,100,"%d",*((char*) addr)); else
-                  snprintf(buf,100,"%u",*((unsigned char*) addr));
+         if (sig) len = snprintf(buf, kSize, "%d",*((char*) addr)); else
+                  len = snprintf(buf, kSize, "%u",*((unsigned char*) addr));
          break;
       case MYSQL_TYPE_FLOAT:
-         snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((float*) addr));
+         len = snprintf(buf, kSize, TSQLServer::GetFloatFormat(), *((float*) addr));
          break;
       case MYSQL_TYPE_DOUBLE:
-         snprintf(buf, 100, TSQLServer::GetFloatFormat(), *((double*) addr));
+         len = snprintf(buf, kSize, TSQLServer::GetFloatFormat(), *((double*) addr));
          break;
       case MYSQL_TYPE_DATETIME:
       case MYSQL_TYPE_TIMESTAMP: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         snprintf(buf,100,"%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
-                  tm->year, tm->month,  tm->day,
-                  tm->hour, tm->minute, tm->second);
+         len = snprintf(buf, kSize, "%4.4d-%2.2d-%2.2d %2.2d:%2.2d:%2.2d",
+                            tm->year, tm->month,  tm->day,
+                            tm->hour, tm->minute, tm->second);
          break;
       }
       case MYSQL_TYPE_TIME: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         snprintf(buf,100,"%2.2d:%2.2d:%2.2d",
-                  tm->hour, tm->minute, tm->second);
+         len = snprintf(buf, kSize, "%2.2d:%2.2d:%2.2d",
+                             tm->hour, tm->minute, tm->second);
          break;
       }
       case MYSQL_TYPE_DATE: {
          MYSQL_TIME* tm = (MYSQL_TIME*) addr;
-         snprintf(buf,100,"%4.4d-%2.2d-%2.2d",
-                  tm->year, tm->month,  tm->day);
+         len = snprintf(buf, kSize, "%4.4d-%2.2d-%2.2d",
+                             tm->year, tm->month,  tm->day);
          break;
       }
       default:
          return nullptr;
    }
+
+   if (len >= kSize)
+      SetError(-1, Form("Cannot convert param %d into string - buffer too small", npar));
 
    fBuffer[npar].fStrBuffer = buf;
 
