@@ -39,13 +39,7 @@ TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement
    fEnv(env),
    fConn(conn),
    fStmt(stmt),
-   fResult(0),
-   fFieldInfo(0),
-   fBuffer(0),
-   fBufferSize(0),
    fNumIterations(niter),
-   fIterCounter(0),
-   fWorkingMode(0),
    fTimeFmt(TOracleServer::GetDatimeFormat())
 {
    if (fStmt) {
@@ -81,11 +75,11 @@ void TOracleStatement::Close(Option_t *)
 
    CloseBuffer();
 
-   fConn = 0;
-   fStmt = 0;
-   fResult = 0;
-   fFieldInfo = 0;
-   fIterCounter = 0;
+   fConn = nullptr;
+   fStmt =  nullptr;
+   fResult = nullptr;
+   fFieldInfo = nullptr;
+   fIterCounter = nullptr;
 }
 
 // Check that statement is ready for use
