@@ -42,7 +42,7 @@ protected:
       ULong_t       fResLength{0};        //! length argument
       my_bool       fResNull{false};      //! indicates if argument is null
       char         *fStrBuffer{nullptr};  //! special buffer to be used for string conversions
-      char         *fFieldName{nullptr};  //! buffer for field name
+      std::string   fFieldName;           //! buffer for field name
    };
 
    MYSQL_STMT      *fStmt{nullptr};       //! executed statement
