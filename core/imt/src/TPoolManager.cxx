@@ -48,7 +48,7 @@ namespace ROOT {
                float cfs_period;
                f>>cfs_period;
                f.close();
-               return (cfs_quota+cfs_period-1)/cfs_period;
+               return static_cast<int>(std::ceil(cfs_quota/cfs_period));
             }
          }
       #endif
