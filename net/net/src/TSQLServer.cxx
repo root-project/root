@@ -61,7 +61,7 @@ const char* TSQLServer::fgFloatFmt = "%e";
 TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 {
    TPluginHandler *h;
-   TSQLServer *serv = 0;
+   TSQLServer *serv = nullptr;
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TSQLServer", db))) {
       if (h->LoadPlugin() == -1)
@@ -71,7 +71,7 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 
    if (serv && serv->IsZombie()) {
       delete serv;
-      serv = 0;
+      serv = nullptr;
    }
 
    return serv;
@@ -79,13 +79,13 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute sql query.
-/// Usefull for commands like DROP TABLE or INSERT, where result set
+/// Useful for commands like DROP TABLE or INSERT, where result set
 /// is not interested. Return kTRUE if no error
 
 Bool_t TSQLServer::Exec(const char* sql)
 {
    TSQLResult* res = Query(sql);
-   if (res==0) return kFALSE;
+   if (!res) return kFALSE;
 
    delete res;
 
@@ -110,7 +110,7 @@ Int_t TSQLServer::GetErrorCode() const
 
 const char* TSQLServer::GetErrorMsg() const
 {
-   return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
+   return GetErrorCode()==0 ? nullptr : fErrorMsg.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ Bool_t TSQLServer::Rollback()
 /// Parameter wild specifies wildcard for table names.
 /// It either contains exact table name to verify that table is exists or
 /// wildcard with "%" (any number of symbols) and "_" (exactly one symbol).
-/// Example of vaild wildcards: "%", "%name","___user__".
+/// Example of valid wildcards: "%", "%name","___user__".
 /// If wild=="", list of all available tables will be produced.
 /// List contain just tables names in the TObjString.
 /// List must be deleted by the user.
@@ -182,13 +182,13 @@ Bool_t TSQLServer::Rollback()
 TList* TSQLServer::GetTablesList(const char* wild)
 {
    TSQLResult* res = GetTables(fDB.Data(), wild);
-   if (res==0) return 0;
+   if (!res) return nullptr;
 
-   TList* lst = 0;
-   TSQLRow* row = 0;
-   while ((row = res->Next())!=0) {
+   TList *lst = nullptr;
+   TSQLRow *row = nullptr;
+   while ((row = res->Next())!=nullptr) {
       const char* tablename = row->GetField(0);
-      if (lst==0) {
+      if (!lst) {
          lst = new TList;
          lst->SetOwner(kTRUE);
       }
@@ -207,21 +207,21 @@ TList* TSQLServer::GetTablesList(const char* wild)
 
 Bool_t TSQLServer::HasTable(const char* tablename)
 {
-   if ((tablename==0) || (strlen(tablename)==0)) return kFALSE;
+   if (!tablename || (strlen(tablename)==0)) return kFALSE;
 
-   TList* lst = GetTablesList(tablename);
-   if (lst==0) return kFALSE;
+   TList *lst = GetTablesList(tablename);
+   if (!lst) return kFALSE;
 
    Bool_t res = kFALSE;
 
-   TObject* obj = 0;
+   TObject* obj = nullptr;
    TIter iter(lst);
 
    // Can be, that tablename contains "_" or "%" symbols, which are wildcards in SQL,
    // therefore more than one table can be returned as result.
    // One should check that exactly same name is appears
 
-   while ((obj = iter()) != 0)
+   while ((obj = iter()) != nullptr)
       if (strcmp(tablename, obj->GetName())==0) res = kTRUE;
 
    delete lst;
@@ -229,22 +229,22 @@ Bool_t TSQLServer::HasTable(const char* tablename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Producec TSQLTableInfo object, which contain info about
+/// Produce TSQLTableInfo object, which contain info about
 /// table itself and each table column
 /// Object must be deleted by user.
 
 TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
 {
-   if ((tablename==0) || (*tablename==0)) return 0;
+   if (!tablename || (*tablename==0)) return 0;
 
    TSQLResult* res = GetColumns(fDB.Data(), tablename);
-   if (res==0) return 0;
+   if (!res) return nullptr;
 
-   TList* lst = 0;
-   TSQLRow* row = 0;
-   while ((row = res->Next())!=0) {
-      const char* columnname = row->GetField(0);
-      if (lst==0) lst = new TList;
+   TList* lst = nullptr;
+   TSQLRow* row = nullptr;
+   while ((row = res->Next())!=nullptr) {
+      const char *columnname = row->GetField(0);
+      if (!lst) lst = new TList;
       lst->Add(new TSQLColumnInfo(columnname));
       delete row;
    }
@@ -259,7 +259,7 @@ TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
 
 void TSQLServer::SetFloatFormat(const char* fmt)
 {
-   if (fmt==0) fmt = "%e";
+   if (!fmt) fmt = "%e";
    fgFloatFmt = fmt;
 }
 
