@@ -35,13 +35,7 @@ ULong64_t TMySQLStatement::fgAllocSizeLimit = 0x8000000; // 128 Mb
 
 TMySQLStatement::TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout) :
    TSQLStatement(errout),
-   fStmt(stmt),
-   fNumBuffers(0),
-   fBind(0),
-   fBuffer(0),
-   fWorkingMode(0),
-   fIterationCount(-1),
-   fNeedParBind(kFALSE)
+   fStmt(stmt)
 {
    ULong_t paramcount = mysql_stmt_param_count(fStmt);
 
@@ -69,7 +63,7 @@ void TMySQLStatement::Close(Option_t *)
    if (fStmt)
       mysql_stmt_close(fStmt);
 
-   fStmt = 0;
+   fStmt = nullptr;
 
    FreeBuffers();
 }
@@ -313,29 +307,38 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
    memset(fBind, 0, sizeof(MYSQL_BIND)*fNumBuffers);
 
    fBuffer = new TParamData[fNumBuffers];
-   memset(fBuffer, 0, sizeof(TParamData)*fNumBuffers);
+   for (int n=0;n<fNumBuffers;++n) {
+      fBuffer[n].fMem = nullptr;
+      fBuffer[n].fSize = 0;
+      fBuffer[n].fSqlType = 0;
+      fBuffer[n].fSign = kFALSE;
+      fBuffer[n].fResLength = 0;
+      fBuffer[n].fResNull = false;
+      fBuffer[n].fStrBuffer = nullptr;
+      fBuffer[n].fFieldName = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert field value to string.
 
-const char* TMySQLStatement::ConvertToString(Int_t npar)
+const char *TMySQLStatement::ConvertToString(Int_t npar)
 {
-   if (fBuffer[npar].fResNull) return 0;
+   if (fBuffer[npar].fResNull) return nullptr;
 
-   void* addr = fBuffer[npar].fMem;
+   void *addr = fBuffer[npar].fMem;
    Bool_t sig = fBuffer[npar].fSign;
 
-   if (addr==0) return 0;
+   if (!addr) return nullptr;
 
    if ((fBind[npar].buffer_type==MYSQL_TYPE_STRING) ||
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
-      return (const char*) addr;
+      return (const char *) addr;
 
-   if (fBuffer[npar].fStrBuffer==0)
+   if (!fBuffer[npar].fStrBuffer)
       fBuffer[npar].fStrBuffer = new char[100];
 
-   char* buf = fBuffer[npar].fStrBuffer;
+   char *buf = fBuffer[npar].fStrBuffer;
 
    switch(fBind[npar].buffer_type) {
       case MYSQL_TYPE_LONG:
@@ -381,7 +384,7 @@ const char* TMySQLStatement::ConvertToString(Int_t npar)
          break;
       }
       default:
-         return 0;
+         return nullptr;
    }
    return buf;
 }
