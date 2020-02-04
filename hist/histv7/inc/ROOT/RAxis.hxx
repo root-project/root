@@ -733,7 +733,7 @@ public:
    double GetBinCenter(int bin) const noexcept
    {
       if (IsUnderflowBin(bin))
-         return std::numeric_limits<double>::min();
+         return std::numeric_limits<double>::lowest();
       if (IsOverflowBin(bin))
          return std::numeric_limits<double>::max();
       return 0.5 * (fBinBorders[bin - 1] + fBinBorders[bin]);
@@ -747,7 +747,7 @@ public:
    double GetBinFrom(int bin) const noexcept
    {
       if (IsUnderflowBin(bin))
-         return std::numeric_limits<double>::min();
+         return std::numeric_limits<double>::lowest();
       // bin 0 is underflow;
       // bin 1 starts at fBinBorders[0]
       return fBinBorders[bin - 1];
