@@ -67,7 +67,7 @@ public:
    TOracleStatement(const TOracleStatement &) = delete;
    TOracleStatement& operator=(const TOracleStatement &) = delete;
 
-   virtual     void        Close(Option_t * = "");
+   void        Close(Option_t * = "") final;
 
    Int_t       GetBufferLength() const final { return fNumIterations; }
    Int_t       GetNumParameters() final;

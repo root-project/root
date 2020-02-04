@@ -39,6 +39,8 @@ public:
 
    virtual Bool_t      NextIteration() = 0;
 
+   virtual   void      Close(Option_t * = "") {}
+
    virtual Bool_t      SetNull(Int_t) { return kFALSE; }
    virtual Bool_t      SetInt(Int_t, Int_t) { return kFALSE; }
    virtual Bool_t      SetUInt(Int_t, UInt_t) { return kFALSE; }
