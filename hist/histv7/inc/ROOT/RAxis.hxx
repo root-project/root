@@ -567,6 +567,10 @@ inline bool operator==(const RAxisEquidistant &lhs, const RAxisEquidistant &rhs)
    return lhs.GetNBins() == rhs.GetNBins() && lhs.GetMinimum() == rhs.GetMinimum() &&
           lhs.GetInverseBinWidth() == rhs.GetInverseBinWidth();
 }
+inline bool operator!=(const RAxisEquidistant &lhs, const RAxisEquidistant &rhs) noexcept
+{
+   return !(lhs == rhs);
+}
 
 /** An axis that can extend its range, keeping the number of its bins unchanged.
  The axis is constructed with an initial range. Apart from its ability to
