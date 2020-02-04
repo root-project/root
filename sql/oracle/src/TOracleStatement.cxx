@@ -79,7 +79,7 @@ void TOracleStatement::Close(Option_t *)
    fStmt =  nullptr;
    fResult = nullptr;
    fFieldInfo = nullptr;
-   fIterCounter = nullptr;
+   fIterCounter = 0;
 }
 
 // Check that statement is ready for use
@@ -134,9 +134,8 @@ void TOracleStatement::SetBufferSize(Int_t size)
     fBufferSize = size;
     fBuffer = new TBufferRec[size];
     for (Int_t n=0;n<fBufferSize;n++) {
-       fBuffer[n].strbuf = 0;
+       fBuffer[n].strbuf = nullptr;
        fBuffer[n].strbufsize = -1;
-       fBuffer[n].namebuf = 0;
     }
 }
 
@@ -148,7 +147,6 @@ void TOracleStatement::CloseBuffer()
    if (fBuffer) {
       for (Int_t n=0;n<fBufferSize;n++) {
          delete[] fBuffer[n].strbuf;
-         delete[] fBuffer[n].namebuf;
       }
 
       delete[] fBuffer;
@@ -661,19 +659,12 @@ const char* TOracleStatement::GetFieldName(Int_t npar)
 {
    CheckGetField("GetFieldName", 0);
 
-   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return 0;
+   if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return nullptr;
 
-   if (fBuffer[npar].namebuf!=0) return fBuffer[npar].namebuf;
+   if (fBuffer[npar].namebuf.empty())
+      fBuffer[npar].namebuf = (*fFieldInfo)[npar].getString(MetaData::ATTR_NAME);
 
-   std::string buff = (*fFieldInfo)[npar].getString(MetaData::ATTR_NAME);
-
-   if (buff.length()==0) return 0;
-
-   fBuffer[npar].namebuf = new char[buff.length()+1];
-
-   strcpy(fBuffer[npar].namebuf, buff.c_str());
-
-   return fBuffer[npar].namebuf;
+   return fBuffer[npar].namebuf.empty() ? nullptr : fBuffer[npar].namebuf.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
