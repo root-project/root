@@ -300,52 +300,54 @@ TEST(AxisTest, Equidistant) {
 
 TEST(AxisTest, Growable) {
   auto test = [](RAxisGrow& axis, std::string_view title) {
-    EXPECT_EQ(axis.GetTitle(), title);
-    EXPECT_EQ(axis.CanGrow(), true);
-    EXPECT_EQ(axis.GetNBinsNoOver(), 10);
-    EXPECT_EQ(axis.GetNBins(), 10);
-    EXPECT_EQ(axis.GetNOverflowBins(), 0);
-    EXPECT_EQ(axis.GetUnderflowBin(), -1);
-    EXPECT_EQ(axis.IsUnderflowBin(-1), true);
-    EXPECT_EQ(axis.IsUnderflowBin(0), false);
-    EXPECT_EQ(axis.IsUnderflowBin(1), false);
-    EXPECT_EQ(axis.GetOverflowBin(), 10);
-    EXPECT_EQ(axis.IsOverflowBin(9), false);
-    EXPECT_EQ(axis.IsOverflowBin(10), true);
-    EXPECT_EQ(axis.IsOverflowBin(11), true);
-    EXPECT_EQ(*axis.begin(), 0);
-    EXPECT_EQ(*axis.begin_with_underflow(), 0);
-    EXPECT_EQ(*axis.end(), 10);
-    EXPECT_EQ(*axis.end_with_overflow(), 10);
+    const RAxisGrow& caxis = axis;
 
-    EXPECT_EQ(axis.FindBin(-100), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.FindBin(1.19), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.FindBin(1.21), 0);
-    EXPECT_EQ(axis.FindBin(1.41), 0);
-    EXPECT_EQ(axis.FindBin(1.43), 1);
-    EXPECT_EQ(axis.FindBin(3.39), 9);
-    EXPECT_EQ(axis.FindBin(3.41), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.FindBin(1000), RAxisBase::kIgnoreBin);
-    EXPECT_EQ(axis.GetMinimum(), 1.2);
-    EXPECT_DOUBLE_EQ(axis.GetMaximum(), 3.4);
-    EXPECT_DOUBLE_EQ(axis.GetBinWidth(), 0.22);
-    EXPECT_DOUBLE_EQ(axis.GetInverseBinWidth(), 1/0.22);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(0), 1.2);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), 1.31);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), 1.42);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(1), 1.42);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(1), 1.53);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(1), 1.64);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(9), 3.18);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(9), 3.29);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(9), 3.4);
+    EXPECT_EQ(caxis.GetTitle(), title);
+    EXPECT_EQ(caxis.CanGrow(), true);
+    EXPECT_EQ(caxis.GetNBinsNoOver(), 10);
+    EXPECT_EQ(caxis.GetNBins(), 10);
+    EXPECT_EQ(caxis.GetNOverflowBins(), 0);
+    EXPECT_EQ(caxis.GetUnderflowBin(), -1);
+    EXPECT_EQ(caxis.IsUnderflowBin(-1), true);
+    EXPECT_EQ(caxis.IsUnderflowBin(0), false);
+    EXPECT_EQ(caxis.IsUnderflowBin(1), false);
+    EXPECT_EQ(caxis.GetOverflowBin(), 10);
+    EXPECT_EQ(caxis.IsOverflowBin(9), false);
+    EXPECT_EQ(caxis.IsOverflowBin(10), true);
+    EXPECT_EQ(caxis.IsOverflowBin(11), true);
+    EXPECT_EQ(*caxis.begin(), 0);
+    EXPECT_EQ(*caxis.begin_with_underflow(), 0);
+    EXPECT_EQ(*caxis.end(), 10);
+    EXPECT_EQ(*caxis.end_with_overflow(), 10);
+
+    EXPECT_EQ(caxis.FindBin(-100), RAxisBase::kIgnoreBin);
+    EXPECT_EQ(caxis.FindBin(1.19), RAxisBase::kIgnoreBin);
+    EXPECT_EQ(caxis.FindBin(1.21), 0);
+    EXPECT_EQ(caxis.FindBin(1.41), 0);
+    EXPECT_EQ(caxis.FindBin(1.43), 1);
+    EXPECT_EQ(caxis.FindBin(3.39), 9);
+    EXPECT_EQ(caxis.FindBin(3.41), RAxisBase::kIgnoreBin);
+    EXPECT_EQ(caxis.FindBin(1000), RAxisBase::kIgnoreBin);
+    EXPECT_EQ(caxis.GetMinimum(), 1.2);
+    EXPECT_DOUBLE_EQ(caxis.GetMaximum(), 3.4);
+    EXPECT_DOUBLE_EQ(caxis.GetBinWidth(), 0.22);
+    EXPECT_DOUBLE_EQ(caxis.GetInverseBinWidth(), 1/0.22);
+    EXPECT_DOUBLE_EQ(caxis.GetBinFrom(0), 1.2);
+    EXPECT_DOUBLE_EQ(caxis.GetBinCenter(0), 1.31);
+    EXPECT_DOUBLE_EQ(caxis.GetBinTo(0), 1.42);
+    EXPECT_DOUBLE_EQ(caxis.GetBinFrom(1), 1.42);
+    EXPECT_DOUBLE_EQ(caxis.GetBinCenter(1), 1.53);
+    EXPECT_DOUBLE_EQ(caxis.GetBinTo(1), 1.64);
+    EXPECT_DOUBLE_EQ(caxis.GetBinFrom(9), 3.18);
+    EXPECT_DOUBLE_EQ(caxis.GetBinCenter(9), 3.29);
+    EXPECT_DOUBLE_EQ(caxis.GetBinTo(9), 3.4);
     // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
     //
     // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44 - 1e-7), 1);
     // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44), 1);
     // EXPECT_DOUBLE_EQ(axis.GetBinIndexForLowEdge(1.44 + 1e-7), 1);
 
-    RAxisConfig cfg(axis);
+    RAxisConfig cfg(caxis);
     EXPECT_EQ(cfg.GetTitle(), title);
     EXPECT_EQ(cfg.GetNBinsNoOver(), 10);
     EXPECT_EQ(cfg.GetKind(), RAxisConfig::kGrow);
