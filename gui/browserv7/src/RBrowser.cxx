@@ -155,15 +155,7 @@ void RBrowser::ProcessSaveFile(const std::string &arg)
 
 long RBrowser::ProcessRunCommand(const std::string &file_path)
 {
-   // Split the path (filename + text)
-   std::vector<std::string> split;
-   std::string buffer;
-   std::istringstream path(file_path);
-   if (std::getline(path, buffer, ':'))
-      split.push_back(buffer);
-   if (std::getline(path, buffer, '\0'))
-      split.push_back(buffer);
-   return gInterpreter->ExecuteMacro(split[0].c_str());
+   return gInterpreter->ExecuteMacro(file_path.c_str());
 }
 
 /////////////////////////////////////////////////////////////////////////////////
