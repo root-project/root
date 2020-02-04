@@ -216,27 +216,38 @@ TEST(AxisTest, Iterator) {
   }
 }
 
+// Common test items for RAxisBase child classes
+void test_axis_base(const RAxisBase& axis,
+                    std::string_view title,
+                    bool can_grow,
+                    int n_bins_no_over) {
+  EXPECT_EQ(axis.GetTitle(), title);
+  EXPECT_EQ(axis.CanGrow(), can_grow);
+  EXPECT_EQ(axis.GetNBinsNoOver(), n_bins_no_over);
+  const int n_overflow_bins = can_grow ? 0 : 2;
+  EXPECT_EQ(axis.GetNOverflowBins(), n_overflow_bins);
+  EXPECT_EQ(axis.GetNBins(), n_bins_no_over + n_overflow_bins);
+  const int underflow_bin = can_grow ? -1 : 0;
+  EXPECT_EQ(axis.GetUnderflowBin(), underflow_bin);
+  EXPECT_EQ(axis.IsUnderflowBin(underflow_bin-1), true);
+  EXPECT_EQ(axis.IsUnderflowBin(underflow_bin), true);
+  EXPECT_EQ(axis.IsUnderflowBin(underflow_bin+1), false);
+  const int overflow_bin = can_grow ? n_bins_no_over : n_bins_no_over + 1;
+  EXPECT_EQ(axis.GetOverflowBin(), overflow_bin);
+  EXPECT_EQ(axis.IsOverflowBin(overflow_bin-1), false);
+  EXPECT_EQ(axis.IsOverflowBin(overflow_bin), true);
+  EXPECT_EQ(axis.IsOverflowBin(overflow_bin+1), true);
+  EXPECT_EQ(*axis.begin(), underflow_bin+1);
+  EXPECT_EQ(*axis.begin_with_underflow(), 0);
+  EXPECT_EQ(*axis.end(), overflow_bin);
+  EXPECT_EQ(*axis.end_with_overflow(), n_bins_no_over + n_overflow_bins);
+}
+
 // TODO: Deduplicate common test elements
 
 TEST(AxisTest, Equidistant) {
   auto test = [](const RAxisEquidistant& axis, std::string_view title) {
-    EXPECT_EQ(axis.GetTitle(), title);
-    EXPECT_EQ(axis.CanGrow(), false);
-    EXPECT_EQ(axis.GetNBinsNoOver(), 10);
-    EXPECT_EQ(axis.GetNBins(), 12);
-    EXPECT_EQ(axis.GetNOverflowBins(), 2);
-    EXPECT_EQ(axis.GetUnderflowBin(), 0);
-    EXPECT_EQ(axis.IsUnderflowBin(-1), true);
-    EXPECT_EQ(axis.IsUnderflowBin(0), true);
-    EXPECT_EQ(axis.IsUnderflowBin(1), false);
-    EXPECT_EQ(axis.GetOverflowBin(), 11);
-    EXPECT_EQ(axis.IsOverflowBin(10), false);
-    EXPECT_EQ(axis.IsOverflowBin(11), true);
-    EXPECT_EQ(axis.IsOverflowBin(12), true);
-    EXPECT_EQ(*axis.begin(), 1);
-    EXPECT_EQ(*axis.begin_with_underflow(), 0);
-    EXPECT_EQ(*axis.end(), 11);
-    EXPECT_EQ(*axis.end_with_overflow(), 12);
+    test_axis_base(axis, title, false, 10);
 
     EXPECT_EQ(axis.FindBin(-100), 0);
     EXPECT_EQ(axis.FindBin(1.19), 0);
@@ -302,23 +313,7 @@ TEST(AxisTest, Growable) {
   auto test = [](RAxisGrow& axis, std::string_view title) {
     const RAxisGrow& caxis = axis;
 
-    EXPECT_EQ(caxis.GetTitle(), title);
-    EXPECT_EQ(caxis.CanGrow(), true);
-    EXPECT_EQ(caxis.GetNBinsNoOver(), 10);
-    EXPECT_EQ(caxis.GetNBins(), 10);
-    EXPECT_EQ(caxis.GetNOverflowBins(), 0);
-    EXPECT_EQ(caxis.GetUnderflowBin(), -1);
-    EXPECT_EQ(caxis.IsUnderflowBin(-1), true);
-    EXPECT_EQ(caxis.IsUnderflowBin(0), false);
-    EXPECT_EQ(caxis.IsUnderflowBin(1), false);
-    EXPECT_EQ(caxis.GetOverflowBin(), 10);
-    EXPECT_EQ(caxis.IsOverflowBin(9), false);
-    EXPECT_EQ(caxis.IsOverflowBin(10), true);
-    EXPECT_EQ(caxis.IsOverflowBin(11), true);
-    EXPECT_EQ(*caxis.begin(), 0);
-    EXPECT_EQ(*caxis.begin_with_underflow(), 0);
-    EXPECT_EQ(*caxis.end(), 10);
-    EXPECT_EQ(*caxis.end_with_overflow(), 10);
+    test_axis_base(caxis, title, true, 10);
 
     EXPECT_EQ(caxis.FindBin(-100), RAxisBase::kIgnoreBin);
     EXPECT_EQ(caxis.FindBin(1.19), RAxisBase::kIgnoreBin);
@@ -374,23 +369,7 @@ TEST(AxisTest, Growable) {
 
 TEST(AxisTest, Irregular) {
   auto test = [](const RAxisIrregular& axis, std::string_view title) {
-    EXPECT_EQ(axis.GetTitle(), title);
-    EXPECT_EQ(axis.CanGrow(), false);
-    EXPECT_EQ(axis.GetNBinsNoOver(), 3);
-    EXPECT_EQ(axis.GetNBins(), 5);
-    EXPECT_EQ(axis.GetNOverflowBins(), 2);
-    EXPECT_EQ(axis.GetUnderflowBin(), 0);
-    EXPECT_EQ(axis.IsUnderflowBin(-1), true);
-    EXPECT_EQ(axis.IsUnderflowBin(0), true);
-    EXPECT_EQ(axis.IsUnderflowBin(1), false);
-    EXPECT_EQ(axis.GetOverflowBin(), 4);
-    EXPECT_EQ(axis.IsOverflowBin(3), false);
-    EXPECT_EQ(axis.IsOverflowBin(4), true);
-    EXPECT_EQ(axis.IsOverflowBin(5), true);
-    EXPECT_EQ(*axis.begin(), 1);
-    EXPECT_EQ(*axis.begin_with_underflow(), 0);
-    EXPECT_EQ(*axis.end(), 4);
-    EXPECT_EQ(*axis.end_with_overflow(), 5);
+    test_axis_base(axis, title, false, 3);
 
     EXPECT_EQ(axis.FindBin(-100), 0);
     EXPECT_EQ(axis.FindBin(2.29), 0);
@@ -457,23 +436,7 @@ TEST(AxisTest, Labels) {
       // labels are added. This is by design, according to the RAxisLabels docs.
       // The configuration would be updated on Grow(), but we can't test Grow()
       // right now since it isn't implemented yet...
-      EXPECT_EQ(caxis.GetTitle(), title);
-      EXPECT_EQ(caxis.CanGrow(), true);
-      EXPECT_EQ(caxis.GetNBinsNoOver(), 5);
-      EXPECT_EQ(caxis.GetNBins(), 5);
-      EXPECT_EQ(caxis.GetNOverflowBins(), 0);
-      EXPECT_EQ(caxis.GetUnderflowBin(), -1);
-      EXPECT_EQ(caxis.IsUnderflowBin(-1), true);
-      EXPECT_EQ(caxis.IsUnderflowBin(0), false);
-      EXPECT_EQ(caxis.IsUnderflowBin(1), false);
-      EXPECT_EQ(caxis.GetOverflowBin(), 5);
-      EXPECT_EQ(caxis.IsOverflowBin(4), false);
-      EXPECT_EQ(caxis.IsOverflowBin(5), true);
-      EXPECT_EQ(caxis.IsOverflowBin(6), true);
-      EXPECT_EQ(*caxis.begin(), 0);
-      EXPECT_EQ(*caxis.begin_with_underflow(), 0);
-      EXPECT_EQ(*caxis.end(), 5);
-      EXPECT_EQ(*caxis.end_with_overflow(), 5);
+      test_axis_base(caxis, title, true, 5);
 
       // NOTE: Needed because RAxisLabels::GetBinCenter() shadows
       //       RAxisEquidistant::GetBinCenter()...
@@ -512,7 +475,7 @@ TEST(AxisTest, Labels) {
 
       RAxisConfig cfg(caxis);
       EXPECT_EQ(cfg.GetTitle(), title);
-      EXPECT_EQ(cfg.GetNBinsNoOver(), expected_labels.size());
+      EXPECT_EQ(cfg.GetNBinsNoOver(), static_cast<int>(expected_labels.size()));
       EXPECT_EQ(cfg.GetKind(), RAxisConfig::kLabels);
       EXPECT_EQ(cfg.GetBinBorders().size(), 0u);
       EXPECT_EQ(cfg.GetBinLabels().size(), expected_labels.size());
