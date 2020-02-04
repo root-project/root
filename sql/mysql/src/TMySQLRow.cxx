@@ -41,8 +41,8 @@ void TMySQLRow::Close(Option_t *)
    if (!fFields)
       return;
 
-   fFields      = 0;
-   fResult      = 0;
+   fFields      = nullptr;
+   fResult      = nullptr;
    fFieldLength = 0;
 }
 
@@ -87,7 +87,7 @@ ULong_t TMySQLRow::GetFieldLength(Int_t field)
 const char *TMySQLRow::GetField(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
 
    return fFields[field];
 }

@@ -19,9 +19,9 @@
 class TMySQLRow : public TSQLRow {
 
 private:
-   MYSQL_RES   *fResult;       // current result set
-   MYSQL_ROW    fFields;       // current row
-   ULong_t     *fFieldLength;  // length of each field in the row
+   MYSQL_RES   *fResult{nullptr};      // current result set
+   MYSQL_ROW    fFields;               // current row
+   ULong_t     *fFieldLength{nullptr}; // length of each field in the row
 
    Bool_t  IsValid(Int_t field);
 
@@ -29,11 +29,11 @@ public:
    TMySQLRow(void *result, ULong_t rowHandle);
    ~TMySQLRow();
 
-   void        Close(Option_t *opt="");
-   ULong_t     GetFieldLength(Int_t field);
-   const char *GetField(Int_t field);
+   void        Close(Option_t *opt="") final;
+   ULong_t     GetFieldLength(Int_t field) final;
+   const char *GetField(Int_t field) final;
 
-   ClassDef(TMySQLRow,0)  // One row of MySQL query result
+   ClassDefOverride(TMySQLRow,0)  // One row of MySQL query result
 };
 
 #endif
