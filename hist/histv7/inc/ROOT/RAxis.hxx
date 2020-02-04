@@ -334,7 +334,7 @@ inline bool operator!=(RAxisBase::const_iterator lhs, RAxisBase::const_iterator 
 /**
 \class RAxisConfig
 Objects used to configure the different axis types. It can store the
-properties of all possible axis types, together with the type of the axis.
+properties of all ROOT-provided axis types, together with the type of the axis.
 
 RODO: that's what a variant will be invented for!
 */
