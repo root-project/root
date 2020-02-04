@@ -331,7 +331,7 @@ const char *TMySQLStatement::ConvertToString(Int_t npar)
       (fBind[npar].buffer_type==MYSQL_TYPE_VAR_STRING))
       return (const char *) addr;
 
-   const int kSize = 100;
+   constexpr int kSize = 100;
    char buf[kSize];
    int len = 0;
 
