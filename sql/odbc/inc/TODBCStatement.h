@@ -48,16 +48,16 @@ protected:
 
 protected:
    SQLHSTMT         fHstmt;
-   Int_t            fBufferPreferredSize;
-   ODBCBufferRec_t *fBuffer;
-   Int_t            fNumBuffers;
-   Int_t            fBufferLength;     // number of entries for each parameter/column
-   Int_t            fBufferCounter;    // used to indicate position in buffers
-   SQLUSMALLINT    *fStatusBuffer;
-   Int_t            fWorkingMode;      // 1 - setting parameters, 2 - reading results, 0 - unknown
-   SQLUINTEGER      fNumParsProcessed; // contains number of parameters, affected by last operation
-   SQLUINTEGER      fNumRowsFetched;   // indicates number of fetched rows
-   ULong64_t        fLastResultRow;    // stores values of row number after last fetch operation
+   Int_t            fBufferPreferredSize{0};
+   ODBCBufferRec_t *fBuffer{nullptr};
+   Int_t            fNumBuffers{0};
+   Int_t            fBufferLength{0};     // number of entries for each parameter/column
+   Int_t            fBufferCounter{0};    // used to indicate position in buffers
+   SQLUSMALLINT    *fStatusBuffer{nullptr};
+   Int_t            fWorkingMode{0};      // 1 - setting parameters, 2 - reading results, 0 - unknown
+   SQLUINTEGER      fNumParsProcessed{0};  // contains number of parameters, affected by last operation
+   SQLUINTEGER      fNumRowsFetched{0};    // indicates number of fetched rows
+   ULong64_t        fLastResultRow{0};     // stores values of row number after last fetch operation
 
    void       *GetParAddr(Int_t npar, Int_t roottype = 0, Int_t length = 0);
    long double ConvertToNumeric(Int_t npar);
@@ -78,52 +78,52 @@ public:
    TODBCStatement(SQLHSTMT stmt, Int_t rowarrsize, Bool_t errout = kTRUE);
    virtual ~TODBCStatement();
 
-   virtual void        Close(Option_t * = "");
+   virtual void        Close(Option_t * = "") final;
 
-   virtual Int_t       GetBufferLength() const { return fBufferLength; }
-   virtual Int_t       GetNumParameters();
+   Int_t       GetBufferLength() const final { return fBufferLength; }
+   Int_t       GetNumParameters() final;
 
-   virtual Bool_t      SetNull(Int_t npar);
-   virtual Bool_t      SetInt(Int_t npar, Int_t value);
-   virtual Bool_t      SetUInt(Int_t npar, UInt_t value);
-   virtual Bool_t      SetLong(Int_t npar, Long_t value);
-   virtual Bool_t      SetLong64(Int_t npar, Long64_t value);
-   virtual Bool_t      SetULong64(Int_t npar, ULong64_t value);
-   virtual Bool_t      SetDouble(Int_t npar, Double_t value);
-   virtual Bool_t      SetString(Int_t npar, const char* value, Int_t maxsize = 256);
-   virtual Bool_t      SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000);
-   virtual Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day);
-   virtual Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec);
-   virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
+   Bool_t      SetNull(Int_t npar) final;
+   Bool_t      SetInt(Int_t npar, Int_t value) final;
+   Bool_t      SetUInt(Int_t npar, UInt_t value) final;
+   Bool_t      SetLong(Int_t npar, Long_t value) final;
+   Bool_t      SetLong64(Int_t npar, Long64_t value) final;
+   Bool_t      SetULong64(Int_t npar, ULong64_t value) final;
+   Bool_t      SetDouble(Int_t npar, Double_t value) final;
+   Bool_t      SetString(Int_t npar, const char* value, Int_t maxsize = 256) final;
+   Bool_t      SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000) final;
+   Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day) final;
+   Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec) final;
+   Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec) final;
    using TSQLStatement::SetTimestamp;
-   virtual Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0);
+   Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0) final;
 
-   virtual Bool_t      NextIteration();
+   Bool_t      NextIteration() final;
 
-   virtual Bool_t      Process();
-   virtual Int_t       GetNumAffectedRows();
+   Bool_t      Process() final;
+   Int_t       GetNumAffectedRows() final;
 
-   virtual Bool_t      StoreResult();
-   virtual Int_t       GetNumFields();
-   virtual const char *GetFieldName(Int_t nfield);
-   virtual Bool_t      NextResultRow();
+   Bool_t      StoreResult() final;
+   Int_t       GetNumFields() final;
+   const char *GetFieldName(Int_t nfield) final;
+   Bool_t      NextResultRow() final;
 
-   virtual Bool_t      IsNull(Int_t);
-   virtual Int_t       GetInt(Int_t npar);
-   virtual UInt_t      GetUInt(Int_t npar);
-   virtual Long_t      GetLong(Int_t npar);
-   virtual Long64_t    GetLong64(Int_t npar);
-   virtual ULong64_t   GetULong64(Int_t npar);
-   virtual Double_t    GetDouble(Int_t npar);
-   virtual const char *GetString(Int_t npar);
-   virtual Bool_t      GetBinary(Int_t npar, void* &mem, Long_t& size);
-   virtual Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day);
-   virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
-   virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
+   Bool_t      IsNull(Int_t) final;
+   Int_t       GetInt(Int_t npar) final;
+   UInt_t      GetUInt(Int_t npar) final;
+   Long_t      GetLong(Int_t npar) final;
+   Long64_t    GetLong64(Int_t npar) final;
+   ULong64_t   GetULong64(Int_t npar) final;
+   Double_t    GetDouble(Int_t npar) final;
+   const char *GetString(Int_t npar) final;
+   Bool_t      GetBinary(Int_t npar, void* &mem, Long_t& size) final;
+   Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day) final;
+   Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec) final;
+   Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec) final;
    using TSQLStatement::GetTimestamp;
-   virtual Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t&);
+   Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t&) final;
 
-   ClassDef(TODBCStatement, 0); //ODBC implementation of TSQLStatement
+   ClassDefOverride(TODBCStatement, 0); //ODBC implementation of TSQLStatement
 };
 
 #endif
