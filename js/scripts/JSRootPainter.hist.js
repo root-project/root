@@ -2174,6 +2174,9 @@
 
       var draw_title = !histo.TestBit(JSROOT.TH1StatusBits.kNoTitle) && (st.fOptTitle > 0);
 
+      // histo.fTitle = "#strike{testing} #overline{Title:} #overline{Title:_{X}} #underline{test}  #underline{test^{X}}";
+      // histo.fTitle = "X-Y-#overline{V}_{#Phi}";
+
       if (pt) {
          pt.Clear();
          if (draw_title) pt.AddText(histo.fTitle);

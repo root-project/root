@@ -1496,6 +1496,38 @@
       return creator.Create();
    }
 
+   /** @memberOf JSROOT.GEO */
+   JSROOT.GEO.createTessellatedBuffer = function( shape, faces_limit) {
+      var numfaces = 0;
+
+      for (var i = 0; i < shape.fFacets.length; ++i) {
+         var f = shape.fFacets[i];
+         if (f.fNvert == 4) numfaces += 2;
+                       else numfaces += 1;
+      }
+
+      if (faces_limit < 0) return numfaces;
+
+      var creator = faces_limit ? new JSROOT.GEO.PolygonsCreator : new JSROOT.GEO.GeometryCreator(numfaces);
+
+      for (var i = 0; i < shape.fFacets.length; ++i) {
+         var f = shape.fFacets[i],
+             v0 = shape.fVertices[f.fIvert[0]].fVec,
+             v1 = shape.fVertices[f.fIvert[1]].fVec,
+             v2 = shape.fVertices[f.fIvert[2]].fVec;
+
+         if (f.fNvert == 4) {
+            var v3 = shape.fVertices[f.fIvert[3]].fVec;
+            creator.AddFace4(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
+            creator.CalcNormal();
+         } else {
+            creator.AddFace3(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2]);
+            creator.CalcNormal();
+         }
+      }
+
+      return creator.Create();
+   }
 
    /** @memberOf JSROOT.GEO */
    JSROOT.GEO.createMatrix = function(matrix) {
@@ -1791,6 +1823,7 @@
             case "TGeoXtru": return JSROOT.GEO.createXtruBuffer( shape, limit );
             case "TGeoParaboloid": return JSROOT.GEO.createParaboloidBuffer( shape, limit );
             case "TGeoHype": return JSROOT.GEO.createHypeBuffer( shape, limit );
+            case "TGeoTessellated": return JSROOT.GEO.createTessellatedBuffer( shape, limit );
             case "TGeoCompositeShape": return JSROOT.GEO.createComposite( shape, limit );
             case "TGeoShapeAssembly": break;
             case "TGeoScaledShape": {
