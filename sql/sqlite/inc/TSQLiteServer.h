@@ -37,7 +37,7 @@ class TSQLiteServer : public TSQLServer {
    TSQLStatement *Statement(const char *sql, Int_t = 100) final;
    Bool_t         HasStatement() const final;
    Int_t          SelectDataBase(const char *dbname) final;
-   TSQLResult    *GetDataBases(const char *wild = nullptr);
+   TSQLResult    *GetDataBases(const char *wild = nullptr) final;
    TSQLResult    *GetTables(const char *dbname, const char *wild = nullptr) final;
    TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = nullptr) final;
    TSQLTableInfo *GetTableInfo(const char* tablename) final;
