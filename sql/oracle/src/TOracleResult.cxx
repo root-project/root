@@ -52,11 +52,11 @@ void TOracleResult::initResultSet(Statement *stmt)
 TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 {
    fConn        = conn;
-   fResult      = 0;
-   fStmt        = 0;
-   fPool        = 0;
+   fResult      = nullptr;
+   fStmt        = nullptr;
+   fPool        = nullptr;
    fRowCount    = 0;
-   fFieldInfo   = 0;
+   fFieldInfo   = nullptr;
    fResultType  = 0;
    fUpdateCount = 0;
 
@@ -70,12 +70,12 @@ TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 
 TOracleResult::TOracleResult(Connection *conn, const char *tableName)
 {
-   fResult      = 0;
-   fStmt        = 0;
-   fConn        = 0;
-   fPool        = 0;
+   fResult      = nullptr;
+   fStmt        = nullptr;
+   fConn        = nullptr;
+   fPool        = nullptr;
    fRowCount    = 0;
-   fFieldInfo   = 0;
+   fFieldInfo   = nullptr;
    fResultType  = 0;
    fUpdateCount = 0;
    fFieldCount  = 0;
@@ -118,10 +118,10 @@ void TOracleResult::Close(Option_t *)
 
    fResultType = 0;
 
-   fStmt = 0;
-   fResult = 0;
-   fFieldInfo = 0;
-   fPool = 0;
+   fStmt = nullptr;
+   fResult = nullptr;
+   fFieldInfo = nullptr;
+   fPool = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -150,7 +150,7 @@ Int_t TOracleResult::GetFieldCount()
 const char *TOracleResult::GetFieldName(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
    fNameBuffer = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
    return fNameBuffer.c_str();
 }
@@ -180,7 +180,7 @@ TSQLRow *TOracleResult::Next()
       Error("Next", "%s", (oraex.getMessage()).c_str());
       MakeZombie();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +189,7 @@ Int_t TOracleResult::GetRowCount() const
 {
    if (!fResult) return 0;
 
-   if (fPool==0) ((TOracleResult*) this)->ProducePool();
+   if (!fPool) ((TOracleResult*) this)->ProducePool();
 
    return fRowCount;
 }
@@ -198,11 +198,11 @@ Int_t TOracleResult::GetRowCount() const
 
 void TOracleResult::ProducePool()
 {
-   if (fPool!=0) return;
+   if (fPool) return;
 
    TList* pool = new TList;
-   TSQLRow* res = 0;
-   while ((res = Next()) !=0) {
+   TSQLRow* res = nullptr;
+   while ((res = Next()) != nullptr) {
       pool->Add(res);
    }
 
