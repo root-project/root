@@ -19,8 +19,8 @@
 class TMySQLResult : public TSQLResult {
 
 private:
-   MYSQL_RES   *fResult;      // query result (rows)
-   MYSQL_FIELD *fFieldInfo;   // info for each field in the row
+   MYSQL_RES   *fResult{nullptr};      // query result (rows)
+   MYSQL_FIELD *fFieldInfo{nullptr};   // info for each field in the row
 
    Bool_t  IsValid(Int_t field);
 
@@ -28,12 +28,12 @@ public:
    TMySQLResult(void *result);
    ~TMySQLResult();
 
-   void        Close(Option_t *opt="");
-   Int_t       GetFieldCount();
-   const char *GetFieldName(Int_t field);
-   TSQLRow    *Next();
+   void        Close(Option_t *opt="") final;
+   Int_t       GetFieldCount() final;
+   const char *GetFieldName(Int_t field) final;
+   TSQLRow    *Next() final;
 
-   ClassDef(TMySQLResult,0)  // MySQL query result
+   ClassDefOverride(TMySQLResult,0)  // MySQL query result
 };
 
 #endif
