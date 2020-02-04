@@ -41,20 +41,18 @@ class TList;
 class TSQLServer : public TObject {
 
 protected:
-   TString   fType;       // type of DBMS (MySQL, Oracle, SysBase, ...)
-   TString   fHost;       // host to which we are connected
-   TString   fDB;         // currently selected DB
-   Int_t     fPort;       // port to which we are connected
-   Int_t     fErrorCode;  // error code of last operation
-   TString   fErrorMsg;   // error message of last operation
-   Bool_t    fErrorOut;   // enable error output
+   TString   fType;             // type of DBMS (MySQL, Oracle, SysBase, ...)
+   TString   fHost;             // host to which we are connected
+   TString   fDB;               // currently selected DB
+   Int_t     fPort{-1};         // port to which we are connected
+   Int_t     fErrorCode{0};     // error code of last operation
+   TString   fErrorMsg;         // error message of last operation
+   Bool_t    fErrorOut{kTRUE}; // enable error output
 
-   TSQLServer()
-     : fType(), fHost(), fDB(), fPort(-1), fErrorCode(0),
-     fErrorMsg(), fErrorOut(kTRUE) { ClearError(); }
+   TSQLServer() {} // not allowed to use =default for TObject-derived classes
 
    void                ClearError();
-   void                SetError(Int_t code, const char* msg, const char* method = 0);
+   void                SetError(Int_t code, const char* msg, const char *method = nullptr);
 
    static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
@@ -73,19 +71,19 @@ public:
 
    virtual ~TSQLServer() { }
 
-   virtual void        Close(Option_t *option="") = 0;
+   virtual void        Close(Option_t *option = "") = 0;
    virtual TSQLResult *Query(const char *sql) = 0;
    virtual Bool_t      Exec(const char* sql);
    virtual TSQLStatement *Statement(const char*, Int_t = 100)
-                           { AbstractMethod("Statement"); return 0; }
+                           { AbstractMethod("Statement"); return nullptr; }
    virtual Bool_t      HasStatement() const { return kFALSE; }
    virtual Int_t       SelectDataBase(const char *dbname) = 0;
-   virtual TSQLResult *GetDataBases(const char *wild = 0) = 0;
-   virtual TSQLResult *GetTables(const char *dbname, const char *wild = 0) = 0;
-   virtual TList      *GetTablesList(const char* wild = 0);
+   virtual TSQLResult *GetDataBases(const char *wild = nullptr) = 0;
+   virtual TSQLResult *GetTables(const char *dbname, const char *wild = nullptr) = 0;
+   virtual TList      *GetTablesList(const char* wild = nullptr);
    virtual Bool_t      HasTable(const char* tablename);
    virtual TSQLTableInfo *GetTableInfo(const char* tablename);
-   virtual TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = 0) = 0;
+   virtual TSQLResult *GetColumns(const char *dbname, const char *table, const char *wild = nullptr) = 0;
    virtual Int_t       GetMaxIdentifierLength() { return 20; }
    virtual Int_t       CreateDataBase(const char *dbname) = 0;
    virtual Int_t       DropDataBase(const char *dbname) = 0;

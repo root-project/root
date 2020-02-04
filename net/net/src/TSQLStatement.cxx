@@ -243,7 +243,7 @@ Int_t TSQLStatement::GetErrorCode() const
 
 const char* TSQLStatement::GetErrorMsg() const
 {
-   return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
+   return GetErrorCode()==0 ? nullptr : fErrorMsg.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -263,7 +263,7 @@ void TSQLStatement::SetError(Int_t code, const char* msg, const char* method)
 {
    fErrorCode = code;
    fErrorMsg = msg;
-   if ((method!=0) && fErrorOut)
+   if (method && fErrorOut)
       Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
 
