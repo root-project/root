@@ -184,16 +184,14 @@ Bool_t TMySQLStatement::StoreResult()
 
       for (int n=0;n<count;n++) {
          SetSQLParamType(n, fields[n].type, (fields[n].flags & UNSIGNED_FLAG) == 0, fields[n].length);
-         if (fields[n].name!=0) {
-            fBuffer[n].fFieldName = new char[strlen(fields[n].name)+1];
-            strcpy(fBuffer[n].fFieldName, fields[n].name);
-         }
+         if (fields[n].name)
+            fBuffer[n].fFieldName = fields[n].name;
       }
 
       mysql_free_result(meta);
    }
 
-   if (fBind==0) return kFALSE;
+   if (!fBind) return kFALSE;
 
    /* Bind the buffers */
    if (mysql_stmt_bind_result(fStmt, fBind))
@@ -217,9 +215,9 @@ Int_t TMySQLStatement::GetNumFields()
 
 const char* TMySQLStatement::GetFieldName(Int_t nfield)
 {
-   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
+   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return nullptr;
 
-   return fBuffer[nfield].fFieldName;
+   return fBuffer[nfield].fFieldName.empty() ? nullptr : fBuffer[nfield].fFieldName.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,8 +277,6 @@ void TMySQLStatement::FreeBuffers()
          free(fBuffer[n].fMem);
          if (fBuffer[n].fStrBuffer)
             delete[] fBuffer[n].fStrBuffer;
-         if (fBuffer[n].fFieldName)
-            delete[] fBuffer[n].fFieldName;
       }
       delete[] fBuffer;
    }
@@ -288,8 +284,8 @@ void TMySQLStatement::FreeBuffers()
    if (fBind)
       delete[] fBind;
 
-   fBuffer = 0;
-   fBind = 0;
+   fBuffer = nullptr;
+   fBind = nullptr;
    fNumBuffers = 0;
 }
 
@@ -315,7 +311,7 @@ void TMySQLStatement::SetBuffersNumber(Int_t numpars)
       fBuffer[n].fResLength = 0;
       fBuffer[n].fResNull = false;
       fBuffer[n].fStrBuffer = nullptr;
-      fBuffer[n].fFieldName = nullptr;
+      fBuffer[n].fFieldName.clear();
    }
 }
 
@@ -571,8 +567,8 @@ const char *TMySQLStatement::GetString(Int_t npar)
       || (fBuffer[npar].fSqlType==MYSQL_TYPE_NEWDECIMAL)
 #endif
        ) {
-         if (fBuffer[npar].fResNull) return 0;
-         char* str = (char*) fBuffer[npar].fMem;
+         if (fBuffer[npar].fResNull) return nullptr;
+         char *str = (char *) fBuffer[npar].fMem;
          ULong_t len = fBuffer[npar].fResLength;
          Int_t size = fBuffer[npar].fSize;
          if (1.*len<size) str[len] = 0; else
@@ -719,18 +715,18 @@ Bool_t TMySQLStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parameter type to be used as buffer.
-/// Used in both setting data to database and retriving data from data base.
+/// Used in both setting data to database and retrieving data from data base.
 /// Initialize proper MYSQL_BIND structure and allocate required buffers.
 
 Bool_t TMySQLStatement::SetSQLParamType(Int_t npar, int sqltype, Bool_t sig, ULong_t sqlsize)
 {
    if ((npar<0) || (npar>=fNumBuffers)) return kFALSE;
 
-   fBuffer[npar].fMem = 0;
+   fBuffer[npar].fMem = nullptr;
    fBuffer[npar].fSize = 0;
    fBuffer[npar].fResLength = 0;
    fBuffer[npar].fResNull = false;
-   fBuffer[npar].fStrBuffer = 0;
+   fBuffer[npar].fStrBuffer = nullptr;
 
    ULong64_t allocsize = 0;
 
