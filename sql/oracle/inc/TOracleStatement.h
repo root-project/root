@@ -35,8 +35,8 @@ protected:
 
    struct TBufferRec {
       char* strbuf{nullptr};
-      Long_t strbufsize{0};
-      char* namebuf{nullptr};
+      Long_t strbufsize{-1};
+      std::string namebuf;
    };
 
    oracle::occi::Environment *fEnv{nullptr};                 // environment
