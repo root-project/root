@@ -252,8 +252,8 @@ TQCommand::~TQCommand()
    if (fRedo != fUndo) delete fUndo;
 
    delete fRedo;
-   delete fRedoArgs;
-   delete fUndoArgs;
+   delete [] fRedoArgs;
+   delete [] fUndoArgs;
 
    Delete();
 }
