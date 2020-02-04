@@ -543,16 +543,19 @@ public:
    /// Get the bin center for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.25.
+   /// The result of this method on an overflow or underflow bin is unspecified
    double GetBinCenter(int bin) const noexcept { return fLow + (bin - *begin() + 0.5) / fInvBinWidth; }
 
    /// Get the low bin border for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.
+   /// The result of this method on an underflow bin is unspecified
    double GetBinFrom(int bin) const noexcept { return fLow + (bin - *begin()) / fInvBinWidth; }
 
    /// Get the high bin border for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.5.
+   /// The result of this method on an overflow bin is unspecified
    double GetBinTo(int bin) const noexcept { return GetBinFrom(bin + 1); }
 
    /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
