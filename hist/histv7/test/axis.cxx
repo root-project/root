@@ -75,29 +75,29 @@ TEST(AxisTest, Config) {
       EXPECT_EQ(cfg.GetNBinsNoOver(), 3);
       EXPECT_EQ(cfg.GetKind(), RAxisConfig::kIrregular);
       EXPECT_EQ(cfg.GetBinBorders().size(), 4u);
-      EXPECT_EQ(cfg.GetBinBorders()[0], 1.2);
-      EXPECT_EQ(cfg.GetBinBorders()[1], 3.4);
-      EXPECT_EQ(cfg.GetBinBorders()[2], 5.6);
-      EXPECT_EQ(cfg.GetBinBorders()[3], 7.8);
+      EXPECT_EQ(cfg.GetBinBorders()[0], 2.3);
+      EXPECT_EQ(cfg.GetBinBorders()[1], 5.7);
+      EXPECT_EQ(cfg.GetBinBorders()[2], 11.13);
+      EXPECT_EQ(cfg.GetBinBorders()[3], 17.19);
       EXPECT_EQ(cfg.GetBinLabels().size(), 0u);
 
       RAxisIrregular axis = Internal::AxisConfigToType<RAxisConfig::kIrregular>()(cfg);
       EXPECT_EQ(axis.GetTitle(), title);
       EXPECT_EQ(axis.GetBinBorders().size(), 4u);
-      EXPECT_EQ(axis.GetBinBorders()[0], 1.2);
-      EXPECT_EQ(axis.GetBinBorders()[1], 3.4);
-      EXPECT_EQ(axis.GetBinBorders()[2], 5.6);
-      EXPECT_EQ(axis.GetBinBorders()[3], 7.8);
+      EXPECT_EQ(axis.GetBinBorders()[0], 2.3);
+      EXPECT_EQ(axis.GetBinBorders()[1], 5.7);
+      EXPECT_EQ(axis.GetBinBorders()[2], 11.13);
+      EXPECT_EQ(axis.GetBinBorders()[3], 17.19);
     };
 
     {
       SCOPED_TRACE("Irregular axis config w/o title");
-      test({{1.2, 3.4, 5.6, 7.8}}, "");
+      test({{2.3, 5.7, 11.13, 17.19}}, "");
     }
 
     {
       SCOPED_TRACE("Irregular axis config with title");
-      test({"RITLE_I", {1.2, 3.4, 5.6, 7.8}}, "RITLE_I");
+      test({"RITLE_I", {2.3, 5.7, 11.13, 17.19}}, "RITLE_I");
     }
   }
 
@@ -390,28 +390,57 @@ TEST(AxisTest, Irregular) {
     EXPECT_EQ(*axis.end(), 4);
     EXPECT_EQ(*axis.end_with_overflow(), 5);
 
-    // TODO: Test specifics of RAxisIrregular interface
+    EXPECT_EQ(axis.FindBin(-100), 0);
+    EXPECT_EQ(axis.FindBin(2.29), 0);
+    EXPECT_EQ(axis.FindBin(2.31), 1);
+    EXPECT_EQ(axis.FindBin(5.69), 1);
+    EXPECT_EQ(axis.FindBin(5.71), 2);
+    EXPECT_EQ(axis.FindBin(11.1), 2);
+    EXPECT_EQ(axis.FindBin(11.2), 3);
+    EXPECT_EQ(axis.FindBin(17.1), 3);
+    EXPECT_EQ(axis.FindBin(17.3), 4);
+    EXPECT_EQ(axis.FindBin(1000), 4);
+    EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(axis.GetBinCenter(1), 4.0);
+    EXPECT_DOUBLE_EQ(axis.GetBinCenter(2), 8.415);
+    EXPECT_DOUBLE_EQ(axis.GetBinCenter(3), 14.16);
+    EXPECT_DOUBLE_EQ(axis.GetBinCenter(4), std::numeric_limits<double>::max());
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(0), std::numeric_limits<double>::lowest());
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(1), 2.3);
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(2), 5.7);
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(3), 11.13);
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(4), 17.19);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), 2.3);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(1), 5.7);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(2), 11.13);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(3), 17.19);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(4), std::numeric_limits<double>::max());
+    EXPECT_EQ(axis.GetBinBorders().size(), 4u);
+    EXPECT_EQ(axis.GetBinBorders()[0], 2.3);
+    EXPECT_EQ(axis.GetBinBorders()[1], 5.7);
+    EXPECT_EQ(axis.GetBinBorders()[2], 11.13);
+    EXPECT_EQ(axis.GetBinBorders()[3], 17.19);
 
     RAxisConfig cfg(axis);
     EXPECT_EQ(cfg.GetTitle(), title);
     EXPECT_EQ(cfg.GetNBinsNoOver(), 3);
     EXPECT_EQ(cfg.GetKind(), RAxisConfig::kIrregular);
     EXPECT_EQ(cfg.GetBinBorders().size(), 4u);
-    EXPECT_EQ(cfg.GetBinBorders()[0], 1.2);
-    EXPECT_EQ(cfg.GetBinBorders()[1], 3.4);
-    EXPECT_EQ(cfg.GetBinBorders()[2], 5.6);
-    EXPECT_EQ(cfg.GetBinBorders()[3], 7.8);
+    EXPECT_EQ(cfg.GetBinBorders()[0], 2.3);
+    EXPECT_EQ(cfg.GetBinBorders()[1], 5.7);
+    EXPECT_EQ(cfg.GetBinBorders()[2], 11.13);
+    EXPECT_EQ(cfg.GetBinBorders()[3], 17.19);
     EXPECT_EQ(cfg.GetBinLabels().size(), 0u);
   };
 
   {
     SCOPED_TRACE("Irregular axis w/o title");
-    test(RAxisIrregular({1.2, 3.4, 5.6, 7.8}), "");
+    test(RAxisIrregular({2.3, 5.7, 11.13, 17.19}), "");
   }
 
   {
     SCOPED_TRACE("Irregular axis with title");
-    test(RAxisIrregular("RITLE_I2", {1.2, 3.4, 5.6, 7.8}), "RITLE_I2");
+    test(RAxisIrregular("RITLE_I2", {2.3, 5.7, 11.13, 17.19}), "RITLE_I2");
   }
 }
 
