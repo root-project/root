@@ -874,8 +874,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       sendDblClick: function (fullpath, opt) {
          if(this.DBLCLKRun) {
-            if(this.isMacro(fullpath)) {
-               return this.websocket.Send("RUNMACRO:" + fullpath);
+            if(opt !== '$$$editor$$$') {
+               opt = '$$$execute$$$';
             }
          }
          this.websocket.Send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');

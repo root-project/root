@@ -46,6 +46,7 @@
 #include <mutex>
 #include <thread>
 #include <fstream>
+#include <ctype.h>
 
 using namespace std::string_literals;
 
@@ -196,6 +197,20 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
       std::vector<std::string> args = { fname, code };
 
       return "FREAD:"s + TBufferJSON::ToJSON(&args).Data();
+   }
+
+   if (drawingOptions == "$$$execute$$$") {
+
+      std::string ext = item_path.substr(item_path.find_last_of(".") + 1);
+
+      std::for_each(ext.begin(), ext.end(), [](char & c) {
+         c = ::tolower(c);
+      });
+
+      if(ext == "c" || ext == "cpp" || ext == "cxx") {
+         ProcessRunCommand(item_path);
+      }
+
    }
 
    auto canv = GetActiveCanvas();
