@@ -836,7 +836,7 @@ public:
    /// Get the center of the bin with label.
    double GetBinCenter(const std::string &label)
    {
-      return GetBinIndex(label) - 0.5; // bin *center*
+      return GetBinIndex(label) + 0.5; // bin *center*
    }
 
    /// Build a vector of labels. The position in the vector defines the label's bin.
