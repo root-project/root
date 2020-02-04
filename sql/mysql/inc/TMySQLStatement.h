@@ -41,7 +41,7 @@ protected:
       Bool_t        fSign{kFALSE};        //! signed - not signed type
       ULong_t       fResLength{0};        //! length argument
       my_bool       fResNull{false};      //! indicates if argument is null
-      char         *fStrBuffer{nullptr};  //! special buffer to be used for string conversions
+      std::string   fStrBuffer;           //! special buffer to be used for string conversions
       std::string   fFieldName;           //! buffer for field name
    };
 
