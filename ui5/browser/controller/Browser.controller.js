@@ -772,8 +772,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onTerminalSubmit: function(oEvent) {
          let command = oEvent.getSource().getValue();
-         let url = '/ProcessLine/cmd.json?arg1="' + command + '"';
-         console.log(command);
          this.websocket.Send("CMD:" + command);
          oEvent.getSource().setValue("");
          this.requestRootHist();
@@ -860,6 +858,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if(this.DBLCLKRun) {
             if(opt !== '$$$editor$$$') {
                opt = '$$$execute$$$';
+               console.log(fullpath);
             }
          }
          this.websocket.Send('DBLCLK: ["' + fullpath + '","' + (opt || "") + '"]');
