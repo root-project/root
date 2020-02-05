@@ -59,8 +59,8 @@ namespace RooLagrangianMorphing {
   // these are a couple of helper functions for use with the Standard Model Effective Field Theory (SMEFT) Model
   // arXiv: 1709.06492
   RooArgSet makeSMEFTCouplings(RooAbsCollection& operators);
-  RooArgSet makeSMEFTggFCouplings(RooAbsCollection& operators);
-  RooArgSet makeSMEFTVBFCouplings(RooAbsCollection& operators);
+  RooArgSet makeSMEFTggfCouplings(RooAbsCollection& operators);
+  RooArgSet makeSMEFTvbfCouplings(RooAbsCollection& operators);
   RooArgSet makeSMEFTHWWCouplings(RooAbsCollection& operators);
   RooArgSet makeSMEFTHyyCouplings(RooAbsCollection& operators);
   
@@ -95,10 +95,11 @@ namespace RooLagrangianMorphing {
     template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
     template <class T> void setVertices(const std::vector<T>& vertices);
     template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
-    void setup(const RooArgSet& operators, const std::vector<std::vector<RooArgList> >& diagrams, bool own);
+
     virtual ~RooLagrangianMorphConfig();
   
   protected:
+    RooListProxy _operators;
     std::vector<RooListProxy*> _vertices;
     std::vector<std::vector<RooListProxy*> > _diagrams;
     RooListProxy _couplings;
@@ -367,8 +368,7 @@ class RooHCggfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas));
-    this->setup(true);
+//    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
   }
 };
 class RooHCggfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -377,8 +377,7 @@ class RooHCggfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas));
-    this->setup(true);
+//    this->setup(kappas,RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
   }
 };
 
@@ -388,8 +387,7 @@ class RooHCvbfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setCouplings(RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas));
-    this->setup(true);
+//    this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHWWCouplings(kappas),true);
   }
 };
 class RooHCvbfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -398,7 +396,7 @@ class RooHCvbfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+    this->setCouplings(RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
     this->setup(true);
   }
 };
@@ -409,7 +407,8 @@ class RooHCggfZZMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfZZ");
-    this->setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+//    RooLagrangianMorphConfig config;
+    this->setCouplings(RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
     this->setup(true);
   }
 };
@@ -419,7 +418,8 @@ class RooHCggfZZMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfZZ");
-    this->setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+    RooLagrangianMorphConfig config;
+    config.setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
     this->setup(true);
   }
 };
@@ -429,8 +429,7 @@ class RooHCvbfZZMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfZZ");
-    this->setCouplings(RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
-    this->setup(true);
+  //  this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
   }
 };
 class RooHCvbfZZMorphPdf : public RooLagrangianMorphPdf {
@@ -439,8 +438,7 @@ class RooHCvbfZZMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfZZ");
-    this->setCouplings(RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
-    this->setup(true);
+  //  this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas),true);
   }
 };
 
@@ -450,8 +448,7 @@ class RooHCvbfMuMuMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfMuMu");
-    this->setCouplings(RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas));
-    this->setup(true);
+  //  this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas),true);
   }
 };
 class RooHCvbfMuMuMorphPdf : public RooLagrangianMorphPdf {
@@ -460,8 +457,7 @@ class RooHCvbfMuMuMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfMuMu");
-    this->setCouplings(RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeHCVBFCouplings(kappas),RooLagrangianMorphing::makeHCHllCouplings(kappas),true);
   }
 };
 
@@ -490,7 +486,7 @@ class RooSMEFTggfMorphFunc : public RooLagrangianMorphFunc {
   void makeCouplings(){
     RooLagrangianMorphConfig config;
     RooArgSet kappas("ggf");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTggFCouplings(kappas));
+    config.setCouplings(RooLagrangianMorphing::makeSMEFTggfCouplings(kappas));
     this->setup(true);
   }
 };
@@ -500,8 +496,7 @@ class RooSMEFTggfMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggf");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTggFCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfMorphFunc : public RooLagrangianMorphFunc {
@@ -510,8 +505,7 @@ class RooSMEFTvbfMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbf");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfMorphPdf : public RooLagrangianMorphPdf {
@@ -520,8 +514,7 @@ class RooSMEFTvbfMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbf");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),true);
   }
 };
 
@@ -531,8 +524,7 @@ class RooSMEFTggfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 class RooSMEFTggfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -541,8 +533,7 @@ class RooSMEFTggfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("ggfWW");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTggfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 
@@ -552,8 +543,7 @@ class RooSMEFTvbfWWMorphFunc : public RooLagrangianMorphFunc {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 class RooSMEFTvbfWWMorphPdf : public RooLagrangianMorphPdf {
@@ -562,8 +552,7 @@ class RooSMEFTvbfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTVBFCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas));
-    this->setup(true);
+ //   this->setup(kappas,RooLagrangianMorphing::makeSMEFTvbfCouplings(kappas),RooLagrangianMorphing::makeSMEFTHWWCouplings(kappas),true);
   }
 };
 
