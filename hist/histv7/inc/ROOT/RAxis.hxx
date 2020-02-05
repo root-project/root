@@ -551,6 +551,8 @@ public:
    /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
    /// return the bin for which this is a low edge. If it's not a bin edge,
    /// return -1.
+   // RODO: Decide if this shouldn't go to RAxisBase so that RAxisIrregular has
+   //       it has well. If so, update tests.
    int GetBinIndexForLowEdge(double x) const noexcept;
 };
 
