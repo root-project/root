@@ -201,14 +201,19 @@ std::string RBrowser::ProcessDblClick(const std::string &item_path, const std::s
 
    if (drawingOptions == "$$$execute$$$") {
 
-      std::string ext = item_path.substr(item_path.find_last_of(".") + 1);
+      R__DEBUG_HERE("rbrowser") << "item_path " << item_path;
 
+      std::string ext = item_path.substr(item_path.find_last_of(".") + 1);
+      //lower the char
       std::for_each(ext.begin(), ext.end(), [](char & c) {
          c = ::tolower(c);
       });
 
+      R__DEBUG_HERE("rbrowser") << "item_path " << item_path;
+
       if(ext == "c" || ext == "cpp" || ext == "cxx") {
          ProcessRunCommand(item_path);
+         return "";
       }
 
    }
@@ -459,6 +464,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg)
          fWebWindow->Send(connid, reply);
 
    } else if (arg.compare(0,9, "RUNMACRO:") == 0) {
+      R__DEBUG_HERE("rbrowser") << "item_path " << arg.substr(9);
       ProcessRunCommand(arg.substr(9));
    } else if (arg.compare(0,14, "SELECT_CANVAS:") == 0) {
       fActiveCanvas = arg.substr(14);
