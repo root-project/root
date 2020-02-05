@@ -52,8 +52,8 @@ protected:
    Double_t                 fRadTsai;    // Tsai formula for the radiation length
 
 private:
-   TGeoElement(const TGeoElement &other);
-   TGeoElement &operator=(const TGeoElement &other);
+   TGeoElement(const TGeoElement &other) = delete;
+   TGeoElement &operator=(const TGeoElement &other) = delete;
 
    // Compute the Coulomb correction factor
    void                     ComputeCoulombFactor();
@@ -67,7 +67,7 @@ public:
    TGeoElement(const char *name, const char *title, Int_t nisotopes);
    TGeoElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a);
    // destructor
-   virtual ~TGeoElement()             {;}
+   virtual ~TGeoElement();
    // methods
    virtual Int_t            ENDFCode()    const { return 0;}
    Int_t                    Z() const {return fZ;}
