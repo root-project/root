@@ -285,7 +285,7 @@ public:
 
    /// Get the high bin border ("right edge") for the given bin index.
    /// The result of this method on an overflow bin is unspecified
-   virtual double GetBinTo(int bin) const noexcept = 0;
+   double GetBinTo(int bin) const noexcept { return GetBinFrom(bin + 1); }
 
    /// Get the low end of the axis range.
    double GetMinimum() const noexcept { return GetBinTo(GetUnderflowBin()); }
@@ -429,12 +429,6 @@ public:
    /// returns 0.
    /// The result of this method on an underflow bin is unspecified
    double GetBinFrom(int bin) const noexcept final override { return fLow + (bin - *begin()) / fInvBinWidth; }
-
-   /// Get the high bin border for the given bin index.
-   /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
-   /// returns 0.5.
-   /// The result of this method on an overflow bin is unspecified
-   double GetBinTo(int bin) const noexcept final override { return GetBinFrom(bin + 1); }
 
    /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
    /// return the bin for which this is a low edge. If it's not a bin edge,
@@ -639,11 +633,11 @@ public:
    /// Get the bin center of the bin with the given index.
    ///
    /// For the bin at index 0 (i.e. the underflow bin), a bin center of
-   /// `std::numeric_limits<double>::min()` is returned, i.e. the minimum value
-   /// that can be held in a double.
+   /// `std::numeric_limits<double>::lowest()` is returned, i.e. the smallest
+   /// value that can be held in a double.
    /// Similarly, for the bin at index N + 1 (i.e. the overflow bin), a bin
    /// center of `std::numeric_limits<double>::max()` is returned, i.e. the
-   /// maximum value that can be held in a double.
+   /// largest value that can be held in a double.
    double GetBinCenter(int bin) const noexcept final override
    {
       if (IsUnderflowBin(bin))
@@ -656,27 +650,20 @@ public:
    /// Get the lower bin border for a given bin index.
    ///
    /// For the bin at index 0 (i.e. the underflow bin), a lower bin border of
-   /// `std::numeric_limits<double>::min()` is returned, i.e. the minimum value
-   /// that can be held in a double.
+   /// `std::numeric_limits<double>::lowest()` is returned, i.e. the smallest
+   /// value that can be held in a double.
+   /// Similarly, for the bin at index N + 2 (i.e. after the overflow bin), a
+   /// lower bin border of `std::numeric_limits<double>::max()` is returned,
+   /// i.e. the largest value that can be held in a double.
    double GetBinFrom(int bin) const noexcept final override
    {
       if (IsUnderflowBin(bin))
          return std::numeric_limits<double>::lowest();
+      if (IsOverflowBin(bin-1))
+         return std::numeric_limits<double>::max();
       // bin 0 is underflow;
       // bin 1 starts at fBinBorders[0]
       return fBinBorders[bin - 1];
-   }
-
-   /// Get the higher bin border for a given bin index.
-   ///
-   /// For the bin at index N + 1 (i.e. the overflow bin), a bin border of
-   /// `std::numeric_limits<double>::max()` is returned, i.e. the maximum value
-   /// that can be held in a double.
-   double GetBinTo(int bin) const noexcept final override
-   {
-      if (IsOverflowBin(bin))
-         return std::numeric_limits<double>::max();
-      return GetBinFrom(bin + 1);
    }
 
    /// This axis cannot be extended.
