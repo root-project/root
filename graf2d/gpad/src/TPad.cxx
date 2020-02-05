@@ -406,6 +406,7 @@ TPad::~TPad()
 ///  macros exec1.C and exec2.C.
 ///
 /// ### Example1 of use of exec1.C
+///
 /// ~~~ {.cpp}
 ///  Root > TFile f("hsimple.root")
 ///  Root > hpx.Draw()
@@ -417,6 +418,7 @@ TPad::~TPad()
 /// contents are printed.
 ///
 /// ### Example2 of use of exec1.C
+///
 /// ~~~ {.cpp}
 ///  Root > TFile f("hsimple.root")
 ///  Root > hpxpy.Draw()
