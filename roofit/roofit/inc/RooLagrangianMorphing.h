@@ -111,7 +111,7 @@ namespace RooLagrangianMorphing {
   template<> struct Internal<RooAbsPdf>  { typedef RooRealSumPdf  Type; };
  
   template<class Base>
-  class RooLagrangianMorphBase : public Base, public RooLagrangianMorphConfig {
+  class RooLagrangianMorphBase : public Base, protected RooLagrangianMorphConfig {
     using InternalType = typename Internal<Base>::Type;
   public:
     RooLagrangianMorphBase();
