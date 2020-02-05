@@ -38,7 +38,7 @@ void TMVA::plot_training_history(TString dataset, TFile* /*file*/, TDirectory* B
 
    TString ftit = "Training History";
 
-   TString hNameRef = "";//training_history";
+   TString hNameRef = "TrainingHistory";
 
    TList xhists;
    TList xmethods;
