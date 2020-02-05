@@ -119,6 +119,7 @@ produce several different results in one event loop. Instant actions trigger the
 | [GetFilterNames](classROOT_1_1RDF_1_1RInterface.html#a25026681111897058299161a70ad9bb2) | Get all the filters defined. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
 | [Display](classROOT_1_1RDF_1_1RInterface.html#a652f9ab3e8d2da9335b347b540a9a941) | Provides an ASCII representation of the columns types and contents of the dataset printable by the user. |
 | [SaveGraph](namespaceROOT_1_1RDF.html#adc17882b283c3d3ba85b1a236197c533) | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
+| [GetNRuns](classROOT_1_1RDF_1_1RInterface.html#adfb0562a9f7732c3afb123aefa07e0df) | Get the number of event loops run by this RDataFrame instance. |
 
 
 ## <a name="introduction"></a>Introduction

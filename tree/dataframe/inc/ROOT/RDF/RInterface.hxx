@@ -1993,6 +1993,16 @@ public:
    /// \return The number of event loops run by this RDataFrame instance
    ///
    /// This method returns the number of events loops run so far by this RDataFrame instance.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::RDataFrame df(1);
+   /// std::cout << df.GetNRuns() << std::endl; // prints "0"
+   /// df.Sum("rdfentry_").GetValue(); // trigger the event loop
+   /// std::cout << df.GetNRuns() << std::endl; // prints "1"
+   /// df.Sum("rdfentry_").GetValue(); // trigger another event loop
+   /// std::cout << df.GetNRuns() << std::endl; // prints "2"
+   /// ~~~
    unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
 
    // clang-format off
