@@ -71,8 +71,10 @@ void rf1003_morphcustomdef()
   // transverse momentum of the di-jet system and the pseudorapidity 
   // of the leading jet in the process VBF Higgs decaying to W+ W-
   // in the Higgs Characterisation Model
-  RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfuinc_ptjj",infilename.c_str(),"twoSelJets/ptjj",prodCouplings,decCouplings,inputs);
-  RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1",infilename.c_str(),"twoSelJets/etaj1",prodCouplings,decCouplings,inputs);
+  RooLagrangianMorphing::RooLagrangianMorphConfig config;
+  config.setCouplings(prodCouplings, decCouplings);
+  RooLagrangianMorphFunc morphfunc_ptjj("morphunc_ptjj","morphfuinc_ptjj",infilename.c_str(),"twoSelJets/ptjj", config, inputs);
+  RooLagrangianMorphFunc morphfunc_etaj1("morphunc_etaj1","morphfunc_etaj1",infilename.c_str(),"twoSelJets/etaj1", config, inputs);
 
   // Define identifier for validation sample
   std::string validationsample("v1");
@@ -153,4 +155,5 @@ void rf1003_morphcustomdef()
   legend1->AddEntry("validation_etaj1","validation sample","PE");
   legend1->Draw();
   legend1->Draw();
+  c->SaveAs("rf1003.pdf");
 }

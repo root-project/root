@@ -61,9 +61,9 @@ class RooHCCustomMorphFunc : public RooLagrangianMorphFunc
     decCouplings.add (*(new RooFormulaVar("_gSM"  ,"cosa*kSM",                        RooArgList(*cosa,*kSM))));
     decCouplings.add (*(new RooFormulaVar("_gHww" ,"cosa*kHww/Lambda",                RooArgList(*cosa,*kHww,*lambda))));
     decCouplings.add (*(new RooFormulaVar("_gAww" ,"sqrt(1-(cosa*cosa))*kAww/Lambda", RooArgList(*cosa,*kAww,*lambda))));
-
+    this->setCouplings(prodCouplings, decCouplings);
     // Setup morphing function
-    this->setup(kappas,prodCouplings,decCouplings);
+    this->setup();
   }
 };
 

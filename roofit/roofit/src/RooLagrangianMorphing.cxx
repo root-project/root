@@ -97,7 +97,7 @@ as well as the Standard Model Effective Field Theory (SMEFT) described in
 templateClassImp(RooLagrangianMorphing::RooLagrangianBase)
 ClassImpT(RooLagrangianMorphing::RooLagrangianMorphBase,T)
 
- #define _DEBUG_
+// #define _DEBUG_
 
 ///////////////////////////////////////////////////////////////////////////////
 // PREPROCESSOR MAGIC /////////////////////////////////////////////////////////

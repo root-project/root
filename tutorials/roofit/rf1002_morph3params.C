@@ -46,11 +46,11 @@ void rf1002_morph3params()
   // Construct three parameter morphing functions for opening angle of the
   // final-state jets and the missing transverse momentum in the process VBF
   //  Higgs decaying to W+ W- in the Higgs Characterisation Model
+
   RooHCvbfWWMorphFunc morphfunc_dphijj("morphfunc_dphijj", "morphfunc_dphijj", infilename.c_str(), "twoSelJets/dphijj", inputs);
   RooHCvbfWWMorphFunc morphfunc_met("morphfunc_met", "morphfunc_met", infilename.c_str(), "twoSelJets/MET", inputs);
-
   // Define identifier for validation sample
-  std::string validationsample = "v1";
+  std::string validationsample = "kSM0";
 
   // Set morphing function at parameter configuration of v1
   // available "v0","v1","v2","v3","v4","v5","v6","v7","v8","v9" 
@@ -96,9 +96,10 @@ void rf1002_morph3params()
   // dphi_jj
   morph_dphijj_dh.plotOn(dphijjframe, Name("morph_dphijj"), DrawOption("E3"), LineStyle(kSolid), LineColor(kBlue), FillColor(kBlue));
   validation_dphijj_dh.plotOn(dphijjframe, Name("morph_dphijj"));
+
   
   // MET
-  morph_met_dh.plotOn(metframe, Name("morph_met"), DrawOption("E3"), LineStyle(kSolid), LineColor(kBlue), FillColor(kBlue));
+  morph_met_dh.plotOn(metframe, Range("FULL"), Name("morph_met"), DrawOption("E3"), LineStyle(kSolid), LineColor(kBlue), FillColor(kBlue));
   validation_met_dh.plotOn(metframe, Name("morph_met"));
 
    // Draw frames on a canvas
@@ -127,4 +128,5 @@ void rf1002_morph3params()
    legend1->AddEntry("validation_met","validation sample","PE");
    legend1->Draw();
    legend1->Draw();
+   c->SaveAs("rf1002.pdf");
 }

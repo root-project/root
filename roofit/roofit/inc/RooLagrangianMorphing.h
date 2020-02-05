@@ -388,7 +388,7 @@ class RooHCvbfWWMorphPdf : public RooLagrangianMorphPdf {
   protected:
   void makeCouplings(){
     RooArgSet kappas("vbfWW");
-    this->setCouplings(RooLagrangianMorphing::makeSMEFTggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
+    this->setCouplings(RooLagrangianMorphing::makeHCggFCouplings(kappas),RooLagrangianMorphing::makeHCHZZCouplings(kappas));
     this->setup(true);
   }
 };
