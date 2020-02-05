@@ -17,12 +17,12 @@
 #define ROOT7_RAxis
 
 #include <algorithm>
-#include <cmath>
-#include <initializer_list>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "ROOT/RAxisConfig.hxx"
 #include "ROOT/RStringView.hxx"
 #include "ROOT/RLogger.hxx"
 
@@ -344,118 +344,6 @@ inline bool operator!=(RAxisBase::const_iterator lhs, RAxisBase::const_iterator 
 ///\}
 
 /**
-\class RAxisConfig
-Objects used to configure the different axis types. It can store the
-properties of all ROOT-provided axis types, together with the type of the axis.
-
-RODO: that's what a variant will be invented for!
-*/
-class RAxisConfig {
-public:
-   enum EKind {
-      kEquidistant, ///< represents a RAxisEquidistant
-      kGrow,        ///< represents a RAxisGrow
-      kIrregular,   ///< represents a RAxisIrregular
-      kLabels,      ///< represents a RAxisLabels
-      kNumKinds
-   };
-
-private:
-   std::string fTitle;
-   size_t fNBinsNoOver;
-   EKind fKind;                      ///< The kind of axis represented by this configuration
-   std::vector<double> fBinBorders;  ///< Bin borders of the RAxisIrregular
-   std::vector<std::string> fLabels; ///< Bin labels for a RAxisLabels
-
-   /// Represents a `RAxisEquidistant` or `RAxisGrow` with `nbins` (excluding over- and
-   /// underflow bins) from `from` to `to`, with an axis title.
-   explicit RAxisConfig(std::string_view title, int nbins, double from, double to, EKind kind)
-      : fTitle(title), fNBinsNoOver(nbins), fKind(kind), fBinBorders(2)
-   {
-      if (from > to)
-         std::swap(to, from);
-
-      fBinBorders[0] = from;
-      fBinBorders[1] = to;
-   }
-
-public:
-   /// Tag type signalling that an axis should be able to grow; used for calling
-   /// the appropriate constructor.
-   struct Grow_t {
-   };
-   /// Tag signalling that an axis should be able to grow; used for calling the
-   /// appropriate constructor like so:
-   ///     RAxisConfig ac(RAxisConfig::Grow, 10, 0., 1.);
-   constexpr static const Grow_t Grow{};
-
-   /// Represents a `RAxisEquidistant` with `nbins` from `from` to `to`, and
-   /// axis title.
-   RAxisConfig(std::string_view title, int nbins, double from, double to)
-      : RAxisConfig(title, nbins, from, to, kEquidistant)
-   {}
-
-   /// Represents a `RAxisEquidistant` with `nbins` from `from` to `to`.
-   RAxisConfig(int nbins, double from, double to): RAxisConfig("", nbins, from, to, kEquidistant) {}
-
-   /// Represents a `RAxisGrow` with `nbins` from `from` to `to`, and axis title.
-   RAxisConfig(std::string_view title, Grow_t, int nbins, double from, double to)
-      : RAxisConfig(title, nbins, from, to, kGrow)
-   {}
-
-   /// Represents a `RAxisGrow` with `nbins` from `from` to `to`.
-   RAxisConfig(Grow_t, int nbins, double from, double to): RAxisConfig("", nbins, from, to, kGrow) {}
-
-   /// Represents a `RAxisIrregular` with `binborders` and title.
-   RAxisConfig(std::string_view title, const std::vector<double> &binborders)
-      : fTitle(title), fNBinsNoOver(binborders.size() - 1), fKind(kIrregular), fBinBorders(binborders)
-   {}
-
-   /// Represents a `RAxisIrregular` with `binborders`.
-   RAxisConfig(const std::vector<double> &binborders): RAxisConfig("", binborders) {}
-
-   /// Represents a `RAxisIrregular` with `binborders` and title.
-   RAxisConfig(std::string_view title, std::vector<double> &&binborders) noexcept
-      : fTitle(title), fNBinsNoOver(binborders.size() - 1), fKind(kIrregular),
-        fBinBorders(std::move(binborders))
-   {}
-
-   /// Represents a `RAxisIrregular` with `binborders`.
-   RAxisConfig(std::vector<double> &&binborders) noexcept: RAxisConfig("", std::move(binborders)) {}
-
-   /// Represents a `RAxisLabels` with `labels` and title.
-   RAxisConfig(std::string_view title, const std::vector<std::string_view> &labels)
-      : fTitle(title), fNBinsNoOver(labels.size()), fKind(kLabels), fLabels(labels.begin(), labels.end())
-   {}
-
-   /// Represents a `RAxisLabels` with `labels`.
-   RAxisConfig(const std::vector<std::string_view> &labels): RAxisConfig("", labels) {}
-
-   /// Represents a `RAxisLabels` with `labels` and title.
-   RAxisConfig(std::string_view title, std::vector<std::string> &&labels)
-      : fTitle(title), fNBinsNoOver(labels.size()), fKind(kLabels), fLabels(std::move(labels))
-   {}
-
-   /// Represents a `RAxisLabels` with `labels`.
-   RAxisConfig(std::vector<std::string> &&labels): RAxisConfig("", std::move(labels)) {}
-
-   /// Get the axis's title
-   const std::string &GetTitle() const { return fTitle; }
-
-   /// Get the axis kind represented by this `RAxisConfig`.
-   EKind GetKind() const noexcept { return fKind; }
-
-   /// Get the number of bins, excluding under- and overflow.
-   int GetNBinsNoOver() const noexcept { return fNBinsNoOver; }
-
-   /// Get the bin borders; non-empty if the GetKind() == kIrregular.
-   const std::vector<double> &GetBinBorders() const noexcept { return fBinBorders; }
-
-   /// Get the bin labels; non-empty if the GetKind() == kLabels.
-   const std::vector<std::string> &GetBinLabels() const noexcept { return fLabels; }
-};
-
-/**
  Axis with equidistant bin borders. Defined by lower l and upper u limit and
  the number of bins n. All bins have the same width (u-l)/n.
 
@@ -567,6 +455,20 @@ inline bool operator!=(const RAxisEquidistant &lhs, const RAxisEquidistant &rhs)
    return !(lhs == rhs);
 }
 
+namespace Internal {
+
+template <>
+struct AxisConfigToType<RAxisConfig::kEquidistant> {
+   using Axis_t = RAxisEquidistant;
+
+   Axis_t operator()(const RAxisConfig &cfg) noexcept
+   {
+      return RAxisEquidistant(cfg.GetTitle(), cfg.GetNBinsNoOver(), cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
+   }
+};
+
+} // namespace Internal
+
 /** An axis that can extend its range, keeping the number of its bins unchanged.
  The axis is constructed with an initial range. Apart from its ability to
  grow, this axis behaves like a RAxisEquidistant.
@@ -630,6 +532,20 @@ public:
    /// This axis kind can increase its range.
    bool CanGrow() const noexcept final override { return true; }
 };
+
+namespace Internal {
+
+template <>
+struct AxisConfigToType<RAxisConfig::kGrow> {
+   using Axis_t = RAxisGrow;
+
+   Axis_t operator()(const RAxisConfig &cfg) noexcept
+   {
+      return RAxisGrow(cfg.GetTitle(), cfg.GetNBinsNoOver(), cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
+   }
+};
+
+} // namespace Internal
 
 /**
   An axis with non-equidistant bins (also known as "variable binning"). It is
@@ -770,6 +686,17 @@ public:
    const std::vector<double> &GetBinBorders() const noexcept { return fBinBorders; }
 };
 
+namespace Internal {
+
+template <>
+struct AxisConfigToType<RAxisConfig::kIrregular> {
+   using Axis_t = RAxisIrregular;
+
+   Axis_t operator()(const RAxisConfig &cfg) { return RAxisIrregular(cfg.GetTitle(), cfg.GetBinBorders()); }
+};
+
+} // namespace Internal
+
 /**
  \class RAxisLabels
  A RAxisGrow that has a label assigned to each bin and a bin width of 1.
@@ -849,37 +776,6 @@ public:
 
 namespace Internal {
 
-/// Converts a RAxisConfig of whatever kind to the corresponding RAxisBase-derived
-/// object.
-template <RAxisConfig::EKind>
-struct AxisConfigToType; // Only specializations are defined.
-
-template <>
-struct AxisConfigToType<RAxisConfig::kEquidistant> {
-   using Axis_t = RAxisEquidistant;
-
-   Axis_t operator()(const RAxisConfig &cfg) noexcept
-   {
-      return RAxisEquidistant(cfg.GetTitle(), cfg.GetNBinsNoOver(), cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
-   }
-};
-
-template <>
-struct AxisConfigToType<RAxisConfig::kGrow> {
-   using Axis_t = RAxisGrow;
-
-   Axis_t operator()(const RAxisConfig &cfg) noexcept
-   {
-      return RAxisGrow(cfg.GetTitle(), cfg.GetNBinsNoOver(), cfg.GetBinBorders()[0], cfg.GetBinBorders()[1]);
-   }
-};
-template <>
-struct AxisConfigToType<RAxisConfig::kIrregular> {
-   using Axis_t = RAxisIrregular;
-
-   Axis_t operator()(const RAxisConfig &cfg) { return RAxisIrregular(cfg.GetTitle(), cfg.GetBinBorders()); }
-};
-
 template <>
 struct AxisConfigToType<RAxisConfig::kLabels> {
    using Axis_t = RAxisLabels;
@@ -915,4 +811,4 @@ EAxisCompatibility CanMap(RAxisEquidistant &target, RAxisEquidistant &source) no
 } // namespace Experimental
 } // namespace ROOT
 
-#endif
+#endif // ROOT7_RAxis header guard
