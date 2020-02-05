@@ -229,46 +229,6 @@ TGeoXtru::TGeoXtru(Double_t *param)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
-  TGeoBBox(xt),
-  fNvert(0),
-  fNz(0),
-  fZcurrent(0),
-  fX(0),
-  fY(0),
-  fZ(0),
-  fScale(0),
-  fX0(0),
-  fY0(0),
-  fThreadData(0),
-  fThreadSize(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
-{
-   if(this!=&xt) {
-      TGeoBBox::operator=(xt);
-      fNvert=0;
-      fNz=0;
-      fZcurrent=0;
-      fX=0;
-      fY=0;
-      fZ=0;
-      fScale=0;
-      fX0=0;
-      fY0=0;
-      fThreadSize=0;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TGeoXtru::~TGeoXtru()
