@@ -287,6 +287,12 @@ public:
    /// The result of this method on an overflow bin is unspecified
    virtual double GetBinTo(int bin) const noexcept = 0;
 
+   /// Get the low end of the axis range.
+   double GetMinimum() const noexcept { return GetBinTo(GetUnderflowBin()); }
+
+   /// Get the high end of the axis range.
+   double GetMaximum() const noexcept { return GetBinFrom(GetOverflowBin()); }
+
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
 };
@@ -517,12 +523,6 @@ public:
 
    /// This axis cannot grow.
    bool CanGrow() const noexcept override { return false; }
-
-   /// Get the low end of the axis range.
-   double GetMinimum() const noexcept { return GetBinTo(GetUnderflowBin()); }
-
-   /// Get the high end of the axis range.
-   double GetMaximum() const noexcept { return GetBinFrom(GetOverflowBin()); }
 
    /// Get the width of the bins
    double GetBinWidth() const noexcept { return 1. / fInvBinWidth; }

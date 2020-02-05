@@ -220,7 +220,9 @@ TEST(AxisTest, Iterator) {
 void test_axis_base(const RAxisBase& axis,
                     std::string_view title,
                     bool can_grow,
-                    int n_bins_no_over) {
+                    int n_bins_no_over,
+                    double minimum,
+                    double maximum) {
   EXPECT_EQ(axis.GetTitle(), title);
   EXPECT_EQ(axis.CanGrow(), can_grow);
   EXPECT_EQ(axis.GetNBinsNoOver(), n_bins_no_over);
@@ -245,6 +247,9 @@ void test_axis_base(const RAxisBase& axis,
   EXPECT_EQ(*axis.begin_with_underflow(), 0);
   EXPECT_EQ(*axis.end(), overflow_bin);
   EXPECT_EQ(*axis.end_with_overflow(), n_bins_no_over + n_overflow_bins);
+
+  EXPECT_DOUBLE_EQ(axis.GetMinimum(), minimum);
+  EXPECT_DOUBLE_EQ(axis.GetMaximum(), maximum);
 }
 
 // Common test items for RAxisEquidistant child classes
@@ -254,10 +259,8 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
                            int n_bins_no_over,
                            double minimum,
                            double maximum) {
-  test_axis_base(axis, title, can_grow, n_bins_no_over);
+  test_axis_base(axis, title, can_grow, n_bins_no_over, minimum, maximum);
 
-  EXPECT_DOUBLE_EQ(axis.GetMinimum(), minimum);
-  EXPECT_DOUBLE_EQ(axis.GetMaximum(), maximum);
   const double bin_width = (maximum - minimum) / n_bins_no_over;
   EXPECT_DOUBLE_EQ(axis.GetBinWidth(), bin_width);
   EXPECT_DOUBLE_EQ(axis.GetInverseBinWidth(), 1.0/bin_width);
@@ -293,6 +296,7 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
   if (!can_grow) {
     EXPECT_DOUBLE_EQ(axis.GetBinFrom(n_bins_no_over+1), maximum);
   }
+
   // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
 }
 
@@ -368,7 +372,7 @@ TEST(AxisTest, Growable) {
 
 TEST(AxisTest, Irregular) {
   auto test = [](const RAxisIrregular& axis, std::string_view title) {
-    test_axis_base(axis, title, false, 3);
+    test_axis_base(axis, title, false, 3, 2.3, 17.19);
 
     EXPECT_EQ(axis.FindBin(-100), 0);
     EXPECT_EQ(axis.FindBin(2.29), 0);
