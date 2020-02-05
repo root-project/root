@@ -186,8 +186,8 @@ std::vector<double> integral_MC(unsigned int dim, double* a, double* b, double* 
   ig2.SetFunction(funptr);
 
   // test using a different generator
-  ROOT::Math::Random<ROOT::Math::GSLRngCMRG> r; 
-  ig2.SetGenerator(r.Rng() ); 
+  ROOT::Math::Random<ROOT::Math::GSLRngCMRG> r;
+  ig2.SetGenerator(r.Rng() );
 
 
   //par.min_calls = 4*dim;
@@ -286,6 +286,9 @@ bool performance()
           ok = false;
        }
     }
+
+    delete [] a;
+    delete [] b;
 
    }
 
