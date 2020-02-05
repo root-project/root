@@ -2,7 +2,7 @@
 
 #include "ROOT/RHist.hxx"
 
-// Test "x + 0 = x"
+// Test "0 + x = x"
 TEST(HistAddTest, AddEmptyHist) {
   ROOT::Experimental::RH1F hFrom({100,0.,1});
   ROOT::Experimental::RH1F hTo({100,0.,1});
@@ -11,7 +11,7 @@ TEST(HistAddTest, AddEmptyHist) {
   EXPECT_FLOAT_EQ(0.42f, hTo.GetBinContent({0.1111}));
 }
 
-// Test "0 + x = x"
+// Test "x + 0 = x"
 TEST(HistAddTest, AddEmptySelf) {
    ROOT::Experimental::RH1F hFrom({100,0.,1});
    ROOT::Experimental::RH1F hTo({100,0.,1});
@@ -26,6 +26,16 @@ TEST(HistAddTest, AddSelfHist) {
    hist.Fill({0.1111}, .42f);
    ROOT::Experimental::Add(hist, hist);
    EXPECT_FLOAT_EQ(0.84f, hist.GetBinContent({0.1111}));
+}
+
+// Test "x - x = 0"
+TEST(HistAddTest, SubstractSelfHist) {
+   ROOT::Experimental::RH1F hFrom({100,0.,1});
+   ROOT::Experimental::RH1F hTo({100,0.,1});
+   hFrom.Fill({0.1111}, -.42f);
+   hTo.Fill({0.1111}, .42f);
+   ROOT::Experimental::Add(hTo, hFrom);
+   EXPECT_FLOAT_EQ(.00f, hTo.GetBinContent({0.1111}));
 }
 
 // Test "x + y" with less STAT
