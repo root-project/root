@@ -456,16 +456,16 @@ TEST(AxisTest, Labels) {
 
     // Bin queries aren't const in general, but should effectively be when
     // querying bins which already exist.
-    EXPECT_EQ(axis.GetBinIndex("abc"), 0);
-    EXPECT_EQ(axis.GetBinIndex("de"), 1);
-    EXPECT_EQ(axis.GetBinIndex("fghi"), 2);
-    EXPECT_EQ(axis.GetBinIndex("j"), 3);
-    EXPECT_EQ(axis.GetBinIndex("klmno"), 4);
-    EXPECT_EQ(axis.GetBinCenter("abc"), 0.5);
-    EXPECT_EQ(axis.GetBinCenter("de"), 1.5);
-    EXPECT_EQ(axis.GetBinCenter("fghi"), 2.5);
-    EXPECT_EQ(axis.GetBinCenter("j"), 3.5);
-    EXPECT_EQ(axis.GetBinCenter("klmno"), 4.5);
+    EXPECT_EQ(axis.FindBinByName("abc"), 0);
+    EXPECT_EQ(axis.FindBinByName("de"), 1);
+    EXPECT_EQ(axis.FindBinByName("fghi"), 2);
+    EXPECT_EQ(axis.FindBinByName("j"), 3);
+    EXPECT_EQ(axis.FindBinByName("klmno"), 4);
+    EXPECT_EQ(axis.GetBinCenterByName("abc"), 0.5);
+    EXPECT_EQ(axis.GetBinCenterByName("de"), 1.5);
+    EXPECT_EQ(axis.GetBinCenterByName("fghi"), 2.5);
+    EXPECT_EQ(axis.GetBinCenterByName("j"), 3.5);
+    EXPECT_EQ(axis.GetBinCenterByName("klmno"), 4.5);
     const_tests(axis, labels);
 
     // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented.
@@ -474,15 +474,15 @@ TEST(AxisTest, Labels) {
 
     // Now let's add some new bins
     auto new_labels = labels;
-    EXPECT_EQ(axis.GetBinIndex("pq"), 5);
+    EXPECT_EQ(axis.FindBinByName("pq"), 5);
     new_labels.push_back("pq");
     const_tests(axis, new_labels);
-    EXPECT_EQ(axis.GetBinCenter("pq"), 5.5);
+    EXPECT_EQ(axis.GetBinCenterByName("pq"), 5.5);
     const_tests(axis, new_labels);
-    EXPECT_EQ(axis.GetBinCenter("rst"), 6.5);
+    EXPECT_EQ(axis.GetBinCenterByName("rst"), 6.5);
     new_labels.push_back("rst");
     const_tests(axis, new_labels);
-    EXPECT_EQ(axis.GetBinIndex("rst"), 6);
+    EXPECT_EQ(axis.FindBinByName("rst"), 6);
     const_tests(axis, new_labels);
   };
 
