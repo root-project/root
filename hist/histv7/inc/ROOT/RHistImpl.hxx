@@ -113,10 +113,10 @@ public:
    /// The bin content, cast to double.
    virtual double GetBinContentAsDouble(int binidx) const = 0;
 
-   /// Get a RAxisView on axis with index iAxis.
+   /// Get a base-class view on axis with index iAxis.
    ///
    /// \param iAxis - index of the axis, must be 0 <= iAxis < DIMENSION
-   virtual RAxisView GetAxis(int iAxis) const = 0;
+   virtual const RAxisBase &GetAxis(int iAxis) const = 0;
 
    /// Get a AxisIterRange_t for the whole histogram, possibly restricting the
    /// range to non-overflow bins.
@@ -347,9 +347,9 @@ struct RFillBinCoord {
 };
 
 template <class... AXISCONFIG>
-static std::array<RAxisView, sizeof...(AXISCONFIG)> GetAxisView(const AXISCONFIG &... axes) noexcept
+static std::array<const RAxisBase *, sizeof...(AXISCONFIG)> GetAxisView(const AXISCONFIG &... axes) noexcept
 {
-   std::array<RAxisView, sizeof...(AXISCONFIG)> axisViews = {{RAxisView(axes)...}};
+   std::array<const RAxisBase *, sizeof...(AXISCONFIG)> axisViews{{&axes...}};
    return axisViews;
 }
 
@@ -415,8 +415,8 @@ public:
    /// Get the axes of this histogram.
    const std::tuple<AXISCONFIG...> &GetAxes() const { return fAxes; }
 
-   /// Normalized axes access, converting the actual axis to RAxisConfig
-   RAxisView GetAxis(int iAxis) const final { return std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
+   /// Normalized axes access, converting from actual axis type to base class
+   const RAxisBase &GetAxis(int iAxis) const final { return *std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
 
    /// Gets the bin index for coordinate `x`; returns -1 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
