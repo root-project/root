@@ -104,8 +104,8 @@ TMVA::RuleFitParams::RuleFitParams()
 
 TMVA::RuleFitParams::~RuleFitParams()
 {
-   if (fNTCoeff)     { delete fNTCoeff; fNTCoeff = 0; }
-   if (fNTLinCoeff)  { delete fNTLinCoeff;fNTLinCoeff = 0; }
+   if (fNTCoeff)     { delete [] fNTCoeff; fNTCoeff = nullptr; }
+   if (fNTLinCoeff)  { delete [] fNTLinCoeff; fNTLinCoeff = nullptr; }
    delete fLogger;
 }
 
