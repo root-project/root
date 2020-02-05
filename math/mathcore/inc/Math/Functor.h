@@ -178,7 +178,13 @@ public:
    ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
+#if defined(_MSC_VER) && !defined(__CLING__)
+   // FIXME: this is a work-around for a compiler error with VS 2019 (16.4.3)
+   // try to remove this #ifdef when updating Visual Studio
+   auto Clone() const { return Copy(); }
+#else
    BaseFunc * Clone() const { return Copy(); }
+#endif
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const {

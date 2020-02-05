@@ -18,12 +18,15 @@
 
 #include <ROOT/FoundationUtils.hxx>
 
+#include <RConfigure.h>
+
 #include <algorithm>
 
 #include <errno.h>
 #include <string.h>
 #ifdef _WIN32
 #include <direct.h>
+#include <Windows4Root.h>
 #else
 #include <unistd.h>
 #endif // _WIN32
@@ -88,5 +91,92 @@ std::string MakePathRelative(const std::string &path, const std::string &base, b
    }
    return result;
 }
+
+/// Transforms a file path by replacing its backslashes with slashes.
+void ConvertToUnixPath(std::string& Path) {
+   std::replace(Path.begin(), Path.end(), '\\', '/');
+}
+
+const std::string& GetFallbackRootSys() {
+   static std::string fallback;
+   if (!fallback.empty())
+      return fallback;
+#ifdef WIN32
+   static char lpFilename[_MAX_PATH];
+   if (::GetModuleFileNameA(
+          NULL,                   // handle to module to find filename for
+          lpFilename,             // pointer to buffer to receive module path
+          sizeof(lpFilename))) {  // size of buffer, in characters
+      auto parent_path = [](std::string path) {
+         return path.substr(0, path.find_last_of("/\\"));
+      };
+      fallback = parent_path(parent_path(lpFilename));
+   }
+#else
+   // FIXME: We should not hardcode this path. We can use a similar to the
+   // windows technique to get the path to the executable. The easiest way
+   // to do this is to depend on LLVMSupport and use getMainExecutable.
+   fallback = "/usr/local/root";
+#endif
+   return fallback;
+}
+
+#ifdef ROOTPREFIX
+static bool IgnorePrefix() {
+   static bool ignorePrefix = ::getenv("ROOTIGNOREPREFIX");
+   return ignorePrefix;
+}
+#endif
+
+const std::string& GetRootSys() {
+#ifdef ROOTPREFIX
+   if (!IgnorePrefix()) {
+      const static std::string rootsys = ROOTPREFIX;
+      return rootsys;
+   }
+#endif
+   static std::string rootsys;
+   if (rootsys.empty()) {
+      if (const char* envValue = ::getenv("ROOTSYS")) {
+         rootsys = envValue;
+         // We cannot use gSystem->UnixPathName.
+         ConvertToUnixPath(rootsys);
+      }
+   }
+   // FIXME: Should this also call UnixPathName for consistency?
+   if (rootsys.empty())
+      rootsys = GetFallbackRootSys();
+   return rootsys;
+}
+
+
+const std::string& GetIncludeDir() {
+#ifdef ROOTINCDIR
+   if (!IgnorePrefix()) {
+      const static std::string rootincdir = ROOTINCDIR;
+      return rootincdir;
+   }
+#endif
+   static std::string rootincdir;
+   if (rootincdir.empty()) {
+      const std::string& sep = GetPathSeparator();
+      rootincdir = GetRootSys() + sep + "include" + sep;
+   }
+   return rootincdir;
+}
+
+const std::string& GetEtcDir() {
+#ifdef ROOTETCDIR
+   if (!IgnorePrefix()) {
+      const static std::string rootetcdir = ROOTETCDIR;
+      return rootetcdir;
+   }
+#endif
+
+   const static std::string rootetcdir =
+      GetRootSys() + GetPathSeparator() + "etc" + GetPathSeparator();;
+   return rootetcdir;
+}
+
 } // namespace FoundationUtils
 } // namespace ROOT

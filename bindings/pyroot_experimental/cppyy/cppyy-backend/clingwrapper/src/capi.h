@@ -118,6 +118,8 @@ extern "C" {
     RPY_EXPORTED
     char* cppyy_scoped_final_name(cppyy_type_t type);
     RPY_EXPORTED
+    int cppyy_has_virtual_destructor(cppyy_type_t type);
+    RPY_EXPORTED
     int cppyy_has_complex_hierarchy(cppyy_type_t type);
     RPY_EXPORTED
     int cppyy_num_bases(cppyy_type_t type);
@@ -125,6 +127,8 @@ extern "C" {
     char* cppyy_base_name(cppyy_type_t type, int base_index);
     RPY_EXPORTED
     int cppyy_is_subtype(cppyy_type_t derived, cppyy_type_t base);
+    RPY_EXPORTED
+    int cppyy_is_smartptr(cppyy_type_t type);
     RPY_EXPORTED
     int cppyy_smartptr_info(const char* name, cppyy_type_t* raw, cppyy_method_t* deref);
     RPY_EXPORTED

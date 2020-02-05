@@ -25,7 +25,7 @@ namespace PyROOT {
    class PropertyProxy {
    public:
       void Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata );
-      void Set( Cppyy::TCppScope_t scope, const std::string& name, void* address );
+      void Set( Cppyy::TCppScope_t scope, const std::string& name, void* address, TEnum* en );
 
       std::string GetName() { return fName; }
       void* GetAddress( ObjectProxy* pyobj /* owner */ );
@@ -70,12 +70,12 @@ namespace PyROOT {
    }
 
    inline PropertyProxy* PropertyProxy_NewConstant(
-      Cppyy::TCppScope_t scope, const std::string& name, void* address )
+      Cppyy::TCppScope_t scope, const std::string& name, void* address, TEnum* en )
    {
    // Create an initialize a new property descriptor, given the C++ datum.
       PropertyProxy* pyprop =
          (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
-      pyprop->Set( scope, name, address );
+      pyprop->Set( scope, name, address, en );
       return pyprop;
    }
 

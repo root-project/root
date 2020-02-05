@@ -32,6 +32,9 @@
 
 // for xml
 #include "TMVA/Tools.h"
+#include "TError.h"   // for R__ASSERT
+
+#include "TMVA/DNN/Functions.h"
 
 namespace TMVA {
 namespace DNN {
@@ -44,6 +47,8 @@ namespace DNN {
  */
 template <typename Architecture_t>
 class VGeneralLayer {
+
+   using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
 
@@ -58,7 +63,7 @@ protected:
    size_t fHeight; ///< The height of the layer.
    size_t fWidth;  ///< The width of this layer.
 
-   bool fIsTraining; ///< Flag indicatig the mode
+   bool fIsTraining; ///< Flag indicating the mode
 
    std::vector<Matrix_t> fWeights; ///< The weights associated to the layer.
    std::vector<Matrix_t> fBiases;  ///< The biases associated to the layer.
@@ -66,8 +71,8 @@ protected:
    std::vector<Matrix_t> fWeightGradients; ///< Gradients w.r.t. the weights of the layer.
    std::vector<Matrix_t> fBiasGradients;   ///< Gradients w.r.t. the bias values of the layer.
 
-   std::vector<Matrix_t> fOutput;              ///< Activations of this layer.
-   std::vector<Matrix_t> fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
+   Tensor_t fOutput;              ///< Activations of this layer.
+   Tensor_t fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
 
    EInitialization fInit; ///< The initialization method.
 
@@ -95,17 +100,22 @@ public:
    virtual ~VGeneralLayer();
 
    /*! Initialize the weights and biases according to the given initialization method. */
-   void Initialize();
+   virtual void Initialize();
 
    /*! Computes activation of the layer for the given input. The input
     * must be in 3D tensor form with the different matrices corresponding to
     * different events in the batch.  */
-   virtual void Forward(std::vector<Matrix_t> &input, bool applyDropout = false) = 0;
+   virtual void Forward(Tensor_t &input, bool applyDropout = false) = 0;
 
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
-   virtual void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                         std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
+   virtual void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward ) = 0;
+   /////                      std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
+
+    /*! Reset some training flags after a loop on all batches
+       Some layer (e.g. batchnormalization) might need to implement the function in case some operations
+       are needed after looping an all batches                                                 */
+   virtual void ResetTraining() {}
 
    /*! Updates the weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -174,17 +184,18 @@ public:
    const Matrix_t &GetBiasGradientsAt(size_t i) const { return fBiasGradients[i]; }
    Matrix_t &GetBiasGradientsAt(size_t i) { return fBiasGradients[i]; }
 
-   const std::vector<Matrix_t> &GetOutput() const { return fOutput; }
-   std::vector<Matrix_t> &GetOutput() { return fOutput; }
+   const Tensor_t &GetOutput() const { return fOutput; }
+   Tensor_t &GetOutput() { return fOutput; }
 
-   const std::vector<Matrix_t> &GetActivationGradients() const { return fActivationGradients; }
-   std::vector<Matrix_t> &GetActivationGradients() { return fActivationGradients; }
+   const Tensor_t &GetActivationGradients() const { return fActivationGradients; }
+   Tensor_t &GetActivationGradients() { return fActivationGradients; }
 
-   Matrix_t &GetOutputAt(size_t i) { return fOutput[i]; }
-   const Matrix_t &GetOutputAt(size_t i) const { return fOutput[i]; }
+   Matrix_t GetOutputAt(size_t i) { return fOutput.At(i).GetMatrix(); }
+   const Matrix_t &GetOutputAt(size_t i) const { return fOutput.At(i).GetMatrix(); }
 
-   Matrix_t &GetActivationGradientsAt(size_t i) { return fActivationGradients[i]; }
-   const Matrix_t &GetActivationGradientsAt(size_t i) const { return fActivationGradients[i]; }
+   Matrix_t GetActivationGradientsAt(size_t i) { return fActivationGradients.At(i).GetMatrix(); }
+   const Matrix_t &GetActivationGradientsAt(size_t i) const { return fActivationGradients.At(i).GetMatrix(); }
+
 
    EInitialization GetInitialization() const { return fInit; }
 
@@ -199,11 +210,11 @@ public:
    void SetIsTraining(bool isTraining) { fIsTraining = isTraining; }
 
    /// helper functions for XML
-   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
+   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor);
    void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
 
    void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
-   
+
 };
 
 //
@@ -216,9 +227,11 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
                                              size_t weightsNRows, size_t weightsNCols, size_t biasesNSlices,
                                              size_t biasesNRows, size_t biasesNCols, size_t outputNSlices,
                                              size_t outputNRows, size_t outputNCols, EInitialization init)
-   : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
-     fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
-     fOutput(), fActivationGradients(), fInit(init)
+   :  fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
+      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+      fOutput( outputNSlices, outputNRows, outputNCols ),
+      fActivationGradients( outputNSlices, outputNRows, outputNCols ),
+      fInit(init)
 {
 
    for (size_t i = 0; i < weightsNSlices; i++) {
@@ -230,11 +243,6 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
       fBiases.emplace_back(biasesNRows, biasesNCols);
       fBiasGradients.emplace_back(biasesNRows, biasesNCols);
    }
-
-   for (size_t i = 0; i < outputNSlices; i++) {
-      fOutput.emplace_back(outputNRows, outputNCols);
-      fActivationGradients.emplace_back(outputNRows, outputNCols);
-   }
 }
 
 //_________________________________________________________________________________________________
@@ -245,11 +253,13 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
                                              size_t biasesNSlices, std::vector<size_t> biasesNRows,
                                              std::vector<size_t> biasesNCols, size_t outputNSlices, size_t outputNRows,
                                              size_t outputNCols, EInitialization init)
-   : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
-     fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
-     fOutput(), fActivationGradients(), fInit(init)
+   :  fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
+      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+      fOutput( outputNSlices, outputNRows, outputNCols ),
+      fActivationGradients( outputNSlices, outputNRows, outputNCols ),
+      fInit(init)
 {
-
+   // add constructor for weights with different shapes (e.g. in recurrent layers)
    for (size_t i = 0; i < weightsNSlices; i++) {
       fWeights.emplace_back(weightsNRows[i], weightsNCols[i]);
       fWeightGradients.emplace_back(weightsNRows[i], weightsNCols[i]);
@@ -260,20 +270,24 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
       fBiasGradients.emplace_back(biasesNRows[i], biasesNCols[i]);
    }
 
-   for (size_t i = 0; i < outputNSlices; i++) {
-      fOutput.emplace_back(outputNRows, outputNCols);
-      fActivationGradients.emplace_back(outputNRows, outputNCols);
-   }
+   // for (size_t i = 0; i < outputNSlices; i++) {
+   //    fOutput.emplace_back(outputNRows, outputNCols);
+   //    fActivationGradients.emplace_back(outputNRows, outputNCols);
+   // }
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *layer)
-   : fBatchSize(layer->GetBatchSize()), fInputDepth(layer->GetInputDepth()), fInputHeight(layer->GetInputHeight()),
-     fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
-     fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
-     fBiasGradients(), fOutput(), fActivationGradients(), fInit(layer->GetInitialization())
+   :  fBatchSize(layer->GetBatchSize()), fInputDepth(layer->GetInputDepth()), fInputHeight(layer->GetInputHeight()),
+      fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
+      fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
+      fBiasGradients(),
+      fOutput( layer->GetOutput().GetShape() ),   // construct from shape of other tensor
+      fActivationGradients( layer->GetActivationGradients().GetShape() ),
+      fInit(layer->GetInitialization() )
 {
+   // Constructor from another layer pointer of a different architecture
    size_t weightsNSlices = (layer->GetWeights()).size();
    size_t weightsNRows = 0;
    size_t weightsNCols = 0;
@@ -301,28 +315,19 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *laye
 
       Architecture_t::Copy(fBiases[i], layer->GetBiasesAt(i));
    }
-
-   size_t outputNSlices = (layer->GetOutput()).size();
-   size_t outputNRows = 0;
-   size_t outputNCols = 0;
-
-   for (size_t i = 0; i < outputNSlices; i++) {
-      outputNRows = (layer->GetOutputAt(i)).GetNrows();
-      outputNCols = (layer->GetOutputAt(i)).GetNcols();
-
-      fOutput.emplace_back(outputNRows, outputNCols);
-      fActivationGradients.emplace_back(outputNRows, outputNCols);
-   }
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(const VGeneralLayer &layer)
-   : fBatchSize(layer.fBatchSize), fInputDepth(layer.fInputDepth), fInputHeight(layer.fInputHeight),
-     fInputWidth(layer.fInputWidth), fDepth(layer.fDepth), fHeight(layer.fHeight), fWidth(layer.fWidth),
-     fIsTraining(layer.fIsTraining), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(), fOutput(),
-     fActivationGradients(), fInit(layer.fInit)
+   :  fBatchSize(layer.fBatchSize), fInputDepth(layer.fInputDepth), fInputHeight(layer.fInputHeight),
+      fInputWidth(layer.fInputWidth), fDepth(layer.fDepth), fHeight(layer.fHeight), fWidth(layer.fWidth),
+      fIsTraining(layer.fIsTraining), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+      fOutput( layer.GetOutput() ),
+      fActivationGradients( layer.GetActivationGradients() ),
+      fInit( layer.GetInitialization())
 {
+   // copy constructor
    size_t weightsNSlices = layer.fWeights.size();
    size_t weightsNRows = 0;
    size_t weightsNCols = 0;
@@ -458,9 +463,9 @@ auto VGeneralLayer<Architecture_t>::CopyBiases(const std::vector<Matrix_t> &othe
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * name, const std::vector<Matrix_t> & tensor) -> void
 {
-   auto xmlengine = gTools().xmlengine(); 
+   auto xmlengine = gTools().xmlengine();
    void* matnode = xmlengine.NewChild(node, 0, name);
-   if (tensor.size() == 0) return; 
+   if (tensor.size() == 0) return;
    xmlengine.NewAttr(matnode,0,"Depth", gTools().StringFromInt(tensor.size()) );
    // assume same number of rows and columns for every matrix in std::vector
    xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(tensor[0].GetNrows()) );
@@ -471,7 +476,7 @@ auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * n
       for (Int_t row = 0; row < mat.GetNrows(); row++) {
          for (Int_t col = 0; col < mat.GetNcols(); col++) {
             TString tmp = TString::Format( "%5.15e ", (mat)(row,col) );
-            s << tmp.Data(); 
+            s << tmp.Data();
          }
       }
    }
@@ -482,7 +487,7 @@ auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * n
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * name, const Matrix_t & matrix) -> void
 {
-   auto xmlengine = gTools().xmlengine(); 
+   auto xmlengine = gTools().xmlengine();
    void* matnode = xmlengine.NewChild(node, 0, name);
 
    xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
@@ -510,8 +515,8 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
    gTools().ReadAttr(matrixXML, "Rows", rows);
    gTools().ReadAttr(matrixXML, "Columns", cols);
 
-   R__ASSERT((size_t) matrix.GetNrows() == rows); 
-   R__ASSERT((size_t) matrix.GetNcols() == cols); 
+   R__ASSERT((size_t) matrix.GetNrows() == rows);
+   R__ASSERT((size_t) matrix.GetNcols() == cols);
 
    const char * matrixString = gTools().xmlengine().GetNodeContent(matrixXML);
    std::stringstream matrixStringStream(matrixString);
@@ -523,13 +528,20 @@ auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name
 #ifndef R__HAS_TMVAGPU
          matrixStringStream >> matrix(i,j);
 #else
-         Scalar_t value; 
-         matrixStringStream >> value; 
-         matrix(i,j) = value; 
+         Scalar_t value;
+         matrixStringStream >> value;
+         matrix(i,j) = value;
 #endif
 
       }
    }
+}
+
+
+template <typename Architecture>
+auto debugTensor(const typename Architecture::Tensor_t & A, const std::string name = "tensor") -> void
+{
+   Architecture::PrintTensor(A,name);
 }
 
 } // namespace DNN

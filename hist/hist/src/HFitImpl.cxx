@@ -235,7 +235,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    // if option grad is specified use gradient
    if ( (linear || fitOption.Gradient) )
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1));
-#ifdef R__HAS_VECCORE      
+#ifdef R__HAS_VECCORE
    else if(f1->IsVectorized())
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*f1)));
 #endif
@@ -362,10 +362,12 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       fitConfig.SetWeightCorrection(weight);
       bool extended = ((fitOption.Like & 4 ) != 4 );
       //if (!extended) Info("HFitImpl","Do a not -extended binned fit");
-      fitok = fitter->LikelihoodFit(*fitdata, extended, fitOption.ExecPolicy);
+
+      // pass fitdata as a shared pointer so ownership is shared with Fitter and FitResult class
+      fitok = fitter->LikelihoodFit(fitdata, extended, fitOption.ExecPolicy);
    }
    else{ // standard least square fit
-      fitok = fitter->Fit(*fitdata, fitOption.ExecPolicy);
+      fitok = fitter->Fit(fitdata, fitOption.ExecPolicy);
    }
    if ( !fitok  && !fitOption.Quiet )
       Warning("Fit","Abnormal termination of minimization.");
@@ -1028,7 +1030,7 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, bool 
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
-   if (usePL) opt.fUseEmpty=true; 
+   if (usePL) opt.fUseEmpty=true;
    ROOT::Fit::DataRange range;
    // get range of function
    if (useRange) HFit::GetFunctionRange(f1,range);

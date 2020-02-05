@@ -16,8 +16,10 @@
 #include "TMath.h"
 #include "TPad.h"
 #include "TWebCanvas.h"
+#include "TBufferJSON.h"
 
-#include "ROOT/RMakeUnique.hxx"
+#include <ROOT/RMakeUnique.hxx>
+
 
 /** \class TWebPadPainter
 \ingroup gpad
@@ -288,3 +290,13 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
       buf[1] = v;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Produce image from WebPadPainter
+
+void TWebPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t gtype) const
+{
+   if ((gtype == TImage::kPng) || (gtype == TImage::kJpeg))
+      TWebCanvas::ProduceImage(pad->GetCanvas(), fileName);
+}
+

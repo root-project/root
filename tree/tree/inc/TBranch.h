@@ -26,19 +26,12 @@
 #include <memory>
 
 #include "Compression.h"
-
-#include "TNamed.h"
-
-#include "TObjArray.h"
-
 #include "TAttFill.h"
-
-#include "TDataType.h"
-
-#include "ROOT/TIOFeatures.hxx"
-#include "ROOT/TBulkBranchRead.hxx" ///< A helper class for bulk IO (multiple events per call) operations.
-
 #include "TBranchCacheInfo.h"
+#include "TDataType.h"
+#include "TNamed.h"
+#include "TObjArray.h"
+#include "ROOT/TIOFeatures.hxx"
 
 class TTree;
 class TBasket;
@@ -50,16 +43,48 @@ class TClonesArray;
 class TTreeCloner;
 class TTreeCache;
 
-   const Int_t kDoNotProcess = BIT(10); // Active bit for branches
-   const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
-   const Int_t kBranchObject = BIT(12); // branch is a TObject*
-   const Int_t kBranchAny    = BIT(17); // branch is an object*
-   const Int_t kMapObject    = kBranchObject | kBranchAny;
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+class TBulkBranchRead;
+}
+}
+namespace Internal {
+class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
+}
+}
+
+const Int_t kDoNotProcess = BIT(10); // Active bit for branches
+const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
+const Int_t kBranchObject = BIT(12); // branch is a TObject*
+const Int_t kBranchAny    = BIT(17); // branch is an object*
+const Int_t kMapObject    = kBranchObject | kBranchAny;
 
 namespace ROOT {
-  namespace Internal {
-    class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
-  }
+namespace Experimental {
+namespace Internal {
+
+///\class TBulkBranchRead
+/// Helper class for reading many branch entries at once to optimize throughput.
+class TBulkBranchRead {
+
+   friend class ::TBranch;
+
+public:
+   Int_t GetBulkEntries(Long64_t evt, TBuffer &user_buf);
+   Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf);
+   Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf, TBuffer *count_buf);
+   Bool_t SupportsBulkRead() const;
+
+private:
+   TBulkBranchRead(TBranch &parent)
+      : fParent(parent)
+   {}
+
+   TBranch &fParent;
+};
+}
+}
 }
 
 class TBranch : public TNamed , public TAttFill {
@@ -242,7 +267,7 @@ public:
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
    void              SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
    void              SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
-   void              SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
+   void              SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );
@@ -281,6 +306,17 @@ inline Int_t TBranch::GetCompressionSettings() const
    return (fCompress < 0) ? -1 : fCompress;
 }
 
-#include "ROOT/TBulkBranchRead.icc"
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+
+inline Int_t  TBulkBranchRead::GetBulkEntries(Long64_t evt, TBuffer& user_buf) { return fParent.GetBulkEntries(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf) { return fParent.GetEntriesSerialized(evt, user_buf); }
+inline Int_t  TBulkBranchRead::GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf) { return fParent.GetEntriesSerialized(evt, user_buf, count_buf); }
+inline Bool_t TBulkBranchRead::SupportsBulkRead() const { return fParent.SupportsBulkRead(); }
+
+}  // Internal
+}  // Experimental
+}  // ROOT
 
 #endif

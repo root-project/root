@@ -8,6 +8,13 @@
 #  CheckCompiler.cmake
 #---------------------------------------------------------------------------------------------------
 
+if(NOT GENERATOR_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
+  if(NOT CMAKE_C_FLAGS AND NOT CMAKE_CXX_FLAGS AND NOT CMAKE_Fortran_FLAGS)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
+      "Specifies the build type on single-configuration generators" FORCE)
+  endif()
+endif()
+
 include(CheckLanguage)
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
 if(fortran)
@@ -84,10 +91,6 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 else()
   set(GCC_MAJOR 0)
   set(GCC_MINOR 0)
-endif()
-
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build, options are: Release, MinSizeRel, Debug, RelWithDebInfo." FORCE)
 endif()
 
 include(CheckCXXCompilerFlag)
@@ -195,5 +198,6 @@ int main() {}
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
-message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}")
+string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE} (flags = '${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}')")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS}")

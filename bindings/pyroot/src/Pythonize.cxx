@@ -1300,6 +1300,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
    PyObject* StlIterIsEqual( PyObject* self, PyObject* other )
    {
+      if (other != Py_None) {
+         if (Utility::AddBinaryOperator(self, other, "==", "__eq__", nullptr, true))
+            return PyObject_CallMethodObjArgs(self, PyStrings::gEq, other, nullptr);
+      }
+
       return PyErr_Format( PyExc_LookupError,
          "No operator==(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
@@ -1311,6 +1316,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
    PyObject* StlIterIsNotEqual( PyObject* self, PyObject* other )
    {
+      if (other != Py_None) {
+         if (Utility::AddBinaryOperator(self, other, "!=", "__ne__", nullptr, true))
+            return PyObject_CallMethodObjArgs(self, PyStrings::gNe, other, nullptr);
+      }
+
       return PyErr_Format( PyExc_LookupError,
          "No operator!=(const %s&, const %s&) available in the dictionary!",
          Utility::ClassName( self ).c_str(), Utility::ClassName( other ).c_str()  );
@@ -2528,7 +2538,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       }
 
    // vector-optimized iterator protocol
-      ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)vector_iter;
+   // Breaks for vector of bool since the "data" member function is not required in the STL.
+      if ( name.find("vector<bool>") == std::string::npos && name.find("RVec<bool>") == std::string::npos ) {
+         ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)vector_iter;
+      }
 
    // helpers for iteration
       TypedefInfo_t* ti = gInterpreter->TypedefInfo_Factory( (name+"::value_type").c_str() );
@@ -2707,8 +2720,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    else if ( name.find("ROOT::RDataFrame") == 0 || name.find("ROOT::RDF::RInterface<") == 0 ) {
-      PyObject_SetAttrString(pyclass, "AsNumpy",
-                             PyObject_GetAttrString( gRootModule, "_RDataFrameAsNumpy" ));
+      if (PyObject_HasAttrString( gRootModule, "_RDataFrameAsNumpy" )) {
+         PyObject_SetAttrString(pyclass, "AsNumpy",
+                                PyObject_GetAttrString( gRootModule, "_RDataFrameAsNumpy" ));
+      }
    }
 
    else if ( name == "TStyle" ) {
@@ -2778,6 +2793,15 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    else if ( name == "RooSimultaneous" )
       Utility::AddUsingToClass( pyclass, "plotOn" );
+   else if ( name == "RooAbsPdf" ) {
+      Utility::AddUsingToClass( pyclass, "createChi2" );
+      Utility::AddUsingToClass( pyclass, "chi2FitTo" );
+   }
+// Same for TH2
+   else if ( name == "TH2" ) {
+      Utility::AddUsingToClass( pyclass, "GetBinErrorUp" );
+      Utility::AddUsingToClass( pyclass, "GetBinErrorLow" );
+   }
 
    // TODO: store these on the pythonizations module, not on gRootModule
    // TODO: externalize this code and use update handlers on the python side

@@ -77,7 +77,7 @@ TMPWorkerTree::~TMPWorkerTree()
 /// Auxilliary method for common initializations
 void TMPWorkerTree::Setup()
 {
-   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 0);
+   Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
    if (uc != 1) fUseTreeCache = kFALSE;
    fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
@@ -158,14 +158,12 @@ void TMPWorkerTree::SetupTreeCache(TTree *tree)
             fTreeCache = (TTreeCache *)curfile->GetCacheRead(tree);
             if (fCacheSize < 0) fCacheSize = tree->GetCacheSize();
          } else {
+            fTreeCache->UpdateBranches(tree);
             fTreeCache->ResetCache();
             curfile->SetCacheRead(fTreeCache, tree);
-            fTreeCache->UpdateBranches(tree);
          }
          if (fTreeCache) {
             fTreeCacheIsLearning = fTreeCache->IsLearning();
-            if (fTreeCacheIsLearning)
-               Info("SetupTreeCache","the tree cache is in learning phase");
          }
       } else {
          Warning("SetupTreeCache", "default tree does not have a file attached: corruption? Tree cache untouched");

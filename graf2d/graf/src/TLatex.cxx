@@ -2202,7 +2202,6 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    // Get current line attributes.
    Short_t lineW = GetLineWidth();
    Int_t lineC = GetLineColor();
-   if (size<0.04) SetLineWidth(1);
 
    TextSpec_t spec;
    spec.fAngle = angle;

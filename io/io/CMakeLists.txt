@@ -8,7 +8,17 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
+if (WIN32)
+  set(rawfile_local_headers ROOT/RRawFileWin.hxx)
+  set(rawfile_local_sources src/RRawFileWin.cxx)
+else ()
+  set(rawfile_local_headers ROOT/RRawFileUnix.hxx)
+  set(rawfile_local_sources src/RRawFileUnix.cxx)
+endif ()
+
 ROOT_LINKER_LIBRARY(RIO
+  src/RRawFile.cxx
+  ${rawfile_local_sources}
   src/TArchiveFile.cxx
   src/TBufferFile.cxx
   src/TBufferText.cxx
@@ -44,12 +54,13 @@ ROOT_LINKER_LIBRARY(RIO
   $<TARGET_OBJECTS:RootPcmObjs>
   LIBRARIES
     ${CMAKE_DL_LIBS}
+    ${ROOT_ATOMIC_LIBS}
   DEPENDENCIES
     Core
     Thread
 )
 
-target_include_directories(RIO PRIVATE res ${CMAKE_SOURCE_DIR}/core/clib/res)
+target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 
 if(root7)
   set(RIO_EXTRA_HEADERS ROOT/RFile.hxx)
@@ -57,6 +68,8 @@ if(root7)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
+  ROOT/RRawFile.hxx
+  ${rawfile_local_headers}
   ROOT/TBufferMerger.hxx
   TArchiveFile.h
   TBufferFile.h
@@ -91,7 +104,6 @@ ROOT_GENERATE_DICTIONARY(G__RIO
   TZIPFile.h
   ${RIO_EXTRA_HEADERS}
   STAGE1
-  NOTARGET
   MODULE
     RIO
   LINKDEF

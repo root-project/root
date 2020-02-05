@@ -867,7 +867,10 @@ void TFoam::Grow()
 
    while ( (fLastCe+2) < fNCells ) {  // this condition also checked inside Divide
       iCell   = PeekMax();            // peek up cell with maximum driver integral
-      if( (iCell<0) || (iCell>fLastCe) ) Error("Grow", "Wrong iCell \n");
+      if( (iCell<0) || (iCell>fLastCe) ) {
+        Error("Grow", "Wrong iCell \n");
+        break;
+      }
       newCell = fCells[iCell];
 
       if(fLastCe !=0) {

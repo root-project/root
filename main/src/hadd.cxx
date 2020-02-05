@@ -310,7 +310,7 @@ int main( int argc, char **argv )
             }
          }
          char ft[7];
-         for (int alg = 0; !useFirstInputCompression && alg <= 4; ++alg) {
+         for (int alg = 0; !useFirstInputCompression && alg <= 5; ++alg) {
             for( int j=0; j<=9; ++j ) {
                const int comp = (alg*100)+j;
                snprintf(ft,7,"-f%s%d",prefix,comp);
@@ -374,9 +374,9 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose % 100;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100;
          delete firstInput;
-      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose % 100; // default compression level.
+      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100; // default compression level.
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
@@ -404,6 +404,9 @@ int main( int argc, char **argv )
       std::cout << "Each process should handle at least 3 files for efficiency.";
       std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
    }
+   if (nProcesses == 1)
+      multiproc = kFALSE;
+
    std::vector<std::string> partialFiles;
 
    if (multiproc) {

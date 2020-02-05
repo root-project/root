@@ -599,7 +599,7 @@ void TMVA::MethodKNN::ReadWeightsFromStream(std::istream& is)
 
    UInt_t nvar = 0;
 
-   while (!is.eof()) {
+   while (is) {
       std::string line;
       std::getline(is, line);
 

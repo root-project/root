@@ -30,8 +30,8 @@ private:
    Long64_t *fPos;          ///< Array of positions of each segment
    Long64_t *fRelOffset;    ///< Relative offset of piece in the buffer
 
-   TFPBlock(const TFPBlock&);            // Not implemented.
-   TFPBlock &operator=(const TFPBlock&); // Not implemented.
+   TFPBlock(const TFPBlock&) = delete;            // Not implemented.
+   TFPBlock &operator=(const TFPBlock&) = delete; // Not implemented.
 
 public:
 

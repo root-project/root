@@ -13,14 +13,26 @@ find_package(ROOT REQUIRED)
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
-  if(NOT MSVC)  # Ignore environment on Windows
-    set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                     ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
-                     ROOTSYS=${CMAKE_BINARY_DIR}
-                     PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+  if(pyroot_experimental)
+    if(NOT MSVC)  # Ignore environment on Windows
+      set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                       ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/lib/${python_dir}:$ENV{${ld_library_path}}
+                       ROOTSYS=${CMAKE_BINARY_DIR}
+                       PYTHONPATH=${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/lib/${python_dir}:$ENV{PYTHONPATH})
+    else()
+      set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
+                       PYTHONPATH=${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/${python_dir};$ENV{PYTHONPATH})
+    endif()
   else()
-    set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
-                     PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
+    if(NOT MSVC)  # Ignore environment on Windows
+      set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                       ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                       ROOTSYS=${CMAKE_BINARY_DIR}
+                       PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+    else()
+      set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
+                       PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
+    endif()
   endif()
 else()                       # testing using an installation
   include(${ROOT_USE_FILE})
@@ -106,6 +118,9 @@ if(NOT ROOT_xml_FOUND)
                 unfold/*.C)        # unfold requires xml
 endif()
 
+if(NOT ROOT_mpi_FOUND)
+  set(mpi_veto io/testTMPIFile.C)
+endif()
 
 if(NOT XROOTD_FOUND)
   set(xrootd_veto dataframe/df101_h1Analysis.C
@@ -185,7 +200,7 @@ endif()
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
-             geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
+             geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C geom/webdemo.C
              gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
              gui/*.C
              hist/exec1.C
@@ -205,6 +220,9 @@ if (NOT ROOT_tmva_FOUND)
 else()
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
+  if(MSVC AND NOT win_broken_tests)
+    list(APPEND tmva_veto tmva/tmva103_Application.C tmva/envelope/classification.C)
+  endif()
 endif()
 
 if (NOT ROOT_pythia6_FOUND)
@@ -225,9 +243,13 @@ endif()
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
                  v7/browser.cxx
+                 v7/filedialog.cxx
                  v7/fitpanel.cxx
                  v7/fitpanel6.cxx
       )
+  if(MSVC AND NOT win_broken_tests)
+    list(APPEND root7_veto v7/box.cxx v7/draw*.cxx )
+  endif()
 endif()
 
 if(NOT root7)
@@ -280,6 +302,7 @@ set(all_veto hsimple.C
              ${roofit_veto}
              ${unuran_veto}
              ${xml_veto}
+             ${mpi_veto}
              ${fitsio_veto}
              ${tmva_veto}
              ${mathmore_veto}
@@ -313,6 +336,14 @@ list(LENGTH tutorials_veto veto)
 message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons")
 
 list(REMOVE_ITEM tutorials ${tutorials_veto})
+
+if(mpi)
+  set (temp_list ${tutorials})
+  list(FILTER tutorials INCLUDE REGEX "MPI")
+  set(mpi_tutorials ${tutorials})
+  set(tutorials ${temp_list})
+  list(REMOVE_ITEM tutorials ${mpi_tutorials})
+endif()
 
 #---Special return code------------------------------------------------
 set(returncode_1 fit/fit2a.C fit/graph2dfit.C
@@ -385,6 +416,8 @@ set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassi
 set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
 set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
 set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
+set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
+set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -422,10 +455,38 @@ foreach(t ${tutorials})
                 TIMEOUT ${thisTestTimeout})
 endforeach()
 
+#---Loop over all MPI tutorials and define the corresponding test---------
+foreach(t ${mpi_tutorials})
+  list(FIND returncode_1 ${t} index)
+  if(index EQUAL -1)
+    set(rc 0)
+  else()
+    set(rc 255)
+  endif()
+  string(REPLACE ".C" "" tname ${t})
+  string(REPLACE "/" "-" tname ${tname})
+
+   # These tests on ARM64 need much more than 20 minutes - increase the timeout
+   if(ROOT_ARCHITECTURE MATCHES arm64)
+     set(thisTestTimeout 2400) # 40m
+   else()
+     set(thisTestTimeout 1200) # 20m
+   endif()
+
+  ROOT_ADD_TEST(tutorial-${tname}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                LABELS tutorial
+                DEPENDS tutorial-hsimple ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ}
+                TIMEOUT ${thisTestTimeout})
+endforeach()
 
 #---Python tutorials-----------------------------------------------------
 if(ROOT_python_FOUND)
-  find_package(PythonInterp REQUIRED)
+  if(NOT PYTHON_EXECUTABLE)
+    find_package(PythonInterp REQUIRED)
+  endif()
 
   file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
   set(pyveto pyroot/demo.py         # requires GUI
@@ -464,6 +525,12 @@ if(ROOT_python_FOUND)
     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 
+  find_python_module(xgboost QUIET)
+  if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)
+    list(REMOVE_ITEM pytutorials ${tmva_veto_py})
+  endif()
+
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
   set(pyroot-h1draw-depends tutorial-pyroot-hsimple-py)
@@ -475,30 +542,6 @@ if(ROOT_python_FOUND)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory) #Race condition
-
-  #---Tutorials expected to fail in PyROOT experimental
-  set(pyexp_fail tutorial-dataframe-df002_dataModel-py
-                 tutorial-dataframe-df003_profiles-py
-                 tutorial-dataframe-df010_trivialDataSource-py
-                 tutorial-dataframe-df011_ROOTDataSource-py
-                 tutorial-dataframe-df014_CSVDataSource-py
-                 tutorial-dataframe-df016_vecOps-py
-                 tutorial-dataframe-df017_vecOpsHEP-py
-                 tutorial-dataframe-df102_NanoAODDimuonAnalysis-py
-                 tutorial-dataframe-df103_NanoAODHiggsAnalysis-py
-                 tutorial-pyroot-benchmarks-py
-                 tutorial-pyroot-pyroot002_TTreeAsMatrix-py
-                 tutorial-pyroot-shapes-py
-                 tutorial-pyroot-staff-py
-                 tutorial-roofit-rf106_plotdecoration-py
-                 tutorial-roofit-rf315_projectpdf-py
-                 tutorial-roofit-rf402_datahandling-py
-                 tutorial-roofit-rf610_visualerror-py)
-
-  if(${PYTHON_VERSION_MAJOR} GREATER_EQUAL 3)
-    # These tests only fail in Py3 with PyROOT experimental
-    list(APPEND pyexp_fail tutorial-pyroot-hsimple-py)
-  endif()
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)

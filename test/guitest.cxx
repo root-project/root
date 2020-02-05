@@ -730,7 +730,7 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = filetypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.SetIniDir(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
                         printf("Open file: %s (dir: %s)\n", fi.fFilename,
                                fi.fIniDir);
@@ -1778,7 +1778,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
    TString dirname = item->GetText();
 
    while ((parent=item->GetParent())) {
-      dirname = gSystem->ConcatFileName(parent->GetText(),dirname);
+      gSystem->PrependPathName(parent->GetText(),dirname);
       item = parent;
    }
 

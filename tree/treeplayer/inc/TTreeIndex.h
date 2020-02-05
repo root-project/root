@@ -23,7 +23,8 @@
 
 
 #include "TVirtualIndex.h"
-#include "TTreeFormula.h"
+
+class TTreeFormula;
 
 class TTreeIndex : public TVirtualIndex {
 
@@ -40,8 +41,8 @@ protected:
    TTreeFormula  *fMinorFormulaParent;  //! Pointer to minor TreeFormula in Parent tree (if any)
 
 private:
-   TTreeIndex(const TTreeIndex&);            // Not implemented.
-   TTreeIndex &operator=(const TTreeIndex&); // Not implemented.
+   TTreeIndex(const TTreeIndex&) = delete;            // Not implemented.
+   TTreeIndex &operator=(const TTreeIndex&) = delete; // Not implemented.
 
 public:
    TTreeIndex();

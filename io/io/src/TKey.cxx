@@ -413,6 +413,9 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
    if (filepos > TFile::kStartBigFile) fVersion += 1000;
 
    if (fTitle.Length() > kTitleMax) fTitle.Resize(kTitleMax);
+
+   if (GetFile() && GetFile()->TestBit(TFile::kReproducible))
+      SetBit(TKey::kReproducible);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -477,6 +480,10 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
             nsize,GetName(),GetTitle());
       return;
    }
+
+   if (f->TestBit(TFile::kReproducible))
+      SetBit(TKey::kReproducible);
+
    fDatime.Set();
    fSeekKey  = bestfree->GetFirst();
 //*-*----------------- Case Add at the end of the file
@@ -592,7 +599,10 @@ void TKey::FillBuffer(char *&buffer)
    tobuf(buffer, version);
 
    tobuf(buffer, fObjlen);
-   fDatime.FillBuffer(buffer);
+   if (TestBit(TKey::kReproducible))
+      TDatime((UInt_t) 1).FillBuffer(buffer);
+   else
+      fDatime.FillBuffer(buffer);
    tobuf(buffer, fKeylen);
    tobuf(buffer, fCycle);
    if (fVersion > 1000) {
@@ -1397,7 +1407,10 @@ void TKey::Streamer(TBuffer &b)
       b << version;
       b << fObjlen;
       if (fDatime.Get() == 0) fDatime.Set();
-      fDatime.Streamer(b);
+      if (TestBit(TKey::kReproducible))
+         TDatime((UInt_t) 1).Streamer(b);
+      else
+         fDatime.Streamer(b);
       b << fKeylen;
       b << fCycle;
       if (fVersion > 1000) {

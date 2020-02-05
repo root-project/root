@@ -112,7 +112,7 @@ GetArgcArgv(std::string &s, char **argv)
 /*
 *  The names of the first group of possible symbol table storage classes
 */
-char * SzStorageClass1[] = {
+const char *SzStorageClass1[] = {
    "NULL","AUTOMATIC","EXTERNAL","STATIC","REGISTER","EXTERNAL_DEF","LABEL",
    "UNDEFINED_LABEL","MEMBER_OF_STRUCT","ARGUMENT","STRUCT_TAG",
    "MEMBER_OF_UNION","UNION_TAG","TYPE_DEFINITION","UNDEFINED_STATIC",
@@ -122,7 +122,7 @@ char * SzStorageClass1[] = {
 /*
 * The names of the second group of possible symbol table storage classes
 */
-char * SzStorageClass2[] = {
+const char *SzStorageClass2[] = {
    "BLOCK","FUNCTION","END_OF_STRUCT","FILE","SECTION","WEAK_EXTERNAL"
 };
 
@@ -134,7 +134,7 @@ char * SzStorageClass2[] = {
 *      ASCII string
 *----------------------------------------------------------------------
 */
-PSTR
+PCSTR
 GetSZStorageClass(BYTE storageClass)
 {
    if ( storageClass <= IMAGE_SYM_CLASS_BIT_FIELD )
@@ -623,7 +623,7 @@ main(int argc, char **argv)
    FILE *fout;
    int full = 0;
    int fort = 0;
-   char *dllname = "";
+   const char *dllname;
    char *outfile = NULL;
 
    if (argc < 3) {

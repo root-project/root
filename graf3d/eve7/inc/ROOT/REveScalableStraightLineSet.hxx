@@ -5,6 +5,7 @@
 
 namespace ROOT {
 namespace Experimental {
+
 class REveScalableStraightLineSet : public REveStraightLineSet
 {
 private:

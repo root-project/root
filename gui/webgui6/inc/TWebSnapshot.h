@@ -98,7 +98,7 @@ protected:
    Long64_t fVersion{0};           ///< actual canvas version
    std::string fScripts;           ///< custom scripts to load
 public:
-   TCanvasWebSnapshot() = default;
+   TCanvasWebSnapshot() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TCanvasWebSnapshot(bool readonly, Long64_t v) : TPadWebSnapshot(readonly), fVersion(v) {}
 
    Long64_t GetVersion() const { return fVersion; }

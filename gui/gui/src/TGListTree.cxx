@@ -2341,6 +2341,7 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
       if (curvol) {
          TNamed *drive = (TNamed *)curvol->At(0);
          item = FindChildByName(0, TString::Format("%s\\", drive->GetName()));
+         delete curvol;
       }
    }
    TGListTreeItem *diritem = 0;
@@ -2682,10 +2683,10 @@ void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
 
 void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t n)
 {
-   static const TGPicture *oldopen=0;
-   static const TGPicture *oldclose=0;
-   static const TGPicture *oldcheck=0;
-   static const TGPicture *olduncheck=0;
+   static const TGPicture *oldopen = nullptr;
+   static const TGPicture *oldclose = nullptr;
+   static const TGPicture *oldcheck = nullptr;
+   static const TGPicture *olduncheck = nullptr;
    static Bool_t makecheck = kTRUE;
    static Bool_t makeuncheck = kTRUE;
    static Color_t oldcolor = -1;
@@ -2705,15 +2706,15 @@ void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t
 
    if (oldopen != fOpenPic) {
       oldopen = fOpenPic;
-      out << "   popen = gClient->GetPicture(" << quote
-          << gSystem->ExpandPathName(gSystem->UnixPathName(fOpenPic->GetName()))
-          << quote << ");" << std::endl;
+      TString picname = gSystem->UnixPathName(fOpenPic->GetName());
+      gSystem->ExpandPathName(picname);
+      out << "   popen = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
    }
    if (oldclose != fClosedPic) {
       oldclose = fClosedPic;
-      out << "   pclose = gClient->GetPicture(" << quote
-          << gSystem->ExpandPathName(gSystem->UnixPathName(fClosedPic->GetName()))
-          << quote << ");" << std::endl;
+      TString picname = gSystem->UnixPathName(fClosedPic->GetName());
+      gSystem->ExpandPathName(picname);
+      out << "   pclose = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
    }
    out << "   item" << s.Data() << "->SetPictures(popen, pclose);" << std::endl;
    if (HasCheckBox()) {
@@ -2728,15 +2729,15 @@ void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t
       out << "   item" << s.Data() << "->CheckItem();" << std::endl;
       if (fCheckedPic && oldcheck != fCheckedPic) {
          oldcheck = fCheckedPic;
-         out << "   pcheck = gClient->GetPicture(" << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(fCheckedPic->GetName()))
-             << quote << ");" << std::endl;
+         TString picname = gSystem->UnixPathName(fCheckedPic->GetName());
+         gSystem->ExpandPathName(picname);
+         out << "   pcheck = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
       }
       if (fUncheckedPic && olduncheck != fUncheckedPic) {
          olduncheck = fUncheckedPic;
-         out << "   puncheck = gClient->GetPicture(" << quote
-             << gSystem->ExpandPathName(gSystem->UnixPathName(fUncheckedPic->GetName()))
-             << quote << ");" << std::endl;
+         TString picname = gSystem->UnixPathName(fUncheckedPic->GetName());
+         gSystem->ExpandPathName(picname);
+         out << "   puncheck = gClient->GetPicture(" << quote << picname << quote << ");" << std::endl;
       }
       out << "   item" << s.Data() << "->SetCheckBoxPictures(pcheck, puncheck);" << std::endl;
       out << "   item" << s.Data() << "->SetCheckBox(kTRUE);" << std::endl;

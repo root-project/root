@@ -14,6 +14,15 @@
 #pragma link C++ class RooRealIntegral+ ;
 #pragma link C++ class RooRealMPFE+ ;
 #pragma link C++ class RooRealProxy+ ;
+#pragma link C++ class RooPdfProxy+;
+#pragma read sourceClass="RooRealProxy" targetClass="RooPdfProxy" version="[1]" \
+  source="" target=""
+#pragma link C++ class RooLVarProxy+;
+#pragma read sourceClass="RooRealProxy" targetClass="RooLVarProxy" version="[1]" \
+  source="" target=""
+#pragma link C++ class RooRealVarProxy+;
+#pragma read sourceClass="RooRealProxy" targetClass="RooRealVarProxy" version="[1]" \
+  source="" target=""
 #pragma link C++ class RooRealVar- ;
 #pragma link C++ class RooRealVarSharedProperties+ ;
 #pragma link C++ class RooRefCountList+ ;
@@ -30,8 +39,16 @@
 #pragma link C++ class RooStringVar+ ;
 #pragma link C++ class RooSuperCategory+ ;
 #pragma link C++ class RooTable+ ;
-#pragma link C++ class RooThreshEntry+ ;
 #pragma link C++ class RooThresholdCategory+ ;
+#pragma read sourceClass="RooThresholdCategory" targetClass="RooThresholdCategory" version="[1]" \
+  source="TSortedList _threshList" target="_threshList" \
+  code="{class RooThreshEntry : public TObject { public: Double_t _thresh; RooCatType _cat;}; \
+         RooThreshEntry* te; \
+         auto iter = onfile._threshList.MakeIterator();\
+         while( (te = (RooThreshEntry*)iter->Next()) ) { \
+           _threshList.emplace_back(te->_thresh, te->_cat); \
+         }\
+         }";
 #pragma link C++ class RooTObjWrap+ ;
 #pragma link C++ class RooTrace+ ;
 #pragma link C++ class RooUniformBinning+ ;

@@ -184,9 +184,7 @@ bool ROOT::Experimental::RWebWindowsManager::CreateServer(bool with_http)
          ui5dir = ".";
       }
 
-      printf("Assign UI5 dir %s\n", ui5dir.Data());
-
-      fServer->AddLocation("rootui5sys/", ui5dir);
+      fServer->AddLocation("rootui5sys/", ui5dir.Data());
    }
 
    if (!with_http || !fAddr.empty())
@@ -370,13 +368,21 @@ std::string ROOT::Experimental::RWebWindowsManager::GetUrl(const ROOT::Experimen
 ///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
 ///   WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
 ///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
+///   WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
+///   WebGui.openui5src:   alternative location for openui5 like https://openui5.hana.ondemand.com/
+///   WebGui.openui5libs:  list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
+///   WebGui.openui5theme:  openui5 theme like sap_belize (default) or sap_fiori_3
 ///
 ///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
 
-unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(ROOT::Experimental::RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
+unsigned ROOT::Experimental::RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
 {
    // silently ignore regular Show() calls in batch mode
    if (!batch_mode && gROOT->IsWebDisplayBatch())
+      return 0;
+
+   // for embedded window no any browser need to be started
+   if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
       return 0;
 
    // we book manager mutex for a longer operation,

@@ -1,8 +1,6 @@
 // Author: Stephan Hageboeck, CERN, May 2019
 /*****************************************************************************
  * Project: RooFit                                                           *
- * Package: RooFitModels                                                     *
- *    File: $Id: RooJohnson.h,v 1.16 2007/07/12 20:30:49 wouter Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -25,10 +23,10 @@ class RooRealVar;
 
 class RooJohnson final : public RooAbsPdf {
 public:
-  RooJohnson() = default;
+  RooJohnson() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
   RooJohnson(const char *name, const char *title,
-            RooAbsReal& mass, RooAbsReal& mu, RooAbsReal& sigma,
+            RooAbsReal& mass, RooAbsReal& mu, RooAbsReal& lambda,
             RooAbsReal& gamma, RooAbsReal& delta,
             double massThreshold = -std::numeric_limits<double>::max());
 
@@ -59,7 +57,7 @@ private:
   double _massThreshold{-1.E300};
 
   Double_t evaluate() const override;
-//  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const override;
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t end) const override;
 
   ClassDefOverride(RooJohnson,1)
 };

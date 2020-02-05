@@ -55,7 +55,7 @@ PyObject* CPyCppyy::PyStrings::gNoImplicit       = nullptr;
 
 //-----------------------------------------------------------------------------
 #define CPPYY_INITIALIZE_STRING(var, str)                                     \
-    if (!(PyStrings::var = CPyCppyy_PyUnicode_InternFromString((char*)#str))) \
+    if (!(PyStrings::var = CPyCppyy_PyText_InternFromString((char*)#str)))    \
         return false
 
 bool CPyCppyy::CreatePyStrings() {
@@ -66,10 +66,10 @@ bool CPyCppyy::CreatePyStrings() {
     CPPYY_INITIALIZE_STRING(gBase,           __base__);
     CPPYY_INITIALIZE_STRING(gCppEq,          __cpp_eq__);
     CPPYY_INITIALIZE_STRING(gCppNe,          __cpp_ne__);
-    CPPYY_INITIALIZE_STRING(gCppName,        __cppname__);
+    CPPYY_INITIALIZE_STRING(gCppName,        __cpp_name__);
     CPPYY_INITIALIZE_STRING(gDeref,          __deref__);
     CPPYY_INITIALIZE_STRING(gDict,           __dict__);
-    if (!(PyStrings::gEmptyString = CPyCppyy_PyUnicode_FromString((char*)"")))
+    if (!(PyStrings::gEmptyString = CPyCppyy_PyText_FromString((char*)"")))
         return false;
     CPPYY_INITIALIZE_STRING(gEq,             __eq__);
     CPPYY_INITIALIZE_STRING(gFollow,         __follow__);

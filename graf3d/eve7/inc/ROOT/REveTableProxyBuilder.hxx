@@ -12,23 +12,25 @@ class REveTableInfo;
 class REveTableProxyBuilder : public REveDataProxyBuilderBase
 {
 private:
-   //TableHandle::TableEntries m_specs;
    REveDataTable* fTable; // cached
 
+protected:
+   void Clean() override;
+
 public:
-   REveTableProxyBuilder() : REveDataProxyBuilderBase("Table"), fTable(0) {}
+   REveTableProxyBuilder();
+   virtual ~REveTableProxyBuilder();
+
    virtual bool WillHandleInteraction() const { return true; }
 
    using REveDataProxyBuilderBase::ModelChanges;
-   virtual void ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product* p);
+   virtual void ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product* p) override;
 
    using REveDataProxyBuilderBase::Build;
-   virtual void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext* context);
+   virtual void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext* context) override;
 
-   void DisplayedCollectionChanged(ElementId_t);
-
-
-   virtual void CleanLocal();
+   void SetCollection(REveDataCollection*) override;
+   void ConfigChanged();
 };
 }
 }

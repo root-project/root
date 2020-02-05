@@ -74,7 +74,7 @@ void TAttAxis::Copy(TAttAxis &attaxis) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset axis attributes
+/// Reset axis attributes.
 
 void TAttAxis::ResetAttAxis(Option_t *option)
 {
@@ -106,7 +106,7 @@ void TAttAxis::ResetAttAxis(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save axis attributes as C++ statement(s) on output stream out
+/// Save axis attributes as C++ statement(s) on output stream out.
 
 void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
 {
@@ -133,10 +133,10 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
    if (TMath::Abs(fLabelOffset-0.005) > 0.0001) {
       out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<std::endl;
    }
-   if (TMath::Abs(fLabelSize-0.04) > 0.001) {
+   if (TMath::Abs(fLabelSize-0.035) > 0.001) {
       out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<std::endl;
    }
-   if (TMath::Abs(fTitleSize-0.04) > 0.001) {
+   if (TMath::Abs(fTitleSize-0.035) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<std::endl;
    }
    if (TMath::Abs(fTickLength-0.03) > 0.001) {
@@ -158,7 +158,7 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set color of the line axis and tick marks
+/// Set color of the line axis and tick marks.
 
 void TAttAxis::SetAxisColor(Color_t color, Float_t alpha)
 {
@@ -168,7 +168,7 @@ void TAttAxis::SetAxisColor(Color_t color, Float_t alpha)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set color of labels
+/// Set color of labels.
 
 void TAttAxis::SetLabelColor(Color_t color, Float_t alpha)
 {
@@ -187,8 +187,8 @@ void TAttAxis::SetLabelFont(Style_t font)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set distance between the axis and the labels
-/// The distance is expressed in per cent of the pad width
+/// Set distance between the axis and the labels.
+/// The distance is expressed in per cent of the pad width.
 
 void TAttAxis::SetLabelOffset(Float_t offset)
 {
@@ -198,8 +198,8 @@ void TAttAxis::SetLabelOffset(Float_t offset)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set size of axis labels
-/// The size is expressed in per cent of the pad width
+/// Set size of axis labels.
+/// The size is expressed in per cent of the pad size.
 
 void TAttAxis::SetLabelSize(Float_t size)
 {
@@ -238,7 +238,7 @@ void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///see function above
+/// Set the number of divisions for this axis using one `int` per division level.
 
 void TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim)
 {
@@ -274,8 +274,8 @@ void TAttAxis::SetMaxDigits(Int_t maxDigits)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set tick mark length
-/// The length is expressed in per cent of the pad width
+/// Set tick mark length.
+/// The length is expressed in per cent of the pad width.
 
 void TAttAxis::SetTickLength(Float_t length)
 {
@@ -284,7 +284,7 @@ void TAttAxis::SetTickLength(Float_t length)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set distance between the axis and the axis title
+/// Set distance between the axis and the axis title.
 /// Offset is a correction factor with respect to the "standard" value.
 ///  - offset = 1   uses standard position that is computed in function
 ///                 of the label offset and size.
@@ -298,7 +298,7 @@ void TAttAxis::SetTitleOffset(Float_t offset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set size of axis title
+/// Set size of axis title.
 /// The size is expressed in per cent of the pad width
 
 void TAttAxis::SetTitleSize(Float_t size)
@@ -308,7 +308,7 @@ void TAttAxis::SetTitleSize(Float_t size)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set color of axis title
+/// Set color of axis title.
 
 void TAttAxis::SetTitleColor(Color_t color)
 {

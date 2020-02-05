@@ -496,59 +496,6 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
-  TNamed(gv),
-  TGeoAtt(gv),
-  TAttLine(gv),
-  TAttFill(gv),
-  TAtt3D(gv),
-  fNodes(gv.fNodes),
-  fShape(gv.fShape),
-  fMedium(gv.fMedium),
-  fFinder(gv.fFinder),
-  fVoxels(gv.fVoxels),
-  fGeoManager(gv.fGeoManager),
-  fField(gv.fField),
-  fOption(gv.fOption),
-  fNumber(gv.fNumber),
-  fNtotal(gv.fNtotal),
-  fRefCount(0),
-  fUserExtension(gv.fUserExtension->Grab()),
-  fFWExtension(gv.fFWExtension->Grab())
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv)
-{
-   if(this!=&gv) {
-      TNamed::operator=(gv);
-      TGeoAtt::operator=(gv);
-      TAttLine::operator=(gv);
-      TAttFill::operator=(gv);
-      TAtt3D::operator=(gv);
-      fNodes=gv.fNodes;
-      fShape=gv.fShape;
-      fMedium=gv.fMedium;
-      fFinder=gv.fFinder;
-      fVoxels=gv.fVoxels;
-      fGeoManager=gv.fGeoManager;
-      fField=gv.fField;
-      fOption=gv.fOption;
-      fNumber=gv.fNumber;
-      fRefCount = 0;
-      fNtotal=gv.fNtotal;
-      fUserExtension=gv.fUserExtension->Grab();
-      fFWExtension=gv.fFWExtension->Grab();
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoVolume::~TGeoVolume()
@@ -2454,41 +2401,6 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMedium *med)
    SetMedium(med);
    fGeoManager->AddVolume(this);
 //   printf("--- volume multi %s created\n", name);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoVolumeMulti::TGeoVolumeMulti(const TGeoVolumeMulti& vm) :
-  TGeoVolume(vm),
-  fVolumes(vm.fVolumes),
-  fDivision(vm.fDivision),
-  fNumed(vm.fNumed),
-  fNdiv(vm.fNdiv),
-  fAxis(vm.fAxis),
-  fStart(vm.fStart),
-  fStep(vm.fStep),
-  fAttSet(vm.fAttSet)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoVolumeMulti& TGeoVolumeMulti::operator=(const TGeoVolumeMulti& vm)
-{
-   if(this!=&vm) {
-      TGeoVolume::operator=(vm);
-      fVolumes=vm.fVolumes;
-      fDivision=vm.fDivision;
-      fNumed=vm.fNumed;
-      fNdiv=vm.fNdiv;
-      fAxis=vm.fAxis;
-      fStart=vm.fStart;
-      fStep=vm.fStep;
-      fAttSet=vm.fAttSet;
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

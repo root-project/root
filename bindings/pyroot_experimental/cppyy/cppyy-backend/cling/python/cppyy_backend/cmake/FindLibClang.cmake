@@ -17,7 +17,7 @@
 # Python support for clang might not be available for Python3. We need to
 # find what we have.
 #
-find_library(LibClang_LIBRARY libclang.so PATH_SUFFIXES $ENV{CONDA_PREFIX}/lib x86_64-linux-gnu llvm llvm/6/lib64)
+find_library(LibClang_LIBRARY libclang.so PATH_SUFFIXES $ENV{CONDA_PREFIX}/lib x86_64-linux-gnu llvm llvm/6/lib64 llvm-6.0/lib)
 function(_find_libclang_python python_executable)
     #
     # Prefer python3 explicitly or implicitly over python2.

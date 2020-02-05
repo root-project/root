@@ -5,19 +5,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>ROOT Browser</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
-      <style>
-         html { height: 100%; }
-         body { min-height: 100%; margin: 0; overflow: hidden }
-         #BrowserDiv {
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            right: 0;
-            padding: 1
-         }
-
-       </style>
+      <link rel="stylesheet" type="text/css" href="rootui5sys/browser/style.css">
 
    </head>
 
@@ -32,7 +20,7 @@
 
            sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
               XMLView.create({
-                 id: "TopEveId",
+                 id: "TopBrowserId",
                  viewName: "rootui5.browser.view.Browser",
                  viewData: { conn_handle: handle }
               }).then(function(oView) {
@@ -45,10 +33,10 @@
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
 
         JSROOT.ConnectWebWindow({
-           prereq: "openui5",
+           prereq: "openui5;v6;v7",  // load v6,v7 because of canvas painter
 //           openui5src: "jsroot",    // use JSROOT provided package, default
-//           openui5src: "https://openui5.hana.ondemand.com/1.64.1/",
-           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor", // customize openui5 libs later
+//           openui5src: "https://openui5.hana.ondemand.com/1.70.0/",
+           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor, sap.tnt", // customize openui5 libs later
            prereq_logdiv: "BrowserDiv",
            callback: InitUI
         });

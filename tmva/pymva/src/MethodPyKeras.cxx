@@ -225,6 +225,7 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
                "Failed to load Keras model from file: "+filenameLoadModel);
    Log() << kINFO << "Load model from file: " << filenameLoadModel << Endl;
 
+
    /*
     * Init variables and weights
     */
@@ -278,7 +279,7 @@ void MethodPyKeras::Train() {
    UInt_t nAllEvents = Data()->GetNTrainingEvents();
    UInt_t nValEvents = GetNumValidationSamples();
    UInt_t nTrainingEvents = nAllEvents - nValEvents;
-   
+
    Log() << kINFO << "Split TMVA training data in " << nTrainingEvents << " training events and "
          << nValEvents << " validation events" << Endl;
 
@@ -334,7 +335,7 @@ void MethodPyKeras::Train() {
    float* valDataWeights = new float[nValEvents];
    //validation events follows the trainig one in the TMVA training vector
    for (UInt_t i=0; i< nValEvents ; i++) {
-      UInt_t ievt = nTrainingEvents + i; // TMVA event index 
+      UInt_t ievt = nTrainingEvents + i; // TMVA event index
       const TMVA::Event* e = GetTrainingEvent(ievt);
       // Fill variables
       for (UInt_t j=0; j<fNVars; j++) {
@@ -370,6 +371,8 @@ void MethodPyKeras::Train() {
    /*
     * Train Keras model
     */
+   Log() << kINFO << "Training Model Summary" << Endl;
+   PyRunString("model.summary()");
 
    // Setup parameters
 
@@ -432,6 +435,44 @@ void MethodPyKeras::Train() {
    // Train model
    PyRunString("history = model.fit(trainX, trainY, sample_weight=trainWeights, batch_size=batchSize, epochs=numEpochs, verbose=verbose, validation_data=(valX, valY, valWeights), callbacks=callbacks)",
                "Failed to train model");
+
+
+   std::vector<float> fHistory; // Hold training history  (val_acc or loss etc)
+   fHistory.resize(fNumEpochs); // holds training loss or accuracy output
+   npy_intp dimsHistory[1] = { (npy_intp)fNumEpochs};
+   PyArrayObject* pHistory = (PyArrayObject*)PyArray_SimpleNewFromData(1, dimsHistory, NPY_FLOAT, (void*)&fHistory[0]);
+   PyDict_SetItemString(fLocalNS, "HistoryOutput", (PyObject*)pHistory);
+
+   // Store training history data
+   Int_t iHis=0;
+   PyRunString("number_of_keys=len(history.history.keys())");
+   PyObject* PyNkeys=PyDict_GetItemString(fLocalNS, "number_of_keys");
+   int nkeys=PyLong_AsLong(PyNkeys);
+   for (iHis=0; iHis<nkeys; iHis++) {
+
+      PyRunString(TString::Format("copy_string=str(list(history.history.keys())[%d])",iHis));
+      //PyRunString("print (copy_string)");
+      PyObject* stra=PyDict_GetItemString(fLocalNS, "copy_string");
+      if(!stra) break;
+#if PY_MAJOR_VERSION < 3   // for Python2
+      const char *stra_name = PyBytes_AsString(stra);
+      // need to add string delimiter for Python2
+      TString sname = TString::Format("'%s'",stra_name);
+      const char * name = sname.Data(); 
+#else   // for Python3
+      PyObject* repr = PyObject_Repr(stra);
+      PyObject* str = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
+      const char *name = PyBytes_AsString(str);
+#endif
+
+      Log() << kINFO << "Getting training history for item:" << iHis << " name = " << name << Endl;
+      PyRunString(TString::Format("for i,p in enumerate(history.history[%s]):\n   HistoryOutput[i]=p\n",name),
+                  TString::Format("Failed to get %s from training history",name));
+      for (size_t i=0; i<fHistory.size(); i++)
+         fTrainHistory.AddValue(name,i+1,fHistory[i]);
+
+   }
+//#endif
 
    /*
     * Store trained model to file (only if option 'SaveBestOnly' is NOT activated,

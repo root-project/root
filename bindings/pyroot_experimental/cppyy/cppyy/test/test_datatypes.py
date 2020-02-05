@@ -73,6 +73,7 @@ class TestDATATYPES:
         assert round(c.get_complex_r().real  -  99., 11) == 0
         assert round(c.get_complex_r().imag  - 101., 11) == 0
         assert complex(cppyy.gbl.std.complex['double'](1, 2)) == complex(1, 2)
+        assert repr(cppyy.gbl.std.complex['double'](1, 2)) == '(1+2j)'
 
         # complex<int> retains C++ type in all cases (but includes pythonization to
         # resemble Python's complex more closely
@@ -431,9 +432,9 @@ class TestDATATYPES:
         c.m_double = -1
         assert round(c.m_double + 1.0, 8) == 0
 
-        raises(TypeError, c.m_double,  'c')
-        raises(TypeError, c.m_int,     -1.)
-        raises(TypeError, c.m_int,      1.)
+        raises(TypeError, setattr, c.m_double,  'c')
+        raises(TypeError, setattr, c.m_int,     -1.)
+        raises(TypeError, setattr, c.m_int,      1.)
 
         c.__destruct__()
 
@@ -452,6 +453,29 @@ class TestDATATYPES:
         gbl.g_int = 22
         assert gbl.get_global_int() == 22
         assert gbl.g_int == 22
+
+      # if setting before checking, the change must be reflected on the C++ side
+        gbl.g_some_global_string = "Python"
+        assert gbl.get_some_global_string() == "Python"
+        assert gbl.g_some_global_string2 == "C++"
+        assert gbl.get_some_global_string2() == "C++"
+        gbl.g_some_global_string2 = "Python"
+        assert gbl.get_some_global_string2() == "Python"
+
+        NS = gbl.SomeStaticDataNS
+        NS.s_some_static_string = "Python"
+        assert NS.get_some_static_string() == "Python"
+        assert NS.s_some_static_string2 == "C++"
+        assert NS.get_some_static_string2() == "C++"
+        NS.s_some_static_string2 = "Python"
+        assert NS.get_some_static_string2() == "Python"
+
+     # verify that non-C++ data can still be set
+        gbl.g_python_only = "Python"
+        assert gbl.g_python_only == "Python"
+
+        NS.s_python_only = "Python"
+        assert NS.s_python_only == "Python"
 
     def test09_global_ptr(self):
         """Test access of global objects through a pointer"""
@@ -532,18 +556,24 @@ class TestDATATYPES:
         assert gbl.kApple  == 78
         assert gbl.kBanana == 29
         assert gbl.kCitrus == 34
+        assert gbl.EFruit.__name__     == 'EFruit'
+        assert gbl.EFruit.__cpp_name__ == 'EFruit'
+
+        assert gbl.EFruit.kApple  == 78
+        assert gbl.EFruit.kBanana == 29
+        assert gbl.EFruit.kCitrus == 34
 
         assert gbl.NamedClassEnum.E1 == 42
-        assert gbl.NamedClassEnum.__name__    == 'NamedClassEnum'
-        assert gbl.NamedClassEnum.__cppname__ == 'NamedClassEnum'
+        assert gbl.NamedClassEnum.__name__     == 'NamedClassEnum'
+        assert gbl.NamedClassEnum.__cpp_name__ == 'NamedClassEnum'
 
         assert gbl.EnumSpace.E
         assert gbl.EnumSpace.EnumClass.E1 == -1   # anonymous
         assert gbl.EnumSpace.EnumClass.E2 == -1   # named type
 
         assert gbl.EnumSpace.NamedClassEnum.E1 == -42
-        assert gbl.EnumSpace.NamedClassEnum.__name__    == 'NamedClassEnum'
-        assert gbl.EnumSpace.NamedClassEnum.__cppname__ == 'EnumSpace::NamedClassEnum'
+        assert gbl.EnumSpace.NamedClassEnum.__name__     == 'NamedClassEnum'
+        assert gbl.EnumSpace.NamedClassEnum.__cpp_name__ == 'EnumSpace::NamedClassEnum'
 
         # typedef enum
         assert gbl.EnumSpace.letter_code
@@ -990,3 +1020,129 @@ class TestDATATYPES:
 
         c.set_callable(lambda x, y: x*y)
         raises(TypeError, c, 3, 3)     # lambda gone out of scope
+
+    def test24_multi_dim_arrays_of_builtins(test):
+        """Multi-dim arrays of builtins"""
+
+        import cppyy, ctypes
+
+        cppyy.cppdef("""
+        template<class T, int nlayers>
+        struct MultiDimTest {
+            T* layers[nlayers];
+
+            MultiDimTest(int width, int height) {
+                for (int i=0; i<nlayers; ++i) {
+                    layers[i] = new T[width*height];
+                    for (int j=0; j<width*height; ++j)
+                        layers[i][j] = j*2;
+                }
+            }
+            ~MultiDimTest() { for (int i=0; i<nlayers; ++i) delete[] layers[i]; }
+        };
+        """)
+
+        from cppyy.gbl import MultiDimTest
+
+        nlayers = 3; width = 8; height = 4
+        for (cpptype, ctype) in (('unsigned char', ctypes.c_ubyte),
+                                 ('int',           ctypes.c_int),
+                                 ('double',        ctypes.c_double)):
+            m = MultiDimTest[cpptype, nlayers](width, height)
+
+            for i in range(nlayers):
+                buf = m.layers[i]
+                p = (ctype * len(buf)).from_buffer(buf)
+                assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
+
+    def test25_anonymous_union(self):
+        """Anonymous unions place there fields in the parent scope"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace AnonUnion {
+        struct Event1 {
+            Event1() : num(1) { shrd.a = 5.; }
+            int num;
+            union SomeUnion {
+                double a;
+                int b;
+            } shrd;
+        };
+
+        struct Event2 {
+            Event2() : num(1) { shrd.a = 5.; }
+            int num;
+            union {
+                double a;
+                int b;
+            } shrd;
+        };
+
+        struct Event3 {
+            Event3(double d) : a(d) {}
+            Event3(int i) : b(i) {}
+            union {
+                double a;
+                int b;
+            };
+        };
+
+        struct Event4 {
+            Event4(int i) : num(1), b(i) {}
+            Event4(double d) : num(2), a(d) {}
+            int num;
+            union {
+                double a;
+                int b;
+            };
+        };
+
+        struct PointXYZI {
+            PointXYZI() : intensity(5.) {}
+            double x, y, z, i;
+            union {
+                int offset1;
+                struct {
+                   int offset2;
+                   float intensity;
+                };
+                float data_c[4];
+            };
+        }; }""")
+
+        # named union
+        e = cppyy.gbl.AnonUnion.Event1()
+        assert e.num == 1
+        raises(AttributeError, getattr, e, 'a')
+        raises(AttributeError, getattr, e, 'b')
+        assert e.shrd.a == 5.
+
+        # anonymous union, with field name
+        e = cppyy.gbl.AnonUnion.Event2()
+        assert e.num == 1
+        raises(AttributeError, getattr, e, 'a')
+        raises(AttributeError, getattr, e, 'b')
+        assert e.shrd.a == 5.
+
+        # anonymous union, no field name
+        e = cppyy.gbl.AnonUnion.Event3(42)
+        assert e.b == 42
+
+        e = cppyy.gbl.AnonUnion.Event3(5.)
+        assert e.a == 5.
+
+        # anonymous union, no field name, with offset
+        e = cppyy.gbl.AnonUnion.Event4(42)
+        assert e.num == 1
+        assert e.b == 42
+
+        e = cppyy.gbl.AnonUnion.Event4(5.)
+        assert e.num == 2
+        assert e.a == 5.
+
+        # anonumous struct in anonymous union
+        p = cppyy.gbl.AnonUnion.PointXYZI()
+        assert type(p.x) == float
+        assert type(p.data_c[0]) == float
+        assert p.intensity == 5.

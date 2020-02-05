@@ -34,6 +34,7 @@ class TFunction;
 class TListOfFunctions : public THashList
 {
 private:
+   friend class TClass;
    TClass    *fClass; // Context of this list.  Not owned.
 
    TExMap    *fIds;      // Map from DeclId_t to TFunction*

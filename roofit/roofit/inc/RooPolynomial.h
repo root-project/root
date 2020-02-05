@@ -50,6 +50,8 @@ protected:
 
   /// Evaluation
   Double_t evaluate() const;
+  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
+
 
   ClassDef(RooPolynomial,1) // Polynomial PDF
 };

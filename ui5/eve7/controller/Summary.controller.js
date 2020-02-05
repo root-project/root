@@ -11,12 +11,11 @@ sap.ui.define([
    "sap/ui/layout/SplitterLayoutData",
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout"
-], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem, 
-            mInput, mCheckBox, mPanel, mText, 
+], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem,
+            mInput, mCheckBox, mPanel, mText,
             SplitterLayoutData, VerticalLayout, HorizontalLayout) {
 
    "use strict";
-   
    var UI5PopupColors = {
          aliceblue: 'f0f8ff',
          antiquewhite: 'faebd7',
@@ -167,8 +166,8 @@ sap.ui.define([
          yellowgreen: '9acd32',
          transparent: '00000000'
    };// colorButton colors
-   
-   
+
+
    // TODO: move to separate file
    var EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
       // when default value not specified - openui tries to load custom
@@ -213,159 +212,105 @@ sap.ui.define([
          var oTree = this.getView().byId("tree");
          oTree.setMode(sap.m.ListMode.Single);
          oTree.setIncludeItemInSelection(true);
+         this.expandLevel = 2;
 
-         if (false) {
-            var oModel = new JSONModel();
-            oModel.setData([]);
-            oModel.setSizeLimit(10000);
-            this.getView().setModel(oModel, "treeModel");
+         var oModel = new JSONModel();
+         oModel.setData([]);
+         oModel.setSizeLimit(10000);
+         oModel.setDefaultBindingMode("OneWay");
+         this.getView().setModel(oModel, "treeModel");
 
-         } else {
-            var oModel = new JSONModel();
-            oModel.setData([]);
-            oModel.setSizeLimit(10000);
-            this.getView().setModel(oModel, "treeModel");
+         var oItemTemplate = new EveSummaryTreeItem({
+            title: "{treeModel>fName}",
+            visible: "{treeModel>fVisible}",
+            type: "{treeModel>fType}",
+            highlight: "{treeModel>fHighlight}",
+            background: "{treeModel>fBackground}",
+            tooltip: "{treeModel>fTitle}"
+         });
+         oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
+         oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
+         oItemTemplate.attachBrowserEvent("mouseleave", this.onMouseLeave, this);
+         oTree.bindItems("treeModel>/", oItemTemplate);
+         this.template = oItemTemplate;
 
-            var oItemTemplate = new EveSummaryTreeItem({
-               title: "{treeModel>fName}",
-               visible: "{treeModel>fVisible}",
-               type: "{treeModel>fType}",
-               highlight: "{treeModel>fHighlight}",
-               background: "{treeModel>fBackground}"
-            });
-            oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
-            oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
-            oItemTemplate.attachBrowserEvent("mouseleave", this.onMouseLeave, this);
-            /*
-              var oDataTemplate = new sap.ui.core.CustomData({
-              key:"eveElement"
-              });
-              oDataTemplate.bindProperty("value", "answer");
-            */
-            oTree.bindItems("treeModel>/", oItemTemplate);
-         }
 
          this.oModelGED = new JSONModel({ "widgetlist" : [] });
          this.getView().setModel(this.oModelGED, "ged");
-         
-         this.oGuiClassDef = {
-            "REveElement" : [{
-               name : "RnrSelf",
-               _type   : "Bool"
-            }, {
-               name : "RnrChildren",
-               _type   : "Bool"
-            }, {
-               name : "MainColor",
-               member: "fMainColor",
-               srv  : "SetMainColorRGB",
-               _type   : "Color"
-            }, {
-               name : "Destroy ",
-               member: "fElementId",
-               srv  : "Destroy",
-               _type   : "Action"
-            }],
-            "REveElementList" : [ {sub: ["REveElement"]}],
-            "REveGeoShape" : [ {sub: ["REveElement"]}, ],
-            "REveCompound" : [ {sub: ["REveElement"]}],
-            "REvePointSet" : [
-            {
-               sub: ["REveElement" ]
-            }, {
-               name : "MarkerSize",
-               _type   : "Number"
-            }],
-             "REveJetCone" : [
-            {
-               name : "RnrSelf",
-               _type   : "Bool"
-            }, {
-               name : "ConeColor",
-               member: "fMainColor",
-               srv  : "SetMainColorRGB",
-                _type   : "Color"
-            }, {
-               name : "NDiv",
-               _type   : "Number"
-            }],
-            "REveDataCollection" : [{
-               name : "FilterExpr",
-                _type   : "String",
-                quote : 1
-            },{
-                name : "CollectionVisible",
-                member:"fRnrSelf",
-               _type   : "Bool"
-            }, {
-               name : "Collection Color",
-               member: "fMainColor",
-               srv  : "SetCollectionColorRGB",
-               _type   : "Color"
-           }],
-           "REveDataItem" : [{
-               name : "ItemColor",
-               member: "fMainColor",
-               srv: "SetItemColorRGB",
-               _type   : "Color"
-           },{
-               name : "ItemRnrSelf",
-               member: "fRnrSelf",
-               _type   : "Bool"
-           },{
-               name : "Filtered",
-               _type   : "Bool"
-           }],
-           "REveTrack" : [
-            {
-               name : "RnrSelf",
-               _type   : "Bool"
-            }, {
-               name : "LineColor",
-               member: "fMainColor",
-               srv  : "SetMainColorRGB",
-               _type   : "Color"
-            }, {
-               name : "LineWidth",
-               _type   : "Number"
-            }, {
-               name : "Destroy ",
-               member: "fElementId",
-               srv  : "Destroy",
-               _type   : "Action"
-            }],
-           "REveDataGeoShape" : [{
-            }]
+
+         let make_col_obj = function(stem) {
+            return { name: stem, member: "f" + stem, srv: "Set" + stem + "RGB", _type: "Color" };
          };
 
+         let make_main_col_obj = function(label, use_main_setter) {
+            return { name: label, member: "fMainColor", srv: "Set" + (use_main_setter ? "MainColor" : label) + "RGB", _type: "Color" };
+         };
+
+         this.oGuiClassDef = {
+            "REveElement" : [
+               { name : "RnrSelf",     _type : "Bool" },
+               { name : "RnrChildren", _type : "Bool" },
+               make_main_col_obj("Color", true),
+               { name : "Destroy",  member : "fElementId", srv : "Destroy",  _type : "Action" },
+            ],
+            "REveElementList" : [ { sub: ["REveElement"] }, ],
+            "REveSelection"   : [ make_col_obj("VisibleEdgeColor"), make_col_obj("HiddenEdgeColor"), ],
+            "REveGeoShape"    : [ { sub: ["REveElement"] } ],
+            "REveCompound"    : [ { sub: ["REveElement"] } ],
+            "REvePointSet" : [
+               { sub: ["REveElement" ] },
+               { name : "MarkerSize", _type : "Number" }
+            ],
+            "REveJetCone" : [
+               { name : "RnrSelf", _type : "Bool" },
+               make_main_col_obj("ConeColor", true),
+               { name : "NDiv",    _type : "Number" }
+            ],
+            "REveDataCollection" : [
+               { name : "FilterExpr",  _type : "String",   quote : 1 },
+               { name : "CollectionVisible",  member :"fRnrSelf",  _type : "Bool" },
+               make_main_col_obj("CollectionColor")
+            ],
+            "REveDataItem" : [
+               make_main_col_obj("ItemColor"),
+               { name : "ItemRnrSelf",   member : "fRnrSelf",  _type : "Bool" },
+               { name : "Filtered",   _type : "Bool" }
+            ],
+            "REveTrack" : [
+               { name : "RnrSelf",   _type : "Bool" },
+               make_main_col_obj("LineColor", true),
+               { name : "LineWidth", _type : "Number" },
+               { name : "Destroy",  member : "fElementId",  srv : "Destroy", _type : "Action" }
+            ],
+         };
+         this.rebuild=false;
       },
 
       SetMgr: function(mgr) {
          this.mgr = mgr;
-
-         this.mgr.RegisterUpdate(this, "UpdateMgr");
-         this.mgr.RegisterElementUpdate(this, "updateGED");
-
+         this.mgr.RegisterController(this);
          this.selected = {}; // container of selected objects
-         // process scene-specific events
-         this.mgr.addSceneHandler(this);
+
       },
 
-      UpdateMgr: function(mgr) {
-
-         console.log('UPDATE MGR', (new Date).toTimeString());
+      OnEveManagerInit: function() {
          var model = this.getView().getModel("treeModel");
          model.setData(this.createSummaryModel());
          model.refresh();
 
          var oTree = this.getView().byId("tree");
-         oTree.expandToLevel(2);
+         oTree.expandToLevel(this.expandLevel);
 
          // hide editor
          if (this.ged) {
             var gedFrame =  this.gedVert;
             gedFrame.unbindElement();
             gedFrame.destroyContent();
+         }
+
+         var scenes = this.mgr.childs[0].childs[2].childs;
+         for (var i = 0; i < scenes.length; ++i ) {
+            this.mgr.RegisterSceneReceiver(scenes[i].fElementId, this);
          }
       },
 
@@ -411,27 +356,6 @@ sap.ui.define([
                       }
                       }
                     */
-      },
-
-      event: function(lst) {
-         this._event = lst;
-         // console.log("summary event lst \n", lst);
-
-         var oTreeData = {fName: "unset"}
-
-         oTreeData.arr = [];
-         this.addNodesToTreeItemModel(lst, oTreeData);
-         // console.log("event model ", { "top" : oTreeData});
-
-         this.model.setData({ fName: "Top", arr: oTreeData }); // ??? is this necessary
-
-         this.model.refresh(true);
-         this.tree.expandToLevel(2);
-         this.getView().setModel(this.model, "treeModel");
-
-         this.oProductModel = new JSONModel();
-         this.oProductModel.setData([this._event]);
-         this.getView().setModel(this.oProductModel, "event");
       },
 
       makeDataForGED: function (element) {
@@ -483,126 +407,108 @@ sap.ui.define([
                name: arrw[i].name,
                data: arrw[i]
             };
-            
+
             modelw.push({ value: v, name: arrw[i].name, data: arrw[i]});
 
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
           }
-          
+
           this.oModelGED.setData({ "widgetlist": modelw });
-      },
-
-      /** Selection of element in the other editors */
-      setElementSelected: function(mstrid, col, indx, from_interactive) {
-         if (!from_interactive)
-            this.selected[mstrid] = { id: mstrid, col: col, indx: indx };
-
-         var model = this.getView().getModel("treeModel");
-
-         this.iterateTreeModel(model.getData(), function(elem) {
-            if (elem.masterid == mstrid) elem.fHighlight = (col && mstrid) ? "Information" : "None";
-         });
-
-         model.refresh();
-      },
-
-      iterateTreeModel: function(data, func) {
-         if (!data) return;
-
-         for (var k=0;k<data.length;++k) {
-            func(data[k]);
-            if (data[k].childs)
-               this.iterateTreeModel(data[k].childs, func);
-         }
-      },
-
-      setElementHighlighted: function(mstrid, col, indx) {
-         var model = this.getView().getModel("treeModel");
-
-         this.iterateTreeModel(model.getData(), function(elem) {
-            if (elem.masterid == mstrid) elem.fBackground = (col && mstrid) ? "yellow" : "";
-         });
-
-         model.refresh();
-
-         /*
-         var items = this.getView().byId("tree").getItems();
-
-         for (var n = 0; n<items.length;++n) {
-            var item = items[n],
-                ctxt = item.getBindingContext("treeModel"),
-                path = ctxt.getPath(),
-                ttt = item.getBindingContext("treeModel").getProperty(path);
-
-            var h_col = (col && mstrid && (mstrid == ttt.masterid)) ? "yellow" : "";
-            if (!h_col && ttt.sel_color) h_col = ttt.sel_color;
-
-            item.$().css("background-color", h_col);
-         }
-         */
       },
 
       onItemPressed: function(oEvent) {
          var model = oEvent.getParameter("listItem").getBindingContext("treeModel"),
              path =  model.getPath(),
              ttt = model.getProperty(path);
-         
+
          console.log("Summary::onItemPressed ", this.mgr.GetElement(ttt.id));
-         if (!ttt || (ttt.childs !== undefined) || !ttt.masterid) return;
-
-         var sel_color = ttt.fHighlight == "None" ? "blue" : "";
-
-         this.setElementSelected(ttt.masterid, sel_color, undefined);
-
-         this.mgr.invokeInOtherScenes(this, "setElementSelected", ttt.masterid, sel_color, undefined);
-
-         // var obj = this.mgr.GetElement(ttt.id);
+         if (!ttt || (ttt.childs !== undefined) || !ttt.id) return;
+        // this.setElementSelected(ttt.id, sel_color, undefined);
       },
 
 
       onToggleOpenState: function(oEvent) {
       },
 
-      onMouseEnter: function(oEvent) {
-         var items = this.getView().byId("tree").getItems(), item = null;
-         for (var n = 0; n < items.length; ++n)
-            if (items[n].getId() == oEvent.target.id) {
-               item = items[n]; break;
+      processHighlight: function(kind, evid, force) {
+
+         if (!force) {
+            if (this._trigger_timer)
+               clearTimeout(this._trigger_timer);
+
+            this._trigger_timer = setTimeout(this.processHighlight.bind(this,kind,evid,true), 200);
+            return;
+         }
+
+         delete this._trigger_timer;
+
+         var objid = 0;
+
+         if (kind != "leave") {
+            var tree = this.getView().byId("tree"),
+                items = tree.getItems(true),         item = null;
+            for (var n = 0; n < items.length; ++n)
+               if (items[n].getId() == evid) {
+                  item = items[n]; break;
+               }
+
+            if (item) {
+               var path = item.getBindingContext("treeModel").getPath();
+               var ttt = item.getBindingContext("treeModel").getProperty(path);
+               objid = ttt.id;
             }
+         }
 
-         // var item = this.getView().byId(oEvent.target.id).getControl();
+         // FIXME: provide more generic code which should
+         this.mgr.SendMIR({ "mir":        "NewElementPicked(" + objid + ",false,false)",
+                            "fElementId": this.mgr.global_highlight_id,
+                            "class":      "ROOT::Experimental::REveSelection"
+                          });
 
-         if (!item) return;
+      },
 
-         var path = item.getBindingContext("treeModel").getPath();
-
-         var ttt = item.getBindingContext("treeModel").getProperty(path);
-
-         var masterid = this.mgr.GetMasterId(ttt.id);
-
-         this.mgr.invokeInOtherScenes(this, "setElementHighlighted", masterid, "cyan");
+      onMouseEnter: function(oEvent) {
+         this.processHighlight("enter", oEvent.target.id);
       },
 
       onMouseLeave: function(oEvent) {
-         // actual call will be performed 100ms later and can be overwritten
+         this.processHighlight("leave");
+      },
 
-         var items = this.getView().byId("tree").getItems(), item = null;
-         for (var n = 0; n < items.length; ++n)
-            if (items[n].getId() == oEvent.target.id) {
-               item = items[n]; break;
-            }
 
-         // var item = this.getView().byId(oEvent.target.id).getControl();
+      GetSelectionColor:function(selection_obj)
+      {
+         return selection_obj.fName == "Global Highlight" ? "rgb(230, 230, 230)" : "rgb(66, 124, 172)";
+      },
+      FindTreeItemForEveElement:function(element_id)
+      {
+         var items = this.getView().byId("tree").getItems();
+         for (var n = 0; n<items.length;++n) {
+            var item = items[n],
+                ctxt = item.getBindingContext("treeModel"),
+                path = ctxt.getPath(),
+                ttt = item.getBindingContext("treeModel").getProperty(path);
 
-         if (!item) return;
-
-         var path = item.getBindingContext("treeModel").getPath();
-
-         var ttt = item.getBindingContext("treeModel").getProperty(path);
-
-         var masterid = this.mgr.GetMasterId(ttt.id);
-
-         this.mgr.invokeInOtherScenes(this, "setElementHighlighted", masterid, null);
+            if (ttt.id == element_id)
+               return item;
+         }
+         return null;
+      },
+      SelectElement: function(selection_obj, element_id, sec_idcs) {
+         let item = this.FindTreeItemForEveElement(element_id);
+         if (item) {
+            let color = this.GetSelectionColor(selection_obj);
+            item.$().css("background-color", color);
+         }
+      },
+      UnselectElement: function (selection_obj, element_id) {
+         let item = this.FindTreeItemForEveElement(element_id);
+         if (item) {
+            let color = this.GetSelectionColor(selection_obj);
+            let cc = item.$().css("background-color");
+            if (cc == color)
+               item.$().css("background-color", "");
+         }
       },
 
       toggleEditor: function() {
@@ -750,7 +656,7 @@ sap.ui.define([
          var label = new mText(sId + "label", { text: { path: "ged>name" } });
          label.setWidth(this.maxLabelLength +"ex");
          label.addStyleClass("sapUiTinyMargin");
-         
+
          return new HorizontalLayout({
             content : [label, widget]
          });
@@ -881,7 +787,7 @@ sap.ui.define([
          for (var n=0;n<src.length;++n) {
             var elem = src[n];
 
-            var newelem = { fName: elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "" };
+            var newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "" };
 
             if (this.canEdit(elem))
                newelem.fType = "DetailAndActive";
@@ -898,9 +804,37 @@ sap.ui.define([
          return tgt;
       },
 
-      endChanges: function(rebuild) {
-         if (rebuild) updateManger(this.mgr);
-      }
+      beginChanges: function() {
+        // this.rebuild=false;
+      },
 
+      elementsRemoved: function(ids) {
+         this.rebuild=true;
+      },
+
+      endChanges: function() {
+         if (this.rebuild) {
+            var oTree = this.getView().byId("tree");
+            oTree.unbindItems();
+
+            var model = this.getView().getModel("treeModel");
+            model.setData(this.createSummaryModel());
+            model.refresh();
+
+            this.getView().setModel(model, "treeModel");
+            oTree.bindItems("treeModel>/", this.template);
+            oTree.setModel(model, "treeModel");
+
+            oTree.expandToLevel(this.expandLevel);
+
+            if (this.ged && this.ged.visible) {
+               var pp = this.byId("sumSplitter");
+               pp.removeContentArea(this.ged);
+               this.ged.visible = false;
+            }
+
+            this.rebuild=false;
+         }
+      }
    });
 });

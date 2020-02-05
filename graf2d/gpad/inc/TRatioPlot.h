@@ -39,7 +39,6 @@ class TFitResultPtr;
 class TFitResult;
 class THStack;
 class TBrowser;
-class TFileMergeInfo;
 
 class TRatioPlot : public TObject {
 

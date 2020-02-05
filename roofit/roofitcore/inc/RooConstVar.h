@@ -31,7 +31,12 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooConstVar(*this,newname); }
   virtual ~RooConstVar();
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Return (constant) value.
+  virtual Double_t getValV(const RooArgSet*) const {
+    return _value;
+  }
+
   void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   virtual Bool_t isDerived() const { 

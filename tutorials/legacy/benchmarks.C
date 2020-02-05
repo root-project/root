@@ -31,6 +31,7 @@ void benchmarks() {
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("benchmarks.C","");
    dir.ReplaceAll("/./","/");
+   dir.ReplaceAll("legacy","");
    bench1 = new TCanvas("bench1","Benchmarks Summary",-1000,50,200,500);
    TPaveText *summary = new TPaveText(0,0,1,1);
    summary->SetTextAlign(12);
@@ -67,5 +68,5 @@ void benchmarks() {
    bexec(dir,"geom/geometry.C");
    bexec(dir,"geom/na49view.C");
    bexec(dir,"tree/ntuple1.C");
-   bexec(dir,"rootmarks.C");
+   bexec(dir,"legacy/rootmarks.C");
 }

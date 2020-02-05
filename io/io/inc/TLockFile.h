@@ -19,8 +19,8 @@
 class TLockFile : public TObject {
 
 private:
-   TLockFile(const TLockFile&);             // not implemented
-   TLockFile& operator=(const TLockFile&);  // not implemented
+   TLockFile(const TLockFile&) = delete;             // not implemented
+   TLockFile& operator=(const TLockFile&) = delete;  // not implemented
 
 protected:
    TString fPath;         ///< Path to file holding the lock

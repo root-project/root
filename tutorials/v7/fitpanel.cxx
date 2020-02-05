@@ -25,10 +25,9 @@ using namespace ROOT::Experimental;
 
 void fitpanel() {
 
-   // TODO - also keep axis correctly in the help
-   auto xaxis = std::make_shared<RAxisConfig>(10, 0., 10.);
+   RAxisConfig xaxis(10, 0., 10.);
    // Create the histogram.
-   auto pHist = std::make_shared<RH1D>(*xaxis.get());
+   auto pHist = std::make_shared<RH1D>(xaxis);
 
    // Fill a few points.
    pHist->Fill(1);
@@ -46,7 +45,6 @@ void fitpanel() {
 
    RDirectory::Heap().Add("fitpanel", panel);
    RDirectory::Heap().Add("firsthisto", pHist);
-   RDirectory::Heap().Add("firstaxis", xaxis);
 
    // TODO: how combine there methods together
    // here std::shread_ptr<> on both sides

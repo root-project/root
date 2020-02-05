@@ -116,6 +116,8 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min0 << std::endl;
 #endif
 
+   if (min0.Fval() < fFval + tlf)  // case of new minimum found
+      return MnCross(min0.UserState(), nfcn, MnCross::CrossNewMin());
    if(min0.HasReachedCallLimit())
       return MnCross(min0.UserState(), nfcn, MnCross::CrossFcnLimit());
    if(!min0.IsValid()) return MnCross(fState, nfcn);
@@ -159,6 +161,8 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int>& par, const 
    std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min1 << std::endl;
 #endif
 
+   if (min1.Fval() < fFval + tlf) // case of new minimum found
+      return MnCross(min1.UserState(), nfcn, MnCross::CrossNewMin());
    if(min1.HasReachedCallLimit())
       return MnCross(min1.UserState(), nfcn, MnCross::CrossFcnLimit());
    if(!min1.IsValid()) return MnCross(fState, nfcn);
@@ -211,7 +215,8 @@ L300:
    std::cout << "MnFunctionCross: after Migrad on n-1  minimum is " << min1 << std::endl;
    std::cout << "nfcn = " << nfcn << std::endl;
 #endif
-
+            if (min1.Fval() < fFval + tlf) // case of new minimum found
+               return MnCross(min1.UserState(), nfcn, MnCross::CrossNewMin());
             if(min1.HasReachedCallLimit())
                return MnCross(min1.UserState(), nfcn, MnCross::CrossFcnLimit());
             if(!min1.IsValid()) return MnCross(fState, nfcn);
@@ -277,6 +282,8 @@ L460:
    std::cout << "nfcn = " << nfcn << std::endl;
 #endif
 
+   if (min2.Fval() < fFval + tlf) // case of new minimum found
+      return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());
    if(min2.HasReachedCallLimit())
       return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
    if(!min2.IsValid()) return MnCross(fState, nfcn);
@@ -480,6 +487,8 @@ L500:
    std::cout << "nfcn = " << nfcn << std::endl;
 #endif
 
+         if (min2.Fval() < fFval + tlf) // case of new minimum found
+            return MnCross(min2.UserState(), nfcn, MnCross::CrossNewMin());
          if(min2.HasReachedCallLimit())
             return MnCross(min2.UserState(), nfcn, MnCross::CrossFcnLimit());
          if(!min2.IsValid()) return MnCross(fState, nfcn);

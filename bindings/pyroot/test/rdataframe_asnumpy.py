@@ -1,6 +1,7 @@
 import unittest
 import ROOT
 import numpy as np
+import pickle
 
 
 class RDataFrameAsNumpy(unittest.TestCase):
@@ -59,6 +60,12 @@ class RDataFrameAsNumpy(unittest.TestCase):
         npy = df.AsNumpy()
         for col in col_names:
             self.assertTrue(all(npy[col] == ref[col]))
+
+    def test_branch_bool(self):
+        df = ROOT.RDataFrame(2).Define("x", "bool(rdfentry_)")
+        npy = df.AsNumpy()
+        self.assertTrue(bool(npy["x"][0]) == False)
+        self.assertTrue(bool(npy["x"][1]) == True)
 
     def test_read_array(self):
         ROOT.gInterpreter.Declare("""
@@ -204,6 +211,18 @@ class RDataFrameAsNumpy(unittest.TestCase):
         df = ROOT.RDataFrame(10).Define("x", "1.0").Filter("x<0")
         npy = df.AsNumpy(["x"])
         self.assertEqual(npy["x"].size, 0)
+
+    def test_pickle(self):
+        """
+        Testing pickling of returned numpy array
+        """
+        df = ROOT.RDataFrame(10).Define("x", "1.0")
+        npy = df.AsNumpy(["x"])
+        arr = npy["x"]
+
+        pickle.dump(arr, open("rdataframe_asnumpy.pickle", "wb"))
+        arr2 = pickle.load(open("rdataframe_asnumpy.pickle", "rb"))
+        self.assertTrue(all(arr == arr2))
 
 
 if __name__ == '__main__':

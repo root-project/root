@@ -21,17 +21,14 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassStreamer.h"
+#include "TClassTable.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "TMethod.h"
-#include "TMethodCall.h"
 #include "TRealData.h"
-#include "TFolder.h"
 #include "TRef.h"
 #include "TInterpreter.h"
 #include "TError.h"
-#include "TDataType.h"
 #include "TVirtualMutex.h"
 #include "TVirtualCollectionProxy.h"
 #include <iostream>
@@ -46,6 +43,12 @@ static TString &IncludeNameBuffer() {
    return includeName;
 }
 
+static TString ExtractClassName(const TString &type_name)
+{
+   TString className = type_name.Strip(TString::kTrailing, '*');
+   if (className.Index("const ")==0) className.Remove(0,6);
+   return className;
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function to initialize the 'index/counter' value of
 /// the Pointer streamerElements.  If directive is a StreamerInfo and it correspond to the
@@ -260,6 +263,9 @@ Bool_t TStreamerElement::CannotSplit() const
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type
 
+   static TClassRef clonesArray("TClonesArray");
+   if (IsaPointer() && cl != clonesArray && !cl->GetCollectionProxy()) return kTRUE;
+
    switch(fType) {
       case TVirtualStreamerInfo::kAny    +TVirtualStreamerInfo::kOffsetL:
       case TVirtualStreamerInfo::kObject +TVirtualStreamerInfo::kOffsetL:
@@ -280,10 +286,10 @@ Bool_t TStreamerElement::CannotSplit() const
 TClass *TStreamerElement::GetClassPointer() const
 {
    if (fClassObject!=(TClass*)(-1)) return fClassObject;
-   TString className = fTypeName.Strip(TString::kTrailing, '*');
-   if (className.Index("const ")==0) className.Remove(0,6);
+
+   TString className(ExtractClassName(fTypeName));
    bool quiet = (fType == TVirtualStreamerInfo::kArtificial);
-   ((TStreamerElement*)this)->fClassObject = TClass::GetClass(className,kTRUE,quiet);
+   ((TStreamerElement*)this)->fClassObject = TClass::GetClass(className, kTRUE, quiet);
    return fClassObject;
 }
 
@@ -571,15 +577,25 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
       if (fClassObject && fClassObject->IsTObject()) {
          fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
       }
-   } else if (fClassObject==0) {
+   } else if (fClassObject == nullptr) {
       // Well since some emulated class is replaced by a real class, we can
       // assume a new library has been loaded.  If this is the case, we should
       // check whether the class now exist (this would be the case for example
       // for reading STL containers).
-      fClassObject = (TClass*)-1;
-      GetClassPointer(); //force fClassObject
-      if (fClassObject && fClassObject->IsTObject()) {
-         fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+
+      TString classname(ExtractClassName(fTypeName));
+
+      if (classname == newClass->GetName()) {
+         fClassObject = newClass;
+         if (fClassObject && fClassObject->IsTObject()) {
+            fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+         }
+      } else if (TClassTable::GetDict(classname)) {
+         fClassObject = (TClass*)-1;
+         GetClassPointer(); //force fClassObject
+         if (fClassObject && fClassObject->IsTObject()) {
+            fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
+         }
       }
    }
 }
@@ -819,21 +835,20 @@ void TStreamerBase::Streamer(TBuffer &R__b)
 
 void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
 {
-   if (fClassObject == oldClass) fClassObject = newClass;
-   else if (fClassObject == 0) {
-      fClassObject = (TClass*)-1;
-      GetClassPointer(); //force fClassObject
+   TStreamerElement::Update(oldClass, newClass);
+
+   if (fBaseClass == oldClass) {
+      fBaseClass = newClass;
+      InitStreaming();
+   } else if (fBaseClass == nullptr) {
+      if (fName == newClass->GetName()) {
+         fBaseClass = newClass;
+         InitStreaming();
+      } else if (TClassTable::GetDict(fName)) {
+         fBaseClass = TClass::GetClass(fName);
+         InitStreaming();
+      }
    }
-   if (fBaseClass   == oldClass) fBaseClass   = newClass;
-   else if (fBaseClass == 0 ) {
-      fBaseClass = (TClass*)-1;
-      GetClassPointer(); //force fClassObject
-   }
-   if (fClassObject != (TClass*)-1 &&
-       fClassObject && fClassObject->IsTObject()) {
-      fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
-   }
-   InitStreaming();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

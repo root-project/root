@@ -23,10 +23,6 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Detail {
-class RColumnElementBase;
-}
-
 // clang-format off
 /**
 \class ROOT::Experimental::EColumnType
@@ -38,10 +34,13 @@ More complex types, such as classes, get translated into columns of such simple 
 // clang-format on
 enum class EColumnType {
    kUnknown = 0,
-   // type for root columns of (nested) collections; 32bit integers that count
-   // relative to the current cluster
+   // type for root columns of (nested) collections; 32bit integers that count relative to the current cluster
    kIndex,
+   // 64 bit column that uses the lower 32bits as kIndex and the higher 32bits as a dispatch tag; used, e.g.,
+   // in order to serialize std::variant
+   kSwitch,
    kByte,
+   kBit,
    kReal64,
    kReal32,
    kReal16,
@@ -49,15 +48,7 @@ enum class EColumnType {
    kInt64,
    kInt32,
    kInt16,
-   //...
 };
-
-/**
- * Lookup table for the element size in bytes for column types. The array has to correspond to EColumnTypes.
- */
-constexpr std::size_t kColumnElementSizes[] =
-  {0 /* kUnknown */, 4 /* kIndex */, 1 /* kByte */, 8 /* kReal64 */, 4 /* kReal32 */, 2 /* kReal16 */,
-   1 /* kReal8 */, 8 /* kInt64 */, 4 /* kInt32 */, 2 /* kInt16 */};
 
 // clang-format off
 /**
@@ -68,23 +59,18 @@ constexpr std::size_t kColumnElementSizes[] =
 // clang-format on
 class RColumnModel {
 private:
-   std::string fName;
    EColumnType fType;
    bool fIsSorted;
 
 public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
-   RColumnModel(std::string_view name, EColumnType type, bool isSorted)
-      : fName(name), fType(type), fIsSorted(isSorted) {}
+   RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
-   std::size_t GetElementSize() const { return kColumnElementSizes[static_cast<int>(fType)]; }
-   std::string GetName() const { return fName; }
    EColumnType GetType() const { return fType; }
    bool GetIsSorted() const { return fIsSorted; }
 
-   Detail::RColumnElementBase *GenerateElement();
    bool operator ==(const RColumnModel &other) const {
-      return (fName == other.fName) && (fType == other.fType) && (fIsSorted == other.fIsSorted);
+      return (fType == other.fType) && (fIsSorted == other.fIsSorted);
    }
 };
 

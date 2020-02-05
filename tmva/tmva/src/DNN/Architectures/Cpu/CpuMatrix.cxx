@@ -96,7 +96,7 @@ void TCpuMatrix<AReal>::InitializeOneVector(size_t n)
 }
 
 // Explicit instantiations.
-template class TCpuMatrix<Real_t>;
+template class TCpuMatrix<Float_t>;
 template class TCpuMatrix<Double_t>;
 
 } // namespace DNN

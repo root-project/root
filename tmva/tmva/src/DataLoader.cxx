@@ -483,6 +483,15 @@ void TMVA::DataLoader::AddVariable( const TString& expression, char type,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// user inserts discriminating array of variables in data set info
+/// in case input tree provides an array of values
+
+void TMVA::DataLoader::AddVariablesArray(const TString &expression, int size, char type,
+                                   Double_t min, Double_t max)
+{
+   DefaultDataSetInfo().AddVariablesArray(expression, size, "", "", min, max, type);
+}
+////////////////////////////////////////////////////////////////////////////////
 /// user inserts target in data set info
 
 void TMVA::DataLoader::AddTarget( const TString& expression, const TString& title, const TString& unit,

@@ -21,21 +21,33 @@
 
 RooMCStudy is a helper class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF 
-to multiple toy Monte Carlo sets generated from either same PDF
-or another PDF.
+to multiple toy Monte Carlo sets. These may be generated from either same PDF
+or from a different PDF with similar parameters.
 
 Given a fit and a generator PDF (they might be identical), RooMCStudy can produce
-large numbers of toyMC samples and/or fit these samples.
-It accumulates the post-fit parameters of each iteration in a dataset.
+toyMC samples and/or fit these.
+It accumulates the post-fit parameters of each iteration in a dataset. These can be
+retrieved using fitParams() or fitParDataSet(). This dataset additionally contains the
+variables
+- NLL: The value of the negative log-likelihood for each run.
+- ngen: The number of events generated for each run.
+
 Additional plotting routines simplify the task of plotting
 the distribution of the minimized likelihood, the fitted parameter values,
 fitted error and pull distribution.
+
 RooMCStudy provides the option to insert add-in modules
 that modify the generate-and-fit cycle and allow to perform
 extra steps in the cycle. Output of these modules can be stored
 alongside the fit results in the aggregate results dataset.
 These study modules should derive from the class RooAbsMCStudyModule.
 
+Check the RooFit tutorials
+- rf801_mcstudy.C
+- rf802_mcstudy_addons.C
+- rf803_mcstudy_addons2.C
+- rf804_mcstudy_constr.C
+for usage examples.
 **/
 
 
@@ -85,7 +97,8 @@ fitting the PDF to data and accumulating the fit statistics.
 <tr><td> ConditionalObservables(const RooArgSet& set)  <td> The set of observables that the PDF should _not_ be normalized over
 <tr><td> Binned(Bool_t flag)               <td> Bin the dataset before fitting it. Speeds up fitting of large data samples
 <tr><td> FitOptions(const char*)           <td> Classic fit options, provided for backward compatibility
-<tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo()
+<tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo().
+                                                `Save()` is especially interesting to be able to retrieve fit results of each run using fitResult().
 <tr><td> Verbose(Bool_t flag)              <td> Activate informational messages in event generation phase
 <tr><td> Extended(Bool_t flag)             <td> Determine number of events for each sample anew from a Poisson distribution
 <tr><td> Constrain(const RooArgSet& pars)  <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
@@ -958,10 +971,12 @@ void RooMCStudy::calcPulls()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a RooDataSet the resulting fit parameters of each toy cycle.
+/// Return a RooDataSet containing the post-fit parameters of each toy cycle.
 /// This dataset also contains any additional output that was generated
-/// by study modules that were added to this RooMCStudy
-
+/// by study modules that were added to this RooMCStudy.
+/// By default, the two following variables are added (apart from fit parameters):
+/// - NLL: The value of the negative log-likelihood for each run.
+/// - ngen: Number of events generated for each run.
 const RooDataSet& RooMCStudy::fitParDataSet()
 {
   if (_canAddFitResults) {
@@ -996,8 +1011,10 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the RooFitResult object of the fit to given sample 
-
+/// Return the RooFitResult of the fit with the given run number.
+///
+/// \note Fit results are not saved by default. This requires passing `FitOptions(Save(), ...)`
+/// to the constructor.
 const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 {
   // Check if sampleNum is in range

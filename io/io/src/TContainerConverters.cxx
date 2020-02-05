@@ -48,7 +48,7 @@ TConvertClonesArrayToProxy::TConvertClonesArrayToProxy(
       fCollectionClass(proxy?proxy->GetCollectionClass():0)
 {
    if (isPointer) fOffset = sizeof(TClonesArray*);
-   else fOffset = sizeof(TClonesArray*);
+   else fOffset = sizeof(TClonesArray);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

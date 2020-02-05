@@ -12,10 +12,11 @@
 ## \macro_image
 ## \macro_code
 ##
-## \author Wim Lavrijsen
+## \author Wim Lavrijsen, Enric Tejedor
 
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
-from ROOT import gROOT, gBenchmark, gRandom, gSystem, Double
+from ROOT import gROOT, gBenchmark, gRandom, gSystem
+import ctypes
 
 # Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'Dynamic Filling Example', 200, 10, 700, 500 )
@@ -55,11 +56,15 @@ for name in histos:
    exec('%sFill = %s.Fill' % (name,name))
 
 # Fill histograms randomly.
-px, py = Double(), Double()
+px_ref, py_ref = ctypes.c_double(), ctypes.c_double()
 kUPDATE = 1000
 for i in range( 25000 ):
- # Generate random values.
-   rannor( px, py )
+ # Generate random values. Use ctypes to pass doubles by reference
+   rannor( px_ref, py_ref )
+ # Retrieve the generated values
+   px = px_ref.value
+   py = py_ref.value
+   
    pz = px*px + py*py
    random = rndm(1)
 

@@ -113,6 +113,8 @@ public:
 
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 
+   const std::shared_ptr<ROOT::Experimental::RWebWindow> &GetWebWindow() const { return fWindow; }
+
    virtual Bool_t IsReadOnly() const { return kTRUE; }
 
    Int_t InitWindow() override;
@@ -132,8 +134,10 @@ public:
 
    void ActivateInEditor(TPad *pad, TObject *obj);
 
+   void ForceUpdate() override;
+
+
    /*
-      virtual void   ForceUpdate() { }
       virtual void   Iconify() { }
       virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
       virtual void   SetWindowPosition(Int_t x, Int_t y);
@@ -168,6 +172,8 @@ public:
 
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
+
+   static bool ProduceImage(TCanvas *c, const char *filename, Int_t width = 0, Int_t height = 0);
 
    ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
 };

@@ -49,7 +49,7 @@ protected:
 
   Double_t _sumWeight ;  // Global sum of weights needed for normalization
   Bool_t _showProgress ; // Show progress indication during evaluation if true
-  virtual Double_t evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t stepSize) const ;
+  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
   
   ClassDef(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
 };

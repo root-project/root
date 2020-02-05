@@ -837,7 +837,7 @@ TString TTabCom::DetermineClass(const char varName[])
    }
    // first char should be '(', which we can ignore.
    c = file1.get();
-   if (!file1 || c <= 0 || c == '*' || c != '(') {
+   if (!file1 || c <= 0 || c != '(') {
       Error("TTabCom::DetermineClass", "variable \"%s\" not defined?",
             varName);
       goto cleanup;
@@ -1486,16 +1486,15 @@ TString TTabCom::DeterminePath(const TString & fileName,
       gSystem->ExpandPathName(path);
       Int_t end = path.Length()-1;
       if (end>0 && path[end]!='/' && path[end]!='\\') {
-         path = gSystem->DirName(path);
+         path = gSystem->GetDirName(path);
       }
       return path;
    } else {
-      TString newBase;
-      TString extendedPath;
+      TString newBase, extendedPath;
       if (fileName.Contains("/")) {
          Int_t end = fileName.Length()-1;
          if (fileName[end] != '/' && fileName[end] != '\\') {
-            newBase = gSystem->DirName(fileName);
+            newBase = gSystem->GetDirName(fileName);
          } else {
             newBase = fileName;
          }

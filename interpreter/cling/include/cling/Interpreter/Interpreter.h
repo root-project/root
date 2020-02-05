@@ -72,6 +72,7 @@ namespace cling {
   class LookupHelper;
   class Value;
   class Transaction;
+  class IncrementalCUDADeviceCompiler;
 
   ///\brief Class that implements the interpreter-like behavior. It manages the
   /// incremental compilation.
@@ -187,6 +188,10 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Whether to allow decl redefinition, i.e. enable the DefinitionShadower.
+    ///
+    bool m_RedefinitionAllowed;
+
     ///\brief Flag toggling the optimization level to be used.
     ///
     int m_OptLevel;
@@ -202,6 +207,11 @@ namespace cling {
     ///\brief Information about the last stored states through .storeState
     ///
     mutable std::vector<ClangInternalState*> m_StoredStates;
+
+    ///\brief Cling's worker class implementing the compilation of CUDA device
+    /// code
+    ///
+    std::unique_ptr<IncrementalCUDADeviceCompiler> m_CUDACompiler;
 
     enum {
       kStdStringTransaction = 0, // Transaction known to contain std::string
@@ -304,6 +314,10 @@ namespace cling {
     ///
     Transaction* Initialize(bool NoRuntime, bool SyntaxOnly,
                             llvm::SmallVectorImpl<llvm::StringRef>& Globals);
+
+    ///\ Shut down the interpreter runtime.
+    ///
+    void ShutDown();
 
     ///\brief The target constructor to be called from both the delegating
     /// constructors. parentInterp might be nullptr.
@@ -667,6 +681,9 @@ namespace cling {
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
+    bool isRedefinitionAllowed() const { return m_RedefinitionAllowed; }
+    void allowRedefinition(bool b = true) { m_RedefinitionAllowed = b; }
+
     int getDefaultOptLevel() const { return m_OptLevel; }
     void setDefaultOptLevel(int optLevel) { m_OptLevel = optLevel; }
 
@@ -713,6 +730,7 @@ namespace cling {
 
     const Transaction* getFirstTransaction() const;
     const Transaction* getLastTransaction() const;
+    const Transaction* getLastWrapperTransaction() const;
     const Transaction* getCurrentTransaction() const;
 
     ///\brief Returns the current or last Transaction.
@@ -785,6 +803,12 @@ namespace cling {
     ///\param[in] Arg - argument passed to the function.
     ///
     void AddAtExitFunc(void (*Func) (void*), void* Arg);
+
+    ///\brief Run once the list of registered atexit functions. This is useful
+    /// when an external process wants to control carefully the teardown because
+    /// the registered atexit functions require alive interpreter service.
+    ///
+    void runAtExitFuncs();
 
     void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);

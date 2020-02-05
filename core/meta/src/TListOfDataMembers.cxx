@@ -25,7 +25,6 @@ unloaded data member.
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "TError.h"
-#include "TEnumConstant.h"
 #include "TClassEdit.h"
 
 #include <sstream>

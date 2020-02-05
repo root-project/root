@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'd3', 'JSRootPainter'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
        factory(require("./JSRootCore.js"), require("d3"), require("./JSRootPainter.js"));
    } else {
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.hierarchy.js');
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.hierarchy.js');
-
       if (typeof JSROOT.Painter != 'object')
          throw new Error('JSROOT.Painter not defined', 'JSRootPainter.hierarchy.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -25,7 +20,6 @@
    "use strict";
 
    JSROOT.sources.push("hierarchy");
-
 
    // ===========================================================================================
 
@@ -1128,9 +1122,9 @@
       return true;
    }
 
+   /** Argument is item name or array of string with items name
+     *only already drawn items will be update with same draw option */
    HierarchyPainter.prototype.updateItems = function(items) {
-      // argument is item name or array of string with items name
-      // only already drawn items will be update with same draw option
 
       if (!this.disp || !items) return;
 
@@ -1153,9 +1147,9 @@
    }
 
 
+   /** Method can be used to fetch new objects and update all existing drawings
+     * if only_auto_items specified, only automatic items will be updated */
    HierarchyPainter.prototype.updateAll = function(only_auto_items, only_items) {
-      // method can be used to fetch new objects and update all existing drawings
-      // if only_auto_items specified, only automatic items will be updated
 
       if (!this.disp) return;
 

@@ -93,6 +93,10 @@ public:
    //
    virtual void TransactionRollback(const cling::Transaction &T);
 
+   ///\brief A previous definition has been shadowed; invalidate TCling' stored
+   /// data about the old (global) decl.
+   virtual void DefinitionShadowed(const clang::NamedDecl *D);
+
    // Used to inform client about a new decl read by the ASTReader.
    //
    virtual void DeclDeserialized(const clang::Decl* D);

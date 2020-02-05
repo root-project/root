@@ -4,17 +4,14 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+set(headers
+    inc/CPyCppyy/CommonDefs.h
+    inc/CPyCppyy/TPyException.h
+    inc/CPyCppyy/DispatchPtr.h
+    inc/CPyCppyy/PyObjectPtr.h
+)
 
-#include_directories(BEFORE include)
-
-ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
-  HEADERS
-    CPyCppyy/CommonDefs.h
-    CPyCppyy/TPyArg.h
-    CPyCppyy/TPyException.h
-    CPyCppyy/TPyReturn.h
-    CPyCppyy/API.h
-  SOURCES
+set(sources
     src/CallContext.cxx
     src/Converters.cxx
     src/CPPClassMethod.cxx
@@ -29,6 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     src/CPyCppyyModule.cxx
     src/CustomPyTypes.cxx
     src/Dispatcher.cxx
+    src/DispatchPtr.cxx
     src/Executors.cxx
     src/LowLevelViews.cxx
     src/MemoryRegulator.cxx
@@ -36,21 +34,21 @@ ROOT_STANDARD_LIBRARY_PACKAGE(cppyy
     src/PyStrings.cxx
     src/Pythonize.cxx
     src/TemplateProxy.cxx
-    src/TPyArg.cxx
-    src/TPyClassGenerator.cxx
     src/TPyException.cxx
-    src/TPyReturn.cxx
-    src/API.cxx
     src/TupleOfInstances.cxx
     src/TypeManip.cxx
     src/Utility.cxx
-  DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
 )
+
+add_library(cppyy SHARED ${headers} ${sources})
 
 if(NOT MSVC)
   target_compile_options(cppyy PRIVATE
-    -Wno-shadow -Wno-strict-aliasing -Wno-unused-but-set-parameter)
+    -Wno-shadow -Wno-strict-aliasing)
+endif()
+if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  target_compile_options(cppyy PRIVATE
+    -Wno-unused-but-set-parameter)
 endif()
 
 # Disables warnings coming from PyCFunction casts
@@ -66,9 +64,21 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREAT
     target_compile_options(cppyy PRIVATE -Wno-deprecated-register)
 endif()
 
+# Disables warnings due to new field tp_vectorcall in Python 3.8
+if(NOT MSVC AND ${PYTHON_VERSION_STRING} VERSION_GREATER_EQUAL "3.8")
+  target_compile_options(cppyy PRIVATE -Wno-missing-field-initializers)
+endif()
+
 target_include_directories(cppyy PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
 
 target_include_directories(cppyy PUBLIC ${PYTHON_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
 target_link_libraries(cppyy cppyy_backend ${PYTHON_LIBRARIES})
+
+set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
+install(TARGETS cppyy EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${CMAKE_INSTALL_PYROOTDIR})
+
+file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
+install(FILES ${headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy)
+

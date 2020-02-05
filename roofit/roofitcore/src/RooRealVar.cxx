@@ -19,10 +19,10 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a fundamental (non-derived) real valued object
+RooRealVar represents a fundamental (non-derived) real-valued object.
 
 This class also holds an (asymmetic) error, a default range and
-a optionally series of alternate named ranges.
+optionally a series of alternate named ranges.
 **/
 
 
@@ -146,7 +146,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _asymErrLo(other._asymErrLo),
   _asymErrHi(other._asymErrHi)
 {
-  _sharedProp =  (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
+  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
   if (other._binning) {
      _binning = other._binning->clone() ;
      _binning->insertHook(*this) ;
@@ -167,6 +167,35 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 
   TRACE_CREATE
 
+}
+
+/// Assign the values of another RooRealVar to this instance.
+RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
+  RooAbsRealLValue::operator=(other);
+
+  _error = other._error;
+  _asymErrLo = other._asymErrLo;
+  _asymErrHi = other._asymErrHi;
+
+  delete _binning;
+  _binning = nullptr;
+  if (other._binning) {
+    _binning = other._binning->clone() ;
+    _binning->insertHook(*this) ;
+  }
+
+  _altNonSharedBinning.Clear();
+  RooAbsBinning* ab ;
+  std::unique_ptr<TIterator> iter(other._altNonSharedBinning.MakeIterator());
+  while((ab=(RooAbsBinning*)iter->Next())) {
+    RooAbsBinning* abc = ab->clone() ;
+    _altNonSharedBinning.Add(abc) ;
+    abc->insertHook(*this) ;
+  }
+
+  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp());
+
+  return *this;
 }
 
 
@@ -193,6 +222,25 @@ RooRealVar::~RooRealVar()
 Double_t RooRealVar::getValV(const RooArgSet*) const
 {
   return _value ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return batch of data between begin and end.
+/// This requires that this instance is attached to a data store.
+/// \param begin First event to return.
+/// \param batchSize   Size of the batch.
+/// \return Span with event data. May be empty if not attached to a data storage.
+RooSpan<const double> RooRealVar::getValBatch(std::size_t begin, std::size_t batchSize,
+    const RooArgSet*) const {
+  const auto batchStatus = _batchData.status(begin, batchSize);
+  if (batchStatus == BatchHelpers::BatchData::kNoBatch) {
+    return {};
+  }
+
+  assert(batchStatus == BatchHelpers::BatchData::kReadyAndConstant);
+  return _batchData.getBatch(begin, batchSize);
 }
 
 
@@ -995,7 +1043,9 @@ void RooRealVar::attachToVStore(RooVectorDataStore& vstore)
   if (getAttribute("StoreError") || getAttribute("StoreAsymError") || vstore.isFullReal(this) ) {
 
     RooVectorDataStore::RealFullVector* rfv = vstore.addRealFull(this) ;
-    rfv->setBuffer(this,&_value) ;
+    rfv->setBuffer(this,&_value);
+
+    _batchData.attachForeignStorage(rfv->data());
 
     // Attach/create additional branch for error
     if (getAttribute("StoreError") || vstore.hasError(this) ) {

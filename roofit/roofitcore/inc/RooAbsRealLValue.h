@@ -33,6 +33,7 @@ public:
   inline RooAbsRealLValue() { }
   RooAbsRealLValue(const char *name, const char *title, const char *unit= "") ;
   RooAbsRealLValue(const RooAbsRealLValue& other, const char* name=0);
+  RooAbsRealLValue& operator=(const RooAbsRealLValue&) = default;
   virtual ~RooAbsRealLValue();
 
   // Parameter value and error accessors

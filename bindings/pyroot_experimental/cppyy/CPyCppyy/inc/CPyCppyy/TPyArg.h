@@ -16,8 +16,11 @@ typedef _object PyObject;
 // Standard
 #include <vector>
 
+// Bindings
+#include "CPyCppyy/CommonDefs.h"
 
-class TPyArg {
+
+class CPYCPPYY_CLASS_EXPORT TPyArg {
 public:
 // converting constructors
     TPyArg(PyObject*);

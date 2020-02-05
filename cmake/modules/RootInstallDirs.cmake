@@ -9,6 +9,8 @@
 #  LIBDIR           - object code libraries (lib or lib64 or lib/<multiarch-tuple> on Debian)
 #  INCLUDEDIR       - C/C++ header files (include)
 #  SYSCONFDIR       - read-only single-machine data (etc)
+#  PYROOTDIR        - pyroot experimental libraries and modules (LIBDIR/pythonX.Y/site-packages
+#                     or LIBDIR/pythonX.Y/dist-packages on Debian)
 #  DATAROOTDIR      - read-only architecture-independent data (share)
 #  DATADIR          - read-only architecture-independent data (DATAROOTDIR/root)
 #  MANDIR           - man documentation (DATAROOTDIR/man)
@@ -19,7 +21,6 @@
 #  FONTDIR          - fonts (DATAROOTDIR/fonts)
 #  DOCDIR           - documentation root (DATAROOTDIR/doc/PROJECT_NAME)
 #  TUTDIR           - tutorials (DOCDIR/tutorials)
-#  ACLOCALDIR       - locale-dependent data (DATAROOTDIR/aclocal)
 #  CMAKEDIR         - cmake modules (DATAROOTDIR/cmake)
 #  ELISPDIR         - lisp files (DATAROOTDIR/emacs/site-lisp)
 #
@@ -71,6 +72,21 @@ if(NOT DEFINED CMAKE_INSTALL_SYSCONFDIR)
   else()
     set(CMAKE_INSTALL_SYSCONFDIR "etc" CACHE PATH "read-only single-machine data (etc)")
   endif()
+endif()
+
+if(NOT DEFINED CMAKE_INSTALL_PYROOTDIR)
+  if(WIN32)
+    set(CMAKE_INSTALL_PYROOTDIR ${LIBDIR}/python/site-packages)
+  else()
+    execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -m site | grep -q dist-packages && echo dist-packages" OUTPUT_VARIABLE packages_name)
+    if(NOT packages_name MATCHES "dist-packages")
+      set(packages_name "site-packages")
+    else()
+      set(packages_name "dist-packages")
+    endif()
+  endif()
+    set(CMAKE_INSTALL_PYROOTDIR "${CMAKE_INSTALL_LIBDIR}/${python_dir}/${packages_name}"
+          CACHE PATH "pyroot libraries and modules (LIBDIR/pythonX.Y/site-packages)")
 endif()
 
 if(NOT DEFINED CMAKE_INSTALL_DATAROOTDIR)
@@ -167,15 +183,6 @@ if(NOT CMAKE_INSTALL_SRCDIR)
   endif()
 endif()
 
-if(NOT CMAKE_INSTALL_ACLOCALDIR)
-  set(CMAKE_INSTALL_ACLOCALDIR "" CACHE PATH "locale-dependent data (DATAROOTDIR/aclocal)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_ACLOCALDIR "${CMAKE_INSTALL_DATAROOTDIR}/aclocal")
-  else()
-    set(CMAKE_INSTALL_ACLOCALDIR "aclocal")
-  endif()
-endif()
-
 if(NOT CMAKE_INSTALL_CMAKEDIR)
   set(CMAKE_INSTALL_CMAKEDIR "" CACHE PATH "CMake modules (DATAROOTDIR/cmake)")
   if(gnuinstall)
@@ -220,6 +227,7 @@ mark_as_advanced(
   CMAKE_INSTALL_LIBDIR
   CMAKE_INSTALL_INCLUDEDIR
   CMAKE_INSTALL_SYSCONFDIR
+  CMAKE_INSTALL_PYROOTDIR
   CMAKE_INSTALL_MANDIR
   CMAKE_INSTALL_DATAROOTDIR
   CMAKE_INSTALL_DATADIR
@@ -230,7 +238,6 @@ mark_as_advanced(
   CMAKE_INSTALL_SRCDIR
   CMAKE_INSTALL_DOCDIR
   CMAKE_INSTALL_TUTDIR
-  CMAKE_INSTALL_ACLOCALDIR
   CMAKE_INSTALL_ELISPDIR
   CMAKE_INSTALL_CMAKEDIR
   )
@@ -241,6 +248,7 @@ foreach(dir BINDIR
             LIBDIR
             INCLUDEDIR
             SYSCONFDIR
+            PYROOTDIR
             MANDIR
             DATAROOTDIR
             DATADIR
@@ -251,7 +259,6 @@ foreach(dir BINDIR
             SRCDIR
             DOCDIR
             TUTDIR
-            ACLOCALDIR
             ELISPDIR
             CMAKEDIR )
   if(NOT IS_ABSOLUTE ${CMAKE_INSTALL_${dir}})

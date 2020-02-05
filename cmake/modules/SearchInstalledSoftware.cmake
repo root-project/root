@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-#---Check for installed packages depending on the build options/components eamnbled -
+#---Check for installed packages depending on the build options/components enabled --
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -182,7 +182,7 @@ endif()
 
 if(builtin_lzma)
   set(lzma_version 5.2.4)
-  set(LIBLZMA_TARGET LZMA)
+  set(LZMA_TARGET LZMA)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
@@ -222,6 +222,34 @@ if(builtin_lzma)
       BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES})
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   endif()
+endif()
+
+#---Check for ZSTD-------------------------------------------------------------------
+if(NOT builtin_zstd)
+  message(STATUS "Looking for ZSTD")
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARIES LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(ZSTD_${suffix} CACHE)
+  endforeach()
+  if(fail-on-missing)
+    find_package(ZSTD REQUIRED)
+    if(ZSTD_VERSION VERSION_LESS 1.0.0)
+      message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
+    endif()
+  else()
+    find_package(ZSTD)
+    if(NOT ZSTD_FOUND)
+      message(STATUS "ZSTD not found. Switching on builtin_zstd option")
+      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
+    elseif(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
+      message(STATUS "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Switching on builtin_zstd option")
+      set(builtin_zstd ON CACHE BOOL "Enabled because ZSTD not found (${builtin_zstd_description})" FORCE)
+    endif()
+  endif()
+endif()
+
+if(builtin_zstd)
+  list(APPEND ROOT_BUILTINS ZSTD)
+  add_subdirectory(builtins/zstd)
 endif()
 
 #---Check for xxHash-----------------------------------------------------------------
@@ -429,14 +457,14 @@ if(mathmore OR builtin_gsl)
         message(FATAL_ERROR "GSL package not found and 'mathmore' component if required ('fail-on-missing' enabled). "
                             "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally.")
       else()
-        message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
+        message(STATUS "GSL not found. Set variable GSL_ROOT_DIR to point to your GSL installation")
         message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
         message(STATUS "               For the time being switching OFF 'mathmore' option")
         set(mathmore OFF CACHE BOOL "Disable because builtin_gsl disabled and external GSL not found (${mathmore_description})" FORCE)
       endif()
     endif()
   else()
-    set(gsl_version 2.1)
+    set(gsl_version 2.5)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
     foreach(l gsl gslcblas)
       list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -448,7 +476,7 @@ if(mathmore OR builtin_gsl)
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-      URL_HASH SHA256=59ad06837397617f698975c494fe7b2b698739a59e2fcf830b776428938a0c66
+      URL_HASH SHA256=0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
@@ -467,17 +495,110 @@ endif()
 #---Check for Python installation-------------------------------------------------------
 
 message(STATUS "Looking for python")
+
+if(pyroot_experimental)
+  unset(PYTHON_INCLUDE_DIR CACHE)
+  unset(PYTHON_LIBRARY CACHE)
+endif()
+
 # Python is required by header and manpage generation
-find_package(PythonInterp ${python_version} REQUIRED)
 
-if(python)
-  find_package(PythonLibs ${python_version} REQUIRED)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
 
-  if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
-    message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
-    " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
-    "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
+  # Determine whether we should prefer Python 2 or Python 3:
+  set(PYTHON_PREFER_VERSION "3")
+  # Check whether old `find_package(PythonInterp)` variable was passed.
+  # If so, it will be passed to find_package(Python) below. Otherwise,
+  # check what `python` points to: Python 2 or 3:
+  if(NOT PYTHON_EXECUTABLE)
+    find_program(PYTHON_EXECUTABLE "python")
   endif()
+  if(PYTHON_EXECUTABLE)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.version_info[0])"
+                    OUTPUT_VARIABLE PYTHON_PREFER_VERSION
+                    ERROR_VARIABLE PYTHON_PREFER_VERSION_ERR)
+    if(PYTHON_PREFER_VERSION_ERR)
+      message(WARNING "Unable to determine version of ${PYTHON_EXECUTABLE}: ${PYTHON_PREFER_VERSION_ERR}")
+    endif()
+    string(STRIP "${PYTHON_PREFER_VERSION}" PYTHON_PREFER_VERSION)
+  endif()
+
+  if(python)
+    set(REQUIRED_PYTHON_Development Development)
+  endif()
+
+  message(STATUS "Preferring Python version ${PYTHON_PREFER_VERSION}")
+
+  if("${PYTHON_PREFER_VERSION}" MATCHES "2")
+    # Means PYTHON_EXECUTABLE wasn't defined.
+    if(PYTHON_INCLUDE_DIRS AND NOT Python2_INCLUDE_DIRS)
+      set(Python2_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    endif()
+    if(PYTHON_LIBRARIES AND NOT Python2_LIBRARIES)
+      set(Python2_LIBRARIES "${PYTHON_LIBRARIES}")
+    endif()
+    find_package(Python2 COMPONENTS Interpreter ${REQUIRED_PYTHON_Development} REQUIRED)
+    if(Python2_Development_FOUND)
+      # Re-run, now with NumPy, but not required:
+      find_package(Python2 COMPONENTS Interpreter Development NumPy)
+      # Compat with find_package(PythonInterp), find_package(PythonLibs)
+      set(PYTHON_EXECUTABLE "${Python2_EXECUTABLE}")
+      set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}")
+      set(PYTHON_LIBRARIES "${Python2_LIBRARIES}")
+      set(PYTHON_VERSION_STRING "${Python2_VERSION}")
+      set(PYTHON_VERSION_MAJOR "${Python2_VERSION_MAJOR}")
+      set(PYTHON_VERSION_MINOR "${Python2_VERSION_MINOR}")
+      set(NUMPY_FOUND ${Python2_NumPy_FOUND})
+      set(NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}")
+    endif()
+  else()
+    if(PYTHON_EXECUTABLE AND NOT Python_EXECUTABLE)
+      set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+    endif()
+    if(PYTHON_INCLUDE_DIRS AND NOT Python_INCLUDE_DIRS)
+      set(Python_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    endif()
+    if(PYTHON_LIBRARIES AND NOT Python_LIBRARIES)
+      set(Python_LIBRARIES "${PYTHON_LIBRARIES}")
+    endif()
+    find_package(Python COMPONENTS Interpreter ${REQUIRED_PYTHON_Development} REQUIRED)
+    if(Python_Development_FOUND)
+      # Re-run, now with NumPy, but not required:
+      find_package(Python COMPONENTS Interpreter Development NumPy)
+      # Compat with find_package(PythonInterp), find_package(PythonLibs), find_package(NumPy)
+      set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+      set(PYTHON_INCLUDE_DIRS "${Python_INCLUDE_DIRS}")
+      set(PYTHON_LIBRARIES "${Python_LIBRARIES}")
+      set(PYTHON_VERSION_STRING "${Python_VERSION}")
+      set(PYTHON_VERSION_MAJOR "${Python_VERSION_MAJOR}")
+      set(PYTHON_VERSION_MINOR "${Python_VERSION_MINOR}")
+      set(NUMPY_FOUND ${Python_NumPy_FOUND})
+      set(NUMPY_INCLUDE_DIRS "${Python_NumPy_INCLUDE_DIRS}")
+    endif()
+  endif()
+
+else()
+  find_package(PythonInterp ${python_version} REQUIRED)
+
+  if(python)
+    find_package(PythonLibs ${python_version} REQUIRED)
+
+    if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
+      message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
+      " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
+      "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
+    endif()
+
+    find_package(NumPy)
+  endif()
+endif()
+
+# set variables necessary for MultiPython
+set(python_dir "python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
+if(WIN32)
+  set(py_localruntimedir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${python_dir})
+else()
+  set(py_localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${python_dir})
 endif()
 
 #---Check for OpenGL installation-------------------------------------------------------
@@ -502,11 +623,12 @@ if(opengl AND NOT builtin_glew)
   else()
     find_Package(GLEW)
     if(NOT GLEW_FOUND)
-      # clear variables set to NOTFOUND to allow builtin GLEW to override them
-      foreach(var GLEW_LIBRARIES GLEW_LIBRARY GLEW_LIBRARY_DEBUG GLEW_LIBRARY_RELEASE)
-        unset(${var})
-        unset(${var} CACHE)
-      endforeach()
+      # set variables to emulate find_package(GLEW)
+      set(GLEW_FOUND TRUE CACHE INTERNAL "" FORCE)
+      set(GLEW_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/graf3d/glew/inc CACHE INTERNAL "" FORCE)
+      set(GLEW_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/graf3d/glew/inc CACHE INTERNAL "" FORCE)
+      set(GLEW_LIBRARY GLEW CACHE INTERNAL "" FORCE)
+      set(GLEW_LIBRARIES GLEW CACHE INTERNAL "" FORCE)
       message(STATUS "GLEW not found. Switching on builtin_glew option")
       set(builtin_glew ON CACHE BOOL "Enabled because opengl requested and GLEW not found (${builtin_glew_description})" FORCE)
     endif()
@@ -713,13 +835,13 @@ if(fftw3)
   endif()
 endif()
 if(builtin_fftw3)
-  set(FFTW_VERSION 3.1.2)
+  set(FFTW_VERSION 3.3.8)
   message(STATUS "Downloading and building FFTW version ${FFTW_VERSION}")
   set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
   ExternalProject_Add(
     FFTW3
     URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
-    URL_HASH SHA256=e1b92e97fe27efcbd150212d0d287ac907bd2fef0af32e16284fef5d1c1c26bf
+    URL_HASH SHA256=6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -735,7 +857,7 @@ endif()
 #---Check for fitsio-------------------------------------------------------------------
 if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
-    set(cfitsio_version 3.280)
+    set(cfitsio_version 3.450)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
     message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
     set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -764,13 +886,20 @@ if(fitsio OR builtin_cfitsio)
         CFITSIO
         # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
-        URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
+        URL_HASH SHA256=bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e
         INSTALL_DIR ${CMAKE_BINARY_DIR}
         CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
         BUILD_IN_SOURCE 1
         BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
       )
+      # We need to know which CURL_LIBRARIES were used in CFITSIO ExternalProject build
+      # and which ${CURL_LIBRARIES} should be used after for linking in ROOT together with CFITSIO.
+      # (curl is not strictly required in CFITSIO CMakeList.txt).
+      find_package(CURL)
+      if(CURL_FOUND)
+        set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARIES} ${CURL_LIBRARIES})
+      endif()
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
     endif()
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
@@ -829,6 +958,9 @@ if(xrootd)
         message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
         message(STATUS "                  For the time being switching OFF 'xrootd' option")
         set(xrootd OFF CACHE BOOL "Disabled because external XROOTD not found and builtin_xrootd disabled (${xrootd_description})" FORCE)
+        if(alien)
+          set(alien OFF CACHE BOOL "Disabled because external XROOTD not found and builtin_xrootd disabled (${alien_description})" FORCE)
+        endif()
       endif()
     else()
       set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
@@ -837,8 +969,8 @@ if(xrootd)
 endif()
 
 if(builtin_xrootd)
-  set(XROOTD_VERSION 4.9.1)
-  set(XROOTD_VERSIONNUM 400090001)
+  set(XROOTD_VERSION 4.10.0)
+  set(XROOTD_VERSIONNUM 400100000)
   set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
   set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
   set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
@@ -861,7 +993,7 @@ if(builtin_xrootd)
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=de47160348d52a655f8d601520ad9146b9ee76eb5d2352cdf232a6fafce27adb
+    URL_HASH SHA256=f07f85e27d72e9e8ff124173c7b53619aed8fcd36f9d6234c33f8f7fd511995b
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -895,18 +1027,17 @@ endif()
 
 #---Alien support----------------------------------------------------------------
 if(alien)
-  if(NOT xrootd)
-    message(FATAL_ERROR "The Alien plugin requires option 'xrootd' to be enabled. Re-run the configuration with 'xrootd=ON'")
-  endif()
   find_package(Alien)
   if(NOT ALIEN_FOUND)
     if(fail-on-missing)
-      message(FATAL_ERROR "Alien API not found and is required. Set the variable ALIEN_DIR to point to your Alien installation,"
-                          "or include the installation of Alien in the CMAKE_PREFIX_PATH. ")
+      message(FATAL_ERROR " Alien API not found and is required."
+        " Set the variable ALIEN_DIR to point to your Alien installation,"
+        " or include the installation of Alien in the CMAKE_PREFIX_PATH.")
     else()
-      message(STATUS "Alien API not found. Set variable ALIEN_DIR to point to your Alien installation,"
-                     "or include the installation of Alien in the CMAKE_PREFIX_PATH.")
-      message(STATUS "For the time being switching OFF 'alien' option")
+      message(STATUS " Alien API not found."
+        " Set variable ALIEN_DIR to point to your Alien installation,"
+        " or include the installation of Alien in the CMAKE_PREFIX_PATH."
+        " For the time being switching OFF 'alien' option")
       set(alien OFF CACHE BOOL "Disabled because Alien API not found (${alien_description})" FORCE)
     endif()
   endif()
@@ -1091,15 +1222,16 @@ if(imt AND NOT builtin_tbb)
   else()
     find_package(TBB 2018)
     if(NOT TBB_FOUND)
-      message(WARNING "TBB not found, enabling 'builtin_tbb' option")
+      message(STATUS "TBB not found, enabling 'builtin_tbb' option")
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
     endif()
   endif()
+  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
 endif()
 
 if(builtin_tbb)
-  set(tbb_builtin_version 2019_U7)
-  set(tbb_sha256 4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a)
+  set(tbb_builtin_version 2019_U9)
+  set(tbb_sha256 15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe)
   if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
     set(_tbb_compiler compiler=clang)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
@@ -1160,6 +1292,7 @@ if(builtin_tbb)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
   set(TBB_TARGET TBB)
 endif()
 
@@ -1271,7 +1404,7 @@ elseif(veccore)
 endif()
 
 if(builtin_veccore)
-  set(VecCore_VERSION "0.5.2")
+  set(VecCore_VERSION "0.6.0")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
   set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1279,7 +1412,7 @@ if(builtin_veccore)
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
-    URL_HASH SHA256=6c8740342bfa1d9c6ef55a19f57b95674a94e5f9ea156e9b329635718b0b4049
+    URL_HASH SHA256=db404d745906efec2a76175995e847af9174df5a8da1e5ccdb241c773d7c8df9
     BUILD_IN_SOURCE 0
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
@@ -1349,13 +1482,13 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.2)
+    set(vdt_version 0.4.3)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=643136a38d6890c1cf18074bd494f99a4f269429ac552c57907e28c0091df8e6
+      URL_HASH SHA256=705674612ebb5c182b65a8f61f4d173eb7fe7cdeee2235b402541a492e08ace1
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS
         -DSSE=OFF # breaks on ARM without this
@@ -1406,6 +1539,17 @@ if(cuda OR tmva-gpu)
     endif()
 
     enable_language(CUDA)
+
+    ### look for package CuDNN
+    find_package(CuDNN)
+
+    if (CUDNN_FOUND)
+      message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
+    else()
+      message(STATUS "CuDNN library not found")
+    endif()
+
+
   elseif(fail-on-missing)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
@@ -1438,8 +1582,6 @@ if(tmva)
   endif()
 
   if(python AND tmva-pymva)
-    message(STATUS "Looking for Numpy")
-    find_package(NumPy)
     if(fail-on-missing AND NOT NUMPY_FOUND)
       message(FATAL_ERROR "TMVA: numpy python package not found and tmva-pymva component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
@@ -1457,6 +1599,23 @@ else()
   set(tmva-gpu   OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-gpu_description})"   FORCE)
   set(tmva-pymva OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-pymva_description})" FORCE)
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
+endif()
+
+#---Check for MPI---------------------------------------------------------------------
+if (mpi)
+  message(STATUS "Looking for MPI")
+  find_package(MPI)
+  if(NOT MPI_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "MPI not found. Ensure that the installation of MPI is in the CMAKE_PREFIX_PATH."
+        " Example: CMAKE_PREFIX_PATH=<MPI_install_path> (e.g. \"/usr/local/mpich\")")
+    else()
+      message(STATUS "MPI not found. Ensure that the installation of MPI is in the CMAKE_PREFIX_PATH")
+      message(STATUS "     Example: CMAKE_PREFIX_PATH=<MPI_install_path> (e.g. \"/usr/local/mpich\")")
+      message(STATUS "     For the time being switching OFF 'mpi' option")
+      set(mpi OFF CACHE BOOL "Disabled because MPI not found (${mpi_description})" FORCE)
+    endif()
+  endif()
 endif()
 
 #---Download googletest--------------------------------------------------------------
@@ -1477,7 +1636,9 @@ if (testing)
   if(MSVC)
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=\\\"\\\"
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\"
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=\\\"\\\")
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
@@ -1543,9 +1704,41 @@ if(webgui)
   ExternalProject_Add(
      OPENUI5
      URL ${CMAKE_SOURCE_DIR}/gui/webdisplay/res/openui5.tar.gz
-     URL_HASH SHA256=499f0dbe1eabb4fd9ebaeafd5788f485e43891ac01a879cd507328976037cc7d
+     URL_HASH SHA256=b264661fb397906714b8253fc3a32ecb6ac0da575cc01ce61636354e6bfccf3c
      CONFIGURE_COMMAND ""
      BUILD_COMMAND ""
      INSTALL_COMMAND ""
      SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution)
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
+endif()
+
+#------------------------------------------------------------------------------------
+# Check if we need libatomic to use atomic operations in the C++ code. On ARM systems
+# we generally do. First just test if CMake is able to compile a test executable
+# using atomic operations without the help of a library. Only if it can't do we start
+# looking for libatomic for the build.
+#
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles("
+#include <atomic>
+#include <cstdint>
+int main() {
+   std::atomic<int> a1;
+   int a1val = a1.load();
+   (void)a1val;
+   std::atomic<uint64_t> a2;
+   uint64_t a2val = a2.load(std::memory_order_relaxed);
+   (void)a2val;
+   return 0;
+}
+" ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
+set(ROOT_ATOMIC_LIBS)
+if(NOT ROOT_HAVE_CXX_ATOMICS_WITHOUT_LIB)
+  find_library(ROOT_ATOMIC_LIB NAMES atomic
+    HINTS ENV LD_LIBRARY_PATH
+    DOC "Path to the atomic library to use during the build")
+  mark_as_advanced(ROOT_ATOMIC_LIB)
+  if(ROOT_ATOMIC_LIB)
+    set(ROOT_ATOMIC_LIBS ${ROOT_ATOMIC_LIB})
+  endif()
 endif()

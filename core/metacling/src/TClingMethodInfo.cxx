@@ -169,6 +169,10 @@ void TClingMethodInfo::CreateSignature(TString &signature) const
       }
       ++idx;
    }
+   auto decl = GetMethodDecl();
+   if (decl && decl->isVariadic())
+      signature += ",...";
+
    signature += ")";
 }
 
@@ -405,6 +409,12 @@ int TClingMethodInfo::InternalNext()
          // Iterator is now valid.
          return 1;
       }
+
+      // Collect internal `__cling_N5xxx' inline namespaces; they will be traversed later
+      if (auto NS = dyn_cast<NamespaceDecl>(*fIter)) {
+         if (NS->getDeclContext()->isTranslationUnit() && NS->isInlineNamespace())
+            fContexts.push_back(NS);
+      }
 //      if (clang::FunctionDecl *fdecl = llvm::dyn_cast<clang::FunctionDecl>(*fIter)) {
 //         if (fdecl->getAccess() == clang::AS_public || fdecl->getAccess() == clang::AS_none) {
 //            // Iterator is now valid.
@@ -427,6 +437,8 @@ long TClingMethodInfo::Property() const
    long property = 0L;
    property |= kIsCompiled;
    const clang::FunctionDecl *fd = GetMethodDecl();
+   if (fd->isConstexpr())
+      property |= kIsConstexpr;
    switch (fd->getAccess()) {
       case clang::AS_public:
          property |= kIsPublic;
@@ -515,18 +527,16 @@ long TClingMethodInfo::ExtraProperty() const
    }
    long property = 0;
    const clang::FunctionDecl *fd = GetMethodDecl();
-   if (fd->isOverloadedOperator()) {
+   if (fd->isOverloadedOperator())
       property |= kIsOperator;
-   }
-   else if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+   if (llvm::isa<clang::CXXConversionDecl>(fd))
       property |= kIsConversion;
-   } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXConstructorDecl>(fd))
       property |= kIsConstructor;
-   } else if (llvm::isa<clang::CXXDestructorDecl>(fd)) {
+   if (llvm::isa<clang::CXXDestructorDecl>(fd))
       property |= kIsDestructor;
-   } else if (fd->isInlined()) {
+   if (fd->isInlined())
       property |= kIsInlined;
-   }
    return property;
 }
 
@@ -602,25 +612,11 @@ const char *TClingMethodInfo::GetPrototype()
       buf += "::";
    }
    buf += Name();
-   buf += '(';
-   TClingMethodArgInfo arg(fInterp, this);
-   int idx = 0;
-   while (arg.Next()) {
-      if (idx) {
-         buf += ", ";
-      }
-      buf += arg.Type()->Name();
-      if (arg.Name() && strlen(arg.Name())) {
-         buf += ' ';
-         buf += arg.Name();
-      }
-      if (arg.DefaultValue()) {
-         buf += " = ";
-         buf += arg.DefaultValue();
-      }
-      ++idx;
-   }
-   buf += ')';
+
+   TString signature;
+   CreateSignature(signature);
+   buf += signature;
+
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>( GetMethodDecl())) {
       if (md->getTypeQualifiers() & clang::Qualifiers::Const) {

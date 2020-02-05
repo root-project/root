@@ -105,6 +105,12 @@ public:
    /// Transfer track from current engine to target engine mc
    void TransferTrack(TVirtualMC *mc);
 
+   /// Try to restore geometry for a given track
+   Bool_t RestoreGeometryState(Int_t trackId, Bool_t checkTrackIdRange = kTRUE);
+
+   /// Try to restore geometry for the track currently set
+   Bool_t RestoreGeometryState();
+
    //
    // Steering and control
    //

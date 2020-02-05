@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -79,7 +79,7 @@ namespace TMVA {
 //      ROOT::TSequentialExecutor &GetSeqExecutor() { return *fSeqfPool; }
 #endif
       /// Get executor class for multi-thread usage
-      /// In case when  MT is not enabled will return a serial executor 
+      /// In case when  MT is not enabled will return a serial executor
       Executor & GetThreadExecutor() { return fExecutor; }
 
       /// Enable MT in TMVA (by default is on when ROOT::EnableImplicitMT() is set
@@ -90,7 +90,7 @@ namespace TMVA {
 
       ///Check if IMT is enabled
       Bool_t IsMTEnabled() const { return  fExecutor.GetPoolSize() > 1; }
-      
+
    public:
 
       class VariablePlotting;
@@ -107,6 +107,7 @@ namespace TMVA {
          Float_t fTimesRMS;
          Int_t   fNbins1D;
          Int_t   fNbins2D;
+         Int_t   fMaxNumOfAllowedVariables;
          Int_t   fMaxNumOfAllowedVariablesForScatterPlots;
          Int_t   fNbinsMVAoutput;
          Int_t   fNbinsXOfROCCurve;
@@ -118,13 +119,14 @@ namespace TMVA {
       class IONames {
 
       public:
-
+         // this is name of weight file directory
+         TString fWeightFileDirPrefix;
          TString fWeightFileDir;
          TString fWeightFileExtension;
          TString fOptionsReferenceFileDir;
       } fIONames; // Customisable weight file properties
-         
-      
+
+
    private:
 
       // private constructor
@@ -136,7 +138,7 @@ namespace TMVA {
       static std::atomic<Config*> fgConfigPtr;
 #else
       static Config* fgConfigPtr;
-#endif                  
+#endif
    private:
 
 #if __cplusplus > 199711L
@@ -154,7 +156,7 @@ namespace TMVA {
 #endif
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
-         
+
       ClassDef(Config,0); // Singleton class for global configuration settings
    };
 

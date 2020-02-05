@@ -807,46 +807,52 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       return fabs(left) >= tol;
   };
 
+  auto errMsg = [](std::string msgHead, const RooAbsReal* tv, const RooAbsReal* ov) {
+    cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in value:\t"
+        << tv->getVal() << " vs.\t" << ov->getVal()
+        << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << endl;
+  };
+
   if (deviation(_minNLL, other._minNLL)) {
     cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << endl ;
     ret = kFALSE ;
   }
 
   for (Int_t i=0 ; i<_constPars->getSize() ; i++) {
-    RooAbsReal* ov = static_cast<RooAbsReal*>(other._constPars->find(_constPars->at(i)->GetName())) ;
+    auto tv = static_cast<const RooAbsReal*>(_constPars->at(i));
+    auto ov = static_cast<const RooAbsReal*>(other._constPars->find(tv->GetName())) ;
     if (!ov) {
       cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (ov && deviation(static_cast<RooAbsReal*>(_constPars->at(i))->getVal(), ov->getVal())) {
-      cout << "RooFitResult::isIdentical: constant parameter " << _constPars->at(i)->GetName() 
-	       << " differs in value: " << static_cast<RooAbsReal*>(_constPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+    if (ov && deviation(tv->getVal(), ov->getVal())) {
+      errMsg("constant parameter", tv, ov);
       ret = kFALSE ;
     }
   }
 
   for (Int_t i=0 ; i<_initPars->getSize() ; i++) {
-    RooAbsReal* ov = static_cast<RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
+    auto ov = static_cast<const RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
+    auto tv = static_cast<const RooAbsReal*>(_initPars->at(i));
     if (!ov) {
       cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (ov && deviation(static_cast<RooAbsReal*>(_initPars->at(i))->getVal(), ov->getVal())) {
-      cout << "RooFitResult::isIdentical: initial parameter " << _initPars->at(i)->GetName() 
-	       << " differs in value: " << static_cast<RooAbsReal*>(_initPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+    if (ov && deviation(tv->getVal(), ov->getVal())) {
+      errMsg("initial parameter", tv, ov);
       ret = kFALSE ;
     }
   }
 
   for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
-    RooAbsReal* ov = static_cast<RooAbsReal*>(other._finalPars->find(_finalPars->at(i)->GetName())) ;
+    auto tv = static_cast<const RooAbsReal*>(_finalPars->at(i));
+    auto ov = static_cast<const RooAbsReal*>(other._finalPars->find(tv->GetName())) ;
     if (!ov) {
-      cout << "RooFitResult::isIdentical: cannot find final parameter " << _finalPars->at(i)->GetName() << " in reference" << endl ;
+      cout << "RooFitResult::isIdentical: cannot find final parameter " << tv->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
-    if (ov && deviation(static_cast<RooAbsReal*>(_finalPars->at(i))->getVal(), ov->getVal())) {
-      cout << "RooFitResult::isIdentical: final parameter " << _finalPars->at(i)->GetName() 
-	       << " differs in value: " << static_cast<RooAbsReal*>(_finalPars->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+    if (ov && deviation(tv->getVal(), ov->getVal())) {
+      errMsg("final parameter", tv, ov);
       ret = kFALSE ;
     }
   }
@@ -862,14 +868,14 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
     other.fillLegacyCorrMatrix() ;
 
     for (Int_t i=0 ; i<_globalCorr->getSize() ; i++) {
-      RooAbsReal* ov = static_cast<RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
+      auto tv = static_cast<const RooAbsReal*>(_globalCorr->at(i));
+      auto ov = static_cast<const RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
       if (!ov) {
-        cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << _globalCorr->at(i)->GetName() << " in reference" << endl ;
+        cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << tv->GetName() << " in reference" << endl ;
         ret = kFALSE ;
       }
-      if (ov && deviationCorr(static_cast<RooAbsReal*>(_globalCorr->at(i))->getVal(), ov->getVal())) {
-        cout << "RooFitResult::isIdentical: global correlation coefficient " << _globalCorr->at(i)->GetName()
-	             << " differs in value: " << static_cast<RooAbsReal*>(_globalCorr->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+      if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
+        errMsg("global correlation coefficient", tv, ov);
         ret = kFALSE ;
       }
     }
@@ -878,14 +884,14 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       RooArgList* row = (RooArgList*) _corrMatrix.At(j) ;
       RooArgList* orow = (RooArgList*) other._corrMatrix.At(j) ;
       for (Int_t i=0 ; i<row->getSize() ; i++) {
-        RooAbsReal* ov = static_cast<RooAbsReal*>(orow->find(row->at(i)->GetName())) ;
+        auto tv = static_cast<const RooAbsReal*>(row->at(i));
+        auto ov = static_cast<const RooAbsReal*>(orow->find(tv->GetName())) ;
         if (!ov) {
-          cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << row->at(i)->GetName() << " in reference" << endl ;
+          cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << tv->GetName() << " in reference" << endl ;
           ret = kFALSE ;
         }
-        if (ov && deviationCorr(static_cast<RooAbsReal*>(row->at(i))->getVal(), ov->getVal())) {
-          cout << "RooFitResult::isIdentical: correlation coefficient " << row->at(i)->GetName()
-	           << " differs in value: " << static_cast<RooAbsReal*>(row->at(i))->getVal() << " vs. " << ov->getVal() << endl ;
+        if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
+          errMsg("correlation coefficient", tv, ov);
           ret = kFALSE ;
         }
       }

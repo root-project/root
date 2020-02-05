@@ -105,7 +105,8 @@ public:
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);
-
+   void OpenInBrowser(const TString & url);
+   void OpenReferenceGuideFor(const TString & strippedClass);
    virtual void    HandleException(Int_t sig);
    virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }

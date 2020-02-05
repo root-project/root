@@ -27,6 +27,9 @@ namespace PyROOT {
    PyObject* GetCppGlobal( const std::string& name );
    PyObject* GetCppGlobal( PyObject*, PyObject* args );
 
+// clean up all objects controlled by TMemoryRegulator
+   PyObject *ClearProxiedObjects();
+
 // bind a ROOT object into a Python object
    PyObject* BindCppObjectNoCast( Cppyy::TCppObject_t object, Cppyy::TCppType_t klass,
       Bool_t isRef = kFALSE, Bool_t isValue = kFALSE );

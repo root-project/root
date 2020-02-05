@@ -22,11 +22,9 @@
 class RooLinTransBinning : public RooAbsBinning {
 public:
 
-  RooLinTransBinning(const char* name=0) : RooAbsBinning(name) {
-    // coverity[UNINIT_CTOR]
-  } ; 
-  RooLinTransBinning(const RooAbsBinning& input, Double_t slope=1.0, Double_t offset=0.0, const char* name=0) ;
-  RooLinTransBinning(const RooLinTransBinning&, const char* name=0) ;
+  RooLinTransBinning(const char* name=0) : RooAbsBinning(name) { }
+  RooLinTransBinning(const RooAbsBinning& input, Double_t slope=1.0, Double_t offset=0.0, const char* name=0);
+  RooLinTransBinning(const RooLinTransBinning&, const char* name=0);
   virtual RooAbsBinning* clone(const char* name=0) const { return new RooLinTransBinning(*this,name) ; }
   virtual ~RooLinTransBinning() ;
 
@@ -55,10 +53,10 @@ protected:
   inline Double_t trans(Double_t x) const { return x*_slope + _offset ; }
   inline Double_t invTrans(Double_t x) const { if (_slope==0.) return 0 ; return (x-_offset)/_slope ; }
 
-  Double_t _slope ;         // Slope of transformation
-  Double_t _offset ;        // Offset of tranformation
-  RooAbsBinning* _input ;   // Input binning
-  mutable Double_t *_array ; //! Array of transformed bin boundaries
+  Double_t _slope{0.};   // Slope of transformation
+  Double_t _offset{0.};  // Offset of transformation
+  RooAbsBinning* _input{nullptr};    // Input binning
+  mutable Double_t *_array{nullptr}; //! Array of transformed bin boundaries
 
   ClassDef(RooLinTransBinning,1) // Linear transformation of binning specification
 };

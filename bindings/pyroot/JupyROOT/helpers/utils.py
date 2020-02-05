@@ -15,6 +15,7 @@ import itertools
 import re
 import fnmatch
 import time
+from datetime import datetime
 from hashlib import sha1
 from contextlib import contextmanager
 from subprocess import check_output
@@ -39,7 +40,6 @@ console.log("JupyROOT - %%cpp magic configured");
 _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
 
 
-_jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
 
@@ -47,19 +47,55 @@ _jsCode = """
 <div id="{jsDivId}"
      style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
 </div>
-
 <script>
- requirejs.config({{
-     paths: {{
-       'JSRootCore' : '{jsROOTSourceDir}/scripts/JSRootCore',
-     }}
-   }});
- require(['JSRootCore'],
-     function(Core) {{
-       var obj = Core.JSONR_unref({jsonContent});
-       Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
-     }}
- );
+if (typeof require !== 'undefined') {{
+
+    // All requirements met (we are in jupyter notebooks or we loaded requirejs before).
+    display_{jsDivId}();
+
+}} else {{
+
+    // We are in jupyterlab, we need to insert requirejs and configure it.
+    // Jupyterlab might be installed in a different base_url so we need to know it.
+    try {{
+        var base_url = JSON.parse(document.getElementById('jupyter-config-data').innerHTML).baseUrl;
+    }} catch(_) {{
+        var base_url = '/';
+    }}
+
+    // Try loading a local version of requirejs and fallback to cdn if not possible.
+    requirejs_load(base_url + 'static/components/requirejs/require.js', requirejs_success(base_url), function(){{
+        requirejs_load('https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js', requirejs_success(base_url), function(){{
+            document.getElementById("{jsDivId}").innerHTML = "Failed to load requireJs";
+        }});
+    }});
+}}
+
+function requirejs_load(src, on_load, on_error) {{
+    var script = document.createElement('script');
+    script.src = src;
+    script.onload = on_load;
+    script.onerror = on_error;
+    document.head.appendChild(script);
+}}
+
+function requirejs_success(base_url) {{
+    return function() {{
+        require.config({{
+            baseUrl: base_url + 'static/'
+        }});
+        display_{jsDivId}();
+    }}
+}}
+
+function display_{jsDivId}() {{
+    require(['scripts/JSRootCore'],
+        function(Core) {{
+            var obj = Core.JSONR_unref({jsonContent});
+            Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+        }}
+    );
+}}
 </script>
 """
 
@@ -201,18 +237,29 @@ def _invokeAclicMac(fileName):
 def _codeToFilename(code):
     '''Convert code to a unique file name
 
-    >>> _codeToFilename("int f(i){return i*i;}")
-    'dbf7e731.C'
+    >>> code = "int f(i){return i*i;}"
+    >>> _codeToFilename(code)[0:9]
+    'dbf7e731_'
+    >>> _codeToFilename(code)[9:-2].isdigit()
+    True
+    >>> _codeToFilename(code)[-2:]
+    '.C'
     '''
     code_enc = code if type(code) == bytes else code.encode('utf-8')
     fileNameBase = sha1(code_enc).hexdigest()[0:8]
-    return fileNameBase + ".C"
+    timestamp = datetime.now().strftime("%H%M%S%f")
+    return fileNameBase + "_" + timestamp + ".C"
 
 def _dumpToUniqueFile(code):
     '''Dump code to file whose name is unique
 
-    >>> _dumpToUniqueFile("int f(i){return i*i;}")
-    'dbf7e731.C'
+    >>> code = "int f(i){return i*i;}"
+    >>> _dumpToUniqueFile(code)[0:9]
+    'dbf7e731_'
+    >>> _dumpToUniqueFile(code)[9:-2].isdigit()
+    True
+    >>> _dumpToUniqueFile(code)[-2:]
+    '.C'
     '''
     fileName = _codeToFilename(code)
     with open (fileName,'w') as ofile:
@@ -349,7 +396,6 @@ class NotebookDrawer(object):
     Capture the canvas which is drawn and decide if it should be displayed using
     jsROOT.
     '''
-    jsUID = 0
 
     def __init__(self, theObject):
         self.drawableObject = theObject
@@ -373,10 +419,13 @@ class NotebookDrawer(object):
     def _getUID(self):
         '''
         Every DIV containing a JavaScript snippet must be unique in the
-        notebook. This methods provides a unique identifier.
+        notebook. This method provides a unique identifier.
+        With the introduction of JupyterLab, multiple Notebooks can exist
+        simultaneously on the same HTML page. In order to ensure a unique
+        identifier with the UID throughout all open Notebooks the UID is
+        generated as a timestamp.
         '''
-        NotebookDrawer.jsUID += 1
-        return NotebookDrawer.jsUID
+        return int(round(time.time() * 1000))
 
     def _canJsDisplay(self):
         if not TBufferJSONAvailable():
@@ -411,7 +460,6 @@ class NotebookDrawer(object):
 
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
-                                    jsROOTSourceDir = _jsROOTSourceDir,
                                     jsonContent = json.Data(),
                                     jsDrawOptions = options,
                                     jsDivId = divId)

@@ -1,7 +1,8 @@
 File features.h
 ===============
 
-.. code-block:: C++
+.. code-block:: c++
+    :linenos:
 
     #include <cmath>
     #include <iostream>
@@ -40,13 +41,13 @@ File features.h
         void array_method(int* ad, int size) {
             for (int i=0; i < size; ++i)
                 std::cout << ad[i] << ' ';
-            std::cout << '\\n';
+            std::cout << '\n';
         }
 
         void array_method(double* ad, int size) {
             for (int i=0; i < size; ++i)
                 std::cout << ad[i] << ' ';
-            std::cout << '\\n';
+            std::cout << '\n';
         }
 
         void uint_ref_assign(unsigned int& target, unsigned int value) {
@@ -90,6 +91,11 @@ File features.h
         return f(i1, i2);
     }
 
+    template<class A, class B, class C = A>
+    C multiply(A a, B b) {
+        return C{a*b};
+    }
+
     //-----
     namespace Namespace {
 
@@ -114,3 +120,4 @@ File features.h
 
     //-----
     enum EFruit {kApple=78, kBanana=29, kCitrus=34};
+    enum class NamedClassEnum { E1 = 42 };

@@ -16,16 +16,16 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
-#include <map>
-#include <vector>
-#include <string>
-#include <utility>
-
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 #include "RooNameSet.h"
 #include "RooCacheManager.h"
+
+#include <map>
+#include <vector>
+#include <string>
+#include <utility>
 
 class TObject ;
 class RooAbsArg;
@@ -53,7 +53,7 @@ public:
   RooDataHist& operator=(const RooDataHist&) = delete;
 
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
-  virtual TObject* Clone(const char* newname) const {
+  virtual TObject* Clone(const char* newname="") const {
     return new RooDataHist(*this, newname && newname[0] != '\0' ? newname : GetName());
   }
   virtual ~RooDataHist() ;
@@ -90,6 +90,14 @@ public:
     return kTRUE ;     
   }
   virtual Bool_t isNonPoissonWeighted() const ;
+
+  virtual RooSpan<const double> getWeightBatch(std::size_t, std::size_t) const {
+    //TODO
+    std::cerr << "Retrieving weights in batches not yet implemented for RooDataHist." << std::endl;
+    assert(false);
+
+    return {};
+  }
 
   Double_t sum(Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) const ;
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize, Bool_t inverseCorr=kFALSE) ;

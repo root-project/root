@@ -422,6 +422,20 @@ TEST_P(RDFSimpleTests, GetNSlots)
    EXPECT_EQ(NSLOTS, ROOT::Internal::RDF::GetNSlots());
 }
 
+TEST_P(RDFSimpleTests, GetNRuns)
+{
+   RDataFrame df(3);
+   EXPECT_EQ(df.GetNRuns(), 0u);
+
+   auto sum1 = df.Sum("rdfentry_");
+   sum1.GetValue();
+   EXPECT_EQ(df.GetNRuns(), 1u);
+
+   auto sum2 = df.Sum("rdfentry_");
+   sum2.GetValue();
+   EXPECT_EQ(df.GetNRuns(), 2u);
+}
+
 TEST_P(RDFSimpleTests, CArraysFromTree)
 {
    auto filename = "dataframe_simple_3.root";
@@ -884,8 +898,9 @@ TEST(RDFSimpleTests, SumOfStrings)
 
 TEST(RDFSimpleTests, GenVector)
 {
+   // The leading underscore of "_hh" tests against ROOT-10305.
    ROOT::RDataFrame t(1);
-   auto aa = t.Define("hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "hh.Rapidity()");
+   auto aa = t.Define("_hh", "ROOT::Math::PtEtaPhiMVector(1,1,1,1)").Define("h", "_hh.Rapidity()");
    auto m = aa.Mean("h");
    EXPECT_TRUE(0 != *m);
 }

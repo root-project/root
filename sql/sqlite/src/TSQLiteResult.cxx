@@ -43,7 +43,7 @@ void TSQLiteResult::Close(Option_t *)
       return;
 
    sqlite3_finalize(fResult);
-   fResult     = 0;
+   fResult     = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ const char *TSQLiteResult::GetFieldName(Int_t field)
 {
    if (!fResult) {
       Error("GetFieldName", "result set closed");
-      return 0;
+      return nullptr;
    }
    return sqlite3_column_name(fResult, field);
 }
@@ -103,17 +103,17 @@ TSQLRow *TSQLiteResult::Next()
 {
    if (!fResult) {
       Error("Next", "result set closed");
-      return 0;
+      return nullptr;
    }
 
    int ret = sqlite3_step(fResult);
    if ((ret != SQLITE_DONE) && (ret != SQLITE_ROW)) {
       Error("Statement", "SQL Error: %d %s", ret, sqlite3_errmsg(sqlite3_db_handle(fResult)));
-      return NULL;
+      return nullptr;
    }
    if (ret == SQLITE_DONE) {
       // Finished executing, no other row!
-      return NULL;
+      return nullptr;
    }
    return new TSQLiteRow((void *) fResult, -1);
 }

@@ -140,7 +140,7 @@ TMVA::CvSplitKFoldsExpr::CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr)
    : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()), fSplitFormula("", expr),
      fParValues(fSplitFormula.GetNpar())
 {
-   if (not fSplitFormula.IsValid()) {
+   if (!fSplitFormula.IsValid()) {
       throw std::runtime_error("Split expression \"" + std::string(fSplitExpr.Data()) + "\" is not a valid TFormula.");
    }
 
@@ -149,7 +149,7 @@ TMVA::CvSplitKFoldsExpr::CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr)
 
       // std::cout << "Found variable with name \"" << name << "\"." << std::endl;
 
-      if (name == "NumFolds" or name == "numFolds") {
+      if (name == "NumFolds" || name == "numFolds") {
          // std::cout << "NumFolds|numFolds is a reserved variable! Adding to context." << std::endl;
          fIdxFormulaParNumFolds = iFormulaPar;
       } else {
@@ -243,7 +243,7 @@ UInt_t TMVA::CvSplitKFoldsExpr::GetSpectatorIndexForName(DataSetInfo &dsi, TStri
 TMVA::CvSplitKFolds::CvSplitKFolds(UInt_t numFolds, TString splitExpr, Bool_t stratified, UInt_t seed)
    : CvSplit(numFolds), fSeed(seed), fSplitExprString(splitExpr), fStratified(stratified)
 {
-   if (not CvSplitKFoldsExpr::Validate(fSplitExprString) and (splitExpr != TString(""))) {
+   if (!CvSplitKFoldsExpr::Validate(fSplitExprString) && (splitExpr != TString(""))) {
       Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
    }
 
@@ -328,7 +328,7 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
       tempSets.at(iFold).reserve(foldSize);
    }
 
-   Bool_t useSplitExpr = not(fSplitExpr == nullptr or fSplitExprString == "");
+   Bool_t useSplitExpr = !(fSplitExpr == nullptr || fSplitExprString == "");
 
    if (useSplitExpr) {
       // Deterministic split
@@ -338,7 +338,7 @@ TMVA::CvSplitKFolds::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFol
          tempSets.at((UInt_t)iFold).push_back(ev);
       }
    } else {
-      if(not fStratified){
+      if(!fStratified){
          // Random split
          std::vector<UInt_t> fOrigToFoldMapping;
          fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);

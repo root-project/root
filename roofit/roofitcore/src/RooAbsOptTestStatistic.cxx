@@ -23,16 +23,16 @@ RooAbsOptTestStatistic is the abstract base class for test
 statistics objects that evaluate a function or PDF at each point of a given
 dataset.  This class provides generic optimizations, such as
 caching and precalculation of constant terms that can be made for
-all such quantities
+all such quantities.
 
 Implementations should define evaluatePartition(), which calculates the
 value of a (sub)range of the dataset and optionally combinedValue(),
 which combines the values calculated for each partition. If combinedValue()
 is not overloaded, the default implementation will add the partition results
-to obtain the combined result
+to obtain the combined result.
 
 Support for calculation in partitions is needed to allow multi-core
-parallelized calculation of test statistics
+parallelized calculation of test statistics.
 **/
 
 #include "RooFit.h"
@@ -225,15 +225,14 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Store normalization set  
   _normSet = (RooArgSet*) indata.get()->snapshot(kFALSE) ;
 
-  // Expand list of observables with any observables used in parameterized ranges
-  RooAbsArg* realDep ;
-  RooFIter iter = _funcObsSet->fwdIterator() ;
-  while((realDep=iter.next())) {
-    RooAbsRealLValue* realDepRLV = dynamic_cast<RooAbsRealLValue*>(realDep) ;
+  // Expand list of observables with any observables used in parameterized ranges.
+  // This NEEDS to be a counting loop since we are inserting during the loop.
+  for (std::size_t i = 0; i < _funcObsSet->size(); ++i) {
+    auto realDepRLV = dynamic_cast<const RooAbsRealLValue*>((*_funcObsSet)[i]);
     if (realDepRLV && realDepRLV->isDerived()) {
-      RooArgSet tmp2 ;
-      realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE) ;
-      _funcObsSet->add(tmp2,kTRUE) ;
+      RooArgSet tmp2;
+      realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE);
+      _funcObsSet->add(tmp2,kTRUE);
     }
   }
 
@@ -245,9 +244,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   
   // Check if the fit ranges of the dependents in the data and in the FUNC are consistent
   const RooArgSet* dataDepSet = indata.get() ;
-  iter = _funcObsSet->fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+  for (const auto arg : *_funcObsSet) {
 
     // Check that both dataset and function argument are of type RooRealVar
     RooRealVar* realReal = dynamic_cast<RooRealVar*>(arg) ;
@@ -295,8 +292,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     //cout << "now adjusting observable ranges to requested fit range" << endl ;
 
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
-    iter = _funcObsSet->fwdIterator() ;
-    while((arg=iter.next())) {
+    for (const auto arg : *_funcObsSet) {
 
       RooRealVar* realObs = dynamic_cast<RooRealVar*>(arg) ;
       if (realObs) {
@@ -379,15 +375,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     
     //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,kTRUE,kTRUE) ;
-
-//     // Delete owned projected dependent copy in _normSet
-//     TIterator* ii = tobedel->createIterator() ;
-//     RooAbsArg* aa ;
-//     while((aa=(RooAbsArg*)ii->Next())) {
-//       delete aa ;
-//     }
-//     delete ii ;
-//     delete tobedel ;
 
     // Mark all projected dependents as such
     RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(*_projDeps) ;
@@ -499,8 +486,8 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 ////////////////////////////////////////////////////////////////////////////////
 /// Driver function to propagate constant term optimizations in test statistic.
 /// If code Activate is sent, constant term optimization will be executed.
-/// If code Deacivate is sent, any existing constant term optimizations will
-/// be abanoned. If codes ConfigChange or ValueChange are sent, any existing
+/// If code Deactivate is sent, any existing constant term optimizations will
+/// be abandoned. If codes ConfigChange or ValueChange are sent, any existing
 /// constant term optimizations will be redone.
 
 void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt) 
@@ -599,7 +586,7 @@ void RooAbsOptTestStatistic::optimizeCaching()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Driver function to activate global constant term optimization.
-/// If activated constant terms are found and cached with the dataset
+/// If activated, constant terms are found and cached with the dataset.
 /// The operation mode of cached nodes is set to AClean meaning that
 /// their getVal() call will never result in an evaluate call.
 /// Finally the branches in the dataset that correspond to observables
@@ -613,7 +600,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     if (_optimized) {
       return ;
     }
-    
+
     // Trigger create of all object caches now in nodes that have deferred object creation
     // so that cache contents can be processed immediately
     _funcClone->getVal(_normSet) ;
@@ -629,10 +616,10 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     // dataset is constructed in terms of a RooVectorDataStore
     if (applyTrackingOpt) {
       if (!dynamic_cast<RooVectorDataStore*>(_dataClone->store())) {
-	coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName() 
-			    << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
-			    << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << endl ;
-	applyTrackingOpt = kFALSE ;
+        coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName()
+			            << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
+			            << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << endl ;
+        applyTrackingOpt = kFALSE ;
       }
     }
 
@@ -650,7 +637,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
       // Set CacheAndTrack flag on all remaining nodes
       trackNodes.setAttribAll("CacheAndTrack",kTRUE) ;
     }
-    
+
     // Find all nodes that depend exclusively on constant parameters
     _cachedNodes.removeAll() ;
 
@@ -666,7 +653,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
 //     cout << "ROATS::oCT(" << GetName() << ") funcClone structure dump AFTER cacheArgs" << endl ;
 //     _funcClone->Print("t") ;
 
-    
+
     // Put all cached nodes in AClean value caching mode so that their evaluate() is never called
     for (auto cacheArg : _cachedNodes) {
       cacheArg->setOperMode(RooAbsArg::AClean) ;
@@ -685,9 +672,9 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     actualTrackNodes.remove(*constNodes) ;
     if (constNodes->getSize()>0) {
       if (constNodes->getSize()<20) {
-	coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+        coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
       } else {
-	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
       }
 //       RooFIter i = constNodes->fwdIterator() ;
 //       RooAbsArg* cnode ;
@@ -697,31 +684,26 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     }
     if (actualTrackNodes.getSize()>0) {
       if (actualTrackNodes.getSize()<20) {
-	coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
-// 	RooFIter iter = actualTrackNodes.fwdIterator() ;
-// 	RooAbsArg* atn ;
-// 	while((atn = iter.next())) {
-// 	  cout << atn->IsA()->GetName() << "::" << atn->GetName() << endl ;
-// 	}
+        coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
       } else {
-	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
       }
     }
     delete constNodes ;
-    
+
     // Disable reading of observables that are no longer used
     _dataClone->optimizeReadingWithCaching(*_funcClone, _cachedNodes,requiredExtraObservables()) ;
 
     _optimized = kTRUE ;
 
   } else {
-    
+
     // Delete the cache
     _dataClone->resetCache() ;
-    
+
     // Reactivate all tree branches
     _dataClone->setArgStatus(*_dataClone->get(),kTRUE) ;
-    
+
     // Reset all nodes to ADirty   
     optimizeCaching() ;
 

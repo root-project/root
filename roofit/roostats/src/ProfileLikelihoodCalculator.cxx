@@ -136,8 +136,9 @@ RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
    if (!constrainedParams) return 0;
    RemoveConstantParameters(constrainedParams);
 
-
-   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs), Offset(RooStats::IsNLLOffset() ) );
+   const auto& config = GetGlobalRooStatsConfig();
+   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
+       RooFit::Offset(config.useLikelihoodOffset) );
 
    // check if global fit has been already done
    if (fFitResult && fGlobalFitDone) {
@@ -176,11 +177,14 @@ RooFitResult * ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
    oocoutP((TObject*)0,Minimization) << "ProfileLikelihoodCalcultor::DoMinimizeNLL - using " << minimType << " / " << minimAlgo << " with strategy " << strategy << std::endl;
    // do global fit and store fit result for further use
 
+   const auto& config = GetGlobalRooStatsConfig();
+
    RooMinimizer minim(*nll);
    minim.setStrategy(strategy);
    minim.setEps(tolerance);
    minim.setPrintLevel(level);
    minim.optimizeConst(2); // to optimize likelihood calculations
+   minim.setEvalErrorWall(config.useEvalErrorWall);
 
    int status = -1;
    for (int tries = 1, maxtries = 4; tries <= maxtries; ++tries) {

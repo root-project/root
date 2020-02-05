@@ -104,6 +104,11 @@ static inline void* PyROOT_PyCapsule_GetPointer( PyObject* capsule, const char* 
 
 #endif  // ! 3.0
 
+// Support non-ASCII strings
+#if PY_VERSION_HEX >= 0x03030000
+#define PyROOT_PyUnicode_AsStringAndSize    _PyUnicode_AsStringAndSize
+#endif
+
 // for 3.0 support (backwards compatibility, really)
 #if PY_VERSION_HEX >= 0x03000000
 #define PyROOT_PyUnicode_Check              PyUnicode_Check

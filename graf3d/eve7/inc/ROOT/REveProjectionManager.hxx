@@ -67,8 +67,6 @@ public:
    void SetImportEmpty(Bool_t ie) { fImportEmpty = ie; }
    Bool_t GetImportEmpty() const { return fImportEmpty; }
 
-   Bool_t HandleElementPaste(REveElement *el) override;
-
    virtual REveElement *ImportElementsRecurse(REveElement *el, REveElement *parent);
    virtual REveElement *ImportElements(REveElement *el, REveElement *ext_list = nullptr);
 

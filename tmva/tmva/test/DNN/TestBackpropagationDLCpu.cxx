@@ -17,6 +17,7 @@
 #include "TMatrix.h"
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestBackpropagationDL.h"
+#include "TRandom.h"
 
 using namespace TMVA::DNN;
 
@@ -28,19 +29,21 @@ int main()
    double error;
    int iret = 0;
 
-   error = testBackpropagationWeightsLinear<TCpu<Scalar_t>>(1.0);
+   gRandom->SetSeed(0);
+
+   error = testBackpropagationWeightsLinear<TCpu<Scalar_t>>(0.1);
    if (error > 1e-3)
        iret++;
 
-   error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-2);
+   error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-5); // relu can use large dx
    if (error > 1e-3)
        iret++;
 
-   error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.0);
+   error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.E-5);
    if (error > 1e-3)
        iret++;
 
-   error = testBackpropagationBiasesLinear<TCpu<Scalar_t>>(1.0);
+   error = testBackpropagationBiasesLinear<TCpu<Scalar_t>>(0.1);  // use large dx since network is linear
    if (error > 1e-3)
        iret++;
 

@@ -45,6 +45,16 @@ using namespace TStreamerInfoActions;
 
 namespace TStreamerInfoActions
 {
+   bool IsDefaultVector(TVirtualCollectionProxy &proxy)
+   {
+      const auto props = proxy.GetProperties();
+      const bool isVector = proxy.GetCollectionType() == ROOT::kSTLvector;
+      const bool hasDefaultAlloc = !(props & TVirtualCollectionProxy::kCustomAlloc);
+      const bool isEmulated = props & TVirtualCollectionProxy::kIsEmulated;
+
+      return isEmulated || (isVector && hasDefaultAlloc);
+   }
+
    template <typename From>
    struct WithFactorMarker {
       typedef From Value_t;
@@ -3077,11 +3087,10 @@ void TStreamerInfo::Compile()
       // try to group consecutive members of the same type
       if (!TestBit(kCannotOptimize)
           && (keep >= 0)
-          && (element->GetType() >=0)
+          && (element->GetType() > 0)
           && (element->GetType() < 10)
           && (fComp[fNdata].fType == fComp[fNdata].fNewType)
           && (fComp[keep].fMethod == 0)
-          && (element->GetType() > 0)
           && (element->GetArrayDim() == 0)
           && (fComp[keep].fType < kObject)
           && (fComp[keep].fType != kCharStar) /* do not optimize char* */
@@ -3884,7 +3893,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    UInt_t ndata = info->GetElements()->GetEntries();
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
-   if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) )
+   if (IsDefaultVector(proxy))
    {
       if (proxy.HasPointers()) {
          // Instead of the creating a new one let's copy the one from the StreamerInfo.
@@ -4001,7 +4010,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
       TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(info,ndata);
 
-      if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) )
+      if (IsDefaultVector(proxy))
       {
          if (proxy.HasPointers()) {
             // Instead of the creating a new one let's copy the one from the StreamerInfo.
@@ -4064,7 +4073,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
                oldType += TVirtualStreamerInfo::kSkip;
             }
          }
-         if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+         if ( IsDefaultVector(proxy)
                /*|| (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
                || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap) */ )
          {
@@ -4137,7 +4146,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             }
          }
 #else
-         if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+         if ( IsDefaultVector(proxy)
                /*|| (proxy.GetCollectionType() == ROOT::kSTLset || proxy.GetCollectionType() == ROOT::kSTLmultiset
                 || proxy.GetCollectionType() == ROOT::kSTLmap || proxy.GetCollectionType() == ROOT::kSTLmultimap)*/ )
          {

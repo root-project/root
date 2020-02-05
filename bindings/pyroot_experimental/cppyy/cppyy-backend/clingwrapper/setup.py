@@ -14,8 +14,12 @@ except ImportError:
     has_wheel = False
 from distutils.errors import DistutilsSetupError
 
+force_bdist = False
+if '--force-bdist' in sys.argv:
+    force_bdist = True
+    sys.argv.remove('--force-bdist')
 
-requirements = ['cppyy-cling>=6.15.2.9']
+requirements = ['cppyy-cling==6.18.2.*']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -31,7 +35,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 def is_manylinux():
     try:
         for line in open('/etc/redhat-release').readlines():
-            if 'CentOS release 5.11' in line:
+            if 'CentOS release 6.10 (Final)' in line:
                 return True
     except (OSError, IOError):
         pass
@@ -75,7 +79,9 @@ class my_build_cpplib(_build_ext):
             os.makedirs(self.build_temp)
         extra_postargs = ['-O2']+get_cflags().split()
         if 'win32' in sys.platform:
-            extra_postargs += ['/GR', '/EHsc-']  # note '/EHsc' hardwired by distutils :(
+        # /EHsc and sometimes /MT are hardwired in distutils, but the compiler/linker will
+        # let the last argument take precedence
+            extra_postargs += ['/GR', '/EHsc-', '/MD']
         objects = self.compiler.compile(
             ext.sources,
             output_dir=self.build_temp,
@@ -183,7 +189,7 @@ class MyDistribution(Distribution):
         # packages are installed one-by-one, on old install is used or the build
         # will simply fail hard. The following is not completely quiet, but at
         # least a lot less conspicuous.
-        if not is_manylinux():
+        if not is_manylinux() and not force_bdist:
             disabled = set((
                 'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
             for cmd in self.commands:
@@ -207,7 +213,7 @@ setup(
     author='PyPy Developers',
     author_email='pypy-dev@python.org',
 
-    version='1.9.0',
+    version='1.10.3',
 
     license='LBNL BSD',
 

@@ -419,10 +419,8 @@ int StatFunction::TestInverse2(RootFinder::EType algoType) {
          std::cout << std::endl;
       }
       iret |= ret;
-
    }
    return iret;
-
 }
 
 // test intergal. derivative and inverse(Rootfinder)

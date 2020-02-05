@@ -41,7 +41,7 @@ protected:
 
    static Int_t fgMapSize; ///< Default map size for all TBuffer objects
 
-   TBufferIO() = default;
+   TBufferIO() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    TBufferIO(TBuffer::EMode mode);
    TBufferIO(TBuffer::EMode mode, Int_t bufsiz);
@@ -73,43 +73,43 @@ public:
 
    virtual ~TBufferIO();
 
-   virtual Int_t GetVersionOwner() const;
+   Int_t GetVersionOwner() const override;
 
    // See comment in TBuffer::SetPidOffset
-   virtual UShort_t GetPidOffset() const { return fPidOffset; }
-   virtual void SetPidOffset(UShort_t offset);
-   virtual Int_t GetBufferDisplacement() const { return fDisplacement; }
-   virtual void SetBufferDisplacement() { fDisplacement = 0; }
-   virtual void SetBufferDisplacement(Int_t skipped) { fDisplacement = (Int_t)(Length() - skipped); }
+   UShort_t GetPidOffset() const override { return fPidOffset; }
+   void SetPidOffset(UShort_t offset) override;
+   Int_t GetBufferDisplacement() const override { return fDisplacement; }
+   void SetBufferDisplacement() override { fDisplacement = 0; }
+   void SetBufferDisplacement(Int_t skipped) override { fDisplacement = (Int_t)(Length() - skipped); }
 
    // Utilities for objects map
-   virtual void SetReadParam(Int_t mapsize);
-   virtual void SetWriteParam(Int_t mapsize);
-   virtual void InitMap();
-   virtual void ResetMap();
-   virtual void Reset();
-   virtual Int_t GetMapCount() const { return fMapCount; }
-   virtual void MapObject(const TObject *obj, UInt_t offset = 1);
-   virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
-   virtual Bool_t CheckObject(const TObject *obj);
-   virtual Bool_t CheckObject(const void *obj, const TClass *ptrClass);
-   virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
+   void SetReadParam(Int_t mapsize) override;
+   void SetWriteParam(Int_t mapsize) override;
+   void InitMap() override;
+   void ResetMap() override;
+   void Reset() override;
+   Int_t GetMapCount() const override { return fMapCount; }
+   void MapObject(const TObject *obj, UInt_t offset = 1) override;
+   void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1) override;
+   Bool_t CheckObject(const TObject *obj) override;
+   Bool_t CheckObject(const void *obj, const TClass *ptrClass) override;
+   void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const override;
 
    // Utilities for TStreamerInfo
-   virtual void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
-   virtual void ForceWriteInfoClones(TClonesArray *a);
-   virtual Int_t ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers);
-   virtual Int_t WriteClones(TClonesArray *a, Int_t nobjects);
-   virtual void TagStreamerInfo(TVirtualStreamerInfo *info);
+   void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) override;
+   void ForceWriteInfoClones(TClonesArray *a) override;
+   Int_t ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers) override;
+   Int_t WriteClones(TClonesArray *a, Int_t nobjects) override;
+   void TagStreamerInfo(TVirtualStreamerInfo *info) override;
 
    // Special basic ROOT objects and collections
-   virtual TProcessID *GetLastProcessID(TRefTable *reftable) const;
-   virtual UInt_t GetTRefExecId();
-   virtual TProcessID *ReadProcessID(UShort_t pidf);
-   virtual UShort_t WriteProcessID(TProcessID *pid);
+   TProcessID *GetLastProcessID(TRefTable *reftable) const override;
+   UInt_t GetTRefExecId() override;
+   TProcessID *ReadProcessID(UShort_t pidf) override;
+   UShort_t WriteProcessID(TProcessID *pid) override;
 
-   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
-   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
+   Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE) override;
+   void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE) override;
    using TBuffer::WriteObject;
 
    static void SetGlobalReadParam(Int_t mapsize);
@@ -117,7 +117,7 @@ public:
    static Int_t GetGlobalReadParam();
    static Int_t GetGlobalWriteParam();
 
-   ClassDef(TBufferIO, 0) // base class, share methods for TBufferFile and TBufferText
+   ClassDefOverride(TBufferIO, 0) // base class, share methods for TBufferFile and TBufferText
 };
 
 #endif

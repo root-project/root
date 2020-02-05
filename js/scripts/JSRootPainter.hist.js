@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootPainter', 'd3'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
        factory(require("./JSRootCore.js"), require("d3"));
    } else {
-
       if (typeof d3 != 'object')
          throw new Error('This extension requires d3.js', 'JSRootPainter.hist.js');
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.hist.js');
-
       if (typeof JSROOT.Painter != 'object')
          throw new Error('JSROOT.Painter not defined', 'JSRootPainter.hist.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -106,456 +101,138 @@
       if ((col>0) && (col<10)) return JSROOT.Painter.CreateGrayPalette();
       if (col < 51) return JSROOT.Painter.CreateDefaultPalette();
       if (col > 113) col = 57;
-      var red, green, blue,
-          stops = [ 0.0000, 0.1250, 0.2500, 0.3750, 0.5000, 0.6250, 0.7500, 0.8750, 1.0000 ];
+      var rgb, stops = [0,0.125,0.25,0.375,0.5,0.625,0.75,0.875,1];
       switch(col) {
-
          // Deep Sea
-         case 51:
-            red   = [ 0,  9, 13, 17, 24,  32,  27,  25,  29];
-            green = [ 0,  0,  0,  2, 37,  74, 113, 160, 221];
-            blue  = [ 28, 42, 59, 78, 98, 129, 154, 184, 221];
-            break;
-
+         case 51: rgb = [[0,9,13,17,24,32,27,25,29],[0,0,0,2,37,74,113,160,221],[28,42,59,78,98,129,154,184,221]]; break;
          // Grey Scale
-         case 52:
-            red = [ 0, 32, 64, 96, 128, 160, 192, 224, 255];
-            green = [ 0, 32, 64, 96, 128, 160, 192, 224, 255];
-            blue = [ 0, 32, 64, 96, 128, 160, 192, 224, 255];
-            break;
-
+         case 52: rgb = [[0,32,64,96,128,160,192,224,255],[0,32,64,96,128,160,192,224,255],[0,32,64,96,128,160,192,224,255]]; break;
          // Dark Body Radiator
-         case 53:
-            red = [ 0, 45, 99, 156, 212, 230, 237, 234, 242];
-            green = [ 0,  0,  0,  45, 101, 168, 238, 238, 243];
-            blue = [ 0,  1,  1,   3,   9,   8,  11,  95, 230];
-            break;
-
+         case 53: rgb = [[0,45,99,156,212,230,237,234,242],[0,0,0,45,101,168,238,238,243],[0,1,1,3,9,8,11,95,230]]; break;
          // Two-color hue (dark blue through neutral gray to bright yellow)
-         case 54:
-            red = [  0,  22, 44, 68, 93, 124, 160, 192, 237];
-            green = [  0,  16, 41, 67, 93, 125, 162, 194, 241];
-            blue = [ 97, 100, 99, 99, 93,  68,  44,  26,  74];
-            break;
-
+         case 54: rgb = [[0,22,44,68,93,124,160,192,237],[0,16,41,67,93,125,162,194,241],[97,100,99,99,93,68,44,26,74]]; break;
          // Rain Bow
-         case 55:
-            red = [  0,   5,  15,  35, 102, 196, 208, 199, 110];
-            green = [  0,  48, 124, 192, 206, 226,  97,  16,   0];
-            blue = [ 99, 142, 198, 201,  90,  22,  13,   8,   2];
-            break;
-
+         case 55: rgb = [[0,5,15,35,102,196,208,199,110],[0,48,124,192,206,226,97,16,0],[99,142,198,201,90,22,13,8,2]]; break;
          // Inverted Dark Body Radiator
-         case 56:
-            red = [ 242, 234, 237, 230, 212, 156, 99, 45, 0];
-            green = [ 243, 238, 238, 168, 101,  45,  0,  0, 0];
-            blue = [ 230,  95,  11,   8,   9,   3,  1,  1, 0];
-            break;
-
-         // Bird
-         case 57:
-            red = [ 0.2082*255, 0.0592*255, 0.0780*255, 0.0232*255, 0.1802*255, 0.5301*255, 0.8186*255, 0.9956*255, 0.9764*255];
-            green = [ 0.1664*255, 0.3599*255, 0.5041*255, 0.6419*255, 0.7178*255, 0.7492*255, 0.7328*255, 0.7862*255, 0.9832*255];
-            blue = [ 0.5293*255, 0.8684*255, 0.8385*255, 0.7914*255, 0.6425*255, 0.4662*255, 0.3499*255, 0.1968*255, 0.0539*255];
-            break;
-
+         case 56: rgb = [[242,234,237,230,212,156,99,45,0],[243,238,238,168,101,45,0,0,0],[230,95,11,8,9,3,1,1,0]]; break;
+         // Bird (default, keep float for backward compat)
+         case 57: rgb = [[ 53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],[42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],[134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]]; break;
          // Cubehelix
-         case 58:
-            red = [ 0.0000, 0.0956*255, 0.0098*255, 0.2124*255, 0.6905*255, 0.9242*255, 0.7914*255, 0.7596*255, 1.0000*255];
-            green = [ 0.0000, 0.1147*255, 0.3616*255, 0.5041*255, 0.4577*255, 0.4691*255, 0.6905*255, 0.9237*255, 1.0000*255];
-            blue = [ 0.0000, 0.2669*255, 0.3121*255, 0.1318*255, 0.2236*255, 0.6741*255, 0.9882*255, 0.9593*255, 1.0000*255];
-            break;
-
+         case 58: rgb = [[0,24,2,54,176,236,202,194,255],[0,29,92,129,117,120,176,236,255],[0,68,80,34,57,172,252,245,255]]; break;
          // Green Red Violet
-         case 59:
-            red = [13, 23, 25, 63, 76, 104, 137, 161, 206];
-            green = [95, 67, 37, 21,  0,  12,  35,  52,  79];
-            blue = [ 4,  3,  2,  6, 11,  22,  49,  98, 208];
-            break;
-
+         case 59: rgb = [[13,23,25,63,76,104,137,161,206],[95,67,37,21,0,12,35,52,79],[4,3,2,6,11,22,49,98,208]]; break;
          // Blue Red Yellow
-         case 60:
-            red = [0,  61,  89, 122, 143, 160, 185, 204, 231];
-            green = [0,   0,   0,   0,  14,  37,  72, 132, 235];
-            blue = [0, 140, 224, 144,   4,   5,   6,   9,  13];
-            break;
-
+         case 60: rgb = [[0,61,89,122,143,160,185,204,231],[0,0,0,0,14,37,72,132,235],[0,140,224,144,4,5,6,9,13]]; break;
          // Ocean
-         case 61:
-            red = [ 14,  7,  2,  0,  5,  11,  55, 131, 229];
-            green = [105, 56, 26,  1, 42,  74, 131, 171, 229];
-            blue = [  2, 21, 35, 60, 92, 113, 160, 185, 229];
-            break;
-
+         case 61: rgb = [[14,7,2,0,5,11,55,131,229],[105,56,26,1,42,74,131,171,229],[2,21,35,60,92,113,160,185,229]]; break;
          // Color Printable On Grey
-         case 62:
-            red = [ 0,   0,   0,  70, 148, 231, 235, 237, 244];
-            green = [ 0,   0,   0,   0,   0,  69,  67, 216, 244];
-            blue = [ 0, 102, 228, 231, 177, 124, 137,  20, 244];
-            break;
-
+         case 62: rgb = [[0,0,0,70,148,231,235,237,244],[0,0,0,0,0,69,67,216,244],[0,102,228,231,177,124,137,20,244]]; break;
          // Alpine
-         case 63:
-            red = [ 50, 56, 63, 68,  93, 121, 165, 192, 241];
-            green = [ 66, 81, 91, 96, 111, 128, 155, 189, 241];
-            blue = [ 97, 91, 75, 65,  77, 103, 143, 167, 217];
-            break;
-
+         case 63: rgb = [[50,56,63,68,93,121,165,192,241],[66,81,91,96,111,128,155,189,241],[97,91,75,65,77,103,143,167,217]]; break;
          // Aquamarine
-         case 64:
-            red = [ 145, 166, 167, 156, 131, 114, 101, 112, 132];
-            green = [ 158, 178, 179, 181, 163, 154, 144, 152, 159];
-            blue = [ 190, 199, 201, 192, 176, 169, 160, 166, 190];
-            break;
-
+         case 64: rgb = [[145,166,167,156,131,114,101,112,132],[158,178,179,181,163,154,144,152,159],[190,199,201,192,176,169,160,166,190]]; break;
          // Army
-         case 65:
-            red = [ 93,   91,  99, 108, 130, 125, 132, 155, 174];
-            green = [ 126, 124, 128, 129, 131, 121, 119, 153, 173];
-            blue = [ 103,  94,  87,  85,  80,  85, 107, 120, 146];
-            break;
-
+         case 65: rgb = [[93,91,99,108,130,125,132,155,174],[126,124,128,129,131,121,119,153,173],[103,94,87,85,80,85,107,120,146]]; break;
          // Atlantic
-         case 66:
-            red = [ 24, 40, 69,  90, 104, 114, 120, 132, 103];
-            green = [ 29, 52, 94, 127, 150, 162, 159, 151, 101];
-            blue = [ 29, 52, 96, 132, 162, 181, 184, 186, 131];
-            break;
-
+         case 66: rgb = [[24,40,69,90,104,114,120,132,103],[29,52,94,127,150,162,159,151,101],[29,52,96,132,162,181,184,186,131]]; break;
          // Aurora
-         case 67:
-            red = [ 46, 38, 61, 92, 113, 121, 132, 150, 191];
-            green = [ 46, 36, 40, 69, 110, 135, 131,  92,  34];
-            blue = [ 46, 80, 74, 70,  81, 105, 165, 211, 225];
-            break;
-
+         case 67: rgb = [[46,38,61,92,113,121,132,150,191],[46,36,40,69,110,135,131,92,34],[46,80,74,70,81,105,165,211,225]]; break;
          // Avocado
-         case 68:
-            red = [ 0,  4, 12,  30,  52, 101, 142, 190, 237];
-            green = [ 0, 40, 86, 121, 140, 172, 187, 213, 240];
-            blue = [ 0,  9, 14,  18,  21,  23,  27,  35, 101];
-            break;
-
+         case 68: rgb = [[0,4,12,30,52,101,142,190,237],[0,40,86,121,140,172,187,213,240],[0,9,14,18,21,23,27,35,101]]; break;
          // Beach
-         case 69:
-            red = [ 198, 206, 206, 211, 198, 181, 161, 171, 244];
-            green = [ 103, 133, 150, 172, 178, 174, 163, 175, 244];
-            blue = [  49,  54,  55,  66,  91, 130, 184, 224, 244];
-            break;
-
+         case 69: rgb = [[198,206,206,211,198,181,161,171,244],[103,133,150,172,178,174,163,175,244],[49,54,55,66,91,130,184,224,244]]; break;
          // Black Body
-         case 70:
-            red = [ 243, 243, 240, 240, 241, 239, 186, 151, 129];
-            green = [ 0,  46,  99, 149, 194, 220, 183, 166, 147];
-            blue = [ 6,   8,  36,  91, 169, 235, 246, 240, 233];
-            break;
-
+         case 70: rgb = [[243,243,240,240,241,239,186,151,129],[0,46,99,149,194,220,183,166,147],[6,8,36,91,169,235,246,240,233]]; break;
          // Blue Green Yellow
-         case 71:
-            red = [ 22, 19,  19,  25,  35,  53,  88, 139, 210];
-            green = [ 0, 32,  69, 108, 135, 159, 183, 198, 215];
-            blue = [ 77, 96, 110, 116, 110, 100,  90,  78,  70];
-            break;
-
+         case 71: rgb = [[22,19,19,25,35,53,88,139,210],[0,32,69,108,135,159,183,198,215],[77,96,110,116,110,100,90,78,70]]; break;
          // Brown Cyan
-         case 72:
-            red = [ 68, 116, 165, 182, 189, 180, 145, 111,  71];
-            green = [ 37,  82, 135, 178, 204, 225, 221, 202, 147];
-            blue = [ 16,  55, 105, 147, 196, 226, 232, 224, 178];
-            break;
-
+         case 72: rgb = [[68,116,165,182,189,180,145,111,71],[37,82,135,178,204,225,221,202,147],[16,55,105,147,196,226,232,224,178]]; break;
          // CMYK
-         case 73:
-            red = [ 61,  99, 136, 181, 213, 225, 198, 136, 24];
-            green = [ 149, 140,  96,  83, 132, 178, 190, 135, 22];
-            blue = [ 214, 203, 168, 135, 110, 100, 111, 113, 22];
-            break;
-
+         case 73: rgb = [[61,99,136,181,213,225,198,136,24],[149,140,96,83,132,178,190,135,22],[214,203,168,135,110,100,111,113,22]]; break;
          // Candy
-         case 74:
-            red = [ 76, 120, 156, 183, 197, 180, 162, 154, 140];
-            green = [ 34,  35,  42,  69, 102, 137, 164, 188, 197];
-            blue = [ 64,  69,  78, 105, 142, 177, 205, 217, 198];
-            break;
-
+         case 74: rgb = [[76,120,156,183,197,180,162,154,140],[34,35,42,69,102,137,164,188,197],[ 64,69,78,105,142,177,205,217,198]]; break;
          // Cherry
-         case 75:
-            red = [ 37, 102, 157, 188, 196, 214, 223, 235, 251];
-            green = [ 37,  29,  25,  37,  67,  91, 132, 185, 251];
-            blue = [ 37,  32,  33,  45,  66,  98, 137, 187, 251];
-            break;
-
+         case 75: rgb = [[37,102,157,188,196,214,223,235,251],[37,29,25,37,67,91,132,185,251],[37,32,33,45,66,98,137,187,251]]; break;
          // Coffee
-         case 76:
-            red = [ 79, 100, 119, 137, 153, 172, 192, 205, 250];
-            green = [ 63,  79,  93, 103, 115, 135, 167, 196, 250];
-            blue = [ 51,  59,  66,  61,  62,  70, 110, 160, 250];
-            break;
-
+         case 76: rgb = [[79,100,119,137,153,172,192,205,250],[63,79,93,103,115,135,167,196,250],[51,59,66,61,62,70,110,160,250]]; break;
          // Dark Rain Bow
-         case 77:
-            red = [  43,  44, 50,  66, 125, 172, 178, 155, 157];
-            green = [  63,  63, 85, 101, 138, 163, 122,  51,  39];
-            blue = [ 121, 101, 58,  44,  47,  55,  57,  44,  43];
-            break;
-
+         case 77: rgb = [[43,44,50,66,125,172,178,155,157],[63,63,85,101,138,163,122,51,39],[121,101,58,44,47,55,57,44,43]]; break;
          // Dark Terrain
-         case 78:
-            red = [  0, 41, 62, 79, 90, 87, 99, 140, 228];
-            green = [  0, 57, 81, 93, 85, 70, 71, 125, 228];
-            blue = [ 95, 91, 91, 82, 60, 43, 44, 112, 228];
-            break;
-
+         case 78: rgb = [[0,41,62,79,90,87,99,140,228],[0,57,81,93,85,70,71,125,228],[95,91,91,82,60,43,44,112,228]]; break;
          // Fall
-         case 79:
-            red = [ 49, 59, 72, 88, 114, 141, 176, 205, 222];
-            green = [ 78, 72, 66, 57,  59,  75, 106, 142, 173];
-            blue = [ 78, 55, 46, 40,  39,  39,  40,  41,  47];
-            break;
-
+         case 79: rgb = [[49,59,72,88,114,141,176,205,222],[78,72,66,57,59,75,106,142,173],[ 78,55,46,40,39,39,40,41,47]]; break;
          // Fruit Punch
-         case 80:
-            red = [ 243, 222, 201, 185, 165, 158, 166, 187, 219];
-            green = [  94, 108, 132, 135, 125,  96,  68,  51,  61];
-            blue = [   7,  9,   12,  19,  45,  89, 118, 146, 118];
-            break;
-
+         case 80: rgb = [[243,222,201,185,165,158,166,187,219],[94,108,132,135,125,96,68,51,61],[7,9,12,19,45,89,118,146,118]]; break;
          // Fuchsia
-         case 81:
-            red = [ 19, 44, 74, 105, 137, 166, 194, 206, 220];
-            green = [ 19, 28, 40,  55,  82, 110, 159, 181, 220];
-            blue = [ 19, 42, 68,  96, 129, 157, 188, 203, 220];
-            break;
-
+         case 81: rgb = [[19,44,74,105,137,166,194,206,220],[19,28,40,55,82,110,159,181,220],[19,42,68,96,129,157,188,203,220]]; break;
          // Grey Yellow
-         case 82:
-            red = [ 33, 44, 70,  99, 140, 165, 199, 211, 216];
-            green = [ 38, 50, 76, 105, 140, 165, 191, 189, 167];
-            blue = [ 55, 67, 97, 124, 140, 166, 163, 129,  52];
-            break;
-
+         case 82: rgb = [[33,44,70,99,140,165,199,211,216],[ 38,50,76,105,140,165,191,189,167],[ 55,67,97,124,140,166,163,129,52]]; break;
          // Green Brown Terrain
-         case 83:
-            red = [ 0, 33, 73, 124, 136, 152, 159, 171, 223];
-            green = [ 0, 43, 92, 124, 134, 126, 121, 144, 223];
-            blue = [ 0, 43, 68,  76,  73,  64,  72, 114, 223];
-            break;
-
+         case 83: rgb = [[0,33,73,124,136,152,159,171,223],[0,43,92,124,134,126,121,144,223],[0,43,68,76,73,64,72,114,223]]; break;
          // Green Pink
-         case 84:
-            red = [  5,  18,  45, 124, 193, 223, 205, 128, 49];
-            green = [ 48, 134, 207, 230, 193, 113,  28,   0,  7];
-            blue = [  6,  15,  41, 121, 193, 226, 208, 130, 49];
-            break;
-
+         case 84: rgb = [[5,18,45,124,193,223,205,128,49],[48,134,207,230,193,113,28,0,7],[6,15,41,121,193,226,208,130,49]]; break;
          // Island
-         case 85:
-            red = [ 180, 106, 104, 135, 164, 188, 189, 165, 144];
-            green = [  72, 126, 154, 184, 198, 207, 205, 190, 179];
-            blue = [  41, 120, 158, 188, 194, 181, 145, 100,  62];
-            break;
-
+         case 85: rgb = [[180,106,104,135,164,188,189,165,144],[72,126,154,184,198,207,205,190,179],[41,120,158,188,194,181,145,100,62]]; break;
          // Lake
-         case 86:
-            red = [  57,  72,  94, 117, 136, 154, 174, 192, 215];
-            green = [   0,  33,  68, 109, 140, 171, 192, 196, 209];
-            blue = [ 116, 137, 173, 201, 200, 201, 203, 190, 187];
-            break;
-
+         case 86: rgb = [[57,72,94,117,136,154,174,192,215],[0,33,68,109,140,171,192,196,209],[116,137,173,201,200,201,203,190,187]]; break;
          // Light Temperature
-         case 87:
-            red = [  31,  71, 123, 160, 210, 222, 214, 199, 183];
-            green = [  40, 117, 171, 211, 231, 220, 190, 132,  65];
-            blue = [ 234, 214, 228, 222, 210, 160, 105,  60,  34];
-            break;
-
+         case 87: rgb = [[31,71,123,160,210,222,214,199,183],[40,117,171,211,231,220,190,132,65],[234,214,228,222,210,160,105,60,34]]; break;
          // Light Terrain
-         case 88:
-            red = [ 123, 108, 109, 126, 154, 172, 188, 196, 218];
-            green = [ 184, 138, 130, 133, 154, 175, 188, 196, 218];
-            blue = [ 208, 130, 109,  99, 110, 122, 150, 171, 218];
-            break;
-
+         case 88: rgb = [[123,108,109,126,154,172,188,196,218],[184,138,130,133,154,175,188,196,218],[208,130,109,99,110,122,150,171,218]]; break;
          // Mint
-         case 89:
-            red = [ 105, 106, 122, 143, 159, 172, 176, 181, 207];
-            green = [ 252, 197, 194, 187, 174, 162, 153, 136, 125];
-            blue = [ 146, 133, 144, 155, 163, 167, 166, 162, 174];
-            break;
-
+         case 89: rgb = [[105,106,122,143,159,172,176,181,207],[252,197,194,187,174,162,153,136,125],[146,133,144,155,163,167,166,162,174]]; break;
          // Neon
-         case 90:
-            red = [ 171, 141, 145, 152, 154, 159, 163, 158, 177];
-            green = [ 236, 143, 100,  63,  53,  55,  44,  31,   6];
-            blue = [  59,  48,  46,  44,  42,  54,  82, 112, 179];
-            break;
-
+         case 90: rgb = [[171,141,145,152,154,159,163,158,177],[236,143,100,63,53,55,44,31,6],[59,48,46,44,42,54,82,112,179]]; break;
          // Pastel
-         case 91:
-            red = [ 180, 190, 209, 223, 204, 228, 205, 152,  91];
-            green = [  93, 125, 147, 172, 181, 224, 233, 198, 158];
-            blue = [ 236, 218, 160, 133, 114, 132, 162, 220, 218];
-            break;
-
+         case 91: rgb = [[180,190,209,223,204,228,205,152,91],[93,125,147,172,181,224,233,198,158],[236,218,160,133,114,132,162,220,218]]; break;
          // Pearl
-         case 92:
-            red = [ 225, 183, 162, 135, 115, 111, 119, 145, 211];
-            green = [ 205, 177, 166, 135, 124, 117, 117, 132, 172];
-            blue = [ 186, 165, 155, 135, 126, 130, 150, 178, 226];
-            break;
-
+         case 92: rgb = [[225,183,162,135,115,111,119,145,211],[205,177,166,135,124,117,117,132,172],[186,165,155,135,126,130,150,178,226]]; break;
          // Pigeon
-         case 93:
-            red = [ 39, 43, 59, 63, 80, 116, 153, 177, 223];
-            green = [ 39, 43, 59, 74, 91, 114, 139, 165, 223];
-            blue = [ 39, 50, 59, 70, 85, 115, 151, 176, 223];
-            break;
-
+         case 93: rgb = [[39,43,59,63,80,116,153,177,223],[39,43,59,74,91,114,139,165,223],[ 39,50,59,70,85,115,151,176,223]]; break;
          // Plum
-         case 94:
-            red = [ 0, 38, 60, 76, 84, 89, 101, 128, 204];
-            green = [ 0, 10, 15, 23, 35, 57,  83, 123, 199];
-            blue = [ 0, 11, 22, 40, 63, 86,  97,  94,  85];
-            break;
-
+         case 94: rgb = [[0,38,60,76,84,89,101,128,204],[0,10,15,23,35,57,83,123,199],[0,11,22,40,63,86,97,94,85]]; break;
          // Red Blue
-         case 95:
-            red = [ 94, 112, 141, 165, 167, 140,  91,  49,  27];
-            green = [ 27,  46,  88, 135, 166, 161, 135,  97,  58];
-            blue = [ 42,  52,  81, 106, 139, 158, 155, 137, 116];
-            break;
-
+         case 95: rgb = [[94,112,141,165,167,140,91,49,27],[27,46,88,135,166,161,135,97,58],[42,52,81,106,139,158,155,137,116]]; break;
          // Rose
-         case 96:
-            red = [ 30, 49, 79, 117, 135, 151, 146, 138, 147];
-            green = [ 63, 60, 72,  90,  94,  94,  68,  46,  16];
-            blue = [ 18, 28, 41,  56,  62,  63,  50,  36,  21];
-            break;
-
+         case 96: rgb = [[30,49,79,117,135,151,146,138,147],[63,60,72,90,94,94,68,46,16],[18,28,41,56,62,63,50,36,21]]; break;
          // Rust
-         case 97:
-            red = [  0, 30, 63, 101, 143, 152, 169, 187, 230];
-            green = [  0, 14, 28,  42,  58,  61,  67,  74,  91];
-            blue = [ 39, 26, 21,  18,  15,  14,  14,  13,  13];
-            break;
-
+         case 97: rgb = [[0,30,63,101,143,152,169,187,230],[0,14,28,42,58,61,67,74,91],[39,26,21,18,15,14,14,13,13]]; break;
          // Sandy Terrain
-         case 98:
-            red = [ 149, 140, 164, 179, 182, 181, 131, 87, 61];
-            green = [  62,  70, 107, 136, 144, 138, 117, 87, 74];
-            blue = [  40,  38,  45,  49,  49,  49,  38, 32, 34];
-            break;
-
+         case 98: rgb = [[149,140,164,179,182,181,131,87,61],[62,70,107,136,144,138,117,87,74],[40,38,45,49,49,49,38,32,34]]; break;
          // Sienna
-         case 99:
-            red = [ 99, 112, 148, 165, 179, 182, 183, 183, 208];
-            green = [ 39,  40,  57,  79, 104, 127, 148, 161, 198];
-            blue = [ 15,  16,  18,  33,  51,  79, 103, 129, 177];
-            break;
-
+         case 99: rgb = [[99,112,148,165,179,182,183,183,208],[39,40,57,79,104,127,148,161,198],[15,16,18,33,51,79,103,129,177]]; break;
          // Solar
-         case 100:
-            red = [ 99, 116, 154, 174, 200, 196, 201, 201, 230];
-            green = [  0,   0,   8,  32,  58,  83, 119, 136, 173];
-            blue = [  5,   6,   7,   9,   9,  14,  17,  19,  24];
-            break;
-
+         case 100: rgb = [[99,116,154,174,200,196,201,201,230],[0,0,8,32,58,83,119,136,173],[5,6,7,9,9,14,17,19,24]]; break;
          // South West
-         case 101:
-            red = [ 82, 106, 126, 141, 155, 163, 142, 107,  66];
-            green = [ 62,  44,  69, 107, 135, 152, 149, 132, 119];
-            blue = [ 39,  25,  31,  60,  73,  68,  49,  72, 188];
-            break;
-
+         case 101: rgb = [[82,106,126,141,155,163,142,107,66],[ 62,44,69,107,135,152,149,132,119],[39,25,31,60,73,68,49,72,188]]; break;
          // Starry Night
-         case 102:
-            red = [ 18, 29, 44,  72, 116, 158, 184, 208, 221];
-            green = [ 27, 46, 71, 105, 146, 177, 189, 190, 183];
-            blue = [ 39, 55, 80, 108, 130, 133, 124, 100,  76];
-            break;
-
+         case 102: rgb = [[18,29,44,72,116,158,184,208,221],[27,46,71,105,146,177,189,190,183],[39,55,80,108,130,133,124,100,76]]; break;
          // Sunset
-         case 103:
-            red = [ 0, 48, 119, 173, 212, 224, 228, 228, 245];
-            green = [ 0, 13,  30,  47,  79, 127, 167, 205, 245];
-            blue = [ 0, 68,  75,  43,  16,  22,  55, 128, 245];
-            break;
-
+         case 103: rgb = [[0,48,119,173,212,224,228,228,245],[0,13,30,47,79,127,167,205,245],[0,68,75,43,16,22,55,128,245]]; break;
          // Temperature Map
-         case 104:
-            red = [  34,  70, 129, 187, 225, 226, 216, 193, 179];
-            green = [  48,  91, 147, 194, 226, 229, 196, 110,  12];
-            blue = [ 234, 212, 216, 224, 206, 110,  53,  40,  29];
-            break;
-
+         case 104: rgb = [[34,70,129,187,225,226,216,193,179],[48,91,147,194,226,229,196,110,12],[234,212,216,224,206,110,53,40,29]]; break;
          // Thermometer
-         case 105:
-            red = [  30,  55, 103, 147, 174, 203, 188, 151, 105];
-            green = [   0,  65, 138, 182, 187, 175, 121,  53,   9];
-            blue = [ 191, 202, 212, 208, 171, 140,  97,  57,  30];
-            break;
-
+         case 105: rgb = [[30,55,103,147,174,203,188,151,105],[0,65,138,182,187,175,121,53,9],[191,202,212,208,171,140,97,57,30]]; break;
          // Valentine
-         case 106:
-            red = [ 112, 97, 113, 125, 138, 159, 178, 188, 225];
-            green = [  16, 17,  24,  37,  56,  81, 110, 136, 189];
-            blue = [  38, 35,  46,  59,  78, 103, 130, 152, 201];
-            break;
-
+         case 106: rgb = [[112,97,113,125,138,159,178,188,225],[16,17,24,37,56,81,110,136,189],[38,35,46,59,78,103,130,152,201]]; break;
          // Visible Spectrum
-         case 107:
-            red = [ 18,  72,   5,  23,  29, 201, 200, 98, 29];
-            green = [  0,   0,  43, 167, 211, 117,   0,  0,  0];
-            blue = [ 51, 203, 177,  26,  10,   9,   8,  3,  0];
-            break;
-
+         case 107: rgb = [[18,72,5,23,29,201,200,98,29],[0,0,43,167,211,117,0,0,0],[51,203,177,26,10,9,8,3,0]]; break;
          // Water Melon
-         case 108:
-            red = [ 19, 42, 64,  88, 118, 147, 175, 187, 205];
-            green = [ 19, 55, 89, 125, 154, 169, 161, 129,  70];
-            blue = [ 19, 32, 47,  70, 100, 128, 145, 130,  75];
-            break;
-
+         case 108: rgb = [[19,42,64,88,118,147,175,187,205],[19,55,89,125,154,169,161,129,70],[19,32,47,70,100,128,145,130,75]]; break;
          // Cool
-         case 109:
-            red = [  33,  31,  42,  68,  86, 111, 141, 172, 227];
-            green = [ 255, 175, 145, 106,  88,  55,  15,   0,   0];
-            blue = [ 255, 205, 202, 203, 208, 205, 203, 206, 231];
-            break;
-
+         case 109: rgb = [[33,31,42,68,86,111,141,172,227],[255,175,145,106,88,55,15,0,0],[255,205,202,203,208,205,203,206,231]]; break;
          // Copper
-         case 110:
-            red = [ 0, 25, 50, 79, 110, 145, 181, 201, 254];
-            green = [ 0, 16, 30, 46,  63,  82, 101, 124, 179];
-            blue = [ 0, 12, 21, 29,  39,  49,  61,  74, 103];
-            break;
-
+         case 110: rgb = [[0,25,50,79,110,145,181,201,254],[0,16,30,46,63,82,101,124,179],[0,12,21,29,39,49,61,74,103]]; break;
          // Gist Earth
-         case 111:
-            red = [ 0, 13,  30,  44,  72, 120, 156, 200, 247];
-            green = [ 0, 36,  84, 117, 141, 153, 151, 158, 247];
-            blue = [ 0, 94, 100,  82,  56,  66,  76, 131, 247];
-            break;
-
+         case 111: rgb = [[0,13,30,44,72,120,156,200,247],[0,36,84,117,141,153,151,158,247],[0,94,100,82,56,66,76,131,247]]; break;
          // Viridis
-         case 112:
-            red = [ 26, 51,  43,  33,  28,  35,  74, 144, 246];
-            green = [  9, 24,  55,  87, 118, 150, 180, 200, 222];
-            blue = [ 30, 96, 112, 114, 112, 101,  72,  35,   0];
-            break;
-
+         case 112: rgb = [[26,51,43,33,28,35,74,144,246],[9,24,55,87,118,150,180,200,222],[30,96,112,114,112,101,72,35,0]]; break;
          // Cividis
-          case 113:
-            red  = [  0,   5,  65,  97, 124, 156, 189, 224, 255 ];
-            green = [ 32,  54,  77, 100, 123, 148, 175, 203, 234 ];
-            blue  = [ 77, 110, 107, 111, 120, 119, 111,  94,  70 ];
-            break;
-
-         default:
-            return JSROOT.Painter.CreateDefaultPalette();
+         case 113: rgb = [[0,5,65,97,124,156,189,224,255],[32,54,77,100,123,148,175,203,234],[77,110,107,111,120,119,111,94,70]]; break;
+         default: return JSROOT.Painter.CreateDefaultPalette();
       }
 
-      return JSROOT.Painter.CreateGradientColorTable(stops, red, green, blue, 255, alfa);
+      return JSROOT.Painter.CreateGradientColorTable(stops, rgb[0], rgb[1], rgb[2], 255, alfa);
    }
 
    // ============================================================
@@ -1906,6 +1583,7 @@
          this.Hist = false;
          this.TextAngle = Math.min(d.partAsInt(), 90);
          if (d.part.indexOf('N')>=0) this.TextKind = "N";
+         if (d.part.indexOf('E0')>=0) this.TextLine = true;
          if (d.part.indexOf('E')>=0) this.TextKind = "E";
       }
 
@@ -1953,8 +1631,8 @@
       if (d.check('F')) { this.Fill = true; this.need_fillcol = true; }
 
       if (d.check('A')) this.Axis = -1;
-      if (this.Axis && d.check("RX")) this.RevX = true;
-      if (this.Axis && d.check("RY")) this.RevY = true;
+      if ((this.Axis || this.Color) && d.check("RX")) this.RevX = true;
+      if ((this.Axis || this.Color) && d.check("RY")) this.RevY = true;
 
       if (d.check('B1')) { this.BarStyle = 1; this.BaseLine = 0; this.Hist = false; this.need_fillcol = true; }
       if (d.check('B')) { this.BarStyle = 1; this.Hist = false; this.need_fillcol = true; }
@@ -2066,13 +1744,12 @@
 
    function THistPainter(histo) {
       JSROOT.TObjectPainter.call(this, histo);
-      this.histo = histo;
       this.draw_content = true;
       this.nbinsx = 0;
       this.nbinsy = 0;
       this.accept_drops = true; // indicate that one can drop other objects like doing Draw("same")
       this.mode3d = false;
-      this.DecomposeTitle();
+      this.hist_painter_id = JSROOT.id_counter++; // assign unique identifier for hist painter
    }
 
    THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -2111,12 +1788,11 @@
       this.mode3d = false;
    }
 
+   /** Cleanup histogram painter */
    THistPainter.prototype.Cleanup = function() {
 
       // clear all 3D buffers
       this.Clear3DScene();
-
-      this.histo = null; // cleanup histogram reference
 
       delete this.fPalette;
       delete this.fContour;
@@ -2211,6 +1887,10 @@
       this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
    }
 
+   /** @brief Update histogram object
+    * @param obj - new histogram instance
+    * @param opt - new drawing option (optional)
+    * @returns {Boolean} - true if histogram was successfully updated */
    THistPainter.prototype.UpdateObject = function(obj, opt) {
 
       var histo = this.GetHisto(),
@@ -2220,12 +1900,10 @@
 
          if (!this.MatchObjectType(obj)) return false;
 
-         // TODO: simple replace of object does not help - one can have different
+         // simple replace of object does not help - one can have different
          // complex relations between histo and stat box, histo and colz axis,
          // one could have THStack or TMultiGraph object
          // The only that could be done is update of content
-
-         // this.histo = obj;
 
          // check only stats bit, later other settings can be monitored
          if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats) != obj.TestBit(JSROOT.TH1StatusBits.kNoStats)) {
@@ -2237,7 +1915,7 @@
 
          // if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats)) this.ToggleStat();
 
-         // special tratement for webcanvas - also name can be changed
+         // special treatment for webcanvas - also name can be changed
          if (this.snapid !== undefined)
             histo.fName = obj.fName;
 
@@ -2294,7 +1972,8 @@
          CopyAxis(histo.fXaxis, obj.fXaxis);
          CopyAxis(histo.fYaxis, obj.fYaxis);
          CopyAxis(histo.fZaxis, obj.fZaxis);
-         if (!fp.zoom_changed_interactive) {
+
+         if (this.snapid || !fp || !fp.zoom_changed_interactive) {
             function CopyZoom(tgt,src) {
                tgt.fFirst = src.fFirst;
                tgt.fLast = src.fLast;
@@ -2315,19 +1994,52 @@
             histo.fBins = obj.fBins;
          }
 
-         this.DecomposeTitle();
+         if (this.options.Func) {
 
-         if (obj.fFunctions && this.options.Func) {
-            for (var n=0;n<obj.fFunctions.arr.length;++n) {
-               var func = obj.fFunctions.arr[n];
-               if (!func || !func._typename) continue;
-               var funcpainter = func.fName ? this.FindPainterFor(null, func.fName, func._typename) : null;
-               if (funcpainter) {
-                  funcpainter.UpdateObject(func);
-               } else if ((func._typename != 'TPaletteAxis') && (func._typename != 'TPaveStats')) {
-                  console.log('Get ' + func._typename + ' in histogram functions list, need to use?');
-                  // histo.fFunctions.Add(func,"");
+            var painters = [], newfuncs = [], pp = this.pad_painter(), pid = this.hist_painter_id;
+
+            // find painters associated with histogram
+            if (pp)
+               pp.ForEachPainterInPad(function(objp) {
+                  if (objp.child_painter_id === pid)
+                     painters.push(objp);
+               }, "objects");
+
+            if (obj.fFunctions)
+               for (var n=0;n<obj.fFunctions.arr.length;++n) {
+                  var func = obj.fFunctions.arr[n];
+                  if (!func || !func._typename) continue;
+                  var funcpainter = null, func_indx = -1;
+
+                  // try to find matching object in associated list of painters
+                  for (var i=0;i<painters.length;++i)
+                     if (painters[i].MatchObjectType(func._typename) && (painters[i].GetObject().fName === func.fName)) {
+                        funcpainter = painters[i];
+                        func_indx = i;
+                        break;
+                     }
+                  // or just in generic list of painted objects
+                  if (!funcpainter && func.fName)
+                     funcpainter = this.FindPainterFor(null, func.fName, func._typename);
+
+                  if (funcpainter) {
+                     funcpainter.UpdateObject(func);
+                     if (func_indx >= 0) painters.splice(func_indx, 1);
+                  } else {
+                     newfuncs.push(func);
+                  }
                }
+
+            // remove all function which are not found in new list of primitives
+            if (pp && (painters.length > 0))
+               pp.CleanPrimitives(function(p) { return painters.indexOf(p) >= 0; });
+
+            // plot new objects on the same pad - will works only for simple drawings already loaded
+            if (pp && (newfuncs.length > 0)) {
+               var prev_name = pp.has_canvas ? pp.CurrentPadName(pp.this_pad_name) : undefined;
+               for (var k=0;k<newfuncs.length;++k)
+                  JSROOT.draw(this.divid, newfuncs[k],"", function (painter) { painter.child_painter_id = pid; } )
+               pp.CurrentPadName(prev_name);
             }
          }
 
@@ -2338,7 +2050,8 @@
             this.DecodeOptions(opt || histo.fOption);
       }
 
-      // if (!fp.zoom_changed_interactive) this.CheckPadRange();
+      if (this.snapid || !fp || !fp.zoom_changed_interactive)
+         this.CheckPadRange();
 
       this.ScanContent();
 
@@ -2447,21 +2160,6 @@
       this.DrawTitle();
    }
 
-   THistPainter.prototype.DecomposeTitle = function() {
-      // if histogram title includes ;, set axis title
-
-      var histo = this.GetHisto();
-
-      if (!histo || !histo.fTitle) return;
-
-      var arr = histo.fTitle.split(';');
-      if (arr.length===3) {
-         histo.fTitle = arr[0];
-         histo.fXaxis.fTitle = arr[1];
-         histo.fYaxis.fTitle = arr[2];
-      }
-   }
-
    THistPainter.prototype.DrawTitle = function() {
 
       // case when histogram drawn over other histogram (same option)
@@ -2475,6 +2173,9 @@
       if (pt && (pt._typename !== "TPaveText")) pt = null;
 
       var draw_title = !histo.TestBit(JSROOT.TH1StatusBits.kNoTitle) && (st.fOptTitle > 0);
+
+      // histo.fTitle = "#strike{testing} #overline{Title:} #overline{Title:_{X}} #underline{test}  #underline{test^{X}}";
+      // histo.fTitle = "X-Y-#overline{V}_{#Phi}";
 
       if (pt) {
          pt.Clear();
@@ -2512,6 +2213,8 @@
       pt.AddText(histo.fTitle);
 
       tpainter.Redraw();
+
+      this.WebCanvasExec('SetTitle("' + histo.fTitle + '")');
    }
 
    THistPainter.prototype.UpdateStatWebCanvas = function() {
@@ -2597,6 +2300,8 @@
       return indx;
    }
 
+   /** Find function in histogram list of functions
+    * @private */
    THistPainter.prototype.FindFunction = function(type_name, obj_name) {
       var histo = this.GetObject(),
           funcs = histo && histo.fFunctions ? histo.fFunctions.arr : null;
@@ -2626,12 +2331,17 @@
       return !this.GetObject() || (!this.draw_content && !this.create_stats) || (this.options.Axis>0);
    }
 
+   /** @summary Create stat box for histogram if required
+    * @private
+    */
    THistPainter.prototype.CreateStat = function(force) {
 
-      if (this.options.PadStats) return null;
+      var histo = this.GetHisto();
+
+      if (this.options.PadStats || !histo) return null;
 
       if (!force && !this.options.ForceStat) {
-         if (this.options.NoStat || this.histo.TestBit(JSROOT.TH1StatusBits.kNoStats) || !JSROOT.gStyle.AutoStat) return null;
+         if (this.options.NoStat || histo.TestBit(JSROOT.TH1StatusBits.kNoStats) || !JSROOT.gStyle.AutoStat) return null;
 
          if (!this.draw_content || !this.is_main_painter()) return null;
       }
@@ -2643,7 +2353,7 @@
          if (stats) stats.fOptStat = optstat;
          delete this.options.optstat;
       } else {
-         optstat = this.histo.$custom_stat || st.fOptStat;
+         optstat = histo.$custom_stat || st.fOptStat;
       }
 
       if (optfit !== undefined) {
@@ -2674,17 +2384,15 @@
       stats.fFillStyle = st.fStatStyle;
 
       stats.fTextAngle = 0;
-      stats.fTextSize = st.fStatFontSize; // 9 ??
+      stats.fTextSize = st.fStatFontSize;
       stats.fTextAlign = 12;
       stats.fTextColor = st.fStatTextColor;
       stats.fTextFont = st.fStatFont;
 
-//      st.fStatBorderSize : 1,
-
-      if (this.histo._typename.match(/^TProfile/) || this.histo._typename.match(/^TH2/))
+      if (histo._typename.match(/^TProfile/) || histo._typename.match(/^TH2/))
          stats.fY1NDC = 0.67;
 
-      stats.AddText(this.histo.fName);
+      stats.AddText(histo.fName);
 
       this.AddFunction(stats);
 
@@ -2704,14 +2412,18 @@
          histo.fFunctions.Add(obj);
    }
 
-   THistPainter.prototype.DrawNextFunction = function(indx, callback) {
-      // method draws next function from the functions list
+   /** @summary Method draws next function from the functions list @private */
+   THistPainter.prototype.DrawNextFunction = function(indx, callback, painter) {
 
-      if (!this.options.Func || !this.histo.fFunctions ||
-          (indx >= this.histo.fFunctions.arr.length)) return JSROOT.CallBack(callback);
+      if (painter && (typeof painter == "object"))
+         painter.child_painter_id = this.hist_painter_id;
 
-      var func = this.histo.fFunctions.arr[indx],
-          opt = this.histo.fFunctions.opt[indx],
+      var histo = this.GetHisto();
+      if (!this.options.Func || !histo.fFunctions ||
+          (indx >= histo.fFunctions.arr.length)) return JSROOT.CallBack(callback);
+
+      var func = histo.fFunctions.arr[indx],
+          opt = histo.fFunctions.opt[indx],
           do_draw = false,
           func_painter = this.FindPainterFor(func);
 
@@ -2719,11 +2431,12 @@
       // object will be redraw automatically
       if (func_painter === null) {
          if (func._typename === 'TPaveText' || func._typename === 'TPaveStats') {
-            do_draw = !this.histo.TestBit(JSROOT.TH1StatusBits.kNoStats) && !this.options.NoStat;
+            do_draw = !histo.TestBit(JSROOT.TH1StatusBits.kNoStats) && !this.options.NoStat;
          } else if (func._typename === 'TF1') {
             do_draw = !func.TestBit(JSROOT.BIT(9));
-         } else
+         } else {
             do_draw = (func._typename !== 'TPaletteAxis');
+         }
       }
 
       if (do_draw)
@@ -2732,11 +2445,12 @@
       this.DrawNextFunction(indx+1, callback);
    }
 
+   /** @summary Unzoom user range if any @private */
    THistPainter.prototype.UnzoomUserRange = function(dox, doy, doz) {
 
-      if (!this.histo) return false;
+      var res = false, painter = this, histo = this.GetHisto();
 
-      var res = false, painter = this;
+      if (!histo) return false;
 
       function UnzoomTAxis(obj) {
          if (!obj) return false;
@@ -2756,9 +2470,9 @@
          return true;
       }
 
-      if (dox && UnzoomTAxis(this.histo.fXaxis)) res = true;
-      if (doy && (UnzoomTAxis(this.histo.fYaxis) || UzoomMinMax(1, this.histo))) res = true;
-      if (doz && (UnzoomTAxis(this.histo.fZaxis) || UzoomMinMax(2, this.histo))) res = true;
+      if (dox && UnzoomTAxis(histo.fXaxis)) res = true;
+      if (doy && (UnzoomTAxis(histo.fYaxis) || UzoomMinMax(1, histo))) res = true;
+      if (doz && (UnzoomTAxis(histo.fZaxis) || UzoomMinMax(2, histo))) res = true;
 
       return res;
    }
@@ -2782,32 +2496,13 @@
       return false;
    }
 
-   THistPainter.prototype.ShowAxisStatus = function(axis_name) {
-      // method called normally when mouse enter main object element
-
-      var status_func = this.GetShowStatusFunc();
-
-      if (!status_func) return;
-
-      var taxis = this.histo ? this.histo['f'+axis_name.toUpperCase()+"axis"] : null;
-
-      var hint_name = axis_name, hint_title = "TAxis";
-
-      if (taxis) { hint_name = taxis.fName; hint_title = taxis.fTitle || "histogram TAxis object"; }
-
-      var m = d3.mouse(this.svg_frame().node());
-
-      var id = (axis_name=="x") ? 0 : 1;
-      if (this.swap_xy) id = 1-id;
-
-      var axis_value = (axis_name=="x") ? this.RevertX(m[id]) : this.RevertY(m[id]);
-
-      status_func(hint_name, hint_title, axis_name + " : " + this.AxisAsText(axis_name, axis_value),
-                  m[0].toFixed(0)+","+ m[1].toFixed(0));
-   }
-
+   /** @summary Add different interactive handlers
+    *
+    * @desc only first (main) painter in list allowed to add interactive functionality
+    * Most of interactivity now handled by frame
+    * @private
+    */
    THistPainter.prototype.AddInteractive = function() {
-      // only first painter in list allowed to add interactive functionality to the frame
 
       if (this.is_main_painter()) {
          var fp = this.frame_painter();
@@ -2881,9 +2576,10 @@
       });  // end menu creation
    }
 
-
+   /** @summary Invoke dialog to enter and modify user range @private */
    THistPainter.prototype.ChangeUserRange = function(arg) {
-      var taxis = this.histo['f'+arg+"axis"];
+      var histo = this.GetHisto(),
+          taxis = histo ? histo['f'+arg+"axis"] : null;
       if (!taxis) return;
 
       var curr = "[1," + taxis.fNbins+"]";
@@ -3029,28 +2725,30 @@
       if (!not_shown) pp.ShowButtons();
    }
 
+   /** @summary Returns tooltip information for 3D drawings @private */
    THistPainter.prototype.Get3DToolTip = function(indx) {
-      var tip = { bin: indx, name: this.GetObject().fName, title: this.GetObject().fTitle };
+      var histo = this.GetHisto(),
+          tip = { bin: indx, name: histo.fName, title: histo.fTitle };
       switch (this.Dimension()) {
          case 1:
             tip.ix = indx; tip.iy = 1;
-            tip.value = this.histo.getBinContent(tip.ix);
-            tip.error = this.histo.getBinError(indx);
+            tip.value = histo.getBinContent(tip.ix);
+            tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(indx-1);
             break;
          case 2:
             tip.ix = indx % (this.nbinsx + 2);
             tip.iy = (indx - tip.ix) / (this.nbinsx + 2);
-            tip.value = this.histo.getBinContent(tip.ix, tip.iy);
-            tip.error = this.histo.getBinError(indx);
+            tip.value = histo.getBinContent(tip.ix, tip.iy);
+            tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1);
             break;
          case 3:
             tip.ix = indx % (this.nbinsx+2);
             tip.iy = ((indx - tip.ix) / (this.nbinsx+2)) % (this.nbinsy+2);
             tip.iz = (indx - tip.ix - tip.iy * (this.nbinsx+2)) / (this.nbinsx+2) / (this.nbinsy+2);
-            tip.value = this.GetObject().getBinContent(tip.ix, tip.iy, tip.iz);
-            tip.error = this.histo.getBinError(indx);
+            tip.value = histo.getBinContent(tip.ix, tip.iy, tip.iz);
+            tip.error = histo.getBinError(indx);
             tip.lines = this.GetBinTips(tip.ix-1, tip.iy-1, tip.iz-1);
             break;
       }
@@ -3512,14 +3210,15 @@
     * @desc Detect min/max values for x and y axis
     * @param when_axis_changed - true when only zooming was changed, some checks may be skipped */
    TH1Painter.prototype.ScanContent = function(when_axis_changed) {
-      // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
       if (when_axis_changed && !this.nbinsx) when_axis_changed = false;
 
       if (this.IsTH1K()) this.ConvertTH1K();
 
+      var histo = this.GetHisto();
+
       if (!when_axis_changed) {
-         this.nbinsx = this.histo.fXaxis.fNbins;
+         this.nbinsx = histo.fXaxis.fNbins;
          this.nbinsy = 0;
          this.CreateAxisFuncs(false);
       }
@@ -3541,8 +3240,8 @@
           profile = this.IsTProfile(), value, err;
 
       for (var i = 0; i < this.nbinsx; ++i) {
-         value = this.histo.getBinContent(i + 1);
-         hsum += profile ? this.histo.fBinEntries[i + 1] : value;
+         value = histo.getBinContent(i + 1);
+         hsum += profile ? histo.fBinEntries[i + 1] : value;
 
          if ((i<left) || (i>=right)) continue;
 
@@ -3553,7 +3252,7 @@
             first = false;
          }
 
-         err = this.options.Error ? this.histo.getBinError(i + 1) : 0;
+         err = this.options.Error ? histo.getBinError(i + 1) : 0;
 
          hmin = Math.min(hmin, value - err);
          hmax = Math.max(hmax, value + err);
@@ -3561,12 +3260,12 @@
 
       // account overflow/underflow bins
       if (profile)
-         hsum += this.histo.fBinEntries[0] + this.histo.fBinEntries[this.nbinsx + 1];
+         hsum += histo.fBinEntries[0] + histo.fBinEntries[this.nbinsx + 1];
       else
-         hsum += this.histo.getBinContent(0) + this.histo.getBinContent(this.nbinsx + 1);
+         hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
 
       this.stat_entries = hsum;
-      if (this.histo.fEntries>1) this.stat_entries = this.histo.fEntries;
+      if (histo.fEntries > 1) this.stat_entries = histo.fEntries;
 
       this.hmin = hmin;
       this.hmax = hmax;
@@ -3633,6 +3332,7 @@
       if (this.draw_content) this.wheel_zoomy = false;
    }
 
+   /** @summary Count histogram statistic @private */
    TH1Painter.prototype.CountStat = function(cond) {
       var profile = this.IsTProfile(),
           histo = this.GetHisto(), xaxis = histo.fXaxis,
@@ -3687,12 +3387,14 @@
       return res;
    }
 
+   /** @summary Fill stat box @private */
    TH1Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
       if (this.IgnoreStatsFill()) return false;
 
-      var data = this.CountStat(),
+      var histo = this.GetHisto(),
+          data = this.CountStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
@@ -3727,7 +3429,7 @@
       } else {
 
          if (print_entries > 0)
-            stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
+            stat.AddText("Entries = " + stat.Format(data.entries, "entries"));
 
          if (print_mean > 0)
             stat.AddText("Mean = " + stat.Format(data.meanx));
@@ -3736,13 +3438,13 @@
             stat.AddText("Std Dev = " + stat.Format(data.rmsx));
 
          if (print_under > 0)
-            stat.AddText("Underflow = " + stat.Format((this.histo.fArray.length > 0) ? this.histo.fArray[0] : 0,"entries"));
+            stat.AddText("Underflow = " + stat.Format((histo.fArray.length > 0) ? histo.fArray[0] : 0, "entries"));
 
          if (print_over > 0)
-            stat.AddText("Overflow = " + stat.Format((this.histo.fArray.length > 0) ? this.histo.fArray[this.histo.fArray.length - 1] : 0,"entries"));
+            stat.AddText("Overflow = " + stat.Format((histo.fArray.length > 0) ? histo.fArray[histo.fArray.length - 1] : 0, "entries"));
 
          if (print_integral > 0)
-            stat.AddText("Integral = " + stat.Format(data.integral,"entries"));
+            stat.AddText("Integral = " + stat.Format(data.integral, "entries"));
 
          if (print_skew > 0)
             stat.AddText("Skew = <not avail>");
@@ -3756,6 +3458,7 @@
       return true;
    }
 
+   /** @summary Draw histogram as bars @private */
    TH1Painter.prototype.DrawBars = function(width, height) {
 
       this.CreateG(true);
@@ -4148,13 +3851,9 @@
          }
       }
 
-      var close_path = "";
-      if (!this.fillatt.empty()) {
-         var h0 = height + 3, gry0 = Math.round(pmain.gry(0));
-         if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
-         close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
-         if (res.length>0) res += close_path;
-      }
+      var h0 = height + 3, gry0 = Math.round(pmain.gry(0));
+      if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
+      var close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
 
       if (draw_markers || show_line) {
          if ((path_fill !== null) && (path_fill.length > 0))
@@ -4170,7 +3869,7 @@
          if ((path_line !== null) && (path_line.length > 0)) {
             if (!this.fillatt.empty())
                this.draw_g.append("svg:path")
-                     .attr("d", this.options.Fill ? (path_line + close_path) : res)
+                     .attr("d", (this.options.Fill ? path_line : res) + close_path)
                      .attr("stroke", "none")
                      .call(this.fillatt.func);
 
@@ -4184,10 +3883,11 @@
             this.draw_g.append("svg:path")
                 .attr("d", path_marker)
                 .call(this.markeratt.func);
-
       }
 
       if ((res.length > 0) && draw_hist) {
+         if (!this.fillatt.empty())
+            res += close_path;
          this.draw_g.append("svg:path")
                     .attr("d", res)
                     .style("stroke-linejoin","miter")
@@ -4236,6 +3936,7 @@
       return tips;
    }
 
+   /** @summary Process tooltip event @private */
    TH1Painter.prototype.ProcessTooltip = function(pnt) {
       if ((pnt === null) || !this.draw_content || !this.draw_g || this.options.Mode3D) {
          if (this.draw_g !== null)
@@ -4392,7 +4093,7 @@
          // if bars option used check that bar is not match
          if ((pnt_x < grx1 - gapx) || (pnt_x > grx2 + gapx)) findbin = null; else
          // exclude empty bin if empty bins suppressed
-         if (!this.options.Zero && (this.histo.getBinContent(findbin+1)===0)) findbin = null;
+         if (!this.options.Zero && (histo.getBinContent(findbin+1)===0)) findbin = null;
       }
 
       var ttrect = this.draw_g.select(".tooltip_bin");
@@ -4462,8 +4163,8 @@
       }
 
       if (res.changed)
-         res.user_info = { obj: this.histo,  name: this.histo.fName,
-                           bin: findbin, cont: this.histo.getBinContent(findbin+1),
+         res.user_info = { obj: histo,  name: histo.fName,
+                           bin: findbin, cont: histo.getBinContent(findbin+1),
                            grx: midx, gry: midy };
 
       return res;
@@ -4572,7 +4273,7 @@
       // create painter and add it to canvas
       var painter = new TH1Painter(histo);
 
-      painter.SetDivId(divid, 1);
+      if (!painter.SetDivId(divid, 1)) return null;
 
       // here we deciding how histogram will look like and how will be shown
       painter.DecodeOptions(opt);
@@ -4665,7 +4366,7 @@
          jj1 = Math.round((this.tt_handle.j1 + this.tt_handle.j2)/2); jj2 = jj1+1;
       }
 
-      var canp = this.canv_painter();
+      var canp = this.canv_painter(), histo = this.GetHisto();
 
       if (canp && !canp._readonly && (this.snapid !== undefined)) {
          // this is when projection should be created on the server side
@@ -4681,12 +4382,12 @@
       if (!this.proj_hist) {
          if (this.is_projection == "X") {
             this.proj_hist = JSROOT.CreateHistogram("TH1D", this.nbinsx);
-            JSROOT.extend(this.proj_hist.fXaxis, this.histo.fXaxis);
+            JSROOT.extend(this.proj_hist.fXaxis, histo.fXaxis);
             this.proj_hist.fName = "xproj";
             this.proj_hist.fTitle = "X projection";
          } else {
             this.proj_hist = JSROOT.CreateHistogram("TH1D", this.nbinsy);
-            JSROOT.extend(this.proj_hist.fXaxis, this.histo.fYaxis);
+            JSROOT.extend(this.proj_hist.fXaxis, histo.fYaxis);
             this.proj_hist.fName = "yproj";
             this.proj_hist.fTitle = "Y projection";
          }
@@ -4695,13 +4396,13 @@
       if (this.is_projection == "X") {
          for (var i=0;i<this.nbinsx;++i) {
             var sum=0;
-            for (var j=jj1;j<jj2;++j) sum+=this.histo.getBinContent(i+1,j+1);
+            for (var j=jj1;j<jj2;++j) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(i+1, sum);
          }
       } else {
          for (var j=0;j<this.nbinsy;++j) {
             var sum = 0;
-            for (var i=ii1;i<ii2;++i) sum += this.histo.getBinContent(i+1,j+1);
+            for (var i=ii1;i<ii2;++i) sum += histo.getBinContent(i+1,j+1);
             this.proj_hist.setBinContent(j+1, sum);
          }
       }
@@ -5583,12 +5284,14 @@
 
    TH2Painter.prototype.DrawBinsText = function(w, h, handle) {
       var histo = this.GetObject(),
-          i,j,binz,colindx,binw,binh,lbl,posx,posy,sizex,sizey,
+          i,j,binz,errz,colindx,binw,binh,lbl,lble,posx,posy,sizex,sizey,
           text_col = this.get_color(histo.fMarkerColor),
           text_angle = -1*this.options.TextAngle,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           text_size = 20, text_offset = 0,
-          profile2d = (this.options.TextKind == "E") && this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function');
+          profile2d = this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function'),
+          show_err = (this.options.TextKind == "E"),
+          use_latex = (show_err && !this.options.TextLine) ? 1 : 0;
 
       if (handle===null) handle = this.PrepareColorDraw({ rounding: false });
 
@@ -5613,6 +5316,16 @@
             lbl = (binz === Math.round(binz)) ? binz.toString() :
                       JSROOT.FFormat(binz, JSROOT.gStyle.fPaintTextFormat);
 
+            if (show_err) {
+               errz = histo.getBinError(histo.getBin(i+1,j+1));
+               lble = (errz === Math.round(errz)) ? errz.toString() :
+                            JSROOT.FFormat(errz, JSROOT.gStyle.fPaintTextFormat);
+               if (this.options.TextLine)
+                  lbl += '\xB1' + lble;
+               else
+                  lbl = "#splitline{" + lbl + "}{#pm" + lble + "}";
+            }
+
             if (text_angle /*|| (histo.fMarkerSize!==1)*/) {
                posx = Math.round(handle.grx[i] + binw*0.5);
                posy = Math.round(handle.gry[j+1] + binh*(0.5 + text_offset));
@@ -5625,7 +5338,7 @@
                sizey = Math.round(binh*0.8);
             }
 
-            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.DrawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: use_latex, draw_g: text_g });
          }
 
       this.FinishTextDrawing(text_g, null);
@@ -6103,6 +5816,7 @@
       this.tt_handle = handle;
    }
 
+   /** Return text information about histogram bin */
    TH2Painter.prototype.GetBinTips = function (i, j) {
       var lines = [], pmain = this.frame_painter(),
           histo = this.GetHisto(),
@@ -6124,10 +5838,12 @@
 
       if (histo.$baseh) binz -= histo.$baseh.getBinContent(i+1,j+1);
 
-      if (binz === Math.round(binz))
-         lines.push("entries = " + binz);
-      else
-         lines.push("entries = " + JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat));
+      lines.push("entries = " + ((binz === Math.round(binz)) ? binz : JSROOT.FFormat(binz, JSROOT.gStyle.fStatFormat)));
+
+      if ((this.options.TextKind == "E") || this.MatchObjectType('TProfile2D')) {
+         var errz = histo.getBinError(histo.getBin(i+1,j+1));
+         lines.push("error = " + ((errz === Math.round(errz)) ? errz.toString() : JSROOT.FFormat(errz, JSROOT.gStyle.fPaintTextFormat)));
+      }
 
       return lines;
    }
@@ -6311,7 +6027,7 @@
                ttrect.attr("x", p.x1)
                      .attr("width", p.x2-p.x1)
                      .attr("y", p.yy1)
-                     .attr("height", p.yy2- p.yy1)
+                     .attr("height", p.yy2-p.yy1)
                      .style("opacity", "0.7")
                      .property("current_bin", i);
          }
@@ -6325,14 +6041,25 @@
       }
 
       var i, j, binz = 0, colindx = null,
-          i1, i2, j1, j2, x1, x2, y1, y2;
+          i1, i2, j1, j2, x1, x2, y1, y2,
+          pmain = this.frame_painter();
 
       // search bins position
-      for (i = h.i1; i < h.i2; ++i)
-         if ((pnt.x>=h.grx[i]) && (pnt.x<=h.grx[i+1])) break;
+      if (pmain.reverse_x) {
+         for (i = h.i1; i < h.i2; ++i)
+            if ((pnt.x<=h.grx[i]) && (pnt.x>=h.grx[i+1])) break;
+      } else {
+         for (i = h.i1; i < h.i2; ++i)
+            if ((pnt.x>=h.grx[i]) && (pnt.x<=h.grx[i+1])) break;
+      }
 
-      for (j = h.j1; j < h.j2; ++j)
-         if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) break;
+      if (pmain.reverse_y) {
+         for (j = h.j1; j < h.j2; ++j)
+            if ((pnt.y<=h.gry[j+1]) && (pnt.y>=h.gry[j])) break;
+      } else {
+         for (j = h.j1; j < h.j2; ++j)
+            if ((pnt.y>=h.gry[j+1]) && (pnt.y<=h.gry[j])) break;
+      }
 
       if ((i < h.i2) && (j < h.j2)) {
 
@@ -6349,7 +6076,16 @@
             x1 = Math.round(x1 + dx*h.xbar1);
             y2 = Math.round(y1 + dy*h.ybar2);
             y1 = Math.round(y1 + dy*h.ybar1);
-            if ((pnt.x<x1) || (pnt.x>=x2) || (pnt.y<y1) || (pnt.y>=y2)) match = false;
+            if (pmain.reverse_x) {
+               if ((pnt.x>x1) || (pnt.x<=x2)) match = false;
+            } else {
+               if ((pnt.x<x1) || (pnt.x>=x2)) match = false;
+            }
+            if (pmain.reverse_y) {
+               if ((pnt.y>y1) || (pnt.y<=y2)) match = false;
+            } else {
+               if ((pnt.y<y1) || (pnt.y>=y2)) match = false;
+            }
          }
 
          binz = histo.getBinContent(i+1,j+1);
@@ -6383,7 +6119,7 @@
          res.changed = true;
       } else {
          if (ttrect.empty())
-            ttrect = this.draw_g.append("svg:rect")
+            ttrect = this.draw_g.append("svg:path")
                                 .attr("class","tooltip_bin h1bin")
                                 .style("pointer-events","none");
 
@@ -6412,10 +6148,7 @@
          res.changed = ttrect.property("current_bin") !== binid;
 
          if (res.changed)
-            ttrect.attr("x", x1)
-                  .attr("width", x2 - x1)
-                  .attr("y", y1)
-                  .attr("height", y2 - y1)
+            ttrect.attr("d", "M"+x1+","+y1 + "h"+(x2-x1) + "v"+(y2-y1) + "h"+(x1-x2) + "z")
                   .style("opacity", "0.7")
                   .property("current_bin", binid);
 
@@ -6494,7 +6227,7 @@
       // create painter and add it to canvas
       var painter = new JSROOT.TH2Painter(histo);
 
-      painter.SetDivId(divid, 1);
+      if (!painter.SetDivId(divid, 1)) return null;
 
       // here we deciding how histogram will look like and how will be shown
       painter.DecodeOptions(opt);

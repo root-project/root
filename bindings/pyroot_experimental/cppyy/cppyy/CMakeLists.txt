@@ -12,12 +12,16 @@ set(py_sources
   cppyy/_pythonization.py
   cppyy/_typemap.py
   cppyy/_version.py
+  cppyy/interactive.py
 )
 
-set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
 foreach(py_source ${py_sources})
-  file(COPY python/${py_source} DESTINATION ${localruntimedir}/cppyy)
-  install(FILES python/${py_source} DESTINATION ${runtimedir}/cppyy)
+  file(COPY python/${py_source} DESTINATION ${py_localruntimedir}/cppyy)
+  install(FILES python/${py_source} DESTINATION ${CMAKE_INSTALL_LIBDIR}/cppyy)
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
 endforeach()
+
+# create egg with cppyy info
+set(cppyy_egg "${CMAKE_CURRENT_BINARY_DIR}/cppyy.egg")
+execute_process(COMMAND bash -c "touch ${cppyy_egg}; cat ${CMAKE_CURRENT_SOURCE_DIR}/python/cppyy/_version.py > ${cppyy_egg}")

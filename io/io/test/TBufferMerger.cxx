@@ -48,7 +48,9 @@ static void RemoveFile(const char *name)
 
 TEST(TBufferMerger, CreateAndDestroy)
 {
-   TBufferMerger merger("tbuffermerger_create.root");
+   {
+      TBufferMerger merger("tbuffermerger_create.root");
+   }
 
    RemoveFile("tbuffermerger_create.root");
 }

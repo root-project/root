@@ -150,6 +150,11 @@ public:
     _list.reserve(count);
   }
 
+  /// Clear contents. If the collection is owning, it will also delete the contents.
+  void clear() {
+    removeAll();
+  }
+
   inline Int_t getSize() const { 
     // Return the number of elements in the collection
     return _list.size();
@@ -162,6 +167,27 @@ public:
 
   RooAbsArg * operator[](Storage_t::size_type i) const {
     return _list[i];
+  }
+
+
+  /// Returns index of given arg, or -1 if arg is not in the collection.
+  inline Int_t index(const RooAbsArg* arg) const {
+    auto item = std::find(_list.begin(), _list.end(), arg);
+    return item != _list.end() ? item - _list.begin() : -1;
+  }
+
+  /// Returns index of given arg, or -1 if arg is not in the collection.
+  inline Int_t index(const RooAbsArg& arg) const {
+    return index(&arg);
+  }
+
+  /// Returns index of arg with given name, or -1 if arg is not in the collection.
+  inline Int_t index(const char* name) const {
+    const std::string theName(name);
+    auto item = std::find_if(_list.begin(), _list.end(), [&theName](const RooAbsArg * elm){
+      return elm->GetName() == theName;
+    });
+    return item != _list.end() ? item - _list.begin() : -1;
   }
 
   inline virtual void Print(Option_t *options= 0) const {

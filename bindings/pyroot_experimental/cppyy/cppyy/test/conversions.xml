@@ -2,6 +2,7 @@
 
   <namespace name="CNS" />
 
+  <class pattern="CNS::*" />
   <function pattern="CNS::*" />
 
 </lcgdict>

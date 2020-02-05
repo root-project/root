@@ -279,6 +279,7 @@ using `TH1::GetOption`:
 | "COLZ"    | Same as "COL". In addition the color palette is also drawn.|
 | "COL2"    | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
 | "COLZ2"   | Same as "COL2". In addition the color palette is also drawn.|
+| "Z CJUST" | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boudaries. For more details see `TPaletteAxis`|
 | "CANDLE"  | Draw a candle plot along X axis.|
 | "CANDLEX" | Same as "CANDLE".|
 | "CANDLEY" | Draw a candle plot along Y axis.|
@@ -652,8 +653,8 @@ Example:
 
 print fit probability, parameter names/values and errors.
 
-1. When `v" = 1` is specified, only the non-fixed parameters are shown.
-2. When `v" = 2` all parameters are shown.
+1. When `v = 1` is specified, only the non-fixed parameters are shown.
+2. When `v = 2` all parameters are shown.
 
 Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent
 to `gStyle->SetOptFit(111)`
@@ -1818,7 +1819,7 @@ Therefore to use this functionality in a macro, `gPad->Update()`
 should be performed after the histogram drawing. Once the list is
 built, the contours are accessible in the following way:
 
-    TObjArray *contours = gROOT->GetListOfSpecials()->FindObject("contours")
+    TObjArray *contours = (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours");
     Int_t ncontours     = contours->GetSize();
     TList *list         = (TList*)contours->At(i);
 
@@ -2493,6 +2494,13 @@ the item `colors` in the `VIEW` menu of the canvas tool bar.
 The red, green, and blue components of a color can be changed thanks to
 `TColor::SetRGB()`.
 
+\since **ROOT version 6.19/01**
+
+As default labels and ticks are drawn by `TGAxis` at equidistant (lin or log)
+points as controlled by SetNdivisions.
+If option "CJUST" is given labels and ticks are justified at the
+color boundaries defined by the contour levels.
+For more details see `TPaletteAxis`
 
 ### <a name="HP24"></a> Drawing a sub-range of a 2D histogram; the [cutg] option
 
@@ -4266,7 +4274,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    if (strstr(chopt,"A"))   Hoption.Axis = -1;
    if (strstr(chopt,"B"))   Hoption.Bar  = 1;
-   if (strstr(chopt,"C")) { Hoption.Curve =1; Hoption.Hist = -1;}
+   if (strstr(chopt,"C") && !strstr(chopt,"CJUST")) { Hoption.Curve =1; Hoption.Hist = -1;}
    if (strstr(chopt,"F"))   Hoption.Fill =1;
    if (strstr(chopt,"][")) {Hoption.Off  =1; Hoption.Hist =1;}
    if (strstr(chopt,"F2"))  Hoption.Fill =2;
@@ -6233,6 +6241,8 @@ void THistPainter::PaintErrors(Option_t *)
    Double_t xmin, xmax, ymin, ymax;
    Double_t logxmin = 0;
    Double_t logymin = 0;
+   Double_t offset = 0.;
+   Double_t width  = 0.;
    Int_t i, k, npoints, first, last, fixbin;
    Int_t if1 = 0;
    Int_t if2 = 0;
@@ -6255,6 +6265,9 @@ void THistPainter::PaintErrors(Option_t *)
    if (Hoption.Error == 0) optionE = 0;
    if (fXaxis->GetXbins()->fN) fixbin = 0;
    else                        fixbin = 1;
+
+   offset = fH->GetBarOffset();
+   width = fH->GetBarWidth();
 
    errormarker = fH->GetMarkerStyle();
    if (optionEX0) {
@@ -6327,6 +6340,18 @@ void THistPainter::PaintErrors(Option_t *)
       //     ey1   = Low Y error
       //     ey2   = Up Y error
       //     (xi,yi) = Error bars coordinates
+
+      // apply offset on errors for bar histograms
+      Double_t xminTmp = gPad->XtoPad(fXaxis->GetBinLowEdge(k));
+      Double_t xmaxTmp = gPad->XtoPad(fXaxis->GetBinUpEdge(k));
+      if (Hoption.Logx) {
+        xminTmp = TMath::Power(10, xminTmp);
+        xmaxTmp = TMath::Power(10, xmaxTmp);
+      }
+      Double_t w    = (xmaxTmp-xminTmp)*width;
+      xminTmp += offset*(xmaxTmp-xminTmp);
+      xmaxTmp = xminTmp + w;
+      xp = (xminTmp+xmaxTmp)/2.;
 
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
@@ -9858,7 +9883,7 @@ void THistPainter::PaintTH2PolyText(Option_t *)
          else continue;
       }
       z = b->GetContent();
-      if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
+      if (z < fH->GetMinimum() || (z == 0 && !Hoption.MinimumZero)) continue;
       if (opt==2) {
          e = fH->GetBinError(b->GetBinNumber());
          tf.Form("#splitline{%s%s}{#pm %s%s}",

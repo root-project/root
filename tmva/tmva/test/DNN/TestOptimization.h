@@ -64,6 +64,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    typename Architecture_t::Scalar_t
 {
    using Matrix_t = typename Architecture_t::Matrix_t;
+   using Tensor_t = typename Architecture_t::Tensor_t;
    using Scalar_t = typename Architecture_t::Scalar_t; 
    using Layer_t = VGeneralLayer<Architecture_t>;
    using DeepNet_t = TDeepNet<Architecture_t, Layer_t>;
@@ -72,6 +73,9 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    size_t nSamples = 256;
    size_t nFeatures = 32;
    size_t batchSize = 32;
+
+   std::chrono::time_point<std::chrono::system_clock> tInitial, tFinal;
+   tInitial = std::chrono::system_clock::now();
 
    // Initialize train and test input
    // XTrain = (1 x nSamples x nFeatures)
@@ -109,6 +113,12 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    YTrain.Mult(XTrain[0], K);
    YTest.Mult(XTest[0], K);
 
+   // YTrain.Print();
+   // YTest.Print();
+   // K.Print(); 
+   // XTrain[0].Print();
+   // XTest[0].Print();
+
    // Fill-in the batch weights
    fillMatrix(WTrain, 1.0);
    fillMatrix(WTest, 1.0);
@@ -138,9 +148,13 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    TensorInput trainingInput(XTrain, YTrain, WTrain);
    TensorInput testInput(XTest, YTest, WTest);
 
-   DataLoader_t trainingData(trainingInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput,
+   std::vector<size_t> shape {inputDepth, inputHeight, inputWidth };
+   
+
+   DataLoader_t trainingData(trainingInput, nSamples, batchSize, shape, {batchDepth, batchHeight, batchWidth}, nOutput,
                              nThreads);
-   DataLoader_t testingData(testInput, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutput, nThreads);
+   DataLoader_t testingData(testInput,  nSamples, batchSize, shape, {batchDepth, batchHeight, batchWidth}, nOutput, 
+                             nThreads);
 
    // create a pointer to base class VOptimizer
    std::unique_ptr<VOptimizer<Architecture_t, Layer_t, DeepNet_t>> optimizer;
@@ -198,14 +212,16 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    // Logic : Y = X * K
    // Let X = I, Then Y = I * K => Y = K
    // I = (1 x batchSize x nFeatures)
-   std::vector<Matrix_t> I;
-   I.reserve(1);
-   I.emplace_back(batchSize, nFeatures);
-   for (size_t i = 0; i < batchSize; i++) {
-      I[0](i, i) = 1.0;
-   }
 
-   deepNet.Forward(I, false);
+   Matrix_t I( batchSize, nFeatures);
+   Architecture_t::InitializeZero(I);
+   for (size_t i = 0; i < batchSize; ++i) { 
+        I(i,i) =  1.;
+   }     
+   Tensor_t tI( I );
+  
+   // do a forward pass to compute initial Mean Error
+   deepNet.Forward(tI, false);
 
    // get the output of the last layer of the deepNet
    TMatrixT<Scalar_t> Ytemp(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
@@ -213,6 +229,7 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
    std::cout << " Before Training: Mean Absolute Error = " << meanAbsoluteError(Ytemp, K) << ",";
 
    Double_t minTestError = 0;
+   
    while (!converged) {
       optimizer->IncrementGlobalStep();
       trainingData.Shuffle(rng);
@@ -220,6 +237,9 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
       // training process
       for (size_t i = 0; i < batchesInEpoch; i++) {
          auto my_batch = trainingData.GetTensorBatch();
+
+         //Architecture_t::PrintTensor(my_batch.GetInput(), std::string(TString::Format(" input batch %d",i).Data()));
+
          deepNet.Forward(my_batch.GetInput(), true);
          deepNet.Backward(my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
          optimizer->Step();
@@ -232,10 +252,12 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
 
          // compute test error
          Double_t testError = 0.0;
+         //int i = 0; 
          for (auto batch : testingData) {
             auto inputTensor = batch.GetInput();
             auto outputMatrix = batch.GetOutput();
             auto weights = batch.GetWeights();
+            //Architecture_t::PrintTensor(inputTensor, std::string(TString::Format(" test batch %d",i++).Data()));
             testError += deepNet.Loss(inputTensor, outputMatrix, weights);
          }
          testError /= (Double_t)(nSamples / batchSize);
@@ -308,9 +330,8 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
       }
    }
 
-   std::cout << " No of Epochs = " << optimizer->GetGlobalStep() << ", ";
 
-   deepNet.Forward(I, false);
+   deepNet.Forward(tI, false);
 
    // get the output of the last layer of the deepNet
    TMatrixT<Scalar_t> Y(deepNet.GetLayerAt(deepNet.GetLayers().size() - 1)->GetOutputAt(0));
@@ -333,6 +354,11 @@ auto testOptimization(typename Architecture_t::Scalar_t momentum, EOptimizer opt
          std::cout << std::endl;
       }
    }
+
+   tFinal = std::chrono::system_clock::now();
+   std::chrono::duration<double> totalTime = tFinal - tInitial;
+
+   std::cout << " No of Epochs = " << optimizer->GetGlobalStep() << ", total Time(sec) " << totalTime.count() << ", ";
 
    return meanAbsoluteError(Y, K);
 }

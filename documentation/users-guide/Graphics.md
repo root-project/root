@@ -2983,7 +2983,7 @@ To change the color model use:
 
 Like PostScript, PDF is a vector graphics output format allowing a very
 high graphics output quality. The functionalities provided by this class
-are very similar to those provided by TPostScript`.
+are very similar to those provided by `TPostScript`.
 
 Compare to PostScript output, the PDF files are usually smaller because
 some parts of them can be compressed.

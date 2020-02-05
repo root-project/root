@@ -330,6 +330,8 @@ TMatrixDSymEigen &TMatrixDSymEigen::operator=(const TMatrixDSymEigen &source)
    if (this != &source) {
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValues.ResizeTo(source.fEigenValues);
+      fEigenVectors = source.fEigenVectors;
+      fEigenValues = source.fEigenValues;
    }
    return *this;
 }

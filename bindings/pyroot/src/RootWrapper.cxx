@@ -121,11 +121,11 @@ namespace {
       Py_DECREF( property );
    }
 
-   void AddPropertyToClass( PyObject* pyclass,
-         Cppyy::TCppScope_t scope, const std::string& name, void* address )
+   void AddConstantPropertyToClass( PyObject* pyclass,
+         Cppyy::TCppScope_t scope, const std::string& name, void* address, TEnum* en )
    {
       PyROOT::PropertyProxy* property =
-         PyROOT::PropertyProxy_NewConstant( scope, name, address );
+         PyROOT::PropertyProxy_NewConstant( scope, name, address, en );
       AddPropertyToClass1( pyclass, property, kTRUE );
       Py_DECREF( property );
    }
@@ -175,6 +175,11 @@ namespace {
 } // unnamed namespace
 
 
+static TMemoryRegulator &GetMemoryRegulator() {
+   static TMemoryRegulator m;
+   return m;
+}
+
 //- public functions ---------------------------------------------------------
 void PyROOT::InitRoot()
 {
@@ -182,8 +187,7 @@ void PyROOT::InitRoot()
    PyEval_InitThreads();
 
 // memory management
-   static TMemoryRegulator m;
-   gROOT->GetListOfCleanups()->Add( &m );
+   gROOT->GetListOfCleanups()->Add( &GetMemoryRegulator() );
 
 // bind ROOT globals that are needed in ROOT.py
    AddToGlobalScope( "gROOT", "TROOT.h", gROOT, Cppyy::GetScope( gROOT->IsA()->GetName() ) );
@@ -362,9 +366,11 @@ static int BuildScopeProxyDict( Cppyy::TCppScope_t scope, PyObject* pyclass ) {
    TEnum* e = 0;
    while ( (e = (TEnum*)ienum.Next()) ) {
       const TSeqCollection* seq = e->GetConstants();
+      auto isScoped = e->Property() & kIsScopedEnum;
+      if (isScoped) continue; // scoped enum: do not add constants as properties of the enum's scope
       for ( Int_t i = 0; i < seq->GetSize(); i++ ) {
          TEnumConstant* ec = (TEnumConstant*)seq->At( i );
-         AddPropertyToClass( pyclass, scope, ec->GetName(), ec->GetAddress() );
+         AddConstantPropertyToClass( pyclass, scope, ec->GetName(), ec->GetAddress(), e );
       }
    }
 
@@ -706,6 +712,8 @@ PyObject* PyROOT::CreateScopeProxy( const std::string& scope_name, PyObject* par
 
    // add __cppname__ to keep the C++ name of the class/scope
    PyObject_SetAttr( pyclass, PyStrings::gCppName, PyROOT_PyUnicode_FromString( actual.c_str() ) );
+   // add also __cpp_name__ for forward compatibility
+   PyObject_SetAttr( pyclass, PyStrings::gCppNameNew, PyROOT_PyUnicode_FromString( actual.c_str() ) );
 
    // add __module__  (see https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_name) 
    std::string module;
@@ -804,6 +812,15 @@ PyObject* PyROOT::GetCppGlobal( const std::string& name )
 // nothing found
    PyErr_Format( PyExc_LookupError, "no such global: %s", name.c_str() );
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all memory-regulated objects
+
+PyObject *PyROOT::ClearProxiedObjects()
+{
+   GetMemoryRegulator().ClearProxiedObjects();
+   Py_RETURN_NONE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

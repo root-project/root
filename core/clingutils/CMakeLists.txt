@@ -29,7 +29,7 @@ target_include_directories(ClingUtils PRIVATE ${CLING_INCLUDE_DIRS})
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
-target_include_directories(ClingUtils PRIVATE SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 # This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
@@ -60,33 +60,38 @@ foreach(dict ${stldicts})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
   ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
-                                NO_SOURCES NO_INSTALL_HEADERS NO_MODULE
+                                NO_SOURCES NO_INSTALL_HEADERS NO_CXXMODULE
                                 STAGE1
                                 NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
                                 DEPENDENCIES Core)
 endforeach()
 
-if(builtin_clang)
+set(CLANG_RESOURCE_DIR_STEM)
+if (builtin_clang)
   set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang)
   set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION})
-else()
-  execute_process(
-    COMMAND ${LLVM_TOOLS_BINARY_DIR}/clang -print-resource-dir
-    RESULT_VARIABLE _CLANG_ERROR OUTPUT_VARIABLE CLANG_RESOURCE_DIR)
+else ()
+  set(CLANG_RESOURCE_DIR_STEM ${LLVM_LIBRARY_DIR}/clang)
+  # A user can define a clang version to use, otherwise find it (but will error if more than one version is present)
+  if (NOT DEFINED CLANG_RESOURCE_DIR_VERSION)
+    if (NOT EXISTS ${CLANG_RESOURCE_DIR_STEM})
+      message(FATAL_ERROR "${CLANG_RESOURCE_DIR_STEM} does not exist. Please install clang.")
+    endif()
+    # There is no reasonable way to get the version of clang under which is its resource directory.
+    # For example, lib/clang/5.0.0/include. Deduce it.
+    file(GLOB CHILDREN RELATIVE ${CLANG_RESOURCE_DIR_STEM} ${CLANG_RESOURCE_DIR_STEM}/*)
+    list(LENGTH CHILDREN CHILDREN_LENGTH)
+    if (${CHILDREN_LENGTH} GREATER 1)
+      message(FATAL_ERROR "Found more than one version of clang. CLANG_RESOURCE_DIR_VERSION contains: '${CHILDREN}'." )
+    endif()
 
-  if(_CLANG_ERROR)
-    message(FATAL_ERROR "Cannot determine clang resource directory path")
+    list(GET CHILDREN 0 CLANG_RESOURCE_DIR_VERSION)
   endif()
-
-  string(STRIP ${CLANG_RESOURCE_DIR} CLANG_RESOURCE_DIR)
-  get_filename_component(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR} REALPATH)
-  get_filename_component(CLANG_RESOURCE_DIR_STEM ${CLANG_RESOURCE_DIR} DIRECTORY)
-  get_filename_component(CLANG_RESOURCE_DIR_VERSION ${CLANG_RESOURCE_DIR} NAME)
 endif()
 
-set(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR_STEM}/${CLANG_RESOURCE_DIR_VERSION}/include)
 
+set(CLANG_RESOURCE_DIR ${CLANG_RESOURCE_DIR_STEM}/${CLANG_RESOURCE_DIR_VERSION}/include)
 
 #---Deal with clang resource here----------------------------------------------
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/
@@ -94,9 +99,9 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
-set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file module.modulemap.build
+foreach(file libc.modulemap cuda.modulemap std.modulemap module.modulemap.build
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
@@ -108,7 +113,7 @@ foreach(file module.modulemap.build
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
     set(dest_file "module.modulemap")
-  else()
+  elseif(NOT ${file} MATCHES ".*modulemap")
     # We do not want our modulemap to be considered part of the PCH.
     set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
   endif()
@@ -129,8 +134,9 @@ endforeach()
 # of that file in build-time versus run-time (different length etc).
 # Capture their build-time version here, and inject it into runtime.
 foreach(file wchar.h bits/stat.h bits/time.h)
-  if(EXISTS /usr/include/${file})
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${file})
+  if(EXISTS ${DEFAULT_SYSROOT}/usr/include/${file})
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${DEFAULT_SYSROOT}/usr/include/${file}
+      ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${file})
   endif()
 endforeach()
 
@@ -163,3 +169,12 @@ else()
         COMMENT "Copying LLVM resource and header files")
 endif()
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
+# CLING is a shorthand for CLING_LIBRARIES and some other clang-specific
+# dependencies which ensure the correct order of building. Then the cling header
+# files (such as RuntimeUniverse.h) are moved to a semi-private place in ROOT
+# #ROOTSYS/etc. This is the place where ROOT will use them from and we should
+# add an explcit dependency to something cling-related which ROOT knows.
+# ClingUtils seems a good candidate because it is very foundational.
+add_dependencies(ClingUtils LLVMRES)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
+

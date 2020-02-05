@@ -11,9 +11,8 @@
 
 add_definitions("-ObjC++")
 
-ROOT_STANDARD_LIBRARY_PACKAGE(GQuartz
-  NO_HEADERS
-  SOURCES
+# Dictionary not needed.
+ROOT_LINKER_LIBRARY(GQuartz
     src/QuartzFillArea.mm
     src/QuartzLine.mm
     src/QuartzMarker.mm

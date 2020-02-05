@@ -24,8 +24,8 @@ class TObjArray;
 class TArchiveFile : public TObject {
 
 private:
-   TArchiveFile(const TArchiveFile&);            ///< Not implemented because TArchiveFile can not be copied.
-   TArchiveFile& operator=(const TArchiveFile&); ///< Not implemented because TArchiveFile can not be copied.
+   TArchiveFile(const TArchiveFile&) = delete;            ///< Not implemented because TArchiveFile can not be copied.
+   TArchiveFile& operator=(const TArchiveFile&) = delete; ///< Not implemented because TArchiveFile can not be copied.
 
 protected:
    TString         fArchiveName;  ///< Archive file name

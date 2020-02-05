@@ -120,7 +120,7 @@ protected:
    TSQLClassInfo *fInfo;   ///<!  classinfo, for which pool is created
    TSQLResult *fClassData; ///<!  results with request to selected table
    Bool_t fIsMoreRows;     ///<!  indicates if class data has not yet read rows
-   TList *fRowsPool;       ///<!  pool of extrcted, but didnot used rows
+   TList *fRowsPool;       ///<!  pool of extracted, but didnot used rows
 
    ClassDef(TSQLObjectDataPool, 1) // XML object keeper class
 };

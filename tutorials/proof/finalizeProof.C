@@ -95,8 +95,8 @@ void finalizeProof(const char *what = "simple",
       Printf("runProof: root.exe not found: please check the environment!");
       return;
    }
-   TString rootsys(gSystem->DirName(rootbin));
-   rootsys = gSystem->DirName(rootsys);
+   TString rootsys = gSystem->GetDirName(rootbin);
+   rootsys = gSystem->GetDirName(rootsys);
    TString tutorials(Form("%s/tutorials", rootsys.Data()));
    delete[] rootbin;
 

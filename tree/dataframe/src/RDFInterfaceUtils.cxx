@@ -118,7 +118,7 @@ std::set<std::string> GetPotentialColumnNames(const std::string &expr)
 // the one in the vector
 class RActionBase;
 
-HeadNode_t CreateSnaphotRDF(const ColumnNames_t &validCols,
+HeadNode_t CreateSnapshotRDF(const ColumnNames_t &validCols,
                             std::string_view treeName,
                             std::string_view fileName,
                             bool isLazy,

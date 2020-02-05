@@ -53,7 +53,7 @@ ClassImp(RooStudyManager);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStudyManager::RooStudyManager(RooWorkspace& w)
-{  
+{
   _pkg = new RooStudyPackage(w) ;
 }
 
@@ -62,7 +62,7 @@ RooStudyManager::RooStudyManager(RooWorkspace& w)
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
-{  
+{
   _pkg = new RooStudyPackage(w) ;
   _pkg->addStudy(study) ;
 }
@@ -70,7 +70,7 @@ RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStudyManager::RooStudyManager(const char* studyPackFileName) 
+RooStudyManager::RooStudyManager(const char* studyPackFileName)
 {
   string pwd = gDirectory->GetName() ;
   TFile *f = new TFile(studyPackFileName) ;
@@ -82,7 +82,7 @@ RooStudyManager::RooStudyManager(const char* studyPackFileName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::addStudy(RooAbsStudy& study) 
+void RooStudyManager::addStudy(RooAbsStudy& study)
 {
   _pkg->addStudy(study) ;
 }
@@ -92,7 +92,7 @@ void RooStudyManager::addStudy(RooAbsStudy& study)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::run(Int_t nExperiments) 
+void RooStudyManager::run(Int_t nExperiments)
 {
   _pkg->driver(nExperiments) ;
 }
@@ -102,7 +102,7 @@ void RooStudyManager::run(Int_t nExperiments)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open PROOF-Lite session
 
-void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui) 
+void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui)
 {
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
@@ -124,7 +124,7 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
 
   // Run selector in parallel
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") starting PROOF processing of " << nExperiments << " experiments" << endl ;
-			 
+
   gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->Process(\"RooProofDriverSelector\",%d) ;",(ULong_t)p,nExperiments)) ;
 
   // Aggregate results data
@@ -132,10 +132,10 @@ void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t
   TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetOutputList()",(ULong_t)p)) ;
   aggregateData(olist) ;
 
-  // cleaning up                                                                                                                                           
-  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") cleaning up input list" << endl ;                                                   
-  gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetInputList()->Remove((TObject*)0x%lx) ;",(ULong_t)p,(ULong_t)_pkg) ) ;                                                   
-  
+  // cleaning up
+  coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") cleaning up input list" << endl ;
+  gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetInputList()->Remove((TObject*)0x%lx) ;",(ULong_t)p,(ULong_t)_pkg) ) ;
+
 }
 
 
@@ -167,7 +167,7 @@ void RooStudyManager::closeProof(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput=kFALSE) 
+void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput=kFALSE)
 {
   TFile f(Form("study_data_%s.root",studyName),"RECREATE") ;
   _pkg->Write("studypack") ;
@@ -177,8 +177,8 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
     // Write header of driver script
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << endl 
-        << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << endl 
+    bdr << "#!/bin/sh" << endl
+        << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << endl
         << "uudecode <<EOR" << endl ;
     bdr.close() ;
 
@@ -187,14 +187,14 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
     // Write remainder of deriver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
-    bdr2 << "EOR" << endl 
-	 << "fi" << endl 
-	 << "root -l -b <<EOR" << endl 
-	 << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl 
-	 << ".q" << endl 
-	 << "EOR" << endl ;  
+    bdr2 << "EOR" << endl
+	 << "fi" << endl
+	 << "root -l -b <<EOR" << endl
+	 << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+	 << ".q" << endl
+	 << "EOR" << endl ;
     // Remove binary input file
-    gSystem->Unlink(Form("study_data_%s.root",studyName)) ;    
+    gSystem->Unlink(Form("study_data_%s.root",studyName)) ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
 			<< "     input data files is embedded in driver script" << endl ;
@@ -202,11 +202,11 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
   } else {
 
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << endl 
-	<< "root -l -b <<EOR" << endl 
-	<< Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl 
-	<< ".q" << endl 
-	<< "EOR" << endl ;  
+    bdr << "#!/bin/sh" << endl
+	<< "root -l -b <<EOR" << endl
+	<< Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+	<< ".q" << endl
+	<< "EOR" << endl ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
 			<< "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
@@ -219,7 +219,7 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::processBatchOutput(const char* filePat) 
+void RooStudyManager::processBatchOutput(const char* filePat)
 {
   list<string> flist ;
   expandWildCardSpec(filePat,flist) ;
@@ -232,10 +232,10 @@ void RooStudyManager::processBatchOutput(const char* filePat)
 
     TList* list = f.GetListOfKeys() ;
     TIterator* kiter = list->MakeIterator();
-    
+
     TObject* obj ;
     TKey* key ;
-    while((key=(TKey*)kiter->Next())) {      
+    while((key=(TKey*)kiter->Next())) {
       obj = f.Get(key->GetName()) ;
       TObject* clone = obj->Clone(obj->GetName()) ;
       olist.Add(clone) ;
@@ -249,11 +249,11 @@ void RooStudyManager::processBatchOutput(const char* filePat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::aggregateData(TList* olist) 
+void RooStudyManager::aggregateData(TList* olist)
 {
   for (list<RooAbsStudy*>::iterator iter=_pkg->studies().begin() ; iter!=_pkg->studies().end() ; ++iter) {
     (*iter)->aggregateSummaryOutput(olist) ;
-  }  
+  }
 }
 
 
@@ -303,13 +303,15 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
       directory = gSystem->UnixPathName(gSystem->WorkingDirectory());
    }
 
-   const char *file;
-   void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(directory.Data()));
+   TString expand_directory = directory;
+   gSystem->ExpandPathName(expand_directory);
+   void *dir = gSystem->OpenDirectory(expand_directory.Data());
 
    if (dir) {
       //create a TList to store the file names (not yet sorted)
       TList l;
       TRegexp re(basename,kTRUE);
+      const char *file;
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;
          TString s = file;
@@ -324,9 +326,9 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
       while ((obj = (TObjString*)next())) {
          file = obj->GetName();
          if (behind_dot_root.Length() != 0)
-	   result.push_back(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data())) ;
+            result.push_back(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data())) ;
          else
-	   result.push_back(Form("%s/%s",directory.Data(),file)) ;
+            result.push_back(Form("%s/%s",directory.Data(),file)) ;
       }
       l.Delete();
    }

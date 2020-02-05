@@ -913,7 +913,7 @@ Int_t TProofBench::RunDataSet(const char *dset,
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->SetReleaseCache(fReleaseCache);
    fRunDS->Run(dset, start, stop, step, fNtries, fDebug, -1);
-   if (!fReadType) SafeDelete(readType);
+   SafeDelete(readType);
 
    // Close the file
    if (SetOutFile(0) != 0)
@@ -946,7 +946,7 @@ Int_t TProofBench::RunDataSetx(const char *dset, Int_t start, Int_t stop)
    if (!fSelOption.IsNull()) fRunDS->SetSelOption(fSelOption);
    if (!fDataPar.IsNull()) fRunDS->SetParList(fDataPar);
    fRunDS->Run(dset, start, stop, -2, fNtries, fDebug, -1);
-   if (!fReadType) SafeDelete(readType);
+   SafeDelete(readType);
 
    // Close the file
    if (SetOutFile(0) != 0)
@@ -1400,7 +1400,7 @@ Int_t TProofBench::MakeDataSet(const char *dset, Long64_t nevt, const char *fnro
       } else {
          fnr = gSystem->BaseName(ur.GetFile());
          // We need to set the basedir
-         TString bdir(gSystem->DirName(fnroot));
+         TString bdir = gSystem->GetDirName(fnroot);
          bdir += "/<fn>";
          fProof->SetParameter("PROOF_BenchmarkBaseDir", bdir.Data());
          // Flag as remote, if so

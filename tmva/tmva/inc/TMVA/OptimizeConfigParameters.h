@@ -40,6 +40,8 @@
 
 #include "TH1.h"
 
+class TestOptimizeConfigParameters;
+
 namespace TMVA {
 
    class MethodBase;
@@ -47,6 +49,7 @@ namespace TMVA {
    class OptimizeConfigParameters : public IFitterTarget  {
 
    public:
+      friend TestOptimizeConfigParameters;
 
       //default constructor
       OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval*> tuneParameters, TString fomType="Separation", TString optimizationType = "GA");

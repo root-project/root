@@ -3,7 +3,7 @@ sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/core/Component',
    'sap/ui/model/json/JSONModel',
-   "sap/ui/core/mvc/XMLView",
+   'sap/ui/core/mvc/XMLView',
    'sap/ui/core/Fragment',
    'sap/m/MessageToast',
    'sap/m/Dialog',
@@ -31,8 +31,11 @@ sap.ui.define([
          var model = new JSONModel({ GedIcon: "", StatusIcon: "", ToolbarIcon: "", TooltipIcon: "sap-icon://accept",
                                      StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"" });
          this.getView().setModel(model);
+         
+         var vd = this.getView().getViewData();
+         var cp = vd ? vd.canvas_painter : null;
 
-         var cp = Component.getOwnerComponentFor(this.getView()).getComponentData().canvas_painter;
+         if (!cp) cp = Component.getOwnerComponentFor(this.getView()).getComponentData().canvas_painter;
 
          if (cp) {
 

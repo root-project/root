@@ -25,11 +25,13 @@ TEST(RCsvDS, ColTypeNames)
 
    EXPECT_STREQ("Height", colNames[2].c_str());
    EXPECT_STREQ("Married", colNames[3].c_str());
+   EXPECT_STREQ("Salary", colNames[4].c_str());
 
    EXPECT_STREQ("std::string", tds.GetTypeName("Name").c_str());
    EXPECT_STREQ("Long64_t", tds.GetTypeName("Age").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("Height").c_str());
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
+   EXPECT_STREQ("double", tds.GetTypeName("Salary").c_str());
 }
 
 TEST(RCsvDS, ColNamesNoHeaders)

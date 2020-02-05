@@ -49,12 +49,12 @@ static const char *gFiletypes[] = { "All files",     "*",
                                     "Text files",    "*.txt",
                                     "ROOT macros",   "*.C",
                                     0,               0 };
-static char *gPrinter      = 0;
-static char *gPrintCommand = 0;
+static char *gPrinter      = nullptr;
+static char *gPrintCommand = nullptr;
 
 
-TGGC *TGTextEdit::fgCursor0GC;
-TGGC *TGTextEdit::fgCursor1GC;
+TGGC *TGTextEdit::fgCursor0GC = nullptr;
+TGGC *TGTextEdit::fgCursor1GC = nullptr;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -393,7 +393,7 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
          static Bool_t overwr = kFALSE;
          TGFileInfo fi;
          fi.fFileTypes = gFiletypes;
-         fi.fIniDir    = StrDup(dir);
+         fi.SetIniDir(dir);
          fi.fOverwrite = overwr;
          new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
          overwr = fi.fOverwrite;
@@ -2226,7 +2226,8 @@ void TGTextEdit::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    if (fromfile) {
       const char *filename = txt->GetFileName();
-      fn = gSystem->ExpandPathName(gSystem->UnixPathName(filename));
+      fn = gSystem->UnixPathName(filename);
+      gSystem->ExpandPathName(fn);
    } else {
       fn = TString::Format("Txt%s", GetName()+5);
       txt->Save(fn.Data());

@@ -97,6 +97,15 @@ public:
 
   virtual void forceCacheUpdate() ;
   
+  virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const {
+    //TODO
+    std::cerr << "This functionality is not yet implemented for composite data stores." << std::endl;
+    assert(false);
+
+    std::vector<double> vec(first, last);
+    return {RooSpan<const double>(vec)};
+  }
+
  protected:
 
   void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;

@@ -248,7 +248,7 @@ public:
 
    void CheckReferenceCount(const std::string &from = "<unknown>") override;
 
-   void ElementChanged(Bool_t update_scenes = kTRUE, Bool_t redraw = kFALSE) override;
+   void StampAllTracks();
 
    // propagation
    void InitTrack(const REveVectorD &v, Int_t charge);

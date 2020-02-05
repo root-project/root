@@ -22,8 +22,8 @@
 RooConstraintSum calculates the sum of the -(log) likelihoods of
 a set of RooAbsPfs that represent constraint functions. This class
 is used to calculate the composite -log(L) of constraints to be
-added the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)
-arguments
+added to the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)
+arguments.
 **/
 
 
@@ -53,7 +53,7 @@ ClassImp(RooConstraintSum);
 
 RooConstraintSum::RooConstraintSum()
 {
-  _setIter1 = _set1.createIterator() ;
+
 }
 
 
@@ -67,12 +67,7 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
   _set1("set1","First set of components",this),
   _paramSet("paramSet","Set of parameters",this)
 {
-
-  _setIter1 = _set1.createIterator() ;
-
-  TIterator* inputIter = constraintSet.createIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*)inputIter->Next())) {
+  for (const auto comp : constraintSet) {
     if (!dynamic_cast<RooAbsPdf*>(comp)) {
       coutE(InputArguments) << "RooConstraintSum::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
 			    << " is not of type RooAbsPdf" << endl ;
@@ -82,8 +77,6 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
   }
 
   _paramSet.add(normSet) ;
-
-  delete inputIter ;
 }
 
 
@@ -98,7 +91,7 @@ RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* na
   _set1("set1",this,other._set1),
   _paramSet("paramSet",this,other._paramSet)
 {
-  _setIter1 = _set1.createIterator() ;  
+
 }
 
 
@@ -108,7 +101,7 @@ RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* na
 
 RooConstraintSum::~RooConstraintSum() 
 {
-  if (_setIter1) delete _setIter1 ;
+
 }
 
 
@@ -119,13 +112,11 @@ RooConstraintSum::~RooConstraintSum()
 Double_t RooConstraintSum::evaluate() const 
 {
   Double_t sum(0);
-  RooAbsReal* comp ;
-  RooFIter setIter1 = _set1.fwdIterator() ;
 
-  while((comp=(RooAbsReal*)setIter1.next())) {
-    sum -= ((RooAbsPdf*)comp)->getLogVal(&_paramSet) ;
+  for (const auto comp : _set1) {
+    sum -= static_cast<RooAbsPdf*>(comp)->getLogVal(&_paramSet);
   }
   
-  return sum ;
+  return sum;
 }
 

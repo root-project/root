@@ -3,8 +3,8 @@
 /// \notebook
 /// Draw a graph with text attached to each point.
 /// The text is drawn in a TExec function attached to the TGraph,
-/// therefore if the text is
-/// moved interactively, it will be automatically updated.
+/// therefore if the a graph's point is
+/// moved interactively, the text will be automatically updated.
 ///
 /// \macro_image
 /// \macro_code
@@ -16,10 +16,10 @@ void graphtext() {
    c->SetGrid();
 
    const Int_t n = 10;
-   TGraph *gr = new TGraph(n);
+   auto gr = new TGraph(n);
    gr->SetTitle("A Simple Graph Example with Text");
    gr->SetMarkerStyle(20);
-   TExec *ex = new TExec("ex","drawtext();");
+   auto ex = new TExec("ex","drawtext();");
    gr->GetListOfFunctions()->Add(ex);
 
    Double_t x, y;
@@ -43,7 +43,7 @@ void drawtext()
    l.SetTextAlign(21);
    l.SetTextColor(kBlue);
 
-   TGraph *g = (TGraph*)gPad->GetListOfPrimitives()->FindObject("Graph");
+   auto g = (TGraph*)gPad->GetListOfPrimitives()->FindObject("Graph");
    n = g->GetN();
 
    for (i=0; i<n; i++) {

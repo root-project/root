@@ -16,9 +16,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#include <windows.h>
+#include <tchar.h>
+#endif
+
 #include "THttpServer.h"
 #include "THttpWSEngine.h"
 #include "TUrl.h"
+
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -234,7 +241,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    Bool_t execres = kTRUE, debug = engine->IsDebugMode();
 
    if (!debug && serv->IsFileRequested(request_info->local_uri, filename)) {
-      if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
+      if ((filename.Length() > 3) && ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS))) {
          std::string buf = THttpServer::ReadFileContent(filename.Data());
          if (buf.empty()) {
             arg->Set404();
@@ -312,7 +319,29 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
    } else if (arg->IsFile()) {
-      mg_send_file(conn, (const char *)arg->GetContent());
+      filename = (const char *)arg->GetContent();
+#ifdef _MSC_VER
+      // resolve Windows links which are not supported by civetweb
+      const int BUFSIZE = 2048;
+      TCHAR Path[BUFSIZE];
+
+      auto hFile = CreateFile(filename.Data(),       // file to open
+                              GENERIC_READ,          // open for reading
+                              FILE_SHARE_READ,       // share for reading
+                              NULL,                  // default security
+                              OPEN_EXISTING,         // existing file only
+                              FILE_ATTRIBUTE_NORMAL, // normal file
+                              NULL);                 // no attr. template
+
+      if( hFile != INVALID_HANDLE_VALUE) {
+         auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, VOLUME_NAME_DOS );
+         // produced file name may include \\? symbols, which are indicating long file name
+         if(dwRet < BUFSIZE) 
+            filename = Path;
+         CloseHandle(hFile);
+      }
+#endif
+      mg_send_file(conn, filename.Data());
    } else {
 
       Bool_t dozip = kFALSE;

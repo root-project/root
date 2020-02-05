@@ -207,7 +207,7 @@ void TGeoMCGeometry::Mixture(Int_t& kmat, const char* name, Float_t* a, Float_t*
    Double_t* dwmat = CreateDoubleArray(wmat, TMath::Abs(nlmat));
 
    Mixture(kmat, name, da, dz, dens, nlmat, dwmat);
-   for (Int_t i=0; i<nlmat; i++) {
+   for (Int_t i=0; i< TMath::Abs(nlmat); i++) {
       a[i] = da[i]; z[i] = dz[i]; wmat[i] = dwmat[i];
    }
 

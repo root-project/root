@@ -46,15 +46,14 @@ ClassImp(TGIcon);
 
 TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
 {
-   fPic = 0;
-   char *path;
+   fPic = nullptr;
 
    if (!image)
       image = "bld_rgb.xpm";
 
-   path = StrDup(image);
+   char *path = StrDup(image);
 
-   fPath = gSystem->DirName(path);
+   fPath = gSystem->GetDirName(path);
 
    fImage = TImage::Open(path);
    if (fImage) {
@@ -91,7 +90,7 @@ void TGIcon::SetImage(const char *img)
 {
    //delete fImage;
    TImage *i = TImage::Open(img);
-   fPath = gSystem->DirName(img);
+   fPath = gSystem->GetDirName(img);
 
    SetImage(i);
 }
@@ -193,7 +192,9 @@ void TGIcon::SetImagePath(const char *path)
    if (!path) {
       return;
    }
-   fPath = gSystem->ExpandPathName(gSystem->UnixPathName(path));
+
+   fPath = gSystem->UnixPathName(path);
+   gSystem->ExpandPathName(fPath);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,13 +211,14 @@ void TGIcon::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       return;
    }
 
-   const char *picname = fPic->GetName();
+   TString picname = gSystem->UnixPathName(fPic->GetName());
+   gSystem->ExpandPathName(picname);
 
    out <<"   TGIcon *";
    if (!fImage) {
       out << GetName() << " = new TGIcon(" << fParent->GetName()
          << ",gClient->GetPicture(" << quote
-         << gSystem->ExpandPathName(gSystem->UnixPathName(picname))   // if no path
+         << picname   // if no path
          << quote << ")" << "," << GetWidth() << "," << GetHeight();
       if (fBackground == GetDefaultFrameBackground()) {
          if (!GetOptions()) {

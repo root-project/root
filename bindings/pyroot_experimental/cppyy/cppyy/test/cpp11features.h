@@ -1,5 +1,6 @@
 #if __cplusplus >= 201103L
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -81,5 +82,18 @@ public:
 private:
     std::vector<T> m_data;
 };
+
+
+//===========================================================================
+struct FNTestStruct {        // for std::function<> testing
+     FNTestStruct(int i) : t(i) {}
+     int t;
+};
+std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc();
+
+namespace FunctionNS {
+    struct FNTestStruct { FNTestStruct(int i) : t(i) {} int t; };
+    std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc();
+}
 
 #endif // c++11 and later

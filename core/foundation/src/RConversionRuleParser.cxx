@@ -15,6 +15,7 @@
 
 #include "RConversionRuleParser.h"
 #include "TSchemaRuleProcessor.h"
+#include "TClassEdit.h"
 
 #include <algorithm>
 #include <iostream>
@@ -281,7 +282,6 @@ namespace ROOT
 
       std::map<std::string, std::string>::const_iterator it1, it2;
       std::list<std::string>                             lst;
-      std::list<std::string>::iterator                   lsIt;
 
       it1 = rule.find( "targetClass" );
       if( it1 == rule.end() ) {
@@ -335,12 +335,13 @@ namespace ROOT
             error_string += warning + " - the list of checksums is empty\n";
          }
 
-         for( lsIt = lst.begin(); lsIt != lst.end(); ++lsIt )
-            if( !TSchemaRuleProcessor::IsANumber( *lsIt ) ) {
-               error_string = warning + " - " + *lsIt + " is not a valid value";
-               error_string += " of checksum parameter - an integer expected";
+         for( const auto& chk : lst ) {
+            if( !TSchemaRuleProcessor::IsANumber(chk, true) ) {
+               error_string = warning + " - " + chk + " is not a valid value";
+               error_string += " of checksum parameter - an integer (decimal/hex) expected";
                return false;
             }
+         }
       }
 
       //-----------------------------------------------------------------------
@@ -363,9 +364,9 @@ namespace ROOT
             error_string = warning + " - the list of versions is empty";
          }
 
-         for( lsIt = lst.begin(); lsIt != lst.end(); ++lsIt )
-            if( !TSchemaRuleProcessor::ProcessVersion( *lsIt, ver ) ) {
-               error_string = warning + " - " + *lsIt + " is not a valid value";
+         for( const auto& version : lst )
+            if( !TSchemaRuleProcessor::ProcessVersion( version, ver ) ) {
+               error_string = warning + " - " + version + " is not a valid value";
                error_string += " of version parameter";
                return false;
             }
@@ -900,12 +901,15 @@ namespace ROOT
       //////////////////////////////////////////////////////////////////////////
 
       SchemaRuleClassMap_t::iterator it;
-      std::string                    targetClass = rule["targetClass"];
-      it = gReadRules.find( targetClass );
+      std::string targetClass = rule["targetClass"];
+      std::string normalizedTargetName;
+      TClassEdit::GetNormalizedName(normalizedTargetName, targetClass);
+
+      it = gReadRules.find( normalizedTargetName );
       if( it == gReadRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRules[targetClass] = lst;
+         gReadRules[normalizedTargetName] = lst;
       }
       else
          it->second.push_back( rule );
@@ -934,11 +938,13 @@ namespace ROOT
 
       SchemaRuleClassMap_t::iterator it;
       std::string                    targetClass = rule["targetClass"];
-      it = gReadRawRules.find( targetClass );
+      std::string normalizedTargetName;
+      TClassEdit::GetNormalizedName(normalizedTargetName, targetClass);
+      it = gReadRawRules.find( normalizedTargetName );
       if( it == gReadRawRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRawRules[targetClass] = lst;
+         gReadRawRules[normalizedTargetName] = lst;
       }
       else
          it->second.push_back( rule );

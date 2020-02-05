@@ -14,6 +14,8 @@
  *************************************************************************/
 
 #include <ROOT/RWebDisplayArgs.hxx>
+#include <ROOT/RWebWindow.hxx>
+#include <ROOT/RConfig.hxx>
 
 #include "TROOT.h"
 
@@ -50,18 +52,47 @@ ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor - specify window width and height
+
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y, const std::string &browser)
+{
+   SetSize(width, height);
+   SetPos(x, y);
+   SetBrowserKind(browser);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Constructor - specify master window and channel (if reserved already)
+
+ROOT::Experimental::RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel)
+{
+   SetMasterWindow(master, channel);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
+ROOT::Experimental::RWebDisplayArgs::~RWebDisplayArgs()
+{
+  // must be defined here to correctly call RWebWindow destructor
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
 /// Recognized values:
 ///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
 ///  firefox - use Mozilla Firefox browser, supports headless mode from v57
 ///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
 ///  browser - default system web-browser, no batch mode
+///   safari - Safari browser on Mac
 ///      cef - Chromium Embeded Framework, local display, local communication
 ///      qt5 - Qt5 WebEngine, local display, local communication
 ///    local - either cef or qt5
 ///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
 
-void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
+ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
    std::string kind = _kind;
 
@@ -86,8 +117,12 @@ void ROOT::Experimental::RWebDisplayArgs::SetBrowserKind(const std::string &_kin
       SetBrowserKind(kCEF);
    else if ((kind == "qt") || (kind == "qt5"))
       SetBrowserKind(kQt5);
+   else if ((kind == "embed") || (kind == "embedded"))
+      SetBrowserKind(kEmbedded);
    else
       SetCustomExec(kind);
+
+   return *this;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -103,6 +138,7 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
       case kQt5: return "qt5";
       case kLocal: return "local";
       case kStandard: return "default";
+      case kEmbedded: return "embed";
       case kCustom:
           auto pos = fExec.find(" ");
           return (pos == std::string::npos) ? fExec : fExec.substr(0,pos);
@@ -112,8 +148,18 @@ std::string ROOT::Experimental::RWebDisplayArgs::GetBrowserName() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+/// Assign window and channel id where other window will be embed
+
+void ROOT::Experimental::RWebDisplayArgs::SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel)
+{
+   SetBrowserKind(kEmbedded);
+   fMaster = master;
+   fMasterChannel = channel;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
 /// Append string to url options
-/// Add "&" as separator if any options already exsists
+/// Add "&" as separator if any options already exists
 
 void ROOT::Experimental::RWebDisplayArgs::AppendUrlOpt(const std::string &opt)
 {
@@ -162,5 +208,13 @@ void ROOT::Experimental::RWebDisplayArgs::SetCustomExec(const std::string &exec)
 
 std::string ROOT::Experimental::RWebDisplayArgs::GetCustomExec() const
 {
-   return GetBrowserKind() == kCustom ? fExec : "";
+   if (GetBrowserKind() != kCustom)
+      return "";
+
+#ifdef R__MACOSX
+   if ((fExec == "safari") || (fExec == "Safari"))
+      return "open -a Safari";
+#endif
+
+   return fExec;
 }

@@ -230,31 +230,6 @@ const TGeoBranchArray *TMCManagerStack::GetCurrentGeoState() const
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// To free the cached geo state which was associated to the current track
-///
-
-void TMCManagerStack::NotifyOnRestoredGeometry()
-{
-   fBranchArrayContainer->FreeGeoState(fParticlesStatus->operator[](fCurrentTrackId)->fGeoStateIndex);
-   fParticlesStatus->operator[](fCurrentTrackId)->fGeoStateIndex = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-/// To free the cached geo state which was associated to a track
-///
-
-void TMCManagerStack::NotifyOnRestoredGeometry(Int_t trackId)
-{
-   if (!HasTrackId(trackId)) {
-      Fatal("NotifyOnRestoredGeometry", "Invalid track ID %i", trackId);
-   }
-   fBranchArrayContainer->FreeGeoState(fParticlesStatus->operator[](trackId)->fGeoStateIndex);
-   fParticlesStatus->operator[](trackId)->fGeoStateIndex = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
 /// Check whether track trackId exists
 ///
 

@@ -708,7 +708,7 @@ Int_t TXProofServ::Setup()
       fTopSessionTag = "";
       // Try to extract it from log file path (for backward compatibility)
       if (gSystem->Getenv("ROOTPROOFLOGFILE")) {
-         fTopSessionTag = gSystem->DirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
+         fTopSessionTag = gSystem->GetDirName(gSystem->Getenv("ROOTPROOFLOGFILE"));
          Ssiz_t lstl;
          if ((lstl = fTopSessionTag.Last('/')) != kNPOS) fTopSessionTag.Remove(0, lstl + 1);
          if (fTopSessionTag.BeginsWith("session-")) {
@@ -746,9 +746,7 @@ Int_t TXProofServ::Setup()
    }
 
    // Goto to the main PROOF working directory
-   char *workdir = gSystem->ExpandPathName(fWorkDir.Data());
-   fWorkDir = workdir;
-   delete [] workdir;
+   gSystem->ExpandPathName(fWorkDir);
    if (gProofDebugLevel > 0)
       Info("Setup", "working directory set to %s", fWorkDir.Data());
 

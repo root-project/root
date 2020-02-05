@@ -7,7 +7,8 @@ def get_cppflags():
     extra_flags = None
     ct_flags = os.path.join(MYHOME, 'etc', 'dictpch', 'allCppflags.txt')
     try:
-        all_flags = open(ct_flags).readlines()
+        with open(ct_flags) as f:
+            all_flags = f.readlines()
         if "std" in os.environ.get("EXTRA_CLING_ARGS", ""):
             keep = []
             for flag in all_flags:

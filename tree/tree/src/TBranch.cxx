@@ -47,7 +47,6 @@
 #include "TVirtualPerfStats.h"
 
 #include "TBranchIMTHelper.h"
-#include "ROOT/TBulkBranchRead.hxx"
 
 #include "ROOT/TIOFeatures.hxx"
 
@@ -969,6 +968,7 @@ Int_t TBranch::FillEntryBuffer(TBasket* basket, TBuffer* buf, Int_t& lnew)
             s = new char[maxsize];
             fEntryBuffer->ReadString(s, maxsize); // Reads at most maxsize - 1 characters, plus null at end
          }
+         delete[] s;
       } else {
          fEntryBuffer->SetBufferOffset(objectStart);
       }
@@ -1420,8 +1420,8 @@ Bool_t TBranch::SupportsBulkRead() const {
 /// NOTES:
 /// - This interface is meant to be used by higher-level, type-safe wrappers, not
 ///   by end-users.
-/// - This only returns events 
-/// 
+/// - This only returns events
+///
 
 Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 {
@@ -1472,6 +1472,7 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 
    fCurrentBasket = nullptr;
    fBaskets[fReadBasket] = nullptr;
+   R__ASSERT(fExtraBasket == nullptr && "fExtraBasket should have been set to nullptr by GetFreshBasket");
    fExtraBasket = basket;
    basket->DisownBuffer();
 
@@ -1768,44 +1769,46 @@ TBasket* TBranch::GetFreshBasket(TBuffer* user_buffer)
       basket = fExtraBasket;
       fExtraBasket = nullptr;
       basket->AdoptBuffer(user_buffer);
-   }
-   if (GetTree()->MemoryFull(0)) {
-      if (fNBaskets==1) {
-         // Steal the existing basket
-         Int_t oldindex = fBaskets.GetLast();
-         basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
-         if (!basket) {
-            fBaskets.SetLast(-2); // For recalculation of Last.
-            oldindex = fBaskets.GetLast();
-            if (oldindex != fBaskets.LowerBound()-1) {
-               basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+   } else {
+      if (GetTree()->MemoryFull(0)) {
+         if (fNBaskets==1) {
+            // Steal the existing basket
+            Int_t oldindex = fBaskets.GetLast();
+            basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+            if (!basket) {
+               fBaskets.SetLast(-2); // For recalculation of Last.
+               oldindex = fBaskets.GetLast();
+               if (oldindex != fBaskets.LowerBound()-1) {
+                  basket = (TBasket*)fBaskets.UncheckedAt(oldindex);
+               }
             }
-         }
-         if (basket && fBasketBytes[oldindex]!=0) {
-            if (basket == fCurrentBasket) {
-               fCurrentBasket    = 0;
-               fFirstBasketEntry = -1;
-               fNextBasketEntry  = -1;
+            if (basket && fBasketBytes[oldindex]!=0) {
+               if (basket == fCurrentBasket) {
+                  fCurrentBasket    = 0;
+                  fFirstBasketEntry = -1;
+                  fNextBasketEntry  = -1;
+               }
+               fBaskets.AddAt(0,oldindex);
+               fBaskets.SetLast(-1);
+               fNBaskets = 0;
+            } else {
+               basket = fTree->CreateBasket(this);
             }
-            fBaskets.AddAt(0,oldindex);
-            fBaskets.SetLast(-1);
-            fNBaskets = 0;
+         } else if (fNBaskets == 0) {
+            // There is nothing to drop!
+            basket = fTree->CreateBasket(this);
          } else {
+            // Memory is full and there is more than one basket,
+            // Let DropBaskets do it job.
+            DropBaskets();
             basket = fTree->CreateBasket(this);
          }
-      } else if (fNBaskets == 0) {
-         // There is nothing to drop!
-         basket = fTree->CreateBasket(this);
       } else {
-         // Memory is full and there is more than one basket,
-         // Let DropBaskets do it job.
-         DropBaskets();
          basket = fTree->CreateBasket(this);
       }
-   } else {
-      basket = fTree->CreateBasket(this);
+      if (user_buffer)
+         basket->AdoptBuffer(user_buffer);
    }
-   basket->AdoptBuffer(user_buffer);
    return basket;
 }
 
@@ -1915,7 +1918,7 @@ TString TBranch::GetRealFileName() const
          // to the branch file name
          char *tname = gSystem->ExpandPathName(tfn);
          if (gSystem->IsAbsoluteFileName(tname) || strstr(tname, ":/")) {
-            bFileName = gSystem->DirName(tname);
+            bFileName = gSystem->GetDirName(tname);
             bFileName += "/";
             bFileName += fFileName;
          }

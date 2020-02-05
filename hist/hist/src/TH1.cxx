@@ -3924,7 +3924,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// is used where the residual for each bin is computed using as error the observed value (the bin error)
 ///
 /// \f[
-///      Chi2 = \sum{ \left(y(i) - \frac{f(x(i) | p )}{e(i)} \right)^2 }
+///      Chi2 = \sum{ \left(\frac{y(i) - f(x(i) | p )}{e(i)} \right)^2 }
 /// \f]
 ///
 /// where y(i) is the bin content for each bin i, x(i) is the bin center and e(i) is the bin error (sqrt(y(i) for
@@ -4935,11 +4935,11 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
 ///
 /// Andy Mastbaum 10/21/08
 
-Double_t TH1::Interpolate(Double_t x)
+Double_t TH1::Interpolate(Double_t x) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   Int_t xbin = FindBin(x);
+   Int_t xbin = fXaxis.FindFixBin(x);
    Double_t x0,x1,y0,y1;
 
    if(x<=GetBinCenter(1)) {
@@ -4963,18 +4963,18 @@ Double_t TH1::Interpolate(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interpolate. Not yet implemented.
+/// 2d Interpolation. Not yet implemented.
 
-Double_t TH1::Interpolate(Double_t, Double_t)
+Double_t TH1::Interpolate(Double_t, Double_t) const
 {
    Error("Interpolate","This function must be called with 1 argument for a TH1");
    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interpolate. Not yet implemented.
+/// 3d Interpolation. Not yet implemented.
 
-Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
+Double_t TH1::Interpolate(Double_t, Double_t, Double_t) const
 {
    Error("Interpolate","This function must be called with 1 argument for a TH1");
    return 0;
@@ -5481,18 +5481,17 @@ static inline bool IsEquidistantBinning(const TAxis& axis)
 ////////////////////////////////////////////////////////////////////////////////
 /// Same limits and bins.
 
-Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
-{
-   return axis1.GetNbins() == axis2.GetNbins()
-      && axis1.GetXmin() == axis2.GetXmin()
-      && axis1.GetXmax() == axis2.GetXmax();
+Bool_t TH1::SameLimitsAndNBins(const TAxis &axis1, const TAxis &axis2){
+   return axis1.GetNbins() == axis2.GetNbins() &&
+          TMath::AreEqualAbs(axis1.GetXmin(), axis2.GetXmin(), axis1.GetBinWidth(axis1.GetNbins()) * 1.E-10) &&
+          TMath::AreEqualAbs(axis1.GetXmax(), axis2.GetXmax(), axis1.GetBinWidth(axis1.GetNbins()) * 1.E-10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finds new limits for the axis for the Merge function.
 /// returns false if the limits are incompatible
 
-Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
+Bool_t TH1::RecomputeAxisLimits(TAxis &destAxis, const TAxis &anAxis)
 {
    if (SameLimitsAndNBins(destAxis, anAxis))
       return kTRUE;
@@ -6228,6 +6227,14 @@ void TH1::Scale(Double_t c1, Option_t *option)
       if (fBuffer) BufferEmpty(1);
       for(Int_t i = 0; i < fNcells; ++i) UpdateBinContent(i, c1 * RetrieveBinContent(i));
       if (fSumw2.fN) for(Int_t i = 0; i < fNcells; ++i) fSumw2.fArray[i] *= (c1 * c1); // update errors
+      // update global histograms statistics
+      Double_t s[kNstat] = {0};
+      GetStats(s);
+      for (Int_t i=0 ; i < kNstat; i++) {
+         if (i == 1)   s[i] = c1*c1*s[i];
+         else          s[i] = c1*s[i];
+      }
+      PutStats(s);
       SetMinimum(); SetMaximum(); // minimum and maximum value will be recalculated the next time
    }
 
@@ -7114,7 +7121,8 @@ Double_t TH1::GetStdDev(Int_t axis) const
    Int_t ax[3] = {2,4,7};
    Int_t axm = ax[axis%10 - 1];
    x    = stats[axm]/stats[0];
-   stddev2 = TMath::Abs(stats[axm+1]/stats[0] -x*x);
+   // for negative stddev (e.g. when having negative weights) - return stdev=0
+   stddev2 = TMath::Max( stats[axm+1]/stats[0] -x*x, 0.0 );
    if (axis<10)
       return TMath::Sqrt(stddev2);
    else {
@@ -8430,7 +8438,8 @@ void TH1::SetStats(Bool_t stats)
 ///
 /// This function is automatically called when the histogram is created
 /// if the static function TH1::SetDefaultSumw2 has been called before.
-/// If flag = false the structure is deleted
+/// If flag = false the structure containing the sum of the square of weights
+/// is rest and it will be empty, but it is not deleted (i.e. GetSumw2()->fN = 0)
 
 void TH1::Sumw2(Bool_t flag)
 {

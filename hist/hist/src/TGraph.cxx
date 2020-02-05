@@ -19,7 +19,6 @@
 #include "TF1.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TFrame.h"
 #include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
@@ -48,7 +47,7 @@ ClassImp(TGraph);
 
 /** \class TGraph
     \ingroup Hist
-A Graph is a graphics object made of two arrays X and Y with npoints each.
+A TGraph is an object made of two arrays X and Y with npoints each.
 The TGraph painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
 
@@ -526,6 +525,13 @@ TGraph::~TGraph()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Allocate internal data structures for `newsize` points.
+
+Double_t **TGraph::Allocate(Int_t newsize) {
+   return AllocateArrays(2, newsize);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Allocate arrays.
 
 Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
@@ -609,7 +615,7 @@ Double_t TGraph::Chisquare(TF1 *func, Option_t * option) const
 
 Bool_t TGraph::CompareArg(const TGraph* gr, Int_t left, Int_t right)
 {
-   Double_t xl, yl, xr, yr;
+   Double_t xl = 0, yl = 0, xr = 0, yr = 0;
    gr->GetPoint(left, xl, yl);
    gr->GetPoint(right, xr, yr);
    return (TMath::ATan2(yl, xl) > TMath::ATan2(yr, xr));
@@ -1052,7 +1058,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 {
    char *linear;
    linear = (char*) strstr(fname, "++");
-   if (linear) { 
+   if (linear) {
       TF1 f1(fname, fname, xmin, xmax);
       return Fit(&f1, option, "", xmin, xmax);
    }
@@ -1579,11 +1585,32 @@ TH1F *TGraph::GetHistogram() const
 
 Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 {
-   if (i < 0 || i >= fNpoints) return -1;
-   if (!fX || !fY) return -1;
+   if (i < 0 || i >= fNpoints || !fX || !fY) return -1;
    x = fX[i];
    y = fY[i];
    return i;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get x value for point i.
+
+Double_t TGraph::GetPointX(Int_t i) const
+{
+   if (i < 0 || i >= fNpoints || !fX)
+      return -1.;
+
+   return fX[i];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get y value for point i.
+
+Double_t TGraph::GetPointY(Int_t i) const
+{
+   if (i < 0 || i >= fNpoints || !fY)
+      return -1.;
+
+   return fY[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1604,6 +1631,38 @@ TAxis *TGraph::GetYaxis() const
    TH1 *h = GetHistogram();
    if (!h) return 0;
    return h->GetYaxis();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation to get information on point of graph at cursor position
+/// Adapted from class TH1
+
+char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
+{
+   // localize point
+   Int_t ipoint = -2;
+   Int_t i;
+   // start with a small window (in case the mouse is very close to one point)
+   for (i = 0; i < fNpoints; i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+
+      if (dpx * dpx + dpy * dpy < 25) {
+         ipoint = i;
+         break;
+      }
+   }
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+
+   if (ipoint == -2)
+      return Form("x=%g, y=%g", x, y);
+
+   Double_t xval = fX[ipoint];
+   Double_t yval = fY[ipoint];
+
+   return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2217,6 +2276,22 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set x value for point i.
+
+void TGraph::SetPointX(Int_t i, Double_t x)
+{
+    SetPoint(i, x, GetPointY(i));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set y value for point i.
+
+void TGraph::SetPointY(Int_t i, Double_t y)
+{
+    SetPoint(i, GetPointX(i), y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set graph name.
 void TGraph::SetName(const char *name)
 {
@@ -2471,18 +2546,45 @@ Int_t TGraph::Merge(TCollection* li)
    }
    return GetN();
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 ///  protected function to perform the merge operation of a graph
 
 Bool_t TGraph::DoMerge(const TGraph* g)
 {
-   Double_t x, y;
+   Double_t x = 0, y = 0;
    for (Int_t i = 0 ; i < g->GetN(); i++) {
       g->GetPoint(i, x, y);
       SetPoint(GetN(), x, y);
    }
    return kTRUE;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move all graph points on specified values dx,dy
+/// If log argument specified, calculation done in logarithmic scale like:
+///  new_value = exp( log(old_value) + delta );
+
+void TGraph::MovePoints(Double_t dx, Double_t dy, Bool_t logx, Bool_t logy)
+{
+   Double_t x = 0, y = 0;
+   for (Int_t i = 0 ; i < GetN(); i++) {
+      GetPoint(i, x, y);
+      if (!logx) {
+         x += dx;
+      } else if (x > 0) {
+         x = TMath::Exp(TMath::Log(x) + dx);
+      }
+      if (!logy) {
+         y += dy;
+      } else if (y > 0) {
+         y = TMath::Exp(TMath::Log(y) + dy);
+      }
+      SetPoint(i, x, y);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Find zero of a continuous function.
 /// This function finds a real zero of the continuous real

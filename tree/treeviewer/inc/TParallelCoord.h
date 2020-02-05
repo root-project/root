@@ -64,7 +64,7 @@ public:
    TParallelCoord();
    TParallelCoord(Long64_t nentries);
    TParallelCoord(TTree* tree, Long64_t nentries);
-   ~TParallelCoord();
+   virtual ~TParallelCoord();
 
    void           AddVariable(Double_t* val, const char* title="");
    void           AddVariable(const char* varexp);

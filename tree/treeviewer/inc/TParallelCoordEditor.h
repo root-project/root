@@ -80,7 +80,7 @@ public:
                         Int_t width = 140, Int_t height = 30,
                         UInt_t options = kChildFrame,
                         Pixel_t back = GetDefaultFrameBackground());
-   ~TParallelCoordEditor();
+   virtual ~TParallelCoordEditor();
 
    virtual void            DoActivateSelection(Bool_t);
    virtual void            DoAddSelection();

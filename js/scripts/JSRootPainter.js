@@ -1,22 +1,17 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'd3'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       var jsroot = require("./JSRootCore.js");
       factory(jsroot, require("d3"));
       if (jsroot.nodejs) jsroot.Painter.readStyleFromURL("?interactive=0&tooltip=0&nomenu&noprogress&notouch&toolbar=0&webgl=0");
    } else {
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootPainter.js');
-
       if (typeof d3 != 'object')
          throw new Error('d3 is not defined', 'JSRootPainter.js');
-
       if (typeof JSROOT.Painter == 'object')
          throw new Error('JSROOT.Painter already defined', 'JSRootPainter.js');
-
       factory(JSROOT, d3);
    }
 } (function(JSROOT, d3) {
@@ -270,6 +265,9 @@
                 // only required for MathJax to provide correct replacement
                 '#sqrt': '\u221A',
                 '#bar': '',
+                '#overline' : '',
+                '#underline' : '',
+                '#strike' : '',
 
                 // from TLatex tables #2 & #3
                 '#leq': '\u2264',
@@ -851,6 +849,14 @@
       return true;
    }
 
+   TAttMarkerHandler.prototype.getStrokeColor = function() {
+      return this.stroke ? this.color : "none";
+   }
+
+   TAttMarkerHandler.prototype.getFillColor = function() {
+      return this.fill ? this.color : "none";
+   }
+
    /** @summary Apply marker styles to created element */
    TAttMarkerHandler.prototype.Apply = function(selection) {
       selection.style('stroke', this.stroke ? this.color : "none");
@@ -1342,18 +1348,21 @@
       return "%Y";
    }
 
+   /** @summary Returns time format @private */
    Painter.getTimeFormat = function(axis) {
       var idF = axis.fTimeFormat.indexOf('%F');
-      if (idF >= 0) return axis.fTimeFormat.substr(0, idF);
-      return axis.fTimeFormat;
+      return (idF >= 0) ? axis.fTimeFormat.substr(0, idF) : axis.fTimeFormat;
    }
 
+   /** @summary Return time offset value for given TAxis object @private */
    Painter.getTimeOffset = function(axis) {
+      var dflt_time_offset = 788918400000;
+      if (!axis) return dflt_time_offset;
       var idF = axis.fTimeFormat.indexOf('%F');
       if (idF < 0) return JSROOT.gStyle.fTimeOffset*1000;
       var sof = axis.fTimeFormat.substr(idF + 2);
       // default string in axis offset
-      if (sof.indexOf('1995-01-01 00:00:00s0')==0) return 788918400000;
+      if (sof.indexOf('1995-01-01 00:00:00s0')==0) return dflt_time_offset;
       // special case, used from DABC painters
       if ((sof == "0") || (sof == "")) return 0;
 
@@ -1421,7 +1430,7 @@
       return (str.indexOf("#")>=0) || (str.indexOf("\\")>=0) || (str.indexOf("{")>=0);
    }
 
-   /** Function translates ROOT TLatex into MathJax format */
+   /** @summary Function translates ROOT TLatex into MathJax format */
    Painter.translateMath = function(str, kind, color, painter) {
 
       if (kind != 2) {
@@ -1638,11 +1647,12 @@
          this.connid = "connect";
       } else if (kind === "close") {
          if ((this.connid===null) || (this.connid==="close")) return;
-         url+="?connection="+this.connid + "&close";
+         url+="?connection=" + this.connid + "&close";
          this.connid = "close";
-         reqmode += ";sync"; // use sync mode to close connection before browser window closed
+         reqmode = "text;sync"; // use sync mode to close connection before browser window closed
       } else if ((this.connid===null) || (typeof this.connid!=='number')) {
-         return console.error("No connection");
+         if (!JSROOT.browser.qt5) console.error("No connection");
+         return;
       } else {
          url+="?connection="+this.connid;
          if (kind==="dummy") url+="&dummy";
@@ -1676,7 +1686,7 @@
 
             var str = "", i = 0, u8Arr = new Uint8Array(res), offset = u8Arr.length;
             if (offset < 4) {
-               console.error('longpoll got short message in raw mode ' + offset);
+               if (!JSROOT.browser.qt5) console.error('longpoll got short message in raw mode ' + offset);
                return this.handle.processreq(null);
             }
 
@@ -1800,7 +1810,7 @@
       this.wait_for_file = false;
       if (!res) return;
       if (this.receiver.ProvideData)
-         this.receiver.ProvideData(res, 0);
+         this.receiver.ProvideData(1, res, 0);
       setTimeout(this.next_operation.bind(this),10);
    }
 
@@ -1821,13 +1831,23 @@
       this.ackn = 10;
    }
 
-   /** Set callbacks reciever.
+   /** Returns arguments specified in the RWebWindow::SetUserArgs() method
+    * Can be any valid JSON expression. Undefined by default.
+    * If field parameter specified and user args is object, returns correspondent member of the user args object */
+   WebWindowHandle.prototype.GetUserArgs = function(field) {
+      if (field && (typeof field == 'string')) {
+         return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
+      }
+
+      return this.user_args;
+   }
+
+   /** @summary Set callbacks receiver.
     *
     * Following function can be defined in receiver object:
     *    - OnWebsocketMsg
     *    - OnWebsocketOpened,
-    *    - OnWebsocketClosed
-    */
+    *    - OnWebsocketClosed */
    WebWindowHandle.prototype.SetReceiver = function(obj) {
       this.receiver = obj;
    }
@@ -1840,16 +1860,35 @@
 
    /** Invoke method in the receiver.
     * @private */
-   WebWindowHandle.prototype.InvokeReceiver = function(method, arg, arg2) {
+   WebWindowHandle.prototype.InvokeReceiver = function(brdcst, method, arg, arg2) {
       if (this.receiver && (typeof this.receiver[method] == 'function'))
          this.receiver[method](this, arg, arg2);
+
+      if (brdcst & this.channels) {
+         var ks = Object.keys(this.channels);
+         for (var n=0;n<ks.length;++n)
+            this.channels[ks[n]].InvokeReceiver(false, method, arg, arg2);
+      }
    }
 
    /** Provide data for receiver. When no queue - do it directly.
     * @private */
-   WebWindowHandle.prototype.ProvideData = function(_msg, _len) {
+   WebWindowHandle.prototype.ProvideData = function(chid, _msg, _len) {
+      if (this.wait_first_recv) {
+         console.log("FIRST MESSAGE", chid, _msg);
+         delete this.wait_first_recv;
+         return this.InvokeReceiver(false, "OnWebsocketOpened");
+      }
+
+      if ((chid > 1) && this.channels)  {
+         var channel = this.channels[chid];
+         if (channel)
+            return channel.ProvideData(1, _msg, _len);
+      }
+
       if (!this.msgqueue || !this.msgqueue.length)
-         return this.InvokeReceiver("OnWebsocketMsg", _msg, _len);
+         return this.InvokeReceiver(false, "OnWebsocketMsg", _msg, _len);
+
       this.msgqueue.push({ ready: true, msg: _msg, len: _len});
    }
 
@@ -1872,7 +1911,7 @@
       this._loop_msgqueue = true;
       while ((this.msgqueue.length > 0) && this.msgqueue[0].ready) {
          var front = this.msgqueue.shift();
-         this.InvokeReceiver("OnWebsocketMsg", front.msg, front.len);
+         this.InvokeReceiver(false, "OnWebsocketMsg", front.msg, front.len);
       }
       if (this.msgqueue.length == 0)
          delete this.msgqueue;
@@ -1881,6 +1920,12 @@
 
    /** Close connection. */
    WebWindowHandle.prototype.Close = function(force) {
+      if (this.master) {
+         this.master.Send("CLOSECH=" + this.channelid, 0);
+         delete this.master.channels[this.channelid];
+         delete this.master;
+         return;
+      }
 
       if (this.timerid) {
          clearTimeout(this.timerid);
@@ -1902,6 +1947,9 @@
 
    /** Send text message via the connection. */
    WebWindowHandle.prototype.Send = function(msg, chid) {
+      if (this.master)
+         return this.master.Send(msg, this.channelid);
+
       if (!this._websocket || (this.state<=0)) return false;
 
       if (isNaN(chid) || (chid===undefined)) chid = 1; // when not configured, channel 1 is used - main widget
@@ -1927,6 +1975,36 @@
       delete this.timerid;
       this.Send("KEEPALIVE", 0);
    }
+
+   /** Method open channel, which will share same connection, but can be used independently from main
+    * @private */
+   WebWindowHandle.prototype.CreateChannel = function() {
+      if (this.master)
+         return master.CreateChannel();
+
+      var channel = new WebWindowHandle("channel");
+      channel.wait_first_recv = true; // first received message via the channel is confirmation of established connection
+
+      if (!this.channels) {
+         this.channels = {};
+         this.freechannelid = 2;
+      }
+
+      channel.master = this;
+      channel.channelid = this.freechannelid++;
+
+      // register
+      this.channels[channel.channelid] = channel;
+
+      // now server-side entity should be initialized and init message send from server side!
+      return channel;
+   }
+
+   /** Returns used channel ID, 1 by default */
+   WebWindowHandle.prototype.getChannelId = function() {
+      return this.channelid && this.master ? this.channelid : 1;
+   }
+
 
    /** Method opens relative path with the same kind of socket.
     * @private
@@ -1997,13 +2075,15 @@
             var key = pthis.key || "";
 
             pthis.Send("READY=" + key, 0); // need to confirm connection
-            pthis.InvokeReceiver('OnWebsocketOpened');
+            pthis.InvokeReceiver(false, "OnWebsocketOpened");
          }
 
          conn.onmessage = function(e) {
             var msg = e.data;
 
             if (pthis.next_binary) {
+
+               var binchid = pthis.next_binary;
                delete pthis.next_binary;
 
                if (msg instanceof Blob) {
@@ -2018,7 +2098,7 @@
                } else {
                   // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
                   // this is from CEF or LongPoll handler
-                  pthis.ProvideData(msg, e.offset || 0);
+                  pthis.ProvideData(binchid, msg, e.offset || 0);
                }
 
                return;
@@ -2044,14 +2124,14 @@
                console.log('GET chid=0 message', msg);
                if (msg == "CLOSE") {
                   pthis.Close(true); // force closing of socket
-                  pthis.InvokeReceiver('OnWebsocketClosed');
+                  pthis.InvokeReceiver(true, "OnWebsocketClosed");
                }
             } else if (msg == "$$binary$$") {
-               pthis.next_binary = true;
+               pthis.next_binary = chid;
             } else if (msg == "$$nullbinary$$") {
-               pthis.ProvideData(new ArrayBuffer(0), 0);
+               pthis.ProvideData(chid, new ArrayBuffer(0), 0);
             } else {
-               pthis.ProvideData(msg);
+               pthis.ProvideData(chid, msg);
             }
 
             if (pthis.ackn > 7)
@@ -2063,14 +2143,14 @@
             if (pthis.state > 0) {
                console.log('websocket closed');
                pthis.state = 0;
-               pthis.InvokeReceiver('OnWebsocketClosed');
+               pthis.InvokeReceiver(true, "OnWebsocketClosed");
             }
          }
 
          conn.onerror = function (err) {
             console.log("websocket error " + err);
             if (pthis.state > 0) {
-               pthis.InvokeReceiver('OnWebsocketError', err);
+               pthis.InvokeReceiver(true, "OnWebsocketError", err);
                pthis.state = 0;
             }
          }
@@ -2104,6 +2184,7 @@
       if (arg.prereq) {
          if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
          if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
+         if (arg.openui5theme) JSROOT.openui5theme = arg.openui5theme;
          return JSROOT.AssertPrerequisites(arg.prereq, function() {
             delete arg.prereq; JSROOT.ConnectWebWindow(arg);
          }, arg.prereq_logdiv);
@@ -2136,6 +2217,7 @@
       // arg.socket_kind = "longpoll";
 
       var handle = new WebWindowHandle(arg.socket_kind);
+      handle.user_args = arg.user_args;
 
       if (window) {
          window.onbeforeunload = handle.Close.bind(handle, true);
@@ -2312,13 +2394,6 @@
    TBasePainter.prototype.CheckResize = function(arg) {
    }
 
-   /** @summary Method called when interactively changes attribute in given class
-    * @abstract
-    * @private */
-   TBasePainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
-      // console.log("Changed attribute", class_name, member_name, new_value);
-   }
-
    /** @summary access to main HTML element used for drawing - typically <div> element
      * @desc if main element was layouted, returns main element inside layout
     * @param {string} is_direct - if 'origin' specified, returns original element even if actual drawing moved to some other place
@@ -2428,8 +2503,7 @@
          if (rect_origin.width > lmt) {
             height_factor = height_factor || 0.66;
             main_origin.style('height', Math.round(rect_origin.width * height_factor)+'px');
-         } else
-         if (can_resize !== 'height') {
+         } else if (can_resize !== 'height') {
             main_origin.style('width', '200px').style('height', '100px');
          }
       }
@@ -2648,6 +2722,7 @@
       this.pad_name = "";
       this.main = null;
       this.draw_object = null;
+      delete this.snapid;
 
       // remove attributes objects (if any)
       delete this.fillatt;
@@ -2657,6 +2732,10 @@
       delete this.root_colors;
       delete this.options;
       delete this.options_store;
+
+      // remove extra fields from v7 painters
+      delete this.rstyle;
+      delete this.csstype;
 
       TBasePainter.prototype.Cleanup.call(this, keep_origin);
    }
@@ -2834,7 +2913,13 @@
       return cp.custom_palette;
    }
 
-
+   /** @summary Method called when interactively changes attribute in given class
+    * @abstract
+    * @private */
+   TObjectPainter.prototype.AttributeChange = function(class_name, member_name, new_value) {
+      // only for objects in web canvas make sense to handle attributes changes from GED
+      // console.log("Changed attribute class = " + class_name + " member = " + member_name + " value = " + new_value);
+   }
 
    /** @summary Checks if draw elements were resized and drawing should be updated.
     *
@@ -2902,6 +2987,8 @@
          this.draw_g.attr('objname', encodeURI(this.draw_object.fName || "name"));
          this.draw_g.attr('objtype', encodeURI(this.draw_object._typename || "type"));
       }
+
+      this.draw_g.property('in_frame', !!frame_layer); // indicates coordinate system
 
       return this.draw_g;
    }
@@ -2971,68 +3058,118 @@
       return pad_painter ? pad_painter.pad : null;
    }
 
-   /** @summary Converts pad x or y coordinate into NDC value
-    * @private */
-   TObjectPainter.prototype.ConvertToNDC = function(axis, value, isndc) {
-      if (isndc) return value;
-      var pad = this.root_pad();
-      if (!pad) return value;
-
-      if (axis=="y") {
-         if (pad.fLogy)
-            value = (value>0) ? JSROOT.log10(value) : pad.fUymin;
-         return (value - pad.fY1) / (pad.fY2 - pad.fY1);
-      }
-      if (pad.fLogx)
-         value = (value>0) ? JSROOT.log10(value) : pad.fUxmin;
-      return (value - pad.fX1) / (pad.fX2 - pad.fX1);
-   }
-
-   /** @summary Converts x or y coordinate into SVG pad or frame coordinates.
+   /** @summary Converts x or y coordinate into SVG pad coordinates.
     *
     *  @param {string} axis - name like "x" or "y"
     *  @param {number} value - axis value to convert.
-    *  @param {boolean|string} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
-    *  @returns {number} rounded value of requested coordiantes
+    *  @param {boolean} ndc - is value in NDC coordinates
+    *  @param {boolean} noround - skip rounding
+    *  @returns {number} value of requested coordiantes, rounded if kind.noround not specified
     *  @private
     */
-   TObjectPainter.prototype.AxisToSvg = function(axis, value, kind) {
-      var main = this.frame_painter();
-      if (main && !kind && main["gr"+axis]) {
-         // this is frame coordinates
-         value = (axis=="y") ? main.gry(value) + main.frame_y()
-                             : main.grx(value) + main.frame_x();
+   TObjectPainter.prototype.AxisToSvg = function(axis, value, ndc, noround) {
+      var use_frame = this.draw_g && this.draw_g.property('in_frame'),
+          main = use_frame ? this.frame_painter() : null;
+
+      if (use_frame && main && main["gr"+axis]) {
+         value = (axis=="y") ? main.gry(value) + (use_frame ? 0 : main.frame_y())
+                             : main.grx(value) + (use_frame ? 0 : main.frame_x());
+      } else if (use_frame) {
+         value = 0; // in principal error, while frame calculation requested
       } else {
-         if (kind !== true) value = this.ConvertToNDC(axis, value);
+         var pad = ndc ? null : this.root_pad();
+         if (pad) {
+            if (axis=="y") {
+               if (pad.fLogy)
+                  value = (value>0) ? JSROOT.log10(value) : pad.fUymin;
+               value = (value - pad.fY1) / (pad.fY2 - pad.fY1);
+            } else {
+               if (pad.fLogx)
+                  value = (value>0) ? JSROOT.log10(value) : pad.fUxmin;
+               value = (value - pad.fX1) / (pad.fX2 - pad.fX1);
+            }
+         }
          value = (axis=="y") ? (1-value)*this.pad_height() : value*this.pad_width();
       }
-      return Math.round(value);
+
+      return noround ? value : Math.round(value);
+   }
+
+   /** @summary Converts pad SVG x or y coordinates into axis values.
+   *
+   *  @param {string} axis - name like "x" or "y"
+   *  @param {number} coord - graphics coordiante.
+   *  @param {boolean} ndc - kind of return value
+   *  @returns {number} value of requested coordiantes
+   *  @private
+   */
+
+   TObjectPainter.prototype.SvgToAxis = function(axis, coord, ndc) {
+      var use_frame = this.draw_g && this.draw_g.property('in_frame'),
+          main = use_frame ? this.frame_painter() : null;
+
+      if (use_frame) main = this.frame_painter();
+
+      if (use_frame && main) {
+         return  (axis=="y") ? main.RevertY(coord - (use_frame ? 0 : main.frame_y()))
+                             : main.RevertX(coord - (use_frame ? 0 : main.frame_x()));
+      } else if (use_frame) {
+         return 0; // in principal error, while frame calculation requested
+      }
+
+      var value = (axis=="y") ? (1 - coord / this.pad_height()) : coord / this.pad_width();
+      var pad = ndc ? null : this.root_pad();
+
+      if (pad) {
+         if (axis=="y") {
+            value = pad.fY1  + value * (pad.fY2 - pad.fY1);
+            if (pad.fLogy) value = Math.pow(10, value);
+         } else {
+            value = pad.fX1 + value * (pad.fX2 - pad.fX1);
+            if (pad.fLogx) value = Math.pow(10, value);
+         }
+      }
+
+      return value;
    }
 
   /** @summary Return functor, which can convert x and y coordinates into pixels, used for drawing
    *
    * Produce functor can convert x and y value by calling func.x(x) and func.y(y)
-   *  @param {boolean|string} kind - false or undefined is coordinate inside frame, true - when NDC pad coordinates are used, "pad" - when pad coordinates relative to pad ranges are specified
+   *  @param {boolean} isndc - if NDC coordinates will be used
    *  @private
    */
-  TObjectPainter.prototype.AxisToSvgFunc = function(kind) {
-     var func = { kind: kind }, main = this.frame_painter();
-     if (main && !kind && main.grx && main.gry) {
-        func.main = main;
-        func.offx = main.frame_x();
-        func.offy = main.frame_y();
+  TObjectPainter.prototype.AxisToSvgFunc = function(isndc) {
+     var func = {isndc: isndc}, use_frame = this.draw_g && this.draw_g.property('in_frame');
+     if (use_frame) func.main = this.frame_painter();
+     if (func.main && !isndc && func.main.grx && func.main.gry) {
+        func.offx = func.main.frame_x();
+        func.offy = func.main.frame_y();
         func.x = function(x) { return Math.round(this.main.grx(x) + this.offx); }
         func.y = function(y) { return Math.round(this.main.gry(y) + this.offy); }
      } else {
-        if (kind !== true) func.p = this; // need for NDC conversion
+        if (!isndc) func.pad = this.root_pad(); // need for NDC conversion
         func.padh = this.pad_height();
         func.padw = this.pad_width();
-        func.x = function(x) { if (this.p) x = this.p.ConvertToNDC("x", x); return Math.round(x*this.padw); }
-        func.y = function(y) { if (this.p) y = this.p.ConvertToNDC("y", y); return Math.round((1-y)*this.padh); }
+        func.x = function(value) {
+           if (this.pad) {
+              if (this.pad.fLogx)
+                 value = (value>0) ? JSROOT.log10(value) : this.pad.fUxmin;
+              value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+           }
+           return Math.round(value*this.padw);
+        }
+        func.y = function(value) {
+           if (this.pad) {
+              if (this.pad.fLogy)
+                 value = (value>0) ? JSROOT.log10(value) : this.pad.fUymin;
+               value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+           }
+           return Math.round((1-value)*this.padh);
+        }
      }
      return func;
   }
-
 
    /** @summary Returns svg element for the frame.
     *
@@ -3392,9 +3529,9 @@
 
       // check if element really exists
       if ((is_main >= 0) && this.select_main(true).empty()) {
-         if (typeof divid == 'string') console.error('element with id ' + divid + ' not exists');
+         if (typeof divid == 'string') console.error('not found HTML element with id: ' + divid);
                                   else console.error('specified HTML element can not be selected with d3.select()');
-         return;
+         return false;
       }
 
       this.create_canvas = false;
@@ -3409,9 +3546,9 @@
       }
 
       if (svg_c.empty()) {
-         if ((is_main < 0) || (is_main===5) || this.iscan) return;
+         if ((is_main < 0) || (is_main===5) || this.iscan) return true;
          this.AccessTopPainter(true);
-         return;
+         return true;
       }
 
       // SVG element where current pad is drawn (can be canvas itself)
@@ -3419,7 +3556,7 @@
       if (this.pad_name === undefined)
          this.pad_name = this.CurrentPadName();
 
-      if (is_main < 0) return;
+      if (is_main < 0) return true;
 
       // create TFrame element if not exists
       if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3) || (is_main == 4))) {
@@ -3429,7 +3566,7 @@
       }
 
       var svg_p = this.svg_pad();
-      if (svg_p.empty()) return;
+      if (svg_p.empty()) return true;
 
       var pp = svg_p.property('pad_painter');
       if (pp && (pp !== this))
@@ -3438,6 +3575,8 @@
       if (((is_main === 1) || (is_main === 4) || (is_main === 5)) && !svg_p.property('mainpainter'))
          // when this is first main painter in the pad
          svg_p.property('mainpainter', this);
+
+      return true;
    }
 
    /** @summary Calculate absolute position of provided selection.
@@ -3601,10 +3740,61 @@
          this.control.SwitchTooltip(on);
    }
 
-   /** @summary Add drag interactive elements
+   /** @summary Add move handlers for drawn element @private */
+   TObjectPainter.prototype.AddMove = function() {
+
+      if (!JSROOT.gStyle.MoveResize || JSROOT.BatchMode ||
+          !this.draw_g || this.draw_g.property("assigned_move")) return;
+
+      function detectRightButton(event) {
+         if ('buttons' in event) return event.buttons === 2;
+         else if ('which' in event) return event.which === 3;
+         else if ('button' in event) return event.button === 2;
+         return false;
+      }
+
+      var prefix = "", drag_move, not_changed = true;
+      if (JSROOT._test_d3_ === 3) {
+         prefix = "drag";
+         drag_move = d3.behavior.drag().origin(Object);
+      } else {
+         drag_move = d3.drag().subject(Object);
+      }
+
+      drag_move
+        .on(prefix+"start",  function() {
+            if (detectRightButton(d3.event.sourceEvent)) return;
+            d3.event.sourceEvent.preventDefault();
+            d3.event.sourceEvent.stopPropagation();
+            var pos = d3.mouse(this.draw_g.node());
+            not_changed = true;
+            if (this.moveStart)
+               this.moveStart(pos[0], pos[1]);
+       }.bind(this)).on("drag", function() {
+            d3.event.sourceEvent.preventDefault();
+            d3.event.sourceEvent.stopPropagation();
+            not_changed = false;
+            if (this.moveDrag)
+               this.moveDrag(d3.event.dx, d3.event.dy);
+       }.bind(this)).on(prefix+"end", function() {
+            d3.event.sourceEvent.preventDefault();
+            d3.event.sourceEvent.stopPropagation();
+            if (this.moveEnd)
+               this.moveEnd(not_changed);
+            var cp = this.canv_painter();
+            if (cp) cp.SelectObjectPainter(this);
+      }.bind(this));
+
+      this.draw_g
+          .style("cursor", "move")
+          .property("assigned_move", true)
+          .call(drag_move);
+   }
+
+   /** @summary Add drag for interactive rectangular elements
     * @private */
    TObjectPainter.prototype.AddDrag = function(callback) {
-      if (!JSROOT.gStyle.MoveResize) return;
+      if (!JSROOT.gStyle.MoveResize || JSROOT.BatchMode) return;
 
       var pthis = this, drag_rect = null, pp = this.pad_painter();
       if (pp && pp._fast_drawing) return;
@@ -3956,10 +4146,8 @@
       if (!snapid || (typeof snapid != 'string')) return;
 
       var canp = this.canv_painter();
-      if (canp && !canp._readonly && canp._websocket) {
-         console.log('execute ' + exec + ' for object ' + snapid);
+      if (canp && !canp._readonly && canp._websocket)
          canp.SendWebsocket("OBJEXEC:" + snapid + ":" + exec);
-      }
    }
 
    /** @summary Fill object menu in web canvas
@@ -4022,7 +4210,7 @@
                }
                if (lastclname != item.fClassName) {
                   lastclname = item.fClassName;
-                  _menu.add("sub:" + lastclname, undefined, null, "Context menu for class " + lastclname);
+                  _menu.add("sub:" + lastclname);
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
@@ -4069,15 +4257,17 @@
          if (!col || (col == "none")) id = 0; else
          for (var k=1;k<arr.length;++k)
             if (arr[k] == col) { id = k; break; }
+         if ((id < 0) && (col.indexOf("rgb")==0)) id = 9999;
       } else if (!isNaN(col) && arr[col]) {
          id = col;
+         col = arr[id];
       }
 
       if (id < 0) return "";
 
       if (id >= 50) {
          // for higher color numbers ensure that such color exists
-         var c = d3.color(arr[id]);
+         var c = d3.color(col);
          id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
       }
 
@@ -4813,6 +5003,9 @@
       var features = [
           { name: "#it{" }, // italic
           { name: "#bf{" }, // bold
+          { name: "#underline{", deco: "underline" }, // underline
+          { name: "#overline{", deco: "overline" }, // overline
+          { name: "#strike{", deco: "line-through" }, // line through
           { name: "kern[", arg: 'float' }, // horizontal shift
           { name: "lower[", arg: 'float' },  // vertical shift
           { name: "scale[", arg: 'float' },  // font scale
@@ -4820,7 +5013,7 @@
           { name: "#font[", arg: 'int' },
           { name: "_{" },  // subscript
           { name: "^{" },   // superscript
-          { name: "#bar{", accent: "\u02C9" }, // "\u0305"
+          { name: "#bar{", deco: "overline" /* accent: "\u02C9" */ }, // "\u0305"
           { name: "#hat{", accent: "\u02C6" }, // "\u0302"
           { name: "#check{", accent: "\u02C7" }, // "\u030C"
           { name: "#acute{", accent: "\u02CA" }, // "\u0301"
@@ -4949,6 +5142,8 @@
                left_brace = found.name;
                right_brace = found.right;
             }
+         } else if (found.deco) {
+            subpos.deco = found.deco;
          } else if (found.accent) {
             subpos.accent = found.accent;
          } else
@@ -4989,6 +5184,12 @@
                     break;
                  }
               subnode.attr('font-weight', curr.bold ? 'bold' : 'normal');
+              break;
+           case "#underline{":
+              subnode.attr('text-decoration', 'underline');
+              break;
+           case "#overline{":
+              subnode.attr('text-decoration', 'overline');
               break;
            case "_{":
               scale = 0.6;
@@ -5149,6 +5350,29 @@
 
                subpos.square_root.append('svg:tspan').attr("dy", makeem(0.25-sqrt_dy)).attr("dx", makeem(-a.length/3-0.2)).text('\u2009'); // unicode tiny space
 
+               break;
+            }
+
+            if (subpos.deco) {
+
+               // use text-decoration attribute when there are no extra elements inside
+               if (subnode1.selectAll('tspan').size() == 0) {
+                  subnode1.attr('text-decoration', subpos.deco);
+                  break;
+               }
+
+               var be = get_boundary(this, subnode1, subpos.rect),
+                   len = be.width / subpos.fsize, fact, dy, symb;
+               switch (subpos.deco) {
+                  case "underline": dy = 0.35; fact = 1.2; symb = '\uFF3F'; break; // '\u2014'; // underline
+                  case "overline": dy = -0.35; fact = 3; symb = '\u203E'; break; // overline
+                  default: dy = 0; fact = 1.8; symb = '\u23AF'; break;
+               }
+               var nn = Math.round(Math.max(len*fact,1)), a = "";
+               while (nn--) a += symb;
+
+               subnode1.append('svg:tspan').attr("dx",  makeem(-len - 0.2)).attr("dy", makeem(dy)).text(a);
+               curr.dy -= dy;
                break;
             }
 
@@ -5561,7 +5785,7 @@
 
       if (pnt && pnt.handler) {
          // special use of interactive handler in the frame painter
-         var rect = this.draw_g ? this.draw_g.select(".interactive_rect") : null;
+         var rect = this.draw_g ? this.draw_g.select(".main_layer") : null;
          if (!rect || rect.empty()) {
             pnt = null; // disable
          } else if (pnt.touch) {
@@ -5987,7 +6211,7 @@
    JSROOT.addDrawFunc({ name: "TH2Poly", icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same", expand_item: "fBins", theonly: true });
    JSROOT.addDrawFunc({ name: "TProfile2Poly", sameas: "TH2Poly" });
    JSROOT.addDrawFunc({ name: "TH2PolyBin", icon: "img_histo2d", draw_field: "fPoly" });
-   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
+   JSROOT.addDrawFunc({ name: /^TH2/, icon: "img_histo2d", prereq: "v6;hist", func: "JSROOT.Painter.drawHistogram2D", opt:";COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same", ctrl: "colz" });
    JSROOT.addDrawFunc({ name: "TProfile2D", sameas: "TH2" });
    JSROOT.addDrawFunc({ name: /^TH3/, icon: 'img_histo3d', prereq: "v6;hist3d", func: "JSROOT.Painter.drawHistogram3D", opt:";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" });
    JSROOT.addDrawFunc({ name: "THStack", icon: "img_histo1d", prereq: "v6;hist", func: "JSROOT.Painter.drawHStack", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" });
@@ -6067,7 +6291,8 @@
    JSROOT.addDrawFunc({ name: "kind:TopFolder", icon: "img_base" });
    JSROOT.addDrawFunc({ name: "kind:Folder", icon: "img_folder", icon2: "img_folderopen", noinspect:true });
 
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TCanvas", icon: "img_canvas", prereq: "v7", func: "JSROOT.v7.drawCanvas", opt: "", expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RCanvas", icon: "img_canvas", prereq: "v7", func: "JSROOT.v7.drawCanvas", opt: "", expand_item: "fPrimitives" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RCanvasDisplayItem", icon: "img_canvas", prereq: "v7", func: "JSROOT.v7.drawPadSnapshot", opt: "", expand_item: "fPrimitives" });
 
 
    JSROOT.getDrawHandle = function(kind, selector) {
@@ -6303,6 +6528,7 @@
       function performDraw() {
          if (handle.direct) {
             painter = new TObjectPainter(obj, opt);
+            painter.csstype = handle.csstype;
             painter.SetDivId(divid, 2);
             painter.Redraw = handle.func;
             painter.Redraw();
@@ -6389,7 +6615,7 @@
          for (var i = 0; i < can_painter.painters.length; ++i) {
             var painter = can_painter.painters[i];
             if (painter.MatchObjectType(obj._typename))
-               if (painter.UpdateObject(obj)) {
+               if (painter.UpdateObject(obj, opt)) {
                   can_painter.RedrawPad();
                   JSROOT.CallBack(callback, painter);
                   return painter;
@@ -6483,7 +6709,7 @@
       }
 
       if (!JSROOT.nodejs) {
-         build(d3.select(window.document).append("div").style("visible", "hidden"));
+         build(d3.select('body').append("div").style("visible", "hidden"));
       } else if (JSROOT.nodejs_document) {
          build(JSROOT.nodejs_window.d3.select('body').append('div'));
       } else {
@@ -6593,6 +6819,7 @@
    }
 
    /** @summary Tries to close current browser tab
+     *
      * @desc Many browsers do not allow simple window.close() call,
      * therefore try several workarounds */
 

@@ -6,6 +6,12 @@
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR
+    " ROOT must be built out-of-source.\n"
+    " Please see README/INSTALL for more information.")
+endif()
+
 set(policy_new CMP0072 CMP0077)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
@@ -46,7 +52,6 @@ endif()
 
 set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
-set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
 
 #---Set the ROOT version--------------------------------------------------------------------
 find_package(Git)
@@ -158,9 +163,6 @@ if(testing)
   enable_testing()
 endif()
 
-#---Check if the user wants to build the project in the source directory------------------------
-ROOT_CHECK_OUT_OF_SOURCE_BUILD()
-
 #---Here we look for installed software and switch on and of the different build options--------
 include(SearchInstalledSoftware)
 
@@ -218,7 +220,7 @@ foreach(artifact_file ${artifact_files})
   # target below will interfere.
   if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
     add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
       COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
       DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
     list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
@@ -326,27 +328,20 @@ install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE
 
 add_dependencies(move_headers copymodulemap)
 
-# Provide our own modulemap for implementations other than libcxx.
-if (NOT WIN32 AND NOT libcxx)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/std.modulemap ${CMAKE_BINARY_DIR}/include/std.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/std.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
-  install(FILES "${CMAKE_BINARY_DIR}/include/libc.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-endif()
-
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
+# if it's unchanged.
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
+configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
+    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+    COPYONLY)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
-
-#---Global PCH-----------------------------------------------------------------------------------
-get_property(__clingetcpch GLOBAL PROPERTY CLINGETCPCH)
-get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
 
 set (CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS}")
 if(cxxmodules)
@@ -357,31 +352,13 @@ if(cxxmodules)
   # are not guaranteed to be compatible among clang revisions.
   string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
-string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
+string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 if(MSVC)
   string(REPLACE "-Zc:__cplusplus" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
-endif()
-
-add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
-                          etc/dictpch/allHeaders.h
-                          etc/dictpch/allCppflags.txt
-                   COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__pch_dependencies})
-
-get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
-foreach(d ${incdirs})
-  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
-    set(__allIncludes ${__allIncludes} -I${d})
-  endif()
-endforeach()
-if(WIN32)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src)
-  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
 endif()
 
 if(runtime_cxxmodules)
@@ -395,23 +372,59 @@ if(runtime_cxxmodules)
   unset(ROOT_LIBRARY_TARGETS CACHE)
   set(FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES On)
 else()
+  get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+
+  if(WIN32)
+    list(APPEND incdirs
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
+      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
+    )
+  endif()
+
+  foreach(d ${incdirs})
+    if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+      set(__allIncludes ${__allIncludes} -I${d})
+    endif()
+  endforeach()
+
+  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
+  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
+
   add_custom_command(OUTPUT etc/allDict.cxx.pch
-                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
-                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                            etc/dictpch/allLinkDefs.h
-                            etc/dictpch/allHeaders.h
-                            etc/dictpch/allCppflags.txt
-                            rootcling)
+    BYPRODUCTS
+      etc/dictpch/allCppflags.txt
+      etc/dictpch/allHeaders.h
+      etc/dictpch/allLinkDefs.h
+    COMMAND
+      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__cling_pch}
+    COMMAND
+      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
+      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
+      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+    DEPENDS
+      rootcling ${__pch_dependencies} ${__pch_dictionaries}
+      ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+  )
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
   install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
+# FIXME: move installation of PCMS in ROOT_GENERATE_DICTIONARY().
+# We are excluding directories, which are accidentaly copied via unxpected behaviour of install(DIRECTORY ..)
 install(
    DIRECTORY ${CMAKE_BINARY_DIR}/lib/
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING PATTERN "*.pcm"
-   PATTERN ".*rdict.*" EXCLUDE
+   PATTERN "JupyROOT" EXCLUDE
+   PATTERN "JsMVA" EXCLUDE
+   PATTERN "python*" EXCLUDE
+   PATTERN "cmake" EXCLUDE
+   PATTERN "pkgconfig" EXCLUDE
 )
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
@@ -473,7 +486,10 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR})
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-  install(FILES cmake/modules/RootMacros.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+  install(FILES
+    cmake/modules/RootMacros.cmake
+    cmake/modules/RootTestDriver.cmake
+    DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 endif()
 
 #---Make sure the Jupyter ROOT C++ kernel runs with the same Python version as ROOT-----
@@ -523,9 +539,19 @@ if(testing)
         set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
       endif()
 
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
-                      https://github.com/root-project/roottest.git
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+      execute_process(COMMAND
+        ${GIT_EXECUTABLE} ls-remote --heads
+        https://github.com/root-project/roottest.git ${GIT_BRANCH}
+        OUTPUT_VARIABLE ROOTTEST_GIT_BRANCH)
+
+      if(NOT "${ROOTTEST_GIT_BRANCH}" STREQUAL "")
+        set(ROOTTEST_GIT_BRANCH -b ${GIT_BRANCH})
+      endif()
+
+      execute_process(COMMAND
+        ${GIT_EXECUTABLE} clone ${ROOTTEST_GIT_BRANCH}
+        https://github.com/root-project/roottest.git
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
       if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
         message(FATAL_ERROR "Error cloning roottest")

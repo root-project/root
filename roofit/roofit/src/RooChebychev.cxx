@@ -23,20 +23,14 @@ implicitly assumed to be 1, and the list of coefficients supplied by callers
 starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear term).
 **/
 
-#include <cmath>
-#include <iostream>
-
-#include "RooFit.h"
-
-#include "Riostream.h"
-
 #include "RooChebychev.h"
+#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooNameReg.h"
 
-#include "TError.h"
+#include <cmath>
 
 ClassImp(RooChebychev);
 
@@ -95,7 +89,8 @@ public:
    /// move on to next order, return reference to new value
    inline ChebychevIterator &operator++() noexcept
    {
-      T newval = fast_fma(_twox, _curr, -_last);
+      //T newval = fast_fma(_twox, _curr, -_last);
+      T newval = _twox*_curr -_last;
       _last = _curr;
       _curr = newval;
       return *this;
@@ -126,19 +121,15 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   _coefList("coefficients","List of coefficients",this),
   _refRangeName(0)
 {
-  TIterator* coefIter = coefList.createIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter->Next())) {
+  for (const auto coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-   std::cerr << "RooChebychev::ctor(" << GetName() <<
+      coutE(InputArguments) << "RooChebychev::ctor(" << GetName() <<
        ") ERROR: coefficient " << coef->GetName() <<
        " is not of type RooAbsReal" << std::endl ;
-      R__ASSERT(0) ;
+      throw std::invalid_argument("Wrong input arguments for RooChebychev");
     }
     _coefList.add(*coef) ;
   }
-
-  delete coefIter ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,12 +174,66 @@ Double_t RooChebychev::evaluate() const
      ++chit;
      for (size_type i = 0; iend != i; ++i, ++chit) {
         auto c = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
-        sum = fast_fma(*chit, c, sum);
+        //sum = fast_fma(*chit, c, sum);
+        sum += *chit*c;
      }
   }
   return sum;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+//Author: Emmanouil Michalainas, CERN 12 AUGUST 2019  
+
+void compute(  size_t batchSize, double xmax, double xmin,
+               double * __restrict output,
+               const double * __restrict const xData,
+               const RooListProxy& _coefList)
+{
+  constexpr size_t block = 128;
+  const size_t nCoef = _coefList.size();
+  double prev[block][2], X[block];
+  
+  for (size_t i=0; i<batchSize; i+=block) {
+    size_t stop = (i+block >= batchSize) ? batchSize-i : block;
+    
+    // set a0-->prev[j][0] and a1-->prev[j][1]
+    // and x tranfsformed to range[-1..1]-->X[j]
+    for (size_t j=0; j<stop; j++) {
+      prev[j][0] = output[i+j] = 1.0;
+      prev[j][1] = X[j] = (xData[i+j] -0.5*(xmax + xmin)) / (0.5*(xmax - xmin));
+    }
+    
+    for (size_t k=0; k<nCoef; k++) {
+      const double coef = static_cast<const RooAbsReal &>(_coefList[k]).getVal();
+      for (size_t j=0; j<stop; j++) {
+        output[i+j] += prev[j][1]*coef;
+        
+        //compute next order
+        const double next = 2*X[j]*prev[j][1] -prev[j][0];
+        prev[j][0] = prev[j][1];
+        prev[j][1] = next;
+      }
+    }
+  }
+}
+};
+
+
+RooSpan<double> RooChebychev::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
+  auto xData = _x.getValBatch(begin, batchSize);
+  if (xData.empty()) {
+    return {};
+  }
+  
+  batchSize = xData.size();
+  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
+  compute(batchSize, xmax, xmin, output.data(), xData.data(), _coefList);
+  return output;
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
@@ -201,7 +246,7 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  R__ASSERT(1 == code);
+  assert(1 == code); (void)code;
 
   const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);

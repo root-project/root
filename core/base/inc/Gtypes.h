@@ -11,7 +11,6 @@
 #ifndef ROOT_Gtypes
 #define ROOT_Gtypes
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Gtypes                                                               //
@@ -21,5 +20,7 @@
 // Obsolete include: typedefs moved to Rtypes.h                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+#include "Rtypes.h"
 
 #endif

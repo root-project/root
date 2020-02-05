@@ -94,7 +94,7 @@ struct SomeResult {
 };
 
 template <class I, typename O = float>
-SomeResult<O> global_get_some_result(const std::vector<I>& carrier) {
+SomeResult<O> global_get_some_result(const I& carrier) {
     SomeResult<O> r{};
     r.m_retval = O(carrier[0]);
     return r;

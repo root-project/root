@@ -14,12 +14,12 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TBranchObject.h"
-#include "TFunction.h"
+#include "TBranchElement.h"
 #include "TClonesArray.h"
 #include "TLeafB.h"
 #include "TLeafC.h"
+#include "TLeafElement.h"
 #include "TLeafObject.h"
-#include "TDataMember.h"
 #include "TMethodCall.h"
 #include "TCutG.h"
 #include "TRandom.h"
@@ -27,8 +27,6 @@
 #include "TDataType.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TBranchElement.h"
-#include "TLeafElement.h"
 #include "TArrayI.h"
 #include "TAxis.h"
 #include "TError.h"
@@ -41,7 +39,6 @@
 #include "TTreeFormulaManager.h"
 #include "TFormLeafInfo.h"
 #include "TMethod.h"
-#include "TBaseClass.h"
 #include "TFormLeafInfoReference.h"
 
 #include "TEntryList.h"
@@ -2967,14 +2964,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    TCutG *gcut = (TCutG*)gROOT->GetListOfSpecials()->FindObject(name.Data());
    if (gcut) {
       if (gcut->GetObjectX()) {
-         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectX(); gcut->SetObjectX(0);
-         }
+         if(!gcut->GetObjectX()->InheritsFrom(TTreeFormula::Class()))
+            gcut->SetObjectX(nullptr);
       }
       if (gcut->GetObjectY()) {
-         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class())) {
-            delete gcut->GetObjectY(); gcut->SetObjectY(0);
-         }
+         if(!gcut->GetObjectY()->InheritsFrom(TTreeFormula::Class()))
+            gcut->SetObjectY(nullptr);
       }
 
       Int_t code = fNcodes;

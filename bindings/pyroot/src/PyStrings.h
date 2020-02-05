@@ -32,6 +32,7 @@ namespace PyROOT {
       R__EXTERN PyObject* gMRO;
       R__EXTERN PyObject* gName;
       R__EXTERN PyObject* gCppName;
+      R__EXTERN PyObject* gCppNameNew;
       R__EXTERN PyObject* gNe;
       R__EXTERN PyObject* gTypeCode;
 

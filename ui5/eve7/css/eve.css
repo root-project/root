@@ -9,3 +9,18 @@
         font-family: "72",Arial,Helvetica,sans-serif;
         font-size: 0.775rem; 
 }
+
+.eve_tooltip {
+  position:      absolute;
+  min-width:     50px;
+  text-align:    left;
+  padding:       4px 4px;
+  font-family:   monospace;
+  background:    #c0c0c0;
+  display:       none;
+  opacity:       80;
+  border:        2px solid black;
+  box-shadow:    2px 2px 3px rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+  white-space:   pre;
+}

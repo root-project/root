@@ -8,7 +8,7 @@
 #include "TObject.h"
 
 // Standard
-#include <map>
+#include <unordered_map>
 
 
 namespace PyROOT {
@@ -29,6 +29,9 @@ namespace PyROOT {
    // callback for ROOT/CINT
       virtual void RecursiveRemove( TObject* object );
 
+   // cleanup of all tracked objects
+      void ClearProxiedObjects();
+
    // add a python object to the table of managed objects
       static Bool_t RegisterObject( ObjectProxy* pyobj, TObject* object );
 
@@ -42,8 +45,8 @@ namespace PyROOT {
       static PyObject* ObjectEraseCallback( PyObject*, PyObject* pyref );
 
    private:
-      typedef std::map< TObject*, PyObject* > ObjectMap_t;
-      typedef std::map< PyObject*, ObjectMap_t::iterator > WeakRefMap_t;
+      typedef std::unordered_map< TObject*, PyObject* > ObjectMap_t;
+      typedef std::unordered_map< PyObject*, ObjectMap_t::iterator > WeakRefMap_t;
 
       static ObjectMap_t*  fgObjectTable;
       static WeakRefMap_t* fgWeakRefTable;

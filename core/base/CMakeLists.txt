@@ -17,14 +17,11 @@ set(BASE_HEADERS
   Buttons.h
   Bytes.h
   Byteswap.h
-  Gtypes.h
-  GuiTypes.h
   KeySymbols.h
   MessageTypes.h
   Riostream.h
   Rtypes.h
   TApplication.h
-  TApplicationImp.h
   TAtt3D.h
   TAttAxis.h
   TAttBBox2D.h
@@ -36,17 +33,11 @@ set(BASE_HEADERS
   TAttText.h
   TBase64.h
   TBenchmark.h
-  TBrowser.h
-  TBrowserImp.h
   TBuffer3D.h
   TBuffer3DTypes.h
   TBuffer.h
-  TCanvasImp.h
-  TColorGradient.h
   TColor.h
-  TContextMenu.h
-  TContextMenuImp.h
-  TControlBarImp.h
+  TColorGradient.h
   TDatime.h
   TDirectory.h
   TEnv.h
@@ -56,9 +47,7 @@ set(BASE_HEADERS
   TFileCollection.h
   TFileInfo.h
   TFolder.h
-  TGuiFactory.h
   TInetAddress.h
-  TInspectorImp.h
   TMacro.h
   TMathBase.h
   TMD5.h
@@ -67,7 +56,6 @@ set(BASE_HEADERS
   TNamed.h
   TNotifyLink.h
   TObject.h
-  TObjectSpy.h
   TObjString.h
   TParameter.h
   TPluginManager.h
@@ -122,12 +110,10 @@ set(BASE_HEADERS
 )
 
 set(BASE_SOURCES
-  src/InitGui.cxx
   src/Match.cxx
   src/String.cxx
   src/Stringio.cxx
   src/TApplication.cxx
-  src/TApplicationImp.cxx
   src/TAtt3D.cxx
   src/TAttAxis.cxx
   src/TAttBBox2D.cxx
@@ -139,16 +125,10 @@ set(BASE_SOURCES
   src/TAttText.cxx
   src/TBase64.cxx
   src/TBenchmark.cxx
-  src/TBrowser.cxx
-  src/TBrowserImp.cxx
   src/TBuffer3D.cxx
   src/TBuffer.cxx
-  src/TCanvasImp.cxx
   src/TColor.cxx
   src/TColorGradient.cxx
-  src/TContextMenu.cxx
-  src/TContextMenuImp.cxx
-  src/TControlBarImp.cxx
   src/TDatime.cxx
   src/TDirectory.cxx
   src/TEnv.cxx
@@ -158,9 +138,7 @@ set(BASE_SOURCES
   src/TFileCollection.cxx
   src/TFileInfo.cxx
   src/TFolder.cxx
-  src/TGuiFactory.cxx
   src/TInetAddress.cxx
-  src/TInspectorImp.cxx
   src/TListOfTypes.cxx
   src/TListOfTypes.h
   src/TMacro.cxx
@@ -170,7 +148,6 @@ set(BASE_SOURCES
   src/TMessageHandler.cxx
   src/TNamed.cxx
   src/TObject.cxx
-  src/TObjectSpy.cxx
   src/TObjString.cxx
   src/TParameter.cxx
   src/TPluginManager.cxx
@@ -223,13 +200,8 @@ endif()
 
 if(root7)
   list(APPEND BASE_HEADERS
-      ROOT/RDrawable.hxx
       ROOT/RDirectoryEntry.hxx
-      ROOT/RIndexIter.hxx
-  )
-  list(APPEND BASE_SOURCES
-      v7/src/RDrawable.cxx
-  )
+      ROOT/RIndexIter.hxx)
 endif()
 
 

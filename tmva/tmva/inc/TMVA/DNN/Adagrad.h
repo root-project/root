@@ -53,6 +53,10 @@ protected:
       fPastSquaredWeightGradients; ///< The sum of the square of the past weight gradients associated with the deep net.
    std::vector<std::vector<Matrix_t>>
       fPastSquaredBiasGradients; ///< The sum of the square of the past bias gradients associated with the deep net.
+   std::vector<std::vector<Matrix_t>>
+      fWorkWeightTensor; ///< working tensor used to keep a temporary copy of weights or weight gradients
+   std::vector<std::vector<Matrix_t>>
+      fWorkBiasTensor; ///< working tensor used to keep a temporary copy of bias or bias gradients
 
    /*! Update the weights, given the current weight gradients. */
    void UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights, const std::vector<Matrix_t> &weightGradients);
@@ -89,29 +93,30 @@ TAdagrad<Architecture_t, Layer_t, DeepNet_t>::TAdagrad(DeepNet_t &deepNet, Scala
    const size_t layersNSlices = layers.size();
    fPastSquaredWeightGradients.resize(layersNSlices);
    fPastSquaredBiasGradients.resize(layersNSlices);
+   fWorkWeightTensor.resize(layersNSlices);
+   fWorkBiasTensor.resize(layersNSlices);
 
    for (size_t i = 0; i < layersNSlices; i++) {
       const size_t weightsNSlices = (layers[i]->GetWeights()).size();
 
-      for (size_t j = 0; j < weightsNSlices; j++) {
-         Matrix_t &currentWeights = layers[i]->GetWeightsAt(j);
-         const size_t weightsNRows = currentWeights.GetNrows();
-         const size_t weightsNCols = currentWeights.GetNcols();
+      // weight and weight gradients  tensors should have same
+      Architecture_t::CreateWeightTensors( fPastSquaredWeightGradients[i], layers[i]->GetWeights()); 
 
-         fPastSquaredWeightGradients[i].emplace_back(weightsNRows, weightsNCols);
+      for (size_t j = 0; j < weightsNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredWeightGradients[i][j], EInitialization::kZero);
       }
 
       const size_t biasesNSlices = (layers[i]->GetBiases()).size();
 
-      for (size_t j = 0; j < biasesNSlices; j++) {
-         Matrix_t &currentBiases = layers[i]->GetBiasesAt(j);
-         const size_t biasesNRows = currentBiases.GetNrows();
-         const size_t biasesNCols = currentBiases.GetNcols();
+      Architecture_t::CreateWeightTensors( fPastSquaredBiasGradients[i], layers[i]->GetBiases()); 
 
-         fPastSquaredBiasGradients[i].emplace_back(biasesNRows, biasesNCols);
+      for (size_t j = 0; j < biasesNSlices; j++) {
          initialize<Architecture_t>(fPastSquaredBiasGradients[i][j], EInitialization::kZero);
       }
+
+      Architecture_t::CreateWeightTensors(fWorkWeightTensor[i], layers[i]->GetWeights());
+      Architecture_t::CreateWeightTensors(fWorkBiasTensor[i], layers[i]->GetBiases());
+
    }
 }
 
@@ -120,21 +125,24 @@ template <typename Architecture_t, typename Layer_t, typename DeepNet_t>
 auto TAdagrad<Architecture_t, Layer_t, DeepNet_t>::UpdateWeights(size_t layerIndex, std::vector<Matrix_t> &weights,
                                                                  const std::vector<Matrix_t> &weightGradients) -> void
 {
-   std::vector<Matrix_t> &currentLayerPastSquaredWeightGradients = this->GetPastSquaredWeightGradientsAt(layerIndex);
+   auto &currentLayerPastSquaredWeightGradients = this->GetPastSquaredWeightGradientsAt(layerIndex);
+  
 
-   for (size_t k = 0; k < currentLayerPastSquaredWeightGradients.size(); k++) {
+   const size_t weightsNSlices = weights.size();
+   assert(currentLayerPastSquaredWeightGradients.size() == weightsNSlices);
 
+   for (size_t i = 0; i < weightsNSlices; i++) {
+
+      auto &currentSquaredWeightGradients = fWorkWeightTensor[layerIndex][i];
       // Vt = Vt-1 + currentSquaredWeightGradients
-      Matrix_t currentSquaredWeightGradients(weightGradients[k].GetNrows(), weightGradients[k].GetNcols());
-      Architecture_t::Copy(currentSquaredWeightGradients, weightGradients[k]);
+      Architecture_t::Copy(currentSquaredWeightGradients, weightGradients[i]);
       Architecture_t::SquareElementWise(currentSquaredWeightGradients);
-      Architecture_t::ScaleAdd(currentLayerPastSquaredWeightGradients[k], currentSquaredWeightGradients, 1.0);
-   }
+      Architecture_t::ScaleAdd(currentLayerPastSquaredWeightGradients[i], currentSquaredWeightGradients, 1.0);
 
-   // updating the weights.
-   // theta = theta - learningRate * currentWeightGradients / (sqrt(Vt + epsilon))
-   for (size_t i = 0; i < weights.size(); i++) {
-      Matrix_t currentWeightUpdates(weights[i].GetNrows(), weights[i].GetNcols());
+      // updating the weights.
+      // theta = theta - learningRate * currentWeightGradients / (sqrt(Vt + epsilon))
+
+      auto &currentWeightUpdates = fWorkWeightTensor[layerIndex][i]; // reuse the work tensor for the weight updates now
       Architecture_t::Copy(currentWeightUpdates, currentLayerPastSquaredWeightGradients[i]);
       Architecture_t::ConstAdd(currentWeightUpdates, this->GetEpsilon());
       Architecture_t::SqrtElementWise(currentWeightUpdates);
@@ -151,19 +159,20 @@ auto TAdagrad<Architecture_t, Layer_t, DeepNet_t>::UpdateBiases(size_t layerInde
 {
    std::vector<Matrix_t> &currentLayerPastSquaredBiasGradients = this->GetPastSquaredBiasGradientsAt(layerIndex);
 
-   for (size_t k = 0; k < currentLayerPastSquaredBiasGradients.size(); k++) {
+   const size_t biasesNSlices = biases.size();
+   assert(currentLayerPastSquaredBiasGradients.size() == biasesNSlices);
+   for (size_t i = 0; i < biasesNSlices; i++) {
 
       // Vt = Vt-1 + currentSquaredBiasGradients
-      Matrix_t currentSquaredBiasGradients(biasGradients[k].GetNrows(), biasGradients[k].GetNcols());
-      Architecture_t::Copy(currentSquaredBiasGradients, biasGradients[k]);
+      auto &currentSquaredBiasGradients = fWorkBiasTensor[layerIndex][i];
+      Architecture_t::Copy(currentSquaredBiasGradients, biasGradients[i]);
       Architecture_t::SquareElementWise(currentSquaredBiasGradients);
-      Architecture_t::ScaleAdd(currentLayerPastSquaredBiasGradients[k], currentSquaredBiasGradients, 1.0);
-   }
+      Architecture_t::ScaleAdd(currentLayerPastSquaredBiasGradients[i], currentSquaredBiasGradients, 1.0);
 
-   // updating the biases.
-   // theta = theta - learningRate * currentBiasGradients / (sqrt(Vt + epsilon))
-   for (size_t i = 0; i < biases.size(); i++) {
-      Matrix_t currentBiasUpdates(biases[i].GetNrows(), biases[i].GetNcols());
+      // updating the biases.
+      // theta = theta - learningRate * currentBiasGradients / (sqrt(Vt + epsilon))
+
+      auto &currentBiasUpdates = fWorkBiasTensor[layerIndex][i];  
       Architecture_t::Copy(currentBiasUpdates, currentLayerPastSquaredBiasGradients[i]);
       Architecture_t::ConstAdd(currentBiasUpdates, this->GetEpsilon());
       Architecture_t::SqrtElementWise(currentBiasUpdates);

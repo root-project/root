@@ -97,6 +97,11 @@ int call_int_int(int (*f)(int, int), int i1, int i2) {
     return f(i1, i2);
 }
 
+template<class A, class B, class C = A>
+C multiply(A a, B b) {
+    return C{a*b};
+}
+
 //-----
 namespace Namespace {
 
@@ -167,7 +172,7 @@ namespace Namespace {
         assert 'Namespace.Concrete.NestedClass' in str(type(n))
         assert 'NestedClass' == type(n).__name__
         assert 'cppyy.gbl.Namespace.Concrete' == type(n).__module__
-        assert 'Namespace::Concrete::NestedClass' == type(n).__cppname__
+        assert 'Namespace::Concrete::NestedClass' == type(n).__cpp_name__
 
     def test_data_members(self):
         import cppyy
@@ -568,3 +573,283 @@ namespace Zoo {
 
         assert Zoo.identify_animal(Zoo.free_lion) == "the animal is a lion"
         assert Zoo.identify_animal_smart(Zoo.free_lion) == "the animal is a lion"
+
+    def test09_templated_function(self):
+        """Templated free function"""
+
+        import cppyy
+
+        mul = cppyy.gbl.multiply
+
+        assert 'multiply' in cppyy.gbl.__dict__
+
+        assert mul(1,  2) == 2
+        assert 'multiply<int,int,int>' in cppyy.gbl.__dict__
+        assert mul(1., 5) == 5.
+        assert 'multiply<double,int,double>' in cppyy.gbl.__dict__
+
+        assert mul[int]     (1, 1) == 1
+        assert 'multiply<int>' in cppyy.gbl.__dict__
+        assert mul[int, int](1, 1) == 1
+        assert 'multiply<int,int>' in cppyy.gbl.__dict__
+
+      # make sure cached values are actually looked up
+        old = getattr(cppyy.gbl, 'multiply<int,int>')
+        setattr(cppyy.gbl, 'multiply<int,int>', staticmethod(lambda x, y: 2*x*y))
+        assert mul[int, int](2, 2) == 8
+        setattr(cppyy.gbl, 'multiply<int,int>', old)
+        assert mul[int, int](2, 2) == 4
+
+        assert raises(TypeError, mul[int, int, int, int], 1, 1)
+        assert raises(TypeError, mul[int, int], 1, 1.)
+        assert type(mul[int, int, float](1, 1)) == float
+        # TODO: the following error message is rather confusing :(
+        assert raises(TypeError, mul[int, int], 1, 'a')
+
+        assert mul['double, double, double'](1., 5) == 5.
+
+    def test10_stl_algorithm(self):
+        """Test STL algorithm on std::string"""
+
+        import cppyy
+
+        cppstr = cppyy.gbl.std.string
+        n = cppstr('this is a C++ string')
+        assert n == 'this is a C++ string'
+        n.erase(cppyy.gbl.std.remove(n.begin(), n.end(), cppstr.value_type(' ')))
+        assert n == 'thisisaC++stringing'
+
+
+class TestADVERTISED:
+    def setup_class(cls):
+        import cppyy
+
+    def test01_reduction_of_overloads(self):
+        """Reduce available overloads to 1"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace Advert01 {
+        class A {
+        public:
+            A(int) {}
+            A(double) {}
+        }; }""")
+
+        def pythonize_A(klass, name):
+            if name == 'A':
+                klass.__init__ = klass.__init__.__overload__("int")
+
+        cppyy.py.add_pythonization(pythonize_A, 'Advert01')
+
+        from cppyy.gbl import Advert01
+
+        assert Advert01.A(1)
+        raises(TypeError, Advert01.A, 1.)
+
+    def test02_use_c_void_p(self):
+        """Use of opaque handles and ctypes.c_void_p"""
+
+        import cppyy, ctypes
+
+      ### void pointer as opaque handle
+        cppyy.cppdef("""namespace Advert02 {
+            typedef void* PicamHandle;
+            void Picam_OpenFirstCamera(PicamHandle* cam) {
+                *cam = new int(42);
+            }
+
+            bool Picam_CloseCamera(PicamHandle cam) {
+                bool ret = false;
+                if (*((int*)cam) == 42) ret = true;
+                delete (int*)cam;
+                return ret;
+            }
+        }""")
+
+        from cppyy.gbl import Advert02
+
+        assert Advert02.PicamHandle
+
+      # first approach
+        cam = Advert02.PicamHandle(cppyy.nullptr)
+        Advert02.Picam_OpenFirstCamera(cam)
+        assert Advert02.Picam_CloseCamera(cam)
+
+      # second approch
+        cam = ctypes.c_void_p()
+        Advert02.Picam_OpenFirstCamera(cam)
+        assert Advert02.Picam_CloseCamera(cam)
+
+    def test03_use_of_ctypes_and_enum(self):
+        """Use of (opaque) enum through ctypes.c_void_p"""
+
+        import cppyy, ctypes
+
+        cppyy.cppdef("""namespace Advert03 {
+        enum SomeEnum1 { AA = -1, BB = 42 };
+        void build_enum_array1(SomeEnum1** ptr, int* sz) {
+            *ptr = (SomeEnum1*)malloc(sizeof(SomeEnum1)*4);
+            *sz = 4;
+            (*ptr)[0] = AA; (*ptr)[1] = BB; (*ptr)[2] = AA; (*ptr)[3] = BB;
+        }
+
+        enum SomeEnum2 { CC = 1, DD = 42 };
+        void build_enum_array2(SomeEnum2** ptr, int* sz) {
+            *ptr = (SomeEnum2*)malloc(sizeof(SomeEnum2)*4);
+            *sz = 4;
+            (*ptr)[0] = CC; (*ptr)[1] = DD; (*ptr)[2] = CC; (*ptr)[3] = DD;
+        } }""")
+
+     # enum through void pointer (b/c underlying type unknown)
+        vp = ctypes.c_void_p(0); cnt = ctypes.c_int(0)
+        cppyy.gbl.Advert03.build_enum_array2(vp, cnt)
+        assert cnt.value == 4
+
+        vp = ctypes.c_void_p(0); cnt = ctypes.c_int(0)
+        cppyy.gbl.Advert03.build_enum_array1(vp, cnt)
+        assert cnt.value == 4
+
+     # helper to convert the enum array pointer & size to something packaged
+        cppyy.cppdef("""namespace Advert03 {
+        std::vector<SomeEnum1> ptr2vec(intptr_t ptr, int sz) {
+            std::vector<SomeEnum1> result{(SomeEnum1*)ptr, (SomeEnum1*)ptr+sz};
+            free((void*)ptr);
+            return result;
+        } }""")
+
+        assert list(cppyy.gbl.Advert03.ptr2vec(vp.value, cnt.value)) == [-1, 42, -1, 42]
+
+      # 2nd approach through low level cast
+        vp = ctypes.pointer(ctypes.c_uint(0)); cnt = ctypes.c_int(0)
+        cppyy.gbl.Advert03.build_enum_array2(vp, cnt)
+        assert cnt.value == 4
+
+        import cppyy.ll
+        arr = cppyy.ll.cast['Advert03::SomeEnum2*'](vp)
+        arr.reshape((cnt.value,))
+
+        assert list(arr) == [1, 42, 1, 42]
+        cppyy.gbl.free(vp)
+
+    def test04_ptr_ptr_python_owns(self):
+        """Example of ptr-ptr use where python owns"""
+
+        import cppyy
+
+        cppyy.cppdef("""namespace Advert04 {
+        struct SomeStruct {
+            SomeStruct(int i) : i(i) {}
+            int i;
+        };
+
+        int count_them(SomeStruct** them, int sz) {
+            int total = 0;
+            for (int i = 0; i < sz; ++i) total += them[i]->i;
+            return total;
+        } }""")
+
+        cppyy.gbl.Advert04
+        from cppyy.gbl.Advert04 import SomeStruct, count_them
+
+      # initialization on python side
+        v = cppyy.gbl.std.vector['Advert04::SomeStruct*']()
+        v._l = [SomeStruct(i) for i in range(10)]
+        for s in v._l: v.push_back(s)
+        assert count_them(v.data(), v.size()) == sum(range(10))
+
+      # initialization on C++ side
+        cppyy.cppdef("""namespace Advert04 {
+        void ptr2ptr_init(SomeStruct** ref) {
+            *ref = new SomeStruct(42);
+        } }""")
+
+        s = cppyy.bind_object(cppyy.nullptr, SomeStruct)
+        cppyy.gbl.Advert04.ptr2ptr_init(s)
+        assert s.i == 42
+
+    def test05_ptr_ptr_with_array(self):
+        """Example of ptr-ptr with array"""
+
+        import cppyy, ctypes
+
+        cppyy.cppdef("""namespace Advert05 {
+        struct SomeStruct { int i; };
+
+        void create_them(SomeStruct** them, int* sz) {
+            *sz = 4;
+            *them = new SomeStruct[*sz];
+            for (int i = 0; i < *sz; ++i) (*them)[i].i = i*i;
+        } }""")
+
+        cppyy.gbl.Advert05
+        from cppyy.gbl.Advert05 import SomeStruct, create_them
+
+        ptr = cppyy.bind_object(cppyy.nullptr, SomeStruct)
+        sz = ctypes.c_int(0)
+        create_them(ptr, sz)
+
+        arr = cppyy.bind_object(cppyy.addressof(ptr), cppyy.gbl.std.array[SomeStruct, sz.value])
+        total = 0
+        for s in arr: total += s.i
+        assert total == 14
+
+    def test06_c_char_p(self):
+        """Example of ctypes.c_char_p usage"""
+
+        import cppyy, ctypes
+
+        cppyy.cppdef("""namespace Advert06 {
+        intptr_t createit(const char** out) {
+            *out = (char*)malloc(4);
+            return (intptr_t)*out;
+        }
+        intptr_t destroyit(const char* in) {
+            intptr_t out = (intptr_t)in;
+            free((void*)in);
+            return out;
+        } }""")
+
+        cppyy.gbl.Advert06
+        from cppyy.gbl.Advert06 import createit, destroyit
+
+        ptr = ctypes.c_char_p()
+        val = createit(ptr)
+        assert destroyit(ptr) == val
+
+    def test07_array_of_arrays(self):
+        """Example of array of array usage"""
+
+
+        import cppyy
+        import cppyy.ll
+
+        NREADOUTS = 4
+        NPIXELS = 16
+
+        cppyy.cppdef("""
+        #define NREADOUTS %d
+        #define NPIXELS %d
+        namespace Advert07 {
+        struct S {
+            S() {
+                uint16_t** readout = new uint16_t*[NREADOUTS];
+                for (int i=0; i<4; ++i) {
+                    readout[i] = new uint16_t[NPIXELS];
+                    for (int j=0; j<NPIXELS; ++j) readout[i][j] = i*NPIXELS+j;
+                }
+                fField = (void*)readout;
+            }
+            ~S() {
+                for (int i = 0; i < 4; ++i) delete[] ((uint16_t**)fField)[i];
+                delete [] (uint16_t**)fField;
+            }
+            void* fField;
+        }; }""" % (NREADOUTS, NPIXELS))
+
+        s = cppyy.gbl.Advert07.S()
+
+        for i in range(NREADOUTS):
+            image_array = cppyy.ll.cast['uint16_t*'](s.fField[i])
+            for j in range (NPIXELS):
+                 assert image_array[j] == i*NPIXELS+j

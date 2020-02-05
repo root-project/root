@@ -12,21 +12,29 @@
 #include "TClass.h"
 #include "TRandom.h"
 #include "TGeoTube.h"
+#include "TGeoSphere.h"
 #include "TParticle.h"
 #include "TApplication.h"
+#include "TMatrixDSym.h"
+#include "TVector.h"
+#include "TMatrixDEigen.h"
 
 #include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveGeoShape.hxx>
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveJetCone.hxx>
+#include <ROOT/REveTrans.hxx>
 
 #include <ROOT/REveTrack.hxx>
 #include <ROOT/REveTrackPropagator.hxx>
+#include <ROOT/REveEllipsoid.hxx>
 
 namespace REX = ROOT::Experimental;
 
@@ -42,9 +50,6 @@ REX::REveViewer *rhoZView = nullptr;
 const Double_t kR_min = 240;
 const Double_t kR_max = 250;
 const Double_t kZ_d   = 300;
-
-const Int_t N_Tracks =   40;
-const Int_t N_Jets   =   20;
 
 
 REX::REvePointSet *getPointSet(int npoints = 2, float s=2, int color=28)
@@ -70,10 +75,13 @@ void addPoints()
 
    auto ps1 = getPointSet(20, 100);
    ps1->SetName("Points_1");
+   ps1->SetTitle("Points_1 title"); // used as tooltip
+
    pntHolder->AddElement(ps1);
 
    auto ps2 = getPointSet(10, 200, 4);
    ps2->SetName("Points_2");
+   ps2->SetTitle("Points_2 title"); // used as tooltip
    pntHolder->AddElement(ps2);
 
    event->AddElement(pntHolder);
@@ -92,9 +100,10 @@ void addTracks()
 
    auto trackHolder = new REX::REveElement("Tracks");
 
-   double v = 0.5;
+   double v = 0.2;
    double m = 5;
 
+   int N_Tracks = 10 + r.Integer(20);
    for (int i = 0; i < N_Tracks; i++)
    {
       TParticle* p = new TParticle();
@@ -106,8 +115,10 @@ void addTracks()
       p->SetMomentum(r.Uniform(-m,m), r.Uniform(-m,m), r.Uniform(-m,m)*r.Uniform(1, 3), 1);
       auto track = new REX::REveTrack(p, 1, prop);
       track->MakeTrack();
+      if (i % 4 == 3) track->SetLineStyle(2); // enabled dashed style for some tracks
       track->SetMainColor(kBlue);
       track->SetName(Form("RandomTrack_%d", i));
+      track->SetTitle(Form("RandomTrack_%d title", i)); // used as tooltip
       trackHolder->AddElement(track);
    }
 
@@ -121,9 +132,11 @@ void addJets()
    REX::REveElement *event = eveMng->GetEventScene();
    auto jetHolder = new REX::REveElement("Jets");
 
+   int N_Jets = 5 + r.Integer(5);
    for (int i = 0; i < N_Jets; i++)
    {
       auto jet = new REX::REveJetCone(Form("Jet_%d", i));
+      jet->SetTitle(Form("Jet_%d title", i)); // used as tooltip
       jet->SetCylinder(2*kR_max, 2*kZ_d);
       jet->AddEllipticCone(r.Uniform(-3.5, 3.5), r.Uniform(0, TMath::TwoPi()),
                            r.Uniform(0.02, 0.2), r.Uniform(0.02, 0.3));
@@ -135,11 +148,62 @@ void addJets()
    event->AddElement(jetHolder);
 }
 
+void addVertex()
+{
+   float pos[3] = {1.46589e-06,-1.30522e-05,-1.98267e-05};
+
+   // symnetric matrix
+
+   double a[16] = {1.46589e-01,-1.30522e-02,-1.98267e-02, 0,
+                   -1.30522e-02, 4.22955e-02,-5.86628e-03, 0,
+                   -1.98267e-02,-5.86628e-03, 2.12836e-01, 0,
+                   0, 0, 0, 1};
+
+   REX::REveTrans t;
+   t.SetFrom(a);
+   TMatrixDSym xxx(3);
+   for(int i = 0; i < 3; i++)
+      for(int j = 0; j < 3; j++)
+      {
+         xxx(i,j) = t(i+1,j+1);
+      }
+
+   TMatrixDEigen eig(xxx);
+   TVectorD xxxEig ( eig.GetEigenValues() );
+   xxxEig = xxxEig.Sqrt();
+
+   TMatrixD vecEig = eig.GetEigenVectors();
+   REX::REveVector v[3]; int ei = 0;
+   for (int i = 0; i < 3; ++i)
+   {
+      v[i].Set(vecEig(0,i), vecEig(1,i), vecEig(2,i));
+      v[i] *=  xxxEig(i);
+   }
+   REX::REveEllipsoid* ell = new  REX::REveEllipsoid("VertexError");
+   ell->InitMainTrans();
+   ell->SetMainColor(kGreen + 10);
+   ell->SetLineWidth(2);
+   ell->SetBaseVectors(v[0], v[1], v[2]);
+   ell->Outline();
+   REX::REveElement *event = eveMng->GetEventScene();
+   event->AddElement(ell);
+   return;
+   //center
+   auto ps = new REX::REvePointSet();
+   ps->SetMainColor(kGreen + 10);
+   ps->SetNextPoint(pos[0], pos[1], pos[2]);
+   ps->SetMarkerStyle(4);
+   ps->SetMarkerSize(4);
+   event->AddElement(ps);
+}
+
+
 void makeEventScene()
 {
    addPoints();
    addTracks();
    addJets();
+   addVertex();
 }
 
 void makeGeometryScene()
@@ -218,22 +282,19 @@ public:
 
    virtual void NextEvent()
    {
-      printf("NEXT EVENT \n");
-
-      REveElement::List_t ev_scenes;
-      ev_scenes.push_back(eveMng->GetEventScene());
-      if (rPhiEventScene)
-         ev_scenes.push_back(rPhiEventScene);
-
-      if (rhoZEventScene)
-         ev_scenes.push_back(rhoZEventScene);
-      eveMng->DestroyElementsOf(ev_scenes);
-
+      eveMng->DisableRedraw();
+      auto scene =  eveMng->GetEventScene();
+      scene->DestroyElements();
       makeEventScene();
-      if (rPhiEventScene || rhoZEventScene)
-         projectScenes(false, true);
-
-      eveMng->BroadcastElementsOf(ev_scenes);
+      for (auto &ie : scene->RefChildren())
+      {
+         if (mngRhoPhi)
+         mngRhoPhi->ImportElements(ie, rPhiEventScene);
+         if (mngRhoZ)
+         mngRhoZ  ->ImportElements(ie, rhoZEventScene);
+      }
+      eveMng->EnableRedraw();
+      eveMng->DoRedraw3D();
    }
 
    virtual void QuitRoot()

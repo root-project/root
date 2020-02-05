@@ -47,8 +47,6 @@ libNew depends on libCore and contains:
 libRint depends on libCore and contains:
   - rint
 
-The directory pcre contains a builtin version of libpcre.a
-
 libMultiProc depends on explicitly on libCore, libNet, libTreePlayer and
 implicit on libRIO, libTree, libGraf3d, libGraf, libHist, libGpad and
 libMathCore and contains:

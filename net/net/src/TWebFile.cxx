@@ -1304,13 +1304,8 @@ Int_t TWebFile::GetHunk(TSocket *s, char *hunk, Int_t maxsize)
       hunk[tail] = '\0';
 
       if (rdlen == 0) {
-         if (tail == 0) {
-            // EOF without anything having been read
-            return tail;
-         } else {
-            // EOF seen: return the data we've read.
-            return tail;
-         }
+         // in case of EOF: return the data we've read.
+         return tail;
       }
       if (end && rdlen == remain) {
          // The terminator was seen and the remaining data drained --

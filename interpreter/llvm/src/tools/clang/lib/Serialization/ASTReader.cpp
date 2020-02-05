@@ -2081,8 +2081,10 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
 
   // For an overridden file, create a virtual file with the stored
   // size/timestamp.
-  if ((Overridden || Transient) && File == nullptr)
+  if ((Overridden || Transient) && (DisableValidation || File == nullptr)) {
     File = FileMgr.getVirtualFile(Filename, StoredSize, StoredTime);
+    Overridden = true;
+  }
 
   if (File == nullptr) {
     if (Complain) {
@@ -2163,6 +2165,10 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
   }
   // FIXME: If the file is overridden and we've already opened it,
   // issue an error (or split it into a separate FileEntry).
+  // FIXME: Complain before hitting the assert. We should investigate why we
+  // hit this unforeseen case.
+  if ((Overridden || Transient) && IsOutOfDate)
+    Error(diag::err_fe_pch_file_overridden, Filename);
 
   InputFile IF = InputFile(File, Overridden || Transient, IsOutOfDate);
 
@@ -7212,7 +7218,7 @@ Stmt *ASTReader::GetExternalDeclStmt(uint64_t Offset) {
   RecordLocation Loc = getLocalBitOffset(Offset);
   Loc.F->DeclsCursor.JumpToBit(Loc.Offset);
   assert(NumCurrentElementsDeserializing == 0 &&
-         "should not be called while already deserializing");
+        "should not be called while already deserializing");
   Deserializing D(this);
   return ReadStmtFromStream(*Loc.F);
 }
@@ -10163,11 +10169,16 @@ void ASTReader::FinishedDeserializing() {
       PendingExceptionSpecUpdates.clear();
       for (auto Update : Updates) {
         ProcessingUpdatesRAIIObj ProcessingUpdates(*this);
-        auto *FPT = Update.second->getType()->castAs<FunctionProtoType>();
+       const PendingExceptionSpecUpdateInfo &PESUInfo = Update.second;
+        auto *FPT = PESUInfo.m_FD->getType()->castAs<FunctionProtoType>();
+       if (PESUInfo.ShouldUpdateESI)
+         PESUInfo.m_FD->setType(getContext().getFunctionType(
+                        FPT->getReturnType(), FPT->getParamTypes(),
+                        FPT->getExtProtoInfo().withExceptionSpec(PESUInfo.m_ESI)));
         auto ESI = FPT->getExtProtoInfo().ExceptionSpec;
         if (auto *Listener = getContext().getASTMutationListener())
-          Listener->ResolvedExceptionSpec(cast<FunctionDecl>(Update.second));
-        for (auto *Redecl : Update.second->redecls())
+          Listener->ResolvedExceptionSpec(cast<FunctionDecl>(PESUInfo.m_FD));
+        for (auto *Redecl : PESUInfo.m_FD->redecls())
           getContext().adjustExceptionSpec(cast<FunctionDecl>(Redecl), ESI);
       }
     }

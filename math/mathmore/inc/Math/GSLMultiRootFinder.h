@@ -172,7 +172,9 @@ namespace Math {
        bool ret = true;
        for (FuncIterator itr = begin; itr != end; ++itr) {
           const ROOT::Math::IMultiGenFunction * f = *itr;
-          ret &= AddFunction( *f);
+          // Using bitwise operator &= require the operand to be a bool
+          // to have the intended effect here.
+          ret &= (AddFunction( *f) != 0);
        }
        return ret;
     }

@@ -33,7 +33,7 @@ def is_manylinux():
         _is_manylinux = False
         try:
             for line in open('/etc/redhat-release').readlines():
-                if 'CentOS release 5.11' in line:
+                if 'CentOS release 6.10 (Final)' in line:
                     _is_manylinux = True
                     break
         except (OSError, IOError):
@@ -88,7 +88,7 @@ class my_cmake_build(_build):
         srcdir   = get_srcdir()
         if not os.path.exists(srcdir):
             log.info('No src directory ... creating with "python create_src_directory.py"')
-            if subprocess.call(['python', 'create_src_directory.py']) != 0:
+            if subprocess.call([sys.executable, 'create_src_directory.py']) != 0:
                 log.error('ERROR: the source directory "%s" does not exist' % srcdir)
                 log.error('Please run "python create_src_directory.py" first.')
                 sys.exit(1)
@@ -112,7 +112,7 @@ class my_cmake_build(_build):
             log.fatal('FATAL: envar STDCXX should be one of 11, 14, or 17')
             sys.exit(1)
 
-        stdcxx='-Dcxx'+stdcxx+'=ON'
+        stdcxx='-DCMAKE_CXX_STANDARD='+stdcxx
 
         # extra optimization flags for Cling
         if not 'EXTRA_CLING_ARGS' in os.environ:
@@ -248,8 +248,8 @@ class my_install(_install):
             outp = inp+'.new'
             outfile = open(outp, 'w')
             for line in open(inp).readlines():
-                if line.find('cxxversion=', 0, 11) == 0:
-                    line = 'cxxversion=cxx17\n'
+                if line.find('cxxversionflag=', 0, 15) == 0:
+                    line = 'cxxversionflag="-std=c++1z "\n'
                 elif line.find('features=', 0, 9) == 0:
                     line = line.replace('cxx11', 'cxx17')
                 outfile.write(line)
@@ -345,7 +345,7 @@ setup(
     author='ROOT Developers',
     author_email='rootdev@cern.ch',
 
-    version='6.15.2.9',
+    version='6.18.2.2',
 
     license='LLVM: UoI-NCSA; ROOT: LGPL 2.1',
 
@@ -378,7 +378,7 @@ setup(
     setup_requires=['wheel'],
 
     include_package_data=True,
-    package_data={'': ['cmake/*.cmake', 'pkg_templates/*.in']},
+    package_data={'': ['cmake/*.cmake', 'pkg_templates/*.in', 'pkg_templates/*.py']},
 
     package_dir={'': 'python'},
     packages=find_packages('python', include=['cppyy_backend']),

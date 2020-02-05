@@ -298,8 +298,8 @@ TEST(RTensor, SliceRowMajor)
    EXPECT_EQ(s3.GetShape().size(), 2u);
    EXPECT_EQ(s3.GetShape()[0], 2u);
    EXPECT_EQ(s3.GetShape()[1], 3u);
-   for(auto i = 0; i < 3; i ++) {
-      for(auto j = 0; j < 2; j ++) {
+   for(auto i = 0; i < 2; i ++) {
+      for(auto j = 0; j < 3; j ++) {
          EXPECT_EQ(x(i, j), s3(i, j));
       }
    }

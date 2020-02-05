@@ -23,6 +23,7 @@
 #include <iterator>
 #include <memory>
 #include <utility>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -30,12 +31,12 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleViewRange
+\class ROOT::Experimental::RNTupleGlobalRange
 \ingroup NTuple
 \brief Used to loop over indexes (entries or collections) between start and end
 */
 // clang-format on
-class RNTupleViewRange {
+class RNTupleGlobalRange {
 private:
    const NTupleSize_t fStart;
    const NTupleSize_t fEnd;
@@ -50,6 +51,42 @@ public:
       ~RIterator() = default;
 
       iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
+      iterator& operator++()    /* prefix */         { ++fIndex; return *this; }
+      reference operator* ()                         { return fIndex; }
+      pointer   operator->()                         { return &fIndex; }
+      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
+      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+   };
+
+   RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
+   RIterator begin() { return RIterator(fStart); }
+   RIterator end() { return RIterator(fEnd); }
+};
+
+
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleClusterRange
+\ingroup NTuple
+\brief Used to loop over entries of collections in a single cluster
+*/
+// clang-format on
+class RNTupleClusterRange {
+private:
+   const DescriptorId_t fClusterId;
+   const ClusterSize_t::ValueType fStart;
+   const ClusterSize_t::ValueType fEnd;
+public:
+   class RIterator : public std::iterator<std::forward_iterator_tag, RClusterIndex> {
+   private:
+      using iterator = RIterator;
+      RClusterIndex fIndex;
+   public:
+      RIterator() = default;
+      explicit RIterator(const RClusterIndex &index) : fIndex(index) {}
+      ~RIterator() = default;
+
+      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
       iterator& operator++()    /* prefix */         { fIndex++; return *this; }
       reference operator* ()                         { return fIndex; }
       pointer   operator->()                         { return &fIndex; }
@@ -57,9 +94,10 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
-   RNTupleViewRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
-   RIterator begin() { return RIterator(fStart); }
-   RIterator end() { return RIterator(fEnd); }
+   RNTupleClusterRange(DescriptorId_t clusterId, ClusterSize_t::ValueType start, ClusterSize_t::ValueType end)
+      : fClusterId(clusterId), fStart(start), fEnd(end) {}
+   RIterator begin() { return RIterator(RClusterIndex(fClusterId, fStart)); }
+   RIterator end() { return RIterator(RClusterIndex(fClusterId, fEnd)); }
 };
 
 
@@ -88,14 +126,22 @@ class RNTupleView {
    friend class RNTupleViewCollection;
 
 protected:
+   /**
+    * fFieldId has fParent always set to null; views access nested fields without looking at the parent
+    */
    RField<T> fField;
    Detail::RFieldValue fValue;
-   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource)
-     : fField(fieldName), fValue(fField.GenerateValue())
+
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+     : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
-      fField.ConnectColumns(pageSource);
-      for (auto& f : fField) {
-         f.ConnectColumns(pageSource);
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
+      std::unordered_map<const Detail::RFieldBase *, DescriptorId_t> field2Id;
+      field2Id[&fField] = fieldId;
+      for (auto &f : fField) {
+         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), field2Id[f.GetParent()]);
+         Detail::RFieldFuse::Connect(subFieldId, *pageSource, f);
+         field2Id[&f] = subFieldId;
       }
    }
 
@@ -106,8 +152,13 @@ public:
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() { fField.DestroyValue(fValue); }
 
-   const T& operator()(NTupleSize_t index) {
-      fField.Read(index, &fValue);
+   const T& operator()(NTupleSize_t globalIndex) {
+      fField.Read(globalIndex, &fValue);
+      return *fValue.Get<T>();
+   }
+
+   const T& operator()(const RClusterIndex &clusterIndex) {
+      fField.Read(clusterIndex, &fValue);
       return *fValue.Get<T>();
    }
 };
@@ -121,8 +172,10 @@ class RNTupleView<float> {
 
 protected:
    RField<float> fField;
-   RNTupleView(std::string_view fieldName, Detail::RPageSource* pageSource) : fField(fieldName) {
-      fField.ConnectColumns(pageSource);
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
    }
 
 public:
@@ -132,7 +185,82 @@ public:
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() = default;
 
-   float operator()(NTupleSize_t index) { return *fField.Map(index); }
+   float operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   float operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
+};
+
+
+template <>
+class RNTupleView<double> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+protected:
+   RField<double> fField;
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
+   }
+
+public:
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
+
+   double operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   double operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
+};
+
+
+template <>
+class RNTupleView<std::int32_t> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+protected:
+   RField<std::int32_t> fField;
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
+   }
+
+public:
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
+
+   std::int32_t operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   std::int32_t operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
+};
+
+template <>
+class RNTupleView<ClusterSize_t> {
+   friend class RNTupleReader;
+   friend class RNTupleViewCollection;
+
+protected:
+   RField<ClusterSize_t> fField;
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
+      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName())
+   {
+      Detail::RFieldFuse::Connect(fieldId, *pageSource, fField);
+   }
+
+public:
+   RNTupleView(const RNTupleView& other) = delete;
+   RNTupleView(RNTupleView&& other) = default;
+   RNTupleView& operator=(const RNTupleView& other) = delete;
+   RNTupleView& operator=(RNTupleView&& other) = default;
+   ~RNTupleView() = default;
+
+   ClusterSize_t operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   ClusterSize_t operator()(const RClusterIndex &clusterIndex) { return *fField.Map(clusterIndex); }
 };
 
 
@@ -147,20 +275,14 @@ class RNTupleViewCollection : public RNTupleView<ClusterSize_t> {
     friend class RNTupleReader;
 
 private:
-   std::string fCollectionName;
    Detail::RPageSource* fSource;
+   DescriptorId_t fCollectionFieldId;
 
-   RNTupleViewCollection(std::string_view fieldName, Detail::RPageSource* source)
-      : RNTupleView<ClusterSize_t>(fieldName, source)
-      , fCollectionName(fieldName)
+   RNTupleViewCollection(DescriptorId_t fieldId, Detail::RPageSource* source)
+      : RNTupleView<ClusterSize_t>(fieldId, source)
       , fSource(source)
+      , fCollectionFieldId(fieldId)
    {}
-
-   std::string GetSubName(std::string_view name) {
-      std::string prefix(fCollectionName);
-      prefix.push_back(Detail::RFieldBase::kCollectionSeparator);
-      return prefix + std::string(name);
-   }
 
 public:
    RNTupleViewCollection(const RNTupleViewCollection& other) = delete;
@@ -169,22 +291,41 @@ public:
    RNTupleViewCollection& operator=(RNTupleViewCollection&& other) = default;
    ~RNTupleViewCollection() = default;
 
-   RNTupleViewRange GetViewRange(NTupleSize_t index) {
+   RNTupleClusterRange GetViewRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
-      NTupleSize_t idxStart;
-      fField.GetCollectionInfo(index, &idxStart, &size);
-      return RNTupleViewRange(idxStart, idxStart + size);
+      RClusterIndex collectionStart;
+      fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
+      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
+                                 collectionStart.GetIndex() + size);
    }
-   template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(GetSubName(fieldName), fSource); }
-   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      return RNTupleViewCollection(GetSubName(fieldName), fSource);
+   RNTupleClusterRange GetViewRange(const RClusterIndex &clusterIndex) {
+      ClusterSize_t size;
+      RClusterIndex collectionStart;
+      fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
+                                 collectionStart.GetIndex() + size);
    }
 
-   ClusterSize_t operator()(NTupleSize_t index) {
+   template <typename T>
+   RNTupleView<T> GetView(std::string_view fieldName) {
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      return RNTupleView<T>(fieldId, fSource);
+   }
+   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      return RNTupleViewCollection(fieldId, fSource);
+   }
+
+   ClusterSize_t operator()(NTupleSize_t globalIndex) {
       ClusterSize_t size;
-      NTupleSize_t idxStart;
-      fField.GetCollectionInfo(index, &idxStart, &size);
+      RClusterIndex collectionStart;
+      fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
+      return size;
+   }
+   ClusterSize_t operator()(const RClusterIndex &clusterIndex) {
+      ClusterSize_t size;
+      RClusterIndex collectionStart;
+      fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
       return size;
    }
 };

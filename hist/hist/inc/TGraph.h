@@ -143,7 +143,10 @@ public:
    Double_t              GetMinimum()  const {return fMinimum;}
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
+   virtual char         *GetObjectInfo(Int_t px, Int_t py) const;
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y) const;
+   virtual Double_t      GetPointX(Int_t i) const;
+   virtual Double_t      GetPointY(Int_t i) const;
 
    virtual void          InitExpo(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitGaus(Double_t xmin=0, Double_t xmax=0);
@@ -157,6 +160,7 @@ public:
    virtual void          LeastSquareFit(Int_t m, Double_t *a, Double_t xmin=0, Double_t xmax=0);
    virtual void          LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         Merge(TCollection* list);
+   virtual void          MovePoints(Double_t dx, Double_t dy, Bool_t logx = kFALSE, Bool_t logy = kFALSE);
    virtual void          Paint(Option_t *chopt="");
    void                  PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
@@ -173,6 +177,8 @@ public:
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
+   virtual void          SetPointX(Int_t i, Double_t x);
+   virtual void          SetPointY(Int_t i, Double_t y);
    virtual void          SetName(const char *name=""); // *MENU*
    virtual void          SetNameTitle(const char *name="", const char *title="");
    virtual void          SetTitle(const char *title="");    // *MENU*
@@ -183,9 +189,5 @@ public:
 
    ClassDef(TGraph,4)  //Graph graphics class
 };
-
-inline Double_t **TGraph::Allocate(Int_t newsize) {
-   return AllocateArrays(2, newsize);
-}
 
 #endif

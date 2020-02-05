@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <title>Geom Demo</title>
+    <script src="jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
+  </head>
+
+  <style>
+    body {
+      margin: 2px;
+    }
+
+    .btn-group button {
+      background-color: #4CAF50; /* Green background */
+      border: 1px solid green; /* Green border */
+      color: white; /* White text */
+      padding: 4px 4px; /* Some padding */
+      cursor: pointer; /* Pointer/hand icon */
+      width: 100%; /* Set a width if needed */
+      display: block; /* Make the buttons appear below each other */
+    }
+
+    .btn-group button:not(:last-child) {
+      border-bottom: none; /* Prevent double borders */
+    }
+
+    /* Add a background color on hover */
+    .btn-group button:hover {
+      background-color: #3e8e41;
+    }
+   </style>
+
+
+  <body>
+     <div class="btn-group" id="btns">
+     </div>
+  </body>
+
+  <script>
+
+     var conn_handle = null;
+
+     function SendMsg(txt) {
+       if (conn_handle)
+          conn_handle.Send(txt);
+     }
+
+     function AddButton(text, exec, title) {
+        var btn = document.createElement("button");
+        btn.onclick = SendMsg.bind(null, exec +  ";");
+        btn.title = title;
+        btn.innerHTML = text;
+        document.getElementById("btns").appendChild(btn);
+     }
+
+     // use code from geodemo.C
+     AddButton("How to run  ","help()","Instructions for running this macro");
+     AddButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
+     AddButton("Box         ","box()","A box shape.");
+     AddButton("Composite   ","composite()","A composite shape");
+     AddButton("Cone        ","cone()","A conical tube");
+     AddButton("Cone segment","coneseg()","A conical segment");
+     AddButton("Cut tube    ","ctub()","A cut tube segment");
+     AddButton("Elliptical tube","eltu()","An elliptical tube");
+     AddButton("Extruded poly","xtru()","A general polygone extrusion");
+     AddButton("Hyperboloid  ","hype()","A hyperboloid");
+     AddButton("Paraboloid  ","parab()","A paraboloid");
+     AddButton("Polycone    ","pcon()","A polycone shape");
+     AddButton("Polygone    ","pgon()","A polygone");
+     AddButton("Parallelepiped","para()","A parallelepiped shape");
+     AddButton("Sphere      ","sphere()","A spherical sector");
+     AddButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
+     AddButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
+     AddButton("Trapezoid   ","trap()","A general trapezoid");
+     AddButton("Tessellated","tessellated()","A tessellated shape");
+     AddButton("Torus       ","torus()","A toroidal segment");
+     AddButton("Tube        ","tube()","A tube with inner and outer radius");
+     AddButton("Tube segment","tubeseg()","A tube segment");
+     AddButton("Twisted trap","gtra()","A twisted trapezoid");
+     AddButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
+     AddButton("Un-aligned","align()","Some alignment operation");
+     // AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
+     AddButton("COMMENTS  ON/OFF","gcomments()","Toggle explanations pad ON/OFF");
+     AddButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
+     AddButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
+     AddButton("Quit","quit()","Quit ROOT seesion");
+
+     JSROOT.ConnectWebWindow({
+       receiver: {
+          // method called when connection to server is established
+          OnWebsocketOpened: function(handle) {
+             conn_handle = handle;
+          },
+
+          // method with new message from server
+          OnWebsocketMsg: function(handle, msg, offset) {
+          },
+
+          // method called when connection is gone
+          OnWebsocketClosed: function(handle) {
+             conn_handle = null;
+             // when connection closed, close panel as well
+             if (window) window.close();
+          }
+       }
+    });
+
+  </script>
+
+</html>

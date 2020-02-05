@@ -41,8 +41,8 @@ TGLSelectRecordBase::TGLSelectRecordBase() :
 TGLSelectRecordBase::TGLSelectRecordBase(UInt_t* data) :
    fN     (data[0]),
    fItems (0),
-   fMinZ  ((Float_t)data[1] / 0x7fffffff),
-   fMaxZ  ((Float_t)data[2] / 0x7fffffff),
+   fMinZ  ((Float_t)data[1] / (Float_t)0x7fffffff),
+   fMaxZ  ((Float_t)data[2] / (Float_t)0x7fffffff),
    fPos   (0)
 {
    CopyItems(&data[3]);
@@ -105,8 +105,8 @@ void TGLSelectRecordBase::CopyItems(UInt_t* items)
 void TGLSelectRecordBase::SetRawOnly(UInt_t* data)
 {
    fN     = data[0];
-   fMinZ  = (Float_t)data[1] / 0x7fffffff;
-   fMaxZ  = (Float_t)data[2] / 0x7fffffff;
+   fMinZ  = (Float_t)data[1] / (Float_t)0x7fffffff;
+   fMaxZ  = (Float_t)data[2] / (Float_t)0x7fffffff;
    CopyItems(&data[3]);
 }
 
@@ -116,8 +116,8 @@ void TGLSelectRecordBase::SetRawOnly(UInt_t* data)
 void TGLSelectRecordBase::Set(UInt_t* data)
 {
    fN     = data[0];
-   fMinZ  = (Float_t)data[1] / 0x7fffffff;
-   fMaxZ  = (Float_t)data[2] / 0x7fffffff;
+   fMinZ  = (Float_t)data[1] / (Float_t)0x7fffffff;
+   fMaxZ  = (Float_t)data[2] / (Float_t)0x7fffffff;
    fPos   = 0;
    CopyItems(&data[3]);
 }

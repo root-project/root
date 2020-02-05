@@ -20,36 +20,34 @@
 struct sqlite3;
 #endif
 
-
-
 class TSQLiteServer : public TSQLServer {
 
  private:
    TString   fSrvInfo;   // Server info string
-   sqlite3  *fSQLite;    // connection to SQLite DB
+   sqlite3  *fSQLite{nullptr};    // connection to SQLite DB
 
  public:
-   TSQLiteServer(const char *db, const char *uid=NULL, const char *pw=NULL);
+   TSQLiteServer(const char *db, const char *uid = nullptr, const char *pw = nullptr);
    ~TSQLiteServer();
 
-   void           Close(Option_t *opt="");
-   Bool_t         StartTransaction();
-   TSQLResult    *Query(const char *sql);
-   Bool_t         Exec(const char *sql);
-   TSQLStatement *Statement(const char *sql, Int_t = 100);
-   Bool_t         HasStatement() const;
-   Int_t          SelectDataBase(const char *dbname);
-   TSQLResult    *GetDataBases(const char *wild = 0);
-   TSQLResult    *GetTables(const char *dbname, const char *wild = 0);
-   TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = 0);
-   TSQLTableInfo *GetTableInfo(const char* tablename);
-   Int_t          CreateDataBase(const char *dbname);
-   Int_t          DropDataBase(const char *dbname);
-   Int_t          Reload();
-   Int_t          Shutdown();
-   const char    *ServerInfo();
+   void           Close(Option_t *opt = "") final;
+   Bool_t         StartTransaction() final;
+   TSQLResult    *Query(const char *sql) final;
+   Bool_t         Exec(const char *sql) final;
+   TSQLStatement *Statement(const char *sql, Int_t = 100) final;
+   Bool_t         HasStatement() const final;
+   Int_t          SelectDataBase(const char *dbname) final;
+   TSQLResult    *GetDataBases(const char *wild = nullptr) final;
+   TSQLResult    *GetTables(const char *dbname, const char *wild = nullptr) final;
+   TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = nullptr) final;
+   TSQLTableInfo *GetTableInfo(const char* tablename) final;
+   Int_t          CreateDataBase(const char *dbname) final;
+   Int_t          DropDataBase(const char *dbname) final;
+   Int_t          Reload() final;
+   Int_t          Shutdown() final;
+   const char    *ServerInfo() final;
 
-   ClassDef(TSQLiteServer,0);  // Connection to SQLite DB
+   ClassDefOverride(TSQLiteServer,0);  // Connection to SQLite DB
 };
 
 #endif

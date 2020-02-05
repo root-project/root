@@ -62,10 +62,16 @@ protected:
    Int_t    Fill(const char*,Double_t,Double_t) {return Fill(0);} //MayNotUse
    Int_t    Fill(const char*,const char*,Double_t) {return Fill(0);} //MayNotUse
 
+   virtual Double_t Interpolate(Double_t x, Double_t y) const; // May not use
+   virtual Double_t Interpolate(Double_t x) const; // MayNotUse
+
 private:
 
    TH3(const TH3&);
    TH3& operator=(const TH3&); // Not implemented
+
+   using TH1::Integral;
+   using TH1::IntegralAndError;
 
 public:
    virtual ~TH3();
@@ -99,13 +105,9 @@ public:
    virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &z);
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t Integral(Option_t *option="") const;
-   using TH1::Integral;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
-   using TH1::IntegralAndError;
    virtual Double_t IntegralAndError(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Double_t & err, Option_t *option="") const;
-   virtual Double_t Interpolate(Double_t x);
-   virtual Double_t Interpolate(Double_t x, Double_t y);
-   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
+   virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
    virtual TH1D    *ProjectionX(const char *name="_px", Int_t iymin=0, Int_t iymax=-1, Int_t izmin=0,
                                 Int_t izmax=-1, Option_t *option="") const; // *MENU*
@@ -128,10 +130,10 @@ public:
 
 protected:
 
-   virtual TH1D        *DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2, 
+   virtual TH1D        *DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2,
                                     const TAxis* projAxis, const TAxis * axis1, const TAxis * axis2, Option_t * option) const;
-   virtual TH1D        *DoProject1D(const char* name, const char * title, const TAxis* projAxis,  
-                         bool computeErrors, bool originalRange, bool useUF, bool useOF) const;
+   virtual TH1D *DoProject1D(const char *name, const char *title, const TAxis *projAxis, const TAxis *axis1,
+                             const TAxis *axis2, bool computeErrors, bool originalRange, bool useUF, bool useOF) const;
    virtual TH2D        *DoProject2D(const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                         bool computeErrors, bool originalRange,
                          bool useUF, bool useOF) const;
@@ -141,7 +143,7 @@ protected:
    // these functions are need to be used inside TProfile3D::DoProjectProfile2D
    static TH1D         *DoProject1D(const TH3 & h, const char* name, const char * title, const TAxis* projX,
                                     bool computeErrors, bool originalRange, bool useUF, bool useOF)  {
-      return h.DoProject1D(name, title, projX, computeErrors, originalRange, useUF, useOF);
+      return h.DoProject1D(name, title, projX, nullptr, nullptr, computeErrors, originalRange, useUF, useOF);
    }
    static TH2D         *DoProject2D(const TH3 & h, const char* name, const char * title, const TAxis* projX, const TAxis* projY,
                                     bool computeErrors, bool originalRange, bool useUF, bool useOF)  {
@@ -335,4 +337,3 @@ protected:
 };
 
 #endif
-

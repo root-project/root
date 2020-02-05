@@ -39,6 +39,7 @@ TLeaf::TLeaf()
    , fIsUnsigned(kFALSE)
    , fLeafCount(0)
    , fBranch(0)
+   , fLeafCountValues(0)
 {
 }
 
@@ -57,6 +58,7 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    , fIsUnsigned(kFALSE)
    , fLeafCount(0)
    , fBranch(parent)
+   , fLeafCountValues(0)
 {
    fLeafCount = GetLeafCounter(fLen);
 
@@ -81,7 +83,8 @@ TLeaf::TLeaf(const TLeaf& lf) :
   fIsRange(lf.fIsRange),
   fIsUnsigned(lf.fIsUnsigned),
   fLeafCount(lf.fLeafCount),
-  fBranch(lf.fBranch)
+  fBranch(lf.fBranch),
+  fLeafCountValues(nullptr)
 {
 }
 
@@ -100,6 +103,10 @@ TLeaf& TLeaf::operator=(const TLeaf& lf)
       fIsUnsigned=lf.fIsUnsigned;
       fLeafCount=lf.fLeafCount;
       fBranch=lf.fBranch;
+      if (fLeafCountValues) {
+         fLeafCountValues->fStartEntry = -1;
+         fLeafCountValues->fValues.resize(0);
+      }
    }
    return *this;
 }
@@ -118,6 +125,7 @@ TLeaf::~TLeaf()
       }
    }
    fLeafCount = 0;
+   delete fLeafCountValues;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,20 +169,27 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
 
    Int_t *retval = new Int_t[events];
    if (R__unlikely(!retval || !fLeafCount)) {
+      delete [] retval;
+      return nullptr;
+   }
+
+   Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning
+   const std::vector<Int_t> *countValues = fLeafCount->GetLeafCountValues(orig_entry, events);
+
+   if (!countValues || ((Int_t)countValues->size()) < events) {
+      Error("GenerateOffsetArrayBase", "The leaf %s could not retrieve enough entries from its branch count (%s), ask for %d and got %ld",
+            GetName(), fLeafCount->GetName(), events, (long)(countValues ? countValues->size() : -1));
+      delete [] retval;
       return nullptr;
    }
 
    Int_t header = GetOffsetHeaderSize();
-   Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning
-   Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
    Int_t len = 0;
    for (Int_t idx = 0, offset = base; idx < events; idx++) {
       retval[idx] = offset;
-      fLeafCount->GetBranch()->GetEntry(orig_entry + idx);
-      len = static_cast<Int_t>(fLeafCount->GetValue());
+      len = (*countValues)[idx];
       offset += fLenType * len + header;
    }
-   fLeafCount->GetBranch()->GetEntry(orig_leaf_entry);
 
    return retval;
 }
@@ -303,6 +318,48 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    delete[] countname;
    countname = 0;
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If this branch is a branch count, return the set of collection size for
+/// the entry range requested
+/// start: first entry to read and return information about
+/// len: number of entries to read.
+const TLeaf::Counts_t *TLeaf::GetLeafCountValues(Long64_t start, Long64_t len)
+{
+   if (len <= 0 || !IsRange())
+     return nullptr;
+
+   if (fLeafCountValues) {
+      if (fLeafCountValues->fStartEntry == start && len < (Long64_t)fLeafCountValues->fValues.size())
+      {
+         return &fLeafCountValues->fValues;
+      }
+      if (start >= fLeafCountValues->fStartEntry &&
+          (start+len) <= (Long64_t)(fLeafCountValues->fStartEntry + fLeafCountValues->fValues.size()))
+      {
+         auto &values(fLeafCountValues->fValues);
+         values.erase(values.begin(), values.begin() + start-fLeafCountValues->fStartEntry);
+         return &values;
+      }
+   } else {
+      fLeafCountValues = new LeafCountValues();
+   }
+
+
+   fLeafCountValues->fValues.clear();
+   fLeafCountValues->fValues.reserve(len);
+   fLeafCountValues->fStartEntry = start;
+
+   auto branch = GetBranch();
+   Long64_t orig_leaf_entry = branch->GetReadEntry();
+   for (Long64_t idx = 0; idx < len; ++idx) {
+       branch->GetEntry(start + idx);
+       auto size = static_cast<Int_t>(GetValue());
+       fLeafCountValues->fValues.push_back( size );
+   }
+   branch->GetEntry(orig_leaf_entry);
+   return &(fLeafCountValues->fValues);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

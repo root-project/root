@@ -16,19 +16,24 @@ function usage()
     echo ""
 }
 
+if ((BASH_VERSINFO[0] < 4)); then
+    echo "Sorry, you need at least bash-4.0 to run this script." >&2
+    exit 1
+fi
+
 if [[ -z "$@" ]]; then
     echo "Needs arguments."
     usage
     exit
 fi
 
-if [[ -z "$ROOTSYS/interpreter/llvm/src/bin/clang" ]]; then
-    echo "You need to set ROOTSYS to find clang."
+if [[ -z "$ROOTSYS/bin/rootcling" ]]; then
+    echo "You need to set ROOTSYS to find rootcling."
     usage
     exit
 fi
 
-CLANG_BINARY=$ROOTSYS/interpreter/llvm/src/bin/clang
+ROOTCLING_BINARY=$ROOTSYS/bin/rootcling
 
 for i in "$@"
 do
@@ -64,7 +69,7 @@ do
     continue
   fi
 
-  HEADERS_IN_PCM=$($CLANG_BINARY -fsyntax-only -Xclang -module-file-info $PCMFILE | grep 'Input file' | sed 's,Input file:,,g' | sed 's, \[.*],,g')
+  HEADERS_IN_PCM=$($ROOTCLING_BINARY bare-cling -module-file-info $PCMFILE | grep 'Input file' | sed 's,Input file:,,g' | sed 's, \[.*],,g')
   for header in $HEADERS_IN_PCM
   do
     if [[ ${hashmap[$header]} ]]

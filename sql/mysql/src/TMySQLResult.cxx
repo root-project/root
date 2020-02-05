@@ -22,7 +22,7 @@ TMySQLResult::TMySQLResult(void *result)
 {
    fResult    = (MYSQL_RES *) result;
    fRowCount  = fResult ? mysql_num_rows(fResult) : 0;
-   fFieldInfo = 0;
+   fFieldInfo = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,8 +43,8 @@ void TMySQLResult::Close(Option_t *)
       return;
 
    mysql_free_result(fResult);
-   fResult    = 0;
-   fFieldInfo = 0;
+   fResult    = nullptr;
+   fFieldInfo = nullptr;
    fRowCount  = 0;
 }
 
@@ -82,14 +82,14 @@ Int_t TMySQLResult::GetFieldCount()
 const char *TMySQLResult::GetFieldName(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
 
    if (!fFieldInfo)
       fFieldInfo = mysql_fetch_fields(fResult);
 
    if (!fFieldInfo) {
       Error("GetFieldName", "cannot get field info");
-      return 0;
+      return nullptr;
    }
 
    return fFieldInfo[field].name;
@@ -101,15 +101,13 @@ const char *TMySQLResult::GetFieldName(Int_t field)
 
 TSQLRow *TMySQLResult::Next()
 {
-   MYSQL_ROW row;
-
    if (!fResult) {
       Error("Next", "result set closed");
-      return 0;
+      return nullptr;
    }
-   row = mysql_fetch_row(fResult);
+   MYSQL_ROW row = mysql_fetch_row(fResult);
    if (!row)
-      return 0;
-   else
-      return new TMySQLRow((void *) fResult, (ULong_t) row);
+      return nullptr;
+
+   return new TMySQLRow((void *) fResult, (ULong_t) row);
 }

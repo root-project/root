@@ -32,7 +32,6 @@
 #endif
 
 #include "TNamed.h"
-#include "TString.h"
 #include "TInetAddress.h"
 #include "TTimer.h"
 #include "ThreadLocalStorage.h"
@@ -109,7 +108,7 @@ enum EFileModeMask {
    kS_IXGRP  = 00010,     // group has execute permission
    kS_IRWXO  = 00007,     // mask for permissions for others (not in group)
    kS_IROTH  = 00004,     // others have read permission
-   kS_IWOTH  = 00002,     // others have write permisson
+   kS_IWOTH  = 00002,     // others have write permission
    kS_IXOTH  = 00001      // others have execute permission
 };
 
@@ -202,14 +201,13 @@ struct ProcInfo_t {
 };
 
 struct RedirectHandle_t {
-   TString   fFile;        // File where the output was redirected
-   TString   fStdOutTty;   // tty associated with stdout, if any (e.g. from ttyname(...))
-   TString   fStdErrTty;   // tty associated with stderr, if any (e.g. from ttyname(...))
-   Int_t     fStdOutDup;   // Duplicated descriptor for stdout
-   Int_t     fStdErrDup;   // Duplicated descriptor for stderr
-   Int_t     fReadOffSet;  // Offset where to start reading the file (used by ShowOutput(...))
-   RedirectHandle_t(const char *n = 0) : fFile(n), fStdOutTty(), fStdErrTty(), fStdOutDup(-1),
-                                         fStdErrDup(-1), fReadOffSet(-1) { }
+   TString   fFile;            // File where the output was redirected
+   TString   fStdOutTty;       // tty associated with stdout, if any (e.g. from ttyname(...))
+   TString   fStdErrTty;       // tty associated with stderr, if any (e.g. from ttyname(...))
+   Int_t     fStdOutDup{-1};   // Duplicated descriptor for stdout
+   Int_t     fStdErrDup{-1};   // Duplicated descriptor for stderr
+   Int_t     fReadOffSet{-1};  // Offset where to start reading the file (used by ShowOutput(...))
+   RedirectHandle_t(const char *n = nullptr) : fFile(n) { }
    void Reset() { fFile = ""; fStdOutTty = ""; fStdErrTty = "";
                   fStdOutDup = -1; fStdErrDup = -1; fReadOffSet = -1; }
 };
@@ -270,75 +268,73 @@ class TSystem : public TNamed {
 public:
    enum EAclicMode { kDefault, kDebug, kOpt };
    enum EAclicProperties {
-      kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created subdirectories
+      kFlatBuildDir = BIT(0)           // If set and a BuildDir is selected, then do not created sub-directories
    };
 
 protected:
-   TFdSet          *fReadmask;         //!Files that should be checked for read events
-   TFdSet          *fWritemask;        //!Files that should be checked for write events
-   TFdSet          *fReadready;        //!Files with reads waiting
-   TFdSet          *fWriteready;       //!Files with writes waiting
-   TFdSet          *fSignals;          //!Signals that were trapped
-   Int_t            fNfd;              //Number of fd's in masks
-   Int_t            fMaxrfd;           //Largest fd in read mask
-   Int_t            fMaxwfd;           //Largest fd in write mask
-   Int_t            fSigcnt;           //Number of pending signals
-   TString          fWdpath;           //Working directory
-   TString          fHostname;         //Hostname
-   Bool_t           fInsideNotify;     //Used by DispatchTimers()
-   Int_t            fBeepFreq;         //Used by Beep()
-   Int_t            fBeepDuration;     //Used by Beep()
+   TFdSet          *fReadmask{nullptr};         //!Files that should be checked for read events
+   TFdSet          *fWritemask{nullptr};        //!Files that should be checked for write events
+   TFdSet          *fReadready{nullptr};        //!Files with reads waiting
+   TFdSet          *fWriteready{nullptr};       //!Files with writes waiting
+   TFdSet          *fSignals{nullptr};          //!Signals that were trapped
+   Int_t            fNfd{0};                    //Number of fd's in masks
+   Int_t            fMaxrfd{-1};                //Largest fd in read mask
+   Int_t            fMaxwfd{-1};                //Largest fd in write mask
+   Int_t            fSigcnt{0};                 //Number of pending signals
+   TString          fWdpath;                    //Working directory
+   TString          fHostname;                  //Hostname
+   Bool_t           fInsideNotify{kFALSE};      //Used by DispatchTimers()
+   Int_t            fBeepFreq{0};               //Used by Beep()
+   Int_t            fBeepDuration{0};           //Used by Beep()
 
-   Bool_t           fInControl;        //True if in eventloop
-   Bool_t           fDone;             //True if eventloop should be finished
-   Int_t            fLevel;            //Level of nested eventloops
+   Bool_t           fInControl{kFALSE};         //True if in eventloop
+   Bool_t           fDone{kFALSE};              //True if eventloop should be finished
+   Int_t            fLevel{0};                  //Level of nested eventloops
 
-   TSeqCollection  *fTimers;           //List of timers
-   TSeqCollection  *fSignalHandler;    //List of signal handlers
-   TSeqCollection  *fFileHandler;      //List of file handlers
-   TSeqCollection  *fStdExceptionHandler; //List of std::exception handlers
-   TSeqCollection  *fOnExitList;       //List of items to be cleaned-up on exit
+   TSeqCollection  *fTimers{nullptr};           //List of timers
+   TSeqCollection  *fSignalHandler{nullptr};    //List of signal handlers
+   TSeqCollection  *fFileHandler{nullptr};      //List of file handlers
+   TSeqCollection  *fStdExceptionHandler{nullptr}; //List of std::exception handlers
+   TSeqCollection  *fOnExitList{nullptr};       //List of items to be cleaned-up on exit
 
-   TString          fListLibs;         //List shared libraries, cache used by GetLibraries
+   TString          fListLibs;                  //List shared libraries, cache used by GetLibraries
 
-   TString          fBuildArch;        //Architecure for which ROOT was built (passed to ./configure)
-   TString          fBuildCompiler;    // Compiler used to build this ROOT
-   TString          fBuildCompilerVersion; //Compiler version used to build this ROOT
-   TString          fBuildNode;        //Detailed information where ROOT was built
-   TString          fBuildDir;         //Location where to build ACLiC shared library and use as scratch area.
-   TString          fFlagsDebug;       //Flags for debug compilation
-   TString          fFlagsOpt;         //Flags for optimized compilation
-   TString          fListPaths;        //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
-   TString          fIncludePath;      //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
-   TString          fLinkedLibs;       //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
-   TString          fSoExt;            //Extension of shared library (.so, .sl, .a, .dll, etc.)
-   TString          fObjExt;           //Extension of object files (.o, .obj, etc.)
-   EAclicMode       fAclicMode;        //Whether the compilation should be done debug or opt
-   TString          fMakeSharedLib;    //Directive used to build a shared library
-   TString          fMakeExe;          //Directive used to build an executable
-   TString          fLinkdefSuffix;    //Default suffix for linkdef files to be used by ACLiC (see EACLiCProperties)
-   Int_t            fAclicProperties;  //Various boolean flag for change ACLiC's behavior.
-   TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
-   TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
+   TString          fBuildArch;                 //Architecture for which ROOT was built (passed to ./configure)
+   TString          fBuildCompiler;             // Compiler used to build this ROOT
+   TString          fBuildCompilerVersion;      //Compiler version used to build this ROOT
+   TString          fBuildNode;                 //Detailed information where ROOT was built
+   TString          fBuildDir;                  //Location where to build ACLiC shared library and use as scratch area.
+   TString          fFlagsDebug;                //Flags for debug compilation
+   TString          fFlagsOpt;                  //Flags for optimized compilation
+   TString          fListPaths;                 //List of all include (fIncludePath + interpreter include path). Cache used by GetIncludePath
+   TString          fIncludePath;               //Used to expand $IncludePath in the directives given to SetMakeSharedLib and SetMakeExe
+   TString          fLinkedLibs;                //Used to expand $LinkedLibs in the directives given to SetMakeSharedLib and SetMakeExe
+   TString          fSoExt;                     //Extension of shared library (.so, .sl, .a, .dll, etc.)
+   TString          fObjExt;                    //Extension of object files (.o, .obj, etc.)
+   EAclicMode       fAclicMode{kDefault};       //Whether the compilation should be done debug or opt
+   TString          fMakeSharedLib;             //Directive used to build a shared library
+   TString          fMakeExe;                   //Directive used to build an executable
+   TString          fLinkdefSuffix;             //Default suffix for linkdef files to be used by ACLiC (see EACLiCProperties)
+   Int_t            fAclicProperties{0};        //Various boolean flag for change ACLiC's behavior.
+   TSeqCollection  *fCompiled{nullptr};         //List of shared libs from compiled macros to be deleted
+   TSeqCollection  *fHelpers{nullptr};          //List of helper classes for alternative file/directory access
 
    TString &GetLastErrorString();             //Last system error message (thread local).
    const TString &GetLastErrorString() const; //Last system error message (thread local).
 
-   TSystem               *FindHelper(const char *path, void *dirptr = 0);
-   virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
+   TSystem               *FindHelper(const char *path, void *dirptr = nullptr);
+   virtual Bool_t         ConsistentWith(const char *path, void *dirptr = nullptr);
    virtual const char    *ExpandFileName(const char *fname);
    virtual Bool_t         ExpandFileName(TString &fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
    virtual void           DoBeep(Int_t /*freq*/=-1, Int_t /*duration*/=-1) const { printf("\a"); fflush(stdout); }
 
-   static const char *StripOffProto(const char *path, const char *proto) {
-      return !strncmp(path, proto, strlen(proto)) ? path + strlen(proto) : path;
-   }
+   static const char     *StripOffProto(const char *path, const char *proto);
 
 private:
-   TSystem(const TSystem&);              // not implemented
-   TSystem& operator=(const TSystem&);   // not implemented
+   TSystem(const TSystem&) = delete;              // not implemented
+   TSystem& operator=(const TSystem&) = delete;   // not implemented
    Bool_t ExpandFileName(const char *fname, char *xname, const int kBufSize);
 
 public:
@@ -414,24 +410,25 @@ public:
    virtual void           *OpenDirectory(const char *name);
    virtual void            FreeDirectory(void *dirp);
    virtual const char     *GetDirEntry(void *dirp);
-   virtual void           *GetDirPtr() const { return 0; }
+   virtual void           *GetDirPtr() const { return nullptr; }
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
    virtual std::string     GetWorkingDirectory() const;
-   virtual const char     *HomeDirectory(const char *userName = 0);
-   virtual std::string     GetHomeDirectory(const char *userName = 0) const;
+   virtual const char     *HomeDirectory(const char *userName = nullptr);
+   virtual std::string     GetHomeDirectory(const char *userName = nullptr) const;
    virtual int             mkdir(const char *name, Bool_t recursive = kFALSE);
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
-   virtual FILE           *TempFileName(TString &base, const char *dir = 0);
+   virtual FILE           *TempFileName(TString &base, const char *dir = nullptr);
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);
    virtual const char     *DirName(const char *pathname);
+   virtual TString         GetDirName(const char *pathname);
    virtual char           *ConcatFileName(const char *dir, const char *name);
    virtual Bool_t          IsAbsoluteFileName(const char *dir);
-   virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = 0);
+   virtual Bool_t          IsFileInIncludePath(const char *name, char **fullpath = nullptr);
    virtual const char     *PrependPathName(const char *dir, TString& name);
    virtual Bool_t          ExpandPathName(TString &path);
    virtual char           *ExpandPathName(const char *path);
@@ -455,14 +452,14 @@ public:
    virtual TList          *GetVolumes(Option_t *) const { return 0; }
 
    //---- Users & Groups
-   virtual Int_t           GetUid(const char *user = 0);
-   virtual Int_t           GetGid(const char *group = 0);
+   virtual Int_t           GetUid(const char *user = nullptr);
+   virtual Int_t           GetGid(const char *group = nullptr);
    virtual Int_t           GetEffectiveUid();
    virtual Int_t           GetEffectiveGid();
    virtual UserGroup_t    *GetUserInfo(Int_t uid);
-   virtual UserGroup_t    *GetUserInfo(const char *user = 0);
+   virtual UserGroup_t    *GetUserInfo(const char *user = nullptr);
    virtual UserGroup_t    *GetGroupInfo(Int_t gid);
-   virtual UserGroup_t    *GetGroupInfo(const char *group = 0);
+   virtual UserGroup_t    *GetGroupInfo(const char *group = nullptr);
 
    //---- Environment Manipulation
    virtual void            Setenv(const char *name, const char *value);
@@ -475,7 +472,7 @@ public:
    virtual void            Closelog();
 
    //---- Standard Output redirection
-   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = 0);
+   virtual Int_t           RedirectOutput(const char *name, const char *mode = "a", RedirectHandle_t *h = nullptr);
    virtual void            ShowOutput(RedirectHandle_t *h);
 
    //---- Dynamic Loading
@@ -523,7 +520,7 @@ public:
    //---- ACLiC (Automatic Compiler of Shared Library for CINT)
    virtual void            AddIncludePath(const char *includePath);
    virtual void            AddLinkedLibs(const char *linkedLib);
-   virtual int             CompileMacro(const char *filename, Option_t *opt="", const char* library_name = "", const char* build_dir = "", UInt_t dirmode = 0);
+   virtual int             CompileMacro(const char *filename, Option_t *opt = "", const char *library_name = "", const char *build_dir = "", UInt_t dirmode = 0);
    virtual Int_t           GetAclicProperties() const;
    virtual const char     *GetBuildArch() const;
    virtual const char     *GetBuildCompiler() const;

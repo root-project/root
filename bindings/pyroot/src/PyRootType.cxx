@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-
 namespace PyROOT {
 
 namespace {
@@ -92,6 +91,7 @@ namespace {
 
       // filter for python specials and lookup qualified class or function
          std::string name = PyROOT_PyUnicode_AsString( pyname );
+
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
             attr = CreateScopeProxy( name, pyclass );
 
@@ -105,7 +105,6 @@ namespace {
                Cppyy::TCppScope_t scope = Cppyy::GetScope( cppname );
                TClass* klass = TClass::GetClass( cppname );
                if ( Cppyy::IsNamespace( scope ) ) {
-
                // tickle lazy lookup of functions
                   if ( ! attr ) {
                      TObject *methObj = nullptr;
@@ -148,11 +147,42 @@ namespace {
                }
 
             // enums types requested as type (rather than the constants)
-               if ( ! attr && klass && klass->GetListOfEnums()->FindObject( name.c_str() ) ) {
-               // special case; enum types; for now, pretend int
-               // TODO: although fine for C++98, this isn't correct in C++11
-                  Py_INCREF( &PyInt_Type );
-                  attr = (PyObject*)&PyInt_Type;
+               if (!attr) {
+                  if (Cppyy::IsEnum(Cppyy::GetScopedFinalName(scope)+"::"+name)) {
+                     // enum types (incl. named and class enums)
+                     Cppyy::TCppEnum_t enumtype = Cppyy::GetEnum(scope, name);
+                     if (enumtype) {
+                        // collect the enum values
+                        Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(enumtype);
+                        PyObject* dct = PyDict_New();
+                        for (Cppyy::TCppIndex_t idata = 0; idata < ndata; ++idata) {
+                           PyObject* val = PyLong_FromLongLong(Cppyy::GetEnumDataValue(enumtype, idata));
+                           PyDict_SetItemString(dct, Cppyy::GetEnumDataName(enumtype, idata).c_str(), val);
+                           Py_DECREF(val);
+                        }
+
+                        // add the __cppname__ for templates
+                        PyObject* cppnamepy = PyROOT_PyUnicode_FromString((Cppyy::GetScopedFinalName(scope)+"::"+name).c_str());
+                        PyDict_SetItem(dct, PyStrings::gCppName, cppnamepy);
+                         // add also __cpp_name__ for forward compatibility
+                        PyDict_SetItem(dct, PyStrings::gCppNameNew, cppnamepy);
+                        Py_DECREF(cppnamepy);
+
+                        // create new type with labeled values in place
+                        PyObject* pybases = PyTuple_New(1);
+                        Py_INCREF(&PyInt_Type);
+                        PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
+                        PyObject* args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
+                        attr = Py_TYPE(&PyInt_Type)->tp_new(Py_TYPE(&PyInt_Type), args, nullptr);
+                        Py_DECREF(args);
+                        Py_DECREF(pybases);
+                        Py_DECREF(dct);
+                     } else {
+                        // presumably not a class enum; simply pretend int
+                        Py_INCREF(&PyInt_Type);
+                        attr = (PyObject*)&PyInt_Type;
+                     }
+                  }
                }
 
                if ( attr ) {

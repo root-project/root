@@ -1,15 +1,15 @@
 {
 	"_version": "1.8.0",
 	"sap.app": {
-		"id": "rootui5.browser",
+		"id": "rootui5.browser"
 	},
 
 	"sap.ui5": {
 		"rootView": {
 			"viewName": "rootui5.browser.view.Browser",
 			"type": "XML",
-         "async": true,
-         "id": "Browser"
+			"async": true,
+			"id": "Browser"
 		},
 		"dependencies": {
 			"minUI5Version": "1.30.0",
@@ -23,6 +23,13 @@
 		"contentDensities": {
 			"compact": true,
 			"cozy": true
+		},
+		"config": {
+			"sample": {
+				"files": [
+					"view.contextmenu.fragment.xml"
+				]
+			}
 		},
 		"routing": {
 			"config": {

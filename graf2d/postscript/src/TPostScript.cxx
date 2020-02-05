@@ -12,7 +12,7 @@
 /** \class TPostScript
 \ingroup PS
 
-Interface to PostScript.
+\brief Interface to PostScript.
 
 To generate a Postscript (or encapsulated ps) file corresponding to
 a single image in a canvas, you can:
@@ -26,7 +26,11 @@ a single image in a canvas, you can:
     file instead.
   - In your program (or macro), you can type:
 ~~~ {.cpp}
-    c1->Print("xxx.ps")</B> or <B>c1->Print("xxx.eps").
+    c1->Print("xxx.ps");
+~~~
+or:
+~~~ {.cpp}
+    c1->Print("xxx.eps");
 ~~~
     This will generate a file corresponding to the picture in the canvas
     pointed by `c1`.
@@ -215,7 +219,7 @@ component K (black). The conversion from RGB to CMYK is:
 CMYK add the black component which allows to have a better quality for black
 printing. PostScript support the CMYK model.
 
-To change the color model use gStyle->SetColorModelPS(c).
+To change the color model use `gStyle->SetColorModelPS(c)`.
 
   - c = 0 means TPostScript will use RGB color model (default)
   - c = 1 means TPostScript will use CMYK color model
@@ -691,8 +695,8 @@ void TPostScript::DefineMarkers()
    PrintStr("/m30 {mp gsave x w2 sub y w2 add w3 sub m currentpoint t");
    PrintStr(" 4 {side} repeat cl s gr} def@");
    PrintStr("/m31 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d");
-   PrintStr(" x w2 sub y w2 add m w w neg d x w2 sub y w2");
-   PrintStr(" sub m w w d s} def@");
+   PrintStr(" x w2 .707 mul sub y w2 .707 mul add m w 1.44 div w 1.44 div neg d x w2 .707 mul sub y w2 .707 mul");
+   PrintStr(" sub m w 1.44 div w 1.44 div d s} def@");
    PrintStr("/m32 {mp x y w2 sub m w2 w d w neg 0 d cl s} def@");
    PrintStr("/m33 {mp x y w2 add m w3 neg w2 neg d w3 w2 neg d w3 w2 d cl f} def@");
    PrintStr("/m34 {mp x w2 sub y w2 sub w3 add m w3 0 d ");
@@ -743,7 +747,7 @@ void TPostScript::DefineMarkers()
    PrintStr(" 0 w3 neg d w3 0 d 0 w3 d w3 0 d 0 w3 d w3 neg 0 d 0 w3 d w3 neg 0 d");
    PrintStr(" 0 w3 neg d w3 neg 0 d 0 w3 neg d w3 0 d 0 w3 d w3 0 d 0 w3 neg d w3 neg 0 d cl f } def@");
    PrintStr("/m2 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d s} def@");
-   PrintStr("/m5 {mp x w2 sub y w2 sub m w w d x w2 sub y w2 add m w w neg d s} def@");
+   PrintStr("/m5 {mp x w2 .707 mul sub y w2 .707 mul sub m w 1.44 div w 1.44 div d x w2 .707 mul sub y w2 .707 mul add m w 1.44 div w 1.44 div neg d s} def@");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1097,12 +1101,13 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    static char chtemp[10];
 
    if (!fMarkerSize) return;
+   fMarkerStyle = TMath::Abs(fMarkerStyle);
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(1);
+   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
-   markerstyle = abs(fMarkerStyle);
+   markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
    if (markerstyle == 1) strlcpy(chtemp, " m20",10);
    if (markerstyle == 2) strlcpy(chtemp, " m2",10);
@@ -1114,14 +1119,14 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle >= 50) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
-   if (markerstyle == 1) {
+   if (markerstyle == 1 || (markerstyle >= 9 && markerstyle <= 19)) {
       markersize = 2.;
    } else if (markerstyle == 6) {
       markersize = 4.;
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize  = fMarkerSize;
+      Float_t symbolsize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale/4.;
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
@@ -1170,12 +1175,13 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    static char chtemp[10];
 
    if (!fMarkerSize) return;
+   fMarkerStyle = TMath::Abs(fMarkerStyle);
    Style_t linestylesav = fLineStyle;
    Width_t linewidthsav = fLineWidth;
    SetLineStyle(1);
-   SetLineWidth(1);
+   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
    SetColor(Int_t(fMarkerColor));
-   markerstyle = abs(fMarkerStyle);
+   markerstyle = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
    if (markerstyle <= 0) strlcpy(chtemp, " m20",10);
    if (markerstyle == 1) strlcpy(chtemp, " m20",10);
    if (markerstyle == 2) strlcpy(chtemp, " m2",10);
@@ -1187,14 +1193,14 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle >= 50) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
-   if (markerstyle == 1) {
+   if (markerstyle == 1 || (markerstyle >= 9 && markerstyle <= 19)) {
       markersize = 2.;
    } else if (markerstyle == 6) {
       markersize = 4.;
    } else if (markerstyle == 7) {
       markersize = 8.;
    } else {
-      Float_t symbolsize  = fMarkerSize;
+      Float_t symbolsize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale/4.;
       const Int_t kBASEMARKER = 8;
       Float_t sbase = symbolsize*kBASEMARKER;
       Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());

@@ -1989,6 +1989,12 @@ public:
    /// ~~~
    unsigned int GetNSlots() const { return fLoopManager->GetNSlots(); }
 
+   /// \brief Gets the number of event loops run
+   /// \return The number of event loops run by this RDataFrame instance
+   ///
+   /// This method returns the number of events loops run so far by this RDataFrame instance.
+   unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
@@ -2451,7 +2457,7 @@ private:
 
       fLoopManager->Book(actionPtr.get());
 
-      return RDFInternal::CreateSnaphotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
+      return RDFInternal::CreateSnapshotRDF(validCols, fullTreename, filename, options.fLazy, *fLoopManager,
                                            std::move(actionPtr));
    }
 

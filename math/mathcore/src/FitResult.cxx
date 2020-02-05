@@ -116,17 +116,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    fMinimizer= min;
    fFitFunc = func;
 
-
-
-   // set minimizer type
-   fMinimType = fconfig.MinimizerType();
-
-   // append algorithm name for minimizer that support it
-   if ( (fMinimType.find("Fumili") == std::string::npos) &&
-        (fMinimType.find("GSLMultiFit") == std::string::npos)
-      ) {
-      if (fconfig.MinimizerAlgoType() != "") fMinimType += " / " + fconfig.MinimizerAlgoType();
-   }
+   fMinimType = fconfig.MinimizerName();
 
    // replace ncalls if minimizer does not support it (they are taken then from the FitMethodFunction)
    if (fNCalls == 0) fNCalls = ncalls;
@@ -208,18 +198,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
             for (unsigned int j = 0; j <= i; ++j)
                fCovMatrix.push_back(min->CovMatrix(i,j) );
       }
-
-      // minos errors
-      if (fValid && fconfig.MinosErrors()) {
-         const std::vector<unsigned int> & ipars = fconfig.MinosParams();
-         unsigned int n = (ipars.size() > 0) ? ipars.size() : npar;
-         for (unsigned int i = 0; i < n; ++i) {
-          double elow, eup;
-          unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
-          bool ret = min->GetMinosError(index, elow, eup);
-          if (ret) SetMinosError(index, elow, eup);
-         }
-      }
+      // minos errors are set separetly when calling Fitter::CalculateMinosErrors()
 
       // globalCC
       fGlobalCC.reserve(npar);
@@ -288,11 +267,14 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
 }
 
-bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool isValid, unsigned int ncalls) {
+bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const ROOT::Fit::FitConfig & fconfig, bool isValid, unsigned int ncalls) {
    // update fit result with new status from minimizer
    // ncalls if it is not zero is used instead of value from minimizer
 
    fMinimizer = min;
+
+   // in case minimizer changes
+   fMinimType = fconfig.MinimizerName();
 
    const unsigned int npar = fParams.size();
    if (min->NDim() != npar ) {
@@ -486,7 +468,10 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       else {
          if (fErrors.size() != 0)
             os << "   +/-   " << std::left << std::setw(nn) << fErrors[i] << std::right;
-         if (IsParameterBound(i) )
+         if (HasMinosError(i))
+            os << "  " << std::left  << std::setw(nn) << LowerError(i) << " +" << std::setw(nn) << UpperError(i)
+               << " (Minos) ";
+         if (IsParameterBound(i))
             os << " \t (limited)";
       }
       os << std::endl;
@@ -740,4 +725,3 @@ bool FitResult::Contour(unsigned int ipar, unsigned int jpar, unsigned int &npoi
    } // end namespace Fit
 
 } // end namespace ROOT
-

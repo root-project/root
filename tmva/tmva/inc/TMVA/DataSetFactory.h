@@ -283,7 +283,8 @@ namespace TMVA {
 
       // the formulas for reading the original tree
       std::vector<TTreeFormula*> fInputFormulas;   // input variables
-      std::vector<TTreeFormula*> fTargetFormulas;  // targets
+      std::vector<std::pair<TTreeFormula*, Int_t>> fInputTableFormulas;    //! input variables expression for arrays
+      std::vector<TTreeFormula *> fTargetFormulas; // targets
       std::vector<TTreeFormula*> fCutFormulas;     // cuts
       std::vector<TTreeFormula*> fWeightFormula;   // weights
       std::vector<TTreeFormula*> fSpectatorFormulas; // spectators

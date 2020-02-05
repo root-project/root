@@ -46,13 +46,28 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Event
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
                               SOURCES Event.cxx LINKDEF EventLinkDef.h
                               DEPENDENCIES Hist MathCore)
-
+if(MSVC)
+  add_custom_command(TARGET Event POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libEvent_rdict.pcm
+                                     ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEvent_rdict.pcm)
+endif()
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---hsimple------------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
 #ROOT_ADD_TEST(test-hsimple COMMAND hsimple)
+
+#---invalid pointer checks---------------------------------------------------------------------
+ROOT_ADD_TEST(test-check-nullptr
+  COMMAND ${ROOT_root_CMD} -b -q -l -e "int*ptr=(int*)0" -e "*ptr"
+  PASSREGEX "dereference null pointer")
+
+if(NOT MSVC OR win_broken_tests)
+  ROOT_ADD_TEST(test-check-invalidptr
+    COMMAND ${ROOT_root_CMD} -b -q -l -e "int*ptr=(int*)1" -e "*ptr"
+    PASSREGEX "invalid memory address")
+endif()
 
 #--minexam-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(minexam minexam.cxx LIBRARIES Minuit)
@@ -207,7 +222,11 @@ ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l 
 
 #--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
-  ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit)
+if(ROOT_mathmore_FOUND)
+  ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
+else()
+  ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
+endif()  
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx
@@ -332,6 +351,7 @@ ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error i
 if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
   ROOT_EXECUTABLE(testTBB testTBB.cxx LIBRARIES ${TBB_LIBRARIES} BUILTINS TBB)
+  set_target_properties(testTBB PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
   ROOT_ADD_TEST(test-TBB COMMAND testTBB FAILREGEX "FAILED|Error in")
 endif()
 
@@ -382,10 +402,24 @@ if (NOT cxxmodules)
   # the current test will not require the VecCore (as in the textual case).
   # Alternatively, we can trace the origin of the fatal error and try to remap
   # the source locations.
-  ROOT_ADD_TEST(test-periodic-build
-    COMMAND
-      env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-      ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
-      --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-  )
+  if(MSVC)
+    set(build_generator_args --build-generator ${CMAKE_GENERATOR})
+    if(CMAKE_GENERATOR_PLATFORM)
+      list(APPEND build_generator_args --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
+    endif()
+    if(CMAKE_GENERATOR_TOOLSET)
+      list(APPEND build_generator_args --build-generator-toolset ${CMAKE_GENERATOR_TOOLSET})
+    endif()
+    ROOT_ADD_TEST(test-periodic-build
+      COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
+        --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+    )
+  else()
+    ROOT_ADD_TEST(test-periodic-build
+      COMMAND
+        env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+        ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
+        --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+    )
+  endif()
 endif()

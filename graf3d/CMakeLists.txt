@@ -20,15 +20,15 @@ endif()
 add_subdirectory(csg) # special CMakeLists.txt
 
 if (opengl)
-   add_subdirectory(eve) # special CMakeLists.txt
-   add_subdirectory(gl) # special CMakeLists.txt
-   if(builtin_glew)
-      add_subdirectory(glew)
-   endif()
-   if(builtin_ftgl)
-      add_subdirectory(ftgl)
-   endif()
-  add_subdirectory(gviz3d) # special CMakeLists.txt
+  if(builtin_ftgl)
+    add_subdirectory(ftgl)
+  endif()
+  if(builtin_glew)
+    add_subdirectory(glew)
+  endif()
+  add_subdirectory(eve)
+  add_subdirectory(gl)
+  add_subdirectory(gviz3d)
 endif()
 
 if(webgui AND root7)

@@ -15,18 +15,21 @@
 #include <ROOT/RWebWindow.hxx>
 
 #include "TSystem.h"
+#include "TBase64.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "THttpServer.h"
 #include "TBufferJSON.h"
 #include "TGeoManager.h"
 
+#include <fstream>
+
 using namespace std::string_literals;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
+ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr, const std::string &volname)
 {
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/geom.html");
@@ -37,11 +40,11 @@ ROOT::Experimental::REveGeomViewer::REveGeomViewer(TGeoManager *mgr)
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 
-   if (mgr) SetGeometry(mgr);
-
    fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
    fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
-   fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1) > 0);
+   fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1));
+
+   if (mgr) SetGeometry(mgr, volname);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,24 +58,14 @@ ROOT::Experimental::REveGeomViewer::~REveGeomViewer()
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// assign new geometry to the viewer
 
-void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr)
+void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr, const std::string &volname)
 {
    fGeoManager = mgr;
+   fSelectedVolume = volname;
 
-   fDesc.Build(fGeoManager);
+   fDesc.Build(mgr, volname);
 
-   if (!fGeoManager) return;
-
-   // take maximal setting
-   auto maxnodes = fGeoManager->GetMaxVisNodes();
-   if (maxnodes > 5000)
-      maxnodes = 5000;
-   else if (maxnodes < 1000)
-      maxnodes = 1000;
-
-   fDesc.SetMaxVisNodes(maxnodes);
-   fDesc.SetMaxVisFaces(maxnodes * 100);
-   fDesc.SetNSegments(fGeoManager->GetNsegments());
+   Update();
 }
 
 
@@ -81,11 +74,8 @@ void ROOT::Experimental::REveGeomViewer::SetGeometry(TGeoManager *mgr)
 
 void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname)
 {
-   if (!fGeoManager || volname.empty()) {
-      fDesc.SelectVolume(nullptr);
-   } else {
-      fDesc.SelectVolume(fGeoManager->GetVolume(volname.c_str()));
-   }
+   if (volname != fSelectedVolume)
+      SetGeometry(fGeoManager, volname);
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -95,14 +85,20 @@ void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname
 
 void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
-   auto number = fWebWindow->NumConnections();
+   std::string user_args = "";
+   if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
+   fWebWindow->SetUserArgs(user_args);
 
-   if ((number == 0) || always_start_new_browser) {
+   if ((fWebWindow->NumConnections(true) == 0) || always_start_new_browser)
       fWebWindow->Show(args);
-   } else {
-      for (int n=0;n<number;++n)
-         WebWindowCallback(fWebWindow->GetConnectionId(n),"RELOAD");
-   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Update geometry drawings in all web displays
+
+void ROOT::Experimental::REveGeomViewer::Update()
+{
+   fWebWindow->Send(0, "RELOAD");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,23 +128,42 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
       fDesc.CollectVisibles();
 
    auto &json = fDesc.GetDrawJson();
-   auto &binary = fDesc.GetDrawBinary();
 
-   printf("Produce JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+   printf("Produce geometry JSON %d\n", (int) json.length());
 
    fWebWindow->Send(connid, json);
-
-   if (binary.size() > 0)
-      fWebWindow->SendBinary(connid, binary.data(), binary.size());
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Configures draw option for geometry
+/// Normally has effect before first drawing of the geometry
+/// When geometry displayed, only "axis" and "rotate" options are updated
+
+void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
+{
+   fDesc.SetDrawOptions(opt);
+
+   fWebWindow->Send(0, "DROPT:"s + opt);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce PNG image of drawn geometry
+/// Drawing should be completed at the moment
+/// Executed asynchronous - method returns immediately, image stored when received from the client
+
+void ROOT::Experimental::REveGeomViewer::SaveImage(const std::string &fname)
+{
+    unsigned connid = fWebWindow->GetConnectionId();
+    if (connid)
+       fWebWindow->Send(connid, "IMAGE:"s + fname);
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// receive data from client
 
 void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("Recv %s\n", arg.c_str());
+   printf("Recv %s\n", arg.substr(0,100).c_str());
 
    if (arg == "GETDRAW") {
 
@@ -163,20 +178,16 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       std::string query = arg.substr(7);
 
       std::string hjson, json;
-      std::vector<unsigned char> binary;
 
-      auto nmatches = fDesc.SearchVisibles(query, hjson, json, binary);
+      auto nmatches = fDesc.SearchVisibles(query, hjson, json);
 
-      printf("Searches %s found %d hjson %d json %d binary %d\n", query.c_str(), nmatches, (int) hjson.length(), (int) json.length(), (int) binary.size());
+      printf("Searches %s found %d hjson %d json %d\n", query.c_str(), nmatches, (int) hjson.length(), (int) json.length());
 
       // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
       fWebWindow->Send(connid, hjson);
 
       if (!json.empty())
          fWebWindow->Send(connid, json);
-
-      if (binary.size() > 0)
-         fWebWindow->SendBinary(connid, binary.data(), binary.size());
 
    } else if (arg.compare(0,4,"GET:") == 0) {
       // provide exact shape
@@ -186,16 +197,12 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
       auto nodeid = fDesc.FindNodeId(stack);
 
       std::string json{"SHAPE:"};
-      std::vector<unsigned char> binary;
 
-      fDesc.ProduceDrawingFor(nodeid, json, binary);
+      fDesc.ProduceDrawingFor(nodeid, json);
 
-      printf("Produce shape for stack json %d binary %d\n", (int) json.length(), (int) binary.size());
+      printf("Produce shape for stack json %d\n", (int) json.length());
 
       fWebWindow->Send(connid, json);
-
-      if (binary.size() > 0)
-         fWebWindow->SendBinary(connid, binary.data(), binary.size());
 
    } else if (arg.compare(0, 6, "GVREQ:") == 0) {
 
@@ -245,15 +252,12 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
             // there can be many elements, which reference same volume
 
             std::string json{"APPND:"};
-            std::vector<unsigned char> binary;
 
-            fDesc.ProduceDrawingFor(nodeid, json, binary, true);
+            if (fDesc.ProduceDrawingFor(nodeid, json, true)) {
 
-            if (binary.size() > 0) {
-               printf("Send appending JSON %d binary %d\n", (int) json.length(), (int) binary.size());
+               printf("Send appending JSON %d\n", (int) json.length());
 
                fWebWindow->Send(connid, json);
-               fWebWindow->SendBinary(connid, binary.data(), binary.size());
             }
          } else if (selected) {
 
@@ -275,5 +279,35 @@ void ROOT::Experimental::REveGeomViewer::WebWindowCallback(unsigned connid, cons
 
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
       if (json.length() > 0) fWebWindow->Send(connid, json);
+   } else if (arg.compare(0,6, "IMAGE:") == 0) {
+      auto separ = arg.find("::",6);
+      if (separ == std::string::npos) return;
+
+      std::string fname = arg.substr(6, separ-6);
+      if (fname.empty()) {
+         int cnt = 0;
+         do {
+            fname = "geometry"s;
+            if (cnt++>0) fname += std::to_string(cnt);
+            fname += ".png"s;
+         } while (!gSystem->AccessPathName(fname.c_str()));
+      }
+
+      TString binary = TBase64::Decode(arg.c_str() + separ + 2);
+
+      std::ofstream ofs(fname);
+      ofs.write(binary.Data(), binary.Length());
+      ofs.close();
+
+      printf("Image file %s size %d has been created\n", fname.c_str(), (int) binary.Length());
+
+   } else if (arg.compare(0,4, "CFG:") == 0) {
+
+      if (fDesc.ChangeConfiguration(arg.substr(4)))
+         SendGeometry(connid);
+
+   } else if (arg == "RELOAD") {
+
+      SendGeometry(connid);
    }
 }

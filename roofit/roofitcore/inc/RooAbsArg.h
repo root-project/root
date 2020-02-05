@@ -49,8 +49,6 @@ class RooSetProxy ;
 class RooListProxy ;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
-class RooRealProxy ;
-/* class TGraphStruct ; */
 
 class RooRefArray : public TObjArray {
  public:
@@ -58,13 +56,17 @@ class RooRefArray : public TObjArray {
   } ;
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
+  RooRefArray& operator=(const RooRefArray& other) = default;
   virtual ~RooRefArray() {} ;
  protected:
   ClassDef(RooRefArray,1) // Helper class for proxy lists
 } ;
 
-
-
+class RooAbsArg;
+/// Print at the prompt
+namespace cling {
+std::string printValue(RooAbsArg*);
+}
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -76,6 +78,7 @@ public:
   virtual ~RooAbsArg();
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
+  RooAbsArg& operator=(const RooAbsArg& other);
   virtual TObject* clone(const char* newname=0) const = 0 ;
   virtual TObject* Clone(const char* newname = 0) const {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
@@ -156,38 +159,38 @@ public:
     return _clientListShape;
   }
 
+  /// List of all servers of this object.
   const RefCountList_t& servers() const {
     return _serverList;
   }
-
+  /// Return server of `this` with name `name`. Returns nullptr if not found.
   inline RooAbsArg* findServer(const char *name) const {
-    // Return server of this arg with given name. Returns null if not found
     const auto serverIt = _serverList.findByName(name);
     return serverIt != _serverList.end() ? *serverIt : nullptr;
   }
+  /// Return server of `this` that has the same name as `arg`. Returns `nullptr` if not found.
   inline RooAbsArg* findServer(const RooAbsArg& arg) const {
-    // Return server of this arg with name of given input arg. Returns null if not found
     const auto serverIt = _serverList.findByNamePointer(&arg);
     return serverIt != _serverList.end() ? *serverIt : nullptr;
   }
+  /// Return i-th server from server list.
   inline RooAbsArg* findServer(Int_t index) const {
-    // Return i-th server from server list
     return _serverList.containedObjects()[index];
   }
+  /// Check if `this` is serving values to `arg`.
   inline Bool_t isValueServer(const RooAbsArg& arg) const {
-    // If true, arg is a value server of self
     return _clientListValue.containsByNamePtr(&arg);
   }
+  /// Check if `this` is serving values to an object with name `name`.
   inline Bool_t isValueServer(const char* name) const {
-    // If true, we have a server with given name
     return _clientListValue.containsSameName(name);
   }
+  /// Check if `this` is serving shape to `arg`.
   inline Bool_t isShapeServer(const RooAbsArg& arg) const {
-    // If true arg is a shape server of self
     return _clientListShape.containsByNamePtr(&arg);
   }
+  /// Check if `this` is serving shape to an object with name `name`.
   inline Bool_t isShapeServer(const char* name) const {
-    // If true, we have a shape server with given name
     return _clientListShape.containsSameName(name);
   }
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
@@ -217,7 +220,6 @@ public:
     return kFALSE;
   }
 
-  void addParameters(RooArgSet& params, const RooArgSet* nset=0, Bool_t stripDisconnected=kTRUE)  const ;
 
   // Parameter & observable interpretation of servers
   friend class RooProdPdf ;
@@ -251,12 +253,19 @@ public:
   RooArgSet* getComponents() const ;
 
   // --- Obsolete functions for backward compatibility
+  /// \deprecated Use getObservables()
   inline RooArgSet* getDependents(const RooArgSet& set) const { return getObservables(set) ; }
+  /// \deprecated Use getObservables()
   inline RooArgSet* getDependents(const RooAbsData* set) const { return getObservables(set) ; }
+  /// \deprecated Use getObservables()
   inline RooArgSet* getDependents(const RooArgSet* depList) const { return getObservables(depList) ; }
+  /// \deprecated Use observableOverlaps()
   inline Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
+  /// \deprecated Use observableOverlaps()
   inline Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const { return observableOverlaps(depList, testArg) ; }
+  /// \deprecated Use checkObservables()
   inline Bool_t checkDependents(const RooArgSet* nset) const { return checkObservables(nset) ; }
+  /// \deprecated Use recursiveCheckObservables()
   inline Bool_t recursiveCheckDependents(const RooArgSet* nset) const { return recursiveCheckObservables(nset) ; }
   // --- End obsolete functions for backward compatibility
 
@@ -267,7 +276,9 @@ public:
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
   virtual void writeToStream(std::ostream& os, Bool_t compact) const = 0 ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  /// Print the object to the defaultPrintStream().
+  /// \param[in] options **V** print verbose. **T** print a tree structure with all children.
+  virtual void Print(Option_t *options= 0) const {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -442,17 +453,6 @@ public:
   inline OperMode operMode() const { return _operMode  ; }
   void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ;
 
-  static UInt_t crc32(const char* data);
-  static UInt_t crc32(const char* data, ULong_t sz, UInt_t crc = 0);
-
-  static const UInt_t fnv1a32start = 2166136261u;
-  static UInt_t fnv1a32(const char* data);
-  static UInt_t fnv1a32(const char* data, ULong_t sz, UInt_t hash = fnv1a32start);
-
-  static const ULong64_t fnv1a64start = (ULong64_t(3421674724u) << 32) | ULong64_t(2216829733u);
-  static ULong64_t fnv1a64(const char* data);
-  static ULong64_t fnv1a64(const char* data, ULong_t sz, ULong64_t hash = fnv1a64start);
-
   Bool_t addOwnedComponents(const RooArgSet& comps) ;
   const RooArgSet* ownedComponents() const { return _ownedComponents ; }
 
@@ -460,41 +460,15 @@ public:
 
   void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
 
-  protected:
-
-  void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
-
-  friend class RooExtendPdf ;
-  friend class RooRealIntegral ;
-  friend class RooAbsReal ;
-  friend class RooProjectedPdf ;
-  //friend class RooSimCloneTool ;
-
-  virtual void operModeHook() {} ;
-
-  virtual void optimizeDirtyHook(const RooArgSet* /*obs*/) {} ;
-
-  virtual Bool_t isValid() const ;
-
-  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t /*stripDisconnected*/) const {} ;
-  virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
 
   // Dirty state modifiers
- public:
-  inline void setValueDirty() const {   if (_operMode==Auto && !inhibitDirty()) setValueDirty(0) ; }
-  inline void setShapeDirty() const { setShapeDirty(0) ; }
-
-  inline void clearValueAndShapeDirty() const {
-    _valueDirty=kFALSE ;
-    _shapeDirty=kFALSE ;
+  /// Mark the element dirty. This forces a re-evaluation when a value is requested.
+  void setValueDirty() {
+    if (_operMode == Auto && !inhibitDirty())
+      setValueDirty(nullptr);
   }
-
-  inline void clearValueDirty() const {
-    _valueDirty=kFALSE ;
-  }
-  inline void clearShapeDirty() const {
-    _shapeDirty=kFALSE ;
-  }
+  /// Notify that a shape-like property (*e.g.* binning) has changed.
+  void setShapeDirty() { setShapeDirty(nullptr); }
 
   const char* aggregateCacheUniqueSuffix() const ;
   virtual const char* cacheUniqueSuffix() const { return 0 ; }
@@ -508,23 +482,8 @@ public:
   void SetName(const char* name) ;
   void SetNameTitle(const char *name, const char *title) ;
 
- protected:
-
-  // Client-Server relatation and Proxy management
-  friend class RooArgSet ;
-  friend class RooAbsCollection ;
-  friend class RooCustomizer ;
-  friend class RooWorkspace ;
-  RefCountList_t _serverList       ; // list of server objects
-  RefCountList_t _clientList; // list of client objects
-  RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
-  RefCountList_t _clientListValue; // subset of clients that requested value dirty flag propagation
-
-  RooRefArray _proxyList        ; // list of proxies
-  std::deque<RooAbsCache*> _cacheList ; // list of caches
 
   // Server redirection interface
- public:
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t recurseInNewSet=kTRUE) ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) { return kFALSE ; } ;
@@ -546,7 +505,66 @@ public:
      return kFALSE;
   };
 
-  protected:
+
+protected:
+   void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
+
+   virtual void operModeHook() {} ;
+
+   virtual void optimizeDirtyHook(const RooArgSet* /*obs*/) {} ;
+
+   virtual Bool_t isValid() const ;
+
+   virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t /*stripDisconnected*/) const {} ;
+   virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
+
+   void clearValueAndShapeDirty() const {
+     _valueDirty=kFALSE ;
+     _shapeDirty=kFALSE ;
+   }
+
+   void clearValueDirty() const {
+     _valueDirty=kFALSE ;
+   }
+   void clearShapeDirty() const {
+     _shapeDirty=kFALSE ;
+   }
+
+   /// Force element to re-evaluate itself when a value is requested.
+   void setValueDirty(const RooAbsArg* source);
+   /// Notify that a shape-like property (*e.g.* binning) has changed.
+   void setShapeDirty(const RooAbsArg* source);
+
+   virtual void ioStreamerPass2() ;
+   static void ioStreamerPass2Finalize() ;
+
+
+private:
+  void addParameters(RooArgSet& params, const RooArgSet* nset=0, Bool_t stripDisconnected=kTRUE) const;
+
+  RefCountListLegacyIterator_t * makeLegacyIterator(const RefCountList_t& list) const;
+
+
+ protected:
+
+  // Client-Server relation and Proxy management
+  friend class RooArgSet ;
+  friend class RooAbsCollection ;
+  friend class RooCustomizer ;
+  friend class RooWorkspace ;
+  friend class RooExtendPdf ;
+  friend class RooRealIntegral ;
+  friend class RooAbsReal ;
+  friend class RooProjectedPdf ;
+  RefCountList_t _serverList       ; // list of server objects
+  RefCountList_t _clientList; // list of client objects
+  RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
+  RefCountList_t _clientListValue; // subset of clients that requested value dirty flag propagation
+
+  RooRefArray _proxyList        ; // list of proxies
+  std::deque<RooAbsCache*> _cacheList ; // list of caches
+
+
   // Proxy management
   friend class RooAddModel ;
   friend class RooArgProxy ;
@@ -585,6 +603,7 @@ public:
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void attachToVStore(RooVectorDataStore& vstore) = 0 ;
+  /// Attach this argument to the data store such that it reads data from there.
   void attachToStore(RooAbsDataStore& store) ;
 
   virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
@@ -594,6 +613,7 @@ public:
   // Global
   friend std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);
   friend std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
+  friend void RooRefArray::Streamer(TBuffer&);
 
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
@@ -607,13 +627,11 @@ public:
   Bool_t localNoDirtyInhibit() const { return _localNoInhibitDirty ; }
  protected:
 
-  // Value and Shape dirty state bits
-  void setValueDirty(const RooAbsArg* source) const ;
-  void setShapeDirty(const RooAbsArg* source) const ;
+
   mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
   mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
+  mutable bool _allBatchesDirty{true}; //! Mark batches as dirty (only meaningful for RooAbsReal).
 
-  friend class RooRealProxy ;
   mutable OperMode _operMode ; // Dirty state propagation mode
   mutable Bool_t _fast ; // Allow fast access mode in getVal() and proxies
 
@@ -634,25 +652,18 @@ public:
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
 
-  public:
-  virtual void ioStreamerPass2() ;
-  static void ioStreamerPass2Finalize() ;
+  // Legacy streamers need the following statics:
+  friend class RooFitResult;
+ public:
   static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution
+ protected:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
-
-  private:
-  RefCountListLegacyIterator_t * makeLegacyIterator(const RefCountList_t& list) const;
 
   ClassDef(RooAbsArg,7) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);
-std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
-
-/// Print a RDataFrame at the prompt
-namespace cling {
-std::string printValue(RooAbsArg *raa);
-} // namespace cling
+std::istream& operator>>(std::istream& is, RooAbsArg &arg);
 
 
 #endif

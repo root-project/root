@@ -128,15 +128,17 @@ namespace FitUtil {
   class IntegralEvaluator {
 
   public:
-     IntegralEvaluator(const ParamFunc &func, const double *p, bool useIntegral = true)
+     IntegralEvaluator(const ParamFunc &func, const double *p, bool useIntegral = true,
+                       ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT)
         : fDim(0), fParams(0), fFunc(0), fIg1Dim(0), fIgNDim(0), fFunc1Dim(0), fFuncNDim(0)
      {
         if (useIntegral) {
-           SetFunction(func, p);
+           SetFunction(func, p, igType);
         }
      }
 
-     void SetFunction(const ParamFunc &func, const double *p = 0)
+     void SetFunction(const ParamFunc &func, const double *p = 0,
+                      ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT)
      {
         // set the integrand function and create required wrapper
         // to perform integral in (x) of a generic  f(x,p)
@@ -152,7 +154,7 @@ namespace FitUtil {
            fFunc1Dim =
               new ROOT::Math::WrappedMemFunction<IntegralEvaluator, double (IntegralEvaluator::*)(double) const>(
                  *this, &IntegralEvaluator::F1);
-           fIg1Dim = new ROOT::Math::IntegratorOneDim();
+           fIg1Dim = new ROOT::Math::IntegratorOneDim(igType);
            // fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
            fIg1Dim->SetFunction(static_cast<const ROOT::Math::IGenFunction &>(*fFunc1Dim));
         } else if (fDim > 1) {
@@ -473,7 +475,7 @@ namespace FitUtil {
          }
 
          // Last SIMD vector of elements (if padding needed)
-         if (data.Size() % vecSize != 0) 
+         if (data.Size() % vecSize != 0)
             vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
                                   res + mapFunction(data.Size() / vecSize));
 
@@ -578,8 +580,8 @@ namespace FitUtil {
 
 #ifdef DEBUG_FITUTIL
             if (i < 5 || (i > numVectors-5) ) {
-               if (ndim == 1) std::cout << i << "  x " << x[0]  << " fval = " << fval; 
-               else std::cout << i << "  x " << x[0] << " y " << x[1] << " fval = " << fval; 
+               if (ndim == 1) std::cout << i << "  x " << x[0]  << " fval = " << fval;
+               else std::cout << i << "  x " << x[0] << " y " << x[1] << " fval = " << fval;
             }
 #endif
 
@@ -725,7 +727,7 @@ namespace FitUtil {
             std::cout << " " << p[ip];
          std::cout << ")  nll = " << -logl << std::endl;
 #endif
-         
+
          return -logl;
 
       }
@@ -854,7 +856,7 @@ namespace FitUtil {
          }
 
          // Last padded SIMD vector of elements
-         if (data.Size() % vecSize != 0) 
+         if (data.Size() % vecSize != 0)
             vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
                                   res + mapFunction(data.Size() / vecSize));
 
@@ -1229,7 +1231,7 @@ namespace FitUtil {
          std::cout << "***** Final gradient : ";
          for (unsigned int ii = 0; ii< npar; ++ii) std::cout << grad[ii] << "   ";
          std::cout << "\n";
-#endif  
+#endif
 
       }
 
@@ -1251,12 +1253,12 @@ namespace FitUtil {
          unsigned initialNPoints = data.Size();
          unsigned numVectors = initialNPoints / vecSize;
 
-#ifdef DEBUG_FITUTIL 
+#ifdef DEBUG_FITUTIL
          std::cout << "\n===> Evaluate Gradient for parameters ";
          for (unsigned int ip = 0; ip < npar; ++ip)
             std::cout << "  " << p[ip];
          std::cout << "\n";
-#endif 
+#endif
 
          (const_cast<IGradModelFunctionTempl<T> &>(func)).SetParameters(p);
 
@@ -1288,12 +1290,12 @@ namespace FitUtil {
             T fval = func(x, p);
             func.ParameterGradient(x, p, &gradFunc[0]);
 
-#ifdef DEBUG_FITUTIL            
+#ifdef DEBUG_FITUTIL
             if (i < 5 || (i > numVectors-5) ) {
                if (ndim > 1) std::cout << i << "  x " << x[0] << " y " << x[1] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
                else std::cout << i << "  x " << x[0] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
             }
-#endif            
+#endif
 
             vecCore::Mask<T> positiveValues = fval > 0;
 

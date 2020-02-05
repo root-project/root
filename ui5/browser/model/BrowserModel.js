@@ -23,6 +23,7 @@ sap.ui.define([
             this.loadDataCounter = 0; // counter of number of nodes
 
             this.sortOrder = "";
+            this.itemsFilter = "";
 
             this.threshold = 100; // default threshold to prefetch items
         },
@@ -34,8 +35,14 @@ sap.ui.define([
         /* Method can be used when complete hierarchy is ready and can be used directly */
         setFullModel: function(topnode) {
            this.fullModel = true;
-           this.h.nchilds = 1;
-           this.h.childs = [ topnode ];
+           if (topnode.length) {
+              this.h.nchilds = topnode.length;
+              this.h.childs = topnode;
+           } else {
+              this.h.nchilds = 1;
+              this.h.childs = [ topnode ];
+           }
+           delete this.h._requested; // reply on top element can be full description
 
            if (!this.mainModel) {
               this.mainModel = this.h.childs;
@@ -51,6 +58,8 @@ sap.ui.define([
         },
 
         clearFullModel: function() {
+           if (!this.fullModel) return;
+
            delete this.h.childs;
            delete this.h.nchilds;
            delete this.fullModel;
@@ -116,7 +125,7 @@ sap.ui.define([
               if (!curr.childs) {
                  // request childs for current element
                  // TODO: we do not know child index, but simply can suply search child as argument
-                 if (!this.fullModel && curr.nchilds) {
+                 if (!this.fullModel && curr.nchilds && (curr.nchilds > 0)) {
                     curr.expanded = true;
                     this.reset_nodes = true;
                     this._expanding_path = path;
@@ -150,20 +159,21 @@ sap.ui.define([
            this.submitRequest(this.h, "/");
         },
 
-        reloadMainModel: function(force) {
+        reloadMainModel: function(force, path = "/") {
            if (this.mainModel && !force) {
               this.h.nchilds = this.mainModel.length;
               this.h.childs = this.mainModel;
               this.h.expanded = true;
               this.reset_nodes = true;
               this.fullModel = this.mainFullModel;
+              console.log('assign this.fullModel = ' + this.fullModel);
               delete this.noData;
               this.scanShifts();
               if (this.oBinding)
                  this.oBinding.checkUpdate(true);
            } else if (!this.fullModel) {
               // send request, content will be reassigned
-              this.submitRequest(this.h, "/");
+              this.submitRequest(this.h, path);
            }
 
         },
@@ -171,12 +181,12 @@ sap.ui.define([
         // submit next request to the server
         // directly use web socket, later can be dedicated channel
         submitRequest: function(elem, path, first, number) {
-
            if (first === "expanding") {
               first = 0;
            } else {
               delete this._expanding_path;
            }
+
 
            if (!this._websocket || elem._requested || this.fullModel) return;
            elem._requested = true;
@@ -187,9 +197,9 @@ sap.ui.define([
               path: path,
               first: first || 0,
               number: number || this.threshold || 100,
-              sort: this.sortOrder || ""
+              sort: this.sortOrder || "",
+              regex: this.itemsFilter ? "^(" + this.itemsFilter + ".*)$" : ""
            };
-
            this._websocket.Send("BRREQ:" + JSON.stringify(request));
         },
 
@@ -199,9 +209,8 @@ sap.ui.define([
 
            this.loadDataCounter--;
 
-           // console.log('PROCESS BR RESPONSE', reply.path, reply);
-
            var elem = this.getNodeByPath(reply.path);
+
 
            if (!elem) { console.error('DID NOT FOUND ' + reply.path); return; }
 
@@ -339,9 +348,9 @@ sap.ui.define([
                     fullpath: path,
                     index: id,
                     _elem: elem,
+                    isLeaf: !elem.nchilds,
                     // these are required by list binding, should be eliminated in the future
                     type: elem.nchilds ? "folder" : "file",
-                    isLeaf: !elem.nchilds,
                     level: lvl,
                     context: pthis.getContext("/nodes/" + id),
                     nodeState: {
@@ -362,7 +371,8 @@ sap.ui.define([
                  // add new request - can we check if only special part of childs is required?
 
                  // TODO: probably one could guess more precise request
-                 pthis.submitRequest(elem, path);
+                 if ((elem.nchilds === undefined) || (elem.nchilds !== 0))
+                   pthis.submitRequest(elem, path);
 
                  return;
               }
@@ -484,6 +494,22 @@ sap.ui.define([
 
 
            this.sortOrder = newValue;
+
+           // now we should request values once again
+
+           this.submitRequest(this.h, "/");
+
+        },
+
+        changeItemsFilter: function(newValue) {
+           if (newValue === undefined)
+              newValue = this.getProperty("/itemsFilter") || "";
+
+           // ignore same value
+           if (newValue === this.itemsFilter)
+              return;
+
+           this.itemsFilter = newValue;
 
            // now we should request values once again
 

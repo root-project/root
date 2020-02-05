@@ -149,44 +149,6 @@ protected:
     Py_ssize_t fArraySize;
 };
 
-// smart pointer executors
-class SmartPtrExecutor : public Executor {
-public:
-    SmartPtrExecutor(Cppyy::TCppType_t smart,
-            Cppyy::TCppType_t raw, Cppyy::TCppMethod_t deref)
-        : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref) {}
-
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-
-protected:
-    Cppyy::TCppType_t   fSmartPtrType;
-    Cppyy::TCppType_t   fRawPtrType;
-    Cppyy::TCppMethod_t fDereferencer;
-};
-
-class SmartPtrPtrExecutor : public SmartPtrExecutor {
-public:
-    using SmartPtrExecutor::SmartPtrExecutor;
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-};
-
-class SmartPtrRefExecutor : public RefExecutor {
-public:
-    SmartPtrRefExecutor(Cppyy::TCppType_t smart,
-            Cppyy::TCppType_t raw, Cppyy::TCppMethod_t deref)
-        : fSmartPtrType(smart), fRawPtrType(raw), fDereferencer(deref) {}
-
-    virtual PyObject* Execute(
-        Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*);
-
-protected:
-    Cppyy::TCppType_t   fSmartPtrType;
-    Cppyy::TCppType_t   fRawPtrType;
-    Cppyy::TCppMethod_t fDereferencer;
-};
-
 } // unnamed namespace
 
 } // namespace CPyCppyy

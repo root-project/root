@@ -13,10 +13,11 @@
 #pragma link off all functions;
 
 #pragma link C++ class ROOT::Experimental::RBrowserRequest+;
-#pragma link C++ class ROOT::Experimental::RBrowserItem+;
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
 
-#pragma link C++ class ROOT::Experimental::RRootFileItem+;
+#pragma link C++ class ROOT::Experimental::RBrowserData+;
+
 #pragma link C++ class ROOT::Experimental::RBrowser+;
+#pragma link C++ class ROOT::Experimental::RFileDialog+;
 
 #endif

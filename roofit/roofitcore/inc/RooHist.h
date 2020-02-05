@@ -19,6 +19,7 @@
 #include "TGraphAsymmErrors.h"
 #include "RooPlotable.h"
 #include "RooAbsData.h"
+#include "RooAbsRealLValue.h"
 
 class TH1;
 class RooCurve ;
@@ -33,6 +34,7 @@ public:
 	  Double_t xErrorFrac=1.0, Bool_t efficiency=kFALSE, Double_t scaleFactor=1.0);
   RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1=1.0, Double_t wgt2=1.0, 
 	  RooAbsData::ErrorType etype=RooAbsData::Poisson, Double_t xErrorFrac=1.0) ;
+  RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac=1.0, Double_t scaleFactor=1.0, const RooArgSet *normVars = 0, const RooFitResult* fr = 0);
   virtual ~RooHist();
 
   // add a datapoint for a bin with n entries, using a Poisson error

@@ -257,10 +257,15 @@ namespace ROOT {
    if (isWeighted)   std::cout << "Weighted data set - sumw =  " << data.SumOfContent() << "  sumw2 = " << data.SumOfError2() << std::endl;
 #endif
 
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval( func, 0, useBinIntegral, igType);
 #else
-   IntegralEvaluator<> igEval( func, p, useBinIntegral);
+   IntegralEvaluator<> igEval( func, p, useBinIntegral, igType);
 #endif
    double maxResValue = std::numeric_limits<double>::max() /n;
    double wrefVolume = 1.0;
@@ -324,7 +329,7 @@ namespace ROOT {
 
       // expected errors
       if (useExpErrors) {
-         double invWeight  = 1.0; 
+         double invWeight  = 1.0;
          if (isWeighted) {
             // we need first to check if a weight factor needs to be applied
             // weight = sumw2/sumw = error**2/content
@@ -334,7 +339,7 @@ namespace ROOT {
             invWeight = data.SumOfContent()/ data.SumOfError2();
             //if (invError > 0) invWeight = y * invError * invError;
          }
-         
+
          //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
          // compute expected error  as f(x) / weight
          double invError2 = (fval > 0) ? invWeight / fval : 0.0;
@@ -669,7 +674,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
    }
 
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
+   IntegralEvaluator<> igEval(func, p, useBinIntegral,igType);
 
    unsigned int npar = func.NPar();
    unsigned initialNPoints = data.Size();
@@ -1105,7 +1115,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 
    }
 
-#ifdef DEBUG  
+#ifdef DEBUG
    std::cout << "Evaluated log L for parameters (";
    for (unsigned int ip = 0; ip < func.NPar(); ++ip)
       std::cout << " " << p[ip];
@@ -1130,7 +1140,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
    (const_cast<IGradModelFunction &>(func)).SetParameters(p);
 
-#ifdef DEBUG  
+#ifdef DEBUG
     std::cout << "\n===> Evaluate Gradient for parameters ";
          for (unsigned int ip = 0; ip < npar; ++ip)
             std::cout << "  " << p[ip];
@@ -1151,14 +1161,14 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
          xc.resize(data.NDim() );
          for (unsigned int j = 0; j < data.NDim(); ++j)
             xc[j] = *data.GetCoordComponent(i, j);
-         x = xc.data(); 
+         x = xc.data();
       } else {
          x = data.GetCoordComponent(i, 0);
       }
 
       double fval = func(x, p);
       func.ParameterGradient(x, p, &gradFunc[0]);
-      
+
 #ifdef DEBUG
       {
          R__LOCKGUARD(gROOTMutex);
@@ -1402,6 +1412,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
    }
 
+//#define DEBUG
 #ifdef DEBUG
    std::cout << "Evaluate PoissonLogL for params = [ ";
    for (unsigned int j = 0; j < func.NPar(); ++j) std::cout << p[j] << " , ";
@@ -1409,10 +1420,16 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
              << useBinVolume << " useW2 " << useW2 << " wrefVolume = " << wrefVolume << std::endl;
 #endif
 
+
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval(func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval(func, 0, useBinIntegral, igType);
 #else
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   IntegralEvaluator<> igEval(func, p, useBinIntegral, igType);
 #endif
 
    auto mapFunction = [&](const unsigned i) {
@@ -1489,7 +1506,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          // can apply correction only when y is not zero otherwise weight is undefined
          // (in case of weighted likelihood I don't care about the constant term due to
          // the saturated model)
- 
+
          // use for the empty bins the global weight
          double weight = 1.0;
          if (y != 0) {
@@ -1516,6 +1533,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
             nloglike += y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
          }
       }
+#ifdef DEBUG
+      {
+         R__LOCKGUARD(gROOTMutex);
+         std::cout << " nll = " << nloglike << std::endl;
+      }
+#endif
       return nloglike;
    };
 
@@ -1573,7 +1596,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 #ifdef USE_PARAMCACHE
    (const_cast<IGradModelFunction &>(func)).SetParameters(p);
 #endif
-   
+
    const DataOptions &fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
@@ -1582,7 +1605,13 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    if (useBinVolume && fitOpt.fNormBinVolume)
       wrefVolume /= data.RefVolume();
 
-   IntegralEvaluator<> igEval(func, p, useBinIntegral);
+   ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT;
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      // do not use GSL integrator which is not thread safe
+      igType = ROOT::Math::IntegrationOneDim::kGAUSS;
+   }
+
+   IntegralEvaluator<> igEval(func, p, useBinIntegral, igType);
 
    unsigned int npar = func.NPar();
    unsigned initialNPoints = data.Size();
@@ -1740,7 +1769,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    for (unsigned int ii = 0; ii< npar; ++ii) std::cout << grad[ii] << "   ";
    std::cout << "\n";
 #endif
-   
+
 }
 
 

@@ -31,6 +31,7 @@
 
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
+#include "TMVA/DNN/CNN/ContextHandles.h"
 
 #include <vector>
 #include <iostream>
@@ -39,21 +40,63 @@ namespace TMVA {
 namespace DNN {
 namespace CNN {
 
+typedef struct TConvParams {
+
+public:
+   size_t batchSize; ///< Batch size used for training and evaluation
+
+   size_t inputDepth;  ///< The depth of the previous layer or input.
+   size_t inputHeight; ///< The height of the previous layer or input.
+   size_t inputWidth;  ///< The width of the previous layer or input.
+
+   size_t numberFilters; ///< The number of the filters, which is equal to the output's depth.
+   size_t filterHeight;  ///< The height of the filter.
+   size_t filterWidth;   ///< The width of the filter.
+
+   size_t strideRows;    ///< The number of row pixels to slid the filter each step.
+   size_t strideCols;    ///< The number of column pixels to slid the filter each step.
+   size_t paddingHeight; ///< The number of zero layers added top and bottom of the input.
+   size_t paddingWidth;  ///< The number of zero layers left and right of the input.
+
+   TConvParams(size_t _batchSize, size_t _inputDepth, size_t _inputHeight, size_t _inputWidth, size_t _numberFilters,
+               size_t _filterHeight, size_t _filterWidth, size_t _strideRows, size_t _strideCols,
+               size_t _paddingHeight, size_t _paddingWidth)
+           : batchSize(_batchSize), inputDepth(_inputDepth), inputHeight(_inputHeight), inputWidth(_inputWidth),
+             numberFilters(_numberFilters), filterHeight(_filterHeight), filterWidth(_filterWidth),
+             strideRows(_strideRows), strideCols(_strideCols), paddingHeight(_paddingHeight),
+             paddingWidth(_paddingWidth)
+   {}
+} TConvParams;
+
+
+
 template <typename Architecture_t>
 class TConvLayer : public VGeneralLayer<Architecture_t> {
 public:
+   using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
 
-private:
+   using LayerDescriptor_t   = typename Architecture_t::ConvolutionDescriptor_t;
+   using WeightsDescriptor_t = typename Architecture_t::FilterDescriptor_t;
+   using HelperDescriptor_t  = typename Architecture_t::ActivationDescriptor_t;
+
+   using AlgorithmForward_t  = typename Architecture_t::AlgorithmForward_t;  // Forward layer operation
+   using AlgorithmBackward_t = typename Architecture_t::AlgorithmBackward_t; // Backward layer operation
+   using AlgorithmHelper_t   = typename Architecture_t::AlgorithmHelper_t;   // Used for weight grad backward pass
+   using ReduceTensorDescriptor_t = typename Architecture_t::ReduceTensorDescriptor_t; // used for reduction of tensor(bias grad)
+
+   // FIXME: Add other cudnn types (algorithm preference etc.)
+   using AlgorithmDataType_t = typename Architecture_t::AlgorithmDataType_t;
+
    /* Calculate the output dimension of the convolutional layer */
-   size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
+   static size_t calculateDimension(size_t imgDim, size_t fltDim, size_t padding, size_t stride);
 
    /* Calculate the number of pixels in a single receptive field */
-   size_t inline calculateNLocalViewPixels(size_t depth, size_t height, size_t width) { return depth * height * width; }
+   static size_t inline calculateNLocalViewPixels(size_t depth, size_t height, size_t width) { return depth * height * width; }
 
    /* Calculate the number of receptive fields in an image given the filter and image sizes */
-   size_t calculateNLocalViews(size_t inputHeight, size_t filterHeight, size_t paddingHeight, size_t strideRows,
+   static size_t calculateNLocalViews(size_t inputHeight, size_t filterHeight, size_t paddingHeight, size_t strideRows,
                                size_t inputWidth, size_t filterWidth, size_t paddingWidth, size_t strideCols);
 
 protected:
@@ -61,27 +104,35 @@ protected:
    size_t fFilterHeight; ///< The height of the filter.
    size_t fFilterWidth;  ///< The width of the filter.
 
-   size_t fStrideRows; ///< The number of row pixels to slid the filter each step.
-   size_t fStrideCols; ///< The number of column pixels to slid the filter each step.
+   size_t fStrideRows;   ///< The number of row pixels to slid the filter each step.
+   size_t fStrideCols;   ///< The number of column pixels to slid the filter each step.
 
-   size_t fNLocalViewPixels; ///< The number of pixels in one local image view.
-   size_t fNLocalViews;      ///< The number of local views in one image.
+   size_t fNLocalViewPixels;     ///< The number of pixels in one local image view.
+   size_t fNLocalViews;          ///< The number of local views in one image.
 
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
 
-private:
-   size_t fPaddingHeight; ///< The number of zero layers added top and bottom of the input.
-   size_t fPaddingWidth;  ///< The number of zero layers left and right of the input.
+   TDescriptors * fDescriptors = nullptr;  ///< Keeps the convolution, activations and filter descriptors
 
-   std::vector<Matrix_t> fDerivatives; ///< First fDerivatives of the activations of this layer.
+   TWorkspace * fWorkspace = nullptr;
+private:
+   size_t fPaddingHeight;        ///< The number of zero layers added top and bottom of the input.
+   size_t fPaddingWidth;         ///< The number of zero layers left and right of the input.
+
+   Tensor_t fInputActivation;        ///< First output of this layer after conv, before activation.
 
    std::vector<int> fBackwardIndices;  ///< Vector of indices used for a fast Im2Col in backward pass
 
-   EActivationFunction fF; ///< Activation function of the layer.
-   ERegularization fReg;   ///< The regularization method.
-   Scalar_t fWeightDecay;  ///< The weight decay.
+   EActivationFunction fF;             ///< Activation function of the layer.
+   ERegularization fReg;               ///< The regularization method.
+   Scalar_t fWeightDecay;              ///< The weight decay.
 
-   std::vector<Matrix_t> fForwardMatrices; ///< Vector of matrices used for speeding-up the forward pass.
+   Tensor_t fForwardTensor;            ///< Cache tensor used for speeding-up the forward pass.
+
+   void InitializeDescriptors();
+   void ReleaseDescriptors();
+   void InitializeWorkspace();
+   void FreeWorkspace();
 
 public:
    /*! Constructor. */
@@ -97,21 +148,23 @@ public:
    TConvLayer(const TConvLayer &);
 
    /*! Destructor. */
-   ~TConvLayer();
+   virtual ~TConvLayer();
+
+   //virtual void Initialize();
 
    /*! Computes activation of the layer for the given input. The input
    * must be in 3D tensor form with the different matrices corresponding to
    * different events in the batch. Computes activations as well as
    * the first partial derivative of the activation function at those
    * activations. */
-   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = false);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derviatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  at the corresponding call to Forward(...). */
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                 std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+   ////              Tensor_t &inp1, Tensor_t &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -138,47 +191,26 @@ public:
 
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
 
-   const std::vector<Matrix_t> &GetDerivatives() const { return fDerivatives; }
-   std::vector<Matrix_t> &GetDerivatives() { return fDerivatives; }
+   const Tensor_t &GetInputActivation() const { return fInputActivation; }
+   Tensor_t &GetInputActivation() { return fInputActivation; }
 
-   Matrix_t &GetDerivativesAt(size_t i) { return fDerivatives[i]; }
-   const Matrix_t &GetDerivativesAt(size_t i) const { return fDerivatives[i]; }
+   Matrix_t &GetInputActivationAt(size_t i) { return fInputActivation[i]; }
+   const Matrix_t &GetInputActivationAt(size_t i) const { return fInputActivation[i]; }
 
-   const std::vector<Matrix_t> &GetForwardMatrices() const { return fForwardMatrices; }
-   std::vector<Matrix_t> &GetForwardMatrices() { return fForwardMatrices; }
+   const Tensor_t &GetForwardMatrices() const { return fForwardTensor; }
+   Tensor_t &GetForwardMatrices() { return fForwardTensor; }
 
    EActivationFunction GetActivationFunction() const { return fF; }
    ERegularization GetRegularization() const { return fReg; }
    Scalar_t GetWeightDecay() const { return fWeightDecay; }
+
+   // The following getters are used for testing
+   TDescriptors * GetDescriptors() {return fDescriptors;}
+   const TDescriptors * GetDescriptors() const {return fDescriptors;}
+
+   TWorkspace * GetWorkspace() {return fWorkspace;}
+   const TWorkspace * GetWorkspace() const {return fWorkspace;}
 };
-
-typedef struct TConvParams {
-
-public:
-   size_t batchSize; ///< Batch size used for training and evaluation
-
-   size_t inputDepth;  ///< The depth of the previous layer or input.
-   size_t inputHeight; ///< The height of the previous layer or input.
-   size_t inputWidth;  ///< The width of the previous layer or input.
-
-   size_t numberFilters; ///< The number of the filters, which is equal to the output's depth.
-   size_t filterHeight; ///< The height of the filter.
-   size_t filterWidth;  ///< The width of the filter.
-
-   size_t strideRows; ///< The number of row pixels to slid the filter each step.
-   size_t strideCols; ///< The number of column pixels to slid the filter each step.
-   size_t paddingHeight; ///< The number of zero layers added top and bottom of the input.
-   size_t paddingWidth;  ///< The number of zero layers left and right of the input.
-
-   TConvParams(size_t _batchSize, size_t _inputDepth, size_t _inputHeight, size_t _inputWidth, size_t _numberFilters,
-               size_t _filterHeight, size_t _filterWidth, size_t _strideRows, size_t _strideCols,
-               size_t _paddingHeight, size_t _paddingWidth)
-           : batchSize(_batchSize), inputDepth(_inputDepth), inputHeight(_inputHeight), inputWidth(_inputWidth),
-             numberFilters(_numberFilters), filterHeight(_filterHeight), filterWidth(_filterWidth),
-             strideRows(_strideRows), strideCols(_strideCols), paddingHeight(_paddingHeight),
-             paddingWidth(_paddingWidth)
-   {}
-} TConvParams;
 
 
 //
@@ -204,18 +236,19 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
      fNLocalViews(calculateNLocalViews(inputHeight, filterHeight, paddingHeight, strideRows,
                                        inputWidth, filterWidth, paddingWidth, strideCols)),
      fDropoutProbability(dropoutProbability), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
-     fDerivatives(), fF(f), fReg(reg), fWeightDecay(weightDecay)
+     fInputActivation(), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {
    /** Each element in the vector is a `T_Matrix` representing an event, therefore `vec.size() == batchSize`.
     *  Cells in these matrices are distributed in the following manner:
     *  Each row represents a single feature map, therefore we have `nRows == depth`.
     *  Each column represents a single pixel in that feature map, therefore we have `nCols == nLocalViews`.
     **/
-   for (size_t i = 0; i < batchSize; i++) {
-      fDerivatives.emplace_back(depth, fNLocalViews);
-      fForwardMatrices.emplace_back(fNLocalViews, fNLocalViewPixels);
-   }
-   Architecture_t::PrepareInternals(fForwardMatrices);
+   fInputActivation = Tensor_t( batchSize, depth, fNLocalViews);     // create tensor (shape is B x C x LV)
+   fForwardTensor = Tensor_t ( batchSize, fNLocalViews, fNLocalViewPixels );
+   
+
+   InitializeDescriptors();
+   InitializeWorkspace();
 }
 
 //______________________________________________________________________________
@@ -226,121 +259,83 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
      fStrideRows(layer->GetStrideRows()), fStrideCols(layer->GetStrideCols()),
      fNLocalViewPixels(layer->GetNLocalViewPixels()), fNLocalViews(layer->GetNLocalViews()),
      fDropoutProbability(layer->GetDropoutProbability()), fPaddingHeight(layer->GetPaddingHeight()),
-     fPaddingWidth(layer->GetPaddingWidth()), fF(layer->GetActivationFunction()),
-     fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay())
+     fPaddingWidth(layer->GetPaddingWidth()),
+     fInputActivation( layer->GetInputActivation().GetShape() ),
+     fF(layer->GetActivationFunction()),
+     fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay()),
+     fForwardTensor( layer->GetForwardMatrices().GetShape() )
 {
-   size_t outputNSlices = (layer->GetDerivatives()).size();
-   size_t outputNRows = 0;
-   size_t outputNCols = 0;
-
-   for (size_t i = 0; i < outputNSlices; i++) {
-      outputNRows = (layer->GetDerivativesAt(i)).GetNrows();
-      outputNCols = (layer->GetDerivativesAt(i)).GetNcols();
-      fDerivatives.emplace_back(outputNRows, outputNCols);
-      fForwardMatrices.emplace_back(layer->GetNLocalViews(), layer->GetNLocalViewPixels());
-   }
+   InitializeDescriptors();
+   InitializeWorkspace();
+   
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
-   : VGeneralLayer<Architecture_t>(convLayer), fFilterDepth(convLayer.fFilterDepth),
-     fFilterHeight(convLayer.fFilterHeight), fFilterWidth(convLayer.fFilterWidth), fStrideRows(convLayer.fStrideRows),
-     fStrideCols(convLayer.fStrideCols), fNLocalViewPixels(convLayer.fNLocalViewPixels),
-     fNLocalViews(convLayer.fNLocalViews), fDropoutProbability(convLayer.fDropoutProbability),
-     fPaddingHeight(convLayer.fPaddingHeight), fPaddingWidth(convLayer.fPaddingWidth),  fF(convLayer.fF),
-     fReg(convLayer.fReg), fWeightDecay(convLayer.fWeightDecay)
+   :  VGeneralLayer<Architecture_t>(convLayer), fFilterDepth(convLayer.fFilterDepth),
+      fFilterHeight(convLayer.fFilterHeight), fFilterWidth(convLayer.fFilterWidth), fStrideRows(convLayer.fStrideRows),
+      fStrideCols(convLayer.fStrideCols), fNLocalViewPixels(convLayer.fNLocalViewPixels),
+      fNLocalViews(convLayer.fNLocalViews), fDropoutProbability(convLayer.fDropoutProbability),
+      fPaddingHeight(convLayer.fPaddingHeight), fPaddingWidth(convLayer.fPaddingWidth),
+      fInputActivation( convLayer.GetInputActivation().GetShape() ),
+      fF(convLayer.fF),
+      fReg(convLayer.fReg), fWeightDecay(convLayer.fWeightDecay),
+      fForwardTensor( convLayer.GetForwardMatrices().GetShape() )
 {
-   size_t outputNSlices = convLayer.fDerivatives.size();
-   size_t outputNRows = convLayer.GetDerivativesAt(0).GetNrows();
-   size_t outputNCols = convLayer.GetDerivativesAt(0).GetNcols();
-
-   for (size_t i = 0; i < outputNSlices; i++) {
-      fDerivatives.emplace_back(outputNRows, outputNCols);
-      fForwardMatrices.emplace_back(convLayer.fNLocalViews, convLayer.fNLocalViewPixels);
-   }
+   InitializeDescriptors();
+   InitializeWorkspace();
 }
 
 //______________________________________________________________________________
+//FIXME: Add function for cudaFree
 template <typename Architecture_t>
 TConvLayer<Architecture_t>::~TConvLayer()
 {
+   //std::cout << "!!!!Delete conv layer " << this->GetOutput().GetShape()[1] << "  " << this->GetOutput().GetShape()[2] << "  " << this->GetOutput().GetShape()[3] << std::endl;
+   if (fDescriptors) {
+      ReleaseDescriptors();
+      delete fDescriptors;
+   }
+
+   if (fWorkspace) {
+      FreeWorkspace();
+      delete fWorkspace;
+   }
 }
+
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
+auto TConvLayer<Architecture_t>::Forward(Tensor_t &input, bool /*applyDropout*/) -> void
 {
    TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
                       this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
                       this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
 
-   R__ASSERT( input.size() > 0);
-   Architecture_t::ConvLayerForward(this->GetOutput(), this->GetDerivatives(), input, this->GetWeightsAt(0),
+   //R__ASSERT( input.size() > 0);
+   Architecture_t::ConvLayerForward(this->GetOutput(), this->GetInputActivation(), input, this->GetWeightsAt(0),
                                     this->GetBiasesAt(0), params, this->GetActivationFunction(),
-                                    this->GetForwardMatrices());
-
-#if 0
-   // in printciple I could make the indices data member of the class
-   Matrix_t inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
-   //Matrix_t inputTr2(this->GetNLocalViews(), this->GetNLocalViewPixels());
-   std::vector<int> vIndices(inputTr.GetNrows() * inputTr.GetNcols() );
-   R__ASSERT( input.size() > 0);
-   Architecture_t::Im2colIndices(vIndices, input[0], this->GetNLocalViews(), this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
-                             this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
-                             this->GetPaddingHeight(), this->GetPaddingWidth());
-   // batch size loop
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-
-      if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
-         Architecture_t::Dropout(input[i], this->GetDropoutProbability());
-      }
-
-      inputTr.Zero();
-      //inputTr2.Zero();
-      // Architecture_t::Im2col(inputTr2, input[i], this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
-      //                         this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
-      //                         this->GetPaddingHeight(), this->GetPaddingWidth());
-      Architecture_t::Im2colFast(inputTr, input[i], vIndices);
-      // bool diff = false;
-      // for (int j = 0; j < inputTr.GetNrows(); ++j) {
-      //    for (int k = 0; k < inputTr.GetNcols(); ++k) {
-      //       if ( inputTr2(j,k) != inputTr(j,k) ) {
-      //          diff = true;
-      //          std::cout <<  "different im2col for " << j << " , " << k << "  " << inputTr(j,k) << "  shoud be " << inputTr2(j,k) << std::endl;
-      //       }
-      //    }
-      // }
-      // if (diff) {
-      //    std::cout << "ConvLayer:: Different Im2Col for batch " << i  << std::endl;
-      //    printf("Layer parameters : %d x %d , filter %d x %d , stride %d %d , pad %d %d \n",this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
-      //                         this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
-      //           this->GetPaddingHeight(), this->GetPaddingWidth() );
-      //    // TMVA_DNN_PrintTCpuMatrix(inputTr);
-      //    // TMVA_DNN_PrintTCpuMatrix(inputTr2);
-      // }
-      // R__ASSERT(!diff);
-      Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeightsAt(0), inputTr);
-      Architecture_t::AddConvBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
-
-      evaluateDerivative<Architecture_t>(this->GetDerivativesAt(i), fF, this->GetOutputAt(i));
-      evaluate<Architecture_t>(this->GetOutputAt(i), fF);
-   }
-#endif
+                                    this->GetForwardMatrices(), (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors),
+                                    (TCNNWorkspace<TConvLayer<Architecture_t>> &) (*fWorkspace));
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                          const std::vector<Matrix_t> &activations_backward,
-                                          std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
-                                          /*inp2*/) -> void
+auto TConvLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,
+                                          const Tensor_t &activations_backward) -> void
+//                                          Tensor_t & /*inp1*/, Tensor_t &
+//                                          /*inp2*/) -> void
 {
    Architecture_t::ConvLayerBackward(
-      gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetDerivatives(),
-      this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetBatchSize(),
-      this->GetInputHeight(), this->GetInputWidth(), this->GetDepth(), this->GetHeight(), this->GetWidth(),
-      this->GetFilterDepth(), this->GetFilterHeight(), this->GetFilterWidth(), this->GetNLocalViews());
+      gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetInputActivation(),
+      this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetOutput(),
+      this->GetActivationFunction(),
+      (TCNNDescriptors<TConvLayer<Architecture_t>> &) (*fDescriptors),
+      (TCNNWorkspace<TConvLayer<Architecture_t>> &) (*fWorkspace),
+      this->GetBatchSize(), this->GetInputHeight(), this->GetInputWidth(), this->GetDepth(),
+      this->GetHeight(), this->GetWidth(), this->GetFilterDepth(), this->GetFilterHeight(),
+      this->GetFilterWidth(), this->GetNLocalViews());
 
    addRegularizationGradients<Architecture_t>(this->GetWeightGradientsAt(0), this->GetWeightsAt(0),
                                               this->GetWeightDecay(), this->GetRegularization());
@@ -358,8 +353,10 @@ auto TConvLayer<Architecture_t>::Print() const -> void
    std::cout << "\t Filter ( W = " << this->GetFilterWidth() << " , ";
    std::cout << " H = " << this->GetFilterHeight() << " ) ";
    //std::cout << "\t Local Views = " << this->GetNLocalViews()  << " " ;
-   if (this->GetOutput().size() > 0) {
-      std::cout << "\tOutput = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) ";
+   if (this->GetOutput().GetSize() > 0) {
+      std::cout << "\tOutput = ( " << this->GetOutput().GetFirstSize() << " , "
+                << this->GetOutput().GetCSize() << " , " << this->GetOutput().GetHSize() << " , " << this->GetOutput().GetWSize()
+                << " ) ";
    }
    std::vector<std::string> activationNames = { "Identity","Relu","Sigmoid","Tanh","SymmRelu","SoftSign","Gauss" };
    std::cout << "\t Activation Function = ";
@@ -388,7 +385,6 @@ void TConvLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    // write weights and bias matrix
    this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
-
 }
 
 //______________________________________________________________________________
@@ -422,6 +418,34 @@ size_t TConvLayer<Architecture_t>::calculateNLocalViews(size_t inputHeight, size
 
     return height * width;
 }
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::InitializeDescriptors() {
+   Architecture_t::InitializeConvDescriptors(fDescriptors, this);
+}
+
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::ReleaseDescriptors() {
+   Architecture_t::ReleaseConvDescriptors(fDescriptors);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::InitializeWorkspace() {
+   TConvParams params(this->GetBatchSize(), this->GetInputDepth(), this->GetInputHeight(), this->GetInputWidth(),
+                      this->GetDepth(), this->GetFilterHeight(), this->GetFilterWidth(),
+                      this->GetStrideRows(), this->GetStrideCols(), this->GetPaddingHeight(), this->GetPaddingWidth());
+
+   Architecture_t::InitializeConvWorkspace(fWorkspace, fDescriptors, params, this);
+}
+
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::FreeWorkspace() {
+   Architecture_t::FreeConvWorkspace(fWorkspace, this);
+}
+
+//______________________________________________________________________________
 
 } // namespace CNN
 } // namespace DNN

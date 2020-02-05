@@ -221,13 +221,8 @@ public:
     virtual ~WSDir() { Clear("nodelete") ; } ; 
 
 
-#if ROOT_VERSION_CODE <= 332546
-    virtual void Add(TObject*) ;
-    virtual void Append(TObject*) ;
-#else 
     virtual void Add(TObject*,Bool_t) ; 
     virtual void Append(TObject*,Bool_t) ; 
-#endif 
 
   protected:
     friend class RooWorkspace ;

@@ -261,7 +261,9 @@ void TMVA::Experimental::Classification::Evaluate()
       for (auto &meth : fMethods) {
          GetMethod(meth.GetValue<TString>("MethodName"), meth.GetValue<TString>("MethodTitle"));
       }
+#ifndef _MSC_VER
       fWorkers.SetNWorkers(fJobs);
+#endif
       auto executor = [=](UInt_t workerID) -> ClassificationResult {
          TMVA::MsgLogger::InhibitOutput();
          TMVA::gConfig().SetSilent(kTRUE);
@@ -285,7 +287,9 @@ void TMVA::Experimental::Classification::Evaluate()
          return GetResults(methodname, methodtitle);
       };
 
+#ifndef _MSC_VER
       fResults = fWorkers.Map(executor, ROOT::TSeqI(fMethods.size()));
+#endif
       if (!IsSilentFile())
          MergeFiles();
    }

@@ -108,12 +108,15 @@ private:
    static size_t          fNOnes;        ///< Current length of the one vector.
    static curandState_t * fCurandStates;
    static size_t          fNCurandStates;
+   
 
    size_t                    fNRows;
    size_t                    fNCols;
    TCudaDeviceBuffer<AFloat> fElementBuffer;
 
 public:
+
+   static Bool_t gInitializeCurand;
 
    static AFloat * GetOnes() {return fOnes;}
 
@@ -148,6 +151,7 @@ public:
     * not the default stream. */
    inline void Synchronize(const TCudaMatrix &) const;
 
+   static size_t GetNDim() {return 2;}
    size_t GetNrows() const {return fNRows;}
    size_t GetNcols() const {return fNCols;}
    size_t GetNoElements() const {return fNRows * fNCols;}
@@ -155,6 +159,8 @@ public:
    const AFloat * GetDataPointer() const {return fElementBuffer;}
    AFloat *       GetDataPointer()       {return fElementBuffer;}
    const cublasHandle_t & GetCublasHandle() const    {return fCublasHandle;}
+
+   inline  TCudaDeviceBuffer<AFloat> GetDeviceBuffer() const { return fElementBuffer;}
 
    /** Access to elements of device matrices provided through TCudaDeviceReference
     *  class. Note that access is synchronous end enforces device synchronization

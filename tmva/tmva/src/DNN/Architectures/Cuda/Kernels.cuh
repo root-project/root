@@ -448,7 +448,7 @@ __global__ void AdamUpdateSecondMom(AFloat * A, const AFloat * B,
 //____________________________________________________________________________
 template<typename AFloat>
 __global__ void IdentityDerivative(AFloat * A,
-                                   int m, int n)   
+                                   int m, int n)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -1170,7 +1170,7 @@ __global__ void Reshape(AFloat * A, const AFloat * B, int nRowsA, int nColsA, in
 /// appropriate input index.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-__global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int nCols)
+__global__ void Flatten(AFloat * A, const AFloat *B, int size, int nRows, int nCols)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -1181,11 +1181,33 @@ __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int 
    // Get a transposed view on matrix B[i].
    int row = j / nCols;
    int col = j % nCols;
-   AFloat element = B[i][col * nRows + row];
+   // AFloat element = B[i][col * nRows + row];
+   AFloat element = B[ i * nColsA + col * nRows + row ];
 
    size_t index = j * size + i;
    A[index] = element;
 }
+
+// row major version of flatten (keep roaw before columns in memory): used by Cudnn
+template<typename AFloat>
+__global__ void FlattenRM(AFloat * A, const AFloat *B, int size, int nRows, int nCols)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   int nColsA = nRows * nCols;
+   if (i >= size || j >= nColsA) return;
+
+   // Get a transposed view on matrix B[i].
+   int row = j / nCols;
+   int col = j % nCols;
+   // AFloat element = B[i][col * nRows + row];
+   AFloat element = B[ i * nColsA + row * nCols + col ];
+
+   size_t index = j * size + i;
+   A[index] = element;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Deflatten a 2D-array into an array of 2D-arrays.
@@ -1202,7 +1224,7 @@ __global__ void Flatten(AFloat * A, const AFloat ** B, int size, int nRows, int 
 /// by locating the appropriate input index.
 //////////////////////////////////////////////////////////////////////////////////
 template<typename AFloat>
-__global__ void Deflatten(AFloat ** A, const AFloat * B, int size, int nRows, int nCols)
+__global__ void Deflatten(AFloat * A, const AFloat * B, int size, int nRows, int nCols)
 {
    int i = blockDim.y * blockIdx.y + threadIdx.y;
    int j = blockDim.x * blockIdx.x + threadIdx.x;
@@ -1215,7 +1237,25 @@ __global__ void Deflatten(AFloat ** A, const AFloat * B, int size, int nRows, in
    // Get a transposed view on matrix A[i].
    int row = j / nCols;
    int col = j % nCols;
-   A[i][col * nRows + row] = element;
+   A[ i * nColsB + col * nRows + row] = element;
+}
+
+// row major of flatten (used by Cudnn)
+template<typename AFloat>
+__global__ void DeflattenRM(AFloat * A, const AFloat * B, int size, int nRows, int nCols)
+{
+   int i = blockDim.y * blockIdx.y + threadIdx.y;
+   int j = blockDim.x * blockIdx.x + threadIdx.x;
+
+   int nColsB = nRows * nCols;
+   if (i >= size || j >= nColsB) return;
+
+   AFloat element = B[j * size + i];
+
+   // Get a transposed view on matrix A[i].
+   int row = j / nCols;
+   int col = j % nCols;
+   A[ i * nColsB + row * nCols + col] = element;
 }
 
 } // namespace Cuda

@@ -273,10 +273,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    TList *primitives = pad->GetListOfPrimitives();
 
-   fPrimitivesLists.Add(primitives); // add list of primitives
+   if (primitives) fPrimitivesLists.Add(primitives); // add list of primitives
 
    TWebPS masterps;
-   bool usemaster = primitives->GetSize() > fPrimitivesMerge;
+   bool usemaster = primitives ? (primitives->GetSize() > fPrimitivesMerge) : false;
 
    TIter iter(primitives);
    TObject *obj = nullptr;
@@ -841,6 +841,16 @@ Bool_t TWebCanvas::PerformUpdate()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Increment canvas version and force sending data to client - do not wit for reply
+
+void TWebCanvas::ForceUpdate()
+{
+   fCanvVersion++;
+
+   CheckDataToSend();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Wait when specified version of canvas was painted and confirmed by browser
 
 Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
@@ -932,3 +942,20 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    c->SetBatch(isbatch);
    return res;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create image using batch (headless) capability of Chrome browser
+/// Supported png, jpeg, svg, pdf folmats
+
+bool TWebCanvas::ProduceImage(TCanvas *c, const char *fileName, Int_t width, Int_t height)
+{
+   if (!c)
+      return false;
+
+   auto json = TWebCanvas::CreateCanvasJSON(c, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
+   if (!json.Length())
+      return false;
+
+   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width ? width : c->GetWw(), height ? height : c->GetWh());
+}
+

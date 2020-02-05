@@ -827,6 +827,10 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
 
    fMinosRun = true;
 
+   // retrieve parameters in case a new minimum has been found
+   if (fMinuit->fCstatu == "SUCCESSFUL")
+      RetrieveParams();
+
    double errParab = 0;
    double gcor = 0;
    // what returns if parameter fixed or constant or at limit ?
@@ -988,7 +992,7 @@ bool TMinuitMinimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 
    if (nstep == 0) return false;
    arglist[0] = ipar+1;  // TMinuit starts from 1
-   arglist[1] = nstep+2; // TMinuit deletes two points
+   arglist[1] = nstep;  //+2; // TMinuit deletes two points
    int nargs = 2;
    if (xmax > xmin ) {
       arglist[2] = xmin;
@@ -1070,14 +1074,13 @@ bool TMinuitMinimizer::SetDebug(bool on) {
    int ierr = 0;
    double arglist[1];
    arglist[0] = 1;
-   if (on) 
+   if (on)
       fMinuit->mnexcm("SET DEBUG",arglist,1,ierr);
    else
       fMinuit->mnexcm("SET NODEBUG",arglist,1,ierr);
 
-   return (ierr == 0); 
+   return (ierr == 0);
 }
 //    } // end namespace Fit
 
 // } // end namespace ROOT
-

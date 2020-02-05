@@ -75,6 +75,9 @@
 #pragma link C++ class TGeoCompositeShape+;
 #pragma link C++ class TGeoPolygon+;
 #pragma link C++ class TGeoXtru+;
+#pragma link C++ class ROOT::Geom::Vertex_t+;
+#pragma link C++ class TGeoFacet+;
+#pragma link C++ class TGeoTessellated+;
 #pragma link C++ class TGeoShapeAssembly+;
 #pragma link C++ class TGeoScaledShape+;
 #pragma link C++ class TGeoVolume-;

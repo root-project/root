@@ -60,7 +60,6 @@
 #include "TVirtualPad.h"
 #include "KeySymbols.h"
 #include "THashTable.h"
-#include "TMethod.h"
 #include "TColor.h"
 #include "TObjString.h"
 #include "TGDNDManager.h"
@@ -1618,11 +1617,10 @@ void TRootBrowserLite::DisplayDirectory()
    if (fListLevel) {
       // disable/enable up level navigation
       TGButton *btn = fToolBar->GetButton(kOneLevelUp);
-      const char *dirname = gSystem->DirName(p);
-      Bool_t disableUp;
+      TString dirname = gSystem->GetDirName(p);
 
       TObject *obj = (TObject*)fListLevel->GetUserData();
-      disableUp = (strlen(dirname) == 1) && (*dirname == '/');
+      Bool_t disableUp = dirname == "/";
 
       // normal file directory
       if (disableUp && (obj) && (obj->IsA() == TSystemDirectory::Class())) {
@@ -1703,11 +1701,16 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
          TSystemFile *sf = (TSystemFile*)obj;
          const TGPicture *pic, *spic;
 
-         TIconBoxThumb *thumb = 0;
-         TString path = gSystem->IsAbsoluteFileName(sf->GetName()) ? sf->GetName() :
-                        gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
+         TString path;
+         if (gSystem->IsAbsoluteFileName(sf->GetName())) {
+            path = sf->GetName();
+         } else {
+            char *buf = gSystem->ConcatFileName(gSystem->WorkingDirectory(), sf->GetName());
+            path = buf;
+            delete [] buf;
+         }
 
-         thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path);
+         TIconBoxThumb *thumb = (TIconBoxThumb*)fIconBox->fThumbnails->FindObject(path.Data());
 
          if (thumb) {
             spic = thumb->fSmall;
@@ -1726,14 +1729,17 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
             UInt_t w = sz;
             UInt_t h = sz;
 
-            if (img->GetWidth() > img->GetHeight()) {
-               h = (img->GetHeight()*sz)/img->GetWidth();
+            auto imgw = img->GetWidth();
+            auto imgh = img->GetHeight();
+
+            if (imgw > imgh) {
+               h = (imgh*sz) / (imgw > 0 ? imgw : 1);
             } else {
-               w = (img->GetWidth()*sz)/img->GetHeight();
+               w = (imgw*sz) / (imgh > 0 ? imgh : 1);
             }
 
-            w = w < 54 ? 54 : w;
-            h = h < 54 ? 54 : h;
+            w = (w < 54) ? 54 : w;
+            h = (h < 54) ? 54 : h;
 
             img->Scale(w, h);
             img->Merge(img, "tint");   // contrasting
@@ -1805,7 +1811,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = gOpenTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.SetIniDir(dir);
                         new TGFileDialog(fClient->GetDefaultRoot(), this,
                                          kFDOpen,&fi);
                         dir = fi.fIniDir;
@@ -1938,7 +1944,7 @@ Bool_t TRootBrowserLite::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fClient->NeedRedraw(fLt, kTRUE);
                      } else {
                         obj = (TObject *)fListLevel->GetUserData();
-                        if (obj) ToSystemDirectory(gSystem->DirName(obj->GetTitle()));
+                        if (obj) ToSystemDirectory(gSystem->GetDirName(obj->GetTitle()));
                      }
                      break;
                   }
@@ -2567,7 +2573,6 @@ void TRootBrowserLite::Checked(TObject *obj, Bool_t checked)
 void TRootBrowserLite::IconBoxAction(TObject *obj)
 {
    Bool_t browsable = kFALSE;
-   const char *dirname = 0;
    if (obj) {
 
       TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
@@ -2614,7 +2619,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
                   fListLevel = 0;
                }
             } else {
-               dirname = gSystem->DirName(gSystem->pwd());
+               TString dirname = gSystem->GetDirName(gSystem->pwd());
                ToSystemDirectory(dirname);
                return;
             }
@@ -2623,7 +2628,7 @@ void TRootBrowserLite::IconBoxAction(TObject *obj)
 
       if (obj && obj->IsFolder()) {
          fIconBox->RemoveAll();
-         TGListTreeItem *itm = 0;
+         TGListTreeItem *itm = nullptr;
 
          if (fListLevel) {
             fLt->OpenItem(fListLevel);

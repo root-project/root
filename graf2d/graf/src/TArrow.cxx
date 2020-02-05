@@ -81,7 +81,7 @@ TArrow::TArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    fAngle       = fgDefaultAngle;
    fArrowSize   = arrowsize;
    fOption      = option;
-   SetFillColor(this->GetLineColor());
+   SetFillColor(GetLineColor());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,10 +96,9 @@ TArrow::~TArrow()
 
 TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 {
-
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
-   ((TArrow&)arrow).Copy(*this);
+   arrow.Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +106,6 @@ TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 
 void TArrow::Copy(TObject &obj) const
 {
-
    TLine::Copy(obj);
    TAttFill::Copy(((TArrow&)obj));
    ((TArrow&)obj).fAngle      = fAngle;
@@ -120,13 +118,11 @@ void TArrow::Copy(TObject &obj) const
 
 void TArrow::Draw(Option_t *option)
 {
-
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
 
    AppendPad(opt);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,13 +154,17 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 void TArrow::Paint(Option_t *option)
 {
-
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
-   PaintArrow(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2), fArrowSize, opt);
+   if (TestBit(kLineNDC))
+      PaintArrow(gPad->GetX1() + fX1 * (gPad->GetX2() - gPad->GetX1()),
+                 gPad->GetY1() + fY1 * (gPad->GetY2() - gPad->GetY1()),
+                 gPad->GetX1() + fX2 * (gPad->GetX2() - gPad->GetX1()),
+                 gPad->GetY1() + fY2 * (gPad->GetY2() - gPad->GetY1()), fArrowSize, opt);
+   else
+      PaintArrow(gPad->XtoPad(fX1), gPad->YtoPad(fY1), gPad->XtoPad(fX2), gPad->YtoPad(fY2), fArrowSize, opt);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this arrow
@@ -173,8 +173,6 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
 
-   Int_t i;
-
    // Option and attributes
    TString opt = option;
    opt.ToLower();
@@ -182,15 +180,14 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    TAttFill::Modify();
 
    // Compute the gPad coordinates in TRUE normalized space (NDC)
-   Int_t ix1,iy1,ix2,iy2;
    Int_t iw = gPad->GetWw();
    Int_t ih = gPad->GetWh();
    Double_t x1p,y1p,x2p,y2p;
    gPad->GetPadPar(x1p,y1p,x2p,y2p);
-   ix1 = (Int_t)(iw*x1p);
-   iy1 = (Int_t)(ih*y1p);
-   ix2 = (Int_t)(iw*x2p);
-   iy2 = (Int_t)(ih*y2p);
+   Int_t ix1 = (Int_t)(iw*x1p);
+   Int_t iy1 = (Int_t)(ih*y1p);
+   Int_t ix2 = (Int_t)(iw*x2p);
+   Int_t iy2 = (Int_t)(ih*y2p);
    Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
    Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
    Double_t rh    = hndc/(Double_t)ih;
@@ -207,36 +204,29 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Double_t ry = (y2ndc-y1ndc)/(ry2-ry1);
 
    // Arrow position and arrow's middle in NDC space
-   Double_t x1n, y1n, x2n, y2n, xm, ym;
-   x1n = rx*(x1-rx1)+x1ndc;
-   x2n = rx*(x2-rx1)+x1ndc;
-   y1n = ry*(y1-ry1)+y1ndc;
-   y2n = ry*(y2-ry1)+y1ndc;
-   xm  = (x1n+x2n)/2;
-   ym  = (y1n+y2n)/2;
+   Double_t x1n = rx*(x1-rx1)+x1ndc;
+   Double_t x2n = rx*(x2-rx1)+x1ndc;
+   Double_t y1n = ry*(y1-ry1)+y1ndc;
+   Double_t y2n = ry*(y2-ry1)+y1ndc;
+   Double_t xm  = (x1n+x2n)/2;
+   Double_t ym  = (y1n+y2n)/2;
 
    // Arrow heads size
    Double_t length = TMath::Sqrt(Double_t((x2n-x1n)*(x2n-x1n)+(y2n-y1n)*(y2n-y1n)));
    Double_t rSize  = 0.7*arrowsize;
    Double_t dSize  = rSize*TMath::Tan(TMath::Pi()*fAngle/360);
-   Double_t cosT   = 1;
-   Double_t sinT   = 0;
-   if (length > 0) {
-      cosT   = (x2n-x1n)/length;
-      sinT   = (y2n-y1n)/length;
-   }
-   // Arrays holding the arrows coordinates
-   Double_t x1ar[4], y1ar[4];
-   Double_t x2ar[4], y2ar[4];
+   Double_t cosT   = (length > 0) ? (x2n-x1n)/length : 1.;
+   Double_t sinT   = (length > 0) ? (y2n-y1n)/length : 0.;
 
    // Draw the start and end bars if needed
    if (opt.BeginsWith("|-")) {
+      Double_t x1ar[2], y1ar[2];
       x1ar[0] = x1n-sinT*dSize;
       y1ar[0] = y1n+cosT*dSize;
       x1ar[1] = x1n+sinT*dSize;
       y1ar[1] = y1n-cosT*dSize;
       // NDC to user coordinates
-      for (i=0; i<2; i++) {
+      for (Int_t i=0; i<2; i++) {
          x1ar[i] = (1/rx)*(x1ar[i]-x1ndc)+rx1;
          y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
@@ -244,12 +234,13 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       opt(0) = ' ';
    }
    if (opt.EndsWith("-|")) {
+      Double_t x2ar[2], y2ar[2];
       x2ar[0] = x2n-sinT*dSize;
       y2ar[0] = y2n+cosT*dSize;
       x2ar[1] = x2n+sinT*dSize;
       y2ar[1] = y2n-cosT*dSize;
       // NDC to user coordinates
-      for (i=0; i<2; i++) {
+      for (Int_t i=0; i<2; i++) {
          x2ar[i] = (1/rx)*(x2ar[i]-x1ndc)+rx1;
          y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
@@ -271,37 +262,14 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       y1h = ym - sinT*rSize/2;
    }
 
-   // Define the arrow's head coordinates
-   if (opt.Contains(">")) {
-      x2ar[0] = x2h - rSize*cosT - sinT*dSize;
-      y2ar[0] = y2h - rSize*sinT + cosT*dSize;
-      x2ar[1] = x2h;
-      y2ar[1] = y2h;
-      x2ar[2] = x2h - rSize*cosT + sinT*dSize;
-      y2ar[2] = y2h - rSize*sinT - cosT*dSize;
-      x2ar[3] = x2ar[0];
-      y2ar[3] = y2ar[0];
-   }
-
-   if (opt.Contains("<")) {
-      x1ar[0] = x1h + rSize*cosT + sinT*dSize;
-      y1ar[0] = y1h + rSize*sinT - cosT*dSize;
-      x1ar[1] = x1h;
-      y1ar[1] = y1h;
-      x1ar[2] = x1h + rSize*cosT - sinT*dSize;
-      y1ar[2] = y1h + rSize*sinT + cosT*dSize;
-      x1ar[3] = x1ar[0];
-      y1ar[3] = y1ar[0];
-   }
-
    // Paint Arrow body
    if (opt.Contains("|>") && !opt.Contains("-|>-")) {
-      x2n = x2n-cosT*rSize;
-      y2n = y2n-sinT*rSize;
+      x2n -= cosT*rSize;
+      y2n -= sinT*rSize;
    }
    if (opt.Contains("<|") && !opt.Contains("-<|-")) {
-      x1n = x1n+cosT*rSize;
-      y1n = y1n+sinT*rSize;
+      x1n += cosT*rSize;
+      y1n += sinT*rSize;
    }
    x1n = (1/rx)*(x1n-x1ndc)+rx1;
    y1n = (1/ry)*(y1n-y1ndc)+ry1;
@@ -311,8 +279,19 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 
    // Draw the arrow's head(s)
    if (opt.Contains(">")) {
+      Double_t x2ar[4], y2ar[4];
+
+      x2ar[0] = x2h - rSize*cosT - sinT*dSize;
+      y2ar[0] = y2h - rSize*sinT + cosT*dSize;
+      x2ar[1] = x2h;
+      y2ar[1] = y2h;
+      x2ar[2] = x2h - rSize*cosT + sinT*dSize;
+      y2ar[2] = y2h - rSize*sinT - cosT*dSize;
+      x2ar[3] = x2ar[0];
+      y2ar[3] = y2ar[0];
+
       // NDC to user coordinates
-      for (i=0; i<4; i++) {
+      for (Int_t i=0; i<4; i++) {
          x2ar[i] = (1/rx)*(x2ar[i]-x1ndc)+rx1;
          y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
@@ -329,9 +308,20 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          gPad->PaintPolyLine(3,x2ar,y2ar);
       }
    }
+
    if (opt.Contains("<")) {
+      Double_t x1ar[4], y1ar[4];
+      x1ar[0] = x1h + rSize*cosT + sinT*dSize;
+      y1ar[0] = y1h + rSize*sinT - cosT*dSize;
+      x1ar[1] = x1h;
+      y1ar[1] = y1h;
+      x1ar[2] = x1h + rSize*cosT - sinT*dSize;
+      y1ar[2] = y1h + rSize*sinT + cosT*dSize;
+      x1ar[3] = x1ar[0];
+      y1ar[3] = y1ar[0];
+
       // NDC to user coordinates
-      for (i=0; i<4; i++) {
+      for (Int_t i=0; i<4; i++) {
          x1ar[i] = (1/rx)*(x1ar[i]-x1ndc)+rx1;
          y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
@@ -368,9 +358,11 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"arrow",0,1);
    SaveLineAttributes(out,"arrow",1,1,1);
 
-   if (fAngle !=60) {
+   if (TestBit(kLineNDC))
+      out<<"   arrow->SetNDC();"<<std::endl;
+
+   if (fAngle!=60)
       out << "   arrow->SetAngle(" << GetAngle() << ");" << std::endl;
-   }
 
    out<<"   arrow->Draw();"<<std::endl;
 }
@@ -381,7 +373,6 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TArrow::SetDefaultAngle(Float_t Angle)
 {
-
    fgDefaultAngle = Angle;
 }
 
@@ -391,7 +382,6 @@ void TArrow::SetDefaultAngle(Float_t Angle)
 
 void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 {
-
    fgDefaultArrowSize = ArrowSize;
 }
 

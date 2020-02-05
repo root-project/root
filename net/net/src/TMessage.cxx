@@ -22,8 +22,8 @@
 #include "TMessage.h"
 #include "Compression.h"
 #include "TVirtualStreamerInfo.h"
+#include "TList.h"
 #include "Bytes.h"
-#include "TFile.h"
 #include "TProcessID.h"
 #include "RZip.h"
 
@@ -34,11 +34,11 @@ ClassImp(TMessage);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TMessage object for storing objects. The "what" integer
-/// describes the type of message. Predifined ROOT system message types
+/// describes the type of message. Predefined ROOT system message types
 /// can be found in MessageTypes.h. Make sure your own message types are
 /// unique from the ROOT defined message types (i.e. 0 - 10000 are
 /// reserved by ROOT). In case you OR "what" with kMESS_ACK, the message
-/// will wait for an acknowledgement from the remote side. This makes
+/// will wait for an acknowledgment from the remote side. This makes
 /// the sending process synchronous. In case you OR "what" with kMESS_ZIP,
 /// the message will be compressed in TSocket using the zip algorithm
 /// (only if message is > 256 bytes).
@@ -54,11 +54,11 @@ TMessage::TMessage(UInt_t what, Int_t bufsiz) :
    fWhat  = what;
    *this << what;
 
-   fClass      = 0;
-   fBufComp    = 0;
-   fBufCompCur = 0;
-   fCompPos    = 0;
-   fInfos      = 0;
+   fClass      = nullptr;
+   fBufComp    = nullptr;
+   fBufCompCur = nullptr;
+   fCompPos    = nullptr;
+   fInfos      = nullptr;
    fEvolution  = kFALSE;
 
    SetBit(kCannotHandleMemberWiseStreaming);
@@ -76,17 +76,17 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
 
    *this >> fWhat;
 
-   fBufComp    = 0;
-   fBufCompCur = 0;
-   fCompPos    = 0;
-   fInfos      = 0;
+   fBufComp    = nullptr;
+   fBufCompCur = nullptr;
+   fCompPos    = nullptr;
+   fInfos      = nullptr;
    fEvolution  = kFALSE;
 
    if (fWhat & kMESS_ZIP) {
       // if buffer has kMESS_ZIP set, move it to fBufComp and uncompress
       fBufComp    = fBuffer;
       fBufCompCur = fBuffer + bufsize;
-      fBuffer     = 0;
+      fBuffer     = nullptr;
       Uncompress();
    }
 
@@ -96,12 +96,12 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
       SetBufferOffset(sizeof(UInt_t) + sizeof(fWhat));
       ResetMap();
    } else {
-      fClass = 0;
+      fClass = nullptr;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clean up compression buffer.
+/// Destructor
 
 TMessage::~TMessage()
 {
@@ -164,6 +164,7 @@ void TMessage::Forward()
 /// relevant TClass in case the TClass does not know yet about a particular
 /// class version. This feature is implemented to support clients and servers
 /// with either different ROOT versions or different user classes versions.
+
 void TMessage::TagStreamerInfo(TVirtualStreamerInfo *info)
 {
    if (fgEvolution || fEvolution) {
@@ -182,9 +183,9 @@ void TMessage::Reset()
 
    if (fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp    = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos    = nullptr;
    }
 
    if (fgEvolution || fEvolution) {
@@ -202,7 +203,8 @@ void TMessage::SetLength() const
 {
    if (IsWriting()) {
       char *buf = Buffer();
-      tobuf(buf, (UInt_t)(Length() - sizeof(UInt_t)));
+      if (buf)
+         tobuf(buf, (UInt_t)(Length() - sizeof(UInt_t)));
 
       if (fBufComp) {
          buf = fBufComp;
@@ -212,9 +214,9 @@ void TMessage::SetLength() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Using this method one can change the message type a-posteriory.
+/// Using this method one can change the message type a-posteriori
 /// In case you OR "what" with kMESS_ACK, the message will wait for
-/// an acknowledgement from the remote side. This makes the sending
+/// an acknowledgment from the remote side. This makes the sending
 /// process synchronous.
 
 void TMessage::SetWhat(UInt_t what)
@@ -222,8 +224,10 @@ void TMessage::SetWhat(UInt_t what)
    fWhat = what;
 
    char *buf = Buffer();
-   buf += sizeof(UInt_t);   // skip reserved length space
-   tobuf(buf, what);
+   if (buf) {
+      buf += sizeof(UInt_t);   // skip reserved length space
+      tobuf(buf, what);
+   }
 
    if (fBufComp) {
       buf = fBufComp;
@@ -233,6 +237,7 @@ void TMessage::SetWhat(UInt_t what)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression algorithm
 
 void TMessage::SetCompressionAlgorithm(Int_t algorithm)
 {
@@ -246,14 +251,15 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
    }
    if (newCompress != fCompress && fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp    = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos    = nullptr;
    }
    fCompress = newCompress;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression level
 
 void TMessage::SetCompressionLevel(Int_t level)
 {
@@ -269,22 +275,23 @@ void TMessage::SetCompressionLevel(Int_t level)
    }
    if (newCompress != fCompress && fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp    = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos    = nullptr;
    }
    fCompress = newCompress;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set compression settings
 
 void TMessage::SetCompressionSettings(Int_t settings)
 {
    if (settings != fCompress && fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp    = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos    = nullptr;
    }
    fCompress = settings;
 }
@@ -304,9 +311,9 @@ Int_t TMessage::Compress()
       // no compression specified
       if (fBufComp) {
          delete [] fBufComp;
-         fBufComp    = 0;
-         fBufCompCur = 0;
-         fCompPos    = 0;
+         fBufComp    = nullptr;
+         fBufCompCur = nullptr;
+         fCompPos    = nullptr;
       }
       return 0;
    }
@@ -319,14 +326,19 @@ Int_t TMessage::Compress()
    // remove any existing compressed buffer before compressing modified message
    if (fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp    = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos    = nullptr;
    }
 
    if (Length() <= (Int_t)(256 + 2*sizeof(UInt_t))) {
       // this message is too small to be compressed
       return 0;
+   }
+
+   if (!Buffer()) {
+      // error condition, should never happen
+      return -1;
    }
 
    Int_t hdrlen   = 2*sizeof(UInt_t);
@@ -350,9 +362,9 @@ Int_t TMessage::Compress()
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
          delete [] fBufComp;
-         fBufComp    = 0;
-         fBufCompCur = 0;
-         fCompPos    = 0;
+         fBufComp    = nullptr;
+         fBufCompCur = nullptr;
+         fCompPos    = nullptr;
          return -1;
       }
       bufcur  += nout;

@@ -5,9 +5,9 @@
           xmlns:l="sap.ui.layout"
           xmlns:commons="sap.ui.commons">
    <Page title="" showNavButton="false" showFooter="false"
-      showSubHeader="false" id="CanvasMainPage">
+      showSubHeader="false" id="CanvasMainPage" >
       <customHeader>
-         <OverflowToolbar id="otb1">
+         <Bar id="otb1">
             <!--  Button id="newEvent" icon="sap-icon://step" type="Transparent"
                tooltip="New event" press="newEvent" visible="false "/-->
               <!--
@@ -37,7 +37,9 @@
                </menu>
             </MenuButton>
             <Button text="Edit" type="Transparent" enabled="false" ></Button>
-            -->
+              -->
+
+              <contentLeft>
             <MenuButton text="View" type="Transparent"  enabled="true">
               <menu>
                 <Menu itemSelected="onViewMenuAction" id="menuViewId">
@@ -65,6 +67,12 @@
               </menu>
             </MenuButton>
             <ToolbarSpacer />
+            
+              </contentLeft>
+              <contentMiddle>
+                <FormattedText id="centerTitle" htmlText="ROOT Event Visalization Environment"/>
+              </contentMiddle>
+              <contentRight>
             <MenuButton text="Help" type="Default"  enabled="true">
               <menu>
                 <Menu >
@@ -75,7 +83,8 @@
                 </Menu>
               </menu>
             </MenuButton>
-         </OverflowToolbar>
+              </contentRight>
+         </Bar>
       </customHeader>
       <subHeader>
          <OverflowToolbar>

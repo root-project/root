@@ -114,6 +114,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #endif
 
 #include "Riostream.h"
+#include "ROOT/FoundationUtils.hxx"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
@@ -730,7 +731,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    gRootDir = GetRootSys().Data();
 
-   TDirectory::Build();
+   TDirectory::BuildDirectory(nullptr, nullptr);
 
    // Initialize interface to CINT C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCling fails
@@ -923,14 +924,15 @@ TROOT::~TROOT()
 
       // ATTENTION!!! Order is important!
 
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fBrowsables);
 
       // FIXME: Causes rootcling to deadlock, debug and uncomment
       // SafeDelete(fRootFolder);
 
+#ifdef R__COMPLETE_MEM_TERMINATION
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
+
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
@@ -947,9 +949,7 @@ TROOT::~TROOT()
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fGeometries->Delete(); SafeDelete(fGeometries);
       fBrowsers->Delete();   SafeDelete(fBrowsers);
-#ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
-#endif
       fColors->Delete();     SafeDelete(fColors);
       fStyles->Delete();     SafeDelete(fStyles);
 
@@ -1018,16 +1018,14 @@ TROOT::~TROOT()
       //
       //    delete fInterpreter;
 
+      // We cannot delete fCleanups because of the logic in atexit which needs it.
       SafeDelete(fCleanups);
 #endif
 
-      // llvm::TimingGroup used for measuring the timing relies the destructors.
-      // In order to make use of this feature we have to call the destructor of
-      // TCling which will shut down clang, cling and llvm.
-      // gSystem->Getenv is not available anymore.
-      if (::getenv("ROOT_CLING_TIMING"))
-         delete fInterpreter;
-
+#ifndef _MSC_VER
+      // deleting the interpreter makes things crash at exit in some cases
+      delete fInterpreter;
+#endif
 
       // Prints memory stats
       TStorage::PrintStatistics();
@@ -1250,7 +1248,7 @@ void TROOT::EndOfProcessCleanups()
    CloseFiles();
 
    if (gInterpreter) {
-      gInterpreter->ShutDown();
+      gInterpreter->ResetGlobals();
    }
 
    // Now delete the objects 'held' by the TFiles so that it
@@ -1267,6 +1265,12 @@ void TROOT::EndOfProcessCleanups()
    fCanvases->Delete("slow");
    fColors->Delete();
    fStyles->Delete();
+
+   TQObject::BlockAllSignals(kTRUE);
+
+   if (gInterpreter) {
+      gInterpreter->ShutDown();
+   }
 }
 
 
@@ -2138,11 +2142,6 @@ void TROOT::InitInterpreter()
    GetModuleHeaderInfoBuffer().clear();
 
    fInterpreter->Initialize();
-
-   // Read the rules before enabling the auto loading to not inadvertently
-   // load the libraries for the classes concerned even-though the user is
-   // *not* using them.
-   TClass::ReadRules(); // Read the default customization rules ...
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2597,7 +2596,7 @@ void TROOT::RegisterModule(const char* modulename,
    atexit(CallCloseFiles);
 
    // Now register with TCling.
-   if (gCling) {
+   if (TROOT::Initialized()) {
       gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode, triggerFunc,
                              fwdDeclsArgToSkip, classesHeaders, false, hasCxxModule);
    } else {
@@ -2849,6 +2848,13 @@ void TROOT::IndentLevel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Initialize ROOT explicitly.
+
+void TROOT::Initialize() {
+   (void) gROOT;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return kTRUE if the TROOT object has been initialized.
 
 Bool_t TROOT::Initialized()
@@ -2933,21 +2939,10 @@ static Bool_t IgnorePrefix() {
 /// Get the rootsys directory in the installation. Static utility function.
 
 const TString& TROOT::GetRootSys() {
-#ifdef ROOTPREFIX
-   if (IgnorePrefix()) {
-#endif
-      static TString rootsys;
-      if (rootsys.IsNull())
-         rootsys = gSystem->UnixPathName(gSystem->Getenv("ROOTSYS"));
-      if (rootsys.IsNull())
-         rootsys = gRootDir;
-      return rootsys;
-#ifdef ROOTPREFIX
-   } else {
-      const static TString rootsys = ROOTPREFIX;
-      return rootsys;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString rootsys = ROOT::FoundationUtils::GetRootSys();
+   return rootsys;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2996,42 +2991,20 @@ const TString& TROOT::GetLibDir() {
 /// Get the include directory in the installation. Static utility function.
 
 const TString& TROOT::GetIncludeDir() {
-#ifdef ROOTINCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootincdir;
-      if (rootincdir.IsNull()) {
-         rootincdir = "include";
-         gSystem->PrependPathName(GetRootSys(), rootincdir);
-      }
-      return rootincdir;
-#ifdef ROOTINCDIR
-   } else {
-      const static TString rootincdir = ROOTINCDIR;
-      return rootincdir;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString includedir = ROOT::FoundationUtils::GetIncludeDir();
+   return includedir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the sysconfig directory in the installation. Static utility function.
 
 const TString& TROOT::GetEtcDir() {
-#ifdef ROOTETCDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootetcdir;
-      if (rootetcdir.IsNull()) {
-         rootetcdir = "etc";
-         gSystem->PrependPathName(GetRootSys(), rootetcdir);
-      }
-      return rootetcdir;
-#ifdef ROOTETCDIR
-   } else {
-      const static TString rootetcdir = ROOTETCDIR;
-      return rootetcdir;
-   }
-#endif
+   // Avoid returning a reference to a temporary because of the conversion
+   // between std::string and TString.
+   const static TString etcdir = ROOT::FoundationUtils::GetEtcDir();
+   return etcdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

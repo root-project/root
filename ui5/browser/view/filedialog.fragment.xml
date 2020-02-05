@@ -1,0 +1,29 @@
+<core:FragmentDefinition
+   xmlns="sap.m"
+   xmlns:core="sap.ui.core">
+   <Page title="" showNavButton="false"
+         showHeader="false" showSubHeader="true" showFooter="true" enableScrolling="true">
+         <subHeader>
+            <OverflowToolbar>
+               <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan">
+               </Breadcrumbs>
+            </OverflowToolbar>
+         </subHeader>
+         <content>
+            <List headerText="Files" items="{ path: '/filesList' }"
+                  itemPress="onItemPress">
+                <StandardListItem title="{name}" icon="{icon}" type="Active" />
+            </List>
+         </content>
+         <footer>
+           <Toolbar>
+               <ComboBox selectedKey="{/fileExt}" items="{ path: '/fileExtList' }" visible="{/showFileExt}"
+                         change="onFileExtChanged">
+                  <core:Item key="{id}" text="{text}" />
+               </ComboBox>
+               <Input id="SelectedFile" type="Text" enabled="{/canEditName}" placeholder="Enter file name" value="{/fileName}" valueLiveUpdate="true">
+               </Input>
+            </Toolbar>
+         </footer>
+   </Page>
+</core:FragmentDefinition>

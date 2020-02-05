@@ -77,6 +77,9 @@ ROOT::Experimental::RWebWindow::RWebWindow() = default;
 
 ROOT::Experimental::RWebWindow::~RWebWindow()
 {
+   if (fMaster)
+      fMaster->RemoveEmbedWindow(fMasterConnId, fMasterChannel);
+
    if (fWSHandler)
       fWSHandler->SetDisabled();
 
@@ -86,12 +89,17 @@ ROOT::Experimental::RWebWindow::~RWebWindow()
       auto lst = GetConnections();
 
       {
+         // clear connections vector under mutex
          std::lock_guard<std::mutex> grd(fConnMutex);
-         fConn.clear(); // remove all connections under mutex
+         fConn.clear();
+         fPendingConn.clear();
       }
 
-      for (auto &conn : lst)
+      for (auto &conn : lst) {
          conn->fActive = false;
+         for (auto &elem: conn->fEmbed)
+            elem.second->fMaster.reset();
+      }
 
       fMgr->Unregister(*this);
    }
@@ -175,7 +183,6 @@ unsigned ROOT::Experimental::RWebWindow::MakeBatch(bool create_new, const RWebDi
    return connid;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns connection id of batch job
 /// Connection to that job may not be initialized yet
@@ -204,7 +211,7 @@ unsigned ROOT::Experimental::RWebWindow::FindBatch()
 /// Batch jobs will be ignored here
 /// Returns 0 if connection not exists
 
-unsigned ROOT::Experimental::RWebWindow::GetDisplayConnection()
+unsigned ROOT::Experimental::RWebWindow::GetDisplayConnection() const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -274,17 +281,26 @@ std::shared_ptr<ROOT::Experimental::RWebWindow::WebConn> ROOT::Experimental::RWe
 
 std::shared_ptr<ROOT::Experimental::RWebWindow::WebConn> ROOT::Experimental::RWebWindow::RemoveConnection(unsigned wsid)
 {
-   std::lock_guard<std::mutex> grd(fConnMutex);
 
-   for (size_t n=0; n<fConn.size();++n)
-      if (fConn[n]->fWSId == wsid) {
-         std::shared_ptr<WebConn> res = std::move(fConn[n]);
-         fConn.erase(fConn.begin() + n);
-         res->fActive = false;
-         return res;
-      }
+   std::shared_ptr<WebConn> res;
 
-   return nullptr;
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      for (size_t n = 0; n < fConn.size(); ++n)
+         if (fConn[n]->fWSId == wsid) {
+            res = std::move(fConn[n]);
+            fConn.erase(fConn.begin() + n);
+            res->fActive = false;
+            break;
+         }
+   }
+
+   if (res)
+      for (auto &elem: res->fEmbed)
+         elem.second->fMaster.reset();
+
+   return res;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -416,7 +432,7 @@ unsigned ROOT::Experimental::RWebWindow::AddDisplayHandle(bool batch_mode, const
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true if provided key value already exists (in processes map or in existing connections)
 
-bool ROOT::Experimental::RWebWindow::HasKey(const std::string &key)
+bool ROOT::Experimental::RWebWindow::HasKey(const std::string &key) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -445,7 +461,7 @@ void ROOT::Experimental::RWebWindow::CheckPendingConnections()
 
    float tmout = fMgr->GetLaunchTmout();
 
-   ConnectionsList selected;
+   ConnectionsList_t selected;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
@@ -644,6 +660,13 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
             ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
             conn->fReady = 10;
          }
+      } else if (cdata.compare(0,8,"CLOSECH=") == 0) {
+         int channel = std::stoi(cdata.substr(8));
+         auto iter = conn->fEmbed.find(channel);
+         if (iter != conn->fEmbed.end()) {
+            iter->second->ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+            conn->fEmbed.erase(iter);
+         }
       }
    } else if (fPanelName.length() && (conn->fReady < 10)) {
       if (cdata == "PANEL_READY") {
@@ -657,8 +680,10 @@ bool ROOT::Experimental::RWebWindow::ProcessWS(THttpCallArg &arg)
    } else if (nchannel == 1) {
       ProvideQueueEntry(conn->fConnId, kind_Data, std::move(cdata));
    } else if (nchannel > 1) {
-      // add processing of extra channels later
-      // conn->fCallBack(conn->fConnId, cdata);
+      // process embed window
+      auto embed_window = conn->fEmbed[nchannel];
+      if (embed_window)
+         embed_window->ProvideQueueEntry(conn->fConnId, kind_Data, std::move(cdata));
    }
 
    CheckDataToSend();
@@ -782,8 +807,8 @@ bool ROOT::Experimental::RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &c
 
 void ROOT::Experimental::RWebWindow::CheckDataToSend(bool only_once)
 {
-   // make copy of all connections to be independent later
-   auto arr = GetConnections();
+   // make copy of all connections to be independent later, only active connections are checked
+   auto arr = GetConnections(0, true);
 
    do {
       bool isany = false;
@@ -812,11 +837,19 @@ void ROOT::Experimental::RWebWindow::Sync()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// Returns window address which is used in URL
+
+std::string ROOT::Experimental::RWebWindow::GetAddr() const
+{
+    return fWSHandler->GetName();
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 /// Returns relative URL address for the specified window
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
-std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWindow> &win)
+std::string ROOT::Experimental::RWebWindow::GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
    if (fMgr != win->fMgr) {
       R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
@@ -824,20 +857,64 @@ std::string ROOT::Experimental::RWebWindow::RelativeAddr(std::shared_ptr<RWebWin
    }
 
    std::string res("../");
-   res.append(win->fWSHandler->GetName());
+   res.append(win->GetAddr());
    res.append("/");
    return res;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Set client version, used as prefix in scripts URL
+/// When changed, web browser will reload all related JS files while full URL will be different
+/// Default is empty value - no extra string in URL
+/// Version should be string like "1.2" or "ver1.subv2" and not contain any special symbols
+
+void ROOT::Experimental::RWebWindow::SetClientVersion(const std::string &vers)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   fClientVersion = vers;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns current client version
+
+std::string ROOT::Experimental::RWebWindow::GetClientVersion() const
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   return fClientVersion;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Set arbitrary JSON code, which is accessible via conn.GetUserArgs() method
+/// This JSON code injected into main HTML document into JSROOT.ConnectWebWindow()
+/// Must be called before RWebWindow::Show() method is called
+
+void ROOT::Experimental::RWebWindow::SetUserArgs(const std::string &args)
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   fUserArgs = args;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Returns configured user arguments for web window
+/// See \ref SetUserArgs method for more details
+
+std::string ROOT::Experimental::RWebWindow::GetUserArgs() const
+{
+   std::lock_guard<std::mutex> grd(fConnMutex);
+   return fUserArgs;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Returns current number of active clients connections
 
-int ROOT::Experimental::RWebWindow::NumConnections()
+int ROOT::Experimental::RWebWindow::NumConnections(bool with_pending) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
-   return fConn.size();
+   auto sz = fConn.size();
+   if (with_pending)
+      sz += fPendingConn.size();
+   return sz;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// Configures recording of communication data in protocol file
@@ -857,14 +934,14 @@ void ROOT::Experimental::RWebWindow::RecordData(const std::string &fname, const 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// returns connection for specified connection number
+/// Returns connection for specified connection number
+/// Only active connections are returned - where clients confirms connection
 /// Total number of connections can be retrieved with NumConnections() method
 
-unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num)
+unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
-   if (num>=(int)fConn.size() || !fConn[num]->fActive) return 0;
-   return fConn[num]->fConnId;
+   return ((num >= 0) && (num < (int)fConn.size()) && fConn[num]->fActive) ? fConn[num]->fConnId : 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -872,7 +949,7 @@ unsigned ROOT::Experimental::RWebWindow::GetConnectionId(int num)
 /// connid is connection (0 - any)
 /// if only_active==false, also inactive connections check or connections which should appear
 
-bool ROOT::Experimental::RWebWindow::HasConnection(unsigned connid, bool only_active)
+bool ROOT::Experimental::RWebWindow::HasConnection(unsigned connid, bool only_active) const
 {
    std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -915,32 +992,37 @@ void ROOT::Experimental::RWebWindow::CloseConnection(unsigned connid)
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns connection (or all active connections)
 
-ROOT::Experimental::RWebWindow::ConnectionsList ROOT::Experimental::RWebWindow::GetConnections(unsigned connid)
+ROOT::Experimental::RWebWindow::ConnectionsList_t ROOT::Experimental::RWebWindow::GetConnections(unsigned connid, bool only_active) const
 {
-   std::vector<std::shared_ptr<WebConn>> arr;
+   ConnectionsList_t arr;
 
-   std::lock_guard<std::mutex> grd(fConnMutex);
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
 
-   if (!connid) {
-      arr = fConn;
-   } else {
-      for (auto &conn : fConn)
-         if ((conn->fConnId == connid) && conn->fActive)
+      for (auto &conn : fConn) {
+         if ((conn->fActive || !only_active) && (!connid || (conn->fConnId == connid)))
             arr.push_back(conn);
+      }
+
+      if (!only_active)
+         for (auto &conn : fPendingConn)
+            if (!connid || (conn->fConnId == connid))
+               arr.push_back(conn);
    }
 
    return arr;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns true if sending via specified connection can be performed
 /// if direct==true, checks if direct sending (without queuing) is possible
 /// if connid==0, all existing connections are checked
 
-bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
+bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct) const
 {
-   auto arr = GetConnections(connid);
+   auto arr = GetConnections(connid, direct); // for direct sending connection has to be active
+
+   auto maxqlen = GetMaxQueueLength();
 
    for (auto &conn : arr) {
 
@@ -949,7 +1031,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
       if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
          return false;
 
-      if (conn->fQueue.size() >= GetMaxQueueLength())
+      if (conn->fQueue.size() >= maxqlen)
          return false;
    }
 
@@ -961,7 +1043,7 @@ bool ROOT::Experimental::RWebWindow::CanSend(unsigned connid, bool direct)
 /// if connid==0, maximal value for all connections is returned
 /// If wrong connection is specified, -1 is return
 
-int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid)
+int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid) const
 {
    int maxq = -1;
 
@@ -982,9 +1064,12 @@ int ROOT::Experimental::RWebWindow::GetSendQueueLength(unsigned connid)
 
 void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int chid)
 {
-   auto arr = GetConnections(connid);
+   if (fMaster)
+      return fMaster->SubmitData(fMasterConnId, txt, std::move(data), fMasterChannel);
 
+   auto arr = GetConnections(connid);
    auto cnt = arr.size();
+   auto maxqlen = GetMaxQueueLength();
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
@@ -1015,7 +1100,7 @@ void ROOT::Experimental::RWebWindow::SubmitData(unsigned connid, bool txt, std::
 
       std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (conn->fQueue.size() < GetMaxQueueLength()) {
+      if (conn->fQueue.size() < maxqlen) {
          if (--cnt)
             conn->fQueue.emplace(chid, txt, std::string(data)); // make copy
          else
@@ -1190,6 +1275,43 @@ void ROOT::Experimental::RWebWindow::Run(double tm)
    }
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Add embed window
+
+unsigned ROOT::Experimental::RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel)
+{
+   if (channel < 2)
+      return 0;
+
+   auto arr = GetConnections(0, true);
+   if (arr.size() == 0)
+      return 0;
+
+   // check if channel already occupied
+   if (arr[0]->fEmbed.find(channel) != arr[0]->fEmbed.end())
+      return 0;
+
+   arr[0]->fEmbed[channel] = window;
+
+   return arr[0]->fConnId;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Remove RWebWindow associated with the channel
+
+void ROOT::Experimental::RWebWindow::RemoveEmbedWindow(unsigned connid, int channel)
+{
+   auto arr = GetConnections(connid);
+
+   for (auto &conn : arr) {
+      auto iter = conn->fEmbed.find(channel);
+      if (iter != conn->fEmbed.end())
+         conn->fEmbed.erase(iter);
+   }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////
 /// Create new RWebWindow
 /// Using default RWebWindowsManager
@@ -1207,5 +1329,36 @@ std::shared_ptr<ROOT::Experimental::RWebWindow> ROOT::Experimental::RWebWindow::
 void ROOT::Experimental::RWebWindow::TerminateROOT()
 {
    fMgr->Terminate();
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Static method to show web window
+/// Has to be used instead of RWebWindow::Show() when window potentially can be embed into other windows
+/// Soon RWebWindow::Show() method will be done protected
+
+unsigned ROOT::Experimental::RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDisplayArgs &args)
+{
+   if (!window)
+      return 0;
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kEmbedded) {
+      unsigned connid = args.fMaster ? args.fMaster->AddEmbedWindow(window, args.fMasterChannel) : 0;
+
+      if (connid > 0) {
+         window->fMaster = args.fMaster;
+         window->fMasterConnId = connid;
+         window->fMasterChannel = args.fMasterChannel;
+
+         // inform client that connection is established and window initialized
+         args.fMaster->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
+
+         // provide call back for window itself that connection is ready
+         window->ProvideQueueEntry(connid, kind_Connect, ""s);
+      }
+
+      return connid;
+   }
+
+   return window->Show(args);
 }
 

@@ -27,8 +27,8 @@ protected:
    Bool_t        fRecursive;      ///< flag to avoid recursive calls
 
 private:
-   TFileCacheWrite(const TFileCacheWrite &);            //cannot be copied
-   TFileCacheWrite& operator=(const TFileCacheWrite &);
+   TFileCacheWrite(const TFileCacheWrite &) = delete;            //cannot be copied
+   TFileCacheWrite& operator=(const TFileCacheWrite &) = delete;
 
 public:
    TFileCacheWrite();

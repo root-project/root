@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorage
 
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -37,6 +38,7 @@ namespace Detail {
 class RColumn;
 class RPagePool;
 class RFieldBase;
+class RNTupleMetrics;
 
 enum class EPageStorageType {
    kSink,
@@ -74,13 +76,16 @@ public:
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(const RColumn &column) = 0;
+   virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) = 0;
    /// Whether the concrete implementation is a sink or a source
    virtual EPageStorageType GetType() = 0;
 
    /// Every page store needs to be able to free pages it handed out.  But Sinks and sources have different means
    /// of allocating pages.
    virtual void ReleasePage(RPage &page) = 0;
+
+   /// Page storage implementations usually have their own metrics
+   virtual RNTupleMetrics &GetMetrics() = 0;
 };
 
 // clang-format off
@@ -95,20 +100,46 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+protected:
+   const RNTupleWriteOptions fOptions;
+
+   /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
+   /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
+   DescriptorId_t fLastFieldId = 0;
+   DescriptorId_t fLastColumnId = 0;
+   DescriptorId_t fLastClusterId = 0;
+   NTupleSize_t fPrevClusterNEntries = 0;
+   /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
+   /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
+   std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+   RNTupleDescriptorBuilder fDescriptorBuilder;
+
+   virtual void DoCreate(const RNTupleModel &model) = 0;
+   virtual RClusterDescriptor::RLocator DoCommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual RClusterDescriptor::RLocator DoCommitCluster(NTupleSize_t nEntries) = 0;
+   virtual void DoCommitDataset() = 0;
+
 public:
-   explicit RPageSink(std::string_view ntupleName);
+   RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
    virtual ~RPageSink();
+   /// Guess the concrete derived page source from the file name (location)
+   static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
+                                            const RNTupleWriteOptions &options = RNTupleWriteOptions());
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
+   /// To do so, Create() calls DoCreate() after updating the descriptor.
    /// Create() associates column handles to the columns referenced by the model
-   virtual void Create(RNTupleModel &model) = 0;
+   void Create(RNTupleModel &model);
    /// Write a page to the storage. The column must have been added before.
-   virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
    /// Finalize the current cluster and create a new one for the following data.
-   virtual void CommitCluster(NTupleSize_t nEntries) = 0;
+   void CommitCluster(NTupleSize_t nEntries);
    /// Finalize the current cluster and the entrire data set.
-   virtual void CommitDataset() = 0;
+   void CommitDataset() { DoCommitDataset(); }
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
@@ -126,25 +157,35 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+protected:
+   const RNTupleReadOptions fOptions;
+   RNTupleDescriptor fDescriptor;
+
+   virtual RNTupleDescriptor DoAttach() = 0;
+
 public:
-   explicit RPageSource(std::string_view ntupleName);
+   RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
    virtual ~RPageSource();
+   /// Guess the concrete derived page source from the file name (location)
+   static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
+                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+   /// Open the same storage multiple time, e.g. for reading in multiple threads
+   virtual std::unique_ptr<RPageSource> Clone() const = 0;
+
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
-   /// TODO: copy/assignment for creating clones in multiple threads.
+   const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
    /// Open the physical storage container for the tree
-   virtual void Attach() = 0;
-
-   /// Re-create the C++ model from the stored meta-data
-   virtual std::unique_ptr<ROOT::Experimental::RNTupleModel> GenerateModel() = 0;
-
-   virtual NTupleSize_t GetNEntries() = 0;
-   virtual NTupleSize_t GetNElements(ColumnHandle_t columnHandle) = 0;
-   virtual ColumnId_t GetColumnId(ColumnHandle_t columnHandle) = 0;
-   virtual const RNTupleDescriptor& GetDescriptor() const = 0;
+   void Attach() { fDescriptor = DoAttach(); }
+   NTupleSize_t GetNEntries();
+   NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
+   ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 
    /// Allocates and fills a page that contains the index-th element
-   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t index) = 0;
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
+   /// Another version of PopulatePage that allows to specify cluster-relative indexes
+   virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
 };
 
 } // namespace Detail

@@ -12,12 +12,12 @@
 #ifndef ROOT_TRefProxy
 #define ROOT_TRefProxy
 
-#include <map>
-#include <string>
-
 #include "TVirtualRefProxy.h"
 
 #include "TClassRef.h"
+
+#include <map>
+#include <string>
 
 // Forward declarations
 class TFormLeafInfoReference;

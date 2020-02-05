@@ -29,10 +29,18 @@
 
 int main()
 {
+
    std::cout << "Testing Method DL for CPU backend: " << std::endl;
 
    TString archCPU = "CPU";
    testMethodDL_CNN(archCPU);
+
+#ifdef R__HAS_TMVAGPU
+   std::cout << "Testing Method DL for GPU backend: " << std::endl;
+
+   TString archGPU  = "GPU";
+   testMethodDL_CNN(archGPU);
+#endif
 
    return 0;
 }

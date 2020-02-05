@@ -21,11 +21,10 @@
 
 #include <iostream>
 
-ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model)
-   : fModel(model), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
+ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
+   : fModel(model), fIndex(index), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
      fCurrentPage(),
-     fColumnIdSource(kInvalidColumnId),
-     fOffsetColumn(nullptr)
+     fColumnIdSource(kInvalidColumnId)
 {
 }
 
@@ -37,17 +36,17 @@ ROOT::Experimental::Detail::RColumn::~RColumn()
       fPageSource->ReleasePage(fCurrentPage);
 }
 
-void ROOT::Experimental::Detail::RColumn::Connect(RPageStorage* pageStorage)
+void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageStorage *pageStorage)
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
       fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
-      fHandleSink = fPageSink->AddColumn(*this);
+      fHandleSink = fPageSink->AddColumn(fieldId, *this);
       fHeadPage = fPageSink->ReservePage(fHandleSink);
       break;
    case EPageStorageType::kSource:
       fPageSource = static_cast<RPageSource*>(pageStorage);
-      fHandleSource = fPageSource->AddColumn(*this);
+      fHandleSource = fPageSource->AddColumn(fieldId, *this);
       fNElements = fPageSource->GetNElements(fHandleSource);
       fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
       break;
@@ -68,4 +67,10 @@ void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
 {
    fPageSource->ReleasePage(fCurrentPage);
    fCurrentPage = fPageSource->PopulatePage(fHandleSource, index);
+}
+
+void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
+{
+   fPageSource->ReleasePage(fCurrentPage);
+   fCurrentPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
 }

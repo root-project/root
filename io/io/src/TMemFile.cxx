@@ -42,13 +42,6 @@ only from memory.
 ClassImp(TMemFile);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
-
-TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Constructor allocating the memory buffer.
 ///
 /// \param size: size of the buffer to be allocated. A value of -1 means that
@@ -56,8 +49,7 @@ TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
 ///
 /// \param previous: previous TMemBlock, used to set up the linked list.
 
-TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
-   fPrevious(previous), fNext(0), fBuffer(0), fSize(0)
+TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) : fPrevious(previous)
 {
    // size will be -1 when copying an existing buffer into fBuffer.
    if (size != -1) {
@@ -69,9 +61,9 @@ TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor not allocating the memory buffer, for external ownership.
 
-TMemFile::TMemBlock::TMemBlock(UChar_t* data, Long64_t size) :
-   fPrevious(nullptr), fNext(nullptr), fBuffer(data), fSize(size)
-{}
+TMemFile::TMemBlock::TMemBlock(UChar_t *data, Long64_t size) : fBuffer(data), fSize(size)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual destructors.  Delete the block memory.
@@ -86,7 +78,7 @@ TMemFile::TMemBlock::~TMemBlock()
 
 void TMemFile::TMemBlock::CreateNext(Long64_t size)
 {
-   R__ASSERT(fNext == 0);
+   R__ASSERT(fNext == nullptr);
    fNext = new TMemBlock(size,this);
 }
 
@@ -118,7 +110,7 @@ TMemFile::EMode TMemFile::ParseOption(Option_t *option)
 TMemFile::TMemFile(const char *path, const ZeroCopyView_t &datarange)
    : TFile(path, "WEB", "read-only TMemFile", 0 /*compress*/),
      fBlockList(reinterpret_cast<UChar_t *>(const_cast<char *>(datarange.fStart)), datarange.fSize),
-     fIsOwnedByROOT(false), fSize(datarange.fSize), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+     fSize(datarange.fSize), fBlockSeek(&(fBlockList))
 {
    fD = 0;
    fOption = "READ";
@@ -167,25 +159,27 @@ TMemFile::TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer)
 /// See the TFile constructor for details.
 
 TMemFile::TMemFile(const char *path, Option_t *option, const char *ftitle, Int_t compress, Long64_t defBlockSize)
-   : TMemFile(path, nullptr, -1, option, ftitle, compress)
+   : TMemFile(path, nullptr, -1, option, ftitle, compress, defBlockSize)
 {
-   fDefaultBlockSize = defBlockSize == 0LL ? fgDefaultBlockSize : defBlockSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual Constructor.  See the TFile constructor for details. Copy data from buffer.
 
-TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress)
-   : TFile(path, "WEB", ftitle, compress), fBlockList(size), fIsOwnedByROOT(true), fSize(size), fSysOffset(0),
-     fBlockSeek(&(fBlockList)), fBlockOffset(0)
+TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *option, const char *ftitle, Int_t compress,
+                   Long64_t defBlockSize)
+   : TFile(path, "WEB", ftitle, compress), fBlockList(size), fIsOwnedByROOT(kTRUE), fSize(size),
+     fBlockSeek(&(fBlockList))
 {
+   fDefaultBlockSize = defBlockSize == 0LL ? fgDefaultBlockSize : defBlockSize;
+
    EMode optmode = ParseOption(option);
 
    if (NeedsToWrite(optmode)) {
       Int_t mode = O_RDWR | O_CREAT;
       if (optmode == EMode::kRecreate) mode |= O_TRUNC;
 
-      fD = SysOpen(path, O_RDWR | O_CREAT, 0644);
+      fD = TMemFile::SysOpen(path, O_RDWR | O_CREAT, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened", path);
          goto zombie;
@@ -193,14 +187,13 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       fWritable = kTRUE;
 
    } else {
-      fD = SysOpen(path, O_RDONLY, 0644);
+      fD = TMemFile::SysOpen(path, O_RDONLY, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened for reading", path);
          goto zombie;
       }
       fWritable = kFALSE;
    }
-
 
    if (buffer)
       SysWriteImpl(fD,buffer,size);
@@ -220,7 +213,7 @@ zombie:
 TMemFile::TMemFile(const TMemFile &orig)
    : TFile(orig.GetEndpointUrl()->GetUrl(), "WEB", orig.GetTitle(), orig.GetCompressionSettings()),
      fBlockList(orig.GetEND()), fExternalData(orig.fExternalData), fIsOwnedByROOT(orig.fIsOwnedByROOT),
-     fSize(orig.GetEND()), fSysOffset(0), fBlockSeek(&(fBlockList)), fBlockOffset(0)
+     fSize(orig.GetEND()), fBlockSeek(&(fBlockList))
 {
    EMode optmode = ParseOption(orig.fOption);
 
@@ -336,7 +329,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    if (fFree) {
       fFree->Delete();
       delete fFree;
-      fFree      = 0;
+      fFree      = nullptr;
    }
    fWritten      = 0;
    fSumBuffer    = 0;
@@ -345,11 +338,11 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fBytesReadExtra = 0;
    fBytesWrite   = 0;
    delete fClassIndex;
-   fClassIndex   = 0;
+   fClassIndex   = nullptr;
    fSeekInfo     = 0;
    fNbytesInfo   = 0;
    delete fProcessIDs;
-   fProcessIDs   = 0;
+   fProcessIDs   = nullptr;
    fNProcessIDs  = 0;
    fOffset       = 0;
    fCacheRead    = 0;
@@ -358,7 +351,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    if (fFree) {
       fFree->Delete();
       delete fFree;
-      fFree = 0;
+      fFree = nullptr;
    }
 
    fSysOffset   = 0;
@@ -396,7 +389,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
       TIter next(directory->GetListOfKeys());
       TKey *key;
       while( (key = (TKey*)next()) ) {
-         if (0 ==  directory->GetList()->FindObject(key->GetName())) {
+         if (nullptr == directory->GetList()->FindObject(key->GetName())) {
             Warning("ResetObjects","Key/Object %s is not attached to the directory %s and can not be ResetAfterMerge correctly",
                     key->GetName(),directory->GetName());
          }

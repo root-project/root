@@ -62,6 +62,7 @@ class TestCPP11FEATURES:
         assert TestSharedPtr.s_counter == 1
         c.__python_owns__ = False
         cc = std.shared_ptr[TestSharedPtr](c)
+        assert cc.__python_owns__
 
         del c
 
@@ -251,3 +252,40 @@ class TestCPP11FEATURES:
 
             c = cppyy.gbl.nullopt
             assert cppyy.gbl.callopt(c)
+
+    def test10_chrono(self):
+        """Use of chrono and overloaded operator+"""
+
+        import cppyy
+        from cppyy.gbl import std
+
+        t = std.chrono.system_clock.now() - std.chrono.seconds(1)
+        # following used to fail with compilation error
+        t = std.chrono.system_clock.now() + std.chrono.seconds(1)
+
+
+    def test11_stdfunction(self):
+        """Use of std::function with arguments in a namespace"""
+
+        import cppyy
+        from cppyy.gbl import FunctionNS, FNTestStruct, FNCreateTestStructFunc
+
+        t = FNTestStruct(42)
+        f = FNCreateTestStructFunc()
+        assert f(t) == 42
+
+        t = FunctionNS.FNTestStruct(13)
+        f = FunctionNS.FNCreateTestStructFunc()
+        assert f(t) == 13
+
+      # and for good measure, inline
+        cppyy.cppdef("""namespace FunctionNS2 {
+            struct FNTestStruct { FNTestStruct(int i) : t(i) {} int t; };
+            std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc() { return [](const FNTestStruct& t) { return t.t; }; }
+        }""")
+
+        from cppyy.gbl import FunctionNS2
+
+        t = FunctionNS.FNTestStruct(27)
+        f = FunctionNS.FNCreateTestStructFunc()
+        assert f(t) == 27

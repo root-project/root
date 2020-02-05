@@ -49,6 +49,7 @@ or RooStringVar objects, thus data can be binned in real and/or discrete dimensi
 #include "TTree.h"
 #include "RooTrace.h"
 #include "RooTreeData.h"
+#include "RooHelpers.h"
 
 using namespace std ;
 
@@ -328,29 +329,22 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 
       // Initialize importing mapped set of TH1s
       map<string,TH1*> hmap ;
-      char tmp[1024] ;
-      strlcpy(tmp,impSliceNames,1024) ;
-      char* token = strtok(tmp,",") ;
       TIterator* hiter = impSliceHistos.MakeIterator() ;
-      while(token) {
-	hmap[token] = (TH1*) hiter->Next() ;
-	token = strtok(0,",") ;
+      for (const auto& token : RooHelpers::tokenise(impSliceNames, ",")) {
+        auto histo = static_cast<TH1*>(hiter->Next());
+        assert(histo);
+        hmap[token] = histo;
       }
       importTH1Set(vars,*indexCat,hmap,initWgt,kFALSE) ;
     } else {
 
       // Initialize importing mapped set of RooDataHists
       map<string,RooDataHist*> dmap ;
-      char tmp[1024] ;
-      strlcpy(tmp,impSliceDNames,1024) ;
-      char* token = strtok(tmp,",") ;
       TIterator* hiter = impSliceDHistos.MakeIterator() ;
-      while(token) {
-	dmap[token] = (RooDataHist*) hiter->Next() ;
-	token = strtok(0,",") ;
+      for (const auto& token : RooHelpers::tokenise(impSliceDNames, ",")) {
+        dmap[token] = (RooDataHist*) hiter->Next() ;
       }
       importDHistSet(vars,*indexCat,dmap,initWgt) ;
-
     }
 
 
@@ -1555,10 +1549,10 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 /// is multiplied by the M-dimensional bin volume, (M = N(sumSet)),
 /// or the fraction of it that falls inside the range rangeName,
 /// making the return value the integral over the function
-/// represented by this histogram
+/// represented by this histogram.
 ///
 /// If correctForBinSize is not specified, the weights are multiplied by the
-/// fraction of the bin volume that falls inside the range, i.e. a factor or
+/// fraction of the bin volume that falls inside the range, i.e. a factor of
 /// binVolumeInRange/totalBinVolume.
 
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
@@ -1575,23 +1569,25 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     _vars = sliceOnlySet;
   }
 
-  // Calculate mask and refence plot bins for non-iterating variables,
+  // Calculate mask and reference plot bins for non-iterating variables,
   // and get ranges for iterating variables
   std::vector<bool> mask(_vars.getSize());
   std::vector<Int_t> refBin(_vars.getSize());
   std::vector<Double_t> rangeLo(_vars.getSize(), -std::numeric_limits<Double_t>::infinity());
   std::vector<Double_t> rangeHi(_vars.getSize(), +std::numeric_limits<Double_t>::infinity());
 
-  for (Int_t i = 0; _vars.size(); ++i) {
+  for (std::size_t i = 0; i < _vars.size(); ++i) {
     const auto arg = _vars[i];
     RooAbsArg* sumsetv = sumSet.find(*arg);
     RooAbsArg* slicesetv = sliceSet.find(*arg);
     mask[i] = !sumsetv;
     if (mask[i]) {
-      refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getBin();
+      auto argLV = dynamic_cast<const RooAbsLValue*>(arg);
+      assert(argLV);
+      refBin[i] = argLV->getBin();
     }
-    std::map<const RooAbsArg*, std::pair<Double_t, Double_t> >::const_iterator
-	it = ranges.find(sumsetv ? sumsetv : slicesetv);
+
+	auto it = ranges.find(sumsetv ? sumsetv : slicesetv);
     if (ranges.end() != it) {
       rangeLo[i] = it->second.first;
       rangeHi[i] = it->second.second;

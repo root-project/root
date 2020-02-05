@@ -24,7 +24,7 @@ protected:
    Short_t      fBorderMode{0};    ///< Bordermode (-1=down, 0 = no border, 1=up)
 
 public:
-   TWbox() = default;
+   TWbox() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
          Color_t color=18, Short_t bordersize=5 ,Short_t bordermode=1);
    TWbox(const TWbox &wbox);

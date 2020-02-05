@@ -11,15 +11,6 @@
 #ifndef ROOT_RDFOPERATIONS
 #define ROOT_RDFOPERATIONS
 
-#include <algorithm>
-#include <limits>
-#include <memory>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <vector>
-#include <iomanip>
-
 #include "Compression.h"
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RStringView.hxx"
@@ -43,6 +34,15 @@
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
+
+#include <algorithm>
+#include <limits>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
+#include <iomanip>
 
 /// \cond HIDDEN_SYMBOLS
 
@@ -1293,12 +1293,15 @@ public:
       }
       TDirectory *treeDirectory = fOutputFiles[slot].get();
       if (!fDirName.empty()) {
-         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
+         // call returnExistingDirectory=true since MT can end up making this call multiple times
+         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str(), "", true);
       }
       // re-create output tree as we need to create its branches again, with new input variables
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
       fOutputTrees[slot] =
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+      // TODO can be removed when RDF supports interleaved TBB task execution properly, see ROOT-10269
+      fOutputTrees[slot]->SetImplicitMT(false);
       if (fOptions.fAutoFlush)
          fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {

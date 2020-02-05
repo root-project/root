@@ -99,7 +99,7 @@ It is strongly reccomended to persistify those as objects rather than lists of l
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
-  
+
   Examples:
    - A int: "myVar/I"
    - A float array with fixed size: "myArrfloat[42]/F"
@@ -113,14 +113,14 @@ It is strongly reccomended to persistify those as objects rather than lists of l
 ~~~
 - If the address points to more than one numerical variable, we strongly recommend
   that the variable be sorted in decreasing order of size.  Any other order will
-  result in a non-portable TTree (i.e. you will not be able to read it back on a 
+  result in a non-portable TTree (i.e. you will not be able to read it back on a
   platform with a different padding strategy).
   We recommend to persistify objects rather than composite leaflists.
 - In case of the truncated floating point types (Float16_t and Double32_t) you can
   furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
-  the type character. For example, for storing a variable size array `myArr` of 
-  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is 
-  stored in a branch called `myArrSize`, the syntax for the `leaflist` string would 
+  the type character. For example, for storing a variable size array `myArr` of
+  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is
+  stored in a branch called `myArrSize`, the syntax for the `leaflist` string would
   be: `myArr[myArrSize]/d[0,twopi]`. Of course the number of bits could be specified,
   the standard rules of opaque typedefs annotation are valid. For example, if only
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
@@ -1649,6 +1649,24 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
       return 0;
    }
    return BronchExec(branchname, actualClass->GetName(), (void*) addobj, kFALSE, bufsize, splitlevel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Wrapper to turn Branch call with an std::array into the relevant leaf list
+// call
+TBranch *TTree::BranchImpArr(const char *branchname, EDataType datatype, std::size_t N, void *addobj, Int_t bufsize,
+                             Int_t /* splitlevel */)
+{
+   if (datatype == kOther_t || datatype == kNoType_t) {
+      Error("Branch",
+            "The inner type of the std::array passed specified for %s is not of a class or type known to ROOT",
+            branchname);
+   } else {
+      TString varname;
+      varname.Form("%s[%d]/%c", branchname, (int)N, DataTypeToChar(datatype));
+      return Branch(branchname, addobj, varname.Data(), bufsize);
+   }
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3770,9 +3788,9 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///        - the default histogram drawing option is used
 ///          if the expression is of the form "e1".
 ///        - if the expression is of the form "e1:e2"or "e1:e2:e3" a cloud of
-///           unbinned 2D or 3D points is drawn respectively.
-///        - if the expression  has four fields "e1:e2:e3:e4" a 2D scatter is
-///          produced with e1 vs e2 vs e3, and e4 is mapped on the current color
+///          unbinned 2D or 3D points is drawn respectively.
+///        - if the expression  has four fields "e1:e2:e3:e4" a cloud of unbinned 3D
+///          points is produced with e1 vs e2 vs e3, and e4 is mapped on the current color
 ///          palette.
 ///    - If option COL is specified when varexp has three fields:
 ///   ~~~ {.cpp}
@@ -8551,7 +8569,7 @@ void TTree::SetCircular(Long64_t maxEntries)
       //a file, reset the compression level to the file compression level
       if (fDirectory) {
          TFile* bfile = fDirectory->GetFile();
-         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+         Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          if (bfile) {
             compress = bfile->GetCompressionSettings();
          }
@@ -8914,13 +8932,37 @@ void TTree::SetObject(const char* name, const char* title)
 
 void TTree::SetParallelUnzip(Bool_t opt, Float_t RelSize)
 {
-   if (opt) TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kEnable);
-   else     TTreeCacheUnzip::SetParallelUnzip(TTreeCacheUnzip::kDisable);
-
-   if (RelSize > 0) {
-      TTreeCacheUnzip::SetUnzipRelBufferSize(RelSize);
+#ifdef R__USE_IMT
+   if (GetTree() == 0) {
+      LoadTree(GetReadEntry());
+      if (!GetTree())
+         return;
    }
+   if (GetTree() != this) {
+      GetTree()->SetParallelUnzip(opt, RelSize);
+      return;
+   }
+   TFile* file = GetCurrentFile();
+   if (!file)
+      return;
 
+   TTreeCache* pf = GetReadCache(file);
+   if (pf && !( opt ^ (nullptr != dynamic_cast<TTreeCacheUnzip*>(pf)))) {
+      // done with opt and type are in agreement.
+      return;
+   }
+   delete pf;
+   auto cacheSize = GetCacheAutoSize(kTRUE);
+   if (opt) {
+      auto unzip = new TTreeCacheUnzip(this, cacheSize);
+      unzip->SetUnzipBufferSize( Long64_t(cacheSize * RelSize) );
+   } else {
+      pf = new TTreeCache(this, cacheSize);
+   }
+#else
+   (void)opt;
+   (void)RelSize;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

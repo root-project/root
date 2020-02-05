@@ -35,23 +35,23 @@ class TMySQLStatement : public TSQLStatement {
 protected:
 
    struct TParamData {
-      void*         fMem;        //! allocated data buffer
-      Int_t         fSize;       //! size of allocated data
-      Int_t         fSqlType;     //! sqltype of parameter
-      Bool_t        fSign;        //! signed - not signed type
-      ULong_t       fResLength;  //! length argument
-      my_bool       fResNull;    //! indicates if argument is null
-      char*         fStrBuffer;  //! special buffer to be used for string conversions
-      char*         fFieldName;  //! buffer for field name
+      void         *fMem{nullptr};        //! allocated data buffer
+      Int_t         fSize{0};             //! size of allocated data
+      Int_t         fSqlType{0};          //! sqltype of parameter
+      Bool_t        fSign{kFALSE};        //! signed - not signed type
+      ULong_t       fResLength{0};        //! length argument
+      my_bool       fResNull{false};      //! indicates if argument is null
+      std::string   fStrBuffer;           //! special buffer to be used for string conversions
+      std::string   fFieldName;           //! buffer for field name
    };
 
-   MYSQL_STMT           *fStmt;          //! executed statement
-   Int_t                 fNumBuffers; //! number of statement parameters
-   MYSQL_BIND           *fBind;          //! array of bind data
-   TParamData           *fBuffer;         //! parameter definition structures
-   Int_t                 fWorkingMode;   //! 1 - setting parameters, 2 - retrieving results
-   Int_t                 fIterationCount;//! number of iteration
-   Bool_t                fNeedParBind;   //! indicates when parameters bind should be called
+   MYSQL_STMT      *fStmt{nullptr};       //! executed statement
+   Int_t            fNumBuffers{0};       //! number of statement parameters
+   MYSQL_BIND      *fBind{nullptr};       //! array of bind data
+   TParamData      *fBuffer{nullptr};     //! parameter definition structures
+   Int_t            fWorkingMode{0};      //! 1 - setting parameters, 2 - retrieving results
+   Int_t            fIterationCount{-1};  //! number of iteration
+   Bool_t           fNeedParBind{kFALSE}; //! indicates when parameters bind should be called
 
    Bool_t      IsSetParsMode() const { return fWorkingMode==1; }
    Bool_t      IsResultSetMode() const { return fWorkingMode==2; }
@@ -69,8 +69,8 @@ protected:
    static ULong64_t fgAllocSizeLimit;
 
 private:
-   TMySQLStatement(const TMySQLStatement&);            // Not implemented.
-   TMySQLStatement &operator=(const TMySQLStatement&); // Not implemented.
+   TMySQLStatement(const TMySQLStatement&) = delete;
+   TMySQLStatement &operator=(const TMySQLStatement&) = delete;
 
 public:
    TMySQLStatement(MYSQL_STMT* stmt, Bool_t errout = kTRUE);
@@ -79,52 +79,52 @@ public:
    static ULong_t GetAllocSizeLimit() { return fgAllocSizeLimit; }
    static void SetAllocSizeLimit(ULong_t sz) { fgAllocSizeLimit = sz; }
 
-   virtual void        Close(Option_t * = "");
+   void        Close(Option_t * = "") final;
 
-   virtual Int_t       GetBufferLength() const { return 1; }
-   virtual Int_t       GetNumParameters();
+   Int_t       GetBufferLength() const final { return 1; }
+   Int_t       GetNumParameters() final;
 
-   virtual Bool_t      SetNull(Int_t npar);
-   virtual Bool_t      SetInt(Int_t npar, Int_t value);
-   virtual Bool_t      SetUInt(Int_t npar, UInt_t value);
-   virtual Bool_t      SetLong(Int_t npar, Long_t value);
-   virtual Bool_t      SetLong64(Int_t npar, Long64_t value);
-   virtual Bool_t      SetULong64(Int_t npar, ULong64_t value);
-   virtual Bool_t      SetDouble(Int_t npar, Double_t value);
-   virtual Bool_t      SetString(Int_t npar, const char* value, Int_t maxsize = 256);
-   virtual Bool_t      SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000);
-   virtual Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day);
-   virtual Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec);
-   virtual Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec);
+   Bool_t      SetNull(Int_t npar) final;
+   Bool_t      SetInt(Int_t npar, Int_t value) final;
+   Bool_t      SetUInt(Int_t npar, UInt_t value) final;
+   Bool_t      SetLong(Int_t npar, Long_t value) final;
+   Bool_t      SetLong64(Int_t npar, Long64_t value) final;
+   Bool_t      SetULong64(Int_t npar, ULong64_t value) final;
+   Bool_t      SetDouble(Int_t npar, Double_t value) final;
+   Bool_t      SetString(Int_t npar, const char* value, Int_t maxsize = 256) final;
+   Bool_t      SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize = 0x1000) final;
+   Bool_t      SetDate(Int_t npar, Int_t year, Int_t month, Int_t day) final;
+   Bool_t      SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec) final;
+   Bool_t      SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec) final;
    using TSQLStatement::SetTimestamp;
-   virtual Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0);
+   Bool_t      SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac = 0) final;
 
-   virtual Bool_t      NextIteration();
+   Bool_t      NextIteration() final;
 
-   virtual Bool_t      Process();
-   virtual Int_t       GetNumAffectedRows();
+   Bool_t      Process() final;
+   Int_t       GetNumAffectedRows() final;
 
-   virtual Bool_t      StoreResult();
-   virtual Int_t       GetNumFields();
-   virtual const char *GetFieldName(Int_t nfield);
-   virtual Bool_t      NextResultRow();
+   Bool_t      StoreResult() final;
+   Int_t       GetNumFields() final;
+   const char *GetFieldName(Int_t nfield) final;
+   Bool_t      NextResultRow() final;
 
-   virtual Bool_t      IsNull(Int_t npar);
-   virtual Int_t       GetInt(Int_t npar);
-   virtual UInt_t      GetUInt(Int_t npar);
-   virtual Long_t      GetLong(Int_t npar);
-   virtual Long64_t    GetLong64(Int_t npar);
-   virtual ULong64_t   GetULong64(Int_t npar);
-   virtual Double_t    GetDouble(Int_t npar);
-   virtual const char *GetString(Int_t npar);
-   virtual Bool_t      GetBinary(Int_t npar, void* &mem, Long_t& size);
-   virtual Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day);
-   virtual Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec);
-   virtual Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec);
+   Bool_t      IsNull(Int_t npar) final;
+   Int_t       GetInt(Int_t npar) final;
+   UInt_t      GetUInt(Int_t npar) final;
+   Long_t      GetLong(Int_t npar) final;
+   Long64_t    GetLong64(Int_t npar) final;
+   ULong64_t   GetULong64(Int_t npar) final;
+   Double_t    GetDouble(Int_t npar) final;
+   const char *GetString(Int_t npar) final;
+   Bool_t      GetBinary(Int_t npar, void* &mem, Long_t& size) final;
+   Bool_t      GetDate(Int_t npar, Int_t& year, Int_t& month, Int_t& day) final;
+   Bool_t      GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec) final;
+   Bool_t      GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec) final;
    using TSQLStatement::GetTimestamp;
-   virtual Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t&);
+   Bool_t      GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec, Int_t&) final;
 
-   ClassDef(TMySQLStatement, 0);  // SQL statement class for MySQL DB
+   ClassDefOverride(TMySQLStatement, 0);  // SQL statement class for MySQL DB
 };
 
 #endif

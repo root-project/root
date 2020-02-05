@@ -131,7 +131,7 @@ bool THtml::TModuleDefinition::GetModule(TClass* cl, TFileSysEntry* fse,
    }
 
    // take the directory name without "/" or leading "."
-   out_modulename = gSystem->DirName(filename);
+   out_modulename = gSystem->GetDirName(filename);
 
    while (out_modulename[0] == '.')
       out_modulename.Remove(0, 1);
@@ -483,7 +483,7 @@ bool THtml::TFileDefinition::GetFileName(const TClass* cl, bool decl,
          possiblePath += "src/";
       out_filename = possiblePath + "/" + possibleFileName;
    } else {
-      possiblePath = gSystem->DirName(clfile);
+      possiblePath = gSystem->GetDirName(clfile);
       possibleFileName = gSystem->BaseName(clfile);
    }
 
@@ -627,7 +627,7 @@ bool THtml::TPathDefinition::GetFileNameFromInclude(const char* included, TStrin
    const TList* bucket = GetOwner()->GetLocalFiles()->GetEntries().GetListForObject(incBase);
    if (!bucket) return false;
 
-   TString alldir(gSystem->DirName(included));
+   TString alldir = gSystem->GetDirName(included);
    TObjArray* arrSubDirs = alldir.Tokenize("/");
    TIter iEntry(bucket);
    TFileSysEntry* entry = 0;
@@ -1468,13 +1468,18 @@ void THtml::Convert(const char *filename, const char *title,
    CreateListOfClasses("*");
 
    const char *dir;
+   TString dfltdir;
 
    // if it's not defined, make the "examples" as a default directory
    if (!*dirname) {
       gSystem->ExpandPathName(fPathInfo.fOutputDir);
-      dir = gSystem->ConcatFileName(fPathInfo.fOutputDir, "examples");
-   } else
+      char *tmp0 = gSystem->ConcatFileName(fPathInfo.fOutputDir, "examples");
+      dfltdir = tmp0;
+      delete [] tmp0;
+      dir = dfltdir.Data();
+   } else {
       dir = dirname;
+   }
 
    // create directory if necessary
    if (gSystem->AccessPathName(dir))
@@ -1489,9 +1494,8 @@ void THtml::Convert(const char *filename, const char *title,
       return;
    }
 
-   TString realFilename(cRealFilename);
+   TString realFilename = cRealFilename;
    delete[] cRealFilename;
-   cRealFilename = 0;
 
    // open source file
    std::ifstream sourceFile;
@@ -1518,9 +1522,7 @@ void THtml::Convert(const char *filename, const char *title,
       Warning("Convert", "Output requested but cannot initialize graphics: GUI  and GL windows not be available");
    output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput, context, fGClient);
 
-   if (tmp1)
-      delete[]tmp1;
-   tmp1 = 0;
+   delete [] tmp1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1744,8 +1746,8 @@ void THtml::CreateListOfClasses(const char* filter)
       if (!module) {
          bool moduleSelected = cdi->IsSelected();
 
-         TString parentModuleName(gSystem->DirName(modulename));
-         TModuleDocInfo* super = 0;
+         TString parentModuleName = gSystem->GetDirName(modulename);
+         TModuleDocInfo* super = nullptr;
          if (parentModuleName.Length() && parentModuleName != ".") {
             super = (TModuleDocInfo*) fDocEntityInfo.fModules.FindObject(parentModuleName);
             if (!super) {

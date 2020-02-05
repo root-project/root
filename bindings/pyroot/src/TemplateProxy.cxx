@@ -251,6 +251,12 @@ namespace {
          pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
          if ( pymeth ) { // overloads stop here, as this is an explicit match
             Py_DECREF( pyname_v1 );
+            if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "Instantiating a function template with parentheses ( f(type1, ..., typeN) ) "
+                       "is deprecated and will not be supported in a future version of ROOT. "
+                       "Instead, use square brackets: f[type1, ..., typeN]", 1) < 0) {
+               return nullptr;
+            }
             return pymeth;         // callable method, next step is by user
          }
       }
@@ -290,33 +296,37 @@ namespace {
 
     // case 4a: instantiating obj->method< T0, T1, ... >( type(a0), type(a1), ... )( a0, a1, ... )
       if ( ! isType && ! ( nStrings == nArgs ) ) {    // no types among args and not all strings
-         PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0, true );
-         if ( pyname_v2 ) {
-            std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
-            Py_DECREF( pyname_v2 );
-            std::string proto = mname.substr( 1, mname.size() - 2 );
-         // the following causes instantiation as necessary
-            auto scope = Cppyy::GetScope(clNameStr);
-            auto cppmeth = Cppyy::GetMethodTemplate(scope, tmplname, proto);
-            if ( cppmeth ) {    // overload stops here
-               Py_XDECREF( pyname_v1 );
-               if (Cppyy::IsNamespace(scope) || Cppyy::IsStaticMethod(cppmeth)) {
-                  pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, cppmeth ) );
-                  pymeth = (PyObject*)MethodProxy_New(
-                     Cppyy::GetMethodName(cppmeth).c_str(), new TFunctionHolder( scope, cppmeth ) );
-               } else {
-                  pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, cppmeth ) );
-                  pymeth = (PyObject*)MethodProxy_New(
-                     Cppyy::GetMethodName(cppmeth).c_str(), new TMethodHolder( scope, cppmeth ) );
+         for (auto pref : {Utility::kReference, Utility::kPointer, Utility::kValue}) {
+            int pcnt = 0;
+            PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0, args, pref, &pcnt, true );
+            if ( pyname_v2 ) {
+               std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
+               Py_DECREF( pyname_v2 );
+               std::string proto = mname.substr( 1, mname.size() - 2 );
+            // the following causes instantiation as necessary
+               auto scope = Cppyy::GetScope(clNameStr);
+               auto cppmeth = Cppyy::GetMethodTemplate(scope, tmplname, proto);
+               if ( cppmeth ) {    // overload stops here
+                  Py_XDECREF( pyname_v1 );
+                  if (Cppyy::IsNamespace(scope) || Cppyy::IsStaticMethod(cppmeth)) {
+                     pytmpl->fTemplated->AddMethod( new TFunctionHolder( scope, cppmeth ) );
+                     pymeth = (PyObject*)MethodProxy_New(
+                        Cppyy::GetMethodName(cppmeth).c_str(), new TFunctionHolder( scope, cppmeth ) );
+                  } else {
+                     pytmpl->fTemplated->AddMethod( new TMethodHolder( scope, cppmeth ) );
+                     pymeth = (PyObject*)MethodProxy_New(
+                        Cppyy::GetMethodName(cppmeth).c_str(), new TMethodHolder( scope, cppmeth ) );
+                  }
+                  PyObject_SetAttrString( pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str(), (PyObject*)pymeth );
+                  Py_DECREF( pymeth );
+                  pymeth = PyObject_GetAttrString(
+                     pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str() );
+                  PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
+                  Py_DECREF( pymeth );
+                  return result;
                }
-               PyObject_SetAttrString( pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str(), (PyObject*)pymeth );
-               Py_DECREF( pymeth );
-               pymeth = PyObject_GetAttrString(
-                  pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, (char*)Cppyy::GetMethodName(cppmeth).c_str() );
-               PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
-               Py_DECREF( pymeth );
-               return result;
             }
+            if (!pcnt) break; // preference never used; no point trying others
          }
       }
 
@@ -334,6 +344,12 @@ namespace {
             Py_DECREF( pymeth );
             pymeth = PyObject_GetAttr( pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname_v1 );
             Py_DECREF( pyname_v1 );
+            if (PyErr_WarnEx(PyExc_FutureWarning,
+                       "Instantiating a function template with parentheses ( f(type1, ..., typeN) ) "
+                       "is deprecated and will not be supported in a future version of ROOT. "
+                       "Instead, use square brackets: f[type1, ..., typeN]", 1) < 0) {
+               return nullptr;
+            }
             return pymeth;         // callable method, next step is by user
          }
          Py_DECREF( pyname_v1 );
@@ -375,6 +391,91 @@ namespace {
    }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Explicit instantiation with square bracket syntax.
+/// Implementation is equivalent to case 2&4b in tpp_call (parenthesis syntax)
+
+   PyObject *tpp_subscript(TemplateProxy *pytmpl, PyObject *args)
+   {
+      bool justOne = !PyTuple_CheckExact(args);
+      Py_ssize_t nArgs;
+      if (justOne) {
+         nArgs = 1;
+         auto item = args;
+         args = PyTuple_New(nArgs);
+         Py_INCREF(item);
+         PyTuple_SET_ITEM(args, 0, item);
+      } else {
+         nArgs = PyTuple_GET_SIZE(args);
+      }
+
+      Bool_t isType = false;
+      Int_t nStrings = 0;
+      for (int i = 0; i < nArgs; ++i) {
+         PyObject* itemi = PyTuple_GET_ITEM(args, i);
+         if (PyType_Check(itemi)) isType = kTRUE;
+#if PY_VERSION_HEX >= 0x03000000
+         else if (! isType && PyUnicode_Check(itemi)) nStrings += 1;
+#else
+         else if (! isType && PyBytes_Check(itemi)) nStrings += 1;
+#endif
+      }
+
+      // Build "< type, type, ... >" part of method name
+      PyObject* pyname = Utility::BuildTemplateName(pytmpl->fPyName, args, 0);
+      if (justOne) Py_DECREF(args);
+
+      // Non-instantiating obj->method< t0, t1, ... >( a0, a1, ... )
+      if ((isType || nStrings == nArgs) && pyname) {  // types in args or all strings
+         // Lookup method on self (to make sure it propagates), which is readily callable
+         PyObject* pymeth = PyObject_GetAttr(pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname);
+         if (pymeth) { // Overloads stop here, as this is an explicit match
+            Py_DECREF(pyname);
+            return pymeth; // Callable method, next step is by user
+         }
+         PyErr_Clear();
+      }
+
+      // Still here? try instantiating methods
+      PyObject* clName = PyObject_GetAttr(pytmpl->fPyClass, PyStrings::gCppName);
+      if (!clName) {
+         PyErr_Clear();
+         clName = PyObject_GetAttr(pytmpl->fPyClass, PyStrings::gName);
+      }
+      auto clNameStr = std::string(PyROOT_PyUnicode_AsString(clName));
+      if (clNameStr == "_global_cpp")
+         clNameStr = ""; // global namespace
+      auto klass = TClass::GetClass(clNameStr.c_str());
+      Py_DECREF(clName);
+
+      // Instantiating obj->method< t0, t1, ... >( a0, a1, ... )
+      if (pyname) {
+         std::string mname = PyROOT_PyUnicode_AsString(pyname);
+         // The following causes instantiation as necessary
+         TMethod *cppmeth = klass ? klass->GetMethodAny(mname.c_str()) : nullptr;
+         if (cppmeth) {    // overload stops here
+            PyObject *pymeth = (PyObject*)MethodProxy_New(
+               mname, new TMethodHolder(Cppyy::GetScope(klass->GetName()),(Cppyy::TCppMethod_t)cppmeth));
+            PyObject_SetAttr(pytmpl->fPyClass, pyname, (PyObject*)pymeth);
+            if (mname != cppmeth->GetName()) // happens with typedefs and template default arguments
+               PyObject_SetAttrString(pytmpl->fPyClass, (char*)mname.c_str(), (PyObject*)pymeth);
+            Py_DECREF(pymeth);
+            pymeth = PyObject_GetAttr(pytmpl->fSelf ? pytmpl->fSelf : pytmpl->fPyClass, pyname);
+            Py_DECREF(pyname);
+            return pymeth;         // callable method, next step is by user
+         }
+         Py_DECREF(pyname);
+      }
+
+      PyErr_Format(PyExc_TypeError, "cannot resolve method template instantiation for \'%s\'",
+         PyROOT_PyUnicode_AsString(pytmpl->fPyName));
+      return nullptr;
+   }
+
+////////////////////////////////////////////////////////////////////////////////
+
+   static PyMappingMethods tpp_as_mapping = {
+      nullptr, (binaryfunc)tpp_subscript, nullptr
+   };
 
    PyGetSetDef tpp_getset[] = {
       { (char*)"__doc__",    (getter)tpp_doc,    NULL, NULL, NULL },
@@ -398,7 +499,7 @@ PyTypeObject TemplateProxy_Type = {
    0,                         // tp_repr
    0,                         // tp_as_number
    0,                         // tp_as_sequence
-   0,                         // tp_as_mapping
+   &tpp_as_mapping,           // tp_as_mapping
    0,                         // tp_hash
    (ternaryfunc)tpp_call,     // tp_call
    0,                         // tp_str

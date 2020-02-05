@@ -41,7 +41,6 @@
 #include "TDataMember.h"
 #include "TMethod.h"
 #include "TDataType.h"
-#include "TRealData.h"
 #include "TFrame.h"
 #include "TExec.h"
 #include "TDatime.h"
@@ -51,8 +50,6 @@
 #include "TEnv.h"
 #include "TImage.h"
 #include "TViewer3DPad.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
@@ -1566,6 +1563,23 @@ void TPad::DrawCrosshair()
 ///   \param[in] title     Pad title.If title is of the form "stringt;stringx;stringy"
 ///                        the pad title is set to stringt, the x axis title to
 ///                        stringx, the y axis title to stringy.
+///
+/// #### Example:
+///
+/// Begin_Macro(source)
+/// {
+///    auto c = new TCanvas("c","c",200,10,500,300);
+///
+///    const Int_t n = 50;
+///    auto g = new TGraph();
+///    for (Int_t i=0;i<n;i++) g->SetPoint(i,i*0.1,100*sin(i*0.1+0.2));
+///
+///    auto frame = c->DrawFrame(0, -110, 2, 110);
+///    frame->GetXaxis()->SetTitle("X axis");
+///
+///    g->Draw("L*");
+/// }
+/// End_Macro
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
@@ -3924,8 +3938,8 @@ void TPad::PaintFillAreaNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 
 void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t FillStyle)
 {
-   static Double_t ang1[10] = {0., 10., 20., 30., 45.,5., 60., 70., 80., 90.};
-   static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 90.};
+   static Double_t ang1[10] = {  0., 10., 20., 30., 45.,5., 60., 70., 80., 89.99};
+   static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 89.99};
 
    Int_t fasi  = FillStyle%1000;
    Int_t idSPA = (Int_t)(fasi/100);
@@ -3989,7 +4003,7 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
 {
    Int_t i, i1, i2, nbi, m, inv;
    Double_t ratiox, ratioy, ymin, ymax, yrot, ycur;
-   const Double_t angr  = TMath::Pi()*(180-angle)/180.;
+   const Double_t angr  = TMath::Pi()*(180.-angle)/180.;
    const Double_t epsil = 0.0001;
    const Int_t maxnbi = 100;
    Double_t xli[maxnbi], xlh[2], ylh[2], xt1, xt2, yt1, yt2;
@@ -3999,8 +4013,8 @@ void TPad::PaintHatches(Double_t dy, Double_t angle,
    Double_t rwxmax = gPad->GetX2();
    Double_t rwymin = gPad->GetY1();
    Double_t rwymax = gPad->GetY2();
-   ratiox = 1/(rwxmax-rwxmin);
-   ratioy = 1/(rwymax-rwymin);
+   ratiox = 1./(rwxmax-rwxmin);
+   ratioy = 1./(rwymax-rwymin);
 
    Double_t sina = TMath::Sin(angr), sinb;
    Double_t cosa = TMath::Cos(angr), cosb;
@@ -4809,45 +4823,39 @@ static Bool_t ContainsTImage(TList *li)
 
 void TPad::Print(const char *filenam, Option_t *option)
 {
-   TString psname, fs1, fs2;
-   const char *filename;
+   TString psname, fs1 = filenam;
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
    // of the file name (see help) they must be removed before doing ExpandPathName.
-   fs1 = filenam;
    if (fs1.EndsWith("[")) {
       fs1.Replace((fs1.Length()-1),1," ");
-      fs2 = gSystem->ExpandPathName(fs1.Data());
-      fs2.Replace((fs2.Length()-1),1,"[");
+      gSystem->ExpandPathName(fs1);
+      fs1.Replace((fs1.Length()-1),1,"[");
    } else if (fs1.EndsWith("]")) {
       fs1.Replace((fs1.Length()-1),1," ");
-      fs2 = gSystem->ExpandPathName(fs1.Data());
-      fs2.Replace((fs2.Length()-1),1,"]");
+      gSystem->ExpandPathName(fs1);
+      fs1.Replace((fs1.Length()-1),1,"]");
    } else {
-      char* exppath = gSystem->ExpandPathName(fs1.Data());
-      fs2 = exppath;
-      delete [] exppath;
+      gSystem->ExpandPathName(fs1);
    }
-   filename = fs2.Data();
 
    // Set the default option as "Postscript" (Should be a data member of TPad)
-   const char *opt_default="ps";
+   const char *opt_default = "ps";
 
-   Int_t lenfil =  filename ? strlen(filename) : 0;
-   TString opt = (!option) ? opt_default : option;
+   TString opt = !option ? opt_default : option;
    Bool_t image = kFALSE;
 
-   if ( !lenfil )  {
+   if (!fs1.Length())  {
       psname = GetName();
       psname += opt;
    } else {
-      psname = filename;
+      psname = fs1;
    }
 
    // lines below protected against case like c1->SaveAs( "../ps/cs.ps" );
    if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) {
       psname = GetName();
-      psname.Append(filename);
+      psname.Append(fs1);
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
@@ -5222,58 +5230,74 @@ void TPad::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Redraw the frame axis
+///  Redraw the frame axis.
+///
 ///  Redrawing axis may be necessary in case of superimposed histograms
-///  when one or more histograms have a fill color
+///  when one or more histograms have a fill color.
+///
 ///  Instead of calling this function, it may be more convenient
-///  to call directly h1->Draw("sameaxis") where h1 is the pointer
+///  to call directly `h1->Draw("sameaxis")` where h1 is the pointer
 ///  to the first histogram drawn in the pad.
 ///
 ///  By default, if the pad has the options gridx or/and gridy activated,
 ///  the grid is not drawn by this function.
-///  if option="g" is specified, this will force the drawing of the grid
+///
+///  If option="g" is specified, this will force the drawing of the grid
 ///  on top of the picture
+///
+///  To redraw the axis tick marks do:
+/// ~~~ {.cpp}
+///   gPad->RedrawAxis();
+/// ~~~
+///  To redraw the axis grid do:
+/// ~~~ {.cpp}
+///   gPad->RedrawAxis("G");
+/// ~~~
+///  To redraw the axis tick marks and the axis grid do:
+/// ~~~ {.cpp}
+///   gPad->RedrawAxis();
+///   gPad->RedrawAxis("G");
+/// ~~~
 
 void TPad::RedrawAxis(Option_t *option)
 {
-   // get first histogram in the list of primitives
    TString opt = option;
    opt.ToLower();
 
    TPad *padsav = (TPad*)gPad;
    cd();
 
+   TH1 *hobj = nullptr;
+
+   // Get the first histogram drawing the axis in the list of primitives
    if (!fPrimitives) fPrimitives = new TList;
    TIter next(fPrimitives);
    TObject *obj;
    while ((obj = next())) {
       if (obj->InheritsFrom(TH1::Class())) {
-         TH1 *hobj = (TH1*)obj;
-         if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
-         else                   hobj->DrawCopy("sameaxis");
-         return;
+         hobj = (TH1*)obj;
+         break;
       }
       if (obj->InheritsFrom(TMultiGraph::Class())) {
          TMultiGraph *mg = (TMultiGraph*)obj;
-         if (mg) {
-            TH1F *h1f = mg->GetHistogram();
-            if (h1f) h1f->DrawCopy("sameaxis");
-         }
-         return;
+         if (mg) hobj = mg->GetHistogram();
+         break;
       }
       if (obj->InheritsFrom(TGraph::Class())) {
          TGraph *g = (TGraph*)obj;
-         if (g) g->GetHistogram()->DrawCopy("sameaxis");
-         return;
+         if (g) hobj = g->GetHistogram();
+         break;
       }
       if (obj->InheritsFrom(THStack::Class())) {
          THStack *hs = (THStack*)obj;
-         if (hs) {
-            TH1 *h1 = hs->GetHistogram();
-            if (h1) h1->DrawCopy("sameaxis");
-         }
-         return;
+         if (hs) hobj = hs->GetHistogram();
+         break;
       }
+   }
+
+   if (hobj) {
+      if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
+      else                   hobj->DrawCopy("sameaxis");
    }
 
    if (padsav) padsav->cd();

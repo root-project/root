@@ -16,13 +16,17 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleView.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <iterator>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 namespace ROOT {
@@ -72,10 +76,19 @@ public:
 
 
 /**
- * Listing of the different options that can be returned by RNTupleReader::GetInfo()
+ * Listing of the different options that can be printed by RNTupleReader::GetInfo()
  */
 enum class ENTupleInfo {
    kSummary,  // The ntuple name, description, number of entries
+   kStorageDetails, // size on storage, page sizes, compression factor, etc.
+   kMetrics, // internals performance counters, requires that EnableMetrics() was called
+};
+
+/**
+ * Listing of the different entry output formats of RNTupleReader::Show()
+ */
+enum class ENTupleFormat {
+   kJSON, // prints a single entry/row in JSON format.
 };
 
 
@@ -94,6 +107,9 @@ Individual fields can be read as well by instantiating a tree view.
 class RNTupleReader : public Detail::RNTuple {
 private:
    std::unique_ptr<Detail::RPageSource> fSource;
+   Detail::RNTupleMetrics fMetrics;
+
+   void ConnectModel();
 
 public:
    // Browse through the entries
@@ -106,7 +122,7 @@ public:
       explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; ++fIndex; return r; }
+      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
       iterator& operator++()    /* prefix */         { ++fIndex; return *this; }
       reference operator* ()                         { return fIndex; }
       pointer   operator->()                         { return &fIndex; }
@@ -123,12 +139,20 @@ public:
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
    /// The model is generated from the ntuple metadata on storage
-   RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   explicit RNTupleReader(std::unique_ptr<Detail::RPageSource> source);
+   std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
-   NTupleSize_t GetNEntries() { return fNEntries; }
+   NTupleSize_t GetNEntries() const { return fNEntries; }
+   const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
-   std::string GetInfo(const ENTupleInfo what = ENTupleInfo::kSummary);
+   /// Prints a detailed summary of the ntuple, including a list of fields.
+   void PrintInfo(const ENTupleInfo what = ENTupleInfo::kSummary, std::ostream &output = std::cout);
+
+   /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
+   /// prints the output in JSON format.
+   /// Uses the visitor pattern to traverse through each field of the given entry.
+   void Show(NTupleSize_t index, const ENTupleFormat format = ENTupleFormat::kJSON, std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an expection.
@@ -140,19 +164,25 @@ public:
       }
    }
 
-   RNTupleViewRange GetViewRange() { return RNTupleViewRange(0, fNEntries); }
+   RNTupleGlobalRange GetViewRange() { return RNTupleGlobalRange(0, fNEntries); }
 
-   /// Provides access to an individual field that can contain either a skalar value or a collection, e.g.
+   /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
    /// field of a collection itself, like GetView<NTupleSize_t>("particle")
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName) { return RNTupleView<T>(fieldName, fSource.get()); }
+   RNTupleView<T> GetView(std::string_view fieldName) {
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      return RNTupleView<T>(fieldId, fSource.get());
+   }
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      return RNTupleViewCollection(fieldName, fSource.get());
+      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      return RNTupleViewCollection(fieldId, fSource.get());
    }
 
    RIterator begin() { return RIterator(0); }
    RIterator end() { return RIterator(fNEntries); }
+
+   void EnableMetrics() { fMetrics.Enable(); }
 };
 
 // clang-format off
@@ -169,7 +199,7 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 // clang-format on
 class RNTupleWriter : public Detail::RNTuple {
 private:
-   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 8192;
+   static constexpr NTupleSize_t kDefaultClusterSizeEntries = 64000;
    std::unique_ptr<Detail::RPageSink> fSink;
    NTupleSize_t fClusterSizeEntries;
    NTupleSize_t fLastCommitted;
@@ -177,7 +207,8 @@ private:
 public:
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
                                                   std::string_view ntupleName,
-                                                  std::string_view storage);
+                                                  std::string_view storage,
+                                                  const RNTupleWriteOptions &options = RNTupleWriteOptions());
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSink> sink);
    RNTupleWriter(const RNTupleWriter&) = delete;
    RNTupleWriter& operator=(const RNTupleWriter&) = delete;
@@ -192,7 +223,8 @@ public:
          value.GetField()->Append(value);
       }
       fNEntries++;
-      if ((fNEntries % fClusterSizeEntries) == 0) CommitCluster();
+      if ((fNEntries % fClusterSizeEntries) == 0)
+         CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();

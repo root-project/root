@@ -114,7 +114,7 @@ TMatrixD TMVA::ResultsMulticlass::GetConfusionMatrix(Double_t effB)
             const Float_t weight = ev->GetWeight();
             const Float_t mvaValue = fMultiClassValues[iEvt][iRow];
 
-            if (cls != iRow and cls != iCol) {
+            if (cls != iRow && cls != iCol) {
                continue;
             }
 
@@ -321,7 +321,7 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
          for (size_t iEvent = 0; iEvent < eventCollection.size(); ++iEvent) {
             Event *ev = eventCollection[iEvent];
 
-            if (ev->GetClass() == iClass or ev->GetClass() == jClass) {
+            if (ev->GetClass() == iClass || ev->GetClass() == jClass) {
                Float_t output_value = (*rawMvaRes)[iEvent][iClass];
                mvaRes.push_back(output_value);
                mvaResTypes.push_back(ev->GetClass() == iClass);

@@ -9,7 +9,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc
-  OBJECT_LIBRARY
   HEADERS
     MPCode.h
     MPSendRecv.h

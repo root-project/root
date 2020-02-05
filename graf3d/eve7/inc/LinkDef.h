@@ -205,6 +205,10 @@
 #pragma link C++ class ROOT::Experimental::REveJetCone+;
 #pragma link C++ class ROOT::Experimental::REveJetConeProjected+;
 
+// Ellipse
+#pragma link C++ class ROOT::Experimental::REveEllipsoid+;
+#pragma link C++ class ROOT::Experimental::REveEllipsoidProjected+;
+
 // REveLineSet
 #pragma link C++ class ROOT::Experimental::REveStraightLineSet+;
 #pragma link C++ class ROOT::Experimental::REveStraightLineSetProjected+;
@@ -220,10 +224,13 @@
 #pragma link C++ class ROOT::Experimental::REveGeomNodeBase+;
 #pragma link C++ class ROOT::Experimental::REveGeomNode+;
 #pragma link C++ class ROOT::Experimental::REveGeomVisible+;
-#pragma link C++ class ROOT::Experimental::REveShapeRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomRawRenderInfo+;
+#pragma link C++ class ROOT::Experimental::RGeomShapeRenderInfo;
 #pragma link C++ class ROOT::Experimental::REveGeomDescription+;
 #pragma link C++ class ROOT::Experimental::REveGeomDrawing+;
 #pragma link C++ class ROOT::Experimental::REveGeomRequest+;
 #pragma link C++ class ROOT::Experimental::REveGeomNodeInfo+;
+#pragma link C++ class ROOT::Experimental::REveGeomConfig+;
 
 #endif

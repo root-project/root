@@ -360,7 +360,7 @@ inline Double_t TanH(Double_t);
 inline Double_t ASin(Double_t);
 inline Double_t ACos(Double_t);
 inline Double_t ATan(Double_t);
-inline Double_t ATan2(Double_t, Double_t);
+inline Double_t ATan2(Double_t y, Double_t x);
 Double_t ASinH(Double_t);
 Double_t ACosH(Double_t);
 Double_t ATanH(Double_t);
@@ -411,7 +411,9 @@ struct Limits {
    // Comparing floating points
    inline Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
       //return kTRUE if absolute difference between af and bf is less than epsilon
-      return TMath::Abs(af-bf) < epsilon;
+      return TMath::Abs(af-bf) < epsilon ||
+             TMath::Abs(af - bf) < Limits<Double_t>::Min(); // handle 0 < 0 case
+
    }
    inline Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
       //return kTRUE if relative difference between af and bf is less than relPrec

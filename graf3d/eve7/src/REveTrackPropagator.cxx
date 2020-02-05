@@ -287,15 +287,13 @@ void REveTrackPropagator::CheckReferenceCount(const std::string& from)
 ////////////////////////////////////////////////////////////////////////////////
 /// Element-change notification.
 /// Stamp all tracks as requiring display-list regeneration.
-/// Virtual from REveElement.
 
-void REveTrackPropagator::ElementChanged(Bool_t update_scenes, Bool_t redraw)
+void REveTrackPropagator::StampAllTracks()
 {
    for (auto &i: fBackRefs) {
       auto track = dynamic_cast<REveTrack *>(i.first);
       if (track) track->StampObjProps();
    }
-   REveElement::ElementChanged(update_scenes, redraw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

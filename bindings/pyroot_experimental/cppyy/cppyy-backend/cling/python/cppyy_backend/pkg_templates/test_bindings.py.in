@@ -34,7 +34,7 @@ class TestBindings(object):
         '''This method is run once after _each_ test method is executed'''
 
     def test_install(self):
-        subprocess.check_call(['pip', 'install', '--force-reinstall', '--pre', '.'], cwd=os.getcwd())
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--force-reinstall', '--pre', '.'], cwd=os.getcwd())
 
     def test_import(self):
         __import__(pkg)
@@ -43,5 +43,5 @@ class TestBindings(object):
         pydoc.render_doc(pkg)
 
     def test_uninstall(self):
-        subprocess.check_call(['pip', 'uninstall', '--yes', pkg], cwd=os.getcwd())
+        subprocess.check_call([sys.executable, '-m', 'pip', 'uninstall', '--yes', pkg], cwd=os.getcwd())
 

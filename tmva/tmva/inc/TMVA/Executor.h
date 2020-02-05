@@ -117,10 +117,16 @@ public:
       else fSeqExecImpl->Foreach(func, args); 
    }
    template<class Function, class INTEGER>
+#ifdef R__USE_IMT 
    void Foreach(Function func, ROOT::TSeq<INTEGER> args, unsigned nChunks = 0){
       if (fMTExecImpl) fMTExecImpl->Foreach(func,args, nChunks);
-      else fSeqExecImpl->Foreach(func, args); 
+      else fSeqExecImpl->Foreach(func, args);
    }
+#else
+    void Foreach(Function func, ROOT::TSeq<INTEGER> args, unsigned /*nChunks*/ = 0){
+      fSeqExecImpl->Foreach(func, args);
+    }
+#endif
 
    /// Wrap TExecutor::Map functions
    template<class F, class Cond = noReferenceCond<F>>

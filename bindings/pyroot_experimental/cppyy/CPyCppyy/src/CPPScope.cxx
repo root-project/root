@@ -24,6 +24,59 @@ namespace CPyCppyy {
 
 extern PyTypeObject CPPInstance_Type;
 
+//- helpers ------------------------------------------------------------------
+static inline PyObject* add_template(PyObject* pyclass,
+    const std::string& name, std::vector<PyCallable*>* overloads = nullptr)
+{
+// If templated, the user-facing function must be the template proxy, but the
+// specific lookup must be the current overload, if already found.
+    TemplateProxy* pytmpl = nullptr;
+
+    const std::string& ncl = TypeManip::clean_type(name);
+    if (ncl != name) {
+        PyObject* pyncl = CPyCppyy_PyText_InternFromString(ncl.c_str());
+        pytmpl = (TemplateProxy*)PyType_Type.tp_getattro((PyObject*)Py_TYPE(pyclass), pyncl);
+        if (!pytmpl) {
+            PyErr_Clear();
+            pytmpl = TemplateProxy_New(ncl, ncl, pyclass);
+        // cache the template on its clean name
+            PyType_Type.tp_setattro((PyObject*)Py_TYPE(pyclass), pyncl, (PyObject*)pytmpl);
+        }
+        Py_DECREF(pyncl);
+    }
+
+    if (pytmpl) {
+        if (!TemplateProxy_CheckExact((PyObject*)pytmpl)) {
+            Py_DECREF(pytmpl);
+            return nullptr;
+        }
+    } else
+        pytmpl = TemplateProxy_New(ncl, ncl, pyclass);
+
+    if (overloads) {
+    // adopt the new overloads
+        if (ncl != name)
+            for (auto clb : *overloads) pytmpl->AdoptTemplate(clb);
+        else
+            for (auto clb : *overloads) pytmpl->AdoptMethod(clb);
+    }
+
+    if (ncl == name)
+        return (PyObject*)pytmpl;
+
+    Py_DECREF(pytmpl);
+    return nullptr;       // so that caller caches the method on full name
+}
+
+//----------------------------------------------------------------------------
+static int enum_setattro(PyObject* /* pyclass */, PyObject* /* pyname */, PyObject* /* pyval */)
+{
+// Helper to make enums read-only.
+    PyErr_SetString(PyExc_TypeError, "enum values are read-only");
+    return -1;
+}
+
+
 //= CPyCppyy type proxy construction/destruction =============================
 static PyObject* meta_alloc(PyTypeObject* meta, Py_ssize_t nitems)
 {
@@ -40,7 +93,6 @@ static void meta_dealloc(CPPScope* scope)
             delete scope->fImp.fUsing; scope->fImp.fUsing = nullptr;
         }
     } else {
-        for (auto& pp : *scope->fImp.fCppObjects) Py_DECREF(pp.second);
         delete scope->fImp.fCppObjects; scope->fImp.fCppObjects = nullptr;
     }
     free(scope->fModuleName);
@@ -51,24 +103,24 @@ static void meta_dealloc(CPPScope* scope)
 static PyObject* meta_getcppname(CPPScope* scope, void*)
 {
     if ((void*)scope == (void*)&CPPInstance_Type)
-        return CPyCppyy_PyUnicode_FromString("CPPInstance_Type");
-    return CPyCppyy_PyUnicode_FromString(Cppyy::GetScopedFinalName(scope->fCppType).c_str());
+        return CPyCppyy_PyText_FromString("CPPInstance_Type");
+    return CPyCppyy_PyText_FromString(Cppyy::GetScopedFinalName(scope->fCppType).c_str());
 }
 
 //-----------------------------------------------------------------------------
 static PyObject* meta_getmodule(CPPScope* scope, void*)
 {
     if ((void*)scope == (void*)&CPPInstance_Type)
-        return CPyCppyy_PyUnicode_FromString("cppyy.gbl");
+        return CPyCppyy_PyText_FromString("cppyy.gbl");
 
     if (scope->fModuleName)
-        return CPyCppyy_PyUnicode_FromString(scope->fModuleName);
+        return CPyCppyy_PyText_FromString(scope->fModuleName);
 
 // get C++ representation of outer scope
     std::string modname =
         TypeManip::extract_namespace(Cppyy::GetScopedFinalName(scope->fCppType));
     if (modname.empty())
-        return CPyCppyy_PyUnicode_FromString(const_cast<char*>("cppyy.gbl"));
+        return CPyCppyy_PyText_FromString(const_cast<char*>("cppyy.gbl"));
 
 // now peel scopes one by one, pulling in the python naming (which will
 // simply recurse if not overridden in python)
@@ -81,9 +133,8 @@ static PyObject* meta_getmodule(CPPScope* scope, void*)
         // append name of our module
             PyObject* pymodname = PyObject_GetAttr(pyscope, PyStrings::gName);
             if (pymodname) {
-                CPyCppyy_PyUnicode_AppendAndDel(
-                    &pymodule, CPyCppyy_PyUnicode_FromString("."));
-                CPyCppyy_PyUnicode_AppendAndDel(&pymodule, pymodname);
+                CPyCppyy_PyText_AppendAndDel(&pymodule, CPyCppyy_PyText_FromString("."));
+                CPyCppyy_PyText_AppendAndDel(&pymodule, pymodname);
             }
         }
         Py_DECREF(pyscope);
@@ -95,7 +146,7 @@ static PyObject* meta_getmodule(CPPScope* scope, void*)
 
 // lookup through python failed, so simply cook up a '::' -> '.' replacement
     TypeManip::cppscope_to_pyscope(modname);
-    return CPyCppyy_PyUnicode_FromString(("cppyy.gbl."+modname).c_str());
+    return CPyCppyy_PyText_FromString(("cppyy.gbl."+modname).c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -107,12 +158,12 @@ static int meta_setmodule(CPPScope* scope, PyObject* value, void*)
         return -1;
     }
 
-    const char* newname = CPyCppyy_PyUnicode_AsStringChecked(value);
+    const char* newname = CPyCppyy_PyText_AsStringChecked(value);
     if (!value)
         return -1;
 
     free(scope->fModuleName);
-    Py_ssize_t sz = CPyCppyy_PyUnicode_GET_SIZE(value);
+    Py_ssize_t sz = CPyCppyy_PyText_GET_SIZE(value);
     scope->fModuleName = (char*)malloc(sz+1);
     memcpy(scope->fModuleName, newname, sz+1);
 
@@ -125,7 +176,7 @@ static PyObject* meta_repr(CPPScope* scope)
 // Specialized b/c type_repr expects __module__ to live in the dictionary,
 // whereas it is a property (to save memory).
     if ((void*)scope == (void*)&CPPInstance_Type)
-        return CPyCppyy_PyUnicode_FromFormat(
+        return CPyCppyy_PyText_FromFormat(
             const_cast<char*>("<class cppyy.CPPInstance at %p>"), scope);
 
     if (scope->fFlags & (CPPScope::kIsMeta | CPPScope::kIsPython)) {
@@ -138,8 +189,8 @@ static PyObject* meta_repr(CPPScope* scope)
     std::string clName = Cppyy::GetFinalName(scope->fCppType);
     const char* kind = (scope->fFlags & CPPScope::kIsNamespace) ? "namespace" : "class";
 
-    PyObject* repr = CPyCppyy_PyUnicode_FromFormat("<%s %s.%s at %p>",
-        kind, CPyCppyy_PyUnicode_AsString(modname), clName.c_str(), scope);
+    PyObject* repr = CPyCppyy_PyText_FromFormat("<%s %s.%s at %p>",
+        kind, CPyCppyy_PyText_AsString(modname), clName.c_str(), scope);
 
     Py_DECREF(modname);
     return repr;
@@ -158,7 +209,12 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
     subtype->tp_alloc   = (allocfunc)meta_alloc;
     subtype->tp_dealloc = (destructor)meta_dealloc;
 
-// creation of the python-side class
+// creation of the python-side class; extend the size if this is a smart ptr
+    Cppyy::TCppType_t raw{0}; Cppyy::TCppMethod_t deref{0};
+    if (CPPScope_CheckExact(subtype)) {
+        if (Cppyy::GetSmartPtrInfo(Cppyy::GetScopedFinalName(((CPPScope*)subtype)->fCppType), &raw, &deref))
+            subtype->tp_basicsize = sizeof(CPPSmartClass);
+    }
     CPPScope* result = (CPPScope*)PyType_Type.tp_new(subtype, args, kwds);
     if (!result)
         return nullptr;
@@ -166,13 +222,19 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
     result->fFlags      = CPPScope::kNone;
     result->fModuleName = nullptr;
 
+    if (raw && deref) {
+        result->fFlags |= CPPScope::kIsSmart;
+        ((CPPSmartClass*)result)->fUnderlyingType = raw;
+        ((CPPSmartClass*)result)->fDereferencer   = deref;
+    }
+
 // initialization of class (based on metatype)
     const char* mp = strstr(subtype->tp_name, "_meta");
     if (!mp || !CPPScope_CheckExact(subtype)) {
     // there has been a user meta class override in a derived class, so do
     // the consistent thing, thus allowing user control over naming
         result->fCppType = Cppyy::GetScope(
-            CPyCppyy_PyUnicode_AsString(PyTuple_GET_ITEM(args, 0)));
+            CPyCppyy_PyText_AsString(PyTuple_GET_ITEM(args, 0)));
     } else {
     // coming here from cppyy or from sub-classing in python; take the
     // C++ type from the meta class to make sure that the latter category
@@ -191,14 +253,23 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
             if (0 < sz && !Cppyy::IsNamespace(result->fCppType)) {
                 result->fFlags |= CPPScope::kIsPython;
                 if (!InsertDispatcher(result, dct)) {
-                    PyErr_Warn(PyExc_RuntimeWarning,
-                        (char*)"no python-side overrides supported");
+                    if (!PyErr_Occurred())
+                         PyErr_Warn(PyExc_RuntimeWarning, (char*)"no python-side overrides supported");
+                } else {
+                // the direct base can be useful for some templates, such as shared_ptrs,
+                // so make it accessible (the __cpp_cross__ data member also signals that
+                // this is a cross-inheritance class)
+                    PyObject* bname = CPyCppyy_PyText_FromString(Cppyy::GetBaseName(result->fCppType, 0).c_str());
+                    if (PyObject_SetAttrString((PyObject*)result, "__cpp_cross__", bname) == -1)
+                        PyErr_Clear();
+                    Py_DECREF(bname);
                 }
             } else if (sz == (Py_ssize_t)-1)
                 PyErr_Clear();
         }
     }
 
+// maps for using namespaces and tracking objects
     if (!Cppyy::IsNamespace(result->fCppType))
         result->fImp.fCppObjects = new CppToPyMap_t;
     else {
@@ -206,6 +277,10 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
         result->fFlags |= CPPScope::kIsNamespace;
     }
 
+    if (PyErr_Occurred()) {
+        Py_DECREF((PyObject*)result);
+        return nullptr;
+    }
     return (PyObject*)result;
 }
 
@@ -217,11 +292,11 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     if (attr || pyclass == (PyObject*)&CPPInstance_Type)
         return attr;
 
-    if (!CPyCppyy_PyUnicode_CheckExact(pyname) || !CPPScope_Check(pyclass))
+    if (!CPyCppyy_PyText_CheckExact(pyname) || !CPPScope_Check(pyclass))
         return nullptr;
 
 // filter for python specials
-    std::string name = CPyCppyy_PyUnicode_AsString(pyname);
+    std::string name = CPyCppyy_PyText_AsString(pyname);
     if (name.size() >= 2 && name.compare(0, 2, "__") == 0 &&
             name.compare(name.size()-2, name.size(), "__") == 0)
         return nullptr;
@@ -253,15 +328,11 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             // Note: can't re-use Utility::AddClass here, as there's the risk of
             // a recursive call. Simply add method directly, as we're guaranteed
             // that it doesn't exist yet.
-                attr = (PyObject*)CPPOverload_New(name, overloads);
+                if (Cppyy::ExistsMethodTemplate(scope, name))
+                    attr = add_template(pyclass, name, &overloads);
 
-            // If both templated and not, the templated one needs to be user-facing
-            // in order to expose the instantiation mechanims.
-                if (Cppyy::ExistsMethodTemplate(scope, name)) {
-                    TemplateProxy* pytmpl = TemplateProxy_New(name, name, pyclass);
-                    pytmpl->AddOverload((CPPOverload*)attr);
-                    attr = (PyObject*)pytmpl;
-                }
+                if (!attr)    // add_template can fail if the method can not be added
+                    attr = (PyObject*)CPPOverload_New(name, overloads);
             }
 
         // tickle lazy lookup of data members
@@ -281,7 +352,8 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
                     const std::string& clean = TypeManip::clean_type(resolved, false, true);
                     Cppyy::TCppType_t tcl = Cppyy::GetScope(clean);
                     if (tcl) {
-                        typedefpointertoclassobject* tpc = PyObject_GC_New(typedefpointertoclassobject, &TypedefPointerToClass_Type);
+                        typedefpointertoclassobject* tpc =
+                            PyObject_GC_New(typedefpointertoclassobject, &TypedefPointerToClass_Type);
                         tpc->fType = tcl;
                         attr = (PyObject*)tpc;
                     }
@@ -291,9 +363,9 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
 
     // function templates that have not been instantiated
         if (!attr) {
-            if (Cppyy::ExistsMethodTemplate(scope, name)) {
-                attr = (PyObject*)TemplateProxy_New(name, name, pyclass);
-            } else {
+            if (Cppyy::ExistsMethodTemplate(scope, name))
+                attr = add_template(pyclass, name);
+            else {
             // for completeness in error reporting
                 PyErr_Format(PyExc_TypeError, "\'%s\' is not a known C++ template", name.c_str());
                 Utility::FetchError(errors);
@@ -307,6 +379,24 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             // enum types (incl. named and class enums)
                 Cppyy::TCppEnum_t etype = Cppyy::GetEnum(scope, name);
                 if (etype) {
+                // create new enum type with labeled values in place, with a meta-class
+                // to make sure the enum values are read-only
+                    PyObject* pymetabases = PyTuple_New(1);
+                    PyObject* btype = (PyObject*)Py_TYPE(&PyInt_Type);
+                    Py_INCREF(btype);
+                    PyTuple_SET_ITEM(pymetabases, 0, btype);
+
+                    PyObject* args = Py_BuildValue((char*)"sO{}", (name+"_meta").c_str(), pymetabases);
+                    Py_DECREF(pymetabases);
+                    PyObject* pymeta = PyType_Type.tp_new(Py_TYPE(&PyInt_Type), args, nullptr);
+                    ((PyTypeObject*)pymeta)->tp_setattro = enum_setattro;
+                    Py_DECREF(args);
+
+                // prepare the base class
+                    PyObject* pybases = PyTuple_New(1);
+                    Py_INCREF(&PyInt_Type);
+                    PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
+
                 // collect the enum values
                     Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(etype);
                     PyObject* dct = PyDict_New();
@@ -316,25 +406,25 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
                         Py_DECREF(val);
                     }
 
-                // add the __cppname__ for templates
+                // add the __cpp_name__ for templates
                     PyObject* cppname = nullptr;
                     if (scope == Cppyy::gGlobalScope) {
                         Py_INCREF(pyname);
                         cppname = pyname;
                     } else
-                        cppname = CPyCppyy_PyUnicode_FromString((Cppyy::GetScopedFinalName(scope)+"::"+name).c_str());
+                        cppname = CPyCppyy_PyText_FromString((Cppyy::GetScopedFinalName(scope)+"::"+name).c_str());
                     PyDict_SetItem(dct, PyStrings::gCppName, cppname);
                     Py_DECREF(cppname);
 
-                // create new type with labeled values in place
-                    PyObject* pybases = PyTuple_New(1);
-                    Py_INCREF(&PyInt_Type);
-                    PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
-                    PyObject* args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
-                    attr = Py_TYPE(&PyInt_Type)->tp_new(Py_TYPE(&PyInt_Type), args, nullptr);
-                    Py_DECREF(args);
+                // create the actual enum class
+                    args = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
                     Py_DECREF(pybases);
                     Py_DECREF(dct);
+                    attr = ((PyTypeObject*)pymeta)->tp_new((PyTypeObject*)pymeta, args, nullptr);
+
+                // final cleanup
+                    Py_DECREF(args);
+                    Py_DECREF(pymeta);
 
                 } else {
                 // presumably not a class enum; simply pretend int
@@ -351,11 +441,11 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
         if (attr) {
         // cache the result
             if (CPPDataMember_Check(attr)) {
-                PyObject_SetAttr((PyObject*)Py_TYPE(pyclass), pyname, attr);
+                PyType_Type.tp_setattro((PyObject*)Py_TYPE(pyclass), pyname, attr);
                 Py_DECREF(attr);
                 attr = PyType_Type.tp_getattro(pyclass, pyname);
             } else
-                PyObject_SetAttr(pyclass, pyname, attr);
+                PyType_Type.tp_setattro(pyclass, pyname, attr);
 
         } else {
             Utility::FetchError(errors);
@@ -379,7 +469,9 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
                 if (pyuscope) {
                     klass->fImp.fUsing->push_back(PyWeakref_NewRef(pyuscope, nullptr));
                 // the namespace may not otherwise be held, so tie the lifetimes
-                    PyObject_SetAttrString(pyclass, ("__lifeline_"+uname).c_str(), pyuscope);
+                    PyObject* llname = CPyCppyy_PyText_FromString(("__lifeline_"+uname).c_str());
+                    PyType_Type.tp_setattro(pyclass, llname, pyuscope);
+                    Py_DECREF(llname);
                     Py_DECREF(pyuscope);
                 }
             }
@@ -392,28 +484,51 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
             if (pyuscope) {
                 attr = PyObject_GetAttr(pyuscope, pyname);
                 if (attr) break;
+                PyErr_Clear();
             }
         }
     }
 
-    if (attr)
+    if (attr) {
         std::for_each(errors.begin(), errors.end(), Utility::PyError_t::Clear);
-    else {
+        PyErr_Clear();
+    } else {
     // not found: prepare a full error report
         PyObject* topmsg = nullptr;
         PyObject* sklass = PyObject_Str(pyclass);
         if (sklass) {
-            topmsg = CPyCppyy_PyUnicode_FromFormat("%s has no attribute \'%s\'. Full details:",
-                CPyCppyy_PyUnicode_AsString(sklass), CPyCppyy_PyUnicode_AsString(pyname));
+            topmsg = CPyCppyy_PyText_FromFormat("%s has no attribute \'%s\'. Full details:",
+                CPyCppyy_PyText_AsString(sklass), CPyCppyy_PyText_AsString(pyname));
             Py_DECREF(sklass);
         } else {
-            topmsg = CPyCppyy_PyUnicode_FromFormat("no such attribute \'%s\'. Full details:",
-                CPyCppyy_PyUnicode_AsString(pyname));
+            topmsg = CPyCppyy_PyText_FromFormat("no such attribute \'%s\'. Full details:",
+                CPyCppyy_PyText_AsString(pyname));
         }
         SetDetailedException(errors, topmsg /* steals */, PyExc_AttributeError /* default error */);
     }
 
     return attr;
+}
+
+//----------------------------------------------------------------------------
+static int meta_setattro(PyObject* pyclass, PyObject* pyname, PyObject* pyval)
+{
+// Global data and static data in namespaces is found lazily, thus if the first
+// use is setting of the global data by the user, it will not be reflected on
+// the C++ side, b/c there is no descriptor yet. This triggers the creation for
+// for such data as necessary. The many checks to narrow down the specific case
+// are needed to prevent unnecessary lookups and recursion.
+    if (((CPPScope*)pyclass)->fFlags & CPPScope::kIsNamespace) {
+    // skip if the given pyval is a descriptor already, or an unassignable class
+        if (!CPyCppyy::CPPDataMember_Check(pyval) && !CPyCppyy::CPPScope_Check(pyval)) {
+            std::string name = CPyCppyy_PyText_AsString(pyname);
+            Cppyy::TCppIndex_t dmi = Cppyy::GetDatamemberIndex(((CPPScope*)pyclass)->fCppType, name);
+            if (dmi != (Cppyy::TCppIndex_t)-1)
+                meta_getattro(pyclass, pyname);       // triggers creation
+        }
+    }
+
+    return PyType_Type.tp_setattro(pyclass, pyname, pyval);
 }
 
 
@@ -446,7 +561,7 @@ static PyObject* meta_dir(CPPScope* klass)
 
 // get rid of duplicates
     for (Py_ssize_t i = 0; i < PyList_GET_SIZE(dirlist); ++i)
-        cppnames.insert(CPyCppyy_PyUnicode_AsString(PyList_GET_ITEM(dirlist, i)));
+        cppnames.insert(CPyCppyy_PyText_AsString(PyList_GET_ITEM(dirlist, i)));
 
     Py_DECREF(dirlist);
     dirlist = PyList_New(cppnames.size());
@@ -454,7 +569,7 @@ static PyObject* meta_dir(CPPScope* klass)
 // copy total onto python list
     Py_ssize_t i = 0;
     for (const auto& name : cppnames) {
-        PyList_SET_ITEM(dirlist, i++, CPyCppyy_PyUnicode_FromString(name.c_str()));
+        PyList_SET_ITEM(dirlist, i++, CPyCppyy_PyText_FromString(name.c_str()));
     }
     return dirlist;
 }
@@ -468,8 +583,8 @@ static PyMethodDef meta_methods[] = {
 
 //-----------------------------------------------------------------------------
 static PyGetSetDef meta_getset[] = {
-    {(char*)"__cppname__", (getter)meta_getcppname, nullptr, nullptr, nullptr},
-    {(char*)"__module__",  (getter)meta_getmodule,  (setter)meta_setmodule, nullptr, nullptr},
+    {(char*)"__cpp_name__", (getter)meta_getcppname, nullptr, nullptr, nullptr},
+    {(char*)"__module__",   (getter)meta_getmodule,  (setter)meta_setmodule, nullptr, nullptr},
     {(char*)nullptr, nullptr, nullptr, nullptr, nullptr}
 };
 
@@ -493,9 +608,13 @@ PyTypeObject CPPScope_Type = {
     0,                             // tp_call
     0,                             // tp_str
     (getattrofunc)meta_getattro,   // tp_getattro
-    0,                             // tp_setattro
+    (setattrofunc)meta_setattro,   // tp_setattro
     0,                             // tp_as_buffer
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,     // tp_flags
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
+#if PY_VERSION_HEX >= 0x03040000
+        | Py_TPFLAGS_TYPE_SUBCLASS
+#endif
+        ,                          // tp_flags
     (char*)"CPyCppyy metatype (internal)",        // tp_doc
     0,                             // tp_traverse
     0,                             // tp_clear

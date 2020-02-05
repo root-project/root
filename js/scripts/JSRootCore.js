@@ -74,8 +74,7 @@
      if (norjs || !require.specified("jsroot"))
         define('jsroot', [], jsroot);
 
-   } else
-   if (typeof exports === 'object' /*&& typeof module !== 'undefined'*/) {
+   } else if (typeof exports === 'object' /*&& typeof module !== 'undefined'*/) {
       // processing with Node.js or CommonJS
 
       //  mark JSROOT as used with Node.js
@@ -96,16 +95,17 @@
 
    "use strict";
 
-   JSROOT.version = "dev 17/07/2019";
+   JSROOT.version = "dev 4/02/2020";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
    JSROOT.source_fullpath = ""; // full name of source script
-   JSROOT.bower_dir = null; // when specified, use standard libs from bower location
-   JSROOT.nocache = false;
-   JSROOT.sources = ['core']; // indicates which major sources were loaded
+   JSROOT.bower_dir = null;     // when specified, use standard libs from bower location
+   JSROOT.nocache = false;      // when specified, used as extra URL parameter to load JSROOT scripts
+   JSROOT.wrong_http_response_handling = false; // when configured, try to handle wrong content-length response from server
+   JSROOT.sources = ['core'];   // indicates which major sources were loaded
 
-   JSROOT.id_counter = 0;
+   JSROOT.id_counter = 1;       // avoid id value 0, starts from 1
    if (JSROOT.BatchMode === undefined)
       JSROOT.BatchMode = false; // when true, disables all kind of interactive features
 
@@ -168,7 +168,7 @@
          FrameNDC: { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
          Palette: 57,
          Latex: 2,    // 0 - never, 1 - only latex symbols, 2 - normal TLatex processing (default), 3 - use MathJax for complex case, 4 - use MathJax always
-         // MathJax : 0,  // depricated, will be supported till JSROOT 6.0, use Latex variable  0 - never, 1 - only for complex cases, 2 - always
+         // MathJax : 0,  // deprecated, will be supported till JSROOT 6.0, use Latex variable  0 - never, 1 - only for complex cases, 2 - always
          ProgressBox: true,  // show progress box
          Embed3DinSVG: 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
          ImageSVG: !JSROOT.nodejs, // when producing SVG images, use <image> elements to insert 3D drawings from three.js,
@@ -382,7 +382,7 @@
                   var dv = new DataView(arr.buffer, value.o || 0),
                       len = Math.min(buf.length, dv.byteLength);
                   for (var k=0; k<len; ++k)
-                     dv.setUint8(k, data.charCodeAt(k));
+                     dv.setUint8(k, buf.charCodeAt(k));
                } else {
                   throw new Error('base64 coding supported only for native arrays with binary data');
                }
@@ -841,7 +841,7 @@
     *    - "head" - returns request itself, uses "HEAD" method
     *
     * Result will be returned to the callback function.
-    * Request will be set as this pointer in the callback.
+    * Request will be set as *this* pointer in the callback.
     * If failed, request returns null
     *
     * @param {string} url - URL for the request
@@ -859,88 +859,92 @@
 
    JSROOT.NewHttpRequest = function(url, kind, user_call_back) {
 
-      var xhr = null;
-      if (JSROOT.nodejs) {
-         var nodejs_class = require("xhr2");
-         xhr = new nodejs_class();
-      } else {
-         xhr = new XMLHttpRequest();
-      }
+      var xhr = JSROOT.nodejs ? new (require("xhr2"))() : new XMLHttpRequest();
 
-      function callback(res) {
-         // we set pointer on request when calling callback
-         if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
-      }
+      xhr.http_callback = (typeof user_call_back == 'function') ? user_call_back.bind(xhr) : function() {};
 
       if (!kind) kind = "buf";
 
-      var pthis = this, method = "GET", async = true, p = kind.indexOf(";sync");
-      if (p>0) { kind.substr(0,p); async = false; }
+      var method = "GET", async = true, p = kind.indexOf(";sync");
+      if (p>0) { kind = kind.substr(0,p); async = false; }
       if (kind === "head") method = "HEAD"; else
       if ((kind === "post") || (kind === "multi") || (kind === "posttext")) method = "POST";
 
+      xhr.kind = kind;
+
+      if (JSROOT.wrong_http_response_handling && (method == "GET") && (typeof xhr.addEventListener === 'function'))
+         xhr.addEventListener("progress", function(oEvent) {
+            if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
+               this.did_abort = true;
+               this.abort();
+               console.warn('Server sends more bytes ' + oEvent.loaded + ' than expected ' + this.expected_size + '. Abort I/O operation');
+               this.http_callback(null);
+            }
+         }.bind(xhr));
+
       xhr.onreadystatechange = function() {
 
-         if (xhr.did_abort) return;
+         if (this.did_abort) return;
 
-         if ((xhr.readyState === 2) && xhr.expected_size) {
-            var len = parseInt(xhr.getResponseHeader("Content-Length"));
-            if (!isNaN(len) && (len>xhr.expected_size)) {
-               xhr.did_abort = true;
-               xhr.abort();
-               console.warn('Server response size ' + len + ' larger than expected ' + xhr.expected_size + ' Abort I/O operation');
-               return callback(null);
+         if ((this.readyState === 2) && this.expected_size) {
+            var len = parseInt(this.getResponseHeader("Content-Length"));
+            if (!isNaN(len) && (len>this.expected_size) && !JSROOT.wrong_http_response_handling) {
+               this.did_abort = true;
+               this.abort();
+               console.warn('Server response size ' + len + ' larger than expected ' + this.expected_size + '. Abort I/O operation');
+               return this.http_callback(null);
             }
          }
 
-         if (xhr.readyState != 4) return;
+         if (this.readyState != 4) return;
 
-         if ((xhr.status != 200) && (xhr.status != 206) && !JSROOT.browser.qt5 &&
+         if ((this.status != 200) && (this.status != 206) && !JSROOT.browser.qt5 &&
              // in these special cases browsers not always set status
-             !((xhr.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
-            return callback(null);
+             !((this.status == 0) && ((url.indexOf("file://")==0) || (url.indexOf("blob:")==0)))) {
+            return this.http_callback(null);
          }
 
-         if (JSROOT.nodejs && (method == "GET") && (kind === "object") &&
-             (xhr.responseType == "arraybuffer") && (xhr.getResponseHeader("content-encoding") == "gzip")) {
+         if (this.nodejs_checkzip && (this.getResponseHeader("content-encoding") == "gzip")) {
             // special handling of gzipped JSON objects in Node.js
             var zlib = require('zlib'),
-                str = zlib.unzipSync(Buffer.from(xhr.response));
-            return callback(pthis.parse(str));
+                str = zlib.unzipSync(Buffer.from(this.response));
+            return this.http_callback(JSROOT.parse(str));
          }
 
-         switch(kind) {
-            case "xml": return callback(xhr.responseXML);
+         switch(this.kind) {
+            case "xml": return this.http_callback(this.responseXML);
             case "posttext":
-            case "text": return callback(xhr.responseText);
-            case "object": return callback(pthis.parse(xhr.responseText));
-            case "multi": return callback(pthis.parse_multi(xhr.responseText));
-            case "head": return callback(xhr);
+            case "text": return this.http_callback(this.responseText);
+            case "object": return this.http_callback(JSROOT.parse(this.responseText));
+            case "multi": return this.http_callback(JSROOT.parse_multi(this.responseText));
+            case "head": return this.http_callback(this);
          }
 
          // if no response type is supported, return as text (most probably, will fail)
-         if (! ('responseType' in xhr))
-            return callback(xhr.responseText);
+         if (this.responseType === undefined)
+            return this.http_callback(this.responseText);
 
-         if ((kind=="bin") && ('byteLength' in xhr.response)) {
+         if ((this.kind == "bin") && ('byteLength' in this.response)) {
             // if string representation in requested - provide it
 
-            var filecontent = "", u8Arr = new Uint8Array(xhr.response);
+            var filecontent = "", u8Arr = new Uint8Array(this.response);
             for (var i = 0; i < u8Arr.length; ++i)
                filecontent += String.fromCharCode(u8Arr[i]);
 
-            return callback(filecontent);
+            return this.http_callback(filecontent);
          }
 
-         callback(xhr.response);
+         this.http_callback(this.response);
       }
 
       xhr.open(method, url, async);
 
       if ((kind == "bin") || (kind == "buf")) xhr.responseType = 'arraybuffer';
 
-      if (JSROOT.nodejs && (method == "GET") && (kind === "object") && (url.indexOf('.json.gz')>0))
+      if (JSROOT.nodejs && (method == "GET") && (kind === "object") && (url.indexOf('.json.gz')>0)) {
+         xhr.nodejs_checkzip = true;
          xhr.responseType = 'arraybuffer';
+      }
 
       return xhr;
    }
@@ -1251,14 +1255,19 @@
          modules.push('JSRootPainter.hist3d');
       }
 
-      if ((kind.indexOf("geom;")>=0) && (jsroot.sources.indexOf("geom")<0)) {
-         if (!JSROOT.nodjs && (typeof window !='undefined'))
+      if (kind.indexOf("datgui;")>=0) {
+         if (!JSROOT.nodejs && (typeof window !='undefined'))
             mainfiles += (use_bower ? "###dat.gui" : "&&&scripts") + "/dat.gui.min.js;";
+         // console.log('extra loading module dat.gui');
+         modules.push('dat.gui');
+      }
+
+      if ((kind.indexOf("geom;")>=0) && (jsroot.sources.indexOf("geom")<0)) {
          mainfiles += "$$$scripts/ThreeCSG" + ext + ".js;" +
                       "$$$scripts/JSRootGeoBase" + ext + ".js;" +
                       "$$$scripts/JSRootGeoPainter" + ext + ".js;";
          extrafiles += "$$$style/JSRootGeoPainter" + ext + ".css;";
-         modules.push('dat.gui', 'ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter');
+         modules.push('ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter');
       }
 
       if (kind.indexOf("mathjax;")>=0) {
@@ -1299,9 +1308,9 @@
             jsroot.console('Reuse existing jQuery ' + jQuery.fn.jquery + ", required 3.1.1", debugout);
          else
             lst_jq += (use_bower ? "###jquery/dist" : "&&&scripts") + "/jquery.min.js;";
-         if (has_jq && typeof $.ui != 'undefined')
+         if (has_jq && typeof $.ui != 'undefined') {
             jsroot.console('Reuse existing jQuery-ui ' + $.ui.version + ", required 1.12.1", debugout);
-         else {
+         } else {
             lst_jq += (use_bower ? "###jquery-ui" : "&&&scripts") + '/jquery-ui.min.js;';
             extrafiles += '$$$style/jquery-ui' + ext + '.css;';
          }
@@ -2273,6 +2282,7 @@
 
       if (arg.openui5src) JSROOT.openui5src = arg.openui5src;
       if (arg.openui5libs) JSROOT.openui5libs = arg.openui5libs;
+      if (arg.openui5theme) JSROOT.openui5theme = arg.openui5theme;
       JSROOT.AssertPrerequisites("2d;" + (arg && arg.prereq ? arg.prereq : ""), function() {
          if (arg && arg.prereq) delete arg.prereq;
          JSROOT.ConnectWebWindow(arg);
@@ -2299,7 +2309,9 @@
 
       var src = JSROOT.source_fullpath;
 
-      if (JSROOT.GetUrlOption('nocache', src)!=null) JSROOT.nocache = (new Date).getTime(); // use timestamp to overcome cache limitation
+      if (JSROOT.GetUrlOption('nocache', src) != null) JSROOT.nocache = (new Date).getTime(); // use timestamp to overcome cache limitation
+      if ((JSROOT.GetUrlOption('wrong_http_response', src) != null) || (JSROOT.GetUrlOption('wrong_http_response') != null))
+         JSROOT.wrong_http_response_handling = true; // server may send wrong content length by partial requests, use other method to control this
 
       if (JSROOT.GetUrlOption('gui', src) !== null)
          return window_on_load( function() { JSROOT.BuildSimpleGUI(); } );

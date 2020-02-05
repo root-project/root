@@ -10,8 +10,12 @@ try:
 except ImportError:
     has_wheel = False
 
+force_bdist = False
+if '--force-bdist' in sys.argv:
+    force_bdist = True
+    sys.argv.remove('--force-bdist')
 
-requirements = ['cppyy-cling', 'cppyy-backend>=1.9.0']
+requirements = ['cppyy-cling==6.18.2.*', 'cppyy-backend==1.10.*']
 setup_requirements = ['wheel']
 if 'build' in sys.argv or 'install' in sys.argv:
     setup_requirements += requirements
@@ -27,7 +31,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 def is_manylinux():
     try:
         for line in open('/etc/redhat-release').readlines():
-            if 'CentOS release 5.11' in line:
+            if 'CentOS release 6.10 (Final)' in line:
                 return True
     except (OSError, IOError):
         pass
@@ -70,13 +74,16 @@ class my_build_extension(_build_ext):
             elif 'g++' in self.compiler.compiler_cxx[0]:
                 ext.extra_compile_args += \
                    ['-Wno-cast-function-type',   # g++ >8.2, complaint of CPyFunction cast
-                    '-Wno-unknown-warning']         # since clang/g++ don't have the same options
+                    '-Wno-unknown-warning']      # since clang/g++ don't have the same options
             ext.extra_compile_args += \
-                ['-Wno-register']                # C++17, Python headers
+                ['-Wno-register',                # C++17, Python headers
+                 '-Wno-strict-aliasing']         # not all Pythons provide this
         if 'linux' in sys.platform:
             ext.extra_link_args += ['-Wl,-Bsymbolic-functions']
         elif 'win32' in sys.platform:
-            ext.extra_compile_args += ['/GR', '/EHsc-']    # note '/EHsc' hardwired by distutils :(
+        # /EHsc and sometimes /MT are hardwired in distutils, but the compiler/linker will
+        # let the last argument take precedence
+            ext.extra_compile_args += ['/GR', '/EHsc-', '/MD']
             ext.extra_link_args += ['/EXPORT:_Init_thread_abort', '/EXPORT:_Init_thread_epoch',
                 '/EXPORT:_Init_thread_footer', '/EXPORT:_Init_thread_header', '/EXPORT:_tls_index']
         return _build_ext.build_extension(self, ext)
@@ -95,7 +102,7 @@ class MyDistribution(Distribution):
         # packages are installed one-by-one, on old install is used or the build
         # will simply fail hard. The following is not completely quiet, but at
         # least a lot less conspicuous.
-        if not is_manylinux():
+        if not is_manylinux() and not force_bdist:
             disabled = set((
                 'bdist_wheel', 'bdist_egg', 'bdist_wininst', 'bdist_rpm'))
             for cmd in self.commands:
@@ -111,7 +118,7 @@ class MyDistribution(Distribution):
 
 setup(
     name='CPyCppyy',
-    version='1.8.2',
+    version='1.9.3',
     description='Cling-based Python-C++ bindings for CPython',
     long_description=long_description,
 

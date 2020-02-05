@@ -351,6 +351,7 @@ Bool_t RooUnitTest::runCompTests()
 
       if (!iter2->first->isIdentical(*bmark,fptol(),fctol())) {
 	cout << "RooUnitTest ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName()
+	     << " from result " << iter2->second
 	     <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << endl ;
 	ret = kFALSE ;
       }

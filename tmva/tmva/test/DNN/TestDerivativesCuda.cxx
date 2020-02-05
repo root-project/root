@@ -24,7 +24,7 @@ int main()
 {
     using Scalar_t = Double_t;
     Double_t error;
-
+    TCudaTensor<Scalar_t> dummy(1, 1);
     //
     // Activation Functions
     //

@@ -73,8 +73,12 @@ newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
 rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
-          -lMultiProc"
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread"
+
+# MultiProc is not supported on Windows
+if test "$platform" != "win32"; then
+   rootlibs="$rootlibs -lMultiProc"
+fi
 
 if echo "${features}" | grep -q "dataframe"; then
    rootlibs="$rootlibs -lROOTDataFrame"
@@ -333,9 +337,9 @@ win32)
       auxcflags="$auxcflags -GR -GX -G5"
    fi
    auxlibs=
-   forcelibs=$rootulibs
-   forceglibs=$rootuglibs
-   forceevelibs=$rootuevelibs
+   #forcelibs=$rootulibs
+   #forceglibs=$rootuglibs
+   #forceevelibs=$rootuevelibs
    ;;
 win32gcc | win64gcc)
    # Windows (32 or 64) with cygwin gcc
@@ -357,11 +361,10 @@ esac
 
 case $arch in
 freebsd* | openbsd* | linux*)
+   auxcflags="-pthread $auxcflags"
+   auxlibs="-pthread $auxlibs"
+
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-pthread $auxcflags"
-         auxlibs="-pthread $auxlibs"
-      fi
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
@@ -372,16 +375,14 @@ freebsd* | openbsd* | linux*)
    done
    ;;
 macosx*)
+   if [ $macosx_minor -ge 5 ]; then
+      auxcflags="-pthread $auxcflags"
+      auxlibs="-lpthread $auxlibs"
+   else
+      auxcflags="-D_REENTRANT $auxcflags"
+      auxlibs="-lpthread $auxlibs"
+   fi
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         if [ $macosx_minor -ge 5 ]; then
-            auxcflags="-pthread $auxcflags"
-            auxlibs="-lpthread $auxlibs"
-         else
-            auxcflags="-D_REENTRANT $auxcflags"
-            auxlibs="-lpthread $auxlibs"
-         fi
-      fi
       if test "x$f" = "xrpath" ; then
          if [ $macosx_minor -ge 5 ]; then
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
@@ -394,21 +395,15 @@ macosx*)
    done
    ;;
 hpuxacc | hpuxia64acc)
-   for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-mt $auxcflags"
-         auxlibs="-mt $auxlibs"
-      fi
-   done
+   auxcflags="-mt $auxcflags"
+   auxlibs="-mt $auxlibs"
    ;;
 win32)
    ;;
 *)
    for f in $features ; do
-      if test "x$f" = "xthread" ; then
-         auxcflags="-D_REENTRANT $auxcflags"
-         auxlibs="-lpthread $auxlibs"
-      fi
+      auxcflags="-D_REENTRANT $auxcflags"
+      auxlibs="-lpthread $auxlibs"
    done
    ;;
 esac

@@ -17,19 +17,20 @@ TClass instances are created starting from different sources of information:
 2. From TProtoClass instances saved in a ROOT pcm file created by the dictionary generator and the dictionary itself.
 3. From a lookup in the AST built by cling.
 
-If a TClass instance is built through the mechanisms 1. and 2., it does not contain information about methods of the 
+If a TClass instance is built through the mechanisms 1. and 2., it does not contain information about methods of the
 class/struct/namespace it represents. Conversely, if built through 3. or 1., it does not carry the information which is necessary
 to ROOT to perform I/O of instances of the class/struct it represents.
-The mechanisms 1., 2. and 3. are not mutually exclusive: it can happen that during the execution of the program, all 
+The mechanisms 1., 2. and 3. are not mutually exclusive: it can happen that during the execution of the program, all
 the three are triggered, modifying the state of the TClass instance.
 
-In order to retrieve a TClass instance from the type system, a query can be executed as follows through the static 
+In order to retrieve a TClass instance from the type system, a query can be executed as follows through the static
 TClass::GetClass method:
-```{.cpp}
+
+~~~ {.cpp}
 auto myClassTClass_0 = TClass::GetClass("myClass");
 auto myClassTClass_1 = TClass::GetClass<myClass>();
 auto myClassTClass_2 = TClass::GetClass(myClassTypeInfo);
-```
+~~~
 
 The name of classes is crucial for ROOT. A careful procedure of *name normalization* is carried out for
 each and every class. A *normalized name* is a valid C++ class name.
@@ -51,7 +52,6 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClassTable.h"
 #include "TDataMember.h"
 #include "TDataType.h"
-#include "TEnum.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -1377,6 +1377,17 @@ void TClass::Init(const char *name, Version_t cversion,
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
       oldcl->fSchemaRules = 0;
+
+      // Move the TFunctions.
+      fFuncTemplate = oldcl->fFuncTemplate;
+      if (fFuncTemplate)
+         fFuncTemplate->fClass = this;
+      oldcl->fFuncTemplate = nullptr;
+      fMethod.store( oldcl->fMethod );
+      if (fMethod)
+         (*fMethod).fClass = this;
+      oldcl->fMethod = nullptr;
+
    }
 
    SetBit(kLoading);
@@ -1403,8 +1414,12 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
 
-      fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
-      fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
+      if (!invalid) {
+         fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
+         fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
+         if (fState <= kEmulated)
+            fState = kInterpreted;
+      }
    }
 
    // We need to check if the class it is not fwd declared for the cases where we
@@ -2283,7 +2298,7 @@ Bool_t TClass::CanSplit() const
 
    }
 
-   if (GetStreamer()!=0) {
+   if (GetStreamer() != nullptr || fStreamerFunc != nullptr) {
 
       // We have an external custom streamer provided by the user, we must not
       // split it.
@@ -6052,6 +6067,8 @@ void TClass::SetUnloaded()
             GetName(),(int)fState);
    }
 
+   InsertTClassInRegistryRAII insertRAII(fState, fName, fNoInfoOrEmuOrFwdDeclNameRegistry);
+
    // Make sure SetClassInfo, re-calculated the state.
    fState = kForwardDeclared;
 
@@ -6299,8 +6316,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
    il = name.Length();
    for (int i=0; i<il; i++) id = id*3+name[i];
 
+   // Here we skip he base classes in case this is a pair or STL collection,
+   // otherwise, on some STL implementations, it can happen that pair has
+   // base classes which are an internal implementation detail.
    TList *tlb = ((TClass*)this)->GetListOfBases();
-   if (tlb && !GetCollectionProxy()) {   // Loop over bases if not a proxied collection
+   if (tlb && !GetCollectionProxy() && strncmp(GetName(), "pair<", 5)) {
+      // Loop over bases if not a proxied collection or a pair
 
       TIter nextBase(tlb);
 

@@ -280,7 +280,7 @@ public:
    virtual void PrintResults();
 
    /// set an object to trace operation for each iteration
-   /// The object muust implement operator() (unsigned int, MinimumState & state)
+   /// The object must be a (or inherit from) ROOT::Minuit2::MnTraceObject and implement operator() (int, const MinimumState & state)
    void SetTraceObject(MnTraceObject & obj);
 
    /// set storage level   = 1 : store all iteration states (default)

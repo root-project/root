@@ -280,7 +280,7 @@ void TMVA::MethodDT::ProcessOptions()
 
    if (fPruneStrength < 0) fAutomatic = kTRUE;
    else fAutomatic = kFALSE;
-   if (fAutomatic && fPruneMethod==!DecisionTree::kCostComplexityPruning){
+   if (fAutomatic && fPruneMethod == DecisionTree::kExpectedErrorPruning){
       Log() << kFATAL
             <<  "Sorry automatic pruning strength determination is not implemented yet for ExpectedErrorPruning" << Endl;
    }

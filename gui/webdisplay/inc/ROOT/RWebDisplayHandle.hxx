@@ -43,6 +43,7 @@ protected:
 
       void TestProg(const std::string &nexttry, bool check_std_paths = false);
 
+      virtual void ProcessGeometry(std::string &, const RWebDisplayArgs &) {}
       virtual std::string MakeProfile(std::string &, bool) { return ""; }
 
    public:
@@ -59,6 +60,8 @@ protected:
       ChromeCreator();
       virtual ~ChromeCreator() = default;
       bool IsActive() const override { return !fProg.empty(); }
+      void ProcessGeometry(std::string &, const RWebDisplayArgs &args) override;
+      std::string MakeProfile(std::string &exec, bool) override;
    };
 
    class FirefoxCreator : public BrowserCreator {
@@ -87,6 +90,8 @@ public:
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);
+
+   static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600);
 };
 
 }

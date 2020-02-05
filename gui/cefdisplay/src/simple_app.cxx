@@ -389,7 +389,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
       window_info.SetAsWindowless(0);
 
-#if CEF_COMMIT_NUMBER > 1926
+#if CEF_COMMIT_NUMBER > 1934
       // Create the first browser window.
       CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, nullptr, nullptr);
 #else
@@ -417,7 +417,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
    if (fUseViewes) {
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
-#if CEF_COMMIT_NUMBER > 1926
+#if CEF_COMMIT_NUMBER > 1934
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr, nullptr);
 #else
          CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, nullptr, nullptr);
@@ -433,7 +433,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 #endif
 
       // Create the first browser window.
-#if CEF_COMMIT_NUMBER > 1926
+#if CEF_COMMIT_NUMBER > 1934
       CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr, nullptr);
 #else
       CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, nullptr);
@@ -469,13 +469,19 @@ protected:
          //   return nullptr;
          // }
 
+         if (args.IsHeadless())
+            return nullptr;
+
          if (fCefApp) {
             if (gHandlingServer != args.GetHttpServer()) {
                R__ERROR_HERE("CEF") << "CEF do not allows to use different THttpServer instances";
                return nullptr;
             }
 
-            CefRect rect(0, 0, args.GetWidth(), args.GetHeight());
+            CefRect rect((args.GetX() > 0) ? args.GetX() : 0,
+                         (args.GetY() > 0) ? args.GetY() : 0,
+                         (args.GetWidth() > 0) ? args.GetWidth() : 800,
+                         (args.GetHeight() > 0) ? args.GetHeight() : 600);
             fCefApp->StartWindow(args.GetFullUrl(), args.IsHeadless(), rect);
             return std::make_unique<RCefWebDisplayHandle>(args.GetFullUrl());
          }

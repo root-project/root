@@ -433,11 +433,15 @@ namespace Math {
    GSLRngMixMax::GSLRngMixMax() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mixmax) );
-      Initialize();      
+      Initialize(); // this creates the gsl_rng structure
+      //  no real need to call CreateEngine since the underlined MIXMAX engine is created
+      // by calling GSLMixMaxWrapper::Seed(gsl_default_seed) that is called 
+      // when gsl_rng is allocated (in Initialize) 
+      GSLMixMaxWrapper::CreateEngine(Engine()->Rng());
    }
    GSLRngMixMax::~GSLRngMixMax() {
       // we need to explicitly delete the ROOT wrapper class
-      GSLMixMaxWrapper::Free(Engine()->Rng()->state);
+      GSLMixMaxWrapper::FreeEngine(Engine()->Rng());
    }
 
 } // namespace Math

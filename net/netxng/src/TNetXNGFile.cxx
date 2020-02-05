@@ -734,6 +734,7 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
    if (!fQueryReadVParams)
       return kTRUE;
 
+#if XrdVNUMBER >= 40000
    std::string lasturl;
    fFile->GetProperty("LastURL",lasturl);
    URL lrl(lasturl);
@@ -746,7 +747,6 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
        return kTRUE;
    }
 
-#if XrdVNUMBER >= 40000
    std::string dataServerStr;
    if( !fFile->GetProperty( "DataServer", dataServerStr ) )
       return kFALSE;

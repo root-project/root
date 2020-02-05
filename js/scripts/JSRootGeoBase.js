@@ -4,20 +4,15 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( [ 'JSRootCore', 'threejs', 'ThreeCSG' ], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       factory(require("./JSRootCore.js"), require("three"), require("./ThreeCSG.js"));
    } else {
-
       if (typeof JSROOT == 'undefined')
          throw new Error('JSROOT is not defined', 'JSRootGeoBase.js');
-
       if (typeof THREE == 'undefined')
          throw new Error('THREE is not defined', 'JSRootGeoBase.js');
-
       if (typeof ThreeBSP == 'undefined')
          throw new Error('ThreeBSP is not defined', 'JSRootGeoBase.js');
-
       factory(JSROOT, THREE, ThreeBSP);
    }
 } (function( JSROOT, THREE, ThreeBSP ) {
@@ -38,7 +33,7 @@
          kVisNone         : JSROOT.BIT(1),           // the volume/node is invisible, as well as daughters
          kVisThis         : JSROOT.BIT(2),           // this volume/node is visible
          kVisDaughters    : JSROOT.BIT(3),           // all leaves are visible
-         kVisOneLevel     : JSROOT.BIT(4),           // first level daughters are visible
+         kVisOneLevel     : JSROOT.BIT(4),           // first level daughters are visible (not used)
          kVisStreamed     : JSROOT.BIT(5),           // true if attributes have been streamed
          kVisTouched      : JSROOT.BIT(6),           // true if attributes are changed after closing geom
          kVisOnScreen     : JSROOT.BIT(7),           // true if volume is visible on screen
@@ -72,15 +67,13 @@
       if (flag===undefined) flag = true;
 
       JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisThis, !flag);
-      JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisDaughters, !flag);
-      JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisOneLevel, false);
+      // JSROOT.GEO.SetBit(this, JSROOT.GEO.BITS.kVisDaughters, !flag);
 
       if (this.fNodes)
          for (var n=0;n<this.fNodes.arr.length;++n) {
             var sub = this.fNodes.arr[n].fVolume;
             JSROOT.GEO.SetBit(sub, JSROOT.GEO.BITS.kVisThis, !flag);
             // JSROOT.GEO.SetBit(sub, JSROOT.GEO.BITS.kVisDaughters, !flag);
-            //JSROOT.GEO.SetBit(sub, JSROOT.GEO.BITS.kVisOneLevel, false);
          }
    }
 
@@ -598,8 +591,8 @@
             shape.fXY[7][0], shape.fXY[7][1],  shape.fDZ
          ],
          indicies = [
-            4,7,6,   6,5,4,   0,3,7,   7,4,0,
-            4,5,1,   1,0,4,   6,2,1,   1,5,6,
+            4,7,6,   6,5,4,   3,7,4,   4,0,3,
+            5,1,0,   0,4,5,   6,2,1,   1,5,6,
             7,3,2,   2,6,7,   1,2,3,   3,0,1 ];
 
       // detect same vertices on both Z-layers
@@ -1107,12 +1100,14 @@
    JSROOT.GEO.createPolygonBuffer = function( shape, faces_limit ) {
       var thetaStart = shape.fPhi1,
           thetaLength = shape.fDphi,
-          radiusSegments = 60;
+          radiusSegments = 60, factor = 1;
 
-      if ( shape._typename == "TGeoPgon" )
+      if (shape._typename == "TGeoPgon") {
          radiusSegments = shape.fNedges;
-      else
+         factor = 1. / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
+      } else {
          radiusSegments = Math.max(5, Math.round(thetaLength/JSROOT.GEO.GradPerSegm));
+      }
 
       var usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
 
@@ -1153,10 +1148,9 @@
 
             if (pnts !== null) {
                if (side === 0) {
-                  pnts.push(new THREE.Vector2(rad, layerz));
-               } else
-               if (rad < shape.fRmax[layer]) {
-                  pnts.unshift(new THREE.Vector2(rad, layerz));
+                  pnts.push(new THREE.Vector2(factor*rad, layerz));
+               } else if (rad < shape.fRmax[layer]) {
+                  pnts.unshift(new THREE.Vector2(factor*rad, layerz));
                }
             }
          }
@@ -1202,14 +1196,14 @@
       // add sides
       for (var side = 0; side < 2; ++side) {
          var rside = (side === 0) ? 'fRmax' : 'fRmin',
-             z1 = shape.fZ[0], r1 = shape[rside][0],
+             z1 = shape.fZ[0], r1 = factor*shape[rside][0],
              d1 = 1 - side, d2 = side;
 
          for (var layer=0; layer < shape.fNz; ++layer) {
 
             if (usage[layer*2+side] === 0) continue;
 
-            var z2 = shape.fZ[layer], r2 = shape[rside][layer],
+            var z2 = shape.fZ[layer], r2 = factor*shape[rside][layer],
                 nxy = 1, nz = 0;
 
             if ((r2 !== r1)) {
@@ -1235,7 +1229,7 @@
       // add top/bottom
       for (var layer=0; layer < shape.fNz; layer += (shape.fNz-1)) {
 
-         var rmin = shape.fRmin[layer], rmax = shape.fRmax[layer];
+         var rmin = factor*shape.fRmin[layer], rmax = factor*shape.fRmax[layer];
 
          if (rmin === rmax) continue;
 
@@ -1502,6 +1496,38 @@
       return creator.Create();
    }
 
+   /** @memberOf JSROOT.GEO */
+   JSROOT.GEO.createTessellatedBuffer = function( shape, faces_limit) {
+      var numfaces = 0;
+
+      for (var i = 0; i < shape.fFacets.length; ++i) {
+         var f = shape.fFacets[i];
+         if (f.fNvert == 4) numfaces += 2;
+                       else numfaces += 1;
+      }
+
+      if (faces_limit < 0) return numfaces;
+
+      var creator = faces_limit ? new JSROOT.GEO.PolygonsCreator : new JSROOT.GEO.GeometryCreator(numfaces);
+
+      for (var i = 0; i < shape.fFacets.length; ++i) {
+         var f = shape.fFacets[i],
+             v0 = shape.fVertices[f.fIvert[0]].fVec,
+             v1 = shape.fVertices[f.fIvert[1]].fVec,
+             v2 = shape.fVertices[f.fIvert[2]].fVec;
+
+         if (f.fNvert == 4) {
+            var v3 = shape.fVertices[f.fIvert[3]].fVec;
+            creator.AddFace4(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
+            creator.CalcNormal();
+         } else {
+            creator.AddFace3(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2]);
+            creator.CalcNormal();
+         }
+      }
+
+      return creator.Create();
+   }
 
    /** @memberOf JSROOT.GEO */
    JSROOT.GEO.createMatrix = function(matrix) {
@@ -1562,7 +1588,7 @@
 
          matrix = new THREE.Matrix4();
 
-         if (node.fTrans!==null) {
+         if (node.fTrans) {
             matrix.set(node.fTrans[0],  node.fTrans[4],  node.fTrans[8],  0,
                        node.fTrans[1],  node.fTrans[5],  node.fTrans[9],  0,
                        node.fTrans[2],  node.fTrans[6],  node.fTrans[10], 0,
@@ -1570,11 +1596,9 @@
             // second - set position with proper sign
             matrix.setPosition({ x: node.fTrans[12], y: node.fTrans[13], z: node.fTrans[14] });
          }
-      } else
-      if (('fMatrix' in node) && (node.fMatrix !== null))
+      } else if (node.fMatrix) {
          matrix = JSROOT.GEO.createMatrix(node.fMatrix);
-      else
-      if ((node._typename == "TGeoNodeOffset") && (node.fFinder !== null)) {
+      } else if ((node._typename == "TGeoNodeOffset") && node.fFinder) {
          var kPatternReflected = JSROOT.BIT(14);
          if ((node.fFinder.fBits & kPatternReflected) !== 0)
             JSROOT.GEO.warn('Unsupported reflected pattern ' + node.fFinder._typename);
@@ -1799,6 +1823,7 @@
             case "TGeoXtru": return JSROOT.GEO.createXtruBuffer( shape, limit );
             case "TGeoParaboloid": return JSROOT.GEO.createParaboloidBuffer( shape, limit );
             case "TGeoHype": return JSROOT.GEO.createHypeBuffer( shape, limit );
+            case "TGeoTessellated": return JSROOT.GEO.createTessellatedBuffer( shape, limit );
             case "TGeoCompositeShape": return JSROOT.GEO.createComposite( shape, limit );
             case "TGeoShapeAssembly": break;
             case "TGeoScaledShape": {
@@ -2082,7 +2107,7 @@
 
       if (geom.type == 'BufferGeometry') {
          var attr = geom.getAttribute('position');
-         return attr ? attr.count / 3 : 0;
+         return attr && attr.count ? Math.round(attr.count / 3) : 0;
       }
 
       // special array of polygons
@@ -2171,7 +2196,9 @@
    JSROOT.GEO.ClonedNodes = function(obj, clones) {
       this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
       this.name_prefix = ""; // name prefix used for nodes names
-      this.maxdepth = 1; // maximal hierarchy depth, required for transparency
+      this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
+      this.vislevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
+      this.maxnodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
 
       if (obj) {
          if (obj.$geoh) this.toplevel = false;
@@ -2179,6 +2206,25 @@
       } else if (clones) {
          this.nodes = clones;
       }
+   }
+
+   /** Set maximal depth for nodes visibility */
+   JSROOT.GEO.ClonedNodes.prototype.SetVisLevel = function(lvl) {
+      this.vislevel = lvl && !isNaN(lvl) ? lvl : 4;
+   }
+
+   /** Returns maximal depth for nodes visibility */
+   JSROOT.GEO.ClonedNodes.prototype.GetVisLevel = function() {
+      return this.vislevel;
+   }
+
+   /** Set maximal depth for nodes visibility */
+   JSROOT.GEO.ClonedNodes.prototype.SetMaxVisNodes = function(v) {
+      this.maxnodes = !isNaN(v) ? v : 10000;
+   }
+
+   JSROOT.GEO.ClonedNodes.prototype.GetMaxVisNodes = function() {
+      return this.maxnodes;
    }
 
    /** Insert node into existing array */
@@ -2218,9 +2264,12 @@
          }
       }
 
-      if (this.nodes)
-         for (var n=0;n<this.nodes.length;++n)
-            delete this.nodes[n].chlds;
+      if (this.nodes) {
+         for (var n=0;n<this.nodes.length;++n) {
+            if (this.nodes[n])
+               delete this.nodes[n].chlds;
+         }
+      }
 
       delete this.nodes;
       delete this.origin;
@@ -2268,7 +2317,7 @@
        // first create nodes objects
        for (var n=0; n<this.origin.length; ++n) {
           var obj = this.origin[n];
-          var node = { id: n, kind: kind, vol: 0, nfaces: 0, numvischld: 1, idshift: 0 };
+          var node = { id: n, kind: kind, vol: 0, nfaces: 0 };
           this.nodes.push(node);
           sortarr.push(node); // array use to produce sortmap
        }
@@ -2306,14 +2355,12 @@
                 shape.$nfaces = JSROOT.GEO.createGeometry(shape, -1);
              clone.nfaces = shape.$nfaces;
              if (clone.nfaces <= 0) clone.vol = 0;
-
-             // if (clone.nfaces < -10) console.log('Problem  with node ' + obj.fName + ':' + obj.fMother.fName);
           }
 
           if (!chlds) continue;
 
           // in cloned object children is only list of ids
-          clone.chlds = new Int32Array(chlds.length);
+          clone.chlds = new Array(chlds.length);
           for (var k=0;k<chlds.length;++k)
              clone.chlds[k] = chlds[k]._refid;
        }
@@ -2326,7 +2373,7 @@
        sortarr.sort(function(a,b) { return b.vol - a.vol; });
 
        // remember sort map and also sortid
-       this.sortmap = new Int32Array(this.nodes.length);
+       this.sortmap = new Array(this.nodes.length);
        for (var n=0;n<this.nodes.length;++n) {
           this.sortmap[n] = sortarr[n].id;
           sortarr[n].sortid = n;
@@ -2342,7 +2389,7 @@
       this.plain_shape = obj;
 
       var node = {
-            id: 0, sortid: 0, kind: 2, numvischld: 0, idshift: 0,
+            id: 0, sortid: 0, kind: 2,
             name: "Shape",
             nfaces: obj.nfaces,
             fDX: 1, fDY: 1, fDZ: 1, vol: 1,
@@ -2362,60 +2409,61 @@
       return cnt;
    }
 
-   /** Mark visisble nodes */
-   JSROOT.GEO.ClonedNodes.prototype.MarkVisibles = function(on_screen, copy_bits, cloning, hide_top_volume) {
-      if (!this.nodes) return 0;
+   /** Mark visisble nodes. Set only basic flags, actual visibility depends from hierarchy  */
+   JSROOT.GEO.ClonedNodes.prototype.MarkVisibles = function(on_screen, copy_bits, hide_top_volume) {
       if (this.plain_shape) return 1;
+      if (!this.origin || !this.nodes) return 0;
 
-      var res = 0, simple_copy = cloning && (cloning.length === this.nodes.length);
-
-      if (!simple_copy && !this.origin) return 0;
+      var res = 0;
 
       for (var n=0;n<this.nodes.length;++n) {
-         var clone = this.nodes[n];
+         var clone = this.nodes[n],
+             obj = this.origin[n];
 
-         clone.vis = false;
-         clone.numvischld = 1; // reset vis counter, will be filled with next scan
-         clone.idshift = 0;
-         delete clone.depth;
-
-         if (simple_copy) {
-            clone.vis = cloning[n].vis;
-            if (cloning[n].depth !== undefined) clone.depth = cloning[n].depth;
-            if (clone.vis) res++;
-            continue;
-         }
-
-         var obj = this.origin[n];
+         clone.vis = 0; // 1 - only with last level
+         delete clone.nochlds;
 
          if (clone.kind === 0) {
             if (obj.fVolume) {
                if (on_screen) {
-                  clone.vis = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOnScreen);
+                  // on screen bits used always, childs always checked
+                  clone.vis = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOnScreen) ? 99 : 0;
+
+                  if ((n==0) && clone.vis && hide_top_volume) clone.vis = 0;
+
                   if (copy_bits) {
                      JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone, false);
-                     JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis, clone.vis);
+                     JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis, (clone.vis > 0));
                      JSROOT.GEO.SetBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters, true);
                   }
                } else {
                   clone.vis = !JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisNone) &&
-                               JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis) && !obj.fFinder;
-                  // special handling for TGeoManager, which top module always hidden
-                  if (hide_top_volume && (n==0))
-                     clone.vis = false;
-                  if (!JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters))
-                     clone.depth = JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisOneLevel) ? 1 : 0;
+                               JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisThis) ? 99 : 0;
+
+                  if (!JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisDaughters) ||
+                      !JSROOT.GEO.TestBit(obj.fVolume, JSROOT.GEO.BITS.kVisDaughters)) clone.nochlds = true;
+
+                  // node with childs only shown in case if it is last level in hierarchy
+                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
+
+                  // special handling for top node
+                  if (n==0) {
+                     if (hide_top_volume) clone.vis = 0;
+                     delete clone.nochlds;
+                  }
                }
             }
          } else {
-            clone.vis = obj.fRnrSelf;
+            clone.vis = obj.fRnrSelf ? 99 : 0;
 
             // when the only node is selected, draw it
-            if ((n===0) && (this.nodes.length===1)) clone.vis = true;
+            if ((n===0) && (this.nodes.length===1)) clone.vis = 99;
+
+            this.vislevel = 9999; // automatically take all volumes
          }
 
          // shape with zero volume or without faces will not be observed
-         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = false;
+         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
 
          if (clone.vis) res++;
       }
@@ -2423,32 +2471,69 @@
       return res;
    }
 
-   JSROOT.GEO.ClonedNodes.prototype.GetVisibleFlags = function() {
-      // function extract only visibility flags, used to transfer them to the worker
-      var res = [];
-      for (var n=0;n<this.nodes.length;++n) {
-         var elem = { vis: this.nodes[n].vis };
-         if ('depth' in this.nodes[n]) elem.depth = this.nodes[n].depth;
-         res.push(elem);
+   /** After visibility flags is set, produce idshift for all nodes as it would be maximum level @private */
+   JSROOT.GEO.ClonedNodes.prototype.ProduceIdShits = function() {
+      for (var k=0;k<this.nodes.length;++k)
+         this.nodes[k].idshift = -1;
+
+      function scan_func(nodes, node) {
+         if (node.idshift < 0) {
+            node.idshift = 0;
+            if (node.chlds)
+               for(var k = 0; k<node.chlds.length; ++k)
+                  node.idshift += scan_func(nodes, nodes[node.chlds[k]]);
+         }
+
+         return node.idshift + 1;
       }
+
+      scan_func(this.nodes, this.nodes[0]);
+   }
+
+   /** Extract only visibility flags, used to transfer them to the worker @private */
+   JSROOT.GEO.ClonedNodes.prototype.GetVisibleFlags = function() {
+      var res = new Array(this.nodes.length);
+      for (var n=0;n<this.nodes.length;++n)
+         res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
       return res;
    }
 
+   /** Assign only visibility flags, extracted with GetVisibleFlags @private */
+   JSROOT.GEO.ClonedNodes.prototype.SetVisibleFlags = function(flags) {
+      if (!this.nodes || !flags || !flags.length != this.nodes.length)
+         return 0;
+
+      var res = 0;
+      for (var n=0;n<this.nodes.length;++n) {
+         var clone = this.nodes[n];
+
+         clone.vis = flags[n].vis;
+         clone.nochlds = flags[n].nochlds;
+         if (clone.vis) res++;
+      }
+
+      return res;
+   }
+
+   /** Scan visible nodes in hierarchy, starting from nodeid
+     * Each entry in hierarchy get its unique id, which is not changed with visibility flags
+     * @private */
    JSROOT.GEO.ClonedNodes.prototype.ScanVisible = function(arg, vislvl) {
-      // Scan visible nodes in hierarchy, starting from nodeid
-      // Each entry in hierarchy get its unique id, which is not changed with visibility flags
 
       if (!this.nodes) return 0;
 
       if (vislvl === undefined) {
-         vislvl = 99999;
          if (!arg) arg = {};
+
+         vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
+         if (vislvl > 88) vislvl = 88;
+
          arg.stack = new Array(100); // current stack
          arg.nodeid = 0;
          arg.counter = 0; // sequence ID of the node, used to identify it later
          arg.last = 0;
          arg.CopyStack = function(factor) {
-            var entry = { nodeid: this.nodeid, seqid: this.counter, stack: (this.last>10) ? new Int32Array(this.last) : new Array(this.last) };
+            var entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
             if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
             for (var n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
@@ -2476,33 +2561,24 @@
          }
       }
 
-      if (node.vis && (vislvl>=0)) {
+      if (node.nochlds) vislvl = 0;
+
+      if (node.vis > vislvl) {
          if (!arg.func || arg.func(node)) res++;
       }
 
       arg.counter++;
 
-      if ((node.depth !== undefined) && (vislvl > node.depth)) vislvl = node.depth;
-
-      //if (arg.last > arg.stack.length - 2)
-      //   throw 'ScanVisible: stack capacity ' + arg.stack.length + ' is not enough';
-
-      if (node.chlds && (node.numvischld > 0)) {
-         var currid = arg.counter, numvischld = 0;
+      if ((vislvl > 0) && node.chlds) {
          arg.last++;
          for (var i = 0; i < node.chlds.length; ++i) {
             arg.nodeid = node.chlds[i];
             arg.stack[arg.last] = i; // in the stack one store index of child, it is path in the hierarchy
-            numvischld += this.ScanVisible(arg, vislvl-1);
+            res += this.ScanVisible(arg, vislvl-1);
          }
          arg.last--;
-         res += numvischld;
-         if (numvischld === 0) {
-            node.numvischld = 0;
-            node.idshift = arg.counter - currid;
-         }
       } else {
-         arg.counter += node.idshift;
+         arg.counter += (node.idshift || 0);
       }
 
       if (arg.last === 0) {
@@ -2649,6 +2725,38 @@
       return stack;
    }
 
+   /** @brief Set usage of default ROOT colors */
+   JSROOT.GEO.ClonedNodes.prototype.SetDefaultColors = function(on) {
+      this.use_dflt_colors = on;
+      if (this.use_dflt_colors && !this.dflt_table) {
+
+         var dflt = { kWhite:0,  kBlack:1, kGray:920,
+               kRed:632, kGreen:416, kBlue:600, kYellow:400, kMagenta:616, kCyan:432,
+               kOrange:800, kSpring:820, kTeal:840, kAzure:860, kViolet:880, kPink:900 };
+
+         var nmax = 110, col = [];
+         for (var i=0;i<nmax;i++) col.push(dflt.kGray);
+
+         //  here we should create a new TColor with the same rgb as in the default
+         //  ROOT colors used below
+         col[ 3] = dflt.kYellow-10;
+         col[ 4] = col[ 5] = dflt.kGreen-10;
+         col[ 6] = col[ 7] = dflt.kBlue-7;
+         col[ 8] = col[ 9] = dflt.kMagenta-3;
+         col[10] = col[11] = dflt.kRed-10;
+         col[12] = dflt.kGray+1;
+         col[13] = dflt.kBlue-10;
+         col[14] = dflt.kOrange+7;
+         col[16] = dflt.kYellow+1;
+         col[20] = dflt.kYellow-10;
+         col[24] = col[25] = col[26] = dflt.kBlue-8;
+         col[29] = dflt.kOrange+9;
+         col[79] = dflt.kOrange-2;
+
+         this.dflt_table = col;
+      }
+   }
+
    /** @brief Provide different properties of draw entry nodeid
     * @desc Only if node visible, material will be created*/
    JSROOT.GEO.ClonedNodes.prototype.getDrawEntryProperties = function(entry) {
@@ -2705,6 +2813,7 @@
       if (volume) prop.linewidth = volume.fLineWidth;
 
       if (visible) {
+
          var _opacity = 1.0;
          if (entry.custom_color)
             prop.fillcolor = entry.custom_color;
@@ -2714,12 +2823,21 @@
             prop.fillcolor = JSROOT.Painter.root_colors[volume.fLineColor];
 
          if (volume.fMedium && volume.fMedium.fMaterial) {
-            var fillstyle = volume.fMedium.fMaterial.fFillStyle,
+            var mat = volume.fMedium.fMaterial,
+                fillstyle = mat.fFillStyle,
                 transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
+
+            if (this.use_dflt_colors) {
+               var matZ = Math.round(mat.fZ),
+                   icol = this.dflt_table[matZ];
+               prop.fillcolor = JSROOT.Painter.root_colors[icol];
+               if (mat.fDensity < 0.1) transparency = 60;
+            }
+
             if (transparency > 0)
                _opacity = (100.0 - transparency) / 100.0;
             if (prop.fillcolor === undefined)
-               prop.fillcolor = JSROOT.Painter.root_colors[volume.fMedium.fMaterial.fFillColor];
+               prop.fillcolor = JSROOT.Painter.root_colors[mat.fFillColor];
          }
          if (prop.fillcolor === undefined)
             prop.fillcolor = "lightgrey";
@@ -2735,10 +2853,11 @@
       return prop;
    }
 
+   /** Creates hierarchy of Object3D for given stack entry
+     * such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
+     * also set renderOrder, required to handle transparency
+     * @private */
    JSROOT.GEO.ClonedNodes.prototype.CreateObject3D = function(stack, toplevel, options) {
-      // create hierarchy of Object3D for given stack entry
-      // such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
-      // also set renderOrder, required to handle transparency
 
       var node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
           force = (typeof options == 'object') || (options==='force');
@@ -2855,30 +2974,48 @@
 
    /** @brief Collects visible nodes, using maxlimit
      * @desc One can use map to define cut based on the volume or serious of cuts */
-   JSROOT.GEO.ClonedNodes.prototype.CollectVisibles = function(maxnumfaces, frustum, maxnumnodes) {
+   JSROOT.GEO.ClonedNodes.prototype.CollectVisibles = function(maxnumfaces, frustum) {
 
       // in simple case shape as it is
       if (this.plain_shape)
          return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
 
-      if (!maxnumnodes) maxnumnodes = maxnumfaces/100;
-
       var arg = {
          facecnt: 0,
-         viscnt: new Int32Array(this.nodes.length), // counter for each node
+         viscnt: new Array(this.nodes.length), // counter for each node
+         vislvl: this.GetVisLevel(),
+         reset: function() {
+            this.total = 0;
+            this.facecnt = 0;
+            for (var n=0;n<this.viscnt.length;++n) this.viscnt[n] = 0;
+         },
          // nodes: this.nodes,
          func: function(node) {
+            this.total++;
             this.facecnt += node.nfaces;
             this.viscnt[node.id]++;
             return true;
          }
       };
 
-      for (var n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
+      arg.reset();
 
-      var total = this.ScanVisible(arg), minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+      var total = this.ScanVisible(arg),
+          maxnumnodes = this.GetMaxVisNodes();
 
-      // console.log('Total visible nodes ' + total + ' numfaces ' + arg.facecnt);
+      if (maxnumnodes > 0) {
+         while ((total > maxnumnodes) && (arg.vislvl > 1)) {
+            arg.vislvl--;
+            arg.reset();
+            total = this.ScanVisible(arg);
+         }
+      }
+
+      this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
+
+      var minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+
+      console.log('Total visible nodes ' + total + ' numfaces ' + arg.facecnt);
 
       if (arg.facecnt > maxnumfaces) {
 
@@ -3099,6 +3236,8 @@
       return res;
    }
 
+   /// =====================================================================
+
    JSROOT.GEO.ObjectName = function(obj) {
       if (!obj || !obj.fName) return "";
       return obj.fName + (obj.$geo_suffix ? obj.$geo_suffix : "");
@@ -3127,9 +3266,9 @@
       }
    }
 
+   /** When transformation matrix includes one or several inversion of axis,
+     * one should inverse geometry object, otherwise THREE.js cannot correctly draw it, @private */
    JSROOT.GEO.createFlippedMesh = function(parent, shape, material) {
-      // when transformation matrix includes one or several inversion of axis,
-      // one should inverse geometry object, otherwise THREE.js cannot correctly draw it
 
       var flip =  new THREE.Vector3(1,1,-1);
 
@@ -3138,9 +3277,8 @@
          if (shape.geom.type == 'BufferGeometry') {
 
             var pos = shape.geom.getAttribute('position').array,
-                norm = shape.geom.getAttribute('normal').array;
-
-            var index = shape.geom.getIndex();
+                norm = shape.geom.getAttribute('normal').array,
+                index = shape.geom.getIndex();
 
             if (index) {
                // we need to unfold all points to
@@ -3262,8 +3400,9 @@
                      setdefaults(chld);
                   }
                }
-            } else
-            if ((obj.$jsroot_depth===undefined) || (obj.$jsroot_depth < lvl)) traverse(chld, lvl, arr);
+            } else if ((obj.$jsroot_depth===undefined) || (obj.$jsroot_depth < lvl)) {
+               traverse(chld, lvl, arr);
+            }
          }
       }
 
@@ -3271,12 +3410,11 @@
          // resort meshes using ray caster and camera position
          // idea to identify meshes which are in front or behind
 
-         if (arr.length>300) {
+         if (arr.length > 300) {
             // too many of them, just set basic level and exit
             for (var i=0;i<arr.length;++i) arr[i].renderOrder = (minorder + maxorder)/2;
             return false;
          }
-
 
          var tmp_vect = new THREE.Vector3();
 
@@ -3422,6 +3560,13 @@
          process(toplevel, 0, 1, 1000000);
    }
 
+   /** @brief Build three.js model for given geometry object.
+    * @desc Following options can be provided:
+    * opt.vislevel - visibility level like TGeoManager::
+    * opt.numnodes - maximal number of visible nodes
+    * opt.numfaces - approx maximal number of created triangles
+    * opt.dflt_colors - use default ROOT colors
+    */
    JSROOT.GEO.build = function(obj, opt, call_back) {
       // function can be used to build three.js model for TGeo object
 
@@ -3430,6 +3575,7 @@
       if (!opt) opt = {};
       if (!opt.numfaces) opt.numfaces = 100000;
       if (!opt.numnodes) opt.numnodes = 1000;
+      if (!opt.frustum) opt.frustum = null;
 
       opt.res_mesh = opt.res_faces = 0;
 
@@ -3464,17 +3610,22 @@
          obj = { _typename:"TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
       var clones = new JSROOT.GEO.ClonedNodes(obj);
+      clones.SetVisLevel(opt.vislevel);
+      clones.SetMaxVisNodes(opt.numnodes);
+
+      if (opt.dflt_colors)
+         clones.SetDefaultColors(true);
 
       var uniquevis = opt.no_screen ? 0 : clones.MarkVisibles(true);
       if (uniquevis <= 0)
-         uniquevis = clones.MarkVisibles(false, false, null, hide_top);
+         uniquevis = clones.MarkVisibles(false, false, hide_top);
       else
-         uniquevis = clones.MarkVisibles(true, true); // copy bits once and use normal visibility bits
+         uniquevis = clones.MarkVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
 
-      var frustum = null;
+      clones.ProduceIdShits();
 
       // collect visible nodes
-      var res = clones.CollectVisibles(opt.numfaces, frustum, opt.numnodes);
+      var res = clones.CollectVisibles(opt.numfaces, opt.frustum);
 
       var draw_nodes = res.lst;
 
@@ -3535,16 +3686,15 @@
       return toplevel;
    }
 
-   JSROOT.GEO.getBoundingBox = function(node, box3) {
+   /**  extract code of Box3.expandByObject
+     * Major difference - do not traverse hierarchy */
 
-      // extract code of Box3.expandByObject
-      // Major difference - do not traverse hierarchy
-
+   JSROOT.GEO.getBoundingBox = function(node, box3, local_coordinates) {
       if (!node || !node.geometry) return box3;
 
       if (!box3) { box3 = new THREE.Box3(); box3.makeEmpty(); }
 
-      node.updateMatrixWorld();
+      if (!local_coordinates) node.updateMatrixWorld();
 
       var v1 = new THREE.Vector3(),
           geometry = node.geometry;
@@ -3553,7 +3703,7 @@
          var vertices = geometry.vertices;
          for (var i = 0, l = vertices.length; i < l; i ++ ) {
             v1.copy( vertices[ i ] );
-            v1.applyMatrix4( node.matrixWorld );
+            if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
             box3.expandByPoint( v1 );
          }
       } else if ( geometry.isBufferGeometry ) {
@@ -3561,7 +3711,8 @@
          if ( attribute !== undefined ) {
             for (var i = 0, l = attribute.count; i < l; i ++ ) {
                // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
-               v1.fromBufferAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+               v1.fromBufferAttribute( attribute, i );
+               if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
                box3.expandByPoint( v1 );
             }
          }

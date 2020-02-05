@@ -207,10 +207,42 @@ namespace {
          if ( object != 0 )
             return BindCppObject( object, object->IsA()->GetName() );
 
-      // 5th attempt: global enum (pretend int, TODO: is fine for C++98, not in C++11)
-         if ( Cppyy::IsEnum( name ) ) {
-            Py_INCREF( &PyInt_Type );
-            return (PyObject*)&PyInt_Type;
+      // 5th attempt: global enum
+         if (Cppyy::IsEnum(name)) {
+            // enum types (incl. named and class enums)
+            Cppyy::TCppEnum_t enumtype = Cppyy::GetEnum(Cppyy::gGlobalScope, name);
+            if (enumtype) {
+               // collect the enum values
+               Cppyy::TCppIndex_t ndata = Cppyy::GetNumEnumData(enumtype);
+               PyObject* dct = PyDict_New();
+               for (Cppyy::TCppIndex_t idata = 0; idata < ndata; ++idata) {
+                  PyObject* val = PyLong_FromLongLong(Cppyy::GetEnumDataValue(enumtype, idata));
+                  PyDict_SetItemString(dct, Cppyy::GetEnumDataName(enumtype, idata).c_str(), val);
+                  Py_DECREF(val);
+               }
+
+               // add the __cppname__ for templates
+               PyObject* cppnamepy = PyROOT_PyUnicode_FromString(cname);
+               PyDict_SetItem(dct, PyStrings::gCppName, cppnamepy);
+               // add also __cpp_name__ for forward compatibility
+               PyDict_SetItem(dct, PyStrings::gCppNameNew, cppnamepy);
+               Py_DECREF(cppnamepy);
+
+               // create new type with labeled values in place
+               PyObject* pybases = PyTuple_New(1);
+               Py_INCREF(&PyInt_Type);
+               PyTuple_SET_ITEM(pybases, 0, (PyObject*)&PyInt_Type);
+               PyObject* argsnt = Py_BuildValue((char*)"sOO", name.c_str(), pybases, dct);
+               attr = Py_TYPE(&PyInt_Type)->tp_new(Py_TYPE(&PyInt_Type), argsnt, nullptr);
+               Py_DECREF(argsnt);
+               Py_DECREF(pybases);
+               Py_DECREF(dct);
+            } else {
+               // presumably not a class enum; simply pretend int
+               Py_INCREF(&PyInt_Type);
+               attr = (PyObject*)&PyInt_Type;
+            }
+            return attr;
          }
 
       // 6th attempt: check macro's (debatable, but this worked in CINT)
@@ -766,13 +798,19 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "_ResetRootModule", (PyCFunction)RootModuleResetCallback,
      METH_NOARGS, (char*) "PyROOT internal function" },
+   { (char*) "ClearProxiedObjects", (PyCFunction)ClearProxiedObjects,
+     METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
    { (char*) "addressof", (PyCFunction)addressof,
      METH_VARARGS, (char*) "Retrieve address of held object as a value" },
    { (char*) "AsCObject", (PyCFunction)AsCObject,
      METH_VARARGS, (char*) "Retrieve held object in a CObject" },
+   { (char*) "as_cobject", (PyCFunction)AsCObject,
+     METH_VARARGS, (char*) "Retrieve held object in a CObject" },
    { (char*) "BindObject", (PyCFunction)BindObject,
+     METH_VARARGS, (char*) "Create an object of given type, from given address" },
+   { (char*) "bind_object", (PyCFunction)BindObject,
      METH_VARARGS, (char*) "Create an object of given type, from given address" },
    { (char*) "MakeNullPointer", (PyCFunction)MakeNullPointer,
      METH_VARARGS, (char*) "Create a NULL pointer of the given type" },

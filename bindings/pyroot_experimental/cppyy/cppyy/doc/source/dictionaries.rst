@@ -23,7 +23,7 @@ residing in ``libproject.so``, the following will generate a
 ``libProjectDict.so`` reflection dictionary::
 
     $ genreflex project_header.h
-    $ g++ -std=c++11 -fPIC -rdynamic -O2 -shared `genreflex --cppflags` project_header_rflx.cpp -o libProjectDict.so -L$PROJECTHOME/lib -lproject
+    $ g++ -std=c++17 -fPIC -rdynamic -O2 -shared `genreflex --cppflags` project_header_rflx.cpp -o libProjectDict.so -L$PROJECTHOME/lib -lproject
 
 Instead of loading the header text into Cling, you can now load the
 dictionary:
@@ -58,7 +58,7 @@ The ``genreflex`` tool can produce rootmap files automatically.
 For example::
 
     $ genreflex project_header.h --rootmap=libProjectDict.rootmap --rootmap-lib=libProjectDict.so
-    $ g++ -std=c++11 -fPIC -rdynamic -O2 -shared `genreflex --cppflags` project_header_rflx.cpp -o libProjectDict.so -L$CPPYYHOME/lib -lCling -L$PROJECTHOME/lib -lproject
+    $ g++ -std=c++17 -fPIC -rdynamic -O2 -shared `genreflex --cppflags` project_header_rflx.cpp -o libProjectDict.so -L$CPPYYHOME/lib -lCling -L$PROJECTHOME/lib -lproject
 
 where the first option (``--rootmap``) specifies the output file name, and the
 second option (``--rootmap-lib``) the name of the reflection library.

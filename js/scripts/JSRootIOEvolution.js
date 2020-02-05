@@ -4,21 +4,16 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'rawinflate'], factory );
-   } else
-   if (typeof exports === 'object' && typeof module !== 'undefined') {
+   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
       require("./rawinflate.min.js");
-
       factory(require("./JSRootCore.js"));
    } else {
       if (typeof JSROOT == 'undefined')
          throw new Error("JSROOT I/O requires JSRootCore.js", "JSRootIOEvolution.js");
-
       if (typeof JSROOT.ZIP == 'undefined')
          throw new Error("JSROOT I/O requires rawinflate.js", "JSRootIOEvolution.js");
-
       if (typeof JSROOT.IO == "object")
          throw new Error("This JSROOT IO already loaded", "JSRootIOEvolution.js");
-
       factory(JSROOT);
    }
 } (function(JSROOT) {
@@ -976,7 +971,7 @@
             if (!sum_total) sum_total = 1;
 
             var progress_offest = sum1/sum_total, progress_this = (sum2-sum1)/sum_total;
-            xhr.addEventListener("progress", function updateProgress(oEvent) {
+            xhr.addEventListener("progress", function(oEvent) {
                if (oEvent.lengthComputable)
                   progress_callback(progress_offest + progress_this*oEvent.loaded/oEvent.total);
             });

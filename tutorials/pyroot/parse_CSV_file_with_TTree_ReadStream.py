@@ -35,6 +35,7 @@
 ## \macro_code
 ##
 ## \author Michael Marino
+from __future__ import print_function
 
 import ROOT
 import sys
@@ -83,13 +84,13 @@ def parse_CSV_file_with_TTree_ReadStream(tree_name, afile):
     branch_descriptor = ':'.join([header_mapping_dictionary[row][0]+'/'+
                            type_mapping_dictionary[header_mapping_dictionary[row][1]]
                            for row in header_row])
-    #print branch_descriptor
+    #print(branch_descriptor)
 
     # Handling the input and output names.  Using the same
     # base name for the ROOT output file.
     output_ROOT_file_name  = os.path.splitext(afile)[0] + '.root'
     output_file            = ROOT.TFile(output_ROOT_file_name, 'recreate')
-    print "Outputting %s -> %s" % (afile, output_ROOT_file_name)
+    print("Outputting %s -> %s" % (afile, output_ROOT_file_name))
 
     output_tree            = ROOT.TTree(tree_name, tree_name)
     file_lines             = open(afile).readlines()
@@ -107,7 +108,7 @@ def parse_CSV_file_with_TTree_ReadStream(tree_name, afile):
     # Removing NaN, setting these entries to 0.0.
     # Also joining the list of strings into one large string.
     file_as_string = ('\n'.join(file_lines)).replace('NaN', str(0.0))
-    #print file_as_string
+    #print(file_as_string)
 
     # creating an istringstream to pass into ReadStream
     istring        = ROOT.istringstream(file_as_string)
@@ -121,7 +122,7 @@ def parse_CSV_file_with_TTree_ReadStream(tree_name, afile):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print "Usage: %s file_to_parse.dat" % sys.argv[0]
+        print("Usage: %s file_to_parse.dat" % sys.argv[0])
         sys.exit(1)
     parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
 

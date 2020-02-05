@@ -242,7 +242,7 @@ public:
    inline void RotateZ(Double_t angle);
    // Rotate the spatial component around the z-axis.
 
-   inline void RotateUz(TVector3 & newUzVector);
+   inline void RotateUz(const TVector3 & newUzVector);
    // Rotates the reference frame from Uz to newUz (unit vector).
 
    inline void Rotate(Double_t, const TVector3 &);
@@ -568,7 +568,7 @@ inline void TLorentzVector::RotateZ(Double_t angle) {
    fP.RotateZ(angle);
 }
 
-inline void TLorentzVector::RotateUz(TVector3 &newUzVector) {
+inline void TLorentzVector::RotateUz(const TVector3 &newUzVector) {
    fP.RotateUz(newUzVector);
 }
 

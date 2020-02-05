@@ -98,6 +98,7 @@ class Container {
 #include <locale.h>
 #include <cmath>
 #include <memory>
+#include <cstdlib>
 
 #include <ROOT/RMakeUnique.hxx>
 
@@ -1425,7 +1426,38 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    } else if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
       // here make STL container processing
 
-      if (stack->fValues.empty()) {
+      if (map_convert == 2) {
+         // converting map into object
+
+         if (!stack->fValues.empty() && (fValue.Length() > 0))
+            stack->PushValue(fValue);
+
+         const char *separ = (fCompact < 2) ? ", " : ",";
+         const char *semi = (fCompact < 2) ? ": " : ":";
+         bool first = true;
+
+         fValue = "{";
+         if (fTypeNameTag.Length() > 0) {
+            fValue.Append("\"");
+            fValue.Append(fTypeNameTag);
+            fValue.Append("\"");
+            fValue.Append(semi);
+            fValue.Append("\"");
+            fValue.Append(cl->GetName());
+            fValue.Append("\"");
+            first = false;
+         }
+         for (Int_t k = 1; k < (int)stack->fValues.size() - 1; k += 2) {
+            if (!first)
+               fValue.Append(separ);
+            first = false;
+            fValue.Append(stack->fValues[k].c_str());
+            fValue.Append(semi);
+            fValue.Append(stack->fValues[k + 1].c_str());
+         }
+         fValue.Append("}");
+         stack->fValues.clear();
+      } else if (stack->fValues.empty()) {
          // empty container
          if (fValue != "0")
             Error("JsonWriteObject", "With empty stack fValue!=0");
@@ -1434,7 +1466,19 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
          auto size = std::stoi(stack->fValues[0]);
 
-         if ((stack->fValues.size() == 1) && ((size > 1) || (fValue.Index("[") == 0))) {
+         bool trivial_format = false;
+
+         if ((stack->fValues.size() == 1) && ((size > 1) || ((fValue.Length() > 1) && (fValue[0]=='[')))) {
+            // prevent case of vector<vector<value_class>>
+            const auto proxy = cl->GetCollectionProxy();
+            TClass *value_class = proxy ? proxy->GetValueClass() : nullptr;
+            if (value_class && TClassEdit::IsStdClass(value_class->GetName()) && (value_class->GetCollectionType() != ROOT::kNotSTL))
+               trivial_format = false;
+            else
+               trivial_format = true;
+         }
+
+         if (trivial_format) {
             // case of simple vector, array already in the value
             stack->fValues.clear();
             if (fValue.Length() == 0) {
@@ -1442,36 +1486,6 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                fValue = "[]";
             }
 
-         } else if (map_convert == 2) {
-            // converting map into object
-            if (fValue.Length() > 0)
-               stack->PushValue(fValue);
-
-            const char *separ = (fCompact < 2) ? ", " : ",";
-            const char *semi = (fCompact < 2) ? ": " : ":";
-            bool first = true;
-
-            fValue = "{";
-            if (fTypeNameTag.Length() > 0) {
-               fValue.Append("\"");
-               fValue.Append(fTypeNameTag);
-               fValue.Append("\"");
-               fValue.Append(semi);
-               fValue.Append("\"");
-               fValue.Append(cl->GetName());
-               fValue.Append("\"");
-               first = false;
-            }
-            for (Int_t k = 1; k < (int) stack->fValues.size() - 1; k += 2) {
-               if (!first)
-                  fValue.Append(separ);
-               first = false;
-               fValue.Append(stack->fValues[k].c_str());
-               fValue.Append(semi);
-               fValue.Append(stack->fValues[k + 1].c_str());
-            }
-            fValue.Append("}");
-            stack->fValues.clear();
          } else {
             const char *separ = "[";
 
@@ -1944,6 +1958,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    return obj;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Read TObject data members from JSON.
+/// Do not call TObject::Streamer() to avoid special tweaking of TBufferJSON interface
+
 void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 {
    nlohmann::json *json = node ? (nlohmann::json *)node : Stack()->fNode;
@@ -1953,12 +1971,14 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
    // UInt32_t pid = json->at("fPID").get<unsigned>(); // ignore PID for the moment
 
    tobj->SetUniqueID(uid);
-   // there is no method to set all bits directly - do it one by one
-   for (unsigned n = 0; n < 32; n++)
-      tobj->SetBit(BIT(n), (bits & BIT(n)) != 0);
 
-   if (gDebug > 2)
-      Info("JsonReadTObjectMembers", "Reading TObject part bits %u kMustCleanup %d", bits, tobj->TestBit(kMustCleanup));
+   static auto tobj_fbits_offset = TObject::Class()->GetDataMemberOffset("fBits");
+
+   // there is no method to set all bits directly - do it differently
+   if (tobj_fbits_offset > 0) {
+      UInt_t *fbits = (UInt_t *) ((char* ) tobj + tobj_fbits_offset);
+      *fbits = (*fbits & (TObject::kIsOnHeap | TObject::kNotDeleted)) | bits;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2370,7 +2390,8 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_
          AppendOutput(stack->fValues[0].c_str());
          AppendOutput(stack->NextMemberSeparator(), "\"fBits\"");
          AppendOutput(fSemicolon.Data());
-         AppendOutput((stack->fValues.size() > 1) ? stack->fValues[1].c_str() : fValue.Data());
+         auto tbits = std::atol((stack->fValues.size() > 1) ? stack->fValues[1].c_str() : fValue.Data());
+         AppendOutput(std::to_string(tbits & ~TObject::kNotDeleted & ~TObject::kIsOnHeap).c_str());
          if (cnt == 3) {
             AppendOutput(stack->NextMemberSeparator(), "\"fPID\"");
             AppendOutput(fSemicolon.Data());
@@ -3008,6 +3029,8 @@ R__ALWAYS_INLINE void TBufferJSON::JsonWriteArrayCompress(const T *vname, Int_t 
          JsonWriteBasic(vname[indx]);
       }
       fValue.Append("]");
+   } else if (is_base64 && !arrsize) {
+      fValue.Append("[]");
    } else {
       fValue.Append("{");
       fValue.Append(TString::Format("\"$arr\":\"%s\"%s\"len\":%d", typname, fArraySepar.Data(), arrsize));

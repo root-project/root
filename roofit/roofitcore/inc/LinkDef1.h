@@ -24,6 +24,13 @@
   code="{ _clientListShape = RooFit::STLRefCountListHelpers::convert(onfile._clientListShape); }"
 #pragma link C++ class RooAbsBinning- ;
 #pragma link C++ class RooAbsCategory+ ;
+#pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[1]" \
+  source="TObjArray _types" target="_types" \
+  code="{TObject* obj; TIterator* it = onfile._types.MakeIterator();\
+         while ((obj=it->Next())) {\
+           auto cat = dynamic_cast<const RooCatType*>(obj); assert(cat);\
+           _types.push_back(new RooCatType(*cat)); }\
+         delete it; }";
 #pragma link C++ class RooAbsCategoryLValue+ ;
 #pragma link C++ class RooAbsCollection+ ;
 #pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[1]" source="" target="_allRRV" code="{ _allRRV=kFALSE ; }"
@@ -47,7 +54,6 @@
 #pragma link C++ class RooAbsRootFinder+ ;
 #pragma link C++ class RooAbsString+ ;
 #pragma link C++ class RooAcceptReject+ ;
-#pragma link C++ class RooAdaptiveGaussKronrodIntegrator1D+ ;
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
 #pragma link C++ class RooAddModel+ ;
@@ -83,6 +89,7 @@
 #pragma link C++ class RooEffProd+ ;
 #pragma link C++ class RooExtendPdf+ ;
 #pragma link off class RooErrorHandler+ ;
+#pragma link C++ class RooWrapperPdf+;
 #endif
  
 

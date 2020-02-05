@@ -66,7 +66,7 @@ enum MsgLevel { DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5 } ;
 /// Topics for a RooMsgService::StreamConfig in RooMsgService
 enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32, 
 	 Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048, 
-	 Contents=4096, DataHandling=8192, NumIntegration=16384 } ;
+	 Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15 } ;
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 // RooAbsReal::plotOn arguments
@@ -91,7 +91,7 @@ RooCmdArg FillColor(Color_t color) ;
 RooCmdArg FillStyle(Style_t style) ;
 RooCmdArg ProjectionRange(const char* rangeName) ;
 RooCmdArg Name(const char* name) ;
-RooCmdArg Invisible() ;
+RooCmdArg Invisible(bool inv=true) ;
 RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
 RooCmdArg EvalErrorValue(Double_t value) ;
 RooCmdArg MoveToBack()  ;
@@ -143,10 +143,11 @@ RooCmdArg StoreError(const RooArgSet& aset) ;
 RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
 RooCmdArg OwnLinked() ;
 
-// RooChi2Var::ctor arguments
+// RooChi2Var::ctor / RooNLLVar arguments
 RooCmdArg Extended(Bool_t flag=kTRUE) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
+RooCmdArg BatchMode(bool flag=true);
 
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
@@ -201,6 +202,7 @@ RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
 RooCmdArg EvalErrorWall(Bool_t flag) ;
 RooCmdArg SumW2Error(Bool_t flag) ;
+RooCmdArg AsymptoticError(Bool_t flag) ;
 RooCmdArg CloneData(Bool_t flag) ;
 RooCmdArg Integrate(Bool_t flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=0) ;

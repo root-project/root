@@ -172,7 +172,34 @@ void DiagnosticsEngine::DiagStateMap::append(SourceManager &SrcMgr,
        Offset = F->ParentOffset, F = F->Parent) {
     F->HasLocalTransitions = true;
     auto &Last = F->StateTransitions.back();
-    assert(Last.Offset <= Offset && "state transitions added out of order");
+    if (Last.Offset > Offset) {
+      // Deal with a state change induced by recursive parsing.
+      // When the first parsing is suspended and a (recursive) parsing is
+      // started, a state change during that 2nd parsing will be associated (in
+      // the upper/outer file) with a newer line (so for that upper/outer file,
+      // the 2nd parsing correspond to a larger offset than the offset
+      // associated with the inclusion of the files processed by the 1st
+      // parsing).
+      // After the end of the recursive parsing, we go back to the
+      // first parsing and any state change will be reported as being done 'earlier'
+      // and was triggering the following assert:
+      //   assert(Last.Offset <= Offset && "state transitions added out of order");
+      auto OnePastIt = std::upper_bound(
+        F->StateTransitions.begin(), F->StateTransitions.end(), Offset,
+        [](unsigned Offset, const DiagStatePoint &P) {
+          return Offset < P.Offset;
+        });
+      if (OnePastIt == F->StateTransitions.begin() || (OnePastIt[-1].Offset != Offset)) {
+        F->StateTransitions.insert( OnePastIt, {State, Offset});
+      } else {
+        auto &Prev = OnePastIt[-1];
+        if (Prev.State == State)
+          break;
+        Prev.State = State;
+        continue;
+      }
+      continue;
+    }
 
     if (Last.Offset == Offset) {
       if (Last.State == State)

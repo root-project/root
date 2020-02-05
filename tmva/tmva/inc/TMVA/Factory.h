@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne, Jan Therhaag
 // Updated by: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer
 
@@ -76,7 +76,7 @@ namespace TMVA {
    class DataLoader;
    class ROCCurve;
    class VariableTransformBase;
-   
+
 
    class Factory : public Configurable {
       friend class CrossValidation;
@@ -94,16 +94,17 @@ namespace TMVA {
       // default destructor
       virtual ~Factory();
 
-      virtual const char*  GetName() const { return "Factory"; }
+      // use TName::GetName and define correct name in constructor
+      //virtual const char*  GetName() const { return "Factory"; }
 
 
       MethodBase* BookMethod( DataLoader *loader, TString theMethodName, TString methodTitle, TString theOption = "" );
       MethodBase* BookMethod( DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
-      MethodBase* BookMethod( DataLoader *, TMVA::Types::EMVA /*theMethod*/, 
-                              TString /*methodTitle*/, 
-                              TString /*methodOption*/, 
-                              TMVA::Types::EMVA /*theComposite*/, 
-                              TString /*compositeOption = ""*/ ) { return 0; } 
+      MethodBase* BookMethod( DataLoader *, TMVA::Types::EMVA /*theMethod*/,
+                              TString /*methodTitle*/,
+                              TString /*methodOption*/,
+                              TMVA::Types::EMVA /*theComposite*/,
+                              TString /*compositeOption = ""*/ ) { return 0; }
 
       // optimize all booked methods (well, if desired by the method)
       std::map<TString,Double_t> OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");
@@ -120,8 +121,8 @@ namespace TMVA {
 
       // performance evaluation
       void EvaluateAllMethods( void );
-      void EvaluateAllVariables(DataLoader *loader, TString options = "" ); 
-  
+      void EvaluateAllVariables(DataLoader *loader, TString options = "" );
+
       TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
       // delete all methods and reset the method vector
@@ -134,22 +135,22 @@ namespace TMVA {
       Bool_t Verbose( void ) const { return fVerbose; }
       void SetVerbose( Bool_t v=kTRUE );
 
-      // make ROOT-independent C++ class for classifier response 
+      // make ROOT-independent C++ class for classifier response
       // (classifier-specific implementation)
-      // If no classifier name is given, help messages for all booked 
+      // If no classifier name is given, help messages for all booked
       // classifiers are printed
       virtual void MakeClass(const TString& datasetname , const TString& methodTitle = "" ) const;
 
-      // prints classifier-specific hepl messages, dedicated to 
+      // prints classifier-specific hepl messages, dedicated to
       // help with the optimisation and configuration options tuning.
-      // If no classifier name is given, help messages for all booked 
+      // If no classifier name is given, help messages for all booked
       // classifiers are printed
       void PrintHelpMessage(const TString& datasetname , const TString& methodTitle = "" ) const;
 
       TDirectory* RootBaseDir() { return (TDirectory*)fgTargetFile; }
 
-      Bool_t IsSilentFile();
-      Bool_t IsModelPersistence();
+      Bool_t IsSilentFile() const { return fSilentFile;}
+      Bool_t IsModelPersistence() const { return fModelPersistence; }
 
       Double_t GetROCIntegral(DataLoader *loader, TString theMethodName, UInt_t iClass = 0);
       Double_t GetROCIntegral(TString datasetname, TString theMethodName, UInt_t iClass = 0);
@@ -163,7 +164,7 @@ namespace TMVA {
       // Methods to get a TMultiGraph for a given class and all methods in dataset.
       TMultiGraph* GetROCCurveAsMultiGraph(DataLoader *loader, UInt_t iClass);
       TMultiGraph* GetROCCurveAsMultiGraph(TString datasetname, UInt_t iClass);
-      
+
       // Draw all ROC curves of a given class for all methods in the dataset.
       TCanvas* GetROCCurve(DataLoader *loader, UInt_t iClass=0);
       TCanvas* GetROCCurve(TString datasetname, UInt_t iClass=0);
@@ -172,14 +173,14 @@ namespace TMVA {
 
       // the beautiful greeting message
       void Greetings();
-      
+
       //evaluate the simple case that is removing 1 variable at time
       TH1F* EvaluateImportanceShort( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       //evaluate all variables combinations
       TH1F* EvaluateImportanceAll( DataLoader *loader,Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
       //evaluate randomly given a number of seeds
       TH1F* EvaluateImportanceRandom( DataLoader *loader,UInt_t nseeds, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
-      
+
       TH1F* GetImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
 
       // Helpers for public facing ROC methods
@@ -210,14 +211,14 @@ namespace TMVA {
       TString                                   fVerboseLevel;    //! verbosity level, controls granularity of logging
       Bool_t                                    fCorrelations;    //! enable to calculate corelations
       Bool_t                                    fROC;             //! enable to calculate ROC values
-      Bool_t                                    fSilentFile;      //! used in contructor wihtout file 
+      Bool_t                                    fSilentFile;      //! used in contructor wihtout file
 
       TString                                   fJobName;         //! jobname, used as extension in weight file names
 
       Types::EAnalysisType                      fAnalysisType;    //! the training type
       Bool_t                                    fModelPersistence;//! option to save the trained model in xml file or using serialization
-      
-      
+
+
    protected:
 
       ClassDef(Factory,0);  // The factory creates all MVA methods, and performs their training and testing
@@ -226,4 +227,3 @@ namespace TMVA {
 } // namespace TMVA
 
 #endif
-

@@ -434,7 +434,7 @@ public:
 //===========================================================================
 class UsingBase1 {                 // using declaration testing
 public:
-    UsingBase1(int n = 13) : m_int(n) {} 
+    UsingBase1(int n = 13) : m_int(n) {}
     virtual ~UsingBase1() {}
     virtual char vcheck() { return 'A'; }
     int m_int;
@@ -495,6 +495,13 @@ class Printable4 { /* empty */ };
 std::ostream& operator<<(std::ostream& os, const Cpp2PyPrinting::Printable3&);
 std::ostream& operator<<(std::ostream& os, const Printable4&);
 
+template <typename T>
+class PrintableBase1 {};
+class Printable5 : public PrintableBase1<int> {};
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const PrintableBase1<T>& y) { return os << "Ok."; }
+
 
 //===========================================================================
 namespace UsedSpace1 {             // for using directives testing
@@ -514,4 +521,3 @@ namespace UserDirs {
     using namespace UsedSpace2;
     using namespace UsedSpace1::inner;
 }
-

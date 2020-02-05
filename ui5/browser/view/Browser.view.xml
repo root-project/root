@@ -3,74 +3,107 @@
           xmlns="sap.m"
           xmlns:mvc="sap.ui.core.mvc"
           xmlns:t="sap.ui.table"
+          xmlns:core="sap.ui.core"
           xmlns:l="sap.ui.layout"
-          xmlns:u="sap.ui.unified"
-          xmlns:e="sap.ui.codeeditor">
-   <Page title="" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
-      <!-- headerContent>
-      </headerContent-->
-      <!-- subHeader>
-      </subHeader-->
-      <content>
-        <l:Splitter id="mainSplitter">
-          <l:Splitter orientation="Vertical">
-            <l:layoutData><l:SplitterLayoutData size="310px" resizable="true"/></l:layoutData>
-            <Toolbar>
-               <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
-               <Button icon="sap-icon://synchronize" type="Transparent"
-                    tooltip="Refresh" press="onRealoadPress"/>
-               <Button icon="sap-icon://log" type="Transparent"
-                    tooltip="Quit ROOT session" press="onQuitRootPress"/>
-               <ToolbarSpacer/>
-               <SearchField liveChange="onSearch"/>
-            </Toolbar>
-            <t:TreeTable
-              id="treeTable"
-              columnHeaderVisible="true"
-              editable="false"
-              enableSelectAll="false"
-              selectionBehavior="RowOnly"
-              selectionMode="Single"
-              visibleRowCountMode="Auto"
-              showColumnVisibilityMenu="true"
-              rows="{/nodes}">
-            </t:TreeTable>
-          </l:Splitter>
-          <!-- here place for Geom drawing, custom controller append in initializer -->
-          <!--l:Splitter orientation="Vertical"-->
-            <TabContainer id="myTabContainer"
-              showAddNewButton="true"
-              addNewButtonPress="addNewButtonPressHandler"
-              itemClose="tabCloseHandler">
-              <items >
-                <TabContainerItem name="Editor" icon="sap-icon://write-new-document" additionalText="Code Editor" >
-                  <content>
-                    <l:Splitter orientation="Vertical">
-                    <Toolbar>
-                      <layoutData><l:SplitterLayoutData size="35px" resizable="false"/></layoutData>
-                      <u:FileUploader change="onChangeFile"/>
-                    </Toolbar>
-                    <e:CodeEditor
-                      id="aCodeEditor"
-                      height="100%"
-                      colorTheme="default"
-                      type="c_cpp"
-                      value="{/code}" />
-                  </l:Splitter>
-                  </content>
-                </TabContainerItem>
-                <TabContainerItem name="Canvas" icon="sap-icon://column-chart-dual-axis" additionalText="ROOT Canvas" >
-                  <content>
-                        
-                  </content>
-                </TabContainerItem>
-              </items>
-            </TabContainer>
-          <!--/l:Splitter-->
-        </l:Splitter>
-      </content>
-    </Page>
+          xmlns:tnt="sap.tnt">
+
+  <Page showSubHeader="false" showHeader="false" showFooter="false">
+    <content>
+      <tnt:ToolHeader asyncMode="true" height="40px" >
+        <Button id="burgerMenu" icon="sap-icon://menu2" type="Transparent">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+        <Button id="expandMaster" icon="sap-icon://full-screen" type="Transparent" press="onExpandMaster">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+        <Button id="shrinkMaster" icon="sap-icon://exit-full-screen" type="Transparent" press="onShrinkMaster" visible="false">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+        <Image height="35px" src="rootui5sys/browser/logo.png" />
+        <Text text="ROOT 7" wrapping="false" />
+        <ToolbarSpacer>
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" minWidth="16px" />
+          </layoutData>
+        </ToolbarSpacer>
+        <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+        <Button icon="sap-icon://log" type="Transparent" tooltip="Logoff" press="onQuitRootPress">
+          <layoutData>
+            <OverflowToolbarLayoutData priority="NeverOverflow" />
+          </layoutData>
+        </Button>
+      </tnt:ToolHeader>
+
+      <ScrollContainer height="calc(100% - 40px)">
+        <SplitApp id="SplitAppBrowser" defaultTransitionNameDetail="slide" defaultTransitionNameMaster="slide">
+
+          <masterPages>
+            <Page id="masterPage" showFooter="true" navButtonPress="onNavBack" showNavButton="false">
+              <customHeader>
+                <Toolbar width="100%">
+                  <SearchField placeholder="Filter" liveChange="onSearch" />
+                  <Button icon="sap-icon://synchronize" press="onRealoadPress" tooltip="Refresh"/>
+                </Toolbar>
+              </customHeader>
+              <content>
+                <tnt:ToolHeader asyncMode="true" height="40px">
+                  <l:VerticalLayout width="100%">
+                    <l:content>
+                      <Breadcrumbs id="breadcrumbs" separatorStyle="GreaterThan"/>
+                    </l:content>
+                  </l:VerticalLayout>
+                </tnt:ToolHeader>
+
+                <ScrollContainer height="calc(100% - 40px)">
+                  <t:TreeTable
+                          id="treeTable"
+                          columnHeaderVisible="true"
+                          editable="false"
+                          enableSelectAll="false"
+                          selectionBehavior="RowOnly"
+                          selectionMode="Single"
+                          visibleRowCountMode="Auto"
+                          showColumnVisibilityMenu="true"
+                          rows="{/nodes}" >
+                    <t:layoutData>
+                      <FlexItemData growFactor="1"/>
+                    </t:layoutData>
+                  </t:TreeTable>
+                </ScrollContainer>
+              </content>
+            </Page>
+          </masterPages>
+
+          <detailPages>
+            <l:Splitter orientation="Vertical">
+              <Page title="Javascript ROOT Browser" showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+                <TabContainer id="myTabContainer" showAddNewButton="true" addNewButtonPress="addNewButtonPressHandler" itemSelect="tabSelectItem" itemClose="tabCloseHandler" />
+              </Page>
+              <Page showNavButton="false" showFooter="false" showSubHeader="false" showHeader="false">
+                <layoutData><l:SplitterLayoutData size="20%" /></layoutData>
+                <Input id="terminal-input" type="Text" placeholder="Enter command ..." submit="onTerminalSubmit" suggestionItems="{/hist}" showSuggestion="true">
+                  <suggestionItems>
+                    <core:Item text="{name}" />
+                  </suggestionItems>
+                </Input>
+                <TextArea editable="false" id="output_log" class="output_log" width="100%" height="calc(100% - 38px)"/>
+              </Page>
+            </l:Splitter>
+          </detailPages>
+
+        </SplitApp>
+      </ScrollContainer>
+    </content>
+  </Page>
+
 </mvc:View>
-
-
-
