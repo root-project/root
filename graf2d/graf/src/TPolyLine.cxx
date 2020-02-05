@@ -124,14 +124,7 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 TPolyLine& TPolyLine::operator=(const TPolyLine& pl)
 {
    if(this!=&pl) {
-      TObject::operator=(pl);
-      TAttLine::operator=(pl);
-      TAttFill::operator=(pl);
-      fN=pl.fN;
-      fLastPoint=pl.fLastPoint;
-      fX=pl.fX;
-      fY=pl.fY;
-      fOption=pl.fOption;
+      pl.Copy(*this);
    }
    return *this;
 }
@@ -166,6 +159,8 @@ void TPolyLine::Copy(TObject &obj) const
    TAttLine::Copy(((TPolyLine&)obj));
    TAttFill::Copy(((TPolyLine&)obj));
    ((TPolyLine&)obj).fN = fN;
+   delete [] ((TPolyLine&)obj).fX;
+   delete [] ((TPolyLine&)obj).fY;
    if (fN > 0) {
       ((TPolyLine&)obj).fX = new Double_t[fN];
       ((TPolyLine&)obj).fY = new Double_t[fN];
