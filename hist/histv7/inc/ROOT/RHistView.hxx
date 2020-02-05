@@ -66,7 +66,7 @@ public:
 
    void SetRange(int axis, double from, double to)
    {
-      RAxisView axisView = fHist.GetImpl()->GetAxis(axis);
+      const RAxisBase &axisView = fHist.GetImpl()->GetAxis(axis);
       fRange[axis] = axisView.FindBin(from);
       fRange[axis] = axisView.FindBin(to);
    }
