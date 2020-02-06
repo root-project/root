@@ -1658,10 +1658,15 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
                   listOfGlobals->Add(enumConstant);
                }
             }
-         } else {
-            // This enum is in a namespace. A TClass entry is bootstrapped if
-            // none exists yet and the enum is added to it
-            TClass *nsTClassEntry = TClass::GetClass(enumScope);
+         } else { // This enum is in a namespace.
+            // Do not load when checking for
+            // existence because if the namespace is forward declared (eg
+            // rootmaps) ROOT will create a TClass in kInterpreted mode and at
+            // teardown complain if the dictionary was not loaded, that is
+            // we did not called TClass::GetClass(enumScope) with autoloading on.
+            // To avoid that, a TClass entry in special mode is created and the
+            // enum is added to it.
+            TClass *nsTClassEntry = TClass::GetClass(enumScope, /*load=*/ false);
             if (!nsTClassEntry) {
                nsTClassEntry = new TClass(enumScope, 0, TClass::kNamespaceForMeta, true);
             }
