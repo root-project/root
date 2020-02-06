@@ -4,6 +4,7 @@ sap.ui.define([
    "sap/m/Button",
    "sap/m/ColorPalettePopover",
    "sap/m/StandardTreeItem",
+   "sap/m/CustomTreeItem",
    "sap/m/Input",
    "sap/m/CheckBox",
    "sap/m/Panel",
@@ -11,7 +12,8 @@ sap.ui.define([
    "sap/ui/layout/SplitterLayoutData",
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout"
-], function(Controller, JSONModel, Button, ColorPalettePopover, StandardTreeItem,
+], function(Controller, JSONModel, Button, ColorPalettePopover,
+            StandardTreeItem, CustomTreeItem,
             mInput, mCheckBox, mPanel, mText,
             SplitterLayoutData, VerticalLayout, HorizontalLayout) {
 
@@ -205,12 +207,10 @@ sap.ui.define([
 
       onInit: function () {
 
-         console.log('Summary CONTROLLER INIT');
-
          var data = [{ fName: "Event" }];
 
          var oTree = this.getView().byId("tree");
-         oTree.setMode(sap.m.ListMode.Single);
+         // oTree.setMode(sap.m.ListMode.MultiSelect);
          oTree.setIncludeItemInSelection(true);
          this.expandLevel = 2;
 
@@ -228,6 +228,15 @@ sap.ui.define([
             background: "{treeModel>fBackground}",
             tooltip: "{treeModel>fTitle}"
          });
+
+/*
+         var oItemTemplate = new CustomTreeItem({
+            content: [
+                 new mCheckBox({ selected: "{treeModel>fVisible}", select: this.clickItemSelected.bind(this) }),
+                 new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false })
+            ]
+         });
+*/
          oItemTemplate.addStyleClass("eveSummaryItem");
          oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
          oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
@@ -285,6 +294,10 @@ sap.ui.define([
             ],
          };
          this.rebuild=false;
+      },
+
+      clickItemSelected: function(oEvent) {
+
       },
 
       SetMgr: function(mgr) {
