@@ -107,8 +107,6 @@ class ROOTFacade(types.ModuleType):
         # Customises lookup in Python's main module to also
         # check in C++'s global namespace
 
-        if sys.hexversion >= 0x3000000:
-            raise ImportError('"from ROOT import *" is not supported in Python 3')
         if self._is_ipython:
             import warnings
             warnings.warn('"from ROOT import *" is not supported in IPython')
