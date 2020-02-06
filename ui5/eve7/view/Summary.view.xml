@@ -11,6 +11,7 @@
 
     <Tree id="tree" itemPress="onItemPressed"
           toggleOpenState="onToggleOpenState" width="95%"
+          selectionChange="onSelectionChange"
           class="sapUiSizeCompact sapUiTinyMargin">
         <layoutData><l:SplitterLayoutData size="auto" minSize="90%"/></layoutData>
 

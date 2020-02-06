@@ -193,12 +193,21 @@ sap.ui.define([
 
       metadata: {
          properties: {
-            background: 'string'
+            background: 'string',
+            mainColor: 'string'
          }
       },
 
       onAfterRendering: function() {
-         this.$().css("background-color", this.getBackground());
+         if (this.getType() == "Active") {
+            // TODO: find better way to select check box
+            var chkbox = this.$().children().first().next();
+            chkbox.css("display","none");
+         } else {
+            this.$().children().last().css("background-color", this.getMainColor());
+         }
+
+         // this.$().css("background-color", this.getBackground());
       }
 
    });
@@ -210,7 +219,7 @@ sap.ui.define([
          var data = [{ fName: "Event" }];
 
          var oTree = this.getView().byId("tree");
-         // oTree.setMode(sap.m.ListMode.MultiSelect);
+         oTree.setMode(sap.m.ListMode.MultiSelect);
          oTree.setIncludeItemInSelection(true);
          this.expandLevel = 2;
 
@@ -226,7 +235,9 @@ sap.ui.define([
             type: "{treeModel>fType}",
             highlight: "{treeModel>fHighlight}",
             background: "{treeModel>fBackground}",
-            tooltip: "{treeModel>fTitle}"
+            tooltip: "{treeModel>fTitle}",
+            mainColor: "{treeModel>fMainColor}",
+            selected: "{treeModel>fSelected}"
          });
 
 /*
@@ -297,6 +308,28 @@ sap.ui.define([
       },
 
       clickItemSelected: function(oEvent) {
+
+      },
+
+      onSelectionChange: function(oEvent) {
+
+         var items = oEvent.getParameters().listItems;
+         if (!items) return;
+
+         for (var k = 0; k < items.length; ++k) {
+            var item = items[k];
+
+            var  path = item.getBindingContext("treeModel").getPath(),
+                 ttt = item.getBindingContext("treeModel").getProperty(path);
+
+            // console.log('path', path, 'selected', item.getSelected());
+
+            var elem = this.mgr.GetElement(ttt.id);
+
+            var mir = "SetRnrSelf(" + item.getSelected() + ")";
+            var obj = {"mir" : mir, "fElementId" : elem.fElementId, "class" : elem._typename};
+            this.mgr.handle.Send(JSON.stringify(obj));
+         }
 
       },
 
@@ -801,12 +834,17 @@ sap.ui.define([
          for (var n=0;n<src.length;++n) {
             var elem = src[n];
 
-            var newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "" };
+            var newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "", fMainColor: "", fSelected: false };
 
-            if (this.canEdit(elem))
+            if (this.canEdit(elem)) {
                newelem.fType = "DetailAndActive";
-            else
+               if (elem.fMainColor) {
+                  newelem.fMainColor = JSROOT.Painter.root_colors[elem.fMainColor];
+                  newelem.fSelected = elem.fRnrSelf;
+               }
+            } else {
                newelem.fType = "Active";
+            }
 
             newelem.masterid = elem.fMasterId || elem.fElementId;
 
