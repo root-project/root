@@ -107,11 +107,6 @@ class ROOTFacade(types.ModuleType):
         # Customises lookup in Python's main module to also
         # check in C++'s global namespace
 
-        if self._is_ipython:
-            import warnings
-            warnings.warn('"from ROOT import *" is not supported in IPython')
-            # Continue anyway, just in case it works
-
         # Get caller module (jump over the facade frames)
         num_frame = 2
         frame = sys._getframe(num_frame).f_globals['__name__']
