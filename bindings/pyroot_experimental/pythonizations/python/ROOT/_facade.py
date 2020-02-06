@@ -114,8 +114,13 @@ class ROOTFacade(types.ModuleType):
             warnings.warn('"from ROOT import *" is not supported in IPython')
             # Continue anyway, just in case it works
 
-        # Get caller module (jump over the facade)
-        caller = sys.modules[sys._getframe(2).f_globals['__name__']]
+        # Get caller module (jump over the facade frames)
+        num_frame = 2
+        frame = sys._getframe(num_frame).f_globals['__name__']
+        while frame == 'ROOT._facade':
+            num_frame += 1
+            frame = sys._getframe(num_frame).f_globals['__name__']
+        caller = sys.modules[frame]
 
         # Inject some predefined attributes of the facade
         for name in self._cppyy_exports + [ 'gROOT', 'AddressOf' ]:
