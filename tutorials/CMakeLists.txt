@@ -483,7 +483,7 @@ foreach(t ${mpi_tutorials})
 endforeach()
 
 #---Python tutorials-----------------------------------------------------
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   if(NOT PYTHON_EXECUTABLE)
     find_package(PythonInterp REQUIRED)
   endif()
