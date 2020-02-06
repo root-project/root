@@ -137,7 +137,7 @@ class ROOTFacade(types.ModuleType):
             return getattr(gbl_namespace, name)
         except AttributeError as err:
             try:
-                return getattr(self.__dict__['ROOT_ns'], name)
+                return getattr(gbl_namespace.ROOT, name)
             except AttributeError:
                 res = gROOT.FindObject(name)
                 if res:
@@ -160,7 +160,6 @@ class ROOTFacade(types.ModuleType):
         self.SetMemoryPolicy(self.kMemoryHeuristics)
 
         # Redirect lookups to cppyy's global namespace
-        self.__dict__['ROOT_ns'] = gbl_namespace.ROOT
         self.__class__.__getattr__ = self._fallback_getattr
         self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)
 
