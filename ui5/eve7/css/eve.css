@@ -5,6 +5,45 @@
 	font-size: 0.75rem;
 }
 
+
+/* adjustment for checkbox inside Summury view items */
+.eveSummaryItem .sapMCb {
+	height: 1.2rem;
+	line-height: 1.2rem;
+	padding-left: 1rem;
+}
+
+.eveSummaryItem .sapMCbBg {
+	left: 0.3rem;
+	top: 0.2rem;
+	width: 0.6rem;
+	height: 0.6rem;
+}
+
+.eveSummaryItem .sapMLIBSelectM {
+	margin-right: 0;
+	width: 1.6rem;
+}
+
+/* adjustment for button inside Summury view items */
+
+.eveSummaryItem .sapMBtn {
+	height: 1.2rem;
+	padding: 0;
+}
+
+.eveSummaryItem .sapMBtnInner {
+	height: 1.2rem;
+	min-width: 1.6rem;
+}
+
+.eveSummaryItem .sapMBtnIcon {
+	line-height: 1.2rem;
+	max-height: 1.2rem;
+}
+
+
+
 /* Holder of GED editor */
  .eveGedHolder {
         font-size: 0.775rem;
