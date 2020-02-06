@@ -106,7 +106,6 @@ public:
    void    SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t);
    void    SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt);
 
-   static void    SetF3(TF3 *f3);
    static void    SetF3ClippingBoxOff();
    static void    SetF3ClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip);
 
