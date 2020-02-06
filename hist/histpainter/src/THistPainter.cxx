@@ -3143,6 +3143,7 @@ THistPainter::THistPainter()
    }
    fXHighlightBin = -1;
    fYHighlightBin = -1;
+   fCurrentF3 = nullptr;
 
    gStringEntries          = gEnv->GetValue("Hist.Stats.Entries",          "Entries");
    gStringMean             = gEnv->GetValue("Hist.Stats.Mean",             "Mean");
@@ -3172,6 +3173,7 @@ THistPainter::THistPainter()
 
 THistPainter::~THistPainter()
 {
+   if (fPie) delete fPie;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4120,7 +4122,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       memcpy(l,"    ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
-      printf("drawing tf3 %s\n", chopt);
    }
 
    l = strstr(chopt,"ISO");
@@ -6895,7 +6896,10 @@ void THistPainter::PaintH3(Option_t *option)
    opt.ToLower();
    Int_t irep;
 
-   if (Hoption.Box || Hoption.Lego) {
+   if (fCurrentF3) {
+      PaintTF3();
+      return;
+   } else if (Hoption.Box || Hoption.Lego) {
       if (Hoption.Box == 11 || Hoption.Lego == 11) {
          PaintH3Box(1);
       } else if (Hoption.Box == 12 || Hoption.Lego == 12) {
@@ -10041,9 +10045,9 @@ void THistPainter::PaintTF3()
 
    fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMode1);
 
-   fLego->ImplicitFunction(fXbuf, fYbuf, fH->GetNbinsX(),
-                                         fH->GetNbinsY(),
-                                         fH->GetNbinsZ(), "BF");
+   fLego->ImplicitFunction(fCurrentF3, fXbuf, fYbuf, fH->GetNbinsX(),
+                                       fH->GetNbinsY(),
+                                       fH->GetNbinsZ(), "BF");
 
    if (Hoption.FrontBox) {
       fLego->InitMoveScreen(-1.1,1.1);
@@ -10164,7 +10168,7 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 {
 
    if (!strcmp(mess,"SetF3")) {
-      TPainter3dAlgorithms::SetF3((TF3*)obj);
+      fCurrentF3 = (TF3 *)obj;
    } else if (!strcmp(mess,"SetF3ClippingBoxOff")) {
       TPainter3dAlgorithms::SetF3ClippingBoxOff();
    } else if (!strcmp(mess,"SetF3ClippingBoxOn")) {
