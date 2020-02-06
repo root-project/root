@@ -171,10 +171,12 @@ namespace RooStats { namespace HistFactory {
       ch |= c4::yml::MAP;
       ch["type"] << "sum";      
 
-      auto tags = ch["dict"];
-      tags |= c4::yml::MAP;
-      tags["statErrorRelThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
-      tags["statErrorConstraintType"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
+      auto staterr = ch["statError"];
+      staterr |= c4::yml::MAP;
+      staterr["relThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
+      staterr["constraint"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
+      auto stack = staterr["stack"];
+      stack |= c4::yml::SEQ;      
       
       auto samples = ch["functions"];
       samples |= c4::yml::MAP;
@@ -185,6 +187,7 @@ namespace RooStats { namespace HistFactory {
         auto ns = samples.last_child()["namespaces"];
         ns |= c4::yml::SEQ;
         ns.append_child() << name;
+        stack.append_child() << s.GetName();
         sum.append_child() << s.GetName();
       }
     }

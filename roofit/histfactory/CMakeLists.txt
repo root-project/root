@@ -37,6 +37,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     RooStats/HistFactory/RooBarlowBeestonLL.h
     RooStats/HistFactory/Sample.h
     RooStats/HistFactory/Systematics.h
+    RooStats/HistFactory/RooJSONFactoryWSTool.h    
   SOURCES
     src/Asimov.cxx
     src/Channel.cxx
@@ -62,6 +63,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/RooBarlowBeestonLL.cxx
     src/Sample.cxx
     src/Systematics.cxx
+    src/RooJSONFactoryWSTool.cxx        
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
