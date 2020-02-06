@@ -1,5 +1,12 @@
+/* custom attributes for items in Summary view*/
+.eveSummaryItem {
+	padding-top: 0;
+	padding-bottom: 0;
+	font-size: 0.75rem;
+}
 
- .eveTreeItem {
+/* Holder of GED editor */
+ .eveGedHolder {
         font-size: 0.775rem;
         border_top: 0px !important;
         border_bottom: 1px !important;
@@ -7,7 +14,7 @@
         padding_top: 0px !important;
         padding_bottom: 1px !important;
         font-family: "72",Arial,Helvetica,sans-serif;
-        font-size: 0.775rem; 
+        font-size: 0.775rem;
 }
 
 .eve_tooltip {
