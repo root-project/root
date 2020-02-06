@@ -115,15 +115,8 @@ class ROOTFacade(types.ModuleType):
             frame = sys._getframe(num_frame).f_globals['__name__']
         caller = sys.modules[frame]
 
-        # Inject some predefined attributes of the facade
-        for name in self._cppyy_exports + [ 'gROOT', 'AddressOf' ]:
-            caller.__dict__[name] = getattr(self, name)
-
         # Install the hook
         cppyy_backend._set_cpp_lazy_lookup(caller.__dict__)
-
-        # Return empty list to prevent further copying
-        return self.module.__all__
 
     def _fallback_getattr(self, name):
         # Try:
@@ -136,6 +129,9 @@ class ROOTFacade(types.ModuleType):
 
         if name == '__all__':
             self._handle_import_all()
+            # Make the attributes of the facade be injected in the
+            # caller module
+            raise AttributeError()
 
         try:
             return getattr(gbl_namespace, name)
