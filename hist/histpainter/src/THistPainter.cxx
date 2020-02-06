@@ -2892,7 +2892,7 @@ The supported option is:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "GLTF3"  | Draw a TF3.|
+| "GL"     | Draw a TF3.|
 
 
 
@@ -4117,12 +4117,15 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"TF3");
    if (l) {
+      memcpy(l,"    ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
+      printf("drawing tf3 %s\n", chopt);
    }
 
    l = strstr(chopt,"ISO");
    if (l) {
+      memcpy(l,"    ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
    }
