@@ -498,9 +498,9 @@ Base* g() { return new Derived(); }
       self.assertEqual( type(ROOT.RG18.g()), ROOT.RG18.Derived )
 
 
-### operator+ of TGLVertex3 ================
-class Regression19TGLVertex3(MyTestCase):
-   def test1OperatorPlus(self):
+### Tests for TGL classes ================
+class Regression19TGL(MyTestCase):
+   def test1TGLVertex3OperatorPlus(self):
       """Try invoking TGLVertex3::operator+ twice"""
       # ROOT-10166
       if exp_pyroot:
@@ -511,6 +511,19 @@ class Regression19TGLVertex3(MyTestCase):
 
          vertexEnd = scatteringPoint + glvec3
          vertexEnd = scatteringPoint + glvec3
+
+   def test2TGLLine3Constructor(self):
+      """Check that the right constructor of TGLLine3 is called"""
+      # ROOT-10102
+      if exp_pyroot:
+         from ROOT import TGLLine3, TGLVertex3, TGLVector3
+
+         trackAfterScattering = TGLLine3(TGLVertex3(2., 3., 0.2), TGLVector3(0., 0., -20.))
+
+         self.assertEqual(trackAfterScattering.Vector().X(), .0)
+         self.assertEqual(trackAfterScattering.Vector().Y(), .0)
+         self.assertEqual(trackAfterScattering.Vector().Z(), -20.0)
+
 
 ### Getting and setting configuration options of gEnv ================
 class Regression20gEnv(MyTestCase):
