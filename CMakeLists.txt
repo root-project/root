@@ -117,6 +117,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
+include(SearchRootCoreDeps)
 include(RootBuildOptions)
 include(RootMacros)
 include(CheckCompiler)
