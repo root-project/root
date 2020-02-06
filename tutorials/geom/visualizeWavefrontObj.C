@@ -46,7 +46,7 @@ void visualizeWavefrontObj(const char *dot_obj_file="", bool check = false)
    TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 10, 10, 10);
    gGeoManager->SetTopVolume(top);
 
-   auto *tsl = TGeoTessellated::ImportFromObjFormat(sfile.Data(), check);
+   auto tsl = TGeoTessellated::ImportFromObjFormat(sfile.Data(), check);
    if (!tsl) return;
    tsl->ResizeCenter(5.);
 
