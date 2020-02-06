@@ -55,8 +55,6 @@ private:
    static Double_t fgF3XClip;      /// Clipping plane along X
    static Double_t fgF3YClip;      /// Clipping plane along Y
    static Double_t fgF3ZClip;      /// Clipping plane along Y
-   static TF3      *fgCurrentF3;   /// Pointer to the 3D function to be paint.
-
 
 public:
    typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
@@ -85,7 +83,7 @@ public:
    void    DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt);
    void    DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt);
    void    GouraudFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t);
-   void    ImplicitFunction(Double_t *rmin, Double_t *rmax, Int_t nx, Int_t ny, Int_t nz, const char *chopt);
+   void    ImplicitFunction(TF3 *f3, Double_t *rmin, Double_t *rmax, Int_t nx, Int_t ny, Int_t nz, const char *chopt);
    void    IsoSurface (Int_t ns, Double_t *s, Int_t nx, Int_t ny, Int_t nz, Double_t *x, Double_t *y, Double_t *z, const char *chopt);
    void    LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt);
    void    LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *vv, Double_t *t);
@@ -189,11 +187,11 @@ private:
    Int_t       fIfrast;    // flag, if it not zero them the algorithm is off
    Int_t       *fRaster;   // pointer to raster buffer
    Int_t       fJmask[30]; // indices of subsets of n-bit masks (n is from 1 to 30)
-   Int_t       fMask[465]; // set of masks (30+29+28+...+1)=465 
+   Int_t       fMask[465]; // set of masks (30+29+28+...+1)=465
 
 //        Marching Cubes 33 - constrction of iso-surfaces, see publication CERN-CN-95-17
 //
-public: 
+public:
    void    MarchingCube(Double_t fiso, Double_t p[8][3], Double_t f[8], Double_t g[8][3], Int_t &nnod, Int_t &ntria, Double_t xyz[][3], Double_t grad[][3], Int_t itria[][3]);
 
 protected:

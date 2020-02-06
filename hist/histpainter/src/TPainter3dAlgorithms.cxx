@@ -57,7 +57,6 @@ Int_t    TPainter3dAlgorithms::fgF3Clipping = 0;
 Double_t TPainter3dAlgorithms::fgF3XClip = 0.;
 Double_t TPainter3dAlgorithms::fgF3YClip = 0.;
 Double_t TPainter3dAlgorithms::fgF3ZClip = 0.;
-TF3     *TPainter3dAlgorithms::fgCurrentF3 = 0;
 
 // Static arrays used to paint stacked lego plots.
 const Int_t kVSizeMax = 20;
@@ -3325,15 +3324,6 @@ void TPainter3dAlgorithms::SetSurfaceFunction(SurfaceFunc_t fun)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function
-/// Store pointer to current implicit function
-
-void TPainter3dAlgorithms::SetF3(TF3 *f3)
-{
-   fgCurrentF3 = f3;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Static function
 /// Set the implicit function clipping box "off".
 
 void TPainter3dAlgorithms::SetF3ClippingBoxOff()
@@ -4153,9 +4143,14 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
 
-void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
+void TPainter3dAlgorithms::ImplicitFunction(TF3 *f3, Double_t *rmin, Double_t *rmax,
                              Int_t nx, Int_t ny, Int_t nz, const char *chopt)
 {
+   if (!f3) {
+      Error("ImplicitFunction", "no TF3 function provided");
+      return;
+   }
+
    Int_t ix,    iy,    iz;
    Int_t ix1,   iy1,   iz1;
    Int_t ix2,   iy2,   iz2;
@@ -4206,7 +4201,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
 
    // Define the colors used to draw the function
    Float_t r=0., g=0., b=0., hue, light, satur, light2;
-   TColor *colref = gROOT->GetColor(fgCurrentF3->GetFillColor());
+   TColor *colref = gROOT->GetColor(f3->GetFillColor());
    if (colref) colref->GetRGB(r, g, b);
    TColor::RGBtoHLS(r, g, b, hue, light, satur);
    TColor *acol;
@@ -4220,7 +4215,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    TColor::HLStoRGB(hue, light2, satur, r, g, b);
    acol = gROOT->GetColor(kF3FillColor2);
    if (acol) acol->SetRGB(r, g, b);
-   colref = gROOT->GetColor(fgCurrentF3->GetLineColor());
+   colref = gROOT->GetColor(f3->GetLineColor());
    if (colref) colref->GetRGB(r, g, b);
    acol = gROOT->GetColor(kF3LineColor);
    if (acol) acol->SetRGB(r, g, b);
@@ -4250,16 +4245,16 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
          p[7][1] = y2;
          if (incrx == +1) {
             x2    = rmin[0];
-            pf[1] = fgCurrentF3->Eval(x2,y1,z1);
-            pf[2] = fgCurrentF3->Eval(x2,y2,z1);
-            pf[5] = fgCurrentF3->Eval(x2,y1,z2);
-            pf[6] = fgCurrentF3->Eval(x2,y2,z2);
+            pf[1] = f3->Eval(x2,y1,z1);
+            pf[2] = f3->Eval(x2,y2,z1);
+            pf[5] = f3->Eval(x2,y1,z2);
+            pf[6] = f3->Eval(x2,y2,z2);
          } else {
             x1    = rmax[0];
-            pf[0] = fgCurrentF3->Eval(x1,y1,z1);
-            pf[3] = fgCurrentF3->Eval(x1,y2,z1);
-            pf[4] = fgCurrentF3->Eval(x1,y1,z2);
-            pf[7] = fgCurrentF3->Eval(x1,y2,z2);
+            pf[0] = f3->Eval(x1,y1,z1);
+            pf[3] = f3->Eval(x1,y2,z1);
+            pf[4] = f3->Eval(x1,y1,z2);
+            pf[7] = f3->Eval(x1,y2,z2);
          }
          for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
             icodes[0] = ix;
@@ -4272,10 +4267,10 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                pf[3]  = pf[2];
                pf[4]  = pf[5];
                pf[7]  = pf[6];
-               pf[1]  = fgCurrentF3->Eval(x2,y1,z1);
-               pf[2]  = fgCurrentF3->Eval(x2,y2,z1);
-               pf[5]  = fgCurrentF3->Eval(x2,y1,z2);
-               pf[6]  = fgCurrentF3->Eval(x2,y2,z2);
+               pf[1]  = f3->Eval(x2,y1,z1);
+               pf[2]  = f3->Eval(x2,y2,z1);
+               pf[5]  = f3->Eval(x2,y1,z2);
+               pf[6]  = f3->Eval(x2,y2,z2);
             } else {
                x2     = x1;
                x1     = x1 - dx;
@@ -4283,10 +4278,10 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                pf[2]  = pf[3];
                pf[5]  = pf[4];
                pf[6]  = pf[7];
-               pf[0]  = fgCurrentF3->Eval(x1,y1,z1);
-               pf[3]  = fgCurrentF3->Eval(x1,y2,z1);
-               pf[4]  = fgCurrentF3->Eval(x1,y1,z2);
-               pf[7]  = fgCurrentF3->Eval(x1,y2,z2);
+               pf[0]  = f3->Eval(x1,y1,z1);
+               pf[3]  = f3->Eval(x1,y2,z1);
+               pf[4]  = f3->Eval(x1,y1,z2);
+               pf[7]  = f3->Eval(x1,y2,z2);
             }
             if (pf[0] >= -kFdel) goto L110;
             if (pf[1] >= -kFdel) goto L120;
@@ -4324,10 +4319,10 @@ L120:
                pn[4][0] = (pf[5] - pf[4]) / dx;
                pn[7][0] = (pf[6] - pf[7]) / dx;
             } else {
-               pn[0][0] = (pf[1] - fgCurrentF3->Eval(x1-dx,y1,z1)) / (dx + dx);
-               pn[3][0] = (pf[2] - fgCurrentF3->Eval(x1-dx,y2,z1)) / (dx + dx);
-               pn[4][0] = (pf[5] - fgCurrentF3->Eval(x1-dx,y1,z2)) / (dx + dx);
-               pn[7][0] = (pf[6] - fgCurrentF3->Eval(x1-dx,y2,z2)) / (dx + dx);
+               pn[0][0] = (pf[1] - f3->Eval(x1-dx,y1,z1)) / (dx + dx);
+               pn[3][0] = (pf[2] - f3->Eval(x1-dx,y2,z1)) / (dx + dx);
+               pn[4][0] = (pf[5] - f3->Eval(x1-dx,y1,z2)) / (dx + dx);
+               pn[7][0] = (pf[6] - f3->Eval(x1-dx,y2,z2)) / (dx + dx);
             }
             if (ix == nx) {
                pn[1][0] = (pf[1] - pf[0]) / dx;
@@ -4335,10 +4330,10 @@ L120:
                pn[5][0] = (pf[5] - pf[4]) / dx;
                pn[6][0] = (pf[6] - pf[7]) / dx;
             } else {
-               pn[1][0] = (fgCurrentF3->Eval(x2+dx,y1,z1) - pf[0]) / (dx + dx);
-               pn[2][0] = (fgCurrentF3->Eval(x2+dx,y2,z1) - pf[3]) / (dx + dx);
-               pn[5][0] = (fgCurrentF3->Eval(x2+dx,y1,z2) - pf[4]) / (dx + dx);
-               pn[6][0] = (fgCurrentF3->Eval(x2+dx,y2,z2) - pf[7]) / (dx + dx);
+               pn[1][0] = (f3->Eval(x2+dx,y1,z1) - pf[0]) / (dx + dx);
+               pn[2][0] = (f3->Eval(x2+dx,y2,z1) - pf[3]) / (dx + dx);
+               pn[5][0] = (f3->Eval(x2+dx,y1,z2) - pf[4]) / (dx + dx);
+               pn[6][0] = (f3->Eval(x2+dx,y2,z2) - pf[7]) / (dx + dx);
             }
             // Find Y-gradient
             if (iy == 1) {
@@ -4347,10 +4342,10 @@ L120:
                pn[4][1] = (pf[7] - pf[4]) / dy;
                pn[5][1] = (pf[6] - pf[5]) / dy;
             } else {
-               pn[0][1] = (pf[3] - fgCurrentF3->Eval(x1,y1-dy,z1)) / (dy + dy);
-               pn[1][1] = (pf[2] - fgCurrentF3->Eval(x2,y1-dy,z1)) / (dy + dy);
-               pn[4][1] = (pf[7] - fgCurrentF3->Eval(x1,y1-dy,z2)) / (dy + dy);
-               pn[5][1] = (pf[6] - fgCurrentF3->Eval(x2,y1-dy,z2)) / (dy + dy);
+               pn[0][1] = (pf[3] - f3->Eval(x1,y1-dy,z1)) / (dy + dy);
+               pn[1][1] = (pf[2] - f3->Eval(x2,y1-dy,z1)) / (dy + dy);
+               pn[4][1] = (pf[7] - f3->Eval(x1,y1-dy,z2)) / (dy + dy);
+               pn[5][1] = (pf[6] - f3->Eval(x2,y1-dy,z2)) / (dy + dy);
             }
             if (iy == ny) {
                pn[2][1] = (pf[2] - pf[1]) / dy;
@@ -4358,10 +4353,10 @@ L120:
                pn[6][1] = (pf[6] - pf[5]) / dy;
                pn[7][1] = (pf[7] - pf[4]) / dy;
             } else {
-               pn[2][1] = (fgCurrentF3->Eval(x2,y2+dy,z1) - pf[1]) / (dy + dy);
-               pn[3][1] = (fgCurrentF3->Eval(x1,y2+dy,z1) - pf[0]) / (dy + dy);
-               pn[6][1] = (fgCurrentF3->Eval(x2,y2+dy,z2) - pf[5]) / (dy + dy);
-               pn[7][1] = (fgCurrentF3->Eval(x1,y2+dy,z2) - pf[4]) / (dy + dy);
+               pn[2][1] = (f3->Eval(x2,y2+dy,z1) - pf[1]) / (dy + dy);
+               pn[3][1] = (f3->Eval(x1,y2+dy,z1) - pf[0]) / (dy + dy);
+               pn[6][1] = (f3->Eval(x2,y2+dy,z2) - pf[5]) / (dy + dy);
+               pn[7][1] = (f3->Eval(x1,y2+dy,z2) - pf[4]) / (dy + dy);
             }
             // Find Z-gradient
             if (iz == 1) {
@@ -4370,10 +4365,10 @@ L120:
                pn[2][2] = (pf[6] - pf[2]) / dz;
                pn[3][2] = (pf[7] - pf[3]) / dz;
             } else {
-               pn[0][2] = (pf[4] - fgCurrentF3->Eval(x1,y1,z1-dz)) / (dz + dz);
-               pn[1][2] = (pf[5] - fgCurrentF3->Eval(x2,y1,z1-dz)) / (dz + dz);
-               pn[2][2] = (pf[6] - fgCurrentF3->Eval(x2,y2,z1-dz)) / (dz + dz);
-               pn[3][2] = (pf[7] - fgCurrentF3->Eval(x1,y2,z1-dz)) / (dz + dz);
+               pn[0][2] = (pf[4] - f3->Eval(x1,y1,z1-dz)) / (dz + dz);
+               pn[1][2] = (pf[5] - f3->Eval(x2,y1,z1-dz)) / (dz + dz);
+               pn[2][2] = (pf[6] - f3->Eval(x2,y2,z1-dz)) / (dz + dz);
+               pn[3][2] = (pf[7] - f3->Eval(x1,y2,z1-dz)) / (dz + dz);
             }
             if (iz == nz) {
                pn[4][2] = (pf[4] - pf[0]) / dz;
@@ -4381,10 +4376,10 @@ L120:
                pn[6][2] = (pf[6] - pf[2]) / dz;
                pn[7][2] = (pf[7] - pf[3]) / dz;
             } else {
-               pn[4][2] = (fgCurrentF3->Eval(x1,y1,z2+dz) - pf[0]) / (dz + dz);
-               pn[5][2] = (fgCurrentF3->Eval(x2,y1,z2+dz) - pf[1]) / (dz + dz);
-               pn[6][2] = (fgCurrentF3->Eval(x2,y2,z2+dz) - pf[2]) / (dz + dz);
-               pn[7][2] = (fgCurrentF3->Eval(x1,y2,z2+dz) - pf[3]) / (dz + dz);
+               pn[4][2] = (f3->Eval(x1,y1,z2+dz) - pf[0]) / (dz + dz);
+               pn[5][2] = (f3->Eval(x2,y1,z2+dz) - pf[1]) / (dz + dz);
+               pn[6][2] = (f3->Eval(x2,y2,z2+dz) - pf[2]) / (dz + dz);
+               pn[7][2] = (f3->Eval(x1,y2,z2+dz) - pf[3]) / (dz + dz);
             }
             fsurf = 0.;
             MarchingCube(fsurf, p, pf, pn, nnod, ntria, xyz, grad, itria);
