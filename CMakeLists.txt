@@ -139,7 +139,7 @@ set(CMAKE_ROOTTEST_DICT ON)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 
 # Find python.
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   if (NOT PYTHON_EXECUTABLE)
     find_package(PythonInterp)
     if(PYTHONINTERP_FOUND)

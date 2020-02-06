@@ -1,4 +1,4 @@
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(write
                     MACRO PyROOT_writetests.py
                     COPY_TO_BUILDDIR PickleTypes.C

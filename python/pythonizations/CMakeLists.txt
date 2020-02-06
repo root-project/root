@@ -1,4 +1,4 @@
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(pythonizations
                     MACRO PyROOT_pythonizationtest.py
                     COPY_TO_BUILDDIR Pythonizables.C Pythonizables.h
