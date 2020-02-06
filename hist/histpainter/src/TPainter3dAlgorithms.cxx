@@ -3200,23 +3200,17 @@ L400:
 
 void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
 {
+   flum = 0;
+
    /* Local variables */
    Double_t cosn, cosr;
    Int_t i;
    Double_t s, vl[3], vn[3];
-   TView *view = 0;
-
-   if (gPad) view = gPad->GetView();
-   if (!view) return;
-
-   /* Parameter adjustments */
-   --anorm;
-
-   flum = 0;
-   if (fLoff != 0) return;
+   TView *view = gPad ? gPad->GetView() : nullptr;
+   if (!view || fLoff) return;
 
    //          T R A N S F E R   N O R M A L  T O   SCREEN COORDINATES
-   view->NormalWCtoNDC(&anorm[1], vn);
+   view->NormalWCtoNDC(anorm, vn);
    s = TMath::Sqrt(vn[0]*vn[0] + vn[1]*vn[1] + vn[2]*vn[2]);
    if (vn[2] < 0) s = -(Double_t)s;
    vn[0] /= s;
@@ -4158,7 +4152,7 @@ void TPainter3dAlgorithms::ImplicitFunction(TF3 *f3, Double_t *rmin, Double_t *r
    Int_t icodes[3], i, i1, i2, k, nnod, ntria;
    Double_t x1=0, x2=0, y1, y2, z1, z2;
    Double_t dx, dy, dz;
-   Double_t p[8][3], pf[8], pn[8][3], t[3], fsurf, w;
+   Double_t p[8][3], pf[8], pn[8][3], t[3], fsurf, w = 0;
 
    Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
    Double_t dtria[kNmaxt][6], abcd[kNmaxt][4];
