@@ -141,11 +141,11 @@ ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
 ROOT_BUILD_OPTION(oracle ON "Enable support for Oracle databases (requires Oracle Instant Client)")
 ROOT_BUILD_OPTION(pgsql ON "Enable support for PostgreSQL")
+ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pyroot_experimental OFF "Use experimental Python bindings for ROOT")
 ROOT_BUILD_OPTION(pythia6_nolink OFF "Delayed linking of Pythia6 library")
 ROOT_BUILD_OPTION(pythia6 ON "Enable support for Pythia 6.x")
 ROOT_BUILD_OPTION(pythia8 ON "Enable support for Pythia 8.x")
-ROOT_BUILD_OPTION(python ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (requires Qt5WebEngine)")
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build RooFit advanced fitting package")
@@ -378,7 +378,7 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
 endforeach()
 
 #---Deprecated options---------------------------------------------------------
-foreach(opt memstat vmc)
+foreach(opt memstat vmc python)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
