@@ -228,6 +228,7 @@ sap.ui.define([
             background: "{treeModel>fBackground}",
             tooltip: "{treeModel>fTitle}"
          });
+         oItemTemplate.addStyleClass("eveSummaryItem");
          oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
          oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
          oItemTemplate.attachBrowserEvent("mouseleave", this.onMouseLeave, this);
@@ -523,7 +524,7 @@ sap.ui.define([
 
             var vert = new VerticalLayout("GED",  {});
             vert.addStyleClass("sapUiSizeCompact");
-            vert.addStyleClass("eveTreeItem");
+            vert.addStyleClass("eveGedHolder");
             vert.addStyleClass("sapUiNoMarginTop");
             vert.addStyleClass("sapUiNoMarginBottom");
 
