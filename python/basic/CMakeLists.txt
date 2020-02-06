@@ -1,4 +1,4 @@
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(basic
                     MACRO PyROOT_basictests.py
                     COPY_TO_BUILDDIR ArgumentPassingCompiled.C ReturnValues.C SimpleClass.C ArgumentPassingInterpreted.C

@@ -1,4 +1,4 @@
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(stl
                     MACRO PyROOT_stltests.py
                     COPY_TO_BUILDDIR StlTypes.C

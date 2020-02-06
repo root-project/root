@@ -1,4 +1,4 @@
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   if (ROOT_pyroot_experimental_FOUND)
     set(scott_file ScottCppyy.C) # Uses Cppyy header
   else()

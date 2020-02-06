@@ -1,4 +1,4 @@
-if(ROOT_python_FOUND)
+if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(ttree
                     MACRO PyROOT_ttreetests.py
                     COPY_TO_BUILDDIR TTreeTypes.C
