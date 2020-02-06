@@ -245,7 +245,7 @@ TEST(TreeProcessorMT, TreeWithFriendTree)
       f.Close();
    }
 
-   ROOT::EnableThreadSafety();
+   ROOT::EnableImplicitMT(1);
    auto procLambda = [](TTreeReader &r) {
       while (r.Next())
          ;
@@ -275,7 +275,7 @@ TEST(TreeProcessorMT, ChainWithFriendChain)
       f.Close();
    }
 
-   ROOT::EnableThreadSafety();
+   ROOT::EnableImplicitMT(1);
    auto procLambda = [](TTreeReader &r) {
       while (r.Next())
          ;
