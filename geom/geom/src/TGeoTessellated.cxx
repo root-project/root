@@ -763,7 +763,7 @@ TGeoTessellated *TGeoTessellated::ImportFromObjFormat(const char *objfile, bool 
          while (ss >> word)
             sfacets.push_back(word);
          if (sfacets.size() > 4 || sfacets.size() < 3) {
-            ::Error("TGeoTessellated::ImportFromObjFormat", "Detected face having unsupported %zu faces",
+            ::Error("TGeoTessellated::ImportFromObjFormat", "Detected face having unsupported %zu vertices",
                     sfacets.size());
             return nullptr;
          }

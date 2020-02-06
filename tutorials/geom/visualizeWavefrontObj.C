@@ -25,15 +25,17 @@ int randomColor()
 }
 
 //______________________________________________________________________________
-void visualizeWavefrontObj(const char *dot_obj_file="teddy.obj", bool check = false)
+void visualizeWavefrontObj(const char *dot_obj_file="", bool check = false)
 {
    // Input a file in .obj format (https://en.wikipedia.org/wiki/Wavefront_.obj_file)
    // The file should have a single object inside, only vertex and faces information is used
    
    TString name = dot_obj_file;
-   TString sfile = gROOT->GetTutorialsDir();
-   sfile += "/geom/";
-   sfile += name;
+   TString sfile = dot_obj_file;
+   if (sfile.IsNull()) {
+      sfile = gROOT->GetTutorialsDir();
+      sfile += "/geom/teddy.obj";
+   }
    name.ReplaceAll(".obj", "");
    gROOT->GetListOfCanvases()->Delete();
    if (gGeoManager)
@@ -45,6 +47,7 @@ void visualizeWavefrontObj(const char *dot_obj_file="teddy.obj", bool check = fa
    gGeoManager->SetTopVolume(top);
 
    auto *tsl = TGeoTessellated::ImportFromObjFormat(sfile.Data(), check);
+   if (!tsl) return;
    tsl->ResizeCenter(5.);
 
    TGeoVolume *vol = new TGeoVolume(name, tsl, med);
