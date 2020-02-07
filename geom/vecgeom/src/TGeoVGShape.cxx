@@ -322,6 +322,8 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
             }
          }
          unplaced_volume = new UnplacedSExtruVolume(p->GetNvert(), x, y, p->GetZ()[0], p->GetZ()[1]);
+         delete [] x;
+         delete [] y;
       }
    }
 
