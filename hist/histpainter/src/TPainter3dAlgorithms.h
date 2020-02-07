@@ -25,6 +25,7 @@ const Int_t kSPHERICAL   = 4;
 const Int_t kRAPIDITY    = 5;
 
 class TF3;
+class TView;
 
 class TPainter3dAlgorithms : public TObject, public TAttLine, public TAttFill {
 
@@ -130,11 +131,12 @@ private:
    Int_t        fLevelLine[NumOfLevelLines];     // Corresponding levels
    Double_t     fPlines[NumOfLevelLines*6];      // End points of lines
 
+   void    Luminosity(TView *view, Double_t *anorm, Double_t &flum);
+
 //       Light and surface properties
 //
 public:
    void    LightSource(Int_t nl, Double_t yl, Double_t xscr, Double_t yscr, Double_t zscr, Int_t &irep);
-   void    Luminosity(Double_t *anorm, Double_t &flum);
    void    SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep);
 
 private:
