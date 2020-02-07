@@ -27,7 +27,7 @@ const Int_t kRAPIDITY    = 5;
 class TF3;
 class TView;
 
-class TPainter3dAlgorithms : public TObject, public TAttLine, public TAttFill {
+class TPainter3dAlgorithms : public TAttLine, public TAttFill {
 
 private:
    Double_t     fRmin[3];          /// Lower limits of lego
@@ -222,8 +222,6 @@ public:
 protected:
    void    TestEdge(Double_t del, Double_t xyz[52][3], Int_t i1, Int_t i2, Int_t iface[3], Double_t abcd[4], Int_t &irep);
 
-public:
-   ClassDef(TPainter3dAlgorithms,0)   //Hidden line removal package
 };
 
 #endif

@@ -72,12 +72,10 @@ extern TH1  *gCurrentHist; //these 3 globals should be replaced by class members
 extern Hoption_t Hoption;
 extern Hparam_t  Hparam;
 
-ClassImp(TPainter3dAlgorithms);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Lego default constructor
 
-TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
+TPainter3dAlgorithms::TPainter3dAlgorithms(): TAttLine(1,1,1), TAttFill(1,0)
 {
    Int_t i;
    fAphi            = 0;
@@ -158,7 +156,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TObject(), TAttLine(1,1,1), TAttFi
 ///  the selected coordinate system
 
 TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system)
-      : TObject(), TAttLine(1,1,1), TAttFill(1,0)
+      : TAttLine(1,1,1), TAttFill(1,0)
 {
    Int_t i;
    Double_t psi;
