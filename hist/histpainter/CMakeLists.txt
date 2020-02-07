@@ -15,7 +15,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     TGraph2DPainter.h
     TGraphPainter.h
     THistPainter.h
-    TLego.h
     TPaletteAxis.h
   SOURCES
     src/TGraph2DPainter.cxx
