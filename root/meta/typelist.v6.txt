@@ -1007,7 +1007,6 @@ Time_t
 TKDE::KernelFunction_Ptr
 TKDTreeID
 TKDTreeIF
-TLego
 TMatrix
 TMatrixD
 TMatrixDBase
