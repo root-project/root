@@ -2301,37 +2301,37 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::addFolders(const RooAr
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor 
-RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig(){}
+RooLagrangianMorphConfig::RooLagrangianMorphConfig(){}
  
 ////////////////////////////////////////////////////////////////////////////////
 /// parameterised constructor 
-RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& couplings){
+RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& couplings){
   extractCouplings(couplings,_couplings);
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// parameterised constructor 
-RooLagrangianMorphing::RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
+RooLagrangianMorphConfig::RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
   extractCouplings(prodCouplings,_prodCouplings);
   extractCouplings(decCouplings,_decCouplings);
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for couplings
-void RooLagrangianMorphing::RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& couplings){
+void RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& couplings){
   extractCouplings(couplings,_couplings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for production and decay couplings
-void RooLagrangianMorphing::RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
+void RooLagrangianMorphConfig::setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings){
   extractCouplings(prodCouplings,_prodCouplings);
   extractCouplings( decCouplings,_decCouplings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for diagrams
-template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setDiagrams(const std::vector<std::vector<T> >& diagrams)
+template <class T> void RooLagrangianMorphConfig::setDiagrams(const std::vector<std::vector<T> >& diagrams)
 {
   for(size_t j=0; j<diagrams.size(); ++j){
     std::vector<RooListProxy*> vertices;
@@ -2339,26 +2339,25 @@ template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setDiag
       vertices.push_back(new RooListProxy());
       vertices[i]->add(diagrams[j][i]);
     }
-   _diagrams.push_back(vertices);
+   _cfgdiagrams.push_back(vertices);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for vertices
-template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setVertices(const std::vector<T>& vertices)
+template <class T> void RooLagrangianMorphConfig::setVertices(const std::vector<T>& vertices)
 {
   std::vector<std::vector<T> > diagrams;
   diagrams.push_back(vertices);
   this->setDiagrams(diagrams);
 }
 
-template void RooLagrangianMorphing::RooLagrangianMorphConfig::setVertices<RooArgSet>(const std::vector<RooArgSet>&);
-template void RooLagrangianMorphing::RooLagrangianMorphConfig::setDiagrams<RooArgSet>(const std::vector<std::vector<RooArgSet>>&);
-template void RooLagrangianMorphing::RooLagrangianMorphConfig::setVertices<RooArgList>(const std::vector<RooArgList>&);
-template void RooLagrangianMorphing::RooLagrangianMorphConfig::setDiagrams<RooArgList>(const std::vector<std::vector<RooArgList>>&);
+template void RooLagrangianMorphConfig::setVertices<RooArgSet>(const std::vector<RooArgSet>&);
+template void RooLagrangianMorphConfig::setDiagrams<RooArgSet>(const std::vector<std::vector<RooArgSet>>&);
+template void RooLagrangianMorphConfig::setVertices<RooArgList>(const std::vector<RooArgList>&);
+template void RooLagrangianMorphConfig::setDiagrams<RooArgList>(const std::vector<std::vector<RooArgList>>&);
 
-
-RooLagrangianMorphing::RooLagrangianMorphConfig::~RooLagrangianMorphConfig()
+RooLagrangianMorphConfig::~RooLagrangianMorphConfig()
 {
   DEBUG("destructor called");
 }
@@ -2368,7 +2367,7 @@ RooLagrangianMorphing::RooLagrangianMorphConfig::~RooLagrangianMorphConfig()
 template<class Base>
 RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter, bool allowNegativeYields) :
   Base(name,title),
-  RooLagrangianMorphConfig(config),
+//  RooLagrangianMorphConfig(config),
   _cacheMgr(this,10,kTRUE,kTRUE),
   _fileName(fileName),
   _obsName(obsName),
@@ -2396,7 +2395,7 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(cons
   RooLagrangianMorphBase(name,title,fileName,obsName,config,"",folders,objFilter,allowNegativeYields) {
   DEBUG("constructor: name,title,filename,obsname,config,folders,objfilter,allowNegativeYields");
 //  this->disableInterferences(this->_nonInterfering);
-  this->setup(false);
+  this->setup(config,false);
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor with proper arguments
@@ -2405,7 +2404,7 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(cons
   RooLagrangianMorphBase(name,title,fileName,obsName,config,"",RooArgList(),objFilter,allowNegativeYields)
 {
   DEBUG("constructor: name,title,filename,obsname,config,objfilter,allowNegativeYields");
-  this->setup(false);
+  this->setup(config,false);
 }
 
 template<class Base>
@@ -2422,62 +2421,76 @@ RooLagrangianMorphing::RooLagrangianMorphBase<Base>::RooLagrangianMorphBase(cons
 /// if own=true, the class will own the operatorsemplate <class Base>
 
 template <class Base> 
-void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
+void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(RooLagrangianMorphConfig &config, bool own)
 {
   DEBUG("setup(ops,config"<<own<<") called");
   this->_ownParameters = own;
   RooArgList operators;
-  if(this->_diagrams.size()> 0){
-    DEBUG("diagrams provided");
-    DEBUG("collecting couplings");
-    for(const auto& diagram:this->_diagrams){
-      for(const auto& vertex : diagram){
-        extractCouplings(*vertex,this->_couplings);
-      }
+  if(config._cfgdiagrams.size()> 0){
+    RooArgList operators;
+    for(const auto& v:config._cfgdiagrams){
+      extractOperators(v,operators);
     }
-    extractOperators(this->_couplings,operators);
 
     if(own){
       this->_operators.addOwned(operators);
     } else {
       this->_operators.add(operators);
     }
+
+    for(size_t j=0; j<config._cfgdiagrams.size(); ++j){
+      std::vector<RooListProxy*> vertices;
+      for(size_t i=0; i<config._cfgdiagrams[j].size(); i++){
+        std::stringstream name;
+        name << "!vertex" << i;
+        std::stringstream title;
+        title << "set of couplings in the vertex " << i;
+        vertices.push_back(new RooListProxy(name.str().c_str(),title.str().c_str(),this,kTRUE,kFALSE));
+        if(own){
+          vertices[i]->addOwned(config._cfgdiagrams[j][i]);
+        } else {
+          vertices[i]->add(config._cfgdiagrams[j][i]);
+        }
+      }
+      this->_diagrams.push_back(vertices);
+    }
+    if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
   }
 
-  else if(this->_couplings.size() > 0){
+  else if(config._couplings.size() > 0){
     std::vector<RooListProxy*> vertices;
     DEBUG("couplings provided");
-    extractOperators(this->_couplings, operators);
+    extractOperators(config._couplings, operators);
     vertices.push_back(new RooListProxy("!couplings",     "set of couplings in the vertex",     this,kTRUE,kFALSE));
     if(own){
       DEBUG("adding own operators");
       this->_operators.addOwned(operators);
-      vertices[0]->addOwned(this->_couplings);
+      vertices[0]->addOwned(config._couplings);
     } else {
       DEBUG("adding non-own operators");
       this->_operators.add(operators);
-      vertices[0]->add(this->_couplings);
+      vertices[0]->add(config._couplings);
     }
   this->_diagrams.push_back(vertices);
   }
 
-  else if(this->_prodCouplings.size() > 0 && this->_decCouplings.size() > 0){
+  else if(config._prodCouplings.size() > 0 && config._decCouplings.size() > 0){
     std::vector<RooListProxy*> vertices;
     DEBUG("prod/dec couplings provided");
-    extractOperators(this->_prodCouplings, operators);
-    extractOperators(this->_decCouplings, operators);
+    extractOperators(config._prodCouplings, operators);
+    extractOperators(config._decCouplings, operators);
     vertices.push_back(new RooListProxy("!production","set of couplings in the production vertex",this,kTRUE,kFALSE));
     vertices.push_back(new RooListProxy("!decay",     "set of couplings in the decay vertex",     this,kTRUE,kFALSE));
     if(own){
       DEBUG("adding own operators");
       this->_operators.addOwned(operators);
-      vertices[0]->addOwned(this->_prodCouplings);
-      vertices[1]->addOwned(this->_decCouplings);
+      vertices[0]->addOwned(config._prodCouplings);
+      vertices[1]->addOwned(config._decCouplings);
     } else {
       DEBUG("adding non-own operators");
       this->_operators.add(operators);
-      vertices[0]->add(this->_prodCouplings);
-      vertices[1]->add(this->_decCouplings);
+      vertices[0]->add(config._prodCouplings);
+      vertices[1]->add(config._decCouplings);
     }
   this->_diagrams.push_back(vertices);
   }
@@ -2485,7 +2498,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// disable interference between the listed operators
-
+/*
 template <class Base>
 void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::disableInterference(const std::vector<const char*>& nonInterfering)
 {
@@ -2511,7 +2524,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::disableInterferences(c
     this->disableInterference(nonInterfering[i]);
   }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /// (-?-)
 

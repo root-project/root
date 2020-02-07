@@ -29,7 +29,7 @@ class RooWorkspace;
 class RooParamHistFunc;
 class TPair;
 class TFolder;
-
+class RooLagrangianMorphConfig;
 #include <vector>
 #include <string>
 #include <iostream>
@@ -84,34 +84,13 @@ namespace RooLagrangianMorphing {
   RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings, const RooLagrangianMorphing::FlagMap& inputFlags, const RooArgList& flags, const std::vector<RooArgList*>& nonInterfering);
   RooArgSet createWeights(const RooLagrangianMorphing::ParamMap& inputs, const std::vector<RooArgList*>& vertices, RooArgList& couplings);
 
-  class RooLagrangianMorphConfig {
-  public:
-    RooLagrangianMorphConfig();
-    RooLagrangianMorphConfig(const RooAbsCollection& couplings);
-    RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
-
-    void setCouplings(const RooAbsCollection& couplings);
-    void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
-    template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
-    template <class T> void setVertices(const std::vector<T>& vertices);
-    template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
-    virtual ~RooLagrangianMorphConfig();
-  
-  protected:
-    std::vector<RooListProxy*> _vertices;
-    std::vector<std::vector<RooListProxy*> > _diagrams;
-    RooListProxy _couplings;
-    RooListProxy _prodCouplings;
-    RooListProxy _decCouplings;
-    std::vector<RooListProxy*> _nonInterfering;
-  };
   // some helpers to make the template mapping work
   template<class Base> struct Internal;
   template<> struct Internal<RooAbsReal> { typedef RooRealSumFunc Type; };
   template<> struct Internal<RooAbsPdf>  { typedef RooRealSumPdf  Type; };
  
   template<class Base>
-  class RooLagrangianMorphBase : public Base, protected RooLagrangianMorphConfig {
+  class RooLagrangianMorphBase : public Base {
     using InternalType = typename Internal<Base>::Type;
   public:
     RooLagrangianMorphBase();
@@ -200,7 +179,7 @@ namespace RooLagrangianMorphing {
     class CacheElem;
     void init();
     void printAuthors() const;
-    void setup(bool ownParams = true);
+    void setup(const RooLagrangianMorphConfig& config, bool ownParams = true);
     bool _ownParameters = false;
   
     void disableInterference(const std::vector<const char*>& nonInterfering);
@@ -251,7 +230,7 @@ namespace RooLagrangianMorphing {
     RooListProxy _observables ;
     RooListProxy _binWidths ;
     RooListProxy _flags;
-    //std::vector<std::vector<RooListProxy*> > _diagrams;
+    std::vector<std::vector<RooListProxy*> > _diagrams;
 
     mutable const RooArgSet* _curNormSet ; //!
 
@@ -303,6 +282,33 @@ namespace RooLagrangianMorphing {
 
 }
 
+class RooLagrangianMorphConfig {
+  template <class Base>
+  friend class RooLagrangianMorphing::RooLagrangianMorphBase;
+  friend class RooLagrangianMorphFunc;
+  friend class RooLagrangianMorphPdf;
+  public:
+
+  RooLagrangianMorphConfig();
+  RooLagrangianMorphConfig(const RooAbsCollection& couplings);
+  RooLagrangianMorphConfig(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
+
+  void setCouplings(const RooAbsCollection& couplings);
+  void setCouplings(const RooAbsCollection& prodCouplings, const RooAbsCollection& decCouplings);
+  template <class T> void setDiagrams(const std::vector<std::vector<T> >& diagrams);
+  template <class T> void setVertices(const std::vector<T>& vertices);
+  template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
+  virtual ~RooLagrangianMorphConfig();
+
+protected:
+  std::vector<RooListProxy*> _vertices;
+  RooListProxy _couplings;
+  RooListProxy _prodCouplings;
+  RooListProxy _decCouplings;
+  std::vector<std::vector<RooListProxy*> > _cfgdiagrams;
+  std::vector<RooListProxy*> _nonInterfering;
+};
+
 class RooLagrangianMorphFunc : public RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsReal> {
 public:
   RooLagrangianMorphFunc(const char *name, const char *title, const char* fileName, const char* obsName,const RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,config,basefolder,folders,objFilter,allowNegativeYields){}
@@ -346,7 +352,7 @@ public:
   CLASSNAME():RooLagrangianMorph ## BASE(){ };                          \
   virtual ~CLASSNAME(){};                        \
   virtual TObject* clone(const char* newname) const override { return new CLASSNAME(*this,newname); };
-
+/*
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // DERIVED CLASSES to implement specific PHYSICS ///////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -472,7 +478,6 @@ ClassImp(RooHCvbfMuMuMorphPdf)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // DERIVED CLASSES to implement specific PHYSICS ///////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
-
 class RooSMEFTggfMorphFunc : public RooLagrangianMorphFunc {
   MAKE_ROOLAGRANGIANMORPH(Func,RooSMEFTggfMorphFunc)
   ClassDefOverride(RooSMEFTggfMorphFunc,1)
@@ -576,5 +581,5 @@ ClassImp(RooSMEFTvbfWWMorphFunc)
 ClassImp(RooSMEFTggfWWMorphPdf)
 ClassImp(RooSMEFTvbfWWMorphPdf)
 #endif
-
+*/
 #endif
