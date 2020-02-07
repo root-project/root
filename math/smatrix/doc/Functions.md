@@ -49,21 +49,21 @@ C = A * B
 
 The operation compiles only if the matrices have the right size. In the case that A and B are symmetric matrices, C is a general one, since their product is not guaranteed to be symmetric.
 
-#### Special note on sing the C++ auto keyword 
+#### Special note on using the C++ auto keyword 
 
-Special care must be taken when using the C++ ``auto`` keyword with epxression templates. Some epxression can lead to temporary objects that the compiler might remove. One eample is when dealing with an epression like: 
+Special care must be taken when using the C++ ``auto`` keyword with expression templates. Some expression can lead to temporary objects that the compiler might remove. One example is when dealing with an expression like: 
 
 ~~~ {.cpp}
 auto D = (A * B) * C; 
 ~~~
 
-while instead declearing directly the matrix as 
+while instead declaring directly the matrix as 
 
 ~~~ {.cpp}
-SMatrix<doble, N, N> D = (A * B) * C; 
+SMatrix<double, N, N> D = (A * B) * C; 
 ~~~
 
-will be fine, because it will force the evaluation of the epression template when construucting the matrix D. 
+will be fine, because it will force the evaluation of the expression template when constructing the matrix D. 
 This is a limitation of the package, see [ROOT-6731](https://sft.its.cern.ch/jira/browse/ROOT-6371) and present in other similar libraries such as Eigen.
 
 ### Matrix and Vector Functions
