@@ -207,9 +207,8 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
 
    if (!fNdt) FindTriangles();
 
-   TGraph *graph = 0;           // current graph
+   TGraph *graph = nullptr;     // current graph
    Int_t npg     = 0;           // number of points in the current graph
-   TList *list   = new TList(); // list holding all the graphs
 
    // Find all the segments making the contour
 
@@ -264,7 +263,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
             delete [] ys0;
             delete [] xs1;
             delete [] ys1;
-            return 0;
+            return nullptr;
          } else {
             i1 = 3-i2-i0;
          }
@@ -326,7 +325,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
             delete [] ys0;
             delete [] xs1;
             delete [] ys1;
-            return 0;
+            return nullptr;
          } else {
             i1 = 3-i2-i0;
          }
@@ -364,6 +363,8 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          }
       }
    }
+
+   TList *list   = new TList(); // list holding all the graphs
 
    Int_t *segUsed = new Int_t[fNdt];
    for(i=0; i<fNdt; i++) segUsed[i]=kFALSE;
