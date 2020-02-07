@@ -2,11 +2,59 @@
 #include "TError.h"
 #include "TROOT.h"
 #include <algorithm>
+#include <fstream>
+#ifdef R__LINUX
+#include <unistd.h>
+#include <sys/stat.h>
+#endif
 #include "tbb/task_scheduler_init.h"
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the available number of logical cores.
+///
+///  - Checks if there is CFS bandwith control in place (linux, via cgroups,
+///    assuming standard paths)
+///  - Otherwise, returns the number of logical cores provided by tbb by default.
+///    This is processor affinity aware, at least in Linux.
+////////////////////////////////////////////////////////////////////////////////
+
 
 namespace ROOT {
 
    namespace Internal {
+
+      //Returns the available number of logical cores.
+      // - Checks if there is CFS bandwith control in place (linux, via cgroups,
+      //   assuming standard paths)
+      // - Otherwise, returns the number of logical cores provided by tbb by default.
+      //   This is processor affinity aware, at least in Linux.
+      Int_t NLogicalCores()
+      {
+      #ifdef R__LINUX
+         // Check for CFS bandwith control
+         std::ifstream f;
+         std::string quotaFile("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us");
+         struct stat buffer;
+         // Does the file exist?
+         if(stat(quotaFile.c_str(), &buffer) == 0) {
+            f.open(quotaFile);
+            float cfs_quota;
+            f>>cfs_quota;
+            f.close();
+            if(cfs_quota > 0) {
+               std::string periodFile("/sys/fs/cgroup/cpuacct/cpu.cfs_period_us");
+               f.open(periodFile);
+               float cfs_period;
+               f>>cfs_period;
+               f.close();
+               return static_cast<int>(std::ceil(cfs_quota/cfs_period));
+            }
+         }
+      #endif
+         return tbb::task_scheduler_init::default_num_threads();
+      }
+
       //Returns the weak_ptr reflecting a shared_ptr to the only instance of the Pool Manager.
       //This will allow to check if the shared_ptr is still alive, solving the dangling pointer problem.
       std::weak_ptr<TPoolManager> &GetWP()
@@ -24,7 +72,7 @@ namespace ROOT {
             mustDelete = false;
          }
 
-         nThreads = nThreads != 0 ? nThreads : tbb::task_scheduler_init::default_num_threads();
+         nThreads = nThreads != 0 ? nThreads : NLogicalCores();
          fSched ->initialize(nThreads);
          fgPoolSize = nThreads;
       };
