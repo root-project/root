@@ -2012,11 +2012,13 @@ void TPainter3dAlgorithms::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, D
       }
    }
 
+   TView *view = gPad ? gPad->GetView() : nullptr;
+
    //        Set luminosity
-   Luminosity(bn,     t[1]);
-   Luminosity(&bn[3], t[2]);
-   Luminosity(&bn[9], t[3]);
-   Luminosity(&bn[6], t[4]);
+   Luminosity(view, bn,     t[1]);
+   Luminosity(view, &bn[3], t[2]);
+   Luminosity(view, &bn[9], t[3]);
+   Luminosity(view, &bn[6], t[4]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3194,20 +3196,21 @@ L400:
 ////////////////////////////////////////////////////////////////////////////////
 /// Find surface luminosity at given point
 ///
+/// \param[in] view    pointer on TView object
 /// \param[in] anorm   surface normal at given point
 ///
 /// \param[out] flum   luminosity
 
-void TPainter3dAlgorithms::Luminosity(Double_t *anorm, Double_t &flum)
+void TPainter3dAlgorithms::Luminosity(TView *view, Double_t *anorm, Double_t &flum)
 {
    flum = 0;
+
+   if (!view || fLoff) return;
 
    /* Local variables */
    Double_t cosn, cosr;
    Int_t i;
    Double_t s, vl[3], vn[3];
-   TView *view = gPad ? gPad->GetView() : nullptr;
-   if (!view || fLoff) return;
 
    //          T R A N S F E R   N O R M A L  T O   SCREEN COORDINATES
    view->NormalWCtoNDC(anorm, vn);
@@ -4152,14 +4155,13 @@ void TPainter3dAlgorithms::ImplicitFunction(TF3 *f3, Double_t *rmin, Double_t *r
    Int_t icodes[3], i, i1, i2, k, nnod, ntria;
    Double_t x1=0, x2=0, y1, y2, z1, z2;
    Double_t dx, dy, dz;
-   Double_t p[8][3], pf[8], pn[8][3], t[3], fsurf, w = 0;
+   Double_t p[8][3], pf[8], pn[8][3], t[3], fsurf, w;
 
    Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
    Double_t dtria[kNmaxt][6], abcd[kNmaxt][4];
    Int_t    itria[kNmaxt][3], iorder[kNmaxt];
-   TView *view = 0;
+   TView *view = gPad ? gPad->GetView() : nullptr;
 
-   if (gPad) view = gPad->GetView();
    if (!view) {
       Error("ImplicitFunction", "no TView in current pad");
       return;
@@ -4381,7 +4383,7 @@ L120:
 
             for ( i=1 ; i<=nnod ; i++ ) {
                view->WCtoNDC(&xyz[i-1][0], &xyzn[i-1][0]);
-               Luminosity(&grad[i-1][0], w);
+               Luminosity(view, &grad[i-1][0], w);
                grad[i-1][0] = w;
             }
             ZDepth(xyzn, ntria, itria, dtria, abcd, (Int_t*)iorder);
@@ -5832,7 +5834,7 @@ L310:
             if (ntria == 0) continue;
             for ( i=1 ; i<=nnod ; i++ ) {
                view->WCtoNDC(&xyz[i-1][0], &xyzn[i-1][0]);
-               Luminosity(&grad[i-1][0], w);
+               Luminosity(view, &grad[i-1][0], w);
                grad[i-1][0] = w;
             }
             ZDepth(xyzn, ntria, itria, dtria, abcd, (Int_t*)iorder);
