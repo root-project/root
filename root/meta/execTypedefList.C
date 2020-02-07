@@ -134,7 +134,7 @@ int execTypedefList() {
    // res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
 
    res = check_file("typelist.v5.txt",349); if (res) return res;
-   res = check_file("typelist.v6.txt",1466); if (res) return res;
+   res = check_file("typelist.v6.txt",1465); if (res) return res;
 
    return 0;
 }
