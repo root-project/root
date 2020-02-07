@@ -36,7 +36,10 @@ y = M * x
 
 
 It compiles only if the matrix and the vectors have the right sizes.
-**Matrix - Matrix multiplication** The _operator *_ defines the matrix-matrix multiplication, \f$ C_{ij} = \sum_{k} A_{ik} B_{kj}\f$:
+
+### Matrix - Matrix multiplication
+
+The _operator *_ defines the matrix-matrix multiplication, \f$ C_{ij} = \sum_{k} A_{ik} B_{kj}\f$:
 
 ~~~ {.cpp}
 // A is a N1xN2 matrix, B is a N2xN3 matrix and C is a N1xN3 matrix
@@ -45,6 +48,23 @@ C = A * B
 
 
 The operation compiles only if the matrices have the right size. In the case that A and B are symmetric matrices, C is a general one, since their product is not guaranteed to be symmetric.
+
+#### Special note on sing the C++ auto keyword 
+
+Special care must be taken when using the C++ ``auto`` keyword with epxression templates. Some epxression can lead to temporary objects that the compiler might remove. One eample is when dealing with an epression like: 
+
+~~~ {.cpp}
+auto D = (A * B) * C; 
+~~~
+
+while instead declearing directly the matrix as 
+
+~~~ {.cpp}
+SMatrix<doble, N, N> D = (A * B) * C; 
+~~~
+
+will be fine, because it will force the evaluation of the epression template when construucting the matrix D. 
+This is a limitation of the package, see [ROOT-6731](https://sft.its.cern.ch/jira/browse/ROOT-6371) and present in other similar libraries such as Eigen.
 
 ### Matrix and Vector Functions
 
