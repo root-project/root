@@ -157,10 +157,7 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t z, Int_t n, 
 
 TGeoElement::~TGeoElement()
 {
-   if (fIsotopes) {
-      // fIsotopes->Delete(); // Andrei, check if isotopes shhould be deleted as well
-      delete fIsotopes;
-   }
+   delete fIsotopes;
    delete [] fAbundances;
 }
 
