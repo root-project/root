@@ -182,7 +182,7 @@ private:
    Int_t       fJmask[30]; // indices of subsets of n-bit masks (n is from 1 to 30)
    Int_t       fMask[465]; // set of masks (30+29+28+...+1)=465
 
-//        Marching Cubes 33 - constrction of iso-surfaces, see publication CERN-CN-95-17
+//        Marching Cubes 33 - construction of iso-surfaces, see publication CERN-CN-95-17
 //
 public:
    void    MarchingCube(Double_t fiso, Double_t p[8][3], Double_t f[8], Double_t g[8][3], Int_t &nnod, Int_t &ntria, Double_t xyz[][3], Double_t grad[][3], Int_t itria[][3]);
