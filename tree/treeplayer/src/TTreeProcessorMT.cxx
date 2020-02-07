@@ -491,6 +491,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const std::vector<Internal::NameAlias> &friendNames = fFriendInfo.fFriendNames;
    const std::vector<std::vector<std::string>> &friendFileNames = fFriendInfo.fFriendFileNames;
 
+   TThreadExecutor pool;
    // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
    // so we do it here for all files.
    const bool hasFriends = !friendNames.empty();
@@ -505,7 +506,6 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const auto friendEntries =
       hasFriends ? Internal::GetFriendEntries(friendNames, friendFileNames) : std::vector<std::vector<Long64_t>>{};
 
-   TThreadExecutor pool;
    // Parent task, spawns tasks that process each of the entry clusters for each input file
    using Internal::EntryCluster;
    auto processFile = [&](std::size_t fileIdx) {
