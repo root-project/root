@@ -520,13 +520,8 @@ void TF3::Paint(Option_t *option)
 
 void TF3::SetClippingBoxOff()
 {
-   if (!fHistogram) {
-      fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
-                                                    ,fNpy,fYmin,fYmax
-                                                    ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
-   }
-   fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOff",0);
+   fClipBoxOn = kFALSE;
+   fClipBox[0] = fClipBox[1] = fClipBox[2] = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -640,18 +635,10 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
 {
-   if (!fHistogram) {
-      fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
-                                                    ,fNpy,fYmin,fYmax
-                                                    ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
-   }
-
-   TVectorD v(3);
-   v(0) = xclip;
-   v(1) = yclip;
-   v(2) = zclip;
-   fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOn",&v);
+   fClipBoxOn = kTRUE;
+   fClipBox[0] = xclip;
+   fClipBox[1] = yclip;
+   fClipBox[2] = zclip;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
