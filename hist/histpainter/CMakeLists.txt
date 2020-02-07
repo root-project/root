@@ -16,7 +16,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     TGraphPainter.h
     THistPainter.h
     TLego.h
-    TPainter3dAlgorithms.h
     TPaletteAxis.h
   SOURCES
     src/TGraph2DPainter.cxx
