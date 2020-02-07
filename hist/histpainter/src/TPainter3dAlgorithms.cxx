@@ -73,11 +73,11 @@ extern Hparam_t  Hparam;
 TPainter3dAlgorithms::TPainter3dAlgorithms(): TAttLine(1,1,1), TAttFill(1,0)
 {
    Int_t i;
-   fAphi            = 0;
+   fAphi            = nullptr;
    fNaphi           = 0;
    fIfrast          = 0;
    fMesh            = 1;
-   fRaster          = 0;
+   fRaster          = nullptr;
    fColorTop        = 1;
    fColorBottom     = 1;
    fEdgeIdx         = -1;
@@ -87,7 +87,7 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(): TAttLine(1,1,1), TAttFill(1,0)
    fLegoFunction    = 0;
    fSurfaceFunction = 0;
 
-   TList *stack = 0;
+   TList *stack = nullptr;
    if (gCurrentHist) stack = gCurrentHist->GetPainter()->GetStack();
    fNStack = 0;
    if (stack) fNStack = stack->GetSize();
@@ -156,11 +156,11 @@ TPainter3dAlgorithms::TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t
    Int_t i;
    Double_t psi;
 
-   fAphi         = 0;
+   fAphi         = nullptr;
    fNaphi        = 0;
    fIfrast       = 0;
    fMesh         = 1;
-   fRaster       = 0;
+   fRaster       = nullptr;
    fColorTop     = 1;
    fColorBottom  = 1;
    fEdgeIdx      = -1;
