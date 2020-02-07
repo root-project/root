@@ -53,11 +53,6 @@ const Int_t kF3FillColor1 = 201;
 const Int_t kF3FillColor2 = 202;
 const Int_t kF3LineColor  = 203;
 
-Int_t    TPainter3dAlgorithms::fgF3Clipping = 0;
-Double_t TPainter3dAlgorithms::fgF3XClip = 0.;
-Double_t TPainter3dAlgorithms::fgF3YClip = 0.;
-Double_t TPainter3dAlgorithms::fgF3ZClip = 0.;
-
 // Static arrays used to paint stacked lego plots.
 const Int_t kVSizeMax = 20;
 static Double_t gV[kVSizeMax];
@@ -3318,30 +3313,6 @@ void TPainter3dAlgorithms::SetSurfaceFunction(SurfaceFunc_t fun)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function
-/// Set the implicit function clipping box "off".
-
-void TPainter3dAlgorithms::SetF3ClippingBoxOff()
-{
-   fgF3Clipping = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Static function
-/// Set the implicit function clipping box "on" and define the clipping box.
-/// xclip, yclip and zclip is a point within the function range. All the
-/// function value having x<=xclip and y<=yclip and z>=zclip are clipped.
-
-void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
-                                              Double_t yclip, Double_t zclip)
-{
-   fgF3Clipping = 1;
-   fgF3XClip = xclip;
-   fgF3YClip = yclip;
-   fgF3ZClip = zclip;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Store dark color for stack number n
 
 void TPainter3dAlgorithms::SetColorDark(Color_t color, Int_t n)
@@ -4166,6 +4137,17 @@ void TPainter3dAlgorithms::ImplicitFunction(TF3 *f3, Double_t *rmin, Double_t *r
    }
    Double_t *tnorm = view->GetTnorm();
    if (!tnorm) return;
+
+
+   Bool_t fgF3Clipping = kFALSE;
+   Double_t fgF3XClip = 0., fgF3YClip = 0., fgF3ZClip = 0.;
+   const Double_t *clip = f3->GetClippingBox();
+   if (clip) {
+      fgF3Clipping = kTRUE;
+      fgF3XClip = clip[0];
+      fgF3YClip = clip[1];
+      fgF3ZClip = clip[2];
+   }
 
    //       D E F I N E   O R D E R   O F   D R A W I N G
    if (*chopt == 'B' || *chopt == 'b') {

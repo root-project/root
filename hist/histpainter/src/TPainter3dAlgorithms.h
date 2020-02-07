@@ -52,11 +52,6 @@ private:
    Int_t        fIc2;              /// Base colour for the 2nd Iso Surface
    Int_t        fIc3;              /// Base colour for the 3rd Iso Surface
 
-   static Int_t    fgF3Clipping;   /// Clipping box is off (0) or on (1)
-   static Double_t fgF3XClip;      /// Clipping plane along X
-   static Double_t fgF3YClip;      /// Clipping plane along Y
-   static Double_t fgF3ZClip;      /// Clipping plane along Y
-
 public:
    typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
    typedef void (TPainter3dAlgorithms::*LegoFunc_t)(Int_t,Int_t,Int_t&,Double_t*,Double_t*,Double_t*);
@@ -106,9 +101,6 @@ public:
    void    SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt);
    void    SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t);
    void    SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const char *chopt);
-
-   static void    SetF3ClippingBoxOff();
-   static void    SetF3ClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip);
 
 //       Color and function levels
 //
