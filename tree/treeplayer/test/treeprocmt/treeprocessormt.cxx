@@ -223,6 +223,7 @@ TEST(TreeProcessorMT, PathName)
 {
    auto fname = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4mu.root";
    auto f = std::unique_ptr<TFile>(TFile::Open(fname));
+   ASSERT_TRUE(f != nullptr) << "Could not open remote file\n";
    auto tree = f->Get<TTree>("Events");
    ROOT::TTreeProcessorMT p(*tree);
    std::atomic<unsigned int> n(0U);
