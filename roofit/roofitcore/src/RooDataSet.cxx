@@ -298,11 +298,11 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     }
     for (map<string,RooAbsData*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
       // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-      if (indexCat && !indexCat->lookupType(hiter->first.c_str())) {
+      if (indexCat && !indexCat->hasLabel(hiter->first)) {
         indexCat->defineType(hiter->first) ;
         coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
       }
-      if (icat && !icat->lookupType(hiter->first.c_str())) {	
+      if (icat && !icat->hasLabel(hiter->first)) {
         icat->defineType(hiter->first) ;
       }
       icat->setLabel(hiter->first.c_str()) ;
@@ -431,11 +431,11 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
         RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
         for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
           // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-          if (!indexCat->lookupType(hiter->first.c_str())) {
+          if (!indexCat->hasLabel(hiter->first)) {
             indexCat->defineType(hiter->first) ;
             coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
           }
-          if (!icat->lookupType(hiter->first.c_str())) {
+          if (!icat->hasLabel(hiter->first)) {
             icat->defineType(hiter->first) ;
           }
           icat->setLabel(hiter->first.c_str()) ;
@@ -495,11 +495,11 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
         RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
         for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
           // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-          if (!indexCat->lookupType(hiter->first.c_str())) {
+          if (!indexCat->hasLabel(hiter->first)) {
             indexCat->defineType(hiter->first) ;
             coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
           }
-          if (!icat->lookupType(hiter->first.c_str())) {
+          if (!icat->hasLabel(hiter->first)) {
             icat->defineType(hiter->first) ;
           }
           icat->setLabel(hiter->first.c_str()) ;
@@ -550,11 +550,11 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
         RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
         for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
           // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-          if (!indexCat->lookupType(hiter->first.c_str())) {
+          if (!indexCat->hasLabel(hiter->first)) {
             indexCat->defineType(hiter->first) ;
             coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
           }
-          if (!icat->lookupType(hiter->first.c_str())) {
+          if (!icat->hasLabel(hiter->first)) {
             icat->defineType(hiter->first) ;
           }
           icat->setLabel(hiter->first.c_str()) ;

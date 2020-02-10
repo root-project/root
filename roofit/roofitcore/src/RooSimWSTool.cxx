@@ -479,7 +479,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
       if(splitIter->second.second.size()>0) {
 	
 	// Check that specified split name is in fact valid
-	if (!splitCat->lookupType(splitIter->second.second.c_str())) {
+	if (!splitCat->hasLabel(splitIter->second.second)) {
 	  coutE(InputArguments) << "RooSimWSTool::executeBuild(" << GetName() << ") ERROR: name of remainder state for constrained split, '" 
 				<< splitIter->second.second << "' , does not match any state name of (composite) split category " << splitCat->GetName() << endl ;
 	  return 0 ;
