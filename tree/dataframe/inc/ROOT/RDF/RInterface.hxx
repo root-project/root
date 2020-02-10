@@ -645,7 +645,8 @@ public:
                 << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
       const auto &customCols = fCustomColumns.GetNames();
-      for (auto &c : columnList) {
+      const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
+      for (auto &c : validColumnNames) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
          const auto customColID = isCustom ? fCustomColumns.GetColumns().at(c)->GetID() : 0;
          cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom,
