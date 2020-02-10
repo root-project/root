@@ -139,12 +139,21 @@ sap.ui.define([], function() {
    }
 
 
-   EveManager.prototype.SendMIR = function(mir)
+   /** Sending Method Invocation Request
+    * Special handling for offline case - some methods can be tried to handle without server */
+   EveManager.prototype.SendMIR = function(mir_call, element_id, element_class)
    {
-      if (!mir || ! this.handle) return;
+      if (!mir_call || ! this.handle || !element_class) return;
 
-      if (this.handle.kind != "file")
-         this.handle.Send(JSON.stringify(mir));
+      if ((this.handle.kind != "file") || (mir_call == "NextEvent()")) {
+         var req = {
+            "mir" : mir_call,
+            "fElementId" : element_id,
+            "class" : element_class
+         }
+
+         this.handle.Send(JSON.stringify(req));
+      }
    }
 
    /** Configure receiver for scene-respective events. Following event used:
