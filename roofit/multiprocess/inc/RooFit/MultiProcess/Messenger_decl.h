@@ -91,11 +91,13 @@ public:
 
 //   bool is_initialized() const;
 
-   void test_receive(ZmqLingeringSocketPtr<> &socket, X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
-   void test_send(ZmqLingeringSocketPtr<> &socket, X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
+   void test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
+   void test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
 
    sigset_t ppoll_sigmask;
 //   std::size_t N_available_polled_results = 0;
+
+   void set_send_flag(int flag);
 
 private:
    // push
@@ -112,6 +114,8 @@ private:
    // pollers for all pull sockets
    std::vector<ZeroMQPoller> qw_pull_poller;
    ZeroMQPoller mq_pull_poller;
+
+   int send_flag = 0;
 };
 
 

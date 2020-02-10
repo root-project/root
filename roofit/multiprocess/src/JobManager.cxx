@@ -33,6 +33,8 @@ JobManager* JobManager::instance(std::size_t N_workers) {
       assert(N_workers != 0);
       _instance.reset(new JobManager(N_workers));  // can't use make_unique, because ctor is private
       _instance->messenger().test_connections(_instance->process_manager());
+      // set send to non blocking on all processes after checking the connections are working:
+      _instance->messenger().set_send_flag(ZMQ_DONTWAIT);
    }
    return _instance.get();
 }

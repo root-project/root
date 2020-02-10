@@ -164,6 +164,18 @@ void worker_loop()
          if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
             std::cerr << "breaking out of worker loop PID " << getpid() << std::endl;
             break;
+         } else if (e.num() == EAGAIN) {
+            // This can happen from recv if ppoll initially gets a read-ready signal for a socket,
+            // but the received data does not pass the checksum test, so the socket becomes unreadable
+            // again or from non-blocking send if the socket becomes unwritable either due to the HWM
+            // being reached or the socket not being connected (anymore). The latter case usually means
+            // the connection has been severed from the other side, meaning it has probably been killed
+            // and in that case the next ppoll call will probably also receive a SIGTERM, ending the
+            // loop. In case something else is wrong, this message will print multiple times, which
+            // should be taken as a cue for writing a bug report :)
+            // TODO: handle this more rigorously
+            std::cout << "EAGAIN in worker_loop() (from either send or receive), continuing" << std::endl;
+            continue;
          } else {
             std::cerr << "other error in worker loop at PID " << getpid() << ", namely " << e.what() << std::endl;
             throw;

@@ -35,12 +35,10 @@ Messenger::Messenger(const ProcessManager &process_manager)
    try {
       if (process_manager.is_master()) {
          mq_push.reset(zmqSvc().socket_ptr(zmq::PUSH));
-         mq_push.reset(zmqSvc().socket_ptr(zmq::PUSH));
          mq_push->bind("ipc:///tmp/roofitMP_from_master_to_queue");
 
          mq_push_poller.register_socket(*mq_push, zmq::POLLOUT);
 
-         mq_pull.reset(zmqSvc().socket_ptr(zmq::PULL));
          mq_pull.reset(zmqSvc().socket_ptr(zmq::PULL));
          mq_pull->bind("ipc:///tmp/roofitMP_from_queue_to_master");
 
@@ -80,7 +78,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          mq_pull.reset(zmqSvc().socket_ptr(zmq::PULL));
          mq_pull->connect("ipc:///tmp/roofitMP_from_master_to_queue");
 
-         mq_pull_poller.register_socket(*mq_pull, zmq::POLLOUT);
+         mq_pull_poller.register_socket(*mq_pull, zmq::POLLIN);
 
       } else if (process_manager.is_worker()) {
          // we only need one queue-worker pipe on the worker
@@ -119,11 +117,7 @@ Messenger::~Messenger() {
 }
 
 
-void Messenger::test_send(ZmqLingeringSocketPtr<> &socket, X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id) {
-   int timeout_ms = 5000;
-   int reset_timeout = socket->getsockopt<int>(ZMQ_SNDTIMEO);
-   socket->setsockopt(ZMQ_SNDTIMEO, &timeout_ms, sizeof(timeout_ms));
-
+void Messenger::test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id) {
    try {
       switch (snd_pipe) {
       case test_snd_pipes::M2Q: {
@@ -150,16 +144,10 @@ void Messenger::test_send(ZmqLingeringSocketPtr<> &socket, X2X ping_value, test_
          throw;
       }
    }
-
-   socket->setsockopt(ZMQ_SNDTIMEO, &reset_timeout, sizeof(reset_timeout));
 }
 
 
-void Messenger::test_receive(ZmqLingeringSocketPtr<> &socket, X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id) {
-   int timeout_ms = 5000;
-   int reset_timeout = socket->getsockopt<int>(ZMQ_RCVTIMEO);
-   socket->setsockopt(ZMQ_RCVTIMEO, &timeout_ms, sizeof(timeout_ms));
-
+void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id) {
    X2X handshake;
 
    try {
@@ -193,8 +181,6 @@ void Messenger::test_receive(ZmqLingeringSocketPtr<> &socket, X2X expected_ping_
    if (handshake != expected_ping_value) {
       throw std::runtime_error("Messenger::test_connections: RECEIVE over master-queue connection failed, did not receive pong!");
    }
-
-   socket->setsockopt(ZMQ_RCVTIMEO, &reset_timeout, sizeof(reset_timeout));
 }
 
 
@@ -202,13 +188,13 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
    process_manager.identify_processes();
    if (process_manager.is_master()) {
       std::cout << "testing Messenger connections on master" << std::endl;
-      test_send(mq_push, X2X::ping, test_snd_pipes::M2Q, -1);
+      test_send(X2X::ping, test_snd_pipes::M2Q, -1);
       std::cout << "testing Messenger connections on master: sent ping" << std::endl;
-      test_receive(mq_pull, X2X::pong, test_rcv_pipes::fromQonM, -1);
+      test_receive(X2X::pong, test_rcv_pipes::fromQonM, -1);
       std::cout << "testing Messenger connections on master: received pong" << std::endl;
-      test_receive(mq_pull, X2X::ping, test_rcv_pipes::fromQonM, -1);
+      test_receive(X2X::ping, test_rcv_pipes::fromQonM, -1);
       std::cout << "testing Messenger connections on master: received ping" << std::endl;
-      test_send(mq_push, X2X::pong, test_snd_pipes::M2Q, -1);
+      test_send(X2X::pong, test_snd_pipes::M2Q, -1);
       std::cout << "DONE testing Messenger connections on master" << std::endl;
    } else if (process_manager.is_queue()) {
       std::cout << "testing Messenger connections on queue" << std::endl;
@@ -228,7 +214,7 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
 //      }
 
       for (std::size_t ix = 0; ix < process_manager.N_workers(); ++ix) {
-         test_send(qw_push[ix], X2X::ping, test_snd_pipes::Q2W, ix);
+         test_send(X2X::ping, test_snd_pipes::Q2W, ix);
       }
 
       while (!process_manager.sigterm_received() && (poller.size() > 0)) {
@@ -243,13 +229,13 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
             // message comes from the master/queue socket (first element):
             if (readable_socket.first == mq_index) {
                std::cout << "queue doing master" << std::endl;
-               test_receive(mq_pull, X2X::ping, test_rcv_pipes::fromMonQ, -1);
+               test_receive(X2X::ping, test_rcv_pipes::fromMonQ, -1);
                std::cout << "queue doing master got ping" << std::endl;
-               test_send(mq_push, X2X::pong, test_snd_pipes::Q2M, -1);
+               test_send(X2X::pong, test_snd_pipes::Q2M, -1);
                std::cout << "queue doing master sent pong" << std::endl;
-               test_send(mq_push, X2X::ping, test_snd_pipes::Q2M, -1);
+               test_send(X2X::ping, test_snd_pipes::Q2M, -1);
                std::cout << "queue doing master sent ping" << std::endl;
-               test_receive(mq_pull, X2X::pong, test_rcv_pipes::fromMonQ, -1);
+               test_receive(X2X::pong, test_rcv_pipes::fromMonQ, -1);
                std::cout << "queue doing master got pong" << std::endl;
                poller.unregister_socket(*mq_pull);
                std::cout << "queue done with master" << std::endl;
@@ -258,11 +244,11 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
                auto this_worker_id = readable_socket.first - 1;  // TODO: replace with a more reliable lookup
                std::cout << "queue doing worker " << this_worker_id << std::endl;
 
-               test_receive(qw_pull[this_worker_id], X2X::pong, test_rcv_pipes::fromWonQ, this_worker_id);
+               test_receive(X2X::pong, test_rcv_pipes::fromWonQ, this_worker_id);
                std::cout << "queue doing worker " << this_worker_id << " received pong" << std::endl;
-               test_receive(qw_pull[this_worker_id], X2X::ping, test_rcv_pipes::fromWonQ, this_worker_id);
+               test_receive(X2X::ping, test_rcv_pipes::fromWonQ, this_worker_id);
                std::cout << "queue doing worker " << this_worker_id << " received ping" << std::endl;
-               test_send(qw_push[this_worker_id], X2X::pong, test_snd_pipes::Q2W, this_worker_id);
+               test_send(X2X::pong, test_snd_pipes::Q2W, this_worker_id);
 
                poller.unregister_socket(*qw_pull[this_worker_id]);
                std::cout << "queue done with worker " << this_worker_id << std::endl;
@@ -277,19 +263,14 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
    } else if (process_manager.is_worker()) {
       std::cout << "testing Messenger connections on worker " << process_manager.worker_id() << std::endl;
 
-//      ZeroMQPoller poller = create_worker_poller();
-
-//      std::cout << "worker " << process_manager.worker_id() << ": created poller" << std::endl;
-
-//      poller.poll(-1);
-      test_receive(this_worker_qw_pull, X2X::ping, test_rcv_pipes::fromQonW, -1);
+      test_receive(X2X::ping, test_rcv_pipes::fromQonW, -1);
       std::cout << "worker " << process_manager.worker_id() << ": received first ping" << std::endl;
-      test_send(this_worker_qw_push, X2X::pong, test_snd_pipes::W2Q, -1);
+      test_send(X2X::pong, test_snd_pipes::W2Q, -1);
       std::cout << "worker " << process_manager.worker_id() << ": sent first pong" << std::endl;
-      test_send(this_worker_qw_push, X2X::ping, test_snd_pipes::W2Q, -1);
+      test_send(X2X::ping, test_snd_pipes::W2Q, -1);
       std::cout << "worker " << process_manager.worker_id() << ": sent first ping" << std::endl;
 //      poller.poll(-1);
-      test_receive(this_worker_qw_pull, X2X::pong, test_rcv_pipes::fromQonW, -1);
+      test_receive(X2X::pong, test_rcv_pipes::fromQonW, -1);
       std::cout << "DONE testing Messenger connections on worker " << process_manager.worker_id() << std::endl;
    } else {
       // should never get here
@@ -377,6 +358,15 @@ void Messenger::send_from_master_to_queue()
 {
    send_from_queue_to_master();
 }
+
+void Messenger::set_send_flag(int flag) {
+   if (flag == 0 || flag == ZMQ_DONTWAIT || flag == ZMQ_SNDMORE || flag == (ZMQ_DONTWAIT | ZMQ_SNDMORE)) {
+      send_flag = flag;
+   } else {
+      throw std::runtime_error("in Messenger::set_send_flag: trying to set illegal flag, see zmq_send API for allowed flags");
+   }
+}
+
 
 // for debugging
 #define PROCESS_VAL(p) case(p): s = #p; break;

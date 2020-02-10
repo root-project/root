@@ -26,7 +26,7 @@ template <typename T, typename... Ts>
 void Messenger::send_from_worker_to_queue(T item, Ts... items)
 {
    try {
-      zmqSvc().send(*this_worker_qw_push, item);
+      zmqSvc().send(*this_worker_qw_push, item, send_flag);
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
       throw;
@@ -56,7 +56,7 @@ template <typename T, typename... Ts>
 void Messenger::send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts... items)
 {
    try {
-      zmqSvc().send(*qw_push[this_worker_id], item);
+      zmqSvc().send(*qw_push[this_worker_id], item, send_flag);
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
       throw;
@@ -89,7 +89,7 @@ template <typename T, typename... Ts>
 void Messenger::send_from_queue_to_master(T item, Ts... items)
 {
    try {
-      zmqSvc().send(*mq_push, item);
+      zmqSvc().send(*mq_push, item, send_flag);
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
       throw;

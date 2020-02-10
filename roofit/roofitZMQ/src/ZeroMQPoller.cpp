@@ -60,6 +60,7 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::ppoll(int timeo, const sigset_
 
    std::cout << "ppolling on PID " << getpid() << "..." << std::endl;
    auto n = ZMQ::ppoll(m_items, timeo, sigmask_);
+   std::cout << "ppolling on PID " << getpid() << " returned n = " << n << std::endl;
    if (n == 0) return r;
 
    for (auto& m_item : m_items) {

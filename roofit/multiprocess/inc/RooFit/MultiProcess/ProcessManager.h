@@ -62,7 +62,7 @@ private:
 
    bool initialized = false;
 
-   static bool _sigterm_received;
+   static volatile sig_atomic_t _sigterm_received;
 };
 
 } // namespace MultiProcess

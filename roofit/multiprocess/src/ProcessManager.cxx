@@ -14,6 +14,7 @@
  */
 
 #include <csignal>  // for sigterm handling on child processes
+#include <cstring>  // for strsignal
 #include <iostream>
 #include <unordered_set>
 
@@ -46,21 +47,25 @@ ProcessManager::~ProcessManager()
 
 
 // static member initialization
-bool ProcessManager::_sigterm_received = false;
+volatile sig_atomic_t ProcessManager::_sigterm_received = 0;
 
 // static function
-void ProcessManager::handle_sigterm(int /*signum*/) {
+void ProcessManager::handle_sigterm(int signum) {
    // We need this to tell the children to die, because we can't talk
    // to them anymore during JobManager destruction, because that kills
    // the Messenger first. We do that with SIGTERMs. The sigterm_received()
    // should be checked in message loops to stop them when it's true.
-   _sigterm_received = true;
-   std::cout << "handled SIGTERM on PID " << getpid() << std::endl;
+   _sigterm_received = 1;
+   std::cout << "handled " << strsignal(signum) << " on PID " << getpid() << std::endl;
 }
 
 // static function
 bool ProcessManager::sigterm_received() {
-   return _sigterm_received;
+   if (_sigterm_received > 0) {
+      return true;
+   } else {
+      return false;
+   }
 }
 
 void ProcessManager::initialize_processes(bool cpu_pinning) {
