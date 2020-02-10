@@ -24,6 +24,7 @@ public:
    ZeroMQPoller() = default;
 
    std::vector<std::pair<size_t, int>> poll(int timeo = -1);
+   std::vector<std::pair<size_t, int>> ppoll(int timeo, const sigset_t * sigmask_);
 
    size_t size() const;
 

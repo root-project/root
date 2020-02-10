@@ -17,6 +17,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <csignal>  // sigprocmask, sigset_t, etc
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 #include "RooFit_ZMQ/ZeroMQPoller.h"
@@ -57,7 +58,8 @@ public:
    void close_master_queue_connection(bool close_context) noexcept;
    void close_queue_worker_connections(bool close_context);
 
-   std::pair<ZeroMQPoller, std::size_t> create_poller();
+   std::pair<ZeroMQPoller, std::size_t> create_queue_poller();
+   ZeroMQPoller create_worker_poller();
 
    // -- WORKER - QUEUE COMMUNICATION --
 
@@ -92,15 +94,24 @@ public:
    void test_receive(ZmqLingeringSocketPtr<> &socket, X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
    void test_send(ZmqLingeringSocketPtr<> &socket, X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
 
+   sigset_t ppoll_sigmask;
+//   std::size_t N_available_polled_results = 0;
+
 private:
    // push
    std::vector<ZmqLingeringSocketPtr<>> qw_push;
    ZmqLingeringSocketPtr<> this_worker_qw_push;
    ZmqLingeringSocketPtr<> mq_push;
+   // pollers for all push sockets
+   std::vector<ZeroMQPoller> qw_push_poller;
+   ZeroMQPoller mq_push_poller;
    // pull
    std::vector<ZmqLingeringSocketPtr<>> qw_pull;
    ZmqLingeringSocketPtr<> this_worker_qw_pull;
    ZmqLingeringSocketPtr<> mq_pull;
+   // pollers for all pull sockets
+   std::vector<ZeroMQPoller> qw_pull_poller;
+   ZeroMQPoller mq_pull_poller;
 };
 
 

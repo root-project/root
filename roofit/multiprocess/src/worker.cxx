@@ -16,6 +16,7 @@
 #include <unistd.h> // getpid, pid_t
 #include <cerrno> // EINTR
 #include <chrono>
+#include <csignal>  // sigprocmask etc
 
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/types.h"
@@ -53,8 +54,20 @@ void worker_loop()
          .count();
    };
 
+   auto poller = JobManager::instance()->messenger().create_worker_poller();
+
+   // Before blocking SIGTERM, set the signal handler, so we can also check after blocking whether a signal occurred
+   // In our case, we already set it in the ProcessManager after forking to the queue and worker processes.
+
+   sigset_t sigmask;
+   sigemptyset(&sigmask);
+   sigaddset(&sigmask, SIGTERM);
+   sigprocmask(SIG_BLOCK, &sigmask, &JobManager::instance()->messenger().ppoll_sigmask);
+
+   // Before doing anything, check whether we have received a terminate signal while blocking signals!
+   // In this case, we also do that in the while condition.
    while (!ProcessManager::sigterm_received() && carry_on) {
-      try { // watch for zmq_error from send or recv caused by SIGTERM from master
+      try { // watch for zmq_error from ppoll caused by SIGTERM from master
          decltype(get_time()) t1 = 0, t2 = 0, t3 = 0;
          std::cout << "worker_loop next iteration" << std::endl;
 
@@ -67,6 +80,7 @@ void worker_loop()
          }
 
          // receive handshake
+//         poller.ppoll(-1, &sigmask_old);
          message_q2w = JobManager::instance()->messenger().receive_from_queue_on_worker<Q2W>();
          std::cout << "worker_loop received handshake" << std::endl;
 
@@ -87,7 +101,9 @@ void worker_loop()
          }
          case Q2W::dequeue_accepted: {
             dequeue_acknowledged = true;
+//            poller.ppoll(-1, &sigmask_old);
             job_id = JobManager::instance()->messenger().receive_from_queue_on_worker<std::size_t>();
+//            poller.ppoll(-1, &sigmask_old);
             task = JobManager::instance()->messenger().receive_from_queue_on_worker<Task>();
 
             t2 = get_time();
@@ -101,6 +117,9 @@ void worker_loop()
             JobManager::instance()->messenger().send_from_worker_to_queue(W2Q::send_result, job_id, task);
             JobManager::get_job_object(job_id)->send_back_task_result_from_worker(task);
 
+            std::cout << "task done: worker " << JobManager::instance()->process_manager().worker_id() << " sent back results" << std::endl;
+
+//            poller.ppoll(-1, &sigmask_old);
             message_q2w = JobManager::instance()->messenger().receive_from_queue_on_worker<Q2W>();
             if (message_q2w != Q2W::result_received) {
                std::cerr << "worker " << getpid()
@@ -108,6 +127,7 @@ void worker_loop()
                          << " instead." << std::endl;
                throw std::runtime_error("");
             }
+            std::cout << "task done: worker " << JobManager::instance()->process_manager().worker_id() << " finished dequeue_accepted" << std::endl;
             break;
          }
 
@@ -116,9 +136,13 @@ void worker_loop()
          case Q2W::update_real: {
             t1 = get_time();
 
+//            poller.ppoll(-1, &sigmask_old);
             job_id = JobManager::instance()->messenger().receive_from_queue_on_worker<std::size_t>();
+//            poller.ppoll(-1, &sigmask_old);
             std::size_t ix = JobManager::instance()->messenger().receive_from_queue_on_worker<std::size_t>();
+//            poller.ppoll(-1, &sigmask_old);
             double val = JobManager::instance()->messenger().receive_from_queue_on_worker<double>();
+//            poller.ppoll(-1, &sigmask_old);
             bool is_constant = JobManager::instance()->messenger().receive_from_queue_on_worker<bool>();
             JobManager::get_job_object(job_id)->update_real(ix, val, is_constant);
 
@@ -138,12 +162,18 @@ void worker_loop()
          }
       } catch (zmq::error_t& e) {
          if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
+            std::cerr << "breaking out of worker loop PID " << getpid() << std::endl;
             break;
          } else {
+            std::cerr << "other error in worker loop at PID " << getpid() << ", namely " << e.what() << std::endl;
             throw;
          }
       }
    }
+   std::cout << "worker out [MIC DROP]" << std::endl;
+   // clean up signal management modifications
+   sigprocmask(SIG_SETMASK, &JobManager::instance()->messenger().ppoll_sigmask, nullptr);
+
    worker_loop_running = false;
 }
 

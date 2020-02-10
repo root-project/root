@@ -12,10 +12,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitZMQ
         RooFit_ZMQ/ZeroMQSvc.h
         RooFit_ZMQ/functions.h
         RooFit_ZMQ/ZeroMQPoller.h
+        RooFit_ZMQ/ppoll.h
     SOURCES
         src/ZeroMQSvc.cpp
         src/ZeroMQPoller.cpp
         src/functions.cpp
+        src/ppoll.cpp
+        src/libzmq/clock.cpp
+        src/libzmq/err.cpp
+        src/libzmq/polling_util.cpp
     DICTIONARY_OPTIONS
         -I${ZeroMQ_INCLUDE_DIR}
         -writeEmptyRootPCM

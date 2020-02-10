@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+#include "RooFit_ZMQ/ppoll.h"
 #include "RooFit_ZMQ/ZeroMQPoller.h"
 
 std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
@@ -15,16 +16,19 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
   if (m_items.empty()) {
     throw std::runtime_error("No sockets registered");
   }
+  int n = 0;
   while (true) {
     try {
-      auto n = zmq::poll(&m_items[0], m_items.size(), timeo);
-      if (n == 0) return r;
-      break;
+       std::cout << "polling on PID " << getpid() << "..." << std::endl;
+       n = zmq::poll(&m_items[0], m_items.size(), timeo);
+       std::cout << "polling on PID " << getpid() << " returned n = " << n << std::endl;
+       if (n == 0) return r;
+       break;
     } catch (const zmq::error_t& e) {
-      if (e.num() != EINTR) {
-        std::cerr << e.what() << std::endl;
-        throw;
-      }
+       std::cerr << "in ZeroMQPoller::poll on PID " << getpid() << ": " << e.what() << std::endl;
+       if (e.num() != EINTR) {
+          throw;
+       }
     }
   }
   // TODO: replace this with ranges::v3::zip
@@ -46,6 +50,36 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
   }
   return r;
 }
+
+std::vector<std::pair<size_t, int>> ZeroMQPoller::ppoll(int timeo, const sigset_t * sigmask_) {
+   if (m_items.empty()) {
+      throw std::runtime_error("No sockets registered");
+   }
+
+   std::vector<std::pair<size_t, int>> r;
+
+   std::cout << "ppolling on PID " << getpid() << "..." << std::endl;
+   auto n = ZMQ::ppoll(m_items, timeo, sigmask_);
+   if (n == 0) return r;
+
+   for (auto& m_item : m_items) {
+      size_t index = 0;
+      int flags = 0;
+      if (m_item.socket == nullptr) {
+         // an fd was registered
+         std::tie(index, flags) = m_fds[m_item.fd];
+      } else {
+         // a socket was registered
+         const zmq::socket_t* s;
+         std::tie(index, flags, s) = m_sockets[m_item.socket];
+      }
+      if (m_item.revents & short(flags)) {
+         r.emplace_back(index, flags);
+      }
+   }
+   return r;
+}
+
 
 size_t ZeroMQPoller::size() const {
   return m_items.size();

@@ -62,7 +62,9 @@ bool Queue::process_master_message(M2Q message)
 
    case M2Q::enqueue: {
       // enqueue task
+//      mq_poller.ppoll(-1, ppoll_sigmask);
       auto job_object_id = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
+//      mq_poller.ppoll(-1, ppoll_sigmask);
       auto task = JobManager::instance()->messenger().receive_from_master_on_queue<Task>();
       JobTask job_task(job_object_id, task);
       add(job_task);
@@ -149,12 +151,23 @@ void Queue::loop()
    bool carry_on = true;
    ZeroMQPoller poller;
    std::size_t mq_index;
-   std::tie(poller, mq_index) = JobManager::instance()->messenger().create_poller();
+   std::tie(poller, mq_index) = JobManager::instance()->messenger().create_queue_poller();
 
+   // Before blocking SIGTERM, set the signal handler, so we can also check after blocking whether a signal occurred
+   // In our case, we already set it in the ProcessManager after forking to the queue and worker processes.
+
+   sigset_t sigmask;
+   sigemptyset(&sigmask);
+   sigaddset(&sigmask, SIGTERM);
+   sigprocmask(SIG_BLOCK, &sigmask, &JobManager::instance()->messenger().ppoll_sigmask);
+
+   // Before doing anything, check whether we have received a terminate signal while blocking signals!
+   // In this case, we also do that in the while condition.
    while (!ProcessManager::sigterm_received() && carry_on) {
-      try { // watch for zmq_error from send or recv caused by SIGTERM from master
+      try { // watch for zmq_error from ppoll caused by SIGTERM from master
          // poll: wait until status change (-1: infinite timeout)
-         auto poll_result = poller.poll(-1);
+         auto poll_result = poller.ppoll(-1, &JobManager::instance()->messenger().ppoll_sigmask);
+//         JobManager::instance()->messenger().N_available_polled_results = poll_result.size();
          // then process incoming messages from sockets
          for (auto readable_socket : poll_result) {
             // message comes from the master/queue socket (first element):
@@ -174,13 +187,22 @@ void Queue::loop()
             }
          }
       } catch (zmq::error_t& e) {
+         std::cout << "catching something on the queue" << std::endl;
          if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
+            std::cout << "queue out [MIC DROP]" << std::endl;
             break;
+         } else if (e.num() == EAGAIN) {
+            // this can happen if ppoll initially gets a read-ready signal for a socket, but the received data does not pass the checksum test, so the socket becomes unreadable again
+            std::cout << "got EAGAIN error in queue loop, retrying" << std::endl;
+            continue;
          } else {
             throw;
          }
       }
    }
+
+   // clean up signal management modifications
+   sigprocmask(SIG_SETMASK, &JobManager::instance()->messenger().ppoll_sigmask, nullptr);
 }
 
 } // namespace MultiProcess

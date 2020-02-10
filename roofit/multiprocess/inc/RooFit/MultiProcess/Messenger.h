@@ -16,7 +16,6 @@
 #define ROOT_ROOFIT_MultiProcess_Messenger
 
 #include "RooFit/MultiProcess/Messenger_decl.h"
-#include "Messenger_decl.h"
 
 namespace RooFit {
 namespace MultiProcess {
@@ -40,7 +39,12 @@ template <typename value_t>
 value_t Messenger::receive_from_worker_on_queue(std::size_t this_worker_id)
 {
    try {
-      auto value = zmqSvc().receive<value_t>(*qw_pull[this_worker_id]);
+//      if (N_available_polled_results > 0) {
+//         --N_available_polled_results;
+//      } else {
+         qw_pull_poller[this_worker_id].ppoll(-1, &ppoll_sigmask);
+//      }
+      auto value = zmqSvc().receive<value_t>(*qw_pull[this_worker_id], ZMQ_DONTWAIT);
       return value;
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
@@ -65,7 +69,12 @@ template <typename value_t>
 value_t Messenger::receive_from_queue_on_worker()
 {
    try {
-      auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull);
+//      if (N_available_polled_results > 0) {
+//         --N_available_polled_results;
+//      } else {
+         qw_pull_poller[0].ppoll(-1, &ppoll_sigmask);
+//      }
+      auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull, ZMQ_DONTWAIT);
       return value;
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
@@ -93,7 +102,12 @@ template <typename value_t>
 value_t Messenger::receive_from_queue_on_master()
 {
    try {
-      auto value = zmqSvc().receive<value_t>(*mq_pull);
+//      if (N_available_polled_results > 0) {
+//         --N_available_polled_results;
+//      } else {
+         mq_pull_poller.ppoll(-1, &ppoll_sigmask);
+//      }
+      auto value = zmqSvc().receive<value_t>(*mq_pull, ZMQ_DONTWAIT);
       return value;
    } catch (zmq::error_t &e) {
       std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
