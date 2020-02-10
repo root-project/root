@@ -218,6 +218,8 @@ sap.ui.define([
 
          var data = [{ fName: "Event" }];
 
+         this.summaryElements = {}; // object with all elements, used for fast access to elements by id
+
          var oTree = this.getView().byId("tree");
          oTree.setMode(sap.m.ListMode.MultiSelect);
          oTree.setIncludeItemInSelection(true);
@@ -304,7 +306,8 @@ sap.ui.define([
                { name : "Destroy",  member : "fElementId",  srv : "Destroy", _type : "Action" }
             ],
          };
-         this.rebuild=false;
+
+         this.rebuild = false;
       },
 
       clickItemSelected: function(oEvent) {
@@ -323,7 +326,7 @@ sap.ui.define([
             var  path = item.getBindingContext("treeModel").getPath(),
                  ttt = item.getBindingContext("treeModel").getProperty(path);
 
-            // console.log('path', path, 'selected', item.getSelected());
+            // console.log('path', path, 'selected', item.getSelected(), ttt.path, "is_same_path", path == ttt.path);
 
             var elem = this.mgr.GetElement(ttt.id);
 
@@ -518,13 +521,11 @@ sap.ui.define([
          this.processHighlight("leave");
       },
 
-
-      GetSelectionColor:function(selection_obj)
-      {
+      GetSelectionColor:function(selection_obj) {
          return selection_obj.fName == "Global Highlight" ? "rgb(230, 230, 230)" : "rgb(66, 124, 172)";
       },
-      FindTreeItemForEveElement:function(element_id)
-      {
+
+      FindTreeItemForEveElement:function(element_id) {
          var items = this.getView().byId("tree").getItems();
          for (var n = 0; n<items.length;++n) {
             var item = items[n],
@@ -537,6 +538,7 @@ sap.ui.define([
          }
          return null;
       },
+
       SelectElement: function(selection_obj, element_id, sec_idcs) {
          let item = this.FindTreeItemForEveElement(element_id);
          if (item) {
@@ -544,6 +546,7 @@ sap.ui.define([
             item.$().css("background-color", color);
          }
       },
+
       UnselectElement: function (selection_obj, element_id) {
          let item = this.FindTreeItemForEveElement(element_id);
          if (item) {
@@ -808,10 +811,12 @@ sap.ui.define([
          return false;
       },
 
-      createSummaryModel: function(tgt, src) {
+      createSummaryModel: function(tgt, src, path) {
          if (tgt === undefined) {
             tgt = [];
             src = this.mgr.childs;
+            this.summaryElements = {};
+            path = "/";
             // console.log('original model', src);
          }
          for (var n=0;n<src.length;++n) {
@@ -829,11 +834,15 @@ sap.ui.define([
                newelem.fType = "Active";
             }
 
+            newelem.path = path + n;
             newelem.masterid = elem.fMasterId || elem.fElementId;
 
             tgt.push(newelem);
+
+            this.summaryElements[newelem.id] = newelem;
+
             if ((elem.childs !== undefined) && this.anyVisible(elem.childs))
-               newelem.childs = this.createSummaryModel([], elem.childs);
+               newelem.childs = this.createSummaryModel([], elem.childs, newelem.path + "/childs/");
          }
 
          return tgt;
@@ -844,7 +853,21 @@ sap.ui.define([
       },
 
       elementsRemoved: function(ids) {
-         this.rebuild=true;
+         this.rebuild = true;
+      },
+
+      sceneElementChange: function(msg) {
+
+         var elem = this.summaryElements[msg.fElementId];
+         if (!elem) return;
+
+         // console.log('SUMMURY: detect changed', elem.id, elem.path);
+
+         if (msg.rnr_self_changed)
+            elem.fSelected = msg.fRnrSelf;
+
+         this.any_changed = true;
+
       },
 
       endChanges: function() {
@@ -868,7 +891,12 @@ sap.ui.define([
                this.ged.visible = false;
             }
 
-            this.rebuild=false;
+            this.rebuild = false;
+         } else if (this.any_changed) {
+            var model = this.getView().getModel("treeModel");
+            model.refresh();
+
+            this.any_changed = false;
          }
       }
    });

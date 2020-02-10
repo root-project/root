@@ -104,7 +104,7 @@ sap.ui.define([], function() {
          return;
       }
 
-      // console.log("OnWebsocketMsg msg len=", msg.length, " txt:", msg.substr(0,120), "...");
+      // console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 300) ? msg : (msg.substr(0,300) + "..."));
 
       let resp = JSON.parse(msg);
 
@@ -145,7 +145,12 @@ sap.ui.define([], function() {
    {
       if (!mir_call || ! this.handle || !element_class) return;
 
+      // Sergey: NextEvent() here just to handle data recording in event_demo.C
+
       if ((this.handle.kind != "file") || (mir_call == "NextEvent()")) {
+
+         // console.log('SendMIR', element_id, mir_call);
+
          var req = {
             "mir" : mir_call,
             "fElementId" : element_id,
