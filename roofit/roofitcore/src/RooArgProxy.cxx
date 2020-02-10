@@ -108,23 +108,30 @@ RooArgProxy::~RooArgProxy()
 
 Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
 {
-  RooAbsArg* newArg ;
-  Bool_t initEmpty = _arg ? kFALSE : kTRUE ;
+  RooAbsArg* newArg = nullptr;
+  const bool initEmpty = _arg == nullptr;
+
   if (_arg) {
-    newArg= _arg->findNewServer(newServerList, nameChange);
-    if (newArg==_owner) newArg = 0 ;
+    newArg = _arg->findNewServer(newServerList, nameChange);
+    if (newArg==_owner) newArg = nullptr;
   } else if (factoryInitMode) {
     newArg = newServerList.first() ;
     _owner->addServer(*newArg,_valueServer,_shapeServer) ;
-  } else {
-    newArg = 0 ;
   }
+
   if (newArg) {
+    if (_ownArg) {
+      // We refer to an object that somebody gave to us. Now, we are not owning it, any more.
+      delete _arg;
+      _ownArg = false;
+    }
+
     _arg = newArg ;
-    _isFund = _arg->isFundamental() ;
-  }  
-  if (initEmpty && !factoryInitMode) return kTRUE ;
-  return newArg?kTRUE:kFALSE ;
+    _isFund = _arg->isFundamental();
+  }
+
+  if (initEmpty && !factoryInitMode) return true;
+  return newArg != nullptr;
 }
 
 
