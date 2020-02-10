@@ -880,7 +880,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
 	      // If fractional split is specified, check that remainder state is a valid state of this split cat
 	      if (remainderState) {
-		if (!splitCat->lookupType(remainderState)) {
+		if (!splitCat->hasLabel(remainderState)) {
 		  coutE(InputArguments) << "RooSimPdfBuilder::buildPdf: ERROR fraction split of parameter " 
 					<< paramName << " has invalid remainder state name: " << remainderState << endl ;
 		  delete paramList ;
