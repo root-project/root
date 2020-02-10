@@ -1,6 +1,7 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
    "sap/ui/model/json/JSONModel",
+   "sap/ui/core/mvc/XMLView",
    "sap/m/Button",
    "sap/m/ColorPalettePopover",
    "sap/m/StandardTreeItem",
@@ -12,7 +13,7 @@ sap.ui.define([
    "sap/ui/layout/SplitterLayoutData",
    "sap/ui/layout/VerticalLayout",
    "sap/ui/layout/HorizontalLayout"
-], function(Controller, JSONModel, Button, ColorPalettePopover,
+], function(Controller, JSONModel, XMLView, Button, ColorPalettePopover,
             StandardTreeItem, CustomTreeItem,
             mInput, mCheckBox, mPanel, mText,
             SplitterLayoutData, VerticalLayout, HorizontalLayout) {
@@ -258,7 +259,7 @@ sap.ui.define([
          this.template = oItemTemplate;
 
 
-         this.oModelGED = new JSONModel({ "widgetlist" : [] });
+         this.oModelGED = new JSONModel({ title: "GED title", "widgetlist" : [] });
          this.getView().setModel(this.oModelGED, "ged");
 
          let make_col_obj = function(stem) {
@@ -462,7 +463,7 @@ sap.ui.define([
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
           }
 
-          this.oModelGED.setData({ "widgetlist": modelw });
+          this.oModelGED.setProperty("/widgetlist", modelw);
       },
 
       onItemPressed: function(oEvent) {
@@ -557,63 +558,76 @@ sap.ui.define([
          }
       },
 
-      toggleEditor: function() {
-         var pp = this.byId("sumSplitter");
-         if (!this.ged) {
-            var panel = new mPanel("productDetailsPanel", { height: "100%", width: "97%" });
-            panel.setHeaderText("ElementGED");
-            panel.addStyleClass("sapUiSizeCompact");
-
-            panel.setLayoutData(new SplitterLayoutData("sld", {size : "30%"}));
-            pp.addContentArea(panel);
-
-            var vert = new VerticalLayout("GED",  {});
-            vert.addStyleClass("sapUiSizeCompact");
-            vert.addStyleClass("eveGedHolder");
-            vert.addStyleClass("sapUiNoMarginTop");
-            vert.addStyleClass("sapUiNoMarginBottom");
-
-            panel.addContent(vert);
-            this.ged = panel;
-            this.gedVert = vert;
-            this.ged.visible = true;
-         } else if (this.ged.visible) {
-            pp.removeContentArea(this.ged);
-            this.ged.visible = false;
-         } else {
-            pp.addContentArea(this.ged);
-            this.ged.visible = true;
-         }
-      },
-
+      /** When edit button pressed */
       onDetailPress: function(oEvent) {
-         // when edit button pressed
          var item = oEvent.getSource(),
              path = item.getBindingContext("treeModel").getPath(),
              ttt = item.getBindingContext("treeModel").getProperty(path);
 
-         if (!ttt) return;
+         this.showGedEditor(path, ttt);
+      },
 
-         if (!this.ged || !this.ged.visible) {
-            this.toggleEditor();
-         } else if (this.ged.editorItemPath == path) {
-            this.toggleEditor(); // hide editor when clicked several times
-            return;
+      showGedEditor: function(path, newelem) {
+
+         var sumSplitter = this.byId("sumSplitter");
+
+         if (!this.ged) {
+            var pthis = this;
+
+            XMLView.create({
+               viewName: "rootui5.eve7.view.Ged",
+               viewData: { summaryCtrl : this },
+               layoutData: new SplitterLayoutData("sld", {size : "30%"}),
+               height: "100%"
+            }).then(function(oView) {
+               sumSplitter.addContentArea(oView);
+
+               oView.setModel(pthis.oModelGED,"ged");
+
+
+               pthis.ged = oView;
+               pthis.gedVert = oView.byId("GED");
+               pthis.ged_visible = true;
+               pthis.fillGedEditor(path, newelem);
+
+            });
+         } else if (this.ged_visible) {
+            if (this.ged_path == path) {
+               this.ged_visible = false;
+               sumSplitter.removeContentArea(this.ged);
+            } else {
+               this.ged_path = path;
+               this.fillGedEditor(path, newelem);
+            }
+         } else {
+            this.ged_visible = true;
+            sumSplitter.addContentArea(this.ged);
+            this.fillGedEditor(path, newelem);
          }
+      },
 
-         this.ged.editorItemPath = path;
+      closeGedEditor: function() {
+         if (this.ged && this.ged_visible) {
+            this.ged_visible = false;
+            this.ged_path = "";
+            this.byId("sumSplitter").removeContentArea(this.ged);
+         }
+      },
 
-         this.editorElement = this.mgr.GetElement(ttt.id);
+      fillGedEditor: function(itemPath, newelem) {
+         this.ged_path = itemPath;
+
+         this.editorElement = this.mgr.GetElement(newelem.id);
 
          var oProductDetailPanel = this.ged;
         // var oProductDetailPanel = this.byId("productDetailsPanel");
-         var title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
-         oProductDetailPanel.setHeaderText(title);
 
-         //var oProductDetailPanel = this.byId("productDetailsPanel");
-         // console.log("event path ", eventPath);
-         var eventPath = item.getBindingContext("treeModel").getPath();
-         oProductDetailPanel.bindElement({ path: eventPath, model: "event" });
+         var title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
+         // oProductDetailPanel.setHeaderText(title);
+
+         this.oModelGED.setProperty("/title", title);
+
+         oProductDetailPanel.bindElement({ path: itemPath, model: "event" });
 
          var gedFrame =  this.gedVert;
          gedFrame.unbindElement();
@@ -623,8 +637,8 @@ sap.ui.define([
 
          // console.log("going to bind >>> ", this.getView().getModel("ged"));
          gedFrame.bindAggregation("content", "ged>/widgetlist",  this.gedFactory.bind(this) );
-
       },
+
 
       gedFactory: function(sId, oContext) {
          var base = "/widgetlist/";
@@ -811,6 +825,19 @@ sap.ui.define([
          return false;
       },
 
+      /** Set summary element attributes from original element */
+      setElementsAttributes: function(newelem, elem) {
+         if (this.canEdit(elem)) {
+            newelem.fType = "DetailAndActive";
+            if (elem.fMainColor) {
+               newelem.fMainColor = JSROOT.Painter.root_colors[elem.fMainColor];
+               newelem.fSelected = elem.fRnrSelf;
+            }
+         } else {
+            newelem.fType = "Active";
+         }
+      },
+
       createSummaryModel: function(tgt, src, path) {
          if (tgt === undefined) {
             tgt = [];
@@ -824,15 +851,7 @@ sap.ui.define([
 
             var newelem = { fName: elem.fName, fTitle: elem.fTitle || elem.fName, id: elem.fElementId, fHighlight: "None", fBackground: "", fMainColor: "", fSelected: false };
 
-            if (this.canEdit(elem)) {
-               newelem.fType = "DetailAndActive";
-               if (elem.fMainColor) {
-                  newelem.fMainColor = JSROOT.Painter.root_colors[elem.fMainColor];
-                  newelem.fSelected = elem.fRnrSelf;
-               }
-            } else {
-               newelem.fType = "Active";
-            }
+            this.setElementsAttributes(newelem, elem);
 
             newelem.path = path + n;
             newelem.masterid = elem.fMasterId || elem.fElementId;
@@ -858,8 +877,15 @@ sap.ui.define([
 
       sceneElementChange: function(msg) {
 
-         var elem = this.summaryElements[msg.fElementId];
-         if (!elem) return;
+         if (this.editorElement && (this.editorElement.fElementId == msg.fElementId))
+            this.updateGED(msg.fElementId);
+
+         var newelem = this.summaryElements[msg.fElementId];
+
+         var elem = this.mgr.GetElement(msg.fElementId);
+
+         if (newelem && elem)
+            this.setElementsAttributes(newelem, elem);
 
          // console.log('SUMMURY: detect changed', elem.id, elem.path);
 

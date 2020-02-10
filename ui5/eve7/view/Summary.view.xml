@@ -5,8 +5,7 @@
     xmlns:form="sap.ui.layout.form"
     xmlns:l="sap.ui.layout"
     xmlns="sap.m"
-    class="sapUiSizeCompact"
-    >
+    class="sapUiSizeCompact">
   <l:Splitter id="sumSplitter" height="100%"  width="auto" orientation="Vertical">
 
     <Tree id="tree" itemPress="onItemPressed"
@@ -14,8 +13,8 @@
           selectionChange="onSelectionChange"
           class="sapUiSizeCompact sapUiTinyMargin">
         <layoutData><l:SplitterLayoutData size="auto" minSize="90%"/></layoutData>
-
     </Tree>
+
   </l:Splitter>
 
 </mvc:View>
