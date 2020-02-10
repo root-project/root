@@ -304,10 +304,7 @@ sap.ui.define([
       }
       fcall += ")";
 
-      this.mgr.SendMIR({ "mir":        fcall,
-                         "fElementId": this.mgr.global_selection_id,
-                         "class":      "ROOT::Experimental::REveSelection"
-                       });
+      this.mgr.SendMIR(fcall, this.mgr.global_selection_id, "ROOT::Experimental::REveSelection");
 
       return true;
    }
@@ -351,10 +348,7 @@ sap.ui.define([
       }
       fcall += ")";
 
-      this.mgr.SendMIR({ "mir":        fcall,
-                         "fElementId": this.mgr.global_highlight_id,
-                         "class":      "ROOT::Experimental::REveSelection"
-                       });
+      this.mgr.SendMIR(fcall, this.mgr.global_highlight_id, "ROOT::Experimental::REveSelection");
 
       return true;
    }
@@ -375,10 +369,7 @@ sap.ui.define([
       {
          let fcall = "NewElementPicked(" + 0 + `, ${is_multi}, ${is_secsel}` + ")";
 
-         this.mgr.SendMIR({ "mir":        fcall,
-                            "fElementId": this.mgr.global_highlight_id,
-                            "class":      "ROOT::Experimental::REveSelection"
-                          });
+         this.mgr.SendMIR(fcall, this.mgr.global_highlight_id, "ROOT::Experimental::REveSelection");
       }
 
       return true;

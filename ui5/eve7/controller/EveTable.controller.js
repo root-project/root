@@ -32,7 +32,7 @@ sap.ui.define([
          this.mgr = data.mgr;
          this.eveViewerId = data.eveViewerId;
          this.kind = data.kind;
-         
+
          this.bindTableColumns = true;
          var element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency
@@ -198,7 +198,7 @@ sap.ui.define([
 
             // expression row
             {
-               var collection = this.mgr.GetElement(this.eveTable.fCollectionId);               
+               var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
                var exprIn = new sap.m.Input("inputExp", {
     		  placeholder: "Start expression with \"i.\" to access object",
     		  showValueHelp: true,
@@ -247,7 +247,7 @@ sap.ui.define([
     			minScreenWidth : "Tablet",
     			demandPopin : true
     		     }),
-                     
+
     		     new sap.m.Column({
     			hAlign : "End",
     			styleClass : "c",
@@ -261,10 +261,10 @@ sap.ui.define([
     		     })
     		  ]
     	       }).addStyleClass("inputRight");
-               
-               
+
+
                exprIn.setModel(oModel);
-               
+
     	       var oTableItemTemplate = new sap.m.ColumnListItem({
     		  type : "Active",
     		  vAlign : "Middle",
@@ -286,7 +286,7 @@ sap.ui.define([
     	       oModel.setData(oSuggestionData);
     	       exprIn.setModel(oModel);
     	       exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
-               
+
                this.editor.addContent(exprIn);
             }
 
@@ -343,14 +343,8 @@ sap.ui.define([
             title = expr;
          }
 
-         var mir = "AddNewColumnToCurrentCollection( \"" + expr + "\", \"" + title + "\" )";
-
-         // console.log("table element id ", pthis.eveTable.fElementId);
-
-         var obj = {"mir" : mir, "fElementId" :pthis.viewInfo.fElementId, "class" : pthis.viewInfo._typename};
-         // console.log("MIR obj ", obj);
-         //pthis.mgr.handle.Send(JSON.stringify(obj));
-         pthis.mgr.SendMIR(obj);
+         pthis.mgr.SendMIR("AddNewColumnToCurrentCollection( \"" + expr + "\", \"" + title + "\" )",
+                           pthis.viewInfo.fElementId, pthis.viewInfo._typename);
 
          // reset values
          sap.ui.getCore().byId("titleEx").setValue("");
@@ -365,9 +359,7 @@ sap.ui.define([
          var coll = entry.collectionEveId;
          var mng =  this.viewInfo;
 
-         var mir = "SetDisplayedCollection(" + coll + ")";
-         var obj = {"mir" : mir, "fElementId" : mng.fElementId, "class":mng._typename };    
-         this.mgr.SendMIR(obj);
+         this.mgr.SendMIR("SetDisplayedCollection(" + coll + ")", mng.fElementId, mng._typename);
       },
 
       sceneElementChange : function(el)

@@ -318,6 +318,7 @@ sap.ui.define([
 
          for (var k = 0; k < items.length; ++k) {
             var item = items[k];
+            if (!item) continue;
 
             var  path = item.getBindingContext("treeModel").getPath(),
                  ttt = item.getBindingContext("treeModel").getProperty(path);
@@ -326,9 +327,7 @@ sap.ui.define([
 
             var elem = this.mgr.GetElement(ttt.id);
 
-            var mir = "SetRnrSelf(" + item.getSelected() + ")";
-            var obj = {"mir" : mir, "fElementId" : elem.fElementId, "class" : elem._typename};
-            this.mgr.handle.Send(JSON.stringify(obj));
+            this.mgr.SendMIR("SetRnrSelf(" + item.getSelected() + ")", elem.fElementId, elem._typename);
          }
 
       },
@@ -507,11 +506,8 @@ sap.ui.define([
          }
 
          // FIXME: provide more generic code which should
-         this.mgr.SendMIR({ "mir":        "NewElementPicked(" + objid + ",false,false)",
-                            "fElementId": this.mgr.global_highlight_id,
-                            "class":      "ROOT::Experimental::REveSelection"
-                          });
-
+         this.mgr.SendMIR("NewElementPicked(" + objid + ",false,false)",
+                          this.mgr.global_highlight_id, "ROOT::Experimental::REveSelection");
       },
 
       onMouseEnter: function(oEvent) {
@@ -739,37 +735,24 @@ sap.ui.define([
             rgb = rgb ? { r: parseInt(rgb[1], 16), g: parseInt(rgb[2], 16), b: parseInt(rgb[3], 16) } : null;
          }
 
-
          var mir =  myData.srv + "((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
-         var obj = { "mir": mir, "fElementId": this.editorElement.fElementId, "class": this.editorElement._typename };
-         this.mgr.handle.Send(JSON.stringify(obj));
+         this.mgr.SendMIR(mir, this.editorElement.fElementId, this.editorElement._typename);
       },
 
       sendMethodInvocationRequest: function(kind, event) {
          var value = "";
          switch (kind) {
-         case "Bool":
-            value = event.getSource().getSelected();
-            break;
-
-         case "Action":
-            value = "";
-            break;
-         default:
-            value =  event.getParameter("value");
+            case "Bool": value = event.getSource().getSelected(); break;
+            case "Action": value = ""; break;
+            default: value =  event.getParameter("value");
          }
 
-         console.log("on change !!!!!!", event.getSource().data("myData"));
+         var myData = event.getSource().data("myData");
 
-         if (event.getSource().data("myData").quote !== undefined ) {
+         if (myData.quote !== undefined)
               value = "\"" + value + " \"";
-         }
-         var mir =  event.getSource().data("myData").srv + "( " + value + " )";
 
-         console.log("=====> ", mir);
-         var obj = {"mir" : mir, "fElementId" : this.editorElement.fElementId, "class" : this.editorElement._typename};
-
-         this.mgr.handle.Send(JSON.stringify(obj));
+         this.mgr.SendMIR(myData.srv + "( " + value + " )", this.editorElement.fElementId, this.editorElement._typename );
       },
 
       changeNumPoints:function() {

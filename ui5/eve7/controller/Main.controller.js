@@ -201,11 +201,8 @@ sap.ui.define(['sap/ui/core/Component',
             return;
          }
 
-         var obj = { "mir": cmd.func, "fElementId": cmd.elementid, "class": cmd.elementclass };
-         // only for real connections send commands to server
-         // only with NextEvent command meaningful handling is possible
-         if ((this.mgr.handle.kind != "file") || (cmd.name == "NextEvent"))
-            this.mgr.SendMIR(obj);
+         this.mgr.SendMIR(cmd.func, cmd.elementid, cmd.elementclass);
+
          if ((cmd.name == "QuitRoot") && window) {
              window.close();
          }
