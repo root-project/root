@@ -46,9 +46,7 @@ void rf701_efficiencyfit()
    // ------------------------------------------------------------------------------------------
 
    // Acceptance state cut (1 or 0)
-   RooCategory cut("cut", "cutr");
-   cut.defineType("accept", 1);
-   cut.defineType("reject", 0);
+   RooCategory cut("cut", "cutr", { {"accept", 1}, {"reject", 0} });
 
    // Construct efficiency p.d.f eff(cut|x)
    RooEfficiency effPdf("effPdf", "effPdf", effFunc, cut, "accept");

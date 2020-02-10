@@ -47,9 +47,9 @@ void rf514_RooCustomizer() {
 
   // Build the categories
   RooCategory sample("sample","sample");
-  sample.defineType("Sample1");
-  sample.defineType("Sample2");
-  sample.defineType("Sample3");
+  sample["Sample1"] = 1;
+  sample["Sample2"] = 2;
+  sample["Sample3"] = 3;
 
 
   // Start to customise the proto model that was defined above.
