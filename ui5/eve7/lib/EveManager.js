@@ -47,11 +47,7 @@ sap.ui.define([], function() {
    /** Returns element with given ID */
    EveManager.prototype.GetElement = function(id)
    {
-      // AMT todo ... I think this check should be optional
-      if (id in this.map)
-	 return this.map[id];
-      else
-	 return undefined;
+      return this.map[id];
    }
 
    /** Attach websocket handle to manager, all communication runs through manager */
@@ -372,8 +368,8 @@ sap.ui.define([], function() {
 
          if (em.changeBit & this.EChangeBits.kCBObjProps) {
             delete obj.render_data;
-	    // AMT note ... the REveSelection changes fall here
-	    // I think this should be a separate change bit
+            // AMT note ... the REveSelection changes fall here
+            // I think this should be a separate change bit
             delete obj.sel_list;
             jQuery.extend(obj, em);
             this.ParseUpdateTriggersAndProcessPostStream(obj);
