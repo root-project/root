@@ -19,21 +19,26 @@
 #include "TNamed.h"
 #include "RooPrintable.h"
 #include "RooArgSet.h"
-#include "RooFormulaVar.h"
-#include <cmath>
-#include "TMatrixDSym.h"
+#include "RooArgList.h"
 #include "RooSpan.h"
 
 class RooAbsArg;
 class RooAbsReal ;
+class RooRealVar;
+class RooAbsRealLValue;
 class RooAbsCategory ;
+class RooAbsCategoryLValue;
 class Roo1DTable ;
 class RooPlot;
 class RooArgList;
 class TH1;
+class TH2F;
 class RooAbsBinning ;
 class Roo1DTable ;
 class RooAbsDataStore ;
+template<typename T> class TMatrixTSym;
+using TMatrixDSym = TMatrixTSym<Double_t>;
+class RooFormulaVar;
 
 
 class RooAbsData : public TNamed, public RooPrintable {
