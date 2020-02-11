@@ -316,15 +316,11 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }
 
-  auto parlist = n["parameters"];
+  auto parlist = n["variables"];
   parlist |= c4::yml::MAP;
 
   auto pdflist = n["pdfs"];
   pdflist |= c4::yml::MAP;
-
-  auto sim = pdflist[c4::to_csubstr(this->GetName())];
-  sim |= c4::yml::MAP;
-  sim["type"] << "simultaneous";
 
   // collect information
   std::map<std::string,RooStats::HistFactory::Constraint::Type> constraints;
@@ -382,19 +378,6 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   }
   
   // pdfs
-  
-  auto simdict = sim["dict"];
-  simdict |= c4::yml::MAP;  
-  simdict["InterpolationScheme"] << fInterpolationScheme;  
-  
-  auto ch = sim["pdfs"];
-  ch |= c4::yml::MAP;  
-  auto chlist = sim["channels"];  
-  chlist |= c4::yml::SEQ;
-  for(const auto& c:fChannels){
-    c.Export(ch);
-    chlist.append_child() << c.GetName();
-  }
 
   for(const auto& sys:constraints){
     auto node = pdflist[c4::to_csubstr(sys.first)];
@@ -440,6 +423,23 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
     auto funclist = n["functions"];
     funclist |= c4::yml::MAP;    
     funclist << fFunctionObjects;
+  }
+
+  // and finally, the simpdf
+  
+  auto sim = pdflist[c4::to_csubstr(this->GetName())];
+  sim |= c4::yml::MAP;
+  sim["type"] << "simultaneous";
+  auto simdict = sim["dict"];
+  simdict |= c4::yml::MAP;  
+  simdict["InterpolationScheme"] << fInterpolationScheme;  
+  auto ch = sim["pdfs"];
+  ch |= c4::yml::MAP;  
+  auto chlist = sim["channels"];  
+  chlist |= c4::yml::SEQ;
+  for(const auto& c:fChannels){
+    c.Export(ch);
+    chlist.append_child() << c.GetName();
   }
 }
 #endif
