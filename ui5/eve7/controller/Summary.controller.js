@@ -83,11 +83,11 @@ sap.ui.define([
          oTree.bindItems("treeModel>/", oItemTemplate);
          this.template = oItemTemplate;
 
-         let make_col_obj = function(stem) {
+         var make_col_obj = function(stem) {
             return { name: stem, member: "f" + stem, srv: "Set" + stem + "RGB", _type: "Color" };
          };
 
-         let make_main_col_obj = function(label, use_main_setter) {
+         var make_main_col_obj = function(label, use_main_setter) {
             return { name: label, member: "fMainColor", srv: "Set" + (use_main_setter ? "MainColor" : label) + "RGB", _type: "Color" };
          };
 
@@ -176,8 +176,8 @@ sap.ui.define([
          if (this.ged)
             this.ged.getController().closeGedEditor();
 
-         var scenes = this.mgr.childs[0].childs[2].childs;
-         for (var i = 0; i < scenes.length; ++i ) {
+         var scenes = this.mgr.getSceneElements();
+         for (var i = 0; i < scenes.length; ++i) {
             this.mgr.RegisterSceneReceiver(scenes[i].fElementId, this);
          }
       },
@@ -302,18 +302,18 @@ sap.ui.define([
       },
 
       SelectElement: function(selection_obj, element_id, sec_idcs) {
-         let item = this.FindTreeItemForEveElement(element_id);
+         var item = this.FindTreeItemForEveElement(element_id);
          if (item) {
-            let color = this.GetSelectionColor(selection_obj);
+            var color = this.GetSelectionColor(selection_obj);
             item.$().css("background-color", color);
          }
       },
 
       UnselectElement: function (selection_obj, element_id) {
-         let item = this.FindTreeItemForEveElement(element_id);
+         var item = this.FindTreeItemForEveElement(element_id);
          if (item) {
-            let color = this.GetSelectionColor(selection_obj);
-            let cc = item.$().css("background-color");
+            var color = this.GetSelectionColor(selection_obj);
+            var cc = item.$().css("background-color");
             if (cc == color)
                item.$().css("background-color", "");
          }
@@ -491,6 +491,50 @@ sap.ui.define([
 
             this.any_changed = false;
          }
+      },
+
+      /** Invoked via EveManager when specified element should be focused */
+      BrowseElement: function(elid) {
+         console.log('WANT to BROWSE', elid);
+
+         var summaryElement = this.summaryElements[elid];
+
+         if (!summaryElement) return;
+
+
+         console.log('Found element', summaryElement.path)
+
+         var element_path = summaryElement.path;
+
+         var oTree = this.getView().byId("tree"), bestindx = 1, bestlen = 0;
+
+         
+         while (bestindx >= 0) {
+            
+            bestindx = -1;
+
+            var items = oTree.getItems();
+
+            for (var k = 0; k < items.length; ++k) {
+               var item = items[k],
+                   model = item.getBindingContext("treeModel"),
+                   path = model.getPath();
+
+               if (element_path == path) {
+                  item.$()[0].scrollIntoView();
+                  console.log('FOUND !!!');
+                  return;
+               }
+
+               if ((element_path.substr(0, path.length) == path) && (path.length > bestlen)) {
+                  bestindx = k;
+                  bestlen = path.length;
+               }
+            }
+            
+            if (bestindx >= 0) oTree.expand(bestindx);
+         }
+
       }
    });
 });
