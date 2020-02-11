@@ -57,6 +57,7 @@ Following parameters can be specified in .rootrc file
 
 WebEve.JsRootRender:  1  # use JSROOT Geometry Painter for GL drawings, default off
 WebEve.DisableShow:   1  # do not start new web browser when REveManager::Show is called
+WebEve.HTimeout:     200 # timeout in ms for elements highlight
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +145,8 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    Int_t js_render = gEnv->GetValue("WebEve.JsRootRender", 0);
-   fWebWindow->SetUserArgs(Form("{ JsRootRender: %d }", js_render));
+   Int_t htimeout = gEnv->GetValue("WebEve.HTimeout", 250);
+   fWebWindow->SetUserArgs(Form("{ JsRootRender: %d, HTimeout: %d }", js_render, htimeout));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },

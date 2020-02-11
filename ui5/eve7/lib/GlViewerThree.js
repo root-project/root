@@ -169,9 +169,7 @@ sap.ui.define([
             glc.removeMouseupListener();
 
             if (event.buttons === 0)
-            {
-               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event), 250);
-            }
+               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), this.controller.htimeout);
          });
 
          this.renderer.domElement.addEventListener('mouseleave', function(event) {
@@ -399,16 +397,14 @@ sap.ui.define([
          if (this.mousemove_timeout)
          {
             clearTimeout(this.mousemove_timeout);
-            this.mousemove_timeout = 0;
+            delete this.mousemove_timeout;
          }
       },
 
-      onMouseMoveTimeout: function(event)
+      onMouseMoveTimeout: function(x, y)
       {
-         this.mousemove_timeout = 0;
+         delete this.mousemove_timeout;
 
-         let x = event.offsetX;
-         let y = event.offsetY;
          let w = this.get_width();
          let h = this.get_height();
 

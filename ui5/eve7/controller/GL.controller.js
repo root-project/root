@@ -179,6 +179,8 @@ sap.ui.define([
          }
 
          this.JsRootRender = !this.mgr.handle.GetUserArgs("JsRootRender");
+         this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
+         if (this.htimeout === undefined) this.htimeout = 250;
 
          // console.log("GLC::checkViewReady, instantiating GLViewer" + viewer_class);
 
