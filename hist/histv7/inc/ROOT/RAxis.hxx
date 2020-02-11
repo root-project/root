@@ -792,7 +792,7 @@ enum class EAxisCompatibility {
 };
 
 /// Whether (and how) the source axis can be merged into the target axis.
-EAxisCompatibility CanMap(RAxisEquidistant &target, RAxisEquidistant &source) noexcept;
+EAxisCompatibility CanMap(const RAxisEquidistant &target, const RAxisEquidistant &source) noexcept;
 ///\}
 
 } // namespace Experimental

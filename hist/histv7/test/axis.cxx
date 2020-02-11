@@ -340,7 +340,7 @@ TEST(AxisTest, Equidistant) {
   RAxisEquidistant axis1("Title", 12, 3.4, 5.6);
   EXPECT_EQ(axis1, RAxisEquidistant("Ritle", 12, 3.4, 5.6));
 
-  // Title is ignored by the equality operator
+  // Title is ignored by the equality operator, and CanMap relies on this
   EXPECT_EQ(axis1, RAxisEquidistant("Ritl", 12, 3.4, 5.6));
 
   // Everything else is taken into account by the equality operator
