@@ -27,7 +27,7 @@
 
 namespace ROOT {
 
-namespace Detail {
+namespace Internal {
 class RRawFile;
 }
 
@@ -106,7 +106,7 @@ private:
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    std::shared_ptr<RPagePool> fPagePool;
    std::unique_ptr<std::array<unsigned char, kMaxPageSize>> fUnzipBuffer;
-   std::unique_ptr<ROOT::Detail::RRawFile> fFile;
+   std::unique_ptr<ROOT::Internal::RRawFile> fFile;
 
    RNTupleMetrics fMetrics;
    RNTuplePlainCounter *fCtrNRead = nullptr;
