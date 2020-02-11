@@ -29,23 +29,23 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // If fstat() does not provide a block size hint, use this value instead
 } // anonymous namespace
 
-ROOT::Detail::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options)
-   : ROOT::Detail::RRawFile(url, options), fFileDes(-1)
+ROOT::Internal::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options)
+   : RRawFile(url, options), fFileDes(-1)
 {
 }
 
-ROOT::Detail::RRawFileUnix::~RRawFileUnix()
+ROOT::Internal::RRawFileUnix::~RRawFileUnix()
 {
    if (fFileDes >= 0)
       close(fFileDes);
 }
 
-std::unique_ptr<ROOT::Detail::RRawFile> ROOT::Detail::RRawFileUnix::Clone() const
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() const
 {
    return std::make_unique<RRawFileUnix>(fUrl, fOptions);
 }
 
-std::uint64_t ROOT::Detail::RRawFileUnix::GetSizeImpl()
+std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
 {
    struct stat info;
    int res = fstat(fFileDes, &info);
@@ -54,7 +54,7 @@ std::uint64_t ROOT::Detail::RRawFileUnix::GetSizeImpl()
    return info.st_size;
 }
 
-void *ROOT::Detail::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
+void *ROOT::Internal::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
 {
    static std::uint64_t szPageBitmap = sysconf(_SC_PAGESIZE) - 1;
    mapdOffset = offset & ~szPageBitmap;
@@ -66,7 +66,7 @@ void *ROOT::Detail::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset, s
    return result;
 }
 
-void ROOT::Detail::RRawFileUnix::OpenImpl()
+void ROOT::Internal::RRawFileUnix::OpenImpl()
 {
    fFileDes = open(GetLocation(fUrl).c_str(), O_RDONLY);
    if (fFileDes < 0) {
@@ -88,7 +88,7 @@ void ROOT::Detail::RRawFileUnix::OpenImpl()
    }
 }
 
-size_t ROOT::Detail::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Internal::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    size_t total_bytes = 0;
    while (nbytes) {
@@ -109,7 +109,7 @@ size_t ROOT::Detail::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std::
    return total_bytes;
 }
 
-void ROOT::Detail::RRawFileUnix::UnmapImpl(void *region, size_t nbytes)
+void ROOT::Internal::RRawFileUnix::UnmapImpl(void *region, size_t nbytes)
 {
    int rv = munmap(region, nbytes);
    if (rv != 0)
