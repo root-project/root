@@ -3,22 +3,20 @@
 // TODO: add dependency from JSROOT components
 
 sap.ui.define([
-    'rootui5/eve7/lib/EveManager',
-    'rootui5/eve7/lib/EveElements'
-], function(EveManager, EveElements) {
+    'rootui5/eve7/lib/EveManager'
+], function(EveManager) {
 
    "use strict";
 
    /// constructor, handle for REveScene class
 
-   function EveScene(mgr, scene, viewer)
+   function EveScene(mgr, scene, glctrl)
    {
       this.mgr     = mgr;
       this.scene   = scene;
       this.id      = scene.fSceneId;
-      this.viewer  = viewer;
-      this.creator = new EveElements();
-      this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+      this.glctrl  = glctrl;
+      this.creator = glctrl.viewer.creator;
       this.id2obj_map  = new Map; // base on element id
       this.mid2obj_map = new Map; // base on master id
 
@@ -87,7 +85,7 @@ sap.ui.define([
          if (elem.render_data)
          {
             let fname = elem.render_data.rnr_func, obj3d = null;
-            if (!this.creator[fname])
+            if ( ! this.creator[fname])
             {
                console.error("Function " + fname + " missing in creator");
             }
@@ -124,12 +122,12 @@ sap.ui.define([
    /** method insert all objects into three.js container */
    EveScene.prototype.redrawScene = function()
    {
-      if ( ! this.viewer) return;
+      if ( ! this.glctrl) return;
 
       let res3d = this.create3DObjects(true);
       if ( ! res3d.length && this.first_time) return;
 
-      let cont = this.viewer.getThreejsContainer("scene" + this.id);
+      let cont = this.glctrl.getSceneContainer("scene" + this.id);
       while (cont.children.length > 0)
          cont.remove(cont.children[0]);
 
@@ -178,13 +176,13 @@ sap.ui.define([
 
    EveScene.prototype.endChanges = function()
    {
-      if (this.viewer)
-         this.viewer.render();
+      if (this.glctrl)
+         this.glctrl.viewer.render();
    }
 
    EveScene.prototype.elementAdded = function(el)
    {
-      if ( ! this.viewer) return;
+      if ( ! this.glctrl) return;
 
       let obj3d =  this.makeGLRepresentation(el);
       if ( ! obj3d) return;
@@ -193,7 +191,7 @@ sap.ui.define([
       let scene = this.mgr.GetElement(el.fSceneId);
       this.update3DObjectsVisibility(scene.childs, true);
 
-      let container = this.viewer.getThreejsContainer("scene" + this.id);
+      let container = this.glctrl.getSceneContainer("scene" + this.id);
 
       container.add(obj3d);
 
@@ -203,13 +201,13 @@ sap.ui.define([
 
    EveScene.prototype.replaceElement = function(el)
    {
-      if ( ! this.viewer) return;
+      if ( ! this.glctrl) return;
 
       let obj3d = this.getObj3D(el.fElementId);
       let all_ancestor_children_visible = obj3d.all_ancestor_children_visible;
       let visible = obj3d.visible;
 
-      let container = this.viewer.getThreejsContainer("scene" + this.id);
+      let container = this.glctrl.getSceneContainer("scene" + this.id);
 
       container.remove(obj3d);
 
@@ -222,7 +220,7 @@ sap.ui.define([
       this.id2obj_map.set(el.fElementId, obj3d);
       if (el.fMasterId) this.mid2obj_map.set(el.fMasterId, obj3d);
 
-      this.viewer.render();
+      this.glctrl.viewer.render();
    }
 
    EveScene.prototype.elementRemoved = function()
@@ -245,7 +243,7 @@ sap.ui.define([
             continue;
          }
 
-         let container = this.viewer.getThreejsContainer("scene" + this.id);
+         let container = this.glctrl.getSceneContainer("scene" + this.id);
          container.remove(obj3d);
 
          this.id2obj_map.delete(elId);
@@ -335,7 +333,7 @@ sap.ui.define([
                }
             }
             if ( ! indx && ! h.sec_idcs.length) {
-               // console.log("processElementHighlighted primARY SElection not changed ");
+               // console.log("processElementHighlighted primary selection not changed ");
                return true;
             }
          }
@@ -408,9 +406,11 @@ sap.ui.define([
       let obj3d = this.getObj3D( element_id );
       if ( ! obj3d) return;
 
-      this.viewer.outline_pass.id2obj_map[element_id] = this.viewer.outline_pass.id2obj_map[element_id] || [];
+      let opass = this.glctrl.viewer.outline_pass;
 
-      if (this.viewer.outline_pass.id2obj_map[element_id][selection_obj.fElementId] !== undefined)
+      opass.id2obj_map[element_id] = opass.id2obj_map[element_id] || [];
+
+      if (opass.id2obj_map[element_id][selection_obj.fElementId] !== undefined)
       {
          return;
       }
@@ -418,7 +418,7 @@ sap.ui.define([
       let stype  = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
       let estype = THREE.OutlinePass.selection_enum[stype];
 
-      // console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outline_pass.id2obj_map);
+      // console.log("EveScene.SelectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
 
       let res = {
          "sel_type" : estype,
@@ -430,12 +430,12 @@ sap.ui.define([
       {
          // exit if you try to highlight an object that has already been selected
          if (estype == THREE.OutlinePass.selection_enum["highlight"] &&
-            this.viewer.outline_pass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
+            opass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
          {
             return;
          }
 
-         this.viewer.outline_pass.id2obj_map[element_id] = [];
+         opass.id2obj_map[element_id] = [];
          res.geom.push(obj3d);
       }
       else
@@ -444,15 +444,16 @@ sap.ui.define([
          ctrl.DrawForSelection(sec_idcs, res.geom);
          res.sec_sel = true;
       }
-      this.viewer.outline_pass.id2obj_map[element_id][selection_obj.fElementId] = res;
+      opass.id2obj_map[element_id][selection_obj.fElementId] = res;
    }
 
    EveScene.prototype.UnselectElement = function(selection_obj, element_id)
    {
-      // console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.viewer.outline_pass.id2obj_map);
-      if (this.viewer.outline_pass.id2obj_map[element_id] !== undefined)
+      let opass = this.glctrl.viewer.outline_pass;
+      // console.log("EveScene.UnselectElement ", selection_obj.fName, element_id, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
+      if (opass.id2obj_map[element_id] !== undefined)
       {
-	 delete this.viewer.outline_pass.id2obj_map[element_id][selection_obj.fElementId];
+	 delete opass.id2obj_map[element_id][selection_obj.fElementId];
       }
    }
 
