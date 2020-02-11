@@ -1221,7 +1221,12 @@ public:
                      ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
 
       if (!fDirName.empty()) {
-         fOutputFile->mkdir(fDirName.c_str());
+         TString checkupdate = fOptions.fMode;
+         checkupdate.ToLower();
+         if (checkupdate == "update")
+             fOutputFile->mkdir(fDirName.c_str(), "", true);  // do not overwrite existing directory
+         else
+             fOutputFile->mkdir(fDirName.c_str());
          fOutputFile->cd(fDirName.c_str());
       }
 
