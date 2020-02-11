@@ -368,6 +368,8 @@
             this.domElement.removeEventListener( 'mouseup', control_mouseup);
          }
 
+         if (this.lstn_click)
+            this.domElement.removeEventListener('click', this.lstn_click);
          this.domElement.removeEventListener('dblclick', this.lstn_dblclick);
          this.domElement.removeEventListener('contextmenu', this.lstn_contextmenu);
          this.domElement.removeEventListener('mousemove', this.lstn_mousemove);
@@ -714,6 +716,26 @@
          this.ProcessDblClick(evnt);
       }
 
+      if (painter && painter.options && painter.options.mouse_click) {
+         control.ProcessClick = function(mouse) {
+            if (typeof this.ProcessSingleClick == 'function') {
+               var intersects = this.GetMouseIntersects(mouse);
+               this.ProcessSingleClick(intersects);
+            }
+         }
+
+         control.lstn_click = function(evnt) {
+            if (this.single_click_tm) {
+               clearTimeout(this.single_click_tm);
+               delete this.single_click_tm;
+            }
+
+            // if normal event, set longer timeout waiting if double click not detected
+            if (evnt.detail != 2)
+               this.single_click_tmout = setTimeout(this.ProcessClick.bind(this, this.GetMousePos(evnt, {})), 300);
+         }.bind(control);
+      }
+
       control.addEventListener( 'change', control.ChangeEvent.bind(control));
       control.addEventListener( 'start', control.StartEvent.bind(control));
       control.addEventListener( 'end', control.EndEvent.bind(control));
@@ -723,6 +745,8 @@
       control.lstn_mousemove = control.MainProcessMouseMove.bind(control);
       control.lstn_mouseleave = control.MainProcessMouseLeave.bind(control);
 
+      if (control.lstn_click)
+         renderer.domElement.addEventListener('click', control.lstn_click);
       renderer.domElement.addEventListener('dblclick', control.lstn_dblclick);
       renderer.domElement.addEventListener('contextmenu', control.lstn_contextmenu);
       renderer.domElement.addEventListener('mousemove', control.lstn_mousemove);

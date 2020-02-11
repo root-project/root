@@ -467,6 +467,7 @@
 
       if (d.check("ORTHO_CAMERA_ROTATE")) { res.ortho_camera = true; res.can_rotate = true; }
       if (d.check("ORTHO_CAMERA")) { res.ortho_camera = true; res.can_rotate = false; }
+      if (d.check("MOUSE_CLICK")) res.mouse_click = true;
 
       if (d.check("DEPTHRAY") || d.check("DRAY")) res.depthMethod = "ray";
       if (d.check("DEPTHBOX") || d.check("DBOX")) res.depthMethod = "box";
