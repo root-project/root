@@ -293,6 +293,40 @@ public:
    /// Get the high end of the axis range.
    double GetMaximum() const noexcept { return GetBinFrom(GetOverflowBin()); }
 
+   /// Check if two axes use the same binning convention, i.e.
+   ///
+   /// - Either they are both growable or neither of them is growable.
+   /// - Minimum, maximum, and all bin borders in the middle are the same.
+   /// - Any metadata attached to the bin (e.g. bin labels) must match.
+   ///
+   /// TODO: Add a way to optimize specific comparisons, e.g. eq-eq, irr-irr...
+   virtual bool SameBinningAs(const RAxisBase& other) const noexcept {
+      // Axis growability (and thus under/overflow bin existence) must match
+      if (CanGrow() != other.CanGrow()) return false;
+
+      // Number of bins must match
+      if (GetNBinsNoOver() != other.GetNBinsNoOver()) return false;
+
+      // Left bin borders must match
+      for (int bin: *this) {
+         if (GetBinFrom(bin) != other.GetBinFrom(bin)) return false;
+      }
+
+      // Right bin border of the last bin (aka maximum) must also match
+      if (GetMaximum() != other.GetMaximum()) return false;
+
+      // TODO: Add a hook to check metadata consistency. Find a way to handle
+      //       the fact that what we actually need is multiple dispatch on
+      //       "this" and "other", e.g. labels check should be triggered whether
+      //       "this" or "other" is an RAxisLabels.
+      //
+      // NOTE: Reduce the scope of overrides to make sure that said hook cannot
+      //       be forgotten by downstream classes.
+
+      // If all of the above matched, we're good.
+      return true;
+   }
+
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
 };
