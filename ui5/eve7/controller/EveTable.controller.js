@@ -33,6 +33,10 @@ sap.ui.define([
          this.eveViewerId = data.eveViewerId;
          this.kind = data.kind;
 
+         var rh = this.mgr.handle.GetUserArgs("TableRowHeight");
+         if (rh && (rh>0))
+            this.getView().byId("table").setRowHeight(rh);
+
          this.bindTableColumns = true;
          var element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency

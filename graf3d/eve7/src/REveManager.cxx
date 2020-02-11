@@ -58,6 +58,7 @@ Following parameters can be specified in .rootrc file
 WebEve.JsRootRender:  1  # use JSROOT Geometry Painter for GL drawings, default off
 WebEve.DisableShow:   1  # do not start new web browser when REveManager::Show is called
 WebEve.HTimeout:     200 # timeout in ms for elements highlight
+WebEve.TableRowHeight: 33  # size of each row in pixels in the Table view, can be used to make design more compact
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,7 +147,8 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
 
    Int_t js_render = gEnv->GetValue("WebEve.JsRootRender", 0);
    Int_t htimeout = gEnv->GetValue("WebEve.HTimeout", 250);
-   fWebWindow->SetUserArgs(Form("{ JsRootRender: %d, HTimeout: %d }", js_render, htimeout));
+   Int_t table_row_height = gEnv->GetValue("WebEve.TableRowHeight", 0);
+   fWebWindow->SetUserArgs(Form("{ JsRootRender: %d, HTimeout: %d, TableRowHeight: %d }", js_render, htimeout, table_row_height));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },
