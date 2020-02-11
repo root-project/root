@@ -170,6 +170,9 @@ sap.ui.define([
          // Use THREE.js renderer, scene, camera, etc. directly instead of through JSRootGeoPainter.
          this.direct_threejs = !this.mgr.handle.GetUserArgs("JsRootRender");
 
+         this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
+         if (this.htimeout === undefined) this.htimeout = 250;
+
          if (this.direct_threejs)
          {
             if (this.renderer) throw new Error("THREE renderer already created.");
@@ -243,6 +246,8 @@ sap.ui.define([
       onGeoPainterReady: function(painter)
       {
          console.log("GL_controller::onGeoPainterReady");
+
+         this.geo_painter.setMouseTmout(this.htimeout);
 
          // AMT temporary here, should be set in camera instantiation time
          if (this.geo_painter._camera.type == "OrthographicCamera")
@@ -431,9 +436,7 @@ sap.ui.define([
             glc.removeMouseupListener();
 
             if (event.buttons === 0)
-            {
-               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event), 250);
-            }
+               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), glc.htimeout);
          });
 
          this.renderer.domElement.addEventListener('mouseleave', function(event) {
@@ -737,31 +740,28 @@ sap.ui.define([
 
       removeMouseMoveTimeout: function()
       {
-         if (this.mousemove_timeout)
-         {
+         if (this.mousemove_timeout) {
             clearTimeout(this.mousemove_timeout);
-            this.mousemove_timeout = 0;
+            delete this.mousemove_timeout;
          }
       },
 
-      onMouseMoveTimeout: function(event)
+      onMouseMoveTimeout: function(x, y)
       {
-         this.mousemove_timeout = 0;
+         delete this.mousemove_timeout;
 
-         let x = event.offsetX;
-         let y = event.offsetY;
-         let w = this.getView().$().width();
-         let h = this.getView().$().height();
+         var w = this.getView().$().width();
+         var h = this.getView().$().height();
 
-         // console.log("GLC::onMouseMoveTimeout", this, event, x, y);
+         // console.log("GLC::onMouseMoveTimeout", x, y);
 
-         let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
+         var mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
 
          this.raycaster.setFromCamera(mouse, this.camera);
 
-         let intersects = this.raycaster.intersectObjects(this.scene.children, true);
+         var intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
-         let o = null, c = null;
+         var o = null, c = null;
 
          for (let i = 0; i < intersects.length; ++i)
          {
