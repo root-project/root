@@ -45,15 +45,18 @@
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
-REveManager* REX::gEve = 0;
-
-
+REveManager *REX::gEve = nullptr;
 
 
 /** \class REveManager
 \ingroup REve
 Central application manager for Eve.
 Manages elements, GUI, GL scenes and GL viewers.
+
+Following parameters can be specified in .rootrc file
+
+WebEve.JsRootRender:  1  # use JSROOT Geometry Painter for GL drawings, default off
+WebEve.DisableShow:   1  # do not start new web browser when REveManager::Show is called
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +142,9 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
+
+   Int_t js_render = gEnv->GetValue("WebEve.JsRootRender", 0);
+   fWebWindow->SetUserArgs(Form("{ JsRootRender: %d }", js_render));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },
@@ -232,7 +238,7 @@ void REveManager::DoRedraw3D()
 {
    static const REveException eh("REveManager::DoRedraw3D ");
    nlohmann::json jobj = {};
-   
+
    jobj["content"] = "BeginChanges";
    fWebWindow->Send(0, jobj.dump());
 
