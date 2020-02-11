@@ -27,8 +27,8 @@ class REveTrackProjected : public REveTrack,
                            public REveProjected
 {
 private:
-   REveTrackProjected(const REveTrackProjected &);            // Not implemented
-   REveTrackProjected &operator=(const REveTrackProjected &); // Not implemented
+   REveTrackProjected(const REveTrackProjected &) = delete;
+   REveTrackProjected &operator=(const REveTrackProjected &) = delete;
 
    Int_t GetBreakPointIdx(Int_t start);
 
@@ -64,8 +64,8 @@ public:
 
 class REveTrackListProjected : public REveTrackList, public REveProjected {
 private:
-   REveTrackListProjected(const REveTrackListProjected &);            // Not implemented
-   REveTrackListProjected &operator=(const REveTrackListProjected &); // Not implemented
+   REveTrackListProjected(const REveTrackListProjected &) = delete;
+   REveTrackListProjected &operator=(const REveTrackListProjected &) = delete;
 
 protected:
    void SetDepthLocal(Float_t d) override;
