@@ -334,16 +334,14 @@ sap.ui.define([
 
 
       /** Called from JSROOT context menu when object selected for browsing */
-      jsrootBrowse: function(obj_id) {
-         console.log('Do browsing', obj_id);
-
+      invokeBrowseOf: function(obj_id) {
          this.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
       },
 
       /** Used together with the geo painter for processing context menu */
       jsrootOrbitContext: function(evnt, intersects) {
 
-         var browseHandler = this.jsrootBrowse.bind(this);
+         var browseHandler = this.invokeBrowseOf.bind(this);
 
          JSROOT.Painter.createMenu(this.geo_painter, function(menu) {
             var numitems = 0, cnt = 0;
@@ -488,12 +486,14 @@ sap.ui.define([
             if (event.movementX == 0 && event.movementY == 0)
                return;
 
-            glc.removeMouseMoveTimeout();
-            glc.clearHighlight();
             glc.removeMouseupListener();
 
-            if (event.buttons === 0)
+            if (event.buttons === 0) {
+               glc.removeMouseMoveTimeout();
                glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), glc.htimeout);
+            } else {
+               glc.clearHighlight();
+            }
          });
 
          this.renderer.domElement.addEventListener('mouseleave', function(event) {
@@ -800,63 +800,69 @@ sap.ui.define([
          }
       },
 
-      onMouseMoveTimeout: function(x, y)
-      {
-         delete this.mousemove_timeout;
-
-         var w = this.getView().$().width();
-         var h = this.getView().$().height();
-
-         // console.log("GLC::onMouseMoveTimeout", x, y);
-
-         var mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
+      /** Get three.js intersect object at specified mouse position */
+      getIntersectAt: function(x, y) {
+         var w = this.getView().$().width(),
+             h = this.getView().$().height(),
+             mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
 
          this.raycaster.setFromCamera(mouse, this.camera);
 
          var intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
-         var o = null, c = null;
-
-         for (let i = 0; i < intersects.length; ++i)
-         {
-            o = intersects[i].object;
-            if (o.get_ctrl)
-            {
-               c = o.get_ctrl();
-               c.elementHighlighted(c.extractIndex(intersects[i]));
-
-               this.highlighted_scene = c.obj3d.scene;
-
-               break;
+         for (var i = 0; i < intersects.length; ++i) {
+            var o = intersects[i].object;
+            if (o.get_ctrl) {
+               intersects[i].mouse = mouse;
+               intersects[i].w = w;
+               intersects[i].h = h;
+               return intersects[i];
             }
          }
+      },
 
-         if (c)
-         {
-            if (c.obj3d && c.obj3d.eve_el)
-               this.ttip_text.innerHTML = c.obj3d.eve_el.fTitle || c.obj3d.eve_el.fName || "";
-            else
-               this.ttip_text.innerHTML = "";
 
-            let del  = this.getView().getDomRef();
-            let offs = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(del) : null;
+      /** Process highlight of object during mouse move after small timeout */
+      onMouseMoveTimeout: function(x, y)
+      {
+         delete this.mousemove_timeout;
 
-            if (mouse.x <= 0) {
-               this.ttip.style.left  = (x + del.offsetLeft + 10) + "px";
-               this.ttip.style.right = null;
-            } else {
-               this.ttip.style.right = (w - x + offs.right + 10) + "px";
-               this.ttip.style.left  = null;
-            }
-            if (mouse.y >= 0) {
-               this.ttip.style.top    = (y + del.offsetTop + 10) + "px";
-               this.ttip.style.bottom = null;
-            } else {
-               this.ttip.style.bottom = (h - y + offs.bottom + 10) + "px";
-               this.ttip.style.top = null;
-            }
-            this.ttip.style.display= "block";
+         var intersect = this.getIntersectAt(x,y);
+
+         if (!intersect)
+            return this.clearHighlight();
+
+         var c = intersect.object.get_ctrl();
+
+         var mouse = intersect.mouse;
+
+         c.elementHighlighted(c.extractIndex(intersect));
+
+         this.highlighted_scene = c.obj3d.scene;
+
+         if (c.obj3d && c.obj3d.eve_el)
+            this.ttip_text.innerHTML = c.obj3d.eve_el.fTitle || c.obj3d.eve_el.fName || "";
+         else
+            this.ttip_text.innerHTML = "";
+
+         let del  = this.getView().getDomRef();
+         let offs = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(del) : null;
+
+         if (mouse.x <= 0) {
+            this.ttip.style.left  = (x + del.offsetLeft + 10) + "px";
+            this.ttip.style.right = null;
+         } else {
+            this.ttip.style.right = (intersect.w - x + offs.right + 10) + "px";
+            this.ttip.style.left  = null;
          }
+         if (mouse.y >= 0) {
+            this.ttip.style.top    = (y + del.offsetTop + 10) + "px";
+            this.ttip.style.bottom = null;
+         } else {
+            this.ttip.style.bottom = (intersect.h - y + offs.bottom + 10) + "px";
+            this.ttip.style.top = null;
+         }
+         this.ttip.style.display= "block";
       },
 
       getRelativeOffsets: function(elem)
@@ -901,7 +907,14 @@ sap.ui.define([
 
          // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
 
+         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+
          menu.add("header:Context Menu");
+
+         if (intersect) {
+            if (intersect.object.eve_el)
+               menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.invokeBrowseOf.bind(this));
+         }
 
          menu.add("Reset camera", this.resetThreejsRenderer);
 
