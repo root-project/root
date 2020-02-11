@@ -126,10 +126,10 @@ sap.ui.define([], function() {
       else if (resp.content == "EndChanges")
       {
          this.ServerEndRedrawCallback();
-         return;
       }
-      else
-      {
+      else if (resp.content == "BrowseElement") {
+         this.BrowseElement(resp.id);
+      } else {
          console.log("OnWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0,120), "...");
       }
    }
@@ -139,7 +139,7 @@ sap.ui.define([], function() {
     * Special handling for offline case - some methods can be tried to handle without server */
    EveManager.prototype.SendMIR = function(mir_call, element_id, element_class)
    {
-      if (!mir_call || ! this.handle || !element_class) return;
+      if (!mir_call || !this.handle || !element_class) return;
 
       // Sergey: NextEvent() here just to handle data recording in event_demo.C
 
@@ -169,6 +169,13 @@ sap.ui.define([], function() {
 
       if (elem.$receivers.indexOf(receiver)<0)
          elem.$receivers.push(receiver);
+   }
+
+   /** Returns list of scene elements */
+   EveManager.prototype.getSceneElements = function()
+   {
+      if (!this.childs) return [];
+      return this.childs[0].childs[2].childs;
    }
 
    /** Invoke function on all receiver of scene events - when such function exists */
@@ -681,6 +688,16 @@ sap.ui.define([], function() {
       this.busyProcessingChanges = false;
    }
 
+   /** Method invoked from server message to browse to element elid */
+   EveManager.prototype.BrowseElement = function(elid) {
+      var scenes = this.getSceneElements();
+
+      for (var i = 0; i < scenes.length; ++i) {
+         var scene = this.GetElement(scenes[i].fElementId);
+         this.callSceneReceivers(scene, "BrowseElement", elid);
+         break; // normally default scene is enough
+      }
+   }
 
    //==============================================================================
    // END protoype functions

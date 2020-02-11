@@ -179,6 +179,7 @@ public:
    REveElement *FindElementById (ElementId_t id) const;
    void         AssignElementId (REveElement* element);
    void         PreDeleteElement(REveElement* element);
+   void         BrowseElement(ElementId_t id);
 
    // VizDB - Visualization-parameter data-base.
    Bool_t       InsertVizDBEntry(const TString& tag, REveElement* model,
