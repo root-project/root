@@ -27,6 +27,7 @@
         class="sapUiNoMarginTop"
         selectionMode="None"
         editable="false"
+        rowHeight="22"
         showColumnVisibilityMenu="true"
         visibleRowCountMode="Auto">
       <table:layoutData>
