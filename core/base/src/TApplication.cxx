@@ -1066,9 +1066,9 @@ void TApplication::Help(const char *line)
       gInterpreter->ProcessLine(line);
       Printf("\nROOT special commands.");
       Printf("==========================================================================");
-      Printf("   pwd                 : show current directory, pad and style");
-      Printf("   ls                  : list contents of current directory");
-      Printf("   which [file]        : shows path of macro file");
+      Printf("   .pwd                : show current directory, pad and style");
+      Printf("   .ls                 : list contents of current directory");
+      Printf("   .which [file]       : shows path of macro file");
       Printf("   .help Class         : opens the reference guide for that class");
       Printf("   .help Class::Member : opens the reference guide for function/member");
       return;
