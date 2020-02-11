@@ -181,6 +181,7 @@ sap.ui.define([
       /** Called from JSROOT context menu when object selected for browsing */
       jsrootBrowse: function(obj_id) {
          console.log('Do browsing', obj_id);
+         this.controller.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
       },
 
       /** Used together with the geo painter for processing context menu */
