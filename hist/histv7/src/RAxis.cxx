@@ -47,19 +47,23 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
    return binIdx;
 }
 
-ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(RAxisEquidistant &target,
-                                                                  RAxisEquidistant &source) noexcept
+ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(const RAxisEquidistant &target,
+                                                                  const RAxisEquidistant &source) noexcept
 {
+   // First, let's get the common "all parameters are equal" case out of the way
    if (source == target)
       return EAxisCompatibility::kIdentical;
 
+   // Do the source min/max boundaries correspond to target bin boundaries?
    int idxTargetLow = target.GetBinIndexForLowEdge(source.GetMinimum());
    int idxTargetHigh = target.GetBinIndexForLowEdge(source.GetMaximum());
    if (idxTargetLow < 0 || idxTargetHigh < 0)
+      // If not, the source is incompatible with the target since the first or
+      // last source bin does not map into a target axis bin.
       return EAxisCompatibility::kIncompatible;
 
-   // If both low and high exist in both axes and the bin width is identical then
-   // one axis contains the other.
+   // If so, and if the bin width is the same, then since we've eliminated the
+   // care where min/max/width are equal, source must be a subset of target.
    if (source.GetInverseBinWidth() == target.GetInverseBinWidth())
       return EAxisCompatibility::kContains;
 
