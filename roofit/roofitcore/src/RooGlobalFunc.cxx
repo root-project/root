@@ -16,9 +16,9 @@
 
 // Global helper functions
 
-#include "RooFit.h"
-
 #include "RooGlobalFunc.h"
+
+#include "RooFit.h"
 #include "RooCategory.h"
 #include "RooRealConstant.h"
 #include "RooDataSet.h"
@@ -27,6 +27,7 @@
 #include "RooRealVar.h"
 #include "RooFitResult.h"
 #include "RooAbsPdf.h"
+#include "RooFormulaVar.h"
 #include "TH1.h"
 
 using namespace std;
