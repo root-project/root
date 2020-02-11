@@ -9,13 +9,12 @@ sap.ui.define([
 
    "use strict";
 
-   // Use THREE.js renderer, scene, camera, etc. directly instead of through JSRootGeoPainter.
-   var direct_threejs = true;
-
    // EveScene constructor function.
    var EveScene = null;
 
-   let maybe_proto = Controller.extend("rootui5.eve7.Controller.GL", {
+   var g_global_init_done = false;
+
+   var ControllerGL = Controller.extend("rootui5.eve7.Controller.GL", {
 
 
       //==============================================================================
@@ -148,21 +147,37 @@ sap.ui.define([
          // QQQQ plus, we should unregister this as gl-controller, too
       },
 
+      g_highlight_update: function(mgr)
+      {
+         let sa = THREE.OutlinePass.selection_atts;
+         let gs = mgr.GetElement(mgr.global_selection_id);
+         let gh = mgr.GetElement(mgr.global_highlight_id);
+
+         if (gs && gh) {
+            sa[0].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gs.fVisibleEdgeColor]);
+            sa[0].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gs.fHiddenEdgeColor]);
+            sa[1].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gh.fVisibleEdgeColor]);
+            sa[1].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gh.fHiddenEdgeColor]);
+         }
+      },
+
       // Checks if all initialization is performed and startup renderer.
       checkViewReady: function()
       {
          if ( ! this._load_scripts || ! this._render_html || ! this.eveViewerId)
-         {
             return;
-         }
 
-         if (direct_threejs)
+         // Use THREE.js renderer, scene, camera, etc. directly instead of through JSRootGeoPainter.
+         this.direct_threejs = !this.mgr.handle.GetUserArgs("JsRootRender");
+
+         if (this.direct_threejs)
          {
             if (this.renderer) throw new Error("THREE renderer already created.");
 
-            if( ! rootui5.eve7.Controller.GL.g_global_init_done)
-            {
-               rootui5.eve7.Controller.GL.g_global_init(this);
+            if(!g_global_init_done) {
+               g_global_init_done = true;
+               this.mgr.RegisterSelectionChangeFoo(this.g_highlight_update.bind(this));
+               this.g_highlight_update(this.mgr);
             }
 
             this.createThreejsRenderer();
@@ -588,7 +603,7 @@ sap.ui.define([
       // XXXX rename to getEveSceneContainer - fix also in EveScene.js
       getThreejsContainer: function(scene_name)
       {
-         let parent = direct_threejs ? this.scene : this.geo_painter.getExtrasContainer();
+         let parent = this.direct_threejs ? this.scene : this.geo_painter.getExtrasContainer();
 
          for (let k = 0; k < parent.children.length; ++k)
          {
@@ -610,7 +625,7 @@ sap.ui.define([
        */
       render: function()
       {
-         if (direct_threejs)
+         if (this.direct_threejs)
          {
             // console.log(this.camera, this.controls, this.controls.target);
 
@@ -897,33 +912,5 @@ sap.ui.define([
 
    });
 
-
-   //==============================================================================
-   // Global / non-prototype members
-   //==============================================================================
-
-   let GLC = rootui5.eve7.Controller.GL;
-
-   GLC.g_highlight_update = function(mgr)
-   {
-      let sa = THREE.OutlinePass.selection_atts;
-      let gs = mgr.GetElement(mgr.global_selection_id);
-      let gh = mgr.GetElement(mgr.global_highlight_id);
-
-      sa[0].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gs.fVisibleEdgeColor]);
-      sa[0].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gs.fHiddenEdgeColor]);
-      sa[1].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gh.fVisibleEdgeColor]);
-      sa[1].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gh.fHiddenEdgeColor]);
-   }
-
-   GLC.g_global_init = function(glc)
-   {
-      glc.mgr.RegisterSelectionChangeFoo(GLC.g_highlight_update);
-
-      GLC.g_highlight_update(glc.mgr);
-
-      GLC.g_global_init_done = true;
-   }
-
-   return maybe_proto;
+   return ControllerGL;
 });
