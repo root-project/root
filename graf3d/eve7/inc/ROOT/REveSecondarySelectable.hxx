@@ -24,8 +24,8 @@ namespace Experimental {
 class REveSecondarySelectable
 {
 private:
-   REveSecondarySelectable(const REveSecondarySelectable &);            // Not implemented
-   REveSecondarySelectable &operator=(const REveSecondarySelectable &); // Not implemented
+   REveSecondarySelectable(const REveSecondarySelectable &) = delete;
+   REveSecondarySelectable &operator=(const REveSecondarySelectable &) = delete;
 
 public:
    typedef std::set<Int_t>                SelectionSet_t;
