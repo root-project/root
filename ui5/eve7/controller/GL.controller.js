@@ -245,8 +245,7 @@ sap.ui.define([
 
       onGeoPainterReady: function(painter)
       {
-         console.log("GL_controller::onGeoPainterReady");
-
+         // configure timeout for interactive operations
          this.geo_painter.setMouseTmout(this.htimeout);
 
          // AMT temporary here, should be set in camera instantiation time
@@ -293,13 +292,11 @@ sap.ui.define([
             // painter.HighlightMesh(active_mesh, undefined, geo_object, geo_index); AMT override
             if (active_mesh && active_mesh.get_ctrl()){
                active_mesh.get_ctrl().elementHighlighted( 0xffaa33, geo_index);
-            }
-            else {
+            }  else {
                var sl = painter.eveGLcontroller.created_scenes;
                for (var k=0; k < sl.length; ++k)
                    sl[k].clearHighlight();
             }
-
 
             if (painter.options.update_browser) {
                if (painter.options.highlight && tooltip) names = [ tooltip ];
@@ -324,13 +321,71 @@ sap.ui.define([
          this.geo_painter._effectComposer.setSize( sz.width, sz.height);
          this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
+         this.geo_painter._controls.ContextMenu = this.jsrootOrbitContext.bind(this);
+
          // create only when geo painter is ready
          this.createScenes();
          this.redrawScenes();
          this.geo_painter.adjustCameraPosition(true);
          this.render();
+
+         ResizeHandler.register(this.getView(), this.onResize.bind(this));
       },
 
+
+      /** Called from JSROOT context menu when object selected for browsing */
+      jsrootBrowse: function(obj_id) {
+         console.log('Do browsing', obj_id);
+      },
+
+      /** Used together with the geo painter for processing context menu */
+      jsrootOrbitContext: function(evnt, intersects) {
+
+         var browseHandler = this.jsrootBrowse.bind(this);
+
+         JSROOT.Painter.createMenu(this.geo_painter, function(menu) {
+            var numitems = 0, cnt = 0;
+            if (intersects)
+               for (var n=0;n<intersects.length;++n)
+                  if (intersects[n].object.geo_name) numitems++;
+
+            if (numitems === 0) {
+               // default JSROOT context menu
+               menu.painter.FillContextMenu(menu);
+            } else {
+               var many = numitems > 1;
+
+               if (many) menu.add("header: Items");
+
+               for (var n=0;n<intersects.length;++n) {
+                  var obj = intersects[n].object;
+                  if (!obj.geo_name) continue;
+
+                  menu.add((many ? "sub:" : "header:") + obj.geo_name, obj.geo_object, browseHandler);
+
+                  menu.add("Browse", obj.geo_object, browseHandler);
+
+                  var wireframe = menu.painter.accessObjectWireFrame(obj);
+
+                  if (wireframe!==undefined)
+                     menu.addchk(wireframe, "Wireframe", n, function(indx) {
+                        var m = intersects[indx].object.material;
+                        m.wireframe = !m.wireframe;
+                        this.Render3D();
+                     });
+
+
+                  // not yet working
+                  // menu.add("Focus", n, function(indx) { this.focusCamera(intersects[indx].object); });
+
+                  if (many) menu.add("endsub:");
+               }
+            }
+
+            // show menu
+            menu.show(evnt);
+         });
+      },
 
       //==============================================================================
       // THREE renderer creation, DOM/event handler setup, reset
@@ -669,19 +724,16 @@ sap.ui.define([
          }
       },
 
-
       /// invoked from ResizeHandler
       onResize: function(event)
       {
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
-         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // minimal latency
+         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // small latency
       },
 
       onResizeTimeout: function()
       {
          delete this.resize_tmout;
-
-         // console.log("onResizeTimeout", this.camera);
 
          // TODO: should be specified somehow in XML file
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
