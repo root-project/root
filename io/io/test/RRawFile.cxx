@@ -14,7 +14,6 @@
 #include "gtest/gtest.h"
 
 using RRawFile = ROOT::Internal::RRawFile;
-
 namespace {
 
 /**
