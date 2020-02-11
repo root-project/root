@@ -203,7 +203,8 @@ sap.ui.define([
 
       createGeoPainter: function()
       {
-         let options = "outline";
+         var options = "outline";
+         options += ", mouse_click"; // process mouse click events
          // options += " black, ";
          if (this.kind != "3D") options += ", ortho_camera";
 
@@ -259,6 +260,24 @@ sap.ui.define([
          }
 
          painter.eveGLcontroller = this;
+
+         /** Handler for single mouse click, provided by basic control, used in GeoPainter */
+         painter._controls.ProcessSingleClick = function(intersects)
+         {
+            if (!intersects) return;
+            var intersect = null;
+            for (var k=0;k<intersects.length;++k) {
+               if (intersects[k].object.get_ctrl) {
+                  intersect = intersects[k];
+                  break;
+               }
+            }
+            if (intersect) {
+               var c = intersect.object.get_ctrl();
+               c.elementSelected(c.extractIndex(intersect));
+            }
+         }
+
          painter._controls.ProcessMouseMove = function(intersects)
          {
             var active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
@@ -821,7 +840,6 @@ sap.ui.define([
          }
       },
 
-
       /** Process highlight of object during mouse move after small timeout */
       onMouseMoveTimeout: function(x, y)
       {
@@ -937,40 +955,14 @@ sap.ui.define([
 
       handleMouseSelect: function(event)
       {
-         let x = event.offsetX;
-         let y = event.offsetY;
-         let w = this.getView().$().width();
-         let h = this.getView().$().height();
+         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
-         // console.log("GLC::handleMouseSelect", this, event, x, y);
-
-         let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
-
-         this.raycaster.setFromCamera(mouse, this.camera);
-
-         let intersects = this.raycaster.intersectObjects(this.scene.children, true);
-
-         let o = null, c = null;
-
-         for (let i = 0; i < intersects.length; ++i)
-         {
-            o = intersects[i].object;
-
-            if (o.get_ctrl)
-            {
-               c = o.get_ctrl();
-               c.event = event;
-
-               c.elementSelected(c.extractIndex(intersects[i]));
-
-               this.highlighted_scene = o.scene;
-
-               break;
-            }
-         }
-
-         if ( ! c)
-         {
+         if (intersect) {
+            var c = intersect.object.get_ctrl();
+            c.event = event;
+            c.elementSelected(c.extractIndex(intersect));
+            this.highlighted_scene = o.scene;
+         } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr
 
             this.created_scenes[0].processElementSelected(null, [], event);
