@@ -24,15 +24,11 @@ coordinates in N-dimensional space are represented by a RooArgSet containing Roo
 or RooStringVar objects, thus data can be binned in real and/or discrete dimensions.
 **/
 
+#include "RooDataHist.h"
+
 #include "RooFit.h"
 #include "Riostream.h"
-
-#include "TH1.h"
-#include "TH1.h"
-#include "TDirectory.h"
-#include "TMath.h"
 #include "RooMsgService.h"
-#include "RooDataHist.h"
 #include "RooDataHistSliceIter.h"
 #include "RooAbsLValue.h"
 #include "RooArgList.h"
@@ -46,10 +42,17 @@ or RooStringVar objects, thus data can be binned in real and/or discrete dimensi
 #include "RooLinkedListIter.h"
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
-#include "TTree.h"
 #include "RooTrace.h"
 #include "RooTreeData.h"
 #include "RooHelpers.h"
+#include "RooFormulaVar.h"
+#include "RooFormula.h"
+
+#include "TH1.h"
+#include "TTree.h"
+#include "TDirectory.h"
+#include "TMath.h"
+#include "Math/Util.h"
 
 using namespace std ;
 

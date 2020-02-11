@@ -17,6 +17,7 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooFormulaVar.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 #include "RooUnitTest.h"
