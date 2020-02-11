@@ -312,6 +312,7 @@ namespace {
 }
 
 template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) const {
+  _strcache.clear();
   for(const auto& ch:this->fChannels){
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }

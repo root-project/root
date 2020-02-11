@@ -3,6 +3,7 @@
 
 class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   RooWorkspace* _workspace;
+  std::vector<std::string> _strcache;
  public:
   RooJSONFactoryWSTool(RooWorkspace& ws);
   
@@ -25,9 +26,9 @@ protected:
   template<class T> void importVariables(const T& n);
   template<class T> void importDependants(const T& n);
   
-  template<class T> void exportFunctions(const T& n);
-  template<class T> void exportPdfs(const T& n);
-  template<class T> void exportVariables(const T& n);
-  template<class T> void exportAll(const T& n);  
+  template<class T> void exportFunctions(T& n);
+  template<class T> void exportPdfs(T& n);
+  template<class T> void exportVariables(T& n);
+  template<class T> void exportAll(T& n);  
   
 };

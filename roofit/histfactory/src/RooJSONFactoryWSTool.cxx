@@ -493,28 +493,37 @@ template<> void RooJSONFactoryWSTool::importVariables(const c4::yml::NodeRef& n)
     if(p.has_child("relErr")) v.setError   (v.getVal()*::val_d(p["relErr"]));
     if(p.has_child("err"))    v.setError   (           ::val_d(p["err"]));
     if(p.has_child("const"))  v.setConstant(::val_b(p["const"]));
+    else v.setConstant(false);
     this->_workspace->import(v);
   }  
 }
 
-template<> void RooJSONFactoryWSTool::exportVariables(const c4::yml::NodeRef& n) {
+template<> void RooJSONFactoryWSTool::exportVariables(c4::yml::NodeRef& n) {
   for(auto* arg:this->_workspace->allVars()){
     RooRealVar* v = dynamic_cast<RooRealVar*>(arg);
     if(!v) continue;
     auto var = n[c4::to_csubstr(v->GetName())];
     var |= c4::yml::MAP;  
     var["value"] << v->getVal();
-    var["min"] << v->getMin();
-    var["max"] << v->getMin();
-    var["err"] << v->getError();
-    var["const"] << v->isConstant();    
+    if(v->getMin() > -1e30){
+      var["min"] << v->getMin();
+    }
+    if(v->getMax() < 1e30){
+      var["max"] << v->getMax();
+    }
+    if(v->getError() > 0){
+      var["err"] << v->getError();
+    }
+    if(v->isConstant()){
+      var["const"] << v->isConstant();
+    }
   }  
 }
 
-template<> void RooJSONFactoryWSTool::exportFunctions(const c4::yml::NodeRef& n) {
+template<> void RooJSONFactoryWSTool::exportFunctions(c4::yml::NodeRef& n) {
 }
 
-template<> void RooJSONFactoryWSTool::exportPdfs(const c4::yml::NodeRef& n) {
+template<> void RooJSONFactoryWSTool::exportPdfs(c4::yml::NodeRef& n) {
 }
 
 template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n) {
@@ -529,13 +538,15 @@ template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n
   }
 }
 
-template<> void RooJSONFactoryWSTool::exportAll(const c4::yml::NodeRef& n) {
+template<> void RooJSONFactoryWSTool::exportAll(c4::yml::NodeRef& n) {
   auto vars = n["variables"];
   vars |= c4::yml::MAP;  
   this->exportVariables(vars);
+  
   auto funcs = n["functions"];
   funcs |= c4::yml::MAP;    
   this->exportFunctions(funcs);
+  
   auto pdfs = n["pdfs"];
   pdfs |= c4::yml::MAP;    
   this->exportPdfs(pdfs);
