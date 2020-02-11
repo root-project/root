@@ -45,8 +45,8 @@ sap.ui.define([
             var pthis = this;
             import("../../eve7/rnr_core/RenderCore.js").then((module) => {
                console.log("GLC onInit RenderCore loaded");
-	       // alert("Step 1: controller says: RnrCore loaded")
-	       pthis.RCore = module;
+              // alert("Step 1: controller says: RnrCore loaded")
+               pthis.RCore = module;
 
                let orc = new pthis.RCore.Object3D;
                console.log("RCore::Object3D", orc);
@@ -177,6 +177,8 @@ sap.ui.define([
          {
             return;
          }
+
+         this.JsRootRender = !this.mgr.handle.GetUserArgs("JsRootRender");
 
          // console.log("GLC::checkViewReady, instantiating GLViewer" + viewer_class);
 

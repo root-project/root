@@ -17,6 +17,20 @@ sap.ui.define([
 
       constructor: GlViewerThree,
 
+      g_highlight_update: function(mgr)
+      {
+         let sa = THREE.OutlinePass.selection_atts;
+         let gs = mgr.GetElement(mgr.global_selection_id);
+         let gh = mgr.GetElement(mgr.global_highlight_id);
+
+         if (gs && gh) {
+            sa[0].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gs.fVisibleEdgeColor]);
+            sa[0].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gs.fHiddenEdgeColor]);
+            sa[1].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gh.fVisibleEdgeColor]);
+            sa[1].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gh.fHiddenEdgeColor]);
+         }
+      },
+
       init: function(controller)
       {
          GlViewer.prototype.init.call(this, controller);
@@ -25,9 +39,12 @@ sap.ui.define([
          this.creator = new EveElements(controller);
          this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
 
-         if( ! GlViewerThree.g_global_init_done)
+         if(!GlViewerThree.g_global_init_done)
          {
-            GlViewerThree.g_global_init(this.controller.mgr);
+            GlViewerThree.g_global_init_done = true;
+
+            this.controller.MGR.RegisterSelectionChangeFoo(this.g_highlight_update.bind(this));
+            this.g_highlight_update(this.controller.mgr);
          }
 
          this.createThreejsRenderer();
@@ -553,33 +570,6 @@ sap.ui.define([
       },
 
    });
-
-   //==============================================================================
-   // Global / non-prototype members
-   //==============================================================================
-
-   let LOX = GlViewerThree;
-
-   LOX.g_highlight_update = function(mgr)
-   {
-      let sa = THREE.OutlinePass.selection_atts;
-      let gs = mgr.GetElement(mgr.global_selection_id);
-      let gh = mgr.GetElement(mgr.global_highlight_id);
-
-      sa[0].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gs.fVisibleEdgeColor]);
-      sa[0].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gs.fHiddenEdgeColor]);
-      sa[1].visibleEdgeColor.setStyle(JSROOT.Painter.root_colors[gh.fVisibleEdgeColor]);
-      sa[1].hiddenEdgeColor .setStyle(JSROOT.Painter.root_colors[gh.fHiddenEdgeColor]);
-   };
-
-   LOX.g_global_init = function(mgr)
-   {
-      mgr.RegisterSelectionChangeFoo(LOX.g_highlight_update);
-
-      LOX.g_highlight_update(mgr);
-
-      LOX.g_global_init_done = true;
-   };
 
    return GlViewerThree;
 
