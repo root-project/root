@@ -39,8 +39,8 @@ class REveStraightLineSet : public REveElement,
                             public TAttBBox
 {
 private:
-   REveStraightLineSet(const REveStraightLineSet&);            // Not implemented
-   REveStraightLineSet& operator=(const REveStraightLineSet&); // Not implemented
+   REveStraightLineSet(const REveStraightLineSet&) = delete;
+   REveStraightLineSet& operator=(const REveStraightLineSet&) = delete;
 
 public:
    struct Line_t
@@ -52,8 +52,8 @@ public:
       Line_t(Float_t x1, Float_t y1, Float_t z1,
              Float_t x2, Float_t y2, Float_t z2) : fId(-1)
       {
-         fV1[0] = x1, fV1[1] = y1, fV1[2] = z1;
-         fV2[0] = x2, fV2[1] = y2, fV2[2] = z2;
+         fV1[0] = x1; fV1[1] = y1; fV1[2] = z1;
+         fV2[0] = x2; fV2[1] = y2; fV2[2] = z2;
       }
    };
 
@@ -64,7 +64,7 @@ public:
 
       Marker_t(Float_t x, Float_t y, Float_t z, Int_t line_id) : fLineId(line_id)
       {
-         fV[0] = x, fV[1] = y, fV[2] = z;
+         fV[0] = x; fV[1] = y; fV[2] = z;
       }
    };
 
@@ -129,8 +129,8 @@ class REveStraightLineSetProjected : public REveStraightLineSet,
                                      public REveProjected
 {
 private:
-   REveStraightLineSetProjected(const REveStraightLineSetProjected&);            // Not implemented
-   REveStraightLineSetProjected& operator=(const REveStraightLineSetProjected&); // Not implemented
+   REveStraightLineSetProjected(const REveStraightLineSetProjected&) = delete;
+   REveStraightLineSetProjected& operator=(const REveStraightLineSetProjected&) = delete;
 
 protected:
    void SetDepthLocal(Float_t d) override;

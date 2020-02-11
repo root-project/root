@@ -31,8 +31,8 @@ class REvePolygonSetProjected : public REveShape,
                                 public REveProjected
 {
 private:
-   REvePolygonSetProjected(const REvePolygonSetProjected &);            // Not implemented
-   REvePolygonSetProjected &operator=(const REvePolygonSetProjected &); // Not implemented
+   REvePolygonSetProjected(const REvePolygonSetProjected &) = delete;
+   REvePolygonSetProjected &operator=(const REvePolygonSetProjected &) = delete;
 
 protected:
    struct Polygon_t {

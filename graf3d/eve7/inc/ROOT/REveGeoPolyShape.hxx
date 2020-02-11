@@ -28,8 +28,8 @@ class REveRenderData;
 class REveGeoPolyShape : public TGeoBBox
 {
 private:
-   REveGeoPolyShape(const REveGeoPolyShape&);            // Not implemented
-   REveGeoPolyShape& operator=(const REveGeoPolyShape&); // Not implemented
+   REveGeoPolyShape(const REveGeoPolyShape&) = delete;
+   REveGeoPolyShape& operator=(const REveGeoPolyShape&) = delete;
 
 protected:
    std::vector<Double_t> fVertices;

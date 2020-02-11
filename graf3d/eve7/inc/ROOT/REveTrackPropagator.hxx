@@ -171,8 +171,8 @@ protected:
    };
 
 private:
-   REveTrackPropagator(const REveTrackPropagator &);            // Not implemented
-   REveTrackPropagator &operator=(const REveTrackPropagator &); // Not implemented
+   REveTrackPropagator(const REveTrackPropagator &) = delete;
+   REveTrackPropagator &operator=(const REveTrackPropagator &) = delete;
 
    void DistributeOffset(const REveVectorD &off, Int_t first_point, Int_t np, REveVectorD &p);
 

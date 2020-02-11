@@ -9,8 +9,8 @@ namespace Experimental {
 class REveScalableStraightLineSet : public REveStraightLineSet
 {
 private:
-   REveScalableStraightLineSet(const REveScalableStraightLineSet&);            // Not implemented
-   REveScalableStraightLineSet& operator=(const REveScalableStraightLineSet&); // Not implemented
+   REveScalableStraightLineSet(const REveScalableStraightLineSet&) = delete;
+   REveScalableStraightLineSet& operator=(const REveScalableStraightLineSet&) = delete;
 
 protected:
    Double_t      fCurrentScale;

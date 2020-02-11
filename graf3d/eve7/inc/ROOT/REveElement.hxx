@@ -71,7 +71,7 @@ class REveElement
    friend class REveManager;
    friend class REveScene;
 
-   REveElement& operator=(const REveElement&); // Not implemented
+   REveElement& operator=(const REveElement&) = delete;
 
 public:
    typedef std::list<REveElement*>              List_t;
