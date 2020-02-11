@@ -13,7 +13,7 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Internal;
+using RRawFile = ROOT::Internal::RRawFile;
 
 namespace {
 
