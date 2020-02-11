@@ -7,10 +7,10 @@ void P010_RRawFileDavix()
        !gEnv->GetValue("Davix.UseOldClient", 0)) {
 
       gPluginMgr->AddHandler(
-         "ROOT::Detail::RRawFile",
+         "ROOT::Internal::RRawFile",
          "^http[s]?:",
-         "ROOT::Detail::RRawFileDavix",
+         "ROOT::Internal::RRawFileDavix",
          "RDAVIX",
-         "RRawFileDavix(std::string_view, ROOT::Detail::RRawFile::ROptions)");
+         "RRawFileDavix(std::string_view, ROOT::Internal::RRawFile::ROptions)");
    }
 }

@@ -26,23 +26,23 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // Read files in 4k pages unless told otherwise
 } // anonymous namespace
 
-ROOT::Detail::RRawFileWin::RRawFileWin(std::string_view url, ROptions options)
-   : ROOT::Detail::RRawFile(url, options), fFilePtr(nullptr)
+ROOT::Internal::RRawFileWin::RRawFileWin(std::string_view url, ROptions options)
+   : RRawFile(url, options), fFilePtr(nullptr)
 {
 }
 
-ROOT::Detail::RRawFileWin::~RRawFileWin()
+ROOT::Internal::RRawFileWin::~RRawFileWin()
 {
    if (fFilePtr != nullptr)
       fclose(fFilePtr);
 }
 
-std::unique_ptr<ROOT::Detail::RRawFile> ROOT::Detail::RRawFileWin::Clone() const
+std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileWin::Clone() const
 {
    return std::make_unique<RRawFileWin>(fUrl, fOptions);
 }
 
-std::uint64_t ROOT::Detail::RRawFileWin::GetSizeImpl()
+std::uint64_t ROOT::Internal::RRawFileWin::GetSizeImpl()
 {
    Seek(0L, SEEK_END);
    long size = ftell(fFilePtr);
@@ -53,7 +53,7 @@ std::uint64_t ROOT::Detail::RRawFileWin::GetSizeImpl()
    return size;
 }
 
-void ROOT::Detail::RRawFileWin::OpenImpl()
+void ROOT::Internal::RRawFileWin::OpenImpl()
 {
    fFilePtr = fopen(GetLocation(fUrl).c_str(), "rb");
    if (fFilePtr == nullptr)
@@ -65,7 +65,7 @@ void ROOT::Detail::RRawFileWin::OpenImpl()
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
-size_t ROOT::Detail::RRawFileWin::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
+size_t ROOT::Internal::RRawFileWin::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    Seek(offset, SEEK_SET);
    size_t res = fread(buffer, 1, nbytes, fFilePtr);
@@ -76,7 +76,7 @@ size_t ROOT::Detail::RRawFileWin::ReadAtImpl(void *buffer, size_t nbytes, std::u
    return res;
 }
 
-void ROOT::Detail::RRawFileWin::Seek(long offset, int whence)
+void ROOT::Internal::RRawFileWin::Seek(long offset, int whence)
 {
    int res = fseek(fFilePtr, offset, whence);
    if (res != 0)

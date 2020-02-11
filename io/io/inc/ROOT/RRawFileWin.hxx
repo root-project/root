@@ -20,7 +20,7 @@
 #include <cstdio>
 
 namespace ROOT {
-namespace Detail {
+namespace Internal {
 
 /**
  * \class RRawFileWin RRawFileWin.hxx
@@ -46,7 +46,7 @@ public:
    int GetFeatures() const final { return kFeatureHasSize; }
 };
 
-} // namespace Detail
+} // namespace Internal
 } // namespace ROOT
 
 #endif

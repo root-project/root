@@ -20,7 +20,7 @@
 #include <string>
 
 namespace ROOT {
-namespace Detail {
+namespace Internal {
 
 /**
  * \class RRawFile RRawFile.hxx
@@ -179,7 +179,7 @@ public:
    bool Readln(std::string &line);
 }; // class RRawFile
 
-} // namespace Detail
+} // namespace Internal
 } // namespace ROOT
 
 #endif

@@ -19,7 +19,7 @@
 #include <cstdint>
 
 namespace ROOT {
-namespace Detail {
+namespace Internal {
 
 /**
  * \class RRawFileUnix RRawFileUnix.hxx
@@ -46,7 +46,7 @@ public:
    int GetFeatures() const final { return kFeatureHasSize | kFeatureHasMmap; }
 };
 
-} // namespace Detail
+} // namespace Internal
 } // namespace ROOT
 
 #endif
