@@ -96,6 +96,43 @@ protected:
       return (int)rawbin;
    }
 
+   /// If supplementary bin metadata (e.g. bin labels) exists in `this`, make
+   /// sure that `other` provides the same bin metadata.
+   ///
+   /// The implementation can work under the assumption that the number of bins
+   /// of `this` and `other` has already been checked to be equal.
+   ///
+   /// RAxis classes which override a non-default implementation of
+   /// `HasSameBinMetadataAs` should start by calling the parent class'
+   /// implementation of this method, in order to allow "stacking" of bin
+   /// metadata across the class hierarchy.
+   ///
+   /// Adding an override of `HasSameBinMetadataAs` to an RAxis class is
+   /// considered an API-breaking change: subclasses can assume that if their
+   /// parent classes don't override the default implementation of
+   /// `HasSameBinMetadataAs`, they never will.
+   virtual bool HasSameBinMetadataAs(const RAxisBase& /*other*/) const noexcept {
+      return true;
+   }
+
+   /// Semantically equivalent to `HasSameBinMetadataAs(other)`, except that the
+   /// implementation can be optimized under knowledge of the fact that
+   /// `other.HasSameBinMetadataAs(*this)` has previously been called and
+   /// returned a positive result.
+   ///
+   /// RAxis classes which override a non-default implementation of
+   /// `AlsoHasSameBinMetadataAs` should start by calling the parent class'
+   /// implementation of this method, in order to allow "stacking" of bin
+   /// metadata across the class hierarchy.
+   ///
+   /// Adding an override of `AlsoHasSameBinMetadataAs` to an RAxis class is
+   /// considered an API-breaking change: subclasses can assume that if their
+   /// parent classes don't override the default implementation of
+   /// `AlsoHasSameBinMetadataAs`, they never will.
+   virtual bool AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept {
+      return HasSameBinMetadataAs(other);
+   }
+
 public:
    /**
     \class const_iterator
@@ -299,8 +336,10 @@ public:
    /// - Minimum, maximum, and all bin borders in the middle are the same.
    /// - Any metadata attached to the bin (e.g. bin labels) must match.
    ///
-   /// TODO: Add a way to optimize specific comparisons, e.g. eq-eq, irr-irr...
-   virtual bool SameBinningAs(const RAxisBase& other) const noexcept {
+   /// TODO: Optimize specific comparisons, e.g. eq-eq, irr-irr..., without
+   ///       making the entire HasSameBinningAs method overridable in order to
+   ///       reduce the odds of child classes overriding it wrong.
+   bool HasSameBinningAs(const RAxisBase& other) const noexcept {
       // Axis growability (and thus under/overflow bin existence) must match
       if (CanGrow() != other.CanGrow()) return false;
 
@@ -315,13 +354,10 @@ public:
       // Right bin border of the last bin (aka maximum) must also match
       if (GetMaximum() != other.GetMaximum()) return false;
 
-      // TODO: Add a hook to check metadata consistency. Find a way to handle
-      //       the fact that what we actually need is multiple dispatch on
-      //       "this" and "other", e.g. labels check should be triggered whether
-      //       "this" or "other" is an RAxisLabels.
-      //
-      // NOTE: Reduce the scope of overrides to make sure that said hook cannot
-      //       be forgotten by downstream classes.
+      // If either `this` or `other` provides supplementary bin metadata, such
+      // as bin labels, make sure that it is present on both sides.
+      if (!HasSameBinMetadataAs(other)) return false;
+      if (!other.AlsoHasSameBinMetadataAs(*this)) return false;
 
       // If all of the above matched, we're good.
       return true;
@@ -739,6 +775,41 @@ class RAxisLabels: public RAxisGrow {
 private:
    /// Map of label (view on `fLabels`'s elements) to bin index
    std::unordered_map<std::string, int /*bin number*/> fLabelsIndex;
+
+protected:
+   // See RAxisBase documentation
+   bool HasSameBinMetadataAs(const RAxisBase& other) const noexcept override {
+      // If this axis has bin labels, `other` must have bin labels too
+      auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
+      if (!other_labels_ptr) return false;
+      const auto& other_labels = *other_labels_ptr;
+
+      // The bin labels and label->bin associations must also be the same.
+      //
+      // We know that the number of bins is the same, per HasSameBinMetadataAs
+      // virtual interface contract, so we only need to check that each bin from
+      // `this` exists identically in `other`.
+      //
+      for (const auto &kv: fLabelsIndex) {
+         auto iter = other_labels.fLabelsIndex.find(kv.first);
+         if ((iter == fLabelsIndex.cend()) || (iter->second != kv.second))
+            return false;
+      }
+      return true;
+   }
+
+   // See RAxisBase documentation
+   bool AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept override {
+      // If this axis has bin labels, `other` must have bin labels too
+      //
+      // That's all we need to check because we can assume that a call to
+      // `other.HasSameBinMetadataAs(*this)` has already completed successfully.
+      // Hence, if `other` is an `RAxisLabels`, the bin labels have already been
+      // compared by this previous call.
+      //
+      auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
+      return (other_labels_ptr != nullptr);
+   }
 
 public:
    /// Construct a RAxisLables from a `vector` of `string_view`s, with title.
