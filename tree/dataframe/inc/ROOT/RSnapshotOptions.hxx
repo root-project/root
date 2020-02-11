@@ -24,9 +24,9 @@ struct RSnapshotOptions {
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
-   RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy)
+   RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy, bool overwrite)
       : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
-        fSplitLevel(splitLevel), fLazy(lazy)
+        fSplitLevel(splitLevel), fLazy(lazy), fOverwrite(overwrite)
    {
    }
    std::string fMode = "RECREATE";             ///< Mode of creation of output file
@@ -35,6 +35,7 @@ struct RSnapshotOptions {
    int fAutoFlush = 0;                         ///< AutoFlush value for output tree
    int fSplitLevel = 99;                       ///< Split level of output tree
    bool fLazy = false;                         ///< Delay the snapshot of the dataset
+   bool fOverwrite = false;                    ///< Use TObject::kOverwrite to avoid saving multiple cycles
 };
 } // ns RDF
 } // ns ROOT
