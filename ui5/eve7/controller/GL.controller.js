@@ -10,7 +10,7 @@ sap.ui.define([
 
    "use strict";
 
-   let maybe_proto = Controller.extend("rootui5.eve7.Controller.GL", {
+   return Controller.extend("rootui5.eve7.Controller.GL", {
 
       //==============================================================================
       // Initialization, bootstrap, destruction & cleanup.
@@ -123,7 +123,7 @@ sap.ui.define([
                break;
             }
          }
-         if ( ! found) return;
+         if (!found) return;
 
          this.eveViewerId = found.fElementId;
          this.kind      = (found.fName == "Default Viewer") ? "3D" : "2D";
@@ -144,12 +144,13 @@ sap.ui.define([
       {
          if (!this.mgr || !this._load_scripts || !this._render_html || !this.eveViewerId || this.viewer_class) return;
 
-         this.viewer_class = !this.mgr.handle.GetUserArgs("GLViewer");
+         this.viewer_class = this.mgr.handle.GetUserArgs("GLViewer");
+         if ((this.viewer_class != "JSRoot") && (this.viewer_class != "Three") && (this.viewer_class != "RCore"))
+            this.viewer_class = "Three";
+
          this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
          if (this.htimeout === undefined) this.htimeout = 250;
 
-         if ((this.viewer_class != "JSRoot") && (this.viewer_class != "Three") && (this.viewer_class != "RCore"))
-            this.viewer_class = "Three";
 
          sap.ui.require(['rootui5/eve7/lib/GlViewer' + this.viewer_class],
                function(GlViewer) {
@@ -229,8 +230,6 @@ sap.ui.define([
          this.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
       }
 
-
    });
 
-   return maybe_proto;
 });
