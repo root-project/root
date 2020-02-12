@@ -6,10 +6,11 @@ sap.ui.define([
    "sap/m/CustomTreeItem",
    "sap/m/CheckBox",
    "sap/m/Text",
+   "sap/m/Button",
    "sap/ui/layout/SplitterLayoutData"
 ], function(Controller, JSONModel, XMLView,
             StandardTreeItem, CustomTreeItem,
-            mCheckBox, mText, SplitterLayoutData) {
+            mCheckBox, mText, mButton, SplitterLayoutData) {
 
    "use strict";
 
@@ -41,6 +42,21 @@ sap.ui.define([
 
    });
 
+   var EveSummaryCustomItem = CustomTreeItem.extend('rootui5.eve7.lib.EveSummaryCustomItem', {
+      renderer: {},
+
+      metadata: {
+         properties: {
+            elementId: 'string',
+            background: 'string',
+            mainColor: 'string',
+            showCheckbox: 'boolean',
+            showRnrChildren: 'boolean'
+         }
+      },
+
+   });
+
    return Controller.extend("rootui5.eve7.controller.Summary", {
 
       onInit: function () {
@@ -50,7 +66,7 @@ sap.ui.define([
          this.summaryElements = {}; // object with all elements, used for fast access to elements by id
 
          var oTree = this.getView().byId("tree");
-         oTree.setMode(sap.m.ListMode.MultiSelect);
+         // oTree.setMode(sap.m.ListMode.MultiSelect);
          oTree.setIncludeItemInSelection(true);
          this.expandLevel = 2;
 
@@ -60,7 +76,7 @@ sap.ui.define([
          oModel.setDefaultBindingMode("OneWay");
          this.getView().setModel(oModel, "treeModel");
 
-         var oItemTemplate = new EveSummaryTreeItem({
+/*         var oItemTemplate = new EveSummaryTreeItem({
             title: "{treeModel>fName}",
             visible: "{treeModel>fVisible}",
             type: "{treeModel>fType}",
@@ -72,15 +88,22 @@ sap.ui.define([
             showCheckbox: "{treeModel>fShowCheckbox}",
             showRnrChildren: "{treeModel>fShowRnrChildren}"
          });
-
-/*
-         var oItemTemplate = new CustomTreeItem({
-            content: [
-                 new mCheckBox({ selected: "{treeModel>fVisible}", select: this.clickItemSelected.bind(this) }),
-                 new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false })
-            ]
-         });
 */
+
+
+         var oItemTemplate = new EveSummaryCustomItem({
+            content: [
+                new mCheckBox({ visible: "{treeModel>fShowCheckbox}", selected: "{treeModel>fSelected}", select: this.clickItemSelected.bind(this) }),
+                new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false }),
+                new mButton({ visible: true, icon: "sap-icon://edit", type: "Transparent" })
+            ],
+
+            elementId: "{treeModel>fElementId}",
+            mainColor: "{treeModel>fMainColor}",
+            showCheckbox: "{treeModel>fShowCheckbox}",
+            showRnrChildren: "{treeModel>fShowRnrChildren}"
+         });
+
          oItemTemplate.addStyleClass("eveSummaryItem");
          oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
          oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
@@ -139,7 +162,16 @@ sap.ui.define([
       },
 
       clickItemSelected: function(oEvent) {
+         var item = oEvent.getSource().getParent();
 
+         var selected = oEvent.getSource().getSelected();
+
+         var elem = this.mgr.GetElement(item.getElementId());
+
+         if (item.getShowRnrChildren())
+             this.mgr.SendMIR("SetRnrChildren(" + selected + ")", elem.fElementId, elem._typename);
+         else
+             this.mgr.SendMIR("SetRnrSelf(" + selected + ")", elem.fElementId, elem._typename);
       },
 
       onSelectionChange: function(oEvent) {
@@ -422,6 +454,7 @@ sap.ui.define([
       setElementsAttributes: function(newelem, elem) {
          newelem.fShowCheckbox = false;
          newelem.fShowRnrChildren = false;
+         newelem.fElementId = elem.fElementId;
 
          if (this.canEdit(elem)) {
             newelem.fType = "DetailAndActive";
