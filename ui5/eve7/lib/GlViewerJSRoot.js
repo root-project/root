@@ -178,16 +178,10 @@ sap.ui.define([
          this.render();
       },
 
-      /** Called from JSROOT context menu when object selected for browsing */
-      jsrootBrowse: function(obj_id) {
-         console.log('Do browsing', obj_id);
-         this.controller.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
-      },
-
       /** Used together with the geo painter for processing context menu */
       jsrootOrbitContext: function(evnt, intersects) {
 
-         var browseHandler = this.jsrootBrowse.bind(this);
+         var browseHandler = this.controller.invokeBrowseOf.bind(this.controller);
 
          JSROOT.Painter.createMenu(this.geo_painter, function(menu) {
             var numitems = 0, cnt = 0;

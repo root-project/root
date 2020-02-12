@@ -495,22 +495,15 @@ sap.ui.define([
 
       /** Invoked via EveManager when specified element should be focused */
       BrowseElement: function(elid) {
-         console.log('WANT to BROWSE', elid);
-
          var summaryElement = this.summaryElements[elid];
-
          if (!summaryElement) return;
 
+         var oTree = this.getView().byId("tree"),
+             element_path = summaryElement.path,
+             bestindx = 1, bestlen = 0;
 
-         console.log('Found element', summaryElement.path)
-
-         var element_path = summaryElement.path;
-
-         var oTree = this.getView().byId("tree"), bestindx = 1, bestlen = 0;
-
-         
          while (bestindx >= 0) {
-            
+
             bestindx = -1;
 
             var items = oTree.getItems();
@@ -521,8 +514,8 @@ sap.ui.define([
                    path = model.getPath();
 
                if (element_path == path) {
-                  item.$()[0].scrollIntoView();
-                  console.log('FOUND !!!');
+                  var dom = item.$()[0];
+                  if (dom) dom.scrollIntoView();
                   return;
                }
 
@@ -531,7 +524,7 @@ sap.ui.define([
                   bestlen = path.length;
                }
             }
-            
+
             if (bestindx >= 0) oTree.expand(bestindx);
          }
 

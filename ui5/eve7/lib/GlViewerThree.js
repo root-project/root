@@ -164,12 +164,14 @@ sap.ui.define([
             if (event.movementX == 0 && event.movementY == 0)
                return;
 
-            glc.removeMouseMoveTimeout();
-            glc.clearHighlight();
             glc.removeMouseupListener();
 
-            if (event.buttons === 0)
+            if (event.buttons === 0) {
+               glc.removeMouseMoveTimeout();
                glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), this.controller.htimeout);
+            } else {
+               glc.clearHighlight();
+            }
          });
 
          this.renderer.domElement.addEventListener('mouseleave', function(event) {
@@ -397,10 +399,8 @@ sap.ui.define([
          }
       },
 
-      onMouseMoveTimeout: function(x, y)
-      {
-         delete this.mousemove_timeout;
-
+      /** Get three.js intersect object at specified mouse position */
+      getIntersectAt: function(x, y) {
          let w = this.get_width();
          let h = this.get_height();
 
@@ -416,44 +416,57 @@ sap.ui.define([
 
          for (let i = 0; i < intersects.length; ++i)
          {
-            o = intersects[i].object;
-            if (o.get_ctrl)
+            if (intersects[i].object.get_ctrl)
             {
-               c = o.get_ctrl();
-               c.elementHighlighted(c.extractIndex(intersects[i]));
-
-               this.highlighted_scene = c.obj3d.scene;
-
-               break;
+               intersects[i].mouse = mouse;
+               intersects[i].w = w;
+               intersects[i].h = h;
+               return intersects[i];
             }
          }
+      },
 
-         if (c)
-         {
-            if (c.obj3d && c.obj3d.eve_el)
-               this.ttip_text.innerHTML = c.obj3d.eve_el.fTitle || c.obj3d.eve_el.fName || "";
-            else
-               this.ttip_text.innerHTML = "";
+      onMouseMoveTimeout: function(x, y)
+      {
+         delete this.mousemove_timeout;
 
-            let del  = this.get_view().getDomRef();
-            let offs = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(del) : null;
+         var intersect = this.getIntersectAt(x,y);
 
-            if (mouse.x <= 0) {
-               this.ttip.style.left  = (x + del.offsetLeft + 10) + "px";
-               this.ttip.style.right = null;
-            } else {
-               this.ttip.style.right = (w - x + offs.right + 10) + "px";
-               this.ttip.style.left  = null;
-            }
-            if (mouse.y >= 0) {
-               this.ttip.style.top    = (y + del.offsetTop + 10) + "px";
-               this.ttip.style.bottom = null;
-            } else {
-               this.ttip.style.bottom = (h - y + offs.bottom + 10) + "px";
-               this.ttip.style.top = null;
-            }
-            this.ttip.style.display= "block";
+         if (!intersect)
+            return this.clearHighlight();
+
+         var c = intersect.object.get_ctrl();
+
+         var mouse = intersect.mouse;
+
+         c.elementHighlighted(c.extractIndex(intersect));
+
+         this.highlighted_scene = c.obj3d.scene;
+
+         if (c.obj3d && c.obj3d.eve_el)
+            this.ttip_text.innerHTML = c.obj3d.eve_el.fTitle || c.obj3d.eve_el.fName || "";
+         else
+            this.ttip_text.innerHTML = "";
+
+         let del  = this.getView().getDomRef();
+         let offs = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(del) : null;
+
+         if (mouse.x <= 0) {
+            this.ttip.style.left  = (x + del.offsetLeft + 10) + "px";
+            this.ttip.style.right = null;
+         } else {
+            this.ttip.style.right = (intersect.w - x + offs.right + 10) + "px";
+            this.ttip.style.left  = null;
          }
+         if (mouse.y >= 0) {
+            this.ttip.style.top    = (y + del.offsetTop + 10) + "px";
+            this.ttip.style.bottom = null;
+         } else {
+            this.ttip.style.bottom = (intersect.h - y + offs.bottom + 10) + "px";
+            this.ttip.style.top = null;
+         }
+
+         this.ttip.style.display= "block";
       },
 
       getRelativeOffsets: function(elem)
@@ -498,7 +511,15 @@ sap.ui.define([
 
          // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
 
+
+         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+
          menu.add("header:Context Menu");
+
+         if (intersect) {
+            if (intersect.object.eve_el)
+               menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
+         }
 
          menu.add("Reset camera", this.resetThreejsRenderer);
 
