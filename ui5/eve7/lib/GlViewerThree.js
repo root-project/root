@@ -542,40 +542,14 @@ sap.ui.define([
 
       handleMouseSelect: function(event)
       {
-         let x = event.offsetX;
-         let y = event.offsetY;
-         let w = this.get_width();
-         let h = this.get_height();
+         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
-         // console.log("GLC::handleMouseSelect", this, event, x, y);
-
-         let mouse = new THREE.Vector2( ((x + 0.5) / w) * 2 - 1, -((y + 0.5) / h) * 2 + 1 );
-
-         this.raycaster.setFromCamera(mouse, this.camera);
-
-         let intersects = this.raycaster.intersectObjects(this.scene.children, true);
-
-         let o = null, c = null;
-
-         for (let i = 0; i < intersects.length; ++i)
-         {
-            o = intersects[i].object;
-
-            if (o.get_ctrl)
-            {
-               c = o.get_ctrl();
-               c.event = event;
-
-               c.elementSelected(c.extractIndex(intersects[i]));
-
-               this.highlighted_scene = o.scene;
-
-               break;
-            }
-         }
-
-         if ( ! c)
-         {
+         if (intersect) {
+            var c = intersect.object.get_ctrl();
+            c.event = event;
+            c.elementSelected(c.extractIndex(intersect));
+            this.highlighted_scene = o.scene;
+         } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr
 
             this.controller.created_scenes[0].processElementSelected(null, [], event);

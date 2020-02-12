@@ -292,7 +292,7 @@ sap.ui.define([
       // MT BEGIN
       // console.log("EveScene.prototype.processElementSelected", obj3d, col, indx, evnt);
 
-      let is_multi  = event && event.ctrlKey;
+      let is_multi  = event && event.ctrlKey ? true : false;
       let is_secsel = indx !== undefined;
 
       let fcall = "NewElementPicked(" + (obj3d ? obj3d.eve_el.fElementId : 0) + `, ${is_multi}, ${is_secsel}`;

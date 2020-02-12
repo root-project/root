@@ -44,6 +44,7 @@ sap.ui.define([
       createGeoPainter: function()
       {
          let options = "outline";
+         options += ", mouse_click"; // process mouse click events
          // options += " black, ";
          if (this.controller.kind != "3D") options += ", ortho_camera";
 
@@ -102,6 +103,24 @@ sap.ui.define([
          }
 
          painter.eveGLcontroller = this.controller;
+
+         /** Handler for single mouse click, provided by basic control, used in GeoPainter */
+         painter._controls.ProcessSingleClick = function(intersects)
+         {
+            if (!intersects) return;
+            var intersect = null;
+            for (var k=0;k<intersects.length;++k) {
+               if (intersects[k].object.get_ctrl) {
+                  intersect = intersects[k];
+                  break;
+               }
+            }
+            if (intersect) {
+               var c = intersect.object.get_ctrl();
+               c.elementSelected(c.extractIndex(intersect));
+            }
+         }
+
          painter._controls.ProcessMouseMove = function(intersects)
          {
             var active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
