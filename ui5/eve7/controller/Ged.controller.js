@@ -181,8 +181,6 @@ sap.ui.define([
    return Controller.extend("rootui5.eve7.controller.Ged", {
 
       onInit : function() {
-         console.log('init GED editor');
-
          this.oModel = new JSONModel({ title: "GED title", "widgetlist" : [] });
          this.getView().setModel(this.oModel, "ged");
 
@@ -194,12 +192,9 @@ sap.ui.define([
       },
 
       onExit : function() {
-         console.log('exit GED editor');
       },
 
       closeGedEditor: function() {
-         console.log('close GED editor');
-
          var sumSplitter = this.getView().getViewData().summaryCtrl.byId("sumSplitter");
 
          if (this.ged_visible)
