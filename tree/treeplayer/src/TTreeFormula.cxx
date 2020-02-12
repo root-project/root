@@ -363,14 +363,18 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
    }
 
    Int_t vsize = 0;
+   bool scalarindex = false;
 
    if (fIndexes[code][fNdimensions[code]]==-2) {
       TTreeFormula *indexvar = fVarIndexes[code][fNdimensions[code]];
       // ASSERT(indexvar!=0);
       Int_t index_multiplicity = indexvar->GetMultiplicity();
       switch (index_multiplicity) {
-         case -1:
          case  0:
+            scalarindex = true;
+            vsize = 1;
+            break;
+         case -1:
          case  2:
             vsize = indexvar->GetNdata();
             break;
@@ -382,7 +386,7 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
 
    fCumulSizes[code][fNdimensions[code]] = size;
 
-   if ( fIndexes[code][fNdimensions[code]] < 0 ) {
+   if ( !scalarindex && fIndexes[code][fNdimensions[code]] < 0 ) {
       fManager->UpdateUsedSize(virt_dim, vsize);
    }
 
@@ -5565,7 +5569,13 @@ Bool_t TTreeFormula::LoadCurrentDim() {
       }
       for(Int_t k=0, virt_dim=0; k < fNdimensions[i]; k++) {
          if (fIndexes[i][k]<0) {
-            if (fIndexes[i][k]==-2 && fManager->fVirtUsedSizes[virt_dim]<0) {
+            if (info && fIndexes[i][k]==-2 && fVarIndexes[i][k]->GetManager()->GetMultiplicity()==0) {
+               // Index and thus local size provided by a "index variable of size 1"
+               Int_t index = fVarIndexes[i][k]->EvalInstance(0);
+               Int_t index_size = info->GetSize(index);
+               if (fManager->fUsedSizes[virt_dim]==1 || (index_size!=1 && index_size<fManager->fUsedSizes[virt_dim]) )
+                  fManager->fUsedSizes[virt_dim] = index_size;
+            } else if (fIndexes[i][k]==-2 && fManager->fVirtUsedSizes[virt_dim]<0) {
 
                // if fVirtUsedSize[virt_dim] is positive then VarIndexes[i][k]->GetNdata()
                // is always the same and has already been factored in fUsedSize[virt_dim]
