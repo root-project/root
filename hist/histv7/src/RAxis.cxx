@@ -20,6 +20,8 @@
 
 constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
 
+ROOT::Experimental::RAxisBase::~RAxisBase() {}
+
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
