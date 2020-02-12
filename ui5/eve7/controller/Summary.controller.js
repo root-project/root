@@ -3,12 +3,13 @@ sap.ui.define([
    "sap/ui/model/json/JSONModel",
    "sap/ui/core/mvc/XMLView",
    "sap/m/CustomTreeItem",
+   "sap/m/FlexBox",
    "sap/m/CheckBox",
    "sap/m/Text",
    "sap/m/Button",
    "sap/ui/layout/SplitterLayoutData"
 ], function(Controller, JSONModel, XMLView, CustomTreeItem,
-            mCheckBox, mText, mButton, SplitterLayoutData) {
+            FlexBox, mCheckBox, mText, mButton, SplitterLayoutData) {
 
    "use strict";
 
@@ -27,8 +28,7 @@ sap.ui.define([
 
       onAfterRendering: function()
       {
-         var btn = this.getContent()[2];
-
+         var btn = this.getContent()[0].getItems()[1];
          btn.$().css('background-color', this.getMainColor());
       }
 
@@ -53,9 +53,21 @@ sap.ui.define([
 
          var oItemTemplate = new EveSummaryCustomItem({
             content: [
-                new mCheckBox({ visible: "{treeModel>fShowCheckbox}", selected: "{treeModel>fSelected}", select: this.clickItemSelected.bind(this) }),
-                new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false }),
-                new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Actiavte GED", press: this.pressGedButton.bind(this) })
+                new FlexBox({
+                   width: "100%",
+                   alignItems: "Start",
+                   justifyContent: "SpaceBetween",
+                   items: [
+                     new FlexBox({
+                        alignItems: "Start",
+                        items: [
+                           new mCheckBox({ visible: "{treeModel>fShowCheckbox}", selected: "{treeModel>fSelected}", select: this.clickItemSelected.bind(this) }),
+                           new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false })
+                         ]
+                      }),
+                      new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Actiavte GED", press: this.pressGedButton.bind(this) })
+                    ]
+                })
             ],
 
             elementId: "{treeModel>fElementId}",
@@ -122,7 +134,7 @@ sap.ui.define([
       },
 
       clickItemSelected: function(oEvent) {
-         var item = oEvent.getSource().getParent();
+         var item = oEvent.getSource().getParent().getParent().getParent();
 
          var selected = oEvent.getSource().getSelected();
 
@@ -135,7 +147,7 @@ sap.ui.define([
       },
 
       pressGedButton: function(oEvent) {
-         var item = oEvent.getSource().getParent();
+         var item = oEvent.getSource().getParent().getParent();
 
          // var path = item.getBindingContext("treeModel").getPath(),
          //    ttt = item.getBindingContext("treeModel").getProperty(path);
