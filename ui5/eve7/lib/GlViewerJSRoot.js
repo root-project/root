@@ -53,6 +53,8 @@ sap.ui.define([
 
          this.geo_painter = JSROOT.Painter.CreateGeoPainter(this.get_view().getDomRef(), null, options);
 
+         this.geo_painter._geom_viewer = true; // disable several JSROOT features
+
          // function used by TGeoPainter to create OutlineShader - for the moment remove from JSROOT
          this.geo_painter.createOutline = function(w,h)
          {
