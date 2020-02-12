@@ -16,6 +16,7 @@
 #include "ROOT/RAxis.hxx"
 
 #include <cmath>
+#include <limits>
 
 constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
 
@@ -23,12 +24,13 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
    // an integer if it's an axis border.
-   double fracBinIdx = (x - GetMinimum()) * fInvBinWidth;
+   double fracBinIdx = *begin() + (x - GetMinimum()) * fInvBinWidth;
+
    // fracBinIdx might be 12.99999999. It's a bin border if the deviation from
    // an actual bin border is "fairly small".
-   int binIdx = std::round(fracBinIdx + 0.5);
+   int binIdx = std::round(fracBinIdx);
    double binOffset = fracBinIdx - binIdx;
-   if (std::fabs(binOffset) > x * 1E-6)
+   if (std::fabs(binOffset) > 10 * std::numeric_limits<double>::epsilon())
       return -1;
 
    // If the bin index is below the first bin (i.e. x is the lower edge of the

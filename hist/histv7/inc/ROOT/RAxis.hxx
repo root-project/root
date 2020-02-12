@@ -430,7 +430,7 @@ public:
    /// The result of this method on an underflow bin is unspecified
    double GetBinFrom(int bin) const noexcept final override { return fLow + (bin - *begin()) / fInvBinWidth; }
 
-   /// If the coordinate `x` is a bin low edge (within 1E-6 of the coordinate),
+   /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
    /// return -1.
    // RODO: Decide if this shouldn't go to RAxisBase so that RAxisIrregular has
