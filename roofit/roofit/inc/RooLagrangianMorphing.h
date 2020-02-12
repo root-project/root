@@ -108,13 +108,14 @@ class RooLagrangianMorphBase;
   template <class T> void setNonInterfering(const std::vector<T*>& nonInterfering);
   virtual ~RooLagrangianMorphConfig();
 
-protected:
+  protected:
   std::vector<RooListProxy*> _vertices;
   RooListProxy _couplings;
   RooListProxy _prodCouplings;
   RooListProxy _decCouplings;
-  std::vector<std::vector<RooListProxy*> > _cfgdiagrams;
+  std::vector<std::vector<RooListProxy*> > _configDiagrams;
   std::vector<RooListProxy*> _nonInterfering;
+
 };
 
 
