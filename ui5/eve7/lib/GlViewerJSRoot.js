@@ -154,7 +154,7 @@ sap.ui.define([
             // painter.HighlightMesh(active_mesh, undefined, geo_object, geo_index); AMT override
             if (active_mesh && active_mesh.get_ctrl())
             {
-               active_mesh.get_ctrl().elementHighlighted( 0xffaa33, geo_index);
+               active_mesh.get_ctrl().elementHighlighted(geo_index);
             }
             else
             {
@@ -162,7 +162,6 @@ sap.ui.define([
                for (var k=0; k < sl.length; ++k)
                   sl[k].clearHighlight();
             }
-
 
             if (painter.options.update_browser) {
                if (painter.options.highlight && tooltip) names = [ tooltip ];
