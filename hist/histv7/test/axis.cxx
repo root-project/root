@@ -297,7 +297,19 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
     EXPECT_DOUBLE_EQ(axis.GetBinFrom(n_bins_no_over+1), maximum);
   }
 
-  // FIXME: Can't test GetBinIndexForLowEdge as RAxis lib isn't linked in
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-100*bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-0.5*bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum), first_bin);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum+0.5*bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum+bin_width), first_bin+1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-1.5*bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-bin_width), last_bin);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-0.5*bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum), last_bin+1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+0.5*bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+bin_width), -1);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+100*bin_width), -1);
 }
 
 TEST(AxisTest, Equidistant) {
