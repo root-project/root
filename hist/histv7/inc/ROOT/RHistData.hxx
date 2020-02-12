@@ -485,10 +485,13 @@ public:
       (void)trigger_base_fill{(STAT<DIMENSIONS, PRECISION>::Fill(x, binidx, weight), 0)...};
    }
 
-   /// Merge with other statistics of the same type.
+   /// Integrate other statistical data into the current data.
    ///
-   /// The implementation assumes that the number of bins is equal.
-   void Add(const RHistData &other)
+   /// The implementation assumes that the other statistics were recorded with
+   /// the same binning configuration, and that the statistics of `OtherData`
+   /// are a superset of those recorded by the active `RHistData` instance.
+   template <typename OtherData>
+   void Add(const OtherData &other)
    {
       // Call Add() on all base classes, using the same tricks as Fill().
       using trigger_base_add = int[];
