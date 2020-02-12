@@ -303,13 +303,16 @@ using RH3LL = RHist<3, int64_t, RHistStatContent>;
 /// Add two histograms.
 ///
 /// This operation may currently only be performed if the two histograms have
-/// the same axis configuration and record the same statistics.
+/// the same axis configuration, use the same precision, and if `from` records
+/// at least the same statistics as `to` (recording more stats is fine).
 ///
 /// In the future, we may either adopt a more relaxed definition of histogram
 /// addition or provide a mechanism to convert from one histogram type to
 /// another. We currently favor the latter path.
-template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... STAT>
-void Add(RHist<DIMENSIONS, PRECISION, STAT...> &to, const RHist<DIMENSIONS, PRECISION, STAT...> &from)
+template <int DIMENSIONS, class PRECISION,
+          template <int D_, class P_> class... STAT_TO,
+          template <int D_, class P_> class... STAT_FROM>
+void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &from)
 {
    // Enforce "same axis configuration" policy.
    auto& toImpl = *to.GetImpl();
