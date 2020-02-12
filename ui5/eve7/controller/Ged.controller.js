@@ -185,7 +185,7 @@ sap.ui.define([
          this.getView().setModel(this.oModel, "ged");
 
          this.ged_visible = false;
-         this.ged_path = "";
+         this.ged_id = -1;
 
          // keep manager reference to simplify handling
          this.mgr = this.getView().getViewData().summaryCtrl.mgr;
@@ -201,13 +201,13 @@ sap.ui.define([
             sumSplitter.removeContentArea(this.getView());
 
          this.ged_visible = false;
-         this.ged_path = "";
+         this.ged_id = -1;
          this.editorElement = null;
       },
 
-      showGedEditor: function(sumSplitter, itemPath, elementId) {
+      showGedEditor: function(sumSplitter, elementId) {
 
-         if (this.ged_visible && (itemPath == this.ged_path))
+         if (this.ged_visible && (elementId == this.ged_id))
             return this.closeGedEditor();
 
          var editorElement = this.mgr.GetElement(elementId);
@@ -217,7 +217,7 @@ sap.ui.define([
          if (!this.ged_visible)
             sumSplitter.addContentArea(this.getView());
 
-         this.ged_path = itemPath;
+         this.ged_id = elementId;
          this.ged_visible = true;
 
          this.editorElement = editorElement;
@@ -225,8 +225,6 @@ sap.ui.define([
          // removing ROOT::Experimental:: from class name
          var title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
          this.oModel.setProperty("/title", title);
-
-         this.getView().bindElement({ path: itemPath, model: "event" });
 
          var gedFrame =  this.getView().byId("GED");
 

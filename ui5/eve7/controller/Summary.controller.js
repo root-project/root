@@ -2,14 +2,12 @@ sap.ui.define([
    'sap/ui/core/mvc/Controller',
    "sap/ui/model/json/JSONModel",
    "sap/ui/core/mvc/XMLView",
-   "sap/m/StandardTreeItem",
    "sap/m/CustomTreeItem",
    "sap/m/CheckBox",
    "sap/m/Text",
    "sap/m/Button",
    "sap/ui/layout/SplitterLayoutData"
-], function(Controller, JSONModel, XMLView,
-            StandardTreeItem, CustomTreeItem,
+], function(Controller, JSONModel, XMLView, CustomTreeItem,
             mCheckBox, mText, mButton, SplitterLayoutData) {
 
    "use strict";
@@ -45,8 +43,6 @@ sap.ui.define([
          this.summaryElements = {}; // object with all elements, used for fast access to elements by id
 
          var oTree = this.getView().byId("tree");
-         // oTree.setMode(sap.m.ListMode.MultiSelect);
-         oTree.setIncludeItemInSelection(true);
          this.expandLevel = 2;
 
          var oModel = new JSONModel();
@@ -54,21 +50,6 @@ sap.ui.define([
          oModel.setSizeLimit(10000);
          oModel.setDefaultBindingMode("OneWay");
          this.getView().setModel(oModel, "treeModel");
-
-/*         var oItemTemplate = new EveSummaryTreeItem({
-            title: "{treeModel>fName}",
-            visible: "{treeModel>fVisible}",
-            type: "{treeModel>fType}",
-            highlight: "{treeModel>fHighlight}",
-            background: "{treeModel>fBackground}",
-            tooltip: "{treeModel>fTitle}",
-            selected: "{treeModel>fSelected}",
-            mainColor: "{treeModel>fMainColor}",
-            showCheckbox: "{treeModel>fShowCheckbox}",
-            showRnrChildren: "{treeModel>fShowRnrChildren}"
-         });
-*/
-
 
          var oItemTemplate = new EveSummaryCustomItem({
             content: [
@@ -87,6 +68,7 @@ sap.ui.define([
          oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
          oItemTemplate.attachBrowserEvent("mouseleave", this.onMouseLeave, this);
          oTree.bindItems("treeModel>/", oItemTemplate);
+
          this.template = oItemTemplate;
 
          var make_col_obj = function(stem) {
@@ -154,12 +136,11 @@ sap.ui.define([
 
       pressGedButton: function(oEvent) {
          var item = oEvent.getSource().getParent();
-         console.log('GED for element', item.getElementId());
 
-         var path = item.getBindingContext("treeModel").getPath(),
-             ttt = item.getBindingContext("treeModel").getProperty(path);
+         // var path = item.getBindingContext("treeModel").getPath(),
+         //    ttt = item.getBindingContext("treeModel").getProperty(path);
 
-         this.showGedEditor(path, ttt);
+         this.showGedEditor(item.getElementId());
       },
 
       SetMgr: function(mgr) {
@@ -186,51 +167,6 @@ sap.ui.define([
          }
       },
 
-      addNodesToTreeItemModel: function(el, model) {
-         // console.log("FILL el ", el.fName)
-         model.fName = el.fName;
-         model.guid = el.guid;
-         if (el.arr) {
-            model.arr = new Array(el.arr.length);
-            for (var n=0; n< el.arr.length; ++n) {
-               model.arr[n]= { fName: "unset"};
-               this.addNodesToTreeItemModel(el.arr[n], model.arr[n]);
-            }
-         }
-
-         /*
-           for (var n=0; n< lst.arr.length; ++n)
-           {
-           var el = lst.arr[n];
-           var node = {
-           "fName" : el.fName,
-           "guid" : el.guid
-           };
-
-           model.arr.push(node);
-           if (el.arr) {
-           node.arr = [];
-           this.addNodesToTreeItemModel(el, node);
-           }
-           }
-    */
-      },
-
-      addNodesToCustomModel:function(lst, model) {/*
-                      for ((var n=0; n< lst.arr.length; ++n))
-                      {
-                      var el = lst.arr[n];
-                      var node = {fName : el.fName , guid : el.guid};
-                      model.push(node);
-                      if (el.arr) {
-                      node.arr = [];
-                      addNodesToTreeItemModel(el, node);
-                      }
-                      }
-                    */
-      },
-
-
       onToggleOpenState: function(oEvent) {
       },
 
@@ -250,17 +186,13 @@ sap.ui.define([
 
          if (kind != "leave") {
             var tree = this.getView().byId("tree"),
-                items = tree.getItems(true),         item = null;
+                items = tree.getItems(true), item = null;
             for (var n = 0; n < items.length; ++n)
                if (items[n].getId() == evid) {
                   item = items[n]; break;
                }
 
-            if (item) {
-               var path = item.getBindingContext("treeModel").getPath();
-               var ttt = item.getBindingContext("treeModel").getProperty(path);
-               objid = ttt.id;
-            }
+            if (item) objid = item.getElementId();
          }
 
          // FIXME: provide more generic code which should
@@ -282,15 +214,9 @@ sap.ui.define([
 
       FindTreeItemForEveElement:function(element_id) {
          var items = this.getView().byId("tree").getItems();
-         for (var n = 0; n<items.length;++n) {
-            var item = items[n],
-                ctxt = item.getBindingContext("treeModel"),
-                path = ctxt.getPath(),
-                ttt = item.getBindingContext("treeModel").getProperty(path);
-
-            if (ttt.id == element_id)
-               return item;
-         }
+         for (var n = 0; n<items.length;++n)
+            if (items[n].getElementId() == element_id)
+               return items[n];
          return null;
       },
 
@@ -312,7 +238,7 @@ sap.ui.define([
          }
       },
 
-      showGedEditor: function(path, newelem) {
+      showGedEditor: function(elementId) {
 
          var sumSplitter = this.byId("sumSplitter");
 
@@ -327,41 +253,13 @@ sap.ui.define([
             }).then(function(oView) {
                pthis.ged = oView;
 
-               pthis.ged.getController().showGedEditor(sumSplitter, path, newelem.id);
+               pthis.ged.getController().showGedEditor(sumSplitter, elementId);
 
             });
          } else {
-            this.ged.getController().showGedEditor(sumSplitter, path, newelem.id);
+            this.ged.getController().showGedEditor(sumSplitter, elementId);
          }
       },
-
-/*
-      changeNumPoints:function() {
-         var myJSON = "changeNumPoints(" +  this.editorElement.guid + ", "  + this.editorElement.fN +  ")";
-         this.mgr.handle.Send(myJSON);
-      },
-
-      printEvent: function(event) {
-         var propertyPath = event.getSource().getBinding("value").getPath();
-         // console.log("property path ", propertyPath);
-         var bindingContext = event.getSource().getBindingContext("event");
-
-         var path =  bindingContext.getPath(propertyPath);
-         var object =  bindingContext.getObject(propertyPath);
-         // console.log("obj ",object );
-
-         this.changeNumPoints();
-      },
-
-      changeRnrSelf: function(event) {
-         var myJSON = "changeRnrSelf(" +  this.editorElement.guid + ", "  + event.getParameters().selected +  ")";
-         this.mgr.handle.Send(myJSON);
-      },
-
-      changeRnrChld: function(event) {
-         console.log("change Rnr ", event, " source ", event.getSource());
-      },
-*/
 
       canEdit: function(elem) {
          var t = elem._typename.substring(20);
