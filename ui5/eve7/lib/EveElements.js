@@ -130,16 +130,16 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             buf[pos+5] = rnrData.vtxBuff[k*3+5];
          }
 
-         // console.log(" vertex ", buf[pos],buf[pos+1], buf[pos+2],buf[pos+3], buf[pos+4],  buf[pos+5]);
          pos+=6;
       }
 
-      var lineMaterial;
-      if (track.fLineStyle == 1) {
-         lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
+      var style = (track.fLineStyle > 1) ? JSROOT.Painter.root_line_styles[track.fLineStyle] : "",
+          dash = style ? style.split(",") : [], lineMaterial;
+
+      if (dash && (dash.length > 1)) {
+         lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
       } else {
-         //lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, gapSize: parseInt(track.fLineStyle) });
-         lineMaterial = new THREE.LineDashedMaterial({ color: track_color, linewidth: track_width, dashSize:3, gapSize: 1 });
+         lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width });
       }
 
       var geom = new THREE.BufferGeometry();
@@ -147,7 +147,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       var line = new THREE.LineSegments(geom, lineMaterial);
 
       // required for the dashed material
-      if (track.fLineStyle != 1)
+      if (dash && (dash.length > 1))
          line.computeLineDistances();
 
       line.hightlightWidthScale = 2;
