@@ -151,6 +151,8 @@ sap.ui.define([
          this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
          if (this.htimeout === undefined) this.htimeout = 250;
 
+         // when "Reset" - reset camera position
+         this.dblclick_action = this.mgr.handle.GetUserArgs("DblClick");
 
          sap.ui.require(['rootui5/eve7/lib/GlViewer' + this.viewer_class],
                function(GlViewer) {

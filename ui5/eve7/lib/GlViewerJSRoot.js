@@ -90,8 +90,6 @@ sap.ui.define([
 
       onGeoPainterReady: function(painter)
       {
-         console.log("GL_controller::onGeoPainterReady");
-
          // AMT temporary here, should be set in camera instantiation time
          if (this.geo_painter._camera.type == "OrthographicCamera")
          {
@@ -120,6 +118,10 @@ sap.ui.define([
                c.elementSelected(c.extractIndex(intersect));
             }
          }
+
+         /** Handler of mouse double click - either ignore or reset camera position */
+         if (this.controller.dblclick_action != "Reset")
+            painter._controls.ProcessDblClick = function(evnt) { }
 
          painter._controls.ProcessMouseMove = function(intersects)
          {
