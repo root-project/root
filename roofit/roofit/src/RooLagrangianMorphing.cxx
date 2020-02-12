@@ -2472,11 +2472,16 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
       name << "!vertex" << i;
       std::stringstream title;
       title << "set of couplings in the vertex " << i;
-      RooListProxy* list = new RooListProxy(name.str().c_str(),this,*(diagrams[j][i]));
+//      RooListProxy* list = new RooListProxy(name.str().c_str(),this,*(diagrams[j][i]));
+      RooListProxy* list = new RooListProxy(name.str().c_str(),title.str().c_str(),this,kTRUE,kFALSE);
       diagram.push_back(list);
       if(own){
+        diagram[i]->addOwned(*diagrams[j][i]);
+      } else {
+	diagram[i]->add(*diagrams[j][i]);
       // ownership of contents of diagrams[i][j]       
-      }
+       }
+    }  
     this->_diagrams.push_back(diagram);
   }
 
