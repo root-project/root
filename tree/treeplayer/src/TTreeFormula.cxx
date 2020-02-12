@@ -5559,7 +5559,6 @@ Bool_t TTreeFormula::LoadCurrentDim() {
       }
       // However we allow several dimensions that virtually vary via the size of their
       // index variables.  So we have code to recalculate fCumulUsedSizes.
-      Int_t index;
       TFormLeafInfo * info = 0;
       if (fLookupType[i]!=kDirect) {
          info = (TFormLeafInfo *)fDataMembers.At(i);
@@ -5570,25 +5569,25 @@ Bool_t TTreeFormula::LoadCurrentDim() {
 
                // if fVirtUsedSize[virt_dim] is positive then VarIndexes[i][k]->GetNdata()
                // is always the same and has already been factored in fUsedSize[virt_dim]
-               index = fVarIndexes[i][k]->GetNdata();
-               if (index==1) {
+               Int_t index_size = fVarIndexes[i][k]->GetNdata();
+               if (index_size==1) {
                   // We could either have a variable size array which is currently of size one
                   // or a single element that might or not might not be present (and is currently present!)
                   if (fVarIndexes[i][k]->GetManager()->GetMultiplicity()==1) {
-                     if (index<fManager->fUsedSizes[virt_dim]) fManager->fUsedSizes[virt_dim] = index;
+                     if (index_size<fManager->fUsedSizes[virt_dim]) fManager->fUsedSizes[virt_dim] = index_size;
                   }
 
                } else if (fManager->fUsedSizes[virt_dim]==-fManager->fVirtUsedSizes[virt_dim] ||
-                          index<fManager->fUsedSizes[virt_dim]) {
-                  fManager->fUsedSizes[virt_dim] = index;
+                          index_size<fManager->fUsedSizes[virt_dim]) {
+                  fManager->fUsedSizes[virt_dim] = index_size;
                }
 
             } else if (hasBranchCount2 && info && k==info->GetVarDim()) {
                // NOTE: We assume the indexing of variable sizes on the first index!
                if (fIndexes[i][0]>=0) {
-                  index = info->GetSize(fIndexes[i][0]);
-                  if (fManager->fUsedSizes[virt_dim]==1 || (index!=1 && index<fManager->fUsedSizes[virt_dim]) )
-                     fManager->fUsedSizes[virt_dim] = index;
+                  Int_t index_size = info->GetSize(fIndexes[i][0]);
+                  if (fManager->fUsedSizes[virt_dim]==1 || (index_size!=1 && index_size<fManager->fUsedSizes[virt_dim]) )
+                     fManager->fUsedSizes[virt_dim] = index_size;
                }
             }
             virt_dim++;
