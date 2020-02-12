@@ -62,7 +62,7 @@ protected:
    RAxisBase() noexcept = default;
 
    /// Virtual destructor needed in this inheritance-based design
-   virtual ~RAxisBase() = default;
+   virtual ~RAxisBase();
 
    /// Construct a RAxisBase.
    ///
