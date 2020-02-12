@@ -19,20 +19,28 @@ sap.ui.define([
          GlViewer.prototype.init.call(this, controller);
          // super.init(controller);
 
-         this.creator = new EveElements(controller);
-         this.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+         var pthis = this;
+         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
+            console.log("GLC onInit RenderCore loaded");
+           // alert("Step 1: controller says: RnrCore loaded")
+            pthis.RCore = module;
 
-         this.createRCoreRenderer();
-         this.controller.createScenes();
-         this.controller.redrawScenes();
-         this.setupRCoreDomAndEventHandlers();
+            pthis.creator = new EveElements(controller);
+            pthis.creator.useIndexAsIs = (JSROOT.GetUrlOption('useindx') !== null);
+
+            pthis.createRCoreRenderer();
+            pthis.controller.createScenes();
+            pthis.controller.redrawScenes();
+            pthis.setupRCoreDomAndEventHandlers();
+         });
+
       },
 
       //==============================================================================
 
       RC: function()
       {
-         return this.controller.RCore;
+         return this.RCore;
       },
 
       make_object: function(name)
