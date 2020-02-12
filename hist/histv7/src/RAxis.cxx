@@ -51,7 +51,7 @@ ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(const RAxisEqu
                                                                   const RAxisEquidistant &source) noexcept
 {
    // First, let's get the common "all parameters are equal" case out of the way
-   if (source == target)
+   if (source.HasSameBinningAs(target))
       return EAxisCompatibility::kIdentical;
 
    // Do the source min/max boundaries correspond to target bin boundaries?
