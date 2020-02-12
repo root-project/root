@@ -168,12 +168,68 @@ sap.ui.define([
          this.geo_painter._effectComposer.setSize( sz.width, sz.height);
          this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
+         this.geo_painter._controls.ContextMenu = this.jsrootOrbitContext.bind(this);
+
          // create only when geo painter is ready
          this.controller.createScenes();
          this.controller.redrawScenes();
 
          this.geo_painter.adjustCameraPosition(true);
          this.render();
+      },
+
+      /** Called from JSROOT context menu when object selected for browsing */
+      jsrootBrowse: function(obj_id) {
+         console.log('Do browsing', obj_id);
+      },
+
+      /** Used together with the geo painter for processing context menu */
+      jsrootOrbitContext: function(evnt, intersects) {
+
+         var browseHandler = this.jsrootBrowse.bind(this);
+
+         JSROOT.Painter.createMenu(this.geo_painter, function(menu) {
+            var numitems = 0, cnt = 0;
+            if (intersects)
+               for (var n=0;n<intersects.length;++n)
+                  if (intersects[n].object.geo_name) numitems++;
+
+            if (numitems === 0) {
+               // default JSROOT context menu
+               menu.painter.FillContextMenu(menu);
+            } else {
+               var many = numitems > 1;
+
+               if (many) menu.add("header: Items");
+
+               for (var n=0;n<intersects.length;++n) {
+                  var obj = intersects[n].object;
+                  if (!obj.geo_name) continue;
+
+                  menu.add((many ? "sub:" : "header:") + obj.geo_name, obj.geo_object, browseHandler);
+
+                  menu.add("Browse", obj.geo_object, browseHandler);
+
+                  var wireframe = menu.painter.accessObjectWireFrame(obj);
+
+                  if (wireframe!==undefined)
+                     menu.addchk(wireframe, "Wireframe", n, function(indx) {
+                        var m = intersects[indx].object.material;
+                        m.wireframe = !m.wireframe;
+                        this.Render3D();
+                     });
+
+
+                  // not yet working
+                  // menu.add("Focus", n, function(indx) { this.focusCamera(intersects[indx].object); });
+
+                  if (many) menu.add("endsub:");
+               }
+            }
+
+            // show menu
+            menu.show(evnt);
+         });
       },
 
       //==============================================================================

@@ -24,7 +24,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    EveElemControl.prototype.invokeSceneMethod = function(fname, arg)
    {
-      if ( ! this.obj3d) return false;
+      if (!this.obj3d) return false;
 
       var s = this.obj3d.scene;
       if (s && (typeof s[fname] == "function"))

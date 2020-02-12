@@ -272,10 +272,6 @@ sap.ui.define([
 
          // This will also call render().
          this.resetThreejsRenderer();
-
-         // XXXX???? esp the last this. should be in controller?
-         // probably is here because viewer is not "ready" until now
-         this.controller.resize_handler.register(this.get_view(), this.controller.onResize.bind(this));
       },
 
       /** Reset camera, lights based on scene bounding box. */
