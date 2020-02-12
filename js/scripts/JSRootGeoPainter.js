@@ -658,9 +658,10 @@
       menu.add("Reset camera position", function() {
          this.focusCamera();
       });
-      menu.add("Get camera position", function() {
-         alert("Position (as url): &opt=" + this.produceCameraUrl());
-      });
+      if (!this._geom_viewer)
+         menu.add("Get camera position", function() {
+            alert("Position (as url): &opt=" + this.produceCameraUrl());
+         });
       if (!this.ctrl.project)
          menu.addchk(this.ctrl.rotate, "Autorotate", function() {
             this.setAutoRotate(!this.ctrl.rotate);
@@ -2383,7 +2384,7 @@
 
    TGeoPainter.prototype.focusCamera = function( focus, autoClip ) {
 
-      if (this.ctrl.project)
+      if (this.ctrl.project || this.ctrl.ortho_camera)
          return this.adjustCameraPosition();
 
       var box = new THREE.Box3();
