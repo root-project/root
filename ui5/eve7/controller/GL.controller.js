@@ -4,16 +4,11 @@ sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/model/json/JSONModel',
    "sap/ui/core/ResizeHandler",
-   'rootui5/eve7/lib/EveManager'
-], function (Component, UIComponent, Controller, JSONModel, ResizeHandler, EveManager) {
+   'rootui5/eve7/lib/EveManager',
+   'rootui5/eve7/lib/EveScene'
+], function (Component, UIComponent, Controller, JSONModel, ResizeHandler, EveManager, EveScene) {
 
    "use strict";
-
-   // EveScene constructor function.
-   var EveScene = null;
-   var GlViewer = null;
-
-   let viewer_class = "JSRoot"; // JSRoot Three RCore
 
    let maybe_proto = Controller.extend("rootui5.eve7.Controller.GL", {
 
@@ -39,45 +34,16 @@ sap.ui.define([
          this._render_html  = false;
          this.htimeout = 250;
 
-         if (viewer_class === "RCore")
-         {
-            var pthis = this;
-            import("../../eve7/rnr_core/RenderCore.js").then((module) => {
-               console.log("GLC onInit RenderCore loaded");
-              // alert("Step 1: controller says: RnrCore loaded")
-               pthis.RCore = module;
-
-               let orc = new pthis.RCore.Object3D;
-               console.log("RCore::Object3D", orc);
-
-               JSROOT.AssertPrerequisites("geom", pthis.onLoadScripts.bind(pthis));
-            });
-         }
-         else
-         {
-            JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
-         }
-
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
+
+         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
       },
 
       onLoadScripts: function()
       {
-         var pthis = this;
+         this._load_scripts = true;
 
-         // console.log("GLC::onLoadScripts, now loading EveScene and GlViewer" + viewer_class);
-
-         // one only can load EveScene after geometry painter
-
-         sap.ui.require(['rootui5/eve7/lib/EveScene',
-                         'rootui5/eve7/lib/GlViewer' + viewer_class
-                        ],
-                        function (eve_scene, gl_viewer) {
-                           EveScene = eve_scene;
-                           GlViewer = gl_viewer;
-                           pthis._load_scripts = true;
-                           pthis.checkViewReady();
-                        });
+         this.checkViewReady();
       },
 
       onViewObjectMatched: function(oEvent)
@@ -88,6 +54,8 @@ sap.ui.define([
                                       args.viewName, JSROOT.$eve7tmp);
 
          delete JSROOT.$eve7tmp;
+
+         this.checkViewReady();
       },
 
       // Initialization that can be done immediately onInit or later through UI5 bootstrap callbacks.
@@ -174,19 +142,19 @@ sap.ui.define([
       // Checks if all initialization is performed and startup renderer.
       checkViewReady: function()
       {
-         if ( ! this._load_scripts || ! this._render_html || ! this.eveViewerId)
-         {
-            return;
-         }
+         if (!this.mgr || !this._load_scripts || !this._render_html || !this.eveViewerId || this.viewer_class) return;
 
          this.JsRootRender = !this.mgr.handle.GetUserArgs("JsRootRender");
          this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
          if (this.htimeout === undefined) this.htimeout = 250;
 
-         // console.log("GLC::checkViewReady, instantiating GLViewer" + viewer_class);
+         this.viewer_class = "JSRoot"; // JSRoot Three RCore
 
-         this.viewer = new GlViewer(viewer_class);
-         this.viewer.init(this);
+         sap.ui.require(['rootui5/eve7/lib/GlViewer' + this.viewer_class],
+               function(GlViewer) {
+                  this.viewer = new GlViewer(this.viewer_class);
+                  this.viewer.init(this);
+               }.bind(this));
       },
 
 
