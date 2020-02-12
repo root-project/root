@@ -1,20 +1,15 @@
 <mvc:View
     controllerName="rootui5.eve7.controller.Summary"
     xmlns:mvc="sap.ui.core.mvc"
-    xmlns:core="sap.ui.core"
-    xmlns:form="sap.ui.layout.form"
     xmlns:l="sap.ui.layout"
     xmlns="sap.m"
     class="sapUiSizeCompact">
   <l:Splitter id="sumSplitter" height="100%"  width="auto" orientation="Vertical">
-
     <Tree id="tree" itemPress="onItemPressed"
-          toggleOpenState="onToggleOpenState" width="95%"
+          toggleOpenState="onToggleOpenState"
           selectionChange="onSelectionChange"
           class="sapUiSizeCompact sapUiTinyMargin">
         <layoutData><l:SplitterLayoutData size="auto" minSize="90%"/></layoutData>
     </Tree>
-
   </l:Splitter>
-
 </mvc:View>
