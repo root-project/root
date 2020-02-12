@@ -144,11 +144,12 @@ sap.ui.define([
       {
          if (!this.mgr || !this._load_scripts || !this._render_html || !this.eveViewerId || this.viewer_class) return;
 
-         this.JsRootRender = !this.mgr.handle.GetUserArgs("JsRootRender");
+         this.viewer_class = !this.mgr.handle.GetUserArgs("GLViewer");
          this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
          if (this.htimeout === undefined) this.htimeout = 250;
 
-         this.viewer_class = "JSRoot"; // JSRoot Three RCore
+         if ((this.viewer_class != "JSRoot") && (this.viewer_class != "Three") && (this.viewer_class != "RCore"))
+            this.viewer_class = "Three";
 
          sap.ui.require(['rootui5/eve7/lib/GlViewer' + this.viewer_class],
                function(GlViewer) {
@@ -156,7 +157,6 @@ sap.ui.define([
                   this.viewer.init(this);
                }.bind(this));
       },
-
 
       //==============================================================================
       // Common functions between THREE and GeoPainter
