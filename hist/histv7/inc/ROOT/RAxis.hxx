@@ -96,11 +96,35 @@ protected:
       return (int)rawbin;
    }
 
+   /// Check if two axis have the same bin borders
+   ///
+   /// Default implementation should work for any RAxis type, but is a little
+   /// bit stupid. RAxis implementations are encouraged to provide optimized
+   /// overrides for common comparison scenarios.
+   virtual bool HasSameBinBordersAs(const RAxisBase& other) const noexcept {
+      // Axis growability (and thus under/overflow bin existence) must match
+      if (CanGrow() != other.CanGrow()) return false;
+
+      // Number of normal bins must match
+      if (GetNBinsNoOver() != other.GetNBinsNoOver()) return false;
+
+      // Left borders of normal bins must match
+      for (int bin: *this) {
+         if (GetBinFrom(bin) != other.GetBinFrom(bin)) return false;
+      }
+
+      // Right border of the last normal bin (aka maximum) must also match
+      if (GetMaximum() != other.GetMaximum()) return false;
+
+      // If all of these checks passed, the two axes have the same bin borders
+      return true;
+   }
+
    /// If supplementary bin metadata (e.g. bin labels) exists in `this`, make
    /// sure that `other` provides the same bin metadata.
    ///
    /// The implementation can work under the assumption that the number of bins
-   /// of `this` and `other` has already been checked to be equal.
+   /// and bin borders of `this` and `other` has already been compared equal.
    ///
    /// RAxis classes which override a non-default implementation of
    /// `HasSameBinMetadataAs` should start by calling the parent class'
@@ -335,24 +359,9 @@ public:
    /// - Either they are both growable or neither of them is growable.
    /// - Minimum, maximum, and all bin borders in the middle are the same.
    /// - Any metadata attached to the bin (e.g. bin labels) must match.
-   ///
-   /// TODO: Optimize specific comparisons, e.g. eq-eq, irr-irr..., without
-   ///       making the entire HasSameBinningAs method overridable in order to
-   ///       reduce the odds of child classes overriding it wrong.
    bool HasSameBinningAs(const RAxisBase& other) const noexcept {
-      // Axis growability (and thus under/overflow bin existence) must match
-      if (CanGrow() != other.CanGrow()) return false;
-
-      // Number of bins must match
-      if (GetNBinsNoOver() != other.GetNBinsNoOver()) return false;
-
-      // Left bin borders must match
-      for (int bin: *this) {
-         if (GetBinFrom(bin) != other.GetBinFrom(bin)) return false;
-      }
-
-      // Right bin border of the last bin (aka maximum) must also match
-      if (GetMaximum() != other.GetMaximum()) return false;
+      // Bin borders must match
+      if (!HasSameBinBordersAs(other)) return false;
 
       // If either `this` or `other` provides supplementary bin metadata, such
       // as bin labels, make sure that it is present on both sides.
@@ -434,6 +443,21 @@ protected:
       return nbinsNoOver / std::abs(highOrLow - lowOrHigh);
    }
 
+   // See RAxisBase documentation
+   bool HasSameBinBordersAs(const RAxisBase& other) const noexcept override {
+      // This is an optimized override for the equidistant-equidistant case,
+      // fall back to the default implementation if we're not in that case.
+      auto other_eq_ptr = dynamic_cast<const RAxisEquidistant*>(&other);
+      if (!other_eq_ptr) return RAxisBase::HasSameBinBordersAs(other);
+      const RAxisEquidistant& other_eq = *other_eq_ptr;
+
+      // Can directly compare equidistant/growable axis properties in this case
+      return fInvBinWidth == other_eq.fInvBinWidth &&
+             fLow == other_eq.fLow &&
+             fNBinsNoOver == other_eq.fNBinsNoOver &&
+             CanGrow() == other_eq.CanGrow();
+   }
+
 public:
    RAxisEquidistant() = default;
 
@@ -507,17 +531,6 @@ public:
    //       it has well. If so, update tests.
    int GetBinIndexForLowEdge(double x) const noexcept;
 };
-
-/// Equality-compare two RAxisEquidistant.
-inline bool operator==(const RAxisEquidistant &lhs, const RAxisEquidistant &rhs) noexcept
-{
-   return lhs.GetNBins() == rhs.GetNBins() && lhs.GetMinimum() == rhs.GetMinimum() &&
-          lhs.GetInverseBinWidth() == rhs.GetInverseBinWidth();
-}
-inline bool operator!=(const RAxisEquidistant &lhs, const RAxisEquidistant &rhs) noexcept
-{
-   return !(lhs == rhs);
-}
 
 namespace Internal {
 
@@ -627,6 +640,19 @@ class RAxisIrregular: public RAxisBase {
 private:
    /// Bin borders, one more than the number of non-overflow bins.
    std::vector<double> fBinBorders;
+
+protected:
+   // See RAxisBase documentation
+   bool HasSameBinBordersAs(const RAxisBase& other) const noexcept override {
+      // This is an optimized override for the irregular-irregular case,
+      // fall back to the default implementation if we're not in that case.
+      auto other_irr_ptr = dynamic_cast<const RAxisIrregular*>(&other);
+      if (!other_irr_ptr) return RAxisBase::HasSameBinBordersAs(other);
+      const RAxisIrregular& other_irr = *other_irr_ptr;
+
+      // Only need to compare bin borders in this specialized case
+      return fBinBorders == other_irr.fBinBorders;
+   }
 
 public:
    RAxisIrregular() = default;
