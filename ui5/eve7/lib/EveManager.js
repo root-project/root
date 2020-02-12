@@ -699,6 +699,28 @@ sap.ui.define([], function() {
       }
    }
 
+   /** Returns true if element match to some entry in selection */
+   EveManager.prototype.MatchSelection = function(globalid, eve_el, indx) {
+      let so = this.GetElement(globalid);
+
+      let a  = so ? so.prev_sel_list : null;
+      if (a && (a.length == 1))
+      {
+         let h = a[0];
+         if (h.primary == eve_el.fElementId || h.primary == eve_el.fMasterId) {
+            if (indx) {
+               if (h.sec_idcs && h.sec_idcs[0] == indx) {
+                  return true;
+               }
+            }
+            if ( ! indx && ! h.sec_idcs.length) {
+               return true;
+            }
+         }
+      }
+   }
+
+
    //==============================================================================
    // END protoype functions
    //==============================================================================
