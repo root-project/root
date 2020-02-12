@@ -28,7 +28,8 @@ sap.ui.define([
          if (this.getType() == "Active") {
             // TODO: find better way to select check box
             var chkbox = this.$().children().first().next();
-            chkbox.css("display","none");
+            if (chkbox.attr("role") == "checkbox")
+               chkbox.css("display","none");
          } else {
             this.$().children().last().css("background-color", this.getMainColor());
          }
@@ -146,14 +147,21 @@ sap.ui.define([
             var item = items[k];
             if (!item) continue;
 
-            var  path = item.getBindingContext("treeModel").getPath(),
-                 ttt = item.getBindingContext("treeModel").getProperty(path);
+            if (item.getType() == "Active") {
+               // workaround, to suppress checkboxes from standard item
+               item.setSelected(false);
+               var chkbox = item.$().children().first().next();
+               if (chkbox.attr("role") == "checkbox")
+                  chkbox.css("display","none");
+            } else {
 
-            // console.log('path', path, 'selected', item.getSelected(), ttt.path, "is_same_path", path == ttt.path);
+               var  path = item.getBindingContext("treeModel").getPath(),
+                    ttt = item.getBindingContext("treeModel").getProperty(path);
 
-            var elem = this.mgr.GetElement(ttt.id);
+               var elem = this.mgr.GetElement(ttt.id);
 
-            this.mgr.SendMIR("SetRnrSelf(" + item.getSelected() + ")", elem.fElementId, elem._typename);
+               this.mgr.SendMIR("SetRnrSelf(" + item.getSelected() + ")", elem.fElementId, elem._typename);
+            }
          }
 
       },
@@ -227,14 +235,22 @@ sap.ui.define([
       },
 
 
+      /** When item pressed - not handled now */
       onItemPressed: function(oEvent) {
-         var model = oEvent.getParameter("listItem").getBindingContext("treeModel"),
-             path =  model.getPath(),
-             ttt = model.getProperty(path);
+         var listItem = oEvent.getParameter("listItem");
+         //     model = listItem.getBindingContext("treeModel"),
+         //     path =  model.getPath(),
+         //     ttt = model.getProperty(path);
 
-         console.log("Summary::onItemPressed ", this.mgr.GetElement(ttt.id));
-         if (!ttt || (ttt.childs !== undefined) || !ttt.id) return;
-        // this.setElementSelected(ttt.id, sel_color, undefined);
+         
+         // workaround, to suppress checkboxes from standard item
+         if (listItem.getType() == "Active") {
+            listItem.setSelected(false);
+            var chkbox = listItem.$().children().first().next();
+            if (chkbox.attr("role") == "checkbox")
+               chkbox.css("display","none");
+         }
+
       },
 
 
