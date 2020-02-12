@@ -58,6 +58,7 @@ Following parameters can be specified in .rootrc file
 WebEve.GLViewer:  Three  # kind of GLViewer, either Three, JSRoot or RCore
 WebEve.DisableShow:   1  # do not start new web browser when REveManager::Show is called
 WebEve.HTimeout:     200 # timeout in ms for elements highlight
+WebEve.DblClick:    Off  # mouse double click handling in GL viewer: Off or Reset
 WebEve.TableRowHeight: 33  # size of each row in pixels in the Table view, can be used to make design more compact
 */
 
@@ -146,9 +147,10 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
    const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "Three");
+   const char *gl_dblclick = gEnv->GetValue("WebEve.DblClick", "Off");
    Int_t htimeout = gEnv->GetValue("WebEve.HTimeout", 250);
    Int_t table_row_height = gEnv->GetValue("WebEve.TableRowHeight", 0);
-   fWebWindow->SetUserArgs(Form("{ GLViewer: \"%s\", HTimeout: %d, TableRowHeight: %d }", gl_viewer, htimeout, table_row_height));
+   fWebWindow->SetUserArgs(Form("{ GLViewer: \"%s\", DblClick: \"%s\", HTimeout: %d, TableRowHeight: %d }", gl_viewer, gl_dblclick, htimeout, table_row_height));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },

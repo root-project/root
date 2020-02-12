@@ -210,9 +210,8 @@ sap.ui.define([
          });
 
          this.renderer.domElement.addEventListener('dblclick', function(event) {
-
-            // console.log("GLC::dblclick", glc, event);
-            glc.resetThreejsRenderer();
+            if (glc.controller.dblclick_action == "Reset")
+               glc.resetThreejsRenderer();
          });
 
          // Key-handlers go on window ...
