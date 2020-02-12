@@ -20,12 +20,14 @@ sap.ui.define([
       metadata: {
          properties: {
             background: 'string',
-            mainColor: 'string'
+            mainColor: 'string',
+            showCheckbox: 'boolean',
+            showRnrChildren: 'boolean'
          }
       },
 
       onAfterRendering: function() {
-         if (this.getType() == "Active") {
+         if (!this.getShowCheckbox()) {
             // TODO: find better way to select check box
             var chkbox = this.$().children().first().next();
             if (chkbox.attr("role") == "checkbox")
@@ -65,8 +67,10 @@ sap.ui.define([
             highlight: "{treeModel>fHighlight}",
             background: "{treeModel>fBackground}",
             tooltip: "{treeModel>fTitle}",
+            selected: "{treeModel>fSelected}",
             mainColor: "{treeModel>fMainColor}",
-            selected: "{treeModel>fSelected}"
+            showCheckbox: "{treeModel>fShowCheckbox}",
+            showRnrChildren: "{treeModel>fShowRnrChildren}"
          });
 
 /*
@@ -147,7 +151,7 @@ sap.ui.define([
             var item = items[k];
             if (!item) continue;
 
-            if (item.getType() == "Active") {
+            if (!item.getShowCheckbox()) {
                // workaround, to suppress checkboxes from standard item
                item.setSelected(false);
                var chkbox = item.$().children().first().next();
@@ -160,7 +164,10 @@ sap.ui.define([
 
                var elem = this.mgr.GetElement(ttt.id);
 
-               this.mgr.SendMIR("SetRnrSelf(" + item.getSelected() + ")", elem.fElementId, elem._typename);
+               if (item.getShowRnrChildren())
+                  this.mgr.SendMIR("SetRnrChildren(" + item.getSelected() + ")", elem.fElementId, elem._typename);
+               else
+                  this.mgr.SendMIR("SetRnrSelf(" + item.getSelected() + ")", elem.fElementId, elem._typename);
             }
          }
 
@@ -242,9 +249,9 @@ sap.ui.define([
          //     path =  model.getPath(),
          //     ttt = model.getProperty(path);
 
-         
+
          // workaround, to suppress checkboxes from standard item
-         if (listItem.getType() == "Active") {
+         if (!listItem.getShowCheckbox()) {
             listItem.setSelected(false);
             var chkbox = listItem.$().children().first().next();
             if (chkbox.attr("role") == "checkbox")
@@ -413,11 +420,22 @@ sap.ui.define([
 
       /** Set summary element attributes from original element */
       setElementsAttributes: function(newelem, elem) {
+         newelem.fShowCheckbox = false;
+         newelem.fShowRnrChildren = false;
+
          if (this.canEdit(elem)) {
             newelem.fType = "DetailAndActive";
+            if (!elem.childs) {
+               newelem.fShowCheckbox = true;
+               newelem.fSelected = elem.fRnrSelf;
+            }  else if (elem.fRnrChildren !== undefined) {
+               newelem.fShowCheckbox = true;
+               newelem.fShowRnrChildren = true;
+               newelem.fSelected = elem.fRnrChildren;
+            }
+
             if (elem.fMainColor) {
                newelem.fMainColor = JSROOT.Painter.root_colors[elem.fMainColor];
-               newelem.fSelected = elem.fRnrSelf;
             }
          } else {
             newelem.fType = "Active";
