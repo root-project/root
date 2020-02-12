@@ -1224,9 +1224,9 @@ public:
          TString checkupdate = fOptions.fMode;
          checkupdate.ToLower();
          if (checkupdate == "update")
-             fOutputFile->mkdir(fDirName.c_str(), "", true);  // do not overwrite existing directory
+            fOutputFile->mkdir(fDirName.c_str(), "", true);  // do not overwrite existing directory
          else
-             fOutputFile->mkdir(fDirName.c_str());
+            fOutputFile->mkdir(fDirName.c_str());
          fOutputFile->cd(fDirName.c_str());
       }
 
