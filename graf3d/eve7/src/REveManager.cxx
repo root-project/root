@@ -55,7 +55,7 @@ Manages elements, GUI, GL scenes and GL viewers.
 
 Following parameters can be specified in .rootrc file
 
-WebEve.JsRootRender:  1  # use JSROOT Geometry Painter for GL drawings, default off
+WebEve.GLViewer:  Three  # kind of GLViewer, either Three, JSRoot or RCore
 WebEve.DisableShow:   1  # do not start new web browser when REveManager::Show is called
 WebEve.HTimeout:     200 # timeout in ms for elements highlight
 WebEve.TableRowHeight: 33  # size of each row in pixels in the Table view, can be used to make design more compact
@@ -145,10 +145,10 @@ REveManager::REveManager() : // (Bool_t map_window, Option_t* opt) :
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
-   Int_t js_render = gEnv->GetValue("WebEve.JsRootRender", 0);
+   const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "Three");
    Int_t htimeout = gEnv->GetValue("WebEve.HTimeout", 250);
    Int_t table_row_height = gEnv->GetValue("WebEve.TableRowHeight", 0);
-   fWebWindow->SetUserArgs(Form("{ JsRootRender: %d, HTimeout: %d, TableRowHeight: %d }", js_render, htimeout, table_row_height));
+   fWebWindow->SetUserArgs(Form("{ GLViewer: \"%s\", HTimeout: %d, TableRowHeight: %d }", gl_viewer, htimeout, table_row_height));
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },
