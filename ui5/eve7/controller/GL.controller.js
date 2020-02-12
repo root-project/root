@@ -256,6 +256,12 @@ sap.ui.define([
             this.viewer.onResizeTimeout();
       },
 
+      /** Called from JSROOT context menu when object selected for browsing */
+      invokeBrowseOf: function(obj_id) {
+         this.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
+      }
+
+
    });
 
    return maybe_proto;
