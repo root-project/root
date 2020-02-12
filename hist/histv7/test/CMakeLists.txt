@@ -4,4 +4,4 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_ADD_UNITTEST_DIR(Hist)
+ROOT_ADD_UNITTEST_DIR(ROOTHist)
