@@ -43,7 +43,7 @@ sap.ui.define([
          {
             GlViewerThree.g_global_init_done = true;
 
-            this.controller.MGR.RegisterSelectionChangeFoo(this.g_highlight_update.bind(this));
+            this.controller.mgr.RegisterSelectionChangeFoo(this.g_highlight_update.bind(this));
             this.g_highlight_update(this.controller.mgr);
          }
 
@@ -168,7 +168,7 @@ sap.ui.define([
 
             if (event.buttons === 0) {
                glc.removeMouseMoveTimeout();
-               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), this.controller.htimeout);
+               glc.mousemove_timeout = setTimeout(glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY), glc.controller.htimeout);
             } else {
                glc.clearHighlight();
             }
@@ -448,7 +448,7 @@ sap.ui.define([
          else
             this.ttip_text.innerHTML = "";
 
-         let del  = this.getView().getDomRef();
+         let del  = this.controller.getView().getDomRef();
          let offs = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(del) : null;
 
          if (mouse.x <= 0) {
@@ -548,7 +548,7 @@ sap.ui.define([
             var c = intersect.object.get_ctrl();
             c.event = event;
             c.elementSelected(c.extractIndex(intersect));
-            this.highlighted_scene = o.scene;
+            this.highlighted_scene = intersect.object.scene;
          } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr
 
