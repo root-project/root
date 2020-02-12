@@ -110,6 +110,14 @@ public:
    const Content_t &GetContentArray() const { return fBinContent; }
    /// Retrieve the content array (non-const).
    Content_t &GetContentArray() { return fBinContent; }
+
+   /// Merge with other RHistStatContent, assuming same bin configuration
+   void Add(const RHistStatContent& other) {
+      assert(fBinContent.size() == other.fBinContent.size());
+      fEntries += other.fEntries;
+      for (size_t b = 0; b < fBinContent.size(); ++b)
+         fBinContent[b] += other.fBinContent[b];
+   }
 };
 
 /**
@@ -149,6 +157,11 @@ public:
 
    /// Get the sum of weights.
    Weight_t GetSumOfWeights() const { return fSumWeights; }
+
+   /// Merge with other RHistStatTotalSumOfWeights data, assuming same bin configuration
+   void Add(const RHistStatTotalSumOfWeights& other) {
+      fSumWeights += other.fSumWeights;
+   }
 };
 
 /**
@@ -188,6 +201,11 @@ public:
 
    /// Get the sum of weights.
    Weight_t GetSumOfSquaredWeights() const { return fSumWeights2; }
+
+   /// Merge with other RHistStatTotalSumOfSquaredWeights data, assuming same bin configuration
+   void Add(const RHistStatTotalSumOfSquaredWeights& other) {
+      fSumWeights2 += other.fSumWeights2;
+   }
 };
 
 /**
@@ -266,6 +284,13 @@ public:
    const std::vector<double> &GetSumOfSquaredWeights() const { return fSumWeightsSquared; }
    /// Get the structure holding the sum of squares of weights (non-const).
    std::vector<double> &GetSumOfSquaredWeights() { return fSumWeightsSquared; }
+
+   /// Merge with other RHistStatUncertainty data, assuming same bin configuration
+   void Add(const RHistStatUncertainty& other) {
+      assert(fSumWeightsSquared.size() == other.fSumWeightsSquared.size());
+      for (size_t b = 0; b < fSumWeightsSquared.size(); ++b)
+         fSumWeightsSquared[b] += other.fSumWeightsSquared[b];
+   }
 };
 
 /** \class RHistDataMomentUncert
@@ -296,6 +321,7 @@ public:
 private:
    std::array<Weight_t, DIMENSIONS> fMomentXW;
    std::array<Weight_t, DIMENSIONS> fMomentX2W;
+   // FIXME: Add sum(w.x.y)-style stats.
 
 public:
    RHistDataMomentUncert() = default;
@@ -308,6 +334,16 @@ public:
          const PRECISION xw = x[idim] * weight;
          fMomentXW[idim] += xw;
          fMomentX2W[idim] += x[idim] * xw;
+      }
+   }
+
+   // FIXME: Add a way to query the inner data
+
+   /// Merge with other RHistDataMomentUncert data, assuming same bin configuration
+   void Add(const RHistDataMomentUncert& other) {
+      for (size_t d = 0; d < DIMENSIONS; ++d) {
+         fMomentXW[d] += other.fMomentXW[d];
+         fMomentX2W[d] += other.fMomentX2W[d];
       }
    }
 };
@@ -447,6 +483,16 @@ public:
       //           comma-separated expression - int.
       using trigger_base_fill = int[];
       (void)trigger_base_fill{(STAT<DIMENSIONS, PRECISION>::Fill(x, binidx, weight), 0)...};
+   }
+
+   /// Merge with other statistics of the same type.
+   ///
+   /// The implementation assumes that the number of bins is equal.
+   void Add(const RHistData &other)
+   {
+      // Call Add() on all base classes, using the same tricks as Fill().
+      using trigger_base_add = int[];
+      (void)trigger_base_add{(STAT<DIMENSIONS, PRECISION>::Add(other), 0)...};
    }
 
    /// Whether this provides storage for uncertainties, or whether uncertainties
