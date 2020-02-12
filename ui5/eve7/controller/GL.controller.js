@@ -23,8 +23,6 @@ sap.ui.define([
 
       onInit : function()
       {
-         this.resize_handler = ResizeHandler;
-
          // var id = this.getView().getId();
 
          let viewData = this.getView().getViewData();
@@ -39,6 +37,7 @@ sap.ui.define([
 
          this._load_scripts = false;
          this._render_html  = false;
+         this.htimeout = 250;
 
          if (viewer_class === "RCore")
          {
@@ -58,6 +57,8 @@ sap.ui.define([
          {
             JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
          }
+
+         ResizeHandler.register(this.getView(), this.onResize.bind(this));
       },
 
       onLoadScripts: function()
@@ -239,7 +240,7 @@ sap.ui.define([
       onResize: function(event)
       {
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
-         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // minimal latency
+         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // small latency
       },
 
       onResizeTimeout: function()
@@ -251,7 +252,8 @@ sap.ui.define([
          // TODO: should be specified somehow in XML file
          this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
 
-         this.viewer.onResizeTimeout();
+         if (this.viewer)
+            this.viewer.onResizeTimeout();
       },
 
    });

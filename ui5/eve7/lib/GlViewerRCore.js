@@ -77,9 +77,6 @@ sap.ui.define([
 
          // This will also call render().
          this.resetRCoreRenderer();
-
-         // XXXX????
-         this.controller.resize_handler.register(this.get_view(), this.controller.onResize.bind(this));
       },
 
       resetRCoreRenderer: function()
@@ -89,7 +86,7 @@ sap.ui.define([
 
          // this.render();
       },
-      
+
       //==============================================================================
 
       render: function()
@@ -106,7 +103,7 @@ sap.ui.define([
 
          this.canvas.width  = w;
          this.canvas.height = h;
-         
+
          if (this.camera.isPerspectiveCamera)
          {
             this.camera.aspect = w / h;
