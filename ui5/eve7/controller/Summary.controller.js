@@ -14,34 +14,6 @@ sap.ui.define([
 
    "use strict";
 
-   var EveSummaryTreeItem = StandardTreeItem.extend('rootui5.eve7.lib.EveSummaryTreeItem', {
-      // when default value not specified - openui tries to load custom
-      renderer: {},
-
-      metadata: {
-         properties: {
-            background: 'string',
-            mainColor: 'string',
-            showCheckbox: 'boolean',
-            showRnrChildren: 'boolean'
-         }
-      },
-
-      onAfterRendering: function() {
-         if (!this.getShowCheckbox()) {
-            // TODO: find better way to select check box
-            var chkbox = this.$().children().first().next();
-            if (chkbox.attr("role") == "checkbox")
-               chkbox.css("display","none");
-         } else {
-            this.$().children().last().css("background-color", this.getMainColor());
-         }
-
-         // this.$().css("background-color", this.getBackground());
-      }
-
-   });
-
    var EveSummaryCustomItem = CustomTreeItem.extend('rootui5.eve7.lib.EveSummaryCustomItem', {
       renderer: {},
 
@@ -54,6 +26,13 @@ sap.ui.define([
             showRnrChildren: 'boolean'
          }
       },
+
+      onAfterRendering: function()
+      {
+         var btn = this.getContent()[2];
+
+         btn.$().css('background-color', this.getMainColor());
+      }
 
    });
 
@@ -95,7 +74,7 @@ sap.ui.define([
             content: [
                 new mCheckBox({ visible: "{treeModel>fShowCheckbox}", selected: "{treeModel>fSelected}", select: this.clickItemSelected.bind(this) }),
                 new mText({text:" {treeModel>fName}", tooltip: "{treeModel>fTitle}" , renderWhitespace: true, wrapping: false }),
-                new mButton({ visible: true, icon: "sap-icon://edit", type: "Transparent" })
+                new mButton({ id: "detailBtn", visible: "{treeModel>fShowButton}", icon: "sap-icon://edit", type: "Transparent", tooltip: "Actiavte GED", press: this.pressGedButton.bind(this) })
             ],
 
             elementId: "{treeModel>fElementId}",
@@ -105,7 +84,6 @@ sap.ui.define([
          });
 
          oItemTemplate.addStyleClass("eveSummaryItem");
-         oItemTemplate.attachDetailPress({}, this.onDetailPress, this);
          oItemTemplate.attachBrowserEvent("mouseenter", this.onMouseEnter, this);
          oItemTemplate.attachBrowserEvent("mouseleave", this.onMouseLeave, this);
          oTree.bindItems("treeModel>/", oItemTemplate);
@@ -174,35 +152,14 @@ sap.ui.define([
              this.mgr.SendMIR("SetRnrSelf(" + selected + ")", elem.fElementId, elem._typename);
       },
 
-      onSelectionChange: function(oEvent) {
+      pressGedButton: function(oEvent) {
+         var item = oEvent.getSource().getParent();
+         console.log('GED for element', item.getElementId());
 
-         var items = oEvent.getParameters().listItems;
-         if (!items) return;
+         var path = item.getBindingContext("treeModel").getPath(),
+             ttt = item.getBindingContext("treeModel").getProperty(path);
 
-         for (var k = 0; k < items.length; ++k) {
-            var item = items[k];
-            if (!item) continue;
-
-            if (!item.getShowCheckbox()) {
-               // workaround, to suppress checkboxes from standard item
-               item.setSelected(false);
-               var chkbox = item.$().children().first().next();
-               if (chkbox.attr("role") == "checkbox")
-                  chkbox.css("display","none");
-            } else {
-
-               var  path = item.getBindingContext("treeModel").getPath(),
-                    ttt = item.getBindingContext("treeModel").getProperty(path);
-
-               var elem = this.mgr.GetElement(ttt.id);
-
-               if (item.getShowRnrChildren())
-                  this.mgr.SendMIR("SetRnrChildren(" + item.getSelected() + ")", elem.fElementId, elem._typename);
-               else
-                  this.mgr.SendMIR("SetRnrSelf(" + item.getSelected() + ")", elem.fElementId, elem._typename);
-            }
-         }
-
+         this.showGedEditor(path, ttt);
       },
 
       SetMgr: function(mgr) {
@@ -271,25 +228,6 @@ sap.ui.define([
                       }
                       }
                     */
-      },
-
-
-      /** When item pressed - not handled now */
-      onItemPressed: function(oEvent) {
-         var listItem = oEvent.getParameter("listItem");
-         //     model = listItem.getBindingContext("treeModel"),
-         //     path =  model.getPath(),
-         //     ttt = model.getProperty(path);
-
-
-         // workaround, to suppress checkboxes from standard item
-         if (!listItem.getShowCheckbox()) {
-            listItem.setSelected(false);
-            var chkbox = listItem.$().children().first().next();
-            if (chkbox.attr("role") == "checkbox")
-               chkbox.css("display","none");
-         }
-
       },
 
 
@@ -374,15 +312,6 @@ sap.ui.define([
          }
       },
 
-      /** When edit button pressed */
-      onDetailPress: function(oEvent) {
-         var item = oEvent.getSource(),
-             path = item.getBindingContext("treeModel").getPath(),
-             ttt = item.getBindingContext("treeModel").getProperty(path);
-
-         this.showGedEditor(path, ttt);
-      },
-
       showGedEditor: function(path, newelem) {
 
          var sumSplitter = this.byId("sumSplitter");
@@ -455,9 +384,12 @@ sap.ui.define([
          newelem.fShowCheckbox = false;
          newelem.fShowRnrChildren = false;
          newelem.fElementId = elem.fElementId;
+         newelem.fShowButton = false;
+         newelem.fMainColor = "";
 
          if (this.canEdit(elem)) {
-            newelem.fType = "DetailAndActive";
+            newelem.fShowButton = true;
+
             if (!elem.childs) {
                newelem.fShowCheckbox = true;
                newelem.fSelected = elem.fRnrSelf;
@@ -470,8 +402,6 @@ sap.ui.define([
             if (elem.fMainColor) {
                newelem.fMainColor = JSROOT.Painter.root_colors[elem.fMainColor];
             }
-         } else {
-            newelem.fType = "Active";
          }
       },
 
