@@ -581,6 +581,7 @@ void TGraph2DPainter::PaintContour(Option_t * /*option*/)
             g->Paint("l");
          }
       }
+      if (l) { l->Delete(); delete l; }
    }
 }
 
