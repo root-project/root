@@ -9,8 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TClass.h"
+
 #include "ROOT/REveBox.hxx"
 #include "ROOT/REveProjectionManager.hxx"
+#include <ROOT/REveRenderData.hxx>
+#include "json.hpp"
 
 using namespace ROOT::Experimental;
 
@@ -27,7 +31,7 @@ by the size of the REveTrans object).
 Currently only supports 3D -> 2D projections.
 */
 
-ClassImp(REveBox);
+//ClassImp(REveBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -90,12 +94,40 @@ void REveBox::ComputeBBox()
    }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t REveBox::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fMainColor"] = GetFillColor();
+   j["fLineColor"] = GetLineColor();
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void REveBox::BuildRenderData()
+{
+   int N = 8;
+   fRenderData = std::make_unique<REveRenderData>("makeBox", N*3);
+   for (Int_t i = 0; i < N; ++i)
+   {
+      fRenderData->PushV(fVertices[i][0], fVertices[i][1], fVertices[i][2]);
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual from REveProjectable, return REveBoxProjected class.
 
 TClass* REveBox::ProjectedClass(const REveProjection*) const
 {
-   return REveBoxProjected::Class();
+   return TClass::GetClass<REveBoxProjected>();
 }
 
 
@@ -104,7 +136,6 @@ TClass* REveBox::ProjectedClass(const REveProjection*) const
 Projection of REveBox.
 */
 
-ClassImp(REveBoxProjected);
 
 Bool_t REveBoxProjected::fgDebugCornerPoints = kFALSE;
 
@@ -210,6 +241,7 @@ void REveBoxProjected::UpdateProjection()
       FindConvexHull(pp[1], fPoints, this);
    }
 }
+/*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get state of fgDebugCornerPoints static.
@@ -227,4 +259,31 @@ Bool_t REveBoxProjected::GetDebugCornerPoints()
 void REveBoxProjected::SetDebugCornerPoints(Bool_t d)
 {
    fgDebugCornerPoints = d;
+   }*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void REveBoxProjected::BuildRenderData()
+{
+   int N = fPoints.size();
+   fRenderData = std::make_unique<REveRenderData>("makeBoxProjected", N*3);
+   for (auto &v : fPoints)
+   {
+      fRenderData->PushV(v.fX);
+      fRenderData->PushV(v.fY);
+      fRenderData->PushV(fDepth);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t REveBoxProjected::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveShape::WriteCoreJson(j, rnr_offset);
+
+   j["fBreakIdx"] = fBreakIdx;
+
+   return ret;
 }
