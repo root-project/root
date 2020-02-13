@@ -250,6 +250,19 @@ sap.ui.define([
          }
       },
 
+      toggleEditor: function() {
+         var showid = -1;
+         if (!this.ged || !this.ged.getController().isGedVisible())
+            for (var id in this.summaryElements) {
+               if (this.summaryElements[id].fShowButton) { showid = id; break; }
+            }
+
+         if (showid > 0)
+            this.showGedEditor(showid);
+         else if (this.ged)
+            this.ged.getController().closeGedEditor();
+      },
+
       showGedEditor: function(elementId) {
 
          var sumSplitter = this.byId("sumSplitter");
