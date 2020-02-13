@@ -41,8 +41,6 @@ std::pair<bool, bool> PyROOT::TMemoryRegulator::RegisterHook(Cppyy::TCppObject_t
    if (Cppyy::IsSubtype(klass, tobjectTypeID)) {
       ObjectMap_t::iterator ppo = fObjectMap.find(cppobj);
       if (ppo == fObjectMap.end()) {
-         // Set cleanup bit so RecursiveRemove is tried on registered object
-         ((TObject*)cppobj)->SetBit(TObject::kMustCleanup);
          fObjectMap.insert({cppobj, klass});
       }
    }
@@ -100,8 +98,10 @@ void PyROOT::TMemoryRegulator::ClearProxiedObjects()
 
       if (pyobj && (pyobj->fFlags & CPPInstance::kIsOwner)) {
          // Only delete the C++ object if the Python proxy owns it.
-         // The deletion will trigger RecursiveRemove on the object
-         delete static_cast<TObject *>(cppobj);
+         // Invoke RecursiveRemove on it first so that proxy cleanup is done
+         auto o = static_cast<TObject *>(cppobj);
+         RecursiveRemove(o);
+         delete o;
       }
       else {
          // Non-owning proxy, just unregister to clean tables.
