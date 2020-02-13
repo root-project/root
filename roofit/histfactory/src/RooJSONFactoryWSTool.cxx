@@ -166,8 +166,13 @@ namespace {
     TClass* tclass;
     std::vector<std::string> arguments;
   };
+  struct RYML_Export_Keys {
+    std::string type;
+    std::map<std::string,std::string> proxies;
+  };  
   std::map<std::string,RYML_Factory_Expression> _rymlPdfFactoryExpressions;
-  std::map<std::string,RYML_Factory_Expression> _rymlFuncFactoryExpressions;  
+  std::map<std::string,RYML_Factory_Expression> _rymlFuncFactoryExpressions;
+  std::map<TClass*,RYML_Export_Keys> _rymlExportKeys;
   
 }
 
@@ -520,10 +525,59 @@ template<> void RooJSONFactoryWSTool::exportVariables(c4::yml::NodeRef& n) {
   }  
 }
 
+namespace {
+  void exportFunctions(const RooArgSet& allElems, c4::yml::NodeRef& n){
+    for(auto* arg:allElems){
+      RooAbsReal* func = dynamic_cast<RooAbsReal*>(arg);
+      if(!func) continue;
+      
+      TClass* cl = TClass::GetClass(func->ClassName());
+      const auto& dict = _rymlExportKeys.find(cl);
+      if(dict == _rymlExportKeys.end()){
+        std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
+        continue;
+      }
+      
+      auto elem = n[c4::to_csubstr(func->GetName())];
+      elem |= c4::yml::MAP;
+      
+      elem["type"] << dict->second.type;
+        
+        size_t nprox = func->numProxies();
+      for(size_t i=0; i<nprox; ++i){
+        RooAbsProxy* p = func->getProxy(i);
+        
+        std::string pname(p->name());
+        if(pname[0] == '!') pname.erase(0,1);
+
+        auto k = dict->second.proxies.find(pname);
+        if(k == dict->second.proxies.end()){
+          std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type << "', skipping" << std::endl;
+          continue;
+        }
+        
+        RooListProxy* l = dynamic_cast<RooListProxy*>(p);
+        if(l){
+          auto items = elem[c4::to_csubstr(k->second)];
+          for(auto e:*l){
+            items.append_child() << e->GetName();
+          }
+        }
+        RooRealProxy* r = dynamic_cast<RooRealProxy*>(p);
+        if(r){
+          elem[c4::to_csubstr(k->second)] << r->arg().GetName();
+        }
+      }
+    }
+  }
+}
+
 template<> void RooJSONFactoryWSTool::exportFunctions(c4::yml::NodeRef& n) {
+  ::exportFunctions(this->_workspace->allFunctions(),n);
 }
 
 template<> void RooJSONFactoryWSTool::exportPdfs(c4::yml::NodeRef& n) {
+  ::exportFunctions(this->_workspace->allPdfs(),n);  
 }
 
 template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n) {
@@ -557,25 +611,26 @@ template<> void RooJSONFactoryWSTool::exportAll(c4::yml::NodeRef& n) {
 #endif
 
 void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
-#ifdef INCLUDE_RYML    
-  std::ifstream infile(fname);
-  std::string line;
-  while (std::getline(infile, line)){
-    std::istringstream iss(line);
-    std::string key;
-    iss >> key;
-    TString classname;
-    iss >> classname;
-    TClass* c = TClass::GetClass(classname);
+#ifdef INCLUDE_RYML
+  std::ifstream infile(fname);  
+  std::string s(std::istreambuf_iterator<char>(infile), {});
+  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
+  c4::yml::NodeRef n = t.rootref();
+  for(const auto& cl:n.children()){
+    std::string key(::key(cl));
+    if(!cl.has_child("class")){
+      std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!" << std::endl;
+      continue;
+    }
+    std::string classname(::val_s(cl["class"]));    
+    TClass* c = TClass::GetClass(classname.c_str());
     if(!c){
       std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
     } else {
       RYML_Factory_Expression ex;
       ex.tclass = c;
-      while(iss.good()){
-        std::string value;
-        iss >> value;
-        ex.arguments.push_back(value);
+      for(const auto& arg:cl["arguments"]){
+        ex.arguments.push_back(::val_s(arg));
       }
       if(c->InheritsFrom(RooAbsPdf::Class())){
         _rymlPdfFactoryExpressions[key] = ex;
@@ -585,15 +640,47 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
         std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
       }
     }
-  }
+  }  
 #endif
 }
+
+void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
+#ifdef INCLUDE_RYML
+  std::ifstream infile(fname);  
+  std::string s(std::istreambuf_iterator<char>(infile), {});
+  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
+  c4::yml::NodeRef n = t.rootref();
+  for(const auto& cl:n.children()){
+    std::string classname(::key(cl));
+    TClass* c = TClass::GetClass(classname.c_str());
+    if(!c){
+      std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
+    } else {
+      RYML_Export_Keys ex;
+      ex.type = ::val_s(cl["type"]);
+      for(const auto& k:cl["proxies"].children()){
+        std::string key(::key(k));
+        std::string val(::val_s(k));                
+        ex.proxies[key] = val;
+      }
+      _rymlExportKeys[c] = ex;
+    }
+  }  
+#endif
+}
+
 void RooJSONFactoryWSTool::clearFactoryExpressions(){
 #ifdef INCLUDE_RYML    
   _rymlPdfFactoryExpressions.clear();
   _rymlFuncFactoryExpressions.clear();
 #endif
 }
+void RooJSONFactoryWSTool::clearExportKeys(){
+#ifdef INCLUDE_RYML    
+  _rymlExportKeys.clear();
+#endif
+}
+
 void RooJSONFactoryWSTool::printFactoryExpressions(){
 #ifdef INCLUDE_RYML    
   for(auto it:_rymlPdfFactoryExpressions){
@@ -612,6 +699,17 @@ void RooJSONFactoryWSTool::printFactoryExpressions(){
     }
     std::cout << std::endl;
   }  
+#endif
+}
+void RooJSONFactoryWSTool::printExportKeys(){
+#ifdef INCLUDE_RYML    
+  for(const auto& it:_rymlExportKeys){
+    std::cout << it.first->GetName() << ": " << it.second.type;
+    for(const auto& kv:it.second.proxies){
+      std::cout << " " << kv.first << "=" << kv.second;
+    }
+    std::cout << std::endl;
+  }
 #endif
 }
 
@@ -665,8 +763,8 @@ Bool_t RooJSONFactoryWSTool::importJSON( std::istream& is ) {
 #endif
 }
 Bool_t RooJSONFactoryWSTool::importJSON( const char* filename ) {
-  std::ifstream out(filename);
-  return this->importJSON(out);
+  std::ifstream infile(filename);
+  return this->importJSON(infile);
 }
 
 Bool_t RooJSONFactoryWSTool::importYML( std::istream& is ) {

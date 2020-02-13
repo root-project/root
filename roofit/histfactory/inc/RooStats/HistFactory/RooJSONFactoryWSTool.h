@@ -20,6 +20,9 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   static void loadFactoryExpressions(const std::string& fname);
   static void clearFactoryExpressions();
   static void printFactoryExpressions();
+  static void loadExportKeys(const std::string& fname);
+  static void clearExportKeys();
+  static void printExportKeys();  
 protected:
   template<class T> void importFunctions(const T& n);
   template<class T> void importPdfs(const T& n);
