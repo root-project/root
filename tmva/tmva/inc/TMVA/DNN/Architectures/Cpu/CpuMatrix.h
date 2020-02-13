@@ -112,6 +112,8 @@ public:
 
    static void InitializeOneVector(size_t n);
 
+   TCpuMatrix() : fNCols(0), fNRows(0) {}
+
    /** Construct matrix and allocate space for its elements. */
    TCpuMatrix(size_t nRows, size_t nCols);
    /** Construct a TCpuMatrix object by (deeply) copying from a
