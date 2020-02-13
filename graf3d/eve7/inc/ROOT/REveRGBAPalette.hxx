@@ -9,31 +9,32 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveRGBAPalette
-#define ROOT_TEveRGBAPalette
+#ifndef ROOT_REveRGBAPalette
+#define ROOT_REveRGBAPalette
 
-#include "TEveUtil.h"
+#include "ROOT/REveUtil.hxx"
 
 #include "TObject.h"
-#include "TQObject.h"
 
 #include "TMath.h"
 
-class TEveRGBAPalette : public TObject,
-                        public TQObject,
-                        public TEveRefCnt
-{
-   friend class TEveRGBAPaletteEditor;
-   friend class TEveRGBAPaletteSubEditor;
+namespace ROOT {
+namespace Experimental {
 
-   friend class TEveRGBAPaletteOverlay;
+class REveRGBAPalette : public TObject,
+                        public REveRefCnt
+{
+   friend class REveRGBAPaletteEditor;
+   friend class REveRGBAPaletteSubEditor;
+
+   friend class REveRGBAPaletteOverlay;
 
 public:
    enum ELimitAction_e { kLA_Cut, kLA_Mark, kLA_Clip, kLA_Wrap };
 
 private:
-   TEveRGBAPalette(const TEveRGBAPalette&);            // Not implemented
-   TEveRGBAPalette& operator=(const TEveRGBAPalette&); // Not implemented
+   REveRGBAPalette(const REveRGBAPalette&);            // Not implemented
+   REveRGBAPalette& operator=(const REveRGBAPalette&); // Not implemented
 
 protected:
    Double_t  fUIf;       // UI representation calculated as: d = fUIf*i + fUIc
@@ -71,13 +72,13 @@ protected:
    Double_t GetCAMinAsDouble() const { return IntToDouble(fCAMin); }
    Double_t GetCAMaxAsDouble() const { return IntToDouble(fCAMax); }
 
-   static TEveRGBAPalette* fgDefaultPalette;
+   static REveRGBAPalette* fgDefaultPalette;
 
 public:
-   TEveRGBAPalette();
-   TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kTRUE,
+   REveRGBAPalette();
+   REveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kTRUE,
                    Bool_t showdef=kTRUE, Bool_t fixcolrng=kFALSE);
-   virtual ~TEveRGBAPalette();
+   virtual ~REveRGBAPalette();
 
    void SetupColorArray() const;
    void ClearColorArray();
@@ -153,18 +154,16 @@ public:
 
    // ================================================================
 
-   void MinMaxValChanged(); // *SIGNAL*
-
-   ClassDef(TEveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
+   ClassDef(REveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
 };
 
 
 /******************************************************************************/
-// Inlines for TEveRGBAPalette
+// Inlines for REveRGBAPalette
 /******************************************************************************/
 
 //______________________________________________________________________________
-inline Bool_t TEveRGBAPalette::WithinVisibleRange(Int_t val) const
+inline Bool_t REveRGBAPalette::WithinVisibleRange(Int_t val) const
 {
    if ((val < fMinVal && fUnderflowAction == kLA_Cut) ||
        (val > fMaxVal && fOverflowAction  == kLA_Cut))
@@ -174,7 +173,7 @@ inline Bool_t TEveRGBAPalette::WithinVisibleRange(Int_t val) const
 }
 
 //______________________________________________________________________________
-inline const UChar_t* TEveRGBAPalette::ColorFromValue(Int_t val) const
+inline const UChar_t* REveRGBAPalette::ColorFromValue(Int_t val) const
 {
    // Here we expect that kLA_Cut has been checked; we further check
    // for kLA_Wrap and kLA_Clip otherwise we proceed as for kLA_Mark.
@@ -204,7 +203,7 @@ inline const UChar_t* TEveRGBAPalette::ColorFromValue(Int_t val) const
 }
 
 //______________________________________________________________________________
-inline void TEveRGBAPalette::ColorFromValue(Int_t val, UChar_t* pix, Bool_t alpha) const
+inline void REveRGBAPalette::ColorFromValue(Int_t val, UChar_t* pix, Bool_t alpha) const
 {
    const UChar_t* c = ColorFromValue(val);
    pix[0] = c[0]; pix[1] = c[1]; pix[2] = c[2];
@@ -212,7 +211,7 @@ inline void TEveRGBAPalette::ColorFromValue(Int_t val, UChar_t* pix, Bool_t alph
 }
 
 //______________________________________________________________________________
-inline Bool_t TEveRGBAPalette::ColorFromValue(Int_t val, Int_t defVal, UChar_t* pix, Bool_t alpha) const
+inline Bool_t REveRGBAPalette::ColorFromValue(Int_t val, Int_t defVal, UChar_t* pix, Bool_t alpha) const
 {
    if (val == defVal) {
       if (fShowDefValue) {
@@ -233,5 +232,8 @@ inline Bool_t TEveRGBAPalette::ColorFromValue(Int_t val, Int_t defVal, UChar_t* 
       return kFALSE;
    }
 }
+
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

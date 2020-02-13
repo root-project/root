@@ -9,28 +9,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TEveDigitSet.h"
-#include "TEveManager.h"
-#include "TEveTrans.h"
+#include "ROOT/REveDigitSet.hxx"
+#include "ROOT/REveManager.hxx"
+#include "ROOT/REveTrans.hxx"
 
 #include "TColor.h"
 #include "TRefArray.h"
 
+#include "json.hpp"
 
-/** \class TEveDigitSet
-\ingroup TEve
+using namespace::ROOT::Experimental;
+
+/** \class REveDigitSet
+\ingroup REve
 Base-class for storage of digit collections; provides
-transformation matrix (TEveTrans), signal to color mapping
-(TEveRGBAPalette) and visual grouping (TEveFrameBox).
+transformation matrix (REveTrans), signal to color mapping
+(REveRGBAPalette) and visual grouping (REveFrameBox).
 
 Base-class for displaying a digit collection.
 Provides common services for:
  - specifying signal / color per digit;
  - specifying object reference per digit;
- - controlling palette and thresholds (external object TEveRGBAPalette);
- - showing a frame around the digits (external object TEveFrameBox);
+ - controlling palette and thresholds (external object REveRGBAPalette);
+ - showing a frame around the digits (external object REveFrameBox);
  - specifying transformation matrix for the whole collection;
-   by data-member of class TEveTrans.
+   by data-member of class REveTrans.
 
 Use method DigitId(TObject* id) to assign additional identification
 to the last created digit. By calling SetOwnIds(kTRUE) tje
@@ -52,39 +55,36 @@ If you want to use single color for all elements call:
 ~~~
 Palette controls will not work in this case.
 
-A pointer to a rectangle / box of class TEveFrameBox can be set via
+A pointer to a rectangle / box of class REveFrameBox can be set via
 ~~~ {.cpp}
-   void SetFrame(TEveFrameBox* b);
+   void SetFrame(REveFrameBox* b);
 ~~~
-A single TEveFrameBox can be shared among several digit-sets (it is
+A single REveFrameBox can be shared among several digit-sets (it is
 reference-counted). The following flags affect how the frame-box will drawn
 and used for selection and highlight:
 ~~~ {.cpp}
    Bool_t fSelectViaFrame;
    Bool_t fHighlightFrame;
 ~~~
-TEveDigitSet is sub-classed from TEveSecondarySelectable -- this means
+REveDigitSet is sub-classed from REveSecondarySelectable -- this means
 individual digits can be selected. By calling:
 ~~~ {.cpp}
-   TEveSecondarySelectable::SetAlwaysSecSelect(kTRUE);
+   REveSecondarySelectable::SetAlwaysSecSelect(kTRUE);
 ~~~
 one can enforce immediate feedback (highlight, tooltip and select on normal
 left-mouse click) on given digit-set.
 
 See also:
 ~~~ {.cpp}
-   TEveQuadSet: rectangle, hexagon or line per digit
-   TEveBoxSet   a 3D box per digit
+   REveQuadSet: rectangle, hexagon or line per digit
+   REveBoxSet   a 3D box per digit
 ~~~
 */
 
-ClassImp(TEveDigitSet);
-
 ////////////////////////////////////////////////////////////////////////////////
 
-TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
-   TEveElement     (fColor),
-   TNamed          (n, t),
+REveDigitSet::REveDigitSet(const char* n, const char* t) :
+   REveElement     (n, t),
 
    fDigitIds       (0),
    fDefaultValue   (kMinInt),
@@ -118,9 +118,9 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 /// Unreference frame and palette. Destroy referenced objects if they
-/// are owned by the TEveDigitSet.
+/// are owned by the REveDigitSet.
 
-TEveDigitSet::~TEveDigitSet()
+REveDigitSet::~REveDigitSet()
 {
    SetFrame(0);
    SetPalette(0);
@@ -132,7 +132,7 @@ TEveDigitSet::~TEveDigitSet()
 ////////////////////////////////////////////////////////////////////////////////
 /// Protected method called whenever a new digit is added.
 
-TEveDigitSet::DigitBase_t* TEveDigitSet::NewDigit()
+REveDigitSet::DigitBase_t* REveDigitSet::NewDigit()
 {
    fLastIdx   = fPlex.Size();
    fLastDigit = new (fPlex.NewAtom()) DigitBase_t(fDefaultValue);
@@ -143,7 +143,7 @@ TEveDigitSet::DigitBase_t* TEveDigitSet::NewDigit()
 /// Protected method. Release and delete the referenced objects, the
 /// ownership is *NOT* checked.
 
-void TEveDigitSet::ReleaseIds()
+void REveDigitSet::ReleaseIds()
 {
    if (fDigitIds)
    {
@@ -160,19 +160,19 @@ void TEveDigitSet::ReleaseIds()
 /// Instruct digit-set to use single color for its digits.
 /// Call SetMainColor/Transparency to initialize it.
 
-void TEveDigitSet::UseSingleColor()
+void REveDigitSet::UseSingleColor()
 {
    fSingleColor = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Override from TEveElement, forward to Frame.
+/// Override from REveElement, forward to Frame.
 
-void TEveDigitSet::SetMainColor(Color_t color)
+void REveDigitSet::SetMainColor(Color_t color)
 {
    if (fSingleColor)
    {
-      TEveElement::SetMainColor(color);
+      REveElement::SetMainColor(color);
    }
    else if (fFrame)
    {
@@ -181,31 +181,32 @@ void TEveDigitSet::SetMainColor(Color_t color)
    }
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual function called when both fSelected is false and
 /// fImpliedSelected is 0.
 
-void TEveDigitSet::UnSelected()
+void REveDigitSet::UnSelected()
 {
    fSelectedSet.clear();
-   TEveElement::UnSelected();
+   REveElement::UnSelected();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual function called when both fHighlighted is false and
 /// fImpliedHighlighted is 0.
 
-void TEveDigitSet::UnHighlighted()
+void REveDigitSet::UnHighlighted()
 {
    fHighlightedSet.clear();
-   TEveElement::UnHighlighted();
+   REveElement::UnHighlighted();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return tooltip for highlighted element if always-sec-select is set.
 /// Otherwise return the tooltip for this element.
 
-TString TEveDigitSet::GetHighlightTooltip()
+TString REveDigitSet::GetHighlightTooltip()
 {
    if (fHighlightedSet.empty()) return "";
 
@@ -225,15 +226,15 @@ TString TEveDigitSet::GetHighlightTooltip()
    }
    else
    {
-      return TEveElement::GetHighlightTooltip();
+      return REveElement::GetHighlightTooltip();
    }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /// Instruct underlying memory allocator to regroup itself into a
 /// contiguous memory chunk.
 
-void TEveDigitSet::RefitPlex()
+void REveDigitSet::RefitPlex()
 {
    fPlex.Refit();
 }
@@ -241,7 +242,7 @@ void TEveDigitSet::RefitPlex()
 ////////////////////////////////////////////////////////////////////////////////
 /// Iterate over the digits and determine min and max signal values.
 
-void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
+void REveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 {
    if (fValueIsColor || fPlex.Size() == 0)
    {
@@ -273,7 +274,7 @@ void TEveDigitSet::ScanMinMaxValues(Int_t& min, Int_t& max)
 /// Note that various AddXyzz() functions set the current digit to the newly
 /// added one.
 
-void TEveDigitSet::SetCurrentDigit(Int_t idx)
+void REveDigitSet::SetCurrentDigit(Int_t idx)
 {
    fLastIdx   = idx;
    fLastDigit = GetDigit(idx);
@@ -282,7 +283,7 @@ void TEveDigitSet::SetCurrentDigit(Int_t idx)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set signal value for the last digit added.
 
-void TEveDigitSet::DigitValue(Int_t value)
+void REveDigitSet::DigitValue(Int_t value)
 {
    fLastDigit->fValue = value;
 }
@@ -290,23 +291,23 @@ void TEveDigitSet::DigitValue(Int_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color for the last digit added.
 
-void TEveDigitSet::DigitColor(Color_t ci)
+void REveDigitSet::DigitColor(Color_t ci)
 {
-   TEveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, kTRUE);
+   REveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color for the last digit added.
 
-void TEveDigitSet::DigitColor(Color_t ci, Char_t transparency)
+void REveDigitSet::DigitColor(Color_t ci, Char_t transparency)
 {
-   TEveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, transparency);
+   REveUtil::ColorFromIdx(ci, (UChar_t*) & fLastDigit->fValue, transparency);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color for the last digit added.
 
-void TEveDigitSet::DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
+void REveDigitSet::DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
    UChar_t* x = (UChar_t*) & fLastDigit->fValue;
    x[0] = r; x[1] = g; x[2] = b; x[3] = a;
@@ -315,7 +316,7 @@ void TEveDigitSet::DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color for the last digit added.
 
-void TEveDigitSet::DigitColor(UChar_t* rgba)
+void REveDigitSet::DigitColor(UChar_t* rgba)
 {
    UChar_t* x = (UChar_t*) & fLastDigit->fValue;
    x[0] = rgba[0]; x[1] = rgba[1]; x[2] = rgba[2]; x[3] = rgba[3];
@@ -324,7 +325,7 @@ void TEveDigitSet::DigitColor(UChar_t* rgba)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set external object reference for the last digit added.
 
-void TEveDigitSet::DigitId(TObject* id)
+void REveDigitSet::DigitId(TObject* id)
 {
    DigitId(fLastIdx, id);
 }
@@ -332,7 +333,7 @@ void TEveDigitSet::DigitId(TObject* id)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set user-data for the last digit added.
 
-void TEveDigitSet::DigitUserData(void* ud)
+void REveDigitSet::DigitUserData(void* ud)
 {
    fLastDigit->fUserData = ud;
 }
@@ -340,7 +341,7 @@ void TEveDigitSet::DigitUserData(void* ud)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set external object reference for digit n.
 
-void TEveDigitSet::DigitId(Int_t n, TObject* id)
+void REveDigitSet::DigitId(Int_t n, TObject* id)
 {
    if (!fDigitIds)
       fDigitIds = new TRefArray;
@@ -354,7 +355,7 @@ void TEveDigitSet::DigitId(Int_t n, TObject* id)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set user-data for digit n.
 
-void TEveDigitSet::DigitUserData(Int_t n, void* ud)
+void REveDigitSet::DigitUserData(Int_t n, void* ud)
 {
    GetDigit(n)->fUserData = ud;
 }
@@ -362,7 +363,7 @@ void TEveDigitSet::DigitUserData(Int_t n, void* ud)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return external TObject associated with digit n.
 
-TObject* TEveDigitSet::GetId(Int_t n) const
+TObject* REveDigitSet::GetId(Int_t n) const
 {
    return fDigitIds ? fDigitIds->At(n) : 0;
 }
@@ -370,15 +371,16 @@ TObject* TEveDigitSet::GetId(Int_t n) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get user-data associated with digit n.
 
-void* TEveDigitSet::GetUserData(Int_t n) const
+void* REveDigitSet::GetUserData(Int_t n) const
 {
    return GetDigit(n)->fUserData;
 }
 
+/*
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this object. Only direct rendering is supported.
 
-void TEveDigitSet::Paint(Option_t*)
+void REveDigitSet::Paint(Option_t*)
 {
    PaintStandard(this);
 }
@@ -387,7 +389,7 @@ void TEveDigitSet::Paint(Option_t*)
 /// Called from renderer when a digit with index idx is selected.
 /// This is by-passed when always-secondary-select is active.
 
-void TEveDigitSet::DigitSelected(Int_t idx)
+void REveDigitSet::DigitSelected(Int_t idx)
 {
    DigitBase_t *qb  = GetDigit(idx);
    TObject     *obj = GetId(idx);
@@ -398,7 +400,7 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    if (fEmitSignals) {
       SecSelected(this, idx);
    } else {
-      printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%lx\n",
+      printf("REveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%lx\n",
              idx, qb->fValue, (ULong_t)obj);
       if (obj)
          obj->Print();
@@ -409,19 +411,20 @@ void TEveDigitSet::DigitSelected(Int_t idx)
 /// Emit a SecSelected signal.
 /// This is by-passed when always-secondary-select is active.
 
-void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
+void REveDigitSet::SecSelected(REveDigitSet* qs, Int_t idx)
 {
    Long_t args[2];
    args[0] = (Long_t) qs;
    args[1] = (Long_t) idx;
 
-   Emit("SecSelected(TEveDigitSet*, Int_t)", args);
+   // Emit("SecSelected(REveDigitSet*, Int_t)", args);
 }
 
+*/
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TEveFrameBox pointer.
+/// Set REveFrameBox pointer.
 
-void TEveDigitSet::SetFrame(TEveFrameBox* b)
+void REveDigitSet::SetFrame(REveFrameBox* b)
 {
    if (fFrame == b) return;
    if (fFrame) fFrame->DecRefCount(this);
@@ -437,9 +440,9 @@ void TEveDigitSet::SetFrame(TEveFrameBox* b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TEveRGBAPalette pointer.
+/// Set REveRGBAPalette pointer.
 
-void TEveDigitSet::SetPalette(TEveRGBAPalette* p)
+void REveDigitSet::SetPalette(REveRGBAPalette* p)
 {
    if (fPalette == p) return;
    if (fPalette) fPalette->DecRefCount();
@@ -448,14 +451,14 @@ void TEveDigitSet::SetPalette(TEveRGBAPalette* p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make sure the TEveRGBAPalette pointer is not null.
+/// Make sure the REveRGBAPalette pointer is not null.
 /// If it is not set, a new one is instantiated and the range is set
 /// to current min/max signal values.
 
-TEveRGBAPalette* TEveDigitSet::AssertPalette()
+REveRGBAPalette* REveDigitSet::AssertPalette()
 {
    if (fPalette == 0) {
-      fPalette = new TEveRGBAPalette;
+      fPalette = new REveRGBAPalette;
       if (!fValueIsColor) {
          Int_t min, max;
          ScanMinMaxValues(min, max);
@@ -464,4 +467,17 @@ TEveRGBAPalette* TEveDigitSet::AssertPalette()
       }
    }
    return fPalette;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t REveDigitSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
+
+   j["fSingleColor"] = fSingleColor;
+   j["fAntiFlick"] = GetAntiFlick();
+
+   return ret;
 }

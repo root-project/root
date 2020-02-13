@@ -12,12 +12,14 @@
 #ifndef ROOT_REveBoxSet
 #define ROOT_REveBoxSet
 
-#include "REveDigitSet.h"
-#include "REveVector.h"
+#include "ROOT/REveDigitSet.hxx"
+#include "ROOT/REveVector.hxx"
 
 class TGeoMatrix;
 class TRandom;
 
+namespace ROOT {
+namespace Experimental {
 class REveBoxSet: public REveDigitSet
 {
    friend class REveBoxSetGL;
@@ -79,7 +81,7 @@ public:
 
    void AddHex(const REveVector& pos, Float_t r, Float_t angle, Float_t depth);
 
-   virtual void ComputeBBox();
+   virtual void ComputeBBox() override;
    // virtual void Paint(Option_t* option = "");
 
    void Test(Int_t nboxes);
@@ -97,7 +99,11 @@ public:
    Int_t GetBoxSkip()   const { return fBoxSkip; }
    void  SetBoxSkip(Int_t bs) { fBoxSkip = bs; }
 
-   ClassDef(REveBoxSet, 0); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
+
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void  BuildRenderData() override;
 };
 
+} // namespace Experimental
+} // namespace ROOT
 #endif
