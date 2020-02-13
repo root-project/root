@@ -101,7 +101,7 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file libc.modulemap cuda.modulemap std.modulemap module.modulemap.build
+foreach(file libc.modulemap boost.modulemap tinyxml2.modulemap cuda.modulemap std.modulemap module.modulemap.build
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
