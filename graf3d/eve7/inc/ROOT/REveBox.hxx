@@ -21,7 +21,8 @@ namespace Experimental {
 // REveBox
 //------------------------------------------------------------------------------
 
-class REveBox : public REveShape
+class REveBox : public REveShape,
+                public REveProjectable
 {
 private:
    REveBox(const REveBox&);            // Not implemented
@@ -41,12 +42,14 @@ public:
    const Float_t* GetVertex(Int_t i) const { return fVertices[i]; }
 
    // For TAttBBox:
-   virtual void ComputeBBox();
+   virtual void ComputeBBox() override;
 
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+   void BuildRenderData() override;
    // Projectable:
-   virtual TClass* ProjectedClass(const REveProjection* p) const;
+   virtual TClass* ProjectedClass(const REveProjection* p) const override;
 
-   ClassDef(REveBox, 0); // 3D box with arbitrary vertices.
+   // ClassDef(REveBox, 0); // 3D box with arbitrary vertices.
 };
 
 
@@ -66,7 +69,7 @@ protected:
    Int_t        fBreakIdx;
    vVector2_t   fDebugPoints;
 
-   virtual void SetDepthLocal(Float_t d);
+   virtual void SetDepthLocal(Float_t d) override;
 
    static Bool_t fgDebugCornerPoints;
 
@@ -74,19 +77,19 @@ public:
    REveBoxProjected(const char* n="REveBoxProjected", const char* t="");
    virtual ~REveBoxProjected();
 
+   void BuildRenderData() override;
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
+
+
    // For TAttBBox:
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
+
 
    // Projected:
-   virtual void SetProjection(REveProjectionManager* mng, REveProjectable* model);
-   virtual void UpdateProjection();
+   void SetProjection(REveProjectionManager* mng, REveProjectable* model) override;
+   void UpdateProjection() override;
 
-   virtual REveElement* GetProjectedAsElement() { return this; }
-
-   static Bool_t GetDebugCornerPoints();
-   static void   SetDebugCornerPoints(Bool_t d);
-
-   ClassDef(REveBoxProjected, 0); // Projection of REveBox.
+   REveElement* GetProjectedAsElement() override { return this; }
 };
 
 } // namespace Experimental
