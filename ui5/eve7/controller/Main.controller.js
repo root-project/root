@@ -42,12 +42,11 @@ sap.ui.define(['sap/ui/core/Component',
          var toolbar = this.byId("otb1");
 
          this.commands = cmds;
-         var pthis = this;
-         for (var k=cmds.length-1;k>=0;--k) {
+         for (var k = cmds.length-1; k>=0; --k) {
             var btn = new mButton({
                icon: cmds[k].icon,
                tooltip: cmds[k].name,
-               press: pthis.executeCommand.bind(pthis, cmds[k])
+               press: this.executeCommand.bind(this, cmds[k])
             });
             toolbar.insertContentLeft(btn, 0);
          }
