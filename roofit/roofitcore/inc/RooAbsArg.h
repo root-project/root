@@ -472,6 +472,8 @@ public:
 
   void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
 
+  RooAbsProxy* getProxy(Int_t index) const ;
+  Int_t numProxies() const ;
 
   // Dirty state modifiers
   /// Mark the element dirty. This forces a re-evaluation when a value is requested.
@@ -592,9 +594,7 @@ private:
   void unRegisterProxy(RooArgProxy& proxy) ;
   void unRegisterProxy(RooSetProxy& proxy) ;
   void unRegisterProxy(RooListProxy& proxy) ;
-  RooAbsProxy* getProxy(Int_t index) const ;
   void setProxyNormSet(const RooArgSet* nset) ;
-  Int_t numProxies() const ;
 
   // Attribute list
   std::set<std::string> _boolAttrib ; // Boolean attributes
