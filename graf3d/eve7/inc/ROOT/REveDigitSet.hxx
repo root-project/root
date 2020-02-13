@@ -9,40 +9,41 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveDigitSet
-#define ROOT_TEveDigitSet
+#ifndef ROOT_REveDigitSet
+#define ROOT_REveDigitSet
 
 #include "TNamed.h"
-#include "TQObject.h"
 #include "TAtt3D.h"
 #include "TAttBBox.h"
 
-#include "TEveUtil.h"
-#include "TEveElement.h"
-#include "TEveFrameBox.h"
-#include "TEveRGBAPalette.h"
-#include "TEveChunkManager.h"
-#include "TEveSecondarySelectable.h"
+#include "ROOT/REveUtil.hxx"
+#include "ROOT/REveElement.hxx"
+#include "ROOT/REveFrameBox.hxx"
+#include "ROOT/REveRGBAPalette.hxx"
+#include "ROOT/REveChunkManager.hxx"
+#include "ROOT/REveSecondarySelectable.hxx"
 
 class TRefArray;
 
-class TEveDigitSet : public TEveElement,
-                     public TNamed, public TQObject,
+namespace ROOT {
+namespace Experimental {
+
+class REveDigitSet : public REveElement,
                      public TAtt3D,
                      public TAttBBox,
-                     public TEveSecondarySelectable
+                     public REveSecondarySelectable
 {
-   friend class TEveDigitSetEditor;
-   friend class TEveDigitSetGL;
+   friend class REveDigitSetEditor;
+   friend class REveDigitSetGL;
 
-   TEveDigitSet(const TEveDigitSet&);            // Not implemented
-   TEveDigitSet& operator=(const TEveDigitSet&); // Not implemented
+   REveDigitSet(const REveDigitSet&);            // Not implemented
+   REveDigitSet& operator=(const REveDigitSet&); // Not implemented
 
 public:
    enum ERenderMode_e { kRM_AsIs, kRM_Line, kRM_Fill };
 
-   typedef void (*Callback_foo)(TEveDigitSet*, Int_t, TObject*);
-   typedef TString (*TooltipCB_foo)(TEveDigitSet*, Int_t);
+   typedef void (*Callback_foo)(REveDigitSet*, Int_t, TObject*);
+   typedef TString (*TooltipCB_foo)(REveDigitSet*, Int_t);
 
    struct DigitBase_t
    {
@@ -61,14 +62,14 @@ protected:
    Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
    Bool_t            fSingleColor;    //  Use the same color for all digits.
    Bool_t            fAntiFlick;      // Make extra render pass to avoid flickering when quads are too small.
-   Bool_t            fOwnIds;         //  Flag specifying if id-objects are owned by the TEveDigitSet.
-   TEveChunkManager  fPlex;           //  Container of digit data.
+   Bool_t            fOwnIds;         //  Flag specifying if id-objects are owned by the REveDigitSet.
+   REveChunkManager  fPlex;           //  Container of digit data.
    DigitBase_t*      fLastDigit;      //! The last / current digit added to collection.
    Int_t             fLastIdx;        //! The last / current idx added to collection.
 
    Color_t           fColor;          //  Color used for frame (or all digis with single-color).
-   TEveFrameBox*     fFrame;          //  Pointer to frame structure.
-   TEveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
+   REveFrameBox*     fFrame;          //  Pointer to frame structure.
+   REveRGBAPalette*  fPalette;        //  Pointer to signal-color palette.
    ERenderMode_e     fRenderMode;     //  Render mode: as-is / line / filled.
    Bool_t            fSelectViaFrame; //  Allow selection via frame.
    Bool_t            fHighlightFrame; //  Highlight frame when object is selected.
@@ -83,23 +84,23 @@ protected:
    void         ReleaseIds();
 
 public:
-   TEveDigitSet(const char* n="TEveDigitSet", const char* t="");
-   virtual ~TEveDigitSet();
-
-   virtual TObject* GetObject(const TEveException&) const
-   { const TObject* obj = this; return const_cast<TObject*>(obj); }
+   REveDigitSet(const char* n="REveDigitSet", const char* t="");
+   virtual ~REveDigitSet();
 
    void   UseSingleColor();
 
    Bool_t GetAntiFlick() const   { return fAntiFlick; }
    void   SetAntiFlick(Bool_t f) { fAntiFlick = f; }
 
-   virtual void SetMainColor(Color_t color);
+   virtual void SetMainColor(Color_t color) override;
 
+   /*
    virtual void UnSelected();
    virtual void UnHighlighted();
 
+   using REveElement::GetHighlightTooltip;
    virtual TString GetHighlightTooltip();
+   */
 
    // Implemented in sub-classes:
    // virtual void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
@@ -129,24 +130,24 @@ public:
    DigitBase_t* GetDigit(Int_t n) const { return (DigitBase_t*) fPlex.Atom(n); }
    TObject*     GetId(Int_t n) const;
    void*        GetUserData(Int_t n) const;
-   using TEveElement::GetUserData;
+   using REveElement::GetUserData;
 
    // --------------------------------
 
    // Implemented in subclasses:
    // virtual void ComputeBBox();
-
+   /*
    virtual void Paint(Option_t* option="");
 
    virtual void DigitSelected(Int_t idx);
-   virtual void SecSelected(TEveDigitSet* qs, Int_t idx); // *SIGNAL*
-
+   virtual void SecSelected(REveDigitSet* qs, Int_t idx); // *SIGNAL*
+   */
    // --------------------------------
 
-   TEveChunkManager* GetPlex() { return &fPlex; }
+   REveChunkManager* GetPlex() { return &fPlex; }
 
-   TEveFrameBox* GetFrame() const { return fFrame; }
-   void          SetFrame(TEveFrameBox* b);
+   REveFrameBox* GetFrame() const { return fFrame; }
+   void          SetFrame(REveFrameBox* b);
 
    Bool_t GetSelectViaFrame() const    { return fSelectViaFrame; }
    void   SetSelectViaFrame(Bool_t sf) { fSelectViaFrame = sf; }
@@ -156,9 +157,9 @@ public:
 
    Bool_t GetValueIsColor()  const { return fValueIsColor; }
 
-   TEveRGBAPalette* GetPalette() const { return fPalette; }
-   void             SetPalette(TEveRGBAPalette* p);
-   TEveRGBAPalette* AssertPalette();
+   REveRGBAPalette* GetPalette() const { return fPalette; }
+   void             SetPalette(REveRGBAPalette* p);
+   REveRGBAPalette* AssertPalette();
 
    ERenderMode_e  GetRenderMode()           const { return fRenderMode; }
    void           SetRenderMode(ERenderMode_e rm) { fRenderMode = rm; }
@@ -178,7 +179,9 @@ public:
    TooltipCB_foo GetTooltipCBFoo()          const { return fTooltipCBFoo; }
    void          SetTooltipCBFoo(TooltipCB_foo f) { fTooltipCBFoo = f; }
 
-   ClassDef(TEveDigitSet, 0); // Base-class for storage of digit collections; provides transformation matrix (TEveTrans), signal to color mapping (TEveRGBAPalette) and visual grouping (TEveFrameBox).
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 };
 
+} // namespace Experimental
+} // namespace ROOT
 #endif

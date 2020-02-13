@@ -9,10 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "REveBoxSet.h"
-#include "REveShape.h"
+#include "ROOT/REveBoxSet.hxx"
+#include "ROOT/REveShape.hxx"
+#include "ROOT/REveRenderData.hxx"
+#include "ROOT/REveRGBAPalette.hxx"
 
 #include "TRandom.h"
+#include <cassert>
+
+#include "json.hpp"
+
+using namespace::ROOT::Experimental;
 
 /** \class REveBoxSet
 \ingroup REve
@@ -38,8 +45,6 @@ Each primitive can be assigned:
 See also base-class REveDigitSet for more information.
 Tutorial: tutorials/eve/boxset_test.C
 */
-
-ClassImp(REveBoxSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -325,6 +330,96 @@ void REveBoxSet::ComputeBBox()
       }
 
    } // end switch box-type
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill core part of JSON representation.
+
+Int_t REveBoxSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   Int_t ret = REveDigitSet::WriteCoreJson(j, rnr_offset);
+   j["boxType"] = int(fBoxType);
+
+   printf(" WriteCoreJsonMAIN color %d \n", GetMainColor());
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Crates 3D point array for rendering.
+
+void REveBoxSet::BuildRenderData()
+{
+   fRenderData = std::make_unique<REveRenderData>("makeBoxSet", fPlex.Size()*24, 0, fPlex.Size());
+
+   switch (fBoxType)
+   {
+      case REveBoxSet::kBT_FreeBox:
+      {
+         REveChunkManager::iterator bi(fPlex);
+         while (bi.next())
+         {
+            REveBoxSet::BFreeBox_t& b = * (REveBoxSet::BFreeBox_t*) bi();
+            // vertices
+            for (int c =0; c < 8; c++) {
+               for (int j =0; j < 3; j++)
+                  fRenderData->PushV(b.fVertices[c][j]);
+            }
+         }
+         break;
+      }
+      case REveBoxSet::kBT_AABox:
+      {
+         REveChunkManager::iterator bi(fPlex);
+         while (bi.next())
+         {
+            REveBoxSet::BAABox_t& b = * (REveBoxSet::BAABox_t*) bi();
+            // position
+            fRenderData->PushV(b.fA, b.fB, b.fC);
+            // dimensions
+            fRenderData->PushV(b.fW, b.fH, b.fD);
+         }
+         break;
+      }
+      default:
+         assert(false && "REveBoxSet::BuildRenderData only kBT_FreeBox type supported");
+   }
+
+   //
+   // setup colors
+   //
+   if (fSingleColor == false)
+   {
+
+      REveChunkManager::iterator bi(fPlex);
+      while (bi.next())
+      {
+         REveDigitSet::DigitBase_t& b = * (REveDigitSet::DigitBase_t*) bi();
+         if (fValueIsColor)
+         {
+            fRenderData->PushI(int(b.fValue));
+         }
+         else if (fSingleColor == false)
+         {
+            UChar_t c[4];
+            Bool_t visible = fPalette->ColorFromValue(b.fValue, fDefaultValue, c);
+
+            int value =
+               c[0] +
+               c[1] * 256 +
+               c[2] * 256*256;
+
+            // printf("box val [%d] values (%d, %d, %d) -> int <%d>\n", b.fValue, c[0], c[1], c[2],  value);
+
+            // presume transparency 100% when non-visible
+            if (!visible)
+               value += 256*256*256*c[4];
+
+
+            fRenderData->PushI(value);
+         }
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
