@@ -558,6 +558,21 @@ class Regression21ReuseProxies(MyTestCase):
          self.assertEqual(a2.b, val)
          self.assertEqual(a1.otherA.b, val)
 
+### Check that kMustCleanup is not set for proxied objects ================
+class Regression22KMustCleanup(MyTestCase):
+   def test1GetListOfGraphs(self):
+      """List returned by GetListOfGraphs should not have kMustCleanup set to true"""
+      # ROOT-9040
+      if exp_pyroot:
+         mg = ROOT.TMultiGraph()
+         mg.Add(ROOT.TGraph())
+
+         l = mg.GetListOfGraphs()
+         self.assertEqual(l.TestBit(ROOT.kMustCleanup), False)
+
+         c = ROOT.TCanvas()
+         mg.Draw()
+
 
 ## actual test run
 if __name__ == '__main__':
