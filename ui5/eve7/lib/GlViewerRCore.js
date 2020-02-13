@@ -10,6 +10,8 @@ sap.ui.define([
       GlViewer.call(this, viewer_class);
    }
 
+   var RC;
+
    GlViewerRCore.prototype = Object.assign(Object.create(GlViewer.prototype), {
 
       constructor: GlViewerRCore,
@@ -20,12 +22,14 @@ sap.ui.define([
          // super.init(controller);
 
          var pthis = this;
-         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
-            console.log("GLC onInit RenderCore loaded");
-           // alert("Step 1: controller says: RnrCore loaded")
-            pthis.RCore = module;
 
-            pthis.creator = new EveElements(controller);
+         import("../../eve7/rnr_core/RenderCore.js").then((module) => {
+
+            console.log("GlViewerRCore.onInit - RenderCore.js loaded");
+
+            RC = module;
+
+            pthis.creator = new EveElements(RC);
             pthis.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
 
             pthis.createRCoreRenderer();
@@ -38,17 +42,11 @@ sap.ui.define([
 
       //==============================================================================
 
-      RC: function()
-      {
-         return this.RCore;
-      },
-
       make_object: function(name)
       {
-         let RC = this.RC();
-
-         // return new RC.Object3D();
-         return new RC.Group();
+         let c = new RC.Group();
+         c.name = name || "<no-name>";
+         return c;
       },
 
       get_top_scene: function()
@@ -60,8 +58,6 @@ sap.ui.define([
 
       createRCoreRenderer: function()
       {
-         let RC = this.RC();
-
          var w = this.get_width();
          var h = this.get_height();
 
@@ -72,11 +68,30 @@ sap.ui.define([
          this.renderer.clearColor = "#FFFFFFFF";
          this.renderer.addShaderLoaderUrls("rootui5sys/eve7/rnr_core/shaders");
 
-         this.camera = new RC.PerspectiveCamera(120, w / h, 10, 10000);
-         this.camera.position = new RC.Vector3(-500, 0, 0);
-         this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
+         if (this.controller.kind === "3D")
+         {
+            this.camera = new RC.PerspectiveCamera(75, w / h, 1, 5000);
+            this.camera.position = new RC.Vector3(-500, 0, 0);
+            this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
+         }
+         else
+         {
+            this.camera = new RC.OrthographicCamera(-w/2, w/2, -h/2, h/2, 0, 2000);
+            this.camera.position = new RC.Vector3(0, 0, 500);
+            this.camera.lookAt(new RC.Vector3(0, 0, 0), new RC.Vector3(0, 1, 0));
+         }
 
          this.scene = new RC.Scene();
+
+         this.rot_center = new THREE.Vector3(0,0,0);
+
+         // Lights are positioned in resetRenderer
+
+         this.point_lights = this.make_object("Lamp container");
+         this.point_lights.add( new RC.PointLight( 0xff5050, 0.7 )); // R
+         this.point_lights.add( new RC.PointLight( 0x50ff50, 0.7 )); // G
+         this.point_lights.add( new RC.PointLight( 0x5050ff, 0.7 )); // B
+         this.scene.add(this.point_lights);
       },
 
       setupRCoreDomAndEventHandlers: function()
@@ -84,15 +99,69 @@ sap.ui.define([
          // this.get_view().getDomRef().appendChild( this.renderer.domElement );
 
          // This will also call render().
-         this.resetRCoreRenderer();
+         //this.resetRCoreRenderer();
+         this.onResizeTimeout();
+         //this.render();
       },
 
       resetRCoreRenderer: function()
       {
+         let THREE = RC;
 
-         this.onResizeTimeout();
+         let sbbox = new THREE.Box3();
+         //sbbox.setFromObject( this.scene );
+         // XXXX infinity ... no traversal?
+         sbbox.expandByPoint(new RC.Point(-1000,-1000,-1000));
+         sbbox.expandByPoint(new RC.Point( 1000, 1000, 1000));
 
-         // this.render();
+         let posV = new THREE.Vector3; posV.subVectors(sbbox.max, this.rot_center);
+         let negV = new THREE.Vector3; negV.subVectors(sbbox.min, this.rot_center);
+
+         let extV = new THREE.Vector3; extV = negV; extV.negate(); extV.max(posV);
+         let extR = extV.length();
+
+         let lc = this.point_lights.children;
+         lc[0].position.set( extR, extR, -extR);
+         lc[1].position.set(-extR, extR,  extR);
+         lc[2].position.set( extR, extR,  extR);
+
+         if (this.controller.kind === "3D") // (this.camera.isPerspectiveCamera)
+         {
+            let posC = new THREE.Vector3(-0.7 * extR, 0.5 * extR, -0.7 * extR);
+
+            this.camera.position.copy(posC);
+
+            // this.controls.screenSpacePanning = true;
+
+            // console.log("resetThreejsRenderer 3D scene bbox ", sbbox, ", camera_pos ", posC, ", look_at ", this.rot_center);
+         }
+         else
+         {
+            let posC = new THREE.Vector3(0, 0, 1000);
+
+            this.camera.position.copy(posC);
+
+            let ey = 1.02 * extV.y;
+            let ex = ey / this.get_height() * this.get_width();
+            this.camera.left   = -ex;
+            this.camera.right  =  ex;
+            this.camera.top    =  ey;
+            this.camera.bottom = -ey;
+
+            // this.controls.resetOrthoPanZoom();
+
+            // this.controls.screenSpacePanning = true;
+            // this.controls.enableRotate = false;
+
+            // console.log("resetThreejsRenderer 2D scene bbox ex ey", sbbox, ex, ey, ", camera_pos ", posC, ", look_at ", this.rot_center);
+         }
+         // this.controls.target.copy( this.rot_center );
+
+         // this.composer.reset();
+
+         // this.controls.update();
+
+         this.render();
       },
 
       //==============================================================================
