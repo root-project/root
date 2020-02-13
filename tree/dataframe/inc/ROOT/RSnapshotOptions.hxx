@@ -24,7 +24,7 @@ struct RSnapshotOptions {
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
-   RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy, bool overwrite)
+   RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy, bool overwrite=false)
       : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
         fSplitLevel(splitLevel), fLazy(lazy), fOverwrite(overwrite)
    {
