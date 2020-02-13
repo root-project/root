@@ -5,7 +5,7 @@
     xmlns="sap.m"
     class="sapUiSizeCompact">
   <l:Splitter id="sumSplitter" height="100%"  width="auto" orientation="Vertical">
-    <Tree id="tree"
+    <Tree id="tree" width="95%"
           toggleOpenState="onToggleOpenState"
           class="sapUiSizeCompact sapUiTinyMargin">
         <layoutData><l:SplitterLayoutData size="auto" minSize="90%"/></layoutData>

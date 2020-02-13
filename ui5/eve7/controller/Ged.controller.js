@@ -194,13 +194,17 @@ sap.ui.define([
       onExit : function() {
       },
 
+      isGedVisible : function() {
+         return this.ged_visible;
+      },
+
       closeGedEditor: function() {
-         var sumSplitter = this.getView().getViewData().summaryCtrl.byId("sumSplitter");
-
-         if (this.ged_visible)
-            sumSplitter.removeContentArea(this.getView());
-
-         this.ged_visible = false;
+         if (this.ged_visible) {
+            var prnt = this.getView().getParent();   
+            if (prnt) prnt.removeContentArea(this.getView());
+            this.ged_visible = false;
+         }
+         
          this.ged_id = -1;
          this.editorElement = null;
       },
