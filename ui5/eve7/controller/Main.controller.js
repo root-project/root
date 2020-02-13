@@ -60,7 +60,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (name.indexOf(" ")>0) name = name.substr(0, name.indexOf(" "));
 
          // FIXME: one need better way to deliver parameters to the selected view
-         JSROOT.$eve7tmp = { mgr: this.mgr, elementid: elem.fElementId, kind: elem.view_kind };
+         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind };
 
          var oRouter = UIComponent.getRouterFor(this);
          oRouter.navTo("View", { viewName: name });

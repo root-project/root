@@ -50,6 +50,12 @@ sap.ui.define([
       {
          let args = oEvent.getParameter("arguments");
 
+         console.log('ON MATCHED', args.viewName);
+         
+         console.log('MORE DATA', JSROOT.$eve7tmp);
+
+         console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
+
          this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
                                       args.viewName, JSROOT.$eve7tmp);
 
