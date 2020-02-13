@@ -1242,9 +1242,9 @@ public:
       if (fOutputFile && fOutputTree) {
          ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
          if (fOptions.fOverwrite)
-           fOutputTree->Write("", TObject::kOverwrite);
+            fOutputTree->Write("", TObject::kOverwrite);
          else
-           fOutputTree->Write();
+            fOutputTree->Write();
          // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
          fOutputTree.reset();
          fOutputFile->Close();
@@ -1330,9 +1330,9 @@ public:
    {
       if (fOutputTrees[slot]->GetEntries() > 0) {
          if (fOptions.fOverwrite)
-           fOutputFiles[slot]->Write("", TObject::kOverwrite);
+            fOutputFiles[slot]->Write("", TObject::kOverwrite);
          else
-           fOutputFiles[slot]->Write();
+            fOutputFiles[slot]->Write();
       }
       // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
       fOutputTrees[slot].reset(nullptr);
