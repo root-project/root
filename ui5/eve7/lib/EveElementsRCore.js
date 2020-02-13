@@ -47,18 +47,15 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
    //==============================================================================
 
    var GL = { POINTS: 0, LINES: 1, LINE_LOOP: 2, LINE_STRIP: 3, TRIANGLES: 4 };
+   var RC;
 
-   function EveElements(glc)
+   function EveElements(rc)
    {
-      console.log("EveElements -- RCore", glc);
+      console.log("EveElements -- RCore", rc);
 
-      this.glc = glc;
+      RC = rc;
    }
 
-   EveElements.prototype.RC = function()
-   {
-      return this.glc.RCore;
-   }
 
    //==============================================================================
    // makeEveGeometry / makeEveGeoShape
@@ -66,8 +63,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    EveElements.prototype.makeEveGeometry = function(rnr_data, force)
    {
-      let RC = this.glc.RCore;
-
       var nVert = rnr_data.idxBuff[1]*3;
 
       if (rnr_data.idxBuff[0] != GL.TRIANGLES)  throw "Expect triangles first.";
@@ -129,9 +124,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    EveElements.prototype.makeEveGeoShape = function(egs, rnr_data)
    {
-      let RC = this.glc.RCore;
-
-      // var egs_ro = new RC.Object3D();
       var egs_ro = new RC.Group();
 
       var geom = this.makeEveGeometry(rnr_data);
@@ -156,8 +148,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    EveElements.prototype.makePolygonSetProjected = function(psp, rnr_data)
    {
-      let RC = this.glc.RCore;
-
       if (this.useIndexAsIs)
          return this.makePolygonSetProjectedOld(psp, rnr_data);
 
