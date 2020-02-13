@@ -100,7 +100,8 @@ sap.ui.define([], function() {
          return;
       }
 
-      // console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 300) ? msg : (msg.substr(0,300) + "..."));
+      if (JSROOT.EVE.gDebug)
+         console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 1000) ? msg : (msg.substr(0,1000) + "..."));
 
       let resp = JSON.parse(msg);
 
@@ -140,6 +141,12 @@ sap.ui.define([], function() {
    {
       if (!mir_call || !this.handle || !element_class) return;
 
+      if (JSROOT.EVE.gDebug)
+         console.log('MIR', mir_call, element_id, element_class);
+
+      if (this.InterceptMIR(mir_call, element_id, element_class))
+         return;
+
       // Sergey: NextEvent() here just to handle data recording in event_demo.C
 
       if ((this.handle.kind != "file") || (mir_call == "NextEvent()")) {
@@ -153,6 +160,7 @@ sap.ui.define([], function() {
          this.handle.Send(JSON.stringify(req));
       }
    }
+
 
    /** Configure receiver for scene-respective events. Following event used:
     * onSceneChanged */
@@ -714,6 +722,75 @@ sap.ui.define([], function() {
       }
    }
 
+
+   //==============================================================================
+   // Offline handling
+   //==============================================================================
+
+
+   /** find elements ids where fMasterId equal to provided */
+   EveManager.prototype.FindElemetsIdsForMaster = function(elementId) {
+      var res = [];
+
+      for (var elid in this.map) {
+         var el = this.map[elid];
+         if (el.fMasterId === elementId)
+            res.push(el.fElementId);
+      }
+
+      return res;
+   }
+
+   /** used to intercept NewElementPicked for hightlight and selection @private */
+   EveManager.prototype._intercept_NewElementPicked = function(elementId) {
+
+      var mirElem = this.GetElement(this._intercept_id);
+
+      var msg1 = { content: "BeginChanges" }, msg3 = { content: "EndChanges" },
+          msg2 = { arr: [ JSROOT.extend({UT_PostStream:"UT_Selection_Refresh_State", changeBit: 4}, mirElem) ],
+                   header:{ content:"ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[] }};
+
+      msg2.arr[0].sel_list = elementId ? [{primary: elementId, implied: this.FindElemetsIdsForMaster(elementId), sec_idcs:[]}] : [];
+
+      msg2.arr[0].prev_sel_list = undefined;
+
+      this.handle.Inject([msg1, msg2, msg3]);
+   }
+
+   /** Handling of MIR calls without sending data to the server.
+    * Can be used for debugging or as offline app */
+   EveManager.prototype.InterceptMIR = function(mir_call, element_id, element_class) {
+
+      if (this.handle.kind != "file")
+         return false;
+
+      // just do not intercept
+      var do_intercept = false;
+
+      if ((mir_call.indexOf("NewElementPicked(") == 0) &&
+          ((element_id == this.global_highlight_id) || (element_id == this.global_selection_id)))
+         do_intercept = true;
+
+      if (!do_intercept)
+         return false;
+
+      this._intercept_id = element_id;
+      this._intercept_class = element_class;
+
+      JSROOT.$eve7mir = this;
+
+      var func = new Function('JSROOT.$eve7mir._intercept_' + mir_call);
+
+      try {
+         func();
+      } catch {
+         console.log("Fail to intercept MIR call:", mir_call);
+      }
+
+      delete JSROOT.$eve7mir;
+
+      return true;
+   }
 
    //==============================================================================
    // END protoype functions
