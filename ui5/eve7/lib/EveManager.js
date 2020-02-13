@@ -134,7 +134,6 @@ sap.ui.define([], function() {
       }
    }
 
-
    /** Sending Method Invocation Request
     * Special handling for offline case - some methods can be tried to handle without server */
    EveManager.prototype.SendMIR = function(mir_call, element_id, element_class)
@@ -144,8 +143,6 @@ sap.ui.define([], function() {
       // Sergey: NextEvent() here just to handle data recording in event_demo.C
 
       if ((this.handle.kind != "file") || (mir_call == "NextEvent()")) {
-
-         // console.log('SendMIR', element_id, mir_call);
 
          var req = {
             "mir" : mir_call,
@@ -192,7 +189,6 @@ sap.ui.define([], function() {
    EveManager.prototype.ImportSceneJson = function(arr)
    {
       this.last_json = null;
-      // console.log("ImportSceneJson JSON", arr[0]);
 
       // remember commands in manager
       if (arr[0].commands && !this.commands)
@@ -235,10 +231,8 @@ sap.ui.define([], function() {
       }
 
       if (arr[0].fTotalBinarySize == 0) {
-         console.log("scene imported ", this.map[arr[0].fSceneId]);
          this.sceneImportComplete(arr[0]);
       }
-
    }
 
    //______________________________________________________________________________
