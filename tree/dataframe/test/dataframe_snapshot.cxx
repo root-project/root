@@ -207,6 +207,49 @@ TEST_F(RDFSnapshot, Snapshot_update)
    test_snapshot_update(tdf);
 }
 
+void test_snapshot_overwrite(RInterface<RLoopManager> &tdf)
+{
+   // test snapshotting two trees to the same file with two snapshots and the "UPDATE" and fOverwrite options
+   const auto outfile = "snapshot_test_overwrite.root";
+   auto s1 = tdf.Snapshot<int>("t", outfile, {"ans"});
+
+   auto c1 = s1->Count();
+   auto min1 = s1->Min<int>("ans");
+   auto max1 = s1->Max<int>("ans");
+   auto mean1 = s1->Mean<int>("ans");
+   EXPECT_EQ(100ull, *c1);
+   EXPECT_EQ(42, *min1);
+   EXPECT_EQ(42, *max1);
+   EXPECT_EQ(42, *mean1);
+
+   RSnapshotOptions opts;
+   opts.fMode = "UPDATE";
+   opts.fOverwrite = true;
+   auto s2 = tdf.Snapshot<int>("t", outfile, {"ans"}, opts);
+
+   auto c2 = s2->Count();
+   auto min2 = s2->Min<int>("ans");
+   auto max2 = s2->Max<int>("ans");
+   auto mean2 = s2->Mean<int>("ans");
+   EXPECT_EQ(100ull, *c2);
+   EXPECT_DOUBLE_EQ(42, *min2);
+   EXPECT_DOUBLE_EQ(42, *min2);
+   EXPECT_DOUBLE_EQ(42, *mean2);
+
+   // check that the output file contains only one t
+   std::unique_ptr<TFile> f(TFile::Open(outfile));
+   EXPECT_NE(nullptr, f->Get<TTree>("t;1"));
+   EXPECT_EQ(nullptr, f->Get<TTree>("t;2"));
+
+   // clean-up
+   gSystem->Unlink(outfile);
+}
+
+TEST_F(RDFSnapshot, Snapshot_overwrite)
+{
+   test_snapshot_overwrite(tdf);
+}
+
 void test_snapshot_options(RInterface<RLoopManager> &tdf)
 {
    RSnapshotOptions opts;
@@ -630,6 +673,12 @@ TEST_F(RDFSnapshotMT, Snapshot_update)
 {
    test_snapshot_update(tdf);
 }
+
+// multi thread test fails due to Snapshot error
+// TEST_F(RDFSnapshotMT, Snapshot_overwrite)
+// {
+//    test_snapshot_overwrite(tdf);
+// }
 
 TEST_F(RDFSnapshotMT, Snapshot_action_with_options)
 {
