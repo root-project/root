@@ -7,9 +7,10 @@ sap.ui.define([
    "sap/m/CheckBox",
    "sap/m/Text",
    "sap/m/Button",
-   "sap/ui/layout/SplitterLayoutData"
+   "sap/ui/layout/SplitterLayoutData",
+   "rootui5/eve7/controller/Ged.controller",
 ], function(Controller, JSONModel, XMLView, CustomTreeItem,
-            FlexBox, mCheckBox, mText, mButton, SplitterLayoutData) {
+            FlexBox, mCheckBox, mText, mButton, SplitterLayoutData, GedController) {
 
    "use strict";
 
@@ -82,53 +83,6 @@ sap.ui.define([
          oTree.bindItems("treeModel>/", oItemTemplate);
 
          this.template = oItemTemplate;
-
-         var make_col_obj = function(stem) {
-            return { name: stem, member: "f" + stem, srv: "Set" + stem + "RGB", _type: "Color" };
-         };
-
-         var make_main_col_obj = function(label, use_main_setter) {
-            return { name: label, member: "fMainColor", srv: "Set" + (use_main_setter ? "MainColor" : label) + "RGB", _type: "Color" };
-         };
-
-         /** Used in creating items and configuring GED */
-         this.oGuiClassDef = {
-            "REveElement" : [
-               { name : "RnrSelf",     _type : "Bool" },
-               { name : "RnrChildren", _type : "Bool" },
-               make_main_col_obj("Color", true),
-               { name : "Destroy",  member : "fElementId", srv : "Destroy",  _type : "Action" },
-            ],
-            "REveElementList" : [ { sub: ["REveElement"] }, ],
-            "REveSelection"   : [ make_col_obj("VisibleEdgeColor"), make_col_obj("HiddenEdgeColor"), ],
-            "REveGeoShape"    : [ { sub: ["REveElement"] } ],
-            "REveCompound"    : [ { sub: ["REveElement"] } ],
-            "REvePointSet" : [
-               { sub: ["REveElement" ] },
-               { name : "MarkerSize", _type : "Number" }
-            ],
-            "REveJetCone" : [
-               { name : "RnrSelf", _type : "Bool" },
-               make_main_col_obj("ConeColor", true),
-               { name : "NDiv",    _type : "Number" }
-            ],
-            "REveDataCollection" : [
-               { name : "FilterExpr",  _type : "String",   quote : 1 },
-               { name : "CollectionVisible",  member :"fRnrSelf",  _type : "Bool" },
-               make_main_col_obj("CollectionColor")
-            ],
-            "REveDataItem" : [
-               make_main_col_obj("ItemColor"),
-               { name : "ItemRnrSelf",   member : "fRnrSelf",  _type : "Bool" },
-               { name : "Filtered",   _type : "Bool" }
-            ],
-            "REveTrack" : [
-               { name : "RnrSelf",   _type : "Bool" },
-               make_main_col_obj("LineColor", true),
-               { name : "LineWidth", _type : "Number" },
-               { name : "Destroy",  member : "fElementId",  srv : "Destroy", _type : "Action" }
-            ],
-         };
 
          this.rebuild = false;
       },
@@ -272,26 +226,17 @@ sap.ui.define([
 
             XMLView.create({
                viewName: "rootui5.eve7.view.Ged",
-               viewData: { summaryCtrl : this },
-               layoutData: new SplitterLayoutData("sld", {size : "30%"}),
+               layoutData: new SplitterLayoutData("sld", {size: "30%"}),
                height: "100%"
             }).then(function(oView) {
                pthis.ged = oView;
-
+               pthis.ged.getController().setManager(pthis.mgr);
                pthis.ged.getController().showGedEditor(sumSplitter, elementId);
 
             });
          } else {
             this.ged.getController().showGedEditor(sumSplitter, elementId);
          }
-      },
-
-      canEdit: function(elem) {
-         var t = elem._typename.substring(20);
-         var ledit = this.oGuiClassDef;
-         if (ledit.hasOwnProperty(t))
-            return true;
-         return false;
       },
 
       anyVisible: function(arr) {
@@ -310,7 +255,7 @@ sap.ui.define([
          newelem.fShowButton = false;
          newelem.fMainColor = "";
 
-         if (this.canEdit(elem)) {
+         if (GedController.canEditClass(elem._typename)) {
             newelem.fShowButton = true;
 
             if (!elem.childs) {

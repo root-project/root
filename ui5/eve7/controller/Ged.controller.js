@@ -178,7 +178,7 @@ sap.ui.define([
 
    });
 
-   return Controller.extend("rootui5.eve7.controller.Ged", {
+   var GedController = Controller.extend("rootui5.eve7.controller.Ged", {
 
       onInit : function() {
          this.oModel = new JSONModel({ title: "GED title", "widgetlist" : [] });
@@ -186,12 +186,13 @@ sap.ui.define([
 
          this.ged_visible = false;
          this.ged_id = -1;
-
-         // keep manager reference to simplify handling
-         this.mgr = this.getView().getViewData().summaryCtrl.mgr;
       },
 
       onExit : function() {
+      },
+
+      setManager: function(mgr) {
+         this.mgr = mgr;
       },
 
       isGedVisible : function() {
@@ -200,11 +201,11 @@ sap.ui.define([
 
       closeGedEditor: function() {
          if (this.ged_visible) {
-            var prnt = this.getView().getParent();   
+            var prnt = this.getView().getParent();
             if (prnt) prnt.removeContentArea(this.getView());
             this.ged_visible = false;
          }
-         
+
          this.ged_id = -1;
          this.editorElement = null;
       },
@@ -214,7 +215,7 @@ sap.ui.define([
          if (this.ged_visible && (elementId == this.ged_id))
             return this.closeGedEditor();
 
-         var editorElement = this.mgr.GetElement(elementId);
+         var editorElement = this.mgr ? this.mgr.GetElement(elementId) : null;
          if (!editorElement)
             return this.closeGedEditor();
 
@@ -243,28 +244,22 @@ sap.ui.define([
 
       makeDataForGED: function (element) {
 
-         var oGuiClassDef = this.getView().getViewData().summaryCtrl.oGuiClassDef;
+         var cgd = GedController.canEditClass(element._typename);
+         if (!cgd)
+            return this.oModel.setProperty("/widgetlist", []);
 
-         // remove ROOT::Experimental::
-         var shtype = element._typename.substring(20);
-         var cgd = oGuiClassDef[shtype];
-         var arrw = [];
-         var modelw = [];
-
+         var arrw = [], modelw = [], off = 0, subEds = [];
          this.maxLabelLength = 0;
-         var off = 0;
 
          // sub editors
-         var subEds= [];
          if (cgd[0].sub) {
             off = 1;
             var sarr = cgd[0].sub;
             for (var i = 0; i< sarr.length; ++i) {
-               var x = oGuiClassDef[sarr[i]];
-               for (var j=0; j < x.length; j++)
-               {
-                  arrw.push(x[j]);
-               }
+               var x = GedController.canEditClass(sarr[i]);
+               if (x)
+                  for (var j=0; j < x.length; j++)
+                     arrw.push(x[j]);
             }
          }
 
@@ -273,7 +268,7 @@ sap.ui.define([
             arrw.push(cgd[i]);
          }
 
-          for (var i=0; i< arrw.length; ++i) {
+         for (var i=0; i< arrw.length; ++i) {
             var parName = arrw[i].name;
 
             if (!arrw[i].member) {
@@ -297,9 +292,9 @@ sap.ui.define([
             modelw.push({ value: v, name: arrw[i].name, data: arrw[i]});
 
             if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
-          }
+         }
 
-          this.oModel.setProperty("/widgetlist", modelw);
+         this.oModel.setProperty("/widgetlist", modelw);
       },
 
       /** Method used to create custom items for GED */
@@ -386,7 +381,7 @@ sap.ui.define([
       },
 
       sendMethodInvocationRequest: function(kind, event) {
-         if (!this.editorElement)
+         if (!this.editorElement || !this.mgr)
             return;
 
          var value = "";
@@ -434,7 +429,8 @@ sap.ui.define([
         }
 
         var mir =  myData.srv + "((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
-        this.mgr.SendMIR(mir, this.editorElement.fElementId, this.editorElement._typename);
+        if (this.mgr)
+           this.mgr.SendMIR(mir, this.editorElement.fElementId, this.editorElement._typename);
      },
 
       updateGED: function(elementId) {
@@ -448,5 +444,62 @@ sap.ui.define([
       }
 
    });
+
+   function make_col_obj(stem) {
+      return { name: stem, member: "f" + stem, srv: "Set" + stem + "RGB", _type: "Color" };
+   }
+
+   function make_main_col_obj(label, use_main_setter) {
+      return { name: label, member: "fMainColor", srv: "Set" + (use_main_setter ? "MainColor" : label) + "RGB", _type: "Color" };
+   };
+
+   /** Used in creating items and configuring GED */
+   GedController.oGuiClassDef = {
+      "REveElement" : [
+         { name : "RnrSelf",     _type : "Bool" },
+         { name : "RnrChildren", _type : "Bool" },
+         make_main_col_obj("Color", true),
+         { name : "Destroy",  member : "fElementId", srv : "Destroy",  _type : "Action" },
+      ],
+      "REveElementList" : [ { sub: ["REveElement"] }, ],
+      "REveSelection"   : [ make_col_obj("VisibleEdgeColor"), make_col_obj("HiddenEdgeColor"), ],
+      "REveGeoShape"    : [ { sub: ["REveElement"] } ],
+      "REveCompound"    : [ { sub: ["REveElement"] } ],
+      "REvePointSet" : [
+         { sub: ["REveElement" ] },
+         { name : "MarkerSize", _type : "Number" }
+      ],
+      "REveJetCone" : [
+         { name : "RnrSelf", _type : "Bool" },
+         make_main_col_obj("ConeColor", true),
+         { name : "NDiv",    _type : "Number" }
+      ],
+      "REveDataCollection" : [
+         { name : "FilterExpr",  _type : "String",   quote : 1 },
+         { name : "CollectionVisible",  member :"fRnrSelf",  _type : "Bool" },
+         make_main_col_obj("CollectionColor")
+      ],
+      "REveDataItem" : [
+         make_main_col_obj("ItemColor"),
+         { name : "ItemRnrSelf",   member : "fRnrSelf",  _type : "Bool" },
+         { name : "Filtered",   _type : "Bool" }
+      ],
+      "REveTrack" : [
+         { name : "RnrSelf",   _type : "Bool" },
+         make_main_col_obj("LineColor", true),
+         { name : "LineWidth", _type : "Number" },
+         { name : "Destroy",  member : "fElementId",  srv : "Destroy", _type : "Action" }
+      ],
+   };
+
+   GedController.canEditClass = function(typename) {
+      // suppress ROOT::Exeperimental:: prefix
+      var t = typename || "";
+      if (t.indexOf("ROOT::Experimental::")==0) t = t.substring(20);
+      return this.oGuiClassDef[t];
+   };
+
+
+   return GedController;
 
 });
