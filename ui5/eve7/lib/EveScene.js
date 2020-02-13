@@ -234,10 +234,9 @@ sap.ui.define([
       {
          let elId  = ids[i];
          let obj3d = this.getObj3D(elId);
-         if ( ! obj3d)
-         {
-            let  el = this.mgr.GetElement(elId);
-            if (el.render_data) {
+         if (!obj3d) {
+            let el = this.mgr.GetElement(elId);
+            if (el && el.render_data) {
                console.log("ERROR EveScene.prototype.elementsRemoved can't find obj3d ",this.mgr.GetElement(el));
             }
             continue;

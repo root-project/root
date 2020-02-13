@@ -729,13 +729,13 @@ sap.ui.define([], function() {
 
 
    /** find elements ids where fMasterId equal to provided */
-   EveManager.prototype.FindElemetsIdsForMaster = function(elementId) {
+   EveManager.prototype.FindElemetsForMaster = function(elementId, collect_ids) {
       var res = [];
 
       for (var elid in this.map) {
          var el = this.map[elid];
-         if (el.fMasterId === elementId)
-            res.push(el.fElementId);
+         if ((el.fMasterId === elementId) && (el.fElementId !== elementId))
+            res.push(collect_ids ? el.fElementId : el);
       }
 
       return res;
@@ -750,11 +750,68 @@ sap.ui.define([], function() {
           msg2 = { arr: [ JSROOT.extend({UT_PostStream:"UT_Selection_Refresh_State", changeBit: 4}, mirElem) ],
                    header:{ content:"ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[] }};
 
-      msg2.arr[0].sel_list = elementId ? [{primary: elementId, implied: this.FindElemetsIdsForMaster(elementId), sec_idcs:[]}] : [];
+      msg2.arr[0].sel_list = elementId ? [{primary: elementId, implied: this.FindElemetsForMaster(elementId, true), sec_idcs:[]}] : [];
 
       msg2.arr[0].prev_sel_list = undefined;
 
       this.handle.Inject([msg1, msg2, msg3]);
+   }
+
+   /** used to intercept BrowseElement call @private */
+   EveManager.prototype._intercept_BrowseElement = function(elementId) {
+      var msg1 = { content: "BrowseElement", id: elementId },
+          msg2 = { content: "BeginChanges" },
+          msg3 = { content: "EndChanges" };
+
+      this.handle.Inject([msg1, msg2, msg3]);
+   }
+
+   /** used to intercept SetRnrSelf call @private */
+   EveManager.prototype._intercept_SetRnrSelf = function(flag) {
+      var messages = [{ content: "BeginChanges" }];
+
+      var mirElem = this.GetElement(this._intercept_id);
+      var msg = { arr: [{ changeBit:8, fElementId: mirElem.fElementId, fRnrChildren: mirElem.fRnrChildren, fRnrSelf: flag }],
+                  header:{ content: "ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
+
+      messages.push(msg);
+
+      this.FindElemetsForMaster(this._intercept_id).forEach(function(subElem) {
+         msg = { arr: [{ changeBit:8, fElementId: subElem.fElementId, fRnrChildren: subElem.fRnrChildren, fRnrSelf: flag }],
+                 header:{ content: "ElementsRepresentaionChanges", fSceneId: subElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
+         messages.push(msg);
+      });
+      messages.push({ content: "EndChanges" });
+
+      this.handle.Inject(messages);
+   }
+
+   /** used to intercept SetMainColorRGB @private */
+   EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
+      var messages = [{ content: "BeginChanges" }];
+      
+      var newColor = JSROOT.Painter.root_colors.length;
+      JSROOT.Painter.root_colors.push("rgb(" + colr + "," + colg + "," + colb + ")");
+
+      var mirElem = this.GetElement(this._intercept_id);
+      var msg = { arr: [ JSROOT.extend({changeBit:1}, mirElem) ],
+                  header:{ content: "ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
+
+      msg.arr[0].fMainColor = newColor;
+      msg.arr[0].sel_list = msg.arr[0].prev_sel_list = msg.arr[0].render_data = undefined;
+
+      messages.push(msg);
+
+      this.FindElemetsForMaster(this._intercept_id).forEach(function(subElem) {
+         var msg = { arr: [ JSROOT.extend({changeBit:1}, subElem) ],
+               header: { content: "ElementsRepresentaionChanges", fSceneId: subElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
+         msg.arr[0].fMainColor = newColor;
+         msg.arr[0].sel_list = msg.arr[0].prev_sel_list = msg.arr[0].render_data = undefined;
+         messages.push(msg);
+      });
+      messages.push({ content: "EndChanges" });
+
+      this.handle.Inject(messages);
    }
 
    /** Handling of MIR calls without sending data to the server.
@@ -767,8 +824,9 @@ sap.ui.define([], function() {
       // just do not intercept
       var do_intercept = false;
 
-      if ((mir_call.indexOf("NewElementPicked(") == 0) &&
-          ((element_id == this.global_highlight_id) || (element_id == this.global_selection_id)))
+      if (((mir_call.indexOf("NewElementPicked(") == 0) && ((element_id == this.global_highlight_id) || (element_id == this.global_selection_id))) ||
+          ((mir_call.indexOf("BrowseElement(") == 0) && (element_id == 0)) ||
+          (mir_call.indexOf("SetRnrSelf(") == 0) || (mir_call.indexOf("SetMainColorRGB(") == 0))
          do_intercept = true;
 
       if (!do_intercept)
@@ -778,6 +836,9 @@ sap.ui.define([], function() {
       this._intercept_class = element_class;
 
       JSROOT.$eve7mir = this;
+
+      if (mir_call.indexOf("SetMainColorRGB(") == 0)
+         mir_call = mir_call.replace(/\(UChar_t\)/g, '');
 
       var func = new Function('JSROOT.$eve7mir._intercept_' + mir_call);
 
@@ -799,6 +860,8 @@ sap.ui.define([], function() {
    JSROOT.EVE.EveManager = EveManager;
 
    JSROOT.EVE.DebugSelection = 0;
+
+   // JSROOT.EVE.gDebug = true;
 
    return EveManager;
 

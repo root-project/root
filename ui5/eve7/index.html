@@ -29,6 +29,8 @@
 
         function InitUI(handle) {
 
+//           sap.ui.loader.config({ paths: { rootui5: "../rootui5/" } });
+
            sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
               new ComponentContainer({
                  name: "rootui5.eve7",
@@ -46,18 +48,19 @@
 
         if (JSROOT.GetUrlOption('nogl')!==null) JSROOT.gStyle.NoWebGL = true;
         if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
-        
+
         JSROOT.ConnectWebWindow({
+//           socket_kind: "file",
            prereq: "openui5",
 //           openui5src: "jsroot",    // use JSROOT provided package, experimental
-//           openui5src: "https://openui5.hana.ondemand.com/",
+//           openui5src: "https://openui5.hana.ondemand.com/1.72.0/",
            openui5libs: "sap.ui.core", // customize openui5 libs
            prereq_logdiv: "EveDiv",
            callback: InitUI
         });
 
       </script>
-   
+
    </body>
-   
+
 </html>
