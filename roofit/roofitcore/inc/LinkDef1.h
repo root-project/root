@@ -52,7 +52,6 @@
 #pragma link C++ class RooAbsReal+ ;
 #pragma link C++ class RooAbsRealLValue+ ;
 #pragma link C++ class RooAbsRootFinder+ ;
-#pragma link C++ class RooAbsString+ ;
 #pragma link C++ class RooAcceptReject+ ;
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
