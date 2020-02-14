@@ -12892,7 +12892,7 @@ bool Sema::CheckEnumUnderlyingType(TypeSourceInfo *TI) {
 /// \return true if the redeclaration was invalid.
 bool Sema::CheckEnumRedeclaration(
     SourceLocation EnumLoc, bool IsScoped, QualType EnumUnderlyingTy,
-    bool EnumUnderlyingIsImplicit, const EnumDecl *Prev, const EnumDecl *New) {
+    bool EnumUnderlyingIsImplicit, const EnumDecl *Prev) {
   bool IsFixed = !EnumUnderlyingTy.isNull();
 
   if (IsScoped != Prev->isScoped()) {
@@ -12940,11 +12940,6 @@ bool Sema::CheckEnumRedeclaration(
     };
 
     if (hasFwdDeclAnnotation(Prev))
-      return false;
-
-    // We have a definition coming from a module and a forward declaration
-    // coming after.
-    if (Prev->isFromASTFile() && hasFwdDeclAnnotation(New))
       return false;
 
     Diag(EnumLoc, diag::err_enum_redeclare_fixed_mismatch)
@@ -13674,8 +13669,7 @@ Decl *Sema::ActOnTag(Scope *S, unsigned TagSpec, TagUseKind TUK,
           // in which case we want the caller to bail out.
           if (CheckEnumRedeclaration(NameLoc.isValid() ? NameLoc : KWLoc,
                                      ScopedEnum, EnumUnderlyingTy,
-                                     EnumUnderlyingIsImplicit, PrevEnum,
-                                     cast<EnumDecl>(SkipBody->New)))
+                                     EnumUnderlyingIsImplicit, PrevEnum))
             return TUK == TUK_Declaration ? PrevTagDecl : nullptr;
         }
 
