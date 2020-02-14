@@ -106,7 +106,6 @@
 #include "RooCategory.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
-#include "RooStringVar.h"
 #include "RooSuperCategory.h"
 #include "RooCatType.h"
 #include "RooCustomizer.h"
