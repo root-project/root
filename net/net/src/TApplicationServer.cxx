@@ -997,6 +997,10 @@ Int_t TApplicationServer::BrowseFile(const char *fname)
          }
       }
    }
+
+   list->Delete();
+   delete list;
+
    return nc;
 }
 
