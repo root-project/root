@@ -915,6 +915,7 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get list of selected items in container.
+/// Returned TList object should be deleted by the user
 
 TList *TGLVContainer::GetSelectedEntries()
 {
@@ -932,6 +933,8 @@ TList *TGLVContainer::GetSelectedEntries()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get list of selected items in container.
+/// Returned TList object and its content should be deleted
+//   lst->Delete(); delete lst;
 
 TList *TGLVContainer::GetSelectedItems()
 {
