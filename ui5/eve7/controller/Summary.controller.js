@@ -102,10 +102,9 @@ sap.ui.define([
          if (!elem)
             return console.log('clickItemSelected: fail to find element', id);
 
-         if (item.getShowRnrChildren())
-             this.mgr.SendMIR("SetRnrChildren(" + selected + ")", elem.fElementId, elem._typename);
-         else
-             this.mgr.SendMIR("SetRnrSelf(" + selected + ")", elem.fElementId, elem._typename);
+         var method = item.getShowRnrChildren() ? "SetRnrChildren" : GedController.GetRnrSelfMethod(elem._typename)
+
+         this.mgr.SendMIR(method + "(" + selected + ")", elem.fElementId, elem._typename);
       },
 
       pressGedButton: function(oEvent) {
