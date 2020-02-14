@@ -3649,13 +3649,13 @@ enum VerboseLevel {
 };
 static llvm::cl::opt<VerboseLevel>
 gOptVerboseLevel(llvm::cl::desc("Choose verbosity level:"),
-                llvm::cl::values(clEnumVal(v, "Show errors (default)."),
+                llvm::cl::values(clEnumVal(v, "Show errors."),
                                  clEnumVal(v0, "Show only fatal errors."),
                                  clEnumVal(v1, "Show errors (the same as -v)."),
-                                 clEnumVal(v2, "Show warnings."),
+                                 clEnumVal(v2, "Show warnings (default)."),
                                  clEnumVal(v3, "Show notes."),
                                  clEnumVal(v4, "Show information.")),
-                llvm::cl::init(v),
+                llvm::cl::init(v2),
                 llvm::cl::cat(gRootclingOptions));
 
 static llvm::cl::opt<bool>
