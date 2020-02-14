@@ -668,6 +668,8 @@ TProof::~TProof()
                gSystem->Unlink(pck->String());
          }
       }
+      epl->Delete();
+      delete epl;
    }
 
    Close();
