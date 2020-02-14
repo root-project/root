@@ -700,6 +700,10 @@ TProof::~TProof()
       fWrksOutputReady->SetOwner(kFALSE);
       delete fWrksOutputReady;
    }
+   if (fQueries) {
+      fQueries->Delete();
+      delete fQueries;
+   }
 
    // remove file with redirected logs
    if (TestBit(TProof::kIsClient)) {
