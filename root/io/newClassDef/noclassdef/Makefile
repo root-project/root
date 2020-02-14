@@ -1,5 +1,5 @@
 SHELL=/bin/bash
-TEST_TARGETS += noclassdef
+TEST_TARGETS += noclassdef mydict-diff
 CLEAN_TARGETS += *.o *.so ti_files ii_files mydict.* driver$(ExeSuf) *~ \
 	*.obj .def *.root *.mode driver.output $(ALL_LIBRARIES)
 
@@ -144,9 +144,11 @@ endif
 infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOT_LOC)/include/Rtypes.h
 	$(CMDECHO)$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
-mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT) 
+mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTCINT)
 	$(CMDECHO)rootcint -f mydict.cc $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h > mydict.log 2>&1
-	$(CMDECHO)test `cat mydict.log | wc -l` == "1" -o  `cat mydict.log | wc -l` == "2"; # mydict.log should only have one or two line!
+
+mydict-diff: mydict.cc
+	$(CMDECHO)diff mydict-gen.ref mydict.log
 
 ifeq ($(PLATFORM),win32)
 libIotest.dll: main.$(ObjSuf) mydict.$(ObjSuf)
