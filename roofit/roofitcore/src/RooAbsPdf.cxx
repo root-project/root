@@ -623,39 +623,6 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// WVE 08/21/01 Probably obsolete now.
-
-Bool_t RooAbsPdf::traceEvalHook(Double_t value) const 
-{
-  // Floating point error checking and tracing for given float value
-
-  // check for a math error or negative value
-  Bool_t error= TMath::IsNaN(value) || (value < 0);
-
-  // do nothing if we are no longer tracing evaluations and there was no error
-  if(!error && _traceCount <= 0) return error ;
-
-  // otherwise, print out this evaluations input values and result
-  if(error && ++_errorCount <= 10) {
-    cxcoutD(Tracing) << "*** Evaluation Error " << _errorCount << " ";
-    if(_errorCount == 10) ccoutD(Tracing) << "(no more will be printed) ";
-  }
-  else if(_traceCount > 0) {
-    ccoutD(Tracing) << '[' << _traceCount-- << "] ";
-  }
-  else {
-    return error ;
-  }
-
-  Print() ;
-
-  return error ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Reset error counter to given value, limiting the number
 /// of future error messages for this pdf to 'resetValue'
 
