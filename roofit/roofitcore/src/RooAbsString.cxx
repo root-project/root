@@ -114,7 +114,7 @@ Bool_t RooAbsString::operator==(const char* value) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)
+Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType) const
 {
   if (!assumeSameType) {
     const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
@@ -129,7 +129,7 @@ Bool_t RooAbsString::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)
 ////////////////////////////////////////////////////////////////////////////////
 /// Equality operator comparing to another RooAbsArg
 
-Bool_t RooAbsString::operator==(const RooAbsArg& other)
+Bool_t RooAbsString::operator==(const RooAbsArg& other) const
 {
   const RooAbsString* otherString = dynamic_cast<const RooAbsString*>(&other) ;
   return otherString ? operator==(otherString->getVal()) : kFALSE ;
