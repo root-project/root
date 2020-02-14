@@ -1216,17 +1216,20 @@ void TUploadDataSetDlg::UploadDataSet()
    const char *dsetName = fDSetName->GetText();
    const char *destination = fDestinationURL->GetText();
    UInt_t flags = 0;
-   TList *skippedFiles = new TList();
-   TList *datasetFiles = new TList();
 
    if (fUploading)
       return;
+
    if (!fViewer->GetActDesc()->fConnected ||
        !fViewer->GetActDesc()->fAttached ||
        !fViewer->GetActDesc()->fProof ||
        !fViewer->GetActDesc()->fProof->IsValid()) {
       return;
    }
+
+   TList *skippedFiles = new TList();
+   TList *datasetFiles = new TList();
+
    // Format upload flags with user selection
    if (fOverwriteDSet->IsOn())
       flags |= TProof::kOverwriteDataSet;
