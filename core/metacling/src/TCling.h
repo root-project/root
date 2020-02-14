@@ -195,7 +195,6 @@ public: // Public Interface
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
    Bool_t  Declare(const char* code);
-   void    EnableAutoLoading();
    void    EndOfLineAction();
    TClass *GetClass(const std::type_info& typeinfo, Bool_t load) const;
    Int_t   GetExitCode() const { return fExitCode; }

@@ -4009,33 +4009,6 @@ int RootClingMain(int argc,
    if (gOptReflex)
       isGenreflex = true;
 
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,21,00)
-   if (gOptCint)
-      fprintf(stderr, "warning: Please remove the deprecated flag -cint.\n");
-   if (gOptGccXml)
-      fprintf(stderr, "warning: Please remove the deprecated flag -gccxml.\n");
-   if (gOptC)
-      fprintf(stderr, "warning: Please remove the deprecated flag -c.\n");
-   if (gOptP)
-      fprintf(stderr, "warning: Please remove the deprecated flag -p.\n");
-   if (gOptIgnoreExistingDict)
-      fprintf(stderr, "warning: Please remove the deprecated flag -r.\n");
-
-   for (auto I = gOptDictionaryHeaderFiles.begin(), E = gOptDictionaryHeaderFiles.end(); I != E; ++I) {
-      if ((*I)[0] == '+') {
-         // Mostly for +P, +V, +STUB which are legacy CINT flags.
-         fprintf(stderr, "warning: Please remove the deprecated flag %s\n", I->c_str());
-         // Remove it from the list because it will mess up our header input.
-         gOptDictionaryHeaderFiles.erase(I);
-      }
-   }
-
-   for (const std::string& Opt : gOptSink)
-      fprintf(stderr, "warning: Please remove the deprecated flag %s\n", Opt.c_str());
-#else
-# error "Remove this deprecated code"
-#endif
-
    if (!gOptLibListPrefix.empty()) {
       string filein = gOptLibListPrefix + ".in";
       FILE *fp;
@@ -5690,18 +5663,6 @@ int GenReflexMain(int argc, char **argv)
          ROOT::option::FullArg::Required,
          "-m \tPcm file loaded before any header (option can be repeated).\n"
       },
-
-      {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,00)
-# error "Remove this deprecated code"
-#endif
-         DEEP,  // Not active. Will be removed for 6.2
-         NOTYPE ,
-         "" , "deep",
-         ROOT::option::Arg::None,
-         ""
-      },
-      //"--deep\tGenerate dictionaries for all dependent classes (ignored).\n"
 
       {
          VERBOSE,

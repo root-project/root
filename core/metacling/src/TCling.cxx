@@ -2929,21 +2929,6 @@ bool TCling::Declare(const char* code)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Enable the automatic loading of shared libraries when a class
-/// is used that is stored in a not yet loaded library. Uses the
-/// information stored in the class/library map (typically
-/// $ROOTSYS/etc/system.rootmap).
-
-void TCling::EnableAutoLoading()
-{
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,21,00)
-   Warning("EnableAutoLoading()", "Call to deprecated interface does nothing. Please remove the call.");
-#else
-# error "Remove this deprecated code"
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// It calls a "fantom" method to synchronize user keyboard input
 /// and ROOT prompt line.
 
