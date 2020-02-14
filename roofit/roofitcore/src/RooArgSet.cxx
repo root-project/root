@@ -595,7 +595,7 @@ Bool_t RooArgSet::setCatIndex(const char* name, Int_t newVal, Bool_t verbose)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get string value of a RooAbsString stored in set with given name. If none is found, value of defVal is returned.
+/// Get string value of a RooStringVar stored in set with given name. If none is found, value of defVal is returned.
 /// No error messages are printed unless the verbose flag is set
 
 const char* RooArgSet::getStringValue(const char* name, const char* defVal, Bool_t verbose) const
@@ -605,11 +605,12 @@ const char* RooArgSet::getStringValue(const char* name, const char* defVal, Bool
     if (verbose) coutE(InputArguments) << "RooArgSet::getStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
     return defVal ;
   }
-  RooAbsString* ras = dynamic_cast<RooAbsString*>(raa) ;
+  auto ras = dynamic_cast<const RooStringVar*>(raa) ;
   if (!ras) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::getStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsString" << endl ;
+    if (verbose) coutE(InputArguments) << "RooArgSet::getStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooStringVar" << endl ;
     return defVal ;
   }
+
   return ras->getVal() ;
 }
 
@@ -626,13 +627,14 @@ Bool_t RooArgSet::setStringValue(const char* name, const char* newVal, Bool_t ve
     if (verbose) coutE(InputArguments) << "RooArgSet::setStringValue(" << GetName() << ") ERROR no object with name '" << name << "' found" << endl ;
     return kTRUE ;
   }
-  RooStringVar* ras = dynamic_cast<RooStringVar*>(raa) ;
+  auto ras = dynamic_cast<RooStringVar*>(raa);
   if (!ras) {
-    if (verbose) coutE(InputArguments) << "RooArgSet::setStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsString" << endl ;
+    if (verbose) coutE(InputArguments) << "RooArgSet::setStringValue(" << GetName() << ") ERROR object '" << name << "' is not of type RooStringVar" << endl ;
     return kTRUE ;
   }
-  ras->setVal(newVal) ;
-  return kFALSE ;
+  ras->setVal(newVal);
+
+  return false;
 }
 
 

@@ -265,7 +265,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsRootFinder.cxx
     src/RooAbsSelfCachedPdf.cxx
     src/RooAbsSelfCachedReal.cxx
-    src/RooAbsString.cxx
     src/RooAbsStudy.cxx
     src/RooAbsTestStatistic.cxx
     src/RooAcceptReject.cxx

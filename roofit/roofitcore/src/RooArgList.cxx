@@ -47,7 +47,6 @@
 #include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooStringVar.h"
 #include "RooTrace.h"
 #include "RooMsgService.h"
 

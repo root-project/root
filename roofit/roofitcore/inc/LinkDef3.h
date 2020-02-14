@@ -36,7 +36,6 @@
 #pragma link C++ class RooSimGenContext+ ;
 #pragma link C++ class RooSimSplitGenContext+ ;
 #pragma link C++ class RooStreamParser+ ;
-#pragma link C++ class RooStringVar+ ;
 #pragma link C++ class RooSuperCategory+ ;
 #pragma link C++ class RooTable+ ;
 #pragma link C++ class RooThresholdCategory+ ;
