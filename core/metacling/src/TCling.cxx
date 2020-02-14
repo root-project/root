@@ -3864,6 +3864,9 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
       return kUnknown;
    }
 
+   // Do not turn on the autoloading if it is globally off.
+   autoload = autoload && IsClassAutoloadingEnabled();
+
    // Avoid the double search below in case the name is a fundamental type
    // or typedef to a fundamental type.
    THashTable *typeTable = dynamic_cast<THashTable*>( gROOT->GetListOfTypes() );
