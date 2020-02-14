@@ -30,5 +30,6 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUA
     target_compile_options(ROOTTPython PRIVATE -Wno-register)
 endif()
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
+    target_compile_options(ROOTTPython PRIVATE -Wno-register)
     target_compile_options(ROOTTPython PRIVATE -Wno-deprecated-register)
 endif()
