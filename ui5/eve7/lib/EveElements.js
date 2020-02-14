@@ -1001,7 +1001,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          // this does not work correctly - draw range ignored when calculating normals
          // even worse - shift 2 makes complete logic wrong while wrong triangle are extracted
          // Let see if it will be fixed https://github.com/mrdoob/three.js/issues/15560
-         body.computeVertexNormals();
+         body.computeVertexNormalsIdxRange(2, 2 + nVert);
          return body;
       }
 
@@ -1095,7 +1095,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                body.setAttribute('position', pos_ba);
                body.setIndex(idx_ba);
                body.setDrawRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
-               body.computeVertexNormals();
+               body.computeVertexNormalsIdxRange(ib_pos + 2, 3 * rnr_data.idxBuff[ib_pos + 1]);
                var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, depthWrite: false,
                                                color:fcol, transparent: true, opacity: 0.4 });
 

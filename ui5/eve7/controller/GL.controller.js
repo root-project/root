@@ -166,6 +166,12 @@ sap.ui.define([
                }.bind(this));
       },
 
+      // Callback from GlViewer class after initialization is complete
+      glViewerInitDone: function()
+      {
+         ResizeHandler.register(this.getView(), this.onResize.bind(this));
+      },
+
       //==============================================================================
       // Common functions between THREE and GeoPainter
       //==============================================================================
@@ -215,21 +221,18 @@ sap.ui.define([
       /// invoked from ResizeHandler
       onResize: function(event)
       {
+         // TODO: should be specified somehow in XML file
+         this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
-         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // small latency
+         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 100); // small latency
       },
 
       onResizeTimeout: function()
       {
          delete this.resize_tmout;
 
-         // console.log("onResizeTimeout", this.camera);
-
-         // TODO: should be specified somehow in XML file
-         this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
-
-         if (this.viewer)
-            this.viewer.onResizeTimeout();
+         this.viewer.onResizeTimeout();
       },
 
       /** Called from JSROOT context menu when object selected for browsing */
