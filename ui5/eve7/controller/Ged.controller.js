@@ -499,6 +499,17 @@ sap.ui.define([
       return this.oGuiClassDef[t];
    };
 
+   /** Return method to toggle rendering self */
+   GedController.GetRnrSelfMethod = function(typename) {
+      var desc = this.canEditClass(typename);
+      if (desc)
+         for (var k=0;k<desc.length;++k)
+            if ((desc[k].member == "fRnrSelf") && desc[k].name)
+               return "Set" + desc[k].name;
+
+      return "SetRnrSelf";
+   }
+
 
    return GedController;
 

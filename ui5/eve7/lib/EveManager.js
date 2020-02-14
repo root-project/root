@@ -141,7 +141,7 @@ sap.ui.define([], function() {
    {
       if (!mir_call || !this.handle || !element_class) return;
 
-      if (JSROOT.EVE.gDebug)
+      // if (JSROOT.EVE.gDebug)
          console.log('MIR', mir_call, element_id, element_class);
 
       if (this.InterceptMIR(mir_call, element_id, element_class))
@@ -789,7 +789,7 @@ sap.ui.define([], function() {
    /** used to intercept SetMainColorRGB @private */
    EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
       var messages = [{ content: "BeginChanges" }];
-      
+
       var newColor = JSROOT.Painter.root_colors.length;
       JSROOT.Painter.root_colors.push("rgb(" + colr + "," + colg + "," + colb + ")");
 
