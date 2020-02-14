@@ -560,9 +560,9 @@ void TProofProgressLog::SaveToFile()
       fProofLog->Save(ord.Data(), filename.Data(), option);
       writemode=kFALSE;
    }
+   delete selected;
 
    Info("SaveToFile", "logs saved to file %s", filename.Data());
-   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
