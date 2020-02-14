@@ -2918,7 +2918,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
 
       } else if (pc.hasProcessed("RangeWithName")) {    
-        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName",0,true), ",")) {
+        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName","",false), ",")) {
           if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
             coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
                 << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
