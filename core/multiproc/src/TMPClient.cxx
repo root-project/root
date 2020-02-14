@@ -192,26 +192,23 @@ bool TMPClient::Fork(TMPWorker &server)
          }
       }
       close(0);
-      std::unique_ptr<TList> lofact(fMon.GetListOfActives());
 
-      if (lofact) {
-         while (lofact->GetSize() > 0) {
-            TSocket *s = (TSocket *) lofact->First();
-            lofact->Remove(s);
-            fMon.Remove(s);
-            delete s;
-         }
+      std::unique_ptr<TList> lofact(fMon.GetListOfActives());
+      while (lofact && (lofact->GetSize() > 0)) {
+         TSocket *s = (TSocket *) lofact->First();
+         fMon.Remove(s);
+         delete s;
+         lofact.reset(fMon.GetListOfActives());
       }
 
       std::unique_ptr<TList> lofdeact(fMon.GetListOfDeActives());
-      if (lofdeact) {
-         while (lofdeact->GetSize() > 0) {
-            TSocket *s = (TSocket *) lofdeact->First();
-            lofdeact->Remove(s);
-            fMon.Remove(s);
-            delete s;
-         }
+      while (lofdeact && (lofdeact->GetSize() > 0)) {
+         TSocket *s = (TSocket *) lofdeact->First();
+         fMon.Remove(s);
+         delete s;
+         lofdeact.reset(fMon.GetListOfDeActives());
       }
+
       //disable graphics
       //these instructions were copied from TApplication::MakeBatch
       gROOT->SetBatch();
