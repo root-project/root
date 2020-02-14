@@ -196,7 +196,6 @@ public:
   RooAbsReal* createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
-  virtual Bool_t R__DEPRECATED(6,22,"Call traceEvalPdf() instead.") traceEvalHook(Double_t value) const ;
   virtual Double_t getValV(const RooArgSet* set=0) const ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
