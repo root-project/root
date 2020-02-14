@@ -336,7 +336,7 @@ public: // Public Interface
    virtual const char* MapCppName(const char*) const;
    virtual void   SetAlloclockfunc(void (*)()) const;
    virtual void   SetAllocunlockfunc(void (*)()) const;
-   virtual int    SetClassAutoloading(int) const;
+   virtual int    SetClassAutoLoading(int) const;
    virtual int    SetClassAutoparsing(int) ;
            Bool_t IsAutoParsingSuspended() const { return fIsAutoParsingSuspended; }
    virtual void   SetErrmsgcallback(void* p) const;
@@ -572,13 +572,13 @@ private: // Private Utility Functions and Classes
                                         TListOfFunctionTemplates*,
                                         TListOfEnums*> &Lists, const clang::Decl *D);
 
-   class SuspendAutoloadingRAII {
+   class SuspendAutoLoadingRAII {
       TCling *fTCling = nullptr;
       bool fOldValue;
 
    public:
-      SuspendAutoloadingRAII(TCling *tcling) : fTCling(tcling) { fOldValue = fTCling->SetClassAutoloading(false); }
-      ~SuspendAutoloadingRAII() { fTCling->SetClassAutoloading(fOldValue); }
+      SuspendAutoLoadingRAII(TCling *tcling) : fTCling(tcling) { fOldValue = fTCling->SetClassAutoLoading(false); }
+      ~SuspendAutoLoadingRAII() { fTCling->SetClassAutoLoading(fOldValue); }
    };
 
    class TUniqueString {
@@ -614,7 +614,7 @@ private: // Private Utility Functions and Classes
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile, TUniqueString* uniqueString = nullptr);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
-   bool IsClassAutoloadingEnabled() const;
+   bool IsClassAutoLoadingEnabled() const;
    void ProcessClassesToUpdate();
    cling::Interpreter *GetInterpreterImpl() const { return fInterpreter.get(); }
    cling::MetaProcessor *GetMetaProcessorImpl() const { return fMetaProcessor.get(); }

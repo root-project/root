@@ -77,7 +77,7 @@ extern "C" {
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp, bool hasCodeGen)
    : InterpreterCallbacks(interp),
      fLastLookupCtx(0), fROOTSpecialNamespace(0),
-     fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
+     fFirstRun(true), fIsAutoLoading(false), fIsAutoLoadingRecursively(false),
      fIsAutoParsingSuspended(false), fPPOldFlag(false), fPPChanged(false) {
    if (hasCodeGen) {
       Transaction* T = 0;
@@ -121,7 +121,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    // Strategy 2) is tried only if 1) fails.
 
    bool isHeaderFile = FileName.endswith(".h") || FileName.endswith(".hxx") || FileName.endswith(".hpp");
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively || !isHeaderFile)
+   if (!IsAutoLoadingEnabled() || fIsAutoLoadingRecursively || !isHeaderFile)
       return;
 
    std::string localString(FileName.str());
@@ -235,7 +235,7 @@ static bool topmostDCIsFunction(Scope* S) {
 }
 
 // On a failed lookup we have to try to more things before issuing an error.
-// The symbol might need to be loaded by ROOT's autoloading mechanism or
+// The symbol might need to be loaded by ROOT's AutoLoading mechanism or
 // it might be a ROOT special object.
 //
 // Try those first and if still failing issue the diagnostics.
@@ -277,7 +277,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
       return true;
    }
 
-   if (fIsAutoloadingRecursively)
+   if (fIsAutoLoadingRecursively)
       return false;
 
    // Finally try to resolve this name as a dynamic name, i.e delay its
@@ -291,7 +291,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
       return false;
    }
 
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
+   if (!IsAutoLoadingEnabled() || fIsAutoLoadingRecursively) return false;
 
    if (Name.getNameKind() != DeclarationName::Identifier) return false;
 
@@ -344,7 +344,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    }
 
    // Clang needs Tag's complete definition. Can we parse it?
-   if (fIsAutoloadingRecursively || fIsAutoParsingSuspended) return false;
+   if (fIsAutoLoadingRecursively || fIsAutoParsingSuspended) return false;
 
    Sema &SemaR = m_Interpreter->getSema();
 
@@ -386,7 +386,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 }
 
 
-// The symbol might be defined in the ROOT class autoloading map so we have to
+// The symbol might be defined in the ROOT class AutoLoading map so we have to
 // try to autoload it first and do secondary lookup to try to find it.
 //
 // returns true when a declaration is found and no error should be emitted.
@@ -402,10 +402,10 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
 
    Sema &SemaR = m_Interpreter->getSema();
 
-   // Try to autoload first if autoloading is enabled
-   if (IsAutoloadingEnabled()) {
+   // Try to autoload first if AutoLoading is enabled
+   if (IsAutoLoadingEnabled()) {
      // Avoid tail chasing.
-     if (fIsAutoloadingRecursively)
+     if (fIsAutoLoadingRecursively)
        return false;
 
      // We should try autoload only for special lookup failures.
@@ -415,7 +415,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
            || kind == Sema::LookupNamespaceName))
         return false;
 
-     fIsAutoloadingRecursively = true;
+     fIsAutoLoadingRecursively = true;
 
      bool lookupSuccess = false;
      // Save state of the PP
@@ -434,7 +434,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
                  // need to auto parse.
                  // But we might need to auto-load.
                  TCling__AutoLoadCallback(Name.data());
-                 fIsAutoloadingRecursively = false;
+                 fIsAutoLoadingRecursively = false;
                  return true;
               }
            }
@@ -449,7 +449,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
      } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
         // We are "autoparsing" a header, and the header was not parsed.
         // But its library is known - so we do know about that header.
-        // Do the parsing explicitly here, while recursive autoloading is
+        // Do the parsing explicitly here, while recursive AutoLoading is
         // disabled.
         std::string incl = "#include \"";
         incl += FE->getName();
@@ -457,7 +457,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
         m_Interpreter->declare(incl);
      }
 
-     fIsAutoloadingRecursively = false;
+     fIsAutoLoadingRecursively = false;
 
      if (lookupSuccess)
        return true;
@@ -822,7 +822,7 @@ void TClingCallbacks::DefinitionShadowed(const clang::NamedDecl *D) {
 
 void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
    if (const RecordDecl* RD = dyn_cast<RecordDecl>(D)) {
-      // FIXME: Our autoloading doesn't work (load the library) when the looked
+      // FIXME: Our AutoLoading doesn't work (load the library) when the looked
       // up decl is found in the PCH/PCM. We have to do that extra step, which
       // loads the corresponding library when a decl was deserialized.
       //
