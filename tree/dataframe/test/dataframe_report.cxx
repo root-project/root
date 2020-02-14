@@ -100,25 +100,51 @@ TEST(RDataFrameReport, ActionLazyness)
 
 TEST(RDataFrameReport, Merging)
 {
+   // Create rdf with a named filter
+   ROOT::RDataFrame d(10);
+   auto rep = d.Define("a", "rdfentry_")
+               .Filter("a < 5", "less_than_5")
+               .Report();
+
+   // Retrieve cutflow report and make a copy of it
+   auto this_rep_val = *rep;
+   auto other_rep_val = this_rep_val;
+
+   // Store initial values
+   auto cut = this_rep_val.At("less_than_5");
+   auto old_all = cut.GetAll();
+   auto old_pass = cut.GetPass();
+   auto old_eff = cut.GetEff();
+
+   // Merge the report with its copy
+   this_rep_val.Merge(other_rep_val);
+
+   auto merged_cut = this_rep_val.At("less_than_5");
+
+   // The All and Pass values should be doubled
+   EXPECT_EQ(merged_cut.GetAll(), old_all*2);
+   EXPECT_EQ(merged_cut.GetPass(), old_pass*2);
+   EXPECT_EQ(merged_cut.GetEff(), old_eff);
+}
+
+TEST(RDataFrameReport, MergeError)
+{
+   // Create first rdf with a named filter
    ROOT::RDataFrame d(10);
    auto rep = d.Define("a", "rdfentry_")
                .Filter("a < 5", "less_than_5")
                .Report();
 
    auto this_rep_val = *rep;
-   auto other_rep_val = this_rep_val;
 
-   auto cut = this_rep_val.At("less_than_5");
+   // Create other rdf with different filter
+   ROOT::RDataFrame e(10);
+   auto rep_diff = e.Define("a", "rdfentry_")
+                    .Filter("a > 5", "greater_than_5")
+                    .Report();
+   
+   auto rep_diff_val = *rep_diff;
 
-   auto old_all = cut.GetAll();
-   auto old_pass = cut.GetPass();
-   auto old_eff = cut.GetEff();
-
-   this_rep_val.Merge(other_rep_val);
-
-   auto merged_cut = this_rep_val.At("less_than_5");
-
-   EXPECT_EQ(merged_cut.GetAll(), old_all*2);
-   EXPECT_EQ(merged_cut.GetPass(), old_pass*2);
-   EXPECT_EQ(merged_cut.GetEff(), old_eff);
+   // Check that Merge throws an error in case of different filter names
+   EXPECT_THROW(this_rep_val.Merge(rep_diff_val), std::runtime_error);
 }

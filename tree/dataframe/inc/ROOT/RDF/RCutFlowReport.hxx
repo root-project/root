@@ -33,8 +33,8 @@ class TCutInfo {
 
 private:
    const std::string fName;
-   const ULong64_t fPass;
-   const ULong64_t fAll;
+   ULong64_t fPass;
+   ULong64_t fAll;
    TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
 
 public:
@@ -42,6 +42,7 @@ public:
    ULong64_t GetAll() const { return fAll; }
    ULong64_t GetPass() const { return fPass; }
    float GetEff() const { return 100.f * (fPass / float(fAll)); }
+   void Merge(const TCutInfo &other);
 };
 
 class RCutFlowReport {
