@@ -192,7 +192,7 @@ namespace {
   void TriggerDictionaryInitialization_libFoo_Impl() {
     static const char* headers[] = {"Foo.h"}
     // More scaffolding
-    extern int __Cling_Autoloading_Map;
+    extern int __Cling_AutoLoading_Map;
     namespace foo{struct __attribute__((annotate("$clingAutoload$Foo.h"))) bar;}
     struct __attribute__((annotate("$clingAutoload$Foo.h"))) S;
     // More initialization scaffolding.
@@ -245,7 +245,7 @@ root [] namespace foo { };struct S;
 root [] foo::bar/*store parsing state*/
         gSystem->Load("Foo");
         // More scaffolding.
-        extern int __Cling_Autoloading_Map;
+        extern int __Cling_AutoLoading_Map;
         namespace foo{struct __attribute__((annotate("$clingAutoload$Foo.h"))) bar;}
         struct __attribute__((annotate("$clingAutoload$Foo.h"))) S;
         // More initialization scaffolding.
@@ -262,7 +262,7 @@ root [] namespace foo { };struct S;
 root [] foo::bar/*store parsing state*/
         gSystem->Load("Foo");
         // More scaffolding.
-        extern int __Cling_Autoloading_Map;
+        extern int __Cling_AutoLoading_Map;
         namespace foo{struct __attribute__((annotate("$clingAutoload$Foo.h"))) bar;}
         struct __attribute__((annotate("$clingAutoload$Foo.h"))) S;
         // More initialization scaffolding.

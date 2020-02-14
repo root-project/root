@@ -40,8 +40,8 @@ private:
    void *fLastLookupCtx;
    clang::NamespaceDecl *fROOTSpecialNamespace;
    bool fFirstRun;
-   bool fIsAutoloading;
-   bool fIsAutoloadingRecursively;
+   bool fIsAutoLoading;
+   bool fIsAutoLoadingRecursively;
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
@@ -52,8 +52,8 @@ public:
 
    void Initialize();
 
-   void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
-   bool IsAutoloadingEnabled() { return fIsAutoloading; }
+   void SetAutoLoadingEnabled(bool val = true) { fIsAutoLoading = val; }
+   bool IsAutoLoadingEnabled() { return fIsAutoLoading; }
 
    void SetAutoParsingSuspended(bool val = true) { fIsAutoParsingSuspended = val; }
    bool IsAutoParsingSuspended() { return fIsAutoParsingSuspended; }
