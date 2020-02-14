@@ -2799,6 +2799,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
                                                         xs->GetInetAddress().GetPort());
                }
             }
+            delete al;
          }
       }
 
@@ -2825,19 +2826,23 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          if (rc  == 1 || (rc == 2 && !savedMonitor)) {
             // Deactivate it if we are done with it
             mon->DeActivate(s);
+            TList *al = mon->GetListOfActives();
             PDB(kCollect, 2)
                Info("Collect","#%04d: deactivating %p (active: %d, %p)", collectId,
                               s, mon->GetActive(),
-                              mon->GetListOfActives()->First());
+                              al->First());
+            delete al;
          } else if (rc == 2) {
             // This end message was for the saved monitor
             // Deactivate it if we are done with it
             if (savedMonitor) {
                savedMonitor->DeActivate(s);
+               TList *al = mon->GetListOfActives();
                PDB(kCollect, 2)
                   Info("Collect","save monitor: deactivating %p (active: %d, %p)",
                                  s, savedMonitor->GetActive(),
-                                 savedMonitor->GetListOfActives()->First());
+                                 al->First());
+               delete al;
             }
          }
 
@@ -2908,6 +2913,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
                                                   xs->GetInetAddress().GetPort());
          }
       }
+      delete al;
       mon->DeActivateAll();
    }
 

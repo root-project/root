@@ -2320,6 +2320,7 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
       PDB(kSubmerger, 2) Info("AcceptResults", "closing socket");
       delete ((TSocket*)(sockets->At(i)));
    }
+   delete sockets;
 
    fMergingMonitor->RemoveAll();
    SafeDelete(fMergingMonitor);
