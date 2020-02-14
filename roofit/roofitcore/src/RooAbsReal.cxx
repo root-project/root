@@ -227,7 +227,7 @@ Bool_t RooAbsReal::operator==(Double_t value) const
 /// Equality operator when comparing to another RooAbsArg.
 /// Only functional when the other arg is a RooAbsReal
 
-Bool_t RooAbsReal::operator==(const RooAbsArg& other)
+Bool_t RooAbsReal::operator==(const RooAbsArg& other) const
 {
   const RooAbsReal* otherReal = dynamic_cast<const RooAbsReal*>(&other) ;
   return otherReal ? operator==(otherReal->getVal()) : kFALSE ;
@@ -236,13 +236,13 @@ Bool_t RooAbsReal::operator==(const RooAbsArg& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooAbsReal::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)
+Bool_t RooAbsReal::isIdentical(const RooAbsArg& other, Bool_t assumeSameType) const
 {
   if (!assumeSameType) {
     const RooAbsReal* otherReal = dynamic_cast<const RooAbsReal*>(&other) ;
     return otherReal ? operator==(otherReal->getVal()) : kFALSE ;
   } else {
-    return getVal()==((RooAbsReal&)other).getVal() ;
+    return getVal() == static_cast<const RooAbsReal&>(other).getVal();
   }
 }
 
