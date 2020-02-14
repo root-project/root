@@ -171,7 +171,7 @@ Bool_t RooAbsCategory::operator==(const char* label) const
 /// Equality operator with another RooAbsArg. Only functional
 /// is also a RooAbsCategory, will return true if index is the same
 
-Bool_t RooAbsCategory::operator==(const RooAbsArg& other)
+Bool_t RooAbsCategory::operator==(const RooAbsArg& other) const
 {
   const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
   return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
@@ -180,13 +180,13 @@ Bool_t RooAbsCategory::operator==(const RooAbsArg& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType)
+Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType) const
 {
   if (!assumeSameType) {
     const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
     return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
   } else {
-    return getIndex()==((RooAbsCategory&)other).getIndex() ;
+    return getIndex() == static_cast<const RooAbsCategory&>(other).getIndex();
   }
 }
 

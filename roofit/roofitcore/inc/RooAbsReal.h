@@ -108,8 +108,8 @@ public:
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
   Bool_t operator==(Double_t value) const ;
-  virtual Bool_t operator==(const RooAbsArg& other) ;
-  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE)  ;
+  virtual Bool_t operator==(const RooAbsArg& other) const;
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
 
 
   inline const Text_t *getUnit() const { 

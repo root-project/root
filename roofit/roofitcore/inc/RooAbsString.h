@@ -34,8 +34,8 @@ public:
   // Return value and unit accessors
   virtual const char* getVal() const ;
   Bool_t operator==(const char*) const ;
-  virtual Bool_t operator==(const RooAbsArg& other) ;
-  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE)  ;
+  virtual Bool_t operator==(const RooAbsArg& other) const;
+  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
