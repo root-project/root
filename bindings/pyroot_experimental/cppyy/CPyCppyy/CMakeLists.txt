@@ -52,7 +52,7 @@ if(NOT MSVC)
   target_compile_options(cppyy PRIVATE
     -Wno-shadow -Wno-strict-aliasing)
 endif()
-if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(cppyy PRIVATE
     -Wno-unused-but-set-parameter)
 endif()
@@ -66,7 +66,7 @@ endif()
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
     target_compile_options(cppyy PRIVATE -Wno-register)
 endif()
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
     target_compile_options(cppyy PRIVATE -Wno-deprecated-register)
 endif()
 
