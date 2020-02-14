@@ -92,7 +92,15 @@ sap.ui.define([
 
          var selected = oEvent.getSource().getSelected();
 
-         var elem = this.mgr.GetElement(item.getElementId());
+         var id = item.getElementId();
+
+         if (id === undefined)
+            return console.log('clickItemSelected: fail to extract element id');
+
+         var elem = this.mgr.GetElement(id);
+
+         if (!elem)
+            return console.log('clickItemSelected: fail to find element', id);
 
          if (item.getShowRnrChildren())
              this.mgr.SendMIR("SetRnrChildren(" + selected + ")", elem.fElementId, elem._typename);
@@ -117,7 +125,7 @@ sap.ui.define([
 
       OnEveManagerInit: function() {
          var model = this.getView().getModel("treeModel");
-         model.setData(this.createSummaryModel());
+         model.setData(this.createModel());
          model.refresh();
 
          var oTree = this.getView().byId("tree");
@@ -158,7 +166,7 @@ sap.ui.define([
                   item = items[n]; break;
                }
 
-            if (item) objid = item.getElementId();
+            if (item) objid = item.getElementId() || 0;
          }
 
          // FIXME: provide more generic code which should
@@ -273,14 +281,12 @@ sap.ui.define([
          }
       },
 
+      createModel: function() {
+         this.summaryElements = {};
+         return this.createSummaryModel([], this.mgr.childs, "/");
+      },
+
       createSummaryModel: function(tgt, src, path) {
-         if (tgt === undefined) {
-            tgt = [];
-            src = this.mgr.childs;
-            this.summaryElements = {};
-            path = "/";
-            // console.log('original model', src);
-         }
          for (var n=0;n<src.length;++n) {
             var elem = src[n];
 
@@ -337,7 +343,7 @@ sap.ui.define([
             oTree.unbindItems();
 
             var model = this.getView().getModel("treeModel");
-            model.setData(this.createSummaryModel());
+            model.setData(this.createModel());
             model.refresh();
 
             this.getView().setModel(model, "treeModel");
