@@ -1049,7 +1049,8 @@ Decl *TemplateDeclInstantiator::VisitEnumDecl(EnumDecl *D) {
                           UnderlyingLoc, DeclarationName());
       SemaRef.CheckEnumRedeclaration(Def->getLocation(), Def->isScoped(),
                                      DefnUnderlying,
-                                     /*EnumUnderlyingIsImplicit=*/false, Enum);
+                                     /*EnumUnderlyingIsImplicit=*/false, Enum,
+                                     Def);
     }
   }
 
