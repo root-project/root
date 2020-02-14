@@ -19,5 +19,4 @@
 #define ROOT_RELEASE_TIME "20:13:00"
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 #define ROOT_VERSION_CODE ROOT_VERSION(6,20,1) /* 398337 */
-
 #endif

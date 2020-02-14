@@ -28,8 +28,8 @@ const char *gROOTCoreTeam[] = {
    "Timur Pocheptsov",
    "Matevz Tadel",
    "Wim Lavrijsen",
-   "Ilka Antcheva",
    "Enric Tejedor Saavedra",
+   "Ilka Antcheva",
    0 };
 
 } // namespace ROOTX
