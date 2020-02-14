@@ -2331,8 +2331,7 @@ public:
   bool CheckEnumRedeclaration(SourceLocation EnumLoc, bool IsScoped,
                               QualType EnumUnderlyingTy,
                               bool EnumUnderlyingIsImplicit,
-                              const EnumDecl *Prev,
-                              const EnumDecl *New);
+                              const EnumDecl *Prev);
 
   /// Determine whether the body of an anonymous enumeration should be skipped.
   /// \param II The name of the first enumerator.
