@@ -192,16 +192,22 @@ bool TMPClient::Fork(TMPWorker &server)
          }
       }
       close(0);
-      if (fMon.GetListOfActives()) {
-         while (fMon.GetListOfActives()->GetSize() > 0) {
-            TSocket *s = (TSocket *) fMon.GetListOfActives()->First();
+      std::unique_ptr<TList> lofact(fMon.GetListOfActives());
+
+      if (lofact) {
+         while (lofact->GetSize() > 0) {
+            TSocket *s = (TSocket *) lofact->First();
+            lofact->Remove(s);
             fMon.Remove(s);
             delete s;
          }
       }
-      if (fMon.GetListOfDeActives()) {
-         while (fMon.GetListOfDeActives()->GetSize() > 0) {
-            TSocket *s = (TSocket *) fMon.GetListOfDeActives()->First();
+
+      std::unique_ptr<TList> lofdeact(fMon.GetListOfDeActives());
+      if (lofdeact) {
+         while (lofdeact->GetSize() > 0) {
+            TSocket *s = (TSocket *) lofdeact->First();
+            lofdeact->Remove(s);
             fMon.Remove(s);
             delete s;
          }
@@ -335,7 +341,7 @@ void TMPClient::HandleMPCode(MPCodeBufPair &msg, TSocket *s)
    if (code == MPCode::kMessage) {
       Error("TMPClient::HandleMPCode", "[I][C] message received: %s\n", str);
    } else if (code == MPCode::kError) {
-      Error("TMPClient::HandleMPCode", "[E][C] error message received: %s\n", str);   
+      Error("TMPClient::HandleMPCode", "[E][C] error message received: %s\n", str);
    } else if (code == MPCode::kShutdownNotice || code == MPCode::kFatalError) {
       if (gDebug > 0) //generally users don't want to know this
          Error("TMPClient::HandleMPCode", "[I][C] shutdown notice received from %s\n", str);
