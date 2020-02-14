@@ -37,7 +37,9 @@ sap.ui.define([
          //super.init(controller);
 
          this.creator = new EveElements(controller);
-         this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
+         // MT-RCORE indices now work, we probably don't need this option anymore.
+         // this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
+         this.creator.useIndexAsIs = true;
 
          if(!GlViewerThree.g_global_init_done)
          {
@@ -45,12 +47,16 @@ sap.ui.define([
 
             this.controller.mgr.RegisterSelectionChangeFoo(this.g_highlight_update.bind(this));
             this.g_highlight_update(this.controller.mgr);
+
+            ApplyThreeHacks();
          }
 
          this.createThreejsRenderer();
          this.controller.createScenes();
          this.controller.redrawScenes();
          this.setupThreejsDomAndEventHandlers();
+
+         this.controller.glViewerInitDone();
       },
 
       //==============================================================================
@@ -575,6 +581,75 @@ sap.ui.define([
       },
 
    });
+
+   //==============================================================================
+   // THREE.js hacks
+   //==============================================================================
+
+   function ApplyThreeHacks()
+   {
+      console.log("GlViewerThree.ApplyThreeHacks()");
+
+      THREE.BufferGeometry.prototype.computeVertexNormalsIdxRange = function(start, count) {
+
+	 if ( ! this.attributes.position || ! this.index) return;
+
+         var index = this.index;
+	 var attributes = this.attributes;
+	 var positions = attributes.position.array;
+	 if ( attributes.normal === undefined ) {
+	    this.addAttribute( 'normal', new THREE.BufferAttribute( new Float32Array( positions.length ), 3 ) );
+	 } else {
+	    // reset existing normals to zero
+	    var array = attributes.normal.array;
+	    for ( var i = 0, il = array.length; i < il; i ++ ) {
+	       array[ i ] = 0;
+	    }
+	 }
+	 var normals = attributes.normal.array;
+
+	 var vA, vB, vC;
+	 var pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
+	 var cb = new THREE.Vector3(), ab = new THREE.Vector3();
+
+	 var indices = index.array;
+
+	 for ( var i = start, i_end = start + count ; i < i_end; i += 3 ) {
+
+	    vA = indices[ i + 0 ] * 3;
+	    vB = indices[ i + 1 ] * 3;
+	    vC = indices[ i + 2 ] * 3;
+
+	    pA.fromArray( positions, vA );
+	    pB.fromArray( positions, vB );
+	    pC.fromArray( positions, vC );
+
+	    cb.subVectors( pC, pB );
+	    ab.subVectors( pA, pB );
+	    cb.cross( ab );
+
+	    normals[ vA ] += cb.x;
+	    normals[ vA + 1 ] += cb.y;
+	    normals[ vA + 2 ] += cb.z;
+
+	    normals[ vB ] += cb.x;
+	    normals[ vB + 1 ] += cb.y;
+	    normals[ vB + 2 ] += cb.z;
+
+	    normals[ vC ] += cb.x;
+	    normals[ vC + 1 ] += cb.y;
+	    normals[ vC + 2 ] += cb.z;
+
+	 }
+	 this.normalizeNormals();
+
+	 attributes.normal.needsUpdate = true;
+
+      };
+
+   }
+
+   //==============================================================================
 
    return GlViewerThree;
 

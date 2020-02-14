@@ -29,15 +29,24 @@ sap.ui.define([
 
             RC = module;
 
-            pthis.creator = new EveElements(RC);
-            pthis.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
-
-            pthis.createRCoreRenderer();
-            pthis.controller.createScenes();
-            pthis.controller.redrawScenes();
-            pthis.setupRCoreDomAndEventHandlers();
+            pthis.bootstrap();
          });
+      },
 
+      bootstrap: function()
+      {
+         this.creator = new EveElements(RC);
+         // this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
+
+         this.createRCoreRenderer();
+         this.controller.createScenes();
+         this.controller.redrawScenes();
+         this.setupRCoreDomAndEventHandlers();
+
+         this.controller.glViewerInitDone();
+
+         // As RC gets loaded asynchronously we've probably missed the initial resize.
+         this.onResizeTimeout();
       },
 
       //==============================================================================
@@ -61,7 +70,9 @@ sap.ui.define([
          var w = this.get_width();
          var h = this.get_height();
 
-         this.canvas = document.createElement('canvas');
+         //this.canvas = document.createElement('canvas');
+         this.canvas = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' );
+
          this.get_view().getDomRef().appendChild(this.canvas);
 
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2);
@@ -99,9 +110,11 @@ sap.ui.define([
          // this.get_view().getDomRef().appendChild( this.renderer.domElement );
 
          // This will also call render().
-         //this.resetRCoreRenderer();
-         this.onResizeTimeout();
-         //this.render();
+         // this.resetRCoreRenderer();
+
+         // this.onResizeTimeout();
+
+         this.render();
       },
 
       resetRCoreRenderer: function()
@@ -168,6 +181,8 @@ sap.ui.define([
 
       render: function()
       {
+         console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
+
          this.renderer.render( this.scene, this.camera );
       },
 
@@ -175,13 +190,15 @@ sap.ui.define([
 
       onResizeTimeout: function()
       {
+         console.log("GlViewerRCore RESIZE ", this.get_width(), this.get_height(), "canvas=", this.canvas);
+
          let w = this.get_width();
          let h = this.get_height();
 
          this.canvas.width  = w;
          this.canvas.height = h;
 
-         if (this.camera.isPerspectiveCamera)
+         if (this.controller.kind === "3D")
          {
             this.camera.aspect = w / h;
          }
