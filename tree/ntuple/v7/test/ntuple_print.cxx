@@ -47,9 +47,13 @@ TEST(RNtuplePrint, FullString)
    FileRaii fileGuard("test_ntuple_print_fullstring.root");
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt");
+      auto fieldPx = model->MakeField<float>("px");
+      auto fieldPy = model->MakeField<float>("py");
+      auto fieldPz = model->MakeField<float>("pz");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", fileGuard.GetPath());
-      *fieldPt = 5.0f;
+      *fieldPx = 1.0;
+      *fieldPy = 1.0;
+      *fieldPz = 1.0;
       ntuple->Fill();
    }
    auto ntuple2 = RNTupleReader::Open("Staff", fileGuard.GetPath());
@@ -60,7 +64,9 @@ TEST(RNtuplePrint, FullString)
        + "* N-Tuple : Staff                                                              *\n"
        + "* Entries : 1                                                                  *\n"
        + "********************************************************************************\n"
-       + "* Field 1   : pt (float)                                                       *\n"
+       + "* Field 1   : px (float)                                                       *\n"
+       + "* Field 2   : py (float)                                                       *\n"
+       + "* Field 3   : pz (float)                                                       *\n"
        + "********************************************************************************\n"};
    EXPECT_EQ(fString, os.str());
 }
