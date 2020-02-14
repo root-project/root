@@ -1426,8 +1426,10 @@ void MethodDL::TrainDeepNet()
       Log() << "   Start epoch iteration ..." << Endl;
       bool debugFirstEpoch = false;
       bool computeLossInTraining = true;  // compute loss in training or at test time
+      size_t nTrainEpochs = 0;
       while (!converged) {
-         optimizer->IncrementGlobalStep();
+         nTrainEpochs++;
+         //optimizer->ResetGlobalStep();
          trainingData.Shuffle(rng);
 
          // execute all epochs
@@ -1487,6 +1489,7 @@ void MethodDL::TrainDeepNet()
             if (debugFirstEpoch)
                std::cout << "- doing optimizer update  \n";
 
+            optimizer->IncrementGlobalStep();
             optimizer->Step();
 
 #ifdef DEBUG
@@ -1504,7 +1507,7 @@ void MethodDL::TrainDeepNet()
          if (debugFirstEpoch) std::cout << "\n End batch loop - compute validation loss   \n";
          //}
          debugFirstEpoch = false;
-         if ((optimizer->GetGlobalStep() % settings.testInterval) == 0) {
+         if ((nTrainEpochs % settings.testInterval) == 0) {
 
             std::chrono::time_point<std::chrono::system_clock> t1,t2;
 
@@ -1528,7 +1531,7 @@ void MethodDL::TrainDeepNet()
             valError += regTerm;
 
             //Log the loss value
-            fTrainHistory.AddValue("valError",optimizer->GetGlobalStep(),valError);
+            fTrainHistory.AddValue("valError",nTrainEpochs,valError);
 
             t2 = std::chrono::system_clock::now();
 
@@ -1542,7 +1545,7 @@ void MethodDL::TrainDeepNet()
             // copy configuration when reached a minimum error
             if (valError < minValError ) {
                // Copy weights from deepNet to fNet
-               Log() << std::setw(10) << optimizer->GetGlobalStep()
+               Log() << std::setw(10) << nTrainEpochs
                      << " Minimum Test error found - save the configuration " << Endl;
                for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
                   fNet->GetLayerAt(i)->CopyParameters(*deepNet.GetLayerAt(i));
@@ -1574,7 +1577,7 @@ void MethodDL::TrainDeepNet()
             trainingError += regTerm;
 
             //Log the loss value
-            fTrainHistory.AddValue("trainingError",optimizer->GetGlobalStep(),trainingError);
+            fTrainHistory.AddValue("trainingError",nTrainEpochs,trainingError);
 
             // stop measuring
             tend = std::chrono::system_clock::now();
@@ -1592,10 +1595,10 @@ void MethodDL::TrainDeepNet()
             double eventTime = elapsed1.count()/( batchesInEpoch * settings.testInterval * settings.batchSize);
 
             converged =
-               convergenceCount > settings.convergenceSteps || optimizer->GetGlobalStep() >= settings.maxEpochs;
+               convergenceCount > settings.convergenceSteps || nTrainEpochs >= settings.maxEpochs;
 
 
-            Log() << std::setw(10) << optimizer->GetGlobalStep()  << " | "
+            Log() << std::setw(10) << nTrainEpochs  << " | "
                   << std::setw(12) << trainingError
                   << std::setw(12) << valError
                   << std::setw(12) << seconds / settings.testInterval
@@ -1612,7 +1615,7 @@ void MethodDL::TrainDeepNet()
 
          // if (stepCount % 10 == 0 || converged) {
          if (converged && debug) {
-            Log() << "Final Deep Net Weights for phase  " << trainingPhase << " epoch " << optimizer->GetGlobalStep()
+            Log() << "Final Deep Net Weights for phase  " << trainingPhase << " epoch " << nTrainEpochs
                   << Endl;
             auto & weights_tensor = deepNet.GetLayerAt(0)->GetWeights();
             auto & bias_tensor = deepNet.GetLayerAt(0)->GetBiases();
