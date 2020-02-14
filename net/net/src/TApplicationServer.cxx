@@ -923,11 +923,13 @@ Int_t TApplicationServer::BrowseDirectory(const char *dirname)
    if (!fWorkingDir || !dirname || !*dirname) {
       if (!fWorkingDir)
          fWorkingDir = new TRemoteObject(fWorkDir, fWorkDir, "TSystemDirectory");
-      fWorkingDir->Browse();
+      TList *list = fWorkingDir->Browse();
       mess.Reset(kMESS_OBJECT);
       mess.WriteObject(fWorkingDir);
       fSocket->Send(mess);
       nc++;
+      list->Delete();
+      delete list;
    }
    else if (fWorkingDir) {
       TRemoteObject dir(dirname, dirname, "TSystemDirectory");
@@ -936,6 +938,8 @@ Int_t TApplicationServer::BrowseDirectory(const char *dirname)
       mess.WriteObject(list);
       fSocket->Send(mess);
       nc++;
+      list->Delete();
+      delete list;
    }
    return nc;
 }
