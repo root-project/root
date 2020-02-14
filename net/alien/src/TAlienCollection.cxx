@@ -1200,8 +1200,10 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
          }
 
          TList *onlinelist = fFileStager->GetStaged(lookuplist);
-         if (!onlinelist)
+         if (!onlinelist) {
+            SafeDelete(lookuplist);
             return kFALSE;
+         }
 
          Reset();
          fc=0;
