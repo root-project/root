@@ -196,6 +196,7 @@ bool TMPClient::Fork(TMPWorker &server)
       std::unique_ptr<TList> lofact(fMon.GetListOfActives());
       while (lofact && (lofact->GetSize() > 0)) {
          TSocket *s = (TSocket *) lofact->First();
+         lofact.reset(nullptr); // delete list before object is destroyed
          fMon.Remove(s);
          delete s;
          lofact.reset(fMon.GetListOfActives());
@@ -204,6 +205,7 @@ bool TMPClient::Fork(TMPWorker &server)
       std::unique_ptr<TList> lofdeact(fMon.GetListOfDeActives());
       while (lofdeact && (lofdeact->GetSize() > 0)) {
          TSocket *s = (TSocket *) lofdeact->First();
+         lofdeact.reset(nullptr); // delete list before object is destroyed
          fMon.Remove(s);
          delete s;
          lofdeact.reset(fMon.GetListOfDeActives());
