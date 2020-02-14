@@ -698,6 +698,7 @@ TProof::~TProof()
    SafeDelete(fRecvMessages);
    SafeDelete(fInputData);
    SafeDelete(fRunningDSets);
+   SafeDelete(fEnabledPackagesOnCluster);
    if (fWrksOutputReady) {
       fWrksOutputReady->SetOwner(kFALSE);
       delete fWrksOutputReady;
@@ -1514,8 +1515,9 @@ Int_t TProof::AddWorkers(TList *workerList)
 
 void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
 {
+   TList *server_packs = gProofServ ? gProofServ->GetEnabledPackages() : nullptr;
    // Packages
-   TList *packs = gProofServ ? gProofServ->GetEnabledPackages() : GetEnabledPackages();
+   TList *packs = server_packs ? server_packs : GetEnabledPackages();
    if (packs && packs->GetSize() > 0) {
       TIter nxp(packs);
       TPair *pck = 0;
@@ -1535,6 +1537,11 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
                EnablePackage(pck->GetName(), (TList *) pck->Value(), kTRUE);
          }
       }
+   }
+
+   if (server_packs) {
+      server_packs->Delete();
+      delete server_packs;
    }
 
    // Loaded macros
