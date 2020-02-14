@@ -117,16 +117,16 @@ public:
    };
    virtual Bool_t IsAutoParsingSuspended() const = 0;
 
-   class SuspendAutoloadingRAII {
+   class SuspendAutoLoadingRAII {
       TInterpreter *fInterp = nullptr;
       bool fOldValue;
 
    public:
-      SuspendAutoloadingRAII(TInterpreter *interp) : fInterp(interp)
+      SuspendAutoLoadingRAII(TInterpreter *interp) : fInterp(interp)
       {
-         fOldValue = fInterp->SetClassAutoloading(false);
+         fOldValue = fInterp->SetClassAutoLoading(false);
       }
-      ~SuspendAutoloadingRAII() { fInterp->SetClassAutoloading(fOldValue); }
+      ~SuspendAutoLoadingRAII() { fInterp->SetClassAutoLoading(fOldValue); }
    };
 
    typedef int (*AutoLoadCallBack_t)(const char*);
@@ -258,7 +258,8 @@ public:
    virtual const char *MapCppName(const char*) const {return 0;}
    virtual void   SetAlloclockfunc(void (*)()) const {;}
    virtual void   SetAllocunlockfunc(void (*)()) const {;}
-   virtual int    SetClassAutoloading(int) const {return 0;}
+   virtual int    SetClassAutoLoading(int) const {return 0;}
+           int    SetClassAutoloading(int a) const { return SetClassAutoLoading(a); }  // Deprecated
    virtual int    SetClassAutoparsing(int) {return 0;};
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
    virtual void   SetTempLevel(int /* val */) const {;}
