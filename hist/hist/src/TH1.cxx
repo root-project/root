@@ -3246,38 +3246,6 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin with abscissa X by 1.
-///
-/// if x is less than the low-edge of the first bin, the Underflow bin is incremented
-/// if x is equal to or greater than the upper edge of last bin, the Overflow bin is incremented
-///
-/// If the storage of the sum of squares of weights has been triggered,
-/// via the function Sumw2, then the sum of the squares of weights is incremented
-/// by 1 in the bin corresponding to x.
-///
-/// The function returns the corresponding bin number which has its content incremented by 1
-
-Int_t TH1::Fill(Double_t x)
-{
-   if (fBuffer)  return BufferFill(x,1);
-
-   Int_t bin;
-   fEntries++;
-   bin =fXaxis.FindBin(x);
-   if (bin <0) return -1;
-   AddBinContent(bin);
-   if (fSumw2.fN) ++fSumw2.fArray[bin];
-   if (bin == 0 || bin > fXaxis.GetNbins()) {
-      if (!GetStatOverflowsBehaviour()) return -1;
-   }
-   ++fTsumw;
-   ++fTsumw2;
-   fTsumwx  += x;
-   fTsumwx2 += x*x;
-   return bin;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Increment bin with abscissa X with a weight w.
 ///
 /// if x is less than the low-edge of the first bin, the Underflow bin is incremented

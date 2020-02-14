@@ -212,9 +212,8 @@ public:
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     ExtendAxis(Double_t x, TAxis *axis);
    virtual TH1     *FFT(TH1* h_output, Option_t *option);
-   virtual Int_t    Fill(Double_t x);
-   virtual Int_t    Fill(Double_t x, Double_t w);
-   virtual Int_t    Fill(const char *name, Double_t w);
+   virtual Int_t    Fill(Double_t x, Double_t w = 1.);
+   virtual Int_t    Fill(const char *name, Double_t w = 1.);
    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride=1);
    virtual void     FillN(Int_t, const Double_t *, const Double_t *, const Double_t *, Int_t) {;}
    virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
