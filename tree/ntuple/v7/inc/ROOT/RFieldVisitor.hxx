@@ -121,7 +121,7 @@ public:
    }
    /// Prints summary of Field
    void VisitField(const Detail::RFieldBase &field) final;
-   void VisitRootField(const RFieldRoot &field) final;
+   void VisitRootField(const RFieldRoot &rootField) final;
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
    void SetDeepestLevel(int d);

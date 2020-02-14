@@ -93,11 +93,12 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const Detail::RFieldBas
 }
 
 
-void ROOT::Experimental::RPrintSchemaVisitor::VisitRootField(const RFieldRoot &field)
+void ROOT::Experimental::RPrintSchemaVisitor::VisitRootField(const RFieldRoot &rootField)
 {
-   auto subFields = field.GetSubFields();
-   for (auto f : subFields) {
+   auto fieldNo = 1;
+   for (auto f : rootField.GetSubFields()) {
       RPrintSchemaVisitor visitor(*this);
+      visitor.fFieldNo = fieldNo++;
       f->AcceptVisitor(visitor);
    }
 }
