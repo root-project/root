@@ -497,14 +497,11 @@ void SetRootSys()
          if (s) *s = 0;
       } else {
          // There was no slashes at all let now change ROOTSYS
-         delete [] ep;
          return;
       }
 
-      if (!gBuildingROOT) {
-         delete [] ep;
+      if (!gBuildingROOT)
          return; // don't mess with user's ROOTSYS.
-      }
 
       int ncha = strlen(ep) + 10;
       char *env = new char[ncha];
@@ -520,7 +517,6 @@ void SetRootSys()
       }
 
       putenv(env);
-      // intentionally not call delete [] env, while GLIBC keep use pointer
       delete [] ep;
    }
 }
@@ -3854,6 +3850,12 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
                            StringRef LinkdefPath, const std::string &moduleName)
 {
+#ifdef __APPLE__
+
+   if (moduleName == "Krb5Auth" || moduleName == "GCocoa" || moduleName == "GQuartz")
+      return true;
+#endif
+
    clang::CompilerInstance *CI = interpreter.getCI();
    clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
    headerSearch.loadTopLevelSystemModules();
@@ -3984,6 +3986,7 @@ int RootClingMain(int argc,
    }
 
    std::string dictname;
+   std::string dictpathname;
 
    if (!gDriverConfig->fBuildingROOTStage1) {
       if (gOptRootBuild) {
@@ -4063,6 +4066,7 @@ int RootClingMain(int argc,
          return 1;
       }
 
+      dictpathname = gOptDictionaryFileName;
       dictname = llvm::sys::path::filename(gOptDictionaryFileName);
    }
 
@@ -4182,7 +4186,7 @@ int RootClingMain(int argc,
    // FIXME: This line is from TModuleGenerator, but we can't reuse this code
    // at this point because TModuleGenerator needs a CompilerInstance (and we
    // currently create the arguments for creating said CompilerInstance).
-   bool isPCH = (gOptDictionaryFileName.getValue() == "allDict.cxx");
+   bool isPCH = (dictpathname == "allDict.cxx");
    std::string outputFile;
    // Data is in 'outputFile', therefore in the same scope.
    StringRef moduleName;
@@ -4193,7 +4197,7 @@ int RootClingMain(int argc,
    auto clingArgsInterpreter = clingArgs;
 
    if (gOptSharedLibFileName.empty()) {
-      gOptSharedLibFileName = gOptDictionaryFileName.getValue();
+      gOptSharedLibFileName = dictpathname;
    }
 
    if (!isPCH && gOptCxxModule) {
@@ -4243,8 +4247,6 @@ int RootClingMain(int argc,
 #endif
          remove((moduleCachePath + llvm::sys::path::get_separator() + "std.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "cuda.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "boost.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "tinyxml2.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Config.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
@@ -4462,7 +4464,7 @@ int RootClingMain(int argc,
          newName += gPathSeparator;
       newName += llvm::sys::path::stem(gOptSharedLibFileName);
       newName += "_";
-      newName += llvm::sys::path::stem(gOptDictionaryFileName);
+      newName += llvm::sys::path::stem(dictpathname);
       newName += llvm::sys::path::extension(gOptSharedLibFileName);
       gOptSharedLibFileName = newName;
    }
@@ -4546,18 +4548,18 @@ int RootClingMain(int argc,
 
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
-   string main_dictname(gOptDictionaryFileName.getValue());
+   string main_dictname(dictpathname);
    std::ostream *dictStreamPtr = NULL;
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
    if (!gOptIgnoreExistingDict) {
-      if (!gOptDictionaryFileName.empty()) {
-         tmpCatalog.addFileName(gOptDictionaryFileName.getValue());
-         fileout.open(gOptDictionaryFileName.c_str());
+      if (!dictpathname.empty()) {
+         tmpCatalog.addFileName(dictpathname);
+         fileout.open(dictpathname.c_str());
          dictStreamPtr = &fileout;
          if (!(*dictStreamPtr)) {
             ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-                                    gOptDictionaryFileName.c_str());
+                                    dictpathname.c_str());
             return 1;
          }
       } else {
@@ -4569,14 +4571,7 @@ int RootClingMain(int argc,
    }
 
    // Now generate a second stream for the split dictionary if it is necessary
-   std::ostream *splitDictStreamPtr;
-   std::unique_ptr<std::ostream> splitDeleter(nullptr);
-   if (gOptSplit) {
-      splitDictStreamPtr = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
-      splitDeleter.reset(splitDictStreamPtr);
-   } else {
-      splitDictStreamPtr = dictStreamPtr;
-   }
+   std::ostream *splitDictStreamPtr = gOptSplit ? CreateStreamPtrForSplitDict(dictpathname, tmpCatalog) : dictStreamPtr;
    std::ostream &dictStream = *dictStreamPtr;
    std::ostream &splitDictStream = *splitDictStreamPtr;
 
@@ -4858,6 +4853,8 @@ int RootClingMain(int argc,
    if (rootclingRetCode != 0) {
       return rootclingRetCode;
    }
+
+   if (gOptSplit && splitDictStreamPtr) delete splitDictStreamPtr;
 
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
