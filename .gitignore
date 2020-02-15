@@ -166,6 +166,9 @@ AutoDict_*.cxx
 # /root/io/
 /root/io/*.root
 
+# /root/io/TFile
+/root/io/TFile/geodemo-update.root
+
 # /root/io/ForeignCArray/
 
 # /root/io/abstractclass/
