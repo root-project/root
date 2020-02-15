@@ -1,13 +1,15 @@
 #include "RooWorkspace.h"
+#include "TH1.h"
 #include <string>
 
 class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   RooWorkspace* _workspace;
-  std::vector<std::string> _strcache;
+  static std::vector<std::string> _strcache;
  public:
   RooJSONFactoryWSTool(RooWorkspace& ws);
+
+  template<class T> static void exportHistogram(const TH1& h, T& n, const std::vector<std::string>& obsnames);
   
-// interfaces for JSON and YAML reading/writing
   Bool_t importJSON(const char* filename);
   Bool_t importYML(const char* filename);
   Bool_t importJSON(std::istream& os);
@@ -28,10 +30,7 @@ protected:
   template<class T> void importPdfs(const T& n);
   template<class T> void importVariables(const T& n);
   template<class T> void importDependants(const T& n);
-  
-  template<class T> void exportFunctions(T& n);
-  template<class T> void exportPdfs(T& n);
-  template<class T> void exportVariables(T& n);
+
   template<class T> void exportAll(T& n);  
-  
+  template<class T> void exportDependants(RooAbsArg* source, T& n);
 };

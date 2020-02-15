@@ -312,82 +312,16 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) {
 #ifdef INCLUDE_RYML
 #include <ryml.hpp>
 #include <c4/yml/std/map.hpp>
+#include <RooStats/HistFactory/RooJSONFactoryWSTool.h>
 #include <c4/yml/std/string.hpp>
 
-namespace c4 { namespace yml {
-  void read(c4::yml::NodeRef const& n, TH1& h){
-//    for(size_t i=0; i<n.num_children(); ++i){
-//      T e;
-//      n[i]>>e;
-//      v->push_back(e);
-//    }
-  }
-
-    
-  void write(c4::yml::NodeRef *bounds, const TAxis& ax){
-    if(!ax.IsVariableBinSize()){
-      *bounds |= c4::yml::MAP;
-      (*bounds)["nbins"] << ax.GetNbins();                
-      (*bounds)["min"] << ax.GetXmin();
-      (*bounds)["max"] << ax.GetXmax();
-    } else {
-      *bounds |= c4::yml::SEQ;              
-      for(size_t i=1; i<=ax.GetNbins(); ++i){
-        bounds->append_child() << ax.GetBinLowEdge(i);      
-      }
-    }
-  }
-    
-  void write(c4::yml::NodeRef *n, const TH1& h){
-    *n |= c4::yml::MAP;
-    auto bounds = (*n)["binning"];
-    bounds |= c4::yml::MAP;
-    auto weights = (*n)["counts"];
-    weights |= c4::yml::SEQ;    
-    auto errors = (*n)["errors"];    
-    errors |= c4::yml::SEQ;    
-    if(h.GetDimension()==1){
-      write(&bounds,*(h.GetXaxis()));
-      for(size_t i=1; i<=h.GetNbinsX(); ++i){
-        weights.append_child() << h.GetBinContent(i);
-        errors.append_child() << h.GetBinError(i);        
-      }    
-    } else {
-      auto x = bounds["x"];
-      write(&x,*(h.GetXaxis()));
-      auto y = bounds["y"];
-      write(&y,*(h.GetYaxis()));      
-      if(h.GetDimension()>2){
-        auto z = bounds["z"];
-        write(&z,*(h.GetZaxis()));              
-      }
-      for(size_t i=1; i<=h.GetNbinsX(); ++i){
-        auto binx = weights.append_child();
-        binx |= c4::yml::SEQ;
-        auto binxe = errors.append_child();
-        binxe |= c4::yml::SEQ;                                
-        for(size_t j=1; j<=h.GetNbinsY(); ++j){
-          if(h.GetDimension()>2){      
-            auto biny = binx.append_child();
-            biny |= c4::yml::SEQ;
-            auto binye = binxe.append_child();
-            binye |= c4::yml::SEQ;                            
-            for(size_t k=1; k<=h.GetNbinsY(); ++k){        
-              biny.append_child() << h.GetBinContent(i,j,k);
-              binye.append_child() << h.GetBinError(i,j,k);              
-            }
-          } else {
-            binx.append_child() << h.GetBinContent(i,j);
-            binxe.append_child() << h.GetBinError(i,j);            
-          }
-        }
-      }          
-    }
-  }
-  }
-}
 namespace RooStats { namespace HistFactory {
     template<> void RooStats::HistFactory::Sample::Export(c4::yml::NodeRef& n) const {
+      std::vector<std::string> obsnames;
+      obsnames.push_back("obs_x_"+fChannelName);
+      obsnames.push_back("obs_y_"+fChannelName);
+      obsnames.push_back("obs_z_"+fChannelName);
+      
       auto s = n[c4::to_csubstr(fName)];
       s |= c4::yml::MAP;
       s["type"] << "histogram";
@@ -420,8 +354,10 @@ namespace RooStats { namespace HistFactory {
           auto node = histoSys[c4::to_csubstr(sys.GetName())];
           node |= c4::yml::MAP;        
           node["parameter"] << std::string("alpha_")+sys.GetName();
-          node["dataLow"] << *(sys.GetHistoLow());
-          node["dataHigh"] << *(sys.GetHistoHigh());
+          auto dataLow = node["dataLow"];
+          auto dataHigh = node["dataHigh"];          
+          RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoLow()),dataLow,obsnames);
+          RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoHigh()),dataHigh,obsnames);                    
         }
       }
 
@@ -433,7 +369,8 @@ namespace RooStats { namespace HistFactory {
       tags["normalizeByTheory"] << fNormalizeByTheory;
       tags["statErrorActivate"] << fStatErrorActivate;
 
-      s["data"] << *(fhNominal.GetObject());
+      auto data = s["data"];
+      RooJSONFactoryWSTool::exportHistogram(*(fhNominal.GetObject()),data,obsnames);
     }
   }
 }

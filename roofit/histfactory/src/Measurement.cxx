@@ -432,7 +432,8 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   sim |= c4::yml::MAP;
   sim["type"] << "simultaneous";
   auto simdict = sim["dict"];
-  simdict |= c4::yml::MAP;  
+  simdict |= c4::yml::MAP;
+  simdict["toplevel"] << true;
   simdict["InterpolationScheme"] << fInterpolationScheme;  
   auto ch = sim["pdfs"];
   ch |= c4::yml::MAP;  
