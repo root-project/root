@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 cmake_minimum_required(VERSION 3.1)
+project(Minuit2)
 
 option(minuit2_mpi "Enable support for MPI in Minuit2")
 option(minuit2_omp "Enable support for OpenMP in Minuit2")
