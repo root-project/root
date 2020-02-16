@@ -518,8 +518,7 @@ TEST(RNTuple, View)
 
    auto viewJetElements = ntuple.GetView<std::int32_t>("jets.std::int32_t");
    n = 0;
-   // TODO(jblomer): fix view iteration
-   for (auto i : ROOT::Experimental::RNTupleGlobalRange(0, 3)) {
+   for (auto i : viewJetElements.GetFieldRange()) {
       n++;
       EXPECT_EQ(n, viewJetElements(i));
    }
