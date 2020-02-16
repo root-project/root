@@ -212,6 +212,7 @@ public:
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
+   NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
    const RFieldBase *GetParent() const { return fParent; }
    std::vector<const RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }

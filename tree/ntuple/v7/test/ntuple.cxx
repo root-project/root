@@ -478,9 +478,10 @@ TEST(RNTuple, View)
    auto model = RNTupleModel::Create();
    auto fieldPt = model->MakeField<float>("pt", 42.0);
    auto fieldTag = model->MakeField<std::string>("tag", "xyz");
-   auto fieldJets = model->MakeField<std::vector<float>>("jets");
-   fieldJets->push_back(1.0);
-   fieldJets->push_back(2.0);
+   auto fieldJets = model->MakeField<std::vector<std::int32_t>>("jets");
+   fieldJets->push_back(1);
+   fieldJets->push_back(2);
+   fieldJets->push_back(3);
 
    {
       RNTupleWriter ntuple(std::move(model),
@@ -500,19 +501,29 @@ TEST(RNTuple, View)
    }
    EXPECT_EQ(2, n);
 
-   auto viewJets = ntuple.GetView<std::vector<float>>("jets");
+   auto viewJets = ntuple.GetView<std::vector<std::int32_t>>("jets");
    n = 0;
    for (auto i : ntuple.GetEntryRange()) {
       if (i == 0) {
-         EXPECT_EQ(2U, viewJets(i).size());
-         EXPECT_EQ(1.0, viewJets(i)[0]);
-         EXPECT_EQ(2.0, viewJets(i)[1]);
+         EXPECT_EQ(3U, viewJets(i).size());
+         EXPECT_EQ(1, viewJets(i)[0]);
+         EXPECT_EQ(2, viewJets(i)[1]);
+         EXPECT_EQ(3, viewJets(i)[2]);
       } else {
          EXPECT_EQ(0U, viewJets(i).size());
       }
       n++;
    }
    EXPECT_EQ(2, n);
+
+   auto viewJetElements = ntuple.GetView<std::int32_t>("jets.std::int32_t");
+   n = 0;
+   // TODO(jblomer): fix view iteration
+   for (auto i : ROOT::Experimental::RNTupleGlobalRange(0, 3)) {
+      n++;
+      EXPECT_EQ(n, viewJetElements(i));
+   }
+   EXPECT_EQ(3, n);
 }
 
 TEST(RNTuple, Capture) {
