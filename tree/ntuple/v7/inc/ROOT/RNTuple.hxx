@@ -133,7 +133,7 @@ public:
       }
    }
 
-   RNTupleGlobalRange GetViewRange() { return RNTupleGlobalRange(0, GetNEntries()); }
+   RNTupleGlobalRange GetEntryRange() { return RNTupleGlobalRange(0, GetNEntries()); }
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
