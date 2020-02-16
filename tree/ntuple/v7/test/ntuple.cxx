@@ -152,7 +152,7 @@ TEST(RNTuple, Multi)
    RNTupleReader ntupleFirst(std::make_unique<RPageSourceFile>("first", fileGuard.GetPath(), RNTupleReadOptions()));
    auto viewPt = ntupleFirst.GetView<float>("pt");
    int n = 0;
-   for (auto i : ntupleFirst.GetViewRange()) {
+   for (auto i : ntupleFirst.GetEntryRange()) {
       EXPECT_EQ(42.0, viewPt(i));
       n++;
    }
@@ -161,7 +161,7 @@ TEST(RNTuple, Multi)
    RNTupleReader ntupleSecond(std::make_unique<RPageSourceFile>("second", fileGuard.GetPath(), RNTupleReadOptions()));
    auto viewE = ntupleSecond.GetView<float>("E");
    n = 0;
-   for (auto i : ntupleSecond.GetViewRange()) {
+   for (auto i : ntupleSecond.GetEntryRange()) {
       EXPECT_EQ(1.0, viewE(i));
       n++;
    }
@@ -255,7 +255,7 @@ TEST(RNTuple, ClassVector)
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("CustomStruct");
    auto viewKlassA = viewKlassVec.GetView<float>("CustomStruct.a");
 
-   for (auto entryId : ntuple.GetViewRange()) {
+   for (auto entryId : ntuple.GetEntryRange()) {
       EXPECT_EQ(42.0, viewKlass(entryId).a);
       EXPECT_EQ(2.0, viewKlass(entryId).v1[0]);
       EXPECT_EQ(42.0, viewKlassA(entryId));
@@ -494,7 +494,7 @@ TEST(RNTuple, View)
    RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
    auto viewPt = ntuple.GetView<float>("pt");
    int n = 0;
-   for (auto i : ntuple.GetViewRange()) {
+   for (auto i : ntuple.GetEntryRange()) {
       EXPECT_EQ(42.0, viewPt(i));
       n++;
    }
@@ -502,7 +502,7 @@ TEST(RNTuple, View)
 
    auto viewJets = ntuple.GetView<std::vector<float>>("jets");
    n = 0;
-   for (auto i : ntuple.GetViewRange()) {
+   for (auto i : ntuple.GetEntryRange()) {
       if (i == 0) {
          EXPECT_EQ(2U, viewJets(i).size());
          EXPECT_EQ(1.0, viewJets(i)[0]);
@@ -567,16 +567,16 @@ TEST(RNTuple, Composable)
    auto viewHitY = viewHits.GetView<float>("y");
 
    int nEv = 0;
-   for (auto e : ntuple->GetViewRange()) {
+   for (auto e : ntuple->GetEntryRange()) {
       EXPECT_EQ(float(nEv), viewPt(e));
       EXPECT_EQ(3U, viewTracks(e));
 
       int nTr = 0;
-      for (auto t : viewTracks.GetViewRange(e)) {
+      for (auto t : viewTracks.GetCollectionRange(e)) {
          EXPECT_EQ(nEv * nTr, viewTrackEnergy(t));
 
          EXPECT_EQ(2.0, viewHits(t));
-         for (auto h : viewHits.GetViewRange(t)) {
+         for (auto h : viewHits.GetCollectionRange(t)) {
             EXPECT_EQ(4.0, viewHitX(h));
             EXPECT_EQ(8.0, viewHitY(h));
          }
@@ -891,7 +891,7 @@ TEST(RNTuple, LargeFile)
    auto rdEnergy  = ntuple->GetView<double>("energy");
    double chksumRead = 0.0;
 
-   for (auto i : ntuple->GetViewRange()) {
+   for (auto i : ntuple->GetEntryRange()) {
       chksumRead += rdEnergy(i);
    }
 

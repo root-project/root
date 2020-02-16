@@ -106,7 +106,7 @@ void ntpl003_lhcbOpenData()
    TH1F h("h", "B Flight Distance", 200, 0, 140);
    h.SetFillColor(48);
 
-   for (auto i : ntuple->GetViewRange()) {
+   for (auto i : ntuple->GetEntryRange()) {
       // Note that we do not load an entry in this loop, i.e. we avoid the memory copy of loading the data into
       // the memory location given by the entry
       h.Fill(viewFlightDistance(i));

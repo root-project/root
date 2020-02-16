@@ -291,14 +291,14 @@ public:
    RNTupleViewCollection& operator=(RNTupleViewCollection&& other) = default;
    ~RNTupleViewCollection() = default;
 
-   RNTupleClusterRange GetViewRange(NTupleSize_t globalIndex) {
+   RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
-   RNTupleClusterRange GetViewRange(const RClusterIndex &clusterIndex) {
+   RNTupleClusterRange GetCollectionRange(const RClusterIndex &clusterIndex) {
       ClusterSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
