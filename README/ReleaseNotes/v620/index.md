@@ -248,6 +248,7 @@ to a PDF. The following macro *e.g.* prints the expected result 5.4:
 [`RooStats::GetGlobalRooStatsConfig()`](https://root.cern.ch/doc/master/namespaceRooStats.html#a827f04b74fab219d613f178fa24d0bc9).
 * Tools like ToyMCSampler and HypoTestInverter have been stabilised and better validate their inputs to
 prevent infinite loops or crashes.
+* SPlot now accepts additional arguments for the internal fitting step to *e.g.* add fit ranges or constraint flags.
 
 
 ## 2D Graphics Libraries
