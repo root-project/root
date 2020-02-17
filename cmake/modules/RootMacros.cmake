@@ -125,7 +125,7 @@ endfunction()
 #  COMPILE_DEFINITIONS are used to create the appropriate -I and -D flags
 #
 #---------------------------------------------------------------------------------------------------
-macro(REFLEX_GENERATE_DICTIONARY dictionary)
+function(REFLEX_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" "OPTIONS;DEPENDS;USES" ${ARGN})
   #---Get List of header files---------------
   set(headerfiles)
@@ -172,7 +172,6 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
     endif()
   endforeach()
 
-  set(definitions)
   get_directory_property(defs COMPILE_DEFINITIONS)
   foreach( d ${defs})
    list(APPEND definitions ${d})
@@ -195,6 +194,8 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
     COMMAND_EXPAND_LISTS
     )
 
+  set(gensrcdict ${dictionary}.cxx PARENT_SCOPE)
+
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
     ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictionary})
@@ -209,7 +210,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
     add_custom_target(${targetname} ALL DEPENDS ${gensrcdict})
   endif()
 
-endmacro()
+endfunction()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GET_LIBRARY_OUTPUT_DIR( result_var )
