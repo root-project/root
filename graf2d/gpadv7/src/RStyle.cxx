@@ -68,15 +68,26 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
    if (css_code.empty())
       return true;
 
-   int len = css_code.length(), pos = 0;
+   int len = css_code.length(), pos = 0, nline = 1, linebeg = 0;
 
-   auto skip_empty = [&css_code, &pos, len] () -> bool {
+   auto error_position = [&css_code, len, nline, linebeg] () -> std::string {
+      std::string res = "\nLine "s + std::to_string(nline) + ": "s;
+
+      int p = linebeg;
+      while ((p<len) && (p < linebeg+100) && (css_code[p] != '\n')) ++p;
+
+      return res + css_code.substr(linebeg, p-linebeg);
+   };
+
+   /** Skip comments or just empty space */
+   auto skip_empty = [&css_code, &pos, &nline, &linebeg, len] () -> bool {
       bool skip_until_newline = false, skip_until_endblock = false;
 
       while (pos < len) {
          if (css_code[pos] == '\n') {
             skip_until_newline = false;
-            ++pos;
+            linebeg = ++pos;
+            ++nline;
             continue;
          }
 
@@ -86,7 +97,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
             continue;
          }
 
-         if (skip_until_newline || (css_code[pos] == ' ') || (css_code[pos] == '\t')) {
+         if (skip_until_newline || skip_until_endblock || (css_code[pos] == ' ') || (css_code[pos] == '\t')) {
             ++pos;
             continue;
          }
@@ -152,7 +163,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
       auto sel = scan_identifier(true);
       if (sel.empty()) {
-         R__ERROR_HERE("rstyle") << "Fail to find selector";
+         R__ERROR_HERE("rstyle") << "Fail to find selector" << error_position();
          return false;
       }
 
@@ -160,7 +171,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
          return false;
 
       if (css_code[pos] != '{') {
-         R__ERROR_HERE("rstyle") << "Fail to find starting {";
+         R__ERROR_HERE("rstyle") << "Fail to find starting {" << error_position();
          return false;
       }
 
@@ -174,7 +185,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
       while (css_code[pos] != '}') {
          auto name = scan_identifier();
          if (name.empty()) {
-            R__ERROR_HERE("rstyle") << "not able to extract identifier";
+            R__ERROR_HERE("rstyle") << "not able to extract identifier" << error_position();
             return false;
          }
 
@@ -182,7 +193,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
             return false;
 
          if (css_code[pos] != ':') {
-            R__ERROR_HERE("rstyle") << "not able to find separator :";
+            R__ERROR_HERE("rstyle") << "not able to find separator :" << error_position();
             return false;
          }
 
@@ -192,7 +203,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
          auto value = scan_value();
          if (value.empty()) {
-            R__ERROR_HERE("rstyle") << "not able to find value";
+            R__ERROR_HERE("rstyle") << "not able to find value" << error_position();
             return false;
          }
 
