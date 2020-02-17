@@ -69,21 +69,21 @@ ROOT::Internal::RRawFile::~RRawFile()
    delete[] fBufferSpace;
 }
 
-ROOT::Internal::RRawFile *
+std::unique_ptr<ROOT::Internal::RRawFile>
 ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 {
    std::string transport = GetTransport(url);
    if (transport == "file") {
 #ifdef _WIN32
-      return new RRawFileWin(url, options);
+      return std::unique_ptr<RRawFile>(new RRawFileWin(url, options));
 #else
-      return new RRawFileUnix(url, options);
+      return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
    if (transport == "http" || transport == "https") {
       if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("ROOT::Internal::RRawFile")) {
          if (h->LoadPlugin() == 0) {
-            return reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options));
+            return std::unique_ptr<RRawFile>(reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options)));
          }
          throw std::runtime_error("Cannot load plugin handler for RRawFileDavix");
       }

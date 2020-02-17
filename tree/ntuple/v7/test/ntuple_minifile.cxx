@@ -48,7 +48,7 @@ TEST(MiniFile, Raw)
    auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
    writer->Commit();
 
-   auto rawFile = std::unique_ptr<RRawFile>(RRawFile::Create(fileGuard.GetPath()));
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple");
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
@@ -78,7 +78,7 @@ TEST(MiniFile, Stream)
    auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
    writer->Commit();
 
-   auto rawFile = std::unique_ptr<RRawFile>(RRawFile::Create(fileGuard.GetPath()));
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple");
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
@@ -114,7 +114,7 @@ TEST(MiniFile, Proper)
    auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
    writer->Commit();
 
-   auto rawFile = std::unique_ptr<RRawFile>(RRawFile::Create(fileGuard.GetPath()));
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple");
    EXPECT_EQ(offHeader, ntuple.fSeekHeader);
@@ -154,7 +154,7 @@ TEST(MiniFile, Multi)
    writer1->Commit();
    writer2->Commit();
 
-   auto rawFile = std::unique_ptr<RRawFile>(RRawFile::Create(fileGuard.GetPath()));
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple1 = reader.GetNTuple("FirstNTuple");
    EXPECT_EQ(offHeader1, ntuple1.fSeekHeader);
@@ -196,7 +196,7 @@ TEST(MiniFile, Failures)
    writer->WriteNTupleFooter(&footer, 1, 1);
    writer->Commit();
 
-   auto rawFile = std::unique_ptr<RRawFile>(RRawFile::Create(fileGuard.GetPath()));
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    EXPECT_DEATH(reader.GetNTuple("No such NTiple"), ".*");
 }
