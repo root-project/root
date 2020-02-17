@@ -43,6 +43,8 @@ public:
 
    const RAttrMap::Value_t *Eval(const std::string &field, const RDrawable &drawable) const;
 
+   const RAttrMap::Value_t *Eval(const std::string &field, const std::string &selector) const;
+
    RAttrMap &AddBlock(const std::string &selector)
    {
       fBlocks.emplace_back(selector);

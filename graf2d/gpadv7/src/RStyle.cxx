@@ -19,12 +19,28 @@ using namespace std::string_literals;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Evaluate style
+/// Evaluate attribute value for provided RDrawable
 
 const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable &drawable) const
 {
    for (const auto &block : fBlocks) {
       if (drawable.MatchSelector(block.selector)) {
+         auto res = block.map.Find(field);
+         if (res)
+            return res;
+      }
+   }
+
+   return nullptr;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Evaluate attribute value for provided selector - exact match is expected
+
+const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const std::string &selector) const
+{
+   for (const auto &block : fBlocks) {
+      if (block.selector == selector) {
          auto res = block.map.Find(field);
          if (res)
             return res;
