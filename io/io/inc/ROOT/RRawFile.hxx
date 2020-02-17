@@ -143,7 +143,7 @@ public:
    virtual std::unique_ptr<RRawFile> Clone() const = 0;
 
    /// Factory method that returns a suitable concrete implementation according to the transport in the url
-   static RRawFile *Create(std::string_view url, ROptions options = ROptions());
+   static std::unique_ptr<RRawFile> Create(std::string_view url, ROptions options = ROptions());
    /// Returns only the file location, e.g. "server/file" for http://server/file
    static std::string GetLocation(std::string_view url);
    /// Returns only the transport protocol in lower case, e.g. "http" for HTTP://server/file
