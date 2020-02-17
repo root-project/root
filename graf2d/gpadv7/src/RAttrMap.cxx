@@ -11,6 +11,10 @@
 #include "ROOT/RAttrBase.hxx"
 #include "ROOT/RLogger.hxx"
 
+#include <string>
+#include <algorithm>
+#include <limits>
+
 template<> bool ROOT::Experimental::RAttrMap::Value_t::Get<bool>() const { return GetBool(); }
 template<> int ROOT::Experimental::RAttrMap::Value_t::Get<int>() const { return GetInt(); }
 template<> double ROOT::Experimental::RAttrMap::Value_t::Get<double>() const { return GetDouble(); }
@@ -38,4 +42,63 @@ ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrMap::AddDefaults(const RA
       m[prefix+entry.first] = entry.second->Copy();
 
    return *this;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add attribute, converting to best possible type
+/// Tested boolean, int, double. If non works - store as a string
+
+void ROOT::Experimental::RAttrMap::AddBestMatch(const std::string &name, const std::string &value)
+{
+   if (value.empty()) {
+      AddString(name, value);
+      return;
+   }
+
+   if (value == "true"s) {
+      AddBool(name, true);
+      return;
+   }
+
+   if (value == "false"s) {
+      AddBool(name, false);
+      return;
+   }
+
+   auto beg = value.begin();
+   int base = 10;
+
+   if (*beg == '-') {
+      ++beg;
+   } else if ((value.length() > 2) && (*beg == '0') && (value[1] == 'x')) {
+      beg += 2;
+      base = 16;
+   }
+
+   // check if only digits are present
+   if (std::find_if(beg, value.end(), [](unsigned char c) { return !std::isdigit(c); }) == value.end()) {
+
+      auto ivalue = std::stoll(base==16 ? value.substr(2) : value, nullptr, base);
+
+      if ((ivalue >= std::numeric_limits<int>::min()) && (ivalue <= std::numeric_limits<int>::max()))
+         AddInt(name, ivalue);
+      else
+         AddDouble(name, ivalue);
+
+      return;
+   }
+
+   // check if characters for double is present
+   if (std::find_if(beg, value.end(), [](unsigned char c) { return !std::isdigit(c) && (c!='.') && (c!='-') && (c!='+') && (c!='e'); }) == value.end()) {
+      try {
+         double dvalue = std::stod(value);
+         AddDouble(name, dvalue);
+         return;
+      } catch(...) {
+         // do nothing
+      }
+   }
+
+   AddString(name, value);
+
 }
