@@ -1,5 +1,5 @@
 
-Processing execCheckClusterRange.C...
+Processing fastcloning/execCheckClusterRange.C...
 Cluster # 1 starts at    0 and ends at   49
 Cluster # 2 starts at   50 and ends at   99
 Cluster # 3 starts at  100 and ends at  149
@@ -139,7 +139,7 @@ Cluster #47 starts at 1740 and ends at 1769
 Cluster #48 starts at 1770 and ends at 1799
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1800 : Total =           29346 bytes  File  Size =      17991 *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      17989 *
 *        :          : Tree compression factor =   1.59                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
@@ -218,7 +218,7 @@ Cluster #67 starts at 2340 and ends at 2369
 Cluster #68 starts at 2370 and ends at 2399
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     2400 : Total =           33566 bytes  File  Size =      20846 *
+*Entries :     2400 : Total =           33566 bytes  File  Size =      20848 *
 *        :          : Tree compression factor =   1.56                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size

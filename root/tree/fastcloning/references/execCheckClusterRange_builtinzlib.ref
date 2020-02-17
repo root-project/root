@@ -218,7 +218,7 @@ Cluster #67 starts at 2340 and ends at 2369
 Cluster #68 starts at 2370 and ends at 2399
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     2400 : Total =           33566 bytes  File  Size =      20856 *
+*Entries :     2400 : Total =           33566 bytes  File  Size =      20853 *
 *        :          : Tree compression factor =   1.56                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry        Size
