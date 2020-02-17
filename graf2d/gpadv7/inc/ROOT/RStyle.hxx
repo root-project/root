@@ -32,12 +32,12 @@ class RStyle {
 public:
 
    struct Block_t {
-      std::string selector;
-      RAttrMap map; ///<    container
+      std::string selector;       ///<  css selector
+      RAttrMap map;               ///<  container with attributes
       Block_t() = default;
       Block_t(const std::string &_selector) : selector(_selector) {}
 
-      Block_t(const Block_t &) {} // dummy, should not be used, but appears in dictionary
+      Block_t(const Block_t &src) : selector(src.selector), map(src.map) {} // not required
       Block_t& operator=(const Block_t &) = delete;
    };
 
@@ -48,6 +48,10 @@ public:
       fBlocks.emplace_back(selector);
       return fBlocks.back().map;
    }
+
+   void Clear();
+
+   bool ParseString(const std::string &css_code);
 
 private:
 
