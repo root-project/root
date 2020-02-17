@@ -21,6 +21,7 @@ namespace ROOT {
 namespace Experimental {
 
 class RAttrBase;
+class RStyle;
 
 /** \class RAttrMap
 \ingroup GpadROOT7
@@ -32,6 +33,7 @@ class RAttrBase;
 class RAttrMap {
 
    friend class RAttrBase;
+   friend class RStyle;
 
 public:
 
@@ -101,6 +103,7 @@ private:
    // Once problem fixed, one could make this container a base class
    std::unordered_map<std::string, std::unique_ptr<Value_t>> m; ///< JSON_object
 
+   void AddBestMatch(const std::string &name, const std::string &value);
 
 public:
 

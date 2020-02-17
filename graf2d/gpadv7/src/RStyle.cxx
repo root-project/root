@@ -207,7 +207,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
             return false;
          }
 
-         map.AddString(name, value);
+         map.AddBestMatch(name, value);
 
          if (!skip_empty())
             return false;
