@@ -10,32 +10,43 @@ TEST(RStyleTest, ParseCss)
 {
    auto style = std::make_shared<ROOT::Experimental::RStyle>();
 
-   bool res1 = style->ParseString("csstype { attr1:value1; attr2:value2; }");
-   EXPECT_EQ(res1, true);
+   bool res = style->ParseString(
+         "/* Basic example of CSS file \n"
+         "   shows how different blocks can be defined */\n"
+         "csstype {\n"
+         "  attr1: value1;\n"
+         "  attr2: value2;\n"
+         "}\n"
+         "\n"
+         "// this is rule for css class\n"
+         ".cssclass {\n"
+         "   attr3: value3;\n"
+         "   attr4: value4;\n"
+         "}\n"
+         "\n"
+         "// this is rule for some specific identifier\n"
+         "#cssid {\n"
+         "   attr5: value5;\n"
+         "   attr6: value6;\n"
+         "}\n"
+         );
 
-   bool res2 = style->ParseString(".cssclass { attr3:value3; attr4:value4; }");
-   EXPECT_EQ(res2, true);
+   ASSERT_EQ(res, true);
 
-   bool res3 = style->ParseString("#cssid { attr5:value5; attr6:value6; }");
-   EXPECT_EQ(res3, true);
+   auto field1 = style->Eval("attr1", "csstype");
 
-   if (res1 && res2 && res3) {
+   ASSERT_NE(field1, nullptr);
+   EXPECT_EQ(field1->GetString(), "value1");
 
-      auto field1 = style->Eval("attr1", "csstype");
+   auto field4 = style->Eval("attr4", ".cssclass");
 
-      ASSERT_NE(field1, nullptr);
-      EXPECT_EQ(field1->GetString(), "value1");
+   ASSERT_NE(field4, nullptr);
+   EXPECT_EQ(field4->GetString(), "value4");
 
-      auto field4 = style->Eval("attr4", ".cssclass");
+   auto field5 = style->Eval("attr5", "#cssid");
 
-      ASSERT_NE(field4, nullptr);
-      EXPECT_EQ(field4->GetString(), "value4");
-
-      auto field5 = style->Eval("attr5", "#cssid");
-
-      ASSERT_NE(field5, nullptr);
-      EXPECT_EQ(field5->GetString(), "value5");
-   }
+   ASSERT_NE(field5, nullptr);
+   EXPECT_EQ(field5->GetString(), "value5");
 }
 
 
