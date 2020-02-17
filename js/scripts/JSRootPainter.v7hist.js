@@ -62,7 +62,7 @@
       if (histo && !histo.getBinContent) {
          console.log('histo type', histo._typename);
          if (histo.fAxes._1) {
-            histo.getBin = function(x, y) { return (x + this.fAxes._0.fNBins * y); }
+            histo.getBin = function(x, y) { return (x + (this.fAxes._0.GetNumBins() + 2) * y); }
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
             histo.getBinError = function(x,y) {
                var bin = this.getBin(x,y);
@@ -222,18 +222,20 @@
 
       if (axis._typename == "ROOT::Experimental::RAxisEquidistant") {
          axis.min = axis.fLow;
-         axis.max = axis.fLow + (axis.fNBins-2)/axis.fInvBinWidth;
+         axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
 
+         axis.GetNumBins = function() { return this.fNBinsNoOver; }
          axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; };
          axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); };
 
       } else {
          axis.min = axis.fBinBorders[0];
-         axis.max = axis.fBinBorders[axis.fNBins - 2];
+         axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
+         axis.GetNumBins = function() { return this.fBinBorders.length-1; }
          axis.GetBinCoord = function(bin) {
             var indx = Math.round(bin);
             if (indx <= 0) return this.fBinBorders[0];
-            if (indx > this.fNBins - 2) return this.fBinBorders[this.fNBins - 2];
+            if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
             if (indx==bin) return this.fBinBorders[indx];
             var indx2 = (bin < indx) ? indx - 1 : indx + 1;
             return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);
@@ -241,7 +243,7 @@
          axis.FindBin = function(x,add) {
             for (var k = 1; k < this.fBinBorders.length; ++k)
                if (x < this.fBinBorders[k]) return Math.floor(k-1+add);
-            return this.fNBins - 2;
+            return this.fBinBorders.length - 1;
          };
       }
 
@@ -807,7 +809,7 @@
       if (!this.nbinsx && when_axis_changed) when_axis_changed = false;
 
       if (!when_axis_changed) {
-         this.nbinsx = this.GetAxis("x").fNBins - 2;
+         this.nbinsx = this.GetAxis("x").GetNumBins();
          this.nbinsy = 0;
          this.CreateAxisFuncs(false);
       }
@@ -1976,8 +1978,8 @@
 
       var i, j, histo = this.GetHisto();
 
-      this.nbinsx = this.GetAxis("x").fNBins - 2;
-      this.nbinsy = this.GetAxis("y").fNBins - 2;
+      this.nbinsx = this.GetAxis("x").GetNumBins();
+      this.nbinsy = this.GetAxis("y").GetNumBins();
 
       // used in CreateXY method
 
