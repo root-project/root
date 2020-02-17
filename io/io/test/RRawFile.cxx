@@ -147,7 +147,7 @@ TEST(RRawFile, Readln)
 TEST(RRawFile, ReadV)
 {
    FileRaii readvGuard("test_rawfile_readv", "Hello, World");
-   std::unique_ptr<RRawFile> f(RRawFile::Create("test_rawfile_readv"));
+   auto f = RRawFile::Create("test_rawfile_readv");
 
    char buffer[2];
    buffer[0] = buffer[1] = 0;
