@@ -1488,7 +1488,6 @@ static void ResolveTypedefImpl(const char *tname,
 
    if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
       cursor += 2;
-      len -= 2;
    }
 
    unsigned int start_of_type = cursor;
