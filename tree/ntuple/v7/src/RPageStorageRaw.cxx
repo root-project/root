@@ -194,7 +194,7 @@ ROOT::Experimental::Detail::RPageSourceRaw::RPageSourceRaw(std::string_view ntup
    const RNTupleReadOptions &options)
    : RPageSourceRaw(ntupleName, options)
 {
-   fFile = std::unique_ptr<ROOT::Internal::RRawFile>(ROOT::Internal::RRawFile::Create(path));
+   fFile = ROOT::Internal::RRawFile::Create(path);
    R__ASSERT(fFile);
    R__ASSERT(fFile->GetFeatures() & ROOT::Internal::RRawFile::kFeatureHasSize);
 }
