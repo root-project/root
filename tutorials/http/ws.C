@@ -79,7 +79,7 @@ void ws()
 
    if (gSystem->InheritsFrom("TMacOSXSystem"))
       gSystem->Exec(Form("open %s", addr));
-   else if (gSystem->InheritsFrom("TWinNTSystem")) {
+   else if (gSystem->InheritsFrom("TWinNTSystem"))
       gSystem->Exec(Form("start %s", addr));
    else
       gSystem->Exec(Form("xdg-open %s &", addr));
