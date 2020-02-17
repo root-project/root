@@ -13,9 +13,9 @@ class TUserHandler : public THttpWSHandler {
       UInt_t fWSId;
       Int_t fServCnt;
 
-      TUserHandler(const char *name = 0, const char *title = 0) : THttpWSHandler(name, title), fWSId(0), fServCnt(0) {}
+      TUserHandler(const char *name = nullptr, const char *title = nullptr) : THttpWSHandler(name, title), fWSId(0), fServCnt(0) {}
 
-      // load custom HTML page when open correpondent address
+      // load custom HTML page when open correspondent address
       TString GetDefaultPageContent() { return "file:ws.htm"; }
 
       virtual Bool_t ProcessWS(THttpCallArg *arg)
@@ -75,9 +75,12 @@ void ws()
 
    printf("Starting browser with URL address %s\n", addr);
    printf("In browser content of ws.htm file should be loaded\n");
+   printf("Please be sure that ws.htm is provided in current directory\n");
 
    if (gSystem->InheritsFrom("TMacOSXSystem"))
       gSystem->Exec(Form("open %s", addr));
+   else if (gSystem->InheritsFrom("TWinNTSystem")) {
+      gSystem->Exec(Form("start %s", addr));
    else
       gSystem->Exec(Form("xdg-open %s &", addr));
 
