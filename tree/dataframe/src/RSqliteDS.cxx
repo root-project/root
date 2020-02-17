@@ -197,7 +197,7 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
    if (flags & (SQLITE_OPEN_READWRITE | SQLITE_OPEN_DELETEONCLOSE | SQLITE_OPEN_EXCLUSIVE))
       return SQLITE_IOERR;
 
-   p->fRawFile = std::unique_ptr<ROOT::Internal::RRawFile>(ROOT::Internal::RRawFile::Create(zName));
+   p->fRawFile = ROOT::Internal::RRawFile::Create(zName);
    if (!p->fRawFile) {
       ::Error("VfsRdOnlyOpen", "Cannot open %s\n", zName);
       return SQLITE_IOERR;
