@@ -81,8 +81,7 @@ public:
 
    void AddHex(const REveVector& pos, Float_t r, Float_t angle, Float_t depth);
 
-   virtual void ComputeBBox() override;
-   // virtual void Paint(Option_t* option = "");
+   void ComputeBBox() override;
 
    void Test(Int_t nboxes);
 
