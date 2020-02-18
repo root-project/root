@@ -177,6 +177,8 @@ long TClingTypeInfo::Property() const
          else if (CRD->isUnion()) {
             property |= kIsUnion;
          }
+         // isAbstract can trigger deserialization
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          if (CRD->isThisDeclarationADefinition() && CRD->isAbstract()) {
             property |= kIsAbstract;
          }
