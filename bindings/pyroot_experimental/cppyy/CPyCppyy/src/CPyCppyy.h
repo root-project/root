@@ -209,8 +209,8 @@ static inline const char* CPyCppyy_PyText_AsStringAndSize(PyObject* pystr, Py_ss
 #define Py_TYPE(ob)             (((PyObject*)(ob))->ob_type)
 #endif
 
-// API changes in 2.5 (int -> Py_ssize_t) and 3.5 (PyUnicodeObject -> PyObject)
-#if PY_VERSION_HEX < 0x03050000
+// API changes in 2.5 (int -> Py_ssize_t) and 3.2 (PyUnicodeObject -> PyObject)
+#if PY_VERSION_HEX < 0x03020000
 static inline Py_ssize_t CPyCppyy_PyUnicode_AsWideChar(PyObject* pyobj, wchar_t* w, Py_ssize_t size)
 {
 #if PY_VERSION_HEX < 0x02050000
