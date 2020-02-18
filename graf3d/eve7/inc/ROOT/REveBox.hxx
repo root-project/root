@@ -48,8 +48,6 @@ public:
    void BuildRenderData() override;
    // Projectable:
    virtual TClass* ProjectedClass(const REveProjection* p) const override;
-
-   // ClassDef(REveBox, 0); // 3D box with arbitrary vertices.
 };
 
 
@@ -69,9 +67,9 @@ protected:
    Int_t        fBreakIdx;
    vVector2_t   fDebugPoints;
 
-   virtual void SetDepthLocal(Float_t d) override;
+   Bool_t       fDebugCornerPoints;
 
-   static Bool_t fgDebugCornerPoints;
+   virtual void SetDepthLocal(Float_t d) override;
 
 public:
    REveBoxProjected(const char* n="REveBoxProjected", const char* t="");
@@ -80,10 +78,11 @@ public:
    void BuildRenderData() override;
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 
-
    // For TAttBBox:
    void ComputeBBox() override;
 
+   Bool_t GetDebugCornerPoints();
+   void   SetDebugCornerPoints(Bool_t d);
 
    // Projected:
    void SetProjection(REveProjectionManager* mng, REveProjectable* model) override;

@@ -137,14 +137,13 @@ Projection of REveBox.
 */
 
 
-Bool_t REveBoxProjected::fgDebugCornerPoints = kFALSE;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
 REveBoxProjected::REveBoxProjected(const char* n, const char* t) :
    REveShape(n, t),
-   fBreakIdx(0)
+   fBreakIdx(0),
+   fDebugCornerPoints(false)
 {
 }
 
@@ -219,7 +218,7 @@ void REveBoxProjected::UpdateProjection()
          if (! overlap)
          {
             ppv.push_back(p);
-            if (fgDebugCornerPoints)
+            if (fDebugCornerPoints)
                fDebugPoints.push_back(p);
          }
       }
@@ -238,14 +237,13 @@ void REveBoxProjected::UpdateProjection()
       FindConvexHull(pp[1], fPoints, this);
    }
 }
-/*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get state of fgDebugCornerPoints static.
 
 Bool_t REveBoxProjected::GetDebugCornerPoints()
 {
-   return fgDebugCornerPoints;
+   return fDebugCornerPoints;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,8 +253,8 @@ Bool_t REveBoxProjected::GetDebugCornerPoints()
 
 void REveBoxProjected::SetDebugCornerPoints(Bool_t d)
 {
-   fgDebugCornerPoints = d;
-   }*/
+   fDebugCornerPoints = d;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Crates 3D point array for rendering.
