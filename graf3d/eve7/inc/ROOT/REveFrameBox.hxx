@@ -13,15 +13,12 @@
 #define ROOT_REveFrameBox
 
 #include "ROOT/REveUtil.hxx"
-#include "TObject.h"
 
 namespace ROOT {
 namespace Experimental {
 
-class REveFrameBox : public TObject, public REveRefBackPtr
+class REveFrameBox : public REveRefBackPtr
 {
-   friend class REveFrameBoxGL;
-
 public:
    enum EFrameType_e  { kFT_None, kFT_Quad, kFT_Box };
 
@@ -88,7 +85,6 @@ public:
    Bool_t GetDrawBack() const   { return fDrawBack; }
    void   SetDrawBack(Bool_t f) { fDrawBack = f;    }
 
-   ClassDef(REveFrameBox, 0); // Description of a 2D or 3D frame that can be used to visually group a set of objects.
 };
 
 } // namespace Experimental
