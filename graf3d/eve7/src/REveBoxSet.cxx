@@ -401,7 +401,7 @@ void REveBoxSet::BuildRenderData()
          }
          else if (fSingleColor == false)
          {
-            UChar_t c[4];
+            UChar_t c[4] = {0, 0, 0, 0};
             Bool_t visible = fPalette->ColorFromValue(b.fValue, fDefaultValue, c);
 
             int value =
@@ -413,7 +413,7 @@ void REveBoxSet::BuildRenderData()
 
             // presume transparency 100% when non-visible
             if (!visible)
-               value += 256*256*256*c[4];
+               value += 256*256*256*c[3];
 
 
             fRenderData->PushI(value);
