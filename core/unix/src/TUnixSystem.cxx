@@ -2153,6 +2153,7 @@ void TUnixSystem::Exit(int code, Bool_t mode)
 
 void TUnixSystem::Abort(int)
 {
+   IgnoreSignal(kSigAbort);
    ::abort();
 }
 
@@ -3631,6 +3632,8 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       if (gExceptionHandler)
          gExceptionHandler->HandleException(sig);
       else {
+         if (sig == kSigAbort)
+            return;
          Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
          StackTrace();
          if (gApplication)
