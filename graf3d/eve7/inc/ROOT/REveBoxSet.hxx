@@ -24,8 +24,8 @@ class REveBoxSet: public REveDigitSet
 {
    friend class REveBoxSetGL;
 
-   REveBoxSet(const REveBoxSet&);            // Not implemented
-   REveBoxSet& operator=(const REveBoxSet&); // Not implemented
+   REveBoxSet(const REveBoxSet&) = delete;
+   REveBoxSet& operator=(const REveBoxSet&) = delete;
 
 public:
    enum EBoxType_e {

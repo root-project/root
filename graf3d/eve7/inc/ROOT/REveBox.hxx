@@ -25,8 +25,8 @@ class REveBox : public REveShape,
                 public REveProjectable
 {
 private:
-   REveBox(const REveBox&);            // Not implemented
-   REveBox& operator=(const REveBox&); // Not implemented
+   REveBox(const REveBox&) = delete;
+   REveBox& operator=(const REveBox&) = delete;
 
 protected:
    Float_t fVertices[8][3];
@@ -61,8 +61,8 @@ class REveBoxProjected : public REveShape,
                          public REveProjected
 {
 private:
-   REveBoxProjected(const REveBoxProjected&);            // Not implemented
-   REveBoxProjected& operator=(const REveBoxProjected&); // Not implemented
+   REveBoxProjected(const REveBoxProjected&) = delete;
+   REveBoxProjected& operator=(const REveBoxProjected&) = delete;
 
 protected:
    vVector2_t   fPoints;
