@@ -1,3 +1,5 @@
+#ifndef ROOJSONFACTORYWSTOOL_H
+#define ROOJSONFACTORYWSTOOL_H
 #include "RooWorkspace.h"
 #include "TH1.h"
 #include <string>
@@ -5,8 +7,11 @@
 class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   RooWorkspace* _workspace;
   static std::vector<std::string> _strcache;
+  void prepare();
  public:
   RooJSONFactoryWSTool(RooWorkspace& ws);
+  static const char* incache(const std::string& str);
+  static void clearcache();
 
   template<class T> static void exportHistogram(const TH1& h, T& n, const std::vector<std::string>& obsnames);
   
@@ -34,3 +39,4 @@ protected:
   template<class T> void exportAll(T& n);  
   template<class T> void exportDependants(RooAbsArg* source, T& n);
 };
+#endif

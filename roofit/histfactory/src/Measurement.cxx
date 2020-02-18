@@ -256,6 +256,7 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
 #include <ryml.hpp>
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
+#include "RooStats/HistFactory/RooJSONFactoryWSTool.h"
 
 namespace RooStats { namespace HistFactory {
     void read(c4::yml::NodeRef const& n, PreprocessFunction *v)
@@ -307,12 +308,8 @@ namespace c4 { namespace yml {
   }
 }
 
-namespace {
-  std::vector<std::string> _strcache;
-}
-
 template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) const {
-  _strcache.clear();
+  RooJSONFactoryWSTool::clearcache();
   for(const auto& ch:this->fChannels){
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }
@@ -366,7 +363,6 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
     }
   }
   
-  
   for(const auto& norm:normfactors){
     auto node = parlist[c4::to_csubstr(norm.second.GetName())];
     node |= c4::yml::MAP;
@@ -379,15 +375,13 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   }
   
   // pdfs
-
   for(const auto& sys:constraints){
     auto node = pdflist[c4::to_csubstr(sys.first)];
     node |= c4::yml::MAP;
     node["type"] << RooStats::HistFactory::Constraint::Name(sys.second);
     if(sys.second == RooStats::HistFactory::Constraint::Gaussian){
       std::string xname = std::string("alpha_")+sys.first;
-      _strcache.push_back(xname);
-      auto xpar = parlist[c4::to_csubstr(_strcache[_strcache.size()-1])];
+      auto xpar = parlist[c4::to_csubstr(RooJSONFactoryWSTool::incache(xname))];
       xpar |= c4::yml::MAP;
       xpar["value"] << 0;      
       xpar["max"] << 5.;
@@ -398,7 +392,7 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
       node["sigma"] << "1.";
     }
   }
-  
+
   for(const auto& sys:fGammaSyst){
     auto node = pdflist[c4::to_csubstr(sys.first)];
     node |= c4::yml::MAP;
@@ -432,16 +426,17 @@ template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) 
   sim |= c4::yml::MAP;
   sim["type"] << "simultaneous";
   auto simdict = sim["dict"];
-  simdict |= c4::yml::MAP;
-  simdict["toplevel"] << true;
+  simdict |= c4::yml::MAP;  
   simdict["InterpolationScheme"] << fInterpolationScheme;  
+  simdict["toplevel"] << true;
   auto ch = sim["pdfs"];
   ch |= c4::yml::MAP;  
   auto chlist = sim["channels"];  
-  chlist |= c4::yml::SEQ;
+  chlist |= c4::yml::MAP;
   for(const auto& c:fChannels){
     c.Export(ch);
-    chlist.append_child() << c.GetName();
+    auto chentry = chlist[c4::to_csubstr(RooJSONFactoryWSTool::incache(c.GetName()))];
+    chentry << c.GetName();
   }
 }
 #endif
