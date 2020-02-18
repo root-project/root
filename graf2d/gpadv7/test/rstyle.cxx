@@ -59,6 +59,29 @@ TEST(RStyleTest, CreateStyle)
    EXPECT_DOUBLE_EQ(drawable.GetAttrText().GetSize(), 3.);
 }
 
+
+TEST(RStyleTest, CreateCss)
+{
+   auto style = std::make_shared<RStyle>();
+
+   auto res = style->ParseString("custom { line_width: 2; } #customid { box_fill_style: 5; } .custom_class { text_size: 3; }");
+
+   ASSERT_EQ(res, true);
+
+   CustomDrawable drawable;
+   drawable.SetId("customid");
+   drawable.SetCssClass("custom_class");
+
+   drawable.UseStyle(style);
+
+   EXPECT_DOUBLE_EQ(drawable.GetAttrLine().GetWidth(), 2.);
+
+   EXPECT_EQ(drawable.AttrBox().GetAttrFill().GetStyle(), 5);
+
+   EXPECT_DOUBLE_EQ(drawable.GetAttrText().GetSize(), 3.);
+}
+
+
 TEST(RStyleTest, LostStyle)
 {
    CustomDrawable drawable;
