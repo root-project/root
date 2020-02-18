@@ -145,6 +145,10 @@ long TClingClassInfo::ClassProperty() const
    }
    long property = 0L;
    const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());
+
+   // isAbstract and other calls can trigger deserialization
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    if (!RD) {
       // We are an enum or namespace.
       // The cint interface always returns 0L for these guys.
