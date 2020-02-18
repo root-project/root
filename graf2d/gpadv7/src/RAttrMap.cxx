@@ -67,6 +67,7 @@ void ROOT::Experimental::RAttrMap::AddBestMatch(const std::string &name, const s
 
    auto beg = value.begin();
    int base = 10;
+   bool int_conversion_fails = false;
 
    if (*beg == '-') {
       ++beg;
@@ -78,27 +79,34 @@ void ROOT::Experimental::RAttrMap::AddBestMatch(const std::string &name, const s
    // check if only digits are present
    if (std::find_if(beg, value.end(), [](unsigned char c) { return !std::isdigit(c); }) == value.end()) {
 
-      auto ivalue = std::stoll(base==16 ? value.substr(2) : value, nullptr, base);
+      try {
 
-      if ((ivalue >= std::numeric_limits<int>::min()) && (ivalue <= std::numeric_limits<int>::max()))
-         AddInt(name, ivalue);
-      else
-         AddDouble(name, ivalue);
+         auto ivalue = std::stoll(base == 16 ? value.substr(2) : value, nullptr, base);
 
-      return;
+         if ((ivalue >= std::numeric_limits<int>::min()) && (ivalue <= std::numeric_limits<int>::max()))
+            AddInt(name, ivalue);
+         else
+            AddDouble(name, ivalue);
+
+         return;
+      } catch (...) {
+         // int conversion fails
+         int_conversion_fails = true;
+      }
    }
 
    // check if characters for double is present
-   if (std::find_if(beg, value.end(), [](unsigned char c) { return !std::isdigit(c) && (c!='.') && (c!='-') && (c!='+') && (c!='e'); }) == value.end()) {
+   if (!int_conversion_fails && std::find_if(beg, value.end(), [](unsigned char c) {
+                                   return !std::isdigit(c) && (c != '.') && (c != '-') && (c != '+') && (c != 'e');
+                                }) == value.end()) {
       try {
          double dvalue = std::stod(value);
          AddDouble(name, dvalue);
          return;
-      } catch(...) {
+      } catch (...) {
          // do nothing
       }
    }
 
    AddString(name, value);
-
 }
