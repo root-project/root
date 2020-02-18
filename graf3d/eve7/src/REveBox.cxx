@@ -160,11 +160,8 @@ REveBoxProjected::~REveBoxProjected()
 
 void REveBoxProjected::ComputeBBox()
 {
-   BBoxInit();
-   for (vVector2_i i = fPoints.begin(); i != fPoints.end(); ++i)
-   {
-      BBoxCheckPoint(i->fX, i->fY, fDepth);
-   }
+   for (auto &pnt: fPoints)
+      BBoxCheckPoint(pnt.fX, pnt.fY, fDepth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,9 +208,9 @@ void REveBoxProjected::UpdateProjection()
 
          REveVector2 p(pbuf);
          Bool_t      overlap = kFALSE;
-         for (vVector2_i j = ppv.begin(); j != ppv.end(); ++j)
+         for (auto &j: ppv)
          {
-            if (p.SquareDistance(*j) < REveProjection::fgEpsSqr)
+            if (p.SquareDistance(j) < REveProjection::fgEpsSqr)
             {
                overlap = kTRUE;
                break;
