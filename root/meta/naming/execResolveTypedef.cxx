@@ -42,6 +42,7 @@ public:
 
 class cl { public: template <class T> class inner; };
 typedef cl cl_t;
+typedef int SomeTypedefName_t;
 
 bool testing(const char *expected, const std::string &result)
 {
@@ -200,6 +201,10 @@ int execResolveTypedef()
    testing("vector<const cl::inner<const long>*const>",TClassEdit::ResolveTypedef("vector<const cl_t::inner<const long> *const>"));
    testing("const cl::inner<const long>*const",TClassEdit::ResolveTypedef("const cl_t::inner<const long> *const"));
 
+   testing("::int",TClassEdit::ResolveTypedef("::SomeTypedefName_t"));
+   testing("::Unknown",TClassEdit::ResolveTypedef("::Unknown"));
+   testing("::SomeTypedefName_tSF",TClassEdit::ResolveTypedef("::SomeTypedefName_tSF")); // the last 2 characters used to be ignored.
+   testing("::int",TClassEdit::ResolveTypedef("::Int_t"));
    // Add an example like pair<...::type_t,int>
 
    return 0;

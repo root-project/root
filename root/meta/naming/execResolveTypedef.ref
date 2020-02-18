@@ -80,4 +80,8 @@ Test 76 The result is correct: vector<const cl::inner<const long>*const>
 Test 77 The result is correct: const cl::inner<const long>*const
 Test 78 The result is correct: vector<const cl::inner<const long>*const>
 Test 79 The result is correct: const cl::inner<const long>*const
+Test 80 The result is correct: ::int
+Test 81 The result is correct: ::Unknown
+Test 82 The result is correct: ::SomeTypedefName_tSF
+Test 83 The result is correct: ::int
 (int) 0
