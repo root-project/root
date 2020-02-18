@@ -50,7 +50,7 @@ public:
       // Base-class for digit representation classes.
 
       Int_t  fValue;    // signal value of a digit (can be direct RGBA color)
-      void  *fUserData; // user-data for given digit
+      void  *fUserData{nullptr}; // user-data for given digit
 
       DigitBase_t(Int_t v=0) : fValue(v), fUserData(0) {}
    };
