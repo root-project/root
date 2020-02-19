@@ -47,7 +47,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     src/RAttrBase.cxx
     src/RPalette.cxx
     src/RStyle.cxx
-    src/RStyleReader.cxx
     src/RPadBase.cxx
     src/RPad.cxx
     src/RPadExtent.cxx
