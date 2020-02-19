@@ -1437,7 +1437,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          bool first = true;
 
          fValue = "{";
-         if (fTypeNameTag.Length() > 0) {
+         if ((fTypeNameTag.Length() > 0) && !IsSkipClassInfo(cl)) {
             fValue.Append("\"");
             fValue.Append(fTypeNameTag);
             fValue.Append("\"");
