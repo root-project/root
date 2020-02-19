@@ -74,6 +74,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/ToyMCStudy.h
     RooStats/UniformProposal.h
     RooStats/UpperLimitMCSModule.h
+    RooStats/RooJSONFactoryWSTool.h       
   SOURCES
     src/AsymptoticCalculator.cxx
     src/BayesianCalculator.cxx
@@ -125,6 +126,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/ToyMCStudy.cxx
     src/UniformProposal.cxx
     src/UpperLimitMCSModule.cxx
+    src/RooJSONFactoryWSTool.cxx    
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
@@ -141,3 +143,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     Graf
     Gpad
 )
+
+if(yml)
+  FIND_PACKAGE(ryml)
+  SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DINCLUDE_RYML")
+  target_include_directories(RooStats PRIVATE ${RYML_INCLUDE_DIRS})
+  target_link_libraries(RooStats PRIVATE -lc4core -lryml)
+  target_link_directories(RooStats PRIVATE ${RYML_LIB_DIR})  
+endif()

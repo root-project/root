@@ -1,4 +1,4 @@
-#include <RooStats/HistFactory/RooJSONFactoryWSTool.h>
+#include <RooStats/RooJSONFactoryWSTool.h>
 
 #include <iostream>
 #include <fstream>

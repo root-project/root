@@ -1,5 +1,8 @@
-#include <RooStats/HistFactory/RooJSONFactoryWSTool.h>
+#include <RooStats/RooJSONFactoryWSTool.h>
 
+#include <RooStats/HistFactory/ParamHistFunc.h>
+#include <RooStats/HistFactory/PiecewiseInterpolation.h>
+#include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooConstVar.h>
 #include <RooCategory.h>
 #include <RooRealVar.h>
@@ -10,10 +13,6 @@
 #include <RooSimultaneous.h>
 #include <RooPoisson.h>
 #include <RooProduct.h>
-
-#include <RooStats/HistFactory/ParamHistFunc.h>
-#include <RooStats/HistFactory/PiecewiseInterpolation.h>
-#include <RooStats/HistFactory/FlexibleInterpVar.h>
 
 namespace {
   // error handling helpers
