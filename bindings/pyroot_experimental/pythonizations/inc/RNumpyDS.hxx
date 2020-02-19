@@ -8,6 +8,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+// Include Python.h first before any standard header
+#include "Python.h"
+
 #include "ROOT/RIntegerSequence.hxx"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RDataSource.hxx"
@@ -20,8 +23,6 @@
 #include <string>
 #include <typeinfo>
 #include <vector>
-
-#include "Python.h"
 
 #ifndef ROOT_RNUMPYDS
 #define ROOT_RNUMPYDS
