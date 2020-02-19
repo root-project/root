@@ -63,7 +63,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/RooBarlowBeestonLL.cxx
     src/Sample.cxx
     src/Systematics.cxx
-    src/RooJSONFactoryWSTool.cxx        
+    src/RooJSONFactoryWSTool.cxx
+    src/RYMLFactories.cxx            
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

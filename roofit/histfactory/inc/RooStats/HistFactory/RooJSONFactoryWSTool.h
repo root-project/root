@@ -46,6 +46,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   static void clearcache();
 
   template<class T> static void exportHistogram(const TH1& h, T& n, const std::vector<std::string>& obsnames);
+  static std::vector<std::vector<int> > generateBinIndices(RooArgList& vars);
   
   Bool_t importJSON(const char* filename);
   Bool_t importYML(const char* filename);

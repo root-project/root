@@ -291,15 +291,15 @@ namespace RooStats { namespace HistFactory {
 }
 
 namespace c4 { namespace yml {
-    template<class T> void read(c4::yml::NodeRef const& n, vector<T> *v){
+    template<class T> void read(NodeRef const& n, std::vector<T> *v){
       for(size_t i=0; i<n.num_children(); ++i){
-        T e;
+        std::string e;
         n[i]>>e;
         v->push_back(e);
       }
     }
     
-    template<class T> void write(c4::yml::NodeRef *n, vector<T> const& v){
+    template<class T> void write(NodeRef *n, std::vector<T> const& v){
       *n |= c4::yml::SEQ;
       for(auto e:v){
         n->append_child() << e;
@@ -307,6 +307,7 @@ namespace c4 { namespace yml {
     }
   }
 }
+
 
 template<> void RooStats::HistFactory::Measurement::Export(c4::yml::NodeRef& n) const {
   RooJSONFactoryWSTool::clearcache();
