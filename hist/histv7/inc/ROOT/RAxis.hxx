@@ -101,7 +101,7 @@ protected:
    /// Default implementation should work for any RAxis type, but is a little
    /// bit stupid. RAxis implementations are encouraged to provide optimized
    /// overrides for common comparison scenarios.
-   virtual bool HasSameBinBordersAs(const RAxisBase& other) const noexcept {
+   virtual bool HasSameBinBordersAs(const RAxisBase& other) const {
       // Axis growability (and thus under/overflow bin existence) must match
       if (CanGrow() != other.CanGrow()) return false;
 
@@ -338,28 +338,28 @@ public:
 
    /// Get the bin center for the given bin index.
    /// The result of this method on an overflow or underflow bin is unspecified
-   virtual double GetBinCenter(int bin) const noexcept = 0;
+   virtual double GetBinCenter(int bin) const = 0;
 
    /// Get the low bin border ("left edge") for the given bin index.
    /// The result of this method on an underflow bin is unspecified
-   virtual double GetBinFrom(int bin) const noexcept = 0;
+   virtual double GetBinFrom(int bin) const = 0;
 
    /// Get the high bin border ("right edge") for the given bin index.
    /// The result of this method on an overflow bin is unspecified
-   double GetBinTo(int bin) const noexcept { return GetBinFrom(bin + 1); }
+   double GetBinTo(int bin) const { return GetBinFrom(bin + 1); }
 
    /// Get the low end of the axis range.
-   double GetMinimum() const noexcept { return GetBinTo(GetUnderflowBin()); }
+   double GetMinimum() const { return GetBinTo(GetUnderflowBin()); }
 
    /// Get the high end of the axis range.
-   double GetMaximum() const noexcept { return GetBinFrom(GetOverflowBin()); }
+   double GetMaximum() const { return GetBinFrom(GetOverflowBin()); }
 
    /// Check if two axes use the same binning convention, i.e.
    ///
    /// - Either they are both growable or neither of them is growable.
    /// - Minimum, maximum, and all bin borders in the middle are the same.
    /// - Any metadata attached to the bin (e.g. bin labels) must match.
-   bool HasSameBinningAs(const RAxisBase& other) const noexcept {
+   bool HasSameBinningAs(const RAxisBase& other) const {
       // Bin borders must match
       if (!HasSameBinBordersAs(other)) return false;
 
@@ -444,7 +444,7 @@ protected:
    }
 
    // See RAxisBase documentation
-   bool HasSameBinBordersAs(const RAxisBase& other) const noexcept override {
+   bool HasSameBinBordersAs(const RAxisBase& other) const override {
       // This is an optimized override for the equidistant-equidistant case,
       // fall back to the default implementation if we're not in that case.
       auto other_eq_ptr = dynamic_cast<const RAxisEquidistant*>(&other);
@@ -516,13 +516,13 @@ public:
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.25.
    /// The result of this method on an overflow or underflow bin is unspecified
-   double GetBinCenter(int bin) const noexcept final override { return fLow + (bin - *begin() + 0.5) / fInvBinWidth; }
+   double GetBinCenter(int bin) const final override { return fLow + (bin - *begin() + 0.5) / fInvBinWidth; }
 
    /// Get the low bin border for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.
    /// The result of this method on an underflow bin is unspecified
-   double GetBinFrom(int bin) const noexcept final override { return fLow + (bin - *begin()) / fInvBinWidth; }
+   double GetBinFrom(int bin) const final override { return fLow + (bin - *begin()) / fInvBinWidth; }
 
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
@@ -643,7 +643,7 @@ private:
 
 protected:
    // See RAxisBase documentation
-   bool HasSameBinBordersAs(const RAxisBase& other) const noexcept override {
+   bool HasSameBinBordersAs(const RAxisBase& other) const override {
       // This is an optimized override for the irregular-irregular case,
       // fall back to the default implementation if we're not in that case.
       auto other_irr_ptr = dynamic_cast<const RAxisIrregular*>(&other);
@@ -734,7 +734,7 @@ public:
    /// Similarly, for the bin at index N + 1 (i.e. the overflow bin), a bin
    /// center of `std::numeric_limits<double>::max()` is returned, i.e. the
    /// largest value that can be held in a double.
-   double GetBinCenter(int bin) const noexcept final override
+   double GetBinCenter(int bin) const final override
    {
       if (IsUnderflowBin(bin))
          return std::numeric_limits<double>::lowest();
@@ -751,7 +751,7 @@ public:
    /// Similarly, for the bin at index N + 2 (i.e. after the overflow bin), a
    /// lower bin border of `std::numeric_limits<double>::max()` is returned,
    /// i.e. the largest value that can be held in a double.
-   double GetBinFrom(int bin) const noexcept final override
+   double GetBinFrom(int bin) const final override
    {
       if (IsUnderflowBin(bin))
          return std::numeric_limits<double>::lowest();
