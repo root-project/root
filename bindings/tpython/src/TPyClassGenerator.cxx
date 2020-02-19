@@ -9,12 +9,13 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-#include "TPyClassGenerator.h"
-#include "TPyReturn.h"
-
 // Bindings
+// CPyCppyy.h must be go first, since it includes Python.h, which must be
+// included before any standard header
 #include "CPyCppyy.h"
 #include "PyStrings.h"
+#include "TPyClassGenerator.h"
+#include "TPyReturn.h"
 #include "Utility.h"
 
 // ROOT
