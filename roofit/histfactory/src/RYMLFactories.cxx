@@ -9,9 +9,7 @@
 #include <RooProdPdf.h>
 #include <RooSimultaneous.h>
 #include <RooPoisson.h>
-#include <RooConstraintSum.h>
 #include <RooProduct.h>
-#include <RooStats/ModelConfig.h>
 
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>

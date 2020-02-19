@@ -8,19 +8,11 @@
 #include <RooRealVar.h>
 #include <RooDataHist.h>
 #include <RooHistFunc.h>
-#include <RooRealSumPdf.h>
 #include <RooProdPdf.h>
 #include <RooSimultaneous.h>
-#include <RooPoisson.h>
-#include <RooConstraintSum.h>
-#include <RooProduct.h>
 #include <RooStats/ModelConfig.h>
 
 #include "TROOT.h"
-
-#include <ryml.hpp>
-#include <c4/yml/std/map.hpp>
-#include <c4/yml/std/string.hpp>
 
 std::vector<std::string> RooJSONFactoryWSTool::_strcache = std::vector<std::string>(1000);
 
