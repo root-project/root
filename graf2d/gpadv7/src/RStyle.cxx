@@ -11,12 +11,7 @@
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RLogger.hxx>
 
-
-// #include "RStyleReader.hxx" // in src/
-
-
 using namespace std::string_literals;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Evaluate attribute value for provided RDrawable
