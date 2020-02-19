@@ -103,18 +103,21 @@ protected:
    /// overrides for common comparison scenarios.
    virtual bool HasSameBinBordersAs(const RAxisBase& other) const {
       // Axis growability (and thus under/overflow bin existence) must match
-      if (CanGrow() != other.CanGrow()) return false;
+      if (CanGrow() != other.CanGrow())
+         return false;
 
       // Number of normal bins must match
-      if (GetNBinsNoOver() != other.GetNBinsNoOver()) return false;
+      if (GetNBinsNoOver() != other.GetNBinsNoOver())
+         return false;
 
       // Left borders of normal bins must match
-      for (int bin: *this) {
-         if (GetBinFrom(bin) != other.GetBinFrom(bin)) return false;
-      }
+      for (int bin: *this)
+         if (GetBinFrom(bin) != other.GetBinFrom(bin))
+            return false;
 
       // Right border of the last normal bin (aka maximum) must also match
-      if (GetMaximum() != other.GetMaximum()) return false;
+      if (GetMaximum() != other.GetMaximum())
+         return false;
 
       // If all of these checks passed, the two axes have the same bin borders
       return true;
@@ -361,12 +364,15 @@ public:
    /// - Any metadata attached to the bin (e.g. bin labels) must match.
    bool HasSameBinningAs(const RAxisBase& other) const {
       // Bin borders must match
-      if (!HasSameBinBordersAs(other)) return false;
+      if (!HasSameBinBordersAs(other))
+         return false;
 
       // If either `this` or `other` provides supplementary bin metadata, such
       // as bin labels, make sure that it is present on both sides.
-      if (!HasSameBinMetadataAs(other)) return false;
-      if (!other.AlsoHasSameBinMetadataAs(*this)) return false;
+      if (!HasSameBinMetadataAs(other))
+         return false;
+      if (!other.AlsoHasSameBinMetadataAs(*this))
+         return false;
 
       // If all of the above matched, we're good.
       return true;
@@ -448,7 +454,8 @@ protected:
       // This is an optimized override for the equidistant-equidistant case,
       // fall back to the default implementation if we're not in that case.
       auto other_eq_ptr = dynamic_cast<const RAxisEquidistant*>(&other);
-      if (!other_eq_ptr) return RAxisBase::HasSameBinBordersAs(other);
+      if (!other_eq_ptr)
+         return RAxisBase::HasSameBinBordersAs(other);
       const RAxisEquidistant& other_eq = *other_eq_ptr;
 
       // Can directly compare equidistant/growable axis properties in this case
@@ -647,7 +654,8 @@ protected:
       // This is an optimized override for the irregular-irregular case,
       // fall back to the default implementation if we're not in that case.
       auto other_irr_ptr = dynamic_cast<const RAxisIrregular*>(&other);
-      if (!other_irr_ptr) return RAxisBase::HasSameBinBordersAs(other);
+      if (!other_irr_ptr)
+         return RAxisBase::HasSameBinBordersAs(other);
       const RAxisIrregular& other_irr = *other_irr_ptr;
 
       // Only need to compare bin borders in this specialized case
@@ -807,7 +815,8 @@ protected:
    bool HasSameBinMetadataAs(const RAxisBase& other) const noexcept override {
       // If this axis has bin labels, `other` must have bin labels too
       auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
-      if (!other_labels_ptr) return false;
+      if (!other_labels_ptr)
+         return false;
       const auto& other_labels = *other_labels_ptr;
 
       // The bin labels and label->bin associations must also be the same.
