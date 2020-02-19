@@ -9,11 +9,12 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-#include "TPython.h"
-
 // Bindings
+// CPyCppyy.h must be go first, since it includes Python.h, which must be
+// included before any standard header
 #include "CPyCppyy.h"
 #include "PyStrings.h"
+#include "TPython.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
 #include "ProxyWrappers.h"

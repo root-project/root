@@ -31,13 +31,15 @@
 // class as argument.                                                   //
 //////////////////////////////////////////////////////////////////////////
 
+// Bindings
+// CPyCppyy.h must be go first, since it includes Python.h, which must be
+// included before any standard header
+#include "CPyCppyy.h"
+#include "MemoryRegulator.h"
+
 // ROOT
 #include "TObject.h"
 #include "TClass.h"
-
-// Bindings
-#include "CPyCppyy.h"
-#include "MemoryRegulator.h"
 
 // Stl
 #include <unordered_map>
