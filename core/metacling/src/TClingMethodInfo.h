@@ -40,6 +40,7 @@ namespace cling {
 
 namespace clang {
    class FunctionDecl;
+   class CXXMethodDecl;
 }
 
 namespace ROOT {
@@ -60,6 +61,8 @@ private:
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
    const clang::FunctionDecl                   *fTemplateSpec; // an all-default-template-args function.
+   llvm::SmallVector<clang::Decl *,4>           fDefDataSpecFuns; // decl_begin() will skip these special members, materialized from DefinitionData
+   llvm::SmallVector<clang::Decl *,4>::const_iterator fDefDataSpecFunIter; // Iterator over fDefDataSpecFuns
 
    const clang::Decl* GetDeclSlow() const;
 
