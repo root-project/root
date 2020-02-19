@@ -449,21 +449,8 @@ protected:
       return nbinsNoOver / std::abs(highOrLow - lowOrHigh);
    }
 
-   // See RAxisBase documentation
-   bool HasSameBinBordersAs(const RAxisBase& other) const override {
-      // This is an optimized override for the equidistant-equidistant case,
-      // fall back to the default implementation if we're not in that case.
-      auto other_eq_ptr = dynamic_cast<const RAxisEquidistant*>(&other);
-      if (!other_eq_ptr)
-         return RAxisBase::HasSameBinBordersAs(other);
-      const RAxisEquidistant& other_eq = *other_eq_ptr;
-
-      // Can directly compare equidistant/growable axis properties in this case
-      return fInvBinWidth == other_eq.fInvBinWidth &&
-             fLow == other_eq.fLow &&
-             fNBinsNoOver == other_eq.fNBinsNoOver &&
-             CanGrow() == other_eq.CanGrow();
-   }
+   /// See RAxisBase::HasSameBinBordersAs
+   bool HasSameBinBordersAs(const RAxisBase& other) const override;
 
 public:
    RAxisEquidistant() = default;
@@ -649,18 +636,8 @@ private:
    std::vector<double> fBinBorders;
 
 protected:
-   // See RAxisBase documentation
-   bool HasSameBinBordersAs(const RAxisBase& other) const override {
-      // This is an optimized override for the irregular-irregular case,
-      // fall back to the default implementation if we're not in that case.
-      auto other_irr_ptr = dynamic_cast<const RAxisIrregular*>(&other);
-      if (!other_irr_ptr)
-         return RAxisBase::HasSameBinBordersAs(other);
-      const RAxisIrregular& other_irr = *other_irr_ptr;
-
-      // Only need to compare bin borders in this specialized case
-      return fBinBorders == other_irr.fBinBorders;
-   }
+   /// See RAxisBase::HasSameBinBordersAs
+   bool HasSameBinBordersAs(const RAxisBase& other) const override;
 
 public:
    RAxisIrregular() = default;
@@ -811,40 +788,11 @@ private:
    std::unordered_map<std::string, int /*bin number*/> fLabelsIndex;
 
 protected:
-   // See RAxisBase documentation
-   bool HasSameBinMetadataAs(const RAxisBase& other) const noexcept override {
-      // If this axis has bin labels, `other` must have bin labels too
-      auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
-      if (!other_labels_ptr)
-         return false;
-      const auto& other_labels = *other_labels_ptr;
+   /// See RAxisBase::HasSameBinMetadataAs
+   bool HasSameBinMetadataAs(const RAxisBase& other) const noexcept override;
 
-      // The bin labels and label->bin associations must also be the same.
-      //
-      // We know that the number of bins is the same, per HasSameBinMetadataAs
-      // virtual interface contract, so we only need to check that each bin from
-      // `this` exists identically in `other`.
-      //
-      for (const auto &kv: fLabelsIndex) {
-         auto iter = other_labels.fLabelsIndex.find(kv.first);
-         if ((iter == fLabelsIndex.cend()) || (iter->second != kv.second))
-            return false;
-      }
-      return true;
-   }
-
-   // See RAxisBase documentation
-   bool AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept override {
-      // If this axis has bin labels, `other` must have bin labels too
-      //
-      // That's all we need to check because we can assume that a call to
-      // `other.HasSameBinMetadataAs(*this)` has already completed successfully.
-      // Hence, if `other` is an `RAxisLabels`, the bin labels have already been
-      // compared by this previous call.
-      //
-      auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
-      return (other_labels_ptr != nullptr);
-   }
+   /// See RAxisBase::AlsoHasSameBinMetadataAs
+   bool AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept override;
 
 public:
    /// Construct a RAxisLables from a `vector` of `string_view`s, with title.
