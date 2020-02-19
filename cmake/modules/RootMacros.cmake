@@ -118,15 +118,13 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 #---REFLEX_GENERATE_DICTIONARY( dictionary headerfiles SELECTION selectionfile OPTIONS opt1 opt2 ...
 #                               DEPENDS dependency1 dependency2 ...
-#                               USES target1 target2 ...
 #                             )
-#
-#  USES takes a list of targets. From the targets the properties INCLUDE_DIRECTORIES and
-#  COMPILE_DEFINITIONS are used to create the appropriate -I and -D flags
+# if dictionary is a TARGET (e.g., created with add_library), we inherit the INCLUDE_DIRECTORES and
+# COMPILE_DEFINITIONS properties
 #
 #---------------------------------------------------------------------------------------------------
 function(REFLEX_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" "OPTIONS;DEPENDS;USES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" "OPTIONS;DEPENDS" ${ARGN})
   #---Get List of header files---------------
   set(headerfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
@@ -177,10 +175,10 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
    list(APPEND definitions ${d})
   endforeach()
 
-  foreach(DEP ${ARG_USES})
-    LIST(APPEND include_dirs $<TARGET_PROPERTY:${DEP},INCLUDE_DIRECTORIES>)
-    LIST(APPEND definitions $<TARGET_PROPERTY:${DEP},COMPILE_DEFINITIONS>)
-  endforeach()
+  IF(TARGET ${dictionary})
+    LIST(APPEND include_dirs $<TARGET_PROPERTY:${dictionary},INCLUDE_DIRECTORIES>)
+    LIST(APPEND definitions $<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>)
+  ENDIF()
 
   add_custom_command(
     OUTPUT ${gensrcdict} ${rootmapname}
@@ -193,7 +191,9 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
 
     COMMAND_EXPAND_LISTS
     )
-
+  IF(TARGET ${dictionary})
+    target_sources(${dictionary} PRIVATE ${gensrcdict})
+  ENDIF()
   set(gensrcdict ${dictionary}.cxx PARENT_SCOPE)
 
   #---roottest compability---------------------------------
