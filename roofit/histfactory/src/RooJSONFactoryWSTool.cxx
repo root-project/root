@@ -23,14 +23,78 @@
 
 std::vector<std::string> RooJSONFactoryWSTool::_strcache = std::vector<std::string>(1000);
 
+namespace {
+  // error handling helpers
+  void error(const char* s){
+    throw std::runtime_error(s);
+  }
+  void error(const std::string& s){
+    throw std::runtime_error(s);
+  }
+  template<class T> static std::string concat(const T* items, const std::string& sep=",") {
+    // Returns a string being the concatenation of strings in input list <items>
+    // (names of objects obtained using GetName()) separated by string <sep>.
+    bool first = true;
+    std::string text;
+    
+    // iterate over strings in list
+    for(auto it:*items){
+      if (!first) {
+        // insert separator string
+        text += sep;
+      } else {
+        first = false;
+      }
+      if(!it) text+="NULL";
+      else text+=it->GetName();
+    }
+    return text;
+  }
+  template<class T> static std::vector<std::string> names(const T* items) {
+    // Returns a string being the concatenation of strings in input list <items>
+    // (names of objects obtained using GetName()) separated by string <sep>.
+    std::vector<std::string> names;
+    // iterate over strings in list
+    for(auto it:*items){
+      if(!it) names.push_back("NULL");
+      else names.push_back(it->GetName());
+    }
+    return names;
+  }
+  // helpers for serializing / deserializing binned datasets
+  inline void genIndicesHelper(std::vector<std::vector<int> >& combinations, RooArgList& vars, size_t curridx){
+    if(curridx == vars.size()){
+      std::vector<int> indices(curridx);
+      for(size_t i=0; i<curridx; ++i){
+        RooRealVar* v = (RooRealVar*)(vars.at(i));
+        indices[i] = v->getBinning().binNumber(v->getVal());
+      }
+      combinations.push_back(indices);
+    } else {
+      RooRealVar* v = (RooRealVar*)(vars.at(curridx));
+      for(int i=0; i<v->numBins(); ++i){      
+        v->setVal(v->getBinning().binCenter(i));
+        ::genIndicesHelper(combinations,vars,curridx+1);
+      }
+    }
+  }
+  inline std::vector<std::vector<int> > genIndices(RooArgList& vars){
+    std::vector<std::vector<int> > combinations;
+    ::genIndicesHelper(combinations,vars,0);
+    return combinations;
+  }
+}
+
 #ifdef INCLUDE_RYML
 #include <ryml.hpp>
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
 
+// maps to hold the importers and exporters for runtime lookup
 template<> std::map<std::string,const RooJSONFactoryWSTool::Importer<c4::yml::NodeRef>*> RooJSONFactoryWSTool::_importers<c4::yml::NodeRef> = std::map<std::string,const RooJSONFactoryWSTool::Importer<c4::yml::NodeRef>*>();
 template<> std::map<const TClass*,const RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef>*> RooJSONFactoryWSTool::_exporters<c4::yml::NodeRef> = std::map<const TClass*,const RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef>*>();
 
+// these are needed to enable the "<<" and ">>" operators for std::vector
 namespace c4 { namespace yml {
     template<class T> void read(c4::yml::NodeRef const& n, std::vector<T> *v){
       for(size_t i=0; i<n.num_children(); ++i){
@@ -48,6 +112,11 @@ namespace c4 { namespace yml {
     }
   }
 }
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// helper functions specific to RYML
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
   inline std::string key(const c4::yml::NodeRef& n){
@@ -75,27 +144,6 @@ namespace {
     int i;
     c4::atoi(n.val(),&i);
     return i;
-  }
-  inline void genIndicesHelper(std::vector<std::vector<int> >& combinations, RooArgList& vars, size_t curridx){
-    if(curridx == vars.size()){
-      std::vector<int> indices(curridx);
-      for(size_t i=0; i<curridx; ++i){
-        RooRealVar* v = (RooRealVar*)(vars.at(i));
-        indices[i] = v->getBinning().binNumber(v->getVal());
-      }
-      combinations.push_back(indices);
-    } else {
-      RooRealVar* v = (RooRealVar*)(vars.at(curridx));
-      for(int i=0; i<v->numBins(); ++i){      
-        v->setVal(v->getBinning().binCenter(i));
-        ::genIndicesHelper(combinations,vars,curridx+1);
-      }
-    }
-  }
-  inline std::vector<std::vector<int> > genIndices(RooArgList& vars){
-    std::vector<std::vector<int> > combinations;
-    ::genIndicesHelper(combinations,vars,0);
-    return combinations;
   }
   inline std::string genPrefix(const c4::yml::NodeRef& p,bool trailing_underscore){
     std::string prefix;
@@ -125,6 +173,7 @@ namespace {
     }
     return vars;
   }
+
   inline void collectNames(const c4::yml::NodeRef& n,std::vector<std::string>& names){
     for(auto c:n.children()){
       names.push_back(::key(c));
@@ -160,14 +209,7 @@ namespace {
       else sumW2.push_back(e*e);
     }
   }
-
-  void error(const char* s){
-    throw std::runtime_error(s);
-  }
-  void error(const std::string& s){
-    throw std::runtime_error(s);
-  }  
-  
+ 
   inline RooDataHist* readData(RooWorkspace* ws, const c4::yml::NodeRef& n,const std::string& namecomp,const std::string& obsnamecomp){
     if(!n.is_map()) throw "data is not a map!";
     auto vars = ::readVars(n,obsnamecomp);
@@ -207,6 +249,34 @@ namespace {
     }
     return dh;
   }
+  inline void importAttributes(RooAbsArg* arg, const c4::yml::NodeRef& n){
+    if(!n.is_map()) return;
+    if(n.has_child("dict")){
+      for(auto attr:n["dict"]){
+        arg->setStringAttribute(::key(attr).c_str(),::val_s(attr).c_str());
+      }
+    }
+  }
+  inline void writeAxis(c4::yml::NodeRef& bounds, const TAxis& ax){
+    if(!ax.IsVariableBinSize()){
+      bounds |= c4::yml::MAP;
+      bounds["nbins"] << ax.GetNbins();                
+      bounds["min"] << ax.GetXmin();
+      bounds["max"] << ax.GetXmax();
+    } else {
+      bounds |= c4::yml::SEQ;              
+      for(int i=1; i<=ax.GetNbins(); ++i){
+        bounds.append_child() << ax.GetBinLowEdge(i);      
+      }
+    }
+  }  
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// RooWSFactoryTool expression handling
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace {
   struct RYML_Factory_Expression {
     TClass* tclass;
     std::vector<std::string> arguments;
@@ -247,157 +317,105 @@ namespace {
       return expression.str();
     }
   };
-  struct RYML_Export_Keys {
-    std::string type;
-    std::map<std::string,std::string> proxies;
-  };  
   std::map<std::string,RYML_Factory_Expression> _rymlPdfFactoryExpressions;
   std::map<std::string,RYML_Factory_Expression> _rymlFuncFactoryExpressions;
-  std::map<TClass*,RYML_Export_Keys> _rymlExportKeys;
-
-  void importAttributes(RooAbsArg* arg, const c4::yml::NodeRef& n){
-    if(!n.is_map()) return;
-    if(n.has_child("dict")){
-      for(auto attr:n["dict"]){
-        arg->setStringAttribute(::key(attr).c_str(),::val_s(attr).c_str());
-      }
-    }
-  }
-  void writeAxis(c4::yml::NodeRef& bounds, const TAxis& ax){
-    if(!ax.IsVariableBinSize()){
-      bounds |= c4::yml::MAP;
-      bounds["nbins"] << ax.GetNbins();                
-      bounds["min"] << ax.GetXmin();
-      bounds["max"] << ax.GetXmax();
-    } else {
-      bounds |= c4::yml::SEQ;              
-      for(int i=1; i<=ax.GetNbins(); ++i){
-        bounds.append_child() << ax.GetBinLowEdge(i);      
-      }
-    }
-  }
 }
 
-template<> void  RooJSONFactoryWSTool::exportHistogram(const TH1& h, c4::yml::NodeRef& n, const std::vector<std::string>& varnames){
-  n |= c4::yml::MAP;
-  auto bounds = n["binning"];
-  bounds |= c4::yml::MAP;
-  auto weights = n["counts"];
-  weights |= c4::yml::SEQ;    
-  auto errors = n["errors"];    
-  errors |= c4::yml::SEQ;
-  auto x = bounds[ c4::to_csubstr(RooJSONFactoryWSTool::incache(varnames[0]))];
-  writeAxis(x,*(h.GetXaxis()));
-  if(h.GetDimension()>1){
-    auto y = bounds[ c4::to_csubstr(RooJSONFactoryWSTool::incache(varnames[1]))];
-    writeAxis(y,*(h.GetYaxis()));
-    if(h.GetDimension()>2){
-      auto z = bounds[ c4::to_csubstr(RooJSONFactoryWSTool::incache(varnames[2]))];
-      writeAxis(z,*(h.GetZaxis()));              
+void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
+  // load a yml file defining the factory expressions
+#ifdef INCLUDE_RYML
+  std::ifstream infile(fname);  
+  std::string s(std::istreambuf_iterator<char>(infile), {});
+  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
+  c4::yml::NodeRef n = t.rootref();
+  for(const auto& cl:n.children()){
+    std::string key(::key(cl));
+    if(!cl.has_child("class")){
+      std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!" << std::endl;
+      continue;
     }
-  }
-  for(int i=1; i<=h.GetNbinsX(); ++i){
-    if(h.GetDimension()==1){
-      weights.append_child() << h.GetBinContent(i);
-      errors.append_child() << h.GetBinError(i);
+    std::string classname(::val_s(cl["class"]));    
+    TClass* c = TClass::GetClass(classname.c_str());
+    if(!c){
+      std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
     } else {
-      for(int j=1; j<=h.GetNbinsY(); ++j){
-        if(h.GetDimension()==2){
-          weights.append_child() << h.GetBinContent(i,j);
-          errors.append_child() << h.GetBinError(i,j);
-        } else {
-          for(int k=1; k<=h.GetNbinsZ(); ++k){        
-            weights.append_child() << h.GetBinContent(i,j,k);
-            errors.append_child() << h.GetBinError(i,j,k);              
-          }
-        }
+      RYML_Factory_Expression ex;
+      ex.tclass = c;
+      for(const auto& arg:cl["arguments"]){
+        ex.arguments.push_back(::val_s(arg));
       }
-    }
-  }
-}
-
-
-template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n);
-
-template<> void RooJSONFactoryWSTool::importFunctions(const c4::yml::NodeRef& n) {
-  // import a list of RooAbsReal objects
-  if(!n.is_map()) return;
-  for(const auto& p:n.children()){
-    // some preparations: what type of function are we dealing with here?
-    std::string name(::key(p));
-    if(name.size() == 0) continue;
-    if(this->_workspace->pdf(name.c_str())) continue;    
-    if(!p.is_map()){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
-      continue;
-    }
-    std::string prefix = ::genPrefix(p,true);
-    if(prefix.size() > 0) name = prefix+name;    
-    if(!p.has_child("type")){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no type given for '" << name << "', skipping." << std::endl;
-      continue;
-    }
-    std::string functype(::val_s(p["type"]));
-    this->importDependants(p);    
-    // check for specific implementations
-    auto it = _importers<c4::yml::NodeRef>.find(functype);
-    if(it != _importers<c4::yml::NodeRef>.end()){
-      try {
-        if(!it->second->importFunction(this->_workspace,p)){
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << functype << " does not import functions!" << std::endl;          
-        }
-      } catch (const std::exception& ex){
-        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping." << std::endl;
-      }
-    } else { // generic import using the factory expressions
-      auto expr = _rymlFuncFactoryExpressions.find(functype);
-      if(expr != _rymlFuncFactoryExpressions.end()){
-        std::string expression = expr->second.generate(p);
-        if(!this->_workspace->factory(expression.c_str())){
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
-        }
+      if(c->InheritsFrom(RooAbsPdf::Class())){
+        _rymlPdfFactoryExpressions[key] = ex;
+      } else if(c->InheritsFrom(RooAbsReal::Class())){
+        _rymlFuncFactoryExpressions[key] = ex;        
       } else {
-        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for functype '" << functype << "' implemented, skipping." << std::endl;
+        std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
       }
     }
-    RooAbsReal* func = this->_workspace->function(name.c_str());
-    if(!func){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") something went wrong importing function '" << name << "'." << std::endl;      
-    } else {
-      ::importAttributes(func,p);
+  }  
+#endif
+}
+void RooJSONFactoryWSTool::clearFactoryExpressions(){
+  // clear all factory expressions
+#ifdef INCLUDE_RYML    
+  _rymlPdfFactoryExpressions.clear();
+  _rymlFuncFactoryExpressions.clear();
+#endif
+}
+void RooJSONFactoryWSTool::printFactoryExpressions(){
+  // print all factory expressions
+#ifdef INCLUDE_RYML    
+  for(auto it:_rymlPdfFactoryExpressions){
+    std::cout << it.first;
+    std::cout << " " << it.second.tclass->GetName();    
+    for(auto v:it.second.arguments){
+      std::cout << " " << v;
     }
+    std::cout << std::endl;
   }
+  for(auto it:_rymlFuncFactoryExpressions){
+    std::cout << it.first;
+    std::cout << " " << it.second.tclass->GetName();    
+    for(auto v:it.second.arguments){
+      std::cout << " " << v;
+    }
+    std::cout << std::endl;
+  }  
+#endif
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// individually implemented importers
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-class RooHistogramFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
-public:
-  virtual bool importFunction(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
-    std::string name(::key(p));
-    std::string prefix = ::genPrefix(p,true);
-    if(prefix.size() > 0) name = prefix+name;    
-    if(!p.has_child("data")){
-      error("function '" + name + "' is of histogram type, but does not define a 'data' key");
-    }
-    try {
-      RooArgSet prodElems;
-      RooDataHist* dh = ::readData(ws,p["data"],name,prefix);       
-      RooHistFunc* hf = new RooHistFunc(name.c_str(),::key(p).c_str(),*(dh->get()),*dh);          
-      if(p.has_child("normfactors")){
-        for(auto nf:p["normfactors"].children()){
-          std::string nfname(::val_s(nf));
-          RooAbsReal* r = ws->var(nfname.c_str());
-          if(!r){
-            error("unable to find normalization factor '" + nfname + "'");
-          } else {
-            prodElems.add(*r);
+namespace {
+  class RooHistogramFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  public:
+    virtual bool importFunction(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+      std::string name(::key(p));
+      std::string prefix = ::genPrefix(p,true);
+      if(prefix.size() > 0) name = prefix+name;    
+      if(!p.has_child("data")){
+        error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+      }
+      try {
+        RooArgSet prodElems;
+        RooDataHist* dh = ::readData(ws,p["data"],name,prefix);       
+        RooHistFunc* hf = new RooHistFunc(name.c_str(),::key(p).c_str(),*(dh->get()),*dh);          
+        if(p.has_child("normfactors")){
+          for(auto nf:p["normfactors"].children()){
+            std::string nfname(::val_s(nf));
+            RooAbsReal* r = ws->var(nfname.c_str());
+            if(!r){
+              error("unable to find normalization factor '" + nfname + "'");
+            } else {
+              prodElems.add(*r);
+            }
           }
         }
-      }
-      if(p.has_child("overallSystematics")){
-        RooArgList nps;
-        std::vector<double> low;
+        if(p.has_child("overallSystematics")){
+          RooArgList nps;
+          std::vector<double> low;
           std::vector<double> high;
           for(auto sys:p["overallSystematics"].children()){
             std::string sysname(::key(sys));
@@ -452,340 +470,362 @@ public:
           ws->import(*hf);
         }
       } catch (const std::runtime_error& e){
-      error("function '" + name + "' is of histogram type, but 'data' is not a valid definition. " + e.what() + ".");
-    }
-    return true;
-  }
-};
-namespace {
-  bool _roohistogramfactory = RooJSONFactoryWSTool::registerImporter("histogram",new RooHistogramFactory());
-}
-
-class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
-public:
-  virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
-    std::string name(::key(p));
-    RooArgSet factors;
-    if(!p.has_child("pdfs")){
-      error("no pdfs of '" + name + "'");
-    }
-    if(!p["pdfs"].is_seq()){
-      error("pdfs '" + name + "' are not a list.");
-    }      
-    for(auto comp:p["pdfs"].children()){
-      std::string pdfname(::val_s(comp));
-      RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
-      if(!pdf){
-        error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+        error("function '" + name + "' is of histogram type, but 'data' is not a valid definition. " + e.what() + ".");
       }
-      factors.add(*pdf);
+      return true;
     }
-    RooProdPdf prod(name.c_str(),name.c_str(),factors);
-    ws->import(prod);
-    return true;
-  }
-};
-namespace {
+  };
+  bool _roohistogramfactory = RooJSONFactoryWSTool::registerImporter("histogram",new RooHistogramFactory());
+
+  class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  public:
+    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+      std::string name(::key(p));
+      RooArgSet factors;
+      if(!p.has_child("pdfs")){
+        error("no pdfs of '" + name + "'");
+      }
+      if(!p["pdfs"].is_seq()){
+        error("pdfs '" + name + "' are not a list.");
+      }      
+      for(auto comp:p["pdfs"].children()){
+        std::string pdfname(::val_s(comp));
+        RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
+        if(!pdf){
+          error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+        }
+        factors.add(*pdf);
+      }
+      RooProdPdf prod(name.c_str(),name.c_str(),factors);
+      ws->import(prod);
+      return true;
+    }
+  };
   bool _rooprodpdffactory = RooJSONFactoryWSTool::registerImporter("pdfprod",new RooProdPdfFactory());
-}
 
   
-class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
-public:
-  virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
-    std::string name(::key(p));
-    if(!p.has_child("channels")){
-      error("no channel components of '" + name + "'");
-    }
-    std::map< std::string, RooAbsPdf *> components;
-    RooCategory cat("channelCat","channelCat");
-    for(auto comp:p["channels"]){
-      std::string catname(::key(comp));
-      std::string pdfname(::val_s(comp));
-      RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
-      if(!pdf){
-        error("unable to obtain component '" + pdfname + "' of '" + name + "'");
+  class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  public:
+    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+      std::string name(::key(p));
+      if(!p.has_child("channels")){
+        error("no channel components of '" + name + "'");
       }
-      components[catname] = pdf;
-      cat.defineType(pdfname.c_str());
-    }
-    RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
-    ws->import(simpdf);
-    return true;
-  }
-};
- namespace {
-   bool _roosimultaneousfactory = RooJSONFactoryWSTool::registerImporter("simultaneous",new RooSimultaneousFactory());
- }
- 
-class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
-public:
-  virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
-    std::string name(::key(p));
-    RooArgList funcs;
-    RooArgList coefs;
-    if(!p.has_child("sum")){
-      error("no sum components of '" + name + "', skipping.");
-    }
-    RooArgList constraints;
-    RooArgList nps;      
-    RooConstVar* c = new RooConstVar("1","1",1.);
-    std::vector<std::string> usesStatError;
-    double statErrorThreshold = 0;
-    if(p.has_child("statError")){
-      auto staterr = p["statError"];
-      statErrorThreshold = ::val_d(staterr["relThreshold"]);      
-      std::string constraint = ::val_s(staterr["constraint"]);
-      std::vector<double> relValues;
-      if(staterr.has_child("stack")){
-        for(auto comp:staterr["stack"]){
-          std::string elem = ::val_s(comp);
-          usesStatError.push_back(elem);
+      std::map< std::string, RooAbsPdf *> components;
+      RooCategory cat("channelCat","channelCat");
+      for(auto comp:p["channels"]){
+        std::string catname(::key(comp));
+        std::string pdfname(::val_s(comp));
+        RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
+        if(!pdf){
+          error("unable to obtain component '" + pdfname + "' of '" + name + "'");
         }
+        components[catname] = pdf;
+        cat.defineType(pdfname.c_str());
       }
+      RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
+      ws->import(simpdf);
+      return true;
     }
-    std::vector<double> sumW;
-    std::vector<double> sumW2;
-    std::vector<std::string> obsnames;
-    std::vector<std::string> sysnames;            
-    for(auto& comp:p["sum"]){
-      std::string fprefix;
-      std::string fname(::val_s(comp));
-      if(p.has_child("functions")){
-        auto funcdefs = p["functions"];
-        if(funcdefs.has_child(c4::to_csubstr(fname.c_str()))){
-          auto def = funcdefs[c4::to_csubstr(fname.c_str())];
-          fprefix = ::genPrefix(def,true);
-          if(::val_s(def["type"]) == "histogram"){
-            try {
-              ::collectObsNames(def["data"],obsnames,name);
-              if(def.has_child("overallSystematics"))  ::collectNames(def["overallSystematics"],sysnames);
-              if(def.has_child("histogramSystematics"))::collectNames(def["histogramSystematics"],sysnames);                                
-            } catch (const char* s){
-              error("function '" + name + "' unable to collect observables from function " + fname + ". " + s );
-            }
-            if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
-              try {              
-                ::stackError(def["data"],sumW,sumW2);
-              } catch (const char* s){                
-                error("function '" + name + "' unable to sum statError from function " + fname + ". " + s );
-              }                
-            }
+  };
+  bool _roosimultaneousfactory = RooJSONFactoryWSTool::registerImporter("simultaneous",new RooSimultaneousFactory());
+ 
+  class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  public:
+    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+      std::string name(::key(p));
+      RooArgList funcs;
+      RooArgList coefs;
+      if(!p.has_child("sum")){
+        error("no sum components of '" + name + "', skipping.");
+      }
+      RooArgList constraints;
+      RooArgList nps;      
+      RooConstVar* c = new RooConstVar("1","1",1.);
+      std::vector<std::string> usesStatError;
+      double statErrorThreshold = 0;
+      if(p.has_child("statError")){
+        auto staterr = p["statError"];
+        statErrorThreshold = ::val_d(staterr["relThreshold"]);      
+        std::string constraint = ::val_s(staterr["constraint"]);
+        std::vector<double> relValues;
+        if(staterr.has_child("stack")){
+          for(auto comp:staterr["stack"]){
+            std::string elem = ::val_s(comp);
+            usesStatError.push_back(elem);
           }
         }
       }
-      RooAbsReal* func = ws->function((fprefix+fname).c_str());
-      if(!func){
-        error("unable to obtain component '" + fprefix+fname + "' of '" + name + "'");
+      std::vector<double> sumW;
+      std::vector<double> sumW2;
+      std::vector<std::string> obsnames;
+      std::vector<std::string> sysnames;            
+      for(auto& comp:p["sum"]){
+        std::string fprefix;
+        std::string fname(::val_s(comp));
+        if(p.has_child("functions")){
+          auto funcdefs = p["functions"];
+          if(funcdefs.has_child(c4::to_csubstr(fname.c_str()))){
+            auto def = funcdefs[c4::to_csubstr(fname.c_str())];
+            fprefix = ::genPrefix(def,true);
+            if(::val_s(def["type"]) == "histogram"){
+              try {
+                ::collectObsNames(def["data"],obsnames,name);
+                if(def.has_child("overallSystematics"))  ::collectNames(def["overallSystematics"],sysnames);
+                if(def.has_child("histogramSystematics"))::collectNames(def["histogramSystematics"],sysnames);                                
+              } catch (const char* s){
+                error("function '" + name + "' unable to collect observables from function " + fname + ". " + s );
+              }
+              if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
+                try {              
+                  ::stackError(def["data"],sumW,sumW2);
+                } catch (const char* s){                
+                  error("function '" + name + "' unable to sum statError from function " + fname + ". " + s );
+                }                
+              }
+            }
+          }
+        }
+        RooAbsReal* func = ws->function((fprefix+fname).c_str());
+        if(!func){
+          error("unable to obtain component '" + fprefix+fname + "' of '" + name + "'");
+        }
+        funcs.add(*func);
       }
-      funcs.add(*func);
-    }
-    RooArgList observables;
-    for(auto& obsname:obsnames){
-      RooRealVar* obs = ws->var(obsname.c_str());
-      if(!obs){
-        error("unable to obtain observable '" + obsname + "' of '" + name + "',");
+      RooArgList observables;
+      for(auto& obsname:obsnames){
+        RooRealVar* obs = ws->var(obsname.c_str());
+        if(!obs){
+          error("unable to obtain observable '" + obsname + "' of '" + name + "',");
+        }
+        observables.add(*obs);
       }
-      observables.add(*obs);
-    }
-    ParamHistFunc* phf = NULL;
-    if(usesStatError.size() > 0){
-      RooArgList gammas;
-      for(size_t i=0; i<sumW.size(); ++i){
-        TString gname = TString::Format("gamma_stat_%s_bin_%d",name.c_str(),(int)i);
-        TString tname = TString::Format("tau_stat_%s_bin_%d",name.c_str(),(int)i);
-        TString prodname = TString::Format("nExp_stat_%s_bin_%d",name.c_str(),(int)i);
-        TString poisname = TString::Format("Constraint_stat_%s_bin_%d",name.c_str(),(int)i);                        
-        double tauCV = sumW2[i];
-        double err = sqrt(sumW2[i])/sumW[i];
-        RooRealVar* g = new RooRealVar(gname.Data(),gname.Data(),1.);
-        if(err < statErrorThreshold) g->setConstant(true);
-        RooRealVar* tau = new RooRealVar(tname.Data(),tname.Data(),tauCV);
-        RooArgSet elems;
-        elems.add(*g);
-        elems.add(*tau);
-        g->setError(err);
-        RooProduct* prod = new RooProduct(prodname.Data(),prodname.Data(),elems);
-        RooPoisson* pois = new RooPoisson(poisname.Data(),poisname.Data(),*prod,*tau);;        
-        gammas.add(*g,true);
-        constraints.add(*pois,true);
+      ParamHistFunc* phf = NULL;
+      if(usesStatError.size() > 0){
+        RooArgList gammas;
+        for(size_t i=0; i<sumW.size(); ++i){
+          TString gname = TString::Format("gamma_stat_%s_bin_%d",name.c_str(),(int)i);
+          TString tname = TString::Format("tau_stat_%s_bin_%d",name.c_str(),(int)i);
+          TString prodname = TString::Format("nExp_stat_%s_bin_%d",name.c_str(),(int)i);
+          TString poisname = TString::Format("Constraint_stat_%s_bin_%d",name.c_str(),(int)i);                        
+          double tauCV = sumW2[i];
+          double err = sqrt(sumW2[i])/sumW[i];
+          RooRealVar* g = new RooRealVar(gname.Data(),gname.Data(),1.);
+          if(err < statErrorThreshold) g->setConstant(true);
+          RooRealVar* tau = new RooRealVar(tname.Data(),tname.Data(),tauCV);
+          RooArgSet elems;
+          elems.add(*g);
+          elems.add(*tau);
+          g->setError(err);
+          RooProduct* prod = new RooProduct(prodname.Data(),prodname.Data(),elems);
+          RooPoisson* pois = new RooPoisson(poisname.Data(),poisname.Data(),*prod,*tau);;        
+          gammas.add(*g,true);
+          constraints.add(*pois,true);
+        }
+        nps.add(gammas);
+        phf = new ParamHistFunc(TString::Format("%s_mcstat",name.c_str()),"staterror",observables,gammas);
+        phf->recursiveRedirectServers(observables);
       }
-      nps.add(gammas);
-      phf = new ParamHistFunc(TString::Format("%s_mcstat",name.c_str()),"staterror",observables,gammas);
-      phf->recursiveRedirectServers(observables);
-    }
-    for(auto& comp:p["sum"]){
-      std::string fname(::val_s(comp));        
-      if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
-        coefs.add(*phf);
-      } else {
-        coefs.add(*c);
-      }
-    }
-    for(auto& np:nps){
-      for(auto client:np->clients()){
-        if(client->InheritsFrom(RooAbsPdf::Class()) && !constraints.find(*client)){
-          constraints.add(*client);
+      for(auto& comp:p["sum"]){
+        std::string fname(::val_s(comp));        
+        if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
+          coefs.add(*phf);
+        } else {
+          coefs.add(*c);
         }
       }
-    }
-    for(auto sysname:sysnames){
-      RooAbsPdf* pdf = ws->pdf(sysname.c_str());
-      if(pdf){
-        constraints.add(*pdf);
-      } else {
-        error("unable to find constraint term '" + sysname + "'");
+      for(auto& np:nps){
+        for(auto client:np->clients()){
+          if(client->InheritsFrom(RooAbsPdf::Class()) && !constraints.find(*client)){
+            constraints.add(*client);
+          }
+        }
       }
+      for(auto sysname:sysnames){
+        RooAbsPdf* pdf = ws->pdf(sysname.c_str());
+        if(pdf){
+          constraints.add(*pdf);
+        } else {
+          error("unable to find constraint term '" + sysname + "'");
+        }
+      }
+      if(constraints.getSize() == 0){
+        RooRealSumPdf sum(name.c_str(),name.c_str(),funcs,coefs);
+        ws->import(sum);
+      } else {
+        RooRealSumPdf sum((name+"_model").c_str(),name.c_str(),funcs,coefs);
+        constraints.add(sum);
+        RooProdPdf prod(name.c_str(),name.c_str(),constraints);
+        ws->import(prod);        
+      }
+      return true;
     }
-    if(constraints.getSize() == 0){
-      RooRealSumPdf sum(name.c_str(),name.c_str(),funcs,coefs);
-      ws->import(sum);
-    } else {
-      RooRealSumPdf sum((name+"_model").c_str(),name.c_str(),funcs,coefs);
-      constraints.add(sum);
-      RooProdPdf prod(name.c_str(),name.c_str(),constraints);
-      ws->import(prod);        
-    }
-    return true;
-  }
-};
+  };
 
-namespace {
   bool _roorealsumpdffactory = RooJSONFactoryWSTool::registerImporter("sum",new RooRealSumPdfFactory());
 }
 
-template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
-  // import a list of RooAbsPdf objects
-  if(!n.is_map()) return;  
-  for(const auto& p:n.children()){
-    // general preparations: what type of pdf should we build?
-    std::string name(::key(p));
-    if(name.size() == 0) continue;
-    if(this->_workspace->pdf(name.c_str())) continue;    
-    if(!p.is_map()){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
-      continue;
-    }
-    std::string prefix = ::genPrefix(p,true);
-    if(prefix.size() > 0) name = prefix+name;
-    if(!p.has_child("type")){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no type given for '" << name << "', skipping." << std::endl;
-      continue;
-    }
-    bool toplevel = false;
-    if(p.has_child("dict")){
-      auto dict = p["dict"];
-      if(dict.has_child("toplevel") && ::val_b(dict["toplevel"])){
-        toplevel = true;
-      }
-    }    
-    std::string pdftype(::val_s(p["type"]));
-    this->importDependants(p);
 
-    // check for specific implementations
-    auto it = _importers<c4::yml::NodeRef>.find(pdftype);
-    if(it != _importers<c4::yml::NodeRef>.end()){
-      try {
-        if(!it->second->importPdf(this->_workspace,p)){
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << pdftype << " does not import pdfs!" << std::endl;          
-        }
-      } catch (const std::exception& ex){
-        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping." << std::endl;
-      }
-    } else { // default implementation using the factory expressions
-      auto expr = _rymlPdfFactoryExpressions.find(pdftype);
-      if(expr != _rymlPdfFactoryExpressions.end()){
-        std::string expression = expr->second.generate(p);
-        if(!this->_workspace->factory(expression.c_str())){
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
-        }
-      } else {
-        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for pdftype '" << pdftype << "' available, skipping." << std::endl;
-      }
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// static helper for exporting RooDataHist
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<> void  RooJSONFactoryWSTool::exportHistogram(const TH1& h, c4::yml::NodeRef& n, const std::vector<std::string>& varnames){
+  n |= c4::yml::MAP;
+  auto bounds = n["binning"];
+  bounds |= c4::yml::MAP;
+  auto weights = n["counts"];
+  weights |= c4::yml::SEQ;    
+  auto errors = n["errors"];    
+  errors |= c4::yml::SEQ;
+  auto x = bounds[ c4::to_csubstr(RooJSONFactoryWSTool::incache(varnames[0]))];
+  writeAxis(x,*(h.GetXaxis()));
+  if(h.GetDimension()>1){
+    auto y = bounds[ c4::to_csubstr(RooJSONFactoryWSTool::incache(varnames[1]))];
+    writeAxis(y,*(h.GetYaxis()));
+    if(h.GetDimension()>2){
+      auto z = bounds[ c4::to_csubstr(RooJSONFactoryWSTool::incache(varnames[2]))];
+      writeAxis(z,*(h.GetZaxis()));              
     }
-    // post-processing: make sure that the pdf has been created, and attach needed attributes
-    RooAbsPdf* pdf = this->_workspace->pdf(name.c_str());
-    if(!pdf){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") something went wrong importing pdf '" << name << "'." << std::endl;      
+  }
+  for(int i=1; i<=h.GetNbinsX(); ++i){
+    if(h.GetDimension()==1){
+      weights.append_child() << h.GetBinContent(i);
+      errors.append_child() << h.GetBinError(i);
     } else {
-      ::importAttributes(pdf,p);
-      if(toplevel){
-        // if this is a toplevel pdf, also cereate a modelConfig for it
-        std::string mcname = name+"_modelConfig";
-        RooStats::ModelConfig* mc = new RooStats::ModelConfig(mcname.c_str(),name.c_str());
-        this->_workspace->import(*mc);
-        RooStats::ModelConfig* inwsmc = dynamic_cast<RooStats::ModelConfig*>(this->_workspace->obj(mcname.c_str()));
-        if(inwsmc){
-          inwsmc->SetWS(*(this->_workspace));
-          inwsmc->SetPdf(*pdf);
+      for(int j=1; j<=h.GetNbinsY(); ++j){
+        if(h.GetDimension()==2){
+          weights.append_child() << h.GetBinContent(i,j);
+          errors.append_child() << h.GetBinError(i,j);
         } else {
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") object '" << mcname << "' in workspace is not of type RooStats::ModelConfig!" << std::endl;        
+          for(int k=1; k<=h.GetNbinsZ(); ++k){        
+            weights.append_child() << h.GetBinContent(i,j,k);
+            errors.append_child() << h.GetBinError(i,j,k);              
+          }
         }
       }
     }
   }
 }
 
-template<> void RooJSONFactoryWSTool::importVariables(const c4::yml::NodeRef& n) {
-  // import a list of RooRealVar objects
-  if(!n.is_map()) return;  
-  for(const auto& p:n.children()){
-    std::string name(::key(p));
-    if(this->_workspace->var(name.c_str())) continue;
-    if(!p.is_map()){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
-      continue;
-    }
-    double val(p.has_child("value") ? ::val_d(p["value"]) : 1.);
-    RooRealVar v(name.c_str(),name.c_str(),val);
-    if(p.has_child("min"))    v.setMin     (::val_d(p["min"]));
-    if(p.has_child("max"))    v.setMax     (::val_d(p["max"]));
-    if(p.has_child("nbins"))  v.setBins     (::val_i(p["nbins"]));    
-    if(p.has_child("relErr")) v.setError   (v.getVal()*::val_d(p["relErr"]));
-    if(p.has_child("err"))    v.setError   (           ::val_d(p["err"]));
-    if(p.has_child("const"))  v.setConstant(::val_b(p["const"]));
-    else v.setConstant(false);
-    ::importAttributes(&v,p);    
-    this->_workspace->import(v);
-  }  
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// RooProxy-based export handling
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+  struct RYML_Export_Keys {
+    std::string type;
+    std::map<std::string,std::string> proxies;
+  };  
+  std::map<TClass*,RYML_Export_Keys> _rymlExportKeys;
 }
+void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
+  // load a yml file defining the export keys
+#ifdef INCLUDE_RYML
+  std::ifstream infile(fname);  
+  std::string s(std::istreambuf_iterator<char>(infile), {});
+  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));
+  c4::yml::NodeRef n = t.rootref();
+  for(const auto& cl:n.children()){
+    std::string classname(::key(cl));
+    TClass* c = TClass::GetClass(classname.c_str());
+    if(!c){
+      std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
+    } else {
+      RYML_Export_Keys ex;
+      ex.type = ::val_s(cl["type"]);
+      for(const auto& k:cl["proxies"].children()){
+        std::string key(::key(k));
+        std::string val(::val_s(k));                
+        ex.proxies[key] = val;
+      }
+      _rymlExportKeys[c] = ex;
+    }
+  }  
+#endif
+}
+void RooJSONFactoryWSTool::clearExportKeys(){
+  // clear all export keys
+#ifdef INCLUDE_RYML    
+  _rymlExportKeys.clear();
+#endif
+}
+void RooJSONFactoryWSTool::printExportKeys(){
+  // print all export keys
+#ifdef INCLUDE_RYML    
+  for(const auto& it:_rymlExportKeys){
+    std::cout << it.first->GetName() << ": " << it.second.type;
+    for(const auto& kv:it.second.proxies){
+      std::cout << " " << kv.first << "=" << kv.second;
+    }
+    std::cout << std::endl;
+  }
+#endif
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// specialized exporter implementations
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+  class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  public:
+    virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
+      RooSimultaneous* sim = static_cast<RooSimultaneous*>(func);
+      elem["type"] << "simultaneous";
+      auto channels = elem["channels"];
+      channels |= c4::yml::MAP;
+      const auto& indexCat = sim->indexCat();
+      for(const auto& cat:indexCat){
+        channels[c4::to_csubstr(cat->GetName())] << sim->getPdf(cat->GetName())->GetName();
+      }
+      return true;
+    }
+  };
+  bool _roosimultaneousstreamer = RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(),new RooSimultaneousStreamer());
+
+  class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  public:
+    virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
+      RooHistFunc* hf = static_cast<RooHistFunc*>(func);
+      const RooDataHist& dh = hf->dataHist();
+      elem["type"] << "histogram";
+      RooArgList vars(*dh.get());
+      TH1* hist = func->createHistogram(::concat(&vars).c_str());
+      auto data = elem["data"];
+      RooJSONFactoryWSTool::exportHistogram(*hist,data,::names(&vars));
+      delete hist;
+      return true;
+    }
+  };
+  bool _roohistfuncstreamer = RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(),new RooHistFuncStreamer());
+
+  class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  public:
+    virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
+      RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<RooStats::HistFactory::FlexibleInterpVar*>(func);
+      elem["type"] << "interpolation0d";        
+      auto vars = elem["vars"];
+      vars |= c4::yml::SEQ;        
+      for(const auto& v:fip->variables()){
+        vars.append_child() << v->GetName();
+      }
+      elem["nom"] << fip->nominal();                
+      elem["high"] << fip->high();        
+      elem["low"] << fip->low();
+      return true;
+    }
+  };
+  bool _flexibleinterpvarstreamer = RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),new FlexibleInterpVarStreamer());
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// helper namespace
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class RooJSONFactoryWSTool::Helpers {
 public:
-  
-  template<class T> static std::string concat(const T* items, const std::string& sep=",") {
-    // Returns a string being the concatenation of strings in input list <items>
-    // (names of objects obtained using GetName()) separated by string <sep>.
-    bool first = true;
-    std::string text;
-    
-    // iterate over strings in list
-    for(auto it:*items){
-      if (!first) {
-        // insert separator string
-        text += sep;
-      } else {
-        first = false;
-      }
-      if(!it) text+="NULL";
-      else text+=it->GetName();
-    }
-    return text;
-  }
-
-
-  template<class T> static std::vector<std::string> names(const T* items) {
-    // Returns a string being the concatenation of strings in input list <items>
-    // (names of objects obtained using GetName()) separated by string <sep>.
-    std::vector<std::string> names;
-    // iterate over strings in list
-    for(auto it:*items){
-      if(!it) names.push_back("NULL");
-      else names.push_back(it->GetName());
-    }
-    return names;
-  }
-
   
   static void exportAttributes(const RooAbsArg* arg, c4::yml::NodeRef& n){
     // exporta ll string attributes of an object
@@ -886,62 +926,163 @@ public:
   }
 };
 
-class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
-public:
-  virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
-    RooSimultaneous* sim = static_cast<RooSimultaneous*>(func);
-    elem["type"] << "simultaneous";
-    auto channels = elem["channels"];
-    channels |= c4::yml::MAP;
-    const auto& indexCat = sim->indexCat();
-    for(const auto& cat:indexCat){
-      channels[c4::to_csubstr(cat->GetName())] << sim->getPdf(cat->GetName())->GetName();
+// forward declaration needed for alternating recursion
+template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// importing functions
+template<> void RooJSONFactoryWSTool::importFunctions(const c4::yml::NodeRef& n) {
+  // import a list of RooAbsReal objects
+  if(!n.is_map()) return;
+  for(const auto& p:n.children()){
+    // some preparations: what type of function are we dealing with here?
+    std::string name(::key(p));
+    if(name.size() == 0) continue;
+    if(this->_workspace->pdf(name.c_str())) continue;    
+    if(!p.is_map()){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
+      continue;
     }
-    return true;
-  }
-};
-namespace {
-  bool _roosimultaneousstreamer = RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(),new RooSimultaneousStreamer());
-}
-
-class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
-public:
-  virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
-    RooHistFunc* hf = static_cast<RooHistFunc*>(func);
-    const RooDataHist& dh = hf->dataHist();
-    elem["type"] << "histogram";
-    RooArgList vars(*dh.get());
-    TH1* hist = func->createHistogram(RooJSONFactoryWSTool::Helpers::concat(&vars).c_str());
-    auto data = elem["data"];
-    RooJSONFactoryWSTool::exportHistogram(*hist,data,RooJSONFactoryWSTool::Helpers::names(&vars));
-    delete hist;
-    return true;
-  }
-};
-namespace {
-  bool _roohistfuncstreamer = RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(),new RooHistFuncStreamer());
-}
-
-class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
-public:
-  virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
-    RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<RooStats::HistFactory::FlexibleInterpVar*>(func);
-    elem["type"] << "interpolation0d";        
-    auto vars = elem["vars"];
-    vars |= c4::yml::SEQ;        
-    for(const auto& v:fip->variables()){
-      vars.append_child() << v->GetName();
+    std::string prefix = ::genPrefix(p,true);
+    if(prefix.size() > 0) name = prefix+name;    
+    if(!p.has_child("type")){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no type given for '" << name << "', skipping." << std::endl;
+      continue;
     }
-    elem["nom"] << fip->nominal();                
-    elem["high"] << fip->high();        
-    elem["low"] << fip->low();
-    return true;
+    std::string functype(::val_s(p["type"]));
+    this->importDependants(p);    
+    // check for specific implementations
+    auto it = _importers<c4::yml::NodeRef>.find(functype);
+    if(it != _importers<c4::yml::NodeRef>.end()){
+      try {
+        if(!it->second->importFunction(this->_workspace,p)){
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << functype << " does not import functions!" << std::endl;          
+        }
+      } catch (const std::exception& ex){
+        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping." << std::endl;
+      }
+    } else { // generic import using the factory expressions
+      auto expr = _rymlFuncFactoryExpressions.find(functype);
+      if(expr != _rymlFuncFactoryExpressions.end()){
+        std::string expression = expr->second.generate(p);
+        if(!this->_workspace->factory(expression.c_str())){
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
+        }
+      } else {
+        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for functype '" << functype << "' implemented, skipping." << std::endl;
+      }
+    }
+    RooAbsReal* func = this->_workspace->function(name.c_str());
+    if(!func){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") something went wrong importing function '" << name << "'." << std::endl;      
+    } else {
+      ::importAttributes(func,p);
+    }
   }
-};
-namespace {
-  bool _flexibleinterpvarstreamer = RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),new FlexibleInterpVarStreamer());
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// importing pdfs
+template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
+  // import a list of RooAbsPdf objects
+  if(!n.is_map()) return;  
+  for(const auto& p:n.children()){
+    // general preparations: what type of pdf should we build?
+    std::string name(::key(p));
+    if(name.size() == 0) continue;
+    if(this->_workspace->pdf(name.c_str())) continue;    
+    if(!p.is_map()){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
+      continue;
+    }
+    std::string prefix = ::genPrefix(p,true);
+    if(prefix.size() > 0) name = prefix+name;
+    if(!p.has_child("type")){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no type given for '" << name << "', skipping." << std::endl;
+      continue;
+    }
+    bool toplevel = false;
+    if(p.has_child("dict")){
+      auto dict = p["dict"];
+      if(dict.has_child("toplevel") && ::val_b(dict["toplevel"])){
+        toplevel = true;
+      }
+    }    
+    std::string pdftype(::val_s(p["type"]));
+    this->importDependants(p);
+
+    // check for specific implementations
+    auto it = _importers<c4::yml::NodeRef>.find(pdftype);
+    if(it != _importers<c4::yml::NodeRef>.end()){
+      try {
+        if(!it->second->importPdf(this->_workspace,p)){
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << pdftype << " does not import pdfs!" << std::endl;          
+        }
+      } catch (const std::exception& ex){
+        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping." << std::endl;
+      }
+    } else { // default implementation using the factory expressions
+      auto expr = _rymlPdfFactoryExpressions.find(pdftype);
+      if(expr != _rymlPdfFactoryExpressions.end()){
+        std::string expression = expr->second.generate(p);
+        if(!this->_workspace->factory(expression.c_str())){
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
+        }
+      } else {
+        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for pdftype '" << pdftype << "' available, skipping." << std::endl;
+      }
+    }
+    // post-processing: make sure that the pdf has been created, and attach needed attributes
+    RooAbsPdf* pdf = this->_workspace->pdf(name.c_str());
+    if(!pdf){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") something went wrong importing pdf '" << name << "'." << std::endl;      
+    } else {
+      ::importAttributes(pdf,p);
+      if(toplevel){
+        // if this is a toplevel pdf, also cereate a modelConfig for it
+        std::string mcname = name+"_modelConfig";
+        RooStats::ModelConfig* mc = new RooStats::ModelConfig(mcname.c_str(),name.c_str());
+        this->_workspace->import(*mc);
+        RooStats::ModelConfig* inwsmc = dynamic_cast<RooStats::ModelConfig*>(this->_workspace->obj(mcname.c_str()));
+        if(inwsmc){
+          inwsmc->SetWS(*(this->_workspace));
+          inwsmc->SetPdf(*pdf);
+        } else {
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") object '" << mcname << "' in workspace is not of type RooStats::ModelConfig!" << std::endl;        
+        }
+      }
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// importing variables
+template<> void RooJSONFactoryWSTool::importVariables(const c4::yml::NodeRef& n) {
+  // import a list of RooRealVar objects
+  if(!n.is_map()) return;  
+  for(const auto& p:n.children()){
+    std::string name(::key(p));
+    if(this->_workspace->var(name.c_str())) continue;
+    if(!p.is_map()){
+      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
+      continue;
+    }
+    double val(p.has_child("value") ? ::val_d(p["value"]) : 1.);
+    RooRealVar v(name.c_str(),name.c_str(),val);
+    if(p.has_child("min"))    v.setMin     (::val_d(p["min"]));
+    if(p.has_child("max"))    v.setMax     (::val_d(p["max"]));
+    if(p.has_child("nbins"))  v.setBins     (::val_i(p["nbins"]));    
+    if(p.has_child("relErr")) v.setError   (v.getVal()*::val_d(p["relErr"]));
+    if(p.has_child("err"))    v.setError   (           ::val_d(p["err"]));
+    if(p.has_child("const"))  v.setConstant(::val_b(p["const"]));
+    else v.setConstant(false);
+    ::importAttributes(&v,p);    
+    this->_workspace->import(v);
+  }  
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// obtain a const pointer from the string cache
 const char* RooJSONFactoryWSTool::incache(const std::string& str){
   auto it = std::find(RooJSONFactoryWSTool::_strcache.begin(),RooJSONFactoryWSTool::_strcache.end(),str);
   if(it == RooJSONFactoryWSTool::_strcache.end()){
@@ -953,11 +1094,14 @@ const char* RooJSONFactoryWSTool::incache(const std::string& str){
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// clear the string cache
 void RooJSONFactoryWSTool::clearcache(){
   RooJSONFactoryWSTool::_strcache.clear();
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// export all dependants (servers) of a RooAbsArg
 template<> void RooJSONFactoryWSTool::exportDependants(RooAbsArg* source, c4::yml::NodeRef& n) {
   // export all the servers of a given RooAbsArg
   auto servers(source->servers());
@@ -993,6 +1137,8 @@ template<> void RooJSONFactoryWSTool::exportDependants(RooAbsArg* source, c4::ym
   Helpers::exportFunctions(pdfset,pdfs);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+// import all dependants (servers) of a node
 template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n) {
   // import all the dependants of an object
   if(n.has_child("variables")){
@@ -1010,116 +1156,6 @@ template<> void RooJSONFactoryWSTool::importDependants(const c4::yml::NodeRef& n
 }
 
 #endif
-
-void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
-  // load a yml file defining the factory expressions
-#ifdef INCLUDE_RYML
-  std::ifstream infile(fname);  
-  std::string s(std::istreambuf_iterator<char>(infile), {});
-  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));    
-  c4::yml::NodeRef n = t.rootref();
-  for(const auto& cl:n.children()){
-    std::string key(::key(cl));
-    if(!cl.has_child("class")){
-      std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!" << std::endl;
-      continue;
-    }
-    std::string classname(::val_s(cl["class"]));    
-    TClass* c = TClass::GetClass(classname.c_str());
-    if(!c){
-      std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
-    } else {
-      RYML_Factory_Expression ex;
-      ex.tclass = c;
-      for(const auto& arg:cl["arguments"]){
-        ex.arguments.push_back(::val_s(arg));
-      }
-      if(c->InheritsFrom(RooAbsPdf::Class())){
-        _rymlPdfFactoryExpressions[key] = ex;
-      } else if(c->InheritsFrom(RooAbsReal::Class())){
-        _rymlFuncFactoryExpressions[key] = ex;        
-      } else {
-        std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
-      }
-    }
-  }  
-#endif
-}
-
-void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
-  // load a yml file defining the export keys
-#ifdef INCLUDE_RYML
-  std::ifstream infile(fname);  
-  std::string s(std::istreambuf_iterator<char>(infile), {});
-  ryml::Tree t = c4::yml::parse(c4::to_csubstr(s.c_str()));
-  c4::yml::NodeRef n = t.rootref();
-  for(const auto& cl:n.children()){
-    std::string classname(::key(cl));
-    TClass* c = TClass::GetClass(classname.c_str());
-    if(!c){
-      std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
-    } else {
-      RYML_Export_Keys ex;
-      ex.type = ::val_s(cl["type"]);
-      for(const auto& k:cl["proxies"].children()){
-        std::string key(::key(k));
-        std::string val(::val_s(k));                
-        ex.proxies[key] = val;
-      }
-      _rymlExportKeys[c] = ex;
-    }
-  }  
-#endif
-}
-
-void RooJSONFactoryWSTool::clearFactoryExpressions(){
-  // clear all factory expressions
-#ifdef INCLUDE_RYML    
-  _rymlPdfFactoryExpressions.clear();
-  _rymlFuncFactoryExpressions.clear();
-#endif
-}
-void RooJSONFactoryWSTool::clearExportKeys(){
-  // clear all export keys
-#ifdef INCLUDE_RYML    
-  _rymlExportKeys.clear();
-#endif
-}
-
-void RooJSONFactoryWSTool::printFactoryExpressions(){
-  // print all factory expressions
-#ifdef INCLUDE_RYML    
-  for(auto it:_rymlPdfFactoryExpressions){
-    std::cout << it.first;
-    std::cout << " " << it.second.tclass->GetName();    
-    for(auto v:it.second.arguments){
-      std::cout << " " << v;
-    }
-    std::cout << std::endl;
-  }
-  for(auto it:_rymlFuncFactoryExpressions){
-    std::cout << it.first;
-    std::cout << " " << it.second.tclass->GetName();    
-    for(auto v:it.second.arguments){
-      std::cout << " " << v;
-    }
-    std::cout << std::endl;
-  }  
-#endif
-}
-void RooJSONFactoryWSTool::printExportKeys(){
-  // print all export keys
-#ifdef INCLUDE_RYML    
-  for(const auto& it:_rymlExportKeys){
-    std::cout << it.first->GetName() << ": " << it.second.type;
-    for(const auto& kv:it.second.proxies){
-      std::cout << " " << kv.first << "=" << kv.second;
-    }
-    std::cout << std::endl;
-  }
-#endif
-}
-
 
 template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
   // export all ModelConfig objects and attached Pdfs
