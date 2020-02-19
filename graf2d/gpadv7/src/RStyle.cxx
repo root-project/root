@@ -63,153 +63,182 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
    if (css_code.empty())
       return true;
 
-   int len = css_code.length(), pos = 0, nline = 1, linebeg = 0;
+   struct RParser {
+      int pos{0};
+      int nline{1};
+      int linebeg{0};
+      int len{0};
+      const std::string &css_code;
 
-   auto error_position = [&css_code, len, nline, linebeg] () -> std::string {
-      std::string res = "\nLine "s + std::to_string(nline) + ": "s;
-
-      int p = linebeg;
-      while ((p<len) && (p < linebeg+100) && (css_code[p] != '\n')) ++p;
-
-      return res + css_code.substr(linebeg, p-linebeg);
-   };
-
-   /** Skip comments or just empty space */
-   auto skip_empty = [&css_code, &pos, &nline, &linebeg, len] () -> bool {
-      bool skip_until_newline = false, skip_until_endblock = false;
-
-      while (pos < len) {
-         if (css_code[pos] == '\n') {
-            skip_until_newline = false;
-            linebeg = ++pos;
-            ++nline;
-            continue;
-         }
-
-         if (skip_until_endblock && (css_code[pos] == '*') && (pos+1 < len) && (css_code[pos+1] == '/')) {
-            pos+=2;
-            skip_until_endblock = false;
-            continue;
-         }
-
-         if (skip_until_newline || skip_until_endblock || (css_code[pos] == ' ') || (css_code[pos] == '\t')) {
-            ++pos;
-            continue;
-         }
-
-         if ((css_code[pos] == '/') && (pos+1 < len)) {
-            if (css_code[pos+1] == '/') {
-               pos+=2;
-               skip_until_newline = true;
-               continue;
-            } else if (css_code[pos+1] == '*')  {
-               pos+=2;
-               skip_until_endblock = true;
-               continue;
-            }
-         }
-
-         return true;
+      RParser(const std::string &_code) : css_code(_code)
+      {
+         len = css_code.length();
       }
 
-      return false;
+      bool more_data() const { return pos < len; }
+
+      char current() const { return css_code[pos]; }
+
+      void shift() { ++pos; }
+
+      bool check_symbol(bool isfirst = false)
+      {
+         auto symbol = current();
+         if (((symbol >= 'a') && (symbol <= 'z')) ||
+             ((symbol >= 'A') && (symbol <= 'Z')) || (symbol == '_')) return true;
+         return (!isfirst && (symbol>='0') && (symbol<='9'));
+      }
+
+      std::string error_position() const
+      {
+         std::string res = "\nLine "s + std::to_string(nline) + ": "s;
+
+         int p = linebeg;
+         while ((p<len) && (p < linebeg+100) && (css_code[p] != '\n')) ++p;
+
+         return res + css_code.substr(linebeg, p-linebeg);
+      }
+
+      bool skip_empty()
+      {
+         bool skip_until_newline = false, skip_until_endblock = false;
+
+         while (pos < len) {
+            if (current() == '\n') {
+               skip_until_newline = false;
+               linebeg = ++pos;
+               ++nline;
+               continue;
+            }
+
+            if (skip_until_endblock && (current() == '*') && (pos+1 < len) && (css_code[pos+1] == '/')) {
+               pos+=2;
+               skip_until_endblock = false;
+               continue;
+            }
+
+            if (skip_until_newline || skip_until_endblock || (current() == ' ') || (current() == '\t')) {
+               shift();
+               continue;
+            }
+
+            if ((current() == '/') && (pos+1 < len)) {
+               if (css_code[pos+1] == '/') {
+                  pos+=2;
+                  skip_until_newline = true;
+                  continue;
+               } else if (css_code[pos+1] == '*')  {
+                  pos+=2;
+                  skip_until_endblock = true;
+                  continue;
+               }
+            }
+
+            return true;
+         }
+
+         return false;
+      }
+
+      std::string scan_identifier(bool selector = false)
+      {
+         if (pos >= len) return ""s;
+
+         int pos0 = pos;
+
+         // start symbols of selector
+         if (selector && ((current() == '.') || (current() == '#'))) shift();
+
+         bool is_first = true;
+
+         while ((pos < len) && check_symbol(is_first)) { shift(); is_first = false; }
+
+         return css_code.substr(pos0, pos-pos0);
+      }
+
+      std::string scan_value()
+      {
+          if (pos >= len) return ""s;
+
+          int pos0 = pos;
+
+          while ((pos < len) && (current() != ';') && current() != '\n') shift();
+
+          if (pos >= len)
+             return ""s;
+
+          shift();
+
+          return css_code.substr(pos0, pos - pos0 - 1);
+      }
+
    };
 
-   auto check_symbol = [] (char symbol, bool isfirst = false) -> bool {
-      if (((symbol >= 'a') && (symbol <= 'z')) ||
-          ((symbol >= 'A') && (symbol <= 'Z')) || (symbol == '_')) return true;
-      return (!isfirst && (symbol>='0') && (symbol<='9'));
-   };
-
-   auto scan_identifier = [&check_symbol, &css_code, &pos, len] (bool selector = false) -> std::string {
-      if (pos >= len) return ""s;
-
-      int pos0 = pos;
-
-      // start symbols of selector
-      if (selector && ((css_code[pos] == '.') || (css_code[pos] == '#'))) ++pos;
-
-      while ((pos < len) && check_symbol(css_code[pos])) ++pos;
-
-      return css_code.substr(pos0, pos-pos0);
-   };
-
-   auto scan_value = [&css_code, &pos, len] () -> std::string {
-       if (pos >= len) return ""s;
-
-       int pos0 = pos;
-
-       while ((pos < len) && (css_code[pos] != ';')) {
-          if (css_code[pos] == '\n') return ""s;
-          pos++;
-       }
-       if (pos >= len) return ""s;
-       ++pos;
-
-       return css_code.substr(pos0, pos - pos0 - 1);
-   };
+   RParser parser(css_code);
 
    RStyle newstyle;
 
-   while (pos < len) {
+   while (parser.more_data()) {
 
-      if (!skip_empty())
+      if (!parser.skip_empty())
          return false;
 
-      auto sel = scan_identifier(true);
+      auto sel = parser.scan_identifier(true);
       if (sel.empty()) {
-         R__ERROR_HERE("rstyle") << "Fail to find selector" << error_position();
+         R__ERROR_HERE("rstyle") << "Fail to find selector" << parser.error_position();
          return false;
       }
 
-      if (!skip_empty())
+      if (!parser.skip_empty())
          return false;
 
-      if (css_code[pos] != '{') {
-         R__ERROR_HERE("rstyle") << "Fail to find starting {" << error_position();
+      if (parser.current() != '{') {
+         R__ERROR_HERE("rstyle") << "Fail to find starting {" << parser.error_position();
          return false;
       }
 
-      ++pos;
+      parser.shift();
 
-      if (!skip_empty())
+      if (!parser.skip_empty())
          return false;
 
       auto &map = newstyle.AddBlock(sel);
 
-      while (css_code[pos] != '}') {
-         auto name = scan_identifier();
+      while (parser.current() != '}') {
+         auto name = parser.scan_identifier();
          if (name.empty()) {
-            R__ERROR_HERE("rstyle") << "not able to extract identifier" << error_position();
+            R__ERROR_HERE("rstyle") << "not able to extract identifier" << parser.error_position();
             return false;
          }
 
-         if (!skip_empty())
+         if (!parser.skip_empty())
             return false;
 
-         if (css_code[pos] != ':') {
-            R__ERROR_HERE("rstyle") << "not able to find separator :" << error_position();
+         if (parser.current() != ':') {
+            R__ERROR_HERE("rstyle") << "not able to find separator :" << parser.error_position();
             return false;
          }
 
-         ++pos;
-         if (!skip_empty())
+         parser.shift();
+
+         if (!parser.skip_empty())
             return false;
 
-         auto value = scan_value();
+         auto value = parser.scan_value();
          if (value.empty()) {
-            R__ERROR_HERE("rstyle") << "not able to find value" << error_position();
+            R__ERROR_HERE("rstyle") << "not able to find value" << parser.error_position();
             return false;
          }
 
          map.AddBestMatch(name, value);
 
-         if (!skip_empty())
+         if (!parser.skip_empty())
             return false;
       }
-      ++pos;
 
-      skip_empty(); // after closing } end of file is possible
+      parser.shift();
+
+      parser.skip_empty(); // after closing } end of file is possible
    }
 
    // finally move all read blocks to this
