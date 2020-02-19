@@ -62,6 +62,29 @@
       return this.v7EvalAttr(name + "_name", "") || dflt;
    }
 
+   /** Create this.fillatt object based on v7 fill attributes */
+   JSROOT.TObjectPainter.prototype.createv7AttFill = function(prefix) {
+      if (!prefix || (typeof prefix != "string")) prefix = "fill_";
+
+      var fill_color = this.v7EvalColor(prefix + "color", "white");
+
+      this.createAttFill({ pattern: 1001, color: 0 });
+
+      this.fillatt.SetSolidColor(fill_color);
+   }
+
+   /** Create this.lineatt object based on v7 line attributes */
+   JSROOT.TObjectPainter.prototype.createv7AttLine = function(prefix) {
+      if (!prefix || (typeof prefix != "string")) prefix = "line_";
+
+      var line_color = this.v7EvalColor(prefix + "color", "black"),
+          line_width = this.v7EvalAttr(prefix + "width", 1),
+          line_style = this.v7EvalAttr(prefix + "style", 1);
+
+      this.createAttLine({ color: line_color, width: line_width, style: line_style });
+   }
+
+
 
    function TAxisPainter(axis, embedded) {
       JSROOT.TObjectPainter.call(this, axis);
@@ -907,14 +930,10 @@
          }
       }
 
-      if (this.fillatt === undefined) {
-         this.createAttFill({ pattern: 1001, color: 0 });
+      if (!this.fillatt)
+         this.createv7AttFill("fill_");
 
-         // TODO: provide real fill color
-         this.fillatt.SetSolidColor('white');
-      }
-
-      this.createAttLine({ color: 'black' });
+      this.createv7AttLine("border_");
    }
 
    TFramePainter.prototype.ProjectAitoff2xy = function(l, b) {
@@ -3327,7 +3346,6 @@
 
          this.draw_object = padattr;
          this.pad = padattr;
-         this.pad_frame = snap.fFrame;
 
          if (this.batch_mode && this.iscan)
              this._fixed_size = true;
@@ -4328,6 +4346,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLegend", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLegend", opt: "", direct: true, csstype: "legend" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrame", icon: "img_frame", func: "JSROOT.v7.drawFrame", opt: "" });
 
    JSROOT.v7.TAxisPainter = TAxisPainter;
    JSROOT.v7.TFramePainter = TFramePainter;

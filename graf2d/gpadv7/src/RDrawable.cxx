@@ -37,7 +37,7 @@ bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) c
 
 /////////////////////////////////////////////////////////////////////////////
 /// Creates display item for drawable
-/// By default item contains drawble data itself
+/// By default item contains drawable data itself
 
 std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RDrawable::Display() const
 {
