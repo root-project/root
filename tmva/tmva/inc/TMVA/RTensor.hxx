@@ -112,7 +112,7 @@ struct and_types : std::true_type {
 };
 
 template <class T0, class... Ts>
-struct and_types<T0, Ts...> : std::integral_constant<bool, T0{} && and_types<Ts...>{}> {
+struct and_types<T0, Ts...> : std::integral_constant<bool, T0() && and_types<Ts...>()> {
 };
 
 /// \brief Copy slice of a tensor recursively from here to there
