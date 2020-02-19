@@ -112,8 +112,6 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
 void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem) const
 {
    paditem.SetAttributes(&GetAttrMap());
-   paditem.SetFrame(GetFrame());
-
    paditem.SetPadStyle(fStyle.lock());
 
    unsigned indx = 0;
@@ -167,18 +165,49 @@ ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &pa
    return ret;
 }
 
-ROOT::Experimental::RFrame *ROOT::Experimental::RPadBase::GetOrCreateFrame()
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Get a frame object for the pad.
+/// If frame not exists - creates and add to the end of primitives list
+
+
+std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetOrCreateFrame()
 {
-   CreateFrameIfNeeded();
-   return fFrame.get();
+   auto frame = GetFrame();
+   if (!frame) {
+      frame = std::make_shared<RFrame>();
+      fPrimitives.emplace_back(frame);
+   }
+
+   return frame;
 }
 
-void ROOT::Experimental::RPadBase::CreateFrameIfNeeded()
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Get a frame object if exists
+
+const std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetFrame() const
 {
-   if (!fFrame)
-      fFrame = std::make_unique<ROOT::Experimental::RFrame>();
+   for (auto &drawable : fPrimitives) {
+      if (drawable->GetCssType() == "frame") {
+         const std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared());
+         if (frame) return frame;
+      }
+   }
+   return nullptr;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Get a frame object if exists
+
+std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetFrame()
+{
+   for (auto &drawable : fPrimitives) {
+      if (drawable->GetCssType() == "frame") {
+         std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared());
+         if (frame) return frame;
+      }
+   }
+   return nullptr;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Get a pad axis from the RFrame.
@@ -186,8 +215,10 @@ void ROOT::Experimental::RPadBase::CreateFrameIfNeeded()
 
 ROOT::Experimental::RPadUserAxisBase* ROOT::Experimental::RPadBase::GetAxis(size_t dimension) const
 {
-   if (fFrame && dimension < fFrame->GetNDimensions())
-      return &fFrame->GetUserAxis(dimension);
+   auto frame = GetFrame();
+
+   if (frame && dimension < frame->GetNDimensions())
+      return &frame->GetUserAxis(dimension);
    return nullptr;
 }
 
@@ -197,8 +228,9 @@ ROOT::Experimental::RPadUserAxisBase* ROOT::Experimental::RPadBase::GetAxis(size
 
 ROOT::Experimental::RPadUserAxisBase* ROOT::Experimental::RPadBase::GetOrCreateAxis(size_t dimension)
 {
-   GetOrCreateFrame()->GrowToDimensions(dimension);
-   return &fFrame->GetUserAxis(dimension);
+   auto frame = GetOrCreateFrame();
+   frame->GrowToDimensions(dimension);
+   return &frame->GetUserAxis(dimension);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,16 +265,18 @@ void ROOT::Experimental::RPadBase::SetAxisAutoBounds(int dimension)
 
 void ROOT::Experimental::RPadBase::SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd)
 {
-   GetOrCreateFrame()->GrowToDimensions(vecBeginAndEnd.size());
-   if (vecBeginAndEnd.size() != fFrame->GetNDimensions()) {
+   auto frame = GetOrCreateFrame();
+
+   frame->GrowToDimensions(vecBeginAndEnd.size());
+   if (vecBeginAndEnd.size() != frame->GetNDimensions()) {
       R__ERROR_HERE("Gpadv7")
          << "Array of axis bound has wrong size " <<  vecBeginAndEnd.size()
-         << " versus numer of axes in frame " << fFrame->GetNDimensions();
+         << " versus numer of axes in frame " << frame->GetNDimensions();
       return;
    }
 
-   for (size_t i = 0, n = fFrame->GetNDimensions(); i < n; ++i)
-      fFrame->GetUserAxis(i).SetBounds(vecBeginAndEnd[i][0], vecBeginAndEnd[i][1]);
+   for (size_t i = 0, n = frame->GetNDimensions(); i < n; ++i)
+      frame->GetUserAxis(i).SetBounds(vecBeginAndEnd[i][0], vecBeginAndEnd[i][1]);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -250,16 +284,18 @@ void ROOT::Experimental::RPadBase::SetAllAxisBounds(const std::vector<std::array
 
 void ROOT::Experimental::RPadBase::SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind)
 {
-   GetOrCreateFrame()->GrowToDimensions(vecBoundAndKind.size());
-   if (vecBoundAndKind.size() != fFrame->GetNDimensions()) {
+   auto frame = GetOrCreateFrame();
+
+   frame->GrowToDimensions(vecBoundAndKind.size());
+   if (vecBoundAndKind.size() != frame->GetNDimensions()) {
       R__ERROR_HERE("Gpadv7")
-         << "Array of axis bound has wrong size " <<  vecBoundAndKind.size()
-         << " versus numer of axes in frame " << fFrame->GetNDimensions();
+         << "Array of axis bound has wrong size " << vecBoundAndKind.size()
+         << " versus numer of axes in frame " << frame->GetNDimensions();
       return;
    }
 
-   for (size_t i = 0, n = fFrame->GetNDimensions(); i < n; ++i)
-      fFrame->GetUserAxis(i).SetBound(vecBoundAndKind[i].fKind, vecBoundAndKind[i].fBound);
+   for (size_t i = 0, n = frame->GetNDimensions(); i < n; ++i)
+      frame->GetUserAxis(i).SetBound(vecBoundAndKind[i].fKind, vecBoundAndKind[i].fBound);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,6 +315,18 @@ void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &ve
 
 void ROOT::Experimental::RPadBase::SetAllAxisAutoBounds()
 {
-   for (size_t i = 0, n = GetOrCreateFrame()->GetNDimensions(); i < n; ++i)
-      fFrame->GetUserAxis(i).SetAutoBounds();
+   auto frame = GetOrCreateFrame();
+
+   for (size_t i = 0, n = frame->GetNDimensions(); i < n; ++i)
+      frame->GetUserAxis(i).SetAutoBounds();
 }
+
+/// Convert user coordinates to normal coordinates.
+std::array<ROOT::Experimental::RPadLength::Normal, 2> ROOT::Experimental::RPadBase::UserToNormal(const std::array<RPadLength::User, 2> &pos) const
+{
+   auto frame = GetFrame();
+   if (!frame) return {};
+
+   return frame->UserToNormal(pos);
+}
+

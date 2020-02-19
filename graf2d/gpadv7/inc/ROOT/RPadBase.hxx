@@ -44,9 +44,6 @@ private:
 
    std::vector<Primitive_t> fPrimitives;
 
-   /// RFrame with user coordinate system, if used by this pad.
-   std::unique_ptr<RFrame> fFrame;
-
    /// Disable copy construction.
    RPadBase(const RPadBase &) = delete;
 
@@ -168,10 +165,9 @@ public:
    /// Wipe the pad by clearing the list of primitives.
    void Wipe() { fPrimitives.clear(); }
 
-   void CreateFrameIfNeeded();
-
-   RFrame *GetOrCreateFrame();
-   const RFrame *GetFrame() const { return fFrame.get(); }
+   std::shared_ptr<RFrame> GetOrCreateFrame();
+   std::shared_ptr<RFrame> GetFrame();
+   const std::shared_ptr<RFrame> GetFrame() const;
 
    RPadUserAxisBase* GetOrCreateAxis(size_t dimension);
    RPadUserAxisBase* GetAxis(size_t dimension) const;
@@ -200,10 +196,7 @@ public:
    virtual RCanvas *GetCanvas() = 0;
 
    /// Convert user coordinates to normal coordinates.
-   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const
-   {
-      return fFrame->UserToNormal(pos);
-   }
+   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const;
 
    void AssignAutoColors();
 
