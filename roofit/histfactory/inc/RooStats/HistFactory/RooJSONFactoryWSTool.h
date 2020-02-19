@@ -5,11 +5,43 @@
 #include <string>
 
 class RooJSONFactoryWSTool : public TNamed, RooPrintable {
+ public:
+  template<class T> class Importer {
+  public:
+    virtual bool importPdf(RooWorkspace*, const T&) const {
+      return false;
+    }
+    virtual bool importFunction(RooWorkspace*, const T&) const {
+      return false;
+    }
+  };
+  template<class T> class Exporter {
+  public:
+    virtual bool exportObject(RooAbsReal*, T&) const {
+      return false;
+    }
+  };   
+  class Helpers;
+ protected:
   RooWorkspace* _workspace;
   static std::vector<std::string> _strcache;
+  template<class T> static std::map<std::string,const Importer<T>*> _importers;
+  template<class T> static std::map<const TClass*,const Exporter<T>*> _exporters;    
   void prepare();
  public:
   RooJSONFactoryWSTool(RooWorkspace& ws);
+
+  template<class T> static bool registerImporter(const std::string& key, const RooJSONFactoryWSTool::Importer<T>* f){
+    if(RooJSONFactoryWSTool::_importers<T>.find(key) != RooJSONFactoryWSTool::_importers<T>.end()) return false;
+    RooJSONFactoryWSTool::_importers<T>[key] = f;
+    return true;
+  }
+  template<class T> static bool registerExporter(const TClass* key, const RooJSONFactoryWSTool::Exporter<T>* f){
+    if(RooJSONFactoryWSTool::_exporters<T>.find(key) != RooJSONFactoryWSTool::_exporters<T>.end()) return false;  
+    RooJSONFactoryWSTool::_exporters<T>[key] = f;
+    return true;
+  }
+
   static const char* incache(const std::string& str);
   static void clearcache();
 
