@@ -651,7 +651,24 @@ std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(const ROOT::Exper
    canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
    canvitem->SetObjectID("canvas"); // for canvas itself use special id
 
-   TString res = TBufferJSON::ToJSON(canvitem.get(), fJsonComp);
+   TBufferJSON json;
+   json.SetCompact(fJsonComp);
+
+   static std::vector<const TClass *> exclude_classes = {
+      TClass::GetClass<ROOT::Experimental::RAttrMap::BoolValue_t>(),
+      TClass::GetClass<ROOT::Experimental::RAttrMap::IntValue_t>(),
+      TClass::GetClass<ROOT::Experimental::RAttrMap::DoubleValue_t>(),
+      TClass::GetClass<ROOT::Experimental::RAttrMap::StringValue_t>(),
+      TClass::GetClass<ROOT::Experimental::RAttrMap>(),
+      TClass::GetClass<ROOT::Experimental::RPadPos>(),
+      TClass::GetClass<ROOT::Experimental::RPadLength>(),
+      TClass::GetClass<std::unordered_map<std::string,ROOT::Experimental::RAttrMap::Value_t*>>()
+   };
+
+   for (auto cl : exclude_classes)
+      json.SetSkipClassInfo(cl);
+
+   auto res = json.StoreObject(canvitem.get(), TClass::GetClass<RCanvasDisplayItem>());
 
    return std::string(res.Data());
 }
