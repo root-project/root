@@ -27,7 +27,7 @@ namespace Experimental {
 class RAttrBox : public RAttrBase {
 
    RAttrLine fAttrBorder{this, "border_"};   ///<!
-   RAttrFill fAttrFill{this, "fill_"};           ///<!
+   RAttrFill fAttrFill{this, "fill_"};       ///<!
 
    R__ATTR_CLASS(RAttrBox, "box_", AddDefaults(fAttrBorder).AddDefaults(fAttrFill));
 

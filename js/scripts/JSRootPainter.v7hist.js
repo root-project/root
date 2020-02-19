@@ -21,7 +21,6 @@
 
    JSROOT.sources.push("v7hist");
 
-
    // =============================================================
 
    function THistPainter(histo) {
@@ -41,11 +40,8 @@
    THistPainter.prototype.PrepareFrame = function(divid) {
       this.SetDivId(divid, -1);
 
-      if (!this.frame_painter()) {
-         var pad = this.root_pad(),
-             fr = pad ? pad.fFrame : null;
-         JSROOT.v7.drawFrame(divid, fr);
-      }
+      if (!this.frame_painter())
+         JSROOT.v7.drawFrame(divid, null);
 
       return this.SetDivId(divid, 1);
    }

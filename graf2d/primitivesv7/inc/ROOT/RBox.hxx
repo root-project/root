@@ -29,7 +29,6 @@ namespace Experimental {
 
 class RBox : public RDrawable {
 
-   /// Box's coordinates
    RPadPos fP1, fP2;                    ///< box corners coordinates
    RAttrBox fAttrBox{this, "box_"};     ///<! box attributes
 

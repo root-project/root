@@ -42,6 +42,11 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
+
+   canvas->GetOrCreateFrame()->AttrFill().SetColor(RColor::kBlue);
+   canvas->GetOrCreateFrame()->AttrBorder().SetColor(RColor::kRed);
+   canvas->GetOrCreateFrame()->AttrBorder().SetWidth(3);
+
    auto draw1 = canvas->Draw(pHist);
    draw1->AttrLine().SetColor(RColor::kRed);
 
