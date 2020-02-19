@@ -22,6 +22,7 @@
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RHistData.hxx"
 #include <initializer_list>
+#include <stdexcept>
 
 namespace ROOT {
 namespace Experimental {
@@ -306,6 +307,10 @@ using RH3LL = RHist<3, int64_t, RHistStatContent>;
 /// the same axis configuration, use the same precision, and if `from` records
 /// at least the same statistics as `to` (recording more stats is fine).
 ///
+/// Adding histograms with incompatible axis binning will be reported at runtime
+/// with an `std::runtime_error`. Insufficient statistics in the source
+/// histogram will be detected at compile-time and result in a compiler error.
+///
 /// In the future, we may either adopt a more relaxed definition of histogram
 /// addition or provide a mechanism to convert from one histogram type to
 /// another. We currently favor the latter path.
@@ -319,9 +324,7 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
    const auto& fromImpl = *from.GetImpl();
    for (int dim = 0; dim < DIMENSIONS; ++dim) {
       if (!toImpl.GetAxis(dim).HasSameBinningAs(fromImpl.GetAxis(dim))) {
-         R__ERROR_HERE("HIST") << "Incompatible axis types";
-         // FIXME: Shouldn't this throw an exception or something?
-         return;
+         throw std::runtime_error("Attempted to add RHists with incompatible axis binning");
       }
    }
 
