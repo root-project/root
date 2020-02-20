@@ -95,7 +95,7 @@ void REveDataCollection::ApplyFilter()
       ids.push_back(idx++);
    }
    StampObjProps();
-   if ( _handler_func_ids) _handler_func_ids( this , ids);
+   if (_handler_func_ids) _handler_func_ids( this , ids);
 }
 
 //______________________________________________________________________________
@@ -173,33 +173,27 @@ Int_t REveDataCollection::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
 //______________________________________________________________________________
 
-void REveDataCollection::SetCollectionColorRGB(UChar_t r, UChar_t g, UChar_t b)
+void REveDataCollection::SetMainColor(Color_t newv)
 {
-   Color_t oldv = GetMainColor();
-   Color_t newv = TColor::GetColor(r, g, b);
    int idx = 0;
    Ids_t ids;
    for (auto & chld : fChildren)
    {
-      // if (chld->GetMainColor() == oldv) {
-         chld->SetMainColor(newv);
-         printf(" REveDataCollection::SetCollectionColorRGB going to change color for idx %d --------------------\n", idx);
-         ids.push_back(idx);
-         // }
-
+      chld->SetMainColor(newv);
+      ids.push_back(idx);
       idx++;
    }
 
    REveElement::SetMainColor(newv);
-   printf("REveDataCollection::SetCollectionColorRGB color ched to %d ->%d\n", oldv, GetMainColor());
-   _handler_func_ids( this , ids);
+   // printf("REveDataCollection::SetCollectionColorRGB color ched to %d ->%d\n", oldv, GetMainColor());
+    if ( _handler_func_ids) _handler_func_ids( this , ids);
 }
 
 //______________________________________________________________________________
 
-void REveDataCollection::SetCollectionVisible(bool iRnrSelf)
+bool REveDataCollection::SetRnrState(bool iRnrSelf)
 {
-   SetRnrSelf(iRnrSelf);
+   bool ret = REveElement::SetRnrState(iRnrSelf);
 
    Ids_t ids;
 
@@ -209,6 +203,8 @@ void REveDataCollection::SetCollectionVisible(bool iRnrSelf)
    }
 
    _handler_func_ids( this , ids);
+
+   return ret;
 }
 
 
@@ -255,11 +251,12 @@ void REveDataItem::SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b)
    c->ItemChanged(this);
 }
 
-void REveDataItem::SetItemRnrSelf(bool iRnrSelf)
+bool REveDataItem::SetRnrSelf(bool iRnrSelf)
 {
-   REveElement::SetRnrSelf(iRnrSelf);
+   bool r = REveElement::SetRnrSelf(iRnrSelf);
    REveDataCollection* c = dynamic_cast<REveDataCollection*>(fMother);
    c->ItemChanged(this);
+   return r;
 }
 
 void REveDataItem::SetFiltered(bool f)

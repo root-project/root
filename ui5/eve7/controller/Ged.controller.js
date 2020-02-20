@@ -475,13 +475,12 @@ sap.ui.define([
          { name : "NDiv",    _type : "Number" }
       ],
       "REveDataCollection" : [
-         { name : "FilterExpr",  _type : "String",   quote : 1 },
-         { name : "CollectionVisible",  member :"fRnrSelf",  _type : "Bool" },
-         make_main_col_obj("CollectionColor")
+         { sub: ["REveElement"] },
+         { name : "FilterExpr",  _type : "String",   quote : 1 }
       ],
       "REveDataItem" : [
          make_main_col_obj("ItemColor"),
-         { name : "ItemRnrSelf",   member : "fRnrSelf",  _type : "Bool" },
+         { name : "RnrSelf",   member : "fRnrSelf",  _type : "Bool" },
          { name : "Filtered",   _type : "Bool" }
       ],
       "REveTrack" : [
