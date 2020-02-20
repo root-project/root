@@ -920,14 +920,24 @@
       var tframe = this.GetObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
-         JSROOT.extend(this, JSROOT.gStyle.FrameNDC);
 
-         if (tframe && tframe.fPos && tframe.fSize) {
-            this.fX1NDC = tframe.fPos.fHoriz.fNormal.fVal;
-            this.fX2NDC = this.fX1NDC + tframe.fSize.fHoriz.fNormal.fVal;
-            this.fY1NDC = tframe.fPos.fVert.fNormal.fVal;
-            this.fY2NDC = this.fY1NDC + tframe.fSize.fVert.fNormal.fVal;
+
+         var pthis = this, padw = this.pad_width(), padh = this.pad_height();
+
+         /** Evalue RAttrLength which consists of normalized and pxel coordinates, return pixel value */
+         function evalLength(name, size, dflt) {
+            var norm = pthis.v7EvalAttr("margin_" + name + "_norm", dflt),
+                px = pthis.v7EvalAttr("margin_" + name + "_px", 0 ),
+                res = 0;
+            if (norm) res = size*norm;
+            if (px) res += px;
+            return size > 0 ? res/size : 0.;
          }
+
+         this.fX1NDC = evalLength("left", padw, JSROOT.gStyle.FrameNDC.fX1NDC);
+         this.fY1NDC = evalLength("bottom", padh, JSROOT.gStyle.FrameNDC.fY1NDC);
+         this.fX2NDC = 1 - evalLength("right", padw, 1-JSROOT.gStyle.FrameNDC.fX2NDC);
+         this.fY2NDC = 1 - evalLength("top", padh, 1-JSROOT.gStyle.FrameNDC.fY2NDC);
       }
 
       if (!this.fillatt)
