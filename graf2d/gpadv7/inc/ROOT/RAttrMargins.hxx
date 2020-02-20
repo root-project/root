@@ -23,66 +23,45 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrLength : public RAttrBase {
+class RAttrMargins : public RAttrBase {
 
-   RPadLength fLength;      ///<! current position
+   R__ATTR_CLASS(RAttrMargins, "margin_", AddString("left","").AddString("right","").AddString("top","").AddString("bottom",""));
 
-   R__ATTR_CLASS(RAttrLength, "shift_", AddDouble("norm", 0.).AddDouble("px", 0));
+   RAttrMargins &SetLeft(const RPadLength &pos) { SetMargin("left", pos); return *this; }
+   RPadLength GetLeft() const { return GetMargin("left"); }
 
-   RAttrLength &Set(const RPadLength &pos)
+   RAttrMargins &SetRight(const RPadLength &pos) { SetMargin("right", pos); return *this; }
+   RPadLength GetRight() const { return GetMargin("right"); }
+
+   RAttrMargins &SetTop(const RPadLength &pos) { SetMargin("top", pos); return *this; }
+   RPadLength GetTop() const { return GetMargin("top"); }
+
+   RAttrMargins &SetBottom(const RPadLength &pos) { SetMargin("bottom", pos); return *this; }
+   RPadLength GetBottom() const { return GetMargin("bottom"); }
+
+protected:
+
+   RAttrMargins &SetMargin(const std::string &name, const RPadLength &pos)
    {
-      if (pos.HasNormal())
-         SetValue("norm", pos.GetNormal());
+      if (pos.Empty())
+         ClearValue(name);
       else
-         ClearValue("norm");
-
-      if (pos.HasPixel())
-         SetValue("px", pos.GetPixel());
-      else
-         ClearValue("px");
+         SetValue(name, pos.AsString());
 
       return *this;
    }
 
-   RPadLength Get() const
+   RPadLength GetMargin(const std::string &name) const
    {
       RPadLength res;
 
-      auto norm = GetValue<double>("norm");
-      auto px = GetValue<double>("px");
+      auto value = GetValue<std::string>(name);
 
-      if (px) res.SetPixel(px);
-      if (norm) res.SetNormal(norm);
+      if (!value.empty())
+         res.ParseString(value);
 
       return res;
    }
-
-};
-
-class RAttrMargins : public RAttrBase {
-
-   RAttrLength fLeft{this, "left_"}; ///<! left margin
-   RAttrLength fRight{this, "right_"}; ///<! right margin
-   RAttrLength fTop{this, "top_"}; ///<! top margin
-   RAttrLength fBottom{this, "bottom_"}; ///<! bottom margin
-
-   R__ATTR_CLASS(RAttrMargins, "margin_", AddDefaults(fLeft).AddDefaults(fRight).AddDefaults(fTop).AddDefaults(fBottom));
-
-   RAttrMargins &SetLeft(const RPadLength &pos) { fLeft.Set(pos); return *this; }
-   RPadLength GetLeft() const { return fLeft.Get(); }
-   RAttrLength &Left() { return fLeft; }
-
-   RAttrMargins &SetRight(const RPadLength &pos) { fRight.Set(pos); return *this; }
-   RPadLength GetRight() const { return fRight.Get(); }
-   RAttrLength &Right() { return fRight; }
-
-   RAttrMargins &SetTop(const RPadLength &pos) { fTop.Set(pos); return *this; }
-   RPadLength GetTop() const { return fTop.Get(); }
-   RAttrLength &Top() { return fTop; }
-
-   RAttrMargins &SetBottom(const RPadLength &pos) { fBottom.Set(pos); return *this; }
-   RPadLength GetBottom() const { return fBottom.Get(); }
-   RAttrLength &Bottom() { return fBottom; }
 
 };
 
