@@ -11,7 +11,7 @@
 #ifndef ROOT_TWebPainting
 #define ROOT_TWebPainting
 
-#include "TList.h"
+#include "TObject.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttText.h"
