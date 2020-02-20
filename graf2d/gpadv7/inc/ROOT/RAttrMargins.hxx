@@ -27,16 +27,16 @@ class RAttrMargins : public RAttrBase {
 
    R__ATTR_CLASS(RAttrMargins, "margin_", AddString("left","").AddString("right","").AddString("top","").AddString("bottom",""));
 
-   RAttrMargins &SetLeft(const RPadLength &pos) { SetMargin("left", pos); return *this; }
+   RAttrMargins &SetLeft(const RPadLength &pos) { return SetMargin("left", pos); }
    RPadLength GetLeft() const { return GetMargin("left"); }
 
-   RAttrMargins &SetRight(const RPadLength &pos) { SetMargin("right", pos); return *this; }
+   RAttrMargins &SetRight(const RPadLength &pos) { return SetMargin("right", pos); }
    RPadLength GetRight() const { return GetMargin("right"); }
 
-   RAttrMargins &SetTop(const RPadLength &pos) { SetMargin("top", pos); return *this; }
+   RAttrMargins &SetTop(const RPadLength &pos) { return SetMargin("top", pos); }
    RPadLength GetTop() const { return GetMargin("top"); }
 
-   RAttrMargins &SetBottom(const RPadLength &pos) { SetMargin("bottom", pos); return *this; }
+   RAttrMargins &SetBottom(const RPadLength &pos) { return SetMargin("bottom", pos); }
    RPadLength GetBottom() const { return GetMargin("bottom"); }
 
 protected:
