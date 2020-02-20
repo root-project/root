@@ -3,10 +3,10 @@
 ///
 /// \macro_code
 ///
-/// \date 2015-03-22
+/// \date 2020-02-20
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
-/// \author Axel Naumann <axel@cern.ch>
+/// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -24,7 +24,7 @@
 // library automatically for outlined function see ROOT-10336
 R__LOAD_LIBRARY(libROOTHistDraw)
 
-void draw()
+void draw_frame()
 {
    using namespace ROOT::Experimental;
 
@@ -42,6 +42,16 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
+
+   auto frame = canvas->GetOrCreateFrame();
+   frame->AttrFill().SetColor(RColor::kBlue);
+   frame->AttrBorder().SetColor(RColor::kRed);
+   frame->AttrBorder().SetWidth(3);
+   frame->Margins().SetTop(0.3_normal);
+   frame->Margins().SetBottom(0.1_normal);
+   frame->Margins().SetLeft(0.2_normal);
+   frame->Margins().SetRight(0.2_normal);
+
    auto draw1 = canvas->Draw(pHist);
    draw1->AttrLine().SetColor(RColor::kRed);
 
