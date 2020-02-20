@@ -1060,6 +1060,25 @@ void TF1::Copy(TObject &obj) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Make a complete copy of the underlying object.  If 'newname' is set,
+/// the copy's name will be set to that name.
+
+TObject* TF1::Clone(const char* newname) const
+{
+
+   TF1* obj = (TF1*)IsA()->GetNew()(0);
+   Copy(*obj);
+
+   if(newname && strlen(newname) ) {
+      obj->SetName(newname);
+   }
+
+   obj->SetHistogram(fHistogram);
+   return obj;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns the first derivative of the function at point x,
 /// computed by Richardson's extrapolation method (use 2 derivative estimates
 /// to compute a third, more accurate estimation)

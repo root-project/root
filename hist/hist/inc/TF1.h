@@ -413,6 +413,7 @@ public:
    static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
+   TObject*         Clone(const char* newname=0) const;
    virtual Double_t Derivative(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    virtual Double_t Derivative2(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    virtual Double_t Derivative3(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
@@ -612,6 +613,7 @@ public:
    void SetFunction(PtrObj &p, MemFn memFn);
    template <typename Func>
    void SetFunction(Func f);
+   virtual void     SetHistogram(TH1 *h) {fHistogram = h;}
    virtual void     SetMaximum(Double_t maximum = -1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum = -1111); // *MENU*
    virtual void     SetNDF(Int_t ndf);
@@ -774,7 +776,7 @@ T TF1::EvalPar(const T *x, const Double_t *params)
 ////////////////////////////////////////////////////////////////////////////////
 ///   Eval for vectorized functions
 // template <class T>
-// T TF1::Eval(T x, T y, T z, T t) const 
+// T TF1::Eval(T x, T y, T z, T t) const
 // {
 //    if (fType == EFType::kFormula)
 //       return fFormula->Eval(x, y, z, t);
