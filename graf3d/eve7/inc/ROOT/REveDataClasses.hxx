@@ -59,6 +59,9 @@ public:
    REveDataCollection(const std::string& n = "REveDataCollection", const std::string& t = "");
    virtual ~REveDataCollection() {}
 
+   bool SingleRnrState() const override { return true; }
+   bool SetRnrState(bool) override;
+
    TClass *GetItemClass() const { return fItemClass; }
    void SetItemClass(TClass *cls) { fItemClass = cls; }
 
@@ -75,8 +78,7 @@ public:
 
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
-   virtual void SetCollectionColorRGB(UChar_t r, UChar_t g, UChar_t b);
-   virtual void SetCollectionVisible(bool);
+   void SetMainColor(Color_t) override;
    virtual void ItemChanged(REveDataItem *item);
 
    void SetHandlerFunc (std::function<void (REveDataCollection*)> handler_func)
@@ -105,7 +107,7 @@ public:
    void   SetFiltered(Bool_t f);
 
    virtual void SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b);
-   virtual void SetItemRnrSelf(bool);
+   bool SetRnrSelf(bool) override;
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet) override;
 
