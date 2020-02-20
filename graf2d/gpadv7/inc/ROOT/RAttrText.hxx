@@ -28,7 +28,7 @@ namespace Experimental {
 
 class RAttrText : public RAttrBase {
 
-   RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
+   RColor fColor{this, "color_"}; ///<! text color, will access container from text attributes
 
    R__ATTR_CLASS(RAttrText, "text_", AddDouble("size", 12.).AddDouble("angle", 0.).AddInt("align", 22).AddInt("font", 41).AddDefaults(fColor));
 
