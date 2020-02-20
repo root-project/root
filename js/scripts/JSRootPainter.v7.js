@@ -937,7 +937,7 @@
 
             while (val.length > 0) {
                // skip empty spaces
-               while (pos < val.length && (val[pos] == ' ') || (val[pos] == '\t'))
+               while ((pos < val.length) && ((val[pos] == ' ') || (val[pos] == '\t')))
                   ++pos;
 
                if (pos >= val.length)
