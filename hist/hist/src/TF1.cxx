@@ -1066,14 +1066,11 @@ void TF1::Copy(TObject &obj) const
 TObject* TF1::Clone(const char* newname) const
 {
 
-   TF1* obj = (TF1*)IsA()->GetNew()(0);
-   Copy(*obj);
-
-   if(newname && strlen(newname) ) {
-      obj->SetName(newname);
+   TF1* obj = (TF1*) TObject::Clone(newname);
+   if (fHistogram) {
+      obj->fHistogram = (TH1*)fHistogram->IsA()->GetNew()(0);
+      fHistogram->Copy(*obj->fHistogram);
    }
-
-   obj->SetHistogram(fHistogram);
    return obj;
 }
 

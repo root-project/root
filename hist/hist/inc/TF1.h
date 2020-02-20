@@ -613,7 +613,6 @@ public:
    void SetFunction(PtrObj &p, MemFn memFn);
    template <typename Func>
    void SetFunction(Func f);
-   virtual void     SetHistogram(TH1 *h) {fHistogram = h;}
    virtual void     SetMaximum(Double_t maximum = -1111); // *MENU*
    virtual void     SetMinimum(Double_t minimum = -1111); // *MENU*
    virtual void     SetNDF(Int_t ndf);
