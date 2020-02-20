@@ -1806,407 +1806,6 @@ void TPDF::Open(const char *fname, Int_t wtype)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Patterns encoding
-
-void TPDF::PatternEncode()
-{
-   Int_t patternNb = kObjPattern;
-
-   NewObject(kObjColorSpace);
-   if (gStyle->GetColorModelPS()) {
-      PrintStr("[/Pattern /DeviceCMYK]@");
-   } else {
-      PrintStr("[/Pattern /DeviceRGB]@");
-   }
-   PrintStr("endobj@");
-   NewObject(kObjPatternResourses);
-   PrintStr("<</ProcSet[/PDF]>>@");
-   PrintStr("endobj@");
-
-   NewObject(kObjPatternList);
-   PrintStr("<<@");
-   PrintStr(" /P01");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P02");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P03");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P04");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P05");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P06");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P07");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P08");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P09");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P10");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P11");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P12");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P13");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P14");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P15");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P16");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P17");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P18");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P19");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P20");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P21");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P22");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P23");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P24");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R");
-   PrintStr(" /P25");
-   WriteInteger(patternNb++);
-   PrintStr(" 0 R@");
-   PrintStr(">>@");
-   PrintStr("endobj@");
-
-   patternNb = kObjPattern;
-
-   // P01
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[1 0 0 1 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 98 4]/XStep 98/YStep 4/Length 91/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301P\241\034(\254\340\253\020m\250\020k\240\220\302e\244`\242\220\313ei\t\244r\200\272\215A\034\v \225\003\2241\202\310\030\201e\f!2\206@N0W \027@\200\001\0|c\024\357\n", 93);
-   fNByte += 93;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P02
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.75 0 0 0.75 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 96 4]/XStep 96/YStep 4/Length 92/Filter/FlateDecode>>@");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\277\025\321+\b\016\342\340P\334tP\252\240\213\3277\332!\204\274\227\v\316\2150\032\335J\356\025\023O\241Np\247\363\021f\317\344\214\234\215\v\002+\036h\033U\326/~\243Ve\231PL\370\215\027\343\032#\006\274\002\f\0\242`\025:\n", 94);
-   fNByte += 94;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P03
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.5 0 0 0.5 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 96 16]/XStep 96/YStep 16/Length 93/Filter/FlateDecode>>@");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\261(\366\n\202\20388\210\233\016J\025t\361\372\376\332!\204\274\227\033\342N\030\215\262\222g\303\304\313Q\347\360\240\370:f\317Y\f\\\214+**\360Dls'\177\306\274\032\257\344\256.\252\376\215\212\221\217\021\003>\001\006\0\317\243\025\254\n", 95);
-   fNByte += 95;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P04
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 63/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002V\231\313\005S\233\303\025\314\025\310\005\020`\0\344\270\r\274\n", 65);
-   fNByte += 65;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P05
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302\005Q\223\313\005\"\r\024r\270\202\271\002\271\0\002\f\0\344\320\r\274\n", 68);
-   fNByte += 68;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P06
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.03 0 0 0.03 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302e\nR\232\v\242@js\270\202\271\002\271\0\002\f\0\345X\r\305\n", 68);
-   fNByte += 68;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P07
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.03 0 0 0.03 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 68/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\270\202\271\002\271\0\002\f\0\345=\r\305\n", 70);
-   fNByte += 70;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P08
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 139/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211D\217\261\016\3020\fDw\177\305\315L6Q\225|\003\022C\305\300Puk+\201\032$\272\360\373\330\265\323\016\271\330\367\234\344\"x\201\030\214\252\232\030+%\353VZ.jd\367\205\003x\241({]\311\324]\323|\342\006\033J\201:\306\325\230Jg\226J\261\275D\257#\337=\220\260\354k\233\351\211\217Z75\337\020\374\324\306\035\303\310\230\342x=\303\371\275\307o\332s\331\223\224\240G\330\a\365\364\027`\0\nX1}\n",141);
-   fNByte += 141;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P09
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 108/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\005RFFz&\020\002,d\240\220\314en\256g\0065\b,\001b\230\202$\240\232\214@\362\246`\2169H\336\024\2426\231\v&\200,\n\326\030\314\025\310\005\020`\0\f@\036\227\n", 110);
-   fNByte += 110;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P10
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 93/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\200\332\r\241\\C \017dN.\027L\312\0\302\205\2535\205j6\205X\224\303\025\314\025\310\005\020`\0\2127\031\t\n", 95);
-   fNByte += 95;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P11
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 164/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211\\\2171\016\3020\fEw\237\342\037\301ip\223^\001\211\001u`@l0\200(\022,\\\037;v\204\332\241\211\336\373\337V\363\246\204;\210\301H\354\337\347F'\274T\355U>\220\360U\215\003\316\027\306\2655\027=\a\306\223\304I\002m\332\330\356&\030\325\333fZ\275F\337\205\235\265O\270\032\004\331\214\336\305\270\004\227`\357i\256\223\342;]\344\255(!\372\356\205j\030\377K\335\220\344\377\210\274\306\022\330\337T{\214,\212;\301\3508\006\346\206\021O=\216|\212|\246#\375\004\030\0\216FF\207\n", 166);
-   fNByte += 166;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P12
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 226/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211<P;n\3030\f\335y\n\236 \220DK\242\256P\240C\321\241C\221\311\311\220\242\016\220.\275~D\221/\203I\342}\370(?(\363\215)q\342\234\374\373\273\322\027\337'\3646\301\037\316\374?a~\347\357s\342\313\2045\361A9\237\322fc\231\200\236F\263\301\334;\211\017\207\rN\311\252S\\\227{\247\006w\207\244\303\255p+(\205\333\360e/v\356a\315\317\360\272\320b|w\276\203o\340k\b\004\027\v$b\226\235,\242\254t(\024\nu\305Vm\313\021\375\327\272\257\227fuf\226ju\356\222x\030\024\313\261S\215\377\341\274,\203\254\253Z\\\262A\262\205eD\350\210\320\201\225\212\320\036\241\355\025\372JE,\2266\344\366\310U\344\016HFx>\351\203\236\002\f\0d}e\216\n", 228);
-   fNByte += 228;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P13
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 69/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002V\231\313\005S\233\303\005\241!\" ~0W \027@\200\001\0\331\227\020\253\n", 71);
-   fNByte += 71;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P14
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.15 0 0 0.15 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 80/YStep 80/Length 114/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\2114\214=\n\2000\f\205\367\234\342\035!-\241\364\f\202\20388\210\233\016J+\350\342\365M\3723\224\327\367}I\036r8A\f\206\343\372\336\203\026\334\212\006\205\027\004\237b\214X7\306\256\33032\331\240~\022y[\315\026\206\222\372\330}\264\036\253\217\335\353\240\030\b%\223\245o=X\227\346\245\355K\341\345@\3613M\364\v0\0\207o\"\261\n", 116);
-   fNByte += 116;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P15
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.102 0 0 0.102 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 60 60]/XStep 60/YStep 60/Length 218/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211<\2211\016\3020\fEw\237\302'@\211c\267w@b@\f\f\210\2510\200(\022,\\\037\347\307\256Z\325\221\375\337\377\225\363\241\312\017\246\302\205'\274\337;\235\371\355\215\275\267\236\\\371\307\265\360\201/\327\3027o\233\361J\262\233\247~\362g\336\211zur!A]{\035}\031S\343\006p\241\226dKI\v\326\202\265\3153\331)X)\335fE\205M\235\373\327\r*\374\026\252\022\216u\223\200\361I\211\177\031\022\001#``\342GI\211\004c\221gi\246\231\247\221\247\231\247\233$XM3\315<\215<\315<K\211e\036#\215a4\366\344\035lm\214Z\314b\211Xj\337K\\\201$\332\325\v\365\2659\204\362\242\274'\v\221\r\321\211\216\364\027`\0\212'_\215\n", 220);
-   fNByte += 220;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P16
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.1 0 0 0.05 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 123/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302ej\240\0D\271 \332\314X\317B\301\330\002H\230\233*\030\231\202\310d.CC=#\020\v*\rV\235\214\254\v\210r@\264\261\031P\241\031H5D\253\021H\267\005\3104 \v\344\016\260\002\020\003lB0W \027@\200\001\0hU \305\n", 125);
-   fNByte += 125;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P17
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020md\242\020k\240\220\002V\234\313\005S\236\303\025\314\025\310\005\020`\0\r\351\016B\n", 68);
-   fNByte += 68;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P18
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 69/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020md\242\020k\240\220\302\005Q\226\313\005\"\r\024r\270\202\271\002\271\0\002\f\0\016\001\016B\n", 71);
-   fNByte += 71;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P19
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.117 0 0 0.117 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 149/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211L\216;\016\302@\fD{\237bN\020\331+6a\257\200D\201((P\252@\001R\220\240\341\372\370\263\216(\326\266f\336\330\373&\301\003\304`\b\307\373\334\351\202\227J\a\025\237\020|U\306\021\327\231q\243\306\250\214\325\372T\006\336\367\032\262\326\205\3124\264b\243$\"n.\244=\314\250!\2139\033\327\022i=\323\317\2518\332T}\347.\202\346W\373\372j\315\221\344\266\213=\237\241\344\034\361\264!\236w\344\177\271o8\323\211~\002\f\0\366\3026\233\n", 151);
-   fNByte += 151;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P20
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.05 0 0 0.1 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 122/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211<L;\016\2030\f\335}\212w\002\344$M\2323 1 \006\006\304\224vhU\220`\341\372<\aT\311\366\263\336o\023\207\017D\241pz\355\376\226\021+\251\226\344\027\017\034\244\321a\232\025/\211\n\316r\343ORh\262}\317\210\344\032o\310)\302\2233\245\252[m\274\332\313\277!$\332\371\371\210`N\242\267$\217\263\246\252W\257\245\006\351\345\024`\0o\347 \305\n", 124);
-   fNByte += 124;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P21
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 117/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211D\2151\n\2000\fE\367\234\342\037!)\224\336Ap\020\a\aq\323A\251\202.^\337$-\025\022^\372\033^n\022\354 \006CX\274\237\215&\\\032u\032\036\020\274\032\243\307\2740V]\027\234\024\242\"\033\2642En\324\312\224bc\262\\\230\377\301\332WM\224\212(U\221\375\265\301\025\016?\350\317P\215\221\033\213o\244\201>\001\006\0\031I'f\n", 119);
-   fNByte += 119;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P22
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 118/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211<\215=\n\204P\f\204\373\234b\216\220<\b\357\016\302\026ba!vZ(\273\v\332x}\223\274\237\"|\223a\230\271Hp\200\030\fa\211\273w\232\3617k0\363\204\3401\033\037,+c#\3170~\2244\304\327EV\243r\247\272oOcr\337\323]H\t\226\252\334\252r\255\362\257\213(\t\304\250\326\315T\267\032\275q\242\221^\001\006\0\272\367(&\n", 120);
-   fNByte += 120;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P23
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 169/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211<\220\273\n\0021\020E\373\371\212[[M\326\331\354\344\027\004\v\261\260\020;\025\224D\320\306\337w\036\254p\363\230\223\341$\344M\005\017\020\203Q8\307\347F'\274\f\355\f>Q\3605\214=\316\005\v.\214kt\217\230;)\324\366\245Fa\213e\320v\212r\022X\006\211Fi\3242\250J\224\302\020\367h\212\254I\\\325R\225o\03143\346U\235@a\t[\202Za\tA\202E`\351~O\002\235`\351~S\202\306h.m\253\264)\232K\217t\310\017q\354\a\353\247\364\377C\356\033\372\t0\0\bm:\375\n", 171);
-   fNByte += 171;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P24
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 280/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\211DQ9N\004A\f\314\373\025\216\211\326\343v\037_@\"@\004\004\210\f\220@\003\022$|\177\335\345j\220v\345\251\303\343*\215\312\273\024\275\\d\375?\361dM\3162\306\337\214\337Y\336n\240m\217\036\301y\343\\<,i\250\0038F\035)\347l\322\026o\377\023\353|[\254\177\343\005;\315\317ky\224\257\240n\203\374\020\225\337\240\345N\236T\272<_\344\245\304^\3238\030\tc\236E\233xO\034\363\204>\251\317\324\233\023{\352\235\376\336S\357Fl\251\017\372\207\247>xoh&_\366Ud\331\253\314D\023\332\241\211\016\205\246\235\326\236*\275\307\204z8!s\031\335\306\\\306C\306\\\225\376\312\\\225\307\252\246\356\364\273Q\347\271:\371\341l\177\311e\210\3571\211\251#\374\302H\037:\342c\241\323\2617\320 \034\250\0\302\323a{\005%\302a\373(Zx\313\026\213@\215p\324}\026=\274e\217E8s\326}\026M\036\312}\271\n0\0\215\263\207\016\n", 282);
-   fNByte += 282;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-
-   // P25
-   NewObject(patternNb++);
-   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
-   WriteInteger(kObjPatternResourses);
-   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 54/Filter/FlateDecode>>");
-   PrintStr("@");
-   fStream->write("stream",6); fNByte += 6;
-   fStream->write("\r\nH\2112T\310T\3402P0P\310\34526P\0\242\034.s\004m\016\242\r\r\f\024@\030\302\002\321iZP\305`M\346\310\212\201R\0\001\006\0\206\322\017\200\n", 56);
-   fNByte += 56;
-   PrintStr("endstream@");
-   PrintStr("endobj@");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Output the string str in the output buffer
 
 void TPDF::PrintStr(const char *str)
@@ -2869,4 +2468,405 @@ void TPDF::WriteReal(Float_t z, Bool_t space)
       if (strstr(str,"e") || strstr(str,"E")) snprintf(str,15,"%10.8f", z);
    }
    PrintStr(str);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Patterns encoding
+
+void TPDF::PatternEncode()
+{
+   Int_t patternNb = kObjPattern;
+
+   NewObject(kObjColorSpace);
+   if (gStyle->GetColorModelPS()) {
+      PrintStr("[/Pattern /DeviceCMYK]@");
+   } else {
+      PrintStr("[/Pattern /DeviceRGB]@");
+   }
+   PrintStr("endobj@");
+   NewObject(kObjPatternResourses);
+   PrintStr("<</ProcSet[/PDF]>>@");
+   PrintStr("endobj@");
+
+   NewObject(kObjPatternList);
+   PrintStr("<<@");
+   PrintStr(" /P01");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P02");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P03");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P04");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P05");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P06");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P07");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P08");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P09");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P10");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P11");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P12");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P13");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P14");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P15");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P16");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P17");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P18");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P19");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P20");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P21");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P22");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P23");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P24");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R");
+   PrintStr(" /P25");
+   WriteInteger(patternNb++);
+   PrintStr(" 0 R@");
+   PrintStr(">>@");
+   PrintStr("endobj@");
+
+   patternNb = kObjPattern;
+
+   // P01
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[1 0 0 1 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 98 4]/XStep 98/YStep 4/Length 91/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301P\241\034(\254\340\253\020m\250\020k\240\220\302e\244`\242\220\313ei\t\244r\200\272\215A\034\v \225\003\2241\202\310\030\201e\f!2\206@N0W \027@\200\001\0|c\024\357\n", 93);
+   fNByte += 93;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P02
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.75 0 0 0.75 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 96 4]/XStep 96/YStep 4/Length 92/Filter/FlateDecode>>@");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\277\025\321+\b\016\342\340P\334tP\252\240\213\3277\332!\204\274\227\v\316\2150\032\335J\356\025\023O\241Np\247\363\021f\317\344\214\234\215\v\002+\036h\033U\326/~\243Ve\231PL\370\215\027\343\032#\006\274\002\f\0\242`\025:\n", 94);
+   fNByte += 94;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P03
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.5 0 0 0.5 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 96 16]/XStep 96/YStep 16/Length 93/Filter/FlateDecode>>@");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\261(\366\n\202\20388\210\233\016J\025t\361\372\376\332!\204\274\227\033\342N\030\215\262\222g\303\304\313Q\347\360\240\370:f\317Y\f\\\214+**\360Dls'\177\306\274\032\257\344\256.\252\376\215\212\221\217\021\003>\001\006\0\317\243\025\254\n", 95);
+   fNByte += 95;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P04
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 63/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002V\231\313\005S\233\303\025\314\025\310\005\020`\0\344\270\r\274\n", 65);
+   fNByte += 65;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P05
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302\005Q\223\313\005\"\r\024r\270\202\271\002\271\0\002\f\0\344\320\r\274\n", 68);
+   fNByte += 68;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P06
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.03 0 0 0.03 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302e\nR\232\v\242@js\270\202\271\002\271\0\002\f\0\345X\r\305\n", 68);
+   fNByte += 68;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P07
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.03 0 0 0.03 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 68/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\270\202\271\002\271\0\002\f\0\345=\r\305\n", 70);
+   fNByte += 70;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P08
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 139/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211D\217\261\016\3020\fDw\177\305\315L6Q\225|\003\022C\305\300Puk+\201\032$\272\360\373\330\265\323\016\271\330\367\234\344\"x\201\030\214\252\232\030+%\353VZ.jd\367\205\003x\241({]\311\324]\323|\342\006\033J\201:\306\325\230Jg\226J\261\275D\257#\337=\220\260\354k\233\351\211\217Z75\337\020\374\324\306\035\303\310\230\342x=\303\371\275\307o\332s\331\223\224\240G\330\a\365\364\027`\0\nX1}\n",141);
+   fNByte += 141;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P09
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 108/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\005RFFz&\020\002,d\240\220\314en\256g\0065\b,\001b\230\202$\240\232\214@\362\246`\2169H\336\024\2426\231\v&\200,\n\326\030\314\025\310\005\020`\0\f@\036\227\n", 110);
+   fNByte += 110;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P10
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 93/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\200\332\r\241\\C \017dN.\027L\312\0\302\205\2535\205j6\205X\224\303\025\314\025\310\005\020`\0\2127\031\t\n", 95);
+   fNByte += 95;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P11
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 164/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211\\\2171\016\3020\fEw\237\342\037\301ip\223^\001\211\001u`@l0\200(\022,\\\037;v\204\332\241\211\336\373\337V\363\246\204;\210\301H\354\337\347F'\274T\355U>\220\360U\215\003\316\027\306\2655\027=\a\306\223\304I\002m\332\330\356&\030\325\333fZ\275F\337\205\235\265O\270\032\004\331\214\336\305\270\004\227`\357i\256\223\342;]\344\255(!\372\356\205j\030\377K\335\220\344\377\210\274\306\022\330\337T{\214,\212;\301\3508\006\346\206\021O=\216|\212|\246#\375\004\030\0\216FF\207\n", 166);
+   fNByte += 166;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P12
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 226/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211<P;n\3030\f\335y\n\236 \220DK\242\256P\240C\321\241C\221\311\311\220\242\016\220.\275~D\221/\203I\342}\370(?(\363\215)q\342\234\374\373\273\322\027\337'\3646\301\037\316\374?a~\347\357s\342\313\2045\361A9\237\322fc\231\200\236F\263\301\334;\211\017\207\rN\311\252S\\\227{\247\006w\207\244\303\255p+(\205\333\360e/v\356a\315\317\360\272\320b|w\276\203o\340k\b\004\027\v$b\226\235,\242\254t(\024\nu\305Vm\313\021\375\327\272\257\227fuf\226ju\356\222x\030\024\313\261S\215\377\341\274,\203\254\253Z\\\262A\262\205eD\350\210\320\201\225\212\320\036\241\355\025\372JE,\2266\344\366\310U\344\016HFx>\351\203\236\002\f\0d}e\216\n", 228);
+   fNByte += 228;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P13
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 69/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002V\231\313\005S\233\303\005\241!\" ~0W \027@\200\001\0\331\227\020\253\n", 71);
+   fNByte += 71;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P14
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.15 0 0 0.15 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 80/YStep 80/Length 114/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\2114\214=\n\2000\f\205\367\234\342\035!-\241\364\f\202\20388\210\233\016J+\350\342\365M\3723\224\327\367}I\036r8A\f\206\343\372\336\203\026\334\212\006\205\027\004\237b\214X7\306\256\33032\331\240~\022y[\315\026\206\222\372\330}\264\036\253\217\335\353\240\030\b%\223\245o=X\227\346\245\355K\341\345@\3613M\364\v0\0\207o\"\261\n", 116);
+   fNByte += 116;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P15
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.102 0 0 0.102 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 60 60]/XStep 60/YStep 60/Length 218/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211<\2211\016\3020\fEw\237\302'@\211c\267w@b@\f\f\210\2510\200(\022,\\\037\347\307\256Z\325\221\375\337\377\225\363\241\312\017\246\302\205'\274\337;\235\371\355\215\275\267\236\\\371\307\265\360\201/\327\3027o\233\361J\262\233\247~\362g\336\211zur!A]{\035}\031S\343\006p\241\226dKI\v\326\202\265\3153\331)X)\335fE\205M\235\373\327\r*\374\026\252\022\216u\223\200\361I\211\177\031\022\001#``\342GI\211\004c\221gi\246\231\247\221\247\231\247\233$XM3\315<\215<\315<K\211e\036#\215a4\366\344\035lm\214Z\314b\211Xj\337K\\\201$\332\325\v\365\2659\204\362\242\274'\v\221\r\321\211\216\364\027`\0\212'_\215\n", 220);
+   fNByte += 220;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P16
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.1 0 0 0.05 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 123/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302ej\240\0D\271 \332\314X\317B\301\330\002H\230\233*\030\231\202\310d.CC=#\020\v*\rV\235\214\254\v\210r@\264\261\031P\241\031H5D\253\021H\267\005\3104 \v\344\016\260\002\020\003lB0W \027@\200\001\0hU \305\n", 125);
+   fNByte += 125;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P17
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 66/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020md\242\020k\240\220\002V\234\313\005S\236\303\025\314\025\310\005\020`\0\r\351\016B\n", 68);
+   fNByte += 68;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P18
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 69/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020md\242\020k\240\220\302\005Q\226\313\005\"\r\024r\270\202\271\002\271\0\002\f\0\016\001\016B\n", 71);
+   fNByte += 71;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P19
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.117 0 0 0.117 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 149/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211L\216;\016\302@\fD{\237bN\020\331+6a\257\200D\201((P\252@\001R\220\240\341\372\370\263\216(\326\266f\336\330\373&\301\003\304`\b\307\373\334\351\202\227J\a\025\237\020|U\306\021\327\231q\243\306\250\214\325\372T\006\336\367\032\262\326\205\3124\264b\243$\"n.\244=\314\250!\2139\033\327\022i=\323\317\2518\332T}\347.\202\346W\373\372j\315\221\344\266\213=\237\241\344\034\361\264!\236w\344\177\271o8\323\211~\002\f\0\366\3026\233\n", 151);
+   fNByte += 151;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P20
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.05 0 0 0.1 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 122/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211<L;\016\2030\f\335}\212w\002\344$M\2323 1 \006\006\304\224vhU\220`\341\372<\aT\311\366\263\336o\023\207\017D\241pz\355\376\226\021+\251\226\344\027\017\034\244\321a\232\025/\211\n\316r\343ORh\262}\317\210\344\032o\310)\302\2233\245\252[m\274\332\313\277!$\332\371\371\210`N\242\267$\217\263\246\252W\257\245\006\351\345\024`\0o\347 \305\n", 124);
+   fNByte += 124;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P21
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 117/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211D\2151\n\2000\fE\367\234\342\037!)\224\336Ap\020\a\aq\323A\251\202.^\337$-\025\022^\372\033^n\022\354 \006CX\274\237\215&\\\032u\032\036\020\274\032\243\307\2740V]\027\234\024\242\"\033\2642En\324\312\224bc\262\\\230\377\301\332WM\224\212(U\221\375\265\301\025\016?\350\317P\215\221\033\213o\244\201>\001\006\0\031I'f\n", 119);
+   fNByte += 119;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P22
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 118/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211<\215=\n\204P\f\204\373\234b\216\220<\b\357\016\302\026ba!vZ(\273\v\332x}\223\274\237\"|\223a\230\271Hp\200\030\fa\211\273w\232\3617k0\363\204\3401\033\037,+c#\3170~\2244\304\327EV\243r\247\272oOcr\337\323]H\t\226\252\334\252r\255\362\257\213(\t\304\250\326\315T\267\032\275q\242\221^\001\006\0\272\367(&\n", 120);
+   fNByte += 120;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P23
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.06 0 0 0.06 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 169/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211<\220\273\n\0021\020E\373\371\212[[M\326\331\354\344\027\004\v\261\260\020;\025\224D\320\306\337w\036\254p\363\230\223\341$\344M\005\017\020\203Q8\307\347F'\274\f\355\f>Q\3605\214=\316\005\v.\214kt\217\230;)\324\366\245Fa\213e\320v\212r\022X\006\211Fi\3242\250J\224\302\020\367h\212\254I\\\325R\225o\03143\346U\235@a\t[\202Za\tA\202E`\351~O\002\235`\351~S\202\306h.m\253\264)\232K\217t\310\017q\354\a\353\247\364\377C\356\033\372\t0\0\bm:\375\n", 171);
+   fNByte += 171;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P24
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 100 100]/XStep 100/YStep 100/Length 280/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\211DQ9N\004A\f\314\373\025\216\211\326\343v\037_@\"@\004\004\210\f\220@\003\022$|\177\335\345j\220v\345\251\303\343*\215\312\273\024\275\\d\375?\361dM\3162\306\337\214\337Y\336n\240m\217\036\301y\343\\<,i\250\0038F\035)\347l\322\026o\377\023\353|[\254\177\343\005;\315\317ky\224\257\240n\203\374\020\225\337\240\345N\236T\272<_\344\245\304^\3238\030\tc\236E\233xO\034\363\204>\251\317\324\233\023{\352\235\376\336S\357Fl\251\017\372\207\247>xoh&_\366Ud\331\253\314D\023\332\241\211\016\205\246\235\326\236*\275\307\204z8!s\031\335\306\\\306C\306\\\225\376\312\\\225\307\252\246\356\364\273Q\347\271:\371\341l\177\311e\210\3571\211\251#\374\302H\037:\342c\241\323\2617\320 \034\250\0\302\323a{\005%\302a\373(Zx\313\026\213@\215p\324}\026=\274e\217E8s\326}\026M\036\312}\271\n0\0\215\263\207\016\n", 282);
+   fNByte += 282;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
+
+   // P25
+   NewObject(patternNb++);
+   PrintStr("<</Type/Pattern/Matrix[0.125 0 0 0.125 20 28]/PatternType 1/Resources");
+   WriteInteger(kObjPatternResourses);
+   PrintStr(" 0 R/PaintType 2/TilingType 1/BBox[0 0 101 101]/XStep 100/YStep 100/Length 54/Filter/FlateDecode>>");
+   PrintStr("@");
+   fStream->write("stream",6); fNByte += 6;
+   fStream->write("\r\nH\2112T\310T\3402P0P\310\34526P\0\242\034.s\004m\016\242\r\r\f\024@\030\302\002\321iZP\305`M\346\310\212\201R\0\001\006\0\206\322\017\200\n", 56);
+   fNByte += 56;
+   PrintStr("endstream@");
+   PrintStr("endobj@");
 }
