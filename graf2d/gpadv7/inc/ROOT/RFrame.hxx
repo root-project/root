@@ -11,7 +11,10 @@
 
 #include "ROOT/RDrawable.hxx"
 
-#include "ROOT/RAttrBox.hxx"
+#include "ROOT/RAttrLine.hxx"
+#include "ROOT/RAttrFill.hxx"
+#include "ROOT/RAttrMargins.hxx"
+
 #include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/RPalette.hxx"
 
@@ -32,9 +35,9 @@ class RFrame : public RDrawable  {
 public:
 
 private:
-
-   RAttrLine fAttrBorder{this, "border_"};   ///<!
-   RAttrFill fAttrFill{this, "fill_"};       ///<!
+   RAttrMargins fMargins{this, "margin_"};     ///<!
+   RAttrLine fAttrBorder{this, "border_"};     ///<!
+   RAttrFill fAttrFill{this, "fill_"};         ///<!
 
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
    std::vector<std::unique_ptr<RPadUserAxisBase>> fUserCoord;
@@ -51,6 +54,10 @@ public:
 
    /// Constructor taking user coordinate system, position and extent.
    explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
+
+   const RAttrMargins &GetMargins() const { return fMargins; }
+   RFrame &SetMargins(const RAttrMargins &margins) { fMargins = margins; return *this; }
+   RAttrMargins &Margins() { return fMargins; }
 
    const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
    RFrame &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
