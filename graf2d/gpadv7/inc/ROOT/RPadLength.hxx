@@ -155,7 +155,17 @@ public:
    double GetPixel() const { return fArr.size() > 1 ? fArr[1] : 0.; }
    double GetUser() const { return fArr.size() > 2 ? fArr[2] : 0.; }
 
-   void ClearUser() { if (fArr.size()>2) fArr.resize(2); }
+   void ClearUser()
+   {
+      if (fArr.size() > 2)
+         fArr.resize(2);
+   }
+
+   void ClearPixelAndUser()
+   {
+      if (fArr.size() > 1)
+         fArr.resize(1);
+   }
 
    void Clear() { fArr.clear(); }
 
