@@ -169,6 +169,8 @@ public:
 
    void Clear() { fArr.clear(); }
 
+   bool Empty() const { return fArr.size() == 0; }
+
    /// Add two `RPadLength`s.
    friend RPadLength operator+(RPadLength lhs, const RPadLength &rhs)
    {
@@ -236,6 +238,10 @@ public:
       if (HasNormal()) SetNormal(scale*GetNormal());
       return *this;
    }
+
+   std::string AsString() const;
+
+   bool ParseString(const std::string &val);
 
 };
 
