@@ -98,9 +98,10 @@ protected:
 
    /// Check if two axis have the same bin borders
    ///
-   /// Default implementation should work for any RAxis type, but is a little
-   /// bit stupid. RAxis implementations are encouraged to provide optimized
-   /// overrides for common comparison scenarios.
+   /// Default implementation should work for any RAxis type, but is quite
+   /// inefficient as it does virtual GetBinFrom calls in a loop. RAxis
+   /// implementations are encouraged to provide optimized overrides for common
+   /// axis binning comparison scenarios.
    virtual bool HasSameBinBordersAs(const RAxisBase& other) const {
       // Axis growability (and thus under/overflow bin existence) must match
       if (CanGrow() != other.CanGrow())
