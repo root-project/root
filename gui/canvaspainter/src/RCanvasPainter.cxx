@@ -660,6 +660,7 @@ std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(const ROOT::Exper
       TClass::GetClass<ROOT::Experimental::RAttrMap::DoubleValue_t>(),
       TClass::GetClass<ROOT::Experimental::RAttrMap::StringValue_t>(),
       TClass::GetClass<ROOT::Experimental::RAttrMap>(),
+      TClass::GetClass<ROOT::Experimental::RStyle::Block_t>(),
       TClass::GetClass<ROOT::Experimental::RPadPos>(),
       TClass::GetClass<ROOT::Experimental::RPadLength>(),
       TClass::GetClass<std::unordered_map<std::string,ROOT::Experimental::RAttrMap::Value_t*>>()

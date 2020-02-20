@@ -14,6 +14,7 @@
 #include "ROOT/RAttrLine.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrMargins.hxx"
+#include "ROOT/RAttrAxis.hxx"
 
 #include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/RPalette.hxx"
@@ -38,6 +39,9 @@ private:
    RAttrMargins fMargins{this, "margin_"};     ///<!
    RAttrLine fAttrBorder{this, "border_"};     ///<!
    RAttrFill fAttrFill{this, "fill_"};         ///<!
+   RAttrAxis fAttrX{this, "x_"};               ///<!
+   RAttrAxis fAttrY{this, "y_"};               ///<!
+   RAttrAxis fAttrZ{this, "z_"};               ///<!
 
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
    std::vector<std::unique_ptr<RPadUserAxisBase>> fUserCoord;
@@ -66,6 +70,20 @@ public:
    const RAttrFill &GetAttrFill() const { return fAttrFill; }
    RFrame &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
    RAttrFill &AttrFill() { return fAttrFill; }
+
+   const RAttrAxis &GetAttrX() const { return fAttrX; }
+   RFrame &SetAttrX(const RAttrAxis &axis) { fAttrX = axis; return *this; }
+   RAttrAxis &AttrX() { return fAttrX; }
+
+   const RAttrAxis &GetAttrY() const { return fAttrY; }
+   RFrame &SetAttrY(const RAttrAxis &axis) { fAttrY = axis; return *this; }
+   RAttrAxis &AttrY() { return fAttrY; }
+
+   const RAttrAxis &GetAttrZ() const { return fAttrZ; }
+   RFrame &SetAttrZ(const RAttrAxis &axis) { fAttrZ = axis; return *this; }
+   RAttrAxis &AttrZ() { return fAttrZ; }
+
+
 
    /// Create `nDimensions` default axes for the user coordinate system.
    void GrowToDimensions(size_t nDimensions);
