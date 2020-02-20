@@ -924,14 +924,65 @@
 
          var pthis = this, padw = this.pad_width(), padh = this.pad_height();
 
-         /** Evalue RAttrLength which consists of normalized and pxel coordinates, return pixel value */
+         /** Evalue RAttrLength which can be coded like "0.1 + 10px", see RPadLength::ParseString() */
+
          function evalLength(name, size, dflt) {
-            var norm = pthis.v7EvalAttr("margin_" + name + "_norm", dflt),
-                px = pthis.v7EvalAttr("margin_" + name + "_px", 0 ),
-                res = 0;
-            if (norm) res = size*norm;
-            if (px) res += px;
-            return size > 0 ? res/size : 0.;
+            var value = pthis.v7EvalAttr("margin_" + name);
+
+            if (value === undefined)
+               return dlft;
+
+            if (typeof value == "number")
+               return value;
+
+            if (size <= 0) size = 1;
+            var norm = 0, px = 0, val = value, operand = 0, pos = 0;
+
+            while (val.length > 0) {
+               // skip empty spaces
+               while (pos < val.length && (val[pos] == ' ') || (val[pos] == '\t'))
+                  ++pos;
+
+               if (pos >= val.length)
+                  break;
+
+               if ((val[pos] == '-') || (val[pos] == '+')) {
+                  if (operand) {
+                     console.log("Fail to parse RPadLength " + value);
+                     return dflt;
+                  }
+                  operand = (val[pos] == '-') ? -1 : 1;
+                  pos++;
+                  continue;
+               }
+
+               if (pos > 0) { val = val.substr(pos); pos = 0; }
+
+               while ((pos < val.length) && (((val[pos]>='0') && (val[pos]<='9')) || (val[pos]=='.'))) pos++;
+
+               var v = parseFloat(val.substr(0, pos));
+               if (isNaN(v)) {
+                  console.log("Fail to parse RPadLength " + value);
+                  return dflt;
+               }
+
+               val = val.substr(pos);
+               pos = 0;
+               if (!operand) operand = 1;
+               if ((val.length > 0) && (val[0] == '%')) {
+                  val = val.substr(1);
+                  norm += operand*v*0.01;
+               } else if ((val.length > 1) && (val[0] == 'p') && (val[1] == 'x')) {
+                  val = val.substr(2);
+                  px += operand*v;
+               } else {
+                  norm += operand*v;
+               }
+
+               operand = 0;
+            }
+
+            return (norm*size + px)/size;
          }
 
          this.fX1NDC = evalLength("left", padw, JSROOT.gStyle.FrameNDC.fX1NDC);
