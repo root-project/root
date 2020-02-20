@@ -85,11 +85,14 @@
    }
 
 
+   function TAxisPainter(embedded, cssprefix) {
+      var dummy = JSROOT.Create("TAxis"); // just dummy before all attributes are implemented
 
-   function TAxisPainter(axis, embedded) {
-      JSROOT.TObjectPainter.call(this, axis);
+      JSROOT.TObjectPainter.call(this, dummy);
 
       this.embedded = embedded; // indicate that painter embedded into the histo painter
+      this.csstype = "frame"; // for the moment only via frame one can set axis attributes
+      this.cssprefix = cssprefix;
 
       this.name = "yaxis";
       this.kind = "normal";
@@ -501,7 +504,7 @@
       // function draws  TAxis or TGaxis object
 
       var axis = this.GetObject(), chOpt = "",
-          is_gaxis = (axis && axis._typename === 'TGaxis'),
+          is_gaxis = false,
           axis_g = layer, tickSize = 0.03,
           scaling_size = 100, draw_lines = true,
           pad_w = this.pad_width() || 10,
@@ -515,18 +518,11 @@
       if (!second_shift) second_shift = 0; else
       if (this.invert_side) second_shift = -second_shift;
 
-      if (is_gaxis) {
-         this.createAttLine({ attr: axis });
-         draw_lines = axis.fLineColor != 0;
-         chOpt = axis.fChopt;
-         tickSize = axis.fTickSize;
-         scaling_size = (vertical ? 1.7*h : 0.6*w);
-      } else {
-         this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
-         chOpt = myXor(vertical, this.invert_side) ? "-S" : "+S";
-         tickSize = axis.fTickLength;
-         scaling_size = (vertical ? pad_w : pad_h);
-      }
+      this.createv7AttLine(this.cssprefix + "line_");
+
+      chOpt = myXor(vertical, this.invert_side) ? "-S" : "+S";
+      tickSize = axis.fTickLength;
+      scaling_size = (vertical ? pad_w : pad_h);
 
       if (!is_gaxis || (this.name === "zaxis")) {
          axis_g = layer.select("." + this.name + "_container");
@@ -872,6 +868,7 @@
 
    function TFramePainter(tframe) {
       JSROOT.TooltipHandler.call(this, tframe);
+      this.csstype = "frame";
       this.mode3d = false;
       this.shrink_frame_left = 0.;
       this.x_kind = 'normal'; // 'normal', 'log', 'time', 'labels'
@@ -930,7 +927,7 @@
             var value = pthis.v7EvalAttr("margin_" + name);
 
             if (value === undefined)
-               return dlft;
+               return dflt;
 
             if (typeof value == "number")
                return value;
@@ -1198,14 +1195,12 @@
       this.CreateXY();
 
       var layer = this.svg_frame().select(".axis_layer"),
-          w = this.frame_width(),
-          h = this.frame_height(),
-          axisx = JSROOT.Create("TAxis"), // temporary object for different attributes
-          axisy = JSROOT.Create("TAxis");
+          w = this.frame_width(), h = this.frame_height();
 
-      this.x_handle = new JSROOT.TAxisPainter(axisx, true);
+      this.x_handle = new TAxisPainter(true, "x_");
       this.x_handle.SetDivId(this.divid, -1);
       this.x_handle.pad_name = this.pad_name;
+      this.x_handle.rstyle = this.rstyle;
 
       this.x_handle.SetAxisConfig("xaxis",
                                   (this.logx && (this.x_kind !== "time")) ? "log" : this.x_kind,
@@ -1214,9 +1209,10 @@
       this.x_handle.lbls_both_sides = false;
       this.x_handle.has_obstacle = false;
 
-      this.y_handle = new JSROOT.TAxisPainter(axisy, true);
+      this.y_handle = new TAxisPainter(true, "y_");
       this.y_handle.SetDivId(this.divid, -1);
       this.y_handle.pad_name = this.pad_name;
+      this.y_handle.rstyle = this.rstyle;
 
       this.y_handle.SetAxisConfig("yaxis",
                                   (this.logy && this.y_kind !== "time") ? "log" : this.y_kind,
@@ -3263,12 +3259,14 @@
 
       while (true) {
 
-         if (objpainter && lst && lst[indx] && objpainter.snapid === undefined) {
+         if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
             // keep snap id in painter, will be used for the
             if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
             objpainter.snapid = lst[indx].fObjectID;
-            objpainter.rstyle = lst[indx].fStyle;
+            if (!objpainter.rstyle) objpainter.rstyle = lst[indx].fStyle || this.rstyle;
          }
+
+         delete this.next_rstyle;
 
          objpainter = null;
 
@@ -3341,6 +3339,9 @@
             return;
          }
 
+         // will be used in SetDivId to assign style to painter
+         this.next_rstyle = lst[indx].fStyle || this.rstyle;
+
          var handle = { func: draw_callback };
 
          if (snap._typename === "ROOT::Experimental::RObjectDisplayItem")
@@ -3348,6 +3349,7 @@
                return JSROOT.draw(this.divid, { _typename: "TFrame", $dummy: true }, "", function() {
                   handle.func("workaround"); // call function with "workaround" as argument
                });
+
 
          // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
          objpainter = JSROOT.draw(this.divid, snap.fDrawable || snap.fObject, snap.fOption || "", handle);
