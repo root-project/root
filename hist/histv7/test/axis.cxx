@@ -405,6 +405,17 @@ TEST(AxisTest, Irregular) {
     EXPECT_EQ(axis.GetBinBorders()[2], 11.13);
     EXPECT_EQ(axis.GetBinBorders()[3], 17.19);
 
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::lowest()), -1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.2), -1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.3), 1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.4), -1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(5.6), -1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(5.7), 2);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.1), -1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.19), 4);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.2), -1);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::max()), -1);
+
     RAxisConfig cfg(axis);
     EXPECT_EQ(cfg.GetTitle(), title);
     EXPECT_EQ(cfg.GetNBinsNoOver(), 3);
