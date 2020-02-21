@@ -41,7 +41,9 @@ def pythonizegeneric(klass, name):
     # name: string containing the name of the class
 
     # Add pretty printing via setting the __str__ special function
-    AddPrettyPrintingPyz(klass)
+    exclude = [ 'std::string' ]
+    if name not in exclude:
+        AddPrettyPrintingPyz(klass)
 
     return True
 
