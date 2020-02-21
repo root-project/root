@@ -80,6 +80,28 @@ bool ROOT::Experimental::RAxisEquidistant::HasSameBinBordersAs(const RAxisBase& 
           CanGrow() == other_eq.CanGrow();
 }
 
+int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept
+{
+   // Check in which bin `x` resides
+   const int binIdx = FindBin(x);
+
+   // Are we close to the lower and upper bin boundaries, if any?
+   constexpr double tol = 10 * std::numeric_limits<double>::epsilon();
+   if (!IsUnderflowBin(binIdx)) {
+      const double lowBound = GetBinFrom(binIdx);
+      if (std::fabs(x - lowBound) < tol * std::fabs(lowBound))
+         return binIdx;
+   }
+   if (!IsOverflowBin(binIdx)) {
+      const double upBound = GetBinTo(binIdx);
+      if (std::fabs(x - upBound) < tol * std::fabs(upBound))
+         return binIdx + 1;
+   }
+
+   // If not, report failure
+   return -1;
+}
+
 bool ROOT::Experimental::RAxisIrregular::HasSameBinBordersAs(const RAxisBase& other) const {
    // This is an optimized override for the irregular-irregular case,
    // fall back to the default implementation if we're not in that case.

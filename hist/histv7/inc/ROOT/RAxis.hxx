@@ -328,6 +328,11 @@ public:
    /// - Bin labels must match (exactly including order, for now).
    bool HasSameBinningAs(const RAxisBase& other) const;
 
+   /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
+   /// return the bin for which this is a low edge. If it's not a bin edge,
+   /// return -1.
+   virtual int GetBinIndexForLowEdge(double x) const noexcept = 0;
+
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
 };
@@ -471,9 +476,7 @@ public:
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
    /// return -1.
-   // RODO: Decide if this shouldn't go to RAxisBase so that RAxisIrregular has
-   //       it has well. If so, update tests.
-   int GetBinIndexForLowEdge(double x) const noexcept;
+   int GetBinIndexForLowEdge(double x) const noexcept final override;
 };
 
 namespace Internal {
@@ -696,6 +699,11 @@ public:
       // bin 1 starts at fBinBorders[0]
       return fBinBorders[bin - 1];
    }
+
+   /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
+   /// return the bin for which this is a low edge. If it's not a bin edge,
+   /// return -1.
+   int GetBinIndexForLowEdge(double x) const noexcept final override;
 
    /// This axis cannot be extended.
    bool CanGrow() const noexcept final override { return false; }
