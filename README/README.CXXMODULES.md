@@ -327,9 +327,9 @@ different. There are several differences which can be noticed:
   
 ### Supported Platforms
 
-  We support all platforms with glibc++ versions: 5.2, 6.2 and 7.2 and 8.
+  We support all platforms with glibc++ versions: 5.2 onward.
 
-  We have experimental support for OSX XCode 10.
+  We support OSX from XCode 10 onward.
 
 ## Changes required by the users
   * Self-contained header files -- every header file should be able to compile
