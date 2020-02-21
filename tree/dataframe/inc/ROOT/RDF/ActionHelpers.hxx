@@ -182,7 +182,7 @@ public:
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   template <typename T, typename std::enable_if<IsDataContainer<T>::value || std::is_same<T, std::string>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       auto &thisBuf = fBuffers[slot];
@@ -193,7 +193,7 @@ public:
    }
 
    template <typename T, typename W,
-             typename std::enable_if<IsContainer<T>::value && IsContainer<W>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<T>::value && IsDataContainer<W>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs, const W &ws)
    {
       auto &thisBuf = fBuffers[slot];
@@ -210,7 +210,7 @@ public:
    }
 
    template <typename T, typename W,
-             typename std::enable_if<IsContainer<T>::value && !IsContainer<W>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<T>::value && !IsDataContainer<W>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs, const W w)
    {
       auto &thisBuf = fBuffers[slot];
@@ -225,7 +225,7 @@ public:
 
    // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename T, typename W,
-             typename std::enable_if<IsContainer<W>::value && !IsContainer<T>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<W>::value && !IsDataContainer<T>::value, int>::type = 0>
    void Exec(unsigned int, const T &, const W &)
    {
       throw std::runtime_error(
@@ -295,7 +295,7 @@ public:
       fObjects[slot]->Fill(x0, x1, x2, x3);
    }
 
-   template <typename X0, typename std::enable_if<IsContainer<X0>::value, int>::type = 0>
+   template <typename X0, typename std::enable_if<IsDataContainer<X0>::value || std::is_same<X0, std::string>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s)
    {
       auto thisSlotH = fObjects[slot];
@@ -306,7 +306,7 @@ public:
 
    // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename X0, typename X1,
-             typename std::enable_if<IsContainer<X1>::value && !IsContainer<X0>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<X1>::value && !IsDataContainer<X0>::value, int>::type = 0>
    void Exec(unsigned int , const X0 &, const X1 &)
    {
       throw std::runtime_error(
@@ -314,7 +314,7 @@ public:
    }
 
    template <typename X0, typename X1,
-             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
       auto thisSlotH = fObjects[slot];
@@ -330,7 +330,7 @@ public:
    }
 
    template <typename X0, typename W,
-             typename std::enable_if<IsContainer<X0>::value && !IsContainer<W>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<X0>::value && !IsDataContainer<W>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const W w)
    {
       auto thisSlotH = fObjects[slot];
@@ -340,7 +340,7 @@ public:
    }
 
    template <typename X0, typename X1, typename X2,
-             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value,
+             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value,
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
@@ -358,7 +358,7 @@ public:
    }
 
    template <typename X0, typename X1, typename W,
-             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && !IsContainer<W>::value,
+             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && !IsDataContainer<W>::value,
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const W w)
    {
@@ -375,8 +375,8 @@ public:
    }
 
    template <typename X0, typename X1, typename X2, typename X3,
-             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
-                                        IsContainer<X3>::value,
+             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value &&
+                                        IsDataContainer<X3>::value,
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {
@@ -395,8 +395,8 @@ public:
    }
 
    template <typename X0, typename X1, typename X2, typename W,
-             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
-                                        !IsContainer<W>::value,
+             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value && IsDataContainer<X2>::value &&
+                                        !IsDataContainer<W>::value,
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const W w)
    {
@@ -459,8 +459,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    template <typename X0, typename X1,
-             typename std::enable_if<
-                ROOT::TypeTraits::IsContainer<X0>::value && ROOT::TypeTraits::IsContainer<X1>::value, int>::type = 0>
+             typename std::enable_if<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
       if (x0s.size() != x1s.size()) {
@@ -727,7 +726,7 @@ public:
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
@@ -771,7 +770,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, ResultType v) { fMaxs[slot] = std::max(v, fMaxs[slot]); }
 
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
@@ -831,7 +830,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, ResultType v) { fSums[slot] += v; }
 
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
@@ -864,7 +863,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
@@ -906,7 +905,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
-   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {

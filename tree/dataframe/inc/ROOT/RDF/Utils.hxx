@@ -15,6 +15,7 @@
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
+#include "ROOT/RSpan.hxx" // for IsDataContainer
 #include "TH1.h"
 
 #include <array>
@@ -23,7 +24,6 @@
 #include <memory>
 #include <string>
 #include <type_traits> // std::decay
-#include <vector>
 
 class TTree;
 class TTreeReader;
@@ -51,6 +51,43 @@ namespace RDF {
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
+
+/// Check for container traits.
+///
+/// Note that we don't recognize std::string as a container.
+template <typename T>
+struct IsDataContainer {
+   using Test_t = typename std::decay<T>::type;
+
+   template <typename A>
+   static constexpr bool Test(A *pt, A const *cpt = nullptr, decltype(pt->begin()) * = nullptr,
+                              decltype(pt->end()) * = nullptr, decltype(cpt->begin()) * = nullptr,
+                              decltype(cpt->end()) * = nullptr, typename A::iterator *pi = nullptr,
+                              typename A::const_iterator *pci = nullptr)
+   {
+      using It_t = typename A::iterator;
+      using CIt_t = typename A::const_iterator;
+      using V_t = typename A::value_type;
+      return std::is_same<Test_t, std::vector<bool>>::value ||
+             (std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
+              std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
+              std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value &&
+              !std::is_same<T, std::string>::value);
+   }
+
+   template <typename A>
+   static constexpr bool Test(...)
+   {
+      return false;
+   }
+
+   static constexpr bool value = Test<Test_t>(nullptr);
+};
+
+template<typename T>
+struct IsDataContainer<std::span<T>> {
+   static constexpr bool value = true;
+};
 
 /// Detect whether a type is an instantiation of vector<T,A>
 template <typename>
@@ -107,7 +144,7 @@ struct IsRVec_t<ROOT::VecOps::RVec<T>> : public std::true_type {};
 
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
 // fundamental types
-template <typename T, bool IsContainer = IsContainer<typename std::decay<T>::type>::value>
+template <typename T, bool IsDataContainer = IsDataContainer<typename std::decay<T>::type>::value || std::is_same<std::string, T>::value>
 struct ValueType {
    using value_type = typename T::value_type;
 };

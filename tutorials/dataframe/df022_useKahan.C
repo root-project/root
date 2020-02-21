@@ -52,7 +52,7 @@ public:
       KahanAlgorithm(x, fPartialSums[slot], fCompensations[slot]);
    }
 
-   template <typename V=T, typename std::enable_if<ROOT::TypeTraits::IsContainer<V>::value, int>::type = 0>
+   template <typename V=T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<V>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {

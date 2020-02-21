@@ -408,7 +408,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const Column
 }
 
 /// The contained `type` alias is `double` if `T == RInferredType`, `U` if `T == std::container<U>`, `T` otherwise.
-template <typename T, bool Container = TTraits::IsContainer<T>::value && !std::is_same<T, std::string>::value>
+template <typename T, bool Container = RDFInternal::IsDataContainer<T>::value && !std::is_same<T, std::string>::value>
 struct TMinReturnType {
    using type = T;
 };

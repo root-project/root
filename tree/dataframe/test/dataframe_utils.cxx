@@ -240,3 +240,11 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
    auto ncols = RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::GetBranchNames(t1), {}, {});
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
 }
+
+TEST(RDataFrameUtils, IsDataContainer)
+{
+   static_assert(RDFInt::IsDataContainer<std::vector<int>>::value, "");
+   static_assert(RDFInt::IsDataContainer<std::vector<bool>>::value, "");
+   static_assert(RDFInt::IsDataContainer<std::tuple<int, int>>::value == false, "");
+   static_assert(RDFInt::IsDataContainer<std::string>::value == false, "");
+}
