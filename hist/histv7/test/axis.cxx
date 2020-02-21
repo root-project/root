@@ -446,6 +446,32 @@ TEST(AxisTest, Labels) {
         EXPECT_EQ(caxis.GetBinLabels()[i], expected_labels[i]);
       }
 
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(expected_labels)),
+                RAxisLabels::kSame);
+      const std::vector<std::string_view> missing_last_label(
+        expected_labels.cbegin(), expected_labels.cend() - 1);
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(missing_last_label)),
+                RAxisLabels::kSubset);
+      auto one_extra_label = expected_labels;
+      one_extra_label.push_back("I AM ROOT");
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(one_extra_label)),
+                RAxisLabels::kSuperset);
+      auto swapped_labels = expected_labels;
+      std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
+                RAxisLabels::kDisordered);
+      auto changed_one_label = expected_labels;
+      changed_one_label[0] = "I AM ROOT";
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(changed_one_label)),
+                RAxisLabels::kSubset | RAxisLabels::kSuperset);
+      auto removed_first = expected_labels;
+      removed_first.erase(removed_first.cbegin());
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(removed_first)),
+                RAxisLabels::kSubset | RAxisLabels::kDisordered);
+      swapped_labels.push_back("I AM ROOT");
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
+                RAxisLabels::kSuperset | RAxisLabels::kDisordered);
+
       RAxisConfig cfg(caxis);
       EXPECT_EQ(cfg.GetTitle(), title);
       EXPECT_EQ(cfg.GetNBinsNoOver(), static_cast<int>(expected_labels.size()));
