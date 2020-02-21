@@ -191,9 +191,9 @@ void REveDataCollection::SetMainColor(Color_t newv)
 
 //______________________________________________________________________________
 
-bool REveDataCollection::SetRnrState(bool iRnrSelf)
+Bool_t REveDataCollection::SetRnrState(Bool_t iRnrSelf)
 {
-   bool ret = REveElement::SetRnrState(iRnrSelf);
+   Bool_t ret = REveElement::SetRnrState(iRnrSelf);
 
    Ids_t ids;
 
@@ -251,9 +251,9 @@ void REveDataItem::SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b)
    c->ItemChanged(this);
 }
 
-bool REveDataItem::SetRnrSelf(bool iRnrSelf)
+Bool_t REveDataItem::SetRnrSelf(Bool_t iRnrSelf)
 {
-   bool r = REveElement::SetRnrSelf(iRnrSelf);
+   Bool_t r = REveElement::SetRnrSelf(iRnrSelf);
    REveDataCollection* c = dynamic_cast<REveDataCollection*>(fMother);
    c->ItemChanged(this);
    return r;
