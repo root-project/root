@@ -76,6 +76,7 @@ protected:
       operator bool() const { return !!value; }
    };
 
+   /** Search value with given name in attributes */
    const Val_t AccessValue(const std::string &name, bool use_style = true) const
    {
       if (auto access = AccessAttr(name)) {
@@ -143,6 +144,7 @@ protected:
       return *this;
    }
 
+   void SetNone(const std::string &name);
    void SetValue(const std::string &name, bool value);
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, int value);

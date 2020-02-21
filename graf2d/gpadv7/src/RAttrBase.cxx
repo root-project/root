@@ -27,7 +27,7 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 {
    if (check_type) {
       const auto *dvalue = GetDefaults().Find(name);
-      if (!dvalue || !dvalue->Compatible(value.Kind()))
+      if (!dvalue || !dvalue->IsCompatible(value.Kind()))
          return false;
    }
 
@@ -40,14 +40,14 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Copy attributes into target object
+/// Check if provided value equal to attribute in the map
 
 bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style) const
 {
    if (auto v = AccessValue(name, use_style))
-      return v.value->IsEqual(value);
+      return v.value->IsCompatible(value.Kind()) && v.value->IsEqual(value);
 
-   return false;
+   return value.Kind() == RAttrMap::kNone;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -84,6 +84,9 @@ void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const st
    fParent = nullptr;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Assign parent object for this RAttrBase
+
 void ROOT::Experimental::RAttrBase::AssignParent(RAttrBase *parent, const std::string &prefix)
 {
    fDrawable = nullptr;
@@ -92,11 +95,27 @@ void ROOT::Experimental::RAttrBase::AssignParent(RAttrBase *parent, const std::s
    fParent = parent;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Clear value if any with specified name
+
 void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 {
    if (auto access = AccessAttr(name))
-       const_cast<RAttrMap*>(access.attr)->Clear(access.fullname);
+       access.attr->Clear(access.fullname);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Add "None" value to attribute. Ensure that value can not be configured via style
+/// Equivalent to css syntax { attrname: }
+
+void ROOT::Experimental::RAttrBase::SetNone(const std::string &name)
+{
+   if (auto access = AccessAttr(name))
+       access.attr->AddNone(access.fullname);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Set boolean value
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, bool value)
 {
@@ -104,11 +123,17 @@ void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, bool value
       access.attr->AddBool(access.fullname, value);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Set integer value
+
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, int value)
 {
    if (auto access = EnsureAttr(name))
       access.attr->AddInt(access.fullname, value);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Set double value
 
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double value)
 {
@@ -116,13 +141,18 @@ void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double val
       access.attr->AddDouble(access.fullname, value);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Set string value
+
 void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std::string &value)
 {
    if (auto access = EnsureAttr(name))
       access.attr->AddString(access.fullname, value);
 }
 
-/** Clear all respective values from drawable. Only defaults can be used */
+///////////////////////////////////////////////////////////////////////////////
+/// Clear all respective values from drawable. Only defaults can be used
+
 void ROOT::Experimental::RAttrBase::Clear()
 {
    for (const auto &entry : GetDefaults())
