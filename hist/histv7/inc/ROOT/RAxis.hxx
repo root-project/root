@@ -827,7 +827,7 @@ public:
       // Otherwise, we must check the labels of the other axis too
       for (const auto &kv: other.fLabelsIndex)
          if (fLabelsIndex.find(kv.first) == other.fLabelsIndex.cend())
-            result = LabelComparisonFlags(result | kSuperset);
+            return LabelComparisonFlags(result | kSuperset);
       return result;
    }
 };
