@@ -27,7 +27,7 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 {
    if (check_type) {
       const auto *dvalue = GetDefaults().Find(name);
-      if (!dvalue || !dvalue->IsCompatible(value.Kind()))
+      if (!dvalue || !dvalue->CanConvertFrom(value.Kind()))
          return false;
    }
 
@@ -45,7 +45,7 @@ bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAt
 bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style) const
 {
    if (auto v = AccessValue(name, use_style))
-      return v.value->IsCompatible(value.Kind()) && v.value->IsEqual(value);
+      return v.value->CanConvertFrom(value.Kind()) && v.value->IsEqual(value);
 
    return value.Kind() == RAttrMap::kNone;
 }

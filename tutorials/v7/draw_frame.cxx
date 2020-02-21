@@ -61,6 +61,8 @@ void draw_frame()
 
    frame1->AttrX().AttrLine().SetColor(RColor::kGreen);
    frame1->AttrY().AttrLine().SetColor(RColor::kBlue);
+   frame1->AttrX().SetZoomMinMax(0.2,0.8);
+   frame1->AttrY().SetMinMax(2,8);
 
    auto draw1 = subpads[0][0]->Draw(pHist);
    draw1->AttrLine().SetColor(RColor::kRed);

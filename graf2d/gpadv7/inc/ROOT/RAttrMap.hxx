@@ -43,7 +43,8 @@ public:
    public:
       virtual ~Value_t() = default;
       virtual EValuesKind Kind() const = 0;
-      virtual bool IsCompatible(EValuesKind kind) const { return kind == Kind(); }
+      virtual bool CanConvertFrom(EValuesKind kind) const { return kind == Kind(); }
+      virtual bool CanConvertTo(EValuesKind kind) const { return kind == Kind(); }
       virtual bool GetBool() const { return false; }
       virtual int GetInt() const { return 0; }
       virtual double GetDouble() const { return 0; }
@@ -70,7 +71,8 @@ public:
    public:
       explicit BoolValue_t(bool _v = false) : v(_v) {}
       EValuesKind Kind() const final { return kBool; }
-      bool IsCompatible(EValuesKind kind) const final { return (kind == kDouble) || (kind == kInt) || (kind == kBool) || (kind == kString); }
+      bool CanConvertFrom(EValuesKind kind) const final { return (kind == kDouble) || (kind == kInt) || (kind == kBool) || (kind == kString); }
+      bool CanConvertTo(EValuesKind kind) const final { return (kind == kDouble) || (kind == kInt) || (kind == kBool) || (kind == kString); }
       bool GetBool() const final { return v; }
       int GetInt() const final { return v ? 1 : 0; }
       double GetDouble() const final { return v ? 1 : 0; }
@@ -84,7 +86,8 @@ public:
    public:
       IntValue_t(int _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kInt; }
-      bool IsCompatible(EValuesKind kind) const final { return (kind == kInt) || (kind == kBool); }
+      bool CanConvertFrom(EValuesKind kind) const final { return (kind == kInt) || (kind == kBool); }
+      bool CanConvertTo(EValuesKind kind) const final { return (kind == kDouble) || (kind == kInt) || (kind == kBool) || (kind == kString); }
       bool GetBool() const final { return v ? true : false; }
       int GetInt() const final { return v; }
       double GetDouble() const final { return v; }
@@ -98,7 +101,8 @@ public:
    public:
       DoubleValue_t(double _v = 0) : v(_v) {}
       EValuesKind Kind() const final { return kDouble; }
-      bool IsCompatible(EValuesKind kind) const final { return (kind == kDouble) || (kind == kInt) || (kind == kBool); }
+      bool CanConvertFrom(EValuesKind kind) const final { return (kind == kDouble) || (kind == kInt) || (kind == kBool); }
+      bool CanConvertTo(EValuesKind kind) const final { return (kind == kDouble) || (kind == kBool) || (kind == kString); }
       bool GetBool() const final { return v ? true : false; }
       int GetInt() const final { return (int) v; }
       double GetDouble() const final { return v; }
@@ -113,7 +117,9 @@ public:
       StringValue_t(const std::string _v = "") : v(_v) {}
       EValuesKind Kind() const final { return kString; }
       // all values can be converted into the string
-      bool IsCompatible(EValuesKind) const final { return true; }
+      bool CanConvertFrom(EValuesKind) const final { return true; }
+      // can convert into string and boolean
+      bool CanConvertTo(EValuesKind kind) const final { return kind == kString; }
       bool GetBool() const final { return v.compare("true") == 0; }
       std::string GetString() const final { return v; }
       bool IsEqual(const Value_t &tgt) const final { return tgt.GetString() == v; }
