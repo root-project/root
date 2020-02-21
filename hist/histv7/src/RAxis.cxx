@@ -33,7 +33,8 @@ bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) con
    if (bool(lbl_ptr) != bool(other_lbl_ptr)) {
       return false;
    } else if (lbl_ptr) {
-      return lbl_ptr->CompareBinLabels(*other_lbl_ptr) == RAxisLabels::kSame;
+      auto lbl_cmp = lbl_ptr->CompareBinLabels(*other_lbl_ptr);
+      return (lbl_cmp == RAxisLabels::kLabelsCmpSame);
    } else {
       return true;
    }

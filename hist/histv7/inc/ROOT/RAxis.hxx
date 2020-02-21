@@ -791,21 +791,25 @@ public:
       return vec;
    }
 
-   /// Result of an RAxisLabels label comparison
-   enum LabelComparisonFlags {
-      kSame = 0,  ///< The two axes have the same labels in the same order
+   /// Result of an RAxisLabels label set comparison
+   enum LabelsCmpFlags {
+      /// Both axes have the same labels, mapping to the same bins
+      kLabelsCmpSame = 0,
 
-      kSubset = 0b1,  ///< Other axis doesn't have some labels of this axis
+      /// The other axis doesn't have some labels from this axis
+      kLabelsCmpSubset = 0b1,
 
-      kSuperset = 0b10,  ///< Other axis has some labels this axis doesn't have
+      /// The other axis has some labels which this axis doesn't have
+      kLabelsCmpSuperset = 0b10,
 
-      kDisordered = 0b100,  ///< Common subset of labels is ordered differently
+      /// The labels shared by both axes do not map into the same bins
+      kLabelsCmpDisordered = 0b100,
    };
 
    /// Compare the labels of this axis with those of another axis
-   LabelComparisonFlags CompareBinLabels(const RAxisLabels& other) const noexcept {
+   LabelsCmpFlags CompareBinLabels(const RAxisLabels& other) const noexcept {
       // This will eventually contain the results of the labels comparison
-      LabelComparisonFlags result = kSame;
+      LabelsCmpFlags result = kLabelsCmpSame;
       size_t missing_in_other = 0;
 
       // First, check how this axis' labels map into the other axis
@@ -814,11 +818,11 @@ public:
          if (iter == other.fLabelsIndex.cend()) {
             ++missing_in_other;
          } else if (iter->second != kv.second) {
-            result = LabelComparisonFlags(result | kDisordered);
+            result = LabelsCmpFlags(result | kLabelsCmpDisordered);
          }
       }
       if (missing_in_other > 0)
-         result = LabelComparisonFlags(result | kSubset);
+         result = LabelsCmpFlags(result | kLabelsCmpSubset);
 
       // If this covered all labels in the other axis, we're done
       if (fLabelsIndex.size() == other.fLabelsIndex.size() + missing_in_other)
@@ -827,7 +831,7 @@ public:
       // Otherwise, we must check the labels of the other axis too
       for (const auto &kv: other.fLabelsIndex)
          if (fLabelsIndex.find(kv.first) == other.fLabelsIndex.cend())
-            return LabelComparisonFlags(result | kSuperset);
+            return LabelsCmpFlags(result | kLabelsCmpSuperset);
       return result;
    }
 };
