@@ -157,7 +157,8 @@ protected:
    template <typename T = void>
    bool HasValue(const std::string &name, bool check_defaults = false) const
    {
-      return Eval<const RAttrMap::Value_t *, T>(name, check_defaults) != nullptr;
+      auto res = Eval<const RAttrMap::Value_t *, T>(name, check_defaults);
+      return res ? (res->Kind() != RAttrMap::kNone) : false;
    }
 
    template <typename T>
@@ -171,8 +172,8 @@ public:
 
    virtual ~RAttrBase() = default;
 
-   friend bool operator==(const RAttrBase& lhs, const RAttrBase& rhs){ return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
-   friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs){ return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
+   friend bool operator==(const RAttrBase& lhs, const RAttrBase& rhs) { return lhs.IsSame(rhs) && rhs.IsSame(lhs); }
+   friend bool operator!=(const RAttrBase& lhs, const RAttrBase& rhs) { return !lhs.IsSame(rhs) || !rhs.IsSame(lhs); }
 };
 
 
