@@ -29,7 +29,10 @@ class RAttrAxis : public RAttrBase {
    RAttrLine fAttrLine{this, "line_"};   ///<!  axis line attributes
    RAttrText fAttrText{this, "text_"};   ///<!  axis text attributes
 
-   R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText).AddDouble("min", 0.).AddDouble("max", 1.).AddBool("log", false).AddBool("invert", false));
+   R__ATTR_CLASS(RAttrAxis, "axis_", AddDefaults(fAttrLine).AddDefaults(fAttrText)
+                                   .AddDouble("min", 0.).AddDouble("max", 1.)
+                                   .AddDouble("zoommin", 0.).AddDouble("zoommax", 0.)
+                                   .AddBool("log", false).AddBool("invert", false));
 
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RAttrAxis &SetAttrLine(const RAttrLine &line) { fAttrLine = line; return *this; }
@@ -47,6 +50,14 @@ class RAttrAxis : public RAttrBase {
 
    void SetMinMax(double min, double max) { SetMin(min); SetMax(max); }
    void ClearMinMax() { ClearValue("min"); ClearValue("max"); }
+
+   void SetZoomMin(double min) { SetValue("zoommin", min); }
+   void SetZoomMax(double max) { SetValue("zoommax", max); }
+   double GetZoomMin() const { return GetValue<double>("zoommin"); }
+   double GetZoomMax() const { return GetValue<double>("zoommax"); }
+
+   void SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); }
+   void ClearZoomMinMax() { ClearValue("zoommin"); ClearValue("zoommax"); }
 
    void SetLog(bool on = true) { SetValue("log", on); }
    bool GetLog() const { return GetValue<bool>("log"); }

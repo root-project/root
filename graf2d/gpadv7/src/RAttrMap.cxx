@@ -31,10 +31,10 @@ template<> double RAttrMap::Value_t::GetValue<double,void>(const Value_t *rec) {
 template<> std::string RAttrMap::Value_t::GetValue<std::string,void>(const Value_t *rec) { return rec ? rec->GetString() : ""; }
 
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,void>(const Value_t *rec) { return rec; }
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,bool>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kBool ? rec : nullptr; }
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,int>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kInt ? rec : nullptr; }
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,double>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kDouble ? rec : nullptr; }
-template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,std::string>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kString ? rec : nullptr;  }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,bool>(const Value_t *rec) { return rec && rec->CanConvertTo(RAttrMap::kBool) ? rec : nullptr; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,int>(const Value_t *rec) { return rec && rec->CanConvertTo(RAttrMap::kInt) ?  rec : nullptr; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,double>(const Value_t *rec) { return rec && rec->CanConvertTo(RAttrMap::kDouble) ? rec : nullptr; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,std::string>(const Value_t *rec) { return rec && rec->CanConvertTo(RAttrMap::kString) ? rec : nullptr; }
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
