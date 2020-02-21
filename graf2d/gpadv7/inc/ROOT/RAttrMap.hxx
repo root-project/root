@@ -37,7 +37,7 @@ class RAttrMap {
 
 public:
 
-   enum EValuesKind { kBool, kInt, kDouble, kString };
+   enum EValuesKind { kNone, kBool, kInt, kDouble, kString };
 
    class Value_t {
    public:
@@ -55,6 +55,14 @@ public:
 
       template <typename RET_TYPE, typename MATCH_TYPE = void>
       static RET_TYPE GetValue(const Value_t *rec);
+   };
+
+   class NoneValue_t : public Value_t {
+   public:
+      explicit NoneValue_t() {}
+      EValuesKind Kind() const final { return kNone; }
+      std::unique_ptr<Value_t> Copy() const final { return std::make_unique<NoneValue_t>(); }
+      bool IsEqual(const Value_t &) const final { return false; }
    };
 
    class BoolValue_t : public Value_t {
@@ -120,6 +128,7 @@ public:
    RAttrMap() = default; ///< JSON_asbase - store as map object
 
    RAttrMap &Add(const std::string &name, std::unique_ptr<Value_t> &&value) { m[name] = std::move(value); return *this; }
+   RAttrMap &AddNone(const std::string &name) { m[name] = std::make_unique<NoneValue_t>(); return *this; }
    RAttrMap &AddBool(const std::string &name, bool value) { m[name] = std::make_unique<BoolValue_t>(value); return *this; }
    RAttrMap &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
    RAttrMap &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
