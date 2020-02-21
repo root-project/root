@@ -15,26 +15,32 @@
 #include <algorithm>
 #include <limits>
 
-template<> bool ROOT::Experimental::RAttrMap::Value_t::Get<bool>() const { return GetBool(); }
-template<> int ROOT::Experimental::RAttrMap::Value_t::Get<int>() const { return GetInt(); }
-template<> double ROOT::Experimental::RAttrMap::Value_t::Get<double>() const { return GetDouble(); }
-template<> std::string ROOT::Experimental::RAttrMap::Value_t::Get<std::string>() const { return GetString(); }
-
-template<> bool ROOT::Experimental::RAttrMap::Value_t::GetValue<bool,void>(const Value_t *rec) { return rec ? rec->GetBool() : false; }
-template<> int ROOT::Experimental::RAttrMap::Value_t::GetValue<int,void>(const Value_t *rec) { return rec ? rec->GetInt() : 0; }
-template<> double ROOT::Experimental::RAttrMap::Value_t::GetValue<double,void>(const Value_t *rec) { return rec ? rec->GetDouble() : 0.; }
-template<> std::string ROOT::Experimental::RAttrMap::Value_t::GetValue<std::string,void>(const Value_t *rec) { return rec ? rec->GetString() : ""; }
-
-template<> const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RAttrMap::Value_t::GetValue<const ROOT::Experimental::RAttrMap::Value_t *,void>(const Value_t *rec) { return rec; }
-template<> const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RAttrMap::Value_t::GetValue<const ROOT::Experimental::RAttrMap::Value_t *,bool>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kBool ? rec : nullptr; }
-template<> const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RAttrMap::Value_t::GetValue<const ROOT::Experimental::RAttrMap::Value_t *,int>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kInt ? rec : nullptr; }
-template<> const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RAttrMap::Value_t::GetValue<const ROOT::Experimental::RAttrMap::Value_t *,double>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kDouble ? rec : nullptr; }
-template<> const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RAttrMap::Value_t::GetValue<const ROOT::Experimental::RAttrMap::Value_t *,std::string>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kString ? rec : nullptr;  }
-
+using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
 
-ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrMap::AddDefaults(const RAttrBase &vis)
+
+template<> bool RAttrMap::Value_t::Get<bool>() const { return GetBool(); }
+template<> int RAttrMap::Value_t::Get<int>() const { return GetInt(); }
+template<> double RAttrMap::Value_t::Get<double>() const { return GetDouble(); }
+template<> std::string RAttrMap::Value_t::Get<std::string>() const { return GetString(); }
+
+template<> bool RAttrMap::Value_t::GetValue<bool,void>(const Value_t *rec) { return rec ? rec->GetBool() : false; }
+template<> int RAttrMap::Value_t::GetValue<int,void>(const Value_t *rec) { return rec ? rec->GetInt() : 0; }
+template<> double RAttrMap::Value_t::GetValue<double,void>(const Value_t *rec) { return rec ? rec->GetDouble() : 0.; }
+template<> std::string RAttrMap::Value_t::GetValue<std::string,void>(const Value_t *rec) { return rec ? rec->GetString() : ""; }
+
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,void>(const Value_t *rec) { return rec; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,bool>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kBool ? rec : nullptr; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,int>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kInt ? rec : nullptr; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,double>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kDouble ? rec : nullptr; }
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,std::string>(const Value_t *rec) { return rec && rec->Kind() == RAttrMap::kString ? rec : nullptr;  }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add defaults values form sub attribute
+
+RAttrMap &RAttrMap::AddDefaults(const RAttrBase &vis)
 {
    auto prefix = vis.GetPrefix();
 
@@ -46,9 +52,9 @@ ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrMap::AddDefaults(const RA
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add attribute, converting to best possible type
-/// Tested boolean, int, double. If non works - store as a string
+/// Tested boolean, int, double. If none works - store as a string
 
-void ROOT::Experimental::RAttrMap::AddBestMatch(const std::string &name, const std::string &value)
+void RAttrMap::AddBestMatch(const std::string &name, const std::string &value)
 {
    if (value.empty()) {
       AddString(name, value);
