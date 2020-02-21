@@ -22,6 +22,23 @@ constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
+bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) const {
+   // Bin borders must match
+   if (!HasSameBinBordersAs(other))
+      return false;
+
+   // Bin labels must match
+   auto lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
+   auto other_lbl_ptr = dynamic_cast<const RAxisLabels*>(&other);
+   if (bool(lbl_ptr) != bool(other_lbl_ptr)) {
+      return false;
+   } else if (lbl_ptr) {
+      return lbl_ptr->CompareBinLabels(*other_lbl_ptr) == RAxisLabels::kSame;
+   } else {
+      return true;
+   }
+}
+
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
@@ -72,39 +89,6 @@ bool ROOT::Experimental::RAxisIrregular::HasSameBinBordersAs(const RAxisBase& ot
 
    // Only need to compare bin borders in this specialized case
    return fBinBorders == other_irr.fBinBorders;
-}
-
-bool ROOT::Experimental::RAxisLabels::HasSameBinMetadataAs(const RAxisBase& other) const noexcept {
-   // If this axis has bin labels, `other` must have bin labels too
-   auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
-   if (!other_labels_ptr)
-      return false;
-   const auto& other_labels = *other_labels_ptr;
-
-   // The bin labels and label->bin associations must also be the same.
-   //
-   // We know that the number of bins is the same, per HasSameBinMetadataAs
-   // virtual interface contract, so we only need to check that each bin from
-   // `this` exists identically in `other`.
-   //
-   for (const auto &kv: fLabelsIndex) {
-      auto iter = other_labels.fLabelsIndex.find(kv.first);
-      if ((iter == fLabelsIndex.cend()) || (iter->second != kv.second))
-         return false;
-   }
-   return true;
-}
-
-bool ROOT::Experimental::RAxisLabels::AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept {
-   // If this axis has bin labels, `other` must have bin labels too
-   //
-   // That's all we need to check because we can assume that a call to
-   // `other.HasSameBinMetadataAs(*this)` has already completed successfully.
-   // Hence, if `other` is an `RAxisLabels`, the bin labels have already been
-   // compared by this previous call.
-   //
-   auto other_labels_ptr = dynamic_cast<const RAxisLabels*>(&other);
-   return (other_labels_ptr != nullptr);
 }
 
 ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(const RAxisEquidistant &target,
