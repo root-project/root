@@ -224,13 +224,18 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
          if (!parser.skip_empty())
             return false;
 
-         auto value = parser.scan_value();
-         if (value.empty()) {
-            R__ERROR_HERE("rstyle") << "not able to find value" << parser.error_position();
-            return false;
-         }
+         if (parser.current() == ';') {
+            parser.shift();
+            map.AddNone(name);
+         } else {
+            auto value = parser.scan_value();
+            if (value.empty()) {
+               R__ERROR_HERE("rstyle") << "not able to find value" << parser.error_position();
+               return false;
+            }
 
-         map.AddBestMatch(name, value);
+            map.AddBestMatch(name, value);
+         }
 
          if (!parser.skip_empty())
             return false;
