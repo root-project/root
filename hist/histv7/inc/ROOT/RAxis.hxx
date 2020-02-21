@@ -124,43 +124,6 @@ protected:
       return true;
    }
 
-   /// If supplementary bin metadata (e.g. bin labels) exists in `this`, make
-   /// sure that `other` provides the same bin metadata.
-   ///
-   /// The implementation can work under the assumption that the number of bins
-   /// and bin borders of `this` and `other` has already been compared equal.
-   ///
-   /// RAxis classes which override a non-default implementation of
-   /// `HasSameBinMetadataAs` should start by calling the parent class'
-   /// implementation of this method, in order to allow "stacking" of bin
-   /// metadata across the class hierarchy.
-   ///
-   /// Adding an override of `HasSameBinMetadataAs` to an RAxis class is
-   /// considered an API-breaking change: subclasses can assume that if their
-   /// parent classes don't override the default implementation of
-   /// `HasSameBinMetadataAs`, they never will.
-   virtual bool HasSameBinMetadataAs(const RAxisBase& /*other*/) const noexcept {
-      return true;
-   }
-
-   /// Semantically equivalent to `HasSameBinMetadataAs(other)`, except that the
-   /// implementation can be optimized under knowledge of the fact that
-   /// `other.HasSameBinMetadataAs(*this)` has previously been called and
-   /// returned a positive result.
-   ///
-   /// RAxis classes which override a non-default implementation of
-   /// `AlsoHasSameBinMetadataAs` should start by calling the parent class'
-   /// implementation of this method, in order to allow "stacking" of bin
-   /// metadata across the class hierarchy.
-   ///
-   /// Adding an override of `AlsoHasSameBinMetadataAs` to an RAxis class is
-   /// considered an API-breaking change: subclasses can assume that if their
-   /// parent classes don't override the default implementation of
-   /// `AlsoHasSameBinMetadataAs`, they never will.
-   virtual bool AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept {
-      return HasSameBinMetadataAs(other);
-   }
-
 public:
    /**
     \class const_iterator
@@ -362,22 +325,8 @@ public:
    ///
    /// - Either they are both growable or neither of them is growable.
    /// - Minimum, maximum, and all bin borders in the middle are the same.
-   /// - Any metadata attached to the bin (e.g. bin labels) must match.
-   bool HasSameBinningAs(const RAxisBase& other) const {
-      // Bin borders must match
-      if (!HasSameBinBordersAs(other))
-         return false;
-
-      // If either `this` or `other` provides supplementary bin metadata, such
-      // as bin labels, make sure that it is present on both sides.
-      if (!HasSameBinMetadataAs(other))
-         return false;
-      if (!other.AlsoHasSameBinMetadataAs(*this))
-         return false;
-
-      // If all of the above matched, we're good.
-      return true;
-   }
+   /// - Bin labels must match (exactly including order, for now).
+   bool HasSameBinningAs(const RAxisBase& other) const;
 
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
@@ -788,13 +737,6 @@ private:
    /// Map of label (view on `fLabels`'s elements) to bin index
    std::unordered_map<std::string, int /*bin number*/> fLabelsIndex;
 
-protected:
-   /// See RAxisBase::HasSameBinMetadataAs
-   bool HasSameBinMetadataAs(const RAxisBase& other) const noexcept override;
-
-   /// See RAxisBase::AlsoHasSameBinMetadataAs
-   bool AlsoHasSameBinMetadataAs(const RAxisBase& other) const noexcept override;
-
 public:
    /// Construct a RAxisLables from a `vector` of `string_view`s, with title.
    explicit RAxisLabels(std::string_view title, const std::vector<std::string_view> &labels)
@@ -847,6 +789,46 @@ public:
       for (const auto &kv: fLabelsIndex)
          vec.at(kv.second) = kv.first;
       return vec;
+   }
+
+   /// Result of an RAxisLabels label comparison
+   enum LabelComparisonFlags {
+      kSame = 0,  ///< The two axes have the same labels in the same order
+
+      kSubset = 0b1,  ///< Other axis doesn't have some labels of this axis
+
+      kSuperset = 0b10,  ///< Other axis has some labels this axis doesn't have
+
+      kDisordered = 0b100,  ///< Common subset of labels is ordered differently
+   };
+
+   /// Compare the labels of this axis with those of another axis
+   LabelComparisonFlags CompareBinLabels(const RAxisLabels& other) const noexcept {
+      // This will eventually contain the results of the labels comparison
+      LabelComparisonFlags result = kSame;
+      size_t missing_in_other = 0;
+
+      // First, check how this axis' labels map into the other axis
+      for (const auto &kv: fLabelsIndex) {
+         auto iter = other.fLabelsIndex.find(kv.first);
+         if (iter == other.fLabelsIndex.cend()) {
+            ++missing_in_other;
+         } else if (iter->second != kv.second) {
+            result = LabelComparisonFlags(result | kDisordered);
+         }
+      }
+      if (missing_in_other > 0)
+         result = LabelComparisonFlags(result | kSubset);
+
+      // If this covered all labels in the other axis, we're done
+      if (fLabelsIndex.size() == other.fLabelsIndex.size() + missing_in_other)
+         return result;
+
+      // Otherwise, we must check the labels of the other axis too
+      for (const auto &kv: other.fLabelsIndex)
+         if (fLabelsIndex.find(kv.first) == other.fLabelsIndex.cend())
+            result = LabelComparisonFlags(result | kSuperset);
+      return result;
    }
 };
 
