@@ -139,9 +139,9 @@ public:
    virtual REveElement* CloneElementRecurse(Int_t level = 0) const;
    virtual void         CloneChildrenRecurse(REveElement *dest, Int_t level = 0) const;
 
-   std::string GetName()   const { return fName;  }
+   const std::string &GetName()   const { return fName;  }
    const char* GetCName()  const { return fName.c_str();  }
-   std::string GetTitle()  const { return fTitle; }
+   const std::string &GetTitle()  const { return fTitle; }
    const char* GetCTitle() const { return fTitle.c_str();  }
 
    virtual std::string GetHighlightTooltip() const { return fTitle; }

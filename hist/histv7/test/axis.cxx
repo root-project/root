@@ -335,18 +335,6 @@ TEST(AxisTest, Equidistant) {
     SCOPED_TRACE("Equidistant axis with title");
     test(RAxisEquidistant("RITLE_E2", 10, 1.2, 3.4), "RITLE_E2");
   }
-
-  // Only RAxisEquidistant currently has an equality operator defined
-  RAxisEquidistant axis1("Title", 12, 3.4, 5.6);
-  EXPECT_EQ(axis1, RAxisEquidistant("Ritle", 12, 3.4, 5.6));
-
-  // Title is ignored by the equality operator
-  EXPECT_EQ(axis1, RAxisEquidistant("Ritl", 12, 3.4, 5.6));
-
-  // Everything else is taken into account by the equality operator
-  EXPECT_NE(axis1, RAxisEquidistant("Ritle", 13, 3.4, 5.6));
-  EXPECT_NE(axis1, RAxisEquidistant("Ritle", 12, 3.5, 5.6));
-  EXPECT_NE(axis1, RAxisEquidistant("Ritle", 12, 3.4, 5.7));
 }
 
 TEST(AxisTest, Growable) {
@@ -469,6 +457,32 @@ TEST(AxisTest, Labels) {
         EXPECT_EQ(caxis.GetBinLabels()[i], expected_labels[i]);
       }
 
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(expected_labels)),
+                RAxisLabels::kLabelsCmpSame);
+      const std::vector<std::string_view> missing_last_label(
+        expected_labels.cbegin(), expected_labels.cend() - 1);
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(missing_last_label)),
+                RAxisLabels::kLabelsCmpSubset);
+      auto one_extra_label = expected_labels;
+      one_extra_label.push_back("I AM ROOT");
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(one_extra_label)),
+                RAxisLabels::kLabelsCmpSuperset);
+      auto swapped_labels = expected_labels;
+      std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
+                RAxisLabels::kLabelsCmpDisordered);
+      auto changed_one_label = expected_labels;
+      changed_one_label[0] = "I AM ROOT";
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(changed_one_label)),
+                RAxisLabels::kLabelsCmpSubset | RAxisLabels::kLabelsCmpSuperset);
+      auto removed_first = expected_labels;
+      removed_first.erase(removed_first.cbegin());
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(removed_first)),
+                RAxisLabels::kLabelsCmpSubset | RAxisLabels::kLabelsCmpDisordered);
+      swapped_labels.push_back("I AM ROOT");
+      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
+                RAxisLabels::kLabelsCmpSuperset | RAxisLabels::kLabelsCmpDisordered);
+
       RAxisConfig cfg(caxis);
       EXPECT_EQ(cfg.GetTitle(), title);
       EXPECT_EQ(cfg.GetNBinsNoOver(), static_cast<int>(expected_labels.size()));
@@ -524,6 +538,59 @@ TEST(AxisTest, Labels) {
     RAxisLabels axis("RITLE_L2", labels);
     test(axis, "RITLE_L2");
   }
+}
+
+TEST(AxisTest, SameBinning) {
+  using EqAxis = RAxisEquidistant;
+  using GrowAxis = RAxisGrow;
+  using IrrAxis = RAxisIrregular;
+  using LabAxis = RAxisLabels;
+
+  auto test_eq = [](const RAxisBase& base, bool grow) {
+    EXPECT_EQ(base.HasSameBinningAs(EqAxis(4, 1.2, 3.4)), !grow);
+    EXPECT_EQ(base.HasSameBinningAs(EqAxis("RitleEq", 4, 1.2, 3.4)), !grow);
+    EXPECT_EQ(base.HasSameBinningAs(GrowAxis(4, 1.2, 3.4)), grow);
+    EXPECT_EQ(base.HasSameBinningAs(GrowAxis("RitleGrow", 4, 1.2, 3.4)), grow);
+    // NOTE: Whether an IrrAxis with the "same" bin boundaries is considered to
+    //       have the same binning is left unspecified for now.
+    EXPECT_FALSE(base.HasSameBinningAs(EqAxis(6, 1.2, 3.4)));
+    EXPECT_FALSE(base.HasSameBinningAs(EqAxis(4, 1.7, 3.4)));
+    EXPECT_FALSE(base.HasSameBinningAs(EqAxis(4, 1.2, 3.9)));
+    EXPECT_FALSE(base.HasSameBinningAs(IrrAxis({0.1, 2.3, 4.5, 6.7, 8.9})));
+    // FIXME: Workaround for RAxisLabels constructor ambiguity
+    const std::vector<std::string_view> four_labels({"a", "bc", "def", "g"});
+    EXPECT_FALSE(base.HasSameBinningAs(LabAxis(four_labels)));
+  };
+  {
+    SCOPED_TRACE("Equidistant axis");
+    test_eq(EqAxis(4, 1.2, 3.4), false);
+  }
+  {
+    SCOPED_TRACE("Growable axis");
+    test_eq(GrowAxis(4, 1.2, 3.4), true);
+  }
+
+  const IrrAxis irr({1.2, 3.4, 5.6});
+  const RAxisBase& ibase = irr;
+  EXPECT_TRUE(ibase.HasSameBinningAs(IrrAxis({1.2, 3.4, 5.6})));
+  EXPECT_TRUE(ibase.HasSameBinningAs(IrrAxis("RitleIrr", {1.2, 3.4, 5.6})));
+  // NOTE: Whether an EqAxis with the "same" bin boundaries is considered to
+  //       have the same binning is left unspecified for now.
+  EXPECT_FALSE(ibase.HasSameBinningAs(EqAxis(2, 1.2, 3.4)));
+  EXPECT_FALSE(ibase.HasSameBinningAs(GrowAxis(2, 1.2, 3.4)));
+  // FIXME: Workaround for RAxisLabels constructor ambiguity
+  const std::vector<std::string_view> two_labels({"abc", "d"});
+  EXPECT_FALSE(ibase.HasSameBinningAs(LabAxis(two_labels)));
+
+  // FIXME: Workaround for RAxisLabels constructor ambiguity
+  const std::vector<std::string_view> three_labels({"ab", "cde" "f"});
+  const LabAxis lab(three_labels);
+  const RAxisBase& lbase = lab;
+  EXPECT_TRUE(lbase.HasSameBinningAs(LabAxis(three_labels)));
+  EXPECT_TRUE(lbase.HasSameBinningAs(LabAxis("RitleLab", three_labels)));
+  EXPECT_FALSE(lbase.HasSameBinningAs(EqAxis(3, 0., 3.)));
+  EXPECT_FALSE(lbase.HasSameBinningAs(GrowAxis(3, 0., 3.)));
+  EXPECT_FALSE(lbase.HasSameBinningAs(IrrAxis({0., 1., 2., 3.})));
 }
 
 TEST(AxisTest, ReverseBinLimits) {

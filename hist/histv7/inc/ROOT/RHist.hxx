@@ -22,6 +22,7 @@
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RHistData.hxx"
 #include <initializer_list>
+#include <stdexcept>
 
 namespace ROOT {
 namespace Experimental {
@@ -300,23 +301,36 @@ using RH3I = RHist<3, int, RHistStatContent>;
 using RH3LL = RHist<3, int64_t, RHistStatContent>;
 ///\}
 
-/// Add two histograms. This is the generic, inefficient version for now; it
-/// assumes no matching axes.
-template <int DIMENSIONS, class PRECISION_TO, class PRECISION_FROM,
+/// Add two histograms.
+///
+/// This operation may currently only be performed if the two histograms have
+/// the same axis configuration, use the same precision, and if `from` records
+/// at least the same statistics as `to` (recording more stats is fine).
+///
+/// Adding histograms with incompatible axis binning will be reported at runtime
+/// with an `std::runtime_error`. Insufficient statistics in the source
+/// histogram will be detected at compile-time and result in a compiler error.
+///
+/// In the future, we may either adopt a more relaxed definition of histogram
+/// addition or provide a mechanism to convert from one histogram type to
+/// another. We currently favor the latter path.
+template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_> class... STAT_TO,
           template <int D_, class P_> class... STAT_FROM>
-void Add(RHist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION_FROM, STAT_FROM...> &from)
+void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &from)
 {
-   auto toImpl = to.GetImpl();
-   auto fillFuncTo = toImpl->GetFillFunc();
-   using HistFrom_t = RHist<DIMENSIONS, PRECISION_FROM, STAT_FROM...>;
-   using FromCoord_t = typename HistFrom_t::CoordArray_t;
-   using FromWeight_t = typename HistFrom_t::Weight_t;
-   auto add = [fillFuncTo, toImpl](const FromCoord_t &x, FromWeight_t c) {
-      (toImpl->*fillFuncTo)(x, c);
-      // RODO: something nice with the uncertainty - depending on whether `to` cares
-   };
-   from.GetImpl()->ApplyXC(add);
+   // Enforce "same axis configuration" policy.
+   auto& toImpl = *to.GetImpl();
+   const auto& fromImpl = *from.GetImpl();
+   for (int dim = 0; dim < DIMENSIONS; ++dim) {
+      if (!toImpl.GetAxis(dim).HasSameBinningAs(fromImpl.GetAxis(dim))) {
+         throw std::runtime_error("Attempted to add RHists with incompatible axis binning");
+      }
+   }
+
+   // Now that we know that the two axes have the same binning, we can just add
+   // the statistics directly.
+   toImpl.GetStat().Add(fromImpl.GetStat());
 }
 
 } // namespace Experimental
