@@ -951,7 +951,7 @@ TF1::~TF1()
 
    if (fFormula) delete fFormula;
    if (fParams) delete fParams;
-   if (fFunctor) delete fFunctor; 
+   if (fFunctor) delete fFunctor;
 }
 
 
@@ -1066,7 +1066,7 @@ void TF1::Copy(TObject &obj) const
 TObject* TF1::Clone(const char*) const
 {
 
-   TF1* obj = (TF1*) TObject::Clone();
+   TF1* obj = (TF1*) TNamed::Clone();
 
    if (fHistogram) {
       obj->fHistogram = (TH1*)fHistogram->Clone();
