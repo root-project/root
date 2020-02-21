@@ -49,17 +49,21 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept
 {
-   // Check the borders of the bin in which `x` resides
+   // Check in which bin `x` resides
    const int binIdx = FindBin(x);
-   const double lowBound = GetBinFrom(binIdx);
-   const double upBound = GetBinTo(binIdx);
 
-   // Are we close to one of the bin boundaries?
-   const double tol = 10 * std::numeric_limits<double>::epsilon();
-   if (!IsUnderflowBin(binIdx) && std::fabs(x - lowBound) < tol * std::fabs(lowBound))
-      return binIdx;
-   if (!IsOverflowBin(binIdx) && std::fabs(x - upBound) < tol * std::fabs(upBound))
-      return binIdx + 1;
+   // Are we close to the lower and upper bin boundaries, if any?
+   constexpr double tol = 10 * std::numeric_limits<double>::epsilon();
+   if (!IsUnderflowBin(binIdx)) {
+      const double lowBound = GetBinFrom(binIdx);
+      if (std::fabs(x - lowBound) < tol * std::fabs(lowBound))
+         return binIdx;
+   }
+   if (!IsOverflowBin(binIdx)) {
+      const double upBound = GetBinTo(binIdx);
+      if (std::fabs(x - upBound) < tol * std::fabs(upBound))
+         return binIdx + 1;
+   }
 
    // If not, report failure
    return -1;
