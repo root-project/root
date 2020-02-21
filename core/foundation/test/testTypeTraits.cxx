@@ -41,14 +41,6 @@ TEST(TypeTraits, RemoveFirstParameter)
    ::testing::StaticAssertTypeEq<RemoveFirstParameter_t<std::tuple<void>>, std::tuple<>>();
 }
 
-TEST(TypeTraits, IsContainer)
-{
-   static_assert(IsContainer<std::vector<int>>::value, "");
-   static_assert(IsContainer<std::vector<bool>>::value, "");
-   static_assert(IsContainer<std::tuple<int, int>>::value == false, "");
-   static_assert(IsContainer<std::string>::value, "");
-}
-
 /******** helper objects ***********/
 struct Dummy {
 };
