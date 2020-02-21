@@ -59,8 +59,8 @@ public:
    REveDataCollection(const std::string& n = "REveDataCollection", const std::string& t = "");
    virtual ~REveDataCollection() {}
 
-   bool SingleRnrState() const override { return true; }
-   bool SetRnrState(bool) override;
+   Bool_t SingleRnrState() const override { return kTRUE; }
+   Bool_t SetRnrState(Bool_t) override;
 
    TClass *GetItemClass() const { return fItemClass; }
    void SetItemClass(TClass *cls) { fItemClass = cls; }
@@ -107,7 +107,7 @@ public:
    void   SetFiltered(Bool_t f);
 
    virtual void SetItemColorRGB(UChar_t r, UChar_t g, UChar_t b);
-   bool SetRnrSelf(bool) override;
+   Bool_t SetRnrSelf(Bool_t) override;
 
    virtual void FillImpliedSelectedSet(Set_t& impSelSet) override;
 
