@@ -1057,6 +1057,10 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    std::string currentDir = gSystem->WorkingDirectory();
    assert(!currentDir.empty());
    gCling->RegisterPrebuiltModulePath(currentDir);
+   if (gDebug > 2)
+      ::Info("TCling::__LoadModule", "Preloading module %s. \n",
+             ModuleName.c_str());
+
    return interp.loadModule(ModuleName, /*Complain=*/true);
 }
 
@@ -1132,7 +1136,7 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
    return GlobalIndex;
 }
 
-static void RegisterCommonCxxModules(cling::Interpreter &clingInterp)
+static void RegisterCxxModules(cling::Interpreter &clingInterp)
 {
    if (!clingInterp.getCI()->getLangOpts().Modules)
       return;
@@ -1160,8 +1164,8 @@ static void RegisterCommonCxxModules(cling::Interpreter &clingInterp)
    LoadModules(CoreModules, clingInterp);
 
    // FIXME: Reducing those will let us be less dependent on rootmap files
-   // static constexpr std::array<const char *, 3> ExcludeModules = {
-   //    {"Rtools", "RSQLite", "RInterface"}};
+   static constexpr std::array<const char *, 3> ExcludeModules = {
+      {"Rtools", "RSQLite", "RInterface"}};
 
    // Take this branch only from ROOT because we don't need to preload modules in rootcling
    if (!IsFromRootCling()) {
@@ -1175,35 +1179,55 @@ static void RegisterCommonCxxModules(cling::Interpreter &clingInterp)
                                                "Proof", "Geom"};
       LoadModules(FIXMEModules, clingInterp);
 
-      loadGlobalModuleIndex(SourceLocation(), clingInterp);
       clang::CompilerInstance &CI = *clingInterp.getCI();
-      if (GlobalModuleIndex *GlobalIndex = CI.getModuleManager()->getGlobalIndex()) {
-         llvm::StringSet<> KnownModuleFileNames;
+      GlobalModuleIndex *GlobalIndex = nullptr;
+      if (gSystem->Getenv("ROOT_EXPERIMENTAL_GMI")) {
+         loadGlobalModuleIndex(SourceLocation(), clingInterp);
+         GlobalIndex = CI.getModuleManager()->getGlobalIndex();
+      }
+      llvm::StringSet<> KnownModuleFileNames;
+      if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
 
-         clang::Preprocessor &PP = CI.getPreprocessor();
-         ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
-         for (auto I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
-            clang::Module *M = I->second;
-            assert(M);
+      clang::Preprocessor &PP = CI.getPreprocessor();
+      std::vector<std::string> PendingModules;
+      PendingModules.reserve(256);
+      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
+      for (auto I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
+         clang::Module *M = I->second;
+         assert(M);
 
-            // We want to load only already created modules.
-            std::string FullASTFilePath;
-            if (!HasASTFileOnDisk(M, PP, &FullASTFilePath))
+         // We want to load only already created modules.
+         std::string FullASTFilePath;
+         if (!HasASTFileOnDisk(M, PP, &FullASTFilePath))
+            continue;
+
+         if (GlobalIndex && KnownModuleFileNames.count(FullASTFilePath))
+            continue;
+
+         if (M->IsMissingRequirement)
+            continue;
+
+         if (GlobalIndex)
+            LoadModule(M->Name, clingInterp);
+         else {
+            // FIXME: We may be able to remove those checks as cling::loadModule
+            // checks if a module was alredy loaded.
+            if (std::find(CoreModules.begin(), CoreModules.end(), M->Name) != CoreModules.end())
+               continue; // This is a core module which was already loaded.
+
+            if (std::find(ExcludeModules.begin(), ExcludeModules.end(), M->Name) != ExcludeModules.end())
                continue;
 
-            if (KnownModuleFileNames.count(FullASTFilePath))
-               continue;
-
-            if (!M->IsMissingRequirement) {
-               if (gDebug > 2)
-                  ::Info("TCling::__RegisterCommonCxxModules", "Preloading %s because it is not in GMI. \n",
-                         M->Name.data());
-
+            // Load system modules now and delay the other modules after we have
+            // loaded all system ones.
+            if (M->IsSystem)
                LoadModule(M->Name, clingInterp);
-            }
+            else
+               PendingModules.push_back(M->Name);
          }
       }
+      LoadModules(PendingModules, clingInterp);
    }
 
    // Check that the gROOT macro was exported by any core module.
@@ -1464,7 +1488,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = llvm::make_unique<cling::MetaProcessor>(*fInterpreter, fMPOuts);
 
-   RegisterCommonCxxModules(*fInterpreter);
+   RegisterCxxModules(*fInterpreter);
    RegisterPreIncludedHeaders(*fInterpreter);
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
