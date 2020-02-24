@@ -1418,15 +1418,11 @@ void TGeoPgon::InspectShape() const
 
 TBuffer3D *TGeoPgon::MakeBuffer3D() const
 {
-   const Int_t n = GetNsegments() + 1;
-   Int_t nz = GetNz();
-   if (nz < 2) return 0;
-   Int_t nbPnts = nz * 2 * n;
-   if (nbPnts <= 0) return 0;
-   Double_t dphi = GetDphi();
-   Bool_t specialCase = TGeoShape::IsSameWithinTolerance(dphi, 360);
-   Int_t nbSegs = 4 * (nz * n - 1 + (specialCase ? 1 : 0));
-   Int_t nbPols = 2 * (nz * n - 1 + (specialCase ? 1 : 0));
+   Int_t nbPnts, nbSegs, nbPols;
+   GetMeshNumbers(nbPnts, nbSegs, nbPols);
+
+   if (nbPnts <= 0)
+      return nullptr;
 
    TBuffer3D *buff =
       new TBuffer3D(TBuffer3DTypes::kGeneric, nbPnts, 3 * nbPnts, nbSegs, 3 * nbSegs, nbPols, 6 * nbPols);
@@ -1444,7 +1440,7 @@ TBuffer3D *TGeoPgon::MakeBuffer3D() const
 void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
 {
    Int_t i, j;
-   const Int_t n = GetNsegments() + 1;
+   const Int_t n = GetNedges() + 1;
    Int_t nz = GetNz();
    if (nz < 2) return;
    Int_t nbPnts = nz * 2 * n;
@@ -1927,8 +1923,13 @@ void TGeoPgon::SetPoints(Float_t *points) const
 
 void TGeoPgon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-   Int_t n = fNedges + 1;
+   nvert = nsegs = npols = 0;
+
+   Int_t n = GetNedges() + 1;
    Int_t nz = GetNz();
+
+   if (nz < 2) return;
+
    nvert = nz * 2 * n;
    Bool_t specialCase = TGeoShape::IsSameWithinTolerance(GetDphi(), 360);
    nsegs = 4 * (nz * n - 1 + (specialCase ? 1 : 0));
@@ -1940,9 +1941,11 @@ void TGeoPgon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 
 Int_t TGeoPgon::GetNmeshVertices() const
 {
-   Int_t n = fNedges + 1;
-   Int_t numPoints = fNz * 2 * n;
-   return numPoints;
+   Int_t nvert, nsegs, npols;
+
+   GetMeshNumbers(nvert, nsegs, npols);
+
+   return nvert;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1962,13 +1965,9 @@ const TBuffer3D &TGeoPgon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) con
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
    if (reqSections & TBuffer3D::kRawSizes) {
-      const Int_t n = GetNsegments() + 1;
-      Int_t nz = GetNz();
-      Int_t nbPnts = nz * 2 * n;
-      if (nz >= 2 && nbPnts > 0) {
-         Bool_t specialCase = TGeoShape::IsSameWithinTolerance(GetDphi(), 360);
-         Int_t nbSegs = 4 * (nz * n - 1 + (specialCase ? 1 : 0));
-         Int_t nbPols = 2 * (nz * n - 1 + (specialCase ? 1 : 0));
+      Int_t nbPnts, nbSegs, nbPols;
+      GetMeshNumbers(nbPnts, nbSegs, nbPols);
+      if (nbPnts > 0) {
          if (buffer.SetRawSizes(nbPnts, 3 * nbPnts, nbSegs, 3 * nbSegs, nbPols, 6 * nbPols)) {
             buffer.SetSectionsValid(TBuffer3D::kRawSizes);
          }
