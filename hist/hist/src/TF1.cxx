@@ -1063,10 +1063,10 @@ void TF1::Copy(TObject &obj) const
 /// Make a complete copy of the underlying object.  If 'newname' is set,
 /// the copy's name will be set to that name.
 
-TObject* TF1::Clone(const char*) const
+TObject* TF1::Clone(const char* newname) const
 {
 
-   TF1* obj = (TF1*) TNamed::Clone();
+   TF1* obj = (TF1*) TNamed::Clone(newname);
 
    if (fHistogram) {
       obj->fHistogram = (TH1*)fHistogram->Clone();
