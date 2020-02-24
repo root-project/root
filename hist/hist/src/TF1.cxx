@@ -951,7 +951,7 @@ TF1::~TF1()
 
    if (fFormula) delete fFormula;
    if (fParams) delete fParams;
-   if (fFunctor) delete fFunctor; 
+   if (fFunctor) delete fFunctor;
 }
 
 
@@ -1056,6 +1056,24 @@ void TF1::Copy(TObject &obj) const
       fComposition->Copy(*comp);
       ((TF1 &)obj).fComposition = std::unique_ptr<TF1AbsComposition>(comp);
    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make a complete copy of the underlying object.  If 'newname' is set,
+/// the copy's name will be set to that name.
+
+TObject* TF1::Clone(const char*) const
+{
+
+   TF1* obj = (TF1*) TNamed::Clone();
+
+   if (fHistogram) {
+      obj->fHistogram = (TH1*)fHistogram->Clone();
+      obj->fHistogram->SetDirectory(0);
+   }
+
+   return obj;
 }
 
 
