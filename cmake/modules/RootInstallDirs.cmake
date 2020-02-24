@@ -74,14 +74,6 @@ if(NOT DEFINED CMAKE_INSTALL_SYSCONFDIR)
   endif()
 endif()
 
-# Set variables necessary for MultiPython
-set(python_dir "python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}")
-if(WIN32)
-  set(py_localruntimedir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${python_dir})
-else()
-  set(py_localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${python_dir})
-endif()
-
 if(NOT DEFINED CMAKE_INSTALL_PYROOTDIR)
   if(WIN32)
     set(CMAKE_INSTALL_PYROOTDIR ${LIBDIR}/python/site-packages)

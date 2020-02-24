@@ -83,7 +83,7 @@ set(ROOT_headers inc)
 ROOT_LINKER_LIBRARY(ROOTPythonizations ${cpp_sources} DEPENDENCIES Core Tree cppyy CMAKENOEXPORT)
 target_include_directories(ROOTPythonizations PRIVATE ${ROOT_headers} ${PYTHON_INCLUDE_DIRS})
 
-file(COPY ${ROOTDirName} DESTINATION ${py_localruntimedir})
+file(COPY ${ROOTDirName} DESTINATION ${localruntimedir})
 install(DIRECTORY ${ROOTDirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # Copy headers inside build_dir/include/Pythonizations

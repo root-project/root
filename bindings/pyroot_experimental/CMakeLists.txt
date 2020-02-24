@@ -4,7 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${py_localruntimedir})
 set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PYROOTDIR})
 
 if(IS_ABSOLUTE ${CMAKE_INSTALL_PYROOTDIR})
