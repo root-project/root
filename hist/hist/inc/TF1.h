@@ -413,6 +413,7 @@ public:
    static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
    virtual void     Browse(TBrowser *b);
    virtual void     Copy(TObject &f1) const;
+   TObject*         Clone(const char* newname=0) const;
    virtual Double_t Derivative(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    virtual Double_t Derivative2(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
    virtual Double_t Derivative3(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
@@ -774,7 +775,7 @@ T TF1::EvalPar(const T *x, const Double_t *params)
 ////////////////////////////////////////////////////////////////////////////////
 ///   Eval for vectorized functions
 // template <class T>
-// T TF1::Eval(T x, T y, T z, T t) const 
+// T TF1::Eval(T x, T y, T z, T t) const
 // {
 //    if (fType == EFType::kFormula)
 //       return fFormula->Eval(x, y, z, t);
