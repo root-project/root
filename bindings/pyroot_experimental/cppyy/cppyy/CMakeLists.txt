@@ -17,7 +17,7 @@ set(py_sources
 )
 
 foreach(py_source ${py_sources})
-  file(COPY python/${py_source} DESTINATION ${py_localruntimedir}/cppyy)
+  file(COPY python/${py_source} DESTINATION ${localruntimedir}/cppyy)
   install(FILES python/${py_source} DESTINATION ${CMAKE_INSTALL_LIBDIR}/cppyy)
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${d}/${py_source})")
   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${d}/${py_source})")
