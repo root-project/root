@@ -1078,7 +1078,7 @@ void TGeoPcon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
       for (j = 1; j < n; j++) {
          buff.fSegs[indx++] = c;
          buff.fSegs[indx++] = indx2 + j - 1;
-         buff.fSegs[indx++] = indx2 + j;
+         buff.fSegs[indx++] = indx2 + j % (n-1);
       }
    }
 
@@ -1086,7 +1086,7 @@ void TGeoPcon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
    // bottom lines
    for (j = 0; j < n; j++) {
       buff.fSegs[indx++] = c;
-      buff.fSegs[indx++] = indx2 + j;
+      buff.fSegs[indx++] = indx2 + j % (n-1);
       buff.fSegs[indx++] = nbPnts - 2;
    }
 
@@ -1094,7 +1094,7 @@ void TGeoPcon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
    // top lines
    for (j = 0; j < n; j++) {
       buff.fSegs[indx++] = c;
-      buff.fSegs[indx++] = indx2 + j;
+      buff.fSegs[indx++] = indx2 + j % (n-1);
       buff.fSegs[indx++] = nbPnts - 1;
    }
 
@@ -1104,8 +1104,8 @@ void TGeoPcon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
       indx2 = i * n;
       for (j = 0; j < n; j++) {
          buff.fSegs[indx++] = c;
-         buff.fSegs[indx++] = indx2 + j;
-         buff.fSegs[indx++] = indx2 + n + j;
+         buff.fSegs[indx++] = indx2 + j % (n-1);
+         buff.fSegs[indx++] = indx2 + n + j % (n-1);
       }
    }
 
