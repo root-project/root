@@ -37,6 +37,8 @@ protected:
    TGeoPcon(const TGeoPcon&);
    TGeoPcon& operator=(const TGeoPcon&);
 
+   Bool_t                HasInsideSurface() const;
+
 public:
    // constructors
    TGeoPcon();
