@@ -864,17 +864,10 @@ void TGeoPcon::InspectShape() const
 
 TBuffer3D *TGeoPcon::MakeBuffer3D() const
 {
-   const Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t nz = GetNz();
-   if (nz < 2) return 0;
-   Int_t nbPnts = nz*2*n;
-   if (nbPnts <= 0) return 0;
-   Double_t dphi = GetDphi();
+   Int_t nbPnts, nbSegs, nbPols;
+   GetMeshNumbers(nbPnts, nbSegs, nbPols);
+   if (nbPnts <= 0) return nullptr;
 
-   Bool_t specialCase = TGeoShape::IsSameWithinTolerance(dphi,360);
-
-   Int_t nbSegs = 4*(nz*n-1+(specialCase ?  1 : 0));
-   Int_t nbPols = 2*(nz*n-1+(specialCase ?  1 : 0));
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric,
                                    nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols);
    if (buff)
@@ -1300,9 +1293,9 @@ void TGeoPcon::SetPoints(Float_t *points) const
 
 Int_t TGeoPcon::GetNmeshVertices() const
 {
-   Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t numPoints = fNz*2*n;
-   return numPoints;
+   Int_t nvert, nsegs, npols;
+   GetMeshNumbers(nvert, nsegs, npols);
+   return nvert;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1335,13 +1328,9 @@ const TBuffer3D & TGeoPcon::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
 
    if (reqSections & TBuffer3D::kRawSizes) {
-      const Int_t n = gGeoManager->GetNsegments()+1;
-      Int_t nz = GetNz();
-      Int_t nbPnts = nz*2*n;
-      if (nz >= 2 && nbPnts > 0) {
-         Bool_t specialCase = TGeoShape::IsSameWithinTolerance(GetDphi(),360);
-         Int_t nbSegs = 4*(nz*n-1+(specialCase ?  1 : 0));
-         Int_t nbPols = 2*(nz*n-1+(specialCase ?  1 : 0));
+      Int_t nbPnts, nbSegs, nbPols;
+      GetMeshNumbers(nbPnts, nbSegs, nbPols);
+      if (nbPnts > 0) {
          if (buffer.SetRawSizes(nbPnts, 3*nbPnts, nbSegs, 3*nbSegs, nbPols, 6*nbPols)) {
             buffer.SetSectionsValid(TBuffer3D::kRawSizes);
          }
