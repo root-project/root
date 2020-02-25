@@ -72,8 +72,6 @@ public:
    /*! Increments the global step. */
    void IncrementGlobalStep() { this->fGlobalStep++; }
 
-   void ResetGlobalStep() { this->fGlobalStep = 0; }
-
    /*! Getters */
    Scalar_t GetLearningRate() const
    {
