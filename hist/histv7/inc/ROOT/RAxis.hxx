@@ -838,7 +838,7 @@ public:
 
       // Otherwise, we must check the labels of the other axis too
       for (const auto &kv: other.fLabelsIndex)
-         if (fLabelsIndex.find(kv.first) == other.fLabelsIndex.cend())
+         if (fLabelsIndex.find(kv.first) == fLabelsIndex.cend())
             return LabelsCmpFlags(result | kLabelsCmpSuperset);
       return result;
    }
