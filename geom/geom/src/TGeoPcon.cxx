@@ -884,6 +884,11 @@ TBuffer3D *TGeoPcon::MakeBuffer3D() const
 
 void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
 {
+   if (!HasInsideSurface()) {
+      SetSegsAndPolsNoInside(buff);
+      return;
+   }
+
    Int_t i, j;
    const Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nz = GetNz();
@@ -1047,6 +1052,99 @@ void TGeoPcon::SetSegsAndPols(TBuffer3D &buff) const
       }
       buff.fPols[indx-8] = indx2+n;
       buff.fPols[indx-2] = indx2+2*n-1;
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TBuffer3D structure for segments and polygons, when no inner surface exists
+
+void TGeoPcon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
+{
+   Int_t i, j;
+   const Int_t n = gGeoManager->GetNsegments() + 1;
+   Int_t nz = GetNz();
+   if (nz < 2) return;
+   Int_t nbPnts = nz * n + 2;
+   if (nbPnts <= 0) return;
+
+   Int_t c = GetBasicColor();
+
+   Int_t indx = 0, indx1 = 0, indx2 = 0;
+
+   //  outside circles, number of segments: nz*n
+   for (i = 0; i < nz; i++) {
+      indx2 = i * n;
+      for (j = 1; j < n; j++) {
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2 + j - 1;
+         buff.fSegs[indx++] = indx2 + j;
+      }
+   }
+
+   indx2 = 0;
+   // bottom lines
+   for (j = 0; j < n; j++) {
+      buff.fSegs[indx++] = c;
+      buff.fSegs[indx++] = indx2 + j;
+      buff.fSegs[indx++] = nbPnts - 2;
+   }
+
+   indx2 = (nz-1) * n;
+   // top lines
+   for (j = 0; j < n; j++) {
+      buff.fSegs[indx++] = c;
+      buff.fSegs[indx++] = indx2 + j;
+      buff.fSegs[indx++] = nbPnts - 1;
+   }
+
+   // outside cylinders, number of segments: (nz-1)*n
+   for (i = 0; i < (nz - 1); i++) {
+      // outside cylinder
+      indx2 = i * n;
+      for (j = 0; j < n; j++) {
+         buff.fSegs[indx++] = c;
+         buff.fSegs[indx++] = indx2 + j;
+         buff.fSegs[indx++] = indx2 + n + j;
+      }
+   }
+
+   indx = 0;
+
+   // bottom cap
+   indx1 = 0; // start of first z layer
+   indx2 = nz*(n-1);
+   for (j = 0; j < n - 1; j++) {
+      buff.fPols[indx++] = c;
+      buff.fPols[indx++] = 3;
+      buff.fPols[indx++] = indx1 + j;
+      buff.fPols[indx++] = indx2 + j + 1;
+      buff.fPols[indx++] = indx2 + j;
+   }
+
+   // top cap
+   indx1 = (nz-1)*(n-1); // start last z layer
+   indx2 = nz*(n-1) + n;
+   for (j = 0; j < n - 1; j++) {
+      buff.fPols[indx++] = c;
+      buff.fPols[indx++] = 3;
+      buff.fPols[indx++] = indx1 + j; // last z layer
+      buff.fPols[indx++] = indx2 + j;
+      buff.fPols[indx++] = indx2 + j + 1;
+   }
+
+   // outside, number of polygons: (nz-1)*(n-1)
+   for (Int_t k = 0; k < (nz - 1); k++) {
+      indx1 = k*n;
+      indx2 = nz*(n-1) + n*2 + k*n;
+      for (j = 0; j < n-1; j++) {
+         buff.fPols[indx++] = c;
+         buff.fPols[indx++] = 4;
+         buff.fPols[indx++] = indx1 + j;
+         buff.fPols[indx++] = indx2 + j;
+         buff.fPols[indx++] = indx1 + j + (n-1);
+         buff.fPols[indx++] = indx2 + j + 1;
+      }
    }
 }
 
@@ -1242,20 +1340,32 @@ void TGeoPcon::SetPoints(Double_t *points) const
    Int_t i, j;
    Int_t indx = 0;
 
+   Bool_t hasInside = HasInsideSurface();
+
    if (points) {
       for (i = 0; i < fNz; i++) {
-         for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmin[i] * TMath::Cos(phi);
-            points[indx++] = fRmin[i] * TMath::Sin(phi);
-            points[indx++] = fZ[i];
-         }
+         if (hasInside)
+            for (j = 0; j < n; j++) {
+               phi = (fPhi1+j*dphi)*TMath::DegToRad();
+               points[indx++] = fRmin[i] * TMath::Cos(phi);
+               points[indx++] = fRmin[i] * TMath::Sin(phi);
+               points[indx++] = fZ[i];
+            }
          for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
             points[indx++] = fRmax[i] * TMath::Cos(phi);
             points[indx++] = fRmax[i] * TMath::Sin(phi);
             points[indx++] = fZ[i];
          }
+      }
+      if (!hasInside) {
+         points[indx++] = 0;
+         points[indx++] = 0;
+         points[indx++] = fZ[0];
+
+         points[indx++] = 0;
+         points[indx++] = 0;
+         points[indx++] = fZ[GetNz()-1];
       }
    }
 }
@@ -1271,20 +1381,32 @@ void TGeoPcon::SetPoints(Float_t *points) const
    Int_t i, j;
    Int_t indx = 0;
 
+   Bool_t hasInside = HasInsideSurface();
+
    if (points) {
       for (i = 0; i < fNz; i++) {
-         for (j = 0; j < n; j++) {
-            phi = (fPhi1+j*dphi)*TMath::DegToRad();
-            points[indx++] = fRmin[i] * TMath::Cos(phi);
-            points[indx++] = fRmin[i] * TMath::Sin(phi);
-            points[indx++] = fZ[i];
-         }
+         if (hasInside)
+            for (j = 0; j < n; j++) {
+               phi = (fPhi1+j*dphi)*TMath::DegToRad();
+               points[indx++] = fRmin[i] * TMath::Cos(phi);
+               points[indx++] = fRmin[i] * TMath::Sin(phi);
+               points[indx++] = fZ[i];
+            }
          for (j = 0; j < n; j++) {
             phi = (fPhi1+j*dphi)*TMath::DegToRad();
             points[indx++] = fRmax[i] * TMath::Cos(phi);
             points[indx++] = fRmax[i] * TMath::Sin(phi);
             points[indx++] = fZ[i];
          }
+      }
+      if (!hasInside) {
+         points[indx++] = 0;
+         points[indx++] = 0;
+         points[indx++] = fZ[0];
+
+         points[indx++] = 0;
+         points[indx++] = 0;
+         points[indx++] = fZ[GetNz()-1];
       }
    }
 }
@@ -1328,12 +1450,22 @@ Bool_t TGeoPcon::HasInsideSurface() const
 
 void TGeoPcon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
+   nvert = nsegs = npols = 0;
+
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nz = GetNz();
-   nvert = nz*2*n;
-   Bool_t specialCase = TGeoShape::IsSameWithinTolerance(GetDphi(),360);
-   nsegs = 4*(nz*n-1+(specialCase ?  1 : 0));
-   npols = 2*(nz*n-1+(specialCase ?  1 : 0));
+   if (nz < 2) return;
+
+   if (HasInsideSurface()) {
+      Bool_t specialCase = TGeoShape::IsSameWithinTolerance(GetDphi(),360);
+      nvert = nz*2*n;
+      nsegs = 4*(nz*n-1+(specialCase ?  1 : 0));
+      npols = 2*(nz*n-1+(specialCase ?  1 : 0));
+   } else {
+      nvert = nz * n + 2;
+      nsegs = nz * (n - 1) + n * 2 + (nz - 1) * n;
+      npols = 2 * (n - 1) + (nz - 1) * (n - 1);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
