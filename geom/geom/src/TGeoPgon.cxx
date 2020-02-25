@@ -1618,7 +1618,7 @@ void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill TBuffer3D structure for segments and polygons.
+/// Fill TBuffer3D structure for segments and polygons, when no inner surface exists
 
 void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
 {

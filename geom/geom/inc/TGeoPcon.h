@@ -38,6 +38,7 @@ protected:
    TGeoPcon& operator=(const TGeoPcon&);
 
    Bool_t                HasInsideSurface() const;
+   void                  SetSegsAndPolsNoInside(TBuffer3D &buff) const;
 
 public:
    // constructors
