@@ -52,7 +52,7 @@ Int_t mtbb101_fillNtuples()
    auto workItem = [](UInt_t workerID) {
       // One generator, file and ntuple per worker
       TRandom3 workerRndm(workerID); // Change the seed
-      TFile ofile(Form("mpbb101_multiCore_%u.root", workerID), "RECREATE");
+      TFile ofile(Form("mtbb101_multiCore_%u.root", workerID), "RECREATE");
       TNtuple workerRandomNumbers("multiCore", "Random Numbers", "r");
       fillRandom(workerRandomNumbers, workerRndm, workSize);
       workerRandomNumbers.Write();
