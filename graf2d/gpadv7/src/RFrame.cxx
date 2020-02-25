@@ -10,13 +10,24 @@
 
 #include "ROOT/RLogger.hxx"
 #include "ROOT/RPadUserAxis.hxx"
+#include "ROOT/RMenuItem.hxx"
+
+#include "TROOT.h"
 
 #include <cassert>
+#include <sstream>
 
 ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame()
 {
    fUserCoord=  std::move(coords);
    fPalette = RPalette::GetPalette("default");
+}
+
+void ROOT::Experimental::RFrame::Execute(const std::string &arg)
+{
+   std::stringstream cmd;
+   cmd << "((RFrame *) " << std::hex << std::showbase << (size_t)this << ")->" << arg << ";";
+   gROOT->ProcessLine(cmd.str().c_str());
 }
 
 void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)
@@ -29,3 +40,16 @@ void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)
       if (!fUserCoord[idx])
          fUserCoord[idx].reset(new RPadCartesianUserAxis);
 }
+
+void ROOT::Experimental::RFrame::PopulateMenu(RMenuItems &items)
+{
+   auto is_x = items.GetSpecifier() == "x";
+   auto is_y = items.GetSpecifier() == "y";
+
+   if (is_x || is_y) {
+      RAttrAxis &attr = is_x ? AttrX() : AttrY();
+      std::string name = is_x ? "AttrX()" : "AttrY()";
+      items.AddChkMenuItem("Log scale", "Change log scale", attr.GetLog(), name + ".SetLog" + (attr.GetLog() ? "(false)" : "(true)"));
+   }
+}
+

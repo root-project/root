@@ -17,6 +17,33 @@
 #include "TMethodCall.h"
 #include "TBufferJSON.h"
 
+//////////////////////////////////////////////////////////
+/// Returns drawable id coded, fullid can include # with extra specifier
+
+std::string ROOT::Experimental::RMenuItems::GetDrawableId()
+{
+   auto p = fId.find("#");
+   if (p == std::string::npos)
+      return fId;
+   return fId.substr(0, p);
+}
+
+
+//////////////////////////////////////////////////////////
+/// Returns specifier string after # in fullid
+
+std::string ROOT::Experimental::RMenuItems::GetSpecifier()
+{
+   auto p = fId.find("#");
+   if (p == std::string::npos)
+      return "";
+   return fId.substr(p+1);
+}
+
+
+//////////////////////////////////////////////////////////
+/// Fill menu for provided object, using *MENU* as indicator in method comments
+
 void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
 {
    fItems.clear();

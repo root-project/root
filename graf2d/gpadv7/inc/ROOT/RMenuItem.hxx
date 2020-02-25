@@ -153,7 +153,11 @@ protected:
    std::string fId;                                        ///< object identifier
    std::vector<std::unique_ptr<Detail::RMenuItem>> fItems; ///< list of items in the menu
 public:
-   void SetId(const std::string &id) { fId = id; }
+   void SetFullId(const std::string &id) { fId = id; }
+   const std::string &GetFullId() const { return fId; }
+
+   std::string GetDrawableId();
+   std::string GetSpecifier();
 
    auto Size() const { return fItems.size(); }
 

@@ -32,16 +32,16 @@ auto style = std::make_shared<RStyle>(); // keep here to avoid destroy when leav
 void draw_frame()
 {
    // Create the histogram.
-   RAxisConfig xaxis("x", 10, 0., 1.);
+   RAxisConfig xaxis("x", 10, 0.1, 110);
    RAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
    auto pHist = std::make_shared<RH2D>(xaxis, yaxis);
 
    // Fill a few points.
-   pHist->Fill({0.01, 1.02});
-   pHist->Fill({0.54, 3.02});
-   pHist->Fill({0.98, 1.02});
-   pHist->Fill({1.90, 1.02});
-   pHist->Fill({0.75, -0.02});
+   pHist->Fill({0.11, 1.02});
+   pHist->Fill({5.54, 3.02});
+   pHist->Fill({20.98, 1.02});
+   pHist->Fill({20.90, 1.02});
+   pHist->Fill({1.75, -0.02});
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
@@ -61,7 +61,9 @@ void draw_frame()
 
    frame1->AttrX().AttrLine().SetColor(RColor::kGreen);
    frame1->AttrY().AttrLine().SetColor(RColor::kBlue);
-   frame1->AttrX().SetZoomMinMax(0.2,0.8);
+
+   frame1->AttrX().SetLog(true);
+   frame1->AttrX().SetZoomMinMax(2.,80.);
    frame1->AttrY().SetMinMax(2,8);
 
    auto draw1 = subpads[0][0]->Draw(pHist);

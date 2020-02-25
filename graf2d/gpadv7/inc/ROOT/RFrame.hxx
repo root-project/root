@@ -83,7 +83,9 @@ public:
    RFrame &SetAttrZ(const RAttrAxis &axis) { fAttrZ = axis; return *this; }
    RAttrAxis &AttrZ() { return fAttrZ; }
 
+   void PopulateMenu(RMenuItems &) override;
 
+   void Execute(const std::string &) override;
 
    /// Create `nDimensions` default axes for the user coordinate system.
    void GrowToDimensions(size_t nDimensions);
