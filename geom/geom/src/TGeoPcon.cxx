@@ -70,9 +70,9 @@ TGeoPcon::TGeoPcon()
           fNz(0),
           fPhi1(0.),
           fDphi(0.),
-          fRmin(NULL),
-          fRmax(NULL),
-          fZ(NULL),
+          fRmin(nullptr),
+          fRmax(nullptr),
+          fZ(nullptr),
           fFullPhi(kFALSE),
           fC1(0.),
           fS1(0.),
@@ -93,9 +93,9 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
           fNz(nz),
           fPhi1(phi),
           fDphi(dphi),
-          fRmin(NULL),
-          fRmax(NULL),
-          fZ(NULL),
+          fRmin(nullptr),
+          fRmax(nullptr),
+          fZ(nullptr),
           fFullPhi(kFALSE),
           fC1(0.),
           fS1(0.),
@@ -134,9 +134,9 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
           fNz(nz),
           fPhi1(phi),
           fDphi(dphi),
-          fRmin(NULL),
-          fRmax(NULL),
-          fZ(NULL),
+          fRmin(nullptr),
+          fRmax(nullptr),
+          fZ(nullptr),
           fFullPhi(kFALSE),
           fC1(0.),
           fS1(0.),
@@ -182,9 +182,9 @@ TGeoPcon::TGeoPcon(Double_t *param)
           fNz(0),
           fPhi1(0.),
           fDphi(0.),
-          fRmin(0),
-          fRmax(0),
-          fZ(0),
+          fRmin(nullptr),
+          fRmax(nullptr),
+          fZ(nullptr),
           fFullPhi(kFALSE),
           fC1(0.),
           fS1(0.),
@@ -200,60 +200,13 @@ TGeoPcon::TGeoPcon(Double_t *param)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
-  TGeoBBox(pc),
-  fNz(0),
-  fPhi1(0.),
-  fDphi(0.),
-  fRmin(0),
-  fRmax(0),
-  fZ(0),
-  fFullPhi(kFALSE),
-  fC1(0.),
-  fS1(0.),
-  fC2(0.),
-  fS2(0.),
-  fCm(0.),
-  fSm(0.),
-  fCdphi(0.)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
-{
-   if(this!=&pc) {
-      TGeoBBox::operator=(pc);
-      fNz=0;
-      fPhi1=0.;
-      fDphi=0.;
-      fRmin=0;
-      fRmax=0;
-      fZ=0;
-      fFullPhi=kFALSE;
-      fC1=0;
-      fS1=0;
-      fC2=0;
-      fS2=0;
-      fCm=0;
-      fSm=0;
-      fCdphi=0;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TGeoPcon::~TGeoPcon()
 {
-   if (fRmin) {delete[] fRmin; fRmin = 0;}
-   if (fRmax) {delete[] fRmax; fRmax = 0;}
-   if (fZ)    {delete[] fZ; fZ = 0;}
+   if (fRmin) { delete[] fRmin; fRmin = nullptr; }
+   if (fRmax) { delete[] fRmax; fRmax = nullptr; }
+   if (fZ)    { delete[] fZ; fZ = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
