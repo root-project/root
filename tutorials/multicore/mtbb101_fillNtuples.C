@@ -40,7 +40,7 @@ Int_t mtbb101_fillNtuples()
 
    // Create a random generator and and Ntuple to hold the numbers
    TRandom3 rndm(1);
-   TFile ofile("mpbb101_singleCore.root", "RECREATE");
+   TFile ofile("mtbb101_singleCore.root", "RECREATE");
    TNtuple randomNumbers("singleCore", "Random Numbers", "r");
    fillRandom(randomNumbers, rndm, nNumbers);
    randomNumbers.Write();
