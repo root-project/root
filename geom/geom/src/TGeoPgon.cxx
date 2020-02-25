@@ -2045,23 +2045,6 @@ void TGeoPgon::SetPoints(Float_t *points) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns true when pgon has internal surface
-/// It will be only disabled when all Rmin values are 0
-
-Bool_t TGeoPgon::HasInsideSurface() const
-{
-   // only when full 360 is used, internal part can be excluded
-   Bool_t specialCase = TGeoShape::IsSameWithinTolerance(GetDphi(), 360);
-   if (!specialCase) return kTRUE;
-
-   for (Int_t i = 0; i < GetNz(); i++)
-      if (fRmin[i] > 0.)
-         return kTRUE;
-
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Returns numbers of vertices, segments and polygons composing the shape mesh.
 
 void TGeoPgon::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
