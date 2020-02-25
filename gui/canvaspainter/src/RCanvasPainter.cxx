@@ -284,23 +284,22 @@ void ROOT::Experimental::RCanvasPainter::CheckDataToSend()
          buf.Append(":");
          buf.Append(cmd->fName);
       } else if (!conn.fGetMenu.empty()) {
-         auto drawable = FindPrimitive(fCanvas, conn.fGetMenu);
 
-         R__DEBUG_HERE("CanvasPainter") << "Request menu for object " << conn.fGetMenu;
+         ROOT::Experimental::RMenuItems items;
+         items.SetFullId(conn.fGetMenu);
+         conn.fGetMenu.clear();
+
+         auto drawable = FindPrimitive(fCanvas, items.GetDrawableId());
 
          if (drawable) {
-
-            ROOT::Experimental::RMenuItems items;
-
-            items.SetId(conn.fGetMenu);
-
+            R__DEBUG_HERE("CanvasPainter") << "Request menu for drawable " << items.GetDrawableId();
             drawable->PopulateMenu(items);
-
             buf = "MENU:";
             buf.Append(TBufferJSON::ToJSON(&items, fJsonComp).Data());
+         } else {
+            R__ERROR_HERE("CanvasPainter") << "Drawable not found " << items.GetDrawableId();
          }
 
-         conn.fGetMenu = "";
       } else if ((conn.fSend != fSnapshotVersion) && (conn.fDelivered == conn.fSend)) {
          // buf = "JSON";
          // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
@@ -516,6 +515,8 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
          if (drawable && (cdata.length() > 0)) {
             R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for drawable " << id;
             drawable->Execute(cdata);
+            const_cast<RCanvas*>(&fCanvas)->Modified();
+            const_cast<RCanvas*>(&fCanvas)->Update(true);
          } else if (id == "canvas") {
             R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for canvas itself (ignored)";
          }

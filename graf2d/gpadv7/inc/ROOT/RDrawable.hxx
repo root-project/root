@@ -130,7 +130,7 @@ public:
    // copy constructor and assign operator !!!
 
    /** Method can be used to provide menu items for the drawn object */
-   virtual void PopulateMenu(RMenuItems &){};
+   virtual void PopulateMenu(RMenuItems &) {}
 
    virtual void Execute(const std::string &);
 
