@@ -34,8 +34,8 @@ protected:
    Double_t              fCdphi;   //! Cosine of dphi
 
    // methods
-   TGeoPcon(const TGeoPcon&);
-   TGeoPcon& operator=(const TGeoPcon&);
+   TGeoPcon(const TGeoPcon&) = delete;
+   TGeoPcon& operator=(const TGeoPcon&) = delete;
 
    Bool_t                HasInsideSurface() const;
    void                  SetSegsAndPolsNoInside(TBuffer3D &buff) const;
