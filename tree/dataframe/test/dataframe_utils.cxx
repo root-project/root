@@ -248,3 +248,13 @@ TEST(RDataFrameUtils, IsDataContainer)
    static_assert(RDFInt::IsDataContainer<std::tuple<int, int>>::value == false, "");
    static_assert(RDFInt::IsDataContainer<std::string>::value == false, "");
 }
+
+TEST(RDataFrameUtils, ValueType)
+{
+   static_assert(std::is_same<RDFInt::ValueType<std::vector<float>>::value_type, float>::value, "");
+   static_assert(std::is_same<RDFInt::ValueType<ROOT::RVec<float>>::value_type, float>::value, "");
+   static_assert(std::is_same<RDFInt::ValueType<std::string>::value_type, char>::value, "");
+   static_assert(std::is_same<RDFInt::ValueType<float>::value_type, float>::value, "");
+   struct Foo {};
+   static_assert(std::is_same<RDFInt::ValueType<Foo>::value_type, Foo>::value, "");
+}
