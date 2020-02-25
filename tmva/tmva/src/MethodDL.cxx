@@ -1429,7 +1429,6 @@ void MethodDL::TrainDeepNet()
       size_t nTrainEpochs = 0;
       while (!converged) {
          nTrainEpochs++;
-         //optimizer->ResetGlobalStep();
          trainingData.Shuffle(rng);
 
          // execute all epochs
@@ -1489,6 +1488,7 @@ void MethodDL::TrainDeepNet()
             if (debugFirstEpoch)
                std::cout << "- doing optimizer update  \n";
 
+            // increment optimizer step that is used in some algorithms (e.g. ADAM)
             optimizer->IncrementGlobalStep();
             optimizer->Step();
 
