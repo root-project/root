@@ -1639,7 +1639,7 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
       for (j = 1; j < n; j++) {
          buff.fSegs[indx++] = c;
          buff.fSegs[indx++] = indx2 + j - 1;
-         buff.fSegs[indx++] = indx2 + j;
+         buff.fSegs[indx++] = indx2 + j % (n-1);
       }
    }
 
@@ -1647,7 +1647,7 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
    // bottom lines
    for (j = 0; j < n; j++) {
       buff.fSegs[indx++] = c;
-      buff.fSegs[indx++] = indx2 + j;
+      buff.fSegs[indx++] = indx2 + j % (n-1);
       buff.fSegs[indx++] = nbPnts - 2;
    }
 
@@ -1655,7 +1655,7 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
    // top lines
    for (j = 0; j < n; j++) {
       buff.fSegs[indx++] = c;
-      buff.fSegs[indx++] = indx2 + j;
+      buff.fSegs[indx++] = indx2 + j % (n-1);
       buff.fSegs[indx++] = nbPnts - 1;
    }
 
@@ -1665,8 +1665,8 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
       indx2 = i * n;
       for (j = 0; j < n; j++) {
          buff.fSegs[indx++] = c;
-         buff.fSegs[indx++] = indx2 + j;
-         buff.fSegs[indx++] = indx2 + n + j;
+         buff.fSegs[indx++] = indx2 + j % (n-1);
+         buff.fSegs[indx++] = indx2 + n + j % (n-1);
       }
    }
 
@@ -1679,7 +1679,7 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
       buff.fPols[indx++] = c;
       buff.fPols[indx++] = 3;
       buff.fPols[indx++] = indx1 + j;
-      buff.fPols[indx++] = indx2 + j + 1;
+      buff.fPols[indx++] = indx2 + (j+1)%(n-1);
       buff.fPols[indx++] = indx2 + j;
    }
 
@@ -1691,7 +1691,7 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
       buff.fPols[indx++] = 3;
       buff.fPols[indx++] = indx1 + j; // last z layer
       buff.fPols[indx++] = indx2 + j;
-      buff.fPols[indx++] = indx2 + j + 1;
+      buff.fPols[indx++] = indx2 + (j+1)%(n-1);
    }
 
    // outside, number of polygons: (nz-1)*(n-1)
@@ -1704,7 +1704,7 @@ void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
          buff.fPols[indx++] = indx1 + j;
          buff.fPols[indx++] = indx2 + j;
          buff.fPols[indx++] = indx1 + j + (n-1);
-         buff.fPols[indx++] = indx2 + j + 1;
+         buff.fPols[indx++] = indx2 + (j+1)%(n-1);
       }
    }
 }
