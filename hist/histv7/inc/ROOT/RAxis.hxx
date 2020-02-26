@@ -402,7 +402,7 @@ protected:
    /// \param lighOrLow - second axis boundary
    static double GetInvBinWidth(int nbinsNoOver, double lowOrHigh, double highOrLow)
    {
-      return nbinsNoOver / std::abs(highOrLow - lowOrHigh);
+      return nbinsNoOver / std::fabs(highOrLow - lowOrHigh);
    }
 
    /// See RAxisBase::HasSameBinBordersAs
