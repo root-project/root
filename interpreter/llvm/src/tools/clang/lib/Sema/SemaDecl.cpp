@@ -12942,6 +12942,13 @@ bool Sema::CheckEnumRedeclaration(
     if (hasFwdDeclAnnotation(Prev))
       return false;
 
+    // We have a definition coming from a module and the annotated forward
+    // declaration coming after. We can try to limit the filter to only the
+    // enums which come from a module *and* the new enum candidate has an
+    // explicit type (eg enum L1GtObject : unsigned int;).
+    if (Prev->isFromASTFile() && !EnumUnderlyingIsImplicit)
+       return false;
+
     Diag(EnumLoc, diag::err_enum_redeclare_fixed_mismatch)
       << Prev->isFixed();
     Diag(Prev->getLocation(), diag::note_previous_declaration);
