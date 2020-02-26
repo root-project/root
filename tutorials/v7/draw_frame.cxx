@@ -18,6 +18,8 @@
 
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
+#include "ROOT/RTitle.hxx"
+#include "ROOT/RFrame.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RStyle.hxx"
 
@@ -66,6 +68,7 @@ void draw_frame()
    frame1->AttrX().SetZoomMinMax(2.,80.);
    frame1->AttrY().SetMinMax(2,8);
 
+   subpads[0][0]->Draw<RTitle>("Frame1 title");
    auto draw1 = subpads[0][0]->Draw(pHist);
    draw1->AttrLine().SetColor(RColor::kRed);
 
@@ -74,6 +77,9 @@ void draw_frame()
 
    auto draw2 = subpads[1][0]->Draw(pHist);
    draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(12);
+
+   auto title = subpads[1][0]->Draw<RTitle>("Frame2 title");
+   title->SetMargin(0.01_normal).SetHeight(0.05_normal);
 
    style->ParseString("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color_name: green; }");
 
