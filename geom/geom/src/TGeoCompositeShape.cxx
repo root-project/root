@@ -170,7 +170,6 @@ divided. Visualization of such volumes is currently not implemented.
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoBoolNode.h"
-#include "TVirtualGeoPainter.h"
 
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"

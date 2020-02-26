@@ -727,39 +727,6 @@ TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
-  TGeoMaterial(gm),
-  fNelements(gm.fNelements),
-  fZmixture(gm.fZmixture),
-  fAmixture(gm.fAmixture),
-  fWeights(gm.fWeights),
-  fNatoms(gm.fNatoms),
-  fVecNbOfAtomsPerVolume(gm.fVecNbOfAtomsPerVolume),
-  fElements(gm.fElements)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm)
-{
-   if(this!=&gm) {
-      TGeoMaterial::operator=(gm);
-      fNelements=gm.fNelements;
-      fZmixture=gm.fZmixture;
-      fAmixture=gm.fAmixture;
-      fWeights=gm.fWeights;
-      fNatoms = gm.fNatoms;
-      fVecNbOfAtomsPerVolume = gm.fVecNbOfAtomsPerVolume;
-      fElements = gm.fElements;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TGeoMixture::~TGeoMixture()

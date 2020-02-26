@@ -74,8 +74,8 @@ private:
    TGeoStateInfo        *fPWInfo;           //! State info for the parallel world
    Int_t                *fNodeIdArray;      //! array of node id's
 
-   TGeoNodeCache(const TGeoNodeCache&); // Not implemented
-   TGeoNodeCache& operator=(const TGeoNodeCache&); // Not implemented
+   TGeoNodeCache(const TGeoNodeCache&) = delete;
+   TGeoNodeCache& operator=(const TGeoNodeCache&) = delete;
 
 public:
    TGeoNodeCache();
