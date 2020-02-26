@@ -157,8 +157,8 @@ protected:
    void                     MakeName(Int_t a, Int_t z, Int_t iso);
 
 private:
-   TGeoElementRN(const TGeoElementRN& elem);
-   TGeoElementRN& operator=(const TGeoElementRN& elem);
+   TGeoElementRN(const TGeoElementRN& elem) = delete;
+   TGeoElementRN& operator=(const TGeoElementRN& elem) = delete;
 
 public:
    TGeoElementRN();
