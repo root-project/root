@@ -16,6 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
     ROOT/RLine.hxx
     ROOT/RMarker.hxx
     ROOT/RText.hxx
+    ROOT/RTitle.hxx
   SOURCES
     src/RBox.cxx
     src/RLegend.cxx
@@ -26,7 +27,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
-    RIO
     ROOTGpadv7
 )
 
