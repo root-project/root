@@ -59,6 +59,67 @@
          obj.fAttr.m[name] = { v: value };
    }
 
+   /** Decode pad length from string, return pixel value */
+   JSROOT.TObjectPainter.prototype.v7EvalLength = function(name, sizepx, dflt) {
+      if (sizepx <= 0) sizepx = 1;
+
+      var value = this.v7EvalAttr(name);
+
+      if (value === undefined)
+         return Math.round(dflt*sizepx);
+
+      if (typeof value == "number")
+         return Math.round(value*sizepx);
+
+      var norm = 0, px = 0, val = value, operand = 0, pos = 0;
+
+      while (val.length > 0) {
+         // skip empty spaces
+         while ((pos < val.length) && ((val[pos] == ' ') || (val[pos] == '\t')))
+            ++pos;
+
+         if (pos >= val.length)
+            break;
+
+         if ((val[pos] == '-') || (val[pos] == '+')) {
+            if (operand) {
+               console.log("Fail to parse RPadLength " + value);
+               return dflt;
+            }
+            operand = (val[pos] == '-') ? -1 : 1;
+            pos++;
+            continue;
+         }
+
+         if (pos > 0) { val = val.substr(pos); pos = 0; }
+
+         while ((pos < val.length) && (((val[pos]>='0') && (val[pos]<='9')) || (val[pos]=='.'))) pos++;
+
+         var v = parseFloat(val.substr(0, pos));
+         if (isNaN(v)) {
+            console.log("Fail to parse RPadLength " + value);
+            return Math.round(dflt*sizepx);
+         }
+
+         val = val.substr(pos);
+         pos = 0;
+         if (!operand) operand = 1;
+         if ((val.length > 0) && (val[0] == '%')) {
+            val = val.substr(1);
+            norm += operand*v*0.01;
+         } else if ((val.length > 1) && (val[0] == 'p') && (val[1] == 'x')) {
+            val = val.substr(2);
+            px += operand*v;
+         } else {
+            norm += operand*v;
+         }
+
+         operand = 0;
+      }
+
+      return Math.round(norm*sizepx + px);
+   }
+
 
    /** Evalue RColor using attribute storage and configured RStyle */
    JSROOT.TObjectPainter.prototype.v7EvalColor = function(name, dflt) {
@@ -926,74 +987,12 @@
 
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
+         var padw = this.pad_width(), padh = this.pad_height();
 
-         var pthis = this, padw = this.pad_width(), padh = this.pad_height();
-
-         /** Evalue RAttrLength which can be coded like "0.1 + 10px", see RPadLength::ParseString() */
-
-         function evalLength(name, size, dflt) {
-            var value = pthis.v7EvalAttr("margin_" + name);
-
-            if (value === undefined)
-               return dflt;
-
-            if (typeof value == "number")
-               return value;
-
-            if (size <= 0) size = 1;
-            var norm = 0, px = 0, val = value, operand = 0, pos = 0;
-
-            while (val.length > 0) {
-               // skip empty spaces
-               while ((pos < val.length) && ((val[pos] == ' ') || (val[pos] == '\t')))
-                  ++pos;
-
-               if (pos >= val.length)
-                  break;
-
-               if ((val[pos] == '-') || (val[pos] == '+')) {
-                  if (operand) {
-                     console.log("Fail to parse RPadLength " + value);
-                     return dflt;
-                  }
-                  operand = (val[pos] == '-') ? -1 : 1;
-                  pos++;
-                  continue;
-               }
-
-               if (pos > 0) { val = val.substr(pos); pos = 0; }
-
-               while ((pos < val.length) && (((val[pos]>='0') && (val[pos]<='9')) || (val[pos]=='.'))) pos++;
-
-               var v = parseFloat(val.substr(0, pos));
-               if (isNaN(v)) {
-                  console.log("Fail to parse RPadLength " + value);
-                  return dflt;
-               }
-
-               val = val.substr(pos);
-               pos = 0;
-               if (!operand) operand = 1;
-               if ((val.length > 0) && (val[0] == '%')) {
-                  val = val.substr(1);
-                  norm += operand*v*0.01;
-               } else if ((val.length > 1) && (val[0] == 'p') && (val[1] == 'x')) {
-                  val = val.substr(2);
-                  px += operand*v;
-               } else {
-                  norm += operand*v;
-               }
-
-               operand = 0;
-            }
-
-            return (norm*size + px)/size;
-         }
-
-         this.fX1NDC = evalLength("left", padw, JSROOT.gStyle.FrameNDC.fX1NDC);
-         this.fY1NDC = evalLength("bottom", padh, JSROOT.gStyle.FrameNDC.fY1NDC);
-         this.fX2NDC = 1 - evalLength("right", padw, 1-JSROOT.gStyle.FrameNDC.fX2NDC);
-         this.fY2NDC = 1 - evalLength("top", padh, 1-JSROOT.gStyle.FrameNDC.fY2NDC);
+         this.fX1NDC = this.v7EvalLength("margin_left", padw, JSROOT.gStyle.FrameNDC.fX1NDC)/padw;
+         this.fY1NDC = this.v7EvalLength("margin_bottom", padh, JSROOT.gStyle.FrameNDC.fY1NDC)/padh;
+         this.fX2NDC = 1 - this.v7EvalLength("margin_right", padw, 1-JSROOT.gStyle.FrameNDC.fX2NDC)/padw;
+         this.fY2NDC = 1 - this.v7EvalLength("margin_top", padh, 1-JSROOT.gStyle.FrameNDC.fY2NDC)/padh;
       }
 
       if (!this.fillatt)
@@ -4423,11 +4422,48 @@
       return painter;
    }
 
+   // =================================================================================
+
+   function drawTitle() {
+      var fp = this.frame_painter();
+      if (!fp)
+         return console.log('no frame painter - no title');
+
+      var fx = this.frame_x(),
+          fy = this.frame_y(),
+          fw = this.frame_width(),
+          fh = this.frame_height(),
+          ph = this.pad_height(),
+          title        = this.GetObject(),
+          pp           = this.pad_painter(),
+          use_frame    = false,
+          title_margin = this.v7EvalLength( "margin", ph, 0.02),
+          title_height = this.v7EvalLength( "height", ph, 0.05),
+          text_size    = this.v7EvalAttr( "text_size", 16),
+          text_angle   = -1 * this.v7EvalAttr( "text_angle", 0),
+          text_align   = this.v7EvalAttr( "text_align", 22),
+          text_color   = this.v7EvalColor( "text_color", "black"),
+          text_font    = this.v7EvalAttr( "text_font", 41);
+
+      this.CreateG(false).attr("transform","translate(" + fx + "," + Math.round(fy-title_margin-title_height) + ")");
+
+      var arg = { align: 22, x: fw/2, y: title_height/2, text: title.fText, rotate: text_angle, color: text_color, latex: 1 };
+
+      this.StartTextDrawing(text_font, text_size);
+
+      this.DrawText(arg);
+
+      this.FinishTextDrawing();
+   }
+
+
+
    // JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPadDisplayItem", icon: "img_canvas", func: drawPad, opt: "" });
 
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true, csstype: "text" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RTitle", icon: "img_text", func: drawTitle, opt: "", direct: true, csstype: "title" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
@@ -4442,6 +4478,7 @@
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawCanvas = drawCanvas;
    JSROOT.v7.drawPadSnapshot = drawPadSnapshot;
+   JSROOT.v7.drawTitle = drawTitle;
 
    return JSROOT;
 
