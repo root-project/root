@@ -52,6 +52,14 @@
       return dflt;
    }
 
+   JSROOT.TObjectPainter.prototype.v7SetAttr = function(name, value) {
+      var obj = this.GetObject();
+
+      if (obj && obj.fAttr && obj.fAttr.m)
+         obj.fAttr.m[name] = { v: value };
+   }
+
+
    /** Evalue RColor using attribute storage and configured RStyle */
    JSROOT.TObjectPainter.prototype.v7EvalColor = function(name, dflt) {
       var rgb = this.v7EvalAttr(name + "_rgb", "");
@@ -1169,16 +1177,58 @@
       return value.toPrecision(4);
    }
 
+
+   /* Set axes ranges for drawing, check configured attributes if range already specified */
    TFramePainter.prototype.SetAxesRanges = function(xmin, xmax, ymin, ymax) {
       if (this.axes_drawn) return;
 
-      if ((this.xmin == this.xmax) && (xmin!==xmax)) {
-         this.xmin = xmin;
-         this.xmax = xmax;
+      var min, max;
+
+      if (this.xmin == this.xmax) {
+         min = this.v7EvalAttr("x_min");
+         max = this.v7EvalAttr("x_max");
+
+         if (min !== undefined) xmin = min;
+         if (max !== undefined) xmax = max;
+
+         if (xmin < xmax) {
+            this.xmin = xmin;
+            this.xmax = xmax;
+         }
+
+         if ((this.zoom_xmin == this.zoom_xmax) && !this.zoom_changed_interactive) {
+            min = this.v7EvalAttr("x_zoommin");
+            max = this.v7EvalAttr("x_zoommax");
+
+            if ((min !== undefined) || (max !== undefined)) {
+               this.zoom_xmin = (min === undefined) ? this.xmin : min;
+               this.zoom_xmax = (max === undefined) ? this.xmax : max;
+            }
+         }
       }
-      if ((this.ymin == this.ymax) && (ymin!==ymax)) {
-         this.ymin = ymin;
-         this.ymax = ymax;
+
+      if (this.ymin == this.ymax) {
+         min = this.v7EvalAttr("y_min");
+         max = this.v7EvalAttr("y_max");
+
+         if (min !== undefined) ymin = min;
+         if (max !== undefined) ymax = max;
+
+         if (ymin < ymax) {
+            this.ymin = ymin;
+            this.ymax = ymax;
+         }
+
+         if ((this.zoom_ymin == this.zoom_ymax) && !this.zoom_changed_interactive) {
+            min = this.v7EvalAttr("y_zoommin");
+            max = this.v7EvalAttr("y_zoommax");
+
+            if ((min !== undefined) || (max !== undefined)) {
+               this.zoom_ymin = (min === undefined) ? this.ymin : min;
+               this.zoom_ymax = (max === undefined) ? this.ymax : max;
+            }
+         }
+
       }
    }
 
@@ -2059,6 +2109,7 @@
       menu_painter.ctx_menu_evnt = evnt;
 
       JSROOT.Painter.createMenu(menu_painter, function(menu) {
+
          var domenu = menu.painter.FillContextMenu(menu, kind, obj);
 
          // fill frame menu by default - or append frame elements when activated in the frame corner
@@ -2067,12 +2118,27 @@
 
          if (domenu)
             menu.painter.FillObjectExecMenu(menu, kind, function() {
-                // suppress any running zooming
-                menu.painter.SwitchTooltip(false);
-                menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true) );
+               if ((menu.size() == 0) && (typeof menu.painter.FillObjectOfflineMenu == 'function'))
+                   menu.painter.FillObjectOfflineMenu(menu, kind);
+
+               // suppress any running zooming
+               menu.painter.SwitchTooltip(false);
+               menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true));
             });
 
       });  // end menu creation
+   }
+
+   /** Fill menu for frame when server is not there */
+   TFramePainter.prototype.FillObjectOfflineMenu = function(menu, kind) {
+      if ((kind!="x") && (kind!="y")) return;
+
+      menu.add("Unzoom", this.Unzoom.bind(this, kind));
+
+      if (this[kind+"_kind"] == "normal")
+         menu.addchk(this["log"+kind], "SetLog"+kind, this.ToggleLog.bind(this, kind));
+
+      // here should be all axes attributes in offline
    }
 
    TFramePainter.prototype.FillContextMenu = function(menu, kind, obj) {
@@ -2081,59 +2147,7 @@
       this.clearInteractiveElements();
 
       if ((kind=="x") || (kind=="y")) {
-         var faxis = null;
-         //this.histo.fXaxis;
-         //if (kind=="y") faxis = this.histo.fYaxis;  else
-         //if (kind=="z") faxis = obj ? obj : this.histo.fZaxis;
          menu.add("header: " + kind.toUpperCase() + " axis");
-         menu.add("Unzoom", this.Unzoom.bind(this, kind));
-
-         if (this[kind+"_kind"] == "normal")
-           menu.addchk(this["log"+kind], "SetLog"+kind, this.ToggleLog.bind(this, kind) );
-
-         // if ((kind === "z") && this.options.Zscale)
-         //   if (this.FillPaletteMenu) this.FillPaletteMenu(menu);
-
-         if (faxis) {
-            menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kMoreLogLabels), "More log",
-                  function() { faxis.InvertBit(JSROOT.EAxisBits.kMoreLogLabels); this.RedrawPad(); });
-            menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kNoExponent), "No exponent",
-                  function() { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.RedrawPad(); });
-            menu.add("sub:Labels");
-            menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterLabels), "Center",
-                  function() { faxis.InvertBit(JSROOT.EAxisBits.kCenterLabels); this.RedrawPad(); });
-            menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kLabelsVert), "Rotate",
-                  function() { faxis.InvertBit(JSROOT.EAxisBits.kLabelsVert); this.RedrawPad(); });
-            this.AddColorMenuEntry(menu, "Color", faxis.fLabelColor,
-                  function(arg) { faxis.fLabelColor = parseInt(arg); this.RedrawPad(); });
-            this.AddSizeMenuEntry(menu,"Offset", 0, 0.1, 0.01, faxis.fLabelOffset,
-                  function(arg) { faxis.fLabelOffset = parseFloat(arg); this.RedrawPad(); } );
-            this.AddSizeMenuEntry(menu,"Size", 0.02, 0.11, 0.01, faxis.fLabelSize,
-                  function(arg) { faxis.fLabelSize = parseFloat(arg); this.RedrawPad(); } );
-            menu.add("endsub:");
-            menu.add("sub:Title");
-            menu.add("SetTitle", function() {
-               var t = prompt("Enter axis title", faxis.fTitle);
-               if (t!==null) { faxis.fTitle = t; this.RedrawPad(); }
-            });
-            menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kCenterTitle), "Center",
-                  function() { faxis.InvertBit(JSROOT.EAxisBits.kCenterTitle); this.RedrawPad(); });
-            menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kRotateTitle), "Rotate",
-                  function() { faxis.InvertBit(JSROOT.EAxisBits.kRotateTitle); this.RedrawPad(); });
-            this.AddColorMenuEntry(menu, "Color", faxis.fTitleColor,
-                  function(arg) { faxis.fTitleColor = parseInt(arg); this.RedrawPad(); });
-            this.AddSizeMenuEntry(menu,"Offset", 0, 3, 0.2, faxis.fTitleOffset,
-                                  function(arg) { faxis.fTitleOffset = parseFloat(arg); this.RedrawPad(); } );
-            this.AddSizeMenuEntry(menu,"Size", 0.02, 0.11, 0.01, faxis.fTitleSize,
-                  function(arg) { faxis.fTitleSize = parseFloat(arg); this.RedrawPad(); } );
-            menu.add("endsub:");
-            menu.add("sub:Ticks");
-            this.AddColorMenuEntry(menu, "Color", faxis.fAxisColor,
-                        function(arg) { faxis.fAxisColor = parseInt(arg); this.RedrawPad(); });
-            this.AddSizeMenuEntry(menu, "Size", -0.05, 0.055, 0.01, faxis.fTickLength,
-                      function(arg) { faxis.fTickLength = parseFloat(arg); this.RedrawPad(); } );
-            menu.add("endsub:");
-         }
          return true;
       }
 
@@ -2443,6 +2457,9 @@
       // if (this.options.BarStyle>=20) this.swap_xy = true;
       this.logx = this.logy = false;
 
+      this.logx = !!this.v7EvalAttr("x_log");
+      this.logy = !!this.v7EvalAttr("y_log");
+
       var w = this.frame_width(), h = this.frame_height();
 
       this.scale_xmin = this.xmin;
@@ -2594,9 +2611,9 @@
    }
 
    TFramePainter.prototype.ToggleLog = function(axis) {
-      var painter = this.main_painter() || this,
-          pad = this.root_pad();
-      var curr = pad["fLog" + axis];
+
+      var curr  = this["log" + axis];
+
       // do not allow log scale for labels
       if (!curr) {
          var kind = this[axis+"_kind"];
@@ -2605,13 +2622,12 @@
          if (kind === "labels") return;
       }
 
-      var pp = this.pad_painter(), canp = this.canv_painter();
-      if (pp && pp.snapid && canp && canp._websocket) {
-         console.warn('Change log scale on server here!!!!');
-         // canp.SendWebsocket("OBJEXEC:" + pp.snapid + ":SetLog" + axis + (curr ? "(0)" : "(1)"));
+      var canp = this.canv_painter();
+      if (this.snapid && canp && canp._websocket) {
+         canp.SendWebsocket("OBJEXEC:" + this.snapid + ":Attr" + axis.toUpperCase() + "().SetLog" + (curr ? "(false)" : "(true)"));
       } else {
-         pad["fLog" + axis] = curr ? 0 : 1;
-         painter.RedrawPad();
+         this.v7SetAttr(axis + "_log", !curr);
+         this.RedrawPad();
       }
    }
 
@@ -2786,14 +2802,14 @@
             svg.select(".canvas_fillrect").on("contextmenu", this.ShowContextMenu.bind(this));
 
          factor = 0.66;
-         if (this.pad && this.pad.fCw && this.pad.fCh && (this.pad.fCw > 0)) {
-            factor = this.pad.fCh / this.pad.fCw;
+         if (this.pad && this.pad.fWinSize[0] && this.pad.fWinSize[1]) {
+            factor = this.pad.fWinSize[1] / this.pad.fWinSize[0];
             if ((factor < 0.1) || (factor > 10)) factor = 0.66;
          }
 
          if (this._fixed_size) {
             render_to.style("overflow","auto");
-            rect = { width: this.pad.fCw, height: this.pad.fCh };
+            rect = { width: this.pad.fWinSize[0], height: this.pad.fWinSize[1] };
          } else {
             rect = this.check_main_resize(2, new_size, factor);
          }
@@ -3236,9 +3252,16 @@
    TPadPainter.prototype.UpdateObject = function(obj) {
       if (!obj) return false;
 
-      this.pad.fCw = obj.fCw;
-      this.pad.fCh = obj.fCh;
-      this.pad.fTitle = obj.fTitle;
+      this.pad.fStyle = obj.fStyle;
+      this.pad.fAttr = obj.fAttr;
+
+      if (this.iscan) {
+         this.pad.fTitle = obj.fTitle;
+         this.pad.fWinSize = obj.fWinSize;
+      } else {
+         this.pad.fPos = obj.fPos;
+         this.pad.fSize = obj.fSize;
+      }
 
       return true;
    }
@@ -3391,10 +3414,10 @@
       if (!snap || !snap.fPrimitives) return;
 
       // for the moment only window size attributes are provided
-      var padattr = { fCw: snap.fWinSize[0], fCh: snap.fWinSize[1], fTitle: snap.fTitle };
+      // var padattr = { fCw: snap.fWinSize[0], fCh: snap.fWinSize[1], fTitle: snap.fTitle };
 
       // if canvas size not specified in batch mode, temporary use 900x700 size
-      if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
+      // if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
 
       if (this.iscan && snap.fTitle && document)
          document.title = snap.fTitle;
@@ -3407,8 +3430,8 @@
 
          this.snapid = snap.fObjectID;
 
-         this.draw_object = padattr;
-         this.pad = padattr;
+         this.draw_object = snap;
+         this.pad = snap;
 
          if (this.batch_mode && this.iscan)
              this._fixed_size = true;
@@ -3423,7 +3446,7 @@
       }
 
       // update only pad/canvas attributes
-      this.UpdateObject(padattr);
+      this.UpdateObject(snap);
 
       // apply all changes in the object (pad or canvas)
       if (this.iscan) {
