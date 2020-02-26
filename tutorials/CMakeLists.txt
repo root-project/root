@@ -513,7 +513,8 @@ if(ROOT_pyroot_FOUND)
  if(NOT XROOTD_FOUND)
    list(APPEND pyveto
        dataframe/df102_NanoAODDimuonAnalysis.py
-       dataframe/df103_NanoAODHiggsAnalysis.py)
+       dataframe/df103_NanoAODHiggsAnalysis.py
+       dataframe/df104_HiggsToTwoPhotons.py)
  endif()
 
   list(REMOVE_ITEM pytutorials ${pyveto})
