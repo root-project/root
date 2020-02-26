@@ -9,6 +9,7 @@ TEST(TChainParsing, RemoteAdd)
    c.Add("root://some.domain/path/to/foo.something/file.root/treename");
    c.Add("root://some.domain/path/to/foo.root/file.root/treename"); // ROOT-9344
    c.Add("root://some.domain/path//to/file.root/treename"); // ROOT-10494
+   c.Add("root://some.domain//path//to//file.root//treename");
    const auto files = c.GetListOfFiles();
 
    EXPECT_STREQ(files->At(0)->GetTitle(), "root://some.domain/path/to/file.root");
@@ -23,8 +24,11 @@ TEST(TChainParsing, RemoteAdd)
    EXPECT_STREQ(files->At(3)->GetTitle(), "root://some.domain/path/to/foo.root/file.root");
    EXPECT_STREQ(files->At(3)->GetName(), "treename");
 
-   EXPECT_STREQ(files->At(4)->GetTitle(), "root://some.domain/path//to/file.root");
+   EXPECT_STREQ(files->At(4)->GetTitle(), "root://some.domain/path/to/file.root");
    EXPECT_STREQ(files->At(4)->GetName(), "treename");
+
+   EXPECT_STREQ(files->At(5)->GetTitle(), "root://some.domain//path/to/file.root");
+   EXPECT_STREQ(files->At(5)->GetName(), "treename");
 }
 
 TEST(TChainParsing, LocalAdd)
