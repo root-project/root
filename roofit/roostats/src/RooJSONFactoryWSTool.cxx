@@ -8,8 +8,6 @@
 #include <RooRealVar.h>
 #include <RooDataHist.h>
 #include <RooHistFunc.h>
-#include <RooProdPdf.h>
-#include <RooSimultaneous.h>
 #include <RooStats/ModelConfig.h>
 
 #include "TROOT.h"
@@ -170,13 +168,19 @@ namespace {
       expression << "::" << name << "(";
       bool first = true;
       for(auto k:this->arguments){
-        if(!p.has_child(c4::to_csubstr(k))){
+        if(!first) expression << ",";
+        first = false;
+        if(k == "true"){
+          expression << "1";
+          continue;
+        } else if(k == "false"){
+          expression << "0";
+          continue;          
+        } else if(!p.has_child(c4::to_csubstr(k))){
           std::stringstream err;
           err << "factory expression for class '" << this->tclass->GetName() << "', which expects key '" << k << "' missing from input for object '" << name << "', skipping.";
           error(err.str().c_str());
         }
-        if(!first) expression << ",";
-        first = false;
         if(p[c4::to_csubstr(k)].is_seq()){
           expression << "{";
           bool f = true;
@@ -265,7 +269,11 @@ void RooJSONFactoryWSTool::printFactoryExpressions(){
 // individually implemented importers
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef INCLUDE_RYML    
+#ifdef INCLUDE_RYML
+#include <RooProdPdf.h>
+#include <RooAddPdf.h>
+#include <RooSimultaneous.h>
+
 namespace {
   class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
@@ -292,6 +300,47 @@ namespace {
     }
   };
   bool _rooprodpdffactory = RooJSONFactoryWSTool::registerImporter("pdfprod",new RooProdPdfFactory());
+
+  class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  public:
+    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+      std::string name(::key(p));
+      RooArgList pdfs;
+      RooArgList coefs;      
+      if(!p.has_child("summands")){
+        error("no summands of '" + name + "'");
+      }
+      if(!p["summands"].is_seq()){
+        error("summands '" + name + "' are not a list.");
+      }      
+      if(!p.has_child("coefficients")){
+        error("no coefficients of '" + name + "'");
+      }
+      if(!p["coefficients"].is_seq()){
+        error("coefficients '" + name + "' are not a list.");
+      }      
+      for(auto comp:p["summands"].children()){
+        std::string pdfname(::val_s(comp));
+        RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
+        if(!pdf){
+          error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+        }
+        pdfs.add(*pdf);
+      }
+      for(auto comp:p["coefficients"].children()){
+        std::string coefname(::val_s(comp));
+        RooAbsArg* coef = ws->arg(coefname.c_str());
+        if(!coef){
+          error("unable to obtain component '" + coefname + "' of '" + name + "'.");
+        }
+        coefs.add(*coef);
+      }      
+      RooAddPdf add(name.c_str(),name.c_str(),pdfs,coefs);
+      ws->import(add);
+      return true;
+    }
+  };
+  bool _rooaddpdffactory = RooJSONFactoryWSTool::registerImporter("pdfsum",new RooAddPdfFactory());  
 
   
   class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
@@ -429,6 +478,11 @@ void RooJSONFactoryWSTool::printExportKeys(){
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef INCLUDE_RYML    
+#include <RooProdPdf.h>
+#include <RooAddPdf.h>
+#include <RooSimultaneous.h>
+
 namespace {
   class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
   public:
@@ -462,6 +516,7 @@ namespace {
   };
   bool _roohistfuncstreamer = RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(),new RooHistFuncStreamer());
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // helper namespace
@@ -469,7 +524,7 @@ namespace {
 
 class RooJSONFactoryWSTool::Helpers {
 public:
-  
+#ifdef INCLUDE_RYML      
   static void exportAttributes(const RooAbsArg* arg, c4::yml::NodeRef& n){
     // exporta ll string attributes of an object
     if(arg->stringAttributes().size() > 0){
@@ -533,6 +588,13 @@ public:
         const auto& dict = _rymlExportKeys.find(cl);
         if(dict == _rymlExportKeys.end()){
           std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
+          std::cerr << "there are several possible reasons for this:" << std::endl;
+          std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added." << std::endl;
+          std::cerr << " 2. " << cl->GetName() << " is a ROOT class that nobody ever bothered to write a serialization definition for." << std::endl;
+          std::cerr << " 3. something is wrong with your setup, e.g. you might have called RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these keys with RooJSONFactoryWSTool::loadExportKeys(filename)" << std::endl;
+          std::cerr << "either way, please make sure that:" << std::endl;
+          std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to see what is available" << std::endl;
+          std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see how to do this!" << std::endl;                              
           continue;
         }
         elem["type"] << dict->second.type;
@@ -567,6 +629,7 @@ public:
       Helpers::exportAttributes(func,elem);
     }
   }
+  #endif
 };
 
 // forward declaration needed for alternating recursion
@@ -609,10 +672,19 @@ template<> void RooJSONFactoryWSTool::importFunctions(const c4::yml::NodeRef& n)
       if(expr != _rymlFuncFactoryExpressions.end()){
         std::string expression = expr->second.generate(p);
         if(!this->_workspace->factory(expression.c_str())){
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping. expression was\n"
+                                << expression << std::endl;          
         }
       } else {
-        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for functype '" << functype << "' implemented, skipping." << std::endl;
+        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for functype '" << functype << "' implemented, skipping." << "\n"
+                              << "there are several possible reasons for this:\n"
+                              << " 1. " << functype << " is a custom type that is not available in RooFit.\n"
+                              << " 2. " << functype << " is a ROOT class that nobody ever bothered to write a deserialization definition for.\n"
+                              << " 3. something is wrong with your setup, e.g. you might have called RooJSONFactoryWSTool::clearFactoryExpressions() and/or never successfully read a file defining these expressions with RooJSONFactoryWSTool::loadFactoryExpressions(filename)\n"
+                              << "either way, please make sure that:\n"
+                              << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printFactoryExpressions() to see what is available\n" 
+                              << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see how to do this!" << std::endl ;
+          continue;        
       }
     }
     RooAbsReal* func = this->_workspace->function(name.c_str());
@@ -669,10 +741,19 @@ template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
       if(expr != _rymlPdfFactoryExpressions.end()){
         std::string expression = expr->second.generate(p);
         if(!this->_workspace->factory(expression.c_str())){
-          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping." << std::endl;
+          coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping. expression was\n"
+                                << expression << std::endl;
         }
       } else {
-        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for pdftype '" << pdftype << "' available, skipping." << std::endl;
+        coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") no handling for pdftype '" << pdftype << "' implemented, skipping." << "\n"
+                              << "there are several possible reasons for this:\n"
+                              << " 1. " << pdftype << " is a custom type that is not available in RooFit.\n"
+                              << " 2. " << pdftype << " is a ROOT class that nobody ever bothered to write a deserialization definition for.\n"
+                              << " 3. something is wrong with your setup, e.g. you might have called RooJSONFactoryWSTool::clearFactoryExpressions() and/or never successfully read a file defining these expressions with RooJSONFactoryWSTool::loadFactoryExpressions(filename)\n"
+                              << "either way, please make sure that:\n"
+                              << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printFactoryExpressions() to see what is available\n" 
+                              << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see how to do this!" << std::endl;
+        continue;
       }
     }
     // post-processing: make sure that the pdf has been created, and attach needed attributes
@@ -805,20 +886,32 @@ template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
   RooArgSet main;
   for(auto obj:this->_workspace->allGenericObjects()){
     if(obj->InheritsFrom(RooStats::ModelConfig::Class())){
-      RooStats::ModelConfig* mc = dynamic_cast<RooStats::ModelConfig*>(obj);
+      RooStats::ModelConfig* mc = static_cast<RooStats::ModelConfig*>(obj);
       RooAbsPdf* pdf = mc->GetPdf();
       this->exportDependants(pdf,n);
       main.add(*pdf);     
     }
   }
-  auto pdfs = n["pdfs"];
-  pdfs |= c4::yml::MAP;  
-  RooJSONFactoryWSTool::Helpers::exportFunctions(main,pdfs);
-  for(auto pdf:main){
-    auto node = pdfs[c4::to_csubstr(pdf->GetName())];
-    auto dict = node["dict"];
-    dict |= c4::yml::MAP;
-    dict["toplevel"] << true;
+  for(auto obj:this->_workspace->allPdfs()){
+    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(obj);
+    if(!pdf) continue;
+    if((pdf->getAttribute("toplevel") || pdf->clients().size()==0) && !main.find(*pdf)){
+      this->exportDependants(pdf,n);
+      main.add(*pdf);
+    }
+  }
+  if(main.size() > 0){
+    auto pdfs = n["pdfs"];
+    pdfs |= c4::yml::MAP;  
+    RooJSONFactoryWSTool::Helpers::exportFunctions(main,pdfs);
+    for(auto pdf:main){
+      auto node = pdfs[c4::to_csubstr(pdf->GetName())];
+      auto dict = node["dict"];
+      dict |= c4::yml::MAP;
+      dict["toplevel"] << true;
+    }
+  } else {
+    std::cerr << "no ModelConfig found in workspace and no pdf identified as toplevel by 'toplevel' attribute or an empty client list. nothing exported!" << std::endl;    
   }
 }
 
