@@ -1622,16 +1622,15 @@ void TGeoPgon::SetSegsAndPols(TBuffer3D &buff) const
 
 void TGeoPgon::SetSegsAndPolsNoInside(TBuffer3D &buff) const
 {
-   Int_t i, j;
    const Int_t n = GetNedges() + 1;
-   Int_t nz = GetNz();
-   if (nz < 2) return;
-   Int_t nbPnts = nz * n + 2;
-   if (nbPnts <= 0) return;
+   const Int_t nz = GetNz();
+   const Int_t nbPnts = nz * n + 2;
+
+   if ((nz < 2) || (nbPnts <= 0) || (n < 2)) return;
 
    Int_t c = GetBasicColor();
 
-   Int_t indx = 0, indx1 = 0, indx2 = 0;
+   Int_t indx = 0, indx1 = 0, indx2 = 0, i, j;
 
    //  outside circles, number of segments: nz*n
    for (i = 0; i < nz; i++) {
