@@ -66,31 +66,6 @@ TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy ctor. NOT TO BE CALLED.
-
-TGeoTrack::TGeoTrack(const TGeoTrack& other)
-                 :TVirtualGeoTrack(other),
-                  fPointsSize(other.fPointsSize),
-                  fNpoints(other.fNpoints),
-                  fPoints(other.fPoints)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator. NOT TO BE CALLED.
-
-TGeoTrack& TGeoTrack::operator=(const TGeoTrack& gv)
-{
-   if(this!=&gv) {
-      TVirtualGeoTrack::operator=(gv);
-      fPointsSize=gv.fPointsSize;
-      fNpoints=gv.fNpoints;
-      fPoints=gv.fPoints;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TGeoTrack::~TGeoTrack()
