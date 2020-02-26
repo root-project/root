@@ -201,6 +201,23 @@ TGeoBoolNode::~TGeoBoolNode()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set fPoints array
+
+void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
+{
+   if (fPoints) {
+      delete [] fPoints;
+      fPoints = nullptr;
+      fNpoints = 0;
+   }
+   if (points) {
+      fNpoints = npoints;
+      fPoints = new Double_t[3*fNpoints];
+      memcpy(fPoints, points, 3*fNpoints*sizeof(Double_t));
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Expands the boolean expression either on left or right branch, creating
 /// component elements (composite shapes and boolean nodes). Returns true on success.
 
@@ -747,9 +764,9 @@ Int_t TGeoUnion::GetNpoints()
       fLeftMat->MasterToLocal(&points[3*itot], point);
       if (!fLeft->Contains(point)) itot++;
    }
-   fNpoints = itot;
-   fPoints = new Double_t[3*fNpoints];
-   memcpy(fPoints, points, 3*fNpoints*sizeof(Double_t));
+
+   AssignPoints(itot, points);
+
    delete [] points1;
    delete [] points2;
    delete [] points;
@@ -1080,9 +1097,9 @@ Int_t TGeoSubtraction::GetNpoints()
       fLeftMat->MasterToLocal(&points[3*itot], point);
       if (fLeft->Contains(point)) itot++;
    }
-   fNpoints = itot;
-   fPoints = new Double_t[3*fNpoints];
-   memcpy(fPoints, points, 3*fNpoints*sizeof(Double_t));
+
+   AssignPoints(itot, points);
+
    delete [] points1;
    delete [] points2;
    delete [] points;
@@ -1506,9 +1523,9 @@ Int_t TGeoIntersection::GetNpoints()
       fLeftMat->MasterToLocal(&points[3*itot], point);
       if (fLeft->Contains(point)) itot++;
    }
-   fNpoints = itot;
-   fPoints = new Double_t[3*fNpoints];
-   memcpy(fPoints, points, 3*fNpoints*sizeof(Double_t));
+
+   AssignPoints(itot, points);
+
    delete [] points1;
    delete [] points2;
    delete [] points;

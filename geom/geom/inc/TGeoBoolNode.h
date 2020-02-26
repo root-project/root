@@ -56,6 +56,8 @@ protected:
    mutable std::mutex                 fMutex;      //! Mutex for thread data access
 // methods
    Bool_t            MakeBranch(const char *expr, Bool_t left);
+   void              AssignPoints(Int_t npoints, Double_t *points);
+
 public:
    // constructors
    TGeoBoolNode();
