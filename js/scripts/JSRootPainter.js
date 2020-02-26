@@ -4226,7 +4226,8 @@
          var items = reply ? reply.fItems : null;
 
          if (items && items.length) {
-            _menu.add("separator");
+            if (_menu.size() > 0)
+              _menu.add("separator");
 
             this.args_menu_items = items;
             this.args_menu_id = reply.fId;
