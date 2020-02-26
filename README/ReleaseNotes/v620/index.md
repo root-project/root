@@ -82,10 +82,6 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
  * The empty headers `Gtypes.h` and `Htypes.h` are deprecated. Please include
    `Rtypes.h`
 
-### Deprecated packages
-
-### Removed packages
-
 ## Core Libraries
 
 * Speed-up startup, in particular in case of no or poor network accesibility, by avoiding
@@ -283,24 +279,6 @@ prevent infinite loops or crashes.
  * To try it out:
      * build with `-DCMAKE_CXX_STANDARD="17" -Dhttp="ON" -Droot7="ON"`
      * see examples in `tutorials/eve7`
-
-## Geometry Libraries
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
 
 ## Language Bindings
 
