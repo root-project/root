@@ -26,8 +26,6 @@
    function drawText() {
       var text         = this.GetObject(),
           pp           = this.pad_painter(),
-          w            = this.pad_width(),
-          h            = this.pad_height(),
           use_frame    = false,
           p            = pp.GetCoordinate(text.fPos),
           text_size    = this.v7EvalAttr( "text_size", 12),
@@ -50,6 +48,7 @@
 
       this.FinishTextDrawing();
    }
+
 
    // =================================================================================
 
