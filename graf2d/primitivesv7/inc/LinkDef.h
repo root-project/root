@@ -15,6 +15,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class ROOT::Experimental::RText+;
+#pragma link C++ class ROOT::Experimental::RTitle+;
 #pragma link C++ class ROOT::Experimental::Internal::RLegendEntry+;
 #pragma link C++ class ROOT::Experimental::RLegend+;
 #pragma link C++ class ROOT::Experimental::RLine+;
