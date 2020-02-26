@@ -26,10 +26,19 @@ environ['CPPYY_API_PATH'] = 'none'
 environ['CPPYY_NO_ROOT_FILTER'] = '1'
 
 import cppyy
+
+# import libROOTPythonizations with Python version number
+import sys, importlib
+major, minor = sys.version_info[0:2]
+librootpyz_mod_name = 'libROOTPythonizations{}_{}'.format(major, minor)
+importlib.import_module(librootpyz_mod_name)
+
+# ensure 'import libROOTPythonizations' will find the versioned module
+sys.modules['libROOTPythonizations'] = sys.modules[librootpyz_mod_name]
+
 import ROOT.pythonization as pyz
 
 import functools
-import importlib
 import pkgutil
 
 def pythonization(lazy = True):
