@@ -17,6 +17,7 @@
 #define ROOT7_RAxis
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <string>
 #include <unordered_map>
