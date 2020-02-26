@@ -403,7 +403,7 @@ void TGraphErrors::Apply(TF1 *f)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Same as Apply but for x
+/// Same as Apply but for x
 
 void TGraphErrors::ApplyX(TF1 *f)
 {
@@ -420,7 +420,7 @@ void TGraphErrors::ApplyX(TF1 *f)
 
       SetPoint(i, f->Eval(x,y), y);
       SetPointError(i, TMath::Abs(f->Eval(x + ex, y) - f->Eval(x - ex, y)) / 2. , ey);
-   }  
+   }
    if (gPad) gPad->Modified();
 }
 
