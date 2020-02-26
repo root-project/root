@@ -45,8 +45,8 @@ private :
    Double_t      *fPoints;     //[fNpoints] array of points (x,y,z,t) belonging to this track
 
 protected:
-   TGeoTrack(const TGeoTrack&);
-   TGeoTrack& operator=(const TGeoTrack&);
+   TGeoTrack(const TGeoTrack&) = delete;
+   TGeoTrack& operator=(const TGeoTrack&) = delete;
 
 public:
    TGeoTrack();
