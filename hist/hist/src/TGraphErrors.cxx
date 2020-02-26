@@ -402,6 +402,28 @@ void TGraphErrors::Apply(TF1 *f)
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Same as Apply but for x
+
+void TGraphErrors::ApplyX(TF1 *f)
+{
+   Double_t x, y, ex, ey;
+
+   if (fHistogram) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
+   for (Int_t i = 0; i < GetN(); i++) {
+      GetPoint(i, x, y);
+      ex = GetErrorX(i);
+      ey = GetErrorY(i);
+
+      SetPoint(i, f->Eval(x,y), y);
+      SetPointError(i, TMath::Abs(f->Eval(x + ex, y) - f->Eval(x - ex, y)) / 2. , ey);
+   }  
+   if (gPad) gPad->Modified();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate scan fields.
