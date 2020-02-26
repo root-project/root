@@ -30,8 +30,8 @@ protected :
    TGeoPhysicalNode  *fLastState;      //! Last PN touched
    TObjArray         *fPhysical;       //! array of physical nodes
 
-   TGeoParallelWorld(const TGeoParallelWorld&);
-   TGeoParallelWorld& operator=(const TGeoParallelWorld&);
+   TGeoParallelWorld(const TGeoParallelWorld&) = delete;
+   TGeoParallelWorld& operator=(const TGeoParallelWorld&) = delete;
 
 public:
    // constructors
