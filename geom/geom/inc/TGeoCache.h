@@ -109,7 +109,7 @@ public:
    const char          *GetPath();
    Int_t                GetStackLevel() const  {return fStackLevel;}
    Int_t                GetNodeId() const;
-   Bool_t               HasIdArray() const {return (fNodeIdArray)?kTRUE:kFALSE;}
+   Bool_t               HasIdArray() const { return fNodeIdArray ? kTRUE : kFALSE; }
    Bool_t               IsDummy() const {return kTRUE;}
 
    void                 LocalToMaster(const Double_t *local, Double_t *master) const;
