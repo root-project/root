@@ -403,7 +403,16 @@ void TGraphErrors::Apply(TF1 *f)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Same as Apply but for x
+/// apply function to all the data points
+/// x = f(x,y)
+///
+/// The error is calculated as ex=(f(x+ex,y)-f(x-ex,y))/2
+/// This is the same as error(fx) = df/dx * ex for small errors
+///
+/// For generic functions the symmetric errors might become non-symmetric
+/// and are averaged here. Use TGraphAsymmErrors if desired.
+///
+/// error on y doesn't change
 
 void TGraphErrors::ApplyX(TF1 *f)
 {
