@@ -132,7 +132,6 @@ private :
    TGeoShape            *fClippingShape;    //! clipping shape for raytracing
    TGeoElementTable     *fElementTable;     //! table of elements
 
-   Int_t                *fNodeIdArray;      //! array of node id's
    Int_t                 fNLevel;           // maximum accepted level in geometry
    TGeoVolume           *fPaintVolume;      //! volume currently painted
    TGeoVolume           *fUserPaintVolume;  //!
