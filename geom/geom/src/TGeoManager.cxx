@@ -365,7 +365,6 @@ TGeoManager::TGeoManager()
       fNsegments = 20;
       fNLevel = 0;
       fUniqueVolumes = 0;
-      fNodeIdArray = 0;
       fClippingShape = 0;
       fMatrixTransform = kFALSE;
       fMatrixReflection = kFALSE;
@@ -472,7 +471,6 @@ void TGeoManager::Init()
    fNsegments = 20;
    fNLevel = 0;
    fUniqueVolumes = new TObjArray(256);
-   fNodeIdArray = 0;
    fClippingShape = 0;
    fMatrixTransform = kFALSE;
    fMatrixReflection = kFALSE;
