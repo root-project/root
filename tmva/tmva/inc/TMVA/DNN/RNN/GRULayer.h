@@ -189,10 +189,10 @@ public:
    void Print() const;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   void AddWeightsXMLTo(void *parent) override;
+   void AddWeightsXMLTo(void *parent);
 
    /*! Read the information and the weights about the layer from XML node. */
-   void ReadWeightsFromXML(void *parent) override;
+   void ReadWeightsFromXML(void *parent);
 
    /*! Getters */
    size_t GetInputSize()               const { return this->GetInputWidth(); }
