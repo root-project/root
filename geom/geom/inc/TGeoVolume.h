@@ -63,8 +63,8 @@ protected :
    TGeoExtension     *fFWExtension;    //! Transient framework-defined extension to volumes
 
 private:
-   TGeoVolume(const TGeoVolume&);  // not implemented
-   TGeoVolume& operator=(const TGeoVolume&); // not implemented
+   TGeoVolume(const TGeoVolume&) = delete;
+   TGeoVolume& operator=(const TGeoVolume&) = delete;
 
 public:
    virtual void  ClearThreadData() const;
@@ -260,8 +260,8 @@ private:
    Double_t         fStep;         // division step
    Bool_t           fAttSet;       // flag attributes set
 
-   TGeoVolumeMulti(const TGeoVolumeMulti&);  // not implemented
-   TGeoVolumeMulti& operator=(const TGeoVolumeMulti&); // not implemented
+   TGeoVolumeMulti(const TGeoVolumeMulti&) = delete;
+   TGeoVolumeMulti& operator=(const TGeoVolumeMulti&) = delete;
 
 public:
    TGeoVolumeMulti();
@@ -319,8 +319,8 @@ protected:
    mutable std::mutex                 fMutex;      //! Mutex for concurrent operations
 
 private:
-   TGeoVolumeAssembly(const TGeoVolumeAssembly &); // not implemented
-   TGeoVolumeAssembly& operator=(const TGeoVolumeAssembly&); // not implemented
+   TGeoVolumeAssembly(const TGeoVolumeAssembly &) = delete;
+   TGeoVolumeAssembly& operator=(const TGeoVolumeAssembly&) = delete;
 
 public:
    TGeoVolumeAssembly();

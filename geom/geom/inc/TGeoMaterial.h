@@ -159,8 +159,8 @@ protected :
    Double_t                *fVecNbOfAtomsPerVolume; //[fNelements] array of numbers of atoms per unit volume
    TObjArray               *fElements;   // array of elements composing the mixture
 // methods
-   TGeoMixture(const TGeoMixture&); // Not implemented
-   TGeoMixture& operator=(const TGeoMixture&); // Not implemented
+   TGeoMixture(const TGeoMixture&) = delete;
+   TGeoMixture& operator=(const TGeoMixture&) = delete;
    void                     AverageProperties();
 
 public:
