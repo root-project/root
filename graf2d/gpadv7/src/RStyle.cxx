@@ -226,7 +226,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
          if (parser.current() == ';') {
             parser.shift();
-            map.AddNone(name);
+            map.AddNoValue(name);
          } else {
             auto value = parser.scan_value();
             if (value.empty()) {
