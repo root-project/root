@@ -19,7 +19,6 @@
 #include "TMD5.h"
 #include "TObject.h"
 #include "TString.h"
-#include "TObjArray.h"
 #include "TStopwatch.h"
 
 #include <atomic>

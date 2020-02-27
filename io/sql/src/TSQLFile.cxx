@@ -163,7 +163,6 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 
 #include "TROOT.h"
 #include "TSystem.h"
-#include "TList.h"
 #include "TObjArray.h"
 #include "TList.h"
 #include "TArrayC.h"
