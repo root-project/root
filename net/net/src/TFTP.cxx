@@ -37,7 +37,6 @@
 #include "TUrl.h"
 #include "TStopwatch.h"
 #include "TSystem.h"
-#include "TEnv.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "NetErrors.h"
