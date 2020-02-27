@@ -2687,7 +2687,8 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
    if (!fPainter) {
-      const char *kind = gROOT->IsWebDisplay() ? "web" : "root";
+      const char *kind = "root";
+      if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch()) kind = "web";
       if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter", kind)) {
          if (h->LoadPlugin() == -1) {
             Error("GetGeomPainter", "could not load plugin for %s geo_painter", kind);
