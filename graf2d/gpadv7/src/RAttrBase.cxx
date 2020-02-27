@@ -105,10 +105,10 @@ void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Add "None" value to attribute. Ensure that value can not be configured via style
-/// Equivalent to css syntax { attrname: }
+/// Set <NoValue> for attribute. Ensure that value can not be configured via style - defaults will be used
+/// Equivalent to css syntax { attrname:; }
 
-void ROOT::Experimental::RAttrBase::SetNone(const std::string &name)
+void ROOT::Experimental::RAttrBase::SetNoValue(const std::string &name)
 {
    if (auto access = AccessAttr(name))
        access.attr->AddNoValue(access.fullname);

@@ -144,7 +144,7 @@ protected:
       return *this;
    }
 
-   void SetNone(const std::string &name);
+   void SetNoValue(const std::string &name);
    void SetValue(const std::string &name, bool value);
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, int value);
