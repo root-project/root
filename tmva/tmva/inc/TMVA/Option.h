@@ -43,7 +43,6 @@
 
 #include "TObject.h"
 #include "TString.h"
-#include "TList.h"
 #include "TMVA/MsgLogger.h"
 
 namespace TMVA {
