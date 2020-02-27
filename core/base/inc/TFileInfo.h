@@ -28,8 +28,6 @@
 
 #include "TMD5.h"
 
-#include "TObjString.h"
-
 #include "TList.h"
 
 class TFileInfoMeta;
