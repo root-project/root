@@ -76,7 +76,6 @@ extra libraries (Histogram, display, etc).
 #include "TRefArrayProxy.h"
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
-#include "TStyle.h"
 #include "TVirtualMutex.h"
 
 #include "HFitInterface.h"
