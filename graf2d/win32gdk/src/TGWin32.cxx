@@ -59,7 +59,6 @@ by Olivier Couet (package X11INT).
 #include "TExMap.h"
 #include "TEnv.h"
 #include "RStipples.h"
-#include "TEnv.h"
 
 // DND protocol version
 #define XDND_PROTOCOL_VERSION   5
