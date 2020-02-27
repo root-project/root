@@ -21,7 +21,6 @@
 #ifndef ROOT_TMVA_VarTransformHandler
 #define ROOT_TMVA_VarTransformHandler
 
-#include "TList.h"
 #include "TString.h"
 #include "TMVA/Types.h"
 #include "TMVA/DataSetInfo.h"
