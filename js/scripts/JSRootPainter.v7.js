@@ -4424,7 +4424,7 @@
 
    // =================================================================================
 
-   function drawTitle() {
+   function drawFrameTitle() {
       var fp = this.frame_painter();
       if (!fp)
          return console.log('no frame painter - no title');
@@ -4463,7 +4463,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true, csstype: "text" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RTitle", icon: "img_text", func: drawTitle, opt: "", direct: true, csstype: "title" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrameTitle", icon: "img_text", func: drawFrameTitle, opt: "", direct: true, csstype: "title" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });
@@ -4478,7 +4478,7 @@
    JSROOT.v7.drawPad = drawPad;
    JSROOT.v7.drawCanvas = drawCanvas;
    JSROOT.v7.drawPadSnapshot = drawPadSnapshot;
-   JSROOT.v7.drawTitle = drawTitle;
+   JSROOT.v7.drawFrameTitle = drawFrameTitle;
 
    return JSROOT;
 

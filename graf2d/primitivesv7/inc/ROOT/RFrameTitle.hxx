@@ -6,8 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RTitle
-#define ROOT7_RTitle
+#ifndef ROOT7_RFrameTitle
+#define ROOT7_RFrameTitle
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
@@ -19,7 +19,7 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RTitle
+/** \class ROOT::Experimental::RFrameTitle
 \ingroup GrafROOT7
 \brief A title for the RFrame.
 \author Sergey Linev <s.linev@gsi.de>
@@ -28,10 +28,10 @@ namespace Experimental {
 */
 
 
-class RTitle : public RDrawable {
+class RFrameTitle : public RDrawable {
 
    class RTitleAttrs : public RAttrBase {
-      friend class RTitle;
+      friend class RFrameTitle;
       R__ATTR_CLASS(RTitleAttrs, "", AddString("margin","0.02").AddString("height","0.05"));
    };
 
@@ -41,14 +41,14 @@ class RTitle : public RDrawable {
 
 public:
 
-   RTitle() : RDrawable("title") {}
+   RFrameTitle() : RDrawable("title") {}
 
-   RTitle(const std::string &txt) : RTitle() { fText = txt; }
+   RFrameTitle(const std::string &txt) : RFrameTitle() { fText = txt; }
 
-   RTitle &SetText(const std::string &t) { fText = t; return *this; }
+   RFrameTitle &SetText(const std::string &t) { fText = t; return *this; }
    const std::string &GetText() const { return fText; }
 
-   RTitle &SetMargin(const RPadLength &pos)
+   RFrameTitle &SetMargin(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("margin");
@@ -67,7 +67,7 @@ public:
       return res;
    }
 
-   RTitle &SetHeight(const RPadLength &pos)
+   RFrameTitle &SetHeight(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("height");
@@ -88,12 +88,9 @@ public:
 
 
    const RAttrText &GetAttrText() const { return fAttrText; }
-   RTitle &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   RFrameTitle &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
    RAttrText &AttrText() { return fAttrText; }
-
-
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
