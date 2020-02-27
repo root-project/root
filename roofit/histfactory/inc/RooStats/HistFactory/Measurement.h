@@ -72,7 +72,8 @@ public:
   void SetFunctionObjects( std::vector< RooStats::HistFactory::PreprocessFunction > objects ) { fFunctionObjects = objects; }
   /// get vector of defined function objects
   std::vector< RooStats::HistFactory::PreprocessFunction >& GetFunctionObjects() { return fFunctionObjects; }
-  std::vector< std::string > GetPreprocessFunctions();
+  const std::vector< RooStats::HistFactory::PreprocessFunction >& GetFunctionObjects() const { return fFunctionObjects; }  
+  std::vector< std::string > GetPreprocessFunctions() const;
 
   /// get vector of defined Asimov Datasets
   std::vector< RooStats::HistFactory::Asimov >& GetAsimovDatasets() { return fAsimovDatasets; }
@@ -97,16 +98,11 @@ public:
   void SetExportOnly( bool ExportOnly ) { fExportOnly = ExportOnly; }
   bool GetExportOnly() { return fExportOnly; }
 
-
   void PrintTree( std::ostream& = std::cout ); /// Print to a stream
   void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
-  void PrintJSON( std::ostream& os = std::cout );    
-  void PrintJSON( std::string filename );
-  void PrintYAML( std::ostream& os = std::cout );    
-  void PrintYAML( std::string filename );  
-  template<class T> void Export(T& t) const;
 
   std::vector< RooStats::HistFactory::Channel >& GetChannels() { return fChannels; }
+  const std::vector< RooStats::HistFactory::Channel >& GetChannels() const { return fChannels; } 
   RooStats::HistFactory::Channel& GetChannel( std::string );
   /// add a completely configured channel
   void AddChannel( RooStats::HistFactory::Channel chan ) { fChannels.push_back( chan ); }
@@ -127,7 +123,8 @@ public:
   std::map< std::string, double >& GetLogNormSyst() { return fLogNormSyst; }
   std::map< std::string, double >& GetNoSyst() { return fNoSyst; }
 
-
+  std::string GetInterpolationScheme() { return fInterpolationScheme; }
+  
 private:
 
   /// Configurables of this measurement

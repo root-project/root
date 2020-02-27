@@ -121,7 +121,7 @@ public:
   const std::vector< RooStats::HistFactory::ShapeFactor >& GetShapeFactorList() const { return fShapeFactorList; }
   
 
-  bool HasStatError() { return fStatErrorActivate; }  
+  bool HasStatError() const { return fStatErrorActivate; }  
   RooStats::HistFactory::StatError& GetStatError() { return fStatError; }
   const RooStats::HistFactory::StatError& GetStatError() const { return fStatError; }  
   void SetStatError( RooStats::HistFactory::StatError Error ) {

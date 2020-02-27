@@ -30,29 +30,33 @@ namespace {
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
 
-namespace c4 { namespace yml {
-    template<class T> void read(NodeRef const& n, std::vector<T> *v){
-      for(size_t i=0; i<n.num_children(); ++i){
-        std::string e;
-        n[i]>>e;
-        v->push_back(e);
-      }
-    }
-    
-    template<class T> void write(NodeRef *n, std::vector<T> const& v){
-      *n |= c4::yml::SEQ;
-      for(auto e:v){
-        n->append_child() << e;
-      }
-    }
-  }
-}
+//namespace c4 { namespace yml {
+//    template<class T> void read(NodeRef const& n, std::vector<T> *v){
+//      for(size_t i=0; i<n.num_children(); ++i){
+//        std::string e;
+//        n[i]>>e;
+//        v->push_back(e);
+//      }
+//    }
+//    
+//    template<class T> void write(NodeRef *n, std::vector<T> const& v){
+//      *n |= c4::yml::SEQ;
+//      for(auto e:v){
+//        n->append_child() << e;
+//      }
+//    }
+//  }
+//}
 
 
 namespace {
-  inline std::string key(const c4::yml::NodeRef& n){
+  inline std::string name(const c4::yml::NodeRef& n){
     std::stringstream ss;
-    ss << n.key();
+    if(n.has_key()){
+      ss << n.key();
+    } else if(n.has_child("name")){
+      ss << n["name"].val();
+    }
     return ss.str();
   }
   inline std::string val_s(const c4::yml::NodeRef& n){
@@ -82,7 +86,7 @@ namespace {
 namespace {
   inline void collectNames(const c4::yml::NodeRef& n,std::vector<std::string>& names){
     for(auto c:n.children()){
-      names.push_back(::key(c));
+      names.push_back(::name(c));
     }
   }
   
@@ -96,7 +100,7 @@ namespace {
       vars["obs_x_"+obsnamecomp] = bounds;
     } else {
       for(c4::yml::NodeRef p:bounds.children()){
-        vars[::key(p)] = p;      
+        vars[::name(p)] = p;      
       }
     }
     return vars;
@@ -189,7 +193,7 @@ namespace {
   class RooHistogramFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
     virtual bool importFunction(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
-      std::string name(::key(p));
+      std::string name(::name(p));
       std::string prefix = ::genPrefix(p,true);
       if(prefix.size() > 0) name = prefix+name;    
       if(!p.has_child("data")){
@@ -198,7 +202,7 @@ namespace {
       try {
         RooArgSet prodElems;
         RooDataHist* dh = ::readData(ws,p["data"],name,prefix);       
-        RooHistFunc* hf = new RooHistFunc(name.c_str(),::key(p).c_str(),*(dh->get()),*dh);          
+        RooHistFunc* hf = new RooHistFunc(name.c_str(),::name(p).c_str(),*(dh->get()),*dh);          
         if(p.has_child("normfactors")){
           for(auto nf:p["normfactors"].children()){
             std::string nfname(::val_s(nf));
@@ -215,8 +219,8 @@ namespace {
           std::vector<double> low;
           std::vector<double> high;
           for(auto sys:p["overallSystematics"].children()){
-            std::string sysname(::key(sys));
-            std::string parname(::val_s(sys["parameter"]));
+            std::string sysname(::name(sys));
+            std::string parname( sys.has_child("parameter") ? ::val_s(sys["parameter"]) : "alpha_"+sysname);
             RooAbsReal* par = ws->var(parname.c_str());
             RooAbsPdf* pdf = ws->pdf(sysname.c_str());
             if(!par){
@@ -237,8 +241,8 @@ namespace {
           RooArgList low;
           RooArgList high;            
           for(auto sys:p["histogramSystematics"].children()){
-            std::string sysname(::key(sys));
-            std::string parname(::val_s(sys["parameter"]));            
+            std::string sysname(::name(sys));
+            std::string parname( sys.has_child("parameter") ? ::val_s(sys["parameter"]) : "alpha_"+sysname);            
             RooAbsReal* par = ws->var(parname.c_str());
             RooAbsPdf* pdf = ws->pdf(sysname.c_str());
             if(!par){
@@ -248,10 +252,10 @@ namespace {
             } else {
               nps.add(*par);
               RooDataHist* dh_low = ::readData(ws,p["dataLow"],sysname+"Low_"+name,prefix);
-              RooHistFunc hf_low((sysname+"Low_"+name).c_str(),::key(p).c_str(),*(dh_low->get()),*dh_low);              
+              RooHistFunc hf_low((sysname+"Low_"+name).c_str(),::name(p).c_str(),*(dh_low->get()),*dh_low);              
               low.add(hf_low);
               RooDataHist* dh_high = ::readData(ws,p["dataHigh"],sysname+"High_"+name,prefix);
-              RooHistFunc hf_high((sysname+"High_"+name).c_str(),::key(p).c_str(),*(dh_high->get()),*dh_high);              
+              RooHistFunc hf_high((sysname+"High_"+name).c_str(),::name(p).c_str(),*(dh_high->get()),*dh_high);              
               high.add(hf_high);              
             }
           }
@@ -277,7 +281,7 @@ namespace {
   class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
     virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
-      std::string name(::key(p));
+      std::string name(::name(p));
       RooArgList funcs;
       RooArgList coefs;
       if(!p.has_child("sum")){

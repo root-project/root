@@ -126,7 +126,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/ToyMCStudy.cxx
     src/UniformProposal.cxx
     src/UpperLimitMCSModule.cxx
-    src/RooJSONFactoryWSTool.cxx    
+    src/RooJSONFactoryWSTool.cxx
+    src/RYMLFactories.cxx        
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

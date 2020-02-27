@@ -159,42 +159,6 @@ void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::strin
 
 }
 
-#ifdef INCLUDE_RYML
-#include <ryml.hpp>
-#include <c4/yml/std/map.hpp>
-#include <c4/yml/std/string.hpp>
-
-namespace RooStats { namespace HistFactory {
-    template<> void RooStats::HistFactory::Channel::Export(c4::yml::NodeRef& n) const {
-      auto name = c4::to_csubstr(fName);      
-      auto ch = n[name];
-      ch |= c4::yml::MAP;
-      ch["type"] << "sum";      
-
-      auto staterr = ch["statError"];
-      staterr |= c4::yml::MAP;
-      staterr["relThreshold"] << fStatErrorConfig.GetRelErrorThreshold();      
-      staterr["constraint"] <<RooStats::HistFactory::Constraint::Name(fStatErrorConfig.GetConstraintType());
-      auto stack = staterr["stack"];
-      stack |= c4::yml::SEQ;      
-      
-      auto samples = ch["functions"];
-      samples |= c4::yml::MAP;
-      auto sum = ch["sum"];
-      sum |= c4::yml::SEQ;      
-      for(const auto& s:fSamples){
-        s.Export(samples);
-        auto ns = samples.last_child()["namespaces"];
-        ns |= c4::yml::SEQ;
-        ns.append_child() << name;
-        stack.append_child() << s.GetName();
-        sum.append_child() << s.GetName();
-      }
-    }
-  }
-}
-#endif
-
 
 void RooStats::HistFactory::Channel::SetData( std::string DataHistoName, std::string DataInputFile, std::string DataHistoPath ) {
   // set data for this channel by specifying the name of the histogram,

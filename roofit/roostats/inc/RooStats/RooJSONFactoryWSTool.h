@@ -24,7 +24,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   class Helpers;
  protected:
   RooWorkspace* _workspace;
-  static std::vector<std::string> _strcache;
+  static std::list<std::string> _strcache;
   template<class T> static std::map<std::string,const Importer<T>*> _importers;
   template<class T> static std::map<const TClass*,const Exporter<T>*> _exporters;    
   void prepare();

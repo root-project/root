@@ -65,6 +65,7 @@ public:
   void SetStatErrorConfig( RooStats::HistFactory::StatErrorConfig Config ) { fStatErrorConfig = Config; }
   /// get information about threshold for statistical uncertainties and constraint term
   HistFactory::StatErrorConfig& GetStatErrorConfig() { return fStatErrorConfig; }
+  const HistFactory::StatErrorConfig& GetStatErrorConfig() const { return fStatErrorConfig; }  
 
   void AddSample( RooStats::HistFactory::Sample sample );
   /// get vector of samples for this channel
@@ -73,7 +74,6 @@ public:
 
   void Print(std::ostream& = std::cout);  
   void PrintXML( std::string Directory, std::string Prefix="" );
-  template<class T> void Export(T& t) const;
   
   void CollectHistograms();
   bool CheckHistograms() const;
