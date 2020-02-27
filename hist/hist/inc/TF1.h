@@ -28,7 +28,6 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
-#include "TROOT.h"
 #include "TF1AbsComposition.h"
 #include "TMath.h"
 #include "Math/Types.h"
