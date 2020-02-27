@@ -221,7 +221,6 @@ or :
 #include "TG3DLine.h"
 #include "TGFileDialog.h"
 #include "TGProgressBar.h"
-#include "TClonesArray.h"
 #include "TSpider.h"
 
 #ifdef WIN32

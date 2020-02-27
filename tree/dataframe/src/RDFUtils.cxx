@@ -19,7 +19,6 @@
 #include "TClassRef.h"
 #include "TInterpreter.h"
 #include "TLeaf.h"
-#include "TObjArray.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 #include "TTree.h"
 
