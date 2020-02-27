@@ -27,11 +27,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TSystemDirectory.h"
-
-#include "TList.h"
-
 #include "TSystem.h"
+
+class TList;
 
 class TRemoteObject : public TNamed {
 

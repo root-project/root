@@ -25,12 +25,11 @@ It contains information on the real remote object as:
   - Remote object address
 */
 
+#include "TRemoteObject.h"
+#include "TSystemDirectory.h"
 #include "TApplication.h"
 #include "TROOT.h"
-#include "TRemoteObject.h"
-#include "TSystem.h"
 #include "TBrowser.h"
-#include "TOrdCollection.h"
 #include "TList.h"
 #include "TClass.h"
 
