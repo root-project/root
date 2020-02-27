@@ -47,7 +47,7 @@ bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const 
    if (auto v = AccessValue(name, use_style))
       return v.value->CanConvertFrom(value.Kind()) && v.value->IsEqual(value);
 
-   return value.Kind() == RAttrMap::kNone;
+   return value.Kind() == RAttrMap::kNoValue;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
 void ROOT::Experimental::RAttrBase::SetNone(const std::string &name)
 {
    if (auto access = AccessAttr(name))
-       access.attr->AddNone(access.fullname);
+       access.attr->AddNoValue(access.fullname);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

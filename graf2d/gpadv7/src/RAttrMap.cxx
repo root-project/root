@@ -57,7 +57,7 @@ RAttrMap &RAttrMap::AddDefaults(const RAttrBase &vis)
 void RAttrMap::AddBestMatch(const std::string &name, const std::string &value)
 {
    if ((value == "none"s) || (value == "null"s) || value.empty()) {
-      AddNone(name);
+      AddNoValue(name);
       return;
    }
 

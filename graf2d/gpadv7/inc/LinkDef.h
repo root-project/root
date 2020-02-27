@@ -16,7 +16,7 @@
 
 #pragma link C++ class ROOT::Experimental::RAttrMap+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::Value_t+;
-#pragma link C++ class ROOT::Experimental::RAttrMap::NoneValue_t+;
+#pragma link C++ class ROOT::Experimental::RAttrMap::NoValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::BoolValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::IntValue_t+;
 #pragma link C++ class ROOT::Experimental::RAttrMap::DoubleValue_t+;

@@ -160,7 +160,7 @@ protected:
    bool HasValue(const std::string &name, bool check_defaults = false) const
    {
       auto res = Eval<const RAttrMap::Value_t *, T>(name, check_defaults);
-      return res ? (res->Kind() != RAttrMap::kNone) : false;
+      return res ? (res->Kind() != RAttrMap::kNoValue) : false;
    }
 
    template <typename T>
