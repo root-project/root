@@ -656,6 +656,7 @@ std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(const ROOT::Exper
    json.SetCompact(fJsonComp);
 
    static std::vector<const TClass *> exclude_classes = {
+      TClass::GetClass<ROOT::Experimental::RAttrMap::NoValue_t>(),
       TClass::GetClass<ROOT::Experimental::RAttrMap::BoolValue_t>(),
       TClass::GetClass<ROOT::Experimental::RAttrMap::IntValue_t>(),
       TClass::GetClass<ROOT::Experimental::RAttrMap::DoubleValue_t>(),
@@ -664,6 +665,7 @@ std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(const ROOT::Exper
       TClass::GetClass<ROOT::Experimental::RStyle::Block_t>(),
       TClass::GetClass<ROOT::Experimental::RPadPos>(),
       TClass::GetClass<ROOT::Experimental::RPadLength>(),
+      TClass::GetClass<ROOT::Experimental::RPadExtent>(),
       TClass::GetClass<std::unordered_map<std::string,ROOT::Experimental::RAttrMap::Value_t*>>()
    };
 
