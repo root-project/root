@@ -53,7 +53,6 @@
 #include "TCreatePrimitives.h"
 #include "TLegend.h"
 #include "TAtt3D.h"
-#include "TObjString.h"
 #include "TApplication.h"
 #include "TVirtualPadPainter.h"
 
