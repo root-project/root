@@ -131,7 +131,7 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 
    auto &json = fDesc.GetDrawJson();
 
-   printf("Produce geometry JSON %d\n", (int) json.length());
+   R__DEBUG_HERE("webeve") << "Produce geometry JSON len: " << json.length();
 
    fWebWindow->Send(connid, json);
 }
@@ -144,8 +144,9 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 void ROOT::Experimental::REveGeomViewer::SetDrawOptions(const std::string &opt)
 {
    fDesc.SetDrawOptions(opt);
-
-   fWebWindow->Send(0, "DROPT:"s + opt);
+   unsigned connid = fWebWindow->GetConnectionId();
+   if (connid)
+      fWebWindow->Send(connid, "DROPT:"s + opt);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
