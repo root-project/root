@@ -141,7 +141,6 @@ the selection.
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TMatrixTSym.h"
-#include "TObjString.h"
 #include "TGraph.h"
 
 #include <algorithm>

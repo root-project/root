@@ -71,7 +71,6 @@ on the test sample.
 #include "TRandom3.h"
 #include "TFile.h"
 #include "TMath.h"
-#include "TObjString.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TGraph.h"

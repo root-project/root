@@ -43,7 +43,6 @@ Class that contains all the data information.
 #include "TVectorF.h"
 #include "TMath.h"
 #include "TROOT.h"
-#include "TObjString.h"
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Tools.h"
