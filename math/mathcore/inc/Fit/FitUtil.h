@@ -29,7 +29,6 @@
 #include "Math/IntegratorMultiDim.h"
 
 #include "TError.h"
-#include "TSystem.h"
 
 // using parameter cache is not thread safe but needed for normalizing the functions
 #define USE_PARAMCACHE
