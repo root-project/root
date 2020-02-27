@@ -38,7 +38,6 @@ class by Rene Brun.
 #include "Hparam.h"
 #include "TMath.h"
 #include "TStyle.h"
-#include "TObjArray.h"
 #include "THLimitsFinder.h"
 #include "TColor.h"
 
