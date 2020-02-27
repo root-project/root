@@ -29,7 +29,6 @@ to database server.
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TObjString.h"
-#include "TClonesArray.h"
 
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"

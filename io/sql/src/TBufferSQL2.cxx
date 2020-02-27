@@ -26,7 +26,6 @@ few other, which can not be converted to SQL (yet).
 
 #include "TBufferSQL2.h"
 
-#include "TObjArray.h"
 #include "TROOT.h"
 #include "TDataType.h"
 #include "TClass.h"

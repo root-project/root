@@ -105,7 +105,6 @@ class Container {
 #include "Compression.h"
 
 #include "TArrayI.h"
-#include "TObjArray.h"
 #include "TError.h"
 #include "TBase64.h"
 #include "TROOT.h"
