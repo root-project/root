@@ -82,6 +82,7 @@ public:
 
 };
 
-}}
+} // namespace Experimental
+} // namespace ROOT
 
 #endif

@@ -244,5 +244,7 @@
 #pragma link C++ class ROOT::Experimental::REveGeomRequest+;
 #pragma link C++ class ROOT::Experimental::REveGeomNodeInfo+;
 #pragma link C++ class ROOT::Experimental::REveGeomConfig+;
+#pragma link C++ class ROOT::Experimental::REveGeomViewer+;
+#pragma link C++ class ROOT::Experimental::REveGeoPainter+;
 
 #endif
