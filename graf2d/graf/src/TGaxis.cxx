@@ -26,7 +26,6 @@
 #include "TF1.h"
 #include "TAxis.h"
 #include "THashList.h"
-#include "TObjString.h"
 #include "TObject.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
