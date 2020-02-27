@@ -18,7 +18,6 @@
 #include "TBrowserImp.h"
 #include "TFolder.h"
 #include "TList.h"
-#include "TObjArray.h"
 #include "TDirectory.h"
 
 #include <sstream>

@@ -28,7 +28,6 @@
 #include "TString.h"
 #include "TApplication.h"
 #include "TTimer.h"
-#include "TObjArray.h"
 #include "TROOT.h"
 #include "TEnv.h"
 
