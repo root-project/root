@@ -18,6 +18,7 @@
 #include "TVirtualPad.h"
 #include "TError.h"
 #include "TClass.h"
+#include "TObjString.h"
 
 #include "TProfileHelper.h"
 
