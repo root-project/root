@@ -31,7 +31,6 @@ optionally a series of alternate named ranges.
 #include "RooTrace.h"
 
 #include <math.h>
-#include "TObjString.h"
 #include "TTree.h"
 #include "RooRealVar.h"
 #include "RooStreamParser.h"
@@ -46,7 +45,7 @@ optionally a series of alternate named ranges.
 using namespace std;
 
 ClassImp(RooRealVar);
-;
+
 
 Bool_t RooRealVar::_printScientific(kFALSE) ;
 Int_t  RooRealVar::_printSigDigits(5) ;
