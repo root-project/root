@@ -95,6 +95,7 @@ robust Streamer mechanism I opted for 3).
 #include "TString.h"
 #include "TSystem.h"
 #include "TClass.h"
+#include "TROOT.h"
 #include "TBufferFile.h"
 #include "TVirtualMutex.h"
 #include "mmprivate.h"
