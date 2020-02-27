@@ -2687,15 +2687,19 @@ Int_t TGeoManager::GetByteCount(Option_t * /*option*/)
 TVirtualGeoPainter *TGeoManager::GetGeomPainter()
 {
    if (!fPainter) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
+      const char *kind = gROOT->IsWebDisplay() ? "web" : "root";
+      if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter", kind)) {
+         if (h->LoadPlugin() == -1) {
+            Error("GetGeomPainter", "could not load plugin for %s geo_painter", kind);
+            return nullptr;
+         }
          fPainter = (TVirtualGeoPainter*)h->ExecPlugin(1,this);
          if (!fPainter) {
-            Error("GetGeomPainter", "could not create painter");
-            return 0;
+            Error("GetGeomPainter", "could not create %s geo_painter", kind);
+            return nullptr;
          }
+      } else {
+         Error("GetGeomPainter", "not found plugin %s for geo_painter", kind);
       }
    }
    return fPainter;

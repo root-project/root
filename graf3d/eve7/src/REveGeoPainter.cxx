@@ -15,7 +15,7 @@ using namespace ROOT::Experimental;
 
 REveGeoPainter::REveGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 {
-
+   printf("DID CREATE REveGeoPainter\n");
 }
 
 REveGeoPainter::~REveGeoPainter()
