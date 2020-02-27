@@ -23,7 +23,6 @@
 #include "Bytes.h"
 #include "Compression.h"
 #include "NetErrors.h"
-#include "TEnv.h"
 #include "TError.h"
 #include "TMessage.h"
 #include "TUDPSocket.h"

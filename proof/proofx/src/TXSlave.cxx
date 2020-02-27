@@ -21,7 +21,6 @@ See TSlave and TXSocket for details.
 #include "TProof.h"
 #include "TProofServ.h"
 #include "TSystem.h"
-#include "TEnv.h"
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TMessage.h"
