@@ -17,7 +17,6 @@ for masters, submasters and workers.
 
 */
 
-#include "TObjArray.h"
 #include "TProofNodeInfo.h"
 
 ClassImp(TProofNodeInfo);
