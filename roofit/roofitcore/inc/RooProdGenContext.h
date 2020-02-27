@@ -16,7 +16,6 @@
 #ifndef ROO_PROD_GEN_CONTEXT
 #define ROO_PROD_GEN_CONTEXT
 
-#include "TList.h"
 #include "RooAbsGenContext.h"
 #include "RooArgSet.h"
 

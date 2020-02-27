@@ -16,7 +16,6 @@
 #ifndef ROO_MAPPED_CATEGORY
 #define ROO_MAPPED_CATEGORY
 
-#include "TObjArray.h"
 #include "RooAbsCategory.h"
 #include "RooCategoryProxy.h"
 #include "RooCatType.h"
