@@ -16,7 +16,6 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#include "TList.h"
 #include "TFile.h"
 #include "TXMLAttr.h"
 #include <TXMLNode.h>

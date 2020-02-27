@@ -23,7 +23,6 @@
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
-#include "TList.h"
 
 class RooAbsData;
 
