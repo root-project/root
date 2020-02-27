@@ -109,7 +109,6 @@
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TObjArray.h"
-#include "TObjString.h"
 #include "TDataMember.h"
 #include "TMethod.h"
 #include "TDataType.h"
