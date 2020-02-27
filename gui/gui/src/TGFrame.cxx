@@ -73,7 +73,6 @@
 #include "TClass.h"
 
 #include "TObjString.h"
-#include "TObjArray.h"
 #include "TBits.h"
 #include "TColor.h"
 #include "TROOT.h"
