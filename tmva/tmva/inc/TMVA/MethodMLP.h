@@ -49,7 +49,6 @@
 #include <vector>
 #include "TString.h"
 #include "TTree.h"
-#include "TObjArray.h"
 #include "TRandom3.h"
 #include "TH1F.h"
 #include "TMatrixDfwd.h"
