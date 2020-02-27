@@ -61,7 +61,6 @@
 #include "TSystem.h"
 #include "TRemoteObject.h"
 #include "TUrl.h"
-#include "TObjString.h"
 #include "compiledata.h"
 #include "TClass.h"
 

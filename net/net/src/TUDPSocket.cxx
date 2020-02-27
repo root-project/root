@@ -27,6 +27,7 @@
 #include "TError.h"
 #include "TMessage.h"
 #include "TUDPSocket.h"
+#include "TObjString.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TString.h"

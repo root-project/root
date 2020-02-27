@@ -26,6 +26,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TMessage.h"
+#include "TObjString.h"
 #include "TPSocket.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
@@ -35,6 +36,7 @@
 #include "TVirtualAuth.h"
 #include "TStreamerInfo.h"
 #include "TProcessID.h"
+
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
