@@ -36,9 +36,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#include "TObjString.h"
+#include "TString.h"
 #include "TRegexp.h"
-
 
 #define MAX_LEN_PAT 1024               // maximum length of a pattern
 #define dblquote(x) "\"" << x << "\""
