@@ -11,6 +11,8 @@
 
 #include "TStatistic.h"
 
+#include "TROOT.h"
+
 // clang-format off
 /**
 * \class TStatistic
