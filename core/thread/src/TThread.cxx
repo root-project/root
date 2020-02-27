@@ -33,6 +33,7 @@
 #include "TTimeStamp.h"
 #include "TInterpreter.h"
 #include "TError.h"
+#include "TSystem.h"
 #include "Varargs.h"
 #include "ThreadLocalStorage.h"
 #include "TThreadSlots.h"
