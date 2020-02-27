@@ -18,7 +18,6 @@
 #include "TDataType.h"
 #include "TDocInfo.h"
 #include "TDocParser.h"
-#include "TEnv.h"
 #include "THtml.h"
 #include "TInterpreter.h"
 #include "TMethod.h"
