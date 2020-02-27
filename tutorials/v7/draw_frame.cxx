@@ -18,7 +18,7 @@
 
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RColor.hxx"
-#include "ROOT/RTitle.hxx"
+#include "ROOT/RFrameTitle.hxx"
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RStyle.hxx"
@@ -34,7 +34,7 @@ auto style = std::make_shared<RStyle>(); // keep here to avoid destroy when leav
 void draw_frame()
 {
    // Create the histogram.
-   RAxisConfig xaxis("x", 10, 0.1, 110);
+   RAxisConfig xaxis("x", 10, 0.1, 110.);
    RAxisConfig yaxis("y", {0., 1., 2., 3., 10.});
    auto pHist = std::make_shared<RH2D>(xaxis, yaxis);
 
@@ -68,7 +68,8 @@ void draw_frame()
    frame1->AttrX().SetZoomMinMax(2.,80.);
    frame1->AttrY().SetMinMax(2,8);
 
-   subpads[0][0]->Draw<RTitle>("Frame1 title");
+   subpads[0][0]->Draw<RFrameTitle>("Frame1 title")->SetMargin(0.01_normal).SetHeight(0.05_normal);
+
    auto draw1 = subpads[0][0]->Draw(pHist);
    draw1->AttrLine().SetColor(RColor::kRed);
 
@@ -78,10 +79,9 @@ void draw_frame()
    auto draw2 = subpads[1][0]->Draw(pHist);
    draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(12);
 
-   auto title = subpads[1][0]->Draw<RTitle>("Frame2 title");
-   title->SetMargin(0.01_normal).SetHeight(0.05_normal);
+   subpads[1][0]->Draw<RFrameTitle>("Frame2 title");
 
-   style->ParseString("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color_name: green; }");
+   style->ParseString("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color_name: green; } title { margin: 0.02; height: 0.1; }");
 
    canvas->UseStyle(style);
 
