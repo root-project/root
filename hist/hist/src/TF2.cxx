@@ -19,7 +19,6 @@
 #include "Riostream.h"
 #include "TColor.h"
 #include "TVirtualFitter.h"
-#include "TClass.h"
 #include "Math/IntegratorOptions.h"
 
 ClassImp(TF2);

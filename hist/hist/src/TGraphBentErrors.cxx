@@ -16,12 +16,9 @@
 #include "TGraphBentErrors.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TArrow.h"
-#include "TBox.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TF1.h"
-#include "TClass.h"
 
 ClassImp(TGraphBentErrors);
 

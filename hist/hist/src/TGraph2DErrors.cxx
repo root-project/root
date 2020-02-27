@@ -11,10 +11,8 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TGraph2DErrors.h"
 #include "TMath.h"
-#include "TPolyMarker.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"

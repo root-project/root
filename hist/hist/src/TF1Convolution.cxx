@@ -22,7 +22,6 @@
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/Functor.h"
 #include "TVirtualFFT.h"
-#include "TClass.h"
 
 /** \class TF1Convolution
     \ingroup Hist

@@ -20,7 +20,6 @@
 #include "TColor.h"
 #include "TVirtualFitter.h"
 #include "TVirtualHistPainter.h"
-#include "TClass.h"
 #include <cassert>
 
 ClassImp(TF3);

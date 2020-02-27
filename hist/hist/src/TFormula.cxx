@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TROOT.h"
-#include "TClass.h"
 #include "TMethod.h"
 #include "TMath.h"
 #include "TF1.h"

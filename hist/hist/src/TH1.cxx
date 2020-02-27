@@ -37,7 +37,6 @@
 #include "TVectorF.h"
 #include "TVectorD.h"
 #include "TBrowser.h"
-#include "TObjString.h"
 #include "TError.h"
 #include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"

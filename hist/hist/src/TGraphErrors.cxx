@@ -16,14 +16,10 @@
 #include "TGraphErrors.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TArrow.h"
-#include "TBox.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TF1.h"
-#include "TVector.h"
 #include "TVectorD.h"
-#include "TClass.h"
 #include "TSystem.h"
 #include <string>
 
