@@ -81,9 +81,9 @@ void draw_frame()
 
    subpads[1][0]->Draw<RFrameTitle>("Frame2 title");
 
-   style->ParseString("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color_name: green; } title { margin: 0.02; height: 0.1; }");
+   style->ParseString("frame { margin_left: 0.3; margin_right: 0.3; x_line_color_name: blue; y_line_color_name: green; } \n title { margin: 0.02; height: 0.1; text_size: 20; }");
 
-   canvas->UseStyle(style);
+   subpads[1][0]->UseStyle(style);
 
    canvas->Show();
 }
