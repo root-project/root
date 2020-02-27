@@ -13,7 +13,6 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TPolyMarker.h"
-#include "TClass.h"
 #include "TMath.h"
 
 ClassImp(TPolyMarker);

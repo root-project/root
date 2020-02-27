@@ -22,7 +22,6 @@
 #include "TPluginManager.h"
 #include "TBrowser.h"
 #include "TColor.h"
-#include "TClass.h"
 #include "TMethodCall.h"
 #include "TF1Helper.h"
 #include "TF1NormSum.h"
