@@ -28,6 +28,7 @@
 
 #include "TList.h"
 #include "TMath.h"
+#include "TROOT.h"
 
 #include "TClass.h"
 #include "TVirtualPad.h" // for gPad
