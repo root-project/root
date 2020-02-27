@@ -62,7 +62,6 @@ extra libraries (Histogram, display, etc).
 #include "TChainElement.h"
 #include "TF1.h"
 #include "TVirtualFitter.h"
-#include "TEnv.h"
 #include "THLimitsFinder.h"
 #include "TSelectorDraw.h"
 #include "TSelectorEntries.h"

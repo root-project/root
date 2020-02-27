@@ -15,7 +15,6 @@
 #include "Riostream.h"
 #include "TSystem.h"
 #include "TImage.h"
-#include "TEnv.h"
 #include "TGToolTip.h"
 #include "TGPicture.h"
 #include "TRandom3.h"
