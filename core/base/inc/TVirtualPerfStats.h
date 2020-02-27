@@ -27,7 +27,6 @@
 
 class TFile;
 class TBranch;
-class TList;
 
 class TVirtualPerfStats : public TObject {
 
