@@ -55,7 +55,6 @@ and the evaluation is done here.
 #include "Riostream.h"
 #include "TRandom3.h"
 #include "TMath.h"
-#include "TObjString.h"
 
 #include <algorithm>
 #include <iomanip>

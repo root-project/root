@@ -92,7 +92,6 @@ evaluation phases.
 #include "TPaletteAxis.h"
 #include "TPrincipal.h"
 #include "TMath.h"
-#include "TObjString.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 

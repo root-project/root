@@ -81,7 +81,6 @@ The adaptive range search is used by default.
 #include "ThreadLocalStorage.h"
 #include "TBuffer.h"
 #include "TFile.h"
-#include "TObjString.h"
 #include "TMath.h"
 
 #include <assert.h>
