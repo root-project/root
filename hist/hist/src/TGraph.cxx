@@ -19,7 +19,6 @@
 #include "TF1.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TVector.h"
 #include "TVectorD.h"
 #include "Foption.h"
 #include "TRandom.h"
@@ -28,7 +27,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualGraphPainter.h"
 #include "TBrowser.h"
-#include "TClass.h"
 #include "TSystem.h"
 #include "TPluginManager.h"
 #include <stdlib.h>
