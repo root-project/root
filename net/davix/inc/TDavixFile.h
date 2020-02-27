@@ -55,13 +55,9 @@
 // S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_TOKEN. gEnv vars have higher priority.
 
 #include "TFile.h"
-#include "TUrl.h"
-#include "TSystem.h"
-#include "TMutex.h"
 
 class TDavixFileInternal;
 struct Davix_fd;
-
 
 class TDavixFile : public TFile {
 private:
