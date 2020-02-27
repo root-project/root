@@ -125,7 +125,6 @@ non-linear methods must be applied.
 #include "TMatrixD.h"
 #include "TVector.h"
 #include "TMath.h"
-#include "TObjString.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TH1.h"
