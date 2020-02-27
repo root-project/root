@@ -40,7 +40,6 @@ proof->SetParameter("PROOF_Packetizer", "TPacketizer");
 #include "TEntryList.h"
 #include "TMap.h"
 #include "TMessage.h"
-#include "TObjString.h"
 #include "TParameter.h"
 
 #include "TProof.h"

@@ -44,7 +44,6 @@ eliminated, optimizing the number of messages exchanged and created / destroyed.
 #include <cstdlib>
 
 #include "TProofServLite.h"
-#include "TObjString.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TException.h"
