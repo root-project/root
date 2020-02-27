@@ -36,7 +36,6 @@ interpreted as a parameter.
 
 #include <math.h>
 #include "Riostream.h"
-#include "TObjString.h"
 #include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"

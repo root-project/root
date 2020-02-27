@@ -41,7 +41,6 @@
 
 #include <math.h>
 #include "TClass.h"
-#include "TObjString.h"
 #include "TTree.h"
 #include "RooLinearVar.h"
 #include "RooStreamParser.h"

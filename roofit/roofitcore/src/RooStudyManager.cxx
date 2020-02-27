@@ -37,6 +37,7 @@ repeated applications of generate-and-fit operations on a workspace
 #include "RooStudyPackage.h"
 #include "TTree.h"
 #include "TFile.h"
+#include "TObjString.h"
 #include "TRegexp.h"
 #include "TKey.h"
 #include <string>
@@ -46,8 +47,6 @@ repeated applications of generate-and-fit operations on a workspace
 using namespace std ;
 
 ClassImp(RooStudyManager);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

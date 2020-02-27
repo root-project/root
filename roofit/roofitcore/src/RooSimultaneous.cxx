@@ -49,7 +49,6 @@ in each category.
 #include "RooFit.h"
 #include "Riostream.h"
 
-#include "TObjString.h"
 #include "RooSimultaneous.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooPlot.h"

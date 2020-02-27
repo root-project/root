@@ -177,7 +177,6 @@ called for each data event.
 #include "TClass.h"
 #include "Riostream.h"
 #include "TMath.h"
-#include "TObjString.h"
 #include "TPaveText.h"
 #include "TList.h"
 #include "TH1.h"
@@ -192,9 +191,9 @@ called for each data event.
 using namespace std;
 
 ClassImp(RooAbsPdf); 
-;
+
 ClassImp(RooAbsPdf::GenSpec);
-;
+
 
 Int_t RooAbsPdf::_verboseEval = 0;
 TString RooAbsPdf::_normRangeOverride ;

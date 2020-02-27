@@ -33,7 +33,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "TClass.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
-#include "TObjString.h"
 #include "TH1.h"
 #include "RooRealIntegral.h"
 #include "RooArgSet.h"
@@ -54,7 +53,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 using namespace std;
 
 ClassImp(RooRealIntegral); 
-;
 
 
 Int_t RooRealIntegral::_cacheAllNDim(2) ;

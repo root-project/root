@@ -38,7 +38,6 @@ setting/clearing/testing named attributes.
 
 #include "TBuffer.h"
 #include "TClass.h"
-#include "TObjString.h"
 #include "TVirtualStreamerInfo.h"
 // #include "TGraphStruct.h"
 
