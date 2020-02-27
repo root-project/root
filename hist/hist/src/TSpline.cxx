@@ -21,7 +21,6 @@
 #include "TF1.h"
 #include "TSystem.h"
 #include "Riostream.h"
-#include "TClass.h"
 #include "TMath.h"
 
 ClassImp(TSplinePoly);

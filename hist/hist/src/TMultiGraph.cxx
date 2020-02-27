@@ -21,7 +21,6 @@
 #include "Riostream.h"
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
-#include "TClass.h"
 #include "TMath.h"
 #include "TSystem.h"
 #include <stdlib.h>

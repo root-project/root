@@ -22,7 +22,6 @@
 #include "TDatime.h"
 #include "TTimeStamp.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TMath.h"
 #include <time.h>
 #include <cassert>

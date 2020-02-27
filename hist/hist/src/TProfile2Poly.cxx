@@ -14,7 +14,6 @@
 
 #include "TMultiGraph.h"
 #include "TGraph.h"
-#include "TClass.h"
 #include "TList.h"
 #include "TMath.h"
 
