@@ -76,7 +76,6 @@
 #include "TFile.h"
 #include "THashList.h"
 #include "TKey.h"
-#include "TObjString.h"
 #include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
