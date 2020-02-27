@@ -91,6 +91,8 @@ void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool 
 
    if ((fWebWindow->NumConnections(true) == 0) || always_start_new_browser)
       fWebWindow->Show(args);
+   else
+      Update();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////

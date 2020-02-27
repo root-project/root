@@ -14,10 +14,16 @@
 
 #include "TVirtualGeoPainter.h"
 
+#include <ROOT/REveGeomViewer.hxx>
+
 namespace ROOT {
 namespace Experimental {
 
 class REveGeoPainter : public TVirtualGeoPainter {
+
+   TGeoManager *fGeoManager{nullptr};
+
+   std::shared_ptr<REveGeomViewer> fViewer;
 
 public:
    REveGeoPainter(TGeoManager *manager);
@@ -47,7 +53,7 @@ public:
    void       DrawPanel() override {}
    void       DrawPath(const char *, Option_t * ="") override {}
    void       DrawPolygon(const TGeoPolygon *) override {}
-   void       DrawVolume(TGeoVolume *, Option_t * ="") override {}
+   void       DrawVolume(TGeoVolume *, Option_t * ="") override;
    void       EditGeometry(Option_t * ="") override {}
    void       EstimateCameraMove(Double_t /*tmin*/, Double_t /*tmax*/, Double_t *, Double_t * ) override {}
    void       ExecuteShapeEvent(TGeoShape *, Int_t, Int_t, Int_t) override {}
@@ -87,7 +93,7 @@ public:
    void       SetBombFactors(Double_t =1.3, Double_t =1.3, Double_t =1.3, Double_t =1.3) override {}
    void       SetClippingShape(TGeoShape *) override {}
    void       SetExplodedView(Int_t =0) override {}
-   void       SetGeoManager(TGeoManager *) override {}
+   void       SetGeoManager(TGeoManager *) override;
    void       SetIteratorPlugin(TGeoIteratorPlugin *) override {}
    void       SetCheckedNode(TGeoNode *) override {}
    void       SetNsegments(Int_t =20) override {}
