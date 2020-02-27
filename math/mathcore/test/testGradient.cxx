@@ -16,6 +16,7 @@
 #include "TH1.h"
 #include "TF2.h"
 #include "TH2.h"
+#include "TROOT.h"
 
 #include "TRandom3.h"
 
@@ -296,11 +297,11 @@ struct GradientTestEvaluation {
       //    std::cout << "  " << solution[i];
       // std::cout << std::endl;
 
-      
+
       std::chrono::duration<Double_t> timeElapsed = end - start;
 
       return timeElapsed.count() / fNumRepetitions;
-     
+
    }
 
    static const int fNumRepetitions = 2;
