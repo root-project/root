@@ -25,7 +25,6 @@
 #include "TTeXDump.h"
 #include "TStyle.h"
 #include "TMath.h"
-#include "TObjArray.h"
 #include "TClass.h"
 
 ClassImp(TTeXDump);

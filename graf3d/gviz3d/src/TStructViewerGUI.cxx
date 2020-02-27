@@ -27,7 +27,6 @@
 #include <TDataMember.h>
 #include <TExMap.h>
 #include <TPolyLine3D.h>
-#include <TObjArray.h>
 #include <TColor.h>
 #include <TGTab.h>
 #include <TGeoManager.h>

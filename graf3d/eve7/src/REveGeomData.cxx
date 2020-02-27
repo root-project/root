@@ -28,7 +28,6 @@
 #include "TGeoMedium.h"
 #include "TGeoMaterial.h"
 #include "TGeoCompositeShape.h"
-#include "TObjArray.h"
 #include "TBuffer3D.h"
 #include "TBufferJSON.h"
 

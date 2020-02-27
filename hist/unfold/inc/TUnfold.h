@@ -94,7 +94,6 @@
 #include <TSpline.h>
 #include <TMatrixDSparse.h>
 #include <TMatrixD.h>
-#include <TObjArray.h>
 #include <TString.h>
 
 #define TUnfold_VERSION "V17.6"
