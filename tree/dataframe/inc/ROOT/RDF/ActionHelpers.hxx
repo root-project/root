@@ -30,7 +30,6 @@
 #include "TH1.h"
 #include "TGraph.h"
 #include "TLeaf.h"
-#include "TObjArray.h"
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
