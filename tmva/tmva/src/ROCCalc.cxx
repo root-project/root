@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <errno.h>
 
-#include "TObjString.h"
 #include "TMath.h"
 #include "TString.h"
 #include "TTree.h"
