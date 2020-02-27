@@ -38,7 +38,6 @@
 #include "TError.h"
 #include "TPRegexp.h"
 #include "TVirtualMonitoring.h"
-#include "TObjArray.h"
 #include "THashList.h"
 #include "TKey.h"
 #include "TTree.h"
