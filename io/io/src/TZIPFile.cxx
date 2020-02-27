@@ -54,7 +54,6 @@ the sub-file starts. The members can be accessed in any order.
 
 #include "TZIPFile.h"
 #include "TFile.h"
-#include "TObjArray.h"
 
 
 ClassImp(TZIPFile);
