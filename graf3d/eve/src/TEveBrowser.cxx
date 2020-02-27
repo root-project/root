@@ -30,7 +30,6 @@
 #include "TSystem.h"
 #include "TRint.h"
 #include "TVirtualX.h"
-#include "TEnv.h"
 
 #include "TApplication.h"
 #include "TFile.h"

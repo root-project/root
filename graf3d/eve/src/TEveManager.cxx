@@ -38,7 +38,6 @@
 #include "TSystem.h"
 #include "TRint.h"
 #include "TVirtualX.h"
-#include "TEnv.h"
 #include "TColor.h"
 #include "TVirtualGL.h"
 #include "TPluginManager.h"

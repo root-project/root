@@ -18,7 +18,6 @@
 #include <ROOT/REveSelection.hxx>
 
 #include "TApplication.h"
-#include "TEnv.h"
 #include "TSystem.h"
 
 using namespace ROOT::Experimental;

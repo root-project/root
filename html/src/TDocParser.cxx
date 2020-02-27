@@ -19,7 +19,6 @@
 #include "TDataType.h"
 #include "TDatime.h"
 #include "TDocDirective.h"
-#include "TEnv.h"
 #include "TGlobal.h"
 #include "THtml.h"
 #include "TInterpreter.h"
