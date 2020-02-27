@@ -17,6 +17,7 @@ using namespace ROOT::Experimental;
 
 REveGeoPainter::REveGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 {
+   TVirtualGeoPainter::SetPainter(this);
    fGeoManager = manager;
 }
 
@@ -32,7 +33,7 @@ void REveGeoPainter::SetGeoManager(TGeoManager *mgr)
    fGeoManager = mgr;
 }
 
-void REveGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *)
+void REveGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
 {
    if (!fViewer)
       fViewer = std::make_shared<REveGeomViewer>(fGeoManager);
@@ -40,8 +41,12 @@ void REveGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *)
    // select volume to draw
    fViewer->SetGeometry(fGeoManager, vol->GetName());
 
+   std::string drawopt = "";
+   if (opt && strstr(opt,"s"))
+      drawopt = "wire";
+
    // specify JSROOT draw options - here clipping on X,Y,Z axes
-   // viewer->SetDrawOptions("clipxyz");
+   fViewer->SetDrawOptions(drawopt);
 
    // set default limits for number of visible nodes and faces
    // when viewer created, initial values exported from TGeoManager
