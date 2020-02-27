@@ -23,7 +23,6 @@
 #include "TF1.h"
 #include "TVector.h"
 #include "TVectorD.h"
-#include "TStyle.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include <string>
