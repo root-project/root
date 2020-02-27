@@ -143,7 +143,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TProcessUUID.h"
 #include "TPluginManager.h"
 #include "TMap.h"
-#include "TObjString.h"
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TListOfTypes.h"

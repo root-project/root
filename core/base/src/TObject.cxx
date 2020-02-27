@@ -45,7 +45,6 @@ class hierarchies (watch out for overlaps).
 #include "TVirtualPad.h"
 #include "TInterpreter.h"
 #include "TMemberInspector.h"
-#include "TObjString.h"
 #include "TRefTable.h"
 #include "TProcessID.h"
 

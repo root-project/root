@@ -35,7 +35,6 @@
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"
 #include "TInterpreter.h"
-#include "TObjString.h"
 #include "TVirtualX.h"
 #include "TUrl.h"
 
