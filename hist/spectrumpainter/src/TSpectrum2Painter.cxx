@@ -31,8 +31,6 @@ Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 #include <climits>
 
 #include "TROOT.h"
-#include "TClass.h"
-#include "TClass.h"
 #include "TColor.h"
 #include "TMath.h"
 #include "TLine.h"

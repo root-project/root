@@ -16,7 +16,6 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TSystem.h"
 #include "THistPainter.h"
 #include "TH2.h"
