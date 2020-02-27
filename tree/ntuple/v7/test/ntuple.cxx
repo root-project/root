@@ -870,7 +870,7 @@ TEST(RNTuple, ReadString)
    EXPECT_EQ(contentString, viewSt(nElementsPerPage/7));
 }
 
-
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST(RNTuple, LargeFile)
 {
    FileRaii fileGuard("test_large_file.root");
@@ -910,3 +910,4 @@ TEST(RNTuple, LargeFile)
    EXPECT_TRUE(f != nullptr);
    delete f;
 }
+#endif

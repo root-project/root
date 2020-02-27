@@ -145,7 +145,7 @@ TEST_F(TestRooWorkspaceWithGaussian, ImportFromFile)
   //Expect successful import:
   EXPECT_FALSE(w.import(spec.str().c_str()));
 
-
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
   //Expect import failures:
   RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments, "ws");
   EXPECT_TRUE(w.import("bogus:abc"));
@@ -155,6 +155,7 @@ TEST_F(TestRooWorkspaceWithGaussian, ImportFromFile)
   ASSERT_TRUE(hijack.str().empty());
   EXPECT_TRUE(w.import( (spec.str()+"bogus").c_str()));
   EXPECT_FALSE(hijack.str().empty());
+#endif
 }
 
 
