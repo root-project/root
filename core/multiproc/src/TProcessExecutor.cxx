@@ -10,7 +10,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TEnv.h"
 #include "ROOT/TProcessExecutor.hxx"
 
 //////////////////////////////////////////////////////////////////////////
