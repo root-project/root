@@ -43,6 +43,7 @@
 #include "KeySymbols.h"
 #include "Riostream.h"
 #include "RConfigure.h"
+#include "TVirtualX.h"
 
 
 static const char *gFiletypes[] = { "All files",     "*",
