@@ -60,6 +60,7 @@
 #include "TCrown.h"
 #include "TArrow.h"
 #include "TVirtualPadEditor.h"
+#include "TVirtualX.h"
 #include "TEnv.h"
 #include "TPoint.h"
 #include "TImage.h"

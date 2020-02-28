@@ -54,6 +54,7 @@ using TBuffer3D mechanism.
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
+#include "TVirtualX.h"
 
 ClassImp(TGeoPainter);
 
