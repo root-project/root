@@ -536,7 +536,6 @@ shuts down the interpreter.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10367'>ROOT-10367</a>] `RooFormulaVar` with categories crash when plotted
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10369'>ROOT-10369</a>] Inverted logic in assert in `TEveVectorT` on Windows
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10370'>ROOT-10370</a>] Builtin CFITSIO has several security vulnerabilities
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10372'>ROOT-10372</a>] CloneData option is ignored in `RooAbsPdf::createNLL`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10375'>ROOT-10375</a>] V523 The `then` statement is equivalent to the `else` statement. MethodMLP.cxx 423
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10391'>ROOT-10391</a>] Marker 29 looks different in png and pdf output
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10411'>ROOT-10411</a>] `RooFormula` doesn't compile when arguments are renamed
