@@ -88,6 +88,8 @@
 #include "TGDNDManager.h"
 #include "TImage.h"
 #include "TObjectSpy.h"
+#include "TVirtualX.h"
+
 
 
 Bool_t      TGFrame::fgInit = kFALSE;

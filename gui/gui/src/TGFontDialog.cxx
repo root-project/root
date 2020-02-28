@@ -28,8 +28,8 @@
 #include "TGLabel.h"
 #include "TGListBox.h"
 #include "TGComboBox.h"
+#include "TVirtualX.h"
 #include <stdlib.h>
-
 
 
 enum EFontDialog {

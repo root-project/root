@@ -60,6 +60,7 @@
 #include "TGPicture.h"
 #include "Riostream.h"
 #include "TSystem.h"
+#include "TVirtualX.h"
 
 
 ClassImp(TGDoubleSlider);

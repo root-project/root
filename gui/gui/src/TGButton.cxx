@@ -101,6 +101,8 @@
 #include "TClass.h"
 #include "TGMenu.h"
 #include "KeySymbols.h"
+#include "TVirtualX.h"
+
 
 const TGGC *TGButton::fgHibckgndGC = 0;
 const TGGC *TGButton::fgDefaultGC = 0;
