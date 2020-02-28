@@ -20,7 +20,7 @@
 #include "TDataType.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TPaveClass.h"
 #include "TArrow.h"
 #include "TText.h"
