@@ -19,7 +19,7 @@ Editor for a TGeoTranslation.
 #include "TGeoMatrixEditor.h"
 #include "TGeoTabManager.h"
 #include "TGeoMatrix.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TGTab.h"
 #include "TGComboBox.h"
 #include "TGButton.h"

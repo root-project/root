@@ -25,7 +25,7 @@ Editor for a TGeoHype.
 #include "TGeoHype.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TView.h"
 #include "TMath.h"
 #include "TGTab.h"

@@ -22,7 +22,6 @@ Editors for materials.
 #include "TGeoMaterial.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
-#include "TPad.h"
 #include "TView.h"
 #include "TGTab.h"
 #include "TGComboBox.h"

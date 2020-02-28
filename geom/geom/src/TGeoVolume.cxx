@@ -382,7 +382,6 @@ volumes (or volume assemblies) as content.
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "TH2F.h"
-#include "TPad.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TEnv.h"
