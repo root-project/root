@@ -21,7 +21,6 @@
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
-#include "TVirtualGL.h"
 #include "TVirtualX.h"
 #include "TGLViewer.h"
 #include "TGLUtil.h"
