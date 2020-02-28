@@ -158,6 +158,7 @@
 #include "TTreePlayer.h"
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
+#include "TVirtualX.h"
 
 #include "RConfigure.h"
 #include "TPluginManager.h"

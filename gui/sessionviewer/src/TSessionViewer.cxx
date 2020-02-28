@@ -64,6 +64,7 @@
 #include "TH2.h"
 #include "TTreePlayer.h"
 #include "TFileCollection.h"
+#include "TVirtualX.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
