@@ -13,8 +13,8 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TPolyLine.h"
-#include "TClass.h"
 
 ClassImp(TPolyLine);
 
