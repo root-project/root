@@ -515,7 +515,8 @@ if(ROOT_pyroot_FOUND)
    list(APPEND pyveto
        dataframe/df102_NanoAODDimuonAnalysis.py
        dataframe/df103_NanoAODHiggsAnalysis.py
-       dataframe/df104_HiggsToTwoPhotons.py)
+       dataframe/df104_HiggsToTwoPhotons.py
+       dataframe/df105_WBosonAnalysis.py)
  endif()
 
   list(REMOVE_ITEM pytutorials ${pyveto})
