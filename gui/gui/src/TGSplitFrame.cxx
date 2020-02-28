@@ -23,6 +23,8 @@
 #include "TClass.h"
 #include "TList.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
+
 
 ClassImp(TGSplitTool);
 ClassImp(TGSplitFrame);

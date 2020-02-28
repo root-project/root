@@ -69,10 +69,11 @@
 #include "TGDNDManager.h"
 #include "Riostream.h"
 #include "RConfigure.h"
+#include "TVirtualX.h"
 #include <stdlib.h>
 
 
-TGGC *TGContainer::fgLineGC = 0;
+TGGC *TGContainer::fgLineGC = nullptr;
 
 const Int_t kAutoScrollFudge = 10;
 const Int_t kAcceleration[kAutoScrollFudge+1] = {1,1,1,2,3,4,6,7,8,16,32};

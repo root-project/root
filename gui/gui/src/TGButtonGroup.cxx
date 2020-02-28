@@ -85,6 +85,7 @@
 #include "TGLayout.h"
 #include "TList.h"
 #include "TGResourcePool.h"
+#include "TVirtualX.h"
 #include "Riostream.h"
 
 

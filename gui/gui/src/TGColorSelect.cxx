@@ -53,6 +53,7 @@
 #include "RConfigure.h"
 #include "TG3DLine.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "Riostream.h"
 
 ClassImp(TGColorFrame);
