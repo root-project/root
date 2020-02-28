@@ -14,6 +14,7 @@
 #include "TGWindow.h"
 #include "TGScrollBar.h"
 #include "TGTable.h"
+#include "TVirtualX.h"
 
 ClassImp(TGTableFrame);
 ClassImp(TGTableHeaderFrame);

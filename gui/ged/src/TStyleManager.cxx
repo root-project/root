@@ -145,8 +145,9 @@
 #include <TStyle.h>
 #include <TSystem.h>
 #include <TVirtualPad.h>
+#include <TVirtualX.h>
 
-TStyleManager *TStyleManager::fgStyleManager = 0;
+TStyleManager *TStyleManager::fgStyleManager = nullptr;
 
 ClassImp(TStyleManager);
 

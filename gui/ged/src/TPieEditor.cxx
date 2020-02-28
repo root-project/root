@@ -40,6 +40,7 @@
 #include "TColor.h"
 #include "TBox.h"
 #include "TPaveLabel.h"
+#include "TVirtualX.h"
 
 ClassImp(TPieEditor);
 

@@ -45,6 +45,7 @@
 #include "TGButton.h"
 #include "Riostream.h"
 #include "RStipples.h"
+#include "TVirtualX.h"
 
 ClassImp(TGedPopup);
 ClassImp(TGedSelect);
@@ -53,7 +54,7 @@ ClassImp(TGedPatternSelector);
 ClassImp(TGedPatternPopup);
 ClassImp(TGedPatternSelect);
 
-TGGC* TGedPatternFrame::fgGC = 0;
+TGGC* TGedPatternFrame::fgGC = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////

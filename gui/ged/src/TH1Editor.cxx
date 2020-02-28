@@ -146,6 +146,7 @@
 #include "TGMsgBox.h"
 #include "TGTab.h"
 #include "TROOT.h"
+#include "TVirtualX.h"
 
 ClassImp(TH1Editor);
 
