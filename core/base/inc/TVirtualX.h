@@ -40,12 +40,6 @@ R__EXTERN Atom_t gWM_DELETE_WINDOW;
 R__EXTERN Atom_t gMOTIF_WM_HINTS;
 R__EXTERN Atom_t gROOT_MESSAGE;
 
-const int kNumCursors = 19;
-enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
-               kBottomSide, kLeftSide, kTopSide, kRightSide,
-               kMove, kCross, kArrowHor, kArrowVer, kHand, kRotate,
-               kPointer, kArrowRight, kCaret, kWatch, kNoDrop };
-
 class TPoint;
 class TString;
 class TGWin32Command;
