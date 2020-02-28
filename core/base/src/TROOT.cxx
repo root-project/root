@@ -153,6 +153,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TFunctionTemplate.h"
 #include "ThreadLocalStorage.h"
 #include "TVirtualRWMutex.h"
+#include "TVirtualX.h"
 
 #include <string>
 namespace std {} using namespace std;
