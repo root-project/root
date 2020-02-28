@@ -45,6 +45,7 @@
 #include "TVirtualPadEditor.h"
 #include "TGedEditor.h"
 #include "TBaseClass.h"
+#include "TVirtualX.h"
 
 #include "RConfigure.h"
 

@@ -21,6 +21,7 @@
 #include "TGPicture.h"
 #include "TGTable.h"
 #include "TRandom3.h"
+#include "TVirtualX.h"
 
 ClassImp(TGTableHeader);
 

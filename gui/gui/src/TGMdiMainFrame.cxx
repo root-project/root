@@ -48,6 +48,7 @@
 #include "TGResourcePool.h"
 #include "Riostream.h"
 #include "TList.h"
+#include "TVirtualX.h"
 
 ClassImp(TGMdiMainFrame);
 ClassImp(TGMdiContainer);

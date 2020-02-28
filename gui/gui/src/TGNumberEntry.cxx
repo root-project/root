@@ -84,6 +84,7 @@
 #include "TGToolTip.h"
 #include "TMath.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
 #include <ctype.h>
 
 

@@ -15,6 +15,7 @@
 #include "TGPicture.h"
 #include "TImage.h"
 #include "TGShapedFrame.h"
+#include "TVirtualX.h"
 #include "Riostream.h"
 
 ClassImp(TGShapedFrame);

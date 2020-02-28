@@ -217,6 +217,7 @@ All other keys with valid ASCII codes insert themselves into the line.
 #include "Riostream.h"
 #include "TClass.h"
 #include "TGMsgBox.h"
+#include "TVirtualX.h"
 
 
 TString      *TGTextEntry::fgClipboardText = 0;

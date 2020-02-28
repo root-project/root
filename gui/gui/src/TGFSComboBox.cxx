@@ -36,10 +36,11 @@
 #include "TGPicture.h"
 #include "TSystem.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
 #include <stdlib.h>
 
-const TGFont *TGTreeLBEntry::fgDefaultFont = 0;
-TGGC         *TGTreeLBEntry::fgDefaultGC = 0;
+const TGFont *TGTreeLBEntry::fgDefaultFont = nullptr;
+TGGC         *TGTreeLBEntry::fgDefaultGC = nullptr;
 
 //--- this is temp here...
 

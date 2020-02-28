@@ -38,6 +38,7 @@
 #include "TImage.h"
 #include "TEnv.h"
 #include "TMath.h"
+#include "TVirtualX.h"
 
 #include "TGSpeedo.h"
 

@@ -47,6 +47,7 @@
 #include "TTimer.h"
 #include "TEnv.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
 
 
 Pixmap_t TGScrollBar::fgBckgndPixmap = 0;

@@ -51,6 +51,8 @@
 #include "TGMdiFrame.h"
 #include "TGMdiDecorFrame.h"
 #include "TGMdiMainFrame.h"
+#include "TVirtualX.h"
+
 
 ClassImp(TGMdiDecorFrame);
 ClassImp(TGMdiTitleBar);

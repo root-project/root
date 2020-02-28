@@ -30,6 +30,7 @@
 #include "TImage.h"
 #include "TClass.h"
 #include "TUrl.h"
+#include "TVirtualX.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -62,6 +62,7 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TVirtualX.h"
 
 ClassImp(TGColorPalette);
 ClassImp(TGColorPick);

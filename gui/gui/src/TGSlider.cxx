@@ -51,6 +51,8 @@
 #include "TImage.h"
 #include "TEnv.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
+
 
 ClassImp(TGSlider);
 ClassImp(TGVSlider);

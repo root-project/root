@@ -46,11 +46,12 @@
 #include "TSystem.h"
 #include "Riostream.h"
 #include "TMath.h"
+#include "TVirtualX.h"
 #include <stdlib.h>
 
 
-const TGFont *TGTextLBEntry::fgDefaultFont = 0;
-TGGC         *TGTextLBEntry::fgDefaultGC = 0;
+const TGFont *TGTextLBEntry::fgDefaultFont = nullptr;
+TGGC         *TGTextLBEntry::fgDefaultGC = nullptr;
 
 ClassImp(TGLBEntry);
 ClassImp(TGTextLBEntry);

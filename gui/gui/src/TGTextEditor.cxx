@@ -182,6 +182,7 @@
 #include "TObjString.h"
 #include "TRootHelpDialog.h"
 #include "HelpText.h"
+#include "TVirtualX.h"
 #ifdef WIN32
 #include "TWin32SplashThread.h"
 #endif
