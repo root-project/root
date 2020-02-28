@@ -33,6 +33,7 @@
 #include "TFrame.h"
 #include "TMarker.h"
 #include "TVirtualPadEditor.h"
+#include "TVirtualX.h"
 #include "TRegexp.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
