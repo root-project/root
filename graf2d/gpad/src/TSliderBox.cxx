@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TSlider.h"
 #include "TSliderBox.h"
+#include "TVirtualX.h"
 
 #include <string.h>
 

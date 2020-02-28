@@ -15,6 +15,7 @@
 #include <Riostream.h>
 #include <TROOT.h>
 #include <TVirtualPad.h>
+#include <TVirtualX.h>
 #include <TArc.h>
 #include <TLegend.h>
 #include <TMath.h>

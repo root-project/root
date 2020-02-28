@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TPaletteAxis.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TStyle.h"
 #include "TMath.h"
 #include "TView.h"

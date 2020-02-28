@@ -35,6 +35,7 @@ TImageDump can be used in any mode (batch, interactive) as follows
 #include "TPoint.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TText.h"
