@@ -21,6 +21,7 @@
 
 #include "TClass.h"
 #include "TContextMenu.h"
+#include "TVirtualX.h"
 
 /** \class TEveGedEditor
 \ingroup TEve
@@ -32,7 +33,7 @@ ClassImp(TEveGedEditor);
 Int_t   TEveGedEditor::fgMaxExtraEditors = 10;
 TList  *TEveGedEditor::fgExtraEditors    = new TList;
 
-TContextMenu *TEveGedEditor::fgContextMenu = 0;
+TContextMenu *TEveGedEditor::fgContextMenu = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -47,6 +47,7 @@ with a tree hierarchy. Specific implementations are:
 
 #include "TGedEditor.h"
 #include "TGeoTabManager.h"
+#include "TVirtualX.h"
 
 TMap TGeoTabManager::fgEditorToMgrMap;
 

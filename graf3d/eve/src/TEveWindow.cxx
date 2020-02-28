@@ -21,6 +21,7 @@
 #include "TGPack.h"
 #include "TGTab.h"
 #include "TRootContextMenu.h"
+#include "TVirtualX.h"
 
 #include <cassert>
 

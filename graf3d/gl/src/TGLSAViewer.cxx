@@ -32,6 +32,7 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TString.h"
 #include "TGFileDialog.h"
+#include "TVirtualX.h"
 
 #include "TGLOutput.h"
 #include "TGLFormat.h"
