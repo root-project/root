@@ -16,7 +16,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualX.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TPolyLine.h"
 #include "TGraph.h"
 #include "TPaveText.h"
