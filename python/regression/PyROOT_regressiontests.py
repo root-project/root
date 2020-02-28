@@ -558,8 +558,8 @@ class Regression21ReuseProxies(MyTestCase):
          self.assertEqual(a2.b, val)
          self.assertEqual(a1.otherA.b, val)
 
-### Check that kMustCleanup is not set for proxied objects ================
-class Regression22KMustCleanup(MyTestCase):
+### Tests related to cleanup of proxied objects ================
+class Regression22ObjectCleanup(MyTestCase):
    def test1GetListOfGraphs(self):
       """List returned by GetListOfGraphs should not have kMustCleanup set to true"""
       # ROOT-9040
@@ -572,6 +572,11 @@ class Regression22KMustCleanup(MyTestCase):
 
          c = ROOT.TCanvas()
          mg.Draw()
+
+   def test2RooFitMinimizer(self):
+      """C++ object returned by RooFit::Minimizer should not be double deleted"""
+      # ROOT-9516
+      minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")
 
 
 ## actual test run
