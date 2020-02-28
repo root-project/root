@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TGraphStruct.h"
 
 #include <stdio.h>
