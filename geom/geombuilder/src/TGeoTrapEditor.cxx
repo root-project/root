@@ -25,7 +25,7 @@ Editor for a TGeoTrap.
 #include "TGeoArb8.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TView.h"
 #include "TGTab.h"
 #include "TGComboBox.h"

@@ -26,7 +26,7 @@ Editor for a TGeoCone.
 #include "TGeoCone.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TView.h"
 #include "TGTab.h"
 #include "TGComboBox.h"

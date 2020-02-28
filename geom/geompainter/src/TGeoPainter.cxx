@@ -23,7 +23,7 @@ using TBuffer3D mechanism.
 #include "TView.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TCanvas.h"
 #include "TH2F.h"
 #include "TF1.h"
