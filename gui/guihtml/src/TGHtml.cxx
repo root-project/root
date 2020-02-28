@@ -47,6 +47,7 @@
 #include "Riostream.h"
 #include "TGComboBox.h"
 #include "TGListBox.h"
+#include "TVirtualX.h"
 
 //_____________________________________________________________________________
 //

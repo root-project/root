@@ -78,6 +78,7 @@
 #include <TSystemDirectory.h>
 #include <TInterpreter.h>
 #include <TStopwatch.h>
+#include <TVirtualX.h>
 
 #include <TRecorder.h>
 

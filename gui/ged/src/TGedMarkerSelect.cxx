@@ -34,6 +34,7 @@
 #include "TGToolTip.h"
 #include "TGButton.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
 
 ClassImp(TGedMarkerSelect);
 ClassImp(TGedMarkerPopup);

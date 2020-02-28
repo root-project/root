@@ -31,6 +31,7 @@
 
 #include "TGHtml.h"
 #include "TImage.h"
+#include "TVirtualX.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the current rendering style. In other words, get the style

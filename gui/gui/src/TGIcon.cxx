@@ -37,6 +37,7 @@
 #include "TGFileDialog.h"
 #include "TGMsgBox.h"
 #include "TVirtualDragManager.h"
+#include "TVirtualX.h"
 
 
 ClassImp(TGIcon);
