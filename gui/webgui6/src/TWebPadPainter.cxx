@@ -14,7 +14,6 @@
 #include "TImage.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "TPad.h"
 #include "TWebCanvas.h"
 #include "TBufferJSON.h"
 
