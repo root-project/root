@@ -367,4 +367,10 @@ const Atom_t kPrimarySelection = 1;  // magic values, must match the ones
 const Atom_t kCutBuffer        = 9;  // in /usr/include/X11/Xatom.h
 const Int_t  kMaxPixel         = 32000;
 
+const int kNumCursors = 19;
+enum ECursor { kBottomLeft, kBottomRight, kTopLeft, kTopRight,
+               kBottomSide, kLeftSide, kTopSide, kRightSide,
+               kMove, kCross, kArrowHor, kArrowVer, kHand, kRotate,
+               kPointer, kArrowRight, kCaret, kWatch, kNoDrop };
+
 #endif

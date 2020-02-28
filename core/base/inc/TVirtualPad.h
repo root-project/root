@@ -22,15 +22,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+
+#include "TObject.h"
+#include "TAttLine.h"
+#include "TAttFill.h"
 #include "TAttPad.h"
-
-#include "TVirtualX.h"
-
-#include "TString.h"
-
-#include "Buttons.h"
-
 #include "TQObject.h"
+
+#include "GuiTypes.h"
+#include "TString.h"
+#include "Buttons.h"
 
 // forward declarations
 class TAxis;
