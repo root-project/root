@@ -18,7 +18,7 @@
 #include "TClass.h"
 #include "TAxis3D.h"
 #include "TCanvas.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TGaxis.h"
 #include "TView.h"
 #include "TVirtualPad.h"

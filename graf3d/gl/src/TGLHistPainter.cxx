@@ -20,7 +20,7 @@
 #include "TROOT.h"
 #include "TGL5D.h"
 #include "TMath.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TH3.h"
 #include "TF3.h"
 
