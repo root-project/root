@@ -85,6 +85,12 @@ more information on how to modernise old code.
 
 ## Geometry Libraries
 
+### Geometry drawing in web browser
+
+When ROOT compiled with -Droot7=ON flag, one can enable geometry drawing in web browser.
+Just apply --web option when starting root like: `root --web tutorials/geom/rootgeom.C`
+Not all features of TGeoPainter are supported - only plain drawing of selected TGeoVolume
+
 
 ## Database Libraries
 
