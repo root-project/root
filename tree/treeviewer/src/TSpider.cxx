@@ -23,7 +23,7 @@
 #include "TROOT.h"
 #include "TEntryList.h"
 #include "TLatex.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TArc.h"
