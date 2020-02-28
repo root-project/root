@@ -34,7 +34,6 @@
 #include "TClass.h"
 #include "TSystem.h"
 #include "TCanvas.h"
-#include "TPadPainter.h"
 #include "TBrowser.h"
 #include "TClassTree.h"
 #include "TMarker.h"
