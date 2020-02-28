@@ -20,8 +20,6 @@
 
 #include "TAxis.h"
 
-#include "TMath.h"
-
 class TH1;
 class TH1D;
 class TH2D;
