@@ -34,6 +34,7 @@
 #include "TPadPainter.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
+#include "TVirtualX.h"
 #include "TAxis.h"
 #include "TH1.h"
 #include "TGraph.h"
