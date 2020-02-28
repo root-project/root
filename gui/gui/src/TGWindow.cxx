@@ -31,6 +31,7 @@
 #include "TGWindow.h"
 #include "Riostream.h"
 #include "TApplication.h"
+#include "TVirtualX.h"
 
 ClassImp(TGWindow);
 ClassImp(TGUnknownWindowHandler);
@@ -133,6 +134,102 @@ void TGWindow::SetWindowName(const char *name)
 const TGWindow *TGWindow::GetMainFrame() const
 {
    return ((fParent == 0) || (fParent == fClient->GetDefaultRoot())) ? this : fParent->GetMainFrame();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// map window
+
+void TGWindow::MapWindow()
+{
+   gVirtualX->MapWindow(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// map sub windows
+
+void TGWindow::MapSubwindows()
+{
+   gVirtualX->MapSubwindows(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// map raised
+
+void TGWindow::MapRaised()
+{
+   gVirtualX->MapRaised(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// unmap window
+
+void TGWindow::UnmapWindow()
+{
+   gVirtualX->UnmapWindow(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// destroy window
+
+void TGWindow::DestroyWindow()
+{
+   gVirtualX->DestroyWindow(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// destroy sub windows
+
+void TGWindow::DestroySubwindows()
+{
+   gVirtualX->DestroySubwindows(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// raise window
+
+void TGWindow::RaiseWindow()
+{
+   gVirtualX->RaiseWindow(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// lower window
+
+void TGWindow::LowerWindow()
+{
+   gVirtualX->LowerWindow(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// iconify window
+
+void TGWindow::IconifyWindow()
+{
+   gVirtualX->IconifyWindow(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// request focus
+
+void TGWindow::RequestFocus()
+{
+   gVirtualX->SetInputFocus(fId);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// set background color
+
+void TGWindow::SetBackgroundColor(Pixel_t color)
+{
+   gVirtualX->SetWindowBackground(fId, color);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// set background pixmap
+
+void TGWindow::SetBackgroundPixmap(Pixmap_t pixmap)
+{
+   gVirtualX->SetWindowBackgroundPixmap(fId, pixmap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
