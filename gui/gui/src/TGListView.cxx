@@ -48,12 +48,14 @@
 #include "TGMimeTypes.h"
 #include "TObjString.h"
 #include "Riostream.h"
+#include "TVirtualX.h"
 
-const TGFont *TGLVEntry::fgDefaultFont = 0;
-TGGC         *TGLVEntry::fgDefaultGC = 0;
 
-const TGFont *TGListView::fgDefaultFont = 0;
-TGGC         *TGListView::fgDefaultGC = 0;
+const TGFont *TGLVEntry::fgDefaultFont = nullptr;
+TGGC         *TGLVEntry::fgDefaultGC = nullptr;
+
+const TGFont *TGListView::fgDefaultFont = nullptr;
+TGGC         *TGListView::fgDefaultGC = nullptr;
 
 
 ClassImp(TGLVEntry);

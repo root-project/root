@@ -57,6 +57,7 @@
 #include "TObjString.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
+#include "TVirtualX.h"
 #include "Riostream.h"
 #include "RConfigure.h"
 
