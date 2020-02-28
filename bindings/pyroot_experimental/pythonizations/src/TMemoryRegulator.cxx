@@ -98,10 +98,13 @@ void PyROOT::TMemoryRegulator::ClearProxiedObjects()
 
       if (pyobj && (pyobj->fFlags & CPPInstance::kIsOwner)) {
          // Only delete the C++ object if the Python proxy owns it.
-         // Invoke RecursiveRemove on it first so that proxy cleanup is done
+         // If it is a value, cppyy deletes it in RecursiveRemove as part of
+         // the proxy cleanup.
          auto o = static_cast<TObject *>(cppobj);
+         bool isValue = pyobj->fFlags & CPPInstance::kIsValue;
          RecursiveRemove(o);
-         delete o;
+         if (!isValue)
+            delete o;
       }
       else {
          // Non-owning proxy, just unregister to clean tables.
