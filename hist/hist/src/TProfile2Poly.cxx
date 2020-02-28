@@ -16,9 +16,11 @@
 #include "TGraph.h"
 #include "TList.h"
 #include "TMath.h"
+#include "Riostream.h"
 
 #include <cassert>
 #include <cmath>
+#include <set>
 
 /** \class TProfile2Poly
     \ingroup Hist

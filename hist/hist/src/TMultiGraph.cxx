@@ -23,6 +23,7 @@
 #include "TPluginManager.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TF1.h"
 #include <stdlib.h>
 
 #include "HFitInterface.h"
