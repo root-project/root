@@ -11,7 +11,6 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
@@ -20,6 +19,7 @@
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
+#include "TVirtualX.h"
 #include "TText.h"
 
 #include "../../../graf2d/mathtext/inc/mathtext.h"

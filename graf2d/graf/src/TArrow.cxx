@@ -15,6 +15,7 @@
 #include "TArrow.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
+#include "TVirtualX.h"
 
 Float_t TArrow::fgDefaultAngle      = 60;
 Float_t TArrow::fgDefaultArrowSize  = 0.05;
