@@ -85,6 +85,26 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
 
      set(CMAKE_C_LINK_FLAGS "${CMAKE_C_LINK_FLAGS} -bind_at_load -m64")
      set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -bind_at_load -m64")
+     if(asan)
+       #This should be the right way to do it, but clang 10 seems to have a bug
+       #execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libclang_rt.asan_osx_dynamic.dylib OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
+       execute_process(COMMAND mdfind -name libclang_rt.asan_osx_dynamic.dylib OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
+       string(REGEX REPLACE "/[^/]+$" "" ASAN_RUNTIME_LIBRARY_PATH ${ASAN_RUNTIME_LIBRARY})
+       set(ENV{${ld_library_path}} $ENV{${ld_library_path}}:${ASAN_RUNTIME_LIBRARY_PATH})
+       if(lsan)
+         set(ASAN_DETECT_LEAKS "1")
+         set(ASAN_FAST_UNWIND "0")
+       else()
+         set(ASAN_DETECT_LEAKS "0")
+         set(ASAN_FAST_UNWIND "1")
+       endif()
+       set(ENV{ASAN_OPTIONS} "fast_unwind_on_malloc=${ASAN_FAST_UNWIND}:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:detect_leaks=${ASAN_DETECT_LEAKS}:detect_container_overflow=1")
+       set(ENV{LSAN_OPTIONS} "max_leaks=5:suppressions=${CMAKE_SOURCE_DIR}/build/LSan.supp:print_suppressions=0")
+
+       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/ASan_blacklist.txt -fno-omit-frame-pointer")
+       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address -shared-libasan")
+       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address -shared-libasan")
+     endif()
 
      # Select flags.
      set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
