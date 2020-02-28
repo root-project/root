@@ -47,6 +47,7 @@
 #include "Riostream.h"
 #include "TGTextEntry.h"
 #include "KeySymbols.h"
+#include "TVirtualX.h"
 #include "RConfigure.h"
 
 
