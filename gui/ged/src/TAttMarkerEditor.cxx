@@ -31,7 +31,6 @@
 #include "TColor.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
-#include "TPad.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TVirtualX.h"
