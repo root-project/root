@@ -40,6 +40,7 @@
 #include "TGComboBox.h"
 #include "TSystem.h"
 #include "TObjArray.h"
+#include "TVirtualX.h"
 
 #include <stdlib.h>
 

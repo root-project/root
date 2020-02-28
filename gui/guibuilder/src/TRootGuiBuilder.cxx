@@ -42,6 +42,7 @@
 #include "TGListBox.h"
 #include "TGComboBox.h"
 #include "TGProgressBar.h"
+#include "TVirtualX.h"
 
 
 //////////////////////////////////////////////////////////////////////////

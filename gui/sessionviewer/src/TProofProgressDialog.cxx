@@ -42,6 +42,8 @@
 #include "TMath.h"
 #include "TH1F.h"
 #include "THLimitsFinder.h"
+#include "TVirtualX.h"
+
 
 #ifdef PPD_SRV_NEWER
 #undef PPD_SRV_NEWER

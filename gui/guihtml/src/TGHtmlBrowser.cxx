@@ -30,6 +30,7 @@
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
 #include "TError.h"
+#include "TVirtualX.h"
 #ifdef R__SSL
 #include "TSSLSocket.h"
 #endif

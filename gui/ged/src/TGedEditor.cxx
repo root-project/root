@@ -63,6 +63,8 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBaseClass.h"
+#include "TVirtualX.h"
+
 
 class TGedTabInfo : public TObject {
    // Helper class for managing visibility and order of created tabs.

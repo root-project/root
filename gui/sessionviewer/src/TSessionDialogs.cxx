@@ -44,6 +44,7 @@
 #include "TFileInfo.h"
 #include "TGMsgBox.h"
 #include "TRegexp.h"
+#include "TVirtualX.h"
 
 ClassImp(TNewChainDlg);
 ClassImp(TNewQueryDlg);

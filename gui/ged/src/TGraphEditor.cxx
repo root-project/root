@@ -41,6 +41,7 @@
 #include "TGraph.h"
 #include "TVirtualPad.h"
 #include "TGraphErrors.h"
+#include "TVirtualX.h"
 
 ClassImp(TGraphEditor);
 
