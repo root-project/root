@@ -33,7 +33,6 @@ using TBuffer3D mechanism.
 #include "TStopwatch.h"
 
 #include "TPolyMarker3D.h"
-#include "TVirtualGL.h"
 
 #include "TGeoAtt.h"
 #include "TGeoVolume.h"

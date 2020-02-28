@@ -39,7 +39,6 @@
 #include "TRint.h"
 #include "TVirtualX.h"
 #include "TColor.h"
-#include "TVirtualGL.h"
 #include "TPluginManager.h"
 #include "TPRegexp.h"
 #include "TClass.h"
