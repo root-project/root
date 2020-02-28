@@ -18,6 +18,7 @@
 #include "TLatex.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TMath.h"
 #include "TH1.h"
 #include "TStyle.h"
