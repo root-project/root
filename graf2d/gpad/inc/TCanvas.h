@@ -12,13 +12,9 @@
 #ifndef ROOT_TCanvas
 #define ROOT_TCanvas
 
-
-
 #include "TPad.h"
 
 #include "TAttCanvas.h"
-
-#include "TVirtualX.h"
 
 #include "TString.h"
 
