@@ -11,12 +11,12 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TLatex.h"
 #include "TMathText.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
+#include "TVirtualX.h"
 
 const Double_t kPI = TMath::Pi();
 
