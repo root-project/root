@@ -13,8 +13,8 @@
 #include "TPolyLine3D.h"
 #include "TPoint.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TView.h"
-
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoTrack.h"
