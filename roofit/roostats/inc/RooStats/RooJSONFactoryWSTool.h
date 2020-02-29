@@ -17,6 +17,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   };
   template<class T> class Exporter {
   public:
+    virtual bool autoExportDependants() const { return true; }
     virtual bool exportObject(const RooAbsArg*, T&) const {
       return false;
     }

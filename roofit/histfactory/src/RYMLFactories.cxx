@@ -83,6 +83,36 @@ namespace {
     int i;
     c4::atoi(n.val(),&i);
     return i;
+  }
+  template<class T> static std::string concat(const T* items, const std::string& sep=",") {
+    // Returns a string being the concatenation of strings in input list <items>
+    // (names of objects obtained using GetName()) separated by string <sep>.
+    bool first = true;
+    std::string text;
+    
+    // iterate over strings in list
+    for(auto it:*items){
+      if (!first) {
+        // insert separator string
+        text += sep;
+      } else {
+        first = false;
+      }
+      if(!it) text+="NULL";
+      else text+=it->GetName();
+    }
+    return text;
+  }
+  template<class T> static std::vector<std::string> names(const T* items) {
+    // Returns a string being the concatenation of strings in input list <items>
+    // (names of objects obtained using GetName()) separated by string <sep>.
+    std::vector<std::string> names;
+    // iterate over strings in list
+    for(auto it:*items){
+      if(!it) names.push_back("NULL");
+      else names.push_back(it->GetName());
+    }
+    return names;
   }  
 }
 
@@ -416,7 +446,7 @@ namespace {
         phf->recursiveRedirectServers(observables);
       }
       for(auto& comp:p["samples"]){
-        std::string fname(::name(comp));        
+        std::string fname(::name(comp));
         if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
           coefs.add(*phf);
         } else {
@@ -476,10 +506,95 @@ namespace {
 
 
 namespace {
+  bool startsWith(const std::string& mainStr, const std::string& toMatch){
+    // std::string::find returns 0 if toMatch is found at starting
+    if(mainStr.find(toMatch) == 0)
+      return true;
+    else
+      return false;
+  }
+  
   class HistFactoryStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
   public:
+    bool autoExportDependants() const override { return false; }
+    void collectElements(RooArgSet& elems, RooProduct* prod) const {
+      for(const auto& e:prod->components()){
+        if(e->InheritsFrom(RooProduct::Class())){
+          collectElements(elems,(RooProduct*)e);
+        } else {
+          elems.add(*e);
+        }
+      }
+    }
     bool tryExport(const RooProdPdf* prodpdf, c4::yml::NodeRef& elem) const {
-      return false;
+      std::string chname(prodpdf->GetName());
+      if(chname.find("model_") == 0){
+        chname = chname.substr(6);
+      }
+      std::vector<RooAbsPdf*> pdfs;
+      RooRealSumPdf* sumpdf = NULL;
+      for(const auto& v:prodpdf->pdfList()){
+        if(v->InheritsFrom(RooRealSumPdf::Class())){
+          sumpdf = static_cast<RooRealSumPdf*>(v);
+        } else {
+          pdfs.push_back(static_cast<RooAbsPdf*>(v));
+        }
+      }
+      if(!sumpdf) return false;
+      for(const auto& bw:sumpdf->coefList()){
+        if(!bw->InheritsFrom(RooAbsReal::Class())) return false;
+      }
+      for(const auto& sample:sumpdf->funcList()){
+        if(!sample->InheritsFrom(RooProduct::Class())) return false;
+      }
+      // this seems to be ok
+      elem["type"] << "histfactory";
+      auto samples = elem["samples"];
+      samples |= c4::yml::MAP;
+      for(const auto& sample:sumpdf->funcList()){
+        std::string samplename = sample->GetName();
+        if(samplename.find("L_x_") == 0) samplename = samplename.substr(4);
+        auto end = samplename.find("_"+chname);
+        if(end < samplename.size()) samplename = samplename.substr(0,end);
+        auto s = samples[c4::to_csubstr(RooJSONFactoryWSTool::incache(samplename))];
+        s |= c4::yml::MAP;
+        s["type"] << "histogram";        
+        RooProduct* prod = dynamic_cast<RooProduct*>(sample);
+        RooArgSet elems;
+        collectElements(elems,prod);
+        for(const auto& e:elems){
+          if(e->InheritsFrom(RooRealVar::Class())){
+            auto norms = s["normFactors"];
+            norms |= c4::yml::SEQ;
+            norms.append_child() << e->GetName();
+          } else if(e->InheritsFrom(RooHistFunc::Class())){
+            auto data = s["data"];
+            const RooHistFunc* hf = static_cast<const RooHistFunc*>(e);
+            const RooDataHist& dh = hf->dataHist();            
+            RooArgList vars(*dh.get());
+            TH1* hist = hf->createHistogram(::concat(&vars).c_str());
+            RooJSONFactoryWSTool::exportHistogram(*hist,data,::names(&vars));
+            delete hist;
+          } else if(e->InheritsFrom(RooStats::HistFactory::FlexibleInterpVar::Class())){
+            const RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar*>(e);
+            auto systs = s["overallSystematics"];
+            systs |= c4::yml::MAP;            
+            for(size_t i=0; i<fip->variables().size(); ++i){
+              std::string sysname(fip->variables().at(i)->GetName());
+              if(sysname.find("alpha_") == 0){
+                sysname = sysname.substr(6);
+              }
+              auto sys = systs[c4::to_csubstr(RooJSONFactoryWSTool::incache(sysname))];
+              sys |= c4::yml::MAP;                          
+              sys["low"] << fip->low()[i];
+              sys["high"] << fip->high()[i];
+            }
+          } else if(e->InheritsFrom(PiecewiseInterpolation::Class())){
+
+          }          
+        }
+      }
+      return true;
     }
     
     virtual bool exportObject(const RooAbsArg* p, c4::yml::NodeRef& elem) const override {

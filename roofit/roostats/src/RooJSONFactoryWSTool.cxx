@@ -511,7 +511,7 @@ public:
     
     auto it = _exporters<c4::yml::NodeRef>.find(cl);
     if(it != _exporters<c4::yml::NodeRef>.end()){
-      RooJSONFactoryWSTool::exportDependants(func,n);
+      if(it->second->autoExportDependants()) RooJSONFactoryWSTool::exportDependants(func,n);
       auto elem = container[c4::to_csubstr(func->GetName())];
       elem |= c4::yml::MAP;
       try {
