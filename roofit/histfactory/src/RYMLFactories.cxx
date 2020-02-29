@@ -475,4 +475,29 @@ namespace {
 }
 
 
+namespace {
+  class HistFactoryStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  public:
+    bool tryExport(const RooProdPdf* prodpdf, c4::yml::NodeRef& elem) const {
+      return false;
+    }
+    
+    virtual bool exportObject(const RooAbsArg* p, c4::yml::NodeRef& elem) const override {
+      const RooProdPdf* prodpdf = static_cast<const RooProdPdf*>(p);
+      if(tryExport(prodpdf,elem)){
+        return true;
+      }
+      elem["type"] << "pdfprod";        
+      auto factors = elem["factors"];
+      factors |= c4::yml::SEQ;        
+      for(const auto& v:prodpdf->pdfList()){
+        factors.append_child() << v->GetName();
+      }
+      return true;
+    }
+  };
+  bool _histfactorystreamer = RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(),new HistFactoryStreamer());
+}
+
+
 #endif

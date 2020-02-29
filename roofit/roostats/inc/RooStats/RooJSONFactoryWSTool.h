@@ -71,6 +71,6 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   template<class T> void importDependants(const T& n);
 
   template<class T> void exportAll(T& n);  
-  template<class T> void exportDependants(RooAbsArg* source, T& n);
+  template<class T> static void exportDependants(const RooAbsArg* source, T& n);
 };
 #endif

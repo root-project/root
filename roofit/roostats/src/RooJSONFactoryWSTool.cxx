@@ -407,6 +407,8 @@ void RooJSONFactoryWSTool::printExportKeys(){
 // helper namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+template<> void RooJSONFactoryWSTool::exportDependants(const RooAbsArg* source, c4::yml::NodeRef& n);
+
 class RooJSONFactoryWSTool::Helpers {
 public:
 #ifdef INCLUDE_RYML
@@ -509,9 +511,9 @@ public:
     
     auto it = _exporters<c4::yml::NodeRef>.find(cl);
     if(it != _exporters<c4::yml::NodeRef>.end()){
+      RooJSONFactoryWSTool::exportDependants(func,n);
       auto elem = container[c4::to_csubstr(func->GetName())];
       elem |= c4::yml::MAP;
-
       try {
         if(!it->second->exportObject(func,elem)){
           std::cerr << "exporter for type " << cl->GetName() << " does not export objects!" << std::endl;          
@@ -658,10 +660,7 @@ template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
     std::string name(::name(p));
     if(name.size() == 0) continue;
     if(this->_workspace->pdf(name.c_str())) continue;    
-    if(!p.is_map()){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
-      continue;
-    }
+    if(!p.is_map()) continue;
     std::string prefix = ::genPrefix(p,true);
     if(prefix.size() > 0) name = prefix+name;
     if(!p.has_child("type")){
@@ -782,7 +781,7 @@ void RooJSONFactoryWSTool::clearcache(){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // export all dependants (servers) of a RooAbsArg
-template<> void RooJSONFactoryWSTool::exportDependants(RooAbsArg* source, c4::yml::NodeRef& n) {
+template<> void RooJSONFactoryWSTool::exportDependants(const RooAbsArg* source, c4::yml::NodeRef& n) {
   // export all the servers of a given RooAbsArg
   auto servers(source->servers());
   for(auto s:servers){

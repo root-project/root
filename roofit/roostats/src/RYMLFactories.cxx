@@ -97,13 +97,13 @@ namespace {
     virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
       std::string name(::name(p));
       RooArgSet factors;
-      if(!p.has_child("pdfs")){
+      if(!p.has_child("factors")){
         error("no pdfs of '" + name + "'");
       }
-      if(!p["pdfs"].is_seq()){
+      if(!p["factors"].is_seq()){
         error("pdfs '" + name + "' are not a list.");
       }      
-      for(auto comp:p["pdfs"].children()){
+      for(auto comp:p["factors"].children()){
         std::string pdfname(::val_s(comp));
         RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
@@ -178,7 +178,7 @@ namespace {
           error("unable to obtain component '" + pdfname + "' of '" + name + "'");
         }
         components[catname] = pdf;
-        cat.defineType(pdfname.c_str());
+        cat.defineType(catname.c_str());
       }
       RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
       tool->workspace()->import(simpdf);
@@ -202,7 +202,9 @@ namespace {
       channels |= c4::yml::MAP;
       const auto& indexCat = sim->indexCat();
       for(const auto& cat:indexCat){
-        channels[c4::to_csubstr(cat->GetName())] << sim->getPdf(cat->GetName())->GetName();
+        RooAbsPdf* pdf = sim->getPdf(cat->GetName());
+        if(!pdf) throw std::runtime_error("no pdf found for category");
+        channels[c4::to_csubstr(cat->GetName())] << pdf->GetName();
       }
       return true;
     }
