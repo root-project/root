@@ -5,6 +5,7 @@
 
 #include <RooConstVar.h>
 #include <RooRealVar.h>
+#include <RooAbsCategory.h>
 #include <RooRealProxy.h>
 #include <RooStats/ModelConfig.h>
 
@@ -447,94 +448,140 @@ public:
       }
     }
   }
+
+  static void exportVariable(const RooAbsReal*v, c4::yml::NodeRef& n) {
+    auto var = n[c4::to_csubstr(v->GetName())];
+    const RooConstVar* cv  = dynamic_cast<const RooConstVar*>(v);
+    const RooRealVar*  rrv = dynamic_cast<const RooRealVar*>(v);    
+    var |= c4::yml::MAP;  
+    if(cv){
+      var["value"] << cv->getVal();
+      var["const"] << true;
+    } else if(rrv){
+      var["value"] << rrv->getVal();
+      if(rrv->getMin() > -1e30){
+        var["min"] << rrv->getMin();
+      }
+      if(rrv->getMax() < 1e30){
+        var["max"] << rrv->getMax();
+      }
+      if(rrv->isConstant()){
+        var["const"] << rrv->isConstant();
+      }
+    }
+    Helpers::exportAttributes(v,var);
+  }
   
   static void exportVariables(const RooArgSet& allElems, c4::yml::NodeRef& n) {
     // export a list of RooRealVar objects
     for(auto* arg:allElems){
       RooRealVar* v = dynamic_cast<RooRealVar*>(arg);
       if(!v) continue;
-      auto var = n[c4::to_csubstr(v->GetName())];
-      var |= c4::yml::MAP;  
-      var["value"] << v->getVal();
-      if(v->getMin() > -1e30){
-        var["min"] << v->getMin();
-      }
-      if(v->getMax() < 1e30){
-        var["max"] << v->getMax();
-      }
-      if(v->isConstant()){
-        var["const"] << v->isConstant();
-      }
-      Helpers::exportAttributes(arg,var);      
+      exportVariable(v,n);
     }  
   }
 
+  static void exportObject(const RooAbsArg* func, c4::yml::NodeRef& n){
+    if(func->InheritsFrom(RooConstVar::Class()) && strcmp(func->GetName(),TString::Format("%g",((RooConstVar*)func)->getVal()).Data())==0){
+      // for RooConstVar, name and value are the same, so we don't need to do anything
+      return;
+    } else if(func->InheritsFrom(RooAbsCategory::Class())){
+      // categories are created by the respective RooSimultaneous, so we're skipping the export here
+      return;
+    } else if(func->InheritsFrom(RooRealVar::Class()) || func->InheritsFrom(RooConstVar::Class())){
+      auto vars = n["variables"];
+      vars |= c4::yml::MAP;
+      exportVariable(static_cast<const RooAbsReal*>(func),vars);
+      return;
+    }
+    
+    c4::yml::NodeRef container;
+    if(func->InheritsFrom(RooAbsPdf::Class())){
+      container = n["pdfs"];
+    } else {
+      container = n["functions"];
+    }
+    container |= c4::yml::MAP;    
+    if(container.has_child(c4::to_csubstr(func->GetName()))) return;
+
+    
+    TClass* cl = TClass::GetClass(func->ClassName());
+    
+    auto it = _exporters<c4::yml::NodeRef>.find(cl);
+    if(it != _exporters<c4::yml::NodeRef>.end()){
+      auto elem = container[c4::to_csubstr(func->GetName())];
+      elem |= c4::yml::MAP;
+
+      try {
+        if(!it->second->exportObject(func,elem)){
+          std::cerr << "exporter for type " << cl->GetName() << " does not export objects!" << std::endl;          
+        }
+        Helpers::exportAttributes(func,elem);        
+      } catch (const std::exception& ex){
+        std::cerr << ex.what() << ". skipping." << std::endl;
+        return;
+      }
+    } else { // generic import using the factory expressions      
+      const auto& dict = _rymlExportKeys.find(cl);
+      if(dict == _rymlExportKeys.end()){
+        std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
+        std::cerr << "there are several possible reasons for this:" << std::endl;
+        std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added." << std::endl;
+        std::cerr << " 2. " << cl->GetName() << " is a ROOT class that nobody ever bothered to write a serialization definition for." << std::endl;
+        std::cerr << " 3. something is wrong with your setup, e.g. you might have called RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these keys with RooJSONFactoryWSTool::loadExportKeys(filename)" << std::endl;
+        std::cerr << "either way, please make sure that:" << std::endl;
+        std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to see what is available" << std::endl;
+        std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see how to do this!" << std::endl;                              
+        return;
+      }
+
+      size_t nprox = func->numProxies();
+      for(size_t i=0; i<nprox; ++i){
+        RooAbsProxy* p = func->getProxy(i);
+        
+        std::string pname(p->name());
+        if(pname[0] == '!') pname.erase(0,1);
+        
+        auto k = dict->second.proxies.find(pname);
+        if(k == dict->second.proxies.end()){
+          std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type << "', skipping" << std::endl;
+          return;
+        }
+        
+        RooListProxy* l = dynamic_cast<RooListProxy*>(p);
+        if(l){
+          for(auto e:*l){
+            exportObject(e,n);            
+          }
+          auto elem = container[c4::to_csubstr(func->GetName())];
+          elem |= c4::yml::MAP;
+          elem["type"] << dict->second.type;
+          auto items = elem[c4::to_csubstr(k->second)];
+          items |= c4::yml::SEQ;
+          for(auto e:*l){          
+            items.append_child() << e->GetName();
+          }
+          Helpers::exportAttributes(func,elem);          
+        }
+        RooRealProxy* r = dynamic_cast<RooRealProxy*>(p);
+        if(r){
+          exportObject(&(r->arg()),n);
+          auto elem = container[c4::to_csubstr(func->GetName())];
+          elem |= c4::yml::MAP;
+          elem["type"] << dict->second.type;
+          elem[c4::to_csubstr(k->second)] << r->arg().GetName();
+          Helpers::exportAttributes(func,elem);
+        }
+      }
+    }
+  }
   static void exportFunctions(const RooArgSet& allElems, c4::yml::NodeRef& n){
     // export a list of functions
     // note: this function assumes that all the dependants of these objects have already been exported
     for(auto* arg:allElems){
       RooAbsReal* func = dynamic_cast<RooAbsReal*>(arg);
       if(!func) continue;
-
-      if(n.has_child(c4::to_csubstr(func->GetName()))) continue;
-      
-      auto elem = n[c4::to_csubstr(func->GetName())];
-      elem |= c4::yml::MAP;
-
-      TClass* cl = TClass::GetClass(func->ClassName());
-      
-      auto it = _exporters<c4::yml::NodeRef>.find(cl);
-      if(it != _exporters<c4::yml::NodeRef>.end()){
-        try {
-          if(!it->second->exportObject(func,elem)){
-            std::cerr << "exporter for type " << cl->GetName() << " does not export objects!" << std::endl;          
-          }
-        } catch (const std::exception& ex){
-          std::cerr << ex.what() << ". skipping." << std::endl;
-        }
-      } else { // generic import using the factory expressions      
-        const auto& dict = _rymlExportKeys.find(cl);
-        if(dict == _rymlExportKeys.end()){
-          std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
-          std::cerr << "there are several possible reasons for this:" << std::endl;
-          std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added." << std::endl;
-          std::cerr << " 2. " << cl->GetName() << " is a ROOT class that nobody ever bothered to write a serialization definition for." << std::endl;
-          std::cerr << " 3. something is wrong with your setup, e.g. you might have called RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these keys with RooJSONFactoryWSTool::loadExportKeys(filename)" << std::endl;
-          std::cerr << "either way, please make sure that:" << std::endl;
-          std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to see what is available" << std::endl;
-          std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see how to do this!" << std::endl;                              
-          continue;
-        }
-        elem["type"] << dict->second.type;
-        
-        size_t nprox = func->numProxies();
-        for(size_t i=0; i<nprox; ++i){
-          RooAbsProxy* p = func->getProxy(i);
-          
-          std::string pname(p->name());
-          if(pname[0] == '!') pname.erase(0,1);
-          
-          auto k = dict->second.proxies.find(pname);
-          if(k == dict->second.proxies.end()){
-            std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type << "', skipping" << std::endl;
-            continue;
-          }
-          
-          RooListProxy* l = dynamic_cast<RooListProxy*>(p);
-          if(l){
-            auto items = elem[c4::to_csubstr(k->second)];
-            items |= c4::yml::SEQ;
-            for(auto e:*l){
-              items.append_child() << e->GetName();
-            }
-          }
-          RooRealProxy* r = dynamic_cast<RooRealProxy*>(p);
-          if(r){
-            elem[c4::to_csubstr(k->second)] << r->arg().GetName();
-          }
-        }
-      }
-      Helpers::exportAttributes(func,elem);
+      Helpers::exportObject(func,n);
     }
   }
   #endif
@@ -553,10 +600,7 @@ template<> void RooJSONFactoryWSTool::importFunctions(const c4::yml::NodeRef& n)
     std::string name(::name(p));
     if(name.size() == 0) continue;
     if(this->_workspace->pdf(name.c_str())) continue;    
-    if(!p.is_map()){
-      coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
-      continue;
-    }
+    if(!p.is_map()) continue; 
     std::string prefix = ::genPrefix(p,true);
     if(prefix.size() > 0) name = prefix+name;    
     if(!p.has_child("type")){
@@ -741,36 +785,9 @@ void RooJSONFactoryWSTool::clearcache(){
 template<> void RooJSONFactoryWSTool::exportDependants(RooAbsArg* source, c4::yml::NodeRef& n) {
   // export all the servers of a given RooAbsArg
   auto servers(source->servers());
-  RooArgSet pdfset;
-  RooArgSet functionset;
-  RooArgSet variableset;  
   for(auto s:servers){
-    if(s->InheritsFrom(RooConstVar::Class())){
-      // for RooConstVar, name and value are the same, so we don't need to do anything
-      continue;
-    }
-    if(s->InheritsFrom(RooRealVar::Class())){
-      variableset.add(*s);
-      continue;
-    }
-    this->exportDependants(s,n);
-    if(s->InheritsFrom(RooAbsPdf::Class())){
-      pdfset.add(*s);
-    } else {
-      functionset.add(*s);
-    }
+    Helpers::exportObject(s,n);
   }
-  auto vars = n["variables"];
-  vars |= c4::yml::MAP;  
-  Helpers::exportVariables(variableset,vars);
-  
-  auto funcs = n["functions"];
-  funcs |= c4::yml::MAP;    
-  Helpers::exportFunctions(functionset,funcs);
-  
-  auto pdfs = n["pdfs"];
-  pdfs |= c4::yml::MAP;    
-  Helpers::exportFunctions(pdfset,pdfs);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -805,13 +822,15 @@ template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
         auto vars = n["variables"];
         vars |= c4::yml::MAP;                
         for(auto obs:*(mc->GetObservables())){
-          RooRealVar* v = this->_workspace->var(obs->GetName());
-          auto var = vars[c4::to_csubstr(this->incache(obs->GetName()))];
-          var |= c4::yml::MAP;                
-          var["nbins"] << v->numBins();
-          auto tags = var["tags"];
-          tags |= c4::yml::SEQ;
-          Helpers::append(tags,"observable");
+          RooRealVar* v = dynamic_cast<RooRealVar*>(obs);
+          if(v){
+            auto var = vars[c4::to_csubstr(this->incache(obs->GetName()))];
+            var |= c4::yml::MAP;                
+            var["nbins"] << v->numBins();
+            auto tags = var["tags"];
+            tags |= c4::yml::SEQ;
+            Helpers::append(tags,"observable");
+          }
         }
       }
       main.add(*pdf);     
@@ -828,7 +847,7 @@ template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
   if(main.size() > 0){
     auto pdfs = n["pdfs"];
     pdfs |= c4::yml::MAP;  
-    RooJSONFactoryWSTool::Helpers::exportFunctions(main,pdfs);
+    RooJSONFactoryWSTool::Helpers::exportFunctions(main,n);
     for(auto pdf:main){
       auto node = pdfs[c4::to_csubstr(pdf->GetName())];
       node |= c4::yml::MAP;

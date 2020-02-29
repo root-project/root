@@ -457,8 +457,8 @@ namespace {
 namespace {
   class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
   public:
-    virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
-      RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<RooStats::HistFactory::FlexibleInterpVar*>(func);
+    virtual bool exportObject(const RooAbsArg* func, c4::yml::NodeRef& elem) const override {
+      const RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar*>(func);
       elem["type"] << "interpolation0d";        
       auto vars = elem["vars"];
       vars |= c4::yml::SEQ;        

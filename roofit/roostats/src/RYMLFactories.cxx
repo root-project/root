@@ -195,8 +195,8 @@ namespace {
 namespace {
   class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
   public:
-    virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
-      RooSimultaneous* sim = static_cast<RooSimultaneous*>(func);
+    virtual bool exportObject(const RooAbsArg* func, c4::yml::NodeRef& elem) const override {
+      const RooSimultaneous* sim = static_cast<const RooSimultaneous*>(func);
       elem["type"] << "simultaneous";
       auto channels = elem["channels"];
       channels |= c4::yml::MAP;
@@ -211,12 +211,12 @@ namespace {
 
   class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
   public:
-    virtual bool exportObject(RooAbsReal* func, c4::yml::NodeRef& elem) const override {
-      RooHistFunc* hf = static_cast<RooHistFunc*>(func);
+    virtual bool exportObject(const RooAbsArg* func, c4::yml::NodeRef& elem) const override {
+      const RooHistFunc* hf = static_cast<const RooHistFunc*>(func);
       const RooDataHist& dh = hf->dataHist();
       elem["type"] << "histogram";
       RooArgList vars(*dh.get());
-      TH1* hist = func->createHistogram(::concat(&vars).c_str());
+      TH1* hist = hf->createHistogram(::concat(&vars).c_str());
       auto data = elem["data"];
       RooJSONFactoryWSTool::exportHistogram(*hist,data,::names(&vars));
       delete hist;
