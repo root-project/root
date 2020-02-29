@@ -29,10 +29,14 @@ namespace {
     std::stringstream ss;
     if(n.has_key()){
       ss << n.key();
-    } else if(n.has_child("name")){
-      ss << n["name"].val();
-    }    
-    return ss.str();
+    } else if(n.is_container()){
+      if(n.has_child("name")){
+        ss << n["name"].val();
+      }
+    } else {
+      ss << n.val();
+    }
+    return ss.str();    
   }
   inline std::string val_s(const c4::yml::NodeRef& n){
     std::stringstream ss;    
@@ -90,7 +94,7 @@ namespace {
 namespace {
   class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
-    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
       std::string name(::name(p));
       RooArgSet factors;
       if(!p.has_child("pdfs")){
@@ -101,14 +105,14 @@ namespace {
       }      
       for(auto comp:p["pdfs"].children()){
         std::string pdfname(::val_s(comp));
-        RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
+        RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
           error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
         }
         factors.add(*pdf);
       }
       RooProdPdf prod(name.c_str(),name.c_str(),factors);
-      ws->import(prod);
+      tool->workspace()->import(prod);
       return true;
     }
   };
@@ -116,7 +120,7 @@ namespace {
 
   class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
-    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
       std::string name(::name(p));
       RooArgList pdfs;
       RooArgList coefs;      
@@ -134,7 +138,7 @@ namespace {
       }      
       for(auto comp:p["summands"].children()){
         std::string pdfname(::val_s(comp));
-        RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
+        RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
           error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
         }
@@ -142,14 +146,14 @@ namespace {
       }
       for(auto comp:p["coefficients"].children()){
         std::string coefname(::val_s(comp));
-        RooAbsArg* coef = ws->arg(coefname.c_str());
+        RooAbsArg* coef = tool->workspace()->arg(coefname.c_str());
         if(!coef){
           error("unable to obtain component '" + coefname + "' of '" + name + "'.");
         }
         coefs.add(*coef);
       }      
       RooAddPdf add(name.c_str(),name.c_str(),pdfs,coefs);
-      ws->import(add);
+      tool->workspace()->import(add);
       return true;
     }
   };
@@ -158,17 +162,18 @@ namespace {
   
   class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
-    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
       std::string name(::name(p));
       if(!p.has_child("channels")){
         error("no channel components of '" + name + "'");
       }
+      tool->importPdfs(p["channels"]);
       std::map< std::string, RooAbsPdf *> components;
       RooCategory cat("channelCat","channelCat");
       for(auto comp:p["channels"]){
         std::string catname(::name(comp));
-        std::string pdfname(::val_s(comp));
-        RooAbsPdf* pdf = ws->pdf(pdfname.c_str());
+        std::string pdfname(comp.has_val() ? ::val_s(comp) : ::name(comp));
+        RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
           error("unable to obtain component '" + pdfname + "' of '" + name + "'");
         }
@@ -176,7 +181,7 @@ namespace {
         cat.defineType(pdfname.c_str());
       }
       RooSimultaneous simpdf(name.c_str(),name.c_str(),components,cat);
-      ws->import(simpdf);
+      tool->workspace()->import(simpdf);
       return true;
     }
   };

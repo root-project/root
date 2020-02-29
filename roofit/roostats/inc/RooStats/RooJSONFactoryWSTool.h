@@ -8,10 +8,10 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
  public:
   template<class T> class Importer {
   public:
-    virtual bool importPdf(RooWorkspace*, const T&) const {
+    virtual bool importPdf(RooJSONFactoryWSTool*, const T&) const {
       return false;
     }
-    virtual bool importFunction(RooWorkspace*, const T&) const {
+    virtual bool importFunction(RooJSONFactoryWSTool*, const T&) const {
       return false;
     }
   };
@@ -30,6 +30,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   void prepare();
  public:
   RooJSONFactoryWSTool(RooWorkspace& ws);
+  RooWorkspace* workspace() { return this->_workspace; }
 
   template<class T> static bool registerImporter(const std::string& key, const RooJSONFactoryWSTool::Importer<T>* f){
     if(RooJSONFactoryWSTool::_importers<T>.find(key) != RooJSONFactoryWSTool::_importers<T>.end()) return false;
@@ -63,7 +64,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   static void loadExportKeys(const std::string& fname);
   static void clearExportKeys();
   static void printExportKeys();  
-protected:
+
   template<class T> void importFunctions(const T& n);
   template<class T> void importPdfs(const T& n);
   template<class T> void importVariables(const T& n);

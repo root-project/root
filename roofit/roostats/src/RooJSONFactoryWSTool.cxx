@@ -62,6 +62,23 @@ namespace {
 #include <ryml.hpp>
 #include <c4/yml/std/map.hpp>
 #include <c4/yml/std/string.hpp>
+#include <c4/yml/common.hpp>
+
+namespace {
+  void error_cb(const char* msg, size_t msg_len, void *user_data){
+    throw std::runtime_error(msg);
+  }
+  
+  bool setcallbacks(){
+    c4::yml::set_callbacks(c4::yml::Callbacks(c4::yml::get_callbacks().m_user_data,
+                                              c4::yml::get_callbacks().m_allocate,
+                                              c4::yml::get_callbacks().m_free,
+                                              &::error_cb));
+    return true;
+  }
+  bool ok = setcallbacks();
+}
+
 
 // maps to hold the importers and exporters for runtime lookup
 template<> std::map<std::string,const RooJSONFactoryWSTool::Importer<c4::yml::NodeRef>*> RooJSONFactoryWSTool::_importers<c4::yml::NodeRef> = std::map<std::string,const RooJSONFactoryWSTool::Importer<c4::yml::NodeRef>*>();
@@ -76,9 +93,13 @@ namespace {
     std::stringstream ss;
     if(n.has_key()){
       ss << n.key();
-    } else if(n.has_child("name")){
-      ss << n["name"].val();
-    }    
+    } else if(n.is_container()){
+      if(n.has_child("name")){
+        ss << n["name"].val();
+      }
+    } else {
+      ss << n.val();
+    }
     return ss.str();
   }
   inline std::string val_s(const c4::yml::NodeRef& n){
@@ -117,22 +138,36 @@ namespace {
 
   inline void importAttributes(RooAbsArg* arg, const c4::yml::NodeRef& n){
     if(!n.is_map()) return;
-    if(n.has_child("dict")){
-      for(auto attr:n["dict"]){
+    if(n.has_child("dict") && n["dict"].is_map()){
+      for(auto attr:n["dict"].children()){
         arg->setStringAttribute(::name(attr).c_str(),::val_s(attr).c_str());
       }
     }
+    if(n.has_child("tags") && n["tags"].is_seq()){
+      for(auto attr:n["tags"].children()){
+        arg->setAttribute(::val_s(attr).c_str());
+      }
+    }    
+  }
+  inline bool checkRegularBins(const TAxis& ax){
+    double w = ax.GetXmax() - ax.GetXmin();
+    double bw = w / ax.GetNbins();
+    for(int i=0; i<=ax.GetNbins(); ++i){
+      if( fabs(ax.GetBinUpEdge(i) - (ax.GetXmin()+(bw*i))) > w*1e-6 ) return false;
+    }
+    return true;
   }
   inline void writeAxis(c4::yml::NodeRef& bounds, const TAxis& ax){
-    if(!ax.IsVariableBinSize()){
+    bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
+    if(regular){
       bounds |= c4::yml::MAP;
       bounds["nbins"] << ax.GetNbins();                
       bounds["min"] << ax.GetXmin();
       bounds["max"] << ax.GetXmax();
     } else {
       bounds |= c4::yml::SEQ;              
-      for(int i=1; i<=ax.GetNbins(); ++i){
-        bounds.append_child() << ax.GetBinLowEdge(i);      
+      for(int i=0; i<=ax.GetNbins(); ++i){
+        bounds.append_child() << ax.GetBinUpEdge(i);      
       }
     }
   }  
@@ -213,6 +248,10 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
     } else {
       RYML_Factory_Expression ex;
       ex.tclass = c;
+      if(!cl.has_child("arguments")){
+        std::cerr << "class " << classname << " seems to have no arguments attached, skipping" << std::endl;
+        continue;
+      }
       for(const auto& arg:cl["arguments"]){
         ex.arguments.push_back(::val_s(arg));
       }
@@ -325,6 +364,14 @@ void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
       std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
     } else {
       RYML_Export_Keys ex;
+      if(!cl.has_child("type")){
+        std::cerr << "class " << classname << "has not type key set, skipping" << std::endl;
+        continue;
+      }
+      if(!cl.has_child("proxies")){
+        std::cerr << "class " << classname << "has no proxies identified, skipping" << std::endl;
+        continue;
+      }      
       ex.type = ::val_s(cl["type"]);
       for(const auto& k:cl["proxies"].children()){
         std::string key(::name(k));
@@ -361,14 +408,41 @@ void RooJSONFactoryWSTool::printExportKeys(){
 
 class RooJSONFactoryWSTool::Helpers {
 public:
-#ifdef INCLUDE_RYML      
+#ifdef INCLUDE_RYML
+  static bool find(const c4::yml::NodeRef& n, const std::string& elem){
+    // find an attribute
+    if(n.is_seq()){
+      for(auto t:n.children()){
+        if(::val_s(t) == elem) return true;
+      }
+      return false;
+    } else if(n.is_map()){
+      return n.has_child(c4::to_csubstr(elem.c_str()));
+    }
+    return false;
+  }
+  
+  static void append(c4::yml::NodeRef& n, const std::string& elem){
+    // append an attribute
+    if(!find(n,elem)){
+      n.append_child() << elem;
+    }
+  }
+  
   static void exportAttributes(const RooAbsArg* arg, c4::yml::NodeRef& n){
-    // exporta ll string attributes of an object
+    // export all string attributes of an object
     if(arg->stringAttributes().size() > 0){
       auto dict = n["dict"];
       dict |= c4::yml::MAP;      
       for(const auto& it:arg->stringAttributes()){
         dict[c4::to_csubstr(it.first.c_str())] << it.second;
+      }
+    }
+    if(arg->attributes().size() > 0){
+      auto tags = n["tags"];
+      tags |= c4::yml::SEQ;      
+      for(const auto& it:arg->attributes()){
+        append(tags,it);
       }
     }
   }
@@ -386,10 +460,6 @@ public:
       }
       if(v->getMax() < 1e30){
         var["max"] << v->getMax();
-      }
-      var["nbins"] << v->numBins();
-      if(v->getError() > 0){
-        var["err"] << v->getError();
       }
       if(v->isConstant()){
         var["const"] << v->isConstant();
@@ -498,7 +568,7 @@ template<> void RooJSONFactoryWSTool::importFunctions(const c4::yml::NodeRef& n)
     auto it = _importers<c4::yml::NodeRef>.find(functype);
     if(it != _importers<c4::yml::NodeRef>.end()){
       try {
-        if(!it->second->importFunction(this->_workspace,p)){
+        if(!it->second->importFunction(this,p)){
           coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << functype << " does not import functions!" << std::endl;          
         }
       } catch (const std::exception& ex){
@@ -554,12 +624,9 @@ template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
       continue;
     }
     bool toplevel = false;
-    if(p.has_child("dict")){
-      auto dict = p["dict"];
-      if(dict.has_child("toplevel") && ::val_b(dict["toplevel"])){
-        toplevel = true;
-      }
-    }    
+    if(p.has_child("tags")){
+      toplevel = Helpers::find(p["tags"],"toplevel");
+    }
     std::string pdftype(::val_s(p["type"]));
     this->importDependants(p);
 
@@ -567,7 +634,7 @@ template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
     auto it = _importers<c4::yml::NodeRef>.find(pdftype);
     if(it != _importers<c4::yml::NodeRef>.end()){
       try {
-        if(!it->second->importPdf(this->_workspace,p)){
+        if(!it->second->importPdf(this,p)){
           coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") importer for type " << pdftype << " does not import pdfs!" << std::endl;          
         }
       } catch (const std::exception& ex){
@@ -608,6 +675,13 @@ template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
         if(inwsmc){
           inwsmc->SetWS(*(this->_workspace));
           inwsmc->SetPdf(*pdf);
+          RooArgSet observables;
+          for(auto var:this->_workspace->allVars()){
+            if(var->getAttribute("observable")){
+              observables.add(*var);
+            }
+          }
+          inwsmc->SetObservables(observables);
         } else {
           coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") object '" << mcname << "' in workspace is not of type RooStats::ModelConfig!" << std::endl;        
         }
@@ -726,6 +800,19 @@ template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
       RooStats::ModelConfig* mc = static_cast<RooStats::ModelConfig*>(obj);
       RooAbsPdf* pdf = mc->GetPdf();
       this->exportDependants(pdf,n);
+      if(mc->GetObservables()){
+        auto vars = n["variables"];
+        vars |= c4::yml::MAP;                
+        for(auto obs:*(mc->GetObservables())){
+          RooRealVar* v = this->_workspace->var(obs->GetName());
+          auto var = vars[c4::to_csubstr(this->incache(obs->GetName()))];
+          var |= c4::yml::MAP;                
+          var["nbins"] << v->numBins();
+          auto tags = var["tags"];
+          tags |= c4::yml::SEQ;
+          Helpers::append(tags,"observable");
+        }
+      }
       main.add(*pdf);     
     }
   }
@@ -743,9 +830,10 @@ template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
     RooJSONFactoryWSTool::Helpers::exportFunctions(main,pdfs);
     for(auto pdf:main){
       auto node = pdfs[c4::to_csubstr(pdf->GetName())];
-      auto dict = node["dict"];
-      dict |= c4::yml::MAP;
-      dict["toplevel"] << true;
+      node |= c4::yml::MAP;
+      auto tags = node["tags"];
+      tags |= c4::yml::SEQ;
+      tags.append_child() << "toplevel";
     }
   } else {
     std::cerr << "no ModelConfig found in workspace and no pdf identified as toplevel by 'toplevel' attribute or an empty client list. nothing exported!" << std::endl;    

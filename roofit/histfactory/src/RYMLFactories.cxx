@@ -54,8 +54,12 @@ namespace {
     std::stringstream ss;
     if(n.has_key()){
       ss << n.key();
-    } else if(n.has_child("name")){
-      ss << n["name"].val();
+    } else if(n.is_container()){
+      if(n.has_child("name")){
+        ss << n["name"].val();
+      }
+    } else {
+      ss << n.val();
     }
     return ss.str();
   }
@@ -89,19 +93,51 @@ namespace {
       names.push_back(::name(c));
     }
   }
-  
-  inline std::map<std::string,c4::yml::NodeRef> readVars(const c4::yml::NodeRef& n,const std::string& obsnamecomp){
-    std::map<std::string,c4::yml::NodeRef> vars;
-    if(!n.is_map()) return vars;
-    if(!n.has_child("binning")) throw "no binning given";
-    c4::yml::NodeRef bounds(n["binning"]);
-    if(!bounds.is_map()) return vars;    
-    if(bounds.has_child("nbins")){
-      vars["obs_x_"+obsnamecomp] = bounds;
-    } else {
-      for(c4::yml::NodeRef p:bounds.children()){
-        vars[::name(p)] = p;      
+
+  struct Var {
+    int nbins;
+    double min;
+    double max;
+    std::vector<double> bounds;
+    
+    Var(int n): nbins(n), min(0), max(n) {}
+    Var(const c4::yml::NodeRef& val){
+      if(val.is_map()){
+        if(!val.has_child("nbins")) error("no nbins given");
+        if(!val.has_child("min"))   error("no min given");
+        if(!val.has_child("max"))   error("no max given");
+        this->nbins = ::val_i(val["nbins"]);      
+        this->min   = ::val_d(val["min"]);
+        this->max   = ::val_d(val["max"]);
+      } else if(val.is_seq()){
+        for(size_t i=0; i<val.num_children(); ++i){
+          this->bounds.push_back(::val_d(val[i]));
+        }
+        this->nbins = this->bounds.size();
+        this->min = this->bounds[0];
+        this->max = this->bounds[this->nbins-1];
       }
+    }
+  };
+
+
+    
+  
+  inline std::map<std::string,Var> readVars(const c4::yml::NodeRef& n,const std::string& obsnamecomp){
+    std::map<std::string,Var> vars;
+    if(!n.is_map()) return vars;
+    if(n.has_child("binning")){
+      c4::yml::NodeRef bounds(n["binning"]);
+      if(!bounds.is_map()) return vars;    
+      if(bounds.has_child("nbins")){
+        vars.emplace(std::make_pair("obs_x_"+obsnamecomp,Var(bounds)));
+      } else {
+        for(c4::yml::NodeRef p:bounds.children()){
+          vars.emplace(std::make_pair(::name(p),Var(p)));      
+        }
+      }
+    } else {
+      vars.emplace(std::make_pair("obs_x_"+obsnamecomp,Var(n["counts"].num_children())));
     }
     return vars;
   }  
@@ -158,20 +194,14 @@ namespace {
       if(ws->var(name.c_str())){
         varlist.add(*(ws->var(name.c_str())));
       } else {
-        auto& val = v.second;
-        if(!val.is_map()) error("variable is not a map!");          
-        if(!val.has_child("nbins")) error("no nbins given");
-        if(!val.has_child("min"))   error("no min given");
-        if(!val.has_child("max"))   error("no max given");
-        double nbins = ::val_i(val["nbins"]);      
-        double min   = ::val_d(val["min"]);
-        double max   = ::val_d(val["max"]);
-        RooRealVar* var = new RooRealVar(name.c_str(),name.c_str(),min);
-        var->setMin(min);
-        var->setMax(max);
-        var->setConstant(true);
-        var->setBins(nbins);
-        varlist.addOwned(*var);
+        auto& var = v.second;
+        RooRealVar* rrv = new RooRealVar(name.c_str(),name.c_str(),var.min);
+        rrv->setMin(var.min);
+        rrv->setMax(var.max);
+        rrv->setConstant(true);
+        rrv->setBins(var.nbins);
+        rrv->setAttribute("observable");
+        varlist.addOwned(*rrv);
       }
     }
     RooDataHist* dh = new RooDataHist(("dataHist_"+namecomp).c_str(),namecomp.c_str(),varlist);
@@ -192,7 +222,26 @@ namespace {
   
   class RooHistogramFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
-    virtual bool importFunction(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+    RooRealVar* getNP(RooJSONFactoryWSTool* tool, const char* parname) const {
+      RooRealVar* par = tool->workspace()->var(parname);
+      if(!par){
+        tool->workspace()->factory(TString::Format("%s[0.,-5,5]",parname).Data());
+        par = tool->workspace()->var(parname);
+      }
+      if(!par) error(TString::Format("unable to find nuisance parameter '%s'",parname));
+      return par;
+    }
+    RooAbsPdf* getConstraint(RooJSONFactoryWSTool* tool, const char* sysname) const {
+      RooAbsPdf* pdf = tool->workspace()->pdf(sysname);
+      if(!pdf){
+        tool->workspace()->factory(TString::Format("RooGaussian::%s(alpha_%s,0.,1.)",sysname,sysname).Data());
+        pdf = tool->workspace()->pdf(sysname);
+      }
+      if(!pdf) error(TString::Format("unable to find constraint term '%s'",sysname));
+      return pdf;
+    }
+    
+    virtual bool importFunction(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
       std::string name(::name(p));
       std::string prefix = ::genPrefix(p,true);
       if(prefix.size() > 0) name = prefix+name;    
@@ -201,12 +250,12 @@ namespace {
       }
       try {
         RooArgSet prodElems;
-        RooDataHist* dh = ::readData(ws,p["data"],name,prefix);       
+        RooDataHist* dh = ::readData(tool->workspace(),p["data"],name,prefix);       
         RooHistFunc* hf = new RooHistFunc(name.c_str(),::name(p).c_str(),*(dh->get()),*dh);          
         if(p.has_child("normfactors")){
           for(auto nf:p["normfactors"].children()){
-            std::string nfname(::val_s(nf));
-            RooAbsReal* r = ws->var(nfname.c_str());
+            std::string nfname(::name(nf));
+            RooAbsReal* r = tool->workspace()->var(nfname.c_str());
             if(!r){
               error("unable to find normalization factor '" + nfname + "'");
             } else {
@@ -220,18 +269,12 @@ namespace {
           std::vector<double> high;
           for(auto sys:p["overallSystematics"].children()){
             std::string sysname(::name(sys));
-            std::string parname( sys.has_child("parameter") ? ::val_s(sys["parameter"]) : "alpha_"+sysname);
-            RooAbsReal* par = ws->var(parname.c_str());
-            RooAbsPdf* pdf = ws->pdf(sysname.c_str());
-            if(!par){
-              error("unable to find nuisance parameter '" + parname + "'.");
-            } else if(!pdf){
-              error("unable to find pdf '" + sysname + "'.");
-            } else {
-              nps.add(*par);
-              low.push_back(::val_d(sys["low"]));
-              high.push_back(::val_d(sys["high"]));
-            }
+            std::string parname( sys.has_child("parameter") ? ::name(sys["parameter"]) : "alpha_"+sysname);
+            RooAbsReal* par = this->getNP(tool,parname.c_str());
+            RooAbsPdf* pdf = this->getConstraint(tool,sysname.c_str());
+            nps.add(*par);
+            low.push_back(::val_d(sys["low"]));
+            high.push_back(::val_d(sys["high"]));
           }
           RooStats::HistFactory::FlexibleInterpVar* v = new RooStats::HistFactory::FlexibleInterpVar(("overallSys_"+name).c_str(),("overallSys_"+name).c_str(),nps,1.,low,high);
           prodElems.addOwned(*v);
@@ -242,22 +285,16 @@ namespace {
           RooArgList high;            
           for(auto sys:p["histogramSystematics"].children()){
             std::string sysname(::name(sys));
-            std::string parname( sys.has_child("parameter") ? ::val_s(sys["parameter"]) : "alpha_"+sysname);            
-            RooAbsReal* par = ws->var(parname.c_str());
-            RooAbsPdf* pdf = ws->pdf(sysname.c_str());
-            if(!par){
-              error("unable to find nuisance parameter '" + parname + "'");
-            } else if(!pdf){
-              error("unable to find pdf '" + sysname + "'.");
-            } else {
-              nps.add(*par);
-              RooDataHist* dh_low = ::readData(ws,p["dataLow"],sysname+"Low_"+name,prefix);
-              RooHistFunc hf_low((sysname+"Low_"+name).c_str(),::name(p).c_str(),*(dh_low->get()),*dh_low);              
-              low.add(hf_low);
-              RooDataHist* dh_high = ::readData(ws,p["dataHigh"],sysname+"High_"+name,prefix);
-              RooHistFunc hf_high((sysname+"High_"+name).c_str(),::name(p).c_str(),*(dh_high->get()),*dh_high);              
-              high.add(hf_high);              
-            }
+            std::string parname( sys.has_child("parameter") ? ::name(sys["parameter"]) : "alpha_"+sysname);            
+            RooAbsReal* par = this->getNP(tool,parname.c_str());
+            RooAbsPdf* pdf = this->getConstraint(tool,sysname.c_str());            
+            nps.add(*par);
+            RooDataHist* dh_low = ::readData(tool->workspace(),p["dataLow"],sysname+"Low_"+name,prefix);
+            RooHistFunc hf_low((sysname+"Low_"+name).c_str(),::name(p).c_str(),*(dh_low->get()),*dh_low);              
+            low.add(hf_low);
+            RooDataHist* dh_high = ::readData(tool->workspace(),p["dataHigh"],sysname+"High_"+name,prefix);
+            RooHistFunc hf_high((sysname+"High_"+name).c_str(),::name(p).c_str(),*(dh_high->get()),*dh_high);              
+            high.add(hf_high);              
           }
           PiecewiseInterpolation* v = new PiecewiseInterpolation(("histoSys_"+name).c_str(),("histoSys_"+name).c_str(),*hf,nps,low,high,true);
           prodElems.addOwned(*v);
@@ -266,9 +303,9 @@ namespace {
           hf->SetName(("hist_"+name).c_str());
           prodElems.addOwned(*hf);          
           RooProduct prod(name.c_str(),name.c_str(),prodElems);
-          ws->import(prod);
+          tool->workspace()->import(prod);
         } else {
-          ws->import(*hf);
+          tool->workspace()->import(*hf);
         }
       } catch (const std::runtime_error& e){
         error("function '" + name + "' is of histogram type, but 'data' is not a valid definition. " + e.what() + ".");
@@ -280,13 +317,14 @@ namespace {
 
   class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
   public:
-    virtual bool importPdf(RooWorkspace* ws, const c4::yml::NodeRef& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
       std::string name(::name(p));
       RooArgList funcs;
       RooArgList coefs;
-      if(!p.has_child("sum")){
-        error("no sum components of '" + name + "', skipping.");
+      if(!p.has_child("samples")){
+        error("no samples in '" + name + "', skipping.");
       }
+      tool->importFunctions(p["samples"]);      
       RooArgList constraints;
       RooArgList nps;      
       RooConstVar* c = new RooConstVar("1","1",1.);
@@ -294,12 +332,12 @@ namespace {
       double statErrorThreshold = 0;
       if(p.has_child("statError")){
         auto staterr = p["statError"];
-        statErrorThreshold = ::val_d(staterr["relThreshold"]);      
-        std::string constraint = ::val_s(staterr["constraint"]);
+        if(staterr.has_child("relThreshold")) statErrorThreshold = ::val_d(staterr["relThreshold"]);
+        //        std::string constraint = ::val_s(staterr["constraint"]);
         std::vector<double> relValues;
         if(staterr.has_child("stack")){
           for(auto comp:staterr["stack"]){
-            std::string elem = ::val_s(comp);
+            std::string elem = ::name(comp);
             usesStatError.push_back(elem);
           }
         }
@@ -308,33 +346,36 @@ namespace {
       std::vector<double> sumW2;
       std::vector<std::string> obsnames;
       std::vector<std::string> sysnames;            
-      for(auto& comp:p["sum"]){
+      for(const auto& comp:p["samples"]){
         std::string fprefix;
-        std::string fname(::val_s(comp));
-        if(p.has_child("functions")){
+        std::string fname(::name(comp));
+        c4::yml::NodeRef def;
+        if(comp.is_container()){
+          def = comp;
+        } else if(p.has_child("functions")){
           auto funcdefs = p["functions"];
           if(funcdefs.has_child(c4::to_csubstr(fname.c_str()))){
-            auto def = funcdefs[c4::to_csubstr(fname.c_str())];
-            fprefix = ::genPrefix(def,true);
-            if(::val_s(def["type"]) == "histogram"){
-              try {
-                ::collectObsNames(def["data"],obsnames,name);
-                if(def.has_child("overallSystematics"))  ::collectNames(def["overallSystematics"],sysnames);
-                if(def.has_child("histogramSystematics"))::collectNames(def["histogramSystematics"],sysnames);                                
-              } catch (const char* s){
-                error("function '" + name + "' unable to collect observables from function " + fname + ". " + s );
-              }
-              if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
-                try {              
-                  ::stackError(def["data"],sumW,sumW2);
-                } catch (const char* s){                
-                  error("function '" + name + "' unable to sum statError from function " + fname + ". " + s );
-                }                
-              }
-            }
+            def = funcdefs[c4::to_csubstr(fname.c_str())];
           }
         }
-        RooAbsReal* func = ws->function((fprefix+fname).c_str());
+        fprefix = ::genPrefix(def,true);
+        if(::val_s(def["type"]) == "histogram"){
+          try {
+            ::collectObsNames(def["data"],obsnames,name);
+            if(def.has_child("overallSystematics"))  ::collectNames(def["overallSystematics"],sysnames);
+            if(def.has_child("histogramSystematics"))::collectNames(def["histogramSystematics"],sysnames);                                
+          } catch (const char* s){
+            error("function '" + name + "' unable to collect observables from function " + fname + ". " + s );
+          }
+          if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
+            try {              
+              ::stackError(def["data"],sumW,sumW2);
+            } catch (const char* s){                
+              error("function '" + name + "' unable to sum statError from function " + fname + ". " + s );
+            }                
+          }
+        }
+        RooAbsReal* func = tool->workspace()->function((fprefix+fname).c_str());
         if(!func){
           error("unable to obtain component '" + fprefix+fname + "' of '" + name + "'");
         }
@@ -342,7 +383,7 @@ namespace {
       }
       RooArgList observables;
       for(auto& obsname:obsnames){
-        RooRealVar* obs = ws->var(obsname.c_str());
+        RooRealVar* obs = tool->workspace()->var(obsname.c_str());
         if(!obs){
           error("unable to obtain observable '" + obsname + "' of '" + name + "',");
         }
@@ -374,8 +415,8 @@ namespace {
         phf = new ParamHistFunc(TString::Format("%s_mcstat",name.c_str()),"staterror",observables,gammas);
         phf->recursiveRedirectServers(observables);
       }
-      for(auto& comp:p["sum"]){
-        std::string fname(::val_s(comp));        
+      for(auto& comp:p["samples"]){
+        std::string fname(::name(comp));        
         if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
           coefs.add(*phf);
         } else {
@@ -390,7 +431,7 @@ namespace {
         }
       }
       for(auto sysname:sysnames){
-        RooAbsPdf* pdf = ws->pdf(sysname.c_str());
+        RooAbsPdf* pdf = tool->workspace()->pdf(sysname.c_str());
         if(pdf){
           constraints.add(*pdf);
         } else {
@@ -399,12 +440,12 @@ namespace {
       }
       if(constraints.getSize() == 0){
         RooRealSumPdf sum(name.c_str(),name.c_str(),funcs,coefs);
-        ws->import(sum);
+        tool->workspace()->import(sum);
       } else {
         RooRealSumPdf sum((name+"_model").c_str(),name.c_str(),funcs,coefs);
         constraints.add(sum);
         RooProdPdf prod(name.c_str(),name.c_str(),constraints);
-        ws->import(prod);        
+        tool->workspace()->import(prod);        
       }
       return true;
     }
