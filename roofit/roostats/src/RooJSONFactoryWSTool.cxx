@@ -424,6 +424,7 @@ public:
   
   static void append(c4::yml::NodeRef& n, const std::string& elem){
     // append an attribute
+    n |= c4::yml::SEQ;          
     if(!find(n,elem)){
       n.append_child() << elem;
     }
@@ -442,7 +443,7 @@ public:
       auto tags = n["tags"];
       tags |= c4::yml::SEQ;      
       for(const auto& it:arg->attributes()){
-        append(tags,it);
+        Helpers::append(tags,it);
       }
     }
   }
@@ -625,7 +626,7 @@ template<> void RooJSONFactoryWSTool::importPdfs(const c4::yml::NodeRef& n) {
     }
     bool toplevel = false;
     if(p.has_child("tags")){
-      toplevel = Helpers::find(p["tags"],"toplevel");
+      toplevel = Helpers::find(p["tags"],this->incache("toplevel"));
     }
     std::string pdftype(::val_s(p["type"]));
     this->importDependants(p);
@@ -832,8 +833,7 @@ template<> void RooJSONFactoryWSTool::exportAll( c4::yml::NodeRef& n) {
       auto node = pdfs[c4::to_csubstr(pdf->GetName())];
       node |= c4::yml::MAP;
       auto tags = node["tags"];
-      tags |= c4::yml::SEQ;
-      tags.append_child() << "toplevel";
+      Helpers::append(tags,this->incache("toplevel"));
     }
   } else {
     std::cerr << "no ModelConfig found in workspace and no pdf identified as toplevel by 'toplevel' attribute or an empty client list. nothing exported!" << std::endl;    

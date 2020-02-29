@@ -451,7 +451,7 @@ namespace {
     }
   };
 
-  bool _roorealsumpdffactory = RooJSONFactoryWSTool::registerImporter("sum",new RooRealSumPdfFactory());
+  bool _roorealsumpdffactory = RooJSONFactoryWSTool::registerImporter("histfactory",new RooRealSumPdfFactory());
 }
 
 namespace {

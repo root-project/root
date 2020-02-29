@@ -119,7 +119,7 @@ template<> void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFact
 template<> void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Channel& c, c4::yml::NodeRef& n) const {
   auto ch = n[c4::to_csubstr(RooJSONFactoryWSTool::incache(c.GetName()))];
   ch |= c4::yml::MAP;
-  ch["type"] << "sum";      
+  ch["type"] << "histfactory";      
   
   auto staterr = ch["statError"];
   staterr |= c4::yml::MAP;
@@ -260,7 +260,7 @@ template<> void RooStats::HistFactory::JSONTool::Export(c4::yml::NodeRef& n) con
   simdict |= c4::yml::MAP;  
   simdict["InterpolationScheme"] << this->_measurement->GetInterpolationScheme();
   auto simtags = sim["tags"];
-  simtags |= c4::yml::SEQ;  
+  simtags |= c4::yml::SEQ;
   simtags.append_child() << "toplevel";
   auto ch = sim["channels"];
   ch |= c4::yml::MAP;  
