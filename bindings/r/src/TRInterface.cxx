@@ -14,7 +14,8 @@ extern "C"
 #include <stdio.h>
 #include <stdlib.h>
 }
-#include<TRint.h>
+#include <TRint.h>
+#include <TSystem.h>
 
 using namespace ROOT::R;
 ClassImp(TRInterface);
