@@ -77,8 +77,13 @@ Make a directory for building
 Run cmake and make
 
     $ cmake ../root
-    $ make -j8
+    $ make -jN
+where 'N' is the number of processor cores you have.
 
+Or, you can use 
+  
+    $ make -j$(nproc) 
+       
 Setup and run ROOT
 
     $ source bin/thisroot.sh
