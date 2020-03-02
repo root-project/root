@@ -54,13 +54,12 @@ object onto a one-dimensional plot.
 #include "TClass.h"
 #include "TH1D.h"
 #include "TBrowser.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
-#include "TDirectory.h"
 #include "TDirectoryFile.h"
 #include "TLegend.h"
 
@@ -70,7 +69,7 @@ object onto a one-dimensional plot.
 using namespace std;
 
 ClassImp(RooPlot);
-;
+
 
 Bool_t RooPlot::_addDirStatus = kTRUE ;
 
