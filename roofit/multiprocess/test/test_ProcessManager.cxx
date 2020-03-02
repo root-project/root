@@ -18,13 +18,20 @@
 
 TEST(TestMPProcessManager, birthAndDeath)
 {
-   // Note that this test does not use terminate() or check for sigterm_received,
-   // it just destroys and exits itself on every process. This is not how it is
-   // used in real life. The checkState test below more closely follows real life
-   // usage.
    auto pm = RooFit::MultiProcess::ProcessManager(2);
-   sleep(5);
 }
+
+TEST(TestMPProcessManager, multiBirth)
+{
+   // This test doesn't actually represent a current usecase in RooFit, but let's
+   // showcase the possibility anyway for future reference.
+
+   // first create a regular pm like in the birthAndDeath test
+   auto pm = RooFit::MultiProcess::ProcessManager(2);
+   // then from each forked node, spin up another set of workers+queue!
+   auto pm2 = RooFit::MultiProcess::ProcessManager(2);
+}
+
 
 TEST(TestMPProcessManager, checkState)
 {
@@ -38,17 +45,12 @@ TEST(TestMPProcessManager, checkState)
       EXPECT_EQ(getpid(), master_pid);
       EXPECT_FALSE(pm.is_queue());
       EXPECT_FALSE(pm.is_worker());
-      pm.terminate();
    } else if (pm.is_queue()) {
       EXPECT_FALSE(pm.is_master());
       EXPECT_FALSE(pm.is_worker());
-      while(!pm.sigterm_received()) {}
-      std::_Exit(0);
    } else if (pm.is_worker()) {
       EXPECT_FALSE(pm.is_master());
       EXPECT_FALSE(pm.is_queue());
       EXPECT_TRUE(pm.worker_id() == 0 || pm.worker_id() == 1);
-      while(!pm.sigterm_received()) {}
-      std::_Exit(0);
    }
 }
