@@ -16,7 +16,6 @@ set(py_sources
 )
 
 set(cppyy_backendDirName cling/python/cppyy_backend)
-file(COPY ${cppyy_backendDirName} DESTINATION ${localruntimedir})
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_version_strings ${val} python_version_string)
@@ -39,5 +38,17 @@ foreach(val RANGE ${how_many_pythons})
   target_include_directories(${libname} PRIVATE ${CMAKE_BINARY_DIR}/include)
 
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
+
+  # Installation
   install(TARGETS ${libname} EXPORT ROOTExports DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  foreach(py_source ${py_sources})
+    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
+  endforeach()
+endforeach()
+
+file(COPY ${cppyy_backendDirName} DESTINATION ${localruntimedir})
+
+foreach(py_source ${py_sources})
+  install(FILES cling/python/${py_source} DESTINATION ${runtimedir}/cppyy_backend)
 endforeach()
