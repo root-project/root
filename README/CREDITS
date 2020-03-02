@@ -180,7 +180,7 @@ D: support and development of TTreeFormula and TTree query mechanism
 N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
-D: TSpline classes
+D: TSpline, TComplex classes
 D: Support for gcc option -weffc++
 
 N: Gian Paolo Ciceri
