@@ -27,8 +27,6 @@
 #include "RooMsgService.h"
 #include "RooTrace.h"
 
-#include "TMath.h"
-
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
 
 using namespace std;

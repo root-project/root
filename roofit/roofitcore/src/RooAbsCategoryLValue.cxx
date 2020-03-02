@@ -30,7 +30,6 @@ to other RooAbsArgs must be invertible
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <stdlib.h>
 #include "TTree.h"
 #include "TString.h"
@@ -44,7 +43,7 @@ to other RooAbsArgs must be invertible
 using namespace std;
 
 ClassImp(RooAbsCategoryLValue); 
-;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
