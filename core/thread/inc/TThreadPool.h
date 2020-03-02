@@ -31,6 +31,8 @@
 #include <sstream>
 #ifdef _MSC_VER
 #define sleep(s) _sleep(s)
+#else
+#include <unistd.h>
 #endif
 
 
