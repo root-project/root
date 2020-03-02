@@ -29,7 +29,6 @@ a_i it returns a_0 * Prod_i (1 - a_i).
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <math.h>
 
 #include "RooRecursiveFraction.h"
@@ -44,7 +43,7 @@ a_i it returns a_0 * Prod_i (1 - a_i).
 using namespace std;
 
 ClassImp(RooRecursiveFraction);
-;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

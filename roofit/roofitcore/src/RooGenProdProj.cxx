@@ -34,7 +34,6 @@ analytically. Remaining non-factorising observables are integrated numerically.
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <math.h>
 
 #include "RooGenProdProj.h"
@@ -46,7 +45,7 @@ analytically. Remaining non-factorising observables are integrated numerically.
 using namespace std;
 
 ClassImp(RooGenProdProj);
-;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -43,8 +43,6 @@
 #include "TH1.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
-
 
 #include "RooFit.h"
 #include "RooStats/HistFactory/ParamHistFunc.h"

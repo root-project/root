@@ -37,7 +37,6 @@
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <stdlib.h>
 
 #ifndef _WIN32

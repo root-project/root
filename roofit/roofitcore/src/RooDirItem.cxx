@@ -27,7 +27,6 @@ methods that can be used to safely attach and detach one self from a TDirectory
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TList.h"
 #include "TDirectoryFile.h"
@@ -36,7 +35,7 @@ methods that can be used to safely attach and detach one self from a TDirectory
 
 using namespace std;
 
-ClassImp(RooDirItem); ;
+ClassImp(RooDirItem);
 
 
 ////////////////////////////////////////////////////////////////////////////////

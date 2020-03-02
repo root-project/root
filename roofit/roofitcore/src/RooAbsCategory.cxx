@@ -32,7 +32,6 @@ is provided to modify the contents, nor a public interface to define states.
 
 #include "Compression.h"
 #include "Riostream.h"
-#include "Riostream.h"
 #include <stdlib.h>
 #include "TString.h"
 #include "TH1.h"
@@ -49,7 +48,7 @@ is provided to modify the contents, nor a public interface to define states.
 using namespace std;
 
 ClassImp(RooAbsCategory);
-;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
