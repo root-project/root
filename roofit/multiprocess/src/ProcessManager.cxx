@@ -42,7 +42,11 @@ ProcessManager::ProcessManager(std::size_t N_workers) : _N_workers(N_workers) {
 
 ProcessManager::~ProcessManager()
 {
-   terminate();
+   if (is_master()) {
+      terminate();
+   } else {
+      wait_for_sigterm_then_exit();
+   }
 }
 
 
@@ -161,6 +165,14 @@ void ProcessManager::terminate() noexcept {
       }
    } catch (const std::exception& e) {
       std::cerr << "WARNING: something in ProcessManager::terminate threw an exception! Original exception message:\n" << e.what() << std::endl;
+   }
+}
+
+
+void ProcessManager::wait_for_sigterm_then_exit() {
+   if (!is_master()) {
+      while(!sigterm_received()) {}
+      std::_Exit(0);
    }
 }
 

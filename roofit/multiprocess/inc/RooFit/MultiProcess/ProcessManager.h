@@ -35,6 +35,7 @@ public:
 
    void terminate() noexcept;
 //   void terminate_workers();
+   void wait_for_sigterm_then_exit();
 
    bool is_master() const;
    bool is_queue() const;
