@@ -160,7 +160,7 @@ public:
 
    const_iterator begin() const { return const_iterator(*fImpl); }
 
-   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
+   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver()); }
 
    /// Swap *this and other.
    ///

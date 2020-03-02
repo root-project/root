@@ -81,17 +81,16 @@ protected:
    ///
    int AdjustOverflowBinNumber(double rawbin) const
    {
-      // Underflow: Put in underflow bin if any, otherwise ignore
-      if (rawbin < 0)
-         return CanGrow() ? kIgnoreBin : GetUnderflowBin();
+      // Overflow: Put in overflow bin if any, otherwise ignore
+      if (rawbin > GetLastBin())
+         return CanGrow() ? kIgnoreBin : GetOverflowBin();
 
-      // Account for the presence of underflow bin, if any
       if (!CanGrow())
          ++rawbin;
 
-      // Overflow: Put in overflow bin if any, otherwise ignore
-      if (rawbin >= GetNBins())
-         return CanGrow() ? kIgnoreBin : GetOverflowBin();
+      // Underflow: Put in underflow bin if any, otherwise ignore
+      if (rawbin < GetFirstBin())
+         return CanGrow() ? kIgnoreBin : GetUnderflowBin();
 
       // Bin index is in range and has been corrected for over/underflow
       return (int)rawbin;
@@ -231,11 +230,7 @@ public:
    };
 
    /// FindBin() returns this bin to signal that the bin number is invalid.
-   constexpr static const int kIgnoreBin = -1;
-
-   /// Extra bins for each EAxisOverflow value.
-   // FIXME: Purpose needs clarification
-   constexpr static const int kNOverflowBins[4] = {0, 1, 1, 2};
+   constexpr static const int kIgnoreBin = 0;
 
    /// Get the axis's title
    const std::string &GetTitle() const { return fTitle; }
@@ -262,41 +257,49 @@ public:
    /// if CanGrow()).
    int GetUnderflowBin() const noexcept {
       if (CanGrow())
-         return -1;
-      else
          return 0;
+      else
+         return -1;
    }
 
    /// Get the bin index for the underflow bin (or the next bin outside range
    /// if CanGrow()).
    int GetOverflowBin() const noexcept {
       if (CanGrow())
-         return GetNBins();
+         return 0;
       else
-         return GetNBins() - 1;
+         return -2;
    }
 
+   /// Get the bin index for the first bin of the axis
+   int GetFirstBin() const noexcept { return 1; }
+
+   /// Get the bin index for the last bin of the axis
+   int GetLastBin() const noexcept { return GetNBinsNoOver(); }
+
    /// Whether the bin index is referencing a bin lower than the axis range.
-   bool IsUnderflowBin(int bin) const noexcept { return bin <= GetUnderflowBin(); }
+   bool IsUnderflowBin(int bin) const noexcept { return bin < GetFirstBin(); }
 
    /// Whether the bin index is referencing a bin higher than the axis range.
-   bool IsOverflowBin(int bin) const noexcept { return bin >= GetOverflowBin(); }
+   bool IsOverflowBin(int bin) const noexcept { return bin > GetLastBin(); }
 
    ///\name Iterator interfaces
    ///\{
 
    /// Get a const_iterator pointing to the first non-underflow bin.
-   const_iterator begin() const noexcept { return const_iterator{GetUnderflowBin() + 1}; }
+   const_iterator begin() const noexcept { return const_iterator{GetFirstBin()}; }
 
    /// Get a const_iterator pointing the first bin, whether underflow or not
-   const_iterator begin_with_underflow() const noexcept { return const_iterator{0}; }
+   // RODO: determine if it is really useful with refactoring
+   const_iterator begin_with_underflow() const noexcept { return const_iterator{GetFirstBin()}; }
 
    /// Get a const_iterator pointing right beyond the last non-overflow bin
    /// (i.e. pointing to the overflow bin, if any).
-   const_iterator end() const noexcept { return const_iterator{GetOverflowBin()}; }
+   const_iterator end() const noexcept { return const_iterator{GetLastBin()}; }
 
    /// Get a const_iterator pointing right beyond the last bin, whether overflow or not
-   const_iterator end_with_overflow() const noexcept { return const_iterator{GetNBins()}; }
+   // RODO: determine if it is really useful with refactoring
+   const_iterator end_with_overflow() const noexcept { return const_iterator{GetLastBin()}; }
    ///\}
 
    /// Find the bin index for the given coordinate.
@@ -317,10 +320,10 @@ public:
    double GetBinTo(int bin) const { return GetBinFrom(bin + 1); }
 
    /// Get the low end of the axis range.
-   double GetMinimum() const { return GetBinTo(GetUnderflowBin()); }
+   double GetMinimum() const { return GetBinFrom(GetFirstBin()); }
 
    /// Get the high end of the axis range.
-   double GetMaximum() const { return GetBinFrom(GetOverflowBin()); }
+   double GetMaximum() const { return GetBinTo(GetLastBin()); }
 
    /// Check if two axes use the same binning convention, i.e.
    ///
@@ -662,6 +665,10 @@ public:
       int rawbin = iNotLess - bBegin;
       // No need for AdjustOverflowBinNumber(rawbin) here; lower_bound() is the
       // answer: e.g. for x < *bBegin, rawbin is 0.
+      if (rawbin < GetFirstBin())
+         return -1;
+      if (rawbin > GetLastBin())
+         return -2;
       return rawbin;
    }
 

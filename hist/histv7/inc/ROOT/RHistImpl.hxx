@@ -85,6 +85,9 @@ public:
    /// Number of bins of this histogram, including all overflow and underflow
    /// bins. Simply the product of all axes' number of bins.
    virtual int GetNBins() const noexcept = 0;
+   /// Number of bins of this histogram, excluding all overflow and underflow
+   /// bins. Simply the product of all axes' number of bins.
+   virtual int GetNBinsNoOver() const noexcept = 0;
 
    /// Get the histogram title.
    const std::string &GetTitle() const { return fTitle; }
@@ -200,11 +203,25 @@ public:
    /// overflow bins.
    int GetNBins() const noexcept final { return fStatistics.size(); }
 
+   /// Get the number of bins in this histogram, excluding possible under- and
+   /// overflow bins.
+   int GetNBinsNoOver() const noexcept final { return fStatistics.sizeNoOver(); }
+
    /// Get the bin content (sum of weights) for bin index `binidx`.
-   Weight_t GetBinContent(int binidx) const { return fStatistics[binidx]; }
+   Weight_t GetBinContent(int binidx) const 
+   {
+      if (binidx == 0)
+         binidx = -1;
+      return fStatistics[binidx]; 
+   }
 
    /// Get the bin content (sum of weights) for bin index `binidx` (non-const).
-   Weight_t &GetBinContent(int binidx) { return fStatistics[binidx]; }
+   Weight_t &GetBinContent(int binidx) 
+   {
+      if (binidx == 0)
+         binidx = -1;
+      return fStatistics[binidx]; 
+   }
 
    /// Const access to statistics.
    const Stat_t &GetStat() const noexcept { return fStatistics; }
@@ -217,7 +234,12 @@ public:
    double GetBinContentAsDouble(int binidx) const final { return (double)GetBinContent(binidx); }
 
    /// Add `w` to the bin at index `bin`.
-   void AddBinContent(int binidx, Weight_t w) { fStatistics[binidx] += w; }
+   void AddBinContent(int binidx, Weight_t w) 
+   {
+      if (binidx == 0)
+         binidx = -1;
+      fStatistics[binidx] += w; 
+   }
 };
 } // namespace Detail
 
@@ -230,30 +252,53 @@ namespace Internal {
 /// \name Axis tuple operations
 /// Template operations on axis tuple.
 ///@{
+
+// Get number of bins in hole hist excluding under-/overflow
 template <int IDX, class AXISTUPLE>
-struct RGetBinCount;
+struct RGetNBinsNoOverCount;
 
 template <class AXES>
-struct RGetBinCount<0, AXES> {
+struct RGetNBinsNoOverCount<0, AXES> {
+   int operator()(const AXES &axes) const { return std::get<0>(axes).GetNBinsNoOver(); }
+};
+
+template <int I, class AXES>
+struct RGetNBinsNoOverCount {
+   int operator()(const AXES &axes) const { return std::get<I>(axes).GetNBinsNoOver() * RGetNBinsNoOverCount<I - 1, AXES>()(axes); }
+};
+
+template <class... AXISCONFIG>
+int GetNBinsNoOverFromAxes(AXISCONFIG... axisArgs)
+{
+   using axesTuple = std::tuple<AXISCONFIG...>;
+   return RGetNBinsNoOverCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+}
+
+// Get number of bins in hole hist including under-/overflow
+template <int IDX, class AXISTUPLE>
+struct RGetNBinsCount;
+
+template <class AXES>
+struct RGetNBinsCount<0, AXES> {
    int operator()(const AXES &axes) const { return std::get<0>(axes).GetNBins(); }
 };
 
 template <int I, class AXES>
-struct RGetBinCount {
-   int operator()(const AXES &axes) const { return std::get<I>(axes).GetNBins() * RGetBinCount<I - 1, AXES>()(axes); }
+struct RGetNBinsCount {
+   int operator()(const AXES &axes) const { return std::get<I>(axes).GetNBins() * RGetNBinsCount<I - 1, AXES>()(axes); }
 };
 
 template <class... AXISCONFIG>
 int GetNBinsFromAxes(AXISCONFIG... axisArgs)
 {
    using axesTuple = std::tuple<AXISCONFIG...>;
-   return RGetBinCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+   return RGetNBinsCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
 }
 
+// Get bin index of given coordinates in hole hist
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
 struct RGetBinIndex;
 
-// Break recursion
 template <class HISTIMPL, class AXES, bool GROW>
 struct RGetBinIndex<-1, HISTIMPL, AXES, GROW> {
    int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
@@ -283,10 +328,10 @@ struct RGetBinIndex {
    }
 };
 
+// Fill range of all axes, including under-/overflow
 template <int I, class AXES>
 struct RFillIterRange;
 
-// Break recursion.
 template <class AXES>
 struct RFillIterRange<-1, AXES> {
    void operator()(Hist::AxisIterRange_t<std::tuple_size<AXES>::value> & /*range*/, const AXES & /*axes*/,
@@ -336,13 +381,13 @@ struct RFillBinCoord {
    void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx) const
    {
       constexpr const int thisAxis = NDIM - I - 1;
-      int axisbin = binidx % std::get<thisAxis>(axes).GetNBins();
+      int axisbin = binidx % std::get<thisAxis>(axes).GetNBinsNoOver();
       switch (kind) {
       case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
       case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
       case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
       }
-      RFillBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, binidx / std::get<thisAxis>(axes).GetNBins());
+      RFillBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, binidx / std::get<thisAxis>(axes).GetNBinsNoOver());
    }
 };
 
@@ -418,7 +463,7 @@ public:
    /// Normalized axes access, converting from actual axis type to base class
    const RAxisBase &GetAxis(int iAxis) const final { return *std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
 
-   /// Gets the bin index for coordinate `x`; returns -1 if there is no such bin,
+   /// Gets the bin index for coordinate `x`; returns 0 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
    int GetBinIndex(const CoordArray_t &x) const final
    {
@@ -426,17 +471,17 @@ public:
       int ret =
          Internal::RGetBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status);
       if (status != RAxisBase::EFindStatus::kValid)
-         return -1;
+         return 0;
       return ret;
    }
 
    /// Gets the bin index for coordinate `x`, growing the axes as needed and
-   /// possible. Returns -1 if there is no such bin,
+   /// possible. Returns 0 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
    int GetBinIndexAndGrow(const CoordArray_t &x) final
    {
       RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kCanGrow;
-      int ret = -1;
+      int ret = 0;
       while (status == RAxisBase::EFindStatus::kCanGrow) {
          ret = Internal::RGetBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), true>()(this, fAxes, x, status);
       }
@@ -509,9 +554,7 @@ public:
    Weight_t GetBinContent(const CoordArray_t &x) const final
    {
       int bin = GetBinIndex(x);
-      if (bin >= 0)
-         return ImplBase_t::GetBinContent(bin);
-      return 0.;
+      return ImplBase_t::GetBinContent(bin);
    }
 
    /// Return the uncertainties for the given bin.
@@ -556,8 +599,8 @@ public:
    using iterator = RHistBinIter<ImplBase_t>;
    iterator begin() noexcept { return iterator(*this); }
    const_iterator begin() const noexcept { return const_iterator(*this); }
-   iterator end() noexcept { return iterator(*this, this->GetNBins()); }
-   const_iterator end() const noexcept { return const_iterator(*this, this->GetNBins()); }
+   iterator end() noexcept { return iterator(*this, this->GetNBinsNoOver()); }
+   const_iterator end() const noexcept { return const_iterator(*this, this->GetNBinsNoOver()); }
    /// \}
 };
 

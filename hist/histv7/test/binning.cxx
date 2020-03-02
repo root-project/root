@@ -14,16 +14,16 @@ TEST(AxisBinning, EquidistBasic) {
    EXPECT_EQ(1, ax.FindBin(-.999));
    EXPECT_EQ(5, ax.FindBin(-.001));
    EXPECT_EQ(10, ax.FindBin(0.999));
-   EXPECT_EQ(0, ax.FindBin(-2.));
-   EXPECT_EQ(11, ax.FindBin(2000.));
+   EXPECT_EQ(-1, ax.FindBin(-2.));
+   EXPECT_EQ(-2, ax.FindBin(2000.));
 
    EXPECT_GE(6, ax.FindBin(std::numeric_limits<double>::min()));
    EXPECT_LE(5, ax.FindBin(std::numeric_limits<double>::min()));
    EXPECT_GE(6, ax.FindBin(-std::numeric_limits<double>::min()));
    EXPECT_LE(5, ax.FindBin(-std::numeric_limits<double>::min()));
 
-   EXPECT_EQ(11, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(0, ax.FindBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 
@@ -31,7 +31,7 @@ TEST(AxisBinning, EquidistBasic) {
 TEST(AxisBinning, EquidistEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
    RAxisEquidistant ax("RITLE", 10, 0., eps * 10.);
-   EXPECT_LE(0, ax.FindBin(0.5*eps));
+   EXPECT_LE(-1, ax.FindBin(0.5*eps));
    EXPECT_GE(1, ax.FindBin(0.5*eps));
 
    EXPECT_LE(5, ax.FindBin(5.*eps));
@@ -40,14 +40,14 @@ TEST(AxisBinning, EquidistEpsBins) {
    EXPECT_LE(10, ax.FindBin(10.*eps));
    EXPECT_GE(11, ax.FindBin(10.*eps));
 
-   EXPECT_EQ(0, ax.FindBin(-2000.*eps));
-   EXPECT_EQ(11, ax.FindBin(2000.*eps));
+   EXPECT_EQ(-1, ax.FindBin(-2000.*eps));
+   EXPECT_EQ(-2, ax.FindBin(2000.*eps));
    EXPECT_LE(1, ax.FindBin(std::numeric_limits<double>::min()));
    EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(0, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_LE(-1, ax.FindBin(-std::numeric_limits<double>::min()));
    EXPECT_GE(1, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(11, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(0, ax.FindBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 
@@ -57,16 +57,16 @@ TEST(AxisBinning, IrregularBasic) {
    EXPECT_EQ(2, ax.FindBin(.001));
    EXPECT_EQ(1, ax.FindBin(-.001));
    EXPECT_EQ(5, ax.FindBin(99.));
-   EXPECT_EQ(0, ax.FindBin(-6.));
-   EXPECT_EQ(6, ax.FindBin(2000.));
+   EXPECT_EQ(-1, ax.FindBin(-6.));
+   EXPECT_EQ(-2, ax.FindBin(2000.));
 
    EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
    EXPECT_LE(1, ax.FindBin(std::numeric_limits<double>::min()));
    EXPECT_GE(2, ax.FindBin(-std::numeric_limits<double>::min()));
    EXPECT_LE(1, ax.FindBin(-std::numeric_limits<double>::min()));
 
-   EXPECT_EQ(6, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(0, ax.FindBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 
@@ -74,7 +74,7 @@ TEST(AxisBinning, IrregularBasic) {
 TEST(AxisBinning, IrregularEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
    RAxisIrregular ax("RITLE", {0., eps, 2.*eps, 3.*eps, 4.*eps, 5.*eps});
-   EXPECT_LE(0, ax.FindBin(0.5*eps));
+   EXPECT_LE(-4, ax.FindBin(0.5*eps));
    EXPECT_GE(1, ax.FindBin(0.5*eps));
 
    EXPECT_LE(3, ax.FindBin(3.*eps));
@@ -83,12 +83,12 @@ TEST(AxisBinning, IrregularEpsBins) {
    EXPECT_LE(5, ax.FindBin(5.*eps));
    EXPECT_GE(6, ax.FindBin(5.*eps));
 
-   EXPECT_EQ(0, ax.FindBin(-2000.*eps));
-   EXPECT_EQ(6, ax.FindBin(2000.*eps));
+   EXPECT_EQ(-1, ax.FindBin(-2000.*eps));
+   EXPECT_EQ(-2, ax.FindBin(2000.*eps));
    EXPECT_EQ(1, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_EQ(0, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(6, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(0, ax.FindBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 // Histogram binning on a Equidistant axis.
@@ -99,16 +99,16 @@ TEST(HistImplBinning, Equidist1D) {
    EXPECT_EQ(5, hist.GetBinIndex({.45}));
    EXPECT_EQ(10, hist.GetBinIndex({.999}));
    EXPECT_EQ(1, hist.GetBinIndex({.001}));
-   EXPECT_EQ(0, hist.GetBinIndex({-.001}));
-   EXPECT_EQ(11, hist.GetBinIndex({1.001}));
+   EXPECT_EQ(-1, hist.GetBinIndex({-.001}));
+   EXPECT_EQ(-2, hist.GetBinIndex({1.001}));
 
    EXPECT_GE(1, hist.GetBinIndex({std::numeric_limits<double>::min()}));
-   EXPECT_LE(0, hist.GetBinIndex({std::numeric_limits<double>::min()}));
+   EXPECT_LE(-1, hist.GetBinIndex({std::numeric_limits<double>::min()}));
    EXPECT_GE(1, hist.GetBinIndex({-std::numeric_limits<double>::min()}));
-   EXPECT_LE(0, hist.GetBinIndex({-std::numeric_limits<double>::min()}));
+   EXPECT_LE(-1, hist.GetBinIndex({-std::numeric_limits<double>::min()}));
 
-   EXPECT_EQ(11, hist.GetBinIndex({std::numeric_limits<double>::max()}));
-   EXPECT_EQ(0, hist.GetBinIndex({-std::numeric_limits<double>::max()}));
+   EXPECT_EQ(-2, hist.GetBinIndex({std::numeric_limits<double>::max()}));
+   EXPECT_EQ(-1, hist.GetBinIndex({-std::numeric_limits<double>::max()}));
 }
 
 TEST(HistImplBinning, EquiDist2D) {
@@ -118,37 +118,37 @@ TEST(HistImplBinning, EquiDist2D) {
 
    // Here's a visual overview of how binning should work
    //
-   //                    Axis 0
+   //                     Axis 0
    //              UF   0.0  1.0  OF
    //        ------------------------
-   //     A   UF  | 0    1    2    3
-   //     x  -1.0 | 4    5    6    7
-   //     .   0.0 | 8    9    10   11
-   //     1   OF  | 12   13   14   15
+   //     A   UF  |-1   -2   -3   -4
+   //     x  -1.0 |-5    1    2   -6
+   //     .   0.0 |-7    3    4   -8
+   //     1   OF  |-9  -10  -11  -12
 
    // Check that coordinates map into the correct bins
 
-   EXPECT_EQ( 0, hist.GetBinIndex({-100., -100.}));
-   EXPECT_EQ( 1, hist.GetBinIndex({0.5, -100.}));
-   EXPECT_EQ( 2, hist.GetBinIndex({1.5, -100.}));
-   EXPECT_EQ( 3, hist.GetBinIndex({100., -100.}));
-   EXPECT_EQ( 4, hist.GetBinIndex({-100., -0.5}));
-   EXPECT_EQ( 5, hist.GetBinIndex({0.5, -0.5}));
-   EXPECT_EQ( 6, hist.GetBinIndex({1.5, -0.5}));
-   EXPECT_EQ( 7, hist.GetBinIndex({100., -0.5}));
-   EXPECT_EQ( 8, hist.GetBinIndex({-100., 0.5}));
-   EXPECT_EQ( 9, hist.GetBinIndex({0.5, 0.5}));
-   EXPECT_EQ(10, hist.GetBinIndex({1.5, 0.5}));
-   EXPECT_EQ(11, hist.GetBinIndex({100., 0.5}));
-   EXPECT_EQ(12, hist.GetBinIndex({-100., 100.}));
-   EXPECT_EQ(13, hist.GetBinIndex({0.5, 100.}));
-   EXPECT_EQ(14, hist.GetBinIndex({1.5, 100.}));
-   EXPECT_EQ(15, hist.GetBinIndex({100., 100.}));
+   EXPECT_EQ(-1, hist.GetBinIndex({-100., -100.}));
+   EXPECT_EQ(-2, hist.GetBinIndex({0.5, -100.}));
+   EXPECT_EQ(-3, hist.GetBinIndex({1.5, -100.}));
+   EXPECT_EQ(-4, hist.GetBinIndex({100., -100.}));
+   EXPECT_EQ(-5, hist.GetBinIndex({-100., -0.5}));
+   EXPECT_EQ( 1, hist.GetBinIndex({0.5, -0.5}));
+   EXPECT_EQ( 2, hist.GetBinIndex({1.5, -0.5}));
+   EXPECT_EQ(-6, hist.GetBinIndex({100., -0.5}));
+   EXPECT_EQ(-7, hist.GetBinIndex({-100., 0.5}));
+   EXPECT_EQ( 3, hist.GetBinIndex({0.5, 0.5}));
+   EXPECT_EQ( 4, hist.GetBinIndex({1.5, 0.5}));
+   EXPECT_EQ(-8, hist.GetBinIndex({100., 0.5}));
+   EXPECT_EQ(-9, hist.GetBinIndex({-100., 100.}));
+   EXPECT_EQ(-10, hist.GetBinIndex({0.5, 100.}));
+   EXPECT_EQ(-11, hist.GetBinIndex({1.5, 100.}));
+   EXPECT_EQ(-12, hist.GetBinIndex({100., 100.}));
 
-   EXPECT_EQ( 0, hist.GetBinIndex({-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
-   EXPECT_EQ( 3, hist.GetBinIndex({ std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
-   EXPECT_EQ(12, hist.GetBinIndex({-std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
-   EXPECT_EQ(15, hist.GetBinIndex({ std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
+   EXPECT_EQ(-1, hist.GetBinIndex({-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
+   EXPECT_EQ(-4, hist.GetBinIndex({ std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
+   EXPECT_EQ(-9, hist.GetBinIndex({-std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
+   EXPECT_EQ(-12, hist.GetBinIndex({ std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
 
    // Check that bins map into the correct coordinates
 

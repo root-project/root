@@ -18,8 +18,6 @@
 #include <cmath>
 #include <limits>
 
-constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
-
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
 bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) const {
