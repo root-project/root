@@ -25,12 +25,7 @@ namespace MultiProcess {
 template <typename T, typename... Ts>
 void Messenger::send_from_worker_to_queue(T item, Ts... items)
 {
-   try {
-      zmqSvc().send(*this_worker_qw_push, item, send_flag);
-   } catch (zmq::error_t &e) {
-      std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
-      throw;
-   };
+   zmqSvc().send(*this_worker_qw_push, item, send_flag);
    //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
    send_from_worker_to_queue(items...);
 }
@@ -38,29 +33,15 @@ void Messenger::send_from_worker_to_queue(T item, Ts... items)
 template <typename value_t>
 value_t Messenger::receive_from_worker_on_queue(std::size_t this_worker_id)
 {
-   try {
-//      if (N_available_polled_results > 0) {
-//         --N_available_polled_results;
-//      } else {
-         qw_pull_poller[this_worker_id].ppoll(-1, &ppoll_sigmask);
-//      }
-      auto value = zmqSvc().receive<value_t>(*qw_pull[this_worker_id], ZMQ_DONTWAIT);
-      return value;
-   } catch (zmq::error_t &e) {
-      std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
-      throw;
-   };
+   qw_pull_poller[this_worker_id].ppoll(-1, &ppoll_sigmask);
+   auto value = zmqSvc().receive<value_t>(*qw_pull[this_worker_id], ZMQ_DONTWAIT);
+   return value;
 }
 
 template <typename T, typename... Ts>
 void Messenger::send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts... items)
 {
-   try {
-      zmqSvc().send(*qw_push[this_worker_id], item, send_flag);
-   } catch (zmq::error_t &e) {
-      std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
-      throw;
-   };
+   zmqSvc().send(*qw_push[this_worker_id], item, send_flag);
    //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
    send_from_queue_to_worker(this_worker_id, items...);
 }
@@ -68,18 +49,9 @@ void Messenger::send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts
 template <typename value_t>
 value_t Messenger::receive_from_queue_on_worker()
 {
-   try {
-//      if (N_available_polled_results > 0) {
-//         --N_available_polled_results;
-//      } else {
-         qw_pull_poller[0].ppoll(-1, &ppoll_sigmask);
-//      }
-      auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull, ZMQ_DONTWAIT);
-      return value;
-   } catch (zmq::error_t &e) {
-      std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
-      throw;
-   };
+   qw_pull_poller[0].ppoll(-1, &ppoll_sigmask);
+   auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull, ZMQ_DONTWAIT);
+   return value;
 }
 
 
@@ -88,12 +60,7 @@ value_t Messenger::receive_from_queue_on_worker()
 template <typename T, typename... Ts>
 void Messenger::send_from_queue_to_master(T item, Ts... items)
 {
-   try {
-      zmqSvc().send(*mq_push, item, send_flag);
-   } catch (zmq::error_t &e) {
-      std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
-      throw;
-   };
+   zmqSvc().send(*mq_push, item, send_flag);
    //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
    send_from_queue_to_master(items...);
 }
@@ -101,18 +68,9 @@ void Messenger::send_from_queue_to_master(T item, Ts... items)
 template <typename value_t>
 value_t Messenger::receive_from_queue_on_master()
 {
-   try {
-//      if (N_available_polled_results > 0) {
-//         --N_available_polled_results;
-//      } else {
-         mq_pull_poller.ppoll(-1, &ppoll_sigmask);
-//      }
-      auto value = zmqSvc().receive<value_t>(*mq_pull, ZMQ_DONTWAIT);
-      return value;
-   } catch (zmq::error_t &e) {
-      std::cerr << e.what() << " -- errnum: " << e.num() << std::endl;
-      throw;
-   };
+   mq_pull_poller.ppoll(-1, &ppoll_sigmask);
+   auto value = zmqSvc().receive<value_t>(*mq_pull, ZMQ_DONTWAIT);
+   return value;
 }
 
 template <typename T, typename... Ts>

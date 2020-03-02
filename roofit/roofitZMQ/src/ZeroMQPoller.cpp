@@ -19,9 +19,7 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::poll(int timeo) {
   int n = 0;
   while (true) {
     try {
-       std::cout << "polling on PID " << getpid() << "..." << std::endl;
        n = zmq::poll(&m_items[0], m_items.size(), timeo);
-       std::cout << "polling on PID " << getpid() << " returned n = " << n << std::endl;
        if (n == 0) return r;
        break;
     } catch (const zmq::error_t& e) {
@@ -58,9 +56,7 @@ std::vector<std::pair<size_t, int>> ZeroMQPoller::ppoll(int timeo, const sigset_
 
    std::vector<std::pair<size_t, int>> r;
 
-   std::cout << "ppolling on PID " << getpid() << "..." << std::endl;
    auto n = ZMQ::ppoll(m_items, timeo, sigmask_);
-   std::cout << "ppolling on PID " << getpid() << " returned n = " << n << std::endl;
    if (n == 0) return r;
 
    for (auto& m_item : m_items) {

@@ -62,9 +62,7 @@ bool Queue::process_master_message(M2Q message)
 
    case M2Q::enqueue: {
       // enqueue task
-//      mq_poller.ppoll(-1, ppoll_sigmask);
       auto job_object_id = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
-//      mq_poller.ppoll(-1, ppoll_sigmask);
       auto task = JobManager::instance()->messenger().receive_from_master_on_queue<Task>();
       JobTask job_task(job_object_id, task);
       add(job_task);
@@ -75,9 +73,6 @@ bool Queue::process_master_message(M2Q message)
    case M2Q::retrieve: {
       // retrieve task results after queue is empty and all
       // tasks have been completed
-      std::cout << "queue empty: " << _queue.empty() << std::endl;
-      std::cout << "tasks completed: " << N_tasks_completed << std::endl;
-      std::cout << "tasks: " << N_tasks << std::endl;
       if (_queue.empty() && N_tasks_completed == 0) {
          JobManager::instance()->messenger().send_from_queue_to_master(Q2M::retrieve_rejected); // handshake message: no tasks enqueued, premature retrieve!
       } else if (_queue.empty() && N_tasks_completed == N_tasks) {
@@ -92,12 +87,12 @@ bool Queue::process_master_message(M2Q message)
    }
 
    case M2Q::update_real: {
-      auto get_time = []() {
-         return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                   std::chrono::high_resolution_clock::now().time_since_epoch())
-            .count();
-      };
-      auto t1 = get_time();
+//      auto get_time = []() {
+//         return std::chrono::duration_cast<std::chrono::nanoseconds>(
+//                   std::chrono::high_resolution_clock::now().time_since_epoch())
+//            .count();
+//      };
+//      auto t1 = get_time();
       auto job_id = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
       auto ix = JobManager::instance()->messenger().receive_from_master_on_queue<std::size_t>();
       auto val = JobManager::instance()->messenger().receive_from_master_on_queue<double>();
@@ -105,8 +100,8 @@ bool Queue::process_master_message(M2Q message)
       for (std::size_t worker_ix = 0; worker_ix < JobManager::instance()->process_manager().N_workers(); ++worker_ix) {
          JobManager::instance()->messenger().send_from_queue_to_worker(worker_ix, Q2W::update_real, job_id, ix, val, is_constant);
       }
-      auto t2 = get_time();
-      std::cout << "update_real on queue: " << (t2 - t1) / 1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
+//      auto t2 = get_time();
+//      std::cout << "update_real on queue: " << (t2 - t1) / 1.e9 << "s (from " << t1 << " to " << t2 << "ns)" << std::endl;
       break;
    }
    }
@@ -121,9 +116,7 @@ void Queue::process_worker_message(std::size_t this_worker_id, W2Q message)
    case W2Q::dequeue: {
       // dequeue task
       JobTask job_task;
-      auto queue_size_before_pop = _queue.size();
       bool popped = pop(job_task);
-      std::cout << "in Queue::process_worker_message, W2Q::dequeue: popped = " << popped << ", queue size before pop = " << queue_size_before_pop << " and after pop = " << _queue.size() << std::endl;
       if (popped) {
          JobManager::instance()->messenger().send_from_queue_to_worker(this_worker_id, Q2W::dequeue_accepted, job_task.first, job_task.second);
       } else {
@@ -187,9 +180,7 @@ void Queue::loop()
             }
          }
       } catch (zmq::error_t& e) {
-         std::cout << "catching something on the queue" << std::endl;
          if ((e.num() == EINTR) && (ProcessManager::sigterm_received())) {
-            std::cout << "queue out [MIC DROP]" << std::endl;
             break;
          } else if (e.num() == EAGAIN) {
             // This can happen from recv if ppoll initially gets a read-ready signal for a socket,

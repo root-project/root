@@ -56,7 +56,7 @@ void ProcessManager::handle_sigterm(int signum) {
    // the Messenger first. We do that with SIGTERMs. The sigterm_received()
    // should be checked in message loops to stop them when it's true.
    _sigterm_received = 1;
-   std::cout << "handled " << strsignal(signum) << " on PID " << getpid() << std::endl;
+//   std::cout << "handled " << strsignal(signum) << " on PID " << getpid() << std::endl;
 }
 
 // static function
@@ -214,7 +214,6 @@ void ProcessManager::shutdown_processes() {
       // then wait for them to actually die and clean out the zombies
       while (!children.empty()) {
          pid_t pid = chill_wait();
-         std::cout << "chillly waited for PID " << pid << std::endl;
          children.erase(pid);
       }
    }

@@ -185,33 +185,15 @@ void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, s
 
 
 void Messenger::test_connections(const ProcessManager &process_manager) {
-   process_manager.identify_processes();
    if (process_manager.is_master()) {
-      std::cout << "testing Messenger connections on master" << std::endl;
       test_send(X2X::ping, test_snd_pipes::M2Q, -1);
-      std::cout << "testing Messenger connections on master: sent ping" << std::endl;
       test_receive(X2X::pong, test_rcv_pipes::fromQonM, -1);
-      std::cout << "testing Messenger connections on master: received pong" << std::endl;
       test_receive(X2X::ping, test_rcv_pipes::fromQonM, -1);
-      std::cout << "testing Messenger connections on master: received ping" << std::endl;
       test_send(X2X::pong, test_snd_pipes::M2Q, -1);
-      std::cout << "DONE testing Messenger connections on master" << std::endl;
    } else if (process_manager.is_queue()) {
-      std::cout << "testing Messenger connections on queue" << std::endl;
       ZeroMQPoller poller;
       std::size_t mq_index;
       std::tie(poller, mq_index) = create_queue_poller();
-
-//      // Before blocking SIGTERM, set the signal handler, so we can also check after blocking whether a signal occurred
-//      // In our case, we already set it in the ProcessManager after forking to the queue and worker processes.
-//      sigset_t sigmask, sigmask_old;
-//      sigemptyset(&sigmask);
-//      sigaddset(&sigmask, SIGTERM);
-//      sigprocmask(SIG_BLOCK, &sigmask, &sigmask_old);
-//      // Before doing anything, check whether we have received a terminate signal while blocking signals!
-//      if (process_manager.sigterm_received()) {
-//         goto end_test_connections;
-//      }
 
       for (std::size_t ix = 0; ix < process_manager.N_workers(); ++ix) {
          test_send(X2X::ping, test_snd_pipes::Q2W, ix);
@@ -219,59 +201,35 @@ void Messenger::test_connections(const ProcessManager &process_manager) {
 
       while (!process_manager.sigterm_received() && (poller.size() > 0)) {
          // poll: wait until status change (-1: infinite timeout)
-         std::cout << "queue polling" << std::endl;
          auto poll_result = poller.poll(-1);
 
-         std::cout << "queue got poll result with size " << poll_result.size() << std::endl;
          // then process incoming messages from sockets
          for (auto readable_socket : poll_result) {
-            std::cout << "readable_socket.second: " << readable_socket.second << std::endl;
             // message comes from the master/queue socket (first element):
             if (readable_socket.first == mq_index) {
-               std::cout << "queue doing master" << std::endl;
                test_receive(X2X::ping, test_rcv_pipes::fromMonQ, -1);
-               std::cout << "queue doing master got ping" << std::endl;
                test_send(X2X::pong, test_snd_pipes::Q2M, -1);
-               std::cout << "queue doing master sent pong" << std::endl;
                test_send(X2X::ping, test_snd_pipes::Q2M, -1);
-               std::cout << "queue doing master sent ping" << std::endl;
                test_receive(X2X::pong, test_rcv_pipes::fromMonQ, -1);
-               std::cout << "queue doing master got pong" << std::endl;
                poller.unregister_socket(*mq_pull);
-               std::cout << "queue done with master" << std::endl;
             } else { // from a worker socket
                // TODO: dangerous assumption for this_worker_id, may become invalid if we allow multiple queue_loops on the same process!
                auto this_worker_id = readable_socket.first - 1;  // TODO: replace with a more reliable lookup
-               std::cout << "queue doing worker " << this_worker_id << std::endl;
 
                test_receive(X2X::pong, test_rcv_pipes::fromWonQ, this_worker_id);
-               std::cout << "queue doing worker " << this_worker_id << " received pong" << std::endl;
                test_receive(X2X::ping, test_rcv_pipes::fromWonQ, this_worker_id);
-               std::cout << "queue doing worker " << this_worker_id << " received ping" << std::endl;
                test_send(X2X::pong, test_snd_pipes::Q2W, this_worker_id);
 
                poller.unregister_socket(*qw_pull[this_worker_id]);
-               std::cout << "queue done with worker " << this_worker_id << std::endl;
             }
          }
       }
-//   end_test_connections:
-//      // clean up signal management modifications
-//      sigprocmask(SIG_SETMASK, &sigmask_old, nullptr);
 
-      std::cout << "DONE testing Messenger connections on queue" << std::endl;
    } else if (process_manager.is_worker()) {
-      std::cout << "testing Messenger connections on worker " << process_manager.worker_id() << std::endl;
-
       test_receive(X2X::ping, test_rcv_pipes::fromQonW, -1);
-      std::cout << "worker " << process_manager.worker_id() << ": received first ping" << std::endl;
       test_send(X2X::pong, test_snd_pipes::W2Q, -1);
-      std::cout << "worker " << process_manager.worker_id() << ": sent first pong" << std::endl;
       test_send(X2X::ping, test_snd_pipes::W2Q, -1);
-      std::cout << "worker " << process_manager.worker_id() << ": sent first ping" << std::endl;
-//      poller.poll(-1);
       test_receive(X2X::pong, test_rcv_pipes::fromQonW, -1);
-      std::cout << "DONE testing Messenger connections on worker " << process_manager.worker_id() << std::endl;
    } else {
       // should never get here
       throw std::runtime_error("Messenger::test_connections: I'm neither master, nor queue, nor a worker");

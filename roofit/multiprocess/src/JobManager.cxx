@@ -62,9 +62,6 @@ JobManager::JobManager(std::size_t N_workers) {
 }
 
 JobManager::~JobManager() {
-#ifndef NDEBUG
-   std::cout << "destroying JobManager on PID " << getpid() << (process_manager().is_worker() ? " worker" : (process_manager().is_queue()? " queue" : " master"));
-#endif
    // The instance gets created by some Job. Once all Jobs are gone, the
    // JM will get destroyed. In this case, the job_objects map should have
    // been emptied. This check makes sure:
