@@ -27,7 +27,6 @@ has a public interface to define the possible value states.
 #include "RooFit.h"
 
 #include "Riostream.h"
-#include "Riostream.h"
 #include <stdlib.h>
 #include "TTree.h"
 #include "TString.h"
@@ -41,7 +40,7 @@ has a public interface to define the possible value states.
 using namespace std;
 
 ClassImp(RooCategory); 
-;
+
 
 RooSharedPropertiesList RooCategory::_sharedPropList ;
 RooCategorySharedProperties RooCategory::_nullProp("00000000-0000-0000-0000-000000000000") ;
