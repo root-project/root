@@ -36,7 +36,7 @@ hypotheses.
 #include "TAxis.h"
 #include "TLegend.h"
 #include "TH1.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "Math/DistFuncMathCore.h"
 
 #include <cmath>
