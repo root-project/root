@@ -579,6 +579,27 @@ class Regression22ObjectCleanup(MyTestCase):
       minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")
 
 
+class Regression23TFractionFitter(MyTestCase):
+   def test1TFractionFitterDestruction(self):
+      """Test proper destruction of TFractionFitter object"""
+      # ROOT-9414
+      h1 = ROOT.TH1F("h1","h1",1,0,1)
+      h2 = ROOT.TH1F("h2","h2",1,0,1)
+      h3 = ROOT.TH1F("h3","h3",1,0,1)
+
+      h1.Fill(0.5)
+      h2.Fill(0.5)
+      h3.Fill(0.5)
+      h3.Fill(0.5)
+
+      mc = ROOT.TObjArray(2)
+      mc.Add(h1)
+      mc.Add(h2)
+
+      ff = ROOT.TFractionFitter(h3, mc)
+      ff.Fit()
+
+
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner
