@@ -32,7 +32,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     set(Python${PYTHON_PREFER_VERSION}_EXECUTABLE "${PYTHON_EXECUTABLE}")
   endif()
 
-  find_package(Python3 COMPONENTS Interpreter Development NumPy QUIET)
+  find_package(Python3 COMPONENTS Interpreter Development NumPy)
   if(Python3_Development_FOUND)
     set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}" CACHE INTERNAL "" FORCE)
     set(PYTHON_INCLUDE_DIRS "${Python3_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
@@ -44,7 +44,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     set(NUMPY_INCLUDE_DIRS "${Python3_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
   endif()
 
-  find_package(Python2 COMPONENTS Interpreter Development NumPy QUIET)
+  find_package(Python2 COMPONENTS Interpreter Development NumPy)
   if(Python2_Development_FOUND)
     if(NOT Python3_Development_FOUND)
       # Only Python2 was found, set as main
@@ -85,7 +85,7 @@ else()
     "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
   endif()
 
-  find_package(NumPy QUIET)
+  find_package(NumPy)
 
   set(PYTHON_VERSION_STRING "${PYTHON_VERSION_MAJOR}_${PYTHON_VERSION_MINOR}")
 
