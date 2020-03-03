@@ -7778,10 +7778,12 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    const Int_t nEXPT = 1000;
    if (opt.Contains("X") && !(afunc1 || afunc2 ) ) {
       Double_t dSEXPT;
-      TH1 *h1_cpy = (TH1 *)(gDirectory ? gDirectory->CloneObject(this, kFALSE) : gROOT->CloneObject(this, kFALSE));
-      TH1 *hExpt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
+      TH1 *h1_cpy =  (TH1 *)(gDirectory ? gDirectory->CloneObject(this, kFALSE) : gROOT->CloneObject(this, kFALSE));
+      TH1 *h1Expt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
+      TH1 *h2Expt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
 
-      if (h1_cpy->GetMinimum() < 0.0) {
+      if (GetMinimum() < 0.0) {
+         // we need to create a new histogram
          // With negative bins we can't draw random samples in a meaningful way.
          Warning("KolmogorovTest", "Detected bins with negative weights, these have been ignored and output might be "
                                    "skewed. Reduce number of bins for histogram?");
@@ -7794,14 +7796,17 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       // make nEXPT experiments (this should be a parameter)
       prb3 = 0;
       for (Int_t i=0; i < nEXPT; i++) {
-         hExpt->Reset();
-         hExpt->FillRandom(h1_cpy, (Int_t)esum2);
-         dSEXPT = KolmogorovTest(hExpt,"M");
+         h1Expt->Reset();
+         h2Expt->Reset();
+         h1Expt->FillRandom(h1_cpy, (Int_t)esum1);
+         h2Expt->FillRandom(h1_cpy, (Int_t)esum2);
+         dSEXPT = h1Expt->KolmogorovTest(h2Expt,"M");
          if (dSEXPT>dfmax) prb3 += 1.0;
       }
       prb3 /= (Double_t)nEXPT;
       delete h1_cpy;
-      delete hExpt;
+      delete h1Expt;
+      delete h2Expt;
    }
 
    // debug printout
