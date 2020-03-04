@@ -38,10 +38,7 @@ PyObject *ClingPrintValue(CPPInstance *self, PyObject * /* args */)
    auto printResult = gInterpreter->ToString(className.c_str(), cppObj);
    if (printResult.find("@0x") == 0) {
       // Fall back to __repr__ if we just get an address from cling
-      auto method = PyObject_GetAttrString((PyObject*)self, "__repr__");
-      auto res = PyObject_CallObject(method, nullptr);
-      Py_DECREF(method);
-      return res;
+      return PyObject_Repr((PyObject*)self);
    } else {
       return CPyCppyy_PyText_FromString(printResult.c_str());
    }
