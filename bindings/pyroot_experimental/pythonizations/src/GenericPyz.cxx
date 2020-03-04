@@ -20,7 +20,7 @@
 
 using namespace CPyCppyy;
 
-std::string GetCppName(const CPPInstance *self)
+static std::string GetCppName(const CPPInstance *self)
 {
    return Cppyy::GetScopedFinalName(self->ObjectIsA());
 }
