@@ -678,22 +678,30 @@ file(RELATIVE_PATH ROOT_CMAKE_TO_INCLUDE_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "$
 file(RELATIVE_PATH ROOT_CMAKE_TO_LIB_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
 file(RELATIVE_PATH ROOT_CMAKE_TO_BIN_DIR "${CMAKE_INSTALL_FULL_CMAKEDIR}" "${CMAKE_INSTALL_FULL_BINDIR}")
 
+# '_' prefixed variables are used to construct the paths,
+# while the normal variants evaluate to full paths at runtime
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
-get_filename_component(ROOT_INCLUDE_DIRS \"\${_thisdir}/${ROOT_CMAKE_TO_INCLUDE_DIR}\" ABSOLUTE)
+get_filename_component(_ROOT_INCLUDE_DIRS \"\${_thisdir}/${ROOT_CMAKE_TO_INCLUDE_DIR}\" REALPATH)
+# resolve relative paths to absolute system paths
+get_filename_component(ROOT_INCLUDE_DIRS \"\${_ROOT_INCLUDE_DIRS}\" REALPATH)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
-get_filename_component(ROOT_LIBRARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_LIB_DIR}\" ABSOLUTE)
+get_filename_component(_ROOT_LIBRARY_DIR \"\${_thisdir}/${ROOT_CMAKE_TO_LIB_DIR}\" REALPATH)
+# resolve relative paths to absolute system paths
+get_filename_component(ROOT_LIBRARY_DIR \"\${_ROOT_LIBRARY_DIR}\" REALPATH)
 ")
 set(ROOT_BINDIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
-get_filename_component(ROOT_BINDIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" ABSOLUTE)
+get_filename_component(_ROOT_BINDIR \"\${_thisdir}/${ROOT_CMAKE_TO_BIN_DIR}\" REALPATH)
+# resolve relative paths to absolute system paths
+get_filename_component(ROOT_BINDIR \"\${_ROOT_BINDIR}\" REALPATH)
 ")
 # Deprecated value ROOT_BINARY_DIR
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
-get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" ABSOLUTE)
+get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" REALPATH)
 ")
 
 # used by ROOTConfig.cmake from the build directory
