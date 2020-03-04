@@ -26,30 +26,13 @@ namespace DNN  {
 
 // Static members.
 //____________________________________________________________________________
-/*template<typename AFloat>
-size_t                   TCudaTensor<AFloat>::fInstances        = 0;*/
-/*template<typename AFloat>
-cublasHandle_t           TCudaTensor<AFloat>::fCublasHandle     = nullptr;*/
-/*template<typename AFloat>
-cudnnHandle_t            TCudaTensor<AFloat>::fCudnnHandle      = nullptr;*/
+#ifdef R__HAS_CUDNN
 template<typename AFloat>
 std::vector<cudnnHandle_t> TCudaTensor<AFloat>::fCudnnHandle(1);
-/*template<typename AFloat>
-cudnnTensorDescriptor_t  TCudaTensor<AFloat>::fTensorDescriptor = nullptr;*/
 template<typename AFloat>
 cudnnDataType_t          TCudaTensor<AFloat>::fDataType         = CUDNN_DATA_FLOAT;
-/*template<typename AFloat>
-AFloat                   * TCudaTensor<AFloat>::fDeviceReturn   = nullptr;*/
-/*template<typename AFloat>
-AFloat                   * TCudaTensor<AFloat>::fOnes           = nullptr;*/
-/*template<typename AFloat>
-curandState_t            * TCudaTensor<AFloat>::fCurandStates   = nullptr;*/
-/*template<typename AFloat>
-size_t                   TCudaTensor<AFloat>::fNCurandStates    = 0;*/
-/*template<typename AFloat>
-size_t                   TCudaTensor<AFloat>::fNOnes            = 0;*/
-/*template<typename AFloat>
-std::vector<std::vector<int> >         TCudaTensor<AFloat>::fStreamIndxs(std:vector<int>(), std::vector<int>());*/
+#endif
+
 template<typename AFloat>
 std::vector<int>         TCudaTensor<AFloat>::fInstances(1,0);
 
@@ -186,30 +169,7 @@ TCudaTensor<AFloat>::TCudaTensor(const TCudaMatrix<AFloat>& matrix, size_t dim) 
    }
 }
 
-//____________________________________________________________________________
-template <typename AFloat>
-TCudaTensor<AFloat>::~TCudaTensor()
-{
-   if (fTensorDescriptor && fTensorDescriptor.use_count() == 1 ) {
-      // //std::cout << "Destroy tensor descriptor for shape ";
-      // for (int ii = 0; ii < fNDim; ++ii)
-      //    std::cout << fShape[ii] << ",";
-      // std::cout << std::endl;
-      CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor->fCudnnDesc));
 
-      fInstances[fStreamIndx]--;
-
-         // When all tensors in a streamIndx are destroyed, release cudnn resources
-      if (fInstances[fStreamIndx] <= 0) {
-         std::cout << "All Cuda tensors are -released - destroy cudnn handle " << fInstances[fStreamIndx] << std::endl;
-         CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
-      }
-
-   }
-
-   //std::cout << "Tensor descriptor destroyed - instances are " << fInstances[fStreamIndx] << std::endl;
-
-}
 
 template<typename AFloat>
 TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
@@ -243,9 +203,33 @@ TCudaTensor<AFloat>::operator TMatrixT<AFloat>() const
    return hostMatrix.T();  // return transpose matrix
 
 }
+#ifdef R__HAS_CUDNN
 //____________________________________________________________________________
 template <typename AFloat>
-inline void TCudaTensor<AFloat>::InitializeCuda()
+TCudaTensor<AFloat>::~TCudaTensor()
+{
+   if (fTensorDescriptor && fTensorDescriptor.use_count() == 1 ) {
+      // //std::cout << "Destroy tensor descriptor for shape ";
+      // for (int ii = 0; ii < fNDim; ++ii)
+      //    std::cout << fShape[ii] << ",";
+      // std::cout << std::endl;
+      CUDNNCHECK(cudnnDestroyTensorDescriptor(fTensorDescriptor->fCudnnDesc));
+
+      fInstances[fStreamIndx]--;
+
+         // When all tensors in a streamIndx are destroyed, release cudnn resources
+      if (fInstances[fStreamIndx] <= 0) {
+         std::cout << "All Cuda tensors are -released - destroy cudnn handle " << fInstances[fStreamIndx] << std::endl;
+         CUDNNCHECK(cudnnDestroy(fCudnnHandle[fStreamIndx]));
+      }
+
+   }
+   //std::cout << "Tensor descriptor destroyed - instances are " << fInstances[fStreamIndx] << std::endl;
+
+}
+//____________________________________________________________________________
+template <typename AFloat>
+void TCudaTensor<AFloat>::InitializeCuda()
 {
    // descriptor is needed for Cuddn tensor that are rowmajor
    if (!fTensorDescriptor && fSize > 0 && fNDim >= 2) {
@@ -366,7 +350,22 @@ void TCudaTensor<AFloat>::SetTensorDescriptor() {
 #endif
 
 
-   }
+}
+#else // case ROOT has not Cudnn (add dummy implementations)
+//____________________________________________________________________________
+template <typename AFloat>
+TCudaTensor<AFloat>::~TCudaTensor()
+{}
+//____________________________________________________________________________
+template <typename AFloat>
+void TCudaTensor<AFloat>::InitializeCuda()
+{}
+//____________________________________________________________________________
+template<typename AFloat>
+void TCudaTensor<AFloat>::SetTensorDescriptor()
+{}
+
+#endif
 
 //____________________________________________________________________________
 template<typename AFloat>
