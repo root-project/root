@@ -1642,7 +1642,11 @@ void MethodDL::Train()
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
+#ifdef R__HAS_CUDNN
       TrainDeepNet<DNN::TCudnn<ScalarImpl_t> >();
+#else
+      TrainDeepNet<DNN::TCuda<ScalarImpl_t>>();
+#endif
 #else
       Log() << kFATAL << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
@@ -2034,7 +2038,12 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
    if (this->GetArchitectureString() == "GPU") {
 #ifdef R__HAS_TMVAGPU
       Log() << kINFO << "Evaluate deep neural network on GPU using batches with size = " <<  batchSize << Endl << Endl;
-      return PredictDeepNet<DNN::TCudnn<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+#ifdef R__HAS_CUDNN
+      return PredictDeepNet<DNN::TCudnn<ScalarImpl_t>>(firstEvt, lastEvt, batchSize, logProgress);
+#else
+      return PredictDeepNet<DNN::TCuda<ScalarImpl_t>>(firstEvt, lastEvt, batchSize, logProgress);
+#endif
+
 #endif
    } else if (this->GetArchitectureString() == "CPU") {
 //#ifdef R__HAS_TMVACPU

@@ -62,6 +62,7 @@
 
 #@hastmvacpu@ R__HAS_TMVACPU /**/
 #@hastmvagpu@ R__HAS_TMVAGPU /**/
+#@hastmvacudnn@ R__HAS_CUDNN /**/
 
 
 #endif

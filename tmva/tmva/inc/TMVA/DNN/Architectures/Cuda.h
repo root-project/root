@@ -106,7 +106,7 @@ public:
       return Tensor_t( {c,h*w,n}, GetTensorLayout());
    }
    static Tensor_t CreateTensor(DeviceBuffer_t buffer, size_t n, size_t c, size_t h, size_t w) {
-      return Tensor_t( buffer, {n,c,h,w}, GetTensorLayout(), 0, 0);
+      return Tensor_t( buffer, {c,h*w, n}, GetTensorLayout(), 0, 0);
    }
 
    // create a weight tensor/matrix  from another tensor using its shape

@@ -19,9 +19,6 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CUDA_CUDATENSOR
 #define TMVA_DNN_ARCHITECTURES_CUDA_CUDATENSOR
 
-//#include "cuda.h"
-#include "cudnn.h"
-
 
 #include <vector>
 #include <cstring>
@@ -33,7 +30,10 @@
 #include "CudaMatrix.h"
 //#include "TMVA/RTensor.hxx"
 
+#ifdef R__HAS_CUDNN
+#include "cudnn.h"
 #define CUDNNCHECK(ans) {cudnnError((ans), __FILE__, __LINE__); }
+#endif
 
 namespace TMVA {
 
@@ -54,12 +54,20 @@ namespace DNN {
 
 using MemoryLayout = TMVA::Experimental::MemoryLayout;
 
- /**
+#ifdef R__HAS_CUDNN
+/**
  * Function to handle the status output of cuDNN function calls. See also
  * CUDACHECK in CudaMatrix.h.
  */
-inline void cudnnError(cudnnStatus_t status, const char *file, int line, bool abort=true);
-
+inline void cudnnError(cudnnStatus_t status, const char *file, int line, bool abort=true)
+{
+   if (status != CUDNN_STATUS_SUCCESS) {
+      fprintf(stderr, "CUDNN Error: %s %s %d\n", cudnnGetErrorString(status), file, line);
+      if (abort)
+         exit(status);
+   }
+}
+#endif
 //____________________________________________________________________________
 //
 // Cuda Tensor
@@ -82,13 +90,19 @@ public:
 
 private:
 
+#ifdef R__HAS_CUDNN
    struct TensorDescriptor {
        cudnnTensorDescriptor_t   fCudnnDesc;
    };
 
    static std::vector<cudnnHandle_t>     fCudnnHandle;      ///< Holds the cuddn library context (one for every CUDA stream)
-   
+
    static cudnnDataType_t                fDataType;         ///< Cudnn datatype used for the tensor
+#else
+   struct TensorDescriptor {
+   };
+#endif
+
    /** For each GPU device keep the CUDA streams in which tensors are used.
      * Instances belonging to the same stream on the same deviceshare a
      * cudnn library handel to keep cudnn contexts seperated */
@@ -184,10 +198,12 @@ public:
 
    const TCudaDeviceBuffer<AFloat> & GetDeviceBuffer()     const {return fElementBuffer;}
    TCudaDeviceBuffer<AFloat>       & GetDeviceBuffer()           {return fElementBuffer;}
+
+#ifdef R__HAS_CUDNN
    const cudnnHandle_t             & GetCudnnHandle()      const {return fCudnnHandle[fStreamIndx];}
    const cudnnTensorDescriptor_t   & GetTensorDescriptor() const {return fTensorDescriptor->fCudnnDesc;}
-
    static cudnnDataType_t   GetDataType() { return fDataType; }
+#endif
 
    cudaStream_t GetComputeStream() const {
       return fElementBuffer.GetComputeStream();
@@ -326,9 +342,11 @@ public:
    TCudaTensor<AFloat> Reshape(const Shape_t & newShape) const {
       TCudaTensor<AFloat> tmp(*this);
       // have a new descriptor for reshaped tensor !!!
+#ifdef R__HAS_CUDNN
       tmp.fTensorDescriptor.reset( new TensorDescriptor() );
-      // t.b.d. need to check if we delete teh cudnn object
+      // t.b.d. need to check if we delete the cudnn object
       CUDNNCHECK(cudnnCreateTensorDescriptor(&(tmp.fTensorDescriptor->fCudnnDesc)));
+#endif
       tmp.ReshapeInPlace(newShape);
       return tmp;
    }
@@ -412,17 +430,7 @@ private:
 
 };
 
-//
-// Inline Functions.
-//______________________________________________________________________________
-inline void cudnnError(cudnnStatus_t status, const char *file, int line, bool abort)
-{
-   if (status != CUDNN_STATUS_SUCCESS)
-   {
-      fprintf(stderr,"CUDNN Error: %s %s %d\n", cudnnGetErrorString(status), file, line);
-      if (abort) exit(status);
-   }
-}
+
 
 
 } // namespace DNN
