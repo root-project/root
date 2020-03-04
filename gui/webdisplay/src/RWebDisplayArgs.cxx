@@ -78,6 +78,9 @@ ROOT::Experimental::RWebDisplayArgs::~RWebDisplayArgs()
   // must be defined here to correctly call RWebWindow destructor
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Set size of web browser window as string like "800x600"
+
 bool ROOT::Experimental::RWebDisplayArgs::SetSizeAsStr(const std::string &str)
 {
    auto separ = str.find("x");
@@ -96,6 +99,30 @@ bool ROOT::Experimental::RWebDisplayArgs::SetSizeAsStr(const std::string &str)
       return false;
 
    SetSize(width, height);
+   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+/// Set position of web browser window as string like "100,100"
+
+bool ROOT::Experimental::RWebDisplayArgs::SetPosAsStr(const std::string &str)
+{
+   auto separ = str.find(",");
+   if ((separ == std::string::npos) || (separ == 0) || (separ == str.length()-1)) return false;
+
+   int x = 0, y = 0;
+
+   try {
+      x = std::stoi(str.substr(0,separ));
+      y = std::stoi(str.substr(separ+1));
+   } catch(...) {
+      return false;
+   }
+
+   if ((x<0) || (y<0))
+      return false;
+
+   SetPos(x, y);
    return true;
 }
 
@@ -127,6 +154,14 @@ ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBro
       auto epos = kind.find_first_of(" ;", pos+5);
       if (epos == std::string::npos) epos = kind.length();
       SetSizeAsStr(kind.substr(pos+5, epos-pos-5));
+      kind.erase(pos, epos-pos);
+   }
+
+   pos = kind.find("pos:");
+   if (pos != std::string::npos) {
+      auto epos = kind.find_first_of(" ;", pos+4);
+      if (epos == std::string::npos) epos = kind.length();
+      SetPosAsStr(kind.substr(pos+4, epos-pos-4));
       kind.erase(pos, epos-pos);
    }
 

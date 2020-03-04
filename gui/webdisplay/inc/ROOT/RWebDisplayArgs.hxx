@@ -63,6 +63,7 @@ protected:
    int fMasterChannel{-1};              ///<!  used master channel
 
    bool SetSizeAsStr(const std::string &str);
+   bool SetPosAsStr(const std::string &str);
 
 public:
    RWebDisplayArgs();
