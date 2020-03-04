@@ -18,8 +18,6 @@
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
 
-#include <sstream>
-
 using namespace CPyCppyy;
 
 std::string GetCppName(const CPPInstance *self)
