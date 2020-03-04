@@ -1432,12 +1432,15 @@ if(cuda OR tmva-gpu)
     enable_language(CUDA)
 
     ### look for package CuDNN
-    find_package(CuDNN)
+    if (cudnn )
+      find_package(CuDNN)
 
-    if (CUDNN_FOUND)
-      message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
-    else()
-      message(STATUS "CuDNN library not found")
+      if (CUDNN_FOUND)
+	message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
+      	set(tmva-cudnn ON)
+      else()
+	message(STATUS "CuDNN library not found")
+      endif()
     endif()
 
 
