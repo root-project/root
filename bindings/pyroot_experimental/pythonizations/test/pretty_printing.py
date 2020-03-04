@@ -57,6 +57,14 @@ class PrettyPrinting(unittest.TestCase):
         self.assertIn("MyClass object at", s)
         self.assertEqual(s, r)
 
+    def test_null_object(self):
+        # ROOT-9935: test null proxied cpp object
+        x = ROOT.MakeNullPointer("TTree")
+        s = x.__str__()
+        r = x.__repr__()
+        self.assertIn("TTree object at", s)
+        self.assertEqual(s, r)
+
 
     # TNamed and TObject are not pythonized because these object are touched
     # by PyROOT before any pythonizations are added. Following, the classes
