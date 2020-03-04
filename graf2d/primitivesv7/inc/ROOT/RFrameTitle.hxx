@@ -28,7 +28,7 @@ namespace Experimental {
 */
 
 
-class RFrameTitle : public RDrawable {
+class RFrameTitle final : public RDrawable {
 
    class RTitleAttrs : public RAttrBase {
       friend class RFrameTitle;
@@ -38,6 +38,10 @@ class RFrameTitle : public RDrawable {
    std::string fText;                    ///< title to display
    RAttrText  fAttrText{this, "text_"};  ///<! text attributes
    RTitleAttrs fAttr{this,""};           ///<! title direct attributes
+
+protected:
+
+   bool IsFrameRequired() const final { return true; }
 
 public:
 

@@ -50,6 +50,12 @@ private:
    /// Disable assignment.
    RPadBase &operator=(const RPadBase &) = delete;
 
+   void TestIfFrameRequired(const RDrawable *drawable)
+   {
+      if (drawable->IsFrameRequired())
+         GetOrCreateFrame();
+   }
+
 protected:
    /// Allow derived classes to default construct a RPadBase.
    RPadBase() : RDrawable("pad") {}
@@ -79,6 +85,8 @@ public:
    {
       auto drawable = std::make_shared<T>(args...);
 
+      TestIfFrameRequired(drawable.get());
+
       fPrimitives.emplace_back(drawable);
 
       return drawable;
@@ -87,19 +95,23 @@ public:
    /// Add existing drawable instance to canvas
    auto Draw(std::shared_ptr<RDrawable> &&drawable)
    {
+      TestIfFrameRequired(drawable.get());
+
       fPrimitives.emplace_back(std::move(drawable));
 
       return fPrimitives.back().get_shared();
    }
 
-   /// Add something to be painted.
-   /// The pad observes what's lifetime through a weak pointer.
-   /// Drawing options will be constructed through `args`, which can be empty for default-constructed options.
+   /// Add object to be painted.
+   /// Correspondent drawable will be created via GetDrawable() function which should be defined and be accessed at calling time.
+   /// If required, extra arguments for GetDrawable() function can be provided.
    template <class T, class... ARGS>
    auto Draw(const std::shared_ptr<T> &what, ARGS... args)
    {
       // Requires GetDrawable(what) to be known!
       auto drawable = GetDrawable(what, args...);
+
+      TestIfFrameRequired(drawable.get());
 
       fPrimitives.emplace_back(drawable);
 
