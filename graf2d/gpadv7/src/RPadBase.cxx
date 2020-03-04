@@ -174,7 +174,7 @@ std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetOrC
 {
    auto frame = GetFrame();
    if (!frame) {
-      frame = std::make_shared<RFrame>();
+      frame.reset(new RFrame());
       fPrimitives.emplace_back(frame);
    }
 
