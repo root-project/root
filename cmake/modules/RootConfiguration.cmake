@@ -476,6 +476,11 @@ if (tmva-gpu)
 else()
   set(hastmvagpu undef)
 endif()
+if (tmva-cudnn)
+   set(hastmvacudnn define)
+else()
+   set(hastmvacudnn undef)
+endif()
 
 # clear cache to allow reconfiguring
 # with a different CMAKE_CXX_STANDARD
