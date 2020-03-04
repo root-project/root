@@ -98,14 +98,14 @@ public:
 
 class RDrawable {
 
-friend class RPadBase; // to access Display method
+friend class RPadBase; // to access Display method and IsFrameRequired
 friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method
 
 private:
    RAttrMap fAttr;               ///< attributes values
-   std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable
+   std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable, not stored when canvas is saved
    std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
    std::string fCssClass;        ///< user defined drawable class, can later go inside map
    std::string fId;              ///< optional object identifier, may be used in CSS as well
@@ -113,6 +113,8 @@ private:
 protected:
 
    virtual void CollectShared(Internal::RIOSharedVector_t &) {}
+
+   virtual bool IsFrameRequired() const { return false; }
 
    RAttrMap &GetAttrMap() { return fAttr; }
    const RAttrMap &GetAttrMap() const { return fAttr; }
