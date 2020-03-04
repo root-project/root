@@ -62,6 +62,8 @@ protected:
    std::shared_ptr<RWebWindow> fMaster; ///<!  master window
    int fMasterChannel{-1};              ///<!  used master channel
 
+   bool SetSizeAsStr(const std::string &str);
+
 public:
    RWebDisplayArgs();
 
