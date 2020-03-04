@@ -1280,6 +1280,11 @@ public:
         fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
         fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
    {
+        TString checkupdate = fOptions.fMode;
+        checkupdate.ToLower();
+        if (checkupdate == "update") {
+            throw std::invalid_argument("Snapshot: fMode == \"update\" not supported when implicit MT is enabled");
+        }
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
