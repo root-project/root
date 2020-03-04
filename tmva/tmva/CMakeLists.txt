@@ -457,7 +457,7 @@ endif()
 if(tmva-gpu)
   target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
   	target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
-  if (CUDNN_FOUND)
+  if (tmva-cudnn)
     message(STATUS "using cudnn in tmva")
 	 target_sources(TMVA PRIVATE
     src/DNN/Architectures/Cuda.cu
