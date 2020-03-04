@@ -22,6 +22,7 @@
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RStyle.hxx"
+#include "ROOT/RPad.hxx"
 
 // macro must be here while cling is not capable to load
 // library automatically for outlined function see ROOT-10336

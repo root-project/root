@@ -49,6 +49,8 @@ protected:
 
    void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fHistImpl); }
 
+   bool IsFrameRequired() const final { return true; }
+
 public:
    RHistDrawable();
    virtual ~RHistDrawable() = default;
