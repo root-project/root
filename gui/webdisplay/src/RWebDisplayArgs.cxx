@@ -78,6 +78,26 @@ ROOT::Experimental::RWebDisplayArgs::~RWebDisplayArgs()
   // must be defined here to correctly call RWebWindow destructor
 }
 
+bool ROOT::Experimental::RWebDisplayArgs::SetSizeAsStr(const std::string &str)
+{
+   auto separ = str.find("x");
+   if ((separ == std::string::npos) || (separ == 0) || (separ == str.length()-1)) return false;
+
+   int width = 0, height = 0;
+
+   try {
+      width = std::stoi(str.substr(0,separ));
+      height = std::stoi(str.substr(separ+1));
+   } catch(...) {
+       return false;
+   }
+
+   if ((width<=0) || (height<=0))
+      return false;
+
+   SetSize(width, height);
+   return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
@@ -102,6 +122,21 @@ ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBro
       kind.clear();
    }
 
+   pos = kind.find("size:");
+   if (pos != std::string::npos) {
+      auto epos = kind.find_first_of(" ;", pos+5);
+      if (epos == std::string::npos) epos = kind.length();
+      SetSizeAsStr(kind.substr(pos+5, epos-pos-5));
+      kind.erase(pos, epos-pos);
+   }
+
+   // remove all trailing spaces
+   while ((kind.length() > 0) && (kind[kind.length()-1] == ' '))
+      kind.resize(kind.length()-1);
+
+   // remove any remaining spaces?
+   // kind.erase(remove_if(kind.begin(), kind.end(), std::isspace), kind.end());
+
    if (kind.empty())
       kind = gROOT->GetWebDisplay().Data();
 
@@ -119,7 +154,7 @@ ROOT::Experimental::RWebDisplayArgs &ROOT::Experimental::RWebDisplayArgs::SetBro
       SetBrowserKind(kQt5);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
-   else
+   else if (!SetSizeAsStr(kind))
       SetCustomExec(kind);
 
    return *this;
