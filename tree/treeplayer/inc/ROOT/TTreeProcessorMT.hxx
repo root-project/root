@@ -22,6 +22,7 @@
 #include "TFriendElement.h"
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
+#include "ROOT/TThreadExecutor.hxx"
 
 #include <string.h>
 #include <functional>
@@ -88,8 +89,10 @@ private:
    /// User-defined selection of entry numbers to be processed, empty if none was provided
    const TEntryList fEntryList; // const to be sure to avoid race conditions among TTreeViews
    const Internal::FriendInfo fFriendInfo;
+   ROOT::TThreadExecutor fPool; ///<! Thread pool for processing.
 
-   ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView; ///<! Thread-local TreeViews
+   // Must be declared after fPool, for IMT to be initialized first!
+   ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{ROOT::kIMTPoolSize}; ///<! Thread-local TreeViews
 
    Internal::FriendInfo GetFriendInfo(TTree &tree);
    std::string FindTreeName();
