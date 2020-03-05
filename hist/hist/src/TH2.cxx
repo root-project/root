@@ -771,6 +771,9 @@ void TH2::DoFitSlices(bool onX,
    Long64_t nentries;
    // in case of sliding merge nstep=1, i.e. do slices starting for every bin
    // now do not slices case with overflow (makes more sense)
+   // when fitting add the option "N". We don;t want to display and store the function
+   // for the temporary histograms that are created and fitted
+   opt += " n "; 
    for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
       TH1D *hp;
       if (onX)
