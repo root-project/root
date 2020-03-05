@@ -18,6 +18,7 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
+#include <ROOT/RPalette.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
 #include <ROOT/RMenuItem.hxx>
@@ -36,18 +37,16 @@ class RHistImplPrecisionAgnosticBase;
 }
 
 template <int DIMENSIONS>
-class RHistDrawable final: public RDrawable {
+class RHistDrawable : public RDrawable {
 public:
    using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
 
 private:
    Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
 
-   RAttrLine  fAttrLine{this, "line_"};        ///<! line attributes
-
 protected:
 
-   void CollectShared(Internal::RIOSharedVector_t &vect) final { vect.emplace_back(&fHistImpl); }
+   void CollectShared(Internal::RIOSharedVector_t &vect) override { vect.emplace_back(&fHistImpl); }
 
    bool IsFrameRequired() const final { return true; }
 
@@ -61,18 +60,14 @@ public:
       fHistImpl = std::shared_ptr<HistImpl_t>(hist, hist->GetImpl());
    }
 
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
-   RAttrLine &AttrLine() { return fAttrLine; }
-
    std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
 
-   void PopulateMenu(RMenuItems &) final
+   void PopulateMenu(RMenuItems &) override
    {
       // populate menu
    }
 
-   void Execute(const std::string &) final
+   void Execute(const std::string &) override
    {
       // should execute menu item
    }
@@ -86,29 +81,66 @@ public:
 
 template <int DIMENSIONS> inline RHistDrawable<DIMENSIONS>::RHistDrawable() : RDrawable("hist") {}
 
+
+class RHist1Drawable final : public RHistDrawable<1> {
+private:
+   RAttrLine  fAttrLine{this, "line_"};        ///<! line attributes
+
+public:
+   template <class HIST>
+   RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
+
+   const RAttrLine &GetAttrLine() const { return fAttrLine; }
+   RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
+   RAttrLine &AttrLine() { return fAttrLine; }
+};
+
+
+class RHist2Drawable final : public RHistDrawable<2> {
+private:
+   Internal::RIOShared<RPalette> fPalette;  ///< I/O capable reference on palette
+
+protected:
+
+   void CollectShared(Internal::RIOSharedVector_t &vect) final
+   {
+      RHistDrawable<2>::CollectShared(vect);
+      vect.emplace_back(&fPalette);
+   }
+
+public:
+   template <class HIST>
+   RHist2Drawable(const std::shared_ptr<HIST> &hist, std::shared_ptr<RPalette> palette = nullptr) : RHistDrawable<2>(hist), fPalette(palette) {}
+
+   std::shared_ptr<RPalette> GetPalette() const { return fPalette.get_shared(); }
+};
+
+
+
+
 inline auto GetDrawable(const std::shared_ptr<RH1D> &histimpl)
 {
-   return std::make_shared<RHistDrawable<1>>(histimpl);
+   return std::make_shared<RHist1Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH1I> &histimpl)
 {
-   return std::make_shared<RHistDrawable<1>>(histimpl);
+   return std::make_shared<RHist1Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH1C> &histimpl)
 {
-   return std::make_shared<RHistDrawable<1>>(histimpl);
+   return std::make_shared<RHist1Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH1F> &histimpl)
 {
-   return std::make_shared<RHistDrawable<1>>(histimpl);
+   return std::make_shared<RHist1Drawable>(histimpl);
 }
 
-inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl)
+inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl, std::shared_ptr<RPalette> palette = nullptr)
 {
-   return std::make_shared<RHistDrawable<2>>(histimpl);
+   return std::make_shared<RHist2Drawable>(histimpl, palette);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH2I> &histimpl)
