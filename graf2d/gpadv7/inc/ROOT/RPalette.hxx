@@ -39,17 +39,34 @@ class RPalette {
 public:
    /// An ordinal value and its associated color.
    struct OrdinalAndColor {
-      double fOrdinal; ///< The value associated with the color.
-      RColor fColor;   ///< The color associated with the value.
-
-      /// Compare two `OrdinalAndColor`s, for sorting.
-      friend bool operator<(const OrdinalAndColor &lhs, const OrdinalAndColor &rhs)
+      double fOrdinal{0.}; ///< The value associated with the color.
+      RColor fColor;       ///< The color associated with the value.
+      /** CAUTION!!!
+       * All constructors are required that std::sort works correctly
+       * To be investigated! */
+      OrdinalAndColor() = default;
+      OrdinalAndColor(double ordinal, const RColor &color) { fOrdinal = ordinal; fColor = color; }
+      OrdinalAndColor(const OrdinalAndColor &src)
       {
-         return lhs.fOrdinal < rhs.fOrdinal;
+         fOrdinal = src.fOrdinal;
+         fColor = src.fColor;
       }
-      /// Compare an `OrdinalAndColor` and an ordinal value.
-      friend bool operator<(const OrdinalAndColor &lhs, double rhs) { return lhs.fOrdinal < rhs; }
+      OrdinalAndColor &operator=(const OrdinalAndColor &src)
+      {
+         fOrdinal = src.fOrdinal;
+         fColor = src.fColor;
+         return *this;
+      }
    };
+
+   /// Compare two `OrdinalAndColor`s, for sorting.
+   friend bool operator<(const OrdinalAndColor &lhs, const OrdinalAndColor &rhs)
+   {
+      return lhs.fOrdinal < rhs.fOrdinal;
+   }
+
+   /// Compare an `OrdinalAndColor` and an ordinal value.
+   friend bool operator<(const OrdinalAndColor &lhs, double rhs) { return lhs.fOrdinal < rhs; }
 
 private:
    /// Palette colors: the color points and their ordinal value.

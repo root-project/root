@@ -54,18 +54,16 @@ RPalette::RPalette(bool interpolate, const std::vector<RColor> &points)
 
 RColor RPalette::GetColor(double ordinal)
 {
-   if (fInterpolate) {
-      R__ERROR_HERE("Gpad") << "Not yet implemented!";
-   } else {
-      auto iColor = std::lower_bound(fColors.begin(), fColors.end(), ordinal);
-      if (iColor == fColors.end())
-         return fColors.back().fColor;
-      // Is iColor-1 closer to ordinal than iColor?
-      if (iColor != fColors.begin() && (iColor - 1)->fOrdinal - ordinal < ordinal - iColor->fOrdinal)
-         return (iColor - 1)->fColor;
-      return iColor->fColor;
-   }
-   return RColor{};
+   if (fInterpolate)
+      R__ERROR_HERE("Gpad") << "Not yet implemented for interpolated!";
+
+   auto iColor = std::lower_bound(fColors.begin(), fColors.end(), ordinal);
+   if (iColor == fColors.end())
+      return fColors.back().fColor;
+   // Is iColor-1 closer to ordinal than iColor?
+   if (iColor != fColors.begin() && (iColor - 1)->fOrdinal - ordinal < ordinal - iColor->fOrdinal)
+      return (iColor - 1)->fColor;
+   return iColor->fColor;
 }
 
 namespace {
