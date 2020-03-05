@@ -318,10 +318,16 @@ GetOrInstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTDecl,
          assert(0 && "unexpected template parameter pack");
          return nullptr;
       } if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
+         if (!TTP->hasDefaultArgument())
+            return nullptr;
          defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument());
       } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(templateParm)) {
+         if (!NTTP->hasDefaultArgument())
+            return nullptr;
          defaultTemplateArgs[iParam] = TemplateArgument(NTTP->getDefaultArgument());
       } else if (auto TTP = dyn_cast<TemplateTemplateParmDecl>(templateParm)) {
+         if (!TTP->hasDefaultArgument())
+            return nullptr;
          defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument().getArgument());
       } else {
          // shouldn't end up here
