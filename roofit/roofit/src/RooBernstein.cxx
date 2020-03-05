@@ -238,7 +238,7 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
   const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
   const Double_t xlo = (_x.min(rangeName?rangeName:0) - xmin) / (xmax - xmin);
-  const Double_t xhi = (_x.max(rangeName?rangeName:0) - xmin) / (xmax - xmin);
+  const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
   const Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
   RooFIter iter = _coefList.fwdIterator() ;
