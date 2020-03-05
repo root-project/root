@@ -1,6 +1,7 @@
 add_subdirectory(roofitZMQ)
 add_subdirectory(multiprocess)
 add_subdirectory(roofitcore)
+add_subdirectory(teststatistics)
 add_subdirectory(roofit)
 add_subdirectory(roostats)
 if(xml OR ROOT_xml_FOUND)
