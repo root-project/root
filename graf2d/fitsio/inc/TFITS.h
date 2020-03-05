@@ -23,6 +23,7 @@
 #include "TNamed.h"
 #include "TMatrixDfwd.h"
 #include "TVectorDfwd.h"
+#include <vector>
 
 class TArrayI;
 class TArrayD;
@@ -55,11 +56,14 @@ public:
       TString fComment;
    };
 
-   struct Column {               //Information of a table column
-      TString            fName;      // Column's name
-      enum EColumnTypes  fType;      // Column's data type
-      Int_t              fDim;       // When cells contain real number vectors, this field indicates
-                                     // the dimension of this vector (number of components), being 1 for scalars.
+   struct Column {               // Information of a table column
+      TString            fName;       // Column's name
+      enum EColumnTypes  fType;       // Column's data type
+      Int_t              fDim;        // When cells contain real number vectors, this field indicates
+                                      // the dimension of this vector (number of components), being 1 for scalars.
+      Bool_t             fVariable;   // kTRUE if the columns has variable-length arrays
+      std::vector<int>   fRowStart;   // starting index of each row
+      std::vector<int>   fVarLengths; // sizes of the individual varaiable-length arrays
    };
 
    union Cell {                 //Table cell contents

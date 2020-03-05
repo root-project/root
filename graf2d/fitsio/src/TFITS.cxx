@@ -81,10 +81,11 @@ several methods to manage them.
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TCanvas.h"
+#include "TMath.h"
 
 #include "fitsio.h"
+#include <iostream>
 #include <stdlib.h>
-
 
 ClassImp(TFITSHDU);
 
@@ -389,6 +390,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                                    || (typecode == TBYTE)  || (typecode == TSTRING)) {
 
             fColumnsInfo[colnum].fType = (typecode == TSTRING) ? kString : kRealNumber;
+            fColumnsInfo[colnum].fVariable = kFALSE;
 
             if (typecode == TSTRING) {
                // String column
@@ -513,6 +515,71 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                      }
                      delete[] array;
                   }
+               }
+            }
+         } else if (typecode < 1) {
+            Info("LoadHDU", "Variable-Length Arrays encountered in %s column", fColumnsInfo[colnum].fName.Data());
+            
+            fColumnsInfo[colnum].fType = kRealVector;
+            fColumnsInfo[colnum].fVariable = kTRUE;
+
+            fColumnsInfo[colnum].fRowStart.assign(table_rows+1, 0);
+            fColumnsInfo[colnum].fVarLengths.assign(table_rows, 0);
+            
+            // loop over rows to derive the total memory requirement
+            fColumnsInfo[colnum].fRowStart[0] = 0;
+
+            for (long row = 0; row < table_rows; row++) {
+               long offset = 0;
+               long repeat = 0;
+               
+               fits_read_descript(fp, colnum+1, row+1, &repeat, &offset, &status);
+
+               fColumnsInfo[colnum].fRowStart[row+1] = fColumnsInfo[colnum].fRowStart[row] + repeat;
+               fColumnsInfo[colnum].fVarLengths[row] = repeat;
+            }
+            
+            for (long row = 0; row < table_rows; row++) {
+               std::cout << "reading row: " << row+1 << "\n"; 
+               int anynul = 0;
+
+               // number of elements in the cell we want to read
+               int nelements = fColumnsInfo[colnum].fRowStart[row+1] - fColumnsInfo[colnum].fRowStart[row];
+
+               const int size = fColumnsInfo[colnum].fVarLengths[row];
+               int abstype = TMath::Abs(typecode);
+               void* nulval=0;
+
+               // define the array to load the data
+               // a fixed arrays is needed as argument to the fits_read_col function
+               // a new TYPE array[size] is therefore defined for each case and then
+               // passed to the ftis_read_col function
+               if (abstype == 21) {
+                  short data[size];
+                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++)
+                     std::cout << data[i] << " ";
+                  std::cout << "\n";
+               } else if (abstype == 41) {
+                  int data[size];
+                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++)
+                     std::cout << data[i] << " ";
+                  std::cout << "\n";
+               } else if (abstype == 42) {
+                  float data[size];
+                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++)
+                     std::cout << data[i] << " ";
+                  std::cout << "\n";
+               } else if (abstype == 82) {
+                  double data[size];
+                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++)
+                     std::cout << data[i] << " ";
+                  std::cout << "\n";
+               } else {
+                  Error("LoadHDU", "The variable-length array type in column %d is unknown", colnum+1);
                }
             }
          } else {
@@ -1468,3 +1535,4 @@ const TString& TFITSHDU::GetColumnName(Int_t colnum)
    }
    return fColumnsInfo[colnum].fName;
 }
+
