@@ -1440,6 +1440,7 @@ if(cuda OR tmva-gpu)
       	set(tmva-cudnn ON)
       else()
 	message(STATUS "CuDNN library not found")
+        set(cudnn OFF CACHE BOOL "Disabled because cudnn is not found" FORCE)
       endif()
     endif()
 
