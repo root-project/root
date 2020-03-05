@@ -4473,14 +4473,18 @@
           obj          = this.GetObject(),
           pp           = this.pad_painter(),
           use_frame    = false,
+          visible        = this.v7EvalAttr("visible", true),
           palette_margin = this.v7EvalLength( "margin", pw, 0.02),
           palette_size = this.v7EvalLength( "size", pw, 0.05);
 
       fp.fPalette = obj.fPalette;
 
-      this.CreateG(false).attr("transform","translate(" + Math.round(fx + fw + palette_margin) +  "," + fy + ")");
+      if (!visible)
+         return this.RemoveDrawG();
 
-      this.draw_g.append("svg:rect")
+      this.CreateG(false)
+           .attr("transform","translate(" + Math.round(fx + fw + palette_margin) +  "," + fy + ")")
+           .append("svg:rect")
            .attr("x", 0)
            .attr("width", palette_size)
            .attr("y", 0)
@@ -4496,7 +4500,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RHist2Drawable", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true, csstype: "text" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrameTitle", icon: "img_text", func: drawFrameTitle, opt: "", direct: true, csstype: "title" });
-   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPaletteDraw", icon: "img_text", func: drawPalette, opt: "", direct: true, csstype: "palette" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPaletteDrawable", icon: "img_text", func: drawPalette, opt: "", direct: true, csstype: "palette" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });

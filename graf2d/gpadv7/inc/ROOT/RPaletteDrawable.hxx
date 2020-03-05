@@ -6,8 +6,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RPaletteDraw
-#define ROOT7_RPaletteDraw
+#ifndef ROOT7_RPaletteDrawable
+#define ROOT7_RPaletteDrawable
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrAxis.hxx>
@@ -20,7 +20,7 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RPaletteDraw
+/** \class ROOT::Experimental::RPaletteDrawable
 \ingroup GrafROOT7
 \brief A color palette draw near the frame.
 \author Sergey Linev <s.linev@gsi.de>
@@ -29,29 +29,33 @@ namespace Experimental {
 */
 
 
-class RPaletteDraw final : public RDrawable {
+class RPaletteDrawable final : public RDrawable {
 
    class ROwnAttrs : public RAttrBase {
-      friend class RPaletteDraw;
-      R__ATTR_CLASS(ROwnAttrs, "", AddString("margin","0.02").AddString("size","0.05"));
+      friend class RPaletteDrawable;
+      R__ATTR_CLASS(ROwnAttrs, "", AddBool("visible", true).AddString("margin","0.02").AddString("size","0.05"));
    };
 
    RPalette   fPalette;                     ///  color palette to draw
    RAttrAxis  fAttrAxis{this, "axis_"};     ///<! axis attributes
-   ROwnAttrs  fAttr{this,""};                ///<! own attributes
+   ROwnAttrs  fAttr{this,""};               ///<! own attributes
 
 protected:
 
    bool IsFrameRequired() const final { return true; }
 
-   RPaletteDraw() : RDrawable("palette") {}
+   RPaletteDrawable() : RDrawable("palette") {}
 
 public:
 
-   RPaletteDraw(const RPalette &palette) : RPaletteDraw() { fPalette = palette; }
+   RPaletteDrawable(const RPalette &palette) : RPaletteDrawable() { fPalette = palette; }
+   RPaletteDrawable(const RPalette &palette, bool visible) : RPaletteDrawable() { fPalette = palette; SetVisible(visible); }
    const RPalette &GetPalette() const { return fPalette; }
 
-   RPaletteDraw &SetMargin(const RPadLength &pos)
+   RPaletteDrawable &SetVisible(bool on = true) { fAttr.SetValue("visible", on); return *this; }
+   bool GetVisible() const { return fAttr.GetValue<bool>("visible"); }
+
+   RPaletteDrawable &SetMargin(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("margin");
@@ -70,7 +74,7 @@ public:
       return res;
    }
 
-   RPaletteDraw &SetSize(const RPadLength &sz)
+   RPaletteDrawable &SetSize(const RPadLength &sz)
    {
       if (sz.Empty())
          fAttr.ClearValue("size");
@@ -90,13 +94,13 @@ public:
    }
 
    const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
-   RPaletteDraw &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
+   RPaletteDrawable &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
    RAttrAxis &AttrAxis() { return fAttrAxis; }
 };
 
 //inline auto GetDrawable(const RPalette &palette)
 //{
-//   return std::make_shared<RPaletteDraw>(palette);
+//   return std::make_shared<RPaletteDrawable>(palette);
 //}
 
 
