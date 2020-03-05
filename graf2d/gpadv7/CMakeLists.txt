@@ -27,6 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RAttrMargins.hxx
     ROOT/RAttrText.hxx
     ROOT/RPalette.hxx
+    ROOT/RPaletteDraw.hxx
     ROOT/RDrawable.hxx
     ROOT/RStyle.hxx
     ROOT/RPadDisplayItem.hxx
