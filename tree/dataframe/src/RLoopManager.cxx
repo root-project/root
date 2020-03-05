@@ -10,6 +10,7 @@
 #include "TBranchObject.h"
 #include "TEntryList.h"
 #include "TError.h"
+#include "TFriendElement.h"
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
