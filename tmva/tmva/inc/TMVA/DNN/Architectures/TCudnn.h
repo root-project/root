@@ -18,6 +18,12 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CUDNN
 #define TMVA_DNN_ARCHITECTURES_CUDNN
 
+#include "RConfigure.h"   // for definition of R__HAS_CUDNN
+
+#ifndef R__HAS_CUDNN
+#error This file can be compiled only when cudnn is available in ROOT
+#else 
+
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
@@ -850,4 +856,5 @@ Long_t TCudnn<AFloat>::CNNOptions::ConvMaxWorkspaceSize = -1;  // -1 let use Cud
 } // namespace DNN
 } // namespace TMVA
 
+#endif
 #endif

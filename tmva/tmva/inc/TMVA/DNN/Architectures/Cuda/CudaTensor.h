@@ -25,6 +25,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "RConfigure.h"
 #include "TMatrixT.h"
 #include "CudaBuffers.h"
 #include "CudaMatrix.h"
