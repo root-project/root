@@ -26,7 +26,6 @@ objects.
 
 #include "TROOT.h"
 #include "ROOT/TTreeProcessorMT.hxx"
-#include "ROOT/TThreadExecutor.hxx"
 
 using namespace ROOT;
 
@@ -491,7 +490,6 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    const std::vector<Internal::NameAlias> &friendNames = fFriendInfo.fFriendNames;
    const std::vector<std::vector<std::string>> &friendFileNames = fFriendInfo.fFriendFileNames;
 
-   TThreadExecutor pool;
    // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
    // so we do it here for all files.
    const bool hasFriends = !friendNames.empty();
@@ -530,7 +528,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
          func(*reader);
       };
 
-      pool.Foreach(processCluster, thisFileClusters);
+      fPool.Foreach(processCluster, thisFileClusters);
    };
 
    std::vector<std::size_t> fileIdxs(fFileNames.size());
@@ -539,7 +537,7 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   pool.Foreach(processFile, fileIdxs);
+   fPool.Foreach(processFile, fileIdxs);
 }
 
 ////////////////////////////////////////////////////////////////////////
