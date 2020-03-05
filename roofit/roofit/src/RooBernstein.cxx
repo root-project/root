@@ -224,7 +224,7 @@ RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batch
 ////////////////////////////////////////////////////////////////////////////////
 /// No analytical calculation available (yet) of integrals over subranges
 
-Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
+Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char*) const
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
