@@ -81,7 +81,7 @@ set(ROOTDirName python/ROOT)
 set(ROOT_headers inc)
 
 file(COPY ${ROOTDirName} DESTINATION ${localruntimedir})
-install(DIRECTORY ${ROOTDirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(DIRECTORY ${ROOTDirName} DESTINATION ${runtimedir})
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_version_strings ${val} python_version_string)
@@ -116,6 +116,7 @@ foreach(val RANGE ${how_many_pythons})
   # create egg with PyROOT info
   set(ROOT_egg "${CMAKE_CURRENT_BINARY_DIR}/PyROOT.egg")
   file(WRITE ${ROOT_egg} "PyROOT ${ROOT_VERSION}")
+
 endforeach()
 
 # Copy headers inside build_dir/include/Pythonizations

@@ -9,8 +9,6 @@
 #  LIBDIR           - object code libraries (lib or lib64 or lib/<multiarch-tuple> on Debian)
 #  INCLUDEDIR       - C/C++ header files (include)
 #  SYSCONFDIR       - read-only single-machine data (etc)
-#  PYROOTDIR        - pyroot experimental libraries and modules (LIBDIR/pythonX.Y/site-packages
-#                     or LIBDIR/pythonX.Y/dist-packages on Debian)
 #  DATAROOTDIR      - read-only architecture-independent data (share)
 #  DATADIR          - read-only architecture-independent data (DATAROOTDIR/root)
 #  MANDIR           - man documentation (DATAROOTDIR/man)
@@ -72,21 +70,6 @@ if(NOT DEFINED CMAKE_INSTALL_SYSCONFDIR)
   else()
     set(CMAKE_INSTALL_SYSCONFDIR "etc" CACHE PATH "read-only single-machine data (etc)")
   endif()
-endif()
-
-if(NOT DEFINED CMAKE_INSTALL_PYROOTDIR)
-  if(WIN32)
-    set(CMAKE_INSTALL_PYROOTDIR ${LIBDIR}/python/site-packages)
-  else()
-    execute_process(COMMAND bash -c "${PYTHON_EXECUTABLE} -m site | grep -q dist-packages && echo dist-packages" OUTPUT_VARIABLE packages_name)
-    if(NOT packages_name MATCHES "dist-packages")
-      set(packages_name "site-packages")
-    else()
-      set(packages_name "dist-packages")
-    endif()
-  endif()
-    set(CMAKE_INSTALL_PYROOTDIR "${CMAKE_INSTALL_LIBDIR}/${python_dir}/${packages_name}"
-          CACHE PATH "pyroot libraries and modules (LIBDIR/pythonX.Y/site-packages)")
 endif()
 
 if(NOT DEFINED CMAKE_INSTALL_DATAROOTDIR)
@@ -227,7 +210,6 @@ mark_as_advanced(
   CMAKE_INSTALL_LIBDIR
   CMAKE_INSTALL_INCLUDEDIR
   CMAKE_INSTALL_SYSCONFDIR
-  CMAKE_INSTALL_PYROOTDIR
   CMAKE_INSTALL_MANDIR
   CMAKE_INSTALL_DATAROOTDIR
   CMAKE_INSTALL_DATADIR
@@ -248,7 +230,6 @@ foreach(dir BINDIR
             LIBDIR
             INCLUDEDIR
             SYSCONFDIR
-            PYROOTDIR
             MANDIR
             DATAROOTDIR
             DATADIR

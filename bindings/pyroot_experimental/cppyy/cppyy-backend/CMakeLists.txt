@@ -25,7 +25,7 @@ foreach(val RANGE ${how_many_pythons})
   set(libname cppyy_backend${python_version_string})
 
   foreach(py_source ${py_sources})
-    install(FILES cling/python/${py_source} DESTINATION ${CMAKE_INSTALL_LIBDIR}/cppyy_backend)
+    install(FILES cling/python/${py_source} DESTINATION ${runtimedir}/cppyy_backend)
     install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
   endforeach()

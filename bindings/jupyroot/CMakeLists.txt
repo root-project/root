@@ -8,10 +8,9 @@
 # CMakeLists.txt file for building JupyROOT bindings/pyroot_experimental/PyROOT package
 #######################################################################################
 
-set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PYROOTDIR})
 set(JupyROOTDirName python/JupyROOT)
 
 ROOT_LINKER_LIBRARY(JupyROOT src/IOHandler.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
-install(DIRECTORY ${JupyROOTDirName} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})

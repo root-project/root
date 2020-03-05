@@ -4,12 +4,10 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PYROOTDIR})
-
-if(IS_ABSOLUTE ${CMAKE_INSTALL_PYROOTDIR})
-  set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PYROOTDIR})
+if(IS_ABSOLUTE ${runtimedir})
+  set(d $ENV{DESTDIR}/${runtimedir})
 else()
-  set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_PYROOTDIR})
+  set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
 endif()
 
 add_subdirectory(cppyy)
