@@ -107,9 +107,8 @@ namespace ROOT {
                return dirs;
             }
          };
-
       } // End of namespace TThreadedObjectUtils
-   } // End of namespace Internals
+   } // End of namespace Internal
 
    namespace TThreadedObjectUtils {
 
