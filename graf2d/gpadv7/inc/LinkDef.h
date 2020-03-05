@@ -66,6 +66,8 @@
 #pragma link C++ class ROOT::Experimental::RPadDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RCanvasDisplayItem+;
 
+#pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::RPalette>+;
+
 #pragma read sourceClass="ROOT::Experimental::RCanvas" targetClass="ROOT::Experimental::RCanvas" source="" target="" code="{ newObj->ResolveSharedPtrs() ; }"
 
 #pragma link C++ class ROOT::Experimental::RColor+;
