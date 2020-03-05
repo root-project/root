@@ -9,7 +9,7 @@
 /// \author Sergey Linev <s.linev@gsi.de>
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -72,13 +72,11 @@ void draw_frame()
    subpads[0][0]->Draw<RFrameTitle>("Frame1 title")->SetMargin(0.01_normal).SetHeight(0.05_normal);
 
    auto draw1 = subpads[0][0]->Draw(pHist);
-   draw1->AttrLine().SetColor(RColor::kRed);
 
    // create frame before drawing histograms
    auto frame2 = subpads[1][0]->GetOrCreateFrame();
 
    auto draw2 = subpads[1][0]->Draw(pHist);
-   draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(12);
 
    subpads[1][0]->Draw<RFrameTitle>("Frame2 title");
 
@@ -86,5 +84,5 @@ void draw_frame()
 
    subpads[1][0]->UseStyle(style);
 
-   canvas->Show();
+   canvas->Show("");
 }

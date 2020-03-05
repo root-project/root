@@ -18,7 +18,6 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrLine.hxx>
-#include <ROOT/RPalette.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
 #include <ROOT/RMenuItem.hxx>
@@ -97,24 +96,10 @@ public:
 
 
 class RHist2Drawable final : public RHistDrawable<2> {
-private:
-   Internal::RIOShared<RPalette> fPalette;  ///< I/O capable reference on palette
-
-protected:
-
-   void CollectShared(Internal::RIOSharedVector_t &vect) final
-   {
-      RHistDrawable<2>::CollectShared(vect);
-      vect.emplace_back(&fPalette);
-   }
-
 public:
    template <class HIST>
-   RHist2Drawable(const std::shared_ptr<HIST> &hist, std::shared_ptr<RPalette> palette = nullptr) : RHistDrawable<2>(hist), fPalette(palette) {}
-
-   std::shared_ptr<RPalette> GetPalette() const { return fPalette.get_shared(); }
+   RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
 };
-
 
 
 
@@ -138,9 +123,9 @@ inline auto GetDrawable(const std::shared_ptr<RH1F> &histimpl)
    return std::make_shared<RHist1Drawable>(histimpl);
 }
 
-inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl, std::shared_ptr<RPalette> palette = nullptr)
+inline auto GetDrawable(const std::shared_ptr<RH2D> &histimpl)
 {
-   return std::make_shared<RHist2Drawable>(histimpl, palette);
+   return std::make_shared<RHist2Drawable>(histimpl);
 }
 
 inline auto GetDrawable(const std::shared_ptr<RH2I> &histimpl)
