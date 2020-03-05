@@ -818,6 +818,7 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    if (binmaxy > nbinsy) binmaxy = nbinsy;
    if (binmaxy < binminy) {binminy = 1; binmaxy = nbinsy;}
 
+
    //default is to fit with a gaussian
    if (f1 == 0) {
       f1 = (TF1*)gROOT->GetFunction("gaus");
@@ -857,27 +858,29 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    //Loop on all cells in X,Y generate a projection along Z
    TH1D *hpz = new TH1D("R_temp","_temp",nbinsz, fZaxis.GetXmin(), fZaxis.GetXmax());
    Int_t bin,binx,biny,binz;
+   TString opt(option);
+   // add option "N" when fitting the 2D histograms
+   opt += " N ";
+ 
    for (biny=binminy;biny<=binmaxy;biny++) {
-      Float_t y = fYaxis.GetBinCenter(biny);
       for (binx=binminx;binx<=binmaxx;binx++) {
-         Float_t x = fXaxis.GetBinCenter(binx);
          hpz->Reset();
          Int_t nfill = 0;
          for (binz=1;binz<=nbinsz;binz++) {
             bin = GetBin(binx,biny,binz);
-            Float_t w = RetrieveBinContent(bin);
+            Double_t w = RetrieveBinContent(bin);
             if (w == 0) continue;
-            hpz->Fill(fZaxis.GetBinCenter(binz),w);
+            hpz->SetBinContent(binz,w);
             hpz->SetBinError(binz,GetBinError(bin));
             nfill++;
          }
          if (nfill < cut) continue;
          f1->SetParameters(parsave);
-         hpz->Fit(fname,option);
+         hpz->Fit(fname,opt.Data());
          Int_t npfits = f1->GetNumberFitPoints();
          if (npfits > npar && npfits >= cut) {
             for (ipar=0;ipar<npar;ipar++) {
-               hlist[ipar]->Fill(x,y,f1->GetParameter(ipar));
+               hlist[ipar]->SetBinContent(binx,biny,f1->GetParameter(ipar));
                hlist[ipar]->SetBinError(binx,biny,f1->GetParError(ipar));
             }
             hchi2->SetBinContent(binx,biny,f1->GetChisquare()/(npfits-npar));
