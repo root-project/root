@@ -67,7 +67,7 @@ void runFit(unsigned int N, double a0, double a1, double a2, double a3)
 
   // Fit pdf to data
   c0.setConstant(kTRUE);
-  auto result = extbern.fitTo(*data,RooFit::Range("range1,range2"));
+  extbern.fitTo(*data,RooFit::Range("range1,range2"));
 
   // Plot the distributions
   RooPlot *xframe1 = x.frame(Title("bernstein p.d.f"));
@@ -112,4 +112,3 @@ TEST(RooBernstein, RangedFit)
 {
   runFit(10000, 0.3, 0.7, 0.2, 0.5);
 }
-
