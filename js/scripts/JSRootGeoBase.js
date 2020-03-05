@@ -861,10 +861,7 @@
 
       var creator = faces_limit ? new JSROOT.GEO.PolygonsCreator : new JSROOT.GEO.GeometryCreator(numfaces);
 
-      // var creator = new JSROOT.GEO.GeometryCreator(numfaces);
-
       var calcZ;
-
       if (shape._typename == "TGeoCtub")
          calcZ = function(x,y,z) {
             var arr = (z<0) ? shape.fNlow : shape.fNhigh;
@@ -913,7 +910,7 @@
          var d1 = side, d2 = 1- side,
              sign = (side == 0) ? 1 : -1,
              reduce = (innerR[side] <= 0) ? 2 : 0;
-         if ((reduce==2) && (thetaLength === 360) && !calcZ ) creator.StartPolygon(side===0);
+         if ((reduce==2) && (thetaLength === 360) && !calcZ) creator.StartPolygon(side===0);
          for (var seg=0;seg<radiusSegments;++seg) {
             creator.AddFace4(
                   innerR[side] * _cos[seg+d1], innerR[side] * _sin[seg+d1], sign*shape.fDZ,
