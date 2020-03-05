@@ -29,7 +29,7 @@ class RAttrBase {
    friend class RAttrMap;
 
    RDrawable *fDrawable{nullptr};      ///<! drawable used to store attributes
-   std::unique_ptr<RAttrMap> fOwnAttr; ///<! own instance when deep copy is created
+   std::unique_ptr<RAttrMap> fOwnAttr; ///<  own instance when deep copy is created, persistent for RColor and similar classes
    std::string fPrefix;                ///<! name prefix for all attributes values
    RAttrBase *fParent{nullptr};        ///<! parent attributes, prefix applied to it
 
