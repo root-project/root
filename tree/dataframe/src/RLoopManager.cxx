@@ -5,7 +5,6 @@
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RSlotStack.hxx"
-#include "ROOT/TTreeProcessorMT.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TBranchElement.h"
 #include "TBranchObject.h"
@@ -17,6 +16,7 @@
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/TTreeProcessorMT.hxx"
 #endif
 
 #include <atomic>
