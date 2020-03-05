@@ -398,12 +398,14 @@
 
    THistPainter.prototype.CreateContour = function(nlevels, zmin, zmax, zminpositive) {
 
+      var main = this.frame_painter();
+
       if (nlevels<1) nlevels = JSROOT.gStyle.fNumberContours;
       this.fContour = [];
       this.colzmin = zmin;
       this.colzmax = zmax;
 
-      if (this.root_pad().fLogz) {
+      if (main.logz) {
          if (this.colzmax <= 0) this.colzmax = 1.;
          if (this.colzmin <= 0)
             if ((zminpositive===undefined) || (zminpositive <= 0))
@@ -430,8 +432,6 @@
             this.fContour.push(this.colzmin + dz*level);
       }
 
-      var main = this.frame_painter();
-
       if (this.Dimension() < 3) {
          main.zmin = this.zmin = this.colzmin;
          main.zmax = this.zmax = this.colzmax;
@@ -445,6 +445,7 @@
       return this.fContour;
    }
 
+   /** Return contour levels, use from the frame when exists @private */
    THistPainter.prototype.GetContour = function() {
       if (this.fContour) return this.fContour;
 
@@ -589,7 +590,7 @@
       return Math.floor(0.01+(zc-this.colzmin)*(cntr.length-1)/(this.colzmax-this.colzmin));
    }
 
-   /// return color from the palette, which corresponds given controur value
+   /// return color from the palette, which corresponds given contour value
    /// optionally one can return color index of the palette
    THistPainter.prototype.getContourColor = function(zc, asindx) {
       var zindx = this.getContourIndex(zc);
@@ -602,9 +603,79 @@
       return asindx ? indx : palette.getColor(indx);
    }
 
+   JSROOT.v7.ExtractRColor = function(rcolor) {
+      var m = rcolor.fOwnAttr.m;
+      if (m.rgb) return "#" + m.rgb.v;
+      if (m.name) return m.name.v;
+      return "black";
+   }
+
+   /* create array of colors of specified len */
+   JSROOT.v7.CreateRPaletteColors = function(rpalette, len) {
+      var arr = [], indx = 0;
+
+      while (arr.length < len) {
+         var value = arr.length / (len-1);
+
+         var entry = rpalette.fColors[indx];
+
+         if ((Math.abs(entry.fOrdinal - value)<0.0001) || (indx == rpalette.fColors.length-1)) {
+            arr.push(JSROOT.v7.ExtractRColor(entry.fColor));
+            continue;
+         }
+
+         var next = rpalette.fColors[indx+1];
+         if (next.fOrdinal <= value) {
+            indx++;
+            continue;
+         }
+
+         var dist = next.fOrdinal - entry.fOrdinal,
+             r1 = (next.fOrdinal - value) / dist,
+             r2 = (value - entry.fOrdinal) / dist;
+
+         // interpolate
+         var col1 = d3.rgb(JSROOT.v7.ExtractRColor(entry.fColor));
+         var col2 = d3.rgb(JSROOT.v7.ExtractRColor(next.fColor));
+
+         var color = d3.rgb(Math.round(col1.r*r1 + col2.r*r2), Math.round(col1.g*r1 + col2.g*r2), Math.round(col1.b*r1 + col2.b*r2));
+
+         arr.push(color.toString());
+      }
+
+      return arr;
+   }
+
+
    THistPainter.prototype.GetPalette = function(force) {
-      if (!this.fPalette || force)
-         this.fPalette = this.get_palette(true, this.options.Palette);
+      if (!this.fPalette || force) {
+         var main = this.frame_painter();
+
+         if (main && main.fPalette) {
+            console.log("Have RPalette", main.fPalette._typename);
+
+            main.fPalette.calcColorIndex = function(i,len) {
+               if (!this.palette || (this.palette.length != len))
+                  this.palette = JSROOT.v7.CreateRPaletteColors(this, len);
+               return i;
+            }
+
+            main.fPalette.getColor = function(indx) {
+               return this.palette[indx];
+            }
+
+            main.fPalette.calcColor = function(i,len) {
+               var indx = this.calcColorIndex(i,len);
+               return this.getColor(indx);
+            }
+
+            this.fPalette = main.fPalette;
+         }
+
+         if (!this.fPalette)
+             this.fPalette = this.get_palette(true, this.options.Palette);
+
+      }
       return this.fPalette;
    }
 
