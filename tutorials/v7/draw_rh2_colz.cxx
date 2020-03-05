@@ -21,7 +21,7 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFrameTitle.hxx"
-#include "ROOT/RPaletteDraw.hxx"
+#include "ROOT/RPaletteDrawable.hxx"
 #include "ROOT/RFrame.hxx"
 #include "TRandom.h"
 
@@ -52,7 +52,7 @@ void draw_rh2_colz()
 
    canvas->Draw<RFrameTitle>("2D histogram with color palette");
 
-   canvas->Draw<RPaletteDraw>(palette);
+   canvas->Draw<RPaletteDrawable>(palette, false);
 
    auto draw1 = canvas->Draw(pHist);
 
