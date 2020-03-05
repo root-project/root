@@ -49,7 +49,9 @@
 
 #ifdef R__HAS_TMVAGPU
 #include "TMVA/DNN/Architectures/Cuda.h"
+#ifdef R__HAS_CUDNN
 #include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
 #endif
 
 #include "TMVA/DNN/Functions.h"
@@ -82,8 +84,11 @@ private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
 // #ifdef R__HAS_TMVAGPU
+// #ifdef R__HAS_CUDNN
 //    using ArchitectureImpl_t = TMVA::DNN::TCudnn<Float_t>;
-//    //using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
+// #else
+//   using ArchitectureImpl_t = TMVA::DNN::TCuda<Float_t>;
+// #endif
 // #else
 // do not use arch GPU for evaluation. It is too slow for batch size=1
    using ArchitectureImpl_t = TMVA::DNN::TCpu<Float_t>;
