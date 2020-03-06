@@ -750,6 +750,9 @@ void TObject::UseCurrentStyle()
 ///  Using the kWriteDelete option a previous key with the same name is
 ///  deleted only after the new object has been written. This option
 ///  is safer than kOverwrite but it is slower.
+///  NOTE: Neither kOverwrite nor kWriteDelete reduces the size of a TFile--
+///  only the metadata is replaced, effectively making the data invisible
+///  without deleting it.
 ///  The kSingleKey option is only used by TCollection::Write() to write
 ///  a container with a single key instead of each object in the container
 ///  with its own key.
