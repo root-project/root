@@ -38,11 +38,8 @@ void draw_rh2_colz()
    RAxisConfig yaxis("y", 20, 0., 10.);
    auto pHist = std::make_shared<RH2D>(xaxis, yaxis);
 
-   for (int n=0;n<10000;n++) {
+   for (int n=0;n<10000;n++)
       pHist->Fill({gRandom->Gaus(5.,2.), gRandom->Gaus(5.,2.)});
-   }
-
-   RPalette palette({{0., RColor::kWhite}, {.3, RColor::kRed}, {.7, RColor::kBlue}, {1., RColor::kGreen}});
 
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
@@ -52,7 +49,7 @@ void draw_rh2_colz()
 
    canvas->Draw<RFrameTitle>("2D histogram with color palette");
 
-   canvas->Draw<RPaletteDrawable>(palette, false);
+   canvas->Draw<RPaletteDrawable>(RPalette::GetPalette(), true);
 
    auto draw1 = canvas->Draw(pHist);
 

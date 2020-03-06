@@ -138,7 +138,7 @@ public:
 
    /// Get a global palette by name. Returns an empty palette if no palette with that name is known.
    /// This function is not thread safe; any concurrent call to global Palette manipulation must be synchronized!
-   static const RPalette &GetPalette(std::string_view name);
+   static const RPalette &GetPalette(std::string_view name = "");
 
    ///\}
 };
