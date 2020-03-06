@@ -2,52 +2,89 @@
 #define ROOJSONFACTORYWSTOOL_H
 #include "RooWorkspace.h"
 #include "TH1.h"
+#include "RooStats/JSONInterface.h"
 #include <string>
 
 class RooJSONFactoryWSTool : public TNamed, RooPrintable {
  public:
-  template<class T> class Importer {
+  class Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool*, const T&) const {
+    virtual bool importPdf(RooJSONFactoryWSTool*, const TJSONNode&) const {
       return false;
     }
-    virtual bool importFunction(RooJSONFactoryWSTool*, const T&) const {
+    virtual bool importFunction(RooJSONFactoryWSTool*, const TJSONNode&) const {
       return false;
     }
   };
-  template<class T> class Exporter {
+  class Exporter {
   public:
     virtual bool autoExportDependants() const { return true; }
-    virtual bool exportObject(const RooAbsArg*, T&) const {
+    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg*, TJSONNode&) const {
       return false;
     }
   };   
-  class Helpers;
+
  protected:
   RooWorkspace* _workspace;
-  static std::list<std::string> _strcache;
-  template<class T> static std::map<std::string,const Importer<T>*> _importers;
-  template<class T> static std::map<const TClass*,const Exporter<T>*> _exporters;    
+  static std::map<std::string,const Importer*> _importers;
+  static std::map<const TClass*,const Exporter*> _exporters;    
   void prepare();
  public:
+  static std::string name(const TJSONNode& n);  
+  
   RooJSONFactoryWSTool(RooWorkspace& ws);
   RooWorkspace* workspace() { return this->_workspace; }
 
-  template<class T> static bool registerImporter(const std::string& key, const RooJSONFactoryWSTool::Importer<T>* f){
-    if(RooJSONFactoryWSTool::_importers<T>.find(key) != RooJSONFactoryWSTool::_importers<T>.end()) return false;
-    RooJSONFactoryWSTool::_importers<T>[key] = f;
+  static bool registerImporter(const std::string& key, const RooJSONFactoryWSTool::Importer* f){
+    if(RooJSONFactoryWSTool::_importers.find(key) != RooJSONFactoryWSTool::_importers.end()) return false;
+    RooJSONFactoryWSTool::_importers[key] = f;
     return true;
   }
-  template<class T> static bool registerExporter(const TClass* key, const RooJSONFactoryWSTool::Exporter<T>* f){
-    if(RooJSONFactoryWSTool::_exporters<T>.find(key) != RooJSONFactoryWSTool::_exporters<T>.end()) return false;  
-    RooJSONFactoryWSTool::_exporters<T>[key] = f;
+  static bool registerExporter(const TClass* key, const RooJSONFactoryWSTool::Exporter* f){
+    if(RooJSONFactoryWSTool::_exporters.find(key) != RooJSONFactoryWSTool::_exporters.end()) return false;  
+    RooJSONFactoryWSTool::_exporters[key] = f;
     return true;
   }
 
-  static const char* incache(const std::string& str);
-  static void clearcache();
-
-  template<class T> static void exportHistogram(const TH1& h, T& n, const std::vector<std::string>& obsnames);
+  // error handling helpers
+  static void error(const char* s){
+    throw std::runtime_error(s);
+  }
+  static void error(const std::string& s){
+    throw std::runtime_error(s);
+  }
+  template<class T> static std::string concat(const T* items, const std::string& sep=",") {
+    // Returns a string being the concatenation of strings in input list <items>
+    // (names of objects obtained using GetName()) separated by string <sep>.
+    bool first = true;
+    std::string text;
+    
+    // iterate over strings in list
+    for(auto it:*items){
+      if (!first) {
+        // insert separator string
+        text += sep;
+      } else {
+        first = false;
+      }
+      if(!it) text+="NULL";
+      else text+=it->GetName();
+    }
+    return text;
+  }
+  template<class T> static std::vector<std::string> names(const T* items) {
+    // Returns a string being the concatenation of strings in input list <items>
+    // (names of objects obtained using GetName()) separated by string <sep>.
+    std::vector<std::string> names;
+    // iterate over strings in list
+    for(auto it:*items){
+      if(!it) names.push_back("NULL");
+      else names.push_back(it->GetName());
+    }
+    return names;
+  }
+  
+  static void exportHistogram(const TH1& h, TJSONNode& n, const std::vector<std::string>& obsnames);
   static std::vector<std::vector<int> > generateBinIndices(RooArgList& vars);
   
   Bool_t importJSON(const char* filename);
@@ -66,12 +103,21 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   static void clearExportKeys();
   static void printExportKeys();  
 
-  template<class T> void importFunctions(const T& n);
-  template<class T> void importPdfs(const T& n);
-  template<class T> void importVariables(const T& n);
-  template<class T> void importDependants(const T& n);
+  void importFunctions(const TJSONNode& n);
+  void importPdfs(const TJSONNode& n);
+  void importVariables(const TJSONNode& n);
+  void importDependants(const TJSONNode& n);
 
-  template<class T> void exportAll(T& n);  
-  template<class T> static void exportDependants(const RooAbsArg* source, T& n);
+  bool find(const TJSONNode& n, const std::string& elem);
+  void append(TJSONNode& n, const std::string& elem);
+  
+  void exportAttributes(const RooAbsArg* arg, TJSONNode& n);
+  void exportVariable(const RooAbsReal*v, TJSONNode& n);
+  void exportVariables(const RooArgSet& allElems, TJSONNode& n);
+  void exportObject(const RooAbsArg* func, TJSONNode& n);
+  void exportFunctions(const RooArgSet& allElems, TJSONNode& n);  
+
+  void exportAll(TJSONNode& n);  
+  void exportDependants(const RooAbsArg* source, TJSONNode& n);
 };
 #endif

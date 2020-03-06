@@ -15,112 +15,9 @@
 #include <RooProduct.h>
 
 namespace {
-  // error handling helpers
-  void error(const char* s){
-    throw std::runtime_error(s);
-  }
-  void error(const std::string& s){
-    throw std::runtime_error(s);
-  }
-}
-
-#ifdef INCLUDE_RYML
-
-#include <ryml.hpp>
-#include <c4/yml/std/map.hpp>
-#include <c4/yml/std/string.hpp>
-
-//namespace c4 { namespace yml {
-//    template<class T> void read(NodeRef const& n, std::vector<T> *v){
-//      for(size_t i=0; i<n.num_children(); ++i){
-//        std::string e;
-//        n[i]>>e;
-//        v->push_back(e);
-//      }
-//    }
-//    
-//    template<class T> void write(NodeRef *n, std::vector<T> const& v){
-//      *n |= c4::yml::SEQ;
-//      for(auto e:v){
-//        n->append_child() << e;
-//      }
-//    }
-//  }
-//}
-
-
-namespace {
-  inline std::string name(const c4::yml::NodeRef& n){
-    std::stringstream ss;
-    if(n.has_key()){
-      ss << n.key();
-    } else if(n.is_container()){
-      if(n.has_child("name")){
-        ss << n["name"].val();
-      }
-    } else {
-      ss << n.val();
-    }
-    return ss.str();
-  }
-  inline std::string val_s(const c4::yml::NodeRef& n){
-    std::stringstream ss;    
-    ss << n.val();
-    return ss.str();
-  }
-  inline double val_d(const c4::yml::NodeRef& n){
-    float d;
-    c4::atof(n.val(),&d);
-    return d;    
-  }
-  inline int val_i(const c4::yml::NodeRef& n){
-    int i;
-    c4::atoi(n.val(),&i);
-
-    return i;
-  }
-  inline bool val_b(const c4::yml::NodeRef& n){
-    int i;
-    c4::atoi(n.val(),&i);
-    return i;
-  }
-  template<class T> static std::string concat(const T* items, const std::string& sep=",") {
-    // Returns a string being the concatenation of strings in input list <items>
-    // (names of objects obtained using GetName()) separated by string <sep>.
-    bool first = true;
-    std::string text;
-    
-    // iterate over strings in list
-    for(auto it:*items){
-      if (!first) {
-        // insert separator string
-        text += sep;
-      } else {
-        first = false;
-      }
-      if(!it) text+="NULL";
-      else text+=it->GetName();
-    }
-    return text;
-  }
-  template<class T> static std::vector<std::string> names(const T* items) {
-    // Returns a string being the concatenation of strings in input list <items>
-    // (names of objects obtained using GetName()) separated by string <sep>.
-    std::vector<std::string> names;
-    // iterate over strings in list
-    for(auto it:*items){
-      if(!it) names.push_back("NULL");
-      else names.push_back(it->GetName());
-    }
-    return names;
-  }  
-}
-
-
-namespace {
-  inline void collectNames(const c4::yml::NodeRef& n,std::vector<std::string>& names){
-    for(auto c:n.children()){
-      names.push_back(::name(c));
+  inline void collectNames(const TJSONNode& n,std::vector<std::string>& names){
+    for(const auto& c:n.children()){
+      names.push_back(RooJSONFactoryWSTool::name(c));
     }
   }
 
@@ -131,17 +28,17 @@ namespace {
     std::vector<double> bounds;
     
     Var(int n): nbins(n), min(0), max(n) {}
-    Var(const c4::yml::NodeRef& val){
+    Var(const TJSONNode& val){
       if(val.is_map()){
-        if(!val.has_child("nbins")) error("no nbins given");
-        if(!val.has_child("min"))   error("no min given");
-        if(!val.has_child("max"))   error("no max given");
-        this->nbins = ::val_i(val["nbins"]);      
-        this->min   = ::val_d(val["min"]);
-        this->max   = ::val_d(val["max"]);
+        if(!val.has_child("nbins")) RooJSONFactoryWSTool::error("no nbins given");
+        if(!val.has_child("min"))   RooJSONFactoryWSTool::error("no min given");
+        if(!val.has_child("max"))   RooJSONFactoryWSTool::error("no max given");
+        this->nbins = val["nbins"].val_int();      
+        this->min   = val["min"].val_float();
+        this->max   = val["max"].val_float();
       } else if(val.is_seq()){
         for(size_t i=0; i<val.num_children(); ++i){
-          this->bounds.push_back(::val_d(val[i]));
+          this->bounds.push_back(val[i].val_float());
         }
         this->nbins = this->bounds.size();
         this->min = this->bounds[0];
@@ -153,17 +50,17 @@ namespace {
 
     
   
-  inline std::map<std::string,Var> readVars(const c4::yml::NodeRef& n,const std::string& obsnamecomp){
+  inline std::map<std::string,Var> readVars(const TJSONNode& n,const std::string& obsnamecomp){
     std::map<std::string,Var> vars;
     if(!n.is_map()) return vars;
     if(n.has_child("binning")){
-      c4::yml::NodeRef bounds(n["binning"]);
+      auto& bounds = n["binning"];
       if(!bounds.is_map()) return vars;    
       if(bounds.has_child("nbins")){
         vars.emplace(std::make_pair("obs_x_"+obsnamecomp,Var(bounds)));
       } else {
-        for(c4::yml::NodeRef p:bounds.children()){
-          vars.emplace(std::make_pair(::name(p),Var(p)));      
+        for(const auto& p:bounds.children()){
+          vars.emplace(std::make_pair(RooJSONFactoryWSTool::name(p),Var(p)));      
         }
       }
     } else {
@@ -172,7 +69,7 @@ namespace {
     return vars;
   }  
   
-  inline void collectObsNames(const c4::yml::NodeRef& n,std::vector<std::string>& obsnames,const std::string& obsnamecomp){
+  inline void collectObsNames(const TJSONNode& n,std::vector<std::string>& obsnames,const std::string& obsnamecomp){
     auto vars = ::readVars(n,obsnamecomp);
     if(obsnames.size() == 0){
       for(auto it:vars){
@@ -184,20 +81,20 @@ namespace {
     }
   }
 
-  inline std::string genPrefix(const c4::yml::NodeRef& p,bool trailing_underscore){
+  inline std::string genPrefix(const TJSONNode& p,bool trailing_underscore){
     std::string prefix;
     if(!p.is_map()) return prefix;
     if(p.has_child("namespaces")){
-      for(auto ns:p["namespaces"]){
+      for(const auto& ns:p["namespaces"].children()){
         if(prefix.size() > 0) prefix+="_";
-        prefix += ::val_s(ns);
+        prefix += ns.val();
       }
     }
     if(trailing_underscore && prefix.size()>0) prefix += "_";
     return prefix;
   }
   
-  inline void stackError(const c4::yml::NodeRef& n,std::vector<double>& sumW,std::vector<double>& sumW2){
+  inline void stackError(const TJSONNode& n,std::vector<double>& sumW,std::vector<double>& sumW2){
     if(!n.is_map()) return;    
     if(!n.has_child("counts")) throw "no counts given";
     if(!n.has_child("errors")) throw "no errors given";    
@@ -206,8 +103,8 @@ namespace {
     }
     const size_t nbins = n["counts"].num_children();
     for(size_t ibin=0; ibin<nbins; ++ibin){
-      double w = ::val_d(n["counts"][ibin]);
-      double e = ::val_d(n["errors"][ibin]);
+      double w = n["counts"][ibin].val_float();
+      double e = n["errors"][ibin].val_float();
       if(ibin<sumW.size()) sumW[ibin] += w;
       else sumW.push_back(w);
       if(ibin<sumW2.size()) sumW2[ibin] += e*e;
@@ -215,7 +112,7 @@ namespace {
     }
   }
 
-  inline RooDataHist* readData(RooWorkspace* ws, const c4::yml::NodeRef& n,const std::string& namecomp,const std::string& obsnamecomp){
+  inline RooDataHist* readData(RooWorkspace* ws, const TJSONNode& n,const std::string& namecomp,const std::string& obsnamecomp){
     if(!n.is_map()) throw "data is not a map!";
     auto vars = readVars(n,obsnamecomp);
     RooArgList varlist;
@@ -236,21 +133,21 @@ namespace {
     }
     RooDataHist* dh = new RooDataHist(("dataHist_"+namecomp).c_str(),namecomp.c_str(),varlist);
     auto bins = RooJSONFactoryWSTool::generateBinIndices(varlist);
-    if(!n.has_child("counts")) error("no counts given");
-    auto counts = n["counts"];
-    if(counts.num_children() != bins.size()) error(TString::Format("inconsistent bin numbers: counts=%d, bins=%d",(int)counts.num_children(),(int)(bins.size())));
+    if(!n.has_child("counts")) RooJSONFactoryWSTool::error("no counts given");
+    auto& counts = n["counts"];
+    if(counts.num_children() != bins.size()) RooJSONFactoryWSTool::error(TString::Format("inconsistent bin numbers: counts=%d, bins=%d",(int)counts.num_children(),(int)(bins.size())));
     for(size_t ibin=0; ibin<bins.size(); ++ibin){
       for(size_t i = 0; i<bins[ibin].size(); ++i){
         RooRealVar* v = (RooRealVar*)(varlist.at(i));
         v->setVal(v->getBinning().binCenter(bins[ibin][i]));
       }
-      dh->add(varlist,::val_d(counts[ibin]));
+      dh->add(varlist,counts[ibin].val_float());
     }
     return dh;
   }
 
   
-  class RooHistogramFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  class RooHistogramFactory : public RooJSONFactoryWSTool::Importer {
   public:
     RooRealVar* getNP(RooJSONFactoryWSTool* tool, const char* parname) const {
       RooRealVar* par = tool->workspace()->var(parname);
@@ -258,7 +155,7 @@ namespace {
         tool->workspace()->factory(TString::Format("%s[0.,-5,5]",parname).Data());
         par = tool->workspace()->var(parname);
       }
-      if(!par) error(TString::Format("unable to find nuisance parameter '%s'",parname));
+      if(!par) RooJSONFactoryWSTool::error(TString::Format("unable to find nuisance parameter '%s'",parname));
       return par;
     }
     RooAbsPdf* getConstraint(RooJSONFactoryWSTool* tool, const char* sysname) const {
@@ -267,27 +164,27 @@ namespace {
         tool->workspace()->factory(TString::Format("RooGaussian::%s(alpha_%s,0.,1.)",sysname,sysname).Data());
         pdf = tool->workspace()->pdf(sysname);
       }
-      if(!pdf) error(TString::Format("unable to find constraint term '%s'",sysname));
+      if(!pdf) RooJSONFactoryWSTool::error(TString::Format("unable to find constraint term '%s'",sysname));
       return pdf;
     }
     
-    virtual bool importFunction(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
-      std::string name(::name(p));
+    virtual bool importFunction(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+      std::string name(RooJSONFactoryWSTool::name(p));
       std::string prefix = ::genPrefix(p,true);
       if(prefix.size() > 0) name = prefix+name;    
       if(!p.has_child("data")){
-        error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+        RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       try {
         RooArgSet prodElems;
         RooDataHist* dh = ::readData(tool->workspace(),p["data"],name,prefix);       
-        RooHistFunc* hf = new RooHistFunc(name.c_str(),::name(p).c_str(),*(dh->get()),*dh);          
+        RooHistFunc* hf = new RooHistFunc(name.c_str(),RooJSONFactoryWSTool::name(p).c_str(),*(dh->get()),*dh);          
         if(p.has_child("normfactors")){
-          for(auto nf:p["normfactors"].children()){
-            std::string nfname(::name(nf));
+          for(const auto& nf:p["normfactors"].children()){
+            std::string nfname(RooJSONFactoryWSTool::name(nf));
             RooAbsReal* r = tool->workspace()->var(nfname.c_str());
             if(!r){
-              error("unable to find normalization factor '" + nfname + "'");
+              RooJSONFactoryWSTool::error("unable to find normalization factor '" + nfname + "'");
             } else {
               prodElems.add(*r);
             }
@@ -297,14 +194,14 @@ namespace {
           RooArgList nps;
           std::vector<double> low;
           std::vector<double> high;
-          for(auto sys:p["overallSystematics"].children()){
-            std::string sysname(::name(sys));
-            std::string parname( sys.has_child("parameter") ? ::name(sys["parameter"]) : "alpha_"+sysname);
+          for(const auto& sys:p["overallSystematics"].children()){
+            std::string sysname(RooJSONFactoryWSTool::name(sys));
+            std::string parname( sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"]) : "alpha_"+sysname);
             RooAbsReal* par = this->getNP(tool,parname.c_str());
             RooAbsPdf* pdf = this->getConstraint(tool,sysname.c_str());
             nps.add(*par);
-            low.push_back(::val_d(sys["low"]));
-            high.push_back(::val_d(sys["high"]));
+            low.push_back(sys["low"].val_float());
+            high.push_back(sys["high"].val_float());
           }
           RooStats::HistFactory::FlexibleInterpVar* v = new RooStats::HistFactory::FlexibleInterpVar(("overallSys_"+name).c_str(),("overallSys_"+name).c_str(),nps,1.,low,high);
           prodElems.addOwned(*v);
@@ -313,17 +210,17 @@ namespace {
           RooArgList nps;
           RooArgList low;
           RooArgList high;            
-          for(auto sys:p["histogramSystematics"].children()){
-            std::string sysname(::name(sys));
-            std::string parname( sys.has_child("parameter") ? ::name(sys["parameter"]) : "alpha_"+sysname);            
+          for(const auto& sys:p["histogramSystematics"].children()){
+            std::string sysname(RooJSONFactoryWSTool::name(sys));
+            std::string parname( sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"]) : "alpha_"+sysname);            
             RooAbsReal* par = this->getNP(tool,parname.c_str());
             RooAbsPdf* pdf = this->getConstraint(tool,sysname.c_str());            
             nps.add(*par);
             RooDataHist* dh_low = ::readData(tool->workspace(),p["dataLow"],sysname+"Low_"+name,prefix);
-            RooHistFunc hf_low((sysname+"Low_"+name).c_str(),::name(p).c_str(),*(dh_low->get()),*dh_low);              
+            RooHistFunc hf_low((sysname+"Low_"+name).c_str(),RooJSONFactoryWSTool::name(p).c_str(),*(dh_low->get()),*dh_low);              
             low.add(hf_low);
             RooDataHist* dh_high = ::readData(tool->workspace(),p["dataHigh"],sysname+"High_"+name,prefix);
-            RooHistFunc hf_high((sysname+"High_"+name).c_str(),::name(p).c_str(),*(dh_high->get()),*dh_high);              
+            RooHistFunc hf_high((sysname+"High_"+name).c_str(),RooJSONFactoryWSTool::name(p).c_str(),*(dh_high->get()),*dh_high);              
             high.add(hf_high);              
           }
           PiecewiseInterpolation* v = new PiecewiseInterpolation(("histoSys_"+name).c_str(),("histoSys_"+name).c_str(),*hf,nps,low,high,true);
@@ -338,21 +235,21 @@ namespace {
           tool->workspace()->import(*hf);
         }
       } catch (const std::runtime_error& e){
-        error("function '" + name + "' is of histogram type, but 'data' is not a valid definition. " + e.what() + ".");
+        RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but 'data' is not a valid definition. " + e.what() + ".");
       }
       return true;
     }
   };
   bool _roohistogramfactory = RooJSONFactoryWSTool::registerImporter("histogram",new RooHistogramFactory());
 
-  class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
-      std::string name(::name(p));
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+      std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList funcs;
       RooArgList coefs;
       if(!p.has_child("samples")){
-        error("no samples in '" + name + "', skipping.");
+        RooJSONFactoryWSTool::error("no samples in '" + name + "', skipping.");
       }
       tool->importFunctions(p["samples"]);      
       RooArgList constraints;
@@ -361,13 +258,12 @@ namespace {
       std::vector<std::string> usesStatError;
       double statErrorThreshold = 0;
       if(p.has_child("statError")){
-        auto staterr = p["statError"];
-        if(staterr.has_child("relThreshold")) statErrorThreshold = ::val_d(staterr["relThreshold"]);
-        //        std::string constraint = ::val_s(staterr["constraint"]);
+        auto& staterr = p["statError"];
+        if(staterr.has_child("relThreshold")) statErrorThreshold = staterr["relThreshold"].val_float();
         std::vector<double> relValues;
         if(staterr.has_child("stack")){
-          for(auto comp:staterr["stack"]){
-            std::string elem = ::name(comp);
+          for(const auto& comp:staterr["stack"].children()){
+            std::string elem = RooJSONFactoryWSTool::name(comp);
             usesStatError.push_back(elem);
           }
         }
@@ -376,38 +272,30 @@ namespace {
       std::vector<double> sumW2;
       std::vector<std::string> obsnames;
       std::vector<std::string> sysnames;            
-      for(const auto& comp:p["samples"]){
+      for(const auto& comp:p["samples"].children()){
         std::string fprefix;
-        std::string fname(::name(comp));
-        c4::yml::NodeRef def;
-        if(comp.is_container()){
-          def = comp;
-        } else if(p.has_child("functions")){
-          auto funcdefs = p["functions"];
-          if(funcdefs.has_child(c4::to_csubstr(fname.c_str()))){
-            def = funcdefs[c4::to_csubstr(fname.c_str())];
-          }
-        }
+        std::string fname(RooJSONFactoryWSTool::name(comp));
+        auto& def = comp.is_container() ? comp : p["functions"][fname.c_str()];
         fprefix = ::genPrefix(def,true);
-        if(::val_s(def["type"]) == "histogram"){
+        if(def["type"].val() == "histogram"){
           try {
             ::collectObsNames(def["data"],obsnames,name);
             if(def.has_child("overallSystematics"))  ::collectNames(def["overallSystematics"],sysnames);
             if(def.has_child("histogramSystematics"))::collectNames(def["histogramSystematics"],sysnames);                                
           } catch (const char* s){
-            error("function '" + name + "' unable to collect observables from function " + fname + ". " + s );
+            RooJSONFactoryWSTool::error("function '" + name + "' unable to collect observables from function " + fname + ". " + s );
           }
           if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
             try {              
               ::stackError(def["data"],sumW,sumW2);
             } catch (const char* s){                
-              error("function '" + name + "' unable to sum statError from function " + fname + ". " + s );
+              RooJSONFactoryWSTool::error("function '" + name + "' unable to sum statError from function " + fname + ". " + s );
             }                
           }
         }
         RooAbsReal* func = tool->workspace()->function((fprefix+fname).c_str());
         if(!func){
-          error("unable to obtain component '" + fprefix+fname + "' of '" + name + "'");
+          RooJSONFactoryWSTool::error("unable to obtain component '" + fprefix+fname + "' of '" + name + "'");
         }
         funcs.add(*func);
       }
@@ -415,7 +303,7 @@ namespace {
       for(auto& obsname:obsnames){
         RooRealVar* obs = tool->workspace()->var(obsname.c_str());
         if(!obs){
-          error("unable to obtain observable '" + obsname + "' of '" + name + "',");
+          RooJSONFactoryWSTool::error("unable to obtain observable '" + obsname + "' of '" + name + "',");
         }
         observables.add(*obs);
       }
@@ -445,8 +333,8 @@ namespace {
         phf = new ParamHistFunc(TString::Format("%s_mcstat",name.c_str()),"staterror",observables,gammas);
         phf->recursiveRedirectServers(observables);
       }
-      for(auto& comp:p["samples"]){
-        std::string fname(::name(comp));
+      for(auto& comp:p["samples"].children()){
+        std::string fname(RooJSONFactoryWSTool::name(comp));
         if(std::find(usesStatError.begin(),usesStatError.end(),fname) != usesStatError.end()){
           coefs.add(*phf);
         } else {
@@ -465,7 +353,7 @@ namespace {
         if(pdf){
           constraints.add(*pdf);
         } else {
-          error("unable to find constraint term '" + sysname + "'");
+          RooJSONFactoryWSTool::error("unable to find constraint term '" + sysname + "'");
         }
       }
       if(constraints.getSize() == 0){
@@ -485,13 +373,13 @@ namespace {
 }
 
 namespace {
-  class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
-    virtual bool exportObject(const RooAbsArg* func, c4::yml::NodeRef& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* func, TJSONNode& elem) const override {
       const RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar*>(func);
       elem["type"] << "interpolation0d";        
-      auto vars = elem["vars"];
-      vars |= c4::yml::SEQ;        
+      auto& vars = elem["vars"];
+      vars.set_seq();
       for(const auto& v:fip->variables()){
         vars.append_child() << v->GetName();
       }
@@ -514,7 +402,7 @@ namespace {
       return false;
   }
   
-  class HistFactoryStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  class HistFactoryStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
     bool autoExportDependants() const override { return false; }
     void collectElements(RooArgSet& elems, RooProduct* prod) const {
@@ -526,7 +414,7 @@ namespace {
         }
       }
     }
-    bool tryExport(const RooProdPdf* prodpdf, c4::yml::NodeRef& elem) const {
+    bool tryExport(const RooProdPdf* prodpdf, TJSONNode& elem) const {
       std::string chname(prodpdf->GetName());
       if(chname.find("model_") == 0){
         chname = chname.substr(6);
@@ -549,43 +437,43 @@ namespace {
       }
       // this seems to be ok
       elem["type"] << "histfactory";
-      auto samples = elem["samples"];
-      samples |= c4::yml::MAP;
+      auto& samples = elem["samples"];
+      samples.set_map();
       for(const auto& sample:sumpdf->funcList()){
         std::string samplename = sample->GetName();
         if(samplename.find("L_x_") == 0) samplename = samplename.substr(4);
         auto end = samplename.find("_"+chname);
         if(end < samplename.size()) samplename = samplename.substr(0,end);
-        auto s = samples[c4::to_csubstr(RooJSONFactoryWSTool::incache(samplename))];
-        s |= c4::yml::MAP;
+        auto& s = samples[samplename];
+        s.set_map();
         s["type"] << "histogram";        
         RooProduct* prod = dynamic_cast<RooProduct*>(sample);
         RooArgSet elems;
         collectElements(elems,prod);
         for(const auto& e:elems){
           if(e->InheritsFrom(RooRealVar::Class())){
-            auto norms = s["normFactors"];
-            norms |= c4::yml::SEQ;
+            auto& norms = s["normFactors"];
+            norms.set_seq();
             norms.append_child() << e->GetName();
           } else if(e->InheritsFrom(RooHistFunc::Class())){
-            auto data = s["data"];
+            auto& data = s["data"];
             const RooHistFunc* hf = static_cast<const RooHistFunc*>(e);
             const RooDataHist& dh = hf->dataHist();            
             RooArgList vars(*dh.get());
-            TH1* hist = hf->createHistogram(::concat(&vars).c_str());
-            RooJSONFactoryWSTool::exportHistogram(*hist,data,::names(&vars));
+            TH1* hist = hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str());
+            RooJSONFactoryWSTool::exportHistogram(*hist,data,RooJSONFactoryWSTool::names(&vars));
             delete hist;
           } else if(e->InheritsFrom(RooStats::HistFactory::FlexibleInterpVar::Class())){
             const RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar*>(e);
-            auto systs = s["overallSystematics"];
-            systs |= c4::yml::MAP;            
+            auto& systs = s["overallSystematics"];
+            systs.set_map();
             for(size_t i=0; i<fip->variables().size(); ++i){
               std::string sysname(fip->variables().at(i)->GetName());
               if(sysname.find("alpha_") == 0){
                 sysname = sysname.substr(6);
               }
-              auto sys = systs[c4::to_csubstr(RooJSONFactoryWSTool::incache(sysname))];
-              sys |= c4::yml::MAP;                          
+              auto& sys = systs[sysname];
+              sys.set_map();                          
               sys["low"] << fip->low()[i];
               sys["high"] << fip->high()[i];
             }
@@ -597,14 +485,14 @@ namespace {
       return true;
     }
     
-    virtual bool exportObject(const RooAbsArg* p, c4::yml::NodeRef& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* p, TJSONNode& elem) const override {
       const RooProdPdf* prodpdf = static_cast<const RooProdPdf*>(p);
       if(tryExport(prodpdf,elem)){
         return true;
       }
       elem["type"] << "pdfprod";        
-      auto factors = elem["factors"];
-      factors |= c4::yml::SEQ;        
+      auto& factors = elem["factors"];
+      factors.set_seq();        
       for(const auto& v:prodpdf->pdfList()){
         factors.append_child() << v->GetName();
       }
@@ -615,4 +503,4 @@ namespace {
 }
 
 
-#endif
+

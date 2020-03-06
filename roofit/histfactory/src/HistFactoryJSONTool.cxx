@@ -1,103 +1,51 @@
-#ifdef INCLUDE_RYML
-#include <ryml.hpp>
-#include <c4/yml/std/map.hpp>
-#include <c4/yml/std/string.hpp>
 #include "RooStats/RooJSONFactoryWSTool.h"
 #include "RooStats/HistFactory/HistFactoryJSONTool.h"
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
-namespace RooStats { namespace HistFactory {
-    void read(c4::yml::NodeRef const& n, PreprocessFunction *v)
-    {
-      std::string name;
-      std::string expression;
-      std::string dependents;
-      std::string command;   
-
-      n["name"]       >> name;      
-      n["expression"] >> expression;
-      n["dependents"] >> dependents;
-      n["command"]    >> command;   
-      
-      v->SetName      (name      );
-      v->SetExpression(expression);
-      v->SetDependents(dependents);
-      v->SetCommand   (command   );
-    }
-    
-    void write(c4::yml::NodeRef *n, PreprocessFunction const& v)
-    {
-      *n |= c4::yml::MAP;
-
-      auto ch = n->append_child();
-      ch["name"] << v.GetName();
-      ch["expression"] << v.GetExpression();
-      ch["dependents"] << v.GetDependents();
-      ch["command"] << v.GetCommand();
-    }
-  }
-}
-
-//namespace c4 { namespace yml {
-//    template<class T> void read(NodeRef const& n, std::vector<T> *v){
-//      for(size_t i=0; i<n.num_children(); ++i){
-//        std::string e;
-//        n[i]>>e;
-//        v->push_back(e);
-//      }
-//    }
-//    
-//    template<class T> void write(NodeRef *n, std::vector<T> const& v){
-//      *n |= c4::yml::SEQ;
-//      for(auto e:v){
-//        n->append_child() << e;
-//      }
-//    }
-//  }
-//}
+#include "RooStats/JSONInterface.h"
+#include "RooStats/RYMLParser.h"
 
 RooStats::HistFactory::JSONTool::JSONTool( RooStats::HistFactory::Measurement* m ) : _measurement(m) {};
 
-template<> void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample& sample, c4::yml::NodeRef& n) const {
+void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample& sample, TJSONNode& s) const {
   std::vector<std::string> obsnames;
   obsnames.push_back("obs_x_"+sample.GetChannelName());
   obsnames.push_back("obs_y_"+sample.GetChannelName());
   obsnames.push_back("obs_z_"+sample.GetChannelName());
   
-  auto s = n[c4::to_csubstr(RooJSONFactoryWSTool::incache(sample.GetName()))];
-  s |= c4::yml::MAP;
+  s.set_map();
   s["type"] << "histogram";
   
   if(sample.GetOverallSysList().size() > 0){
-    auto overallSys = s["overallSystematics"];
-    overallSys |= c4::yml::MAP;
+    auto& overallSys = s["overallSystematics"];
+    overallSys.set_map();
     for(const auto& sys:sample.GetOverallSysList()){
-      auto node = overallSys[c4::to_csubstr(sys.GetName())];
-      node |= c4::yml::MAP;        
+      auto& node = overallSys[sys.GetName()];
+      node.set_map();
       node["low"] << sys.GetLow();
       node["high"] << sys.GetHigh();
     }
   }
 
   if(sample.GetNormFactorList().size()>0){
-    auto normFactors = s["normFactors"];
-    normFactors |= c4::yml::SEQ;
+    auto& normFactors = s["normFactors"];
+    normFactors.set_seq();
     for(auto& sys:sample.GetNormFactorList()){
       normFactors.append_child() << sys.GetName();
     }
   }
 
   if(sample.GetHistoSysList().size()>0){
-    auto histoSys = s["histogramSystematics"];
-    histoSys |= c4::yml::MAP;
+    auto& histoSys = s["histogramSystematics"];
+    histoSys.set_map();
     for(size_t i=0; i<sample.GetHistoSysList().size(); ++i){
-      auto sys = sample.GetHistoSysList()[i];
-      auto node = histoSys[c4::to_csubstr(sys.GetName())];
-      node |= c4::yml::MAP;        
-      auto dataLow = node["dataLow"];
-      auto dataHigh = node["dataHigh"];          
+      auto& sys = sample.GetHistoSysList()[i];
+      auto& node = histoSys[sys.GetName()];
+      node.set_map();
+      auto& dataLow = node["dataLow"];
+      auto& dataHigh = node["dataHigh"];          
       RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoLow()),dataLow,obsnames);
       RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoHigh()),dataHigh,obsnames);                    
     }
@@ -106,41 +54,40 @@ template<> void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFact
   // std::vector< RooStats::HistFactory::ShapeSys >    fShapeSysList;
   // std::vector< RooStats::HistFactory::ShapeFactor > fShapeFactorList;
   
-  auto tags = s["dict"];
-  tags |= c4::yml::MAP;      
+  auto& tags = s["dict"];
+  tags.set_map();
   tags["normalizeByTheory"] << sample.GetNormalizeByTheory();
   tags["statErrorActivate"] << sample.HasStatError();
 
-  auto data = s["data"];
+  auto& data = s["data"];
   RooJSONFactoryWSTool::exportHistogram(*sample.GetHisto(),data,obsnames);
 }
 
 
-template<> void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Channel& c, c4::yml::NodeRef& n) const {
-  auto ch = n[c4::to_csubstr(RooJSONFactoryWSTool::incache(c.GetName()))];
-  ch |= c4::yml::MAP;
+void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Channel& c, TJSONNode& ch) const {
+  ch.set_map();
   ch["type"] << "histfactory";      
   
-  auto staterr = ch["statError"];
-  staterr |= c4::yml::MAP;
+  auto& staterr = ch["statError"];
+  staterr.set_map();
   staterr["relThreshold"] << c.GetStatErrorConfig().GetRelErrorThreshold();      
   staterr["constraint"] <<RooStats::HistFactory::Constraint::Name(c.GetStatErrorConfig().GetConstraintType());
-  auto stack = staterr["stack"];
-  stack |= c4::yml::SEQ;      
+  auto& stack = staterr["stack"];
+  stack.set_seq();
   
-  auto samples = ch["samples"];
-  samples |= c4::yml::MAP;
+  auto& samples = ch["samples"];
+  samples.set_map();
   for(const auto& s:c.GetSamples()){
-    this->Export(s,samples);
-    auto ns = samples.last_child()["namespaces"];
-    ns |= c4::yml::SEQ;
+    auto& sample = samples[s.GetName()];
+    this->Export(s,sample);
+    auto& ns = sample["namespaces"];
+    ns.set_seq();
     ns.append_child() << c.GetName();
     stack.append_child() << s.GetName();
   }
 }
 
-template<> void RooStats::HistFactory::JSONTool::Export(c4::yml::NodeRef& n) const {
-  RooJSONFactoryWSTool::clearcache();
+void RooStats::HistFactory::JSONTool::Export(TJSONNode& n) const {
   for(const auto& ch:this->_measurement->GetChannels()){
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }
@@ -148,8 +95,8 @@ template<> void RooStats::HistFactory::JSONTool::Export(c4::yml::NodeRef& n) con
   //   auto parlist = n["variables"];
   //   parlist |= c4::yml::MAP;
 
-  auto pdflist = n["pdfs"];
-  pdflist |= c4::yml::MAP;
+  auto& pdflist = n["pdfs"];
+  pdflist.set_map();
 
   // collect information
   std::map<std::string,RooStats::HistFactory::Constraint::Type> constraints;
@@ -246,37 +193,45 @@ template<> void RooStats::HistFactory::JSONTool::Export(c4::yml::NodeRef& n) con
   //  }
 
   if(this->_measurement->GetFunctionObjects().size() > 0){
-    auto funclist = n["functions"];
-    funclist |= c4::yml::MAP;    
-    funclist << this->_measurement->GetFunctionObjects();
+    auto& funclist = n["functions"];
+    funclist.set_map();
+    for(const auto& func:this->_measurement->GetFunctionObjects()){
+      auto& f = funclist[func.GetName()];
+      f.set_map();
+      f["name"] << func.GetName();
+      f["expression"] << func.GetExpression();
+      f["dependents"] << func.GetDependents();
+      f["command"] << func.GetCommand();      
+    }
   }
-
+    
   // and finally, the simpdf
   
-  auto sim = pdflist[c4::to_csubstr(this->_measurement->GetName())];
-  sim |= c4::yml::MAP;
+  auto& sim = pdflist[this->_measurement->GetName()];
+  sim.set_map();
   sim["type"] << "simultaneous";
-  auto simdict = sim["dict"];
-  simdict |= c4::yml::MAP;  
+  auto& simdict = sim["dict"];
+  simdict.set_map();
   simdict["InterpolationScheme"] << this->_measurement->GetInterpolationScheme();
-  auto simtags = sim["tags"];
-  simtags |= c4::yml::SEQ;
+  auto& simtags = sim["tags"];
+  simtags.set_seq();
   simtags.append_child() << "toplevel";
-  auto ch = sim["channels"];
-  ch |= c4::yml::MAP;  
+  auto& ch = sim["channels"];
+  ch.set_map();
   for(const auto& c:this->_measurement->GetChannels()){
-    this->Export(c,ch);
+    auto& thisch = ch[c.GetName()];
+    this->Export(c,thisch);
   }
 }
-#endif
 
 void RooStats::HistFactory::JSONTool::PrintJSON( std::ostream& os ) {
 #ifdef INCLUDE_RYML  
-  ryml::Tree t;
-  c4::yml::NodeRef n = t.rootref();
-  n |= c4::yml::MAP;
+  TRYMLParser p;
+  p.clearcache();  
+  auto& n = p.rootnode();
+  n.set_map();
   this->Export(n);
-  os << c4::yml::as_json(t);
+  n.writeJSON(os);
 #else
   std::cerr << "JSON export only support with rapidyaml!" << std::endl;
 #endif
@@ -287,12 +242,13 @@ void RooStats::HistFactory::JSONTool::PrintJSON( std::string filename ) {
 }
 
 void RooStats::HistFactory::JSONTool::PrintYAML( std::ostream& os ) {
-#ifdef INCLUDE_RYML  
-  ryml::Tree t;
-  c4::yml::NodeRef n = t.rootref();
-  n |= c4::yml::MAP;
+#ifdef INCLUDE_RYML
+  TRYMLParser p;
+  p.clearcache();
+  auto& n = p.rootnode();
+  n.set_map();
   this->Export(n);
-  os << t;
+  n.writeYML(os);  
 #else
   std::cerr << "YAML export only support with rapidyaml!" << std::endl;
 #endif

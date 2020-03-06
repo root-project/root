@@ -6,108 +6,29 @@
 #include <RooCategory.h>
 #include <RooHistFunc.h>
 
-
+#include <RooStats/JSONInterface.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // individually implemented importers
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef INCLUDE_RYML
-#include <ryml.hpp>
-#include <c4/yml/std/map.hpp>
-#include <c4/yml/std/string.hpp>
-
 namespace {
-  // error handling helpers
-  void error(const char* s){
-    throw std::runtime_error(s);
-  }
-  void error(const std::string& s){
-    throw std::runtime_error(s);
-  }
-  inline std::string name(const c4::yml::NodeRef& n){
-    std::stringstream ss;
-    if(n.has_key()){
-      ss << n.key();
-    } else if(n.is_container()){
-      if(n.has_child("name")){
-        ss << n["name"].val();
-      }
-    } else {
-      ss << n.val();
-    }
-    return ss.str();    
-  }
-  inline std::string val_s(const c4::yml::NodeRef& n){
-    std::stringstream ss;    
-    ss << n.val();
-    return ss.str();
-  }
-  inline double val_d(const c4::yml::NodeRef& n){
-    float d;
-    c4::atof(n.val(),&d);
-    return d;    
-  }
-  inline int val_i(const c4::yml::NodeRef& n){
-    int i;
-    c4::atoi(n.val(),&i);
-
-    return i;
-  }
-  inline bool val_b(const c4::yml::NodeRef& n){
-    int i;
-    c4::atoi(n.val(),&i);
-    return i;
-  }
-  template<class T> static std::string concat(const T* items, const std::string& sep=",") {
-    // Returns a string being the concatenation of strings in input list <items>
-    // (names of objects obtained using GetName()) separated by string <sep>.
-    bool first = true;
-    std::string text;
-    
-    // iterate over strings in list
-    for(auto it:*items){
-      if (!first) {
-        // insert separator string
-        text += sep;
-      } else {
-        first = false;
-      }
-      if(!it) text+="NULL";
-      else text+=it->GetName();
-    }
-    return text;
-  }
-  template<class T> static std::vector<std::string> names(const T* items) {
-    // Returns a string being the concatenation of strings in input list <items>
-    // (names of objects obtained using GetName()) separated by string <sep>.
-    std::vector<std::string> names;
-    // iterate over strings in list
-    for(auto it:*items){
-      if(!it) names.push_back("NULL");
-      else names.push_back(it->GetName());
-    }
-    return names;
-  }
-}
-
-namespace {
-  class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
-      std::string name(::name(p));
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+      std::string name(RooJSONFactoryWSTool::name(p));
       RooArgSet factors;
       if(!p.has_child("factors")){
-        error("no pdfs of '" + name + "'");
+        RooJSONFactoryWSTool::error("no pdfs of '" + name + "'");
       }
       if(!p["factors"].is_seq()){
-        error("pdfs '" + name + "' are not a list.");
+        RooJSONFactoryWSTool::error("pdfs '" + name + "' are not a list.");
       }      
-      for(auto comp:p["factors"].children()){
-        std::string pdfname(::val_s(comp));
+      for(const auto& comp:p["factors"].children()){
+        std::string pdfname(comp.val());
         RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
-          error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+          RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
         }
         factors.add(*pdf);
       }
@@ -118,37 +39,37 @@ namespace {
   };
   bool _rooprodpdffactory = RooJSONFactoryWSTool::registerImporter("pdfprod",new RooProdPdfFactory());
 
-  class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
-      std::string name(::name(p));
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+      std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList pdfs;
       RooArgList coefs;      
       if(!p.has_child("summands")){
-        error("no summands of '" + name + "'");
+        RooJSONFactoryWSTool::error("no summands of '" + name + "'");
       }
       if(!p["summands"].is_seq()){
-        error("summands '" + name + "' are not a list.");
+        RooJSONFactoryWSTool::error("summands '" + name + "' are not a list.");
       }      
       if(!p.has_child("coefficients")){
-        error("no coefficients of '" + name + "'");
+        RooJSONFactoryWSTool::error("no coefficients of '" + name + "'");
       }
       if(!p["coefficients"].is_seq()){
-        error("coefficients '" + name + "' are not a list.");
+        RooJSONFactoryWSTool::error("coefficients '" + name + "' are not a list.");
       }      
-      for(auto comp:p["summands"].children()){
-        std::string pdfname(::val_s(comp));
+      for(const auto& comp:p["summands"].children()){
+        std::string pdfname(comp.val());
         RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
-          error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+          RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
         }
         pdfs.add(*pdf);
       }
-      for(auto comp:p["coefficients"].children()){
-        std::string coefname(::val_s(comp));
+      for(const auto& comp:p["coefficients"].children()){
+        std::string coefname(comp.val());
         RooAbsArg* coef = tool->workspace()->arg(coefname.c_str());
         if(!coef){
-          error("unable to obtain component '" + coefname + "' of '" + name + "'.");
+          RooJSONFactoryWSTool::error("unable to obtain component '" + coefname + "' of '" + name + "'.");
         }
         coefs.add(*coef);
       }      
@@ -160,22 +81,22 @@ namespace {
   bool _rooaddpdffactory = RooJSONFactoryWSTool::registerImporter("pdfsum",new RooAddPdfFactory());  
 
   
-  class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer<c4::yml::NodeRef> {
+  class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const c4::yml::NodeRef& p) const override {
-      std::string name(::name(p));
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+      std::string name(RooJSONFactoryWSTool::name(p));
       if(!p.has_child("channels")){
-        error("no channel components of '" + name + "'");
+        RooJSONFactoryWSTool::error("no channel components of '" + name + "'");
       }
       tool->importPdfs(p["channels"]);
       std::map< std::string, RooAbsPdf *> components;
       RooCategory cat("channelCat","channelCat");
-      for(auto comp:p["channels"]){
-        std::string catname(::name(comp));
-        std::string pdfname(comp.has_val() ? ::val_s(comp) : ::name(comp));
+      for(const auto& comp:p["channels"].children()){
+        std::string catname(RooJSONFactoryWSTool::name(comp));
+        std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
         RooAbsPdf* pdf = tool->workspace()->pdf(pdfname.c_str());
         if(!pdf){
-          error("unable to obtain component '" + pdfname + "' of '" + name + "'");
+          RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'");
         }
         components[catname] = pdf;
         cat.defineType(catname.c_str());
@@ -193,39 +114,41 @@ namespace {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
-    virtual bool exportObject(const RooAbsArg* func, c4::yml::NodeRef& elem) const override {
+    bool autoExportDependants() const override { return false; }    
+    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* func, TJSONNode& elem) const override {
       const RooSimultaneous* sim = static_cast<const RooSimultaneous*>(func);
       elem["type"] << "simultaneous";
-      auto channels = elem["channels"];
-      channels |= c4::yml::MAP;
+      auto& channels = elem["channels"];
+      channels.set_map();
       const auto& indexCat = sim->indexCat();
       for(const auto& cat:indexCat){
         RooAbsPdf* pdf = sim->getPdf(cat->GetName());
-        if(!pdf) throw std::runtime_error("no pdf found for category");
-        channels[c4::to_csubstr(cat->GetName())] << pdf->GetName();
+        if(!pdf) RooJSONFactoryWSTool::error("no pdf found for category");
+        auto& ch = channels[cat->GetName()];
+        tool->exportObject(pdf,ch);
       }
       return true;
     }
   };
   bool _roosimultaneousstreamer = RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(),new RooSimultaneousStreamer());
 
-  class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter<c4::yml::NodeRef> {
+  class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
-    virtual bool exportObject(const RooAbsArg* func, c4::yml::NodeRef& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg* func, TJSONNode& elem) const override {
       const RooHistFunc* hf = static_cast<const RooHistFunc*>(func);
       const RooDataHist& dh = hf->dataHist();
       elem["type"] << "histogram";
       RooArgList vars(*dh.get());
-      TH1* hist = hf->createHistogram(::concat(&vars).c_str());
-      auto data = elem["data"];
-      RooJSONFactoryWSTool::exportHistogram(*hist,data,::names(&vars));
+      TH1* hist = hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str());
+      auto& data = elem["data"];
+      RooJSONFactoryWSTool::exportHistogram(*hist,data,RooJSONFactoryWSTool::names(&vars));
       delete hist;
       return true;
     }
   };
   bool _roohistfuncstreamer = RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(),new RooHistFuncStreamer());
 }
-#endif
+
 
