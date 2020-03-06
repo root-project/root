@@ -1481,7 +1481,7 @@ if(tmva)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
   endif()
 
-  if(python AND tmva-pymva)
+  if(tmva-pymva)
     if(fail-on-missing AND NOT NUMPY_FOUND)
       message(FATAL_ERROR "TMVA: numpy python package not found and tmva-pymva component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
