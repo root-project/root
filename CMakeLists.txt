@@ -450,9 +450,8 @@ install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INS
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
-add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
+add_custom_target(version COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-#add_dependencies(version root.exe)
 endif()
 
 #---distribution commands------------------------------------------------------------------------
