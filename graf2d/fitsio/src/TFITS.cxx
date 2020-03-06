@@ -84,7 +84,6 @@ several methods to manage them.
 #include "TMath.h"
 
 #include "fitsio.h"
-#include <iostream>
 #include <stdlib.h>
 
 ClassImp(TFITSHDU);
@@ -192,11 +191,17 @@ void TFITSHDU::_release_resources()
                   for (Int_t row = 0; row < fNRows; row++) {
                      delete [] fCells[offset+row].fString;
                   }
-               } else if (fColumnsInfo[i].fType == kRealVector) {
+               } else if (fColumnsInfo[i].fType == kRealArray) {
                   //Deallocate character arrays allocated for kString columns
                   Int_t offset = i * fNRows;
                   for (Int_t row = 0; row < fNRows; row++) {
-                     delete [] fCells[offset+row].fRealVector;
+                     delete [] fCells[offset+row].fRealArray;
+                  }
+               } else if (fColumnsInfo[i].fType == kRealVector) {
+                  // Deallocate character arrays allocated for variable-length array columns
+                  Int_t offset = i * fNRows;
+                  for (Int_t row = 0; row < fNRows; row++) {
+                     delete fCells[offset + row].fRealVector;
                   }
                }
             }
@@ -282,7 +287,8 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
 
    //Read HDU's data
    if (fType == kImageHDU) {
-      //Image
+      Info("LoadHDU", "The selected HDU contains an Image Extension");
+
       int param_ndims=0;
       long *param_dimsizes;
 
@@ -339,7 +345,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
          fPixels = new TArrayD();
       }
    } else {
-      // Table
+      Info("LoadHDU", "The selected HDU contains a Table Extension");
 
       // Get table's number of rows and columns
       long table_rows;
@@ -389,11 +395,10 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                                    || (typecode == TFLOAT) || (typecode == TLOGICAL) || (typecode == TBIT)
                                    || (typecode == TBYTE)  || (typecode == TSTRING)) {
 
-            fColumnsInfo[colnum].fType = (typecode == TSTRING) ? kString : kRealNumber;
-            fColumnsInfo[colnum].fVariable = kFALSE;
-
             if (typecode == TSTRING) {
-               // String column
+               // this column contains strings
+               fColumnsInfo[colnum].fType = kString;
+
                int dispwidth=0;
                fits_get_col_display_width(fp, colnum+1, &dispwidth, &status);
                if (status) goto ERR;
@@ -429,7 +434,6 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                   }
                }
 
-
                //Save values
                for (long row = 0; row < table_rows; row++) {
                   fCells[cellindex++].fString = array[row];
@@ -439,7 +443,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
 
 
             } else {
-               //Numeric or vector column
+               // this column contains either a number or a fixed-length array
                double nulval = 0;
                int anynul=0;
 
@@ -478,7 +482,8 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
 
                // Save values
                if (repeat == 1) {
-                  // Scalar
+                  // this column contains scalars
+                  fColumnsInfo[colnum].fType = kRealNumber;
                   if (typecode == TLOGICAL) {
                      for (long row = 0; row < table_rows; row++) {
                         int temp = (signed char)arrayl[row];
@@ -492,7 +497,8 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                      delete[] array;
                   }
                } else if (repeat > 1) {
-                  // Vector
+                  // this column contains fixed-length arrays
+                  fColumnsInfo[colnum].fType = kRealArray;
                   if (typecode == TLOGICAL) {
                      for (long row = 0; row < table_rows; row++) {
                         double *vec = new double[repeat];
@@ -501,7 +507,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                            int temp = (signed char)arrayl[offset++];
                            vec[component] = (double)temp;
                         }
-                        fCells[cellindex++].fRealVector = vec;
+                        fCells[cellindex++].fRealArray = vec;
                      }
                      delete[] arrayl;
                   } else {
@@ -511,22 +517,23 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                         for (long component = 0; component < repeat; component++) {
                            vec[component] = array[offset++];
                         }
-                        fCells[cellindex++].fRealVector = vec;
+                        fCells[cellindex++].fRealArray = vec;
                      }
                      delete[] array;
                   }
                }
             }
          } else if (typecode < 1) {
-            Info("LoadHDU", "Variable-Length Arrays encountered in %s column", fColumnsInfo[colnum].fName.Data());
-            
+            // this column contains variable-length arrays
             fColumnsInfo[colnum].fType = kRealVector;
-            fColumnsInfo[colnum].fVariable = kTRUE;
 
-            fColumnsInfo[colnum].fRowStart.assign(table_rows+1, 0);
-            fColumnsInfo[colnum].fVarLengths.assign(table_rows, 0);
+            // null variables needed by the fits_read_col
+            double nulval = 0;
+            int anynul=0;
             
             // loop over rows to derive the total memory requirement
+            fColumnsInfo[colnum].fRowStart.assign(table_rows+1, 0);
+            fColumnsInfo[colnum].fVarLengths.assign(table_rows, 0);
             fColumnsInfo[colnum].fRowStart[0] = 0;
 
             for (long row = 0; row < table_rows; row++) {
@@ -534,53 +541,54 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                long repeat = 0;
                
                fits_read_descript(fp, colnum+1, row+1, &repeat, &offset, &status);
-
+               // store the starting of each row and the number of elements it contains 
                fColumnsInfo[colnum].fRowStart[row+1] = fColumnsInfo[colnum].fRowStart[row] + repeat;
                fColumnsInfo[colnum].fVarLengths[row] = repeat;
             }
             
-            for (long row = 0; row < table_rows; row++) {
-               std::cout << "reading row: " << row+1 << "\n"; 
-               int anynul = 0;
-
-               // number of elements in the cell we want to read
-               int nelements = fColumnsInfo[colnum].fRowStart[row+1] - fColumnsInfo[colnum].fRowStart[row];
-
+           for (long row = 0; row < table_rows; row++) {
+               // number of elements in the cell we want to read, i.e.
+               // number of elements in the variable-length array
+               int nelements = fColumnsInfo[colnum].fRowStart[row + 1] - fColumnsInfo[colnum].fRowStart[row];
+               // size of the variable-length array
                const int size = fColumnsInfo[colnum].fVarLengths[row];
+               // vector to store the results
+               TArrayD *vec = new TArrayD(size);
+               // variable-length array have negative DATATYPE
                int abstype = TMath::Abs(typecode);
-               void* nulval=0;
-
-               // define the array to load the data
+             
+               // define the array to load the data with the CFITSIO functions
                // a fixed arrays is needed as argument to the fits_read_col function
-               // a new TYPE array[size] is therefore defined for each case and then
-               // passed to the ftis_read_col function
+               // so a new `TYPE array[size]` is defined for each case and then
+               // passed to the `fits_read_col` function
+               //
+               // TODO: add all type cases, for now only short, long, float and double are considered
+               //
                if (abstype == 21) {
                   short data[size];
-                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
-                  for (int i = 0; i < size; i++)
-                     std::cout << data[i] << " ";
-                  std::cout << "\n";
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++) 
+                     vec->SetAt(data[i], i);
                } else if (abstype == 41) {
                   int data[size];
-                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
-                  for (int i = 0; i < size; i++)
-                     std::cout << data[i] << " ";
-                  std::cout << "\n";
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++) 
+                     vec->SetAt(data[i], i);
                } else if (abstype == 42) {
                   float data[size];
-                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
-                  for (int i = 0; i < size; i++)
-                     std::cout << data[i] << " ";
-                  std::cout << "\n";
-               } else if (abstype == 82) {
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++) 
+                     vec->SetAt(data[i], i);
+              } else if (abstype == 82) {
                   double data[size];
-                  fits_read_col(fp, abstype, colnum+1, row+1, 1, nelements, nulval, data, &anynul, &status);
-                  for (int i = 0; i < size; i++)
-                     std::cout << data[i] << " ";
-                  std::cout << "\n";
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  for (int i = 0; i < size; i++) 
+                     vec->SetAt(data[i], i);
                } else {
-                  Error("LoadHDU", "The variable-length array type in column %d is unknown", colnum+1);
+                  Error("LoadHDU", "The variable-length array type in column %d is unknown", colnum + 1);
                }
+               // return the vector storing the results in the corresponding cell
+               fCells[cellindex++].fRealVector = vec;
             }
          } else {
             Warning("LoadHDU", "error opening FITS file. Column type %d is currently not supported", typecode);
@@ -759,7 +767,20 @@ void TFITSHDU::PrintColumnInfo(const Option_t *) const
    }
 
    for (Int_t i = 0; i < fNColumns; i++) {
-      printf("%-20s : %s\n", fColumnsInfo[i].fName.Data(), (fColumnsInfo[i].fType == kRealNumber) ? "REAL NUMBER" : "STRING");
+      switch (fColumnsInfo[i].fType){
+         case kString:
+            printf("%-20s : %s\n", fColumnsInfo[i].fName.Data(), "STRING");
+            break;
+         case kRealNumber:
+            printf("%-20s : %s\n", fColumnsInfo[i].fName.Data(), "REAL NUMBER");
+            break;
+         case kRealArray:
+            printf("%-20s : %s\n", fColumnsInfo[i].fName.Data(), "FIXED-LENGTH ARRAY");
+            break;
+         case kRealVector:
+            printf("%-20s : %s\n", fColumnsInfo[i].fName.Data(), "VARIABLE-LENGTH ARRAY");
+            break;
+      }
    }
 }
 
@@ -773,6 +794,19 @@ void TFITSHDU::PrintFullTable(const Option_t *) const
    if (fType != kTableHDU) {
       Warning("PrintColumnInfo", "this is not a table HDU.");
       return;
+   }
+
+   // check that the table does not contain fixed or variable length arrays
+   // in that case is not possible to print a flattened table
+   for (Int_t col = 0; col < fNColumns; col++){
+      if (fColumnsInfo[col].fType == kRealArray) {
+         Warning("PrintColumnInfo", "The table contains column with fixed-length arrays and cannot be flattened for printing.");
+         return;
+      }
+      else if (fColumnsInfo[col].fType == kRealVector) {
+         Warning("PrintColumnInfo", "The table contains column with variable-length arrays and cannot be flattened for printing.");
+         return;
+      }
    }
 
    // Dump header
@@ -792,7 +826,7 @@ void TFITSHDU::PrintFullTable(const Option_t *) const
       for (Int_t col = 0; col < fNColumns; col++) {
          if (fColumnsInfo[col].fType == kString) {
             printf("%-10s", fCells[col * fNRows + row].fString);
-         } else {
+         } else if (fColumnsInfo[col].fType == kRealNumber) {
             printed_chars = printf("%.2lg", fCells[col * fNRows + row].fRealNumber);
             printed_chars -= 10;
             while (printed_chars < 0) {
@@ -845,7 +879,6 @@ TImage *TFITSHDU::ReadAsImage(Int_t layer, TImagePalette *pal)
       Warning("ReadAsImage", "this is not an image HDU.");
       return 0;
    }
-
 
    if (((fSizes->GetSize() != 2) && (fSizes->GetSize() != 3) && (fSizes->GetSize() != 4)) || ((fSizes->GetSize() == 4) && (fSizes->GetAt(3) > 1))) {
       Warning("ReadAsImage", "could not convert image HDU to image because it has %d dimensions.", fSizes->GetSize());
@@ -1301,11 +1334,13 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(Int_t colnum)
       return 0;
    }
 
-   if (fColumnsInfo[colnum].fType != kRealNumber) {
-      Warning("GetTabRealVectorColumn", "attempting to read a column that is not of type 'kRealNumber'.");
+   if (fColumnsInfo[colnum].fType == kRealArray) {
+      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded fixed-length arrays");
+      Info("GetTabRealVectorColumn", "Use GetTabRealVectorCells() or GetTabRealVectorCell() instead.");
       return 0;
-   } else if (fColumnsInfo[colnum].fDim > 1) {
-      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded vectors, not real scalars. Use GetTabRealVectorCells() instead.");
+   } else if (fColumnsInfo[colnum].fType == kRealVector) {
+      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded variable-length arrays");
+      Info("GetTabRealVectorColumn", "Use GetTabVarLengthCell() instead.");
       return 0;
    }
 
@@ -1340,11 +1375,13 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(const char *colname)
       return 0;
    }
 
-   if (fColumnsInfo[colnum].fType != kRealNumber) {
-      Warning("GetTabRealVectorColumn", "attempting to read a column that is not of type 'kRealNumber'.");
+   if (fColumnsInfo[colnum].fType == kRealArray) {
+      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded fixed-length arrays");
+      Info("GetTabRealVectorColumn", "Use GetTabRealVectorCell() instead.");
       return 0;
-   } else if (fColumnsInfo[colnum].fDim > 1) {
-      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded vectors, not real scalars. Use GetTabRealVectorCells() instead.");
+   } else if (fColumnsInfo[colnum].fType == kRealVector) {
+      Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded variable-length arrays");
+      Info("GetTabRealVectorColumn", "Use GetTabVarLengthCell() instead.");
       return 0;
    }
 
@@ -1422,8 +1459,9 @@ TObjArray *TFITSHDU::GetTabRealVectorCells(Int_t colnum)
       return 0;
    }
 
-   if (fColumnsInfo[colnum].fType != kRealNumber) {
-      Warning("GetTabRealVectorCells", "attempting to read a column that is not of type 'kRealNumber'.");
+   if (fColumnsInfo[colnum].fType == kRealVector) {
+      Warning("GetTabRealVectorCells", "attempting to read a column whose cells have embedded variable-length arrays");
+      Info("GetTabRealVectorCells", "Use GetTabVarLengthCell() instead.");
       return 0;
    }
 
@@ -1434,7 +1472,7 @@ TObjArray *TFITSHDU::GetTabRealVectorCells(Int_t colnum)
 
    for (Int_t row = 0; row < fNRows; row++) {
       TVectorD *v = new TVectorD();
-      v->Use(dim, fCells[offset + row].fRealVector);
+      v->Use(dim, fCells[offset + row].fRealArray);
       res->Add(v);
    }
 
@@ -1466,7 +1504,7 @@ TObjArray *TFITSHDU::GetTabRealVectorCells(const char *colname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get a real vector embedded in a cell given by (row>=0, column>=0)
+/// Get a real array (with fixed or variable-length) embedded in a cell given by (row>=0, column>=0)
 
 TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, Int_t colnum)
 {
@@ -1484,15 +1522,15 @@ TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, Int_t colnum)
       Warning("GetTabRealVectorCell", "row index out of bounds.");
       return 0;
    }
-
-   if (fColumnsInfo[colnum].fType != kRealNumber) {
-      Warning("GetTabRealVectorCell", "attempting to read a column that is not of type 'kRealNumber'.");
+   
+   if (fColumnsInfo[colnum].fType == kRealVector) {
+      Warning("GetTabRealVectorCells", "attempting to read a column whose cells have embedded variable-length arrays");
+      Info("GetTabRealVectorCells", "Use GetTabVarLengthCell() instead.");
       return 0;
    }
 
    TVectorD *v = new TVectorD();
-   v->Use(fColumnsInfo[colnum].fDim, fCells[(colnum * fNRows) + rownum].fRealVector);
-
+   v->Use(fColumnsInfo[colnum].fDim, fCells[(colnum * fNRows) + rownum].fRealArray);
    return v;
 }
 
@@ -1516,7 +1554,6 @@ TVectorD *TFITSHDU::GetTabRealVectorCell(Int_t rownum, const char *colname)
    return GetTabRealVectorCell(rownum, colnum);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the name of a column given its index (column>=0).
 /// In case of error the column name is "".
@@ -1536,3 +1573,45 @@ const TString& TFITSHDU::GetColumnName(Int_t colnum)
    return fColumnsInfo[colnum].fName;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get the variable-length array contained in a cell given by (row>=0, column name)
+
+TArrayD *TFITSHDU::GetTabVarLengthVectorCell(Int_t rownum, Int_t colnum) {
+
+   if (fType != kTableHDU) {
+      Warning("GetTabVarLengthVectorCell", "this is not a table HDU.");
+      return 0;
+   }
+
+   if ((colnum < 0) || (colnum >= fNColumns)) {
+      Warning("GetTabVarLengthVectorCell", "column index out of bounds.");
+      return 0;
+   }
+
+   if ((rownum < 0) || (rownum >= fNRows)) {
+      Warning("GetTabVarLengthVectorCell", "row index out of bounds.");
+      return 0;
+   } 
+   
+   return fCells[(colnum * fNRows) + rownum].fRealVector;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the variable-length array contained in a cell given by (row>=0, column name)
+
+TArrayD *TFITSHDU::GetTabVarLengthVectorCell(Int_t rownum, const char *colname)
+{
+   if (fType != kTableHDU) {
+      Warning("GetTabVarLengthVectorCell", "this is not a table HDU.");
+      return 0;
+   }
+
+   Int_t colnum = GetColumnNumber(colname);
+
+   if (colnum == -1) {
+      Warning("GetTabVarLengthVectorCell", "column not found.");
+      return 0;
+   }
+
+   return GetTabVarLengthVectorCell(rownum, colnum);
+}
