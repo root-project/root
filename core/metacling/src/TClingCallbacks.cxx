@@ -288,6 +288,9 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
 bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/)
 {
+   if (::getenv("ROOT_DISABLE_GMI"))
+      return false;
+
    const CompilerInstance *CI = m_Interpreter->getCI();
    const LangOptions &LangOpts = CI->getPreprocessor().getLangOpts();
 
@@ -315,6 +318,10 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
       for (auto FileName : FoundModules) {
          StringRef ModuleName = llvm::sys::path::stem(*FileName);
          fIsLoadingModule = true;
+         if (gDebug > 2)
+            llvm::errs() << "Loading " << ModuleName << " on demand"
+                         << " for " << Name.getAsString() << "\n";
+
          m_Interpreter->loadModule(ModuleName);
          fIsLoadingModule = false;
          if (loadFirstMatchOnly)
