@@ -1578,10 +1578,14 @@ function(ROOT_ADD_PYUNITTESTS name)
 endfunction()
 
 #----------------------------------------------------------------------------
-# ROOT_ADD_PYUNITTEST( <name> <file>)
+# ROOT_ADD_PYUNITTEST( <name> <file>
+#                     [WILLFAIL]
+#                     [COPY_TO_BUILDDIR copy_file1 copy_file1 ...]
+#                     [ENVIRONMENT var1=val1 var2=val2 ...]
+#                     [DEPENDENCIES_FOUND dep_x_found dep_y_found ...])
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;ENVIRONMENT" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;ENVIRONMENT;DEPENDENCIES_FOUND" ${ARGN})
   set(ROOT_ENV ROOTSYS=${ROOTSYS}
       PATH=${ROOTSYS}/bin:$ENV{PATH}
       LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
@@ -1602,11 +1606,22 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(will_fail WILLFAIL)
   endif()
 
-  ROOT_ADD_TEST(pyunittests-${good_name}
+  set(dependencies ON)
+  if(DEFINED ARG_DEPENDENCIES_FOUND)
+      foreach(dep ${ARG_DEPENDENCIES_FOUND})
+      if(NOT ${dep})
+        set(dependencies FALSE)
+      endif()
+    endforeach()
+  endif()
+
+  if(dependencies)
+    ROOT_ADD_TEST(pyunittests-${good_name}
                 COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
                 ${copy_to_builddir}
                 ${will_fail})
+  endif()
 endfunction()
 
 #----------------------------------------------------------------------------
