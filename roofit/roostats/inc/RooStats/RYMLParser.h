@@ -5,25 +5,24 @@
 #ifdef INCLUDE_RYML
 #include <list>
 #include <istream>
+#include <memory>
 
-
-#include <ryml.hpp>
-#include <c4/yml/std/map.hpp>
-#include <c4/yml/std/string.hpp>
-#include <c4/yml/common.hpp>
-
-class TRYMLParser {
+class TRYMLTree {
  protected:
-  ryml::Tree tree;
+  class Impl;
+  std::unique_ptr<Impl> tree;
  public:
   class Node : public TJSONNode {
  protected:
-   c4::yml::NodeRef node;
+   TRYMLTree* tree;
+   class Impl;
+   friend TRYMLTree;
+   std::unique_ptr<Impl> node;
  public:
    virtual void writeJSON(std::ostream& os) const override;
    virtual void writeYML(std::ostream&) const override;
-   
-   Node(c4::yml::NodeRef n);
+
+   Node(TRYMLTree* t,const Impl& other);   
    Node(const Node& other);
    virtual Node& operator<< (std::string const& s) override ;
    virtual Node& operator<< (int i) override;
@@ -43,23 +42,25 @@ class TRYMLParser {
    virtual bool has_key() const override;
    virtual bool has_val() const override;  
    virtual bool has_child(std::string const&) const override;
-   virtual TJSONNode& append_child() override;     
+   virtual Node& append_child() override;     
    virtual size_t num_children() const override;
    virtual Node& child(size_t pos) override;
    virtual const Node& child(size_t pos) const override;
 
  };
+ 
  protected:
-  static std::list<std::string> _strcache;
-  static std::list<Node> _nodecache;
+  std::list<std::string> _strcache;
+  std::list<Node> _nodecache;
  public:
-  static Node& incache(const Node& n);
-  static const char* incache(const std::string& str);
-  static void clearcache();
+  Node& incache(const Node& n);
+  const char* incache(const std::string& str);
+  void clearcache();
   
  public:
-  TRYMLParser();  
-  TRYMLParser(std::istream& is);
+  TRYMLTree();
+  ~TRYMLTree();
+  TRYMLTree(std::istream& is);
   Node& rootnode();
 };
 

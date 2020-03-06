@@ -76,7 +76,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/UpperLimitMCSModule.h
     RooStats/RooJSONFactoryWSTool.h
     RooStats/JSONInterface.h
-    RooStats/RYMLParser.h               
+    RooStats/RYMLParser.h
+#    RooStats/JSONParser.h                   
   SOURCES
     src/AsymptoticCalculator.cxx
     src/BayesianCalculator.cxx
@@ -129,8 +130,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/UniformProposal.cxx
     src/UpperLimitMCSModule.cxx
     src/RooJSONFactoryWSTool.cxx
-    src/RYMLFactories.cxx
-    src/RYMLParser.cxx                   
+    src/JSONFactories.cxx
+    src/RYMLParser.cxx
+#    src/JSONParser.cxx                       
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

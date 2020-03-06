@@ -226,8 +226,7 @@ void RooStats::HistFactory::JSONTool::Export(TJSONNode& n) const {
 
 void RooStats::HistFactory::JSONTool::PrintJSON( std::ostream& os ) {
 #ifdef INCLUDE_RYML  
-  TRYMLParser p;
-  p.clearcache();  
+  TRYMLTree p;
   auto& n = p.rootnode();
   n.set_map();
   this->Export(n);
@@ -243,8 +242,7 @@ void RooStats::HistFactory::JSONTool::PrintJSON( std::string filename ) {
 
 void RooStats::HistFactory::JSONTool::PrintYAML( std::ostream& os ) {
 #ifdef INCLUDE_RYML
-  TRYMLParser p;
-  p.clearcache();
+  TRYMLTree p;
   auto& n = p.rootnode();
   n.set_map();
   this->Export(n);

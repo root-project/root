@@ -162,7 +162,7 @@ namespace {
 void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
   // load a yml file defining the factory expressions
   std::ifstream infile(fname);
-  TRYMLParser p(infile);
+  TRYMLTree p(infile);
   TJSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
     std::string key(::name(cl));
@@ -277,7 +277,7 @@ namespace {
 void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
   // load a yml file defining the export keys
   std::ifstream infile(fname);
-  TRYMLParser p(infile);
+  TRYMLTree p(infile);
   TJSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
     std::string classname(::name(cl));
@@ -752,11 +752,11 @@ void RooJSONFactoryWSTool::exportAll( TJSONNode& n) {
 
 Bool_t RooJSONFactoryWSTool::exportJSON( std::ostream& os ) {
   // export the workspace in JSON
-  TRYMLParser p;
+  TRYMLTree p;
   TJSONNode& n = p.rootnode();    
   n.set_map();
   this->exportAll(n);
-  n.writeYML(os);  
+  n.writeJSON(os);  
   return true;
 }
 Bool_t RooJSONFactoryWSTool::exportJSON( const char* filename ) {
@@ -767,7 +767,7 @@ Bool_t RooJSONFactoryWSTool::exportJSON( const char* filename ) {
 
 Bool_t RooJSONFactoryWSTool::exportYML( std::ostream& os ) {
   // export the workspace in YML
-  TRYMLParser p;
+  TRYMLTree p;
   TJSONNode& n = p.rootnode();    
   n.set_map();
   this->exportAll(n);
@@ -786,7 +786,7 @@ void RooJSONFactoryWSTool::prepare(){
 
 Bool_t RooJSONFactoryWSTool::importJSON( std::istream& is ) {
   // import a JSON file to the workspace
-  TRYMLParser p(is);
+  TRYMLTree p(is);
   TJSONNode& n = p.rootnode();  
   this->prepare();
   this->importDependants(n);
@@ -800,7 +800,7 @@ Bool_t RooJSONFactoryWSTool::importJSON( const char* filename ) {
 
 Bool_t RooJSONFactoryWSTool::importYML( std::istream& is ) {
   // import a YML file to the workspace  
-  TRYMLParser p(is);
+  TRYMLTree p(is);
   TJSONNode& n = p.rootnode();
   this->prepare();
   this->importDependants(n);  

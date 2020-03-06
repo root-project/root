@@ -63,7 +63,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/RooBarlowBeestonLL.cxx
     src/Sample.cxx
     src/Systematics.cxx
-    src/RYMLFactories.cxx
+    src/JSONFactories.cxx
     src/HistFactoryJSONTool.cxx                
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
