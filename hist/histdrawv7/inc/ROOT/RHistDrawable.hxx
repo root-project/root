@@ -86,6 +86,8 @@ private:
    RAttrLine  fAttrLine{this, "line_"};        ///<! line attributes
 
 public:
+   RHist1Drawable() = default;
+
    template <class HIST>
    RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
 
@@ -97,6 +99,8 @@ public:
 
 class RHist2Drawable final : public RHistDrawable<2> {
 public:
+   RHist2Drawable() = default;
+
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
 };

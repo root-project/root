@@ -50,6 +50,11 @@ private:
    /// Palette used to visualize user coordinates.
    RPalette fPalette;
 
+   RFrame(const RFrame &) = delete;
+   RFrame &operator=(const RFrame &) = delete;
+
+public:
+
    // Default constructor
    RFrame() : RDrawable("frame")
    {
@@ -58,11 +63,6 @@ private:
 
    /// Constructor taking user coordinate system, position and extent.
    explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
-
-   RFrame(const RFrame &) = delete;
-   RFrame &operator=(const RFrame &) = delete;
-
-public:
 
    const RAttrMargins &GetMargins() const { return fMargins; }
    RFrame &SetMargins(const RAttrMargins &margins) { fMargins = margins; return *this; }
