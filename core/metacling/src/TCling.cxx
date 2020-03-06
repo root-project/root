@@ -1122,7 +1122,63 @@ static GlobalModuleIndex *loadGlobalModuleIndex(SourceLocation TriggerLoc, cling
          RecreateIndex = true;
       }
       if (RecreateIndex) {
-         GlobalModuleIndex::writeIndex(CI.getFileManager(), CI.getPCHContainerReader(), ModuleIndexPath);
+         cling::Interpreter::PushTransactionRAII deserRAII(&interp);
+         clang::GlobalModuleIndex::UserDefinedInterestingIDs IDs;
+
+         struct DefinitionFinder : public RecursiveASTVisitor<DefinitionFinder> {
+            DefinitionFinder(clang::GlobalModuleIndex::UserDefinedInterestingIDs& IDs,
+                             clang::TranslationUnitDecl* TU) : DefinitionIDs(IDs) {
+               TraverseDecl(TU);
+            }
+            bool VisitNamedDecl(NamedDecl *ND) {
+               for (auto R : ND->redecls()) {
+                  if (!R->isFromASTFile())
+                     continue;
+                  if (TagDecl *TD = llvm::dyn_cast<TagDecl>(R)) {
+                     if (TD->isCompleteDefinition())
+                        Register(TD);
+                  } else if (NamespaceDecl *NSD = llvm::dyn_cast<NamespaceDecl>(R))
+                     Register(NSD, /*AddSingleEntry=*/ false);
+                  else if (TypedefNameDecl *TND = dyn_cast<TypedefNameDecl>(R))
+                     Register(TND);
+                  // FIXME: Add the rest...
+               }
+               return true; // continue decending
+            }
+         private:
+            clang::GlobalModuleIndex::UserDefinedInterestingIDs &DefinitionIDs;
+            void Register(NamedDecl* ND, bool AddSingleEntry = true) {
+               assert(ND->isFromASTFile());
+               // FIXME: All decls should have an owning module once rootcling
+               // updates its generated decls from within the LookupHelper & co.
+               if (!ND->hasOwningModule()) {
+#ifndef NDEBUG
+                  SourceManager &SM = ND->getASTContext().getSourceManager();
+                  SourceLocation Loc = ND->getLocation();
+                  const FileEntry *FE = SM.getFileEntryForID(SM.getFileID(Loc));
+                  (void)FE;
+                  assert(FE->getName().contains("input_line_"));
+#endif
+                  return;
+               }
+
+               Module *OwningModule = ND->getOwningModule()->getTopLevelModule();
+               assert(OwningModule);
+               if (AddSingleEntry && DefinitionIDs.count(ND->getName()))
+                  return;
+               // FIXME: The FileEntry in not stable to serialize.
+               // FIXME: We might end up with many times with the same module.
+               // FIXME: We might end up two modules containing a definition.
+               // FIXME: What do we do if no definition is found.
+               DefinitionIDs[ND->getName()].push_back(OwningModule->getASTFile());
+            }
+         };
+         DefinitionFinder defFinder(IDs, CI.getASTContext().getTranslationUnitDecl());
+
+         GlobalModuleIndex::writeIndex(CI.getFileManager(),
+                                       CI.getPCHContainerReader(),
+                                       ModuleIndexPath,
+                                       &IDs);
          ModuleManager->resetForReload();
          ModuleManager->loadGlobalIndex();
          GlobalIndex = ModuleManager->getGlobalIndex();
@@ -1171,19 +1227,27 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       LoadModules(CommonModules, clingInterp);
 
       // These modules should not be preloaded but they fix issues.
-      std::vector<std::string> FIXMEModules = {"Hist", "Gpad", "Graf",
-                                               "GenVector", "Smatrix", "Tree",
-                                               "TreePlayer", "Physics",
-                                               "Proof", "Geom"};
+      // FIXME: Hist is not a core module but is very entangled to MathCore and
+      // causes issues.
+      std::vector<std::string> FIXMEModules = {"Hist"};
       LoadModules(FIXMEModules, clingInterp);
 
       clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
+      // Conservatively enable platform by platform.
+      bool supportedPlatform = false;
+      // Allow forcefully enabling the GMI.
       const char *experimentalGMI = gSystem->Getenv("ROOT_EXPERIMENTAL_GMI");
-      if (experimentalGMI && strcmp(experimentalGMI,"false") != 0) {
+      if (experimentalGMI && strcmp(experimentalGMI,"false") != 0)
+         supportedPlatform = true;
+
+      if (supportedPlatform && !gSystem->Getenv("ROOT_DISABLE_GMI")) {
          loadGlobalModuleIndex(SourceLocation(), clingInterp);
+         // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
+         // We should investigate how to suppress it completely.
          GlobalIndex = CI.getModuleManager()->getGlobalIndex();
       }
+
       llvm::StringSet<> KnownModuleFileNames;
       if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
