@@ -10,7 +10,6 @@
 
 from ROOT import pythonization
 from libROOTPythonizations import AsRVec
-import numpy as np
 
 
 try:
@@ -21,6 +20,12 @@ except:
 
 
 def Compute(self, x):
+    # Import numpy lazily
+    try:
+        import numpy as np
+    except:
+        raise ImportError("Failed to import numpy during call of RBDT::Compute.")
+
     # numpy.array is a factory and the actual type of a numpy array is numpy.ndarray
     if isinstance(x, np.ndarray):
         if len(x.shape) == 1:
