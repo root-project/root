@@ -105,10 +105,6 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
-  # create egg with PyROOT info
-  set(ROOT_egg "${CMAKE_CURRENT_BINARY_DIR}/PyROOT.egg")
-  file(WRITE ${ROOT_egg} "PyROOT ${ROOT_VERSION}")
-
   foreach(py_source ${py_sources})
     install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")

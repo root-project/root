@@ -25,10 +25,6 @@ foreach(val RANGE ${how_many_pythons})
     install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
   endforeach()
-
-  # create egg with cppyy info
-  set(cppyy_egg "${CMAKE_CURRENT_BINARY_DIR}/cppyy.egg")
-  execute_process(COMMAND bash -c "touch ${cppyy_egg}; cat ${CMAKE_CURRENT_SOURCE_DIR}/python/cppyy/_version.py > ${cppyy_egg}")
 endforeach()
 
 file(COPY ${cppyyDirName} DESTINATION ${localruntimedir})
