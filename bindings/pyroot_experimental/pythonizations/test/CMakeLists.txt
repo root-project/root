@@ -9,7 +9,7 @@ ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
@@ -27,10 +27,10 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_attrsyntax_get_writeobject_open tfile_attrs
 file(COPY TreeHelper.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
 if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
 endif()
 
 # TH1 and subclasses pythonizations
@@ -81,17 +81,17 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops.py)
 
 # RVec and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
 endif()
 
 # RTensor pythonizations
 if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
 endif()
 
 # Passing Python callables to ROOT.TF
