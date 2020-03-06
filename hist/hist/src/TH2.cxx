@@ -768,21 +768,21 @@ void TH2::DoFitSlices(bool onX,
 
    //Loop on all bins in Y, generate a projection along X
    Int_t bin;
-   Long64_t nentries;
    // in case of sliding merge nstep=1, i.e. do slices starting for every bin
    // now do not slices case with overflow (makes more sense)
    // when fitting add the option "N". We don;t want to display and store the function
    // for the temporary histograms that are created and fitted
    opt += " n "; 
    for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
-      TH1D *hp;
+      TH1D *hp = nullptr;
       if (onX)
          hp= ProjectionX("_temp",bin,bin+ngroup-1,proj_opt);
       else
          hp= ProjectionY("_temp",bin,bin+ngroup-1,proj_opt);
       if (hp == 0) continue;
-      nentries = Long64_t(hp->GetEntries());
-      if (nentries == 0 || nentries < cut) {delete hp; continue;}
+      // nentries can be the effective entries and it could be a very small number but not zero!
+      Double_t nentries = hp->GetEntries();
+      if ( nentries <= 0 || nentries < cut) {delete hp; continue;}
       f1->SetParameters(parsave);
       hp->Fit(f1,opt.Data());
       Int_t npfits = f1->GetNumberFitPoints();
