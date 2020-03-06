@@ -752,7 +752,10 @@ void TObject::UseCurrentStyle()
 ///  is safer than kOverwrite but it is slower.
 ///  NOTE: Neither kOverwrite nor kWriteDelete reduces the size of a TFile--
 ///  the space is simply freed up to be overwritten; in the case of a TTree,
-///  only the metadata is replaced, effectively making the data invisible
+///  it is more complicated. If one opens a TTree, appends some entries,
+///  then writes it out, the behaviour is effectively the same. If, however,
+///  one creates a new TTree and writes it out in this way,
+///  only the metadata is replaced, effectively making the old data invisible
 ///  without deleting it.
 ///  The kSingleKey option is only used by TCollection::Write() to write
 ///  a container with a single key instead of each object in the container
