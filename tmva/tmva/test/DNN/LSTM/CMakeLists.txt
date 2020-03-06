@@ -21,7 +21,7 @@ include_directories(${ROOT_INCLUDE_DIRS})
 
 
 #--- CUDA tests. ---------------------------
-if (CUDA_FOUND)
+if (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
    set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
 
