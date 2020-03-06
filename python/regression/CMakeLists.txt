@@ -27,6 +27,6 @@ if(ROOT_pyroot_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
                                                      -e .L\ root_6023.h+
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/${python_dir}/libcppyy_backend.so)
+                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
 endif()

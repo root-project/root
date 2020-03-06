@@ -96,7 +96,6 @@ endif()
 set(compression_default "zlib" CACHE STRING "" FORCE)
 
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
-set(ROOT_PYTHON_LIBRARY_DIR ${ROOT_LIBRARY_DIR}/${python_dir})
 
 # Detect bitness.
 if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*|aarch64.*|ppc64.*
@@ -110,13 +109,8 @@ endif()
 
 # Setup environment.
 set(ROOTTEST_ENV_PATH ${ROOT_BINDIR})
-if(ROOT_pyroot_experimental_FOUND)
-  set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR}:${ROOT_PYTHON_LIBRARY_DIR})
-  set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR}:${ROOT_PYTHON_LIBRARY_DIR})
-else()
-  set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
-  set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
-endif()
+set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
+set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_EXTRA)
 
 set(ROOTTEST_ENVIRONMENT
@@ -162,11 +156,7 @@ find_library(OPENGL_gl_LIBRARY NAMES GL)
 
 # Setup standard includes / links.
 include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-if(ROOT_pyroot_experimental_FOUND)
-  link_directories(${ROOT_LIBRARY_DIR} ${ROOT_PYTHON_LIBRARY_DIR})
-else()
-  link_directories(${ROOT_LIBRARY_DIR})
-endif()
+link_directories(${ROOT_LIBRARY_DIR})
 set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 include(RoottestCTest)

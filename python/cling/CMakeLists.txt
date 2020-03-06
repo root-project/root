@@ -9,7 +9,7 @@ if(ROOT_pyroot_FOUND)
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyAPITest.ref
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/${python_dir}/libcppyy_backend.so)
+                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
   # TPython::LoadMacro and TPython::Import are broken in the new Cppyy
   # https://bitbucket.org/wlav/cppyy/issues/65
@@ -19,7 +19,7 @@ if(ROOT_pyroot_FOUND)
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTREF PyClassTest.ref
                     ENVIRONMENT CLING_STANDARD_PCH=none
-                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/${python_dir}/libcppyy_backend.so)
+                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
 
   ROOTTEST_ADD_TEST(cling
                     MACRO PyROOT_clingtests.py
