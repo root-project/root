@@ -31,11 +31,11 @@ TEST(IOTest, OneDOpts)
       auto drawable2 = canv.Draw(h);
       drawable2->AttrLine().SetColor(RColor::kBlue);
 
-      EXPECT_EQ(canv.NumPrimitives(), 2u);
+      EXPECT_EQ(canv.NumPrimitives(), 3u);
       EXPECT_NE(canv.GetPrimitive(0).get(), canv.GetPrimitive(1).get());
 
-      auto pr1 = std::dynamic_pointer_cast<RHist1Drawable>(canv.GetPrimitive(0));
-      auto pr2 = std::dynamic_pointer_cast<RHist1Drawable>(canv.GetPrimitive(1));
+      auto pr1 = std::dynamic_pointer_cast<RHist1Drawable>(canv.GetPrimitive(1));
+      auto pr2 = std::dynamic_pointer_cast<RHist1Drawable>(canv.GetPrimitive(2));
       ASSERT_NE(pr1, nullptr);
       ASSERT_NE(pr2.get(), nullptr);
 
@@ -53,11 +53,11 @@ TEST(IOTest, OneDOpts)
    auto canv2 = file2->Get<ROOT::Experimental::RCanvas>("canv");
    ASSERT_NE(canv2, nullptr);
 
-   EXPECT_EQ(canv2->NumPrimitives(), 2u);
-   EXPECT_NE(canv2->GetPrimitive(0).get(), canv2->GetPrimitive(1).get());
+   EXPECT_EQ(canv2->NumPrimitives(), 3u);
+   EXPECT_NE(canv2->GetPrimitive(1).get(), canv2->GetPrimitive(2).get());
 
-   auto dr1 = std::dynamic_pointer_cast<RHist1Drawable>(canv2->GetPrimitive(0));
-   auto dr2 = std::dynamic_pointer_cast<RHist1Drawable>(canv2->GetPrimitive(1));
+   auto dr1 = std::dynamic_pointer_cast<RHist1Drawable>(canv2->GetPrimitive(1));
+   auto dr2 = std::dynamic_pointer_cast<RHist1Drawable>(canv2->GetPrimitive(2));
    ASSERT_NE(dr1, nullptr);
    ASSERT_NE(dr2, nullptr);
 
