@@ -1410,7 +1410,17 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
          clingArgsStorage.push_back("-fmodule-map-file=" + ModuleMapLoc);
       }
-      clingArgsStorage.push_back("-fmodules-cache-path=" + std::string(TROOT::GetLibDir()));
+      std::string ModulesCachePath;
+      EnvOpt = llvm::sys::Process::GetEnv("CLING_MODULES_CACHE_PATH");
+      if (EnvOpt.hasValue()){
+         StringRef Env(*EnvOpt);
+         assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
+         ModulesCachePath = Env.str();
+      } else {
+         ModulesCachePath = TROOT::GetLibDir();
+      }
+
+      clingArgsStorage.push_back("-fmodules-cache-path=" + ModulesCachePath);
    }
 
    std::vector<const char*> interpArgs;
