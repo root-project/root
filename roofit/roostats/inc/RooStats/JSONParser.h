@@ -18,7 +18,8 @@ class TJSONTree : public JSONTree {
    virtual void writeJSON(std::ostream& os) const override;
 
    Node(TJSONTree* t,std::istream& is);
-   Node(TJSONTree* t,Impl& other);   
+   Node(TJSONTree* t,Impl& other);
+   Node(TJSONTree* t);      
    Node(const Node& other);
    virtual ~Node();
    virtual Node& operator<< (std::string const& s) override;
@@ -35,7 +36,10 @@ class TJSONTree : public JSONTree {
    virtual void set_map() override;
    virtual void set_seq() override;  
    virtual std::string key() const override;
-   virtual std::string val() const override;   
+   virtual std::string val() const override;
+   virtual int val_int() const override;
+   virtual float val_float() const override;
+   virtual bool val_bool() const override;
    virtual bool has_key() const override;
    virtual bool has_val() const override;  
    virtual bool has_child(std::string const&) const override;

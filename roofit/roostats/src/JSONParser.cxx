@@ -10,6 +10,8 @@ TJSONTree::Node& TJSONTree::rootnode() {
 
 // TJSONTree methods
 
+TJSONTree::TJSONTree() : root(this) {};
+
 TJSONTree::TJSONTree(std::istream& is) : root(this,is) {};
 
 TJSONTree::~TJSONTree(){
@@ -48,7 +50,8 @@ public:
   virtual const nlohmann::json& get() const override {
     return node;
   }  
-  BaseNode(std::istream& is) : Impl(""), node(nlohmann::json::parse(is)) {}  
+  BaseNode(std::istream& is) : Impl(""), node(nlohmann::json::parse(is)) {}
+  BaseNode() : Impl("") {}    
 };
 
 class TJSONTree::Node::Impl::NodeRef : public TJSONTree::Node::Impl {
@@ -60,7 +63,8 @@ public:
   virtual const nlohmann::json& get() const override {
     return node;
   }  
-  NodeRef(const std::string& k,nlohmann::json& n) : Impl(k), node(n) {}    
+  NodeRef(const std::string& k,nlohmann::json& n) : Impl(k), node(n) {}
+  NodeRef(const NodeRef& other) : Impl(other.key()), node(other.node) {}      
 };  
 
 TJSONTree::Node& TJSONTree::Node::Impl::mkNode(TJSONTree* t, const std::string& k, nlohmann::json& n){
@@ -69,6 +73,8 @@ TJSONTree::Node& TJSONTree::Node::Impl::mkNode(TJSONTree* t, const std::string& 
 }
 
 TJSONTree::Node::Node(TJSONTree* t,std::istream& is) : tree(t), node(new Impl::BaseNode(is)) {}
+
+TJSONTree::Node::Node(TJSONTree* t) : tree(t), node(new Impl::BaseNode()) {}
 
 TJSONTree::Node::Node(TJSONTree* t,Impl& other) : tree(t), node(new Impl::NodeRef(other.key(),other.get())) {}
 
@@ -131,20 +137,64 @@ bool TJSONTree::Node::is_seq() const {
 }
 
 void TJSONTree::Node::set_map() {
-  node->get() = nlohmann::json::object();
+  if(node->get().type() == nlohmann::json::value_t::null){
+    node->get() = nlohmann::json::object();
+  } else if(node->get().type() != nlohmann::json::value_t::object){
+    throw std::runtime_error("cannot declare "+this->key()+" to be of map-type, already of type "+node->get().type_name());
+  }
 }
 
 void TJSONTree::Node::set_seq() {
-  node->get() = nlohmann::json::array();
+  if(node->get().type() == nlohmann::json::value_t::null){
+    node->get() = nlohmann::json::array();
+  } else if(node->get().type() != nlohmann::json::value_t::array){
+    throw std::runtime_error("cannot declare "+this->key()+" to be of seq-type, already of type "+node->get().type_name());
+  }  
 }
 
 std::string TJSONTree::Node::key() const {
   return node->key();
 }
 
-std::string TJSONTree::Node::val() const {
-  return node->get().get<std::string>();
+namespace {
+  std::string itoa(int i) {
+    std::stringstream ss;
+    ss << i;
+    return ss.str();
+  }
+  std::string ftoa(float f) {
+    std::stringstream ss;
+    ss << f;
+    return ss.str();
+  }
 }
+
+std::string TJSONTree::Node::val() const {
+  switch (node->get().type()){
+  case nlohmann::json::value_t::string:
+    return node->get().get<std::string>();
+  case nlohmann::json::value_t::boolean:
+    return node->get().get<bool>() ? "true" : "false";
+  case nlohmann::json::value_t::number_integer:
+    return ::itoa(node->get().get<int>());
+  case nlohmann::json::value_t::number_unsigned:
+    return ::itoa(node->get().get<unsigned int>());
+  case nlohmann::json::value_t::number_float:
+    return ::ftoa(node->get().get<float>());
+  default:
+    throw std::runtime_error("implicit string conversion for type "+node->get().type_name()+" not supported!");
+  }
+}
+
+int TJSONTree::Node::val_int() const {
+  return node->get().get<int>();
+}
+float TJSONTree::Node::val_float() const {
+  return node->get().get<float>();
+}
+bool TJSONTree::Node::val_bool() const {
+  return node->get().get<bool>();
+}    
 
 bool TJSONTree::Node::has_key() const {
   return node->key().size()>0;
@@ -168,9 +218,13 @@ size_t TJSONTree::Node::num_children() const {
 }
 
 TJSONTree::Node& TJSONTree::Node::child(size_t pos) {
-  return Impl::mkNode(tree,"",node->get()[pos]);
+  auto it=node->get().begin(); 
+  for(size_t i=0; i<pos; ++i) ++it;
+  return Impl::mkNode(tree,this->is_map() ? it.key() : "",*it);
 }
 
 const TJSONTree::Node& TJSONTree::Node::child(size_t pos) const {
-  return Impl::mkNode(tree,"",node->get()[pos]);
+  auto it=node->get().begin(); 
+  for(size_t i=0; i<pos; ++i) ++it;
+  return Impl::mkNode(tree,this->is_map() ? it.key() : "",*it);  
 }

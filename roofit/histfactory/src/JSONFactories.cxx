@@ -146,28 +146,27 @@ namespace {
     return dh;
   }
 
+  RooRealVar* getNP(RooJSONFactoryWSTool* tool, const char* parname) {
+    RooRealVar* par = tool->workspace()->var(parname);
+    if(!par){
+      tool->workspace()->factory(TString::Format("%s[0.,-5,5]",parname).Data());
+      par = tool->workspace()->var(parname);
+    }
+    if(!par) RooJSONFactoryWSTool::error(TString::Format("unable to find nuisance parameter '%s'",parname));
+    return par;
+  }
+  RooAbsPdf* getConstraint(RooJSONFactoryWSTool* tool, const char* sysname) {
+    RooAbsPdf* pdf = tool->workspace()->pdf(sysname);
+    if(!pdf){
+      tool->workspace()->factory(TString::Format("RooGaussian::%s(alpha_%s,0.,1.)",sysname,sysname).Data());
+      pdf = tool->workspace()->pdf(sysname);
+    }
+    if(!pdf) RooJSONFactoryWSTool::error(TString::Format("unable to find constraint term '%s'",sysname));
+    return pdf;
+  }
   
   class RooHistogramFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    RooRealVar* getNP(RooJSONFactoryWSTool* tool, const char* parname) const {
-      RooRealVar* par = tool->workspace()->var(parname);
-      if(!par){
-        tool->workspace()->factory(TString::Format("%s[0.,-5,5]",parname).Data());
-        par = tool->workspace()->var(parname);
-      }
-      if(!par) RooJSONFactoryWSTool::error(TString::Format("unable to find nuisance parameter '%s'",parname));
-      return par;
-    }
-    RooAbsPdf* getConstraint(RooJSONFactoryWSTool* tool, const char* sysname) const {
-      RooAbsPdf* pdf = tool->workspace()->pdf(sysname);
-      if(!pdf){
-        tool->workspace()->factory(TString::Format("RooGaussian::%s(alpha_%s,0.,1.)",sysname,sysname).Data());
-        pdf = tool->workspace()->pdf(sysname);
-      }
-      if(!pdf) RooJSONFactoryWSTool::error(TString::Format("unable to find constraint term '%s'",sysname));
-      return pdf;
-    }
-    
     virtual bool importFunction(RooJSONFactoryWSTool* tool, const JSONNode& p) const override {
       std::string name(RooJSONFactoryWSTool::name(p));
       std::string prefix = ::genPrefix(p,true);
@@ -197,7 +196,7 @@ namespace {
           for(const auto& sys:p["overallSystematics"].children()){
             std::string sysname(RooJSONFactoryWSTool::name(sys));
             std::string parname( sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"]) : "alpha_"+sysname);
-            RooAbsReal* par = this->getNP(tool,parname.c_str());
+            RooAbsReal* par = ::getNP(tool,parname.c_str());
             nps.add(*par);
             low.push_back(sys["low"].val_float());
             high.push_back(sys["high"].val_float());
@@ -212,7 +211,7 @@ namespace {
           for(const auto& sys:p["histogramSystematics"].children()){
             std::string sysname(RooJSONFactoryWSTool::name(sys));
             std::string parname( sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"]) : "alpha_"+sysname);            
-            RooAbsReal* par = this->getNP(tool,parname.c_str());
+            RooAbsReal* par = ::getNP(tool,parname.c_str());
             nps.add(*par);
             RooDataHist* dh_low = ::readData(tool->workspace(),p["dataLow"],sysname+"Low_"+name,prefix);
             RooHistFunc hf_low((sysname+"Low_"+name).c_str(),RooJSONFactoryWSTool::name(p).c_str(),*(dh_low->get()),*dh_low);              
@@ -347,12 +346,8 @@ namespace {
         }
       }
       for(auto sysname:sysnames){
-        RooAbsPdf* pdf = tool->workspace()->pdf(sysname.c_str());
-        if(pdf){
-          constraints.add(*pdf);
-        } else {
-          RooJSONFactoryWSTool::error("unable to find constraint term '" + sysname + "'");
-        }
+        RooAbsPdf* pdf = ::getConstraint(tool,sysname.c_str());
+        constraints.add(*pdf);
       }
       if(constraints.getSize() == 0){
         RooRealSumPdf sum(name.c_str(),name.c_str(),funcs,coefs);

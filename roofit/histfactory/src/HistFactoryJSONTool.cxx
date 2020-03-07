@@ -5,7 +5,13 @@
 #include "RooStats/HistFactory/Sample.h"
 
 #include "RooStats/JSONInterface.h"
+#undef INCLUDE_RYML
+
+#ifdef INCLUDE_RYML  
 #include "RooStats/RYMLParser.h"
+#else
+#include "RooStats/JSONParser.h"
+#endif
 
 RooStats::HistFactory::JSONTool::JSONTool( RooStats::HistFactory::Measurement* m ) : _measurement(m) {};
 
@@ -227,13 +233,13 @@ void RooStats::HistFactory::JSONTool::Export(JSONNode& n) const {
 void RooStats::HistFactory::JSONTool::PrintJSON( std::ostream& os ) {
 #ifdef INCLUDE_RYML  
   TRYMLTree p;
+#else
+  TJSONTree p;
+#endif
   auto& n = p.rootnode();
   n.set_map();
   this->Export(n);
   n.writeJSON(os);
-#else
-  std::cerr << "JSON export only support with rapidyaml!" << std::endl;
-#endif
 }
 void RooStats::HistFactory::JSONTool::PrintJSON( std::string filename ) {
   std::ofstream out(filename);

@@ -1,5 +1,4 @@
 #include <RooStats/RooJSONFactoryWSTool.h>
-#include <RooStats/RYMLParser.h>
 
 #include <iostream>
 #include <fstream>
@@ -11,6 +10,13 @@
 #include <RooStats/ModelConfig.h>
 
 #include "TROOT.h"
+
+#undef INCLUDE_RYML
+#ifdef INCLUDE_RYML  
+#include "RooStats/RYMLParser.h"
+#else
+#include "RooStats/JSONParser.h"
+#endif
 
 namespace {
   // helpers for serializing / deserializing binned datasets
@@ -37,7 +43,7 @@ std::map<std::string,const RooJSONFactoryWSTool::Importer*> RooJSONFactoryWSTool
 std::map<const TClass*,const RooJSONFactoryWSTool::Exporter*> RooJSONFactoryWSTool::_exporters = std::map<const TClass*,const RooJSONFactoryWSTool::Exporter*>();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// helper functions specific to RYML
+// helper functions specific to JSON
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -109,11 +115,11 @@ namespace {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  struct RYML_Factory_Expression {
+  struct JSON_Factory_Expression {
     TClass* tclass;
     std::vector<std::string> arguments;
     std::string generate(const JSONNode& p){
-      std::string name(::name(p));
+      std::string name(RooJSONFactoryWSTool::name(p));
       std::stringstream expression;
       std::string classname(this->tclass->GetName());
       size_t colon = classname.find_last_of(":");
@@ -155,17 +161,17 @@ namespace {
       return expression.str();
     }
   };
-  std::map<std::string,RYML_Factory_Expression> _rymlPdfFactoryExpressions;
-  std::map<std::string,RYML_Factory_Expression> _rymlFuncFactoryExpressions;
+  std::map<std::string,JSON_Factory_Expression> _pdfFactoryExpressions;
+  std::map<std::string,JSON_Factory_Expression> _funcFactoryExpressions;
 }
 
 void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
   // load a yml file defining the factory expressions
   std::ifstream infile(fname);
-  TRYMLTree p(infile);
-  JSONNode& n = p.rootnode();
+  TJSONTree p(infile);
+  const JSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
-    std::string key(::name(cl));
+    std::string key(RooJSONFactoryWSTool::name(cl));
     if(!cl.has_child("class")){
       std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!" << std::endl;
       continue;
@@ -175,7 +181,7 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
     if(!c){
       std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
     } else {
-      RYML_Factory_Expression ex;
+      JSON_Factory_Expression ex;
       ex.tclass = c;
       if(!cl.has_child("arguments")){
         std::cerr << "class " << classname << " seems to have no arguments attached, skipping" << std::endl;
@@ -185,9 +191,9 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
         ex.arguments.push_back(arg.val());
       }
       if(c->InheritsFrom(RooAbsPdf::Class())){
-        _rymlPdfFactoryExpressions[key] = ex;
+        _pdfFactoryExpressions[key] = ex;
       } else if(c->InheritsFrom(RooAbsReal::Class())){
-        _rymlFuncFactoryExpressions[key] = ex;        
+        _funcFactoryExpressions[key] = ex;        
       } else {
         std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
       }
@@ -196,12 +202,12 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
 }
 void RooJSONFactoryWSTool::clearFactoryExpressions(){
   // clear all factory expressions
-  _rymlPdfFactoryExpressions.clear();
-  _rymlFuncFactoryExpressions.clear();
+  _pdfFactoryExpressions.clear();
+  _funcFactoryExpressions.clear();
 }
 void RooJSONFactoryWSTool::printFactoryExpressions(){
   // print all factory expressions
-  for(auto it:_rymlPdfFactoryExpressions){
+  for(auto it:_pdfFactoryExpressions){
     std::cout << it.first;
     std::cout << " " << it.second.tclass->GetName();    
     for(auto v:it.second.arguments){
@@ -209,7 +215,7 @@ void RooJSONFactoryWSTool::printFactoryExpressions(){
     }
     std::cout << std::endl;
   }
-  for(auto it:_rymlFuncFactoryExpressions){
+  for(auto it:_funcFactoryExpressions){
     std::cout << it.first;
     std::cout << " " << it.second.tclass->GetName();    
     for(auto v:it.second.arguments){
@@ -268,24 +274,28 @@ void  RooJSONFactoryWSTool::exportHistogram(const TH1& h, JSONNode& n, const std
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  struct RYML_Export_Keys {
+  struct JSON_Export_Keys {
     std::string type;
     std::map<std::string,std::string> proxies;
   };  
-  std::map<TClass*,RYML_Export_Keys> _rymlExportKeys;
+  std::map<TClass*,JSON_Export_Keys> _exportKeys;
 }
 void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
   // load a yml file defining the export keys
   std::ifstream infile(fname);
+  #ifdef INCLUDE_RYML
   TRYMLTree p(infile);
-  JSONNode& n = p.rootnode();
+  #else
+  TJSONTree p(infile);
+  #endif
+  const JSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
-    std::string classname(::name(cl));
+    std::string classname(RooJSONFactoryWSTool::name(cl));
     TClass* c = TClass::GetClass(classname.c_str());
     if(!c){
       std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
     } else {
-      RYML_Export_Keys ex;
+      JSON_Export_Keys ex;
       if(!cl.has_child("type")){
         std::cerr << "class " << classname << "has not type key set, skipping" << std::endl;
         continue;
@@ -296,21 +306,21 @@ void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
       }      
       ex.type = cl["type"].val();
       for(const auto& k:cl["proxies"].children()){
-        std::string key(::name(k));
+        std::string key(RooJSONFactoryWSTool::name(k));
         std::string val(k.val());                
         ex.proxies[key] = val;
       }
-      _rymlExportKeys[c] = ex;
+      _exportKeys[c] = ex;
     }
   }  
 }
 void RooJSONFactoryWSTool::clearExportKeys(){
   // clear all export keys
-  _rymlExportKeys.clear();
+  _exportKeys.clear();
 }
 void RooJSONFactoryWSTool::printExportKeys(){
   // print all export keys
-  for(const auto& it:_rymlExportKeys){
+  for(const auto& it:_exportKeys){
     std::cout << it.first->GetName() << ": " << it.second.type;
     for(const auto& kv:it.second.proxies){
       std::cout << " " << kv.first << "=" << kv.second;
@@ -430,8 +440,8 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg* func, JSONNode& n){
         return;
       }
     } else { // generic import using the factory expressions      
-      const auto& dict = _rymlExportKeys.find(cl);
-      if(dict == _rymlExportKeys.end()){
+      const auto& dict = _exportKeys.find(cl);
+      if(dict == _exportKeys.end()){
         std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
         std::cerr << "there are several possible reasons for this:" << std::endl;
         std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added." << std::endl;
@@ -501,7 +511,7 @@ void RooJSONFactoryWSTool::importFunctions(const JSONNode& n) {
   if(!n.is_map()) return;
   for(const auto& p:n.children()){
     // some preparations: what type of function are we dealing with here?
-    std::string name(::name(p));
+    std::string name(RooJSONFactoryWSTool::name(p));
     if(name.size() == 0) continue;
     if(this->_workspace->pdf(name.c_str())) continue;    
     if(!p.is_map()) continue; 
@@ -524,8 +534,8 @@ void RooJSONFactoryWSTool::importFunctions(const JSONNode& n) {
         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping." << std::endl;
       }
     } else { // generic import using the factory expressions
-      auto expr = _rymlFuncFactoryExpressions.find(functype);
-      if(expr != _rymlFuncFactoryExpressions.end()){
+      auto expr = _funcFactoryExpressions.find(functype);
+      if(expr != _funcFactoryExpressions.end()){
         std::string expression = expr->second.generate(p);
         if(!this->_workspace->factory(expression.c_str())){
           coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping. expression was\n"
@@ -559,7 +569,7 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode& n) {
   if(!n.is_map()) return;  
   for(const auto& p:n.children()){
     // general preparations: what type of pdf should we build?
-    std::string name(::name(p));
+    std::string name(RooJSONFactoryWSTool::name(p));
     if(name.size() == 0) continue;
     if(this->_workspace->pdf(name.c_str())) continue;    
     if(!p.is_map()) continue;
@@ -587,8 +597,8 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode& n) {
         coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") " << ex.what() << ". skipping." << std::endl;
       }
     } else { // default implementation using the factory expressions
-      auto expr = _rymlPdfFactoryExpressions.find(pdftype);
-      if(expr != _rymlPdfFactoryExpressions.end()){
+      auto expr = _pdfFactoryExpressions.find(pdftype);
+      if(expr != _pdfFactoryExpressions.end()){
         std::string expression = expr->second.generate(p);
         if(!this->_workspace->factory(expression.c_str())){
           coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") failed to create " << expr->second.tclass->GetName() << " '" << name << "', skipping. expression was\n"
@@ -642,7 +652,7 @@ void RooJSONFactoryWSTool::importVariables(const JSONNode& n) {
   // import a list of RooRealVar objects
   if(!n.is_map()) return;  
   for(const auto& p:n.children()){
-    std::string name(::name(p));
+    std::string name(RooJSONFactoryWSTool::name(p));
     if(this->_workspace->var(name.c_str())) continue;
     if(!p.is_map()){
       coutE(InputArguments) << "RooJSONFactoryWSTool(" << GetName() << ") node '" << name << "' is not a map, skipping." << std::endl;
@@ -752,7 +762,11 @@ void RooJSONFactoryWSTool::exportAll( JSONNode& n) {
 
 Bool_t RooJSONFactoryWSTool::exportJSON( std::ostream& os ) {
   // export the workspace in JSON
+  #ifdef INCLUDE_RYML
   TRYMLTree p;
+  #else
+  TJSONTree p;
+  #endif
   JSONNode& n = p.rootnode();    
   n.set_map();
   this->exportAll(n);
@@ -767,7 +781,11 @@ Bool_t RooJSONFactoryWSTool::exportJSON( const char* filename ) {
 
 Bool_t RooJSONFactoryWSTool::exportYML( std::ostream& os ) {
   // export the workspace in YML
-  TRYMLTree p;
+  #ifdef INCLUDE_RYML
+  TRYMLTree p;  
+  #else
+  TJSONTree p;
+  #endif
   JSONNode& n = p.rootnode();    
   n.set_map();
   this->exportAll(n);
@@ -786,7 +804,11 @@ void RooJSONFactoryWSTool::prepare(){
 
 Bool_t RooJSONFactoryWSTool::importJSON( std::istream& is ) {
   // import a JSON file to the workspace
+  #ifdef INCLUDE_RYML
   TRYMLTree p(is);
+  #else
+  TJSONTree p(is);
+  #endif
   JSONNode& n = p.rootnode();  
   this->prepare();
   this->importDependants(n);
@@ -799,8 +821,12 @@ Bool_t RooJSONFactoryWSTool::importJSON( const char* filename ) {
 }
 
 Bool_t RooJSONFactoryWSTool::importYML( std::istream& is ) {
-  // import a YML file to the workspace  
+  // import a YML file to the workspace
+  #ifdef INCLUDE_RYML
   TRYMLTree p(is);
+  #else
+  TJSONTree p(is);
+  #endif  
   JSONNode& n = p.rootnode();
   this->prepare();
   this->importDependants(n);  
