@@ -129,6 +129,8 @@ protected:
 
    void CopyTo(RAttrBase &tgt, bool use_style = true) const;
 
+   void MoveTo(RAttrBase &tgt);
+
    bool IsSame(const RAttrBase &src, bool use_style = true) const;
 
    RAttrBase(RDrawable *drawable, const std::string &prefix) { AssignDrawable(drawable, prefix); }
@@ -194,13 +196,8 @@ public: \
    ClassName(RDrawable *drawable, const std::string &prefix = dflt_prefix) { AssignDrawable(drawable, prefix); } \
    ClassName(RAttrBase *parent, const std::string &prefix = dflt_prefix) { AssignParent(parent, prefix); } \
    ClassName(const ClassName &src) : ClassName() { src.CopyTo(*this); } \
-   ClassName(ClassName &&src) = default; \
-   ClassName &operator=(ClassName &&src) = default; \
-   ClassName &operator=(const ClassName &src) \
-   { \
-      Clear(); \
-      src.CopyTo(*this); \
-      return *this; \
-   }
+   ClassName(ClassName &&src) : ClassName() { src.MoveTo(*this); } \
+   ClassName &operator=(ClassName &&src) { src.MoveTo(*this); return *this; } \
+   ClassName &operator=(const ClassName &src) { Clear(); src.CopyTo(*this); return *this; } \
 
 #endif

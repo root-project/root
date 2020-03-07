@@ -10,6 +10,8 @@
 
 #include <ROOT/RLogger.hxx>
 
+#include <utility>
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Return default values for attributes, empty for base class
@@ -59,6 +61,17 @@ void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
       if (auto v = AccessValue(entry.first, use_style))
          tgt.CopyValue(entry.first, *v.value);
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Move all fields into target object
+
+void ROOT::Experimental::RAttrBase::MoveTo(RAttrBase &tgt)
+{
+   std::swap(fOwnAttr, tgt.fOwnAttr);
+   std::swap(fPrefix, tgt.fPrefix);
+   std::swap(fDrawable, tgt.fDrawable);
+   std::swap(fParent, tgt.fParent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
