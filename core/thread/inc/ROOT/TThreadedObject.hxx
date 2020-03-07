@@ -168,7 +168,8 @@ namespace ROOT {
    public:
       /// The maximum number of processing slots (distinct threads) which the instances can manage.
       /// Deprecated; please use the `TNumSlots` constructor instead.
-      static unsigned fgMaxSlots;
+      static unsigned fgMaxSlots
+      R__DEPRECATED(6, 24, "Superior interface exists: construct TThreadedObject using TNumSlots instead.");
 
       TThreadedObject(const TThreadedObject&) = delete;
 
@@ -179,7 +180,7 @@ namespace ROOT {
       ///   number of slots is defined by ROOT's implicit MT pool size; IMT must be enabled.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(TNumSlots nslotsTag, ARGS&&... args) : fIsMerged(false), fAutoSlotsWithIMTOff(false)
+      TThreadedObject(TNumSlots nslotsTag, ARGS&&... args) : fIsMerged(false)
       {
          auto nslots = nslotsTag.fVal;
          if (nslotsTag == kIMTPoolSize) {
@@ -193,13 +194,16 @@ namespace ROOT {
       }
 
       /// Construct the TThreaded object and the "model" of the thread private
-      /// objects, assuming IMT usage. Consider using constructor taking `TNumSlots` instead.
+      /// objects, assuming IMT usage. This constructor is equivalent to `TThreadedObject(kIMTPoolSize,...)`
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS&&... args) : fIsMerged(false), fAutoSlotsWithIMTOff(false)
+      TThreadedObject(ARGS&&... args) : fIsMerged(false)
       {
          const auto imtPoolSize = ROOT::GetImplicitMTPoolSize();
-         fAutoSlotsWithIMTOff = !imtPoolSize;
+         if (!imtPoolSize) {
+            Warning("TThreadedObject()",
+               "Use without IMT is deprecated, either enable IMT first, or use constructor overload taking TNumSlots!");
+         }
          auto nslots = std::max(fgMaxSlots, imtPoolSize);
          Create(nslots, args...);
       }
@@ -211,9 +215,6 @@ namespace ROOT {
       {
          if ( i >= fObjPointers.size()) {
             Warning("TThreadedObject::GetAtSlot", "Maximum number of slots reached.");
-            if (fAutoSlotsWithIMTOff && ROOT::GetImplicitMTPoolSize() > fObjPointers.size())
-               Warning("TThreadedObject::GetAtSlot",
-                  "To use TThreadedObject with IMT, turn IMT on before constructing a TThreadedObject.");
             return nullptr;
          }
          auto objPointer = fObjPointers[i];
@@ -314,10 +315,6 @@ namespace ROOT {
       unsigned fCurrMaxSlotIndex = 0;                    ///< The maximum slot index
       ROOT::TSpinMutex fThrIDSlotMutex;                  ///< Mutex to protect the ID-slot map access
       bool fIsMerged : 1;                                ///< Remember if the objects have been merged already
-
-      /// At construction without slot size, IMT was off. It's used to indicate a contract violation,
-      /// if later a slot too high is accessed and IMT was turned on in the meantime.
-      bool fAutoSlotsWithIMTOff : 1;
 
       /// Get the slot number for this threadID.
       unsigned GetThisSlotNumber()
