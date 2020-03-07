@@ -9,17 +9,17 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
  public:
   class Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool*, const TJSONNode&) const {
+    virtual bool importPdf(RooJSONFactoryWSTool*, const JSONNode&) const {
       return false;
     }
-    virtual bool importFunction(RooJSONFactoryWSTool*, const TJSONNode&) const {
+    virtual bool importFunction(RooJSONFactoryWSTool*, const JSONNode&) const {
       return false;
     }
   };
   class Exporter {
   public:
     virtual bool autoExportDependants() const { return true; }
-    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg*, TJSONNode&) const {
+    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg*, JSONNode&) const {
       return false;
     }
   };   
@@ -30,7 +30,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   static std::map<const TClass*,const Exporter*> _exporters;    
   void prepare();
  public:
-  static std::string name(const TJSONNode& n);  
+  static std::string name(const JSONNode& n);  
   
   RooJSONFactoryWSTool(RooWorkspace& ws);
   RooWorkspace* workspace() { return this->_workspace; }
@@ -84,7 +84,7 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
     return names;
   }
   
-  static void exportHistogram(const TH1& h, TJSONNode& n, const std::vector<std::string>& obsnames);
+  static void exportHistogram(const TH1& h, JSONNode& n, const std::vector<std::string>& obsnames);
   static std::vector<std::vector<int> > generateBinIndices(RooArgList& vars);
   
   Bool_t importJSON(const char* filename);
@@ -103,21 +103,21 @@ class RooJSONFactoryWSTool : public TNamed, RooPrintable {
   static void clearExportKeys();
   static void printExportKeys();  
 
-  void importFunctions(const TJSONNode& n);
-  void importPdfs(const TJSONNode& n);
-  void importVariables(const TJSONNode& n);
-  void importDependants(const TJSONNode& n);
+  void importFunctions(const JSONNode& n);
+  void importPdfs(const JSONNode& n);
+  void importVariables(const JSONNode& n);
+  void importDependants(const JSONNode& n);
 
-  bool find(const TJSONNode& n, const std::string& elem);
-  void append(TJSONNode& n, const std::string& elem);
+  bool find(const JSONNode& n, const std::string& elem);
+  void append(JSONNode& n, const std::string& elem);
   
-  void exportAttributes(const RooAbsArg* arg, TJSONNode& n);
-  void exportVariable(const RooAbsReal*v, TJSONNode& n);
-  void exportVariables(const RooArgSet& allElems, TJSONNode& n);
-  void exportObject(const RooAbsArg* func, TJSONNode& n);
-  void exportFunctions(const RooArgSet& allElems, TJSONNode& n);  
+  void exportAttributes(const RooAbsArg* arg, JSONNode& n);
+  void exportVariable(const RooAbsReal*v, JSONNode& n);
+  void exportVariables(const RooArgSet& allElems, JSONNode& n);
+  void exportObject(const RooAbsArg* func, JSONNode& n);
+  void exportFunctions(const RooArgSet& allElems, JSONNode& n);  
 
-  void exportAll(TJSONNode& n);  
-  void exportDependants(const RooAbsArg* source, TJSONNode& n);
+  void exportAll(JSONNode& n);  
+  void exportDependants(const RooAbsArg* source, JSONNode& n);
 };
 #endif

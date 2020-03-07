@@ -11,8 +11,8 @@ class JSONTool : public TNamed, RooPrintable {
   RooStats::HistFactory::Measurement* _measurement;
   static std::vector<std::string> _strcache;  
   
-  void Export(const RooStats::HistFactory::Channel& c, TJSONNode& t) const;
-  void Export(const RooStats::HistFactory::Sample& s, TJSONNode& t) const;  
+  void Export(const RooStats::HistFactory::Channel& c, JSONNode& t) const;
+  void Export(const RooStats::HistFactory::Sample& s, JSONNode& t) const;  
   
  public:
   JSONTool( RooStats::HistFactory::Measurement* );
@@ -21,7 +21,7 @@ class JSONTool : public TNamed, RooPrintable {
   void PrintJSON( std::string filename );
   void PrintYAML( std::ostream& os = std::cout );    
   void PrintYAML( std::string filename );  
-  void Export(TJSONNode& t) const;  
+  void Export(JSONNode& t) const;  
 
 };
   }

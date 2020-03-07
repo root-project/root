@@ -41,7 +41,7 @@ std::map<const TClass*,const RooJSONFactoryWSTool::Exporter*> RooJSONFactoryWSTo
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  inline std::string name(const TJSONNode& n){
+  inline std::string name(const JSONNode& n){
     std::stringstream ss;
     if(n.has_key()){
       ss << n.key();
@@ -54,7 +54,7 @@ namespace {
     }
     return ss.str();
   }
-  inline std::string genPrefix(const TJSONNode& p,bool trailing_underscore){
+  inline std::string genPrefix(const JSONNode& p,bool trailing_underscore){
     std::string prefix;
     if(!p.is_map()) return prefix;
     if(p.has_child("namespaces")){
@@ -67,7 +67,7 @@ namespace {
     return prefix;
   }
 
-  inline void importAttributes(RooAbsArg* arg, const TJSONNode& n){
+  inline void importAttributes(RooAbsArg* arg, const JSONNode& n){
     if(!n.is_map()) return;
     if(n.has_child("dict") && n["dict"].is_map()){
       for(const auto& attr:n["dict"].children()){
@@ -88,7 +88,7 @@ namespace {
     }
     return true;
   }
-  inline void writeAxis(TJSONNode& bounds, const TAxis& ax){
+  inline void writeAxis(JSONNode& bounds, const TAxis& ax){
     bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
     if(regular){
       bounds.set_map();
@@ -112,7 +112,7 @@ namespace {
   struct RYML_Factory_Expression {
     TClass* tclass;
     std::vector<std::string> arguments;
-    std::string generate(const TJSONNode& p){
+    std::string generate(const JSONNode& p){
       std::string name(::name(p));
       std::stringstream expression;
       std::string classname(this->tclass->GetName());
@@ -163,7 +163,7 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
   // load a yml file defining the factory expressions
   std::ifstream infile(fname);
   TRYMLTree p(infile);
-  TJSONNode& n = p.rootnode();
+  JSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
     std::string key(::name(cl));
     if(!cl.has_child("class")){
@@ -225,7 +225,7 @@ std::vector<std::vector<int> > RooJSONFactoryWSTool::generateBinIndices(RooArgLi
   return combinations;
 }
 
-void  RooJSONFactoryWSTool::exportHistogram(const TH1& h, TJSONNode& n, const std::vector<std::string>& varnames){
+void  RooJSONFactoryWSTool::exportHistogram(const TH1& h, JSONNode& n, const std::vector<std::string>& varnames){
   n.set_map();
   auto& bounds = n["binning"];
   bounds.set_map();
@@ -278,7 +278,7 @@ void RooJSONFactoryWSTool::loadExportKeys(const std::string& fname){
   // load a yml file defining the export keys
   std::ifstream infile(fname);
   TRYMLTree p(infile);
-  TJSONNode& n = p.rootnode();
+  JSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
     std::string classname(::name(cl));
     TClass* c = TClass::GetClass(classname.c_str());
@@ -323,7 +323,7 @@ void RooJSONFactoryWSTool::printExportKeys(){
 // helper namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool RooJSONFactoryWSTool::find(const TJSONNode& n, const std::string& elem){
+bool RooJSONFactoryWSTool::find(const JSONNode& n, const std::string& elem){
   // find an attribute
   if(n.is_seq()){
     for(const auto& t:n.children()){
@@ -336,7 +336,7 @@ bool RooJSONFactoryWSTool::find(const TJSONNode& n, const std::string& elem){
   return false;
 }
   
-void RooJSONFactoryWSTool::append(TJSONNode& n, const std::string& elem){
+void RooJSONFactoryWSTool::append(JSONNode& n, const std::string& elem){
     // append an attribute
     n.set_seq();          
     if(!find(n,elem)){
@@ -344,7 +344,7 @@ void RooJSONFactoryWSTool::append(TJSONNode& n, const std::string& elem){
     }
   }
   
-void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg* arg, TJSONNode& n){
+void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg* arg, JSONNode& n){
     // export all string attributes of an object
     if(arg->stringAttributes().size() > 0){
       auto& dict = n["dict"];
@@ -362,7 +362,7 @@ void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg* arg, TJSONNode& n){
     }
   }
 
-void RooJSONFactoryWSTool::exportVariable(const RooAbsReal*v, TJSONNode& n) {
+void RooJSONFactoryWSTool::exportVariable(const RooAbsReal*v, JSONNode& n) {
     auto& var = n[v->GetName()];
     const RooConstVar* cv  = dynamic_cast<const RooConstVar*>(v);
     const RooRealVar*  rrv = dynamic_cast<const RooRealVar*>(v);    
@@ -385,7 +385,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsReal*v, TJSONNode& n) {
     RooJSONFactoryWSTool::exportAttributes(v,var);
   }
   
-void RooJSONFactoryWSTool::exportVariables(const RooArgSet& allElems, TJSONNode& n) {
+void RooJSONFactoryWSTool::exportVariables(const RooArgSet& allElems, JSONNode& n) {
     // export a list of RooRealVar objects
     for(auto* arg:allElems){
       RooRealVar* v = dynamic_cast<RooRealVar*>(arg);
@@ -394,7 +394,7 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet& allElems, TJSONNode&
     }  
   }
   
-void RooJSONFactoryWSTool::exportObject(const RooAbsArg* func, TJSONNode& n){
+void RooJSONFactoryWSTool::exportObject(const RooAbsArg* func, JSONNode& n){
     if(func->InheritsFrom(RooConstVar::Class()) && strcmp(func->GetName(),TString::Format("%g",((RooConstVar*)func)->getVal()).Data())==0){
       // for RooConstVar, name and value are the same, so we don't need to do anything
       return;
@@ -408,7 +408,7 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg* func, TJSONNode& n){
       return;
     }
     
-    TJSONNode& container = func->InheritsFrom(RooAbsPdf::Class()) ? n["pdfs"] : n["functions"] ;
+    JSONNode& container = func->InheritsFrom(RooAbsPdf::Class()) ? n["pdfs"] : n["functions"] ;
     container.set_map();    
     if(container.has_child(func->GetName())) return;
     
@@ -484,7 +484,7 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg* func, TJSONNode& n){
     }
   }
 
-void RooJSONFactoryWSTool::exportFunctions(const RooArgSet& allElems, TJSONNode& n){
+void RooJSONFactoryWSTool::exportFunctions(const RooArgSet& allElems, JSONNode& n){
     // export a list of functions
     // note: this function assumes that all the dependants of these objects have already been exported
     for(auto* arg:allElems){
@@ -496,7 +496,7 @@ void RooJSONFactoryWSTool::exportFunctions(const RooArgSet& allElems, TJSONNode&
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing functions
-void RooJSONFactoryWSTool::importFunctions(const TJSONNode& n) {
+void RooJSONFactoryWSTool::importFunctions(const JSONNode& n) {
   // import a list of RooAbsReal objects
   if(!n.is_map()) return;
   for(const auto& p:n.children()){
@@ -554,7 +554,7 @@ void RooJSONFactoryWSTool::importFunctions(const TJSONNode& n) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing pdfs
-void RooJSONFactoryWSTool::importPdfs(const TJSONNode& n) {
+void RooJSONFactoryWSTool::importPdfs(const JSONNode& n) {
   // import a list of RooAbsPdf objects
   if(!n.is_map()) return;  
   for(const auto& p:n.children()){
@@ -638,7 +638,7 @@ void RooJSONFactoryWSTool::importPdfs(const TJSONNode& n) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing variables
-void RooJSONFactoryWSTool::importVariables(const TJSONNode& n) {
+void RooJSONFactoryWSTool::importVariables(const JSONNode& n) {
   // import a list of RooRealVar objects
   if(!n.is_map()) return;  
   for(const auto& p:n.children()){
@@ -664,7 +664,7 @@ void RooJSONFactoryWSTool::importVariables(const TJSONNode& n) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // export all dependants (servers) of a RooAbsArg
-void RooJSONFactoryWSTool::exportDependants(const RooAbsArg* source, TJSONNode& n) {
+void RooJSONFactoryWSTool::exportDependants(const RooAbsArg* source, JSONNode& n) {
   // export all the servers of a given RooAbsArg
   auto servers(source->servers());
   for(auto s:servers){
@@ -674,7 +674,7 @@ void RooJSONFactoryWSTool::exportDependants(const RooAbsArg* source, TJSONNode& 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // import all dependants (servers) of a node
-void RooJSONFactoryWSTool::importDependants(const TJSONNode& n) {
+void RooJSONFactoryWSTool::importDependants(const JSONNode& n) {
   // import all the dependants of an object
   if(n.has_child("variables")){
     this->importVariables(n["variables"]);
@@ -687,7 +687,7 @@ void RooJSONFactoryWSTool::importDependants(const TJSONNode& n) {
   }
 }
 
-std::string RooJSONFactoryWSTool::name(const TJSONNode& n){
+std::string RooJSONFactoryWSTool::name(const JSONNode& n){
   std::stringstream ss;
   if(n.has_key()){
     ss << n.key();
@@ -701,7 +701,7 @@ std::string RooJSONFactoryWSTool::name(const TJSONNode& n){
   return ss.str();    
 }
 
-void RooJSONFactoryWSTool::exportAll( TJSONNode& n) {
+void RooJSONFactoryWSTool::exportAll( JSONNode& n) {
   // export all ModelConfig objects and attached Pdfs
   RooArgSet main;
   for(auto obj:this->_workspace->allGenericObjects()){
@@ -753,7 +753,7 @@ void RooJSONFactoryWSTool::exportAll( TJSONNode& n) {
 Bool_t RooJSONFactoryWSTool::exportJSON( std::ostream& os ) {
   // export the workspace in JSON
   TRYMLTree p;
-  TJSONNode& n = p.rootnode();    
+  JSONNode& n = p.rootnode();    
   n.set_map();
   this->exportAll(n);
   n.writeJSON(os);  
@@ -768,7 +768,7 @@ Bool_t RooJSONFactoryWSTool::exportJSON( const char* filename ) {
 Bool_t RooJSONFactoryWSTool::exportYML( std::ostream& os ) {
   // export the workspace in YML
   TRYMLTree p;
-  TJSONNode& n = p.rootnode();    
+  JSONNode& n = p.rootnode();    
   n.set_map();
   this->exportAll(n);
   n.writeYML(os);
@@ -787,7 +787,7 @@ void RooJSONFactoryWSTool::prepare(){
 Bool_t RooJSONFactoryWSTool::importJSON( std::istream& is ) {
   // import a JSON file to the workspace
   TRYMLTree p(is);
-  TJSONNode& n = p.rootnode();  
+  JSONNode& n = p.rootnode();  
   this->prepare();
   this->importDependants(n);
   return true;
@@ -801,7 +801,7 @@ Bool_t RooJSONFactoryWSTool::importJSON( const char* filename ) {
 Bool_t RooJSONFactoryWSTool::importYML( std::istream& is ) {
   // import a YML file to the workspace  
   TRYMLTree p(is);
-  TJSONNode& n = p.rootnode();
+  JSONNode& n = p.rootnode();
   this->prepare();
   this->importDependants(n);  
   return true;

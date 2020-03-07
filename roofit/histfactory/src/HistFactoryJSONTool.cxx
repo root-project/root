@@ -9,7 +9,7 @@
 
 RooStats::HistFactory::JSONTool::JSONTool( RooStats::HistFactory::Measurement* m ) : _measurement(m) {};
 
-void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample& sample, TJSONNode& s) const {
+void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample& sample, JSONNode& s) const {
   std::vector<std::string> obsnames;
   obsnames.push_back("obs_x_"+sample.GetChannelName());
   obsnames.push_back("obs_y_"+sample.GetChannelName());
@@ -64,7 +64,7 @@ void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample
 }
 
 
-void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Channel& c, TJSONNode& ch) const {
+void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Channel& c, JSONNode& ch) const {
   ch.set_map();
   ch["type"] << "histfactory";      
   
@@ -87,7 +87,7 @@ void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Channe
   }
 }
 
-void RooStats::HistFactory::JSONTool::Export(TJSONNode& n) const {
+void RooStats::HistFactory::JSONTool::Export(JSONNode& n) const {
   for(const auto& ch:this->_measurement->GetChannels()){
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }

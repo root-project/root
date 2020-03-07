@@ -15,7 +15,7 @@
 #include <RooProduct.h>
 
 namespace {
-  inline void collectNames(const TJSONNode& n,std::vector<std::string>& names){
+  inline void collectNames(const JSONNode& n,std::vector<std::string>& names){
     for(const auto& c:n.children()){
       names.push_back(RooJSONFactoryWSTool::name(c));
     }
@@ -28,7 +28,7 @@ namespace {
     std::vector<double> bounds;
     
     Var(int n): nbins(n), min(0), max(n) {}
-    Var(const TJSONNode& val){
+    Var(const JSONNode& val){
       if(val.is_map()){
         if(!val.has_child("nbins")) RooJSONFactoryWSTool::error("no nbins given");
         if(!val.has_child("min"))   RooJSONFactoryWSTool::error("no min given");
@@ -50,7 +50,7 @@ namespace {
 
     
   
-  inline std::map<std::string,Var> readVars(const TJSONNode& n,const std::string& obsnamecomp){
+  inline std::map<std::string,Var> readVars(const JSONNode& n,const std::string& obsnamecomp){
     std::map<std::string,Var> vars;
     if(!n.is_map()) return vars;
     if(n.has_child("binning")){
@@ -69,7 +69,7 @@ namespace {
     return vars;
   }  
   
-  inline void collectObsNames(const TJSONNode& n,std::vector<std::string>& obsnames,const std::string& obsnamecomp){
+  inline void collectObsNames(const JSONNode& n,std::vector<std::string>& obsnames,const std::string& obsnamecomp){
     auto vars = ::readVars(n,obsnamecomp);
     if(obsnames.size() == 0){
       for(auto it:vars){
@@ -81,7 +81,7 @@ namespace {
     }
   }
 
-  inline std::string genPrefix(const TJSONNode& p,bool trailing_underscore){
+  inline std::string genPrefix(const JSONNode& p,bool trailing_underscore){
     std::string prefix;
     if(!p.is_map()) return prefix;
     if(p.has_child("namespaces")){
@@ -94,7 +94,7 @@ namespace {
     return prefix;
   }
   
-  inline void stackError(const TJSONNode& n,std::vector<double>& sumW,std::vector<double>& sumW2){
+  inline void stackError(const JSONNode& n,std::vector<double>& sumW,std::vector<double>& sumW2){
     if(!n.is_map()) return;    
     if(!n.has_child("counts")) throw "no counts given";
     if(!n.has_child("errors")) throw "no errors given";    
@@ -112,7 +112,7 @@ namespace {
     }
   }
 
-  inline RooDataHist* readData(RooWorkspace* ws, const TJSONNode& n,const std::string& namecomp,const std::string& obsnamecomp){
+  inline RooDataHist* readData(RooWorkspace* ws, const JSONNode& n,const std::string& namecomp,const std::string& obsnamecomp){
     if(!n.is_map()) throw "data is not a map!";
     auto vars = readVars(n,obsnamecomp);
     RooArgList varlist;
@@ -168,7 +168,7 @@ namespace {
       return pdf;
     }
     
-    virtual bool importFunction(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+    virtual bool importFunction(RooJSONFactoryWSTool* tool, const JSONNode& p) const override {
       std::string name(RooJSONFactoryWSTool::name(p));
       std::string prefix = ::genPrefix(p,true);
       if(prefix.size() > 0) name = prefix+name;    
@@ -198,7 +198,6 @@ namespace {
             std::string sysname(RooJSONFactoryWSTool::name(sys));
             std::string parname( sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"]) : "alpha_"+sysname);
             RooAbsReal* par = this->getNP(tool,parname.c_str());
-            RooAbsPdf* pdf = this->getConstraint(tool,sysname.c_str());
             nps.add(*par);
             low.push_back(sys["low"].val_float());
             high.push_back(sys["high"].val_float());
@@ -214,7 +213,6 @@ namespace {
             std::string sysname(RooJSONFactoryWSTool::name(sys));
             std::string parname( sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"]) : "alpha_"+sysname);            
             RooAbsReal* par = this->getNP(tool,parname.c_str());
-            RooAbsPdf* pdf = this->getConstraint(tool,sysname.c_str());            
             nps.add(*par);
             RooDataHist* dh_low = ::readData(tool->workspace(),p["dataLow"],sysname+"Low_"+name,prefix);
             RooHistFunc hf_low((sysname+"Low_"+name).c_str(),RooJSONFactoryWSTool::name(p).c_str(),*(dh_low->get()),*dh_low);              
@@ -244,7 +242,7 @@ namespace {
 
   class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const JSONNode& p) const override {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList funcs;
       RooArgList coefs;
@@ -375,7 +373,7 @@ namespace {
 namespace {
   class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
-    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* func, TJSONNode& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg* func, JSONNode& elem) const override {
       const RooStats::HistFactory::FlexibleInterpVar* fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar*>(func);
       elem["type"] << "interpolation0d";        
       auto& vars = elem["vars"];
@@ -394,14 +392,6 @@ namespace {
 
 
 namespace {
-  bool startsWith(const std::string& mainStr, const std::string& toMatch){
-    // std::string::find returns 0 if toMatch is found at starting
-    if(mainStr.find(toMatch) == 0)
-      return true;
-    else
-      return false;
-  }
-  
   class HistFactoryStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
     bool autoExportDependants() const override { return false; }
@@ -414,7 +404,7 @@ namespace {
         }
       }
     }
-    bool tryExport(const RooProdPdf* prodpdf, TJSONNode& elem) const {
+    bool tryExport(const RooProdPdf* prodpdf, JSONNode& elem) const {
       std::string chname(prodpdf->GetName());
       if(chname.find("model_") == 0){
         chname = chname.substr(6);
@@ -485,7 +475,7 @@ namespace {
       return true;
     }
     
-    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* p, TJSONNode& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg* p, JSONNode& elem) const override {
       const RooProdPdf* prodpdf = static_cast<const RooProdPdf*>(p);
       if(tryExport(prodpdf,elem)){
         return true;

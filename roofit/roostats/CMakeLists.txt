@@ -77,7 +77,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/RooJSONFactoryWSTool.h
     RooStats/JSONInterface.h
     RooStats/RYMLParser.h
-#    RooStats/JSONParser.h                   
+    RooStats/JSONParser.h                   
   SOURCES
     src/AsymptoticCalculator.cxx
     src/BayesianCalculator.cxx
@@ -132,7 +132,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/RooJSONFactoryWSTool.cxx
     src/JSONFactories.cxx
     src/RYMLParser.cxx
-#    src/JSONParser.cxx                       
+    src/JSONParser.cxx                       
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES
@@ -149,6 +149,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     Graf
     Gpad
 )
+
+target_include_directories(RooStats
+  PRIVATE
+  ${CMAKE_SOURCE_DIR}/io/io/res
+)
+
 
 if(yml)
   FIND_PACKAGE(ryml)

@@ -1,28 +1,25 @@
-#ifndef RYML_PARSER_H
-#define RYML_PARSER_H
+#ifndef JSON_PARSER_H
+#define JSON_PARSER_H
 #include "JSONInterface.h"
 
-#ifdef INCLUDE_RYML
-#include <list>
 #include <istream>
 #include <memory>
 
-class TRYMLTree : public JSONTree {
+class TJSONTree : public JSONTree {
  protected:
   class Impl;
   std::unique_ptr<Impl> tree;
  public:
   class Node : public JSONNode {
  protected:
-   TRYMLTree* tree;
+   TJSONTree* tree;
    class Impl;
-   friend TRYMLTree;
+   friend TJSONTree;
    std::unique_ptr<Impl> node;
  public:
    virtual void writeJSON(std::ostream& os) const override;
-   virtual void writeYML(std::ostream&) const override;
 
-   Node(TRYMLTree* t,const Impl& other);   
+   Node(TJSONTree* t,const Impl& other);   
    Node(const Node& other);
    virtual Node& operator<< (std::string const& s) override;
    virtual Node& operator<< (int i) override;
@@ -47,22 +44,10 @@ class TRYMLTree : public JSONTree {
    virtual Node& child(size_t pos) override;
    virtual const Node& child(size_t pos) const override;
  };
- 
- protected:
-  std::list<std::string> _strcache;
-  std::list<Node> _nodecache;
- public:
-  Node& incache(const Node& n);
-  const char* incache(const std::string& str);
-  void clearcache();
   
  public:
-  TRYMLTree();
-  ~TRYMLTree();
-  TRYMLTree(std::istream& is);
-  Node& rootnode();
+  TJSONTree();  
+  TJSONTree(std::istream& is);
+  virtual Node& rootnode() override;
 };
-
-#endif
-
 #endif

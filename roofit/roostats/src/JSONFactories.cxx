@@ -15,7 +15,7 @@
 namespace {
   class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const JSONNode& p) const override {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgSet factors;
       if(!p.has_child("factors")){
@@ -41,7 +41,7 @@ namespace {
 
   class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const JSONNode& p) const override {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList pdfs;
       RooArgList coefs;      
@@ -83,7 +83,7 @@ namespace {
   
   class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer {
   public:
-    virtual bool importPdf(RooJSONFactoryWSTool* tool, const TJSONNode& p) const override {
+    virtual bool importPdf(RooJSONFactoryWSTool* tool, const JSONNode& p) const override {
       std::string name(RooJSONFactoryWSTool::name(p));
       if(!p.has_child("channels")){
         RooJSONFactoryWSTool::error("no channel components of '" + name + "'");
@@ -117,7 +117,7 @@ namespace {
   class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
     bool autoExportDependants() const override { return false; }    
-    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* func, TJSONNode& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool* tool, const RooAbsArg* func, JSONNode& elem) const override {
       const RooSimultaneous* sim = static_cast<const RooSimultaneous*>(func);
       elem["type"] << "simultaneous";
       auto& channels = elem["channels"];
@@ -136,7 +136,7 @@ namespace {
 
   class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
   public:
-    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg* func, TJSONNode& elem) const override {
+    virtual bool exportObject(RooJSONFactoryWSTool*, const RooAbsArg* func, JSONNode& elem) const override {
       const RooHistFunc* hf = static_cast<const RooHistFunc*>(func);
       const RooDataHist& dh = hf->dataHist();
       elem["type"] << "histogram";
