@@ -11,7 +11,6 @@
 
 #include "TROOT.h"
 
-#undef INCLUDE_RYML
 #ifdef INCLUDE_RYML  
 #include "RooStats/RYMLParser.h"
 #else
