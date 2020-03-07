@@ -559,7 +559,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
              
                // define the array to load the data with the CFITSIO functions
                // a fixed arrays is needed as argument to the fits_read_col function
-               // so a new `TYPE array[size]` is defined for each case and then
+               // so a new `DATATYPE array[size]` is defined for each case and then
                // passed to the `fits_read_col` function
                //
                // TODO: add all type cases, for now only short, long, float and double are considered
@@ -587,7 +587,7 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
                } else {
                   Error("LoadHDU", "The variable-length array type in column %d is unknown", colnum + 1);
                }
-               // return the vector storing the results in the corresponding cell
+               // place the vector storing the variable-length array in the corresponding cell
                fCells[cellindex++].fRealVector = vec;
             }
          } else {
@@ -1377,7 +1377,7 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(const char *colname)
 
    if (fColumnsInfo[colnum].fType == kRealArray) {
       Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded fixed-length arrays");
-      Info("GetTabRealVectorColumn", "Use GetTabRealVectorCell() instead.");
+      Info("GetTabRealVectorColumn", "Use GetTabRealVectorCells() or GetTabRealVectorCell() instead.");
       return 0;
    } else if (fColumnsInfo[colnum].fType == kRealVector) {
       Warning("GetTabRealVectorColumn", "attempting to read a column whose cells have embedded variable-length arrays");
