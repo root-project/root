@@ -4,11 +4,9 @@
 
 #include <istream>
 #include <memory>
+#include <list>
 
 class TJSONTree : public JSONTree {
- protected:
-  class Impl;
-  std::unique_ptr<Impl> tree;
  public:
   class Node : public JSONNode {
  protected:
@@ -19,8 +17,10 @@ class TJSONTree : public JSONTree {
  public:
    virtual void writeJSON(std::ostream& os) const override;
 
-   Node(TJSONTree* t,const Impl& other);   
+   Node(TJSONTree* t,std::istream& is);
+   Node(TJSONTree* t,Impl& other);   
    Node(const Node& other);
+   virtual ~Node();
    virtual Node& operator<< (std::string const& s) override;
    virtual Node& operator<< (int i) override;
    virtual Node& operator<< (double d) override;       
@@ -44,10 +44,17 @@ class TJSONTree : public JSONTree {
    virtual Node& child(size_t pos) override;
    virtual const Node& child(size_t pos) const override;
  };
+ protected:
+  Node root;
+  std::list<Node> _nodecache;  
+  void clearcache();
   
  public:
-  TJSONTree();  
+  TJSONTree();
+  virtual ~TJSONTree();    
   TJSONTree(std::istream& is);
+  TJSONTree::Node& incache(const TJSONTree::Node& n);
+  
   virtual Node& rootnode() override;
 };
 #endif
