@@ -1539,7 +1539,9 @@ if(cuda OR tmva-gpu)
     endif()
 
     enable_language(CUDA)
-    
+
+    set(cuda ON CACHE BOOL "Found Cuda for TMVA GPU" FORCE)
+
     ### look for package CuDNN
     if (cudnn )
       find_package(CuDNN)
@@ -1558,6 +1560,8 @@ if(cuda OR tmva-gpu)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
 
+else()
+  set(cudnn OFF)
 endif()
 
 #---TMVA and its dependencies------------------------------------------------------------
