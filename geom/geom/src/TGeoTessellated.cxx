@@ -32,6 +32,9 @@ for the composing faces.
 #include "TMath.h"
 #include "TRandom.h"
 
+#include <array>
+#include <vector>
+
 ClassImp(TGeoTessellated)
 
    using Vertex_t = Tessellated::Vertex_t;
