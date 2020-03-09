@@ -19,8 +19,7 @@
 
 ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame()
 {
-   fUserCoord=  std::move(coords);
-   fPalette = RPalette::GetPalette("default");
+   fUserCoord = std::move(coords);
 }
 
 void ROOT::Experimental::RFrame::Execute(const std::string &arg)
