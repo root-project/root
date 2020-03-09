@@ -244,6 +244,8 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
    // error normalization in case of zero error in the data
    if (fitdata->GetErrorType() == ROOT::Fit::BinData::kNoError) fitConfig.SetNormErrors(true);
+   // error normalization also in case of W1 option (weights = 1)
+   if (fitdata->Opt().fErrors1)  fitConfig.SetNormErrors(true);
    // normalize errors also in case you are fitting a Ndim histo with a N-1 function
    if (int(fitdata->NDim())  == hdim -1 ) fitConfig.SetNormErrors(true);
 
