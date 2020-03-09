@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -36,6 +36,7 @@ class RAttrColor : public RAttrBase {
                  AddString("rgb", "").AddString("a", "").AddString("name", "").AddBool("auto", false));
 
 protected:
+
    /** Set color as plain SVG name like "white" or "lightblue". Clears RGB component before */
    void SetName(const std::string &_name) { SetValue("name", _name); }
 
@@ -51,6 +52,7 @@ protected:
    /** Set color as hex string like 00FF00 */
    void SetHex(const std::string &_hex) { SetValue("rgb", _hex); }
 
+   /** Remove color hex value */
    void ClearHex() { ClearValue("rgb"); }
 
    /** Returns true if color hex value was  specified */
@@ -65,9 +67,10 @@ protected:
    /** Set color alpha (opacity) value - from 0 to 1 */
    void SetAlpha(float alpha) { return SetAlphaHex(RColor::toHex((uint8_t)(alpha * 255))); }
 
-   /** Set color alpha (opacity) value - from 0 to 1 */
+   /** Set color alpha (opacity) value as hex */
    void SetAlphaHex(const std::string &val) { SetValue("a", val); }
 
+   /** Remove color alpha value */
    void ClearAlpha() { ClearValue("a"); }
 
 public:
@@ -88,6 +91,7 @@ public:
 
    }
 
+   /** Extract RColor for given attribute */
    RColor GetColor() const
    {
       RColor res;
@@ -101,6 +105,7 @@ public:
       return res;
    }
 
+   /** Remove all values which can correspond to RColor value */
    void Clear()
    {
       ClearHex();

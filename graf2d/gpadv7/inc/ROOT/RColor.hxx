@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,11 +14,10 @@
 #include <string>
 #include <array>
 
-
-class RAttrColor;
-
 namespace ROOT {
 namespace Experimental {
+
+class RAttrColor;
 
 // TODO: see also imagemagick's C++ interface for RColor operations!
 // https://www.imagemagick.org/api/magick++-classes.php
@@ -92,19 +91,18 @@ public:
       SetAlpha(alpha);
    }
 
+   /** Set alpha as float value from range 0..1 */
    void SetAlphaFloat(float alpha)
    {
-      uint8_t v = 0;
       if (alpha <= 0.)
-         v  = 0;
+         SetAlpha(0);
       else if (alpha >= 1.)
-         v  = 255;
+         SetAlpha(255);
       else
-         v  = (uint8_t) (alpha * 255);
-
-      SetAlpha(v);
+         SetAlpha((uint8_t)(alpha * 255));
    }
 
+   /** Set alpha as value from range 0..255 */
    void SetAlpha(uint8_t alpha)
    {
       if (fRGBA.empty()) {
@@ -124,8 +122,10 @@ public:
    /** Returns true if no color is specified */
    bool IsEmpty() const { return fName.empty() && (fRGBA.size() == 0); }
 
+   /** Returns color as RGBA array - when exists */
    const std::vector<uint8_t> &GetRGBA() const { return fRGBA; }
 
+   /** Returns color as RGBA array, trying also convert color name into RGBA value */
    std::vector<uint8_t> AsRGBA() const;
 
    /** Returns red color component 0..255 */
@@ -133,6 +133,7 @@ public:
    {
       if (fRGBA.size() > 2)
          return fRGBA[0];
+
       std::vector<uint8_t> rgb;
       return ConvertToRGB(fName, rgb) ? rgb[0] : 0;
    }
@@ -157,20 +158,20 @@ public:
       return ConvertToRGB(fName, rgb) ? rgb[2] : 0;
    }
 
-   /** Returns color alpha (opacity) as float from 0. to 1. */
+   /** Returns color alpha (opacity) as uint8_t 0..255 */
    uint8_t GetAlpha() const
    {
       if (fRGBA.size() > 0)
          return fRGBA.size() == 4 ? fRGBA[3] : 255;
 
       std::vector<uint8_t> rgba;
-      if (ConvertToRGB(fName, rgba) && rgba.size() == 3)
+      if (ConvertToRGB(fName, rgba) && (rgba.size() == 3))
          return rgba[3];
 
       return 255;
    }
 
-   /** Returns color alpha (opacity) as float from 0. to 1. */
+   /** Returns color alpha (opacity) as float from 0..1 */
    float GetAlphaFloat() const
    {
       return GetAlpha() / 255.;
