@@ -8,16 +8,30 @@
 
 #include "ROOT/RColor.hxx"
 
+#include <unordered_map>
+
 using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
 
-constexpr RColor::RGB_t RColor::kRed;
-constexpr RColor::RGB_t RColor::kGreen;
-constexpr RColor::RGB_t RColor::kBlue;
-constexpr RColor::RGB_t RColor::kWhite;
 constexpr RColor::RGB_t RColor::kBlack;
+constexpr RColor::RGB_t RColor::kGreen;
+constexpr RColor::RGB_t RColor::kLime;
+constexpr RColor::RGB_t RColor::kAqua;
+constexpr RColor::RGB_t RColor::kPurple;
+constexpr RColor::RGB_t RColor::kGrey;
+constexpr RColor::RGB_t RColor::kFuchsia;
+constexpr RColor::RGB_t RColor::kNavy;
+constexpr RColor::RGB_t RColor::kBlue;
+constexpr RColor::RGB_t RColor::kTeal;
+constexpr RColor::RGB_t RColor::kOlive;
+constexpr RColor::RGB_t RColor::kSilver;
+constexpr RColor::RGB_t RColor::kMaroon;
+constexpr RColor::RGB_t RColor::kRed;
+constexpr RColor::RGB_t RColor::kYellow;
+constexpr RColor::RGB_t RColor::kWhite;
 constexpr float RColor::kTransparent;
+constexpr float RColor::kSemiTransparent;
 constexpr float RColor::kOpaque;
 
 
@@ -31,16 +45,55 @@ bool RColor::ConvertToRGB(const std::string &name, std::vector<uint8_t> &rgba)
       return false;
    }
 
+   if (name[0] == '#') {
+      if ((name.length() != 7) && (name.length() != 9)) return false;
+
+      rgba.resize((name.length() == 7) ? 3 : 4);
+
+      try {
+        rgba[0] = std::stoi(name.substr(1,2), nullptr, 16);
+        rgba[1] = std::stoi(name.substr(3,2), nullptr, 16);
+        rgba[2] = std::stoi(name.substr(5,2), nullptr, 16);
+        if (name.length() == 9)
+           rgba[3] = std::stoi(name.substr(7,2), nullptr, 16);
+      } catch(...) {
+         return false;
+      }
+
+      return true;
+   }
+
+   // see https://www.december.com/html/spec/colorsvghex.html
+
+   static std::unordered_map<std::string,RGB_t> known_colors = {
+      {"black", kWhite},
+      {"green", kGreen},
+      {"lime", kLime},
+      {"aqua", kAqua},
+      {"purple", kPurple},
+      {"grey", kGrey},
+      {"fuchsia", kFuchsia},
+      {"navy", kNavy},
+      {"blue", kBlue},
+      {"teal", kTeal},
+      {"olive", kOlive},
+      {"silver", kSilver},
+      {"maroon", kMaroon},
+      {"red", kRed},
+      {"yellow", kYellow},
+      {"white", kWhite}
+   };
+
    rgba.resize(3);
    rgba[0] = rgba[1] = rgba[2] = 0;
 
-   if (name == "red") { rgba[0] = 255; rgba[1] = 0; rgba[2] = 0; }
-   else if (name == "green") { rgba[0] = 0; rgba[1] = 255; rgba[2] = 0; }
-   else if (name == "blue") { rgba[0] = 0; rgba[1] = 0; rgba[2] = 255; }
-   else if (name == "black") { rgba[0] = rgba[1] = rgba[2] = 0; }
-   else if (name == "white") { rgba[0] = rgba[1] = rgba[2] = 255; }
-   else if (name == "grey") { rgba[0] = rgba[1] = rgba[2] = 127; }
-   else return false;
+   auto known = known_colors.find(name);
+   if (known != known_colors.end()) {
+      rgba[0] = known->second[0];
+      rgba[1] = known->second[1];
+      rgba[2] = known->second[2];
+      return true;
+   }
 
    return true;
 }
@@ -66,9 +119,13 @@ bool RColor::SetRGBHex(const std::string &hex)
 {
    if (hex.length() != 6) return false;
 
-   SetRGB( std::stoi(hex.substr(0,2), nullptr, 16),
-           std::stoi(hex.substr(2,2), nullptr, 16),
-           std::stoi(hex.substr(4,2), nullptr, 16));
+   try {
+      SetRGB( std::stoi(hex.substr(0,2), nullptr, 16),
+              std::stoi(hex.substr(2,2), nullptr, 16),
+              std::stoi(hex.substr(4,2), nullptr, 16));
+   } catch (...) {
+      return false;
+   }
    return true;
 }
 
