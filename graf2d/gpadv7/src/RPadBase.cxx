@@ -99,7 +99,7 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
               case 1: col = RColor::kGreen; break;
               case 2: col = RColor::kBlue; break;
             }
-            drawable->fAttr.AddString(attr.first.substr(0,pos) + "_color_rgb", col.GetHex());
+            drawable->fAttr.AddString(attr.first.substr(0,pos) + "_color_rgb", col.AsHex());
          }
       }
    }

@@ -69,6 +69,7 @@
 #pragma read sourceClass="ROOT::Experimental::RCanvas" targetClass="ROOT::Experimental::RCanvas" source="" target="" code="{ newObj->ResolveSharedPtrs() ; }"
 
 #pragma link C++ class ROOT::Experimental::RColor+;
+#pragma link C++ class ROOT::Experimental::RAttrColor+;
 #pragma link C++ class ROOT::Experimental::RAttrFill+;
 #pragma link C++ class ROOT::Experimental::RAttrLine+;
 #pragma link C++ class ROOT::Experimental::RAttrBox+;

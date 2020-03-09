@@ -10,7 +10,7 @@
 #define ROOT7_RAttrLine
 
 #include <ROOT/RAttrBase.hxx>
-#include <ROOT/RColor.hxx>
+#include <ROOT/RAttrColor.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -25,7 +25,7 @@ namespace Experimental {
 
 class RAttrLine : public RAttrBase {
 
-   RColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
+   RAttrColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
 
    R__ATTR_CLASS(RAttrLine, "line_", AddDouble("width", 1.).AddInt("style", 1).AddDefaults(fColor));
 
@@ -44,8 +44,8 @@ class RAttrLine : public RAttrBase {
 
    ///The color of the line.
    RAttrLine &SetColor(const RColor &color) { fColor = color; return *this; }
-   const RColor &GetColor() const { return fColor; }
-   RColor &Color() { return fColor; }
+   RColor GetColor() const { return fColor.GetColor(); }
+   RAttrColor &AttrColor() { return fColor; }
 
 };
 

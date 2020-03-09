@@ -10,7 +10,7 @@
 #define ROOT7_RAttrText
 
 #include <ROOT/RAttrBase.hxx>
-#include <ROOT/RColor.hxx>
+#include <ROOT/RAttrColor.hxx>
 
 #include <string>
 
@@ -28,7 +28,7 @@ namespace Experimental {
 
 class RAttrText : public RAttrBase {
 
-   RColor fColor{this, "color_"}; ///<! text color, will access container from text attributes
+   RAttrColor fColor{this, "color_"}; ///<! text color, will access container from text attributes
 
    R__ATTR_CLASS(RAttrText, "text_", AddDouble("size", 12.).AddDouble("angle", 0.).AddInt("align", 22).AddInt("font", 41).AddDefaults(fColor));
 
@@ -50,8 +50,8 @@ class RAttrText : public RAttrBase {
 
    ///The color of the text.
    RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
-   const RColor &GetColor() const { return fColor; }
-   RColor &Color() { return fColor; }
+   RColor GetColor() const { return fColor.GetColor(); }
+   RAttrColor &AttrColor() { return fColor; }
 
 };
 

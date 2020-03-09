@@ -18,7 +18,6 @@ TEST(Primitives, RBox)
    box->AttrBox().AttrBorder().SetColor(RColor::kRed).SetWidth(5.).SetStyle(7);
    box->AttrBox().AttrFill().SetColor(RColor::kBlue).SetStyle(6);
 
-
    EXPECT_EQ(canv.NumPrimitives(), 1u);
 
    EXPECT_EQ(box->GetAttrBox().GetAttrBorder().GetColor(), RColor::kRed);
@@ -87,9 +86,9 @@ TEST(Primitives, SameColor)
    auto line2 = canv.Draw<RLine>(RPadPos(0.1_normal, 0.9_normal), RPadPos(0.9_normal,0.1_normal));
    auto line3 = canv.Draw<RLine>(RPadPos(0.9_normal, 0.1_normal), RPadPos(0.1_normal,0.9_normal));
 
-   line1->AttrLine().Color().SetAuto();
-   line2->AttrLine().Color().SetAuto();
-   line3->AttrLine().Color().SetAuto();
+   line1->AttrLine().AttrColor().SetAuto();
+   line2->AttrLine().AttrColor().SetAuto();
+   line3->AttrLine().AttrColor().SetAuto();
 
    canv.AssignAutoColors();
 
