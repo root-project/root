@@ -4687,7 +4687,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    DeclarationName DName = &SemaR.Context.Idents.get(name);
 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                  Sema::ForRedeclaration);
+                  Sema::ForExternalRedeclaration);
 
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
