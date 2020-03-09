@@ -76,7 +76,12 @@ for p in processes:
             ROOT.ROOT.RDF.TH1DModel(p, "Diphoton invariant mass; m_{#gamma#gamma} [GeV];Events", 30, 105, 160),
             "m_yy", "weight")
 
-# Run the event loop and create the plot
+# Run the event loop
+ggh = hists["ggH"].GetValue()
+vbf = hists["VBF"].GetValue()
+data = hists["data"].GetValue()
+
+# Create the plot
 
 # Set styles
 ROOT.gROOT.SetStyle("ATLAS")
@@ -97,11 +102,6 @@ lower_pad.SetBottomMargin(0.3)
 
 upper_pad.Draw()
 lower_pad.Draw()
-
-# Run the event loop
-ggh = hists["ggH"].GetValue()
-vbf = hists["VBF"].GetValue()
-data = hists["data"].GetValue()
 
 # Fit signal + background model to data
 upper_pad.cd()
@@ -209,6 +209,5 @@ text.DrawLatex(0.18 + 0.13, 0.84, "Open Data")
 text.SetTextSize(0.04)
 text.DrawLatex(0.18, 0.78, "#sqrt{s} = 13 TeV, 10 fb^{-1}");
 
-# Draw and save the plot
-c.Draw()
+# Save the plot
 c.SaveAs("HiggsToTwoPhotons.pdf");
