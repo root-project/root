@@ -295,12 +295,12 @@ int GetNBinsFromAxes(AXISCONFIG... axisArgs)
    return RGetNBinsCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
 }
 
-// Get bin index of given coordinates in hole hist
+// Get under/overflow bin index of given coordinates
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
-struct RGetBinIndex;
+struct RGetUnderOverBinIndex;
 
 template <class HISTIMPL, class AXES, bool GROW>
-struct RGetBinIndex<-1, HISTIMPL, AXES, GROW> {
+struct RGetUnderOverBinIndex<-1, HISTIMPL, AXES, GROW> {
    int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
                   RAxisBase::EFindStatus &status) const
    {
@@ -310,12 +310,12 @@ struct RGetBinIndex<-1, HISTIMPL, AXES, GROW> {
 };
 
 template <int I, class HISTIMPL, class AXES, bool GROW>
-struct RGetBinIndex {
+struct RGetUnderOverBinIndex {
    int operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x,
                   RAxisBase::EFindStatus &status) const
    {
       constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
-      int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
+      int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]) - 1;
       if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin >= std::get<thisAxis>(axes).GetNBinsNoOver())) {
          hist->GrowAxis(thisAxis, x[thisAxis]);
          status = RAxisBase::EFindStatus::kCanGrow;
@@ -324,7 +324,40 @@ struct RGetBinIndex {
          return bin;
       }
       return bin +
-             RGetBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBins();
+             RGetUnderOverBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBins();
+   }
+};
+
+// Get actual bin index of given coordinates
+template <int IDX, class HISTIMPL, class AXES, bool GROW>
+struct RGetActualBinIndex;
+
+template <class HISTIMPL, class AXES, bool GROW>
+struct RGetActualBinIndex<-1, HISTIMPL, AXES, GROW> {
+   int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
+                  RAxisBase::EFindStatus &status) const
+   {
+      status = RAxisBase::EFindStatus::kValid;
+      return 0;
+   }
+};
+
+template <int I, class HISTIMPL, class AXES, bool GROW>
+struct RGetActualBinIndex {
+   int operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x,
+                  RAxisBase::EFindStatus &status) const
+   {
+      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
+      int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]) - 1;
+      if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin >= std::get<thisAxis>(axes).GetNBinsNoOver())) {
+         hist->GrowAxis(thisAxis, x[thisAxis]);
+         status = RAxisBase::EFindStatus::kCanGrow;
+
+         // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
+         return bin;
+      }
+      return bin +
+             RGetActualBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBinsNoOver();
    }
 };
 
@@ -463,15 +496,56 @@ public:
    /// Normalized axes access, converting from actual axis type to base class
    const RAxisBase &GetAxis(int iAxis) const final { return *std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
 
+   /// 
+   std::vector<int> GetBinType(const CoordArray_t &x) const
+   {
+      std::vector<int> binType;
+      for(int thisAxis = 0; thisAxis < DATA::GetNDim(); ++thisAxis) {
+         int bin = std::get<thisAxis>(fAxes).FindBin(x[thisAxis]);
+         binType = {thisAxis, bin};
+         if(bin == -1 || bin == -2)
+            return binType;
+      }
+      binType = {-1, 0};
+      return binType;!
+   }
+
+   /// Gets the bin index for coordinate `x`; returns 0 if there is no such bin,
+   /// e.g. for axes without over / underflow but coordinate out of range.
+   int GetUnderOverBinIndex(const CoordArray_t &x, int axis, int type) const final
+   {
+      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
+      int offset = axis * 2 * GetNBinsForOffset;
+      int ret =
+         Internal::RGetUnderOverBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status, axis, offset) + 1;
+      if (status != RAxisBase::EFindStatus::kValid)
+         return 0;
+      return ret;
+   }
+
+   /// Gets the bin index for coordinate `x`; returns 0 if there is no such bin,
+   /// e.g. for axes without over / underflow but coordinate out of range.
+   int GetActualBinIndex(const CoordArray_t &x) const final
+   {
+      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
+      int ret =
+         Internal::RGetActualBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status) + 1;
+      if (status != RAxisBase::EFindStatus::kValid)
+         return 0;
+      return ret;
+   }
+
    /// Gets the bin index for coordinate `x`; returns 0 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
    int GetBinIndex(const CoordArray_t &x) const final
    {
       RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
-      int ret =
-         Internal::RGetBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status);
-      if (status != RAxisBase::EFindStatus::kValid)
-         return 0;
+      std::vector<int> binType = GetBinType(x);
+      if(binType[1] == -1 || binType[1] == -2) {
+         int ret = GetUnderOverBinIndex(x, binType[0]);
+      } else {
+         int ret = GetActualBinIndex(x);
+      }
       return ret;
    }
 

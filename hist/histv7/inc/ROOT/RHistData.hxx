@@ -83,12 +83,12 @@ private:
 
 public:
    RHistStatContent() = default;
-   RHistStatContent(size_t in_size): fBinContent(in_size - 1), fUnderOverBinContent(3) {}
+   RHistStatContent(size_t in_size): fBinContent(in_size - 1), fUnderOverBinContent(in_size - 1) {}
 
    /// Add weight to the bin content at binidx.
    void Fill(const CoordArray_t & /*x*/, int binidx, Weight_t weight = 1.)
    {
-      if(binidx < 0){
+      if(binidx < 0) {
          fUnderOverBinContent[std::abs(binidx)] += weight;
          ++fEntries;
       } else {

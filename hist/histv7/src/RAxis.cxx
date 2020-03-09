@@ -58,7 +58,7 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
    // If x is the lower edge of the overflow bin then that's still okay - but if
    // even the bin before binIdx is an overflow it's out of range.
    if (IsOverflowBin(binIdx - 1))
-      return -1;
+      return -2;
 
    return binIdx;
 }

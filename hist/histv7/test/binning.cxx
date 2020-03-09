@@ -121,34 +121,34 @@ TEST(HistImplBinning, EquiDist2D) {
    //                     Axis 0
    //              UF   0.0  1.0  OF
    //        ------------------------
-   //     A   UF  |-1   -2   -3   -4
-   //     x  -1.0 |-5    1    2   -6
-   //     .   0.0 |-7    3    4   -8
-   //     1   OF  |-9  -10  -11  -12
+   //     A   UF  |1/9   10   11   5/12
+   //     x  -1.0 | 2     1    2   6
+   //     .   0.0 | 3     3    4   7
+   //     1   OF  |4/13  14   15   8/16
 
    // Check that coordinates map into the correct bins
 
-   EXPECT_EQ(-1, hist.GetBinIndex({-100., -100.}));
-   EXPECT_EQ(-2, hist.GetBinIndex({0.5, -100.}));
-   EXPECT_EQ(-3, hist.GetBinIndex({1.5, -100.}));
-   EXPECT_EQ(-4, hist.GetBinIndex({100., -100.}));
-   EXPECT_EQ(-5, hist.GetBinIndex({-100., -0.5}));
+   EXPECT_EQ( 1, hist.GetBinIndex({-100., -100.}));
+   EXPECT_EQ(10, hist.GetBinIndex({0.5, -100.}));
+   EXPECT_EQ(11, hist.GetBinIndex({1.5, -100.}));
+   EXPECT_EQ( 5, hist.GetBinIndex({100., -100.}));
+   EXPECT_EQ( 2, hist.GetBinIndex({-100., -0.5}));
    EXPECT_EQ( 1, hist.GetBinIndex({0.5, -0.5}));
    EXPECT_EQ( 2, hist.GetBinIndex({1.5, -0.5}));
-   EXPECT_EQ(-6, hist.GetBinIndex({100., -0.5}));
-   EXPECT_EQ(-7, hist.GetBinIndex({-100., 0.5}));
+   EXPECT_EQ( 6, hist.GetBinIndex({100., -0.5}));
+   EXPECT_EQ( 3, hist.GetBinIndex({-100., 0.5}));
    EXPECT_EQ( 3, hist.GetBinIndex({0.5, 0.5}));
    EXPECT_EQ( 4, hist.GetBinIndex({1.5, 0.5}));
-   EXPECT_EQ(-8, hist.GetBinIndex({100., 0.5}));
-   EXPECT_EQ(-9, hist.GetBinIndex({-100., 100.}));
-   EXPECT_EQ(-10, hist.GetBinIndex({0.5, 100.}));
-   EXPECT_EQ(-11, hist.GetBinIndex({1.5, 100.}));
-   EXPECT_EQ(-12, hist.GetBinIndex({100., 100.}));
+   EXPECT_EQ( 7, hist.GetBinIndex({100., 0.5}));
+   EXPECT_EQ( 4, hist.GetBinIndex({-100., 100.}));
+   EXPECT_EQ(14, hist.GetBinIndex({0.5, 100.}));
+   EXPECT_EQ(15, hist.GetBinIndex({1.5, 100.}));
+   EXPECT_EQ( 8, hist.GetBinIndex({100., 100.}));
 
-   EXPECT_EQ(-1, hist.GetBinIndex({-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
-   EXPECT_EQ(-4, hist.GetBinIndex({ std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
-   EXPECT_EQ(-9, hist.GetBinIndex({-std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
-   EXPECT_EQ(-12, hist.GetBinIndex({ std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
+   EXPECT_EQ( 1, hist.GetBinIndex({-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
+   EXPECT_EQ( 5, hist.GetBinIndex({ std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
+   EXPECT_EQ( 4, hist.GetBinIndex({-std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
+   EXPECT_EQ( 8, hist.GetBinIndex({ std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
 
    // Check that bins map into the correct coordinates
 
