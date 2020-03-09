@@ -7034,19 +7034,50 @@ void TTree::Print(Option_t* option) const
       option = "";
 
    if (strncmp(option,"clusters",strlen("clusters"))==0) {
-      Printf("%-16s %-16s %-16s %5s",
-             "Cluster Range #", "Entry Start", "Last Entry", "Size");
+      Printf("%-16s %-16s %-16s %8s %20s",
+             "Cluster Range #", "Entry Start", "Last Entry", "Size", "Number of clusters");
       Int_t index= 0;
       Long64_t clusterRangeStart = 0;
+      Long64_t totalClusters = 0;
+      bool estimated = false;
+      bool unknown = false;
+      auto printer = [this, &totalClusters, &estimated, &unknown](Int_t ind, Long64_t start, Long64_t end, Long64_t recordedSize) {
+            Long64_t nclusters = 0;
+            if (recordedSize > 0) {
+               nclusters = (1 + end - start) / recordedSize;
+               Printf("%-16d %-16lld %-16lld %8lld %10lld",
+                      ind, start, end, recordedSize, nclusters);
+            } else {
+               // NOTE: const_cast ... DO NOT Merge for now
+               TClusterIterator iter((TTree*)this, start);
+               iter.Next();
+               auto estimated_size = iter.GetNextEntry() - start;
+               if (estimated_size > 0) {
+                  nclusters = (1 + end - start) / estimated_size;
+                  Printf("%-16d %-16lld %-16lld %8lld %10lld (estimated)",
+                      ind, start, end, recordedSize, nclusters);
+                  estimated = true;
+               } else {
+                  Printf("%-16d %-16lld %-16lld %8lld    (unknown)",
+                        ind, start, end, recordedSize);
+                  unknown = true;
+               }
+            }
+            start = end + 1;
+            totalClusters += nclusters;
+      };
       if (fNClusterRange) {
          for( ; index < fNClusterRange; ++index) {
-            Printf("%-16d %-16lld %-16lld %5lld",
-                   index, clusterRangeStart, fClusterRangeEnd[index], fClusterSize[index]);
+            printer(index, clusterRangeStart, fClusterRangeEnd[index], fClusterSize[index]);
             clusterRangeStart = fClusterRangeEnd[index] + 1;
          }
       }
-      Printf("%-16d %-16lld %-16lld %5lld",
-             index, clusterRangeStart, fEntries - 1, fAutoFlush);
+      printer(index, clusterRangeStart, fEntries - 1, fAutoFlush);
+      if (unknown) {
+         Printf("Total number of clusters: (unknown)");
+      } else  {
+         Printf("Total number of clusters: %lld %s", totalClusters, estimated ? "(estimated)" : "");
+      }
       return;
    }
 
