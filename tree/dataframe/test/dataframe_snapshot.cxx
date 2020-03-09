@@ -628,7 +628,16 @@ TEST(RDFSnapshotMore, LazyNotTriggered)
 #ifdef R__USE_IMT
 TEST_F(RDFSnapshotMT, Snapshot_update)
 {
-   test_snapshot_update(tdf);
+   bool hasThrown = false;
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fMode = "UPDATE";
+   try {
+      tdf.Snapshot<int>("t", "some_file.root", {"ans"}, opts);
+   } catch (const std::invalid_argument &e) {
+      EXPECT_STREQ(e.what(), "Snapshot: fMode == \"update\" not supported when implicit MT is enabled");
+      hasThrown = true;
+   }
+   EXPECT_TRUE(hasThrown);
 }
 
 TEST_F(RDFSnapshotMT, Snapshot_action_with_options)
