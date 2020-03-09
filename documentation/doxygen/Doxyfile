@@ -802,7 +802,7 @@ INPUT                  = . \
                          ../../core/macosx/ \
                          ../../core/meta/ \
                          ../../core/metacling/ \
-                         ../../core/metautils/ \
+                         ../../core/clingutils/ \
                          ../../core/multiproc/ \
                          ../../core/rint/ \
                          ../../core/thread/ \
