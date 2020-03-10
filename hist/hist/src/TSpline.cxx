@@ -15,6 +15,7 @@
 */
 
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TSpline.h"
 #include "TVirtualPad.h"
 #include "TH1.h"

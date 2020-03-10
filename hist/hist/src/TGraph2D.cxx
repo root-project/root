@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "TH2.h"
 #include "TF2.h"

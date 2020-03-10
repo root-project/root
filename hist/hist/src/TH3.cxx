@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "THashList.h"
 #include "TH3.h"

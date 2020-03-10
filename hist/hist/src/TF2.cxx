@@ -13,6 +13,7 @@
 #include "TF2.h"
 #include "TMath.h"
 #include "TRandom.h"
+#include "TBuffer.h"
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"

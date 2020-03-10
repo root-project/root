@@ -63,6 +63,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/image/`
 #include "TASImage.h"
 #include "TASImagePlugin.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "TSystem.h"
 #include "TVirtualX.h"

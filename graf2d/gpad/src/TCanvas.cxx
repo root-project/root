@@ -14,6 +14,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TCanvas.h"
 #include "TDatime.h"
 #include "TClass.h"
