@@ -23,7 +23,6 @@
 #include "TVirtualCollectionProxy.h"
 #include "TNotifyLink.h"
 
-#include <list>
 #include <algorithm>
 
 class TBranch;
