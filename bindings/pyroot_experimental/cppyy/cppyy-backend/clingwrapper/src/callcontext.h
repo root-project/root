@@ -1,9 +1,6 @@
 #ifndef CPYCPPYY_CALLCONTEXT_H
 #define CPYCPPYY_CALLCONTEXT_H
 
-// Standard
-#include <vector>
-
 //Bindings
 #include "cpp_cppyy.h"
 
