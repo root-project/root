@@ -109,13 +109,13 @@ void compute(	size_t batchSize,
       output[i] = NaN;
     }
     if (X[i] == M[i]) {
-      output[i] = (G[i]==1.0)/B[i];
-    } 
+      output[i] = ((G[i]==1.0) ? 1. : 0.)/B[i];
+    }
     else {
       output[i] = 0.0;
     }
   }
-  
+
   if (G.isBatch()) {
     for (size_t i=0; i<batchSize; i++) {
       if (output[i] == 0.0) {
@@ -131,7 +131,7 @@ void compute(	size_t batchSize,
       }
     }
   }
-  
+
   for (size_t i=0; i<batchSize; i++) {
     if (X[i] != M[i]) {
       const double invBeta = 1/B[i];
