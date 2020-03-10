@@ -537,10 +537,10 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
             fColumnsInfo[colnum].fRowStart[0] = 0;
 
             for (long row = 0; row < table_rows; row++) {
-               long offset = 0;
+               long offset_descript = 0;
                long repeat = 0;
                
-               fits_read_descript(fp, colnum+1, row+1, &repeat, &offset, &status);
+               fits_read_descript(fp, colnum+1, row+1, &repeat, &offset_descript, &status);
                // store the starting of each row and the number of elements it contains 
                fColumnsInfo[colnum].fRowStart[row+1] = fColumnsInfo[colnum].fRowStart[row] + repeat;
                fColumnsInfo[colnum].fVarLengths[row] = repeat;
