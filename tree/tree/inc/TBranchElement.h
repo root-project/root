@@ -29,8 +29,6 @@
 
 #include "TError.h"
 
-#include <vector>
-
 class TFolder;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
