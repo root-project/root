@@ -8093,7 +8093,7 @@ int TCling::ClassInfo_GetMethodNArg(ClassInfo_t* cinfo, const char* method, cons
 bool TCling::ClassInfo_HasDefaultConstructor(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->HasDefaultConstructor();
+   return TClinginfo->HasDefaultConstructor() != ROOT::TMetaUtils::EIOCtorCategory::kAbsent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

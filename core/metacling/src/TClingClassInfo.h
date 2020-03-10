@@ -27,6 +27,7 @@
 
 #include "TClingDeclInfo.h"
 #include "TClingMethodInfo.h"
+#include "TClingUtils.h"
 #include "TDataType.h"
 #include "TDictionary.h"
 
@@ -125,7 +126,7 @@ public:
    ptrdiff_t            GetBaseOffset(TClingClassInfo* toBase, void* address, bool isDerivedObject);
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    std::vector<std::string> GetUsingNamespaces();
-   bool                 HasDefaultConstructor() const;
+   ROOT::TMetaUtils::EIOCtorCategory      HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;
    void                 Init(const char *name);
    void                 Init(const clang::Decl*);
