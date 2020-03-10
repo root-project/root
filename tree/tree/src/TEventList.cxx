@@ -45,6 +45,7 @@ the TEventList object created in the above commands:
 */
 
 #include "TEventList.h"
+#include "TBuffer.h"
 #include "TCut.h"
 #include "TClass.h"
 #include "TFile.h"
