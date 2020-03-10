@@ -22,7 +22,6 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <map>
 #include <vector>
 
 namespace clang {
