@@ -13,8 +13,6 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <vector>
-#include <list>
 #include <ROOT/RMakeUnique.hxx>
 
 namespace ROOT {

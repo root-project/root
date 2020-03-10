@@ -18,7 +18,6 @@
 
 #include "GuiTypes.h"
 
-#include <list>
 #include <map>
 #include <set>
 #include <exception>

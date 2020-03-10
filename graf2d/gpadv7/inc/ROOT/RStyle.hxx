@@ -12,6 +12,7 @@
 #include <ROOT/RAttrMap.hxx>
 
 #include <string>
+#include <list>
 
 namespace ROOT {
 namespace Experimental {
