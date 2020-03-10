@@ -21,6 +21,7 @@
 #include <ROOT/REveDataClasses.hxx>
 #include <ROOT/REveManager.hxx>
 
+#include <sstream>
 #include "json.hpp"
 
 using namespace ROOT::Experimental;
