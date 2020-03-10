@@ -16,7 +16,6 @@
 
 #include "TError.h"
 
-#include <list>
 #include <map>
 #include <set>
 #include <exception>
