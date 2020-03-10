@@ -127,6 +127,7 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 #include "TError.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TObject.h"
 #include "TObjectTable.h"

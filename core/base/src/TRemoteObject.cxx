@@ -29,6 +29,7 @@ It contains information on the real remote object as:
 #include "TSystemDirectory.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TBrowser.h"
 #include "TList.h"
 #include "TClass.h"

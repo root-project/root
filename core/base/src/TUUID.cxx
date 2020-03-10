@@ -108,6 +108,7 @@ system clock catches up.
 #include "TROOT.h"
 #include "TDatime.h"
 #include "TUUID.h"
+#include "TBuffer.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TInetAddress.h"

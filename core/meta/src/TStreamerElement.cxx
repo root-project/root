@@ -18,6 +18,7 @@
 #include "TROOT.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassStreamer.h"

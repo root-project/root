@@ -34,6 +34,7 @@ In a later release the collections may become templatized.
 #include "TCollection.h"
 #include "Riostream.h"
 #include "Varargs.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TROOT.h"
 #include "TBrowser.h"
