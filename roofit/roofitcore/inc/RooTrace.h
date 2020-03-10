@@ -16,8 +16,8 @@
 #ifndef ROO_TRACE
 #define ROO_TRACE
 
-#include <assert.h>
 #include "RooLinkedList.h"
+#include <map>
 
 #define TRACE_CREATE
 #define TRACE_DESTROY 

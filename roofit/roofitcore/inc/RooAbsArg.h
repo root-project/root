@@ -16,7 +16,6 @@
 #ifndef ROO_ABS_ARG
 #define ROO_ABS_ARG
 
-#include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
 #include "TRefArray.h"

@@ -16,12 +16,14 @@
 #ifndef ROO_DATA_SET
 #define ROO_DATA_SET
 
-class TDirectory ;
-class RooAbsRealLValue ;
-class RooRealVar ;
-class RooDataHist ;
+class TDirectory;
+class RooAbsRealLValue;
+class RooRealVar;
+class RooDataHist;
+
 #include "RooAbsData.h"
 #include "RooDirItem.h"
+#include <list>
 
 
 #define USEMEMPOOLFORDATASET

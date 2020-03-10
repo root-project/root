@@ -19,7 +19,6 @@
 
 #include "RooSpan.h"
 #include <unordered_map>
-#include <assert.h>
 
 namespace BatchHelpers {
 
