@@ -24,32 +24,42 @@ class TGeoMatrix;
 /// after version of 3.1.0 it is included in official releases
 /// see https://github.com/nlohmann/json/issues/314
 
+#ifndef INCLUDE_NLOHMANN_JSON_FWD_HPP_
+#define INCLUDE_NLOHMANN_JSON_FWD_HPP_
+
 #include <cstdint> // int64_t, uint64_t
 #include <map> // map
 #include <memory> // allocator
 #include <string> // string
 #include <vector> // vector
 
-namespace nlohmann {
+namespace nlohmann
+{
 
-  template<typename T, typename SFINAE>
-    struct adl_serializer;
+// see json_fwd.hpp
+template<typename T = void, typename SFINAE = void>
+struct adl_serializer;
 
-  template<template<typename U, typename V, typename... Args> class ObjectType,
-           template<typename U, typename... Args> class ArrayType,
-           class StringType,
-           class BooleanType,
-           class NumberIntegerType,
-           class NumberUnsignedType,
-           class NumberFloatType,
-           template<typename U> class AllocatorType,
-           template<typename T, typename SFINAE> class JSONSerializer>
-     class basic_json;
+template<template<typename U, typename V, typename... Args> class ObjectType =
+         std::map,
+         template<typename U, typename... Args> class ArrayType = std::vector,
+         class StringType = std::string, class BooleanType = bool,
+         class NumberIntegerType = std::int64_t,
+         class NumberUnsignedType = std::uint64_t,
+         class NumberFloatType = double,
+         template<typename U> class AllocatorType = std::allocator,
+         template<typename T, typename SFINAE = void> class JSONSerializer =
+         adl_serializer>
+class basic_json;
 
-   using json = basic_json<std::map, std::vector, std::string,
-                           bool, std::int64_t, std::uint64_t, double,
-                           std::allocator, adl_serializer>;
-}
+template<typename BasicJsonType>
+class json_pointer;
+
+using json = basic_json<>;
+}  // namespace nlohmann
+
+#endif
+
 
 namespace ROOT {
 namespace Experimental {
