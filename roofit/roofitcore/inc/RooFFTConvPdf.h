@@ -18,9 +18,8 @@
 #include "RooAbsReal.h"
 #include "RooHistPdf.h"
 #include "TVirtualFFT.h"
-class RooRealVar ;
 
-#include <map>
+class RooRealVar;
 
 ///PDF for the numerical (FFT) convolution of two PDFs.
 class RooFFTConvPdf : public RooAbsCachedPdf {

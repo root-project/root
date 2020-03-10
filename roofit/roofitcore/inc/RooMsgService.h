@@ -16,7 +16,6 @@
 #ifndef ROO_MSG_SERVICE
 #define ROO_MSG_SERVICE
 
-#include <assert.h>
 #include "TObject.h"
 #include <string>
 #include <vector>

@@ -13,6 +13,7 @@
 #include <string>
 #include <cstdlib>
 #include <cstring>
+#include <cassert>
 #include <iostream>
 #include <algorithm>
 #include <exception>

@@ -17,7 +17,6 @@
 #define ROO_SHARED_PROPERTY_LIST
 
 #include "TObject.h"
-#include <assert.h>
 #include "RooRefCountList.h"
 #include "RooSharedProperties.h"
 #include <map>
@@ -34,7 +33,7 @@ public:
 protected:
 
   RooRefCountList _propList ;
-   std::map<std::string, RooSharedProperties *> _newPropList; 
+  std::map<std::string, RooSharedProperties *> _newPropList; 
 
   ClassDef(RooSharedPropertiesList,0) // Manager for shared properties among clones of certain RooAbsArg-derived types
 };

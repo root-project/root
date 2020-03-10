@@ -22,7 +22,6 @@
 #include "TMatrixDSymfwd.h"
 #include <vector>
 #include <string>
-#include <map>
 
 class RooAbsReal ;
 class RooFitResult ;
