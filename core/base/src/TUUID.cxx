@@ -106,6 +106,7 @@ system clock catches up.
 */
 
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TUUID.h"
 #include "TError.h"
 #include "TSystem.h"

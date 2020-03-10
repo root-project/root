@@ -237,6 +237,7 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #include "Riostream.h"
 #include "Byteswap.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"

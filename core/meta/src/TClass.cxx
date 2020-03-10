@@ -52,6 +52,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClassTable.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TDatime.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"

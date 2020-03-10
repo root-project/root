@@ -59,6 +59,7 @@ the table of contents.
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
