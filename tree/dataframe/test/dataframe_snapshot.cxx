@@ -165,46 +165,64 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
    gSystem->Unlink(fname);
 }
 
-void test_snapshot_update(RInterface<RLoopManager> &tdf)
+void TestSnapshotUpdate(RInterface<RLoopManager> &tdf, const std::string &outfile, const std::string &tree1,
+                        const std::string &tree2, bool overwriteIfExists)
 {
-   // test snapshotting two trees to the same file with two snapshots and the "UPDATE" option
-   const auto outfile = "snapshot_test_update.root";
-   auto s1 = tdf.Snapshot<int>("t", outfile, {"ans"});
+   // test snapshotting two trees to the same file opened in "UPDATE" mode
+   auto df = tdf.Define("x", [] { return 10; });
+   auto s1 = df.Snapshot<int>(tree1, outfile, {"x"});
 
    auto c1 = s1->Count();
-   auto min1 = s1->Min<int>("ans");
-   auto max1 = s1->Max<int>("ans");
-   auto mean1 = s1->Mean<int>("ans");
+   auto mean1 = s1->Mean<int>("x");
    EXPECT_EQ(100ull, *c1);
-   EXPECT_EQ(42, *min1);
-   EXPECT_EQ(42, *max1);
-   EXPECT_EQ(42, *mean1);
+   EXPECT_DOUBLE_EQ(10., *mean1);
 
    RSnapshotOptions opts;
    opts.fMode = "UPDATE";
-   auto s2 = tdf.Define("two", []() { return 2.; }).Snapshot<double>("t2", outfile, {"two"}, opts);
+   opts.fOverwriteIfExists = overwriteIfExists;
+   auto s2 = ROOT::RDataFrame(50ull).Define("x", [] { return 10; })
+                                    .Snapshot<int>(tree2, outfile, {"x"}, opts);
 
    auto c2 = s2->Count();
-   auto min2 = s2->Min<double>("two");
-   auto max2 = s2->Max<double>("two");
-   auto mean2 = s2->Mean<double>("two");
-   EXPECT_EQ(100ull, *c2);
-   EXPECT_DOUBLE_EQ(2., *min2);
-   EXPECT_DOUBLE_EQ(2., *min2);
-   EXPECT_DOUBLE_EQ(2., *mean2);
+   auto mean2 = s2->Mean<int>("x");
+   EXPECT_EQ(50ull, *c2);
+   EXPECT_DOUBLE_EQ(10., *mean2);
 
    // check that the output file contains both trees
-   std::unique_ptr<TFile> f(TFile::Open(outfile));
-   EXPECT_NE(nullptr, f->Get<TTree>("t"));
-   EXPECT_NE(nullptr, f->Get<TTree>("t2"));
+   std::unique_ptr<TFile> f(TFile::Open(outfile.c_str()));
+   EXPECT_NE(nullptr, f->Get<TTree>(tree1.c_str()));
+   EXPECT_NE(nullptr, f->Get<TTree>(tree2.c_str()));
 
    // clean-up
-   gSystem->Unlink(outfile);
+   gSystem->Unlink(outfile.c_str());
 }
 
-TEST_F(RDFSnapshot, Snapshot_update)
+TEST_F(RDFSnapshot, Snapshot_update_diff_treename)
 {
-   test_snapshot_update(tdf);
+   // test snapshotting two trees with different names
+   TestSnapshotUpdate(tdf, "snap_update_difftreenames.root", "t1", "t2", false);
+}
+
+TEST_F(RDFSnapshot, Snapshot_update_same_treename)
+{
+   bool exceptionCaught = false;
+   try {
+      // test snapshotting two trees with same name
+      TestSnapshotUpdate(tdf, "snap_update_sametreenames.root", "t", "t", false);
+   } catch (const std::invalid_argument &e) {
+      const std::string msg =
+         "Snapshot: tree \"t\" already present in file \"snap_update_sametreenames.root\". If you want to delete the "
+         "original tree and write another, please set RSnapshotOptions::fOverwriteIfExists to true.";
+      EXPECT_EQ(e.what(), msg);
+      exceptionCaught = true;
+   }
+   EXPECT_TRUE(exceptionCaught);
+}
+
+TEST_F(RDFSnapshot, Snapshot_update_overwrite)
+{
+   // test snapshotting two trees with different names
+   TestSnapshotUpdate(tdf, "snap_update_overwrite.root", "t", "t", true);
 }
 
 void test_snapshot_options(RInterface<RLoopManager> &tdf)
@@ -626,9 +644,32 @@ TEST(RDFSnapshotMore, LazyNotTriggered)
 
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
-TEST_F(RDFSnapshotMT, Snapshot_update)
+TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
 {
-   test_snapshot_update(tdf);
+   // test snapshotting two trees with different names
+   TestSnapshotUpdate(tdf, "snap_update_difftreenames.root", "t1", "t2", false);
+}
+
+TEST_F(RDFSnapshotMT, Snapshot_update_same_treename)
+{
+   bool exceptionCaught = false;
+   try {
+      // test snapshotting two trees with same name
+      TestSnapshotUpdate(tdf, "snap_update_sametreenames.root", "t", "t", false);
+   } catch (const std::invalid_argument &e) {
+      const std::string msg =
+         "Snapshot: tree \"t\" already present in file \"snap_update_sametreenames.root\". If you want to delete the "
+         "original tree and write another, please set RSnapshotOptions::fOverwriteIfExists to true.";
+      EXPECT_EQ(e.what(), msg);
+      exceptionCaught = true;
+   }
+   EXPECT_TRUE(exceptionCaught);
+}
+
+TEST_F(RDFSnapshotMT, Snapshot_update_overwrite)
+{
+   // test snapshotting two trees with different names
+   TestSnapshotUpdate(tdf, "snap_update_overwrite.root", "t", "t", true);
 }
 
 TEST_F(RDFSnapshotMT, Snapshot_action_with_options)
