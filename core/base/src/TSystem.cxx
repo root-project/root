@@ -737,31 +737,37 @@ void TSystem::StackTrace()
 
 TSystem *TSystem::FindHelper(const char *path, void *dirptr)
 {
-   if (!fHelpers)
-      fHelpers = new TOrdCollection;
-
-   TPluginHandler *h;
    TSystem *helper = nullptr;
-   if (path) {
-      if (!GetDirPtr()) {
-         TUrl url(path, kTRUE);
-         if (!strcmp(url.GetProtocol(), "file"))
-            return nullptr;
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
+      if (!fHelpers) {
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+         fHelpers = new TOrdCollection;
       }
+
+      if (path) {
+         if (!GetDirPtr()) {
+            TUrl url(path, kTRUE);
+            if (!strcmp(url.GetProtocol(), "file"))
+               return nullptr;
+         }
+      }
+
+      // look for existing helpers
+      TIter next(fHelpers);
+      while ((helper = (TSystem*) next()))
+         if (helper->ConsistentWith(path, dirptr))
+            return helper;
+
+      if (!path)
+         return nullptr;
    }
-
-   // look for existing helpers
-   TIter next(fHelpers);
-   while ((helper = (TSystem*) next()))
-      if (helper->ConsistentWith(path, dirptr))
-         return helper;
-
-   if (!path)
-      return nullptr;
 
    // create new helper
    TRegexp re("^root.*:");  // also roots, rootk, etc
    TString pname = path;
+   TPluginHandler *h;
    if (pname.BeginsWith("xroot:") || pname.Index(re) != kNPOS) {
       // (x)rootd daemon ...
       if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
@@ -775,8 +781,10 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       helper = (TSystem*) h->ExecPlugin(0);
    }
 
-   if (helper)
+   if (helper) {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       fHelpers->Add(helper);
+   }
 
    return helper;
 }
