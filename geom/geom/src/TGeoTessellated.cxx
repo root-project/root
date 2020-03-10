@@ -20,6 +20,7 @@ for the composing faces.
 
 #include "Riostream.h"
 #include <sstream>
+#include <array>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -34,7 +35,7 @@ for the composing faces.
 
 ClassImp(TGeoTessellated)
 
-   using Vertex_t = Tessellated::Vertex_t;
+using Vertex_t = Tessellated::Vertex_t;
 
 std::ostream &operator<<(std::ostream &os, TGeoFacet const &facet)
 {
