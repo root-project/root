@@ -50,6 +50,7 @@ This process is also organized by the workspace through the
 #include "RooResolutionModel.h"
 #include "RooPlot.h"
 #include "RooRandom.h"
+#include "TBuffer.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
