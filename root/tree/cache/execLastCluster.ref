@@ -6,27 +6,28 @@ Estimate cluster size: 3
 *Entries :     1000 : Total =          424803 bytes  File  Size =      33982 *
 *        :          : Tree compression factor =  12.78                       *
 ******************************************************************************
-Cluster Range #  Entry Start      Last Entry        Size
-0                0                49                  10
-1                50               99                   0
-2                100              149                 10
-3                150              199                  0
-4                200              249                 10
-5                250              299                  0
-6                300              349                 10
-7                350              399                  0
-8                400              449                 10
-9                450              499                  0
-10               500              549                 10
-11               550              599                  0
-12               600              649                 10
-13               650              699                  0
-14               700              749                 10
-15               750              799                  0
-16               800              849                 10
-17               850              899                  0
-18               900              949                 10
-19               950              999              -2000000
+Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
+0                0                49                     10          5
+1                50               99                      0         16 (estimated)
+2                100              149                    10          5
+3                150              199                     0         16 (estimated)
+4                200              249                    10          5
+5                250              299                     0         16 (estimated)
+6                300              349                    10          5
+7                350              399                     0         16 (estimated)
+8                400              449                    10          5
+9                450              499                     0         16 (estimated)
+10               500              549                    10          5
+11               550              599                     0         16 (estimated)
+12               600              649                    10          5
+13               650              699                     0         16 (estimated)
+14               700              749                    10          5
+15               750              799                     0         16 (estimated)
+16               800              849                    10          5
+17               850              899                     0         16 (estimated)
+18               900              949                    10          5
+19               950              999              -2000000         16 (estimated)
+Total number of clusters: 210 (estimated)
 Start entry: 983
 Next entry 1: 983
 Next entry 2: 983
