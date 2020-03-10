@@ -1,11 +1,9 @@
 #ifndef BDTControlPlots__HH
 #define BDTControlPlots__HH
-#include <vector>
+
 #include <string>
 #include "tmvaglob.h"
 
-#include "TH1.h"
-#include "TGraph.h"
 namespace TMVA{
 
    // input: - Input file (result from TMVA),
