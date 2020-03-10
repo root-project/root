@@ -21,9 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TBuffer.h"
 #include "TNamed.h"
 #include "TList.h"
+#include "TClass.h"
 #include "TUUID.h"
 
 class TBrowser;
