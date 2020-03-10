@@ -39,7 +39,6 @@
 
 #include <map>
 #include <set>
-#include <vector>
 #include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////
@@ -117,7 +116,7 @@ private:
    SurfaceList fSurfaceList;  //list of optical surfaces
    VolList     fVolumeList;   //list of volumes
    NodeList    fNodeList;     //list of placed volumes
-  
+
    NameLst *fNameList; //list of names (pointer mapped)
 
    //Data members
@@ -242,7 +241,7 @@ private:
    // Backwards compatibility (to be removed in the future): Combined implementation to extract GDML information from the geometry tree
    void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, TList* materialsLst, const char* filename, TString option);
    void ExtractVolumes(TGeoVolume* topVolume);    //result <volume> node...  + corresp. shape
-  
+
    ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };
 
