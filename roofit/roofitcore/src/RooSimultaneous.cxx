@@ -763,6 +763,14 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     RooAbsCategory* idxComp ;
     Bool_t first(kTRUE) ;
     while((idxComp=(RooAbsCategory*)compIter->Next())) {
+      RooAbsArg* slicedComponent = nullptr;
+      if (sliceSet && (slicedComponent = sliceSet->find(*idxComp)) != nullptr) {
+        auto theCat = static_cast<const RooAbsCategory*>(slicedComponent);
+        auto idxCompLV = dynamic_cast<RooAbsCategoryLValue*>(idxComp);
+        if (idxCompLV)
+          idxCompLV->setIndex(theCat->getIndex(), false);
+      }
+
       if (!first) {
         cutString.Append("&&") ;
       } else {
