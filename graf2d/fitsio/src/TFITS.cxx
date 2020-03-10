@@ -538,12 +538,12 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
 
             for (long row = 0; row < table_rows; row++) {
                long offset = 0;
-               long repeat_descript = 0;
+               long repeat_row = 0; 
                
-               fits_read_descript(fp, colnum+1, row+1, &repeat_descript, &offset, &status);
+               fits_read_descript(fp, colnum+1, row+1, &repeat_row, &offset, &status);
                // store the starting of each row and the number of elements it contains 
-               fColumnsInfo[colnum].fRowStart[row+1] = fColumnsInfo[colnum].fRowStart[row] + repeat_descript;
-               fColumnsInfo[colnum].fVarLengths[row] = repeat_descript;
+               fColumnsInfo[colnum].fRowStart[row+1] = fColumnsInfo[colnum].fRowStart[row] + repeat_row;
+               fColumnsInfo[colnum].fVarLengths[row] = repeat_row;
             }
             
            for (long row = 0; row < table_rows; row++) {
