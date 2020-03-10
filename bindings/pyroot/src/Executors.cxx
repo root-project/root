@@ -17,6 +17,7 @@
 #include <cstring>
 #include <utility>
 #include <sstream>
+#include <map>
 
 
 //- data ______________________________________________________________________
