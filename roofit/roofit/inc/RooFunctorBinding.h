@@ -22,7 +22,6 @@
 #include "RooMsgService.h"
 #include <string>
 #include <map>
-#include <vector>
 #include "Math/IFunction.h"
 
 namespace RooFit {
