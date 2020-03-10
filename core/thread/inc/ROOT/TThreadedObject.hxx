@@ -157,11 +157,6 @@ namespace ROOT {
     * In case an elaborate thread management is in place, e.g. in presence of
     * stream of operations or "processing slots", it is also possible to
     * manually select the correct object pointer explicitly.
-    * The default size of the threaded objects is 64. This size can be extended
-    * manually via the fgMaxSlots parameter. The size of individual instances
-    * is automatically extended if the size of the implicit MT pool is bigger
-    * than 64.
-    *
     */
    template<class T>
    class TThreadedObject {
