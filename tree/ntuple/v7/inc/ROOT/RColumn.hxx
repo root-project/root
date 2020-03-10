@@ -25,7 +25,6 @@
 #include <TError.h>
 
 #include <memory>
-#include <vector>
 
 namespace ROOT {
 namespace Experimental {
