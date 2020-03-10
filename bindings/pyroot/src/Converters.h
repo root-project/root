@@ -9,7 +9,6 @@
 // Standard
 #include <limits.h>
 #include <string>
-#include <map>
 
 
 namespace PyROOT {
