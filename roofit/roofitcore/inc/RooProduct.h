@@ -21,12 +21,10 @@
 #include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 
-#include <vector>
 #include <utility>
 
-
 class RooRealVar;
-class RooArgList ;
+class RooArgList;
 
 
 class RooProduct : public RooAbsReal {
