@@ -165,46 +165,71 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
    gSystem->Unlink(fname);
 }
 
-void test_snapshot_update(RInterface<RLoopManager> &tdf)
+template <typename T>
+struct Variable {
+   using type = T;
+   std::string fName;
+   T fValue;
+};
+
+template <typename T1, typename T2>
+void test_snapshot_update(RInterface<RLoopManager> &tdf, const std::string &outfile, const std::string &tree1,
+                          const std::string &tree2, const Variable<T1> v1, const Variable<T2> v2)
 {
-   // test snapshotting two trees to the same file with two snapshots and the "UPDATE" option
-   const auto outfile = "snapshot_test_update.root";
-   auto s1 = tdf.Snapshot<int>("t", outfile, {"ans"});
+   // test snapshotting two trees to the same file opened in "UPDATE" mode
+   auto df = tdf.Define(v1.fName, [&] { return v1.fValue; });
+   auto s1 = df.template Snapshot<T1>(tree1, outfile, {v1.fName});
 
    auto c1 = s1->Count();
-   auto min1 = s1->Min<int>("ans");
-   auto max1 = s1->Max<int>("ans");
-   auto mean1 = s1->Mean<int>("ans");
+   auto mean1 = s1->template Mean<T1>(v1.fName);
    EXPECT_EQ(100ull, *c1);
-   EXPECT_EQ(42, *min1);
-   EXPECT_EQ(42, *max1);
-   EXPECT_EQ(42, *mean1);
+   EXPECT_DOUBLE_EQ(double(v1.fValue), *mean1);
 
    RSnapshotOptions opts;
    opts.fMode = "UPDATE";
-   auto s2 = tdf.Define("two", []() { return 2.; }).Snapshot<double>("t2", outfile, {"two"}, opts);
+   auto s2 = ROOT::RDataFrame(50ull).Define(v2.fName, [&] { return v2.fValue; })
+                                    .template Snapshot<T2>(tree2, outfile, {v2.fName}, opts);
 
    auto c2 = s2->Count();
-   auto min2 = s2->Min<double>("two");
-   auto max2 = s2->Max<double>("two");
-   auto mean2 = s2->Mean<double>("two");
-   EXPECT_EQ(100ull, *c2);
-   EXPECT_DOUBLE_EQ(2., *min2);
-   EXPECT_DOUBLE_EQ(2., *min2);
-   EXPECT_DOUBLE_EQ(2., *mean2);
+   auto mean2 = s2->template Mean<T2>(v2.fName);
+   EXPECT_EQ(50ull, *c2);
+   EXPECT_DOUBLE_EQ(double(v2.fValue), *mean2);
 
    // check that the output file contains both trees
-   std::unique_ptr<TFile> f(TFile::Open(outfile));
-   EXPECT_NE(nullptr, f->Get<TTree>("t"));
-   EXPECT_NE(nullptr, f->Get<TTree>("t2"));
+   std::unique_ptr<TFile> f(TFile::Open(outfile.c_str()));
+   EXPECT_NE(nullptr, f->Get<TTree>(tree1.c_str()));
+   EXPECT_NE(nullptr, f->Get<TTree>(tree2.c_str()));
 
    // clean-up
-   gSystem->Unlink(outfile);
+   gSystem->Unlink(outfile.c_str());
 }
 
-TEST_F(RDFSnapshot, Snapshot_update)
+TEST_F(RDFSnapshot, Snapshot_update_diff_treename)
 {
-   test_snapshot_update(tdf);
+   // test snapshotting two trees with different names
+   test_snapshot_update(tdf, "snap_update_difftreenames.root", "t1", "t2",
+                        Variable<double>{"one", 1.}, Variable<float>{"two", 2.f});
+}
+
+TEST_F(RDFSnapshot, Snapshot_update_diff_columns)
+{
+   // test snapshotting two trees with same name, different columns
+   test_snapshot_update(tdf, "snap_update_diffcolumns.root", "t", "t",
+                        Variable<double>{"one", 1.}, Variable<float>{"two", 2.f});
+}
+
+TEST_F(RDFSnapshot, Snapshot_update_diff_column_types)
+{
+   // test snapshotting two trees with same name, same columns, but columns have different types
+   test_snapshot_update(tdf, "snap_update_diffcolumns.root", "t", "t",
+                        Variable<double>{"one", 1.}, Variable<float>{"one", 2.f});
+}
+
+TEST_F(RDFSnapshot, Snapshot_update_same_columns)
+{
+   // test snapshotting two trees with same name and columns
+   test_snapshot_update(tdf, "snap_update_diffcolumns.root", "t", "t",
+                        Variable<double>{"one", 1.}, Variable<double>{"one", 2.});
 }
 
 void test_snapshot_options(RInterface<RLoopManager> &tdf)
@@ -626,9 +651,32 @@ TEST(RDFSnapshotMore, LazyNotTriggered)
 
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
-TEST_F(RDFSnapshotMT, Snapshot_update)
+TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
 {
-   test_snapshot_update(tdf);
+   // test snapshotting two trees with different names
+   test_snapshot_update(tdf, "snap_update_difftreenames.root", "t1", "t2",
+                        Variable<double>{"one", 1.}, Variable<float>{"two", 2.f});
+}
+
+TEST_F(RDFSnapshotMT, Snapshot_update_diff_columns)
+{
+   // test snapshotting two trees with same name, different columns
+   test_snapshot_update(tdf, "snap_update_diffcolumns.root", "t", "t",
+                        Variable<double>{"one", 1.}, Variable<float>{"two", 2.f});
+}
+
+TEST_F(RDFSnapshotMT, Snapshot_update_diff_column_types)
+{
+   // test snapshotting two trees with same name, same columns, but columns have different types
+   test_snapshot_update(tdf, "snap_update_diffcolumns.root", "t", "t",
+                        Variable<double>{"one", 1.}, Variable<float>{"one", 2.f});
+}
+
+TEST_F(RDFSnapshotMT, Snapshot_update_same_columns)
+{
+   // test snapshotting two trees with same name and columns
+   test_snapshot_update(tdf, "snap_update_diffcolumns.root", "t", "t",
+                        Variable<double>{"one", 1.}, Variable<double>{"one", 2.});
 }
 
 TEST_F(RDFSnapshotMT, Snapshot_action_with_options)
