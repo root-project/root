@@ -30,16 +30,13 @@
 
 #include "Math/Minimizer.h"
 
-
 #include "Math/IFunctionfwd.h"
 
 #include "Math/IParamFunctionfwd.h"
 
 #include "Math/BasicMinimizer.h"
 
-
 #include <vector>
-#include <map>
 #include <string>
 
 

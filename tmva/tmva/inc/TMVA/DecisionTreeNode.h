@@ -44,7 +44,7 @@
 
 #include <iostream>
 #include <vector>
-#include <map>
+
 namespace TMVA {
 
    class DTNodeTrainingInfo

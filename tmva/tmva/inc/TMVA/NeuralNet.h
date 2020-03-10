@@ -25,7 +25,6 @@
 #define TMVA_NEURAL_NET
 #pragma once
 
-#include <map>
 #include <vector>
 #include <iostream>
 #include <fstream>

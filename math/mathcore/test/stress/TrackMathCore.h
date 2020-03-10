@@ -12,7 +12,6 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <cassert>
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double>> Vector4D_t;
 typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t>> Vector4D32_t;

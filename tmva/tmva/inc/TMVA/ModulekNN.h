@@ -35,7 +35,6 @@
 
 
 // C++
-#include <cassert>
 #include <iosfwd>
 #include <map>
 #include <string>
