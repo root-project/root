@@ -5,7 +5,6 @@
 #include "PyCallable.h"
 
 // Standard
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>

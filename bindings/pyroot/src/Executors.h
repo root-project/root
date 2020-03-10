@@ -8,7 +8,6 @@
 
 // Standard
 #include <string>
-#include <map>
 
 
 namespace PyROOT {

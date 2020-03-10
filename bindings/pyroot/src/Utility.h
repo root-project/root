@@ -5,7 +5,6 @@
 #define PYROOT_UTILITY_H
 
 // Standard
-#include <map>
 #include <string>
 #include <vector>
 
