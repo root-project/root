@@ -30,7 +30,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
 #include "TCut.h"
 
 #include "TMVA/Configurable.h"
