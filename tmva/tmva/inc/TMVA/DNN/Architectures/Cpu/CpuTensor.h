@@ -18,7 +18,7 @@
 #define TMVA_DNN_ARCHITECTURES_CPU_CPUTENSOR
 
 #include <cstddef>
-#include <vector>
+
 
 #include "TMatrix.h"
 #include "TMVA/Config.h"
