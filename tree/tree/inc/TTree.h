@@ -39,6 +39,7 @@
 #include "TDataType.h"
 #include "TDirectory.h"
 #include "TObjArray.h"
+#include "TList.h"
 #include "TVirtualTreePlayer.h"
 
 #include <array>
