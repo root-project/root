@@ -30,6 +30,7 @@
 
 #include "TClingMethodInfo.h"
 #include "TClingClassInfo.h"
+#include "TClingUtils.h"
 #include "TInterpreter.h"
 
 #include "cling/Interpreter/Value.h"
@@ -112,7 +113,7 @@ private:
    tcling_callfunc_Wrapper_t make_wrapper();
 
    tcling_callfunc_ctor_Wrapper_t
-   make_ctor_wrapper(const TClingClassInfo* info);
+   make_ctor_wrapper(const TClingClassInfo* info, ROOT::TMetaUtils::EIOCtorCategory);
 
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
@@ -175,11 +176,12 @@ public:
 
    TClingCallFunc &operator=(const TClingCallFunc &rhs) = delete;
 
-   void* ExecDefaultConstructor(const TClingClassInfo* info, void* address = 0,
-                                unsigned long nary = 0UL);
-   void ExecDestructor(const TClingClassInfo* info, void* address = 0,
+   void* ExecDefaultConstructor(const TClingClassInfo* info,
+                                ROOT::TMetaUtils::EIOCtorCategory kind,
+                                void* address = nullptr, unsigned long nary = 0UL);
+   void ExecDestructor(const TClingClassInfo* info, void* address = nullptr,
                        unsigned long nary = 0UL, bool withFree = true);
-   void ExecWithReturn(void* address, void* ret = 0);
+   void ExecWithReturn(void* address, void *ret = nullptr);
    void ExecWithArgsAndReturn(void* address,
                               const void* args[] = 0,
                               int nargs = 0,
