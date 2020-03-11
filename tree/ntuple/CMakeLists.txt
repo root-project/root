@@ -15,6 +15,8 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
 HEADERS
+  ROOT/RCluster.hxx
+  ROOT/RClusterPool.hxx
   ROOT/RColumn.hxx
   ROOT/RColumnElement.hxx
   ROOT/RColumnModel.hxx
@@ -37,6 +39,8 @@ HEADERS
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
 SOURCES
+  v7/src/RCluster.cxx
+  v7/src/RClusterPool.cxx
   v7/src/RColumn.cxx
   v7/src/RColumnElement.cxx
   v7/src/RField.cxx
