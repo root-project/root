@@ -3197,6 +3197,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*IsMapped*/ 0,
+                                              /*IsFrameworkFound*/ nullptr,
                                               /*SkipCache*/ false,
                                               /*BuildSystemModule*/ false,
                                               /*OpenFile*/ false,

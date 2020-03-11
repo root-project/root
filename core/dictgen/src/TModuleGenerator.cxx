@@ -115,8 +115,9 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
                                  true /*isAngled*/, 0 /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                            const clang::DirectoryEntry*>>(),
-                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*RequestingModule*/, 0/*SuggestedModule*/);
+                                 nullptr /*SearchPath*/,/*RelativePath*/ nullptr,
+                                 nullptr /*RequestingModule*/, nullptr /*SuggestedModule*/,
+                                 nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/);
       if (hdrFileEntry) {
          return kSFKHeader;
       }
@@ -576,8 +577,9 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
                                  true /*isAngled*/, 0 /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                          const clang::DirectoryEntry*>>(),
-                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*RequestingModule*/, 0/*SuggestedModule*/)) {
+                                 nullptr /*SearchPath*/, nullptr /*RelativePath*/,
+                                 nullptr /*RequestingModule*/, nullptr/*SuggestedModule*/,
+                                 nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/)) {
       hdrFullPath = hdrFileEntry->getName();
       return true;
    }
