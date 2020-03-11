@@ -22,11 +22,13 @@
 
 #include "TDictionary.h"
 #include "TString.h"
-#include "TObjArray.h"
 
-#ifndef R__LESS_INCLUDES
+#ifdef R__LESS_INCLUDES
+class TObjArray;
+#else
 // not used at all but can have many side effects
 #include "TObjString.h"
+#include "TObjArray.h"
 #endif
 
 #include <map>
