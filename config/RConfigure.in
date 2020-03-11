@@ -47,6 +47,7 @@
 #@hasqt5webengine@ R__HAS_QT5WEB  /**/
 #@hasdavix@ R__HAS_DAVIX  /**/
 #@hasdataframe@ R__HAS_DATAFRAME /**/
+#@use_less_includes@ R__LESS_INCLUDES /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC
