@@ -35,6 +35,7 @@ allows a simple partial implementation for new OS'es.
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TUrl.h"

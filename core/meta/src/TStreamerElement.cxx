@@ -30,6 +30,7 @@
 #include "TRef.h"
 #include "TInterpreter.h"
 #include "TError.h"
+#include "TObjArray.h"
 #include "TVirtualMutex.h"
 #include "TVirtualCollectionProxy.h"
 #include <iostream>

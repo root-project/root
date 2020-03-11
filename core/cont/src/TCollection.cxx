@@ -44,6 +44,7 @@ In a later release the collections may become templatized.
 #include "TVirtualMutex.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "TObjArray.h"
 #include <sstream>
 
 #include "TSpinLockGuard.h"

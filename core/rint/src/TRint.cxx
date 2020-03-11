@@ -36,6 +36,7 @@
 #include "TException.h"
 #include "TInterpreter.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TStorage.h" // ROOT::Internal::gMmallocDesc
 #include "TTabCom.h"
 #include "TError.h"
