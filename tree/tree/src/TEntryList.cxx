@@ -153,6 +153,7 @@ See comments to those functions for more details
 #include "TFile.h"
 #include "TRegexp.h"
 #include "TSystem.h"
+#include "TObjString.h"
 
 ClassImp(TEntryList);
 
