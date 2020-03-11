@@ -379,12 +379,18 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
   endif()
 endforeach()
 
-#---Deprecated options---------------------------------------------------------
-foreach(opt memstat vmc python)
+#---Deprecated options------------------------------------------------------------------------
+foreach(opt memstat vmc)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
 endforeach()
+
+#---Replaced options--------------------------------------------------------------------------
+if(python)
+  message(DEPRECATION ">>> Please use the equivalent option 'pyroot' instead of 'python'; the latter will be removed in v6.22.")
+  set(pyroot ON CACHE BOOL "" FORCE)
+endif()
 
 #---Avoid creating dependencies to 'non-standard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
