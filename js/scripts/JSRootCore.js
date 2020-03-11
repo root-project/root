@@ -2163,6 +2163,13 @@
       return m;
    }
 
+   /** @summary Add methods for specified type.
+    * Will be automatically applied when decoding JSON string
+    * @private */
+   JSROOT.registerMethods = function(typename, m) {
+      JSROOT.methodsCache[typename] = m;
+   }
+
    /** @summary Returns true if object represents basic ROOT collections
     * @private */
    JSROOT.IsRootCollection = function(lst, typename) {
@@ -2183,7 +2190,7 @@
     * @private
     */
    JSROOT.addMethods = function(obj, typename) {
-      this.extend(obj, JSROOT.getMethods(typename || obj._typename, obj));
+      this.extend(obj, this.getMethods(typename || obj._typename, obj));
    }
 
    JSROOT.lastFFormat = "";

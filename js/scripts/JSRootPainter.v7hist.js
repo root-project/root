@@ -493,12 +493,6 @@
       return true;
    }
 
-   THistPainter.prototype.GetPalette = function(force) {
-      var pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
-
-      return pp ? pp.GetPalette() : null;
-   }
-
    THistPainter.prototype.UpdatePaletteDraw = function() {
       var pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
       if (pp) pp.DrawPalette();
@@ -662,7 +656,7 @@
          }
       }
 
-      res.palette = this.GetPalette();
+      res.palette = pmain.GetPalette();
 
       if (res.palette)
          this.CreateContour(pmain, res.palette, args.scatter_plot);
@@ -2364,9 +2358,10 @@
 
    TH2Painter.prototype.DrawBinsContour = function(frame_w,frame_h) {
       var handle = this.PrepareColorDraw({ rounding: false, extra: 100, original: this.options.Proj != 0 }),
-          palette = this.GetPalette(),
+          main = this.frame_painter(),
+          palette = main.GetPalette(),
           levels = palette.GetContour(),
-          painter = this, main = this.frame_painter();
+          painter = this;
 
       function BuildPath(xp,yp,iminus,iplus) {
          var cmd = "", last = null, pnt = null, i;
@@ -2512,7 +2507,7 @@
           colPaths = [], textbins = [],
           colindx, cmd, bin, item,
           i, len = histo.fBins.arr.length,
-          palette = this.GetPalette();
+          palette = pmain.GetPalette();
 
       // force recalculations of contours
       // use global coordinates
