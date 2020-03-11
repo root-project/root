@@ -51,6 +51,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    edmval *= 0.0001;
    //edmval *= 0.1; // use small factor for Fumili
 
+   // synchronize print levels
+   int printLevel = PrintLevel();
+   BuilderPrintLevelConf plconf(printLevel);
 
 #ifdef DEBUG
    std::cout<<"FumiliBuilder convergence when edm < "<<edmval<<std::endl;
@@ -79,7 +82,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
    result.push_back( seed.State() );
 
-   int printLevel = PrintLevel();
    if (printLevel >1) {
       std::cout << "Fumili: start iterating until Edm is < " << edmval << std::endl;
       MnPrint::PrintState(std::cout, seed.State(), "Fumili: Initial state  ");
