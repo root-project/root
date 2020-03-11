@@ -51,6 +51,7 @@ See TDSet.
 #include "TSystem.h"
 #include "THashList.h"
 #include "TSelector.h"
+#include "TObjString.h"
 
 #include "TVirtualStreamerInfo.h"
 #include "TClassRef.h"

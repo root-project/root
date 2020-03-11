@@ -52,6 +52,7 @@
 #include "TMath.h"
 #include "TProfile.h"
 #include "TVectorD.h"
+#include "TObjString.h"
 
 #include <algorithm>
 #include <cassert>

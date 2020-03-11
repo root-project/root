@@ -33,6 +33,7 @@ At most one manager instance per server is allowed.
 #include "TSocket.h"
 #include "TROOT.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 ClassImp(TProofMgr);
 
