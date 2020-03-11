@@ -1104,7 +1104,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    return (tcling_callfunc_Wrapper_t)F;
 }
 
-tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info)
+tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info, ROOT::TMetaUtils::EIOCtorCategory kind)
 {
    // Make a code string that follows this pattern:
    //
@@ -1163,6 +1163,8 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
       stream.flush();
    }
+
+
    //
    //  Make the wrapper name.
    //
@@ -1177,6 +1179,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
       buf << '_' << gWrapperSerial++;
       wrapper_name = buf.str();
    }
+
    //
    //  Write the wrapper code.
    //
@@ -1187,6 +1190,17 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    buf << wrapper_name;
    buf << "(void** ret, void* arena, unsigned long nary)\n";
    buf << "{\n";
+   ++indent_level;
+
+   string constr_arg;
+   if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
+      constr_arg = "((TRootIOCtor*)nullptr)";
+   else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIORefType) {
+      indent(buf, indent_level);
+      buf << "TRootIOCtor arg;\n";
+      constr_arg = "(arg)";
+   }
+
    //    if (!arena) {
    //       if (!nary) {
    //          *ret = new ClassName;
@@ -1195,7 +1209,6 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    //          *ret = new ClassName[nary];
    //       }
    //    }
-   ++indent_level;
    indent(buf, indent_level);
    buf << "if (!arena) {\n";
    ++indent_level;
@@ -1203,7 +1216,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    buf << "if (!nary) {\n";
    ++indent_level;
    indent(buf, indent_level);
-   buf << "*ret = new " << class_name << ";\n";
+   buf << "*ret = new " << class_name << constr_arg << ";\n";
    --indent_level;
    indent(buf, indent_level);
    buf << "}\n";
@@ -1211,7 +1224,10 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    buf << "else {\n";
    ++indent_level;
    indent(buf, indent_level);
-   buf << "*ret = new " << class_name << "[nary];\n";
+   if (constr_arg.empty())
+      buf << "*ret = new " << class_name << "[nary];\n";
+   else
+      buf << "*ret = nullptr;\n"; // no way to create objects array with non-default constructor
    --indent_level;
    indent(buf, indent_level);
    buf << "}\n";
@@ -1233,7 +1249,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    buf << "if (!nary) {\n";
    ++indent_level;
    indent(buf, indent_level);
-   buf << "*ret = new (arena) " << class_name << ";\n";
+   buf << "*ret = new (arena) " << class_name << constr_arg << ";\n";
    --indent_level;
    indent(buf, indent_level);
    buf << "}\n";
@@ -1241,7 +1257,10 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    buf << "else {\n";
    ++indent_level;
    indent(buf, indent_level);
-   buf << "*ret = new (arena) " << class_name << "[nary];\n";
+   if (constr_arg.empty())
+      buf << "*ret = new (arena) " << class_name << "[nary];\n";
+   else
+      buf << "*ret = nullptr;\n"; // no way to create objects array with non-default constructor
    --indent_level;
    indent(buf, indent_level);
    buf << "}\n";
@@ -2098,17 +2117,18 @@ void TClingCallFunc::ExecWithReturn(void *address, void *ret/*= 0*/)
    exec(address, ret);
 }
 
-void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *address /*=0*/,
-      unsigned long nary /*= 0UL*/)
+void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
+                                             ROOT::TMetaUtils::EIOCtorCategory kind,
+                                             void *address /*=0*/, unsigned long nary /*= 0UL*/)
 {
    if (!info->IsValid()) {
       ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
-      return 0;
+      return nullptr;
    }
-   tcling_callfunc_ctor_Wrapper_t wrapper = 0;
+   tcling_callfunc_ctor_Wrapper_t wrapper = nullptr;
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
-      const Decl *D = info->GetDecl();
+      auto D = info->GetDecl();
       //if (!info->HasDefaultConstructor()) {
       //   // FIXME: We might have a ROOT ioctor, we might
       //   //        have to check for that here.
@@ -2117,17 +2137,17 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
       //         info->Name());
       //   return 0;
       //}
-      map<const Decl *, void *>::iterator I = gCtorWrapperStore.find(D);
+      auto I = gCtorWrapperStore.find(D);
       if (I != gCtorWrapperStore.end()) {
          wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
       } else {
-         wrapper = make_ctor_wrapper(info);
+         wrapper = make_ctor_wrapper(info, kind);
       }
    }
    if (!wrapper) {
       ::Error("TClingCallFunc::ExecDefaultConstructor",
             "Called with no wrapper, not implemented!");
-      return 0;
+      return nullptr;
    }
    void *obj = 0;
    (*wrapper)(&obj, address, nary);
