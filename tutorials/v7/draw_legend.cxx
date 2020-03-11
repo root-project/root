@@ -46,14 +46,14 @@ void draw_legend()
 
    // draw histogram
    auto draw1 = canvas->Draw(pHist);
-   draw1->AttrLine().SetWidth(2).Color().SetAuto();
+   draw1->AttrLine().SetWidth(2).AttrColor().SetAuto();
 
    // draw histogram
    auto draw2 = canvas->Draw(pHist2);
-   draw2->AttrLine().SetWidth(4).Color().SetAuto();
+   draw2->AttrLine().SetWidth(4).AttrColor().SetAuto();
 
    canvas->AssignAutoColors();
-   
+
    auto legend = canvas->Draw<RLegend>(RPadPos(0.5_normal, 0.6_normal), RPadPos(0.9_normal,0.9_normal), "Legend title");
    legend->AttrBox().AttrFill().SetStyle(5).SetColor(RColor::kWhite);
    legend->AttrBox().AttrBorder().SetWidth(2).SetColor(RColor::kRed);
