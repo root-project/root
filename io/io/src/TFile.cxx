@@ -96,6 +96,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "RConfigure.h"
 #include "Strlen.h"
 #include "TArrayC.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassTable.h"

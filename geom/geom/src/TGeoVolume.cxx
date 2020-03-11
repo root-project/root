@@ -379,6 +379,7 @@ volumes (or volume assemblies) as content.
 
 #include "Riostream.h"
 #include "TString.h"
+#include "TBuffer.h"
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "TH2F.h"
