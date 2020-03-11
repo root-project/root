@@ -4483,9 +4483,15 @@
    ////////////////////////////////////////////////////////////////////////////////////////////
 
    JSROOT.v7.ExtractRColor = function(rcolor) {
-      var m = rcolor.fOwnAttr.m;
-      if (m.rgb) return "#" + m.rgb.v;
-      if (m.name) return m.name.v;
+      if (rcolor.fName)
+         return rcolor.fName;
+
+      if (rcolor.fRGBA.length == 3)
+         return "rgb(" + rcolor.fRGBA[0] + "," + rcolor.fRGBA[1] + "," + rcolor.fRGBA[2] + ")";
+
+      if (rcolor.fRGBA.length == 4)
+         return "rgba(" + rcolor.fRGBA[0] + "," + rcolor.fRGBA[1] + "," + rcolor.fRGBA[2] + "," + rcolor.fRGBA[3] + ")";
+
       return "black";
    }
 
