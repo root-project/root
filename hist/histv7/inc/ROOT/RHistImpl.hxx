@@ -376,7 +376,7 @@ private:
    std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
 
 public:
-   RHistImpl(TRootIOCtor * = nullptr);
+   RHistImpl(TRootIOCtor *);
    RHistImpl(AXISCONFIG... axisArgs);
    RHistImpl(std::string_view title, AXISCONFIG... axisArgs);
 
