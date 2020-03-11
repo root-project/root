@@ -1,5 +1,7 @@
 #include "TFile.h"
 #include "TClass.h"
+#include "TObjArray.h"
+
 
 class MyClass {
 public:
