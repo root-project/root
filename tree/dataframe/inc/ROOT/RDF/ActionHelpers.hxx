@@ -1058,12 +1058,13 @@ template <typename T>
 void SetBranchesHelper(BoolArrayMap &, TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
                        const std::string &name, TBranch *& branch, void *& branchAddress, T *address)
 {
-   outputTree.Branch(name.c_str(), address);
+   outputTree.SetBranchAddress(name.c_str(), address);
+   // always save nullptrs for the non-RVec overload of SetBranchesHelper
    branch = nullptr;
    branchAddress = nullptr;
 }
 
-/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
+/// Helper function for SnapshotHelper and SnapshotHelperMT. It sets branch addresses for the output TTree of a Snapshot.
 /// This overload is called for columns of type `RVec<T>`. For RDF, these can represent:
 /// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch title
 /// 2. RVecs coming from a custom column or a source
@@ -1082,7 +1083,7 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       // Treat 2. and 3.:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
-      outputTree.Branch(outName.c_str(), &ab->AsVector());
+      outputTree.SetBranchAddress(outName.c_str(), &ab->AsVector());
       return;
    }
 
@@ -1107,6 +1108,17 @@ void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &output
       branch = outputBranch;
       branchAddress = GetData(*ab);
    }
+}
+
+template <typename ColumnType>
+void MakeBranch(TTree &tree, const std::string &name, ColumnType */*dummy for overloading*/) {
+   tree.Branch(name.c_str(), (ColumnType*){});
+}
+
+template <typename ValueType>
+void MakeBranch(TTree &tree, const std::string &name, RVec<ValueType> */*dummy for overloading*/) {
+   // if the type is RVec<T>, Snapshot writes it as std::vector<T>
+   tree.Branch(name.c_str(), (std::vector<ValueType>*){});
 }
 
 // generic version, no-op
@@ -1231,6 +1243,14 @@ public:
       fOutputTree =
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/fOutputFile.get());
 
+      // create the branches in the output TTree
+      std::size_t branchIdx = 0ull;
+      std::size_t expander[] = {(MakeBranch(*fOutputTree,
+                                            fOutputBranchNames[branchIdx],
+                                            static_cast<BranchTypes*>(nullptr)),
+                                 ++branchIdx)...};
+      (void)expander;
+
       if (fOptions.fAutoFlush)
          fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
    }
@@ -1307,6 +1327,7 @@ public:
       fOutputTrees[slot]->SetImplicitMT(false);
       if (fOptions.fAutoFlush)
          fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
+
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
@@ -1318,6 +1339,15 @@ public:
          if (friendsListPtr && friendsListPtr->GetEntries() > 0)
             fInputTrees[slot]->AddClone(fOutputTrees[slot].get());
       }
+
+      // create branches in output TTree
+      std::size_t branchIdx = 0ull;
+      std::size_t expander[] = {(MakeBranch(*fOutputTrees[slot],
+                                 fOutputBranchNames[branchIdx],
+                                 static_cast<BranchTypes*>(nullptr)),
+                                ++branchIdx)...};
+      (void)expander;
+
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
@@ -1387,7 +1417,27 @@ public:
 
    void Initialize()
    {
+      ::TDirectory::TContext c; // do not change gDirectory outside of this scope
+
       const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+
+      // Write an empty TTree to file as a clean starting point for TBufferMerger.
+      // This is mostly useful when a TTree with the same name is already present in the output
+      // file and we are UPDATE'ing the TFile, in which case TBufferMerger would try to merge new
+      // content with the old TTree. What we want instead is to write a new namecycle.
+      TFile f(fFileName.c_str(), fOptions.fMode.c_str(), "", cs);
+      TDirectory *treeDirectory = &f;
+      if (!fDirName.empty()) {
+         treeDirectory = treeDirectory->mkdir(fDirName.c_str(), "");
+      }
+      TTree t(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+      std::size_t branchIdx = 0ull;
+      std::size_t expander[] = {(MakeBranch(t, fOutputBranchNames[branchIdx], static_cast<BranchTypes*>(nullptr)),
+                                 ++branchIdx)...};
+      (void)expander;
+      treeDirectory->Write();
+      treeDirectory->Close();
+
       fMerger = std::make_unique<ROOT::Experimental::TBufferMerger>(fFileName.c_str(), fOptions.fMode.c_str(), cs);
    }
 
