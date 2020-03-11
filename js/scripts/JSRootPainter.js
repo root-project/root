@@ -4515,13 +4515,13 @@
     * @desc used to find title drawing
     * @private */
    TObjectPainter.prototype.FindInPrimitives = function(objname) {
-
       var painter = this.pad_painter();
-      if (!painter || !painter.pad) return null;
 
-      if (painter.pad.fPrimitives)
-         for (var n=0;n<painter.pad.fPrimitives.arr.length;++n) {
-            var prim = painter.pad.fPrimitives.arr[n];
+      var arr = painter && painter.pad && painter.pad.fPrimitives ? painter.pad.fPrimitives.arr : null;
+
+      if (arr && arr.length)
+         for (var n=0;n<arr.length;++n) {
+            var prim = arr[n];
             if (('fName' in prim) && (prim.fName === objname)) return prim;
          }
 
