@@ -559,29 +559,33 @@ Bool_t TFITSHDU::LoadHDU(TString& filepath_filter)
              
                // define the array to load the data with the CFITSIO functions
                // a fixed arrays is needed as argument to the fits_read_col function
-               // so a new `DATATYPE array[size]` is defined for each case and then
-               // passed to the `fits_read_col` function
+               // so a vector is defined and then its `.data()` pointer is passed
+               // to fits_read_col
                //
                // TODO: add all type cases, for now only short, long, float and double are considered
                //
                if (abstype == 21) {
-                  short data[size];
-                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  std::vector<short> data; 
+                  data.resize(size);
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data.data(), &anynul, &status);
                   for (int i = 0; i < size; i++) 
                      vec->SetAt(data[i], i);
                } else if (abstype == 41) {
-                  int data[size];
-                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  std::vector<int> data; 
+                  data.resize(size);
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data.data(), &anynul, &status);
                   for (int i = 0; i < size; i++) 
                      vec->SetAt(data[i], i);
                } else if (abstype == 42) {
-                  float data[size];
-                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  std::vector<float> data; 
+                  data.resize(size);
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data.data(), &anynul, &status);
                   for (int i = 0; i < size; i++) 
                      vec->SetAt(data[i], i);
               } else if (abstype == 82) {
-                  double data[size];
-                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data, &anynul, &status);
+                  std::vector<double> data; 
+                  data.resize(size);
+                  fits_read_col(fp, abstype, colnum + 1, row + 1, 1, nelements, &nulval, data.data(), &anynul, &status);
                   for (int i = 0; i < size; i++) 
                      vec->SetAt(data[i], i);
                } else {
