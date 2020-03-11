@@ -24,6 +24,7 @@
 #include "TError.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TVirtualHistPainter.h"
 
 

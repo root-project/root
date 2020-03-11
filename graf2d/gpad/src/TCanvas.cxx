@@ -31,6 +31,7 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TColor.h"
+#include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"

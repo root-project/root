@@ -13,6 +13,7 @@
 #include "TROOT.h"
 #include "TObject.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TMath.h"
 #include "Math/Integrator.h"
 #include "Math/IntegratorMultiDim.h"

@@ -23,6 +23,7 @@
 #include "TEnv.h"
 #include "TInterpreter.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TPRegexp.h"
 #include "TRegexp.h"
 #include "TROOT.h"

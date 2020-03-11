@@ -31,6 +31,7 @@
 #include "TGClient.h"
 #include "TEnv.h"
 #include "TList.h"
+#include "TObjArray.h"
 #include "TContextMenu.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
