@@ -1592,6 +1592,33 @@
       }
    }
 
+   /** Returns palette associated with frame. Either from existing palette painter or just default palette */
+   TFramePainter.prototype.GetPalette = function(force) {
+      var pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
+
+      if (pp) return pp.GetPalette();
+
+      if (!this.fDfltPalette) {
+         this.fDfltPalette = {
+            _typename : "ROOT::Experimental::RPalette",
+            fColors : [{ fOrdinal : 0,     fColor : { fRGBA : [53, 42, 135] } },
+                       { fOrdinal : 0.125, fColor : { fRGBA : [15, 92, 221] } },
+                       { fOrdinal : 0.25,  fColor : { fRGBA : [20, 129, 214] } },
+                       { fOrdinal : 0.375, fColor : { fRGBA : [6, 164, 202] } },
+                       { fOrdinal : 0.5,   fColor : { fRGBA : [46, 183, 164] } },
+                       { fOrdinal : 0.625, fColor : { fRGBA : [135, 191, 119] } },
+                       { fOrdinal : 0.75,  fColor : { fRGBA : [209, 187, 89] } },
+                       { fOrdinal : 0.875, fColor : { fRGBA : [254, 200, 50] } },
+                       { fOrdinal : 1,     fColor : { fRGBA : [249, 251, 14] } }],
+             fInterpolate : true,
+             fNormalized : true
+         };
+         JSROOT.addMethods(this.fDfltPalette, "ROOT::Experimental::RPalette");
+      }
+
+      return this.fDfltPalette;
+   }
+
    /** Function called when frame is clicked and object selection can be performed
      * such event can be used to select objects */
    TFramePainter.prototype.ProcessFrameClick = function(pnt, dblckick) {
@@ -4495,61 +4522,13 @@
       return "black";
    }
 
-   /* create array of colors of specified len */
-   JSROOT.v7.CreateRPaletteColors = function(rpalette, len) {
-      var arr = [], indx = 0;
+   JSROOT.registerMethods("ROOT::Experimental::RPalette", {
 
-      while (arr.length < len) {
-         var value = arr.length / (len-1);
-
-         var entry = rpalette.fColors[indx];
-
-         if ((Math.abs(entry.fOrdinal - value)<0.0001) || (indx == rpalette.fColors.length-1)) {
-            arr.push(JSROOT.v7.ExtractRColor(entry.fColor));
-            continue;
-         }
-
-         var next = rpalette.fColors[indx+1];
-         if (next.fOrdinal <= value) {
-            indx++;
-            continue;
-         }
-
-         var dist = next.fOrdinal - entry.fOrdinal,
-             r1 = (next.fOrdinal - value) / dist,
-             r2 = (value - entry.fOrdinal) / dist;
-
-         // interpolate
-         var col1 = d3.rgb(JSROOT.v7.ExtractRColor(entry.fColor));
-         var col2 = d3.rgb(JSROOT.v7.ExtractRColor(next.fColor));
-
-         var color = d3.rgb(Math.round(col1.r*r1 + col2.r*r2), Math.round(col1.g*r1 + col2.g*r2), Math.round(col1.b*r1 + col2.b*r2));
-
-         arr.push(color.toString());
-      }
-
-      return arr;
-   }
-
-   function RPalettePainter(palette) {
-      JSROOT.TObjectPainter.call(this, palette);
-      this.csstype = "palette";
-   }
-
-   RPalettePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
-
-   RPalettePainter.prototype.GetPalette = function()
-   {
-      var drawable = this.GetObject();
-      var pal = drawable ? drawable.fPalette : null;
-
-      if (!pal || pal.getColor) return pal;
-
-      pal.getColor = function(indx) {
+      getColor: function(indx) {
          return this.palette[indx];
-      }
+      },
 
-      pal.getContourIndex = function(zc) {
+      getContourIndex: function(zc) {
          var cntr = this.fContour, l = 0, r = cntr.length-1, mid;
 
          if (zc < cntr[0]) return -1;
@@ -4565,22 +4544,57 @@
 
          // last color in pallette starts from level cntr[r-1]
          return Math.floor((zc-cntr[0]) / (cntr[r-1] - cntr[0]) * (r-1));
-      }
+      },
 
-      pal.getContourColor = function(zc) {
+      getContourColor: function(zc) {
          var zindx = this.getContourIndex(zc);
          return (zindx < 0) ? "" : this.getColor(zindx);
-      }
+      },
 
-      pal.GetContour = function() {
+      GetContour: function() {
          return this.fContour && (this.fContour.length > 1) ? this.fContour : null;
-      }
+      },
 
-      pal.DeleteContour = function() {
+      DeleteContour: function() {
          delete this.fContour;
-      }
+      },
 
-      pal.CreateContour = function(logz, nlevels, zmin, zmax, zminpositive) {
+      CreatePaletteColors: function(len) {
+         var arr = [], indx = 0;
+
+         while (arr.length < len) {
+            var value = arr.length / (len-1);
+
+            var entry = this.fColors[indx];
+
+            if ((Math.abs(entry.fOrdinal - value)<0.0001) || (indx == this.fColors.length-1)) {
+               arr.push(JSROOT.v7.ExtractRColor(entry.fColor));
+               continue;
+            }
+
+            var next = this.fColors[indx+1];
+            if (next.fOrdinal <= value) {
+               indx++;
+               continue;
+            }
+
+            var dist = next.fOrdinal - entry.fOrdinal,
+                r1 = (next.fOrdinal - value) / dist,
+                r2 = (value - entry.fOrdinal) / dist;
+
+            // interpolate
+            var col1 = d3.rgb(JSROOT.v7.ExtractRColor(entry.fColor));
+            var col2 = d3.rgb(JSROOT.v7.ExtractRColor(next.fColor));
+
+            var color = d3.rgb(Math.round(col1.r*r1 + col2.r*r2), Math.round(col1.g*r1 + col2.g*r2), Math.round(col1.b*r1 + col2.b*r2));
+
+            arr.push(color.toString());
+         }
+
+         return arr;
+      },
+
+      CreateContour: function(logz, nlevels, zmin, zmax, zminpositive) {
          this.fContour = [];
          delete this.fCustomContour;
          this.colzmin = zmin;
@@ -4614,8 +4628,26 @@
          }
 
          if (!this.palette || (this.palette.length != nlevels))
-            this.palette = JSROOT.v7.CreateRPaletteColors(this, nlevels);
+            this.palette = this.CreatePaletteColors(nlevels);
       }
+
+   });
+
+
+   function RPalettePainter(palette) {
+      JSROOT.TObjectPainter.call(this, palette);
+      this.csstype = "palette";
+   }
+
+   RPalettePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   RPalettePainter.prototype.GetPalette = function()
+   {
+      var drawable = this.GetObject();
+      var pal = drawable ? drawable.fPalette : null;
+
+      if (pal && !pal.getColor)
+         JSROOT.addMethods(pal, "ROOT::Experimental::RPalette");
 
       return pal;
    }
