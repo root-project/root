@@ -112,10 +112,6 @@ foreach(file libc.modulemap boost.modulemap tinyxml2.modulemap cuda.modulemap st
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
     set(dest_file "module.modulemap")
-	list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${clinginclude}/cling/${file}
-	  ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${dest_file})
-	list(APPEND files_to_copy ${clinginclude}/cling/${file})
-	install(FILES ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${dest_file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
   elseif(NOT ${file} MATCHES ".*modulemap")
     # We do not want our modulemap to be considered part of the PCH.
     set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
@@ -148,6 +144,9 @@ if(MSVC)
   add_custom_command(OUTPUT ${stamp_file}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include
         ${copy_commands}
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CLANG_RESOURCE_DIR}
+        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include		
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}
         COMMENT "Copying LLVM resource and header files")
