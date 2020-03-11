@@ -3394,7 +3394,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
                                 ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
-                                0/*IsMapped*/, 0/*RequestingModule*/, 0/*SuggestedModule*/,
+                                0/*SuggestedModule*/, 0/*RequestingModule*/,
+                                0/*IsMapped*/, nullptr /*IsFrameworkFound*/,
                                 false /*SkipCache*/,
                                 false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
@@ -3448,8 +3449,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                                    0/*IsMapped*/, 0/*Searchpath*/, 0/*RelPath*/,
-                                    0/*RequestingModule*/, 0/*SuggestedModule*/);
+                                    0/*Searchpath*/, 0/*RelPath*/,
+                                    0/*SuggestedModule*/, 0/*RequestingModule*/,
+                                    0/*IsMapped*/, nullptr /*IsFrameworkFound*/);
    }
 
    if (!FELong) {
@@ -3473,10 +3475,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                               0/*IsMapped*/,
-                               0/*Searchpath*/,
-                               0/*RelPath*/,
-                               0/*RequestingModule*/, 0 /*SuggestedModule*/) == FELong) {
+                               0/*Searchpath*/, 0/*RelPath*/,
+                               0/*SuggestedModule*/, 0/*RequestingModule*/,
+                               0/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
          return trailingPart;
       }
    }
