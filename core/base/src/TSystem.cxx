@@ -757,12 +757,12 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       fHelpers = new TOrdCollection;
 
    TPluginHandler *h;
-   TSystem *helper = 0;
+   TSystem *helper = nullptr;
    if (path) {
       if (!GetDirPtr()) {
          TUrl url(path, kTRUE);
          if (!strcmp(url.GetProtocol(), "file"))
-            return 0;
+            return nullptr;
       }
    }
 
@@ -773,7 +773,7 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
          return helper;
 
    if (!path)
-      return 0;
+      return nullptr;
 
    // create new helper
    TRegexp re("^root.*:");  // also roots, rootk, etc
@@ -782,12 +782,12 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       // (x)rootd daemon ...
       if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
          if (h->LoadPlugin() == -1)
-            return 0;
+            return nullptr;
          helper = (TSystem*) h->ExecPlugin(2, path, kFALSE);
       }
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       helper = (TSystem*) h->ExecPlugin(0);
    }
 
