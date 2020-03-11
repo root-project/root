@@ -29,7 +29,8 @@ RooStringVar is a RooAbsArg implementing string values.
 #include "TTree.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
-              
+#include "TBranch.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with initial value. The size argument is ignored.

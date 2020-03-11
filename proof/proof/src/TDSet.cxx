@@ -19,6 +19,7 @@ See TDSet.
 #include "TDSet.h"
 
 #include "Riostream.h"
+#include "TBuffer.h"
 #include "TChain.h"
 #include "TClass.h"
 #include "TClassTable.h"

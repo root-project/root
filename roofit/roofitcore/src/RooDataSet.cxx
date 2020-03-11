@@ -76,6 +76,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TFile.h"
+#include "TBuffer.h"
 #include "ROOT/RMakeUnique.hxx"
 
 #include <fstream>

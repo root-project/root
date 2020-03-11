@@ -6,6 +6,7 @@
 #include "TRandom3.h"
 #include "TTree.h"
 #include "TROOT.h"
+#include "TBranch.h"
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"

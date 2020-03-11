@@ -32,6 +32,8 @@ optionally a series of alternate named ranges.
 
 #include <math.h>
 #include "TTree.h"
+#include "TBuffer.h"
+#include "TBranch.h"
 #include "RooRealVar.h"
 #include "RooStreamParser.h"
 #include "RooErrorVar.h"
