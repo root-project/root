@@ -7699,6 +7699,16 @@ void TTree::RegisterExternalFriend(TFriendElement *fe)
    fExternalFriends->Add(fe);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Removes external friend
+
+void TTree::RemoveExternalFriend(TFriendElement *fe)
+{
+   if (fExternalFriends) fExternalFriends->Remove((TObject*)fe);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a friend from the list of friends.
 
