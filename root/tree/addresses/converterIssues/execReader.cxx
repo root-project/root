@@ -7,6 +7,7 @@
 // ROOT include(s):
 #include <TFile.h>
 #include <TTree.h>
+#include <TBranch.h>
 #include <TError.h>
 
 #define AODX_STANDALONE 1 
