@@ -46,7 +46,7 @@ enum class EOverflow {
    kNoOverflow = 0x0, ///< Exclude under- and overflows
    kUnderflow = 0x1,  ///< Include underflows
    kOverflow = 0x2,   ///< Include overflows
-   kUnderOver = 0x3,  ///< Include both under- and overflows
+   kAllOverflow = 0x3,  ///< Include both under- and overflows
 };
 
 inline bool operator&(EOverflow a, EOverflow b)
@@ -92,6 +92,10 @@ public:
    /// Get the histogram title.
    const std::string &GetTitle() const { return fTitle; }
 
+   /// Given the coordinate `x`, determine the index of the bin.
+   virtual int GetOverflowBinIndex(const CoordArray_t &x, int axis, int type) const = 0;
+   /// Given the coordinate `x`, determine the index of the bin.
+   virtual int GetActualBinIndex(const CoordArray_t &x) const = 0;
    /// Given the coordinate `x`, determine the index of the bin.
    virtual int GetBinIndex(const CoordArray_t &x) const = 0;
    /// Given the coordinate `x`, determine the index of the bin, possibly growing
@@ -295,14 +299,68 @@ int GetNBinsFromAxes(AXISCONFIG... axisArgs)
    return RGetNBinsCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
 }
 
+// 
+template <int IDX, class AXISTUPLE>
+struct RGetOverflowOffset;
+
+template <class AXES>
+struct RGetOverflowOffset<0, AXES> {
+   int operator()(const AXES &axes, int axisToSkip) const
+   {
+      if (0 == axisToSkip) {
+         return 1;
+      } else {
+         return std::get<0>(axes).GetNBins();
+      }
+   }
+};
+
+template <int I, class AXES>
+struct RGetOverflowOffset {
+   int operator()(const AXES &axes, int axisToSkip) const
+   {
+      if (I == axisToSkip) {
+         return RGetOverflowOffset<I - 1, AXES>()(axes, axisToSkip);
+      } else {
+         return std::get<I>(axes).GetNBins() * RGetOverflowOffset<I - 1, AXES>()(axes, axisToSkip);
+      }
+   }
+};
+
+// 
+template <int IDX, class HISTIMPL, class AXES>
+struct RGetOverflowBin;
+
+template <class HISTIMPL, class AXES>
+struct RGetOverflowBin<-1, HISTIMPL, AXES> {
+   std::vector<int> operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &) const
+   {
+      return {-1, 0};
+   }
+};
+
+template <int I, class HISTIMPL, class AXES>
+struct RGetOverflowBin {
+   std::vector<int> operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x) const
+   {
+      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
+      int bin = std::get<thisAxis>(axes).FindOverflowBin(x[thisAxis]);
+      if (bin == -1 || bin == -2) {
+         return {thisAxis, bin};
+      } else {
+         return RGetOverflowBin<I - 1, HISTIMPL, AXES>()(hist, axes, x);
+      }
+   }
+};
+
 // Get under/overflow bin index of given coordinates
 template <int IDX, class HISTIMPL, class AXES, bool GROW>
-struct RGetUnderOverBinIndex;
+struct RGetOverflowBinIndex;
 
 template <class HISTIMPL, class AXES, bool GROW>
-struct RGetUnderOverBinIndex<-1, HISTIMPL, AXES, GROW> {
+struct RGetOverflowBinIndex<-1, HISTIMPL, AXES, GROW> {
    int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
-                  RAxisBase::EFindStatus &status) const
+                  RAxisBase::EFindStatus &status, int) const
    {
       status = RAxisBase::EFindStatus::kValid;
       return 0;
@@ -310,21 +368,25 @@ struct RGetUnderOverBinIndex<-1, HISTIMPL, AXES, GROW> {
 };
 
 template <int I, class HISTIMPL, class AXES, bool GROW>
-struct RGetUnderOverBinIndex {
+struct RGetOverflowBinIndex {
    int operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x,
-                  RAxisBase::EFindStatus &status) const
+                  RAxisBase::EFindStatus &status, int axisOverflow) const
    {
       constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
-      int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]) - 1;
-      if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin >= std::get<thisAxis>(axes).GetNBinsNoOver())) {
-         hist->GrowAxis(thisAxis, x[thisAxis]);
-         status = RAxisBase::EFindStatus::kCanGrow;
+      if (thisAxis == axisOverflow) {
+         return RGetOverflowBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status, axisOverflow);
+      } else {
+         int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]) - 1;
+         if (GROW && std::get<thisAxis>(axes).CanGrow() && (bin < 0 || bin >= std::get<thisAxis>(axes).GetNBinsNoOver())) {
+            hist->GrowAxis(thisAxis, x[thisAxis]);
+            status = RAxisBase::EFindStatus::kCanGrow;
 
-         // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
-         return bin;
+            // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
+            return bin;
+         }
+         return bin +
+               RGetOverflowBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status, axisOverflow) * std::get<thisAxis>(axes).GetNBins();
       }
-      return bin +
-             RGetUnderOverBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBins();
    }
 };
 
@@ -499,25 +561,32 @@ public:
    /// 
    std::vector<int> GetBinType(const CoordArray_t &x) const
    {
-      std::vector<int> binType;
-      for(int thisAxis = 0; thisAxis < DATA::GetNDim(); ++thisAxis) {
-         int bin = std::get<thisAxis>(fAxes).FindBin(x[thisAxis]);
-         binType = {thisAxis, bin};
-         if(bin == -1 || bin == -2)
-            return binType;
-      }
-      binType = {-1, 0};
-      return binType;!
+      return Internal::RGetOverflowBin<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, x);
+   }
+
+   /// 
+   int GetOverflowOffset(int axis) const
+   {
+      return Internal::RGetOverflowOffset<DATA::GetNDim() - 1, decltype(fAxes)>()(fAxes, axis);
+   }
+
+   /// 
+   int GetAxisOffset(int axis) const
+   {
+      int ret = 0;
+      for (int i = 0; i < axis; ++i)
+         ret += 2 * GetOverflowOffset(i);
+      return ret;
    }
 
    /// Gets the bin index for coordinate `x`; returns 0 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
-   int GetUnderOverBinIndex(const CoordArray_t &x, int axis, int type) const final
+   int GetOverflowBinIndex(const CoordArray_t &x, int axis, int type) const final
    {
       RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
-      int offset = axis * 2 * GetNBinsForOffset;
+      int offset = GetAxisOffset(axis) + (std::abs(type) - 1) * GetOverflowOffset(axis);
       int ret =
-         Internal::RGetUnderOverBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status, axis, offset) + 1;
+         Internal::RGetOverflowBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status, axis) + offset + 1;
       if (status != RAxisBase::EFindStatus::kValid)
          return 0;
       return ret;
@@ -539,12 +608,12 @@ public:
    /// e.g. for axes without over / underflow but coordinate out of range.
    int GetBinIndex(const CoordArray_t &x) const final
    {
-      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
       std::vector<int> binType = GetBinType(x);
-      if(binType[1] == -1 || binType[1] == -2) {
-         int ret = GetUnderOverBinIndex(x, binType[0]);
+      int ret = 0;
+      if (binType[1] == -1 || binType[1] == -2) {
+         ret = GetOverflowBinIndex(x, binType[0], binType[1]);
       } else {
-         int ret = GetActualBinIndex(x);
+         ret = GetActualBinIndex(x);
       }
       return ret;
    }
@@ -557,7 +626,12 @@ public:
       RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kCanGrow;
       int ret = 0;
       while (status == RAxisBase::EFindStatus::kCanGrow) {
-         ret = Internal::RGetBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), true>()(this, fAxes, x, status);
+         std::vector<int> binType = GetBinType(x);
+         if (binType[1] == -1 || binType[1] == -2) {
+            ret = GetOverflowBinIndex(x, binType[0], binType[1]);
+         } else {
+            ret = GetActualBinIndex(x);
+         }
       }
       return ret;
    }

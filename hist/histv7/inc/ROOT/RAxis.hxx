@@ -307,6 +307,11 @@ public:
    /// below the bin border. I.e. don't do that for reliable results!
    virtual int FindBin(double x) const noexcept = 0;
 
+   /// Find the bin index for the given coordinate.
+   /// \note Passing a bin border coordinate can either return the bin above or
+   /// below the bin border. I.e. don't do that for reliable results!
+   virtual int FindOverflowBin(double x) const noexcept = 0;
+
    /// Get the bin center for the given bin index.
    /// The result of this method on an overflow or underflow bin is unspecified
    virtual double GetBinCenter(int bin) const = 0;
@@ -451,6 +456,20 @@ public:
    /// \note Passing a bin border coordinate can either return the bin above or
    /// below the bin border. I.e. don't do that for reliable results!
    int FindBin(double x) const noexcept final override
+   {
+      double rawbin = (x - fLow) * fInvBinWidth;
+      int ret = AdjustOverflowBinNumber(rawbin);
+      if (ret == -1)
+         return 0;
+      if (ret == -2)
+         return GetNBins() - 1;
+      return ret;
+   }
+
+   /// Find the bin index for the given coordinate.
+   /// \note Passing a bin border coordinate can either return the bin above or
+   /// below the bin border. I.e. don't do that for reliable results!
+   int FindOverflowBin(double x) const noexcept final override
    {
       double rawbin = (x - fLow) * fInvBinWidth;
       return AdjustOverflowBinNumber(rawbin);
@@ -657,6 +676,25 @@ public:
    /// below the axis range, return 0. If it is above, return N + 1 for an axis
    /// with N non-overflow bins.
    int FindBin(double x) const noexcept final override
+   {
+      const auto bBegin = fBinBorders.begin();
+      const auto bEnd = fBinBorders.end();
+      // lower_bound finds the first bin border that is >= x.
+      auto iNotLess = std::lower_bound(bBegin, bEnd, x);
+      int rawbin = iNotLess - bBegin;
+      // No need for AdjustOverflowBinNumber(rawbin) here; lower_bound() is the
+      // answer: e.g. for x < *bBegin, rawbin is 0.
+      if (rawbin < GetFirstBin())
+         return 0;
+      if (rawbin > GetLastBin())
+         return GetNBins() - 1;
+      return rawbin;
+   }
+
+   /// Find the bin index for the given coordinate.
+   /// \note Passing a bin border coordinate can either return the bin above or
+   /// below the bin border. I.e. don't do that for reliable results!
+   int FindOverflowBin(double x) const noexcept final override
    {
       const auto bBegin = fBinBorders.begin();
       const auto bEnd = fBinBorders.end();
