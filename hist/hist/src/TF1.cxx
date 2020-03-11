@@ -19,6 +19,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TRandom.h"
+#include "TObjString.h"
 #include "TInterpreter.h"
 #include "TPluginManager.h"
 #include "TBrowser.h"

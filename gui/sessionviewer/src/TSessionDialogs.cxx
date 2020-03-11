@@ -38,6 +38,7 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TKey.h"
+#include "TObjString.h"
 #include "TGTableLayout.h"
 #include "TGFileDialog.h"
 #include "TProof.h"

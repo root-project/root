@@ -27,6 +27,7 @@
 #include "TPRegexp.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TObjString.h"
 #include "TVirtualMutex.h"
 #include <string>
 

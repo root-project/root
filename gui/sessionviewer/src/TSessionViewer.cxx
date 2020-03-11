@@ -44,6 +44,7 @@
 #include "TChain.h"
 #include "TDSet.h"
 #include "TFileInfo.h"
+#include "TObjString.h"
 #include "TProof.h"
 #include "TRandom.h"
 #include "TSessionViewer.h"
