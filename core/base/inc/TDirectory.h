@@ -22,11 +22,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
-#include "TList.h"
 #include "TClass.h"
 #include "TUUID.h"
 
-#ifndef R__LESS_INCLUDES
+#ifdef R__LESS_INCLUDES
+class TList;
+#else
+#include "TList.h"
 #include "TBuffer.h"
 #include "TDatime.h"
 #endif
