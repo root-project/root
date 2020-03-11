@@ -1,12 +1,14 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TFile.h>
 #include <TTree.h>
+#include <TBranch.h>
 #include <TMatrixD.h>
 #include <TVectorD.h>
 #include <TString.h>
 #include <TArrayD.h>
 #include <TArrayI.h>
 #include <TObjArray.h>
+#include <TObjString.h>
 #include <TMap.h>
 #include <TSystem.h>
 #include <Riostream.h>
