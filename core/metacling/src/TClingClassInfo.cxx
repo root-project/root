@@ -1073,8 +1073,8 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
 
       if (kind == ROOT::TMetaUtils::EIOCtorCategory::kAbsent) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
-         Error("TClingClassInfo::New()", "Class has no default constructor: %s",
-               FullyQualifiedName(GetDecl()).c_str());
+         // Error("TClingClassInfo::New()", "Class has no default constructor: %s",
+         //       FullyQualifiedName(GetDecl()).c_str());
          return nullptr;
       }
    } // End of Lock section.
