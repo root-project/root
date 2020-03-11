@@ -26,6 +26,11 @@
 #include "TClass.h"
 #include "TUUID.h"
 
+#ifndef R__LESS_INCLUDES
+#include "TBuffer.h"
+#include "TDatime.h"
+#endif
+
 class TBrowser;
 class TKey;
 class TFile;
