@@ -14,13 +14,15 @@ from glob import glob
 
 import importlib
 
-from JupyROOT.helpers.handlers import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
+from JupyROOT.helpers.handlers import IOHandler, Poller, JupyROOTDeclarer, JupyROOTExecutor, JupyROOTDisplayer
 
 import ROOT
 
 _ioHandler = None
+_Poller    = None
 _Executor  = None
 _Declarer  = None
+_Displayer = None
 
 def GetIOHandler():
     global _ioHandler
@@ -28,17 +30,30 @@ def GetIOHandler():
         _ioHandler = IOHandler()
     return _ioHandler
 
-def GetExecutor():
+def GetPoller():
+    global _Poller
+    if not _Poller:
+        _Poller = Poller()
+        _Poller.start()
+    return _Poller
+
+def GetExecutor(poller):
     global _Executor
     if not _Executor:
-        _Executor = JupyROOTExecutor()
+        _Executor = JupyROOTExecutor(poller)
     return _Executor
 
-def GetDeclarer():
+def GetDeclarer(poller):
     global _Declarer
     if not _Declarer:
-        _Declarer = JupyROOTDeclarer()
+        _Declarer = JupyROOTDeclarer(poller)
     return _Declarer
+
+def GetDisplayer(poller):
+    global _Displayer
+    if not _Displayer:
+        _Displayer = JupyROOTDisplayer(poller)
+    return _Displayer
 
 class MagicLoader(object):
     '''Class to load JupyROOT Magics'''
