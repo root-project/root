@@ -16,7 +16,6 @@
 #include "TFile.h"
 #include "TColor.h"
 #include "TPaveText.h"
-#include "TObjString.h"
 #include "TControlBar.h"
 
 #include "TGWindow.h"
