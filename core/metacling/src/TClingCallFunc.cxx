@@ -1129,6 +1129,35 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    //    }
    // }
    //
+   // When I/O constructor used:
+   //
+   // void
+   // unique_wrapper_ddd(void** ret, void* arena, unsigned long nary)
+   // {
+   //    if (!arena) {
+   //       if (!nary) {
+   //          *ret = new ClassName((TRootIOCtor*)nullptr);
+   //       }
+   //       else {
+   //          char *buf = malloc(nary * sizeof(ClassName));
+   //          for (int k=0;k<nary;++k)
+   //             new (buf + k * sizeof(ClassName)) ClassName((TRootIOCtor*)nullptr);
+   //          *ret = buf;
+   //       }
+   //    }
+   //    else {
+   //       if (!nary) {
+   //          *ret = new (arena) ClassName((TRootIOCtor*)nullptr);
+   //       }
+   //       else {
+   //          for (int k=0;k<nary;++k)
+   //             new ((char *) arena + k * sizeof(ClassName)) ClassName((TRootIOCtor*)nullptr);
+   //          *ret = arena;
+   //       }
+   //    }
+   // }
+   //
+   //
    // Note:
    //
    // If the class is of POD type, the form:
@@ -1180,6 +1209,13 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
       wrapper_name = buf.str();
    }
 
+   string constr_arg;
+   if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
+      constr_arg = "((TRootIOCtor*)nullptr)";
+   else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIORefType) {
+      constr_arg = "(*((TRootIOCtor*)nullptr))";
+   }
+
    //
    //  Write the wrapper code.
    //
@@ -1190,16 +1226,6 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    buf << wrapper_name;
    buf << "(void** ret, void* arena, unsigned long nary)\n";
    buf << "{\n";
-   ++indent_level;
-
-   string constr_arg;
-   if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
-      constr_arg = "((TRootIOCtor*)nullptr)";
-   else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIORefType) {
-      indent(buf, indent_level);
-      buf << "TRootIOCtor arg;\n";
-      constr_arg = "(arg)";
-   }
 
    //    if (!arena) {
    //       if (!nary) {
@@ -1209,30 +1235,31 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    //          *ret = new ClassName[nary];
    //       }
    //    }
-   indent(buf, indent_level);
+   indent(buf, ++indent_level);
    buf << "if (!arena) {\n";
-   ++indent_level;
-   indent(buf, indent_level);
+   indent(buf, ++indent_level);
    buf << "if (!nary) {\n";
-   ++indent_level;
-   indent(buf, indent_level);
+   indent(buf, ++indent_level);
    buf << "*ret = new " << class_name << constr_arg << ";\n";
-   --indent_level;
-   indent(buf, indent_level);
+   indent(buf, --indent_level);
    buf << "}\n";
    indent(buf, indent_level);
    buf << "else {\n";
-   ++indent_level;
-   indent(buf, indent_level);
-   if (constr_arg.empty())
+   indent(buf, ++indent_level);
+   if (constr_arg.empty()) {
       buf << "*ret = new " << class_name << "[nary];\n";
-   else
-      buf << "*ret = nullptr;\n"; // no way to create objects array with non-default constructor
-   --indent_level;
-   indent(buf, indent_level);
+   } else {
+      buf << "char *buf = (char *) malloc(nary * sizeof(" << class_name << "));\n";
+      indent(buf, indent_level);
+      buf << "for (int k=0;k<nary;++k)\n";
+      indent(buf, ++indent_level);
+      buf << "new (buf + k * sizeof(" << class_name << ")) " << class_name << constr_arg << ";\n";
+      indent(buf, --indent_level);
+      buf << "*ret = buf;\n";
+   }
+   indent(buf, --indent_level);
    buf << "}\n";
-   --indent_level;
-   indent(buf, indent_level);
+   indent(buf, --indent_level);
    buf << "}\n";
    //    else {
    //       if (!nary) {
@@ -1244,28 +1271,27 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    //    }
    indent(buf, indent_level);
    buf << "else {\n";
-   ++indent_level;
-   indent(buf, indent_level);
+   indent(buf, ++indent_level);
    buf << "if (!nary) {\n";
-   ++indent_level;
-   indent(buf, indent_level);
+   indent(buf, ++indent_level);
    buf << "*ret = new (arena) " << class_name << constr_arg << ";\n";
-   --indent_level;
-   indent(buf, indent_level);
+   indent(buf, --indent_level);
    buf << "}\n";
    indent(buf, indent_level);
    buf << "else {\n";
-   ++indent_level;
-   indent(buf, indent_level);
-   if (constr_arg.empty())
+   indent(buf, ++indent_level);
+   if (constr_arg.empty()) {
       buf << "*ret = new (arena) " << class_name << "[nary];\n";
-   else
-      buf << "*ret = nullptr;\n"; // no way to create objects array with non-default constructor
-   --indent_level;
-   indent(buf, indent_level);
+   } else {
+      buf << "for (int k=0;k<nary;++k)\n";
+      indent(buf, ++indent_level);
+      buf << "new ((char *) arena + k * sizeof(" << class_name << ")) " << class_name << constr_arg << ";\n";
+      indent(buf, --indent_level);
+      buf << "*ret = arena;\n";
+   }
+   indent(buf, --indent_level);
    buf << "}\n";
-   --indent_level;
-   indent(buf, indent_level);
+   indent(buf, --indent_level);
    buf << "}\n";
    // End wrapper.
    --indent_level;
