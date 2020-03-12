@@ -25,6 +25,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <set>
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
