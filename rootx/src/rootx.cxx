@@ -201,8 +201,11 @@ static void SetLibraryPath()
 # endif
    putenv(msg);
 # ifdef ROOTPREFIX
-   } else {
-      char *msg = strdup("LD_LIBRARY_PATH=" ROOTLIBDIR "");
+   } else /* if (getenv("ROOTIGNOREPREFIX")) */ {
+      std::string ldLibPath = "LD_LIBRARY_PATH=" ROOTLIBDIR;
+      if (const char *oldLdLibPath = getenv("LD_LIBRARY_PATH"))
+         ldLibPath += std::string(":") + oldLdLibPath;
+      char *msg = strdup(ldLibPath.c_str());
       putenv(msg);
    }
 # endif
