@@ -52,7 +52,7 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None):
     # Import numpy and numpy.array derived class lazily
     try:
         import numpy
-        from ROOT.pythonization._rdf_utils import ndarray
+        from ROOT.pythonization.utils._rdf_utils import ndarray
     except:
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
