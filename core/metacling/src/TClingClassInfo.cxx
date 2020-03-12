@@ -690,6 +690,12 @@ ROOT::TMetaUtils::EIOCtorCategory TClingClassInfo::HasDefaultConstructor(bool ch
    if (checkio && (kind == EIOCtorCategory::kAbsent)) {
       const RConstructorType ioctortype_io("TRootIOCtor", *fInterp);
       kind = CheckConstructor(CRD, ioctortype_io, *fInterp);
+
+      if (kind == EIOCtorCategory::kAbsent) {
+         const RConstructorType ioctortype_io2("__void__", *fInterp);
+         if (CheckConstructor(CRD, ioctortype_io2, *fInterp) == EIOCtorCategory::kIORefType)
+            kind = EIOCtorCategory::kIOVoidType;
+      }
    }
 
    return kind;
