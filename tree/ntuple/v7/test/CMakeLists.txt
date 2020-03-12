@@ -23,6 +23,7 @@ if(MSVC)
 endif()
 
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_packing ntuple_packing.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
