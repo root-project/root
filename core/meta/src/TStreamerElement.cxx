@@ -27,6 +27,7 @@
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TRealData.h"
+#include "ThreadLocalStorage.h"
 #include "TRef.h"
 #include "TInterpreter.h"
 #include "TError.h"

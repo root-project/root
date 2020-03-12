@@ -63,6 +63,7 @@
 #include "TError.h"
 #include "TVirtualStreamerInfo.h"
 #include "TSchemaRuleSet.h"
+#include "ThreadLocalStorage.h"
 
 #include "RZip.h"
 
