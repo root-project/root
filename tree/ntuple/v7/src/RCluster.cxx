@@ -14,3 +14,27 @@
  *************************************************************************/
 
 #include <ROOT/RCluster.hxx>
+
+ROOT::Experimental::Detail::RCluster::~RCluster()
+{
+}
+
+const ROOT::Experimental::Detail::ROnDiskPage *
+ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key) const
+{
+   const auto itr = fOnDiskPages.find(key);
+   if (itr != fOnDiskPages.end())
+      return &(itr->second);
+   return nullptr;
+}
+
+
+ROOT::Experimental::Detail::RHeapCluster::~RHeapCluster()
+{
+   delete[] static_cast<unsigned char *>(fMemory);
+}
+
+
+ROOT::Experimental::Detail::RMMapCluster::~RMMapCluster()
+{
+}
