@@ -44,6 +44,7 @@ allows a simple partial implementation for new OS'es.
 #include "compiledata.h"
 #include "RConfigure.h"
 #include "THashList.h"
+#include "ThreadLocalStorage.h"
 
 #include <sstream>
 #include <string>

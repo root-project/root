@@ -38,6 +38,7 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "TStorage.h" // ROOT::Internal::gMmallocDesc
+#include "ThreadLocalStorage.h"
 #include "TTabCom.h"
 #include "TError.h"
 #include <stdlib.h>

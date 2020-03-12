@@ -83,6 +83,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TSchemaRule.h"
 #include "TSystem.h"
 #include "TThreadSlots.h"
+#include "ThreadLocalStorage.h"
 
 #include <cstdio>
 #include <cctype>

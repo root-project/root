@@ -35,6 +35,7 @@
 #include "TObjString.h"
 #include "Riostream.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #include "TObjArray.h"
 #include <map>
 #include <algorithm>
