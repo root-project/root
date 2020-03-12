@@ -25,9 +25,14 @@
 
 #include "Compression.h"
 #include "TDirectoryFile.h"
-#include "TMap.h"
 #include "TUrl.h"
 #include "ROOT/RConcurrentHashColl.hxx"
+
+#ifdef R__LESS_INCLUDES
+class TMap;
+#else
+#include "TMap.h"
+#endif
 
 #ifdef R__USE_IMT
 #include "ROOT/TRWSpinLock.hxx"
