@@ -29,11 +29,11 @@ class TObjArray;
 // not used at all but can have many side effects
 #include "TObjString.h"
 #include "TObjArray.h"
+#include <set>
 #endif
 
 #include <map>
 #include <string>
-#include <set>
 #include <unordered_set>
 #include <vector>
 
