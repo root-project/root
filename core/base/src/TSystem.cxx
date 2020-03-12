@@ -48,6 +48,7 @@ allows a simple partial implementation for new OS'es.
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
+#include <set>
 
 #ifdef WIN32
 #include <io.h>

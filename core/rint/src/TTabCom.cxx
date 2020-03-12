@@ -123,6 +123,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <set>
 
 #include "RConfigure.h"
 #include "TTabCom.h"
