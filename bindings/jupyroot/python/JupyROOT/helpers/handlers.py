@@ -12,12 +12,13 @@ from threading import Thread
 from time import sleep as timeSleep
 from sys import platform
 from os import path
-import weakref
 import sys
 if sys.hexversion >= 0x3000000:
     import queue
 else:
     import Queue as queue
+
+from JupyROOT import helpers
 
 _lib = CDLL(path.join(path.dirname(path.dirname(path.dirname(__file__))), 'libJupyROOT.so'))
 
@@ -75,27 +76,35 @@ class IOHandler(object):
        return outDict,errDict
 
 class Poller(Thread):
-    def __init__(self, runner_obj, name):
-        Thread.__init__(self, group=None, target=None, name=name)
+    def __init__(self):
+        Thread.__init__(self, group=None, target=None, name="JupyROOT Poller Thread")
         self.poll = True
-        self.ro_ref = weakref.ref(runner_obj)
+        self.is_running = False
+        self.queue = queue.Queue()
+
     def run(self):
         while self.poll:
-            work_item_argument = self.ro_ref().argument_queue.get()
-            if work_item_argument is not None:
-                self.ro_ref().is_running = True
-                self.ro_ref().Run(work_item_argument)
-                self.ro_ref().is_running = False
+            work_item = self.queue.get()
+            if work_item is not None:
+                function, argument = work_item
+                self.is_running = True
+                function(argument)
+                self.is_running = False
             else:
                 self.poll = False
-        return
+
+    def Stop(self):
+        if self.is_alive():
+            self.queue.put(None)
+            self.join() 
 
 class Runner(object):
     ''' Asynchrously run functions
     >>> import time
     >>> def f(code):
     ...    print(code)
-    >>> r= Runner(f)
+    >>> p = Poller(); p.start()
+    >>> r= Runner(f, p)
     >>> r.Run("ss")
     ss
     >>> r.AsyncRun("ss");time.sleep(1)
@@ -103,7 +112,7 @@ class Runner(object):
     >>> def g(msg):
     ...    time.sleep(.5)
     ...    print(msg)
-    >>> r= Runner(g)
+    >>> r= Runner(g, p)
     >>> r.AsyncRun("Asynchronous");print("Synchronous");time.sleep(1)
     Synchronous
     Asynchronous
@@ -113,74 +122,78 @@ class Runner(object):
     Asynchronous
     >>> print(r.HasFinished())
     True
-    >>> r.Stop()
+    >>> p.Stop()
     '''
-    def __init__(self, function):
+    def __init__(self, function, poller):
         self.function = function
-        self.is_running = False
-        self.argument_queue = queue.Queue()
-        self.poller = Poller(runner_obj=self, name = "JupyROOT Runner Thread")
-        self.poller.start()
-
-    def __del__(self):
-        if self.poller.is_alive():
-            self.Stop()
-        self.poller.join()
+        self.poller = poller
 
     def Run(self, argument):
         return self.function(argument)
 
     def AsyncRun(self, argument):
-        self.is_running = True
-        self.argument_queue.put(argument)
+        self.poller.is_running = True
+        self.poller.queue.put((self.Run, argument))
 
     def Wait(self):
-        while self.is_running: pass
+        while self.poller.is_running:
+            timeSleep(.1)
 
     def HasFinished(self):
-        if self.is_running: return False
-        return True
-
-    def Stop(self):
-        self.Wait()
-        self.argument_queue.put(None)
-        self.Wait()
-
+        return not self.poller.is_running
 
 class JupyROOTDeclarer(Runner):
     ''' Asynchrously execute declarations
     >>> import ROOT
-    >>> d = JupyROOTDeclarer()
+    >>> p = Poller(); p.start()
+    >>> d = JupyROOTDeclarer(p)
     >>> d.Run("int f(){return 3;}".encode("utf-8"))
     1
     >>> ROOT.f()
     3
-    >>> d.Stop()
+    >>> p.Stop()
     '''
-    def __init__(self):
-       super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer)
+    def __init__(self, poller):
+       super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer, poller)
 
 class JupyROOTExecutor(Runner):
     r''' Asynchrously execute process lines
     >>> import ROOT
-    >>> d = JupyROOTExecutor()
+    >>> p = Poller(); p.start()
+    >>> d = JupyROOTExecutor(p)
     >>> d.Run('cout << "Here am I" << endl;'.encode("utf-8"))
     1
-    >>> d.Stop()
+    >>> p.Stop()
     '''
-    def __init__(self):
-       super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor)
+    def __init__(self, poller):
+       super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor, poller)
 
-def RunAsyncAndPrint(executor, code, ioHandler, printFunction, silent = False, timeout = 0.1):
-   ioHandler.Clear()
-   ioHandler.InitCapture()
-   executor.AsyncRun(code)
-   while not executor.HasFinished():
-         ioHandler.Poll()
-         if not silent:
+def display_drawables(displayFunction):
+    drawers = helpers.utils.GetDrawers()
+    for drawer in drawers:
+        for dobj in drawer.GetDrawableObjects():
+            displayFunction(dobj)
+
+class JupyROOTDisplayer(Runner):
+    ''' Display all canvases'''
+    def __init__(self, poller):
+       super(JupyROOTDisplayer, self).__init__(display_drawables, poller)
+
+def RunAsyncAndPrint(executor, code, ioHandler, printFunction, displayFunction, silent = False, timeout = 0.1):
+    ioHandler.Clear()
+    ioHandler.InitCapture()
+    executor.AsyncRun(code)
+    while not executor.HasFinished():
+        ioHandler.Poll()
+        if not silent:
             printFunction(ioHandler)
             ioHandler.Clear()
-         if executor.HasFinished(): break
-         timeSleep(.1)
-   executor.Wait()
-   ioHandler.EndCapture()
+        if executor.HasFinished(): break
+        timeSleep(.1)
+    executor.Wait()
+    ioHandler.EndCapture()
+
+def Display(displayer, displayFunction):
+    displayer.AsyncRun(displayFunction)
+    displayer.Wait()
+
