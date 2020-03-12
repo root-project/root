@@ -254,7 +254,9 @@ class StreamCapture(object):
         self.outString = ""
         self.errString = ""
 
-        self.asyncCapturer = handlers.Runner(self.syncCapture)
+        self.poller = handlers.Poller()
+        self.poller.start()
+        self.asyncCapturer = handlers.Runner(self.syncCapture, self.poller)
 
         self.isFirstPreExecute = True
         self.isFirstPostExecute = True
@@ -310,6 +312,8 @@ class StreamCapture(object):
         self.shell.events.register('pre_execute', self.pre_execute)
         self.shell.events.register('post_execute', self.post_execute)
 
+    def __del__(self):
+        self.poller.Stop()
 
 def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()

@@ -24,9 +24,9 @@ except ImportError:
 import ROOT
 
 from JupyROOT.helpers.utils import setStyle, invokeAclic, GetDrawers
-from JupyROOT.helpers.handlers import RunAsyncAndPrint
+from JupyROOT.helpers.handlers import RunAsyncAndPrint, Display
 from JupyROOT.helpers.cppcompleter import CppCompleter
-from JupyROOT.kernel.utils import GetIOHandler, GetExecutor, GetDeclarer, MagicLoader
+from JupyROOT.kernel.utils import GetIOHandler, GetPoller, GetExecutor, GetDeclarer, GetDisplayer, MagicLoader
 
 import IPython
 
@@ -57,16 +57,17 @@ class ROOTKernel(MetaKernel):
         MetaKernel.__init__(self,**kwargs)
         setStyle()
         self.ioHandler = GetIOHandler()
-        self.Executor  = GetExecutor()
-        self.Declarer  = GetDeclarer()#required for %%cpp -d magic
+        self.Poller    = GetPoller()
+        self.Executor  = GetExecutor(self.Poller)
+        self.Declarer  = GetDeclarer(self.Poller) #required for %%cpp -d magic
+        self.Displayer = GetDisplayer(self.Poller)
         self.ACLiC     = invokeAclic
         self.magicloader = MagicLoader(self)
         self.completer = CppCompleter()
         self.completer.activate()
 
     def __del__(self):
-        self.Executor.Stop()
-        self.Declarer.Stop()
+        self.Poller.Stop()
 
     def get_completions(self, info):
         return self.completer._completeImpl(info['code'])
@@ -90,10 +91,7 @@ class ROOTKernel(MetaKernel):
                              silent,
                              .1)
 
-            drawers = GetDrawers()
-            for drawer in drawers:
-                for dobj in drawer.GetDrawableObjects():
-                    self.Display(dobj)
+            Display(self.Displayer, self.Display)
 
         except KeyboardInterrupt:
             ROOT.gROOT.SetInterrupt()
