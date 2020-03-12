@@ -4803,9 +4803,9 @@ int RootClingMain(int argc,
       // is significant.  The list is sorted by with the highest
       // priority first.
       if (!gOptInterpreterOnly) {
-         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
-         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("__void__", interp)); // ROOT-7723
-         constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
+         constructorTypes.emplace_back("TRootIOCtor", interp);
+         constructorTypes.emplace_back("__void__", interp); // ROOT-7723
+         constructorTypes.emplace_back("", interp);
       }
    }
 

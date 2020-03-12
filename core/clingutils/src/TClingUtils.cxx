@@ -1010,7 +1010,7 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
       return EIOCtorCategory::kAbsent;
    }
 
-   for (clang::CXXRecordDecl::ctor_iterator iter = cl->ctor_begin(), end = cl->ctor_end();
+   for (auto iter = cl->ctor_begin(), end = cl->ctor_end();
           iter != end;
           ++iter)
       {
@@ -1043,7 +1043,6 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
                   clarg += arg;
                   if (realArg == clarg) {
                      return ioCtorCategory;
-
                   }
                }
             }
@@ -1116,7 +1115,7 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
       } else {
          // I/O constructors can take pointers or references to ctorTypes
         proto += " *";
-        if (EIOCtorCategory::kIOPtrType == ioCtorCat){
+        if (EIOCtorCategory::kIOPtrType == ioCtorCat) {
            arg = "( ("; //(MyType*)nullptr
         } else if (EIOCtorCategory::kIORefType == ioCtorCat) {
            arg = "( *("; //*(MyType*)nullptr
