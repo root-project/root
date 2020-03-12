@@ -7092,7 +7092,7 @@ Bool_t ROOT::Internal::HasConsistentHashMember(TClass &clRef)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if we have access to a constructor useable for I/O.  This is
+/// Return true if we have access to a constructor usable for I/O.  This is
 /// typically the default constructor but can also be a constructor specifically
 /// marked for I/O (for example a constructor taking a TRootIOCtor* as an
 /// argument).  In other words, if this routine returns true, TClass::New is
@@ -7108,14 +7108,14 @@ Bool_t ROOT::Internal::HasConsistentHashMember(TClass &clRef)
 ///    gInterpreter->ClassInfo_HasDefaultConstructor(aClass->GetClassInfo());
 /// \code
 
-Bool_t TClass::HasDefaultConstructor() const
+Bool_t TClass::HasDefaultConstructor(Bool_t testio) const
 {
 
    if (fNew) return kTRUE;
 
    if (HasInterpreterInfo()) {
       R__LOCKGUARD(gInterpreterMutex);
-      return gCling->ClassInfo_HasDefaultConstructor(GetClassInfo());
+      return gCling->ClassInfo_HasDefaultConstructor(GetClassInfo(), testio);
    }
    if (fCollectionProxy) {
       return kTRUE;
