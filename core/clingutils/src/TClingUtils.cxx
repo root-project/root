@@ -1100,15 +1100,14 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
 {
    if (cl->isAbstract()) return false;
 
-   for (RConstructorTypes::const_iterator ctorTypeIt = ctorTypes.begin();
-        ctorTypeIt!=ctorTypes.end(); ++ctorTypeIt) {
+   for (auto & ctorType : ctorTypes) {
 
-      auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, *ctorTypeIt, interp);
+      auto ioCtorCat = ROOT::TMetaUtils::CheckConstructor(cl, ctorType, interp);
 
       if (EIOCtorCategory::kAbsent == ioCtorCat)
          continue;
 
-      std::string proto( ctorTypeIt->GetName() );
+      std::string proto( ctorType.GetName() );
       bool defaultCtor = proto.empty();
       if (defaultCtor) {
          arg.clear();
