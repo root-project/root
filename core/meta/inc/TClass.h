@@ -29,6 +29,7 @@ class TObjArray;
 // not used at all but can have many side effects
 #include "TObjString.h"
 #include "TObjArray.h"
+#include "ThreadLocalStorage.h"
 #include <set>
 #endif
 
@@ -36,9 +37,7 @@ class TObjArray;
 #include <string>
 #include <unordered_set>
 #include <vector>
-
 #include <atomic>
-#include "ThreadLocalStorage.h"
 
 class TBaseClass;
 class TBrowser;
