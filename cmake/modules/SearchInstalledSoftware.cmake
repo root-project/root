@@ -1529,8 +1529,11 @@ if (vecgeom)
 endif()
 
 #---Check for CUDA-----------------------------------------------------------------------
+# if tmva-gpu is off and cuda is on cuda is searched but not used in tmva
+#  if cuda is off but tmva-gpu is on cuda is searched and activated if found ! 
 
 if(cuda OR tmva-gpu)
+
   find_package(CUDA)
 
   if(CUDA_FOUND)
@@ -1543,19 +1546,25 @@ if(cuda OR tmva-gpu)
     set(cuda ON CACHE BOOL "Found Cuda for TMVA GPU" FORCE)
 
     ### look for package CuDNN
-    if (cudnn )
-      find_package(CuDNN)
+    if (cudnn)
+      if (fail-on-missing)
+        find_package(CuDNN REQUIRED)
+      else()
+        find_package(CuDNN)
+      endif()
 
       if (CUDNN_FOUND)
 	message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
-      	set(tmva-cudnn ON)
+	### set tmva-cudnn flag only if tmva-gpu is on!
+	if (tmva-gpu) 
+       	  set(tmva-cudnn ON)
+	endif()
       else()
 	message(STATUS "CuDNN library not found")
         set(cudnn OFF CACHE BOOL "Disabled because cudnn is not found" FORCE)
       endif()
     endif()
 
-    
   elseif(fail-on-missing)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
