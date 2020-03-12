@@ -9,12 +9,21 @@
 #define ROOT_TBranchSTL
 
 #include "TBranch.h"
+#include "TIndArray.h"
+
+#ifdef R__LESS_INCLUDES
+class TTree;
+class TVirtualCollectionProxy;
+class TStreamerInfo;
+class TBranchElement;
+#else
 #include "TTree.h"
 #include "TVirtualCollectionProxy.h"
 #include "TBrowser.h"
 #include "TBranchObject.h"
 #include "TBranchElement.h"
-#include "TIndArray.h"
+#endif
+
 #include <map>
 #include <vector>
 #include <utility>
