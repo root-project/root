@@ -1,4 +1,4 @@
-# C++ Modules in ROOT. Technology Preview
+# C++ Modules in ROOT. Technology Overview
 
 *Vassil Vassilev, Oksana Shadura, Yuka Takahashi and Raphael Isemann*
 
