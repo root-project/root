@@ -328,6 +328,7 @@ prevent infinite loops or crashes.
 
 ## Build, Configuration and Testing Infrastructure
 
+- Option `python` was renamed to `pyroot`. While still using `python` option, `pyroot` will be enabled authomatically.
 - Make MLP optional via the `-Dmlp={OFF,ON}` switch for CMake
 - Make Spectrum optional via the `-Dspectrum={OFF,ON}` switch for CMake
 - ROOT now fails to configure when any package is missing
