@@ -21,6 +21,7 @@
 #include "TGraphDelaunay2D.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
+#include "TVirtualHistPainter.h"
 #include "TPluginManager.h"
 #include "TSystem.h"
 #include <stdlib.h>
