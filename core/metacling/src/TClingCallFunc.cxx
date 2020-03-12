@@ -1213,9 +1213,9 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
       constr_arg = "((TRootIOCtor*)nullptr)";
    else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIORefType)
-      constr_arg = "(*((TRootIOCtor*)nullptr))";
+      constr_arg = "(*((TRootIOCtor*)arena))";
    else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOVoidType)
-      constr_arg = "(*((__void__*)nullptr))";
+      constr_arg = "(*((__void__*)arena))";
 
    //
    //  Write the wrapper code.
