@@ -1797,9 +1797,14 @@ void TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)
       return;
    }
 
-   if (ipoint > fNpoints-1) {
-      Error("TGraph", "Inserted point index should be <= %d", fNpoints-1);
+   if (ipoint > fNpoints) {
+      Error("TGraph", "Inserted point index should be <= %d", fNpoints);
       return;
+   }
+
+   if (ipoint == fNpoints) {
+       SetPoint(ipoint, x, y);
+       return;
    }
 
    Double_t **ps = ExpandAndCopy(fNpoints + 1, ipoint);
