@@ -75,10 +75,10 @@ class JSONNode {
   using const_children_view = children_view_t<const JSONNode>;
   
   children_view children() {
-    return children_view(child_iterator_t(*this,0),child_iterator_t(*this,this->num_children()));
+    return children_view(child_iterator_t<JSONNode>(*this,0),child_iterator_t<JSONNode>(*this,this->num_children()));
   }
   const_children_view children() const {
-    return const_children_view(child_iterator_t(*this,0),child_iterator_t(*this,this->num_children()));
+    return const_children_view(child_iterator_t<const JSONNode>(*this,0),child_iterator_t<const JSONNode>(*this,this->num_children()));
   }    
   virtual JSONNode& child(size_t pos) = 0;
   virtual const JSONNode& child(size_t pos) const = 0;    
