@@ -12,9 +12,14 @@ set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
 # Include cpp notebooks if metakernel is present
 execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import metakernel" RESULT_VARIABLE FoundMetakernel ERROR_QUIET)
 if(FoundMetakernel EQUAL 0)
-set(NOTEBOOKS ${NOTEBOOKS}
-              ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
+  set(NOTEBOOKS ${NOTEBOOKS}
+                ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
+                ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
+
+  if(ROOT_imt_FOUND)
+    set(NOTEBOOKS ${NOTEBOOKS}
+                  ${CMAKE_CURRENT_SOURCE_DIR}/Cpp_IMT_Canvas.ipynb)
+  endif()
 endif()
 
 find_python_module(IPython QUIET)
