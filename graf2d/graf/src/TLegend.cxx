@@ -26,6 +26,7 @@
 #include "Riostream.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
+#include "TH1.h"
 #include "THStack.h"
 
 ClassImp(TLegend);
