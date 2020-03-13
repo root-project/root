@@ -133,7 +133,8 @@ PyTypeObject PropertyProxy_Type = {
    sizeof(PropertyProxy),     // tp_basicsize
    0,                         // tp_itemsize
    (destructor)pp_dealloc,    // tp_dealloc
-   0,                         // tp_print
+   0,                         // tp_print (python < 3.8)
+                              // tp_vectorcall_offset (python >= 3.8)
    0,                         // tp_getattr
    0,                         // tp_setattr
    0,                         // tp_compare
@@ -181,6 +182,12 @@ PyTypeObject PropertyProxy_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
    , 0                        // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+   , 0                        // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+   , 0                        // tp_print (python 3.8 only)
+#endif
 #endif
 };
 

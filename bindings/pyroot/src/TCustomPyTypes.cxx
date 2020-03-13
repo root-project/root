@@ -19,7 +19,8 @@ PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
    0,                         // tp_basicsize
    0,                         // tp_itemsize
    0,                         // tp_dealloc
-   0,                         // tp_print
+   0,                         // tp_print (python < 3.8)
+                              // tp_vectorcall_offset (python >= 3.8)
    0,                         // tp_getattr
    0,                         // tp_setattr
    0,                         // tp_compare
@@ -69,6 +70,12 @@ PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
 #if PY_VERSION_HEX >= 0x03040000
    , 0                        // tp_finalize
 #endif
+#if PY_VERSION_HEX >= 0x03080000
+   , 0                        // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+   , 0                        // tp_print (python 3.8 only)
+#endif
+#endif
 };
 
 //= long type allowed for reference passing ==================================
@@ -78,7 +85,8 @@ PyTypeObject TCustomInt_Type = {       // python int is a C/C++ long
    0,                         // tp_basicsize
    0,                         // tp_itemsize
    0,                         // tp_dealloc
-   0,                         // tp_print
+   0,                         // tp_print (python < 3.8)
+                              // tp_vectorcall_offset (python >= 3.8)
    0,                         // tp_getattr
    0,                         // tp_setattr
    0,                         // tp_compare
@@ -127,6 +135,12 @@ PyTypeObject TCustomInt_Type = {       // python int is a C/C++ long
 #endif
 #if PY_VERSION_HEX >= 0x03040000
    , 0                        // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+   , 0                        // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+   , 0                        // tp_print (python 3.8 only)
+#endif
 #endif
 };
 
@@ -277,7 +291,8 @@ PyTypeObject TCustomInstanceMethod_Type = {
    0,                         // tp_basicsize
    0,                         // tp_itemsize
    (destructor)im_dealloc,    // tp_dealloc
-   0,                         // tp_print
+   0,                         // tp_print (python < 3.8)
+                              // tp_vectorcall_offset (python >= 3.8)
    0,                         // tp_getattr
    0,                         // tp_setattr
    0,                         // tp_compare
@@ -326,6 +341,12 @@ PyTypeObject TCustomInstanceMethod_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
    , 0                        // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+   , 0                        // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+   , 0                        // tp_print (python 3.8 only)
+#endif
 #endif
 };
 
