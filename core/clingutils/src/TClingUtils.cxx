@@ -1006,7 +1006,67 @@ bool ROOT::TMetaUtils::CheckDefaultConstructor(const clang::CXXRecordDecl* cl, c
    return false;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Checks IO constructor - must be public and with specified argument
+
+ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckIOConstructor(const clang::CXXRecordDecl *cl,
+                                                                       const char *typeOfArg,
+                                                                       const clang::CXXRecordDecl *expectedArgType,
+                                                                       const cling::Interpreter& interpreter)
+{
+   if (typeOfArg && !expectedArgType) {
+      const cling::LookupHelper& lh = interpreter.getLookupHelper();
+      // We can not use findScope since the type we are given are usually,
+      // only forward declared (and findScope explicitly reject them).
+      clang::QualType instanceType = lh.findType(typeOfArg, cling::LookupHelper::WithDiagnostics);
+      if (!instanceType.isNull())
+         expectedArgType = instanceType->getAsCXXRecordDecl();
+   }
+
+   if (!expectedArgType)
+      return EIOCtorCategory::kAbsent;
+
+   for (auto iter = cl->ctor_begin(), end = cl->ctor_end(); iter != end; ++iter)
+      {
+         if ((iter->getAccess() != clang::AS_public) || (iter->getNumParams() != 1))
+            continue;
+
+         // We can reach this constructor.
+         clang::QualType argType((*iter->param_begin())->getType());
+         argType = argType.getDesugaredType(cl->getASTContext());
+         // Deal with pointers and references: ROOT-7723
+         auto ioCtorCategory = EIOCtorCategory::kAbsent;
+         if (argType->isPointerType()) {
+            ioCtorCategory = EIOCtorCategory::kIOPtrType;
+            argType = argType->getPointeeType();
+         } else if (argType->isReferenceType()) {
+            ioCtorCategory = EIOCtorCategory::kIORefType;
+            argType = argType.getNonReferenceType();
+         } else
+            continue;
+
+         argType = argType.getDesugaredType(cl->getASTContext());
+         const clang::CXXRecordDecl *argDecl = argType->getAsCXXRecordDecl();
+         if (argDecl) {
+            if (argDecl->getCanonicalDecl() == expectedArgType->getCanonicalDecl()) {
+               return ioCtorCategory;
+            }
+         } else {
+            std::string realArg = argType.getAsString();
+            std::string clarg("class ");
+            clarg += typeOfArg;
+            if (realArg == clarg)
+               return ioCtorCategory;
+         }
+   } // for each constructor
+
+   return EIOCtorCategory::kAbsent;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if class has constructor of provided type - either default or with single argument
 
 ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
                                                                      const RConstructorType &ioctortype,
@@ -1014,52 +1074,13 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 {
    const char *arg = ioctortype.GetName();
 
-   if (ioctortype.GetType() == nullptr && (arg == 0 || arg[0] == '\0')) {
+   if (!ioctortype.GetType() && (!arg || !arg[0])) {
       // We are looking for a constructor with zero non-default arguments.
 
       return CheckDefaultConstructor(cl, interpreter) ? EIOCtorCategory::kDefault : EIOCtorCategory::kAbsent;
    }
 
-   for (auto iter = cl->ctor_begin(), end = cl->ctor_end();
-          iter != end;
-          ++iter)
-      {
-         if (iter->getAccess() != clang::AS_public)
-            continue;
-
-         // We can reach this constructor.
-         if (iter->getNumParams() == 1) {
-            clang::QualType argType( (*iter->param_begin())->getType() );
-            argType = argType.getDesugaredType(cl->getASTContext());
-            // Deal with pointers and references: ROOT-7723
-            auto ioCtorCategory = EIOCtorCategory::kAbsent;
-            if (argType->isPointerType()) {
-               ioCtorCategory = EIOCtorCategory::kIOPtrType;
-               argType = argType->getPointeeType();
-            } else if (argType->isReferenceType()){
-               ioCtorCategory = EIOCtorCategory::kIORefType;
-               argType = argType.getNonReferenceType();
-            }
-            if (ioCtorCategory !=  EIOCtorCategory::kAbsent) {
-               argType = argType.getDesugaredType(cl->getASTContext());
-               const clang::CXXRecordDecl *argDecl = argType->getAsCXXRecordDecl();
-               if (argDecl && ioctortype.GetType()) {
-                  if (argDecl->getCanonicalDecl() == ioctortype.GetType()->getCanonicalDecl()) {
-                     return ioCtorCategory;
-                  }
-               } else {
-                  std::string realArg = argType.getAsString();
-                  std::string clarg("class ");
-                  clarg += arg;
-                  if (realArg == clarg) {
-                     return ioCtorCategory;
-                  }
-               }
-            }
-         } // has one argument.
-      } // for each constructor
-
-   return EIOCtorCategory::kAbsent;
+   return CheckIOConstructor(cl, arg, ioctortype.GetType(), interpreter);
 }
 
 
@@ -1074,10 +1095,10 @@ const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
       = interp.getLookupHelper().findFunctionProto(cinfo, method, proto,
                                                    diagnose ? cling::LookupHelper::WithDiagnostics
                                                    : cling::LookupHelper::NoDiagnostics);
-   if (funcD) {
+   if (funcD)
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
-   }
-   return 0;
+
+   return nullptr;
 }
 
 
