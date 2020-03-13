@@ -447,6 +447,7 @@ public:
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
    DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
    DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
+   DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
 
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
