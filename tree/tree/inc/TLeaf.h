@@ -41,7 +41,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+#include "TNamed.h"
+
+#ifdef R__LESS_INCLUDES
+class TBranch;
+#else
 #include "TBranch.h"
+#endif
 
 class TClonesArray;
 class TBrowser;

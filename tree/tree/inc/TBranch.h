@@ -23,14 +23,12 @@
 //     the list of TLeaves (branch description)                         //
 //////////////////////////////////////////////////////////////////////////
 
-#include <memory>
-
-#include "Compression.h"
+#include "TNamed.h"
 #include "TAttFill.h"
+#include "TObjArray.h"
 #include "TBranchCacheInfo.h"
 #include "TDataType.h"
-#include "TNamed.h"
-#include "TObjArray.h"
+#include "Compression.h"
 #include "ROOT/TIOFeatures.hxx"
 
 class TTree;

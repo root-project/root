@@ -22,11 +22,11 @@ class TBranchElement;
 #include "TBrowser.h"
 #include "TBranchObject.h"
 #include "TBranchElement.h"
+#include <utility>
 #endif
 
 #include <map>
 #include <vector>
-#include <utility>
 
 class TBranchSTL: public TBranch {
    public:

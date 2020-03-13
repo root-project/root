@@ -23,7 +23,6 @@
 
 #include "TObject.h"
 
-#include <limits>
 
 class TClass;
 class TTree;
