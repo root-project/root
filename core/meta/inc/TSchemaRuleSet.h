@@ -4,13 +4,16 @@
 #ifndef ROOT_TSchemaRuleSet
 #define ROOT_TSchemaRuleSet
 
-class TClass;
-
 #include "TObject.h"
-#include "TObjArray.h"
-#include "Rtypes.h"
 #include "TString.h"
 #include "TClassRef.h"
+
+#ifdef R__LESS_INCLUDES
+class TObjArray;
+#else
+#include "TObjArray.h"
+#endif
+
 
 namespace ROOT {
 
