@@ -24,8 +24,6 @@
 
 #include "TObject.h"
 
-#include <memory>
-
 class TVirtualMutex;
 
 // Global mutex set in TThread::Init
