@@ -29,12 +29,12 @@
 #include "TGFont.h"
 #include "TGLayout.h"
 #include "TGString.h"
-#include "TList.h"
 
 class TGResourcePool;
 class TGTextButton;
 class TGVFileSplitter;
 class TDNDData;
+class TList;
 
 //---- frame states
 
