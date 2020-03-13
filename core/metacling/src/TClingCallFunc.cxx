@@ -1104,7 +1104,8 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    return (tcling_callfunc_Wrapper_t)F;
 }
 
-tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info, ECtorCategory kind)
+tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info,
+      ROOT::TMetaUtils::EIOCtorCategory kind, const std::string &type_name)
 {
    // Make a code string that follows this pattern:
    //
@@ -1210,12 +1211,10 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    }
 
    string constr_arg;
-   if (kind == ECtorCategory::kTRootIOPtr)
-      constr_arg = "((TRootIOCtor*)nullptr)";
-   else if (kind == ECtorCategory::kTRootIORef)
-      constr_arg = "(*((TRootIOCtor*)arena))";
-   else if (kind == ECtorCategory::kVoidRef)
-      constr_arg = "(*((__void__*)arena))";
+   if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
+      constr_arg = string("((") + type_name + "*)nullptr)";
+   else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIORefType)
+      constr_arg = string("(*((") + type_name + "*)arena))";
 
    //
    //  Write the wrapper code.
@@ -2145,7 +2144,8 @@ void TClingCallFunc::ExecWithReturn(void *address, void *ret/*= 0*/)
 }
 
 void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
-                                             ECtorCategory kind,
+                                             ROOT::TMetaUtils::EIOCtorCategory kind,
+                                             const std::string &type_name,
                                              void *address /*=0*/, unsigned long nary /*= 0UL*/)
 {
    if (!info->IsValid()) {
@@ -2168,7 +2168,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       if (I != gCtorWrapperStore.end()) {
          wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
       } else {
-         wrapper = make_ctor_wrapper(info, kind);
+         wrapper = make_ctor_wrapper(info, kind, type_name);
       }
    }
    if (!wrapper) {
