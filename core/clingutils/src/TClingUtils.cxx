@@ -988,6 +988,25 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Checks if default constructor exists and accessible
+
+bool ROOT::TMetaUtils::CheckDefaultConstructor(const clang::CXXRecordDecl* cl, const cling::Interpreter& interpreter)
+{
+   clang::CXXRecordDecl* ncCl = const_cast<clang::CXXRecordDecl*>(cl);
+
+   // We may induce template instantiation
+   cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
+
+   if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
+      if (Ctor->getAccess() == clang::AS_public && !Ctor->isDeleted()) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
                                                                      const RConstructorType &ioctortype,
@@ -995,19 +1014,10 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 {
    const char *arg = ioctortype.GetName();
 
-   if (ioctortype.GetType() ==0 && (arg == 0 || arg[0] == '\0')) {
+   if (ioctortype.GetType() == nullptr && (arg == 0 || arg[0] == '\0')) {
       // We are looking for a constructor with zero non-default arguments.
-      clang::CXXRecordDecl* ncCl = const_cast<clang::CXXRecordDecl*>(cl);
 
-      // We may induce template instantiation
-      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
-
-      if (auto* Ctor = interpreter.getCI()->getSema().LookupDefaultConstructor(ncCl)) {
-         if (Ctor->getAccess() == clang::AS_public && !Ctor->isDeleted()) {
-            return EIOCtorCategory::kDefault;
-         }
-      }
-      return EIOCtorCategory::kAbsent;
+      return CheckDefaultConstructor(cl, interpreter) ? EIOCtorCategory::kDefault : EIOCtorCategory::kAbsent;
    }
 
    for (auto iter = cl->ctor_begin(), end = cl->ctor_end();
@@ -1075,7 +1085,7 @@ const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
 
 namespace ROOT {
    namespace TMetaUtils {
-      RConstructorType::RConstructorType(const char *type_of_arg, const cling::Interpreter &interp) : fArgTypeName(type_of_arg),fArgType(0)
+      RConstructorType::RConstructorType(const char *type_of_arg, const cling::Interpreter &interp) : fArgTypeName(type_of_arg),fArgType(nullptr)
       {
          const cling::LookupHelper& lh = interp.getLookupHelper();
          // We can not use findScope since the type we are given are usually,

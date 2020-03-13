@@ -684,21 +684,17 @@ ROOT::TMetaUtils::EIOCtorCategory TClingClassInfo::HasDefaultConstructor(bool ch
    if (!CRD)
       return EIOCtorCategory::kAbsent;
 
-   const RConstructorType ioctortype_dflt("", *fInterp);
-   auto kind = CheckConstructor(CRD, ioctortype_dflt, *fInterp);
-
-   if (checkio && (kind == EIOCtorCategory::kAbsent)) {
+   if (checkio) {
       const RConstructorType ioctortype_io("TRootIOCtor", *fInterp);
-      kind = CheckConstructor(CRD, ioctortype_io, *fInterp);
+      auto kind = CheckConstructor(CRD, ioctortype_io, *fInterp);
+      if (kind != EIOCtorCategory::kAbsent) return kind;
 
-      if (kind == EIOCtorCategory::kAbsent) {
-         const RConstructorType ioctortype_io2("__void__", *fInterp);
-         if (CheckConstructor(CRD, ioctortype_io2, *fInterp) == EIOCtorCategory::kIORefType)
-            kind = EIOCtorCategory::kIOVoidType;
-      }
+      const RConstructorType ioctortype_io2("__void__", *fInterp);
+      if (CheckConstructor(CRD, ioctortype_io2, *fInterp) == EIOCtorCategory::kIORefType)
+         return EIOCtorCategory::kIOVoidType;
    }
 
-   return kind;
+   return CheckDefaultConstructor(CRD, *fInterp) ? EIOCtorCategory::kDefault: EIOCtorCategory::kAbsent;
 }
 
 bool TClingClassInfo::HasMethod(const char *name) const
