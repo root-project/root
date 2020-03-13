@@ -299,7 +299,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
          TLeaf *toleaf = (TLeaf*)to->GetListOfLeaves()->At(i);
          if (toleaf->IsA() != fromleaf->IsA() ) {
             // The data type do not match, we can not do a fast merge.
-            fWarningMsg.Form("The export leaf and the import leaf (%s.%s) do not have the data type (%s vs %s)",
+            fWarningMsg.Form("The export leaf and the import leaf (%s.%s) do not have the same data type (%s vs %s)",
                               from->GetName(),fromleaf->GetName(),fromleaf->GetTypeName(),toleaf->GetTypeName());
             if (! (fOptions & kNoWarnings) ) {
                Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
