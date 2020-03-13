@@ -224,8 +224,6 @@ TEST(Cache, evtCounter)
 
 }
 
-#ifdef R__B64
-
 TEST(Cache, Regex)
 {
 
@@ -328,8 +326,6 @@ TEST(Cache, Carrays)
 
    gSystem->Unlink(fileName);
 }
-
-#endif // R__B64
 
 // ROOT-10563
 TEST(Cache, Alias)

@@ -117,8 +117,6 @@ TEST(TRootTDS, SetNSlotsTwice)
 }
 #endif
 
-#ifdef R__B64
-
 TEST(TRootTDS, FromARDF)
 {
    std::unique_ptr<RDataSource> tds(new ROOT::Internal::RDF::RRootDS(treeName, fileGlob));
@@ -190,5 +188,3 @@ TEST(TRootTDS, FromARDFWithJittingMT)
 }
 
 #endif // R__USE_IMT
-
-#endif // R__B64
