@@ -355,6 +355,10 @@ enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType, k
 EIOCtorCategory CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
+bool CheckDefaultConstructor(const clang::CXXRecordDecl*, const cling::Interpreter& interp);
+
+
+//______________________________________________________________________________
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
