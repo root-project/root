@@ -25,6 +25,7 @@ using TBuffer3D mechanism.
 #include "TAttFill.h"
 #include "TVirtualPad.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TH2F.h"
 #include "TF1.h"
 #include "TGraph.h"
