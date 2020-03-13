@@ -26,8 +26,6 @@
 #include "TDatime.h"
 #include "TList.h"
 
-class TList;
-class TBrowser;
 class TKey;
 class TFile;
 

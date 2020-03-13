@@ -19,7 +19,6 @@
 
 #include <memory>
 
-class TList;
 class TFile;
 class TDirectory;
 
