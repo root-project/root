@@ -338,10 +338,6 @@ else()
   list(APPEND root7_veto ${v7_veto_files})
 endif()
 
-if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
-  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C v7/ntuple/ntpl004_dimuon.C)
-endif()
-
 if (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)
    set(macm1_veto dataframe/df107_SingleTopAnalysis.py)
 endif()
@@ -397,7 +393,6 @@ set(all_veto hsimple.C
              ${classic_veto}
              ${pythia_veto}
              ${root7_veto}
-             ${bits32_veto}
              ${xrootd_veto}
              ${mlp_veto}
              ${spectrum_veto}
