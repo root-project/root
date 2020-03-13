@@ -113,7 +113,7 @@ private:
    tcling_callfunc_Wrapper_t make_wrapper();
 
    tcling_callfunc_ctor_Wrapper_t
-   make_ctor_wrapper(const TClingClassInfo* info, ECtorCategory);
+   make_ctor_wrapper(const TClingClassInfo *, ROOT::TMetaUtils::EIOCtorCategory, const std::string &);
 
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
@@ -177,7 +177,8 @@ public:
    TClingCallFunc &operator=(const TClingCallFunc &rhs) = delete;
 
    void* ExecDefaultConstructor(const TClingClassInfo* info,
-                                ECtorCategory kind,
+                                ROOT::TMetaUtils::EIOCtorCategory kind,
+                                const std::string &type_name,
                                 void* address = nullptr, unsigned long nary = 0UL);
    void ExecDestructor(const TClingClassInfo* info, void* address = nullptr,
                        unsigned long nary = 0UL, bool withFree = true);
