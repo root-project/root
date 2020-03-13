@@ -16,7 +16,6 @@
 #include "TClass.h"
 #include "TError.h"
 #include "TMethod.h"
-#include "TROOT.h"
 
 #include <list>
 
