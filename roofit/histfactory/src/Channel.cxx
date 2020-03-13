@@ -161,7 +161,6 @@ void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::strin
 }
 
 
-
 void RooStats::HistFactory::Channel::SetData( std::string DataHistoName, std::string DataInputFile, std::string DataHistoPath ) {
   // set data for this channel by specifying the name of the histogram,
   // the external ROOT file and the path to the histogram inside the ROOT file
@@ -321,7 +320,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 }
 
 
-bool RooStats::HistFactory::Channel::CheckHistograms() { 
+bool RooStats::HistFactory::Channel::CheckHistograms() const { 
 
   // Check that all internal histogram pointers
   // are properly configured (ie that they're not NULL)
@@ -336,7 +335,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
     // Get the histograms for the samples:
     for( unsigned int sampItr = 0; sampItr < fSamples.size(); ++sampItr ) {
 
-      RooStats::HistFactory::Sample& sample = fSamples.at( sampItr );
+      const RooStats::HistFactory::Sample& sample = fSamples.at( sampItr );
 
       // Get the nominal histogram:
       if( sample.GetHisto() == NULL ) {
@@ -380,7 +379,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the HistoSys Variations:
       for( unsigned int histoSysItr = 0; histoSysItr < sample.GetHistoSysList().size(); ++histoSysItr ) {
 
-	RooStats::HistFactory::HistoSys& histoSys = sample.GetHistoSysList().at( histoSysItr );
+	const RooStats::HistFactory::HistoSys& histoSys = sample.GetHistoSysList().at( histoSysItr );
 
 	if( histoSys.GetHistoLow() == NULL ) {
 	  cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoSys.GetName()
@@ -399,7 +398,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the HistoFactor Variations:
       for( unsigned int histoFactorItr = 0; histoFactorItr < sample.GetHistoFactorList().size(); ++histoFactorItr ) {
 
-	RooStats::HistFactory::HistoFactor& histoFactor = sample.GetHistoFactorList().at( histoFactorItr );
+	const RooStats::HistFactory::HistoFactor& histoFactor = sample.GetHistoFactorList().at( histoFactorItr );
 
 	if( histoFactor.GetHistoLow() == NULL ) {
 	  cxcoutEHF << "Error: HistoSyst Low for Systematic " << histoFactor.GetName()
@@ -418,7 +417,7 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
       // Get the ShapeSys Variations:
       for( unsigned int shapeSysItr = 0; shapeSysItr < sample.GetShapeSysList().size(); ++shapeSysItr ) {
 	
-	RooStats::HistFactory::ShapeSys& shapeSys = sample.GetShapeSysList().at( shapeSysItr );
+	const RooStats::HistFactory::ShapeSys& shapeSys = sample.GetShapeSysList().at( shapeSysItr );
 
 	if( shapeSys.GetErrorHist() == NULL ) {
 	  cxcoutEHF << "Error: HistoSyst High for Systematic " << shapeSys.GetName()
