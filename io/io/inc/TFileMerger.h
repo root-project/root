@@ -12,12 +12,10 @@
 #ifndef ROOT_TFileMerger
 #define ROOT_TFileMerger
 
-#include "TList.h"
 #include "TObject.h"
+#include "TList.h"
 #include "TString.h"
 #include "TStopwatch.h"
-
-#include <memory>
 
 class TFile;
 class TDirectory;
