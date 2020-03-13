@@ -53,7 +53,7 @@ namespace HistFactory {
     OverallSys() : fLow(0), fHigh(0) {}
 
     void SetName( const std::string& Name ) { fName = Name; }
-    std::string GetName() const { return fName; }
+    const std::string& GetName() const { return fName; }
 
     void SetLow( double Low )   { fLow  = Low; }
     void SetHigh( double High ) { fHigh = High; }
