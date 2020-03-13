@@ -120,7 +120,7 @@ public:
 template <typename T>
 T InvariantMassStdVector(std::vector<T>& pt, std::vector<T>& eta, std::vector<T>& phi, std::vector<T>& mass)
 {
-   assert(pt.size() == eta.size() == phi.size() == mass.size() == 2);
+   assert(pt.size() == eta.size() && eta.size() == phi.size() && phi.size() == mass.size() && mass.size() == 2);
 
    // We adopt the memory here, no copy
    ROOT::RVec<float> rvPt(pt);
