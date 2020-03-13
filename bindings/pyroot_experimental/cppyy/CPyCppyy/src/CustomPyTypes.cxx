@@ -34,6 +34,12 @@ PyTypeObject RefFloat_Type = {     // python float is a C/C++ double
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
 #endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                            // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+    , 0                            // tp_print (python 3.8 only)
+#endif
+#endif
 };
 
 //= long type allowed for reference passing ==================================
@@ -59,6 +65,12 @@ PyTypeObject RefInt_Type = {       // python int is a C/C++ long
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                            // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+    , 0                            // tp_print (python 3.8 only)
+#endif
 #endif
 };
 
@@ -89,6 +101,12 @@ PyTypeObject TypedefPointerToClass_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+    , 0                           // tp_print (python 3.8 only)
+#endif
 #endif
 };
 
@@ -255,6 +273,12 @@ PyTypeObject CustomInstanceMethod_Type = {
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
 #endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                            // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+    , 0                            // tp_print (python 3.8 only)
+#endif
+#endif
 };
 
 
@@ -304,6 +328,12 @@ PyTypeObject IndexIter_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+    , 0                           // tp_print (python 3.8 only)
+#endif
 #endif
 };
 
@@ -363,6 +393,12 @@ PyTypeObject VectorIter_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#if PY_VERSION_HEX < 0x03090000
+    , 0                           // tp_print (python 3.8 only)
+#endif
 #endif
 };
 
