@@ -62,7 +62,7 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooMsgService.h"
 #include "ROOT/RMakeUnique.hxx"
 #include "TObjString.h"
-
+#include "TClass.h"
 
 #include <sstream>
 #include <regex>

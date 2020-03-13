@@ -31,7 +31,7 @@ with a probability proportional to its associated coefficient.
 #include "RooFit.h"
 
 #include "Riostream.h"
-
+#include "TClass.h"
 
 #include "RooMsgService.h"
 #include "RooAddGenContext.h"

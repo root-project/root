@@ -31,6 +31,7 @@ has a public interface to define the possible value states.
 #include "TTree.h"
 #include "TString.h"
 #include "TH1.h"
+#include "TList.h"
 #include "RooCategory.h"
 #include "RooArgSet.h"
 #include "RooStreamParser.h"

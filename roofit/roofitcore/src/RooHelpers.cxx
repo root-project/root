@@ -17,6 +17,8 @@
 #include "RooHelpers.h"
 #include "RooAbsRealLValue.h"
 
+#include "TClass.h"
+
 namespace RooHelpers {
 
 /// Tokenise the string by splitting at the characters in delims.

@@ -34,6 +34,7 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 #include "BatchHelpers.h"
 
 #include "TMath.h"
+#include "TClass.h"
 #include <Math/SpecFuncMathCore.h>
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>

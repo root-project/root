@@ -51,7 +51,7 @@ combined in the main thread.
 #include "RooAbsCategoryLValue.h"
 
 #include "TTimeStamp.h"
-
+#include "TClass.h"
 #include <string>
 
 using namespace std;
