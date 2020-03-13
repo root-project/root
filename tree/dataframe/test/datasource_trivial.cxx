@@ -141,8 +141,6 @@ TEST(RTrivialDS, EarlyQuitWithRange)
    EXPECT_EQ(df.Range(10).Count().GetValue(), 10);
 }
 
-#ifdef R__B64
-
 TEST(RTrivialDS, FromARDFWithJitting)
 {
    std::unique_ptr<RDataSource> tds(new RTrivialDS(32));
@@ -245,5 +243,3 @@ TEST(RTrivialDS, SkipEntriesMT)
 }
 
 #endif // R__USE_IMT
-
-#endif // R__B64

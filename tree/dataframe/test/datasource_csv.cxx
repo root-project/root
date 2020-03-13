@@ -210,8 +210,6 @@ TEST(RCsvDS, SetNSlotsTwice)
 }
 #endif
 
-#ifdef R__B64
-
 TEST(RCsvDS, FromARDF)
 {
    std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
@@ -324,5 +322,3 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
 }
 
 #endif // R__USE_IMT
-
-#endif // R__B64
