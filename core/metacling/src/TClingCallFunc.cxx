@@ -1104,7 +1104,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    return (tcling_callfunc_Wrapper_t)F;
 }
 
-tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info, ROOT::TMetaUtils::EIOCtorCategory kind)
+tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info, ECtorCategory kind)
 {
    // Make a code string that follows this pattern:
    //
@@ -1210,11 +1210,11 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    }
 
    string constr_arg;
-   if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
+   if (kind == ECtorCategory::kTRootIOPtr)
       constr_arg = "((TRootIOCtor*)nullptr)";
-   else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIORefType)
+   else if (kind == ECtorCategory::kTRootIORef)
       constr_arg = "(*((TRootIOCtor*)arena))";
-   else if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOVoidType)
+   else if (kind == ECtorCategory::kVoidRef)
       constr_arg = "(*((__void__*)arena))";
 
    //
@@ -2145,7 +2145,7 @@ void TClingCallFunc::ExecWithReturn(void *address, void *ret/*= 0*/)
 }
 
 void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
-                                             ROOT::TMetaUtils::EIOCtorCategory kind,
+                                             ECtorCategory kind,
                                              void *address /*=0*/, unsigned long nary /*= 0UL*/)
 {
    if (!info->IsValid()) {

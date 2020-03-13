@@ -663,7 +663,7 @@ std::vector<std::string> TClingClassInfo::GetUsingNamespaces()
    return res;
 }
 
-ROOT::TMetaUtils::EIOCtorCategory TClingClassInfo::HasDefaultConstructor(bool checkio) const
+ECtorCategory TClingClassInfo::HasDefaultConstructor(bool checkio) const
 {
    // Return true if there a constructor taking no arguments (including
    // a constructor that has defaults for all of its arguments) which
@@ -677,24 +677,23 @@ ROOT::TMetaUtils::EIOCtorCategory TClingClassInfo::HasDefaultConstructor(bool ch
    using namespace ROOT::TMetaUtils;
 
    if (!IsLoaded())
-      return EIOCtorCategory::kAbsent;
+      return ECtorCategory::kAbsent;
 
    auto CRD = llvm::dyn_cast<CXXRecordDecl>(GetDecl());
    // Namespaces do not have constructors.
    if (!CRD)
-      return EIOCtorCategory::kAbsent;
+      return ECtorCategory::kAbsent;
 
    if (checkio) {
-      const RConstructorType ioctortype_io("TRootIOCtor", *fInterp);
-      auto kind = CheckConstructor(CRD, ioctortype_io, *fInterp);
-      if (kind != EIOCtorCategory::kAbsent) return kind;
+      auto kind = CheckIOConstructor(CRD, "TRootIOCtor", nullptr, *fInterp);
+      if (kind == EIOCtorCategory::kIORefType) return ECtorCategory::kTRootIORef;
+      if (kind == EIOCtorCategory::kIOPtrType) return ECtorCategory::kTRootIOPtr;
 
-      const RConstructorType ioctortype_io2("__void__", *fInterp);
-      if (CheckConstructor(CRD, ioctortype_io2, *fInterp) == EIOCtorCategory::kIORefType)
-         return EIOCtorCategory::kIOVoidType;
+      if (CheckIOConstructor(CRD, "__void__", nullptr, *fInterp) == EIOCtorCategory::kIORefType)
+         return ECtorCategory::kVoidRef;
    }
 
-   return CheckDefaultConstructor(CRD, *fInterp) ? EIOCtorCategory::kDefault: EIOCtorCategory::kAbsent;
+   return CheckDefaultConstructor(CRD, *fInterp) ? ECtorCategory::kDefault : ECtorCategory::kAbsent;
 }
 
 bool TClingClassInfo::HasMethod(const char *name) const
@@ -1060,7 +1059,7 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
       return nullptr;
    }
 
-   ROOT::TMetaUtils::EIOCtorCategory kind;
+   ECtorCategory kind;
 
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -1073,7 +1072,7 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
 
       kind = HasDefaultConstructor(true);
 
-      if (kind == ROOT::TMetaUtils::EIOCtorCategory::kAbsent) {
+      if (kind == ECtorCategory::kAbsent) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          // Error("TClingClassInfo::New()", "Class has no default constructor: %s",
          //       FullyQualifiedName(GetDecl()).c_str());
@@ -1107,7 +1106,7 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
       return nullptr;
    }
 
-   ROOT::TMetaUtils::EIOCtorCategory kind;
+   ECtorCategory kind;
 
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -1120,7 +1119,7 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
       }
 
       kind = HasDefaultConstructor(true);
-      if (kind == ROOT::TMetaUtils::EIOCtorCategory::kAbsent) {
+      if (kind == ECtorCategory::kAbsent) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New(n)",
          //      "Class has no default constructor: %s",
@@ -1157,7 +1156,7 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
       return nullptr;
    }
 
-   ROOT::TMetaUtils::EIOCtorCategory kind;
+   ECtorCategory kind;
 
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -1170,7 +1169,7 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
       }
 
       kind = HasDefaultConstructor(true);
-      if (kind == ROOT::TMetaUtils::EIOCtorCategory::kAbsent) {
+      if (kind == ECtorCategory::kAbsent) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New(n, arena)",
          //      "Class has no default constructor: %s",
@@ -1201,7 +1200,7 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
       return nullptr;
    }
 
-   ROOT::TMetaUtils::EIOCtorCategory kind;
+   ECtorCategory kind;
 
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -1214,7 +1213,7 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
       }
 
       kind = HasDefaultConstructor(true);
-      if (kind == ROOT::TMetaUtils::EIOCtorCategory::kAbsent) {
+      if (kind == ECtorCategory::kAbsent) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New(arena)",
          //      "Class has no default constructor: %s",
