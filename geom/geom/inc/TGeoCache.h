@@ -15,7 +15,11 @@
 
 #include "TGeoNode.h"
 
+#ifdef R__LESS_INCLUDES
+class TGeoStateInfo;
+#else
 #include "TGeoStateInfo.h"
+#endif
 
 // forward declarations
 class TGeoManager;

@@ -14,10 +14,6 @@
 
 #include "TVirtualGeoTrack.h"
 
-#include "TPolyLine3D.h"
-
-class TPolyMarker3D;
-
 /////////////////////////////////////////////////////////////////////////////
 // TGeoTrack - Tracks attached to a geometry.                              //
 //             Tracks are 3D objects made of points and they store a       //
