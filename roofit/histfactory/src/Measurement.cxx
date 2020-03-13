@@ -121,7 +121,7 @@ void RooStats::HistFactory::Measurement::AddPreprocessFunction( std::string name
 }
 
 /// Returns a list of defined preprocess function expressions
-std::vector<std::string> RooStats::HistFactory::Measurement::GetPreprocessFunctions()
+std::vector<std::string> RooStats::HistFactory::Measurement::GetPreprocessFunctions() const
 {
 
   
@@ -645,8 +645,7 @@ std::string RooStats::HistFactory::Measurement::GetDirPath( TDirectory* dir )
 /// right away. Instead, once all such histograms have been supplied,
 /// one should run this method to open all ROOT files and to copy and
 /// save all necessary histograms.
-void RooStats::HistFactory::Measurement::CollectHistograms()
-{
+void RooStats::HistFactory::Measurement::CollectHistograms() {
 
 
   for( unsigned int chanItr = 0; chanItr < fChannels.size(); ++chanItr) {

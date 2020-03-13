@@ -376,6 +376,14 @@ double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Const getters
+
+const RooListProxy& FlexibleInterpVar::variables() const { return _paramList; }
+double FlexibleInterpVar::nominal() const { return _nominal; }        
+const std::vector<double>& FlexibleInterpVar::low() const { return _low; }
+const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
+
+////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
 Double_t FlexibleInterpVar::evaluate() const 
