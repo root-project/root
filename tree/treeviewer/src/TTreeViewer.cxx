@@ -190,6 +190,7 @@ or :
 #include "TContextMenu.h"
 #include "TInterpreter.h"
 #include "TLeaf.h"
+#include "TBranch.h"
 #include "TRootHelpDialog.h"
 #include "TSystem.h"
 #include "TApplication.h"

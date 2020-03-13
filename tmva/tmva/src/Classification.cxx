@@ -31,6 +31,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TLeaf.h>
+#include <TBranch.h>
 #include <TEventList.h>
 #include <TH2.h>
 #include <TText.h>

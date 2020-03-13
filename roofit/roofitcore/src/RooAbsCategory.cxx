@@ -37,6 +37,7 @@ is provided to modify the contents, nor a public interface to define states.
 #include "TH1.h"
 #include "TTree.h"
 #include "TLeaf.h"
+#include "TBranch.h"
 #include "RooAbsCategory.h"
 #include "RooArgSet.h"
 #include "Roo1DTable.h"

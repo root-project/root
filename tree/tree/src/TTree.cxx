@@ -395,6 +395,7 @@ End_Macro
 #include "TROOT.h"
 #include "TRealData.h"
 #include "TRegexp.h"
+#include "TRefTable.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TStyle.h"
