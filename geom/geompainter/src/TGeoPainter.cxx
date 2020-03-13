@@ -37,6 +37,7 @@ using TBuffer3D mechanism.
 #include "TGeoAtt.h"
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
+#include "TGeoElement.h"
 #include "TGeoManager.h"
 #include "TGeoTrack.h"
 #include "TGeoOverlap.h"
