@@ -167,7 +167,11 @@ namespace {
 void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string& fname){
   // load a yml file defining the factory expressions
   std::ifstream infile(fname);
+  #ifdef INCLUDE_RYML
+  TRYMLTree p(infile);
+  #else
   TJSONTree p(infile);
+  #endif  
   const JSONNode& n = p.rootnode();
   for(const auto& cl:n.children()){
     std::string key(RooJSONFactoryWSTool::name(cl));
