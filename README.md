@@ -32,9 +32,9 @@ acquisition, simulation and data analysis systems.
 ## Build Status
 | Branch | Nightly build status |
 |--------|------------|
-| master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
-| v6-18-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-18-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-18-00-patches/) |
-| v6-16-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-16-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-16-00-patches/) |
+| master | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-master)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-master/) |
+| v6-20-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-20-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-20-00-patches/) |
+| v6-18-00-patches | [![Build Status](http://lcgapp-services.cern.ch/root-jenkins/buildStatus/icon?job=root-nightly-v6-18-00-patches)](https://lcgapp-services.cern.ch/root-jenkins/view/ROOT/job/root-nightly-v6-18-00-patches/) |
 
 ## Cite
 We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)
