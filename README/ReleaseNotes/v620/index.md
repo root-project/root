@@ -578,9 +578,31 @@ shuts down the interpreter.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10310'>ROOT-10310</a>] Reverse axis drawing options RX and RY should be also allowed in `TMultiGraph`
 
 
+## Release 6.20/02
+
+Released on March 15, 2020
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10576'>ROOT-10576</a>] - Error getting list of methods of std in cxx17
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10595'>ROOT-10595</a>] - Fix TH1::KolmogorovTest when using option X
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10605'>ROOT-10605</a>] - wrong slice in plotting simultaneous pdf built with RooSimWSTool
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10613'>ROOT-10613</a>] - Configuration does not fail when fail-on-missing is ON and cudnn is not found
+* Build failures due to missing CuDNN.
+* Do not overwrite existing LD_LIBRARY_PATH.
+* Deprecate "python" CMake option: use "pyroot" instead.
+* Protect multi-thread access to TSystem::fHelper.
+* Fix plotting slices of RooSimultaneous.
+* Fix the copying of the trained mu and variance parameters in the BatchNormLayer.
+* Fix in MethodPyKeras for the different API in version 2.
+* [DF] Throw in case of Snapshot w/ IMT + "UPDATE" mode
+* [clingutils] Handle non-defaulted template arg after defaulted arg:
+* Move RRawFile from Experimental::Detail to Detail
+* [DF] use RRawFile in SQlite data source, making Davix a plugin.
+* [CMake] Fix 'Numpy not found' bug.
 
 ## HEAD of the v6-20-00-patches branch
 
-These changes will be part of a future 6.20/02.
+These changes will be part of a future 6.20/04.
 
 * None so far.
