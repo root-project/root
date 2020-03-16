@@ -19,8 +19,12 @@ std::string::size_type find_qualifier_index(const std::string& name)
     std::string::size_type i = name.size() - 1;
     for ( ; 0 < i; --i) {
         std::string::value_type c = name[i];
-        if (is_varchar(c) || c == '>')
-            break;
+        if (is_varchar(c) || c == '>') {
+            if (c == 't' && 6 < i && !is_varchar(name[i-5]) && name.substr(i-4, 5) == "const")
+                i -= 4;      // this skips 'const' on a pointer type
+            else
+                break;
+        }
     }
 
     return i+1;
