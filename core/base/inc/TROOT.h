@@ -26,7 +26,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDirectory.h"
-#include "TList.h"
+// #include "TList.h"
 #include "RConfigure.h"
 
 #include <atomic>
@@ -55,6 +55,7 @@ class TListOfDataMembers;
 class TListOfEnums;
 class TListOfFunctions;
 class TListOfFunctionTemplates;
+class TSeqCollection;
 class TFunctionTemplate;
 class TGlobalMappedFunction;
 
@@ -279,8 +280,8 @@ public:
    TObject          *GetGeometry(const char *name) const;
    const TObject    *GetSelectedPrimitive() const { return fPrimitive; }
    TVirtualPad      *GetSelectedPad() const { return fSelectPad; }
-   Int_t             GetNclasses() const { return fClasses->GetSize(); }
-   Int_t             GetNtypes() const { return fTypes->GetSize(); }
+   Int_t             GetNclasses() const;
+   Int_t             GetNtypes() const;
    TFolder          *GetRootFolder() const { return fRootFolder; }
    TProcessUUID     *GetUUIDs() const { return fUUIDs; }
    const TString    &GetWebDisplay() const { return fWebDisplay; }
