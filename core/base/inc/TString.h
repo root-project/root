@@ -28,9 +28,12 @@
 #include "ROOT/RStringView.hxx"
 #include "ROOT/TypeTraits.hxx"
 
+#ifndef R__LESS_INCLUDES
+#include <cstdarg>
+#endif
+
 #include <iosfwd>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 class TRegexp;

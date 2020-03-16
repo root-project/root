@@ -18,7 +18,10 @@
 #include "TStorage.h"
 #include "TVersionCheck.h"
 
-#include <stdarg.h>
+#ifndef R__LESS_INCLUDES
+#include <cstdarg>
+#endif
+
 #include <string>
 #include <iosfwd>
 

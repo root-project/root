@@ -27,7 +27,10 @@
 
 
 #include "Rtypes.h"
-#include <stdarg.h>
+
+#ifndef R__LESS_INCLUDES
+#include <cstdarg>
+#endif
 
 
 class TVirtualMutex;
