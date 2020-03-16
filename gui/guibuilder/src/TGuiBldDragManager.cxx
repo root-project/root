@@ -26,6 +26,7 @@
 #include "TClassMenuItem.h"
 #include "TMethod.h"
 #include "TBaseClass.h"
+#include "TDataMember.h"
 #include "TMethodArg.h"
 #include "TToggle.h"
 #include "TDataType.h"
