@@ -26,11 +26,14 @@
 
 #include "TObject.h"
 #include "TString.h"
-#include "TMap.h"
 
+#ifdef R__LESS_INCLUDES
+class TMap;
+#else
+#include "TMap.h"
+#endif
 
 class THashList;
-class TMap;
 
 class TUrl : public TObject {
 
