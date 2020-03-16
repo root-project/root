@@ -26,8 +26,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDirectory.h"
-// #include "TList.h"
-#include "RConfigure.h"
+// #include "TList.h"  // included in TDirectory.h
+// #include "RConfigure.h"  // included via Rtypes.h
 
 #include <atomic>
 #include <string>
