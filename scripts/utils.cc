@@ -6,6 +6,7 @@
 #endif
 
 #include <stdio.h>
+#include <cstdarg>
 #include "snprintf.h"
 
 #include "TError.h"
