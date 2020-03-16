@@ -128,10 +128,6 @@ ROOTTEST_ADD_TEST(testIMT
                   OUTREF testIMT.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_ADD_TEST(test_splitcoll_arrayview
-                  MACRO test_splitcoll_arrayview.C+
-                  OUTREF test_splitcoll_arrayview.ref)
-
 ROOTTEST_GENERATE_EXECUTABLE(test_readerarray test_readerarray.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_readerarray
                   EXEC ./test_readerarray
