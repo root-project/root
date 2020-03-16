@@ -28,6 +28,7 @@ with name GetXXX, IsXXX or HasXXX for given object.
 */
 
 #include "TMethod.h"
+#include "TMethodCall.h"
 #include "TToggle.h"
 #include "TDataMember.h"
 
