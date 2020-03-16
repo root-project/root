@@ -19,10 +19,11 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a fundamental (non-derived) real-valued object.
+RooRealVar represents a variable that can be changed by e.g. the fitter.
 
-This class also holds an (asymmetic) error, a default range and
-optionally a series of alternate named ranges.
+It can be written into datasets, can hold a (possibly asymmetric) error, and
+can have several ranges. These can be accessed with names, to e.g. limit fits
+or integrals to sub ranges. The range without any name is used as default range.
 **/
 
 
@@ -54,7 +55,7 @@ RooRealVarSharedProperties RooRealVar::_nullProp("00000000-0000-0000-0000-000000
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Default constructor.
 
 RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0), _sharedProp(0)
 {
@@ -65,8 +66,7 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with value and unit
-
+/// Create a constant variable with a value and optional unit.
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
@@ -82,8 +82,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with range and unit. Initial value is center of range
-
+/// Create a variable allowed to float in the given range.
+/// The initial value will be set to the center of the range.
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
@@ -117,8 +117,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with value, range and unit
-
+/// Create a variable with the given starting value. It is allowed to float
+/// within the defined range. Optionally, a unit can be specified for axis labels.
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
