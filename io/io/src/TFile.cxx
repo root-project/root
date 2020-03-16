@@ -123,6 +123,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TEnv.h"
 #include "TVirtualMonitoring.h"
 #include "TVirtualMutex.h"
+#include "TMap.h"
 #include "TMathBase.h"
 #include "TObjString.h"
 #include "TStopwatch.h"
