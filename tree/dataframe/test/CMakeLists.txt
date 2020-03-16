@@ -14,6 +14,12 @@ ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_helpers dataframe_helpers.cxx LIBRARIES ROOTDataFrame)
+if(NOT runtime_cxxmodules)
+  # This test fails with runtime C++ modules on in v6.18, runs fine in v6.20 and above. Won't fix.
+  ROOT_GENERATE_DICTIONARY(TwoFloatsDict TwoFloats.h LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
+  ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx TwoFloatsDict.cxx LIBRARIES ROOTDataFrame)
+  target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_leaves dataframe_leaves.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)
