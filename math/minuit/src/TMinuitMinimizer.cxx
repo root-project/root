@@ -16,6 +16,7 @@
 
 #include "TMinuit.h"
 #include "TROOT.h"
+#include "TList.h"
 
 #include "TGraph.h" // needed for scan
 #include "TError.h"

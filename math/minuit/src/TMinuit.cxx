@@ -335,6 +335,7 @@ into account the non-linearities much more precisely.
 #include <stdio.h>
 
 #include "TROOT.h"
+#include "TList.h"
 #include "TMinuit.h"
 #include "TMath.h"
 #include "TError.h"
