@@ -25,6 +25,7 @@
 #include "TError.h"
 #include "TClassMenuItem.h"
 #include "TMethod.h"
+#include "TMethodCall.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMethodArg.h"
