@@ -164,6 +164,16 @@ TTask::~TTask()
    delete fTasks;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add TTask to this.
+
+void  TTask::Add(TTask *task) 
+{
+   fTasks->Add(task);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Abort current tree of tasks.
 /// After this call, the tree of tasks is ready to be executed again.
