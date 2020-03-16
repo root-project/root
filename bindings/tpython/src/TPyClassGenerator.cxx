@@ -22,6 +22,7 @@
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
+#include "TList.h"
 
 // Standard
 #include <sstream>

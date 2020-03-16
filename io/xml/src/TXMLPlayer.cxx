@@ -105,6 +105,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TList.h"
 #include "TClass.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamerElement.h"

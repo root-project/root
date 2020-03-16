@@ -33,6 +33,7 @@
 #include "TXMLSetup.h"
 
 #include "TROOT.h"
+#include "TList.h"
 #include "TClass.h"
 #include "TStreamerElement.h"
 
