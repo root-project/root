@@ -1426,22 +1426,17 @@ endif()
 
 #---Check for CUDA-----------------------------------------------------------------------
 # if tmva-gpu is off and cuda is on cuda is searched but not used in tmva
-#  if cuda is off but tmva-gpu is on cuda is searched and activated if found ! 
-
+#  if cuda is off but tmva-gpu is on cuda is searched and activated if found !
+#
 if(cuda OR tmva-gpu)
-
   find_package(CUDA)
-
   if(CUDA_FOUND)
     if(NOT DEFINED CMAKE_CUDA_STANDARD)
       set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
     endif()
-
     enable_language(CUDA)
-
     set(cuda ON CACHE BOOL "Found Cuda for TMVA GPU" FORCE)
-
-
+    ###
     ### look for package CuDNN
     if (cudnn)
       if (fail-on-missing)
@@ -1449,7 +1444,6 @@ if(cuda OR tmva-gpu)
       else()
         find_package(CuDNN)
       endif()
-
       if (CUDNN_FOUND)
         message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
 	### set tmva-cudnn flag only if tmva-gpu is on!
@@ -1461,25 +1455,21 @@ if(cuda OR tmva-gpu)
         set(cudnn OFF CACHE BOOL "Disabled because cudnn is not found" FORCE)
       endif()
     endif()
-
   elseif(fail-on-missing)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
-
 else()
   set(cudnn OFF)
 endif()
-
+#
 #---TMVA and its dependencies------------------------------------------------------------
 if (tmva AND NOT mlp)
   message(FATAL_ERROR "The 'tmva' option requires 'mlp', please enable mlp with -Dmlp=ON")
 endif()
-
 if(tmva)
   if(tmva-cpu AND imt)
     message(STATUS "Looking for BLAS for optional parts of TMVA")
     find_package(BLAS)
-
     if(NOT BLAS_FOUND)
       if (GSL_FOUND)
         message(STATUS "Using GSL CBLAS for optional parts of TMVA")
@@ -1490,11 +1480,9 @@ if(tmva)
   else()
     set(tmva-cpu OFF CACHE BOOL "Disabled because 'imt' is disabled (${tmva-cpu_description})" FORCE)
   endif()
-
   if(tmva-gpu AND NOT CUDA_FOUND)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
   endif()
-
   if(tmva-pymva)
     if(fail-on-missing AND NOT NUMPY_FOUND)
       message(FATAL_ERROR "TMVA: numpy python package not found and tmva-pymva component required"
@@ -1504,7 +1492,6 @@ if(tmva)
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy was not found (${tmva-pymva_description})" FORCE)
     endif()
   endif()
-
   if(tmva-rmva AND NOT R_FOUND)
     set(tmva-rmva  OFF CACHE BOOL "Disabled because R was not found (${tmva-rmva_description})"  FORCE)
   endif()
