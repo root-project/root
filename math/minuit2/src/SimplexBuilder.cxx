@@ -32,6 +32,10 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
    // method to find initial simplex is slightly different than in the orginal Fortran
    // Minuit since has not been proofed that one to be better
 
+   // synchronize print levels
+   int printLevel = PrintLevel();
+   BuilderPrintLevelConf plconf(printLevel);
+
 #ifdef DEBUG
    std::cout << "Running Simplex with maxfcn = " << maxfcn << " minedm = " << minedm << std::endl;
 #endif
@@ -99,7 +103,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
 
       // trace the iterations (need to create a MinimunState although errors and gradient are not existing)
       if (TraceIter() ) TraceIteration(niterations, MinimumState(MinimumParameters(simplex(jl).second,simplex(jl).first), simplex.Edm(), mfcn.NumOfCalls()) );
-      if (PrintLevel() > 1) MnPrint::PrintState(std::cout,simplex(jl).first, simplex.Edm(),mfcn.NumOfCalls(),"Simplex: Iteration # ", niterations);
+      if (printLevel > 1) MnPrint::PrintState(std::cout,simplex(jl).first, simplex.Edm(),mfcn.NumOfCalls(),"Simplex: Iteration # ", niterations);
       niterations++;
 
 
@@ -203,7 +207,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn& mfcn, const GradientCalcula
 
    MinimumState st(MinimumParameters(pbar, dirin, ybar), simplex.Edm(), mfcn.NumOfCalls());
 
-   if (PrintLevel() > 1)
+   if (printLevel > 1)
       MnPrint::PrintState(std::cout,st,"Simplex: Final iteration");
    if (TraceIter() ) TraceIteration(niterations, st);
 
