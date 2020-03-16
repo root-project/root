@@ -156,6 +156,18 @@ class TestClassROOT_PYTHONIZATIONS:
         data = gauss.generate(ROOT.RooArgSet(x), 10000)  # ROOT.RooDataSet
         h1d = data.createHistogram("myname", x)
 
+    def test05_rooargset_iter(self):
+        """STL sequence iterator injected in RooAbsCollection, inherited by RooArgSet"""
+
+        # ROOT-10606
+        import ROOT
+
+        varA = ROOT.RooRealVar("a", "a", 0.)
+        varB = ROOT.RooRealVar("b", "b", 1.)
+        varSet = ROOT.RooArgSet(varA, varB)
+        for var in varSet:
+            var.Print()
+
 
 ## actual test run
 if __name__ == '__main__':
