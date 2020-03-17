@@ -133,7 +133,7 @@ class CppCompleter(object):
 
     def _completeImpl(self, line):
         line=line.split()[-1]
-        suggestions = self._getSuggestions(line)
+        suggestions = [ str(s) for s in self._getSuggestions(line) ]
         suggestions = filter(lambda s: len(s.strip()) != 0, suggestions)
         suggestions = sorted(suggestions)
         if not suggestions: return []
