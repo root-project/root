@@ -43,26 +43,26 @@ class RAttrAxis : public RAttrBase {
    RAttrText &AttrText() { return fAttrText; }
 
    // min range, graphics will not show value less then this
-   void SetMin(double min) { SetValue("min", min); }
-   void SetMax(double max) { SetValue("max", max); }
+   RAttrAxis &SetMin(double min) { SetValue("min", min); return *this; }
+   RAttrAxis &SetMax(double max) { SetValue("max", max); return *this; }
    double GetMin() const { return GetValue<double>("min"); }
    double GetMax() const { return GetValue<double>("max"); }
 
-   void SetMinMax(double min, double max) { SetMin(min); SetMax(max); }
+   RAttrAxis &SetMinMax(double min, double max) { SetMin(min); SetMax(max); return *this; }
    void ClearMinMax() { ClearValue("min"); ClearValue("max"); }
 
-   void SetZoomMin(double min) { SetValue("zoommin", min); }
-   void SetZoomMax(double max) { SetValue("zoommax", max); }
+   RAttrAxis &SetZoomMin(double min) { SetValue("zoommin", min); return *this; }
+   RAttrAxis &SetZoomMax(double max) { SetValue("zoommax", max); return *this; }
    double GetZoomMin() const { return GetValue<double>("zoommin"); }
    double GetZoomMax() const { return GetValue<double>("zoommax"); }
 
-   void SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); }
+   RAttrAxis &SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
    void ClearZoomMinMax() { ClearValue("zoommin"); ClearValue("zoommax"); }
 
-   void SetLog(bool on = true) { SetValue("log", on); }
+   RAttrAxis &SetLog(bool on = true) { SetValue("log", on); return *this; }
    bool GetLog() const { return GetValue<bool>("log"); }
 
-   void SetInvert(bool on = true) { SetValue("invert", on); }
+   RAttrAxis &SetInvert(bool on = true) { SetValue("invert", on); return *this; }
    bool GetInvert() const { return GetValue<bool>("invert"); }
 
 };
