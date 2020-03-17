@@ -29,7 +29,7 @@ RPalette::RPalette(bool interpolate, bool knownNormalized, const std::vector<RPa
       // Is this a normalized palette? I.e. are the first and last ordinals 0 and 1?
       double high = fColors.back().fOrdinal;
       double low = fColors.front().fOrdinal;
-      double prec = (high - low) * 1E-6;
+      double prec = (high - low) * 1e-8;
 
       auto reasonablyEqual = [&](double val, double expected) -> bool { return std::fabs(val - expected) < prec; };
       fNormalized = reasonablyEqual(low, 0.) && reasonablyEqual(high, 1.);
@@ -54,16 +54,61 @@ RPalette::RPalette(bool interpolate, const std::vector<RColor> &points)
 
 RColor RPalette::GetColor(double ordinal)
 {
-   // if (fInterpolate)
-   //    R__ERROR_HERE("Gpad") << "Not yet implemented for interpolated!";
+   if (fColors.size() == 0)
+      return RColor();
 
-   auto iColor = std::lower_bound(fColors.begin(), fColors.end(), ordinal);
-   if ((iColor == fColors.end()) || (iColor+1 == fColors.end()))
+   if (fColors.size() == 1)
+      return fColors.front().fColor;
+
+   constexpr float epsilon = 1e-8;
+   if (ordinal < fColors.front().fOrdinal + epsilon)
+      return fColors.front().fColor;
+
+   if (ordinal > fColors.back().fOrdinal - epsilon)
       return fColors.back().fColor;
-   // Is iColor-1 closer to ordinal than iColor?
-   if ((iColor+1)->fOrdinal - ordinal < ordinal - iColor->fOrdinal)
-      return (iColor + 1)->fColor;
-   return iColor->fColor;
+
+   auto iColor2 = std::lower_bound(fColors.begin(), fColors.end(), ordinal);
+   auto iColor1 = iColor2 - 1;
+
+   auto diff1 = ordinal - iColor1->fOrdinal;
+   auto diff2 = iColor2->fOrdinal - ordinal;
+
+   if ((diff1 < -epsilon) || (diff2 < -epsilon)) {
+      R__ERROR_HERE("Gpad") << "Wrong palette settings";
+      return fColors.back().fColor;
+   }
+
+   if (diff1 < epsilon)
+      return iColor1->fColor;
+
+   if (diff2 < epsilon)
+      return iColor2->fColor;
+
+   if (IsGradient()) {
+      auto dist = diff1 + diff2;
+      auto rgba1 = iColor1->fColor.AsRGBA();
+      auto rgba2 = iColor2->fColor.AsRGBA();
+      if ((dist > epsilon) && (rgba1.size() > 2) && (rgba2.size() > 2)) {
+         if (rgba1.size() == 4)
+            rgba2.resize(4, 0xff);
+         else if (rgba2.size() == 4)
+            rgba1.resize(4, 0xff);
+
+         for (unsigned i = 0; i < rgba1.size(); ++i)
+            rgba1[i] = (uint8_t) std::lround( (diff2*rgba1[i] + diff1*rgba2[i]) / dist);
+
+         RColor res;
+         res.SetRGB(rgba1[0], rgba1[1], rgba1[2]);
+         if (rgba1.size() == 4)
+            res.SetAlpha(rgba1[3]);
+
+         return res;
+      }
+
+      R__ERROR_HERE("Gpad") << "Fail to interpolate color";
+   }
+
+   return (diff2 < diff1) ? iColor2->fColor : iColor1->fColor;
 }
 
 namespace {
