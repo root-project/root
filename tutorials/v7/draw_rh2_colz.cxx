@@ -47,6 +47,8 @@ void draw_rh2_colz()
    // should we made special style for frame with palette?
    canvas->GetOrCreateFrame()->Margins().SetRight(0.2_normal);
 
+   canvas->GetOrCreateFrame()->SetGridX(true).SetGridY(false);
+
    canvas->Draw<RFrameTitle>("2D histogram with color palette");
 
    canvas->Draw<RPaletteDrawable>(RPalette::GetPalette(), true);
