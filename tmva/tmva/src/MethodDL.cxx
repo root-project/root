@@ -252,7 +252,7 @@ void MethodDL::ProcessOptions()
 #ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
-         "detected by CMAKE by using -Dcuda=On "
+         "detected by CMAKE by using -Dtmva-gpu=On  "
             << Endl;
 #ifdef R__HAS_TMVACPU
       fArchitectureString = "CPU";
@@ -267,9 +267,9 @@ void MethodDL::ProcessOptions()
    }
   else if (fArchitectureString == "CUDNN") {
 #ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
-      Log() << kERROR << "CUDA backend not enabled. Please make sure "
+      Log() << kERROR << "CUDA+CUDNN backend not enabled. Please make sure "
             "you have CUDNN and CUDA installed and that the GPU capability/CUDA "
-            "was successfully detected by CMAKE by using -Dcuda=On"
+            "was successfully detected by CMAKE by using -Dtmva-gpu=On"
             << Endl;
 #ifdef R__HAS_TMVACPU
       fArchitectureString = "CPU";

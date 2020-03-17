@@ -1459,7 +1459,10 @@ if(cuda OR tmva-gpu)
     message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
   endif()
 else()
-  set(cudnn OFF)
+  if (cudnn)
+    message(STATUS "Cannot select cudnn without selecting cuda or tmva-gpu. Option is ignored")
+    set(cudnn OFF)
+  endif()
 endif()
 #
 #---TMVA and its dependencies------------------------------------------------------------
