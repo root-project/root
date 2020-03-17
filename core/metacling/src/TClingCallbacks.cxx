@@ -101,7 +101,8 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          const clang::FileEntry *FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
-                                         const clang::Module * Imported) {
+                                         const clang::Module * Imported,
+                                         clang::SrcMgr::CharacteristicKind FileType) {
    // We found a module. Do not try to do anything else.
    Sema &SemaR = m_Interpreter->getSema();
    if (Imported) {
