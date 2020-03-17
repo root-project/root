@@ -167,7 +167,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
 )
 
 # This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}
-target_include_directories(Core PRIVATE ${CMAKE_SOURCE_DIR})
+# target_include_directories(Core PRIVATE ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(Core
   PRIVATE
