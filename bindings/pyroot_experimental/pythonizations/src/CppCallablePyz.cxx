@@ -322,7 +322,7 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
          }
          code << "   auto pyb_" << i << " = b_" << i << " ? Py_True : Py_False;\n";
       } else if (pytypes[i] == "O") { // C++ objects
-         code << "   auto pyo_" << i << " = TPython::CPPInstance_FromVoidPtr("
+         code << "   auto pyo_" << i << " = CPyCppyy::Instance_FromVoidPtr("
               << "&o_" << i << ", \"" << inputTypesStr[i] << "\");\n";
          cleanup << "   Py_DECREF(pyo_" << i << ");\n";
       }
@@ -374,11 +374,11 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
             code << "   auto result = PyLong_AsUnsignedLong(pyresult);\n";
          }
       } else {
-         code << "   if (!TPython::CPPInstance_Check(pyresult)) {\n"
+         code << "   if (!CPyCppyy::CPPInstance_Check(pyresult)) {\n"
               << "      throw std::runtime_error(\"Failed to convert return value of Python callable to C++ object: Python object is not created by cppyy (CPPInstance).\");\n"
               << "      \n"
               << "   }\n";
-         code << "   auto result = *reinterpret_cast<" << returnTypeStr << "*>(TPython::CPPInstance_AsVoidPtr(pyresult));\n";
+         code << "   auto result = *reinterpret_cast<" << returnTypeStr << "*>(CPyCppyy::Instance_AsVoidPtr(pyresult));\n";
       }
 
       code << "   Py_DECREF(pyresult);\n\n"
@@ -393,19 +393,36 @@ PyObject* GenericCallableImpl_call(PyObject * /*self*/, PyObject *args)
    PyObject_SetAttrString(pyfunc, "__cpp_wrapper__", pycode);
    Py_DECREF(pycode);
 
+   // Cppyy dependencies
+   auto err = gInterpreter->Declare("#include \"CPyCppyy/API.h\"");
+   if (!err) {
+      PyErr_SetString(PyExc_RuntimeError, "Failed to compile C++ wrapper: Failed to include CPyCppyy/API.h.");
+      return NULL;
+   }
+   // We need CPPInstance_Check, which is defined in a private header of Cppyy (CPPInstance.h)
+   std::stringstream cpp_inst_check;
+   cpp_inst_check << "#ifndef CPPCALLABLE_CPYCPPYY\n"
+                  << "#define CPPCALLABLE_CPYCPPYY\n"
+                  << "namespace CPyCppyy {\n"
+                  << "PyTypeObject CPPInstance_Type;\n"
+                  << "\n"
+                  << "template<typename T>\n"
+                  << "inline bool CPPInstance_Check(T *object)\n"
+                  << "{\n"
+                  << "   return object &&\n"
+                  << "   (Py_TYPE(object)->tp_new == CPPInstance_Type.tp_new ||\n"
+                  << "   PyObject_TypeCheck(object, &CPPInstance_Type));\n"
+                  << "}\n"
+                  << "}\n"
+                  << "#endif\n";
+   auto cpp_inst_check_str = cpp_inst_check.str();
+   err = gInterpreter->Declare(cpp_inst_check_str.c_str());
+   if (!err) {
+      PyErr_SetString(PyExc_RuntimeError, "Failed to compile C++ wrapper: Failed to define CPPInstance_Check.");
+      return NULL;
+   }
+
    // Jit C++ wrapper
-   auto err = gInterpreter->Declare("#include \"Python.h\"");
-   if (!err) {
-      PyErr_SetString(PyExc_RuntimeError, "Failed to compile C++ wrapper: Failed to include Python.h.");
-      return NULL;
-   }
-
-   err = gInterpreter->Declare("#include \"CPyCppyy/API.h\"");
-   if (!err) {
-      PyErr_SetString(PyExc_RuntimeError, "Failed to compile C++ wrapper: Failed to include API.h.");
-      return NULL;
-   }
-
    err = gInterpreter->Declare(code_cstr);
    if (!err) {
       PyErr_SetString(PyExc_RuntimeError,
