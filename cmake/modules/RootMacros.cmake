@@ -841,23 +841,23 @@ endfunction()
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
   if(PROJECT_NAME STREQUAL "ROOT")
 
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
+#    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+#      target_include_directories(${library}
+#        PRIVATE
+#          ${CMAKE_CURRENT_SOURCE_DIR}/inc
+#        INTERFACE
+#          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+#      )
+#    endif()
 
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
-    endif()
+#    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+#      target_include_directories(${library}
+#        PRIVATE
+#          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
+#        INTERFACE
+#          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+#      )
+#    endif()
 
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
       target_include_directories(${library}
