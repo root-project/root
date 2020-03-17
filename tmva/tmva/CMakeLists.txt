@@ -455,28 +455,27 @@ if(tmva-cpu)
 endif()
 
 if(tmva-gpu)
-  target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
-  	target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
   if (tmva-cudnn)
-    message(STATUS "Using cuDNN for TMVA Deep Learning on GPU")
-	 target_sources(TMVA PRIVATE
-    src/DNN/Architectures/Cuda.cu
-    src/DNN/Architectures/Cuda/CudaBuffers.cxx
-    src/DNN/Architectures/Cuda/CudaMatrix.cu
-    src/DNN/Architectures/Cuda/CudaTensor.cu
-    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
-	 src/DNN/Architectures/Cudnn.cu)
+    message(STATUS "Using Cuda+cuDNN for TMVA Deep Learning on GPU")
+    target_sources(TMVA PRIVATE
+                   src/DNN/Architectures/Cuda.cu
+                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                   src/DNN/Architectures/Cuda/CudaMatrix.cu
+                   src/DNN/Architectures/Cuda/CudaTensor.cu
+                   src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
+		   src/DNN/Architectures/Cudnn.cu)
+    target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS} )
     target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
   else()
-   message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
-   target_compile_definitions(TMVA PRIVATE -DDNN_NO_CUDNN)
-	target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
-	target_sources(TMVA PRIVATE
-    src/DNN/Architectures/Cuda.cu
-    src/DNN/Architectures/Cuda/CudaBuffers.cxx
-    src/DNN/Architectures/Cuda/CudaMatrix.cu
-    src/DNN/Architectures/Cuda/CudaTensor.cu )
-  endif()
+    message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
+    target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
+    target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
+    target_sources(TMVA PRIVATE
+                   src/DNN/Architectures/Cuda.cu
+    		   src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                   src/DNN/Architectures/Cuda/CudaMatrix.cu
+                   src/DNN/Architectures/Cuda/CudaTensor.cu )
+   endif()
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
