@@ -8825,7 +8825,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
    const clang::FunctionDecl *fd = ft->getTemplatedDecl();
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
-      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+      if (md->getMethodQualifiers().hasConst()) {
          property |= kIsConstant | kIsConstMethod;
       }
       if (md->isVirtual()) {
