@@ -57,6 +57,7 @@ The following people have contributed to this new version:
 ## RooFit Libraries
 
 ### Type safe proxies to RooFit objects
+
 RooFit's proxy classes have been modernised. The new class `RooProxy` allows for access to other RooFit objects
 similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
 accessed like this:
@@ -78,6 +79,15 @@ Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooProx
 more information on how to modernise old code.
 
 ## 2D Graphics Libraries
+
+  - Allow TF1 to be painted with a filled color and a line curve. Previously the filling was done
+    like an histogram (with steps). Example:
+~~~ {.cpp}
+   TF1 *f=new TF1("f", "TMath::Gaus(x)", -6, 6);
+   f->SetFillColor(3);
+   f->SetFillStyle(1001);
+   f->Draw();
+~~~
 
 
 ## 3D Graphics Libraries

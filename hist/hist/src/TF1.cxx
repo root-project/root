@@ -3023,8 +3023,8 @@ void TF1::Paint(Option_t *choptin)
    // Draw the histogram.
    if (!gPad) return;
    if (opt.Length() == 0) {
-      if (optSAME) fHistogram->Paint("lfsame");
-      else         fHistogram->Paint("lf");
+      if (optSAME) fHistogram->Paint("lf2same");
+      else         fHistogram->Paint("lf2");
    } else {
       fHistogram->Paint(option);
    }
