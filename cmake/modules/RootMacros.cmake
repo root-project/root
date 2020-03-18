@@ -553,8 +553,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_compile_definitions(${dictionary} PRIVATE
       ${definitions} $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
 
+    # remove all -I prefixes from list of include dirs
+    set(pureincdirs)
+    foreach(dir ${includedirs})
+      string(SUBSTRING ${dir} 2 -1 dir0)
+      set(pureincdirs ${pureincdirs} ${dir0})
+    endforeach()
+
     target_include_directories(${dictionary} PRIVATE
-      ${includedirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+      ${pureincdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
   else()
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   endif()
