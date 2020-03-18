@@ -132,15 +132,16 @@ namespace ROOT {
 
    //////////////////////////////////////////////////////////////////////////
    /// Class constructor.
-   /// If the scheduler is active, gets a pointer to it.
-   /// If not, initializes the pool of threads with the number of logical threads supported by the hardware.
-   TThreadExecutor::TThreadExecutor(): TThreadExecutor::TThreadExecutor(tbb::task_scheduler_init::default_num_threads()) {}
-   //////////////////////////////////////////////////////////////////////////
-   /// Class constructor.
-   /// nThreads is the number of threads that will be spawned. If the scheduler is active (ImplicitMT enabled, another TThreadExecutor instance),
-   /// it won't change the number of threads.
+   /// If the scheduler is active, gets a pointer to it and works with the current pool of threads.
+   /// If not, initializes the pool of threads, spawning nThreads. nThreads' default value, 0, initializes the
+   /// pool with as many logical threads as there should be available in the system (see NLogicalCores in TPoolManager.cxx).
    TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    {
+      auto current = ROOT::Internal::TPoolManager::GetPoolSize();
+      if (nThreads && current && (current != nThreads))
+      {
+         Warning("TThreadExecutor", "There's already an active pool of threads. Proceeding with the current %d threads", current);
+      }
       fSched = ROOT::Internal::GetPoolManager(nThreads);
    }
 
