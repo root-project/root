@@ -266,7 +266,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
-    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS;INCDIRS" ${ARGN})
+    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -299,18 +299,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif()
 
-  if (ARG_INCDIRS)
-    foreach(dir ${ARG_INCDIRS})
-       list(APPEND incdirs ${dir})
-    endforeach()
-  endif(ARG_INCDIRS)
- 
+  set(headerdirs_dflt)
+
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-       list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+       list(APPEND headerdirs_dflt ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     endif()
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-       list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+       list(APPEND headerdirs_dflt ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
     endif()
   endif()
 
@@ -335,7 +331,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         set(headerFile ${fp})
       else()
         set(incdirs_in_build)
-        set(incdirs_in_prefix)
+        set(incdirs_in_prefix ${headerdirs_dflt})
         string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _source_dir "${CMAKE_SOURCE_DIR}")
         string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _binary_dir "${CMAKE_BINARY_DIR}")
         string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _curr_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
@@ -385,22 +381,22 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    set(includedirs -I${CMAKE_SOURCE_DIR}
-                    -I${CMAKE_BINARY_DIR}/etc/cling/ # This is for the RuntimeUniverse
-                    -I${CMAKE_BINARY_DIR}/include)
+    list(APPEND includedirs -I${CMAKE_BINARY_DIR}/include)
+    list(APPEND includedirs -I${CMAKE_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
+#    list(APPEND includedirs -I${CMAKE_SOURCE_DIR})
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
   endif()
   foreach( d ${incdirs})
-   set(includedirs ${includedirs} -I${d})
+    list(APPEND includedirs -I${d})
   endforeach()
 
   foreach(dep ${ARG_DEPENDENCIES})
     if(TARGET ${dep})
       get_property(dep_include_dirs TARGET ${dep} PROPERTY INCLUDE_DIRECTORIES)
       foreach(d ${dep_include_dirs})
-        set(includedirs ${includedirs} -I${d})
+         list(APPEND includedirs -I${d})
       endforeach()
     endif()
   endforeach()
