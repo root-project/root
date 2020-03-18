@@ -156,7 +156,7 @@ public:
    RResult(const Dummy &value) : Internal::RResultType<T>(value) {}
    /// Constructor is _not_ explicit such that the RError returned by R__FAIL can be converted into an RResult<T>
    /// for any T
-   RResult(std::unique_ptr<RError> error) : fError(std::move(error)) {}
+   RResult(const RError &error) : fError(std::make_unique<RError>(error)) {}
 
    /// RResult<void> has a default contructor that creates an object representing success
    template <typename Dummy = T, typename = typename std::enable_if_t<std::is_void<T>::value, Dummy>>
@@ -217,7 +217,7 @@ public:
 /// Short-hand to return an RResult<void> indicating success
 #define R__SUCCESS return ROOT::Experimental::RResult<void>();
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
-#define R__FAIL(msg) return std::make_unique<ROOT::Experimental::RError>(msg, __func__, __FILE__, __LINE__)
+#define R__FAIL(msg) return ROOT::Experimental::RError(msg, __func__, __FILE__, __LINE__)
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
 #define R__FORWARD_RESULT(res) if (res.GetError()) { res.GetError()->AddFrame(__func__, __FILE__, __LINE__); } \
    return res
