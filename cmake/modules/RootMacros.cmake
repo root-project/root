@@ -1202,7 +1202,9 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Dictionary might include things from the current src dir, e.g. tests. Alas
   # there is no way to set the include directory for a source file (except for
   # the generic COMPILE_FLAGS), so this needs to be glued to the target.
-  target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  if(NOT (CMAKE_PROJECT_NAME STREQUAL ROOT))
+     target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  endif()
 
   # Install headers if we have any headers and if the user didn't explicitly
   # disabled this.
