@@ -11,7 +11,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#include <RooFit/TestStatistics/RooRealL.h>
+#include <TestStatistics/RooMultiL.h>
 
 namespace RooFit {
 namespace TestStatistics {

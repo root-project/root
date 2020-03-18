@@ -11,20 +11,18 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientJob
-#define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientJob
+#ifndef ROOT_ROOFIT_TESTSTATISTICS_RooMultiL
+#define ROOT_ROOFIT_TESTSTATISTICS_RooMultiL
 
-#include <RooFit/MultiProcess/Job.h>
-#include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
+#include <TestStatistics/RooAbsL.h>
 
 namespace RooFit {
 namespace TestStatistics {
 
-class LikelihoodGradientJob : MultiProcess::Job, LikelihoodGradientWrapper {
+class RooMultiL : RooAbsL {
 };
 
 }
 }
 
-
-#endif // ROOT_ROOFIT_LikelihoodGradientJob
+#endif // ROOT_ROOFIT_TESTSTATISTICS_RooMultiL

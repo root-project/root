@@ -250,13 +250,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         RooMinimizerType.h
         RooMinimizer_impl.h
         MultiProcess/BidirMMapPipe.h
-#        MultiProcess/GradMinimizer.h
-#        MultiProcess/Job.h
-#        MultiProcess/NLLVar.h
-#        MultiProcess/TaskManager.h
-#        MultiProcess/Vector.h
-#        MultiProcess/messages.h
-#        MultiProcess/util.h
+        TestStatistics/GradMinimizer.h
+        TestStatistics/GradMinimizerFcn.h
+        TestStatistics/LikelihoodGradientJob.h
+        TestStatistics/LikelihoodGradientWrapper.h
+        TestStatistics/LikelihoodJob.h
+        TestStatistics/LikelihoodWrapper.h
+        TestStatistics/Minimizer.h
+        TestStatistics/MinimizerFcn.h
+        TestStatistics/MinimizerType.h
+        TestStatistics/Minimizer_impl.h
+        TestStatistics/RooAbsL.h
+        TestStatistics/RooBinnedL.h
+        TestStatistics/RooConstraintL.h
+        TestStatistics/RooMultiL.h
+        TestStatistics/RooRealL.h
+        TestStatistics/RooUnbinnedL.h
   SOURCES
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
@@ -483,12 +492,20 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/RooGradientFunction.cxx
         src/RooMinimizerType.cxx
         src/MultiProcess/BidirMMapPipe.cxx
-#        src/MultiProcess/GradMinimizerFcn.cxx
-#        src/MultiProcess/Job.cxx
-#        src/MultiProcess/NLLVar.cxx
-#        src/MultiProcess/TaskManager.cxx
-#        src/MultiProcess/messages.cxx
-#        src/MultiProcess/util.cxx
+        src/TestStatistics/GradMinimizerFcn.cxx
+        src/TestStatistics/LikelihoodGradientJob.cxx
+        src/TestStatistics/LikelihoodGradientWrapper.cxx
+        src/TestStatistics/LikelihoodJob.cxx
+        src/TestStatistics/LikelihoodWrapper.cxx
+        src/TestStatistics/Minimizer.cxx
+        src/TestStatistics/MinimizerFcn.cxx
+        src/TestStatistics/MinimizerType.cxx
+        src/TestStatistics/RooAbsL.cxx
+        src/TestStatistics/RooBinnedL.cxx
+        src/TestStatistics/RooConstraintL.cxx
+        src/TestStatistics/RooMultiL.cxx
+        src/TestStatistics/RooRealL.cxx
+        src/TestStatistics/RooUnbinnedL.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
 #    -I${ZeroMQ_INCLUDE_DIR} # necessary because zmq.h is included in the RooFitCore dictionary as well via MultiProcess

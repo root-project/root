@@ -11,18 +11,18 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#ifndef ROOT_ROOFIT_TESTSTATISTICS_RooUnbinnedL
-#define ROOT_ROOFIT_TESTSTATISTICS_RooUnbinnedL
+#ifndef ROOT_ROOFIT_TESTSTATISTICS_RooBinnedL
+#define ROOT_ROOFIT_TESTSTATISTICS_RooBinnedL
 
-#include <RooFit/TestStatistics/RooAbsL.h>
+#include <TestStatistics/RooAbsL.h>
 
 namespace RooFit {
 namespace TestStatistics {
 
-class RooUnbinnedL : RooAbsL {
+class RooBinnedL : RooAbsL {
 };
 
 }
 }
 
-#endif // ROOT_ROOFIT_TESTSTATISTICS_RooUnbinnedL
+#endif // ROOT_ROOFIT_TESTSTATISTICS_RooBinnedL

@@ -14,7 +14,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_RooConstraintL
 #define ROOT_ROOFIT_TESTSTATISTICS_RooConstraintL
 
-#include <RooFit/TestStatistics/RooAbsL.h>
+#include <TestStatistics/RooAbsL.h>
 
 namespace RooFit {
 namespace TestStatistics {

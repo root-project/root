@@ -11,7 +11,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#include <RooFit/TestStatistics/RooBinnedL.h>
+#include <TestStatistics/LikelihoodGradientWrapper.h>
 
 namespace RooFit {
 namespace TestStatistics {

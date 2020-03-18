@@ -11,7 +11,7 @@
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
-#include <RooFit/TestStatistics/RooConstraintL.h>
+#include <TestStatistics/LikelihoodWrapper.h>
 
 namespace RooFit {
 namespace TestStatistics {
