@@ -266,7 +266,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
-    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
+    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS;INCDIRS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -297,6 +297,21 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         list(APPEND incdirs ${dir})
       endif()
     endforeach()
+  endif()
+
+  if (ARG_INCDIRS)
+    foreach(dir ${ARG_INCDIRS})
+       list(APPEND incdirs ${dir})
+    endforeach()
+  endif(ARG_INCDIRS)
+ 
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+       list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+    endif()
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+       list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+    endif()
   endif()
 
   #---Get the list of header files-------------------------
