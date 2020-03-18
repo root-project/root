@@ -34,9 +34,8 @@ namespace ROOT {
 
    class TThreadExecutor: public TExecutor<TThreadExecutor> {
    public:
-      explicit TThreadExecutor();
 
-      explicit TThreadExecutor(UInt_t nThreads);
+      explicit TThreadExecutor(UInt_t nThreads = 0u);
 
       TThreadExecutor(TThreadExecutor &) = delete;
       TThreadExecutor &operator=(TThreadExecutor &) = delete;
