@@ -11,9 +11,6 @@
 
 //#define NDEBUG
 
-#ifdef WIN32
-#include "Windows4Root.h"
-#endif
 // Please don't to move <GL/glew.h> from here: 
 // <GL/glew.h> should be included before any of Cocoa headers.
 // Moving it will trigger the redefinition error:
