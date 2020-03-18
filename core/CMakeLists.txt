@@ -19,6 +19,21 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 #endif"
 )
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(Core 
+   GDIRS 
+      ginclude 
+   DIRS 
+      core/base/inc
+      core/foundation/inc
+      core/cont/inc
+      core/gui/inc
+      core/meta/inc
+      core/clib/inc
+      core/thread/inc 
+   V7DIRS 
+      core/base/v7/inc
+)
+
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different

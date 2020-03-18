@@ -861,69 +861,61 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
+#---ROOT_CONFIGURE_LIBRARY_INCLUDES( library DIRS incl1 incl2 ... GDIRS incl1 incl2 ... V7DIRS incl1 incl2 ...)
+#---------------------------------------------------------------------------------------------------
+function(ROOT_CONFIGURE_LIBRARY_INCLUDES library)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DIRS;GDIRS;V7DIRS" ${ARGN})
+  set(lst)
+  foreach(glbl ${ARG_GDIRS})
+     list(APPEND lst ${CMAKE_BINARY_DIR}/${glbl})
+  endforeach()
+  foreach(src ${ARG_DIRS})
+     list(APPEND lst ${CMAKE_SOURCE_DIR}/${src})
+  endforeach()
+  if(root7)
+     foreach(src ${ARG_V7DIRS})
+        list(APPEND lst ${CMAKE_SOURCE_DIR}/${src})
+     endforeach()
+  endif(root7)
+  
+  SET(ROOT_INCDIRS_${library} ${lst} PARENT_SCOPE)
+endfunction()
+
+#---------------------------------------------------------------------------------------------------
 #---ROOT_ADD_INCLUDE_DIRECTORIES( library DEPENDENCIES dep1 dep2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES" ${ARGN})
   if(PROJECT_NAME STREQUAL "ROOT")
-      # these are generated includes like RConfigure.h
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_BINARY_DIR}/ginclude
-        INTERFACE $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>)
-  
-      # these are core/base includes
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/base/inc
-        INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>)
-      if(root7)
-        target_include_directories(${library}
-           PRIVATE ${CMAKE_SOURCE_DIR}/core/base/v7/inc
-           INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
-      endif(root7)
-
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/inc)
-
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/cont/inc)
-
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/gui/inc)
-
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/meta/inc)
-
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/inc)
-
-      target_include_directories(${library}
-        PRIVATE ${CMAKE_SOURCE_DIR}/core/thread/inc)
+      list(PREPEND ARG_DEPENDENCIES Core)
+      list(APPEND ARG_DEPENDENCIES ${library})
+      list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
       
-      foreach(dep ${ARG_DEPENDENCIES})
-        if(dep MATCHES Clib)
-           target_include_directories(${library}
-              PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/inc
-              INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clib/inc>)
-        endif()
+      set(fulllst)
+      
+      foreach(lib ${ARG_DEPENDENCIES})
+         foreach(incl ${ROOT_INCDIRS_${lib}})
+            list(APPEND fulllst ${incl})
+         endforeach()
       endforeach()
-
+  
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-         target_include_directories(${library}
-           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc
-           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
+         list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/inc)
        endif()
 
       if(root7 AND (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc))
-         target_include_directories(${library}
-           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc
-           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>)
+         list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
        endif()
           
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-         target_include_directories(${library}
-           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res
-           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+         list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/res)
       endif()
+      
+      list(REMOVE_DUPLICATES fulllst)
+      
+      foreach(incl ${fulllst})
+          target_include_directories(${library} PRIVATE ${incl} INTERFACE $<BUILD_INTERFACE:${incl}>)
+      endforeach()    
 
     if (cxxmodules)
       # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
