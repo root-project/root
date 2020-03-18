@@ -8,14 +8,14 @@ using RException = ROOT::Experimental::RException;
 
 namespace {
 
-static ROOT::Experimental::RResult<bool> TestFailure()
+static ROOT::Experimental::RResult<void> TestFailure()
 {
    R__FAIL("test failure");
 }
 
-static ROOT::Experimental::RResult<bool> TestSuccess()
+static ROOT::Experimental::RResult<void> TestSuccess()
 {
-   return true;
+   R__SUCCESS
 }
 
 static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
