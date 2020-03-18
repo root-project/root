@@ -226,6 +226,8 @@ generateHeader(Base
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
+file(COPY ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
+
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/man)
 
 if(NOT MSVC)
