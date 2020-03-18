@@ -96,15 +96,18 @@ def getKernelName(inNBName):
         return 'root'
 
 
-def canReproduceNotebook(inNBName):
+def canReproduceNotebook(inNBName, needsCompare):
     kernelName = getKernelName(inNBName)
     tmpDir = addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     interpName = getInterpreterName()
     convCmd = convCmdTmpl %(interpName, kernelName, inNBName, outNBName)
-    os.system(convCmd) # we use system to inherit the environment in os.environ
+    exitStatus = os.system(convCmd) # we use system to inherit the environment in os.environ
     shutil.rmtree(tmpDir)
-    return compareNotebooks(inNBName,outNBName)
+    if needsCompare:
+        return compareNotebooks(inNBName,outNBName)
+    else:
+        return exitStatus
 
 def isInputNotebookFileName(filename):
     if not filename.endswith(".ipynb"):
@@ -114,11 +117,15 @@ def isInputNotebookFileName(filename):
 
 if __name__ == "__main__":
     import sys
-    if len(sys.argv) != 2:
-        print("Usage: nbdiff.py myNotebook.ipynb")
+    needsCompare = True
+    if len(sys.argv) < 2:
+        print("Usage: nbdiff.py myNotebook.ipynb [compare_output]")
         sys.exit(1)
+    elif len(sys.argv) == 3 and sys.argv[2] == "OFF":
+        needsCompare = False
+
     nbFileName = sys.argv[1]
     if not isInputNotebookFileName(nbFileName):
         sys.exit(1)
-    retCode = canReproduceNotebook(nbFileName)
+    retCode = canReproduceNotebook(nbFileName, needsCompare)
     sys.exit(retCode)

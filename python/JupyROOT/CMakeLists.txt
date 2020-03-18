@@ -15,11 +15,6 @@ if(FoundMetakernel EQUAL 0)
   set(NOTEBOOKS ${NOTEBOOKS}
                 ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
                 ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
-
-  if(ROOT_imt_FOUND)
-    set(NOTEBOOKS ${NOTEBOOKS}
-                  ${CMAKE_CURRENT_SOURCE_DIR}/Cpp_IMT_Canvas.ipynb)
-  endif()
 endif()
 
 find_python_module(IPython QUIET)
@@ -41,6 +36,12 @@ if(PY_IPYTHON_FOUND)
     ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
                       COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK})
   endforeach()
+
+  if(FoundMetakernel EQUAL 0 AND ROOT_imt_FOUND)
+    # No need to compare output here, just check it runs with no error
+    ROOTTEST_ADD_TEST(Cpp_IMT_Canvas_notebook
+                      COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${CMAKE_CURRENT_SOURCE_DIR}/Cpp_IMT_Canvas.ipynb "OFF")
+  endif()
 endif()
 
 
