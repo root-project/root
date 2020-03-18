@@ -9,6 +9,11 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(Gpad
+   DIRS
+     graf2d/gpad/inc
+)  
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   HEADERS
     TAttCanvas.h

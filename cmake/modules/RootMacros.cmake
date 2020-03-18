@@ -878,7 +878,7 @@ function(ROOT_CONFIGURE_LIBRARY_INCLUDES library)
      endforeach()
   endif(root7)
   
-  SET(ROOT_INCDIRS_${library} ${lst} PARENT_SCOPE)
+  SET(root_incdirs_${library} ${lst} PARENT_SCOPE)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -894,7 +894,7 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       set(fulllst)
       
       foreach(lib ${ARG_DEPENDENCIES})
-         foreach(incl ${ROOT_INCDIRS_${lib}})
+         foreach(incl ${root_incdirs_${lib}})
             list(APPEND fulllst ${incl})
          endforeach()
       endforeach()
