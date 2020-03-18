@@ -749,6 +749,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
 #                        [NOINSTALL] LIBRARIES library1 library2 ...
+#                        DEPENDENCIES dep1 dep2                         
 #                        BUILTINS dep1 dep2)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
@@ -813,7 +814,7 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
 
-  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library} DEPENDENCIES ${ARG_DEPENDENCIES})
 
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
@@ -860,35 +861,69 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_ADD_INCLUDE_DIRECTORIES( library )
+#---ROOT_ADD_INCLUDE_DIRECTORIES( library DEPENDENCIES dep1 dep2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES" ${ARGN})
   if(PROJECT_NAME STREQUAL "ROOT")
-
-#    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-#      target_include_directories(${library}
-#        PRIVATE
-#          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-#        INTERFACE
-#          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-#      )
-#    endif()
-
-#    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-#      target_include_directories(${library}
-#        PRIVATE
-#          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-#        INTERFACE
-#          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-#      )
-#    endif()
-
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      # these are generated includes like RConfigure.h
       target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/res
-      )
-    endif()
+        PRIVATE ${CMAKE_BINARY_DIR}/ginclude
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>)
+  
+      # these are core/base includes
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/base/inc
+        INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>)
+      if(root7)
+        target_include_directories(${library}
+           PRIVATE ${CMAKE_SOURCE_DIR}/core/base/v7/inc
+           INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
+      endif(root7)
+
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/inc)
+
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/cont/inc)
+
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/gui/inc)
+
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/meta/inc)
+
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/inc)
+
+      target_include_directories(${library}
+        PRIVATE ${CMAKE_SOURCE_DIR}/core/thread/inc)
+      
+      foreach(dep ${ARG_DEPENDENCIES})
+        if(dep MATCHES Clib)
+           target_include_directories(${library}
+              PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/inc
+              INTERFACE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clib/inc>)
+        endif()
+      endforeach()
+
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+         target_include_directories(${library}
+           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc
+           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
+       endif()
+
+      if(root7 AND (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc))
+         target_include_directories(${library}
+           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc
+           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>)
+       endif()
+          
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+         target_include_directories(${library}
+           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res
+           INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+      endif()
 
     if (cxxmodules)
       # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
@@ -897,7 +932,7 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       # get a redefinition error.
       # We should remove these lines when the fallback include is removed. Then
       # we will need a module.modulemap file per `inc` directory.
-      target_include_directories(${library} BEFORE PRIVATE ${CMAKE_BINARY_DIR}/include)
+      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
     else()
       # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
       target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
