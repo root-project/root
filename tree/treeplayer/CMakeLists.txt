@@ -22,6 +22,11 @@ if(imt)
   )
 endif()
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(TreePlayer
+   DIRS
+     tree/treeplayer/inc
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   HEADERS
     ROOT/TTreeReaderFast.hxx
