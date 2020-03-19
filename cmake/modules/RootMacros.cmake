@@ -268,7 +268,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
-    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
+    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS;INCLUDES" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -284,6 +284,95 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(CMAKE_INSTALL_LIBDIR ${CMAKE_CURRENT_BINARY_DIR})
     set(libprefix "")
   endif()
+  
+  
+  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
+    set(incdirs)
+
+    # for a time been, roocling makes strange error
+    list(APPEND incdirs ${CMAKE_BINARY_DIR}/include)
+    
+    if(TARGET ${ARG_MODULE})
+       get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+       foreach(dir ${target_incdirs})
+           list(APPEND incdirs ${dir})
+       endforeach()
+    endif()
+
+    foreach(dir ${ARG_INCLUDES})
+        list(APPEND incdirs ${dir})
+    endforeach()
+
+    list(REMOVE_DUPLICATES incdirs)
+    
+    foreach(d ${incdirs})
+       list(APPEND includedirs -I${d})
+    endforeach()
+    
+    set(pureincdirs ${incdirs})
+    
+    set(headerfiles)
+    set(_list_of_header_dependencies)
+    foreach(fp ${ARG_UNPARSED_ARGUMENTS})
+      if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
+        file(GLOB files inc/${fp} ${fp}) # Elements of ${fp} have the complete path.
+        foreach(f ${files})
+          if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
+            set(add_inc_as_include On)
+            string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/inc/" "" f_no_inc ${f})
+            list(APPEND headerfiles ${f_no_inc})
+            list(APPEND _list_of_header_dependencies ${f})
+          endif()
+        endforeach()
+      else()
+        if(IS_ABSOLUTE ${fp})
+          set(headerFile ${fp})
+        else()
+          set(incdirs_in_build)
+          set(incdirs_in_prefix ${headerdirs_dflt})
+          foreach(incdir ${incdirs})
+            if(NOT IS_ABSOLUTE ${incdir})
+              list(APPEND incdirs_in_build ${incdir})
+            else()
+              list(APPEND incdirs_in_prefix ${incdir})
+            endif()
+          endforeach()
+          if(incdirs_in_build)
+            find_file(headerFile ${fp}
+              HINTS ${incdirs_in_build}
+              NO_DEFAULT_PATH
+              NO_SYSTEM_ENVIRONMENT_PATH
+              NO_CMAKE_FIND_ROOT_PATH)
+          endif()
+          # Try this even if NOT incdirs_in_prefix: might not need a HINT.
+          if(NOT headerFile)
+            find_file(headerFile ${fp}
+              HINTS ${incdirs_in_prefix}
+              NO_DEFAULT_PATH
+              NO_SYSTEM_ENVIRONMENT_PATH)
+          endif()
+        endif()
+        if(NOT headerFile)
+          message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
+        endif()
+        list(APPEND headerfiles ${fp})
+        list(APPEND _list_of_header_dependencies ${headerFile})
+        unset(headerFile CACHE) # find_file, forget headerFile!
+      endif()
+    endforeach()
+
+    foreach(fp ${ARG_NODEPHEADERS})
+      list(APPEND headerfiles ${fp})
+      # no dependency - think "vector" etc.
+    endforeach()
+
+    if(NOT (headerfiles OR ARG_LINKDEF))
+      message(FATAL_ERROR "No headers nor LinkDef.h supplied / found for dictionary ${dictionary}!")
+    endif()
+
+  else()
+  
+    ####################### start for old-style includes/headers generation ##################
 
   #---Get the list of include directories------------------
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
@@ -402,9 +491,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       endforeach()
     endif()
   endforeach()
-
+  
   if(includedirs)
     list(REMOVE_DUPLICATES includedirs)
+  endif()
+  
+  set(pureincdirs)
+  foreach(dir ${includedirs})
+    string(SUBSTRING ${dir} 2 -1 dir0)
+    set(pureincdirs ${pureincdirs} ${dir0})
+  endforeach()
+
+    ####################### end for old-style includes/headers generation ##################
   endif()
 
   #---Get the list of definitions---------------------------
@@ -892,7 +990,7 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       list(APPEND ARG_DEPENDENCIES ${library})
       list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
 
-      message("library ${library} depends ${ARG_DEPENDENCIES}")
+      # message("library ${library} depends ${ARG_DEPENDENCIES}")
 
       set(fulllst)
 
@@ -920,8 +1018,6 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
 
       list(REMOVE_DUPLICATES fulllst)
 
-      message("library ${library} local includes paths ${fulllst}")
-
       foreach(incl ${fulllst})
           target_include_directories(${library} PRIVATE ${incl} INTERFACE $<BUILD_INTERFACE:${incl}>)
       endforeach()
@@ -933,10 +1029,10 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       # get a redefinition error.
       # We should remove these lines when the fallback include is removed. Then
       # we will need a module.modulemap file per `inc` directory.
-      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+      # target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
     else()
       # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
+      # target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
     endif()
 
   endif()
@@ -1242,6 +1338,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
                           DEPENDENCIES ${ARG_DEPENDENCIES}
                           BUILTINS ${ARG_BUILTINS}
+                          INCLUDES ${ARG_INCLUDES}
                           )
 
   # Dictionary might include things from the current src dir, e.g. tests. Alas
