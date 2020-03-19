@@ -54,7 +54,7 @@ proof->SetParameter("PROOF_Packetizer", "TPacketizer");
 #include "TMonitor.h"
 #include "TNtuple.h"
 #include "TNtupleD.h"
-#include "TPerfStats.h"
+#include "TVirtualPerfStats.h"
 
 ClassImp(TVirtualPacketizer);
 
