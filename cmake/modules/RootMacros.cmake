@@ -554,6 +554,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       ${definitions} $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
 
     # remove all -I prefixes from list of include dirs
+    # otherwise generated make files will look like:
+    # CXX_INCLUDES = -I/home/user/git/root6/io/io/-I/home/user/git/root6 ...
     set(pureincdirs)
     foreach(dir ${includedirs})
       string(SUBSTRING ${dir} 2 -1 dir0)
