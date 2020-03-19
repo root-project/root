@@ -13,15 +13,11 @@ if(builtin_vdt OR vdt)
    set(vdt_includes ${VDT_INCLUDE_DIRS})
 endif()
 
-if(builtin_vdt)
-   set(vdt_gincl "./")
-endif()
-
 ROOT_CONFIGURE_LIBRARY_INCLUDES(RooFitCore
    DIRS
      roofit/roofitcore/inc
    GDIRS
-     ${vdt_gincl}
+     ${vdt_includes}
 )
 
 

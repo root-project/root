@@ -35,7 +35,7 @@ endif()
 
 ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
    GDIRS
-      ginclude
+      ${CMAKE_BINARY_DIR}/ginclude
    DIRS
       core/base/inc
       core/foundation/inc
