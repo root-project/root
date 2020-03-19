@@ -15,6 +15,11 @@ if(alien)
   set(PROOF_EXTRA_SOURCES src/TDataSetManagerAliEn.cxx)
 endif()
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(Proof
+   DIRS
+     proof/proof/inc
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Proof
   HEADERS
     TCondor.h
