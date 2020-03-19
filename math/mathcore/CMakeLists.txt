@@ -119,12 +119,18 @@ endif()
 if(veccore)
   set(MATHCORE_BUILTINS VECCORE)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
+  if(builtin_veccore)
+     set(veccore_path externals/usr/local/include)
+     set(veccore_full_path ${CMAKE_BINARY_DIR}/${veccore_path})
+  endif()
 endif()
 
 ROOT_CONFIGURE_LIBRARY_INCLUDES(MathCore
    DIRS
      math/mathcore/inc
      math/mathmore/inc
+   GDIRS
+     ${veccore_path}
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
@@ -196,6 +202,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${MATHCORE_DEPENDENCIES}
   BUILTINS
     ${MATHCORE_BUILTINS}
+  INCLUDES
+    ${veccore_full_path}
 )
 
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
