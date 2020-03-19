@@ -29,6 +29,11 @@ if(ssl)
   endif()
 endif()
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(Net
+   DIRS
+     net/net/inc
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Net
   HEADERS
     NetErrors.h

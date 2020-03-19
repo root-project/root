@@ -45,4 +45,8 @@ ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx
     Net
   BUILTINS
     OPENSSL
+  INCLUDES
+    res
+    ../auth/res
+    ../auth/inc
 )

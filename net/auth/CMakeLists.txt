@@ -13,6 +13,11 @@ add_library(rsa STATIC src/rsaaux.cxx src/rsalib.cxx src/rsafun.cxx)
 target_include_directories(rsa PUBLIC res)
 set_property(TARGET rsa PROPERTY POSITION_INDEPENDENT_CODE ON)
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(RootAuth
+   DIRS
+     net/auth/inc
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
   HEADERS
     AuthConst.h
@@ -30,6 +35,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
   DEPENDENCIES
     Net
     RIO
+  INCLUDES
+    ../../core/textinput/inc
 )
 
 target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:Linux>:crypt>)

@@ -10,6 +10,7 @@
 
 if(builtin_vdt)
   link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+  set(vdt_includes ${HEADER_OUTPUT_PATH})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
@@ -23,6 +24,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
+  INCLUDES
+    ${vdt_includes}
 )
 
 if(builtin_vdt OR vdt)
