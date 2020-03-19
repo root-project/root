@@ -831,12 +831,36 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
 }
 
 // ROOT-9736
-TEST(RDFSimpleTests, NonExistingFile)
+TEST_P(RDFSimpleTests, NonExistingFile)
 {
    ROOT::RDataFrame r("myTree", "nonexistingfile.root");
 
    // We try to use the tree for jitting: an exception is thrown
    EXPECT_ANY_THROW(r.Filter("inventedVar > 0"));
+}
+
+// ROOT-10549: check we throw if a file is unreadable
+TEST_P(RDFSimpleTests, NonExistingFileInChain)
+{
+   const auto filename = "rdf_nonexistingfileinchain.root";
+   ROOT::RDataFrame(1).Define("x", [] { return 10; }).Snapshot<int>("t", filename, {"x"});
+
+   ROOT::RDataFrame df("t", {filename, "doesnotexist.root"});
+
+   bool exceptionCaught = false;
+   try {
+      df.Count().GetValue();
+   } catch (const std::runtime_error &e) {
+      const std::string expected_msg =
+         ROOT::IsImplicitMTEnabled()
+            ? "TTreeProcessorMT::Process: an error occurred while opening file doesnotexist.root"
+            : "An error was encountered while processing the data. TTreeReader status code is: 5";
+      EXPECT_EQ(e.what(), expected_msg);
+      exceptionCaught = true;
+   }
+   EXPECT_TRUE(exceptionCaught);
+
+   gSystem->Unlink(filename);
 }
 
 TEST_P(RDFSimpleTests, Stats)
