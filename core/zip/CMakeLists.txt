@@ -6,6 +6,7 @@
 
 find_package(ZLIB REQUIRED)
 
+
 ROOT_OBJECT_LIBRARY(Zip
   src/Bits.c
   src/ZDeflate.c
@@ -13,8 +14,11 @@ ROOT_OBJECT_LIBRARY(Zip
   src/ZInflate.c
   src/Compression.cxx
   src/RZip.cxx
+  INCLUDES
+    ${ZLIB_INCLUDE_DIR}
+    ../lzma/inc
+    ../lz4/inc
+    ../zstd/inc
 )
-
-target_include_directories(Zip PRIVATE ${ZLIB_INCLUDE_DIR})
 
 ROOT_INSTALL_HEADERS()

@@ -19,19 +19,29 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 #endif"
 )
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Core 
-   GDIRS 
-      ginclude 
-   DIRS 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
+   GDIRS
+      ginclude
+   DIRS
       core/base/inc
       core/foundation/inc
       core/cont/inc
       core/gui/inc
       core/meta/inc
       core/clib/inc
-      core/thread/inc 
-   V7DIRS 
+      core/zip/inc
+      core/thread/inc
+   V7DIRS
       core/base/v7/inc
+)
+
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+  DEPENDS
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 )
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
@@ -43,10 +53,14 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
     ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 )
 
-add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
+add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp ${CMAKE_BINARY_DIR}/include/RGitCommit.h ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
   PROPERTIES GENERATED TRUE)
+
+set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+
 set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
   PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
 

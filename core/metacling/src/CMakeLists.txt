@@ -16,12 +16,12 @@ include_directories(SYSTEM
   ${CLAD_INCLUDE_DIRS}
 )
 
-include_directories(
-  ../res
-  ../../clingutils/res
-  ../../foundation/res
-  ${CLING_INCLUDE_DIRS}
-)
+#include_directories(
+#  ../res
+#  ../../clingutils/res
+#  ../../foundation/res
+#  ${CLING_INCLUDE_DIRS}
+#)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
@@ -59,6 +59,13 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingTypedefInfo.cxx
   TClingTypeInfo.cxx
   TClingValue.cxx
+  INCLUDES
+     ../res
+     ../../clingutils/res
+     ../../foundation/res
+     ../../zip/inc
+     ../../../io/io/inc
+     ${CLING_INCLUDE_DIRS}
 )
 
 add_dependencies(MetaCling CLING)

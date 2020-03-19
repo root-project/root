@@ -20,4 +20,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
+  INCLUDES
+    ${CMAKE_SOURCE_DIR}/core/textinput/inc
 )

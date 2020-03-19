@@ -42,6 +42,9 @@ ROOT_LINKER_LIBRARY(FTGL
     ZLIB::ZLIB
   BUILTINS
     FREETYPE
+  INCLUDES
+    ${FREETYPE_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
 )
 
 target_include_directories(FTGL PRIVATE

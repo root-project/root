@@ -15,8 +15,12 @@ set(Unix_dict_headers
 
 ROOT_OBJECT_LIBRARY(Unix
   src/TUnixSystem.cxx
+  INCLUDES
+     ../clib/res
+     ../foundation/res
+     ../textinput/inc
 )
 
-target_include_directories(Unix PRIVATE ../clib/res ../foundation/res)
+# target_include_directories(Unix PRIVATE ../clib/res ../foundation/res)
 
 ROOT_INSTALL_HEADERS()

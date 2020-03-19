@@ -55,7 +55,7 @@ endif()
 #---CreateRootClingCommandLineOptions------------------------------------------------------------------
 generateHeader(Dictgen
   ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py
-  ${CMAKE_BINARY_DIR}/include/rootclingCommandLineOptionsHelp.h
+  ${CMAKE_BINARY_DIR}/ginclude/rootclingCommandLineOptionsHelp.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

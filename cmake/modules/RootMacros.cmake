@@ -749,11 +749,12 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
 #                        [NOINSTALL] LIBRARIES library1 library2 ...
-#                        DEPENDENCIES dep1 dep2                         
-#                        BUILTINS dep1 dep2)
+#                        DEPENDENCIES dep1 dep2
+#                        BUILTINS dep1 dep2
+#                        INCLUDES incl1 incl2)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS;INCLUDES"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   if(NOT ARG_TYPE)
     set(ARG_TYPE SHARED)
@@ -814,7 +815,7 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
 
-  ROOT_ADD_INCLUDE_DIRECTORIES(${library} DEPENDENCIES ${ARG_DEPENDENCIES})
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library} DEPENDENCIES ${ARG_DEPENDENCIES} INCLUDES ${ARG_INCLUDES})
 
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
@@ -877,28 +878,34 @@ function(ROOT_CONFIGURE_LIBRARY_INCLUDES library)
         list(APPEND lst ${CMAKE_SOURCE_DIR}/${src})
      endforeach()
   endif(root7)
-  
-  SET(root_incdirs_${library} ${lst} PARENT_SCOPE)
+
+  SET(root_incdirs_${library} ${lst} CACHE STRING "includes for ${library}" FORCE)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_ADD_INCLUDE_DIRECTORIES( library DEPENDENCIES dep1 dep2 ...)
+#---ROOT_ADD_INCLUDE_DIRECTORIES( library DEPENDENCIES dep1 dep2 ... INCLUDES incl1 incl2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES;INCLUDES" ${ARGN})
   if(PROJECT_NAME STREQUAL "ROOT")
       list(PREPEND ARG_DEPENDENCIES Core)
       list(APPEND ARG_DEPENDENCIES ${library})
       list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
-      
+
+      message("library ${library} depends ${ARG_DEPENDENCIES}")
+
       set(fulllst)
-      
+
       foreach(lib ${ARG_DEPENDENCIES})
          foreach(incl ${root_incdirs_${lib}})
             list(APPEND fulllst ${incl})
          endforeach()
       endforeach()
-  
+
+      foreach(incl ${ARG_INCLUDES})
+        list(APPEND fulllst ${incl})
+      endforeach()
+
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
          list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/inc)
        endif()
@@ -906,16 +913,18 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       if(root7 AND (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc))
          list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
        endif()
-          
+
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
          list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/res)
       endif()
-      
+
       list(REMOVE_DUPLICATES fulllst)
-      
+
+      message("library ${library} local includes paths ${fulllst}")
+
       foreach(incl ${fulllst})
           target_include_directories(${library} PRIVATE ${incl} INTERFACE $<BUILD_INTERFACE:${incl}>)
-      endforeach()    
+      endforeach()
 
     if (cxxmodules)
       # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
@@ -935,10 +944,10 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
 endfunction(ROOT_ADD_INCLUDE_DIRECTORIES)
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ...)
+#---ROOT_OBJECT_LIBRARY( <name> source1 source2 ... BUILTINS dep1 dep2 ... INCLUDES src1 src2)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_OBJECT_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS;INCLUDES"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
@@ -946,7 +955,7 @@ function(ROOT_OBJECT_LIBRARY library)
   endif()
   add_dependencies(${library} move_headers)
 
-  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library} INCLUDES ${ARG_INCLUDES})
 
   #--- Only for building shared libraries
   set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -1128,7 +1137,7 @@ endfunction()
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
 #                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
-#                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
+#                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generate
 #                                 [NO_HEADERS]                 : don't glob to fill HEADERS variable
 #                                 SOURCES source1 source2      : if not specified, globbing for *.cxx is used
 #                                 [NO_SOURCES]                 : don't glob to fill SOURCES variable
@@ -1137,6 +1146,7 @@ endfunction()
 #                                 LIBRARIES lib1 lib2          : linking flags such as dl, readline
 #                                 DEPENDENCIES lib1 lib2       : dependencies such as Core, MathCore
 #                                 BUILTINS builtin1 builtin2   : builtins like AFTERIMAGE
+#                                 INCLUDES inc1 inc2           : extra includes paths to build sources
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
@@ -1146,7 +1156,7 @@ endfunction()
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
-  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
+  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS INCLUDES)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Check if we have any unparsed arguments
@@ -1206,6 +1216,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
+                        INCLUDES ${ARG_INCLUDES}
                        )
   else(ARG_OBJECT_LIBRARY)
     ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES}
@@ -1213,6 +1224,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
+                        INCLUDES ${ARG_INCLUDES}
                        )
   endif(ARG_OBJECT_LIBRARY)
 
