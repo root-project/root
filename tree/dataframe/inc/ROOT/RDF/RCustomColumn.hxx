@@ -67,8 +67,8 @@ class RCustomColumn final : public RCustomColumnBase {
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, NoneTag)
+   template <std::size_t... S>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, NoneTag)
    {
       fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -76,8 +76,8 @@ class RCustomColumn final : public RCustomColumnBase {
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotTag)
+   template <std::size_t... S>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, SlotTag)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -85,9 +85,8 @@ class RCustomColumn final : public RCustomColumnBase {
       (void)entry;
    }
 
-   template <std::size_t... S, typename... BranchTypes>
-   void
-   UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, TypeList<BranchTypes...>, SlotAndEntryTag)
+   template <std::size_t... S>
+   void UpdateHelper(unsigned int slot, Long64_t entry, std::index_sequence<S...>, SlotAndEntryTag)
    {
       fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -123,7 +122,7 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), ColumnTypes_t(), ExtraArgsTag{});
+         UpdateHelper(slot, entry, TypeInd_t(), ExtraArgsTag{});
          fLastCheckedEntry[slot] = entry;
       }
    }
