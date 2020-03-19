@@ -19,6 +19,20 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 #endif"
 )
 
+if(ROOT_ARCHITECTURE MATCHES macosx)
+  set(platform_incl "core/unix/inc core/macosx/inc")
+elseif(ROOT_ARCHITECTURE MATCHES win32)
+  set(platform_incl "core/winnt/inc")
+else()
+  set(platform_incl "core/unix/inc")
+endif()
+
+
+if(ROOT_ARCHITECTURE MATCHES win32)
+   set(win32_incl core/win32/inc)
+endif()
+
+
 ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
    GDIRS
       ginclude
@@ -31,6 +45,7 @@ ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
       core/clib/inc
       core/zip/inc
       core/thread/inc
+      ${platform_incl}
    V7DIRS
       core/base/v7/inc
 )
