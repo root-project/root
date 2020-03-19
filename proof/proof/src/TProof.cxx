@@ -76,7 +76,7 @@ messages to all workers, it collects results, etc.
 #include "TProofNodeInfo.h"
 #include "TProofOutputFile.h"
 #include "TVirtualProofPlayer.h"
-// #include "TVirtualPacketizer.h"
+#include "TVirtualPacketizer.h"
 #include "TProofServ.h"
 #include "TPluginManager.h"
 #include "TQueryResult.h"

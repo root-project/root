@@ -55,6 +55,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ProofPlayer
     RIO
     Thread
     Tree
+    TreePlayer
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ProofDraw
