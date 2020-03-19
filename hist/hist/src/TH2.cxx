@@ -697,9 +697,25 @@ void TH2::DoFitSlices(bool onX,
    TAxis& innerAxis = (onX ? fXaxis : fYaxis);
 
    Int_t nbins  = outerAxis.GetNbins();
+   // get correct first last bins for outer axis
+   // when using default values (0,-1) check if an axis range is set in outer axis
+   // do same as in DoProjection for inner axis
+   if ( lastbin < firstbin && outerAxis.TestBit(TAxis::kAxisRange) ) {
+      firstbin = outerAxis.GetFirst();
+      lastbin = outerAxis.GetLast();
+      // For special case of TAxis::SetRange, when first == 1 and last
+      // = N and the range bit has been set, the TAxis will return 0
+      // for both.
+      if (firstbin == 0 && lastbin == 0)  {
+         firstbin = 1;
+         lastbin = nbins;
+      }
+   }
    if (firstbin < 0) firstbin = 0;
    if (lastbin < 0 || lastbin > nbins + 1) lastbin = nbins + 1;
    if (lastbin < firstbin) {firstbin = 0; lastbin = nbins + 1;}
+
+   
    TString opt = option;
    TString proj_opt = "e";
    Int_t i1 = opt.Index("[");
@@ -741,14 +757,17 @@ void TH2::DoFitSlices(bool onX,
    char *name   = new char[2000];
    char *title  = new char[2000];
    const TArrayD *bins = outerAxis.GetXbins();
+   Int_t firstOutBin = std::max(outerAxis.GetFirst(),1);
+   Int_t lastOutBin = std::min(outerAxis.GetLast(),outerAxis.GetNbins() ) ;
+   Int_t nOutBins = lastOutBin-firstOutBin+1;
    for (ipar=0;ipar<npar;ipar++) {
       snprintf(name,2000,"%s_%d",GetName(),ipar);
       snprintf(title,2000,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
       delete gDirectory->FindObject(name);
       if (bins->fN == 0) {
-         hlist[ipar] = new TH1D(name,title, nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+         hlist[ipar] = new TH1D(name,title, nOutBins, outerAxis.GetBinLowEdge(firstOutBin), outerAxis.GetBinUpEdge(lastOutBin));
       } else {
-         hlist[ipar] = new TH1D(name,title, nbins,bins->fArray);
+         hlist[ipar] = new TH1D(name,title, nOutBins, &bins->fArray[firstOutBin-1]);
       }
       hlist[ipar]->GetXaxis()->SetTitle(outerAxis.GetTitle());
       if (arr)
@@ -758,9 +777,9 @@ void TH2::DoFitSlices(bool onX,
    delete gDirectory->FindObject(name);
    TH1D *hchi2 = 0;
    if (bins->fN == 0) {
-      hchi2 = new TH1D(name,"chisquare", nbins, outerAxis.GetXmin(), outerAxis.GetXmax());
+      hchi2 = new TH1D(name,"chisquare", nOutBins, outerAxis.GetBinLowEdge(firstOutBin), outerAxis.GetBinUpEdge(lastOutBin));
    } else {
-      hchi2 = new TH1D(name,"chisquare", nbins, bins->fArray);
+      hchi2 = new TH1D(name,"chisquare", nOutBins, &bins->fArray[firstOutBin-1]);
    }
    hchi2->GetXaxis()->SetTitle(outerAxis.GetTitle());
    if (arr)
