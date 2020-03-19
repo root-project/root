@@ -119,10 +119,11 @@ endif()
 if(veccore)
   set(MATHCORE_BUILTINS VECCORE)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
-  if(builtin_veccore)
-     set(veccore_path externals/usr/local/include)
-     set(veccore_full_path ${CMAKE_BINARY_DIR}/${veccore_path})
-  endif()
+endif()
+
+if(builtin_veccore OR builtin_vc)
+  set(veccore_path externals/usr/local/include)
+  set(veccore_full_path ${CMAKE_BINARY_DIR}/${veccore_path})
 endif()
 
 ROOT_CONFIGURE_LIBRARY_INCLUDES(MathCore

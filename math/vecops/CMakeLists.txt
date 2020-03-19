@@ -13,6 +13,11 @@ if(builtin_vdt)
   set(vdt_includes ${HEADER_OUTPUT_PATH})
 endif()
 
+if(builtin_vdt OR vdt)
+   set(vdt_includes ${VDT_INCLUDE_DIRS})
+endif()
+
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
   HEADERS
     ROOT/RAdoptAllocator.hxx

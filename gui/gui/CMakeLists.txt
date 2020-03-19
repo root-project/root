@@ -8,16 +8,11 @@
 # CMakeLists.txt file for building ROOT gui/gui package
 ############################################################################
 
-<<<<<<< HEAD
-=======
-include_directories(${CMAKE_SOURCE_DIR}/gui/ged/inc)
-
 ROOT_CONFIGURE_LIBRARY_INCLUDES(Gui
    DIRS
      gui/gui/inc
 )
 
->>>>>>> [cmake] resolve gui and math dependencies
 ROOT_STANDARD_LIBRARY_PACKAGE(Gui
   HEADERS
     HelpText.h

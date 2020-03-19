@@ -12,18 +12,23 @@ if (tmva-cpu)
   set(TMVA_CPU_HEADERS
       TMVA/DNN/Architectures/Cpu/Blas.h
   )
+  list(APPEND tmva_extra_incl ${TBB_INCLUDE_DIRS})
 #else()
 #  set(installoptions ${installoptions} FILTER "Cpu")
 endif()
 
 if(tmva-gpu)
   set(dictoptions -I${CUDA_TOOLKIT_INCLUDE})
+    # target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
+
   set(TMVA_GPU_HEADERS
        TMVA/DNN/Architectures/Cuda.h
 		#  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
 		#  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
 		#  TMVA/DNN/Architectures/Cuda/CudaTensor.h
   )
+  list(APPEND tmva_extra_incl ${CUDA_INCLUDE_DIRS})
+
 else()
   set(installoptions ${installoptions} FILTER "Cuda")
 endif()
@@ -405,12 +410,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/VarTransformHandler.cxx
     src/Volume.cxx
     src/DNN/Architectures/Reference.cxx
-	 src/DNN/Architectures/Reference/DataLoader.cxx
-	 src/DNN/Architectures/Reference/TensorDataLoader.cxx
-	 src/DNN/Architectures/Cpu.cxx
+    src/DNN/Architectures/Reference/DataLoader.cxx
+    src/DNN/Architectures/Reference/TensorDataLoader.cxx
+    src/DNN/Architectures/Cpu.cxx
     src/DNN/Architectures/Cpu/CpuBuffer.cxx
-	 src/DNN/Architectures/Cpu/CpuMatrix.cxx
-	 ${TMVA_EXTRA_SOURCES}
+    src/DNN/Architectures/Cpu/CpuMatrix.cxx
+    ${TMVA_EXTRA_SOURCES}
   DEPENDENCIES
     TreePlayer
     Tree
@@ -427,19 +432,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${dictoptions}
+  INCLUDES
+    ${tmva_extra_incl}
   INSTALL_OPTIONS
     ${installoptions}
 )
 
-if(builtin_vdt)
-  # cannot export include for vdt, as it points to build dir
-  target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
-elseif(vdt)
-  target_include_directories(TMVA PUBLIC ${VDT_INCLUDE_DIRS})
-endif()
+# vdt will be imported via MathCore
 
 if(tmva-cpu)
-  target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
+  # target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})
   target_link_libraries(TMVA PRIVATE ${TBB_LIBRARIES})
   set_target_properties(TMVA PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
@@ -455,6 +457,8 @@ if(tmva-cpu)
 endif()
 
 if(tmva-gpu)
+  target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
+  # target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
   if (tmva-cudnn)
     message(STATUS "Using Cuda+cuDNN for TMVA Deep Learning on GPU")
     target_sources(TMVA PRIVATE

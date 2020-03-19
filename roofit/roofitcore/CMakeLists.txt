@@ -9,18 +9,20 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if(builtin_vdt OR vdt)
+   set(vdt_includes ${VDT_INCLUDE_DIRS})
+endif()
+
+if(builtin_vdt)
+   set(vdt_gincl "./")
+endif()
+
 ROOT_CONFIGURE_LIBRARY_INCLUDES(RooFitCore
    DIRS
      roofit/roofitcore/inc
+   GDIRS
+     ${vdt_gincl}
 )
-
-if(vdt)
-  if(builtin_vdt)
-    set(vdt_includes ${HEADER_OUTPUT_PATH})
-  else()
-    set(vdt_includes ${VDT_INCLUDE_DIR})
-  endif(builtin_vdt)
-endif(vdt)
 
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
