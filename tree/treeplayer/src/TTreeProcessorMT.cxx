@@ -175,8 +175,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
          const auto msg = "TTreeProcessorMT::Process: an error occurred while opening file " + fileName;
          throw std::runtime_error(msg);
       }
-      TTree *t = nullptr; // not a leak, t will be deleted by f
-      f->GetObject(treeName.c_str(), t);
+      auto *t = f->Get<TTree>(treeName.c_str());  // t will be deleted by f
 
       if (!t) {
          const auto msg =
