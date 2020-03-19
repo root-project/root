@@ -44,7 +44,7 @@ proof->SetParameter("PROOF_Packetizer", "TPacketizer");
 
 #include "TProof.h"
 #include "TProofDebug.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TProofServ.h"
 #include "TSlave.h"
 #include "TSocket.h"

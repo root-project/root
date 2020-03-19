@@ -52,7 +52,7 @@ eliminated, optimizing the number of messages exchanged and created / destroyed.
 #include "TMessage.h"
 #include "TProofDebug.h"
 #include "TProof.h"
-#include "TProofPlayer.h"
+#include "TVirtualProofPlayer.h"
 #include "TProofQueryResult.h"
 #include "TRegexp.h"
 #include "TClass.h"
