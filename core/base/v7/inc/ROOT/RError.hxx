@@ -17,6 +17,7 @@
 #define ROOT7_RError
 
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION
 
 #include <cstddef>
 #include <memory>
@@ -204,7 +205,7 @@ public:
 
    void Throw() { throw RException(*fError); }
 
-   // Help prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
+   // Help to prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
    // an exception close to the error location. For stack allocated RResult objects, an exception is thrown
    // the latest when leaving the scope. Heap allocated ill RResult objects can live much longer making it difficult
    // to trace back the original failure.
@@ -217,9 +218,10 @@ public:
 /// Short-hand to return an RResult<void> indicating success
 #define R__SUCCESS return ROOT::Experimental::RResult<void>();
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
-#define R__FAIL(msg) return ROOT::Experimental::RError(msg, __func__, __FILE__, __LINE__)
+#define R__FAIL(msg) return ROOT::Experimental::RError(msg, R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__)
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
-#define R__FORWARD_RESULT(res) if (res.GetError()) { res.GetError()->AddFrame(__func__, __FILE__, __LINE__); } \
+#define R__FORWARD_RESULT(res) if (res.GetError()) \
+      { res.GetError()->AddFrame(R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__); } \
    return res
 
 } // namespace Experimental
