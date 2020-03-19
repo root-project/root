@@ -9,6 +9,20 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(RooFitCore
+   DIRS
+     roofit/roofitcore/inc
+)
+
+if(vdt)
+  if(builtin_vdt)
+    set(vdt_includes ${HEADER_OUTPUT_PATH})
+  else()
+    set(vdt_includes ${VDT_INCLUDE_DIR})
+  endif(builtin_vdt)
+endif(vdt)
+
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     Roo1DTable.h
@@ -460,12 +474,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-  LINKDEF
+  LINKDEF 
     inc/LinkDef.h
+  INCLUDES
+    ${vdt_includes}
 )
 
-if(vdt AND NOT builtin_vdt)
-  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
-endif()
+#if(vdt AND NOT builtin_vdt)
+#  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
+#endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
