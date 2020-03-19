@@ -121,6 +121,12 @@ if(veccore)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
 endif()
 
+ROOT_CONFIGURE_LIBRARY_INCLUDES(MathCore
+   DIRS
+     math/mathcore/inc
+     math/mathmore/inc
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   HEADERS
     ${HEADERS}

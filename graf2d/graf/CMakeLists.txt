@@ -9,6 +9,12 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+
+ROOT_CONFIGURE_LIBRARY_INCLUDES(Graf
+   DIRS
+     graf2d/graf/inc
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   HEADERS
     TArc.h
