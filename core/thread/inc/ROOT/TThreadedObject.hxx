@@ -122,6 +122,18 @@ namespace ROOT {
                return dirs;
             }
          };
+
+         struct MaxSlots_t {
+            unsigned fVal;
+            operator unsigned() const { return fVal; }
+            MaxSlots_t &operator=(unsigned val)
+               R__DEPRECATED(6, 24, "Superior interface exists: construct TThreadedObject using TNumSlots instead.")
+            {
+               fVal = val;
+               return *this;
+            }
+         };
+
       } // End of namespace TThreadedObjectUtils
    } // End of namespace Internal
 
@@ -163,8 +175,7 @@ namespace ROOT {
    public:
       /// The maximum number of processing slots (distinct threads) which the instances can manage.
       /// Deprecated; please use the `TNumSlots` constructor instead.
-      static unsigned fgMaxSlots
-      R__DEPRECATED(6, 24, "Superior interface exists: construct TThreadedObject using TNumSlots instead.");
+      static Internal::TThreadedObjectUtils::MaxSlots_t fgMaxSlots;
 
       TThreadedObject(const TThreadedObject&) = delete;
 
@@ -199,7 +210,7 @@ namespace ROOT {
             Warning("TThreadedObject()",
                "Use without IMT is deprecated, either enable IMT first, or use constructor overload taking TNumSlots!");
          }
-         auto nslots = std::max(fgMaxSlots, imtPoolSize);
+         auto nslots = std::max((unsigned)fgMaxSlots, imtPoolSize);
          Create(nslots, args...);
       }
 
@@ -336,7 +347,7 @@ namespace ROOT {
       }
    };
 
-   template<class T> unsigned TThreadedObject<T>::fgMaxSlots = 64;
+   template<class T> Internal::TThreadedObjectUtils::MaxSlots_t TThreadedObject<T>::fgMaxSlots{64};
 
 } // End ROOT namespace
 
