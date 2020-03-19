@@ -679,17 +679,17 @@ namespace {
     ModuleMapFiles.push_back(cIncLoc.str().str());
     llvm::sys::path::append(stdIncLoc, "std.modulemap");
     ModuleMapFiles.push_back(stdIncLoc.str().str());
-    if (!tinyxml2IncLoc.empty()) {
-      llvm::sys::path::append(tinyxml2IncLoc, "module.modulemap");
-      ModuleMapFiles.push_back(tinyxml2IncLoc.str().str());
-    }
-    if (!boostIncLoc.empty()) {
-      llvm::sys::path::append(boostIncLoc, "module.modulemap");
-      ModuleMapFiles.push_back(boostIncLoc.str().str());
-    }
     if (!cudaIncLoc.empty()) {
       llvm::sys::path::append(cudaIncLoc, "cuda.modulemap");
       ModuleMapFiles.push_back(cudaIncLoc.str().str());
+    }
+    if (!tinyxml2IncLoc.empty()) {
+      llvm::sys::path::append(tinyxml2IncLoc, "tinyxml2.modulemap");
+      ModuleMapFiles.push_back(tinyxml2IncLoc.str().str());
+    }
+    if (!boostIncLoc.empty()) {
+      llvm::sys::path::append(boostIncLoc, "boost.modulemap");
+      ModuleMapFiles.push_back(boostIncLoc.str().str());
     }
     llvm::sys::path::append(clingIncLoc, "module.modulemap");
     ModuleMapFiles.push_back(clingIncLoc.str().str());
