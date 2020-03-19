@@ -14,5 +14,8 @@ if(ROOT_roofit_FOUND)
                     MACROARG "true, \"./ASCII-in-out_result.txt\""
                     POSTCMD diff ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out_data.txt ./ASCII-in-out_result.txt)
 
+  ROOT_ADD_GTEST(stabilityTests stabilityTests.cxx LIBRARIES Core Tree RooFitCore RooFit
+                 COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/stabilityTests_data_1.root)
+
   add_subdirectory(vectorisedPDFs) 
 endif()
