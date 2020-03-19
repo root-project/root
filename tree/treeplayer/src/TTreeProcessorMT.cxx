@@ -169,23 +169,19 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
    entriesPerFile.reserve(nFileNames);
    Long64_t offset = 0ll;
    for (const auto &fileName : fileNames) {
-      auto fileNameC = fileName.c_str();
+      const auto fileNameC = fileName.c_str();
       std::unique_ptr<TFile> f(TFile::Open(fileNameC)); // need TFile::Open to load plugins if need be
       if (!f || f->IsZombie()) {
-         Error("TTreeProcessorMT::Process", "An error occurred while opening file %s: skipping it.", fileNameC);
-         clustersPerFile.emplace_back(std::vector<EntryCluster>());
-         entriesPerFile.emplace_back(0ULL);
-         continue;
+         const auto msg = "TTreeProcessorMT::Process: an error occurred while opening file " + fileName;
+         throw std::runtime_error(msg);
       }
       TTree *t = nullptr; // not a leak, t will be deleted by f
       f->GetObject(treeName.c_str(), t);
 
       if (!t) {
-         Error("TTreeProcessorMT::Process", "An error occurred while getting tree %s from file %s: skipping this file.",
-               treeName.c_str(), fileNameC);
-         clustersPerFile.emplace_back(std::vector<EntryCluster>());
-         entriesPerFile.emplace_back(0ULL);
-         continue;
+         const auto msg =
+            "TTreeProcessorMT::Process: an error occurred while getting tree" + treeName + " from file " + fileName;
+         throw std::runtime_error(msg);
       }
 
       auto clusterIter = t->GetClusterIterator(0);
