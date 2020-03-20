@@ -189,7 +189,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
 
       // Make the workspace for this individual channel
       std::string ch_name = channel.GetName();
-      cxcoutInoObj(HistFactory) << "Starting to process channel: " << ch_name << std::endl;
+      cxcoutPnoObj(HistFactory) << "Starting to process channel: " << ch_name << std::endl;
       channel_names.push_back(ch_name);
       RooWorkspace* ws_single = factory.MakeSingleChannelModel( measurement, channel );
       channel_workspaces.push_back(ws_single);
@@ -208,7 +208,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       TFile* chanFile = TFile::Open( ChannelFileName.c_str(), "UPDATE" );
       cxcoutInoObj(HistFactory) << "About to write channel measurement to file" << std::endl;
       meas_chan.writeToFile( chanFile );
-      cxcoutInoObj(HistFactory) << "Successfully wrote channel to file" << std::endl;
+      cxcoutPnoObj(HistFactory) << "Successfully wrote channel to file" << std::endl;
       chanFile->Close();
 
       // Get the Paramater of Interest as a RooRealVar
@@ -250,9 +250,9 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     
     std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
       + rowTitle + "_model.root";
-    cxcoutInoObj(HistFactory) << "Writing combined workspace to file: " << CombinedFileName << std::endl;
+    cxcoutPnoObj(HistFactory) << "Writing combined workspace to file: " << CombinedFileName << std::endl;
     ws->writeToFile( CombinedFileName.c_str() );
-    cxcoutInoObj(HistFactory) << "Writing combined measurement to file: " << CombinedFileName << std::endl;
+    cxcoutPnoObj(HistFactory) << "Writing combined measurement to file: " << CombinedFileName << std::endl;
     TFile* combFile = TFile::Open( CombinedFileName.c_str(), "UPDATE" );
     if( combFile == NULL ) {
       cxcoutEnoObj(HistFactory) << "Error: Failed to open file " << CombinedFileName << std::endl;
@@ -361,10 +361,10 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 
   ///////////////////////////////////////
   // Do the fit
-  cxcoutInoObj(HistFactory) << "\n\n---------------"
-    << "\n---------------- Doing "<< channel << " Fit"
+  cxcoutPnoObj(HistFactory) << "\n---------------"
+    << "\nDoing "<< channel << " Fit"
     << "\n---------------\n\n" << std::endl;
-  model->fitTo(*simData, Minos(kTRUE), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO) ? 1 : -1));
+  model->fitTo(*simData, Minos(kTRUE), PrintLevel(RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG) ? 1 : -1));
 
   // If there are no parameters of interest,
   // we exit the function here

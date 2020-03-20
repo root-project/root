@@ -243,7 +243,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
 
     // Get the nominal histogram:
-    cxcoutPnoObj(HistFactory) << "Collecting Nominal Histogram" << std::endl;
+    cxcoutDnoObj(HistFactory) << "Collecting Nominal Histogram" << std::endl;
     TH1* Nominal =  GetHistogram(sample.GetInputFile(),
 				 sample.GetHistoPath(),
 				 sample.GetHistoName());
@@ -463,7 +463,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
-  cxcoutPnoObj(HistFactory) << "Opened input file: " << InputFile << ": " << inFile << std::endl;
+  cxcoutInoObj(HistFactory) << "Opened input file: " << InputFile << ": " << inFile << std::endl;
 
   std::string HistNameFull = HistoPath + HistoName;
 

@@ -190,7 +190,7 @@ namespace HistFactory{
       throw hf_exc();
     }
     if(poi_list.size()!=0){
-      proto_config->GuessObsAndNuisance(*expData);
+      proto_config->GuessObsAndNuisance(*expData, RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO));
     }
 
     // Now, let's loop over any additional asimov datasets
@@ -647,8 +647,10 @@ namespace HistFactory{
          // build the gamma parameter k = as y_s + 1
          RooAbsArg * kappa = proto->factory(TString::Format("sum::k_%s(%s,1.)",name,yvar->GetName()) ); 
          RooAbsArg * gamma = proto->factory(TString::Format("Gamma::%sConstraint(%s, %s, %s, 0.0)",beta->GetName(),beta->GetName(), kappa->GetName(), theta->GetName() ) );  
-         alphaOfBeta->Print("t");
-         gamma->Print("t"); 
+         if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG)) {
+           alphaOfBeta->Print("t");
+           gamma->Print("t");
+         }
          constraintTermNames.push_back(gamma->GetName());
          // set global observables
          RooRealVar * gobs = dynamic_cast<RooRealVar*>(yvar); assert(gobs);
@@ -712,7 +714,8 @@ namespace HistFactory{
                                                                      tauName.c_str(),kappaName.c_str(),alphaName ) );
 
             cxcoutI(HistFactory) << "Added a log-normal constraint for " << name << std::endl;
-            alphaOfBeta->Print("t"); 
+            if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG))
+              alphaOfBeta->Print("t");
             params.add(*alphaOfBeta);
          }
 
@@ -1923,23 +1926,12 @@ namespace HistFactory{
     proto->factory(TString::Format("%s[0,-1e10,1e10]",weightName));
     proto->defineSet("obsAndWeight",TString::Format("%s,%s",weightName,observablesStr.c_str()));
 
-    /* Old code for generating the asimov
-       Asimov generation is now done later...
-       
-    RooAbsData* asimov_data = model->generateBinned(observables,ExpectedData());
-
-    /// Asimov dataset
-    RooDataSet* asimovDataUnbinned = new RooDataSet("asimovData","",*proto->set("obsAndWeight"),weightName);
-    for(int i=0; i<asimov_data->numEntries(); ++i){
-      asimov_data->get(i)->Print("v");
-      //cout << "GREPME : " << i << " " << data->weight() <<endl;
-      asimovDataUnbinned->add( *asimov_data->get(i), asimov_data->weight() );
-    }
-    proto->import(*asimovDataUnbinned);
-    */
-
     // New Asimov Generation: Use the code in the Asymptotic calculator 
     // Need to get the ModelConfig...
+    int asymcalcPrintLevel = 0;
+    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO)) asymcalcPrintLevel = 1;
+    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::DEBUG)) asymcalcPrintLevel = 2;
+    AsymptoticCalculator::SetPrintLevel(asymcalcPrintLevel);
     unique_ptr<RooAbsData> asimov_dataset(AsymptoticCalculator::GenerateAsimovData(*model, observables));
     proto->import(dynamic_cast<RooDataSet&>(*asimov_dataset), Rename("asimovData"));
 
@@ -2292,7 +2284,8 @@ namespace HistFactory{
     combined->defineSet("observables",obsList);
     combined_config->SetObservables(*combined->set("observables"));
 
-    combined->Print();
+    if (RooMsgService::instance().isActive(static_cast<TObject*>(nullptr), RooFit::HistFactory, RooFit::INFO))
+      combined->Print();
 
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
             << "\tImporting combined model"
@@ -2362,7 +2355,7 @@ namespace HistFactory{
     for(unsigned int i = 0; i< channel_names.size(); ++i){
 
       // Grab the dataset for the existing channel
-      std::cout << "Merging data for channel " << channel_names[i].c_str() << std::endl;
+      cxcoutPnoObj(HistFactory) << "Merging data for channel " << channel_names[i].c_str() << std::endl;
       RooDataSet* obsDataInChannel = (RooDataSet*) wspace_vec[i]->data(dataSetName.c_str());
       if( !obsDataInChannel ) {
 	std::cout << "Error: Can't find DataSet: " << dataSetName

@@ -250,7 +250,7 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
     }
   }
 
-  cxcoutPnoObj(HistFactory) << "End Measurement: " << GetName() << std::endl;
+  cxcoutInoObj(HistFactory) << "End Measurement: " << GetName() << std::endl;
 
 }
 
