@@ -69,7 +69,7 @@ for p in processes:
     # Make additional kinematic cuts and select mass window
     df[p] = df[p].Filter("photon_pt[goodphotons][0] / 1000.0 / m_yy > 0.35")\
                  .Filter("photon_pt[goodphotons][1] / 1000.0 / m_yy > 0.25")\
-                 .Filter("(m_yy > 105) && (m_yy < 160)")
+                 .Filter("m_yy > 105 && m_yy < 160")
 
     # Book histogram of the invariant mass with this selection
     hists[p] = df[p].Histo1D(
@@ -202,10 +202,8 @@ text.SetNDC()
 text.SetTextFont(72)
 text.SetTextSize(0.05)
 text.DrawLatex(0.18, 0.84, "ATLAS")
-
 text.SetTextFont(42)
 text.DrawLatex(0.18 + 0.13, 0.84, "Open Data")
-
 text.SetTextSize(0.04)
 text.DrawLatex(0.18, 0.78, "#sqrt{s} = 13 TeV, 10 fb^{-1}");
 
