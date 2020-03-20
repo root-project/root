@@ -24,6 +24,8 @@
 #include "TMath.h"
 #include "TObjString.h"
 
+#include "TCanvas.h"
+
 ClassImp(TH3);
 
 /** \addtogroup Hist
@@ -808,16 +810,49 @@ void TH3::FillRandom(TH1 *h, Int_t ntimes)
 
 void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t binmaxy, Int_t cut, Option_t *option)
 {
-   Int_t nbinsx  = fXaxis.GetNbins();
-   Int_t nbinsy  = fYaxis.GetNbins();
-   Int_t nbinsz  = fZaxis.GetNbins();
-   if (binminx < 1) binminx = 1;
-   if (binmaxx > nbinsx) binmaxx = nbinsx;
-   if (binmaxx < binminx) {binminx = 1; binmaxx = nbinsx;}
-   if (binminy < 1) binminy = 1;
-   if (binmaxy > nbinsy) binmaxy = nbinsy;
-   if (binmaxy < binminy) {binminy = 1; binmaxy = nbinsy;}
+   //Int_t nbinsz  = fZaxis.GetNbins();
 
+   // get correct first and last bins for outer axes used in the loop doing the slices
+   // when using default values (0,-1) check if an axis range is set in outer axis
+   // do same as in DoProjection for inner axis
+   auto computeFirstAndLastBin = [](const TAxis  & outerAxis, Int_t &firstbin, Int_t &lastbin) {
+      Int_t nbins  = outerAxis.GetNbins();
+      if ( lastbin < firstbin && outerAxis.TestBit(TAxis::kAxisRange) ) {
+         firstbin = outerAxis.GetFirst();
+         lastbin = outerAxis.GetLast();
+         // For special case of TAxis::SetRange, when first == 1 and last
+         // = N and the range bit has been set, the TAxis will return 0
+         // for both.
+         if (firstbin == 0 && lastbin == 0)  {
+            firstbin = 1;
+            lastbin = nbins;
+         }
+      }
+      if (firstbin < 0) firstbin = 0;
+      if (lastbin < 0 || lastbin > nbins + 1) lastbin = nbins + 1;
+      if (lastbin < firstbin) {firstbin = 0; lastbin = nbins + 1;}
+   };
+
+   computeFirstAndLastBin(fXaxis, binminx, binmaxx);
+   computeFirstAndLastBin(fYaxis, binminy, binmaxy);
+
+   // limits for the axis of the fit results histograms are different
+   auto computeAxisLimits = [](const TAxis  & outerAxis, Int_t firstbin, Int_t lastbin,
+                               Int_t  &nBins, Double_t  &xMin, Double_t  & xMax) {
+      Int_t firstOutBin = std::max(firstbin,1);
+      Int_t lastOutBin = std::min(lastbin,outerAxis.GetNbins() ) ;
+      nBins = lastOutBin-firstOutBin+1;
+      xMin = outerAxis.GetBinLowEdge(firstOutBin);
+      xMax = outerAxis.GetBinUpEdge(lastOutBin);
+      // return first bin that is used in case of variable bin size axis
+      return firstOutBin;
+   };
+   Int_t nbinsX = 0;
+   Double_t xMin, xMax = 0;
+   Int_t firstBinXaxis = computeAxisLimits(fXaxis, binminx, binmaxx, nbinsX, xMin, xMax);
+   Int_t nbinsY = 0;
+   Double_t yMin, yMax = 0;
+   Int_t firstBinYaxis = computeAxisLimits(fYaxis, binminy, binmaxy, nbinsY, yMin, yMax);
 
    //default is to fit with a gaussian
    if (f1 == 0) {
@@ -832,58 +867,75 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 
    //Create one 2-d histogram for each function parameter
    Int_t ipar;
-   char name[80], title[80];
-   TH2D *hlist[25];
+   TString name;
+   TString title;
+   std::vector<TH1*> hlist(npar+1); // include also chi2 histogram
    const TArrayD *xbins = fXaxis.GetXbins();
    const TArrayD *ybins = fYaxis.GetXbins();
-   for (ipar=0;ipar<npar;ipar++) {
-      snprintf(name,80,"%s_%d",GetName(),ipar);
-      snprintf(title,80,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
-      if (xbins->fN == 0) {
-         hlist[ipar] = new TH2D(name, title,
-                                nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax(),
-                                nbinsy, fYaxis.GetXmin(), fYaxis.GetXmax());
+   for (ipar=0;ipar<= npar;ipar++) {
+      if (ipar < npar) {
+         // fitted parameter histograms
+         name = TString::Format("%s_%d",GetName(),ipar);
+         title = TString::Format("Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
       } else {
-         hlist[ipar] = new TH2D(name, title,
-                                nbinsx, xbins->fArray,
-                                nbinsy, ybins->fArray);
+         // chi2 histograms
+         name = TString::Format("%s_chi2",GetName());
+         title = "chisquare";
       }
+      if (xbins->fN == 0 && ybins->fN == 0) {
+         hlist[ipar] = new TH2D(name, title,
+                                nbinsX, xMin, xMax,
+                                nbinsY, yMin, yMax);
+      } else if (xbins->fN > 0 && ybins->fN > 0 ) {
+         hlist[ipar] = new TH2D(name, title,
+                                nbinsX, &xbins->fArray[firstBinXaxis],
+                                nbinsY, &ybins->fArray[firstBinYaxis]);
+      }
+      // mixed case do not exist for TH3
+      R__ASSERT(hlist[ipar]);
+
       hlist[ipar]->GetXaxis()->SetTitle(fXaxis.GetTitle());
       hlist[ipar]->GetYaxis()->SetTitle(fYaxis.GetTitle());
    }
-   snprintf(name,80,"%s_chi2",GetName());
-   TH2D *hchi2 = new TH2D(name,"chisquare", nbinsx, fXaxis.GetXmin(), fXaxis.GetXmax()
-      , nbinsy, fYaxis.GetXmin(), fYaxis.GetXmax());
+   TH1 * hchi2 = hlist.back();
 
    //Loop on all cells in X,Y generate a projection along Z
-   TH1D *hpz = new TH1D("R_temp","_temp",nbinsz, fZaxis.GetXmin(), fZaxis.GetXmax());
-   Int_t bin,binx,biny,binz;
+   TH1D *hpz = nullptr;
    TString opt(option);
    // add option "N" when fitting the 2D histograms
    opt += " N ";
- 
-   for (biny=binminy;biny<=binmaxy;biny++) {
-      for (binx=binminx;binx<=binmaxx;binx++) {
-         hpz->Reset();
-         Int_t nfill = 0;
-         for (binz=1;binz<=nbinsz;binz++) {
-            bin = GetBin(binx,biny,binz);
-            Double_t w = RetrieveBinContent(bin);
-            if (w == 0) continue;
-            hpz->SetBinContent(binz,w);
-            hpz->SetBinError(binz,GetBinError(bin));
-            nfill++;
+
+   for (Int_t biny=binminy; biny<=binmaxy; biny++) {
+      for (Int_t binx=binminx; binx<=binmaxx; binx++) {
+         // use TH3::ProjectionZ
+         hpz = ProjectionZ("R_temp",binx,binx,biny,biny);
+
+         Double_t nentries = hpz->GetEntries();
+         if ( nentries <= 0 || nentries < cut) {
+            if (!opt.Contains("Q"))
+               Info("FitSlicesZ","Slice (%d,%d) skipped, the number of entries is zero or smaller than the given cut value, n=%f",binx,biny,nentries);
+            continue;
          }
-         if (nfill < cut) continue;
          f1->SetParameters(parsave);
+         Int_t bin = hlist[0]->FindBin( fXaxis.GetBinCenter(binx), fYaxis.GetBinCenter(biny) );
+         if (!opt.Contains("Q")) {
+            int ibx,iby,ibz = 0;
+            hlist[0]->GetBinXYZ(bin,ibx,iby,ibz);
+            Info("DoFitSlices","Slice fit [(%f,%f),(%f,%f)]",hlist[0]->GetXaxis()->GetBinLowEdge(ibx), hlist[0]->GetXaxis()->GetBinUpEdge(ibx),
+                                                            hlist[0]->GetYaxis()->GetBinLowEdge(iby), hlist[0]->GetYaxis()->GetBinUpEdge(iby));
+         }
          hpz->Fit(fname,opt.Data());
          Int_t npfits = f1->GetNumberFitPoints();
          if (npfits > npar && npfits >= cut) {
             for (ipar=0;ipar<npar;ipar++) {
-               hlist[ipar]->SetBinContent(binx,biny,f1->GetParameter(ipar));
-               hlist[ipar]->SetBinError(binx,biny,f1->GetParError(ipar));
+               hlist[ipar]->SetBinContent(bin,f1->GetParameter(ipar));
+               hlist[ipar]->SetBinError(bin,f1->GetParError(ipar));
             }
-            hchi2->SetBinContent(binx,biny,f1->GetChisquare()/(npfits-npar));
+            hchi2->SetBinContent(bin,f1->GetChisquare()/(npfits-npar));
+         }
+         else {
+            if (!opt.Contains("Q"))
+               Info("FitSlicesZ","Fitted slice (%d,%d) skipped, the number of fitted points is too small, n=%d",binx,biny,npfits);
          }
       }
    }
