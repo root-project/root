@@ -26,7 +26,7 @@ def WithPyROOT(filename):
     h.DrawCopy()
 
 def WithRDataFrameVecOpsJit(treename, filename):
-    f = ROOT.ROOT.RDataFrame(treename, filename)
+    f = ROOT.RDataFrame(treename, filename)
     h = f.Define("good_pt", "sqrt(px*px + py*py)[E>100]")\
          .Histo1D(("pt", "pt", 16, 0, 4), "good_pt")
     h.DrawCopy()

@@ -73,7 +73,7 @@ for p in processes:
 
     # Book histogram of the invariant mass with this selection
     hists[p] = df[p].Histo1D(
-            ROOT.ROOT.RDF.TH1DModel(p, "Diphoton invariant mass; m_{#gamma#gamma} [GeV];Events", 30, 105, 160),
+            ROOT.RDF.TH1DModel(p, "Diphoton invariant mass; m_{#gamma#gamma} [GeV];Events", 30, 105, 160),
             "m_yy", "weight")
 
 # Run the event loop

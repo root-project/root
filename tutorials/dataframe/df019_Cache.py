@@ -22,12 +22,11 @@
 ## \author Danilo Piparo
 
 import ROOT
-RDataFrame = ROOT.ROOT.RDataFrame
 import os
 
 # We create a data frame on top of the hsimple example
 hsimplePath = os.path.join(str(ROOT.gROOT.GetTutorialDir().Data()), "hsimple.root")
-df = RDataFrame("ntuple", hsimplePath)
+df = ROOT.RDataFrame("ntuple", hsimplePath)
 
 #We apply a simple cut and define a new column
 df_cut = df.Filter("py > 0.f")\

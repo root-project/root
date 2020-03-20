@@ -12,7 +12,7 @@
 import ROOT
 
 ROOT.ROOT.EnableImplicitMT(2)
-d = ROOT.ROOT.RDataFrame(160)
+d = ROOT.RDataFrame(160)
 
 # Create a trivial parabola
 dd = d.Alias("x", "rdfentry_").Define("y", "x*x")

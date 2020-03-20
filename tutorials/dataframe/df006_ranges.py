@@ -12,9 +12,9 @@
 import ROOT
 
 def fill_tree(treeName, fileName):
-    tdf = ROOT.ROOT.RDataFrame(100)
-    tdf.Define("b1", "(int) tdfentry_")\
-       .Define("b2", "(float) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
+    df = ROOT.RDataFrame(100)
+    df.Define("b1", "(int) rdfentry_")\
+      .Define("b2", "(float) rdfentry_ * rdfentry_").Snapshot(treeName, fileName)
 
 
 # We prepare an input tree to run on
@@ -24,8 +24,7 @@ treeName = "myTree"
 fill_tree(treeName, fileName)
 
 # We read the tree from the file and create a RDataFrame.
-RDF = ROOT.ROOT.RDataFrame
-d = RDF(treeName, fileName)
+d = ROOT.RDataFrame(treeName, fileName)
 
 # ## Usage of ranges
 # Now we'll count some entries using ranges

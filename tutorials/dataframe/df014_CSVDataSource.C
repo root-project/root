@@ -25,15 +25,15 @@ int df014_CSVDataSource()
    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName);
+   auto df = ROOT::RDF::MakeCsvDataFrame(fileName);
 
    // Now we will apply a first filter based on two columns of the CSV,
    // and we will define a new column that will contain the invariant mass.
    // Note how the new invariant mass column is defined from several other
    // columns that already existed in the CSV file.
    auto filteredEvents =
-      tdf.Filter("Q1 * Q2 == -1")
-         .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))");
+      df.Filter("Q1 * Q2 == -1")
+        .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))");
 
    // Next we create a histogram to hold the invariant mass values and we draw it.
    auto invMass =

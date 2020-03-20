@@ -75,7 +75,7 @@ int df007_snapshot()
    // Open the new file and list the columns of the tree
    TFile f2(outFileNameAllColumns);
    t = f2.Get<TTree>(treeName);
-   std::cout << "These are all the columns available to this tdf:" << std::endl;
+   std::cout << "These are all the columns available to this dataframe:" << std::endl;
    for (auto branch : *t->GetListOfBranches()) {
       std::cout << "Branch: " << branch->GetName() << std::endl;
    }
@@ -85,8 +85,8 @@ int df007_snapshot()
    // analysis chain from it. The default columns are the one selected.
    // Notice also how we can decide to be more explicit with the types of the
    // columns.
-   auto snapshot_tdf = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
-   auto h = snapshot_tdf->Histo1D();
+   auto snapshot_df = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
+   auto h = snapshot_df->Histo1D();
    auto c = new TCanvas();
    h->DrawClone();
 
