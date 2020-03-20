@@ -77,7 +77,21 @@ the above code can be simplified to
 Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooProxy.html) for `RooProxy` for
 more information on how to modernise old code.
 
-### Less verbose HistFactory
+### HistFactory
+
+#### Switch default statistical MC errors to Poisson
+When defining HistFactory samples with statistical errors from C++, e.g.
+    Sample background1( "background1", "background1", InputFile );
+    background1.ActivateStatError();
+statistical MC errors now have Poisson instead of Gaussian constraints. This better reflects the uncertainty of the MC simulations.
+This can be reverted as follows:
+    // C++:
+    Channel chan("channel1");
+    chan.SetStatErrorConfig( 0.05, "Gauss" );
+    // Within <Channel ... > XML:
+    <StatErrorConfig RelErrorThreshold="0.05" ConstraintType="Gauss" />
+
+#### Less verbose HistFactory
 HistFactory was very verbose, writing to the terminal with lots of `cout`. Now, many HistFactory messages are going
 into RooFit's message stream number 2. The verbosity can therefore be adjusted using
     RooMsgService::instance().getStream(2).minLevel = RooFit::PROGRESS;
