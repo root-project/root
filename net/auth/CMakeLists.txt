@@ -32,8 +32,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
   DEPENDENCIES
     Net
     RIO
-  INCLUDES
-    ../../core/textinput/inc
 )
 
 target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:Linux>:crypt>)

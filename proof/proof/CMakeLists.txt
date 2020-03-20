@@ -92,6 +92,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proof
     Tree
   LIBRARIES
     ${ROOT_ATOMIC_LIBS}
-  INCLUDES
-    ${CMAKE_SOURCE_DIR}/core/textinput/inc
 )

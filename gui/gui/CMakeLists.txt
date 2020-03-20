@@ -209,7 +209,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
   INCLUDES
     ${CMAKE_SOURCE_DIR}/gui/ged/inc
     ${CMAKE_SOURCE_DIR}/core/rint/inc
-    ${CMAKE_SOURCE_DIR}/core/textinput/inc
 )
 
 target_include_directories(Gui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)

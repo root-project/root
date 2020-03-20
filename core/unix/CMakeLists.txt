@@ -18,7 +18,6 @@ ROOT_OBJECT_LIBRARY(Unix
   INCLUDES
      ../clib/res
      ../foundation/res
-     ../textinput/inc
 )
 
 ROOT_INSTALL_HEADERS()

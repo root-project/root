@@ -46,6 +46,7 @@ ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
       core/clib/inc
       core/zip/inc
       core/thread/inc
+      core/textinput/inc
       ${platform_incl}
    V7DIRS
       core/base/v7/inc
@@ -197,7 +198,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
     base/inc/LinkDef.h
   INCLUDES
     ${CMAKE_SOURCE_DIR}/core/clingutils/inc
-    ${CMAKE_SOURCE_DIR}/core/textinput/inc
 )
 
 # This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}
