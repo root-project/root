@@ -23,13 +23,13 @@
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/ROCCurve.h"
-#include "TMVA/tmvaglob.h"
 #include "TMVA/Types.h"
 
 #include "TSystem.h"
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TGraph.h"
+#include "TLegend.h"
 #include "TMath.h"
 
 #include "ROOT/RMakeUnique.hxx"
