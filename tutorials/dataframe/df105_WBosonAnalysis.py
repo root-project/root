@@ -102,7 +102,7 @@ float ComputeTransverseMass(float met_et, float met_phi, float lep_pt, float lep
 histos = {}
 for s in samples:
     df[s] = df[s].Define("mt_w", "ComputeTransverseMass(met_et, met_phi, lep_pt[idx], lep_eta[idx], lep_phi[idx], lep_E[idx])")
-    histos[s] = df[s].Histo1D(ROOT.ROOT.RDF.TH1DModel(s, "mt_w", 40, 60, 180), "mt_w", "weight")
+    histos[s] = df[s].Histo1D(ROOT.RDF.TH1DModel(s, "mt_w", 40, 60, 180), "mt_w", "weight")
 
 # Run the event loop and merge histograms of the respective processes
 

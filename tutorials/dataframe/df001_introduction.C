@@ -159,12 +159,12 @@ int df001_introduction()
    // It is possible at any moment to read the entry number and the processing
    // slot number. The latter may change when implicit multithreading is active.
    // The special columns which provide the entry number and the slot index are
-   // called "tdfentry_" and "tdfslot_" respectively. Their types are an unsigned
+   // called "rdfentry_" and "rdfslot_" respectively. Their types are an unsigned
    // 64 bit integer and an unsigned integer.
    auto printEntrySlot = [](ULong64_t iEntry, unsigned int slot) {
       std::cout << "Entry: " << iEntry << " Slot: " << slot << std::endl;
    };
-   d.Foreach(printEntrySlot, {"tdfentry_", "tdfslot_"});
+   d.Foreach(printEntrySlot, {"rdfentry_", "rdfslot_"});
 
    return 0;
 }

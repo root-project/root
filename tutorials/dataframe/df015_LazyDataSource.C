@@ -38,12 +38,12 @@ int df015_LazyDataSource()
 
    // Now we create a new dataframe built on top of the columns above. Note that up to now, no event loop
    // has been carried out!
-   auto tdf = MakeLazyDataFrame(std::make_pair(px1Name, px1), std::make_pair(py1Name, py1));
+   auto df = MakeLazyDataFrame(std::make_pair(px1Name, px1), std::make_pair(py1Name, py1));
 
    // We build a histogram of the transverse momentum the muons.
    auto ptFormula = [](double px, double py) { return sqrt(px * px + py * py); };
-   auto pt_h = tdf.Define("pt", ptFormula, {"px1", "py1"})
-                  .Histo1D<double>({"pt", "Muon p_{T};p_{T} [GeV/c];", 128, 0, 128}, "pt");
+   auto pt_h = df.Define("pt", ptFormula, {"px1", "py1"})
+                 .Histo1D<double>({"pt", "Muon p_{T};p_{T} [GeV/c];", 128, 0, 128}, "pt");
 
    auto can = new TCanvas();
    can->SetLogy();

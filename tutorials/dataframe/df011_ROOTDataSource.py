@@ -17,8 +17,8 @@ import ROOT
 
 # A simple helper function to fill a test tree: this makes the example stand-alone.
 def fill_tree(treeName, fileName):
-    tdf = ROOT.ROOT.RDataFrame(10000)
-    tdf.Define("b1", "(int) tdfentry_").Snapshot(treeName, fileName)
+    df = ROOT.RDataFrame(10000)
+    df.Define("b1", "(int) rdfentry_").Snapshot(treeName, fileName)
 
 
 # We prepare an input tree to run on
@@ -27,7 +27,7 @@ treeName = "myTree"
 fill_tree(treeName, fileName)
 
 # Create the data frame
-MakeRootDataFrame = ROOT.ROOT.RDF.MakeRootDataFrame
+MakeRootDataFrame = ROOT.RDF.MakeRootDataFrame
 
 d = MakeRootDataFrame(treeName, fileName)
 
