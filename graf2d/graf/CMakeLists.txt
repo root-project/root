@@ -10,12 +10,9 @@
 ############################################################################
 
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Graf
-   DIRS
-     graf2d/graf/inc
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Graf
+  HEADERSDIR
+    graf2d/graf/inc 
   HEADERS
     TArc.h
     TArrow.h

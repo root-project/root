@@ -20,7 +20,6 @@ ROOT_CONFIGURE_LIBRARY_INCLUDES(RooFitCore
      ${vdt_includes}
 )
 
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     Roo1DTable.h

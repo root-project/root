@@ -9,12 +9,9 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Tree
-   DIRS
-     tree/tree/inc
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Tree
+  HEADERSDIR
+    tree/tree/inc 
   HEADERS
     TBasket.h
     TBasketSQL.h

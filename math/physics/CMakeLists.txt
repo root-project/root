@@ -8,12 +8,9 @@
 # CMakeLists.txt file for building ROOT math/physics package
 ############################################################################
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Physics
-   DIRS
-     math/physics/inc
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Physics
+  HEADERSDIR
+    math/physics/inc
   HEADERS
     TFeldmanCousins.h
     TGenPhaseSpace.h

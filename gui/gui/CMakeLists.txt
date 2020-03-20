@@ -8,12 +8,9 @@
 # CMakeLists.txt file for building ROOT gui/gui package
 ############################################################################
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Gui
-   DIRS
-     gui/gui/inc
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Gui
+  HEADERSDIR
+    gui/gui/inc
   HEADERS
     HelpText.h
     TG3DLine.h

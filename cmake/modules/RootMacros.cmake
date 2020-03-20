@@ -1231,6 +1231,7 @@ endfunction()
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
+#                                 [HEADERSDIR dir]             : source directory where library headers are stored           
 #                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
 #                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generate
 #                                 [NO_HEADERS]                 : don't glob to fill HEADERS variable
@@ -1251,7 +1252,7 @@ endfunction()
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
-  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS INCLUDES)
+  set(multiValueArgs DEPENDENCIES HEADERSDIR HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS INCLUDES)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Check if we have any unparsed arguments
@@ -1265,6 +1266,10 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   if (ARG_SOURCES AND ARG_NO_SOURCES)
     message(AUTHOR_WARNING "SOURCES and NO_SOURCES arguments are mutually exclusive.")
   endif()
+  
+  if (ARG_HEADERSDIR)
+     ROOT_CONFIGURE_LIBRARY_INCLUDES(${libname} DIRS ${ARG_HEADERSDIR}) 
+  endif()  
 
   # Set default values
   # If HEADERS/SOURCES are not parsed, we glob for those files.

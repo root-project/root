@@ -8,12 +8,9 @@
 # CMakeLists.txt file for building ROOT hist/hist package
 ############################################################################
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Hist
-   DIRS
-     hist/hist/inc
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Hist
+  HEADERSDIR
+    hist/hist/inc 
   HEADERS
     Foption.h
     HFitInterface.h
