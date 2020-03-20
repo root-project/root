@@ -9,6 +9,10 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if(builtin_glew)
+   set(glew_includes ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   HEADERS
     TGCocoa.h
@@ -35,6 +39,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   DEPENDENCIES
     GQuartz
     Gui
+  INCLUDES
+    ${FREETYPE_INCLUDE_DIRS}
+    ${OPENGL_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
+    ${glew_includes}
   LIBRARIES
     "-framework Cocoa"
     "-framework OpenGL"
