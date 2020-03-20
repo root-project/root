@@ -757,9 +757,13 @@ void TH2::DoFitSlices(bool onX,
    char *name   = new char[2000];
    char *title  = new char[2000];
    const TArrayD *bins = outerAxis.GetXbins();
-   Int_t firstOutBin = std::max(outerAxis.GetFirst(),1);
-   Int_t lastOutBin = std::min(outerAxis.GetLast(),outerAxis.GetNbins() ) ;
+   // outer axis boudaries used for creating reported histograms are different
+   // than the limits used in the projection loop (firstbin,lastbin)
+   Int_t firstOutBin = outerAxis.TestBit(TAxis::kAxisRange) ? std::max(firstbin,1) : 1; 
+   Int_t lastOutBin = outerAxis.TestBit(TAxis::kAxisRange) ?  std::min(lastbin,outerAxis.GetNbins() ) : outerAxis.GetNbins();
    Int_t nOutBins = lastOutBin-firstOutBin+1;
+   // merge bins if use nstep > 1 and fixed bins
+   if (bins->fN == 0) nOutBins /= nstep;  
    for (ipar=0;ipar<npar;ipar++) {
       snprintf(name,2000,"%s_%d",GetName(),ipar);
       snprintf(title,2000,"Fitted value of par[%d]=%s",ipar,f1->GetParName(ipar));
@@ -791,9 +795,9 @@ void TH2::DoFitSlices(bool onX,
    // now do not slices case with overflow (makes more sense)
    // when fitting add the option "N". We don;t want to display and store the function
    // for the temporary histograms that are created and fitted
-   opt += " n "; 
+   opt += " n ";
+   TH1D *hp = nullptr;
    for (bin=firstbin;bin+ngroup-1<=lastbin;bin += nstep) {
-      TH1D *hp = nullptr;
       if (onX)
          hp= ProjectionX("_temp",bin,bin+ngroup-1,proj_opt);
       else
@@ -801,20 +805,31 @@ void TH2::DoFitSlices(bool onX,
       if (hp == 0) continue;
       // nentries can be the effective entries and it could be a very small number but not zero!
       Double_t nentries = hp->GetEntries();
-      if ( nentries <= 0 || nentries < cut) {delete hp; continue;}
+      if ( nentries <= 0 || nentries < cut) {
+         if (!opt.Contains("Q"))
+               Info("DoFitSlices","Slice %d skipped, the number of entries is zero or smaller than the given cut value, n=%f",bin,nentries);
+         continue;
+      }
       f1->SetParameters(parsave);
+      Int_t binOn = hlist[0]->FindBin(outerAxis.GetBinCenter(bin+ngroup/2));
+      if (!opt.Contains("Q"))
+         Info("DoFitSlices","Slice fit %d (%f,%f)",binOn,hlist[0]->GetXaxis()->GetBinLowEdge(binOn),hlist[0]->GetXaxis()->GetBinUpEdge(binOn));
       hp->Fit(f1,opt.Data());
       Int_t npfits = f1->GetNumberFitPoints();
       if (npfits > npar && npfits >= cut) {
-         Int_t binOn = bin + ngroup/2;
          for (ipar=0;ipar<npar;ipar++) {
-            hlist[ipar]->Fill(outerAxis.GetBinCenter(binOn),f1->GetParameter(ipar));
+            hlist[ipar]->SetBinContent(binOn,f1->GetParameter(ipar));
             hlist[ipar]->SetBinError(binOn,f1->GetParError(ipar));
          }
          hchi2->SetBinContent(binOn,f1->GetChisquare()/(npfits-npar));
       }
-      delete hp;
+      else {
+         if (!opt.Contains("Q"))
+            Info("DoFitSlices","Fitted slice %d skipped, the number of fitted points is too small, n=%d",bin,npfits);
+      }
+      // don't need to delete hp. If histogram has the same name it is re-used in TH2::Projection
    }
+   delete hp; 
    delete [] parsave;
    delete [] name;
    delete [] title;
