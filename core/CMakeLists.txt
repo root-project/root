@@ -20,11 +20,12 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 )
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
-  set(platform_incl "core/unix/inc core/macosx/inc")
+  list(APPEND platform_incl core/unix/inc)
+  list(APPEND platform_incl core/macosx/inc)
 elseif(ROOT_ARCHITECTURE MATCHES win32)
-  set(platform_incl "core/winnt/inc")
+  set(platform_incl core/winnt/inc)
 else()
-  set(platform_incl "core/unix/inc")
+  set(platform_incl core/unix/inc)
 endif()
 
 
