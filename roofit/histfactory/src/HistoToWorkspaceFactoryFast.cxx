@@ -2141,7 +2141,6 @@ namespace HistFactory{
 
     map<string, RooAbsPdf*> pdfMap;
     vector<RooAbsPdf*> models;
-    stringstream ss;
 
     RooArgList obsList;
     for(unsigned int i = 0; i< ch_names.size(); ++i){
@@ -2152,11 +2151,19 @@ namespace HistFactory{
     cxcoutI(HistFactory) << obsList;
 
     RooArgSet globalObs;
+    stringstream channelString;
+    channelString << "channelCat[";
     for(unsigned int i = 0; i< ch_names.size(); ++i){
       string channel_name=ch_names[i];
+      if (i == 0 && isdigit(channel_name[0])) {
+        throw std::invalid_argument("The first channel name for HistFactory cannot start with a digit. Got " + channel_name);
+      }
+      if (channel_name.find(',') != std::string::npos) {
+        throw std::invalid_argument("Channel names for HistFactory cannot contain ','. Got " + channel_name);
+      }
 
-      if (ss.str().empty()) ss << channel_name ;
-      else ss << ',' << channel_name ;
+      if (i == 0) channelString << channel_name ;
+      else channelString << ',' << channel_name ;
       RooWorkspace * ch=chs[i];
       
       RooAbsPdf* model = ch->pdf(("model_"+channel_name).c_str());
@@ -2168,7 +2175,7 @@ namespace HistFactory{
       //      constrainedParams->add( * ch->set("constrainedParams") );
       pdfMap[channel_name]=model;
     }
-    //constrainedParams->Print();
+    channelString << "]";
 
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
         << "\tEntering combination"
@@ -2177,7 +2184,9 @@ namespace HistFactory{
     //    RooWorkspace* combined = chs[0];
     
 
-    RooCategory* channelCat = (RooCategory*) combined->factory(("channelCat["+ss.str()+"]").c_str());
+    RooCategory* channelCat = dynamic_cast<RooCategory*>( combined->factory(channelString.str().c_str()) );
+    if (!channelCat) throw std::runtime_error("Unable to construct a category from string " + channelString.str());
+
     RooSimultaneous * simPdf= new RooSimultaneous("simPdf","",pdfMap, *channelCat);
     ModelConfig * combined_config = new ModelConfig("ModelConfig", combined);
     combined_config->SetWorkspace(*combined);
@@ -2191,7 +2200,7 @@ namespace HistFactory{
     ////////////////////////////////////////////
     // Make toy simultaneous dataset
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
-        << "\tcreate toy data for " << ss.str()
+        << "\tcreate toy data for " << channelString.str()
         << "\n-----------------------------------------\n" << endl;
     
 
