@@ -363,12 +363,14 @@ public:
  * \ingroup HistFactory
  * Configuration to automatically assign nuisance parameters for the statistical
  * error of the Monte Carlo simulations.
+ * The default is to assign a Poisson uncertainty to a bin when its statistical uncertainty
+ * is larger than 5% of the bin content.
  */
   class StatErrorConfig {
 
   public:
 
-    StatErrorConfig() : fRelErrorThreshold( .05 ), fConstraintType( Constraint::Gaussian ) {;}
+    StatErrorConfig() : fRelErrorThreshold( .05 ), fConstraintType( Constraint::Poisson ) {;}
     void Print(std::ostream& = std::cout) const;
     void PrintXML(std::ostream&) const;
 
