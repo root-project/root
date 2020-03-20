@@ -1146,7 +1146,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
    std::map<std::string, RooDataSet*> asimovDataMap;
 
   //look at category of simpdf
-  RooCategory& channelCat = (RooCategory&)simPdf->indexCat();
+  RooCategory& channelCat = const_cast<RooCategory&>(dynamic_cast<const RooCategory&>(simPdf->indexCat()));
   int nrIndices = channelCat.numTypes();
   if( nrIndices == 0 ) {
     oocoutW((TObject*)0,Generation) << "Simultaneous pdf does not contain any categories." << endl;
