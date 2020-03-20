@@ -93,6 +93,9 @@ class TestClassPYTHONIZATIONS_FRAGILITY:
 
 
 class TestClassROOT_PYTHONIZATIONS:
+    def setup_class(cls):
+        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+
     def test01_tgraph(self):
         """TGraph has GetN() mapped as size to its various buffer returns"""
 
@@ -159,14 +162,15 @@ class TestClassROOT_PYTHONIZATIONS:
     def test05_rooargset_iter(self):
         """STL sequence iterator injected in RooAbsCollection, inherited by RooArgSet"""
 
-        # ROOT-10606
-        import ROOT
+        if self.exp_pyroot:
+            # ROOT-10606
+            import ROOT
 
-        varA = ROOT.RooRealVar("a", "a", 0.)
-        varB = ROOT.RooRealVar("b", "b", 1.)
-        varSet = ROOT.RooArgSet(varA, varB)
-        for var in varSet:
-            var.Print()
+            varA = ROOT.RooRealVar("a", "a", 0.)
+            varB = ROOT.RooRealVar("b", "b", 1.)
+            varSet = ROOT.RooArgSet(varA, varB)
+            for var in varSet:
+                var.Print()
 
 
 ## actual test run
