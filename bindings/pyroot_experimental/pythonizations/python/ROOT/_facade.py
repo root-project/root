@@ -132,18 +132,16 @@ class ROOTFacade(types.ModuleType):
             # Make the attributes of the facade be injected in the
             # caller module
             raise AttributeError()
-
-        try:
+        # Note that hasattr caches the lookup for getattr
+        elif hasattr(gbl_namespace, name):
             return getattr(gbl_namespace, name)
-        except AttributeError as err:
-            try:
-                return getattr(gbl_namespace.ROOT, name)
-            except AttributeError:
-                res = gROOT.FindObject(name)
-                if res:
-                    return res
-                else:
-                    raise AttributeError(str(err))
+        elif hasattr(gbl_namespace.ROOT, name):
+            return getattr(gbl_namespace.ROOT, name)
+        else:
+            res = gROOT.FindObject(name)
+            if res:
+                return res
+        raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
