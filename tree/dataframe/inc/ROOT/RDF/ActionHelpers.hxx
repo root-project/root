@@ -1125,6 +1125,8 @@ inline void UpdateBoolArray(BoolArrayMap &boolArrays, RVec<bool> &v, const std::
    }
 }
 
+void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName);
+
 /// Helper object for a single-thread Snapshot action
 template <typename... BranchTypes>
 class SnapshotHelper : public RActionImpl<SnapshotHelper<BranchTypes...>> {
@@ -1150,6 +1152,7 @@ public:
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fBranches(vbnames.size(), nullptr),
         fBranchAddresses(vbnames.size(), nullptr)
    {
+      ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
    }
 
    SnapshotHelper(const SnapshotHelper &) = delete;
@@ -1283,6 +1286,7 @@ public:
         fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)), 
         fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr))
    {
+      ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
