@@ -328,6 +328,36 @@ struct RGetOverflowOffset {
 };
 
 // 
+template <int IDX, class HISTIMPL, class AXISTUPLE>
+struct RGetOverflowOffsetReversed;
+
+template <class HISTIMPL, class AXES>
+struct RGetOverflowOffsetReversed<-1, HISTIMPL, AXES> {
+   int operator()(HISTIMPL *, const AXES &, int) const
+   {
+      return -1;
+   }
+};
+
+template <int I, class HISTIMPL, class AXES>
+struct RGetOverflowOffsetReversed {
+   int operator()(HISTIMPL *hist, const AXES &axes, int binidx) const
+   {
+      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
+      int ret = 0, retPlus1 = 0;
+      for (int i = 0; i < thisAxis; ++i)
+         ret += 2 * RGetOverflowOffset<HISTIMPL::GetNDim() - 1, decltype(axes)>()(axes, i);
+      for (int i = 0; i < thisAxis + 1; ++i)
+         retPlus1 += 2 * RGetOverflowOffset<HISTIMPL::GetNDim() - 1, decltype(axes)>()(axes, i);
+      if (ret <= binidx && retPlus1 <= binidx) {
+         return RGetOverflowOffsetReversed<I - 1, HISTIMPL, AXES>()(hist, axes, binidx);
+      } else {
+         return thisAxis;
+      }
+   }
+};
+
+// 
 template <int IDX, class HISTIMPL, class AXES>
 struct RGetOverflowBin;
 
@@ -461,6 +491,64 @@ enum class EBinCoord {
 };
 
 template <int I, int NDIM, class COORD, class AXES>
+struct RFillOverflowBinCoord;
+
+// Break recursion.
+template <int NDIM, class COORD, class AXES>
+struct RFillOverflowBinCoord<-1, NDIM, COORD, AXES> {
+   void operator()(COORD & /*coord*/, const AXES & /*axes*/, EBinCoord /*kind*/, int /*binidx*/, int /*axisToSkip*/, int /*overflowType*/) const {}
+};
+
+/** Fill `coord` with low bin edge or center or high bin edge of all axes.
+ */
+template <int I, int NDIM, class COORD, class AXES>
+struct RFillOverflowBinCoord {
+   void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx, int axisToSkip, int overflowType) const
+   {
+      constexpr const int thisAxis = NDIM - I - 1;
+      if (thisAxis == axisToSkip) {
+         if (overflowType == -1) {
+            switch (kind) {
+               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(overflowType); break;
+               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(overflowType); break;
+               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(std::get<thisAxis>(axes).GetFirstBin()); break;
+            }
+         } else if (overflowType == -2) {
+            switch (kind) {
+               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(std::get<thisAxis>(axes).GetLastBin()); break;
+               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(overflowType); break;
+               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(overflowType); break;
+            }
+         }
+         RFillOverflowBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, binidx, axisToSkip, overflowType);
+      } else {
+         int axisbin = binidx % std::get<thisAxis>(axes).GetNBins();
+         if (axisbin < std::get<thisAxis>(axes).GetFirstBin()) {
+            switch (kind) {
+               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
+               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(std::get<thisAxis>(axes).GetFirstBin()); break;
+            }
+         } else if (std::get<thisAxis>(axes).GetLastBin() < axisbin) {
+            switch (kind) {
+               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(std::get<thisAxis>(axes).GetLastBin()); break;
+               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
+            }
+         } else {
+            switch (kind) {
+               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
+               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
+            }
+         }
+         RFillOverflowBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, (binidx - axisbin + 1) / std::get<thisAxis>(axes).GetNBins(), axisToSkip, overflowType);
+      }
+   }
+};
+
+//
+template <int I, int NDIM, class COORD, class AXES>
 struct RFillBinCoord;
 
 // Break recursion.
@@ -476,13 +564,13 @@ struct RFillBinCoord {
    void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx) const
    {
       constexpr const int thisAxis = NDIM - I - 1;
-      int axisbin = binidx % std::get<thisAxis>(axes).GetNBinsNoOver();
+      int axisbin = binidx % std::get<thisAxis>(axes).GetNBinsNoOver() + 1;
       switch (kind) {
       case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
       case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
       case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
       }
-      RFillBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, binidx / std::get<thisAxis>(axes).GetNBinsNoOver());
+      RFillBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, (binidx - axisbin + 1) / std::get<thisAxis>(axes).GetNBinsNoOver());
    }
 };
 
@@ -586,10 +674,10 @@ public:
       RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
       int offset = GetAxisOffset(axis) + (std::abs(type) - 1) * GetOverflowOffset(axis);
       int ret =
-         Internal::RGetOverflowBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status, axis) + offset + 1;
+         Internal::RGetOverflowBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status, axis) + offset + (1 * DATA::GetNDim());
       if (status != RAxisBase::EFindStatus::kValid)
          return 0;
-      return ret;
+      return -(ret);
    }
 
    /// Gets the bin index for coordinate `x`; returns 0 if there is no such bin,
@@ -640,8 +728,19 @@ public:
    CoordArray_t GetBinCenter(int binidx) const final
    {
       using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
+      using RFillOverflowBinCoord = Internal::RFillOverflowBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
-      RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx);
+      int axis = 0, type = 0, offset = 0, overflow = 0;
+      if (binidx < 0) {
+         binidx = std::abs(binidx) - 1;
+         axis = Internal::RGetOverflowOffsetReversed<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, binidx);
+         overflow = GetAxisOffset(axis) + GetOverflowOffset(axis);
+         type = -(binidx / overflow) - 1;
+         offset = GetAxisOffset(axis) + (std::abs(type) - 1) * GetOverflowOffset(axis);
+         RFillOverflowBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx - offset, axis, type);
+      } else { 
+         RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx - 1);
+      }
       return coord;
    }
 
@@ -649,8 +748,19 @@ public:
    CoordArray_t GetBinFrom(int binidx) const final
    {
       using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
+      using RFillOverflowBinCoord = Internal::RFillOverflowBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
-      RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx);
+      int axis = 0, type = 0, offset = 0, overflow = 0;
+      if (binidx < 0) {
+         binidx = std::abs(binidx) - 1;
+         axis = Internal::RGetOverflowOffsetReversed<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, binidx);
+         overflow = GetAxisOffset(axis) + GetOverflowOffset(axis);
+         type = -(binidx / overflow) - 1;
+         offset = GetAxisOffset(axis) + (std::abs(type) - 1) * GetOverflowOffset(axis);
+         RFillOverflowBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx - offset, axis, type);
+      } else { 
+         RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx - 1);
+      }
       return coord;
    }
 
@@ -658,8 +768,19 @@ public:
    CoordArray_t GetBinTo(int binidx) const final
    {
       using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
+      using RFillOverflowBinCoord = Internal::RFillOverflowBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
       CoordArray_t coord;
-      RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx);
+      int axis = 0, type = 0, offset = 0, overflow = 0;
+      if (binidx < 0) {
+         binidx = std::abs(binidx) - 1;
+         axis = std::abs(Internal::RGetOverflowOffsetReversed<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, binidx));
+         overflow = GetAxisOffset(axis) + GetOverflowOffset(axis);
+         type = -(binidx / overflow) - 1;
+         offset = GetAxisOffset(axis) + (std::abs(type) - 1) * GetOverflowOffset(axis);
+         RFillOverflowBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx - offset, axis, type);
+      } else { 
+         RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx - 1);
+      }
       return coord;
    }
 

@@ -74,7 +74,7 @@ TEST(AxisBinning, IrregularBasic) {
 TEST(AxisBinning, IrregularEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
    RAxisIrregular ax("RITLE", {0., eps, 2.*eps, 3.*eps, 4.*eps, 5.*eps});
-   EXPECT_LE(-4, ax.FindOverflowBin(0.5*eps));
+   EXPECT_LE(-1, ax.FindOverflowBin(0.5*eps));
    EXPECT_GE(1, ax.FindOverflowBin(0.5*eps));
 
    EXPECT_LE(3, ax.FindOverflowBin(3.*eps));
@@ -119,36 +119,36 @@ TEST(HistImplBinning, EquiDist2D) {
    // Here's a visual overview of how binning should work
    //
    //                     Axis 0
-   //              UF   0.0  1.0  OF
-   //        ------------------------
-   //     A   UF  |1/9   10   11   5/12
-   //     x  -1.0 | 2     1    2   6
-   //     .   0.0 | 3     3    4   7
-   //     1   OF  |4/13  14   15   8/16
+   //              UF      0.0    1.0    OF
+   //        --------------------------------
+   //     A   UF  |-1/-9   -10   -11   -5/-12
+   //     x  -1.0 |  -2      1     2     -6
+   //     .   0.0 |  -3      3     4     -7
+   //     1   OF  |-4/-13  -14   -15   -8/-16
 
    // Check that coordinates map into the correct bins
 
-   EXPECT_EQ( 1, hist.GetBinIndex({-100., -100.}));
-   EXPECT_EQ(10, hist.GetBinIndex({0.5, -100.}));
-   EXPECT_EQ(11, hist.GetBinIndex({1.5, -100.}));
-   EXPECT_EQ( 5, hist.GetBinIndex({100., -100.}));
-   EXPECT_EQ( 2, hist.GetBinIndex({-100., -0.5}));
-   EXPECT_EQ( 1, hist.GetBinIndex({0.5, -0.5}));
-   EXPECT_EQ( 2, hist.GetBinIndex({1.5, -0.5}));
-   EXPECT_EQ( 6, hist.GetBinIndex({100., -0.5}));
-   EXPECT_EQ( 3, hist.GetBinIndex({-100., 0.5}));
-   EXPECT_EQ( 3, hist.GetBinIndex({0.5, 0.5}));
-   EXPECT_EQ( 4, hist.GetBinIndex({1.5, 0.5}));
-   EXPECT_EQ( 7, hist.GetBinIndex({100., 0.5}));
-   EXPECT_EQ( 4, hist.GetBinIndex({-100., 100.}));
-   EXPECT_EQ(14, hist.GetBinIndex({0.5, 100.}));
-   EXPECT_EQ(15, hist.GetBinIndex({1.5, 100.}));
-   EXPECT_EQ( 8, hist.GetBinIndex({100., 100.}));
+   EXPECT_EQ( -1, hist.GetBinIndex({-100., -100.}));
+   EXPECT_EQ(-10, hist.GetBinIndex({0.5, -100.}));
+   EXPECT_EQ(-11, hist.GetBinIndex({1.5, -100.}));
+   EXPECT_EQ( -5, hist.GetBinIndex({100., -100.}));
+   EXPECT_EQ( -2, hist.GetBinIndex({-100., -0.5}));
+   EXPECT_EQ(  1, hist.GetBinIndex({0.5, -0.5}));
+   EXPECT_EQ(  2, hist.GetBinIndex({1.5, -0.5}));
+   EXPECT_EQ( -6, hist.GetBinIndex({100., -0.5}));
+   EXPECT_EQ( -3, hist.GetBinIndex({-100., 0.5}));
+   EXPECT_EQ(  3, hist.GetBinIndex({0.5, 0.5}));
+   EXPECT_EQ(  4, hist.GetBinIndex({1.5, 0.5}));
+   EXPECT_EQ( -7, hist.GetBinIndex({100., 0.5}));
+   EXPECT_EQ( -4, hist.GetBinIndex({-100., 100.}));
+   EXPECT_EQ(-14, hist.GetBinIndex({0.5, 100.}));
+   EXPECT_EQ(-15, hist.GetBinIndex({1.5, 100.}));
+   EXPECT_EQ( -8, hist.GetBinIndex({100., 100.}));
 
-   EXPECT_EQ( 1, hist.GetBinIndex({-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
-   EXPECT_EQ( 5, hist.GetBinIndex({ std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
-   EXPECT_EQ( 4, hist.GetBinIndex({-std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
-   EXPECT_EQ( 8, hist.GetBinIndex({ std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
+   EXPECT_EQ( -1, hist.GetBinIndex({-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
+   EXPECT_EQ( -5, hist.GetBinIndex({ std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()}));
+   EXPECT_EQ( -4, hist.GetBinIndex({-std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
+   EXPECT_EQ( -8, hist.GetBinIndex({ std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()}));
 
    // Check that bins map into the correct coordinates
 
@@ -161,121 +161,125 @@ TEST(HistImplBinning, EquiDist2D) {
 
    // ... first bin on axis 1 ...
 
-   EXPECT_LE(uf_from,         hist.GetBinFrom(0)[0]);
-   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(0)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(0)[0]);
-   EXPECT_LE(uf_from,         hist.GetBinFrom(0)[1]);
-   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(0)[1]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(0)[1]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-1)[0]);
+   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(-1)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(-1)[0]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-1)[1]);
+   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(-1)[1]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(-1)[1]);
+
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(-10)[0]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(-10)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(-10)[0]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-10)[1]);
+   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(-10)[1]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(-10)[1]);
+
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(-11)[0]);
+   EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(-11)[0]);
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(-11)[0]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-11)[1]);
+   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(-11)[1]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(-11)[1]);
+
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(-5)[0]);
+   EXPECT_GE(of_center_axis0, hist.GetBinCenter(-5)[0]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-5)[0]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-5)[1]);
+   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(-5)[1]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(-5)[1]);
+
+   // ... next bin on axis 1 ...
+   
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-2)[0]);
+   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(-2)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(-2)[0]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(-2)[1]);
+   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(-2)[1]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(-2)[1]);
+
 
    EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(1)[0]);
    EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(1)[0]);
    EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(1)[0]);
-   EXPECT_LE(uf_from,         hist.GetBinFrom(1)[1]);
-   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(1)[1]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(1)[1]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(1)[1]);
+   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(1)[1]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(1)[1]);
 
    EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(2)[0]);
    EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(2)[0]);
    EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(2)[0]);
-   EXPECT_LE(uf_from,         hist.GetBinFrom(2)[1]);
-   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(2)[1]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(2)[1]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(2)[1]);
+   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(2)[1]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(2)[1]);
 
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(3)[0]);
-   EXPECT_GE(of_center_axis0, hist.GetBinCenter(3)[0]);
-   EXPECT_GE(of_to,           hist.GetBinTo(3)[0]);
-   EXPECT_LE(uf_from,         hist.GetBinFrom(3)[1]);
-   EXPECT_LE(uf_center_axis1, hist.GetBinCenter(3)[1]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinTo(3)[1]);
 
-   // ... next bin on axis 1 ...
-
-   EXPECT_LE(uf_from,         hist.GetBinFrom(4)[0]);
-   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(4)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(4)[0]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(4)[1]);
-   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(4)[1]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(4)[1]);
-
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(5)[0]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(5)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(5)[0]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(5)[1]);
-   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(5)[1]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(5)[1]);
-
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(6)[0]);
-   EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(6)[0]);
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(6)[0]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(6)[1]);
-   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(6)[1]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(6)[1]);
-
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(7)[0]);
-   EXPECT_GE(of_center_axis0, hist.GetBinCenter(7)[0]);
-   EXPECT_GE(of_to,           hist.GetBinTo(7)[0]);
-   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(7)[1]);
-   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(7)[1]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(7)[1]);
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(-6)[0]);
+   EXPECT_GE(of_center_axis0, hist.GetBinCenter(6)[0]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-6)[0]);
+   EXPECT_FLOAT_EQ(-1.0,      hist.GetBinFrom(-6)[1]);
+   EXPECT_FLOAT_EQ(-0.5,      hist.GetBinCenter(-6)[1]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(-6)[1]);
 
    // ... next bin on axis 1 ...
 
-   EXPECT_LE(uf_from,         hist.GetBinFrom(8)[0]);
-   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(8)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(8)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(8)[1]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(8)[1]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(8)[1]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-3)[0]);
+   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(-3)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(-3)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(-3)[1]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(-3)[1]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(-3)[1]);
 
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(9)[0]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(9)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(9)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(9)[1]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(9)[1]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(9)[1]);
 
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(10)[0]);
-   EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(10)[0]);
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(10)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(10)[1]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(10)[1]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(10)[1]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(3)[0]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(3)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(3)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(3)[1]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(3)[1]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(3)[1]);
 
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(11)[0]);
-   EXPECT_GE(of_center_axis0, hist.GetBinCenter(11)[0]);
-   EXPECT_GE(of_to,           hist.GetBinTo(11)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(11)[1]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(11)[1]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(11)[1]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(4)[0]);
+   EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(4)[0]);
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(4)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(4)[1]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(4)[1]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(4)[1]);
+
+
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(-7)[0]);
+   EXPECT_GE(of_center_axis0, hist.GetBinCenter(-7)[0]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-7)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(-7)[1]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(-7)[1]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(-7)[1]);
 
    // ... last bin on axis 1 ...
 
-   EXPECT_LE(uf_from,         hist.GetBinFrom(12)[0]);
-   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(12)[0]);
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(12)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(12)[1]);
-   EXPECT_GE(of_center_axis1, hist.GetBinCenter(12)[1]);
-   EXPECT_GE(of_to,           hist.GetBinTo(12)[1]);
+   EXPECT_LE(uf_from,         hist.GetBinFrom(-4)[0]);
+   EXPECT_LE(uf_center_axis0, hist.GetBinCenter(-4)[0]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinTo(-4)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(-4)[1]);
+   EXPECT_GE(of_center_axis1, hist.GetBinCenter(-4)[1]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-4)[1]);
 
-   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(13)[0]);
-   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(13)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(13)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(13)[1]);
-   EXPECT_GE(of_center_axis1, hist.GetBinCenter(13)[1]);
-   EXPECT_GE(of_to,           hist.GetBinTo(13)[1]);
+   EXPECT_FLOAT_EQ( 0.0,      hist.GetBinFrom(-14)[0]);
+   EXPECT_FLOAT_EQ( 0.5,      hist.GetBinCenter(-14)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinTo(-14)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(-14)[1]);
+   EXPECT_GE(of_center_axis1, hist.GetBinCenter(-14)[1]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-14)[1]);
 
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(14)[0]);
-   EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(14)[0]);
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(14)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(14)[1]);
-   EXPECT_GE(of_center_axis1, hist.GetBinCenter(14)[1]);
-   EXPECT_GE(of_to,           hist.GetBinTo(14)[1]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(-15)[0]);
+   EXPECT_FLOAT_EQ( 1.5,      hist.GetBinCenter(-15)[0]);
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinTo(-15)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(-15)[1]);
+   EXPECT_GE(of_center_axis1, hist.GetBinCenter(-15)[1]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-15)[1]);
 
-   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(15)[0]);
-   EXPECT_GE(of_center_axis0, hist.GetBinCenter(15)[0]);
-   EXPECT_GE(of_to,           hist.GetBinTo(15)[0]);
-   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(15)[1]);
-   EXPECT_GE(of_center_axis1, hist.GetBinCenter(15)[1]);
-   EXPECT_GE(of_to,           hist.GetBinTo(15)[1]);
+   EXPECT_FLOAT_EQ( 2.0,      hist.GetBinFrom(-8)[0]);
+   EXPECT_GE(of_center_axis0, hist.GetBinCenter(-8)[0]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-8)[0]);
+   EXPECT_FLOAT_EQ( 1.0,      hist.GetBinFrom(-8)[1]);
+   EXPECT_GE(of_center_axis1, hist.GetBinCenter(-8)[1]);
+   EXPECT_GE(of_to,           hist.GetBinTo(-8)[1]);
 }
