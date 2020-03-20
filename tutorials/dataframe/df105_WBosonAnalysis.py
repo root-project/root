@@ -57,11 +57,11 @@ bool GoodElectronOrMuon(int type, float pt, float eta, float phi, float e, float
 {
     ROOT::Math::PtEtaPhiEVector p(pt / 1000.0, eta, phi, e / 1000.0);
     if (abs(z0 * sin(p.theta())) > 0.5) return false;
-    if ((type == 11) && (abs(eta) < 2.46) && (abs(eta) < 1.37 || abs(eta) > 1.52)) {
+    if (type == 11 && abs(eta) < 2.46 && (abs(eta) < 1.37 || abs(eta) > 1.52)) {
         if (abs(trackd0pv / tracksigd0pv) > 5) return false;
         return true;
     }
-    if ((type == 13) && (abs(eta) < 2.5)) {
+    if (type == 13 && abs(eta) < 2.5) {
         if (abs(trackd0pv / tracksigd0pv) > 3) return false;
         return true;
     }
@@ -73,9 +73,9 @@ for s in samples:
     # Require missing transverse energy larger than 30 GeV
     df[s] = df[s].Filter("met_et > 30000")
     # Select electron or muon trigger
-    df[s] = df[s].Filter("trigE | trigM")
+    df[s] = df[s].Filter("trigE || trigM")
     # Select events with exactly one good lepton
-    df[s] = df[s].Define("good_lep", "lep_isTightID && (lep_pt > 35000) && (lep_ptcone30 / lep_pt < 0.1) && (lep_etcone20 / lep_pt < 0.1)")\
+    df[s] = df[s].Define("good_lep", "lep_isTightID && lep_pt > 35000 && lep_ptcone30 / lep_pt < 0.1 && lep_etcone20 / lep_pt < 0.1")\
                  .Filter("Sum(good_lep) == 1")
     # Apply additional cuts in case the lepton is an electron or muon
     df[s] = df[s].Define("idx", "ROOT::VecOps::ArgMax(good_lep)")\
@@ -184,10 +184,8 @@ text.SetNDC()
 text.SetTextFont(72)
 text.SetTextSize(0.045)
 text.DrawLatex(0.21, 0.86, "ATLAS")
-
 text.SetTextFont(42)
 text.DrawLatex(0.21 + 0.16, 0.86, "Open Data")
-
 text.SetTextSize(0.04)
 text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.1f} fb^{{-1}}".format(lumi * args.lumi_scale / 1000.0))
 
