@@ -26,6 +26,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLParser
      src/TXMLParser.cxx
   DEPENDENCIES
     Core
+  INCLUDES
+    ${LIBXML2_INCLUDE_DIR} 
+    ${LIBXML2_INCLUDE_DIRS}
 )
 
 # not needed to propagate includes to rootcling

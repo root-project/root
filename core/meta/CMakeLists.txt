@@ -87,9 +87,10 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TViewPubDataMembers.cxx
   src/TViewPubFunctions.cxx
   src/TVirtualStreamerInfo.cxx
+  INCLUDES
+    res
+    ../foundation/res
 )
-
-target_include_directories(Meta PRIVATE res ../foundation/res)
 
 ROOT_INSTALL_HEADERS()
 ROOT_ADD_TEST_SUBDIRECTORY(test)

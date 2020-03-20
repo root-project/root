@@ -30,9 +30,9 @@ ROOT_OBJECT_LIBRARY(TextInput
   src/textinput/TerminalDisplayWin.cpp
   src/textinput/TextInputContext.cpp
   src/textinput/TextInput.cpp
+  INCLUDES
+    src
 )
-
-target_include_directories(TextInput PRIVATE src)
 
 ROOT_INSTALL_HEADERS()
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)

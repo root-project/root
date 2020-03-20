@@ -43,6 +43,4 @@ ROOT_OBJECT_LIBRARY(GuiCore
   src/TToggleGroup.cxx
 )
 
-# target_include_directories(GuiCore PRIVATE res ../foundation/res)
-
 ROOT_INSTALL_HEADERS()

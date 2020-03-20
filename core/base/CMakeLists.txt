@@ -215,8 +215,8 @@ endif()
 # only here complete list of headers can be propogated to parent cmake file
 set(Core_dict_headers ${BASE_HEADERS} PARENT_SCOPE)
 
-ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
-target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
+ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES} 
+                    INCLUDES ${CMAKE_SOURCE_DIR}/core/base/res ${CMAKE_SOURCE_DIR}/core/foundation/res ${PCRE_INCLUDE_DIR})
 
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
 generateHeader(Base

@@ -473,12 +473,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Foam
   LINKDEF 
     inc/LinkDef.h
-  INCLUDES
-    ${vdt_includes}
 )
 
-#if(vdt AND NOT builtin_vdt)
-#  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
-#endif()
+if(vdt AND NOT builtin_vdt)
+  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

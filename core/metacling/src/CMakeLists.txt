@@ -16,13 +16,6 @@ include_directories(SYSTEM
   ${CLAD_INCLUDE_DIRS}
 )
 
-#include_directories(
-#  ../res
-#  ../../clingutils/res
-#  ../../foundation/res
-#  ${CLING_INCLUDE_DIRS}
-#)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)

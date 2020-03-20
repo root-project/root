@@ -13,9 +13,9 @@ ROOT_LINKER_LIBRARY(GLEW
   LIBRARIES
     OpenGL::GL
     OpenGL::GLU
+  INCLUDES
+    ${GLEW_INCLUDE_DIR}
 )
-
-target_include_directories(GLEW PRIVATE ${GLEW_INCLUDE_DIR})
 
 # Do not install headers for all platforms and configurations.
 if(UNIX)

@@ -88,9 +88,9 @@ ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
 add_dependencies(rootcling complexDict)
 
 target_include_directories(rootcling PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../core/metacling/res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../core/dictgen/res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../io/rootpcm/res)
+        ${CMAKE_SOURCE_DIR}/core/metacling/res
+        ${CMAKE_SOURCE_DIR}/core/dictgen/res
+        ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
 endif()

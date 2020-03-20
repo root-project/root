@@ -9,7 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   HEADERSDIR
     graf2d/graf/inc 
@@ -101,6 +100,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     RIO
   BUILTINS
     FREETYPE
+  INCLUDES
+    ${FREETYPE_INCLUDE_DIRS}
 )
 
 target_include_directories(Graf PRIVATE ${FREETYPE_INCLUDE_DIRS})

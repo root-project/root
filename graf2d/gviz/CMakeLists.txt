@@ -25,6 +25,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
   DEPENDENCIES
     Hist
     Graf
+  INCLUDES
+    ${GRAPHVIZ_INCLUDE_DIR}/graphviz
 )
 
 target_include_directories(Gviz PRIVATE ${GRAPHVIZ_INCLUDE_DIR}/graphviz)

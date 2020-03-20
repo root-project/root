@@ -148,8 +148,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${unix_objects}
                ${winnt_objects})
 
-ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
-target_include_directories(BaseTROOT PRIVATE foundation/res)
+ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h INCLUDES foundation/res)
 add_dependencies(BaseTROOT gitcommit)
 #----------------------------------------------------------------------------------------
 

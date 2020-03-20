@@ -21,6 +21,4 @@ ROOT_OBJECT_LIBRARY(Unix
      ../textinput/inc
 )
 
-# target_include_directories(Unix PRIVATE ../clib/res ../foundation/res)
-
 ROOT_INSTALL_HEADERS()

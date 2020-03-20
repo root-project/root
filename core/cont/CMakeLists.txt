@@ -68,9 +68,9 @@ ROOT_OBJECT_LIBRARY(Cont
   src/TRefTable.cxx
   src/TSeqCollection.cxx
   src/TSortedList.cxx
+  INCLUDES
+    ${CMAKE_SOURCE_DIR}/core/foundation/res
 )
-
-target_include_directories(Cont PRIVATE res ../foundation/res)
 
 ROOT_INSTALL_HEADERS()
 

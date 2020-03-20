@@ -20,11 +20,9 @@ endif()
 
 if(builtin_gl2ps)
   set(RGL_EXTRA_SOURCES ${RGL_EXTRA_SOURCES} src/gl2ps.cxx)
-  include_directories(src/gl2ps)
   set(gl2ps_includes ${CMAKE_SOURCE_DIR}/graf3d/gl/src/gl2ps)
 else()
   set(gl2ps_includes ${GL2PS_INCLUDE_DIRS})
-  include_directories(${GL2PS_INCLUDE_DIRS})
 endif()
 
 if(builtin_glew)

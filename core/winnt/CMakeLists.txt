@@ -17,8 +17,7 @@ ROOT_OBJECT_LIBRARY(Winnt
   src/TWin32SplashThread.cxx
   src/TWinNTSystem.cxx
   src/Win32Splash.cxx
+  INCLUDES ../foundation/res
 )
-
-target_include_directories(Winnt PRIVATE ../foundation/res)
 
 ROOT_INSTALL_HEADERS()
