@@ -25,32 +25,25 @@
 
 namespace RooHelpers {
 
-/// Switches the message service to verbose while the instance alive.
+/// Switches the message service to verbose while the instance is alive.
 class LocalChangeMsgLevel {
   public:
     /// Change message level (and topics) while this object is alive, reset when it goes out of scope.
     /// \param[in] lvl The desired message level. Defaults to verbose.
-    /// \param[in] extraTopics Extra topics to be switched on.
+    /// \param[in] extraTopics Extra topics to be switched on. These will only switched on in the last stream to prevent all streams are printing.
+    /// \param[in] removeTopics Message topics to be switched off
+    /// \param[in] overrideExternalLevel Override the user message level.
     LocalChangeMsgLevel(RooFit::MsgLevel lvl = RooFit::DEBUG,
-        RooFit::MsgTopic extraTopics = static_cast<RooFit::MsgTopic>(0u)) {
-      auto& msg = RooMsgService::instance();
-      fOldKillBelow = msg.globalKillBelow();
-      msg.setGlobalKillBelow(lvl);
-      fOldConf = msg.getStream(0);
-      msg.getStream(0).minLevel = lvl;
-      msg.getStream(0).addTopic(extraTopics);
-      msg.setStreamStatus(0, true);
-    }
+        unsigned int extraTopics = 0u,
+        unsigned int removeTopics = 0u,
+        bool overrideExternalLevel = true);
 
-    ~LocalChangeMsgLevel() {
-      auto& msg = RooMsgService::instance();
-      msg.setGlobalKillBelow(fOldKillBelow);
-      msg.getStream(0) = fOldConf;
-    }
+    ~LocalChangeMsgLevel();
 
   private:
     RooFit::MsgLevel fOldKillBelow;
-    RooMsgService::StreamConfig fOldConf;
+    std::vector<RooMsgService::StreamConfig> fOldConf;
+    int fExtraStream{-1};
 };
 
 
