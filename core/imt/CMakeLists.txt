@@ -19,6 +19,8 @@ target_include_directories(Clib PRIVATE
    ${CMAKE_SOURCE_DIR}/core/base/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
+# Instruct cmake to find the HPX settings
+find_package(HPX)
 
 target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
