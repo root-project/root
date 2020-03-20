@@ -57,8 +57,7 @@ ROOT.fill_tree(fileName, treeName)
 
 # We read the tree from the file and create a RDataFrame, a class that
 # allows us to interact with the data contained in the tree.
-RDF = ROOT.ROOT.RDataFrame
-d = RDF(treeName, fileName)
+d = ROOT.RDataFrame(treeName, fileName)
 
 # Operating on branches which are collection of objects
 # Here we deal with the simplest of the cuts: we decide to accept the event

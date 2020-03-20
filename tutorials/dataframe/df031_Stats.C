@@ -6,7 +6,7 @@
 ///
 /// \macro_code
 /// \macro_output
-/// 
+///
 /// \date April 2019
 /// \author Danilo Piparo
 
@@ -16,7 +16,7 @@ void df031_Stats() {
     ROOT::RDataFrame r(256);
     auto rr = r.Define("v", [](ULong64_t e){return e;}, {"rdfentry_"})
                .Define("w", [](ULong64_t e){return 1./(e+1);}, {"v"});
-    
+
     // Now extract the statistics, weighted, unweighted - with and without explicit types.
     auto stats_eu = rr.Stats<ULong64_t>("v");
     auto stats_ew = rr.Stats<ULong64_t, double>("v", "w");

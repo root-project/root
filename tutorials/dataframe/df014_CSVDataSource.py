@@ -27,15 +27,15 @@ fileName = "df014_CsvDataSource_MuRun2010B_py.csv"
 if not os.path.isfile(fileName):
     ROOT.TFile.Cp(fileNameUrl, fileName)
 
-MakeCsvDataFrame = ROOT.ROOT.RDF.MakeCsvDataFrame
-tdf = MakeCsvDataFrame(fileName)
+MakeCsvDataFrame = ROOT.RDF.MakeCsvDataFrame
+df = MakeCsvDataFrame(fileName)
 
 # Now we will apply a first filter based on two columns of the CSV,
 # and we will define a new column that will contain the invariant mass.
 # Note how the new invariant mass column is defined from several other
 # columns that already existed in the CSV file.
-filteredEvents = tdf.Filter("Q1 * Q2 == -1") \
-                    .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))")
+filteredEvents = df.Filter("Q1 * Q2 == -1") \
+                   .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))")
 
 # Next we create a histogram to hold the invariant mass values and we draw it.
 invMass = filteredEvents.Histo1D(("invMass", "CMS Opendata: #mu#mu mass;#mu#mu mass [GeV];Events", 512, 2, 110), "m")

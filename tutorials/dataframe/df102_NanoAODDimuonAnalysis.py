@@ -30,7 +30,7 @@ ROOT.ROOT.EnableImplicitMT()
 files = ROOT.std.vector("string")(2)
 files[0] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleMuParked.root"
 files[1] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"
-df = ROOT.ROOT.RDataFrame("Events", files)
+df = ROOT.RDataFrame("Events", files)
 
 # For simplicity, select only events with exactly two muons and require opposite charge
 df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons")
