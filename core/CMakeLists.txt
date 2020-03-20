@@ -131,32 +131,7 @@ endif()
 
 #---G__Core--------------------------------------------------------------------
 
-# libCore is linked against zlib (based on the location returned by find_package or builtin_zlib). The dictionary of
-# libCore, G__Core.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
-# The includePath variable of the dictionary is empty, but we do not notice it because, by chance, G__MathMore adds
-# the same includePath for GSL. OTOH, if we have a small test case which works only with libCore.so we never give a
-# chance MathMore's dictionary to hide the problem and thus we pick up the system zlib.h.
-#
-# FIXME: Using include_directories is too intrusive as it does much more than what we want, that is, it will add this
-# include path not only in the dictionary but as part of the compilation lines. It is harmless but suboptimal: we need a
-# mechanism throough which we can express that we only need the path in the dictionary.
-#
-# NOTE: We cannot use set_property(TARGET G__Core ...) becase this has to happen before registering the target.
-include_directories(
-  ${ZLIB_INCLUDE_DIR}
-  base/inc
-  ${dict_v7dirs}
-  clib/inc
-  cont/inc
-  foundation/inc
-  macosx/inc
-  unix/inc
-  winnt/inc
-  clingutils/inc
-  meta/inc
-  gui/inc
-  textinput/inc
-)
+# Now includes path used from Core module, which configured before
 
 set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Clib>
@@ -221,6 +196,9 @@ ROOT_GENERATE_DICTIONARY(G__Core
     -writeEmptyRootPCM
   LINKDEF
     base/inc/LinkDef.h
+  INCLUDES
+    ${CMAKE_SOURCE_DIR}/core/clingutils/inc
+    ${CMAKE_SOURCE_DIR}/core/textinput/inc
 )
 
 # This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}
