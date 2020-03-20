@@ -1751,11 +1751,20 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("@");
    PrintStr("/CreationDate (");
    TDatime t;
-   char str[17];
-   snprintf(str,17,"D:%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d",
-                t.GetYear()  , t.GetMonth(),
-                t.GetDay()   , t.GetHour(),
-                t.GetMinute(), t.GetSecond());
+   Int_t toff = t.Convert(kFALSE) - t.Convert(kTRUE); // time zone and dst offset
+   toff = toff/60;
+   char str[24];
+   snprintf(str,24,"D:%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d%c%2.2d'%2.2d'",
+            t.GetYear()  , t.GetMonth(),
+            t.GetDay()   , t.GetHour(),
+            t.GetMinute(), t.GetSecond(),
+            toff < 0 ? '-' : '+',
+            // TMath::Abs(toff/60), TMath::Abs(toff%60)); // format-truncation warning
+            TMath::Abs(toff/60) & 0x3F, TMath::Abs(toff%60) & 0x3F); // now 2 digits
+   PrintStr(str);
+   PrintStr(")");
+   PrintStr("@");
+   PrintStr("/ModDate (");
    PrintStr(str);
    PrintStr(")");
    PrintStr("@");
