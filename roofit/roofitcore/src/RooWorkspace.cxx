@@ -2190,8 +2190,9 @@ RooFactoryWSTool& RooWorkspace::factory()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Short-hand function for factory()->process(expr) ;
-
+/// Short-hand function for `factory()->process(expr);`
+///
+/// \copydoc RooFactoryWSTool::process(const char*)
 RooAbsArg* RooWorkspace::factory(const char* expr)
 {
   return factory().process(expr) ;
