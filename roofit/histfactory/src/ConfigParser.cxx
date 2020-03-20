@@ -778,7 +778,7 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
   HistFactory::StatErrorConfig config;
 
   // Setup default values:
-  config.SetConstraintType( Constraint::Gaussian );
+  config.SetConstraintType( Constraint::Poisson );
   config.SetRelErrorThreshold( 0.05 ); // 5%
 
   // Loop over the node's attributes
