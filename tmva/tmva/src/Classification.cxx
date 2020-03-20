@@ -40,7 +40,6 @@
 #include <TMatrixF.h>
 #include <TMatrixDSym.h>
 #include <TMultiGraph.h>
-#include <TPaletteAxis.h>
 #include <TPrincipal.h>
 #include <TMath.h>
 #include <TSystem.h>
