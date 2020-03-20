@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <ROOT/RError.hxx>
 
@@ -47,10 +48,8 @@ TEST(Exception, Report)
    } catch (const RException& e) {
       exceptionThrown = true;
       ASSERT_EQ(2U, e.GetError().GetStackTrace().size());
-      EXPECT_EQ("ROOT::Experimental::RResult<int> {anonymous}::TestSyscall(bool)",
-                e.GetError().GetStackTrace().at(0).fFunction);
-      EXPECT_EQ("ROOT::Experimental::RResult<int> {anonymous}::TestChain(bool)",
-                e.GetError().GetStackTrace().at(1).fFunction);
+      EXPECT_THAT(e.GetError().GetStackTrace().at(0).fFunction, ::testing::HasSubstr("TestSyscall(bool)"));
+      EXPECT_THAT(e.GetError().GetStackTrace().at(1).fFunction, ::testing::HasSubstr("TestChain(bool)"));
    }
    EXPECT_TRUE(exceptionThrown);
 }
