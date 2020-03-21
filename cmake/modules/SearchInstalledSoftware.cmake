@@ -489,6 +489,8 @@ if(mathmore OR builtin_gsl)
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
     set(GSL_TARGET GSL)
+    set(GSL_INCLUDE_DIR ${CMAKE_BINARY_DIR}/GSL-prefix/src/GSL-build)
+    set(GSL_FOUND ON)
     set(mathmore ON CACHE BOOL "Enabled because builtin_gls requested (${mathmore_description})" FORCE)
   endif()
 endif()
