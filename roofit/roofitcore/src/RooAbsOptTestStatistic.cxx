@@ -290,27 +290,26 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (rangeName && strlen(rangeName)) {    
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;    
 
+    bool observablesKnowRange = false;
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     for (const auto arg : *_funcObsSet) {
 
       RooRealVar* realObs = dynamic_cast<RooRealVar*>(arg) ;
       if (realObs) {
 
-	// If no explicit range is given for RooAddPdf coefficients, create explicit named range equivalent to original observables range
+        observablesKnowRange |= realObs->hasRange(rangeName);
+
+        // If no explicit range is given for RooAddPdf coefficients, create explicit named range equivalent to original observables range
         if (!(addCoefRangeName && strlen(addCoefRangeName))) {
-	  realObs->setRange(Form("NormalizationRangeFor%s",rangeName),realObs->getMin(),realObs->getMax()) ;
-// 	  cout << "RAOTS::ctor() setting range " << Form("NormalizationRangeFor%s",rangeName) << " on observable " 
-// 	       << realObs->GetName() << " to [" << realObs->getMin() << "," << realObs->getMax() << "]" << endl ;
-	}
+          realObs->setRange(Form("NormalizationRangeFor%s",rangeName),realObs->getMin(),realObs->getMax()) ;
+        }
 
-	// Adjust range of function observable to those of given named range
-	realObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;	
-//  	cout << "RAOTS::ctor() setting normalization range on observable " 
-//  	     << realObs->GetName() << " to [" << realObs->getMin() << "," << realObs->getMax() << "]" << endl ;
+        // Adjust range of function observable to those of given named range
+        realObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;
 
-	// Adjust range of data observable to those of given named range
-	RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
-	dataObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;	
+        // Adjust range of data observable to those of given named range
+        RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
+        dataObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;
        
         // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
         if (!_splitRange) {
@@ -329,6 +328,9 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
         }
       }
     }
+
+    if (!observablesKnowRange)
+      coutW(Fitting) << "None of the fit observables seem to know the range '" << rangeName << "'. This means that the full range will be used." << std::endl;
   }
   delete origObsSet ;
 
