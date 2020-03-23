@@ -16,9 +16,9 @@ ROOT_OBJECT_LIBRARY(Zip
   src/RZip.cxx
   INCLUDES
     ${ZLIB_INCLUDE_DIR}
-    ../lzma/inc
-    ../lz4/inc
-    ../zstd/inc
+    ${CMAKE_SOURCE_DIR}/core/lzma/inc
+    ${CMAKE_SOURCE_DIR}/core/lz4/inc
+    ${CMAKE_SOURCE_DIR}/core/zstd/inc
 )
 
 ROOT_INSTALL_HEADERS()

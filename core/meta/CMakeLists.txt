@@ -88,8 +88,8 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TViewPubFunctions.cxx
   src/TVirtualStreamerInfo.cxx
   INCLUDES
-    res
-    ../foundation/res
+    ${CMAKE_SOURCE_DIR}/core/meta/res
+    ${CMAKE_SOURCE_DIR}/core/foundation/res
 )
 
 ROOT_INSTALL_HEADERS()

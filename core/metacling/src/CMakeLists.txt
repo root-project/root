@@ -53,11 +53,11 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingTypeInfo.cxx
   TClingValue.cxx
   INCLUDES
-     ../res
-     ../../clingutils/res
-     ../../foundation/res
-     ../../zip/inc
-     ../../../io/io/inc
+     ${CMAKE_SOURCE_DIR}/core/metacling/res
+     ${CMAKE_SOURCE_DIR}/core/clingutils/res
+     ${CMAKE_SOURCE_DIR}/core/foundation/res
+     ${CMAKE_SOURCE_DIR}/core/zip/inc
+     ${CMAKE_SOURCE_DIR}/io/io/inc
      ${CLING_INCLUDE_DIRS}
 )
 

@@ -28,12 +28,6 @@ else()
   set(platform_incl core/unix/inc)
 endif()
 
-
-if(ROOT_ARCHITECTURE MATCHES win32)
-   set(win32_incl core/win32/inc)
-endif()
-
-
 ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
    GDIRS
       ${CMAKE_BINARY_DIR}/ginclude
@@ -197,6 +191,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
   LINKDEF
     base/inc/LinkDef.h
   INCLUDES
+    ${CMAKE_SOURCE_DIR}/core
     ${CMAKE_SOURCE_DIR}/core/clingutils/inc
 )
 

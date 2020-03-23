@@ -17,7 +17,8 @@ ROOT_OBJECT_LIBRARY(Winnt
   src/TWin32SplashThread.cxx
   src/TWinNTSystem.cxx
   src/Win32Splash.cxx
-  INCLUDES ../foundation/res
+  INCLUDES 
+    ${CMAKE_SOURCE_DIR}/core/foundation/res
 )
 
 ROOT_INSTALL_HEADERS()
