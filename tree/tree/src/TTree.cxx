@@ -1287,16 +1287,20 @@ TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
    }
    TFriendElement *fe = new TFriendElement(this, treename, filename);
 
-   fFriends->Add(fe);
    TTree *t = fe->GetTree();
+   bool canAddFriend = true;
    if (t) {
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
          Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent Tree: %lld", treename,
                  filename, t->GetEntries(), fEntries);
       }
    } else {
-      Warning("AddFriend", "Cannot add FriendElement %s in file %s", treename, filename);
+      Error("AddFriend", "Cannot find tree '%s' in file '%s', friend not added", treename, filename);
+      canAddFriend = false;
    }
+
+   if (canAddFriend)
+      fFriends->Add(fe);
    return fe;
 }
 
@@ -1316,16 +1320,20 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
    }
    TFriendElement *fe = new TFriendElement(this, treename, file);
    R__ASSERT(fe);
-   fFriends->Add(fe);
    TTree *t = fe->GetTree();
+   bool canAddFriend = true;
    if (t) {
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
          Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent tree: %lld", treename,
                  file->GetName(), t->GetEntries(), fEntries);
       }
    } else {
-      Warning("AddFriend", "unknown tree '%s' in file '%s'", treename, file->GetName());
+      Error("AddFriend", "Cannot find tree '%s' in file '%s', friend not added", treename, filename);
+      canAddFriend = false;
    }
+
+   if (canAddFriend)
+      fFriends->Add(fe);
    return fe;
 }
 
