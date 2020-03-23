@@ -1026,6 +1026,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       RooRealVar* rrv =  dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) rrv->setRange("fit",rangeLo,rangeHi) ;
     }
+
+    // Clear possible range attributes from previous fits.
+    setStringAttribute("fitrange", nullptr);
+
     // Set range name to be fitted to "fit"
     rangeName = "fit" ;
   }
