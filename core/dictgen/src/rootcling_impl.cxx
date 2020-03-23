@@ -4349,6 +4349,8 @@ int RootClingMain(int argc,
 
    // For the list of 'opaque' typedef to also include string, we have to include it now.
    interp.declare("#include <string>");
+   // For initializing TNormalizedCtxt.
+   interp.declare("#include <RtypesCore.h>");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
