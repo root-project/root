@@ -158,7 +158,6 @@ TEST_F(RDFSnapshot, Snapshot_nocolumnmatch)
    const auto fname = "snapshotnocolumnmatch.root";
    RDataFrame d(1);
    auto op = [&](){
-      testing::internal::CaptureStderr();
       d.Snapshot("t", fname, "x");
    };
    EXPECT_ANY_THROW(op());
@@ -816,8 +815,9 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
 TEST(RDFSnapshotMore, TreeWithFriendsMT)
 {
    const auto fname = "treewithfriendsmt.root";
-   ROOT::EnableImplicitMT();
    RDataFrame(10).Define("x", []() { return 0; }).Snapshot<int>("t", fname, {"x"});
+
+   ROOT::EnableImplicitMT();
 
    TFile file(fname);
    auto tree = file.Get<TTree>("t");
