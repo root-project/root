@@ -1280,18 +1280,19 @@ void TTree::AddClone(TTree* clone)
 ///     tree.Draw("var:ft1.var:ft2.var")
 /// ~~~
 
-TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
+TFriendElement *TTree::AddFriend(const char *treename, const char *filename)
 {
    if (!fFriends) {
       fFriends = new TList();
    }
-   TFriendElement* fe = new TFriendElement(this, treename, filename);
+   TFriendElement *fe = new TFriendElement(this, treename, filename);
 
    fFriends->Add(fe);
-   TTree* t = fe->GetTree();
+   TTree *t = fe->GetTree();
    if (t) {
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
-         Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent Tree: %lld", treename, filename, t->GetEntries(), fEntries);
+         Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent Tree: %lld", treename,
+                 filename, t->GetEntries(), fEntries);
       }
    } else {
       Warning("AddFriend", "Cannot add FriendElement %s in file %s", treename, filename);
@@ -1308,7 +1309,7 @@ TFriendElement* TTree::AddFriend(const char* treename, const char* filename)
 /// - reads a Tree with name treename from the file
 /// - adds the Tree to the list of friends
 
-TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
+TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
 {
    if (!fFriends) {
       fFriends = new TList();
@@ -1319,9 +1320,10 @@ TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
    TTree *t = fe->GetTree();
    if (t) {
       if (!t->GetTreeIndex() && (t->GetEntries() < fEntries)) {
-         Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent tree: %lld", treename, file->GetName(), t->GetEntries(), fEntries);
+         Warning("AddFriend", "FriendElement %s in file %s has less entries %lld than its parent tree: %lld", treename,
+                 file->GetName(), t->GetEntries(), fEntries);
       }
-  } else {
+   } else {
       Warning("AddFriend", "unknown tree '%s' in file '%s'", treename, file->GetName());
    }
    return fe;
@@ -1333,7 +1335,7 @@ TFriendElement* TTree::AddFriend(const char* treename, TFile* file)
 /// The TTree is managed by the user (e.g., the user must delete the file).
 /// For a complete description see AddFriend(const char *, const char *).
 
-TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
+TFriendElement *TTree::AddFriend(TTree *tree, const char *alias, Bool_t warn)
 {
    if (!tree) {
       return 0;
@@ -1341,13 +1343,14 @@ TFriendElement* TTree::AddFriend(TTree* tree, const char* alias, Bool_t warn)
    if (!fFriends) {
       fFriends = new TList();
    }
-   TFriendElement* fe = new TFriendElement(this, tree, alias);
+   TFriendElement *fe = new TFriendElement(this, tree, alias);
    R__ASSERT(fe); // this assert is for historical reasons. Don't remove it unless you understand all the consequences.
    fFriends->Add(fe);
-   TTree* t = fe->GetTree();
+   TTree *t = fe->GetTree();
    if (warn && (t->GetEntries() < fEntries)) {
       Warning("AddFriend", "FriendElement '%s' in file '%s' has less entries %lld than its parent tree: %lld",
-              tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(), fEntries);
+              tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(),
+              fEntries);
    }
    tree->RegisterExternalFriend(fe);
    return fe;
