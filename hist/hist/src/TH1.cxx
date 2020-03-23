@@ -3819,8 +3819,8 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// Fit histogram with function f1.
 ///
 /// \param[in] option fit options is given in parameter option.
-///        - "W"  Set all weights to 1 for non empty bins; ignore error bars
-///        - "WW" Set all weights to 1 including empty bins; ignore error bars
+///        - "W"  Ignore the bin uncertainties when fitting using the default least square (chi2) method but skip empty bins
+///        - "WW" Ignore the bin uncertainties when fitting using the default least square (chi2) method and include also the empty bins
 ///        - "I"  Use integral of function in bin, normalized by the bin volume,
 ///          instead of value at bin center
 ///        -  "L"  Use Loglikelihood method (default is chisquare method)
