@@ -2726,6 +2726,7 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 /// <tr><td> `ProjectionRange(const char* rn)`  <td>  Override default range of projection integrals to a different
 ///               range specified by given range name. This technique allows you to project a finite width slice in a real-valued observable
 /// <tr><td> `NormRange(const char* name)`      <td>  Calculate curve normalization w.r.t. specified range[s].
+///               See the tutorial rf212_rangesAndBlinding.C
 ///               \note A Range() by default sets a NormRange() on the same range, but this option allows
 ///               to override the default, or specify normalization ranges when the full curve is to be drawn.
 ///
