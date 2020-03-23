@@ -289,7 +289,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooArgSet* dataObsSet = (RooArgSet*) _dataClone->get() ;
   if (rangeName && strlen(rangeName)) {    
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;    
-    //cout << "now adjusting observable ranges to requested fit range" << endl ;
 
     // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
     for (const auto arg : *_funcObsSet) {
@@ -313,20 +312,21 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 	RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
 	dataObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;	
        
-	// Keep track of list of fit ranges in string attribute fit range of original p.d.f.
-	if (!_splitRange) {
-	  const char* origAttrib = real.getStringAttribute("fitrange") ;	  
-	  if (origAttrib) {
-	    real.setStringAttribute("fitrange",Form("%s,fit_%s",origAttrib,GetName())) ;
-	  } else {
-	    real.setStringAttribute("fitrange",Form("fit_%s",GetName())) ;
-	  }
-	  RooRealVar* origObs = (RooRealVar*) origObsSet->find(arg->GetName()) ;
-	  if (origObs) {
-	    origObs->setRange(Form("fit_%s",GetName()),realObs->getMin(rangeName),realObs->getMax(rangeName)) ;
-	  }
-	}
-	
+        // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
+        if (!_splitRange) {
+          const std::string fitRangeName = std::string("fit_") + GetName();
+          const char* origAttrib = real.getStringAttribute("fitrange") ;
+          std::string newAttr = origAttrib ? origAttrib : "";
+
+          if (newAttr.find(fitRangeName) == std::string::npos) {
+            newAttr += (newAttr.empty() ? "" : ",") + fitRangeName;
+          }
+          real.setStringAttribute("fitrange", newAttr.c_str());
+          RooRealVar* origObs = (RooRealVar*) origObsSet->find(arg->GetName()) ;
+          if (origObs) {
+            origObs->setRange(fitRangeName.c_str(), realObs->getMin(rangeName), realObs->getMax(rangeName));
+          }
+        }
       }
     }
   }
