@@ -229,7 +229,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
     //    RooStats::SetParameters(&parameterPoint, const_cast<RooArgSet*>(hist->get()));
     //    Int_t index = hist->calcTreeIndex(); // get index
     int index = hist->getIndex(parameterPoint); // get index
-    if (index >= fSamplingSummaries.size())
+    if (index >= (int)fSamplingSummaries.size())
       throw std::runtime_error("ConfidenceBelt::GetAcceptanceRegion: Sampling summaries are not filled yet. Switch on NeymanConstruction::CreateConfBelt() or FeldmanCousins::CreateConfBelt().");
 
     return &(fSamplingSummaries[index].GetAcceptanceRegion());
@@ -252,7 +252,7 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
    break;
     }
 
-    if (index >= fSamplingSummaries.size())
+    if (index >= (int)fSamplingSummaries.size())
       throw std::runtime_error("ConfidenceBelt::GetAcceptanceRegion: Sampling summaries are not filled yet. Switch on NeymanConstruction::CreateConfBelt() or FeldmanCousins::CreateConfBelt().");
 
     return &(fSamplingSummaries[index].GetAcceptanceRegion());
