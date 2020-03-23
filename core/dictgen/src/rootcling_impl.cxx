@@ -4325,21 +4325,15 @@ int RootClingMain(int argc,
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
-   if (isGenreflex) {
-      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
-         // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
-         return 1;
-      }
-   } else {
-      // rootcling
-      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
-            // CINT uses to define a few header implicitly, we need to do it explicitly.
-            || interp.declare("#include <assert.h>\n"
-                             ) != cling::Interpreter::kSuccess
-            || interp.declare("#include \"Rtypes.h\"\n"
-                              "#include \"TObject.h\""
-                             ) != cling::Interpreter::kSuccess
+   if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+      ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+      return 1;
+   }
+   if (!isGenreflex) { // rootcling
+      // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
+      if (interp.declare("#include <assert.h>\n") != cling::Interpreter::kSuccess
+          || interp.declare("#include \"Rtypes.h\"\n"
+                            "#include \"TObject.h\"") != cling::Interpreter::kSuccess
          ) {
          // There was an error.
          ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
