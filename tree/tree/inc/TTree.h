@@ -239,7 +239,12 @@ public:
       /// If set, the branch's buffers will grow until an event cluster boundary is hit,
       /// guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
       /// memory bounds in the case of extremely large events.
-      kOnlyFlushAtCluster = BIT(14)
+      kOnlyFlushAtCluster = BIT(14),
+      /// If set, signals that this TTree is the output of the processing of another TTree, and
+      /// the entries are reshuffled w.r.t. to the original TTree. As a safety measure, a TTree
+      /// with this bit set cannot add friends nor can be added as a friend. If you know what
+      /// you are doing, you can manually unset this bit with `ResetBit(EStatusBits::kEntriesReshuffled)`.
+      kEntriesReshuffled = BIT(19) // bits 15-18 are used by TChain
    };
 
    // Split level modifier
