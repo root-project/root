@@ -73,6 +73,15 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     message(FATAL_ERROR "No Python 2 or 3 were found")
   endif()
 
+  # Print message saying with which versions of Python are used to build
+  if(pyroot_experimental)
+    if(NOT Python3_Development_FOUND OR NOT Python2_Development_FOUND)
+      message(STATUS "Main Python used to build: ${PYTHON_VERSION_MAJOR}; PyROOT built for version ${PYTHON_VERSION_MAJOR} ")
+    elseif(Python3_Development_FOUND AND Python2_Development_FOUND)
+      message(STATUS "Main Python used to build: ${PYTHON_VERSION_MAJOR}; PyROOT built for versions ${PYTHON_VERSION_MAJOR} and ${OTHER_PYTHON_VERSION_MAJOR}")
+    endif()
+  endif()
+
 else()
 
   find_package(PythonInterp ${python_version} REQUIRED)
