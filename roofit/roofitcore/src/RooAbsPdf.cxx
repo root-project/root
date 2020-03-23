@@ -2933,13 +2933,15 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       }
 
       if (hasCustomRange && adjustNorm) {
+        // If overlapping ranges were given, remove them now
         const std::size_t oldSize = rangeLim.size();
         removeRangeOverlap(rangeLim);
 
-        if (oldSize != rangeLim.size()) {
+        if (oldSize != rangeLim.size() && !pc.hasProcessed("NormRange")) {
           // User gave overlapping ranges. This leads to double-counting events and integrals, and must
-          // therefore be avoided.
-          coutE(Plotting) << "Requested ranges overlap. For correct plotting, new ranges "
+          // therefore be avoided. If a NormRange has been given, the overlap is alreay gone.
+          // It's safe to plot even with overlap now.
+          coutE(Plotting) << "Requested plot/integration ranges overlap. For correct plotting, new ranges "
               "will be defined." << std::endl;
           auto plotVar = dynamic_cast<RooRealVar*>(frame->getPlotVar());
           assert(plotVar);
