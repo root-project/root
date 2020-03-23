@@ -89,6 +89,7 @@ namespace RooStats {
    return fPointsToTest;
       }
 
+      /// Get the confidence belt. This requires that CreateConfBelt() has been set.
       ConfidenceBelt* GetConfidenceBelt() {return fConfBelt;}
 
       void UseAdaptiveSampling(bool flag=true){fAdaptiveSampling=flag;}

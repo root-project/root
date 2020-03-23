@@ -72,7 +72,7 @@ FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) :
   fTestStatSampler(0),
   fPointsToTest(0),
   fPOIToTest(0),
-  fConfBelt(0),
+  fConfBelt(nullptr),
   fAdaptiveSampling(false),
   fAdditionalNToysFactor(1.),
   fNbins(10),
@@ -254,7 +254,9 @@ PointSetInterval* FeldmanCousins::GetInterval() const {
   nc.AdditionalNToysFactor(fAdditionalNToysFactor);
   nc.SaveBeltToFile(fSaveBeltToFile);
   nc.CreateConfBelt(fCreateBelt);
-  fConfBelt = nc.GetConfidenceBelt();
+  if (fCreateBelt)
+    fConfBelt = nc.GetConfidenceBelt();
+
   // use it
   return nc.GetInterval();
 }
