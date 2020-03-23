@@ -115,7 +115,7 @@ else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> ${COMPILEDATA}.tmp
 fi
 if [ "$CUSTOMEXE" = "" ]; then
-   echo "#define MAKEEXE \"cd \$BuildDir ; $BXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $BXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs\""  >> ${COMPILEDATA}.tmp
+   echo "#define MAKEEXE \"cd \$BuildDir ; $BXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles; $BXX \$Opt \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs\""  >> ${COMPILEDATA}.tmp
 else
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> ${COMPILEDATA}.tmp
 fi
