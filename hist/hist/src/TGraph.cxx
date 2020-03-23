@@ -1079,7 +1079,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 ///
 /// option | description
 /// -------|------------
-/// "W" | Set all weights to 1; ignore error bars
+/// "W" | Ignore all point errors when fitting a TGraphErrors or TGraphAsymmErrors
 /// "U" | Use a User specified fitting algorithm (via SetFCN)
 /// "Q" | Quiet mode (minimum printing)
 /// "V" | Verbose mode (default is between Q and V)
@@ -1092,7 +1092,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 /// "+" | Add this new fitted function to the list of fitted functions (by default, any previous function is deleted)
 /// "C" | In case of linear fitting, do not calculate the chisquare (saves time)
 /// "F" | If fitting a polN, use the minuit fitter
-/// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the coordinate
+/// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the X coordinates
 /// "ROB" | In case of linear fitting, compute the LTS regression coefficients (robust (resistant) regression), using the default fraction of good points "ROB=0.x" - compute the LTS regression coefficients, using 0.x as a fraction of good points
 /// "S" |  The result of the fit is returned in the TFitResultPtr (see below Access to the Fit Result)
 ///
