@@ -4,6 +4,8 @@
 
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
+include_directories(${OPENGL_INCLUDE_DIR})
+
 if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
