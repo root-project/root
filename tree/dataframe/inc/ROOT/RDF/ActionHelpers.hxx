@@ -1307,6 +1307,7 @@ public:
       // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
       fOutputTrees[slot] =
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+      fOutputTrees[slot]->SetBit(TTree::kEntriesReshuffled);
       // TODO can be removed when RDF supports interleaved TBB task execution properly, see ROOT-10269
       fOutputTrees[slot]->SetImplicitMT(false);
       if (fOptions.fAutoFlush)
