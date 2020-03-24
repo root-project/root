@@ -9,7 +9,6 @@
 #include "TBranchElement.h"
 #include "TBranchObject.h"
 #include "TEntryList.h"
-#include "TError.h"
 #include "TFriendElement.h"
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
@@ -23,9 +22,11 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <exception>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iostream>
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
@@ -252,8 +253,15 @@ void RLoopManager::RunEmptySourceMT()
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       auto slot = slotStack.GetSlot();
       InitNodeSlots(nullptr, slot);
-      for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
-         RunAndCheckFilters(slot, currEntry);
+      try {
+         for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
+            RunAndCheckFilters(slot, currEntry);
+         }
+      } catch (...) {
+         CleanUpTask(slot);
+         // Error might throw in experiment frameworks like CMSSW
+         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         throw;
       }
       CleanUpTask(slot);
       slotStack.ReturnSlot(slot);
@@ -269,8 +277,14 @@ void RLoopManager::RunEmptySourceMT()
 void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
-   for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
-      RunAndCheckFilters(0, currEntry);
+   try {
+      for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
+         RunAndCheckFilters(0, currEntry);
+      }
+   } catch (...) {
+      CleanUpTask(0u);
+      std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+      throw;
    }
    CleanUpTask(0u);
 }
@@ -292,9 +306,15 @@ void RLoopManager::RunTreeProcessorMT()
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
       auto count = entryCount.fetch_add(nEntries);
-      // recursive call to check filters and conditionally execute actions
-      while (r.Next()) {
-         RunAndCheckFilters(slot, count++);
+      try {
+         // recursive call to check filters and conditionally execute actions
+         while (r.Next()) {
+            RunAndCheckFilters(slot, count++);
+         }
+      } catch (...) {
+         CleanUpTask(slot);
+         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         throw;
       }
       CleanUpTask(slot);
       slotStack.ReturnSlot(slot);
@@ -313,8 +333,14 @@ void RLoopManager::RunTreeReader()
 
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
-   while (r.Next() && fNStopsReceived < fNChildren) {
-      RunAndCheckFilters(0, r.GetCurrentEntry());
+   try {
+      while (r.Next() && fNStopsReceived < fNChildren) {
+         RunAndCheckFilters(0, r.GetCurrentEntry());
+      }
+   } catch (...) {
+      CleanUpTask(0u);
+      std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+      throw;
    }
    CleanUpTask(0u);
 }
@@ -328,13 +354,19 @@ void RLoopManager::RunDataSource()
    while (!ranges.empty()) {
       InitNodeSlots(nullptr, 0u);
       fDataSource->InitSlot(0u, 0ull);
-      for (const auto &range : ranges) {
-         auto end = range.second;
-         for (auto entry = range.first; entry < end; ++entry) {
-            if (fDataSource->SetEntry(0u, entry)) {
-               RunAndCheckFilters(0u, entry);
+      try {
+         for (const auto &range : ranges) {
+            auto end = range.second;
+            for (auto entry = range.first; entry < end; ++entry) {
+               if (fDataSource->SetEntry(0u, entry)) {
+                  RunAndCheckFilters(0u, entry);
+               }
             }
          }
+      } catch (...) {
+         CleanUpTask(0u);
+         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         throw;
       }
       CleanUpTask(0u);
       fDataSource->FinaliseSlot(0u);
@@ -357,10 +389,16 @@ void RLoopManager::RunDataSourceMT()
       InitNodeSlots(nullptr, slot);
       fDataSource->InitSlot(slot, range.first);
       const auto end = range.second;
-      for (auto entry = range.first; entry < end; ++entry) {
-         if (fDataSource->SetEntry(slot, entry)) {
-            RunAndCheckFilters(slot, entry);
+      try {
+         for (auto entry = range.first; entry < end; ++entry) {
+            if (fDataSource->SetEntry(slot, entry)) {
+               RunAndCheckFilters(slot, entry);
+            }
          }
+      } catch (...) {
+         CleanUpTask(slot);
+         std::cerr << "RDataFrame::Run: event was loop interrupted\n";
+         throw;
       }
       CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);
