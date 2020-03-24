@@ -14,6 +14,7 @@ endif()
 
 if(builtin_glew)
    set(glew_includes ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
+   set(glew_dep GLEW)
 endif()
 
 ROOT_LINKER_LIBRARY(FTGL
@@ -46,6 +47,8 @@ ROOT_LINKER_LIBRARY(FTGL
     ZLIB::ZLIB
   BUILTINS
     FREETYPE
+  DEPENDENCIES
+    ${glew_dep}
   INCLUDES
     ${FREETYPE_INCLUDE_DIRS}
     ${OPENGL_INCLUDE_DIR}
