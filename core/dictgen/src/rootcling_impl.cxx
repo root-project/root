@@ -4412,12 +4412,6 @@ int RootClingMain(int argc,
                                  gOptUmbrellaInput.ArgStr.data());
    }
 
-
-   if (gDriverConfig->fAddAncestorPCMROOTFile) {
-      for (const auto & baseModule : gOptModuleDependencies)
-         gDriverConfig->fAddAncestorPCMROOTFile(baseModule.c_str());
-   }
-
    // We have a multiDict request. This implies generating a pcm which is of the form
    // dictName_libname_rdict.pcm
    if (gOptMultiDict) {
