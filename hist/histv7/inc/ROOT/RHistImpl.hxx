@@ -731,6 +731,7 @@ public:
          } else {
             ret = GetActualBinIndex(x);
          }
+         status = RAxisBase::EFindStatus::kValid;
       }
       return ret;
    }
