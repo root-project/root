@@ -66,7 +66,6 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooCompositeDataStore.h"
-#include "RooTreeData.h"
 #include "RooSentinel.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
@@ -2015,7 +2014,7 @@ void RooDataSet::Streamer(TBuffer &R__b)
        TTree* X_tree(0) ; R__b >> X_tree;
        RooArgSet X_truth ; X_truth.Streamer(R__b);
        TString X_blindString ; X_blindString.Streamer(R__b);
-       R__b.CheckByteCount(R__s1, R__c1, RooTreeData::Class());
+       R__b.CheckByteCount(R__s1, R__c1, TClass::GetClass("RooTreeData"));
        // --- End of RooTreeData-v1 streamer
        
        // Construct RooTreeDataStore from X_tree and complete initialization of new-style RooAbsData
