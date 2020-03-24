@@ -4,6 +4,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <cassert>
 
 auto fileName("testtypeguessing.root");
 auto treeName("myTree");
@@ -22,12 +23,21 @@ int main() {
 
    TFile f(fileName);
    ROOT::RDataFrame d(treeName, fileName);
+
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
    auto hb = d.Histo1D<double>("b");
+
    // Histo1D("s") should compile and execute (jitting recognizes the std::string type)
    // although the histogram will be filled with meaningless values
    auto hs = d.Histo1D("s");
-   *hb;
+
+   bool exception_caught = false;
+   try {
+      *hb;
+   } catch (const std::runtime_error &) {
+      exception_caught = true;
+   }
+   assert(exception_caught);
 
    return 0;
 }
