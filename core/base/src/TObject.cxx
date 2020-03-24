@@ -756,7 +756,8 @@ void TObject::UseCurrentStyle()
 ///  then writes it out, the behaviour is effectively the same. If, however,
 ///  one creates a new TTree and writes it out in this way,
 ///  only the metadata is replaced, effectively making the old data invisible
-///  without deleting it.
+///  without deleting it. TTree::Delete() can be used to mark all disk space
+///  occupied by a TTree as free before overwriting its metadata this way.
 ///  The kSingleKey option is only used by TCollection::Write() to write
 ///  a container with a single key instead of each object in the container
 ///  with its own key.
