@@ -143,6 +143,18 @@ namespace genreflex {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
+
+ // FIXME: We should remove after removal of r flag.
+static llvm::cl::opt<bool>
+gOptIgnoreExistingDict("r",
+               llvm::cl::desc("Deprecated. Similar to -f but it ignores the dictionary generation. \
+When -r is present rootcling becomes a tool to generate rootmaps (and capability files)."),
+               llvm::cl::Hidden,
+               llvm::cl::cat(gRootclingOptions));
+
+////////////////////////////////////////////////////////////////////////////////
+
 void SetRootSys();
 
 ROOT::Internal::RootCling::TROOTSYSSetter::TROOTSYSSetter() {
@@ -2688,7 +2700,9 @@ int GenerateFullDict(std::ostream &dictStream,
 
    // SELECTION LOOP
    for (auto const & ns : scan.fSelectedNamespaces) {
-      WriteNamespaceInit(ns, interp, dictStream);
+      if (!gOptIgnoreExistingDict) {
+         WriteNamespaceInit(ns, interp, dictStream);
+      }
       auto nsName = ns.GetNamespaceDecl()->getQualifiedNameAsString();
       if (nsName.find("(anonymous)") == std::string::npos)
          EmitStreamerInfo(nsName.c_str());
@@ -2721,7 +2735,10 @@ int GenerateFullDict(std::ostream &dictStream,
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);
          } else {
-            ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+            if (!gOptIgnoreExistingDict) {
+               ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
+                                                needsCollectionProxy);
+            }
             EmitStreamerInfo(selClass.GetNormalizedName());
          }
       }
@@ -2740,7 +2757,7 @@ int GenerateFullDict(std::ostream &dictStream,
          continue;
       }
       const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
-      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass, "Class_Name", interp)) {
+      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass, "Class_Name", interp) && !gOptIgnoreExistingDict) {
          WriteClassFunctions(cxxdecl, dictStream, isSplit);
       }
    }
@@ -2758,24 +2775,30 @@ int GenerateFullDict(std::ostream &dictStream,
       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
 
       if (!ROOT::TMetaUtils::IsSTLContainer(selClass)) {
-         ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+         if (!gOptIgnoreExistingDict) {
+            ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes,
+                                             needsCollectionProxy);
+         }
          EmitStreamerInfo(selClass.GetNormalizedName());
       }
    }
    // Loop to write all the ClassCode
-   for (auto const & selClass : scan.fSelectedClasses) {
-      ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
-                                       selClass,
-                                       interp,
-                                       normCtxt,
-                                       dictStream,
-                                       ctorTypes,
-                                       isGenreflex);
-   }
+   if (!gOptIgnoreExistingDict) {
+      for (auto const &selClass : scan.fSelectedClasses) {
+          ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
+                                           selClass,
+                                           interp,
+                                           normCtxt,
+                                           dictStream,
+                                           ctorTypes,
+                                           isGenreflex);
+      }
 
-   // Loop on the registered collections internally
-   // coverity[fun_call_w_exception] - that's just fine.
-   ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy, EmitStreamerInfo);
+      // Loop on the registered collections internally
+      // coverity[fun_call_w_exception] - that's just fine.
+      ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy,
+                                                      EmitStreamerInfo);
+   }
 
    if (!gDriverConfig->fBuildingROOTStage1) {
       EmitTypedefs(scan.fSelectedTypedefs);
@@ -3629,7 +3652,6 @@ static void MaybeSuppressWin32CrashDialogs() {
 #endif
 }
 
-static llvm::cl::OptionCategory gRootclingOptions("rootcling common options");
 static llvm::cl::opt<bool> gOptForce("f", llvm::cl::desc("Overwrite <file>s."),
                                     llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool> gOptRootBuild("rootbuild", llvm::cl::desc("If we are building ROOT."),
@@ -3674,12 +3696,6 @@ gOptLibListPrefix("lib-list-prefix",
 static llvm::cl::opt<bool>
 gOptGeneratePCH("generate-pch",
                llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
-               llvm::cl::Hidden,
-               llvm::cl::cat(gRootclingOptions));
- // FIXME: We should remove the IgnoreExistingDict option as it is not used.
-static llvm::cl::opt<bool>
-gOptIgnoreExistingDict("r",
-               llvm::cl::desc("Deprecated, legacy flag which is ignored."),
                llvm::cl::Hidden,
                llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<std::string>
@@ -4550,6 +4566,10 @@ int RootClingMain(int argc,
    std::ofstream fileout;
    string main_dictname(gOptDictionaryFileName.getValue());
    std::ostream *dictStreamPtr = NULL;
+   std::ostream *dictStream = nullptr;
+   std::ostream *splitDictStream = nullptr;
+   std::ostream *splitDictStreamPtr = nullptr;
+   std::unique_ptr<std::ostream> splitDeleter(nullptr);
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
    if (!gOptIgnoreExistingDict) {
@@ -4565,34 +4585,30 @@ int RootClingMain(int argc,
       } else {
          dictStreamPtr = &std::cout;
       }
-   } else {
-      fileout.open("/dev/null");
-      dictStreamPtr = &fileout;
-   }
 
-   // Now generate a second stream for the split dictionary if it is necessary
-   std::ostream *splitDictStreamPtr;
-   std::unique_ptr<std::ostream> splitDeleter(nullptr);
-   if (gOptSplit) {
-      splitDictStreamPtr = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
-      splitDeleter.reset(splitDictStreamPtr);
-   } else {
-      splitDictStreamPtr = dictStreamPtr;
-   }
-   std::ostream &dictStream = *dictStreamPtr;
-   std::ostream &splitDictStream = *splitDictStreamPtr;
+      // Now generate a second stream for the split dictionary if it is necessary
+      if (gOptSplit) {
+         splitDictStreamPtr = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
+         splitDeleter.reset(splitDictStreamPtr);
+      } else {
+         splitDictStreamPtr = dictStreamPtr;
+      }
 
-   size_t dh = main_dictname.rfind('.');
-   if (dh != std::string::npos) {
-      main_dictname.erase(dh);
-   }
-   // Need to replace all the characters not allowed in a symbol ...
-   std::string main_dictname_copy(main_dictname);
-   TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
+      dictStream = dictStreamPtr;
+      splitDictStream = splitDictStreamPtr;
 
-   CreateDictHeader(dictStream, main_dictname);
-   if (gOptSplit)
-      CreateDictHeader(splitDictStream, main_dictname);
+      size_t dh = main_dictname.rfind('.');
+      if (dh != std::string::npos) {
+         main_dictname.erase(dh);
+      }
+      // Need to replace all the characters not allowed in a symbol ...
+      std::string main_dictname_copy(main_dictname);
+      TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
+
+      CreateDictHeader(*dictStream, main_dictname);
+      if (gOptSplit)
+         CreateDictHeader(*splitDictStream, main_dictname);
+   }
 
    //---------------------------------------------------------------------------
    // Parse the linkdef or selection.xml file.
@@ -4725,18 +4741,18 @@ int RootClingMain(int argc,
    // Write schema evolution related headers and declarations
    /////////////////////////////////////////////////////////////////////////////
 
-   if (!ROOT::gReadRules.empty() || !ROOT::gReadRawRules.empty()) {
-      dictStream << "#include \"TBuffer.h\"\n"
-                 << "#include \"TVirtualObject.h\"\n"
-                 << "#include <vector>\n"
-                 << "#include \"TSchemaHelper.h\"\n\n";
+   if ((!ROOT::gReadRules.empty() || !ROOT::gReadRawRules.empty()) && !gOptIgnoreExistingDict) {
+      *dictStream << "#include \"TBuffer.h\"\n"
+                  << "#include \"TVirtualObject.h\"\n"
+                  << "#include <vector>\n"
+                  << "#include \"TSchemaHelper.h\"\n\n";
 
       std::list<std::string> includes;
       GetRuleIncludes(includes);
       for (auto & incFile : includes) {
-         dictStream << "#include <" << incFile << ">" << std::endl;
+         *dictStream << "#include <" << incFile << ">" << std::endl;
       }
-      dictStream << std::endl;
+      *dictStream << std::endl;
    }
 
    selectionRules.SearchNames(interp);
@@ -4820,9 +4836,11 @@ int RootClingMain(int argc,
    }
 
    if (!gOptGeneratePCH) {
-      GenerateNecessaryIncludes(dictStream, includeForSource, extraIncludes);
-      if (gOptSplit) {
-         GenerateNecessaryIncludes(splitDictStream, includeForSource, extraIncludes);
+      if (!gOptIgnoreExistingDict) {
+         GenerateNecessaryIncludes(*dictStream, includeForSource, extraIncludes);
+         if (gOptSplit) {
+            GenerateNecessaryIncludes(*splitDictStream, includeForSource, extraIncludes);
+         }
       }
       if (gDriverConfig->fInitializeStreamerInfoROOTFile) {
          gDriverConfig->fInitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
@@ -4848,7 +4866,7 @@ int RootClingMain(int argc,
          rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
       }
    } else {
-      rootclingRetCode += GenerateFullDict(splitDictStream,
+      rootclingRetCode += GenerateFullDict(*splitDictStream,
                                  interp,
                                  scan,
                                  constructorTypes,
@@ -4901,7 +4919,7 @@ int RootClingMain(int argc,
                fwdDeclsString = GenerateFwdDeclString(scan, interp);
          }
       }
-      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
+      modGen.WriteRegistrationSource(*dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
                                      extraIncludes, gOptCxxModule);
       // If we just want to inline the input header, we don't need
       // to generate any files.
