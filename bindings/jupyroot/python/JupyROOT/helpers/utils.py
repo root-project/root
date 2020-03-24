@@ -412,8 +412,46 @@ class NotebookDrawer(object):
 
 
     def _getJsCode(self):
+        # Add extra primitives to canvas with custom colors, palette, gStyle
+        prim = self.drawableObject.GetListOfPrimitives()
+
+        style = ROOT.gStyle
+        colors = ROOT.gROOT.GetListOfColors()
+        palette = None
+
+        # always provide gStyle object
+        if prim.FindObject(style):
+           style = None
+        else:
+           prim.Add(style)
+
+        cnt = 0
+        for n in range(colors.GetLast()+1):
+           if colors.At(n): cnt = cnt+1
+           
+        # add all colors if there are more than 598 colors defined
+        if cnt < 599 or prim.FindObject(colors):
+           colors = None
+        else:
+           prim.Add(colors)
+
+        if colors:
+           pal = ROOT.TColor.GetPalette()
+           palette = ROOT.TObjArray()
+           palette.SetName("CurrentColorPalette")
+           for i in range(pal.GetSize()):
+              palette.Add(colors.At(pal[i]))
+           prim.Add(palette)
+
+        ROOT.TColor.DefinedColors()
+       
         # Workaround to have ConvertToJSON work
         json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 3)
+
+        # Cleanup primitives after conversion
+        if style: prim.Remove(style)
+        if colors: prim.Remove(colors)
+        if palette: prim.Remove(palette)
 
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
