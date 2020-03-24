@@ -30,7 +30,6 @@ namespace RootCling {
       void (*fAddStreamerInfoToROOTFile)(const char *normName) = nullptr;
       void (*fAddTypedefToROOTFile)(const char *tdname) = nullptr;
       void (*fAddEnumToROOTFile)(const char *tdname) = nullptr;
-      void (*fAddAncestorPCMROOTFile)(const char *pcmName) = nullptr;
       bool (*fCloseStreamerInfoROOTFile)(bool writeEmptyRootPCM) = nullptr;
    };
 
