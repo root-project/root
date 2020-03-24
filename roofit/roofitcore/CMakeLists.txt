@@ -250,16 +250,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         RooMinimizerType.h
         RooMinimizer_impl.h
         MultiProcess/BidirMMapPipe.h
-        TestStatistics/GradMinimizer.h
-        TestStatistics/GradMinimizerFcn.h
+#        TestStatistics/GradMinimizer.h
         TestStatistics/LikelihoodGradientJob.h
         TestStatistics/LikelihoodGradientWrapper.h
         TestStatistics/LikelihoodJob.h
         TestStatistics/LikelihoodWrapper.h
-        TestStatistics/Minimizer.h
-        TestStatistics/MinimizerFcn.h
-        TestStatistics/MinimizerType.h
-        TestStatistics/Minimizer_impl.h
+#        TestStatistics/Minimizer.h
+#        TestStatistics/MinimizerFcn.h
+#        TestStatistics/MinimizerType.h
+#        TestStatistics/Minimizer_impl.h
+        TestStatistics/MinuitFcnGrad.h
         TestStatistics/RooAbsL.h
         TestStatistics/RooBinnedL.h
         TestStatistics/RooConstraintL.h
@@ -492,14 +492,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/RooGradientFunction.cxx
         src/RooMinimizerType.cxx
         src/MultiProcess/BidirMMapPipe.cxx
-        src/TestStatistics/GradMinimizerFcn.cxx
+#        src/TestStatistics/GradMinimizerFcn.cxx
         src/TestStatistics/LikelihoodGradientJob.cxx
         src/TestStatistics/LikelihoodGradientWrapper.cxx
         src/TestStatistics/LikelihoodJob.cxx
         src/TestStatistics/LikelihoodWrapper.cxx
-        src/TestStatistics/Minimizer.cxx
-        src/TestStatistics/MinimizerFcn.cxx
-        src/TestStatistics/MinimizerType.cxx
+#        src/TestStatistics/Minimizer.cxx
+#        src/TestStatistics/MinimizerFcn.cxx
+#        src/TestStatistics/MinimizerType.cxx
+        TestStatistics/MinuitFcnGrad.cxx
         src/TestStatistics/RooAbsL.cxx
         src/TestStatistics/RooBinnedL.cxx
         src/TestStatistics/RooConstraintL.cxx

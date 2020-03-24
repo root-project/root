@@ -3,38 +3,36 @@
  * Package: RooFitCore                                                       *
  * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
- *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
  *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
- *   VC, Vince Croft,     DIANA / NYU,        vincent.croft@cern.ch          *
- *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOGradMinimizer
+#ifndef ROOFIT_TESTSTATISTICS_GRADMINIMIZER_H
+#define ROOFIT_TESTSTATISTICS_GRADMINIMIZER_H
 
-#ifndef ROOT_ROOFIT_TESTSTATISTICS_GRAD_MINIMIZER_FCN
-#define ROOT_ROOFIT_TESTSTATISTICS_GRAD_MINIMIZER_FCN
+#include <vector>
+#include <RooMinimizer.h>
 
 #include "Fit/FitResult.h"
 #include "Minuit2/MnStrategy.h"
 #include "TMatrixDSym.h"
 #include "RooGradientFunction.h"
 
-#include <TestStatistics/GradMinimizer.h>
+#include "RooGradMinimizer.h"
+#include "TestStatistics/LikelihoodGradientWrapper.h"
 
 namespace RooFit {
 namespace TestStatistics {
 
 class GradMinimizerFcn : public RooGradientFunction {
 public:
-   GradMinimizerFcn(RooAbsReal *funct, MinimizerGenericPtr context, bool verbose = false);
-
+   GradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context, bool verbose = false);
    GradMinimizerFcn(const GradMinimizerFcn &other);
 
-   ROOT::Math::IMultiGradFunction *Clone() const override;
+   ROOT::Math::IMultiGradFunction* Clone() const override;
 
    void BackProp(const ROOT::Fit::FitResult &results);
    void ApplyCovarianceMatrix(TMatrixDSym &V);
@@ -43,17 +41,24 @@ public:
    double get_error_def() const;
    void set_strategy(int istrat);
 
-   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst = kTRUE,
-                      Bool_t verbose = kFALSE);
+   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
+                      Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
+
+   void Gradient(const double *x, double *grad) const override;
+   void G2ndDerivative(const double *x, double *g2) const override;
+   void GStepSize(const double *x, double *gstep) const override;
 
 private:
-   std::vector<ROOT::Fit::ParameterSettings> &parameter_settings() const override;
+   std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const override;
 
-   MinimizerGenericPtr _context;
+//   LikelihoodGradientWrapper gradient;
+
+   RooMinimizerGenericPtr _context;
 };
+
+using GradMinimizer = RooMinimizerTemplate<GradMinimizerFcn, RooFit::MinimizerType::Minuit2, std::size_t>;
 
 } // namespace TestStatistics
 } // namespace RooFit
 
-#endif // ROOT_ROOFIT_TESTSTATISTICS_GRAD_MINIMIZER_FCN
-#endif
+#endif //ROOFIT_TESTSTATISTICS_GRADMINIMIZER_H

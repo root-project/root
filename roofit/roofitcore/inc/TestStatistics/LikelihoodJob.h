@@ -14,10 +14,16 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodJob
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodJob
 
+#include "Math/MinimizerOptions.h"
+#include <RooFit/MultiProcess/Job.h>
+#include <TestStatistics/LikelihoodWrapper.h>
+
 namespace RooFit {
 namespace TestStatistics {
 
-class LikelihoodJob {
+class LikelihoodJob : MultiProcess::Job, LikelihoodWrapper {
+   // TODO: implement override if necessary
+//   void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) override;
 };
 
 }

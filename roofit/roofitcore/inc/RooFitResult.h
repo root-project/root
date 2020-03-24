@@ -21,7 +21,6 @@
 #include "RooDirItem.h"
 #include "RooArgList.h"
 #include "RooMinimizerType.h"
-#include "TestStatistics/MinimizerType.h"
 
 #include "RVersion.h"
 #include "TMatrixFfwd.h"
@@ -38,11 +37,6 @@ class RooPlot;
 class TObject ;
 class TH2 ;
 typedef RooArgSet* pRooArgSet ;
-namespace RooFit {
-namespace TestStatistics {
-template <class MinimizerFcn, MinimizerType default_minimizer_type, typename... MinimizerFcnCtorAdditionalArgs> class MinimizerTemplate;
-}
-}
 
 
 class RooFitResult : public TNamed, public RooPrintable, public RooDirItem {
@@ -169,8 +163,6 @@ protected:
   friend class RooMinuit ;
   template <class MF, RooFit::MinimizerType dmt, typename... MinFcnCArgs>
   friend class RooMinimizerTemplate;
-   template <class MinimizerFcn, RooFit::TestStatistics::MinimizerType default_minimizer_type, typename... MinimizerFcnCtorAdditionalArgs>
-   friend class RooFit::TestStatistics::MinimizerTemplate;
   void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;

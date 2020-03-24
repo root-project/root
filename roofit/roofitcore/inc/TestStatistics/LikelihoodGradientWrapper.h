@@ -15,6 +15,7 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 
 #include <memory>  // shared_ptr
+#include "Math/MinimizerOptions.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -24,7 +25,13 @@ class RooAbsL;
 
 class LikelihoodGradientWrapper {
 public:
-   virtual double get_value(const double *x, std::size_t index);
+   explicit LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood);
+   virtual void fill_gradient(const double *x, double *grad) = 0;
+   virtual void fill_second_derivative(const double *x, double *g2) = 0;
+   virtual void fill_step_size(const double *x, double *gstep) = 0;
+
+   // synchronize minimizer settings with calculators in child classes
+   virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options);
 private:
    std::shared_ptr<RooAbsL> likelihood;
 };

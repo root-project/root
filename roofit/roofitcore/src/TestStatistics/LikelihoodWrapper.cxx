@@ -16,5 +16,9 @@
 namespace RooFit {
 namespace TestStatistics {
 
+LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> _likelihood) : likelihood(std::move(_likelihood)) {}
+
+void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) {}
+
 }
 }

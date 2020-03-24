@@ -18,8 +18,9 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // GradMinimizerFcn is am interface class to the ROOT::Math function
-// for minization. See GradMinimizer.cxx for more information.
-//                                                                                   
+// for minimization. It synchronizes parameter information between Minuit
+// and RooFit. See GradMinimizer.cxx for more information.
+//
 
 #include <iostream>
 
@@ -37,8 +38,8 @@
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 
-#include <TestStatistics/GradMinimizerFcn.h>
 #include <TestStatistics/GradMinimizer.h>
+#include "TestStatistics/LikelihoodGradientJob.h"
 
 #include "Fit/Fitter.h"
 #include "Math/Minimizer.h"
@@ -48,14 +49,15 @@
 namespace RooFit {
 namespace TestStatistics {
 
-GradMinimizerFcn::GradMinimizerFcn(RooAbsReal *funct, MinimizerGenericPtr context, bool verbose)
+GradMinimizerFcn::GradMinimizerFcn(RooAbsReal *funct, RooMinimizerGenericPtr context, bool verbose)
    : RooGradientFunction(funct, verbose), _context(context)
 {
    set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
    set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
 }
 
-GradMinimizerFcn::GradMinimizerFcn(const GradMinimizerFcn &other) : RooGradientFunction(other), _context(other._context)
+GradMinimizerFcn::GradMinimizerFcn(const GradMinimizerFcn &other)
+   : RooGradientFunction(other), _context(other._context)
 {
 }
 
@@ -133,7 +135,20 @@ GradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &paramet
    return returnee;
 }
 
-}}  // end namespace
+//void GradMinimizerFcn::Gradient(const double *x, double *grad) const {
+//   gradient.fill_gradient(x, grad);
+//}
+//
+//void GradMinimizerFcn::G2ndDerivative(const double *x, double *g2) const {
+//   gradient.fill_second_derivative(x, g2);
+//}
+//
+//void GradMinimizerFcn::GStepSize(const double *x, double *gstep) const {
+//   gradient.fill_step_size(x, gstep);
+//}
+
+
+} // namespace TestStatistics
+} // namespace RooFit
 
 #endif
-

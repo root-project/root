@@ -15,6 +15,7 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
 
 #include <memory>  // shared_ptr
+#include "Math/MinimizerOptions.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -24,8 +25,11 @@ class RooAbsL;
 
 class LikelihoodWrapper {
 public:
-   virtual double get_value(const double *x);
+   explicit LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood);
+   virtual double get_value(const double *x) = 0 ;
 
+   // synchronize minimizer settings with calculators in child classes
+   virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options);
 private:
    std::shared_ptr<RooAbsL> likelihood;
 };
