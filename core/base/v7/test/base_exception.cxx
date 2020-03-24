@@ -57,23 +57,8 @@ TEST(Exception, Report)
 
 TEST(Exception, DiscardReturnValue)
 {
-   bool exceptionThrown;
-
-   try {
-      exceptionThrown = false;
-      TestFailure();
-   } catch (const RException&) {
-      exceptionThrown = true;
-   }
-   EXPECT_TRUE(exceptionThrown);
-
-   try {
-      exceptionThrown = false;
-      TestSuccess();
-   } catch (const RException&) {
-      exceptionThrown = true;
-   }
-   EXPECT_FALSE(exceptionThrown);
+   EXPECT_THROW(TestFailure(), RException);
+   EXPECT_NO_THROW(TestSuccess());
 }
 
 
