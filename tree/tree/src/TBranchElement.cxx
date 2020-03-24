@@ -5242,7 +5242,9 @@ void TBranchElement::SetAddress(void* addr)
             // We are either a top-level branch or subbranch which is a pointer to an STL container.
             // Streamer type should be -1 (for a top-level branch) or kSTLp here.
             if ((fStreamerType != -1) && (fStreamerType != TVirtualStreamerInfo::kSTLp)) {
-               Error("SetAddress", "Branch %s is an STL container but fStreamerType is: %d", GetName(), fStreamerType);
+               Error("SetAddress",
+                     "Branch %s is a split STL container (fStreamerType is: %d), the address can not be set directly.",
+                     GetName(), fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch.
                void** pp = (void**) fAddress;
@@ -5291,7 +5293,9 @@ void TBranchElement::SetAddress(void* addr)
             // We are either a top-level branch or sub-branch which is a pointer to an STL container.
             // Streamer type should be -1 (for a top-level branch) or kSTLp here.
             if ((fStreamerType != -1) && (fStreamerType != TVirtualStreamerInfo::kSTLp)) {
-               Error("SetAddress", "Branch %s is an STL container but fStreamerType is: %d", GetName(), fStreamerType);
+               Error("SetAddress",
+                     "Branch %s is a split STL container (fStreamerType is: %d), the address can not be set directly.",
+                     GetName(), fStreamerType);
             } else if (fStreamerType == -1) {
                // -- We are a top-level branch, allocate.
                SetBit(kDeleteObject);
