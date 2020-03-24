@@ -79,7 +79,7 @@ foreach(val RANGE ${how_many_pythons})
   endif()
 
   # Disables warnings due to new field tp_vectorcall in Python 3.8
-  if(NOT MSVC AND ${python_version_string} VERSION_GREATER_EQUAL "3.8")
+  if(NOT MSVC AND ${python_version_string} STRGREATER_EQUAL "3_8")
     target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
   endif()
 
