@@ -163,9 +163,9 @@ private:
 
 public:
    RHistImplBase() = default;
-   RHistImplBase(size_t numBins): fStatistics(numBins) {}
-   RHistImplBase(std::string_view title, size_t numBins)
-      : RHistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins)
+   RHistImplBase(size_t numBins, size_t numOverflowBins): fStatistics(numBins, numOverflowBins) {}
+   RHistImplBase(std::string_view title, size_t numBins, size_t numOverflowBins)
+      : RHistImplPrecisionAgnosticBase<DATA::GetNDim()>(title), fStatistics(numBins, numOverflowBins)
    {}
    RHistImplBase(const RHistImplBase &) = default;
    RHistImplBase(RHistImplBase &&) = default;
@@ -297,6 +297,13 @@ int GetNBinsFromAxes(AXISCONFIG... axisArgs)
 {
    using axesTuple = std::tuple<AXISCONFIG...>;
    return RGetNBinsCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
+}
+
+template <class... AXISCONFIG>
+int GetNOverflowBinsFromAxes(AXISCONFIG... axisArgs)
+{
+   using axesTuple = std::tuple<AXISCONFIG...>;
+   return RGetNBinsCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...}) - RGetNBinsNoOverCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
 }
 
 // 
@@ -614,7 +621,11 @@ public:
 
    /// Retrieve the fill function for this histogram implementation, to prevent
    /// the virtual function call for high-frequency fills.
-   FillFunc_t GetFillFunc() const final { return (FillFunc_t)&RHistImpl::Fill; }
+   FillFunc_t GetFillFunc() const final { 
+      auto testFill = (FillFunc_t)&RHistImpl::Fill;
+      testFill = nullptr;
+      return (FillFunc_t)&RHistImpl::Fill; 
+   }
 
    /// Apply a function (lambda) to all bins of the histogram. The function takes
    /// the bin reference.
@@ -879,12 +890,12 @@ RHistImpl<DATA, AXISCONFIG...>::RHistImpl(TRootIOCtor *)
 
 template <class DATA, class... AXISCONFIG>
 RHistImpl<DATA, AXISCONFIG...>::RHistImpl(AXISCONFIG... axisArgs)
-   : ImplBase_t(Internal::GetNBinsFromAxes(axisArgs...)), fAxes{axisArgs...}
+   : ImplBase_t(Internal::GetNBinsNoOverFromAxes(axisArgs...), Internal::GetNOverflowBinsFromAxes(axisArgs...)), fAxes{axisArgs...}
 {}
 
 template <class DATA, class... AXISCONFIG>
 RHistImpl<DATA, AXISCONFIG...>::RHistImpl(std::string_view title, AXISCONFIG... axisArgs)
-   : ImplBase_t(title, Internal::GetNBinsFromAxes(axisArgs...)), fAxes{axisArgs...}
+   : ImplBase_t(title, Internal::GetNBinsNoOverFromAxes(axisArgs...), Internal::GetNOverflowBinsFromAxes(axisArgs...)), fAxes{axisArgs...}
 {}
 
 #if 0

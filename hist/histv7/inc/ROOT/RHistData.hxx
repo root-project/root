@@ -83,7 +83,7 @@ private:
 
 public:
    RHistStatContent() = default;
-   RHistStatContent(size_t in_size): fBinContent(in_size - 1), fOverflowBinContent(in_size - 1) {}
+   RHistStatContent(size_t bin_size, size_t overflow_size): fBinContent(bin_size), fOverflowBinContent(overflow_size) {}
 
    /// Add weight to the bin content at binidx.
    void Fill(const CoordArray_t & /*x*/, int binidx, Weight_t weight = 1.)
@@ -102,10 +102,10 @@ public:
    int64_t GetEntries() const { return fEntries; }
 
    /// Get the number of bins exluding under-/overflow.
-   size_t sizeNoOver() const noexcept { return fBinContent.size(); }
+   size_t sizeNoOver() const noexcept { return fBinContent.size() - 1; }
 
    /// Get the number of bins including under-/overflow..
-   size_t size() const noexcept { return fBinContent.size() + fOverflowBinContent.size(); }
+   size_t size() const noexcept { return fBinContent.size()+ fOverflowBinContent.size(); }
 
    /// Get the bin content for the given bin.
    Weight_t operator[](int idx) const 
@@ -196,7 +196,7 @@ private:
 
 public:
    RHistStatTotalSumOfWeights() = default;
-   RHistStatTotalSumOfWeights(size_t) {}
+   RHistStatTotalSumOfWeights(size_t, size_t) {}
 
    /// Add weight to the bin content at binidx.
    void Fill(const CoordArray_t & /*x*/, int, Weight_t weight = 1.) { fSumWeights += weight; }
@@ -240,7 +240,7 @@ private:
 
 public:
    RHistStatTotalSumOfSquaredWeights() = default;
-   RHistStatTotalSumOfSquaredWeights(size_t) {}
+   RHistStatTotalSumOfSquaredWeights(size_t, size_t) {}
 
    /// Add weight to the bin content at binidx.
    void Fill(const CoordArray_t & /*x*/, int /*binidx*/, Weight_t weight = 1.) { fSumWeights2 += weight * weight; }
@@ -310,7 +310,7 @@ private:
 
 public:
    RHistStatUncertainty() = default;
-   RHistStatUncertainty(size_t size): fSumWeightsSquared(size - 1), fOverflowSumWeightsSquared(3) {}
+   RHistStatUncertainty(size_t bin_size, size_t overflow_size): fSumWeightsSquared(bin_size), fOverflowSumWeightsSquared(overflow_size) {}
 
    /// Add weight to the bin at binidx; the coordinate was x.
    void Fill(const CoordArray_t & /*x*/, int binidx, Weight_t weight = 1.)
@@ -404,7 +404,7 @@ private:
 
 public:
    RHistDataMomentUncert() = default;
-   RHistDataMomentUncert(size_t) {}
+   RHistDataMomentUncert(size_t, size_t) {}
 
    /// Add weight to the bin at binidx; the coordinate was x.
    void Fill(const CoordArray_t &x, int /*binidx*/, Weight_t weight = 1.)
@@ -453,7 +453,7 @@ public:
    using BinStat_t = RBinStat;
 
    RHistStatRuntime() = default;
-   RHistStatRuntime(size_t) {}
+   RHistStatRuntime(size_t, size_t) {}
    virtual ~RHistStatRuntime() = default;
 
    virtual void DoFill(const CoordArray_t &x, int binidx, Weight_t weightN) = 0;
@@ -541,7 +541,7 @@ public:
 
    /// Constructor providing the number of bins (incl under, overflow) to the
    /// base classes.
-   RHistData(size_t size): STAT<DIMENSIONS, PRECISION>(size)... {}
+   RHistData(size_t bin_size, size_t overflow_size): STAT<DIMENSIONS, PRECISION>(bin_size, overflow_size)... {}
 
    /// Fill weight at x to the bin content at binidx.
    void Fill(const CoordArray_t &x, int binidx, Weight_t weight = 1.)
