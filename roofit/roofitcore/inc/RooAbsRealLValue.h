@@ -84,7 +84,8 @@ public:
   /// \param name Optional range name. If not given, the default range will be used.
   /// \return A pair with [lowerBound, upperBound]
   std::pair<double, double> getRange(const char* name = 0) const {
-    return {getMin(name), getMax(name)};
+    const auto& binning = getBinning(name);
+    return {binning.lowBound(), binning.highBound()};
   }
   /// Check if variable has a lower bound.
   inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
