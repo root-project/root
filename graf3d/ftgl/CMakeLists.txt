@@ -10,6 +10,10 @@ if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
 
+if(builtin_glew)
+   set(glew_dep GLEW)
+endif()
+
 ROOT_LINKER_LIBRARY(FTGL
     src/FTBitmapGlyph.cxx
     src/FTCharmap.cxx
@@ -40,6 +44,8 @@ ROOT_LINKER_LIBRARY(FTGL
     ZLIB::ZLIB
   BUILTINS
     FREETYPE
+  DEPENDENCIES
+    ${glew_dep}
 )
 
 ROOT_INSTALL_HEADERS()
