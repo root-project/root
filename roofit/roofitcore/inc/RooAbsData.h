@@ -116,7 +116,7 @@ public:
   virtual void reset() ;
 
 
-  Bool_t getRange(const RooRealVar& var, double& lowest, double& highest, double marginFrac=0, bool symMode=kFALSE) const ;
+  Bool_t getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_t& highest, Double_t marginFrac=0, Bool_t symMode=kFALSE) const ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooArgSet& catSet, const char* cuts="", const char* opts="") const ;

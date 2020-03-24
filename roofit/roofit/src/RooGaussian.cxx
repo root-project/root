@@ -74,9 +74,9 @@ namespace {
 ///overlap, results will likely be garbage.
 template<class Tx, class TMean, class TSig>
 void compute(RooSpan<double> output, Tx x, TMean mean, TSig sigma) {
-  const int n = output.size();
+  const auto n = output.size();
 
-  for (int i = 0; i < n; ++i) {
+  for (std::size_t i = 0; i < n; ++i) {
     const double arg = x[i] - mean[i];
     const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
 

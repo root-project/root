@@ -413,16 +413,13 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   RooArgSet varSubset ;
   if (varSet) {
     varSubset.add(*varSet) ;
-    TIterator* iter = varSubset.createIterator() ;
-    RooAbsArg* arg ;
-    while((arg=(RooAbsArg*)iter->Next())) {
+    for (const auto arg : varSubset) {
       if (!_vars.find(arg->GetName())) {
-   coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable "
-               << arg->GetName() << " not in dataset, ignored" << endl ;
-   varSubset.remove(*arg) ;
+        coutW(InputArguments) << "RooAbsData::reduce(" << GetName() << ") WARNING: variable "
+            << arg->GetName() << " not in dataset, ignored" << endl ;
+        varSubset.remove(*arg) ;
       }
     }
-    delete iter ;
   } else {
     varSubset.add(*get()) ;
   }
@@ -842,7 +839,7 @@ Double_t RooAbsData::standMoment(const RooRealVar &var, Double_t order, const ch
 /// \return \f$ \left< \left( X - \left< X \right> \right)^n \right> \f$ of order \f$n\f$.
 ///
 
-Double_t RooAbsData::moment(const RooRealVar &var, Double_t order, const char* cutSpec, const char* cutRange) const
+Double_t RooAbsData::moment(const RooRealVar& var, Double_t order, const char* cutSpec, const char* cutRange) const
 {
   Double_t offset = order>1 ? moment(var,1,cutSpec,cutRange) : 0 ;
   return moment(var,order,offset,cutSpec,cutRange) ;
@@ -855,17 +852,18 @@ Double_t RooAbsData::moment(const RooRealVar &var, Double_t order, const char* c
 /// the moment is calculated on the subset of the data which pass the C++ cut specification expression 'cutSpec'
 /// and/or are inside the range named 'cutRange'
 
-Double_t RooAbsData::moment(const RooRealVar &var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
+Double_t RooAbsData::moment(const RooRealVar& var, Double_t order, Double_t offset, const char* cutSpec, const char* cutRange) const
 {
   // Lookup variable in dataset
-  RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
-  if(0 == varPtr) {
+  auto arg = _vars.find(var.GetName());
+  if (!arg) {
     coutE(InputArguments) << "RooDataSet::moment(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
     return 0;
   }
 
+  auto varPtr = dynamic_cast<const RooRealVar*>(arg);
   // Check if found variable is of type RooRealVar
-  if (!dynamic_cast<RooRealVar*>(varPtr)) {
+  if (!varPtr) {
     coutE(InputArguments) << "RooDataSet::moment(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
     return 0;
   }
@@ -2116,17 +2114,18 @@ Roo1DTable* RooAbsData::table(const RooAbsCategory& cat, const char* cuts, const
 /// observable 'var' in this dataset. If the return value is kTRUE and error
 /// occurred
 
-Bool_t RooAbsData::getRange(const RooRealVar& var, double& lowest, double& highest, double marginFrac, bool symMode) const
+Bool_t RooAbsData::getRange(const RooAbsRealLValue& var, Double_t& lowest, Double_t& highest, Double_t marginFrac, Bool_t symMode) const
 {
   // Lookup variable in dataset
-  RooRealVar *varPtr= (RooRealVar*) _vars.find(var.GetName());
-  if(0 == varPtr) {
+  const auto arg = _vars.find(var.GetName());
+  if (!arg) {
     coutE(InputArguments) << "RooDataSet::getRange(" << GetName() << ") ERROR: unknown variable: " << var.GetName() << endl ;
     return kTRUE;
   }
 
+  auto varPtr = dynamic_cast<const RooRealVar*>(arg);
   // Check if found variable is of type RooRealVar
-  if (!dynamic_cast<RooRealVar*>(varPtr)) {
+  if (!varPtr) {
     coutE(InputArguments) << "RooDataSet::getRange(" << GetName() << ") ERROR: variable " << var.GetName() << " is not of type RooRealVar" << endl ;
     return kTRUE;
   }
@@ -2161,7 +2160,7 @@ Bool_t RooAbsData::getRange(const RooRealVar& var, double& lowest, double& highe
 
     } else {
 
-      Double_t mom1 = moment(var,1) ;
+      Double_t mom1 = moment(*varPtr,1) ;
       Double_t delta = ((highest-mom1)>(mom1-lowest)?(highest-mom1):(mom1-lowest))*(1+marginFrac) ;
       lowest = mom1-delta ;
       highest = mom1+delta ;
