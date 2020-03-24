@@ -1,5 +1,5 @@
 
-ULong64_t triggerBug()
+void triggerBug()
 {
    auto filenames = {"input1.root", "input2.root"};
    TChain input_chain("MCDecayTree");
@@ -8,21 +8,27 @@ ULong64_t triggerBug()
    }
    ROOT::RDataFrame d_input(input_chain);
    auto m = d_input.Mean<float>("mup_PHI");
-   return *d_input.Count();
+   *d_input.Count();
 }
 
 int test_chainZombieFile() {
 
-   auto c = triggerBug();
-   bool isExpectedCount = 1 == c;
-
-   ROOT::EnableImplicitMT();
-   auto cmt = triggerBug();
-   isExpectedCount &= 1 == cmt;
-
-   if (!isExpectedCount) {
-      std::cerr << "The test failed. The count was " << c << " and " << cmt << " repectively\n";
+   bool allHaveThrown = true;
+   try {
+   triggerBug();
+   } catch (const std::runtime_error &) {
+      allHaveThrown &= true;
    }
 
-   return isExpectedCount ? 0 : 1;
+   ROOT::EnableImplicitMT();
+   try {
+   triggerBug();
+   } catch (const std::runtime_error &) {
+      allHaveThrown &= true;
+   }
+
+   if (!allHaveThrown)
+      std::cerr << "The test failed. RDF did not throw when opening a corrupted file in the middle of an event loop\n";
+
+   return allHaveThrown ? 0 : 1;
 }
