@@ -12,9 +12,15 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 #include <TestStatistics/RooAbsL.h>
+#include "../../inc/TestStatistics/RooAbsL.h"
+#include "RooAbsPdf.h"
 
 namespace RooFit {
 namespace TestStatistics {
 
+RooArgSet *RooAbsL::getParameters()
+{
+   return pdf->getParameters(*data);
 }
-}
+} // namespace TestStatistics
+} // namespace RooFit

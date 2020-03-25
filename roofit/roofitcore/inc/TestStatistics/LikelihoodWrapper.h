@@ -16,6 +16,8 @@
 
 #include <memory>  // shared_ptr
 #include "Math/MinimizerOptions.h"
+#include "RooArgSet.h"
+#include "RooAbsArg.h"  // enum ConstOpCode
 
 namespace RooFit {
 namespace TestStatistics {
@@ -30,6 +32,10 @@ public:
 
    // synchronize minimizer settings with calculators in child classes
    virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options);
+
+   // necessary from MinuitFcnGrad to reach likelihood properties:
+   RooArgSet* getParameters();
+   void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode);
 private:
    std::shared_ptr<RooAbsL> likelihood;
 };

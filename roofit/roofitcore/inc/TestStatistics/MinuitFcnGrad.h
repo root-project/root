@@ -23,6 +23,8 @@
 #include "TestStatistics/LikelihoodGradientWrapper.h"
 #include "TestStatistics/LikelihoodJob.h"
 #include "TestStatistics/LikelihoodGradientJob.h"
+#include "TestStatistics/RooAbsL.h"
+#include "RooMinimizer.h"
 
 // forward declaration
 class RooAbsL;
@@ -34,7 +36,48 @@ namespace TestStatistics {
 class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction {
 public:
    template <typename LWrapper = LikelihoodJob, typename LGWrapper = LikelihoodGradientJob>
-   explicit MinuitFcnGrad(RooAbsL * _likelihood) : likelihood(std::make_unique<LWrapper>(_likelihood)), gradient(std::make_unique<LGWrapper>(_likelihood)) {}
+   explicit MinuitFcnGrad(RooAbsL * _likelihood, RooMinimizerGenericPtr context, bool verbose = false) : likelihood(std::make_unique<LWrapper>(_likelihood)), gradient(std::make_unique<LGWrapper>(_likelihood)), _context(context), _verbose(verbose) {
+      // Examine parameter list
+      RooArgSet* paramSet = _likelihood->getParameters();
+      RooArgList paramList(*paramSet);
+      delete paramSet;
+
+      _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",kFALSE);
+      if (_floatParamList->getSize()>1) {
+         _floatParamList->sort();
+      }
+      _floatParamList->setName("floatParamList");
+
+      _constParamList = (RooArgList*) paramList.selectByAttrib("Constant",kTRUE);
+      if (_constParamList->getSize()>1) {
+         _constParamList->sort();
+      }
+      _constParamList->setName("constParamList");
+
+      // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
+      TIterator* pIter = _floatParamList->createIterator();
+      RooAbsArg* arg;
+      while ((arg=(RooAbsArg*)pIter->Next())) {
+         if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
+            oocoutW(static_cast<RooAbsArg*>(nullptr),Eval) << "RooGradientFunction::RooGradientFunction: removing parameter "
+                                                           << arg->GetName()
+                                                           << " from list because it is not of type RooRealVar" << std::endl;
+            _floatParamList->remove(*arg);
+         }
+      }
+      delete pIter;
+
+      _nDim = _floatParamList->getSize();
+
+      updateFloatVec();
+
+      // Save snapshot of initial lists
+      _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE);
+      _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE);
+
+      synchronize_parameter_settings(_context.fitter()->Config().ParamsSettings());
+   }
+
    MinuitFcnGrad(const MinuitFcnGrad &other);
 
    ROOT::Math::IMultiGradFunction *Clone() const override;
@@ -105,7 +148,6 @@ public:
 
 
 private:
-   RooAbsReal *_funct;
    std::unique_ptr<LikelihoodWrapper> likelihood;
    std::unique_ptr<LikelihoodGradientWrapper> gradient;
    // the following four are mutable because DoEval is const
@@ -118,12 +160,13 @@ private:
    Bool_t _doEvalErrorWall = kTRUE;
    unsigned int _nDim = 0;
 
-   RooArgList *_floatParamList;
+   RooArgList *_floatParamList {};
    std::vector<RooAbsArg *> _floatParamVec;
-   RooArgList *_constParamList;
-   RooArgList *_initFloatParamList;
-   RooArgList *_initConstParamList;
+   RooArgList *_constParamList {};
+   RooArgList *_initFloatParamList {};
+   RooArgList *_initConstParamList {};
 
+   RooMinimizerGenericPtr _context;
    bool _verbose;
 };
 
