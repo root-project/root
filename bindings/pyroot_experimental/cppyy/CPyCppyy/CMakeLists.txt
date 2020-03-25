@@ -48,10 +48,11 @@ set(sources
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_include_dirs ${val} python_include_dir)
+  list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_version_strings ${val} python_version_string)
   list(GET python_libraries ${val} python_library)
 
-  set(libname cppyy${python_version_string})
+  set(libname cppyy${python_under_version_string})
 
   add_library(${libname} SHARED ${headers} ${sources})
 
@@ -79,7 +80,7 @@ foreach(val RANGE ${how_many_pythons})
   endif()
 
   # Disables warnings due to new field tp_vectorcall in Python 3.8
-  if(NOT MSVC AND ${python_version_string} STRGREATER_EQUAL "3_8")
+  if(NOT MSVC AND ${python_version_string} VERSION_GREATER_EQUAL "3.8")
     target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
   endif()
 
@@ -88,7 +89,7 @@ foreach(val RANGE ${how_many_pythons})
   target_include_directories(${libname} PUBLIC ${python_include_dir}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
-  target_link_libraries(${libname} cppyy_backend${python_version_string} ${python_library})
+  target_link_libraries(${libname} cppyy_backend${python_under_version_string} ${python_library})
 
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
