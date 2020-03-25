@@ -13,7 +13,6 @@
  */
 
 #include "TestStatistics/MinuitFcnGrad.h"
-#include "../../inc/TestStatistics/MinuitFcnGrad.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -52,6 +51,54 @@ void MinuitFcnGrad::GStepSize(const double *x, double *gstep) const
 {
    gradient->fill_step_size(x, gstep);
 }
+
+ROOT::Math::IMultiGradFunction *MinuitFcnGrad::Clone() const
+{
+   return new MinuitFcnGrad(*this);
+}
+
+double MinuitFcnGrad::DoDerivative(const double *x, unsigned int icoord) const
+{
+   throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
+}
+
+double MinuitFcnGrad::DoSecondDerivative(const double * /*x*/, unsigned int /*icoord*/) const
+{
+   throw std::runtime_error("MinuitFcnGrad::DoSecondDerivative is not implemented, please use G2ndDerivative instead.");
+};
+
+double MinuitFcnGrad::DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const
+{
+   throw std::runtime_error("MinuitFcnGrad::DoStepSize is not implemented, please use GStepSize instead.");
+}
+
+MinuitFcnGrad::~MinuitFcnGrad()
+{
+   delete _floatParamList;
+   delete _initFloatParamList;
+   delete _constParamList;
+   delete _initConstParamList;
+}
+
+bool MinuitFcnGrad::hasG2ndDerivative() const
+{
+   return true;
+}
+
+bool MinuitFcnGrad::hasGStepSize() const
+{
+   return true;
+}
+
+unsigned int MinuitFcnGrad::NDim() const
+{
+   return _nDim;
+}
+
+bool MinuitFcnGrad::returnsInMinuit2ParameterSpace() const
+{
+   return true;
+};
 
 } // namespace TestStatistics
 } // namespace RooFit

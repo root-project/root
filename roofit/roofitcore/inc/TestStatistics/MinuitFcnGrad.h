@@ -16,7 +16,7 @@
 
 #include <Fit/ParameterSettings.h>
 #include "ROOT/RMakeUnique.hxx"
-#include "Math/IFunction.h"  // ROOT::Math::IMultiGradFunction
+#include "Math/IFunction.h" // ROOT::Math::IMultiGradFunction
 #include "RooArgList.h"
 #include "RooRealVar.h"
 #include "TestStatistics/LikelihoodWrapper.h"
@@ -36,32 +36,35 @@ namespace TestStatistics {
 class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction {
 public:
    template <typename LWrapper = LikelihoodJob, typename LGWrapper = LikelihoodGradientJob>
-   explicit MinuitFcnGrad(RooAbsL * _likelihood, RooMinimizerGenericPtr context, bool verbose = false) : likelihood(std::make_unique<LWrapper>(_likelihood)), gradient(std::make_unique<LGWrapper>(_likelihood)), _context(context), _verbose(verbose) {
+   explicit MinuitFcnGrad(RooAbsL *_likelihood, RooMinimizerGenericPtr context, bool verbose = false)
+      : likelihood(std::make_unique<LWrapper>(_likelihood)), gradient(std::make_unique<LGWrapper>(_likelihood)),
+        _context(std::move(context)), _verbose(verbose)
+   {
       // Examine parameter list
-      RooArgSet* paramSet = _likelihood->getParameters();
+      RooArgSet *paramSet = _likelihood->getParameters();
       RooArgList paramList(*paramSet);
       delete paramSet;
 
-      _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",kFALSE);
-      if (_floatParamList->getSize()>1) {
+      _floatParamList = (RooArgList *)paramList.selectByAttrib("Constant", kFALSE);
+      if (_floatParamList->getSize() > 1) {
          _floatParamList->sort();
       }
       _floatParamList->setName("floatParamList");
 
-      _constParamList = (RooArgList*) paramList.selectByAttrib("Constant",kTRUE);
-      if (_constParamList->getSize()>1) {
+      _constParamList = (RooArgList *)paramList.selectByAttrib("Constant", kTRUE);
+      if (_constParamList->getSize() > 1) {
          _constParamList->sort();
       }
       _constParamList->setName("constParamList");
 
       // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
-      TIterator* pIter = _floatParamList->createIterator();
-      RooAbsArg* arg;
-      while ((arg=(RooAbsArg*)pIter->Next())) {
+      TIterator *pIter = _floatParamList->createIterator();
+      RooAbsArg *arg;
+      while ((arg = (RooAbsArg *)pIter->Next())) {
          if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-            oocoutW(static_cast<RooAbsArg*>(nullptr),Eval) << "RooGradientFunction::RooGradientFunction: removing parameter "
-                                                           << arg->GetName()
-                                                           << " from list because it is not of type RooRealVar" << std::endl;
+            oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
+               << "RooGradientFunction::RooGradientFunction: removing parameter " << arg->GetName()
+               << " from list because it is not of type RooRealVar" << std::endl;
             _floatParamList->remove(*arg);
          }
       }
@@ -72,8 +75,8 @@ public:
       updateFloatVec();
 
       // Save snapshot of initial lists
-      _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE);
-      _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE);
+      _initFloatParamList = (RooArgList *)_floatParamList->snapshot(kFALSE);
+      _initConstParamList = (RooArgList *)_constParamList->snapshot(kFALSE);
 
       synchronize_parameter_settings(_context.fitter()->Config().ParamsSettings());
    }
@@ -82,14 +85,14 @@ public:
 
    ROOT::Math::IMultiGradFunction *Clone() const override;
 
-   ~MinuitFcnGrad();
+   ~MinuitFcnGrad() override;
 
    // inform Minuit through its parameter_settings vector of RooFit parameter properties
    Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
                                          Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
 
    // let gradient calculator know of synced settings
-   void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings) const;
+   void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
 
    // used inside Minuit:
    bool returnsInMinuit2ParameterSpace() const override;
@@ -109,7 +112,6 @@ public:
    void zeroEvalCount();
    void SetVerbose(Bool_t flag = kTRUE);
 
-
    // TODO: for what is this used?
    void updateFloatVec();
 
@@ -118,11 +120,13 @@ private:
    void SetPdfParamErr(Int_t index, Double_t value);
    void ClearPdfParamAsymErr(Int_t index);
    void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
-   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
-      RooRealVar* par = (RooRealVar*)_floatParamVec[index];
+   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const
+   {
+      RooRealVar *par = (RooRealVar *)_floatParamVec[index];
 
-      if (par->getVal()!=value) {
-         if (_verbose) std::cout << par->GetName() << "=" << value << ", " ;
+      if (par->getVal() != value) {
+         if (_verbose)
+            std::cout << par->GetName() << "=" << value << ", ";
 
          par->setVal(value);
          return kTRUE;
@@ -133,6 +137,7 @@ private:
 
    // IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient, (has)G2ndDerivative and (has)GStepSize
    double DoEval(const double *x) const override;
+
 public:
    void Gradient(const double *x, double *grad) const override;
    void G2ndDerivative(const double *x, double *g2) const override;
@@ -146,8 +151,13 @@ public:
    // miscellaneous
    // TODO: hier getters, zoals bijv die covariance matrix, tenzij dat bij sync hoort, mss bij RooFitResult maken...
 
-
 private:
+   // The following three overrides will not actually be used in this class, so they will throw:
+   double DoDerivative(const double *x, unsigned int icoord) const override;
+   double DoSecondDerivative(const double * /*x*/, unsigned int /*icoord*/) const override;
+   double DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const override;
+
+   // members
    std::unique_ptr<LikelihoodWrapper> likelihood;
    std::unique_ptr<LikelihoodGradientWrapper> gradient;
    // the following four are mutable because DoEval is const
@@ -160,17 +170,17 @@ private:
    Bool_t _doEvalErrorWall = kTRUE;
    unsigned int _nDim = 0;
 
-   RooArgList *_floatParamList {};
+   RooArgList *_floatParamList{};
    std::vector<RooAbsArg *> _floatParamVec;
-   RooArgList *_constParamList {};
-   RooArgList *_initFloatParamList {};
-   RooArgList *_initConstParamList {};
+   RooArgList *_constParamList{};
+   RooArgList *_initFloatParamList{};
+   RooArgList *_initConstParamList{};
 
    RooMinimizerGenericPtr _context;
    bool _verbose;
 };
 
-}
+} // namespace TestStatistics
 } // namespace RooFit
 
 #endif // ROOT_ROOFIT_TESTSTATISTICS_MinuitFcnGrad
