@@ -1776,10 +1776,9 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
         // Use user category name if provided
         catname++ ;
 
-	const RooCatType* type = indexCat->lookupType(catname,kFALSE) ;
-	if (type) {
+	if (indexCat->hasLabel(catname)) {
 	  // Use existing category index
-	  indexCat->setIndex(type->getVal()) ;
+	  indexCat->setLabel(catname);
 	} else {
 	  // Register cat name
 	  indexCat->defineType(catname,fileSeqNum) ;
@@ -1859,9 +1858,10 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
   if (indexCat) {
     // Copy dynamically defined types from new data set to indexCat in original list
-    RooCategory* origIndexCat = (RooCategory*) variables.find(indexCatName) ;
-    for (const auto& type : *indexCat) {
-      origIndexCat->defineType(type.first, type.second);
+    assert(dynamic_cast<RooCategory*>(variables.find(indexCatName)));
+    const auto origIndexCat = static_cast<RooCategory*>(variables.find(indexCatName));
+    for (const auto& nameIdx : *indexCat) {
+      origIndexCat->defineType(nameIdx.first, nameIdx.second);
     }
   }
   oocoutI(data.get(),DataHandling) << "RooDataSet::read: read " << data->numEntries()
