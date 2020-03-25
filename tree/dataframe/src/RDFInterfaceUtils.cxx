@@ -193,6 +193,26 @@ static std::vector<std::string> GetColumnTypes(const ParsedExpression &pExpr, TT
    }
    return colTypes;
 }
+
+// returns the name of the lambda expression in the map returned by GetJittedExprs
+static std::string DeclareExpression(const std::string &lambdaExpr, ROOT::Detail::RDF::RLoopManager &lm)
+{
+   auto &exprMap = ROOT::Internal::RDF::GetJittedExprs();
+   const auto exprIt = exprMap.find(lambdaExpr);
+   if (exprIt != exprMap.end()) {
+      // expression already there
+      const auto lambdaName = exprIt->second;
+      return lambdaName;
+   }
+
+   // new expression
+   const auto lambdaBaseName = "lambda" + std::to_string(exprMap.size());
+   const auto lambdaFullName = "__rdf::" + lambdaBaseName;
+   exprMap.insert({lambdaExpr, lambdaFullName});
+   lm.ToJitDeclare("namespace __rdf { auto " + lambdaBaseName + " = " + lambdaExpr + "; }");
+   return lambdaFullName;
+}
+
 } // anonymous namespace
 
 namespace ROOT {
@@ -749,6 +769,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
    TryToJitExpression(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
 
    const auto filterLambda = BuildLambdaString(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
+   const auto lambdaName = DeclareExpression(filterLambda, *lm);
 
    // columnsOnHeap is deleted by the jitted call to JitFilterHelper
    ROOT::Internal::RDF::RBookedCustomColumns *columnsOnHeap = new ROOT::Internal::RDF::RBookedCustomColumns(customCols);
@@ -758,7 +779,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
    std::stringstream filterInvocation;
-   filterInvocation << "ROOT::Internal::RDF::JitFilterHelper(" << filterLambda << ", {";
+   filterInvocation << "ROOT::Internal::RDF::JitFilterHelper(" << lambdaName << ", {";
    for (const auto &col : parsedExpr.fUsedCols)
       filterInvocation << "\"" << col << "\", ";
    if (!parsedExpr.fUsedCols.empty())
@@ -797,10 +818,8 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    lm.JitDeclarations(); // TryToJitExpression might need some of the Define'd column type aliases
    TryToJitExpression(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
 
-   const auto definelambda = BuildLambdaString(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
-   const auto customColID = std::to_string(jittedCustomColumn->GetID());
-   const auto lambdaName = "eval_" + std::string(name) + customColID;
-   const std::string ns = "__rdf";
+   const auto defineLambda = BuildLambdaString(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
+   const auto lambdaName = DeclareExpression(defineLambda, lm);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
@@ -808,13 +827,14 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    // Declare the lambda variable and an alias for the type of the defined column in namespace __rdf
    // This assumes that a given variable is Define'd once per RDataFrame -- we might want to relax this requirement
    // to let python users execute a Define cell multiple times
-   const auto defineDeclaration =
-      "namespace " + ns + " { auto " + lambdaName + " = " + definelambda + ";\n" + "using " + std::string(name) +
-      customColID + "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName + " )>::ret_type;  }\n";
+   const auto customColID = std::to_string(jittedCustomColumn->GetID());
+   const auto defineDeclaration = "namespace __rdf { using " + std::string(name) + customColID +
+                                  "_type = typename ROOT::TypeTraits::CallableTraits<decltype(" + lambdaName +
+                                  " )>::ret_type;  }\n";
    lm.ToJitDeclare(defineDeclaration);
 
    std::stringstream defineInvocation;
-   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << definelambda << ", {";
+   defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << lambdaName << ", {";
    for (const auto &col : parsedExpr.fUsedCols) {
       defineInvocation << "\"" << col << "\", ";
    }
@@ -967,6 +987,11 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
    for (auto i = 0u; i < nColumns; ++i)
       mustBeDefined[i] = std::find(definedCols.begin(), definedCols.end(), requestedCols[i]) == definedCols.end();
    return mustBeDefined;
+}
+
+std::unordered_map<std::string, std::string> &GetJittedExprs() {
+   static std::unordered_map<std::string, std::string> jittedExpressions;
+   return jittedExpressions;
 }
 
 } // namespace RDF

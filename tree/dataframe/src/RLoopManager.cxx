@@ -73,7 +73,10 @@ public:
 
    void RemoveCodeForLoopManager(const RLoopManager *lm)
    {
-      fCodeToDeclare.erase(lm);
+      // fCodeToDeclare for old RLoopManagers is left in fCodeToDeclare, as it might contain
+      // the definition of lambdas that are also used by other RLoopManagers. It's not expensive
+      // to jit-declare a bit more than strictly needed. fCodeToExec for RLoopManagers that went out
+      // of scope must be erased: it would refer to variables that are not in scope anymore.
       fCodeToExec.erase(lm);
    }
 };
