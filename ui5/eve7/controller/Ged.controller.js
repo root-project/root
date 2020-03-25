@@ -489,6 +489,7 @@ sap.ui.define([
          { name : "LineWidth", _type : "Number" },
          { name : "Destroy",  member : "fElementId",  srv : "Destroy", _type : "Action" }
       ],
+      "REveStraightLineSet" : [{ sub: ["REveElement" ] }]
    };
 
    GedController.canEditClass = function(typename) {

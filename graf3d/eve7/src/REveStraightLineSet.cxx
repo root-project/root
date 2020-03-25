@@ -152,6 +152,7 @@ void REveStraightLineSet::WriteVizParams(std::ostream& out, const TString& var)
    out << t << "SetDepthTest("  << ToString(fDepthTest)  << ");\n";
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
@@ -165,8 +166,8 @@ Int_t REveStraightLineSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fLineStyle"] = fLineStyle;
    j["fMarkerSize"] = fMarkerSize;
    j["fMarkerStyle"] = fMarkerStyle;
-   j["fSecondarySelect"] = false;
-   // printf("REveStraightLineSet::WriteCoreJson %d \n", ret);
+   j["fSecondarySelect"] = fAlwaysSecSelect;
+
    return ret;
 }
 
