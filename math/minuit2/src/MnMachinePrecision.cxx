@@ -19,16 +19,20 @@ namespace ROOT {
 MnMachinePrecision::MnMachinePrecision() {
    // use double precision values from the numeric_limits standard
    // and do not determine it anymore using ComputePrecision
-   fEpsMac = 8 * std::numeric_limits<double>::epsilon();
+   // epsilon from stundard
+   // note that there is a factor of 2 in the definition of
+   // std::numeric_limitys::epsilon w.r.t DLAMCH epsilon
+   
+   fEpsMac = 4. * std::numeric_limits<double>::epsilon();
    fEpsMa2 = 2.*sqrt(fEpsMac);
 }
 void MnMachinePrecision::ComputePrecision() {
    fEpsMac = 4.0E-7;
    fEpsMa2 = 2.*sqrt(fEpsMac);
 
-   //determine machine precision
+   //determine machine precision using
+   // code similar to DLAMCH LAPACK Fortran function
    /*
-       // use DLAMACH LAPACK function
        char e[] = {"e"};
        fEpsMac = 8.*dlamch_(e);
        fEpsMa2 = 2.*sqrt(fEpsMac);
