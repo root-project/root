@@ -85,8 +85,7 @@ protected:
       if (rawbin > GetLastBin())
          return CanGrow() ? kIgnoreBin : GetOverflowBin();
 
-      if (!CanGrow())
-         ++rawbin;
+      ++rawbin;
 
       // Underflow: Put in underflow bin if any, otherwise ignore
       if (rawbin < GetFirstBin())

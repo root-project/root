@@ -49,16 +49,16 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
    int binIdx = std::round(fracBinIdx);
    double binOffset = fracBinIdx - binIdx;
    if (std::fabs(binOffset) > 10 * std::numeric_limits<double>::epsilon())
-      return -1;
+      return 0;
 
    // If the bin index is below the first bin (i.e. x is the lower edge of the
    // underflow bin) then it's out of range.
    if (IsUnderflowBin(binIdx))
-      return -1;
+      return 0;
    // If x is the lower edge of the overflow bin then that's still okay - but if
    // even the bin before binIdx is an overflow it's out of range.
    if (IsOverflowBin(binIdx - 1))
-      return -2;
+      return 0;
 
    return binIdx;
 }
@@ -97,7 +97,7 @@ int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const no
    }
 
    // If not, report failure
-   return -1;
+   return 0;
 }
 
 bool ROOT::Experimental::RAxisIrregular::HasSameBinBordersAs(const RAxisBase& other) const {
