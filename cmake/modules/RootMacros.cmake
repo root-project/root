@@ -268,7 +268,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
-    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS;INCLUDES" ${ARGN})
+    "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -308,9 +308,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        endforeach()
     endif()
 
-    foreach(dir ${ARG_INCLUDES})
-        list(APPEND incdirs ${dir})
-    endforeach()
+    if(ARG_MODULE STREQUAL Core)
+       list(APPEND incdirs ${CMAKE_SOURCE_DIR}/core) # This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}/core
+       list(APPEND incdirs ${CMAKE_SOURCE_DIR}/core/clingutils/inc) # this path not exposed to Core source includes
+    endif()
 
     list(REMOVE_DUPLICATES incdirs)
 
@@ -1337,7 +1338,6 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
                           DEPENDENCIES ${ARG_DEPENDENCIES}
                           BUILTINS ${ARG_BUILTINS}
-                          INCLUDES ${ARG_INCLUDES}
                           )
 
   # Dictionary might include things from the current src dir, e.g. tests. Alas
