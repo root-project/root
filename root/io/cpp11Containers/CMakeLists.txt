@@ -16,13 +16,11 @@ ROOTTEST_ADD_TEST(unorderedSet
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(unorderedMap unorderedMap.h  SELECTION unorderedMap_selection.xml)
 
-if(NOT 32BIT)
-   ROOTTEST_ADD_TEST(unorderedMap
-                     MACRO  execUnorderedMap.C
-                     OUTREF execUnorderedMap.ref
-                     DEPENDS ${GENERATE_REFLEX_TEST} unorderedSet
-                     LABELS longtest)
-endif()
+ROOTTEST_ADD_TEST(unorderedMap
+                  MACRO  execUnorderedMap.C
+                  OUTREF execUnorderedMap.ref
+                  DEPENDS ${GENERATE_REFLEX_TEST} unorderedSet
+                  LABELS longtest)
 
 ROOTTEST_ADD_TEST(Names
                   COPY_TO_BUILDDIR auxCode.h commonUtils.h
