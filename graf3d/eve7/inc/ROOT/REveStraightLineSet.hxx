@@ -21,6 +21,7 @@
 #include "ROOT/REveProjectionBases.hxx"
 #include "ROOT/REveChunkManager.hxx"
 #include "ROOT/REveTrans.hxx"
+#include "ROOT/REveSecondarySelectable.hxx"
 
 class TRandom;
 
@@ -36,7 +37,8 @@ class REveStraightLineSet : public REveElement,
                             public REveProjectable,
                             public TAttLine,
                             public TAttMarker,
-                            public TAttBBox
+                            public TAttBBox,
+                            public REveSecondarySelectable
 {
 private:
    REveStraightLineSet(const REveStraightLineSet&) = delete;
