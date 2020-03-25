@@ -104,8 +104,10 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from index category and full list of PDFs. 
 /// In this constructor form, a PDF must be supplied for each indexCat state
-/// to avoid ambiguities. The PDFs are associated in order with the state of the
-/// index category as listed by the index categories type iterator.
+/// to avoid ambiguities. The PDFs are associated with the states of the
+/// index category as they appear when iterating through the category states
+/// with RooAbsCategory::begin() and RooAbsCategory::end(). This usually means
+/// they are associated by ascending index numbers.
 ///
 /// PDFs may not overlap (i.e. share any variables) with the index category (function)
 
@@ -118,24 +120,19 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   _indexCat("indexCat","Index category",this,inIndexCat),
   _numPdf(0)
 {
-  if (inPdfList.getSize() != inIndexCat.numTypes()) {
+  if (inPdfList.size() != inIndexCat.size()) {
     coutE(InputArguments) << "RooSimultaneous::ctor(" << GetName() 
 			  << " ERROR: Number PDF list entries must match number of index category states, no PDFs added" << endl ;
     return ;
   }
 
   map<string,RooAbsPdf*> pdfMap ;
-  // Iterator over PDFs and index cat states and add each pair
-  TIterator* pIter = inPdfList.createIterator() ;
-  TIterator* cIter = inIndexCat.typeIterator() ;
-  RooAbsPdf* pdf ;
-  RooCatType* type(0) ;
-  while ((pdf=(RooAbsPdf*)pIter->Next())) {
-    type = (RooCatType*) cIter->Next() ;
-    pdfMap[string(type->GetName())] = pdf ;
+  auto indexCatIt = inIndexCat.begin();
+  for (unsigned int i=0; i < inPdfList.size(); ++i) {
+    auto pdf = static_cast<RooAbsPdf*>(&inPdfList[i]);
+    const auto& nameIdx = (*indexCatIt++);
+    pdfMap[nameIdx.first] = pdf;
   }
-  delete pIter ;
-  delete cIter ;
 
   initialize(inIndexCat,pdfMap) ;
 }
@@ -242,9 +239,9 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
       RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
 
       // Iterator over all states of repliSuperCat
-      for (const auto& type : repliSuperCat) {
+      for (const auto& nameIdx : repliSuperCat) {
         // Set value
-        repliSuperCat.setLabel(type.first.c_str()) ;
+        repliSuperCat.setLabel(nameIdx.first) ;
         // Retrieve corresponding label of superIndex
         string superLabel = superIndex->getCurrentLabel() ;
         failure |= addPdf(*citer->second.pdf,superLabel.c_str()) ;
@@ -285,9 +282,9 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
         for (const auto& stype : *citer->second.subIndex) {
           const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(stype.first.c_str());
 
-          for (const auto& rtype : repliSuperCat) {
-            repliSuperCat.setLabel(rtype.first.c_str()) ;
-            string superLabel = superIndex->getCurrentLabel() ;
+          for (const auto& nameIdx : repliSuperCat) {
+            repliSuperCat.setLabel(nameIdx.first) ;
+            const string superLabel = superIndex->getCurrentLabel() ;
             RooAbsPdf* compPdf = citer->second.simPdf->getPdf(stype.first.c_str());
             if (compPdf) {
               failure |= addPdf(*compPdf,superLabel.c_str()) ;
@@ -1101,16 +1098,11 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
 
   RooDataSet* data = new RooDataSet("gensimglobal","gensimglobal",whatVars) ;
   
-  // Construct iterator over index types
-  TIterator* iter = indexCat().typeIterator() ;
-
   for (Int_t i=0 ; i<nEvents ; i++) {
-    iter->Reset() ;
-    RooCatType* tt ; 
-    while((tt=(RooCatType*) iter->Next())) {
+    for (const auto& nameIdx : indexCat()) {
       
       // Get pdf associated with state from simpdf
-      RooAbsPdf* pdftmp = getPdf(tt->GetName()) ;
+      RooAbsPdf* pdftmp = getPdf(nameIdx.first.c_str());
       
       // Generate only global variables defined by the pdf associated with this state
       RooArgSet* globtmp = pdftmp->getObservables(whatVars) ;
@@ -1126,8 +1118,6 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
     data->add(*globClone) ;
   }
 
-
-  delete iter ;
   delete globClone ;
   return data ;
 }

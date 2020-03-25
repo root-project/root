@@ -513,12 +513,11 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   // Count number of used states
   Int_t n = 0;
   _nGof = 0;
-  RooCatType* type;
-  TIterator* catIter = simCat.typeIterator();
-  while ((type = (RooCatType*) catIter->Next())) {
+
+  for (const auto& catState : simCat) {
     // Retrieve the PDF for this simCat state
-    RooAbsPdf* pdf = simpdf->getPdf(type->GetName());
-    RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName());
+    RooAbsPdf* pdf = simpdf->getPdf(catState.first.c_str());
+    RooAbsData* dset = (RooAbsData*) dsetList->FindObject(catState.first.c_str());
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
       ++_nGof;
@@ -530,14 +529,14 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   _gofSplitMode.resize(_nGof);
 
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
-  catIter->Reset();
-  while ((type = (RooCatType*) catIter->Next())) {
+  for (const auto& catState : simCat) {
+    const std::string& catName = catState.first;
     // Retrieve the PDF for this simCat state
-    RooAbsPdf* pdf = simpdf->getPdf(type->GetName());
-    RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName());
+    RooAbsPdf* pdf = simpdf->getPdf(catName.c_str());
+    RooAbsData* dset = (RooAbsData*) dsetList->FindObject(catName.c_str());
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
-      ccoutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << type->GetName()
+      ccoutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << n << " for state " << catName
 		     << " (" << dset->numEntries() << " dataset entries)" << endl;
 
       
@@ -568,10 +567,10 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // Below here directly pass binnedPdf instead of PROD(binnedPdf,constraints) as constraints are evaluated elsewhere anyway
       // and omitting them reduces model complexity and associated handling/cloning times
       if (_splitRange && rangeName) {
-	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,binnedL);
+	_gofArray[n] = create(catName.c_str(), catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
+			      Form("%s_%s",rangeName,catName.c_str()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,binnedL);
       } else {
-	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
+	_gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
 			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,binnedL);
       }
       _gofArray[n]->setSimCount(_nGof);
@@ -605,7 +604,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     } else {
       if ((!dset || (0. != dset->sumEntries() && !processEmptyDataSets())) && pdf) {
 	if (_verbose) {
-	  ccoutD(Fitting) << "RooAbsTestStatistic::initSimMode: state " << type->GetName()
+	  ccoutD(Fitting) << "RooAbsTestStatistic::initSimMode: state " << catName
 			 << " has no data entries, no slave calculator created" << endl;
 	}
       }
@@ -615,7 +614,6 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   
   dsetList->Delete(); // delete the content.
   delete dsetList;
-  delete catIter;
 }
 
 

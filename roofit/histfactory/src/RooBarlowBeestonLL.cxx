@@ -194,24 +194,11 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
   // Loop over the channels
   RooSimultaneous* simPdf = (RooSimultaneous*) _pdf;
   RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
-  TIterator* iter = channelCat->typeIterator() ;
-  RooCatType* tt = NULL;
-  while((tt=(RooCatType*) iter->Next())) {
-    /*
-      std::string ChannelName = tt->GetName();
-      
-      HHChannel_hh_edit
-      
-      TIterator* iter_channels = channelsWithConstraints->createIterator();
-      RooAbsPdf* channelPdf=NULL;
-      while(( channelPdf=(RooAbsPdf*)iter_channels->Next()  )) {
-      
-      std::string channel_name = RooStats::channelNameFromPdf( channelPdf );
-    */
+  for (const auto& nameIdx : *channelCat) {
 
     // Warning: channel cat name is not necesarily the same name
     // as the pdf's (for example, if someone does edits)
-    RooAbsPdf* channelPdf = simPdf->getPdf(tt->GetName());
+    RooAbsPdf* channelPdf = simPdf->getPdf(nameIdx.first.c_str());
     std::string channel_name = channelPdf->GetName();
 
     // First, we check if this channel uses Stat Uncertainties:

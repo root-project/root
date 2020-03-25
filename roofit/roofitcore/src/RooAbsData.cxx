@@ -1529,13 +1529,10 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 
   // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
   if (createEmptyDataSets) {
-    TIterator* stateIter = cloneCat->typeIterator() ;
-    RooCatType* state ;
-    while ((state=(RooCatType*)stateIter->Next())) {
-      RooAbsData* subset = emptyClone(state->GetName(),state->GetName(),&subsetVars,(addWV?"weight":0)) ;
+    for (const auto& nameIdx : *cloneCat) {
+      RooAbsData* subset = emptyClone(nameIdx.first.c_str(), nameIdx.first.c_str(), &subsetVars,(addWV?"weight":0)) ;
       dsetList->Add((RooAbsArg*)subset) ;
     }
-    delete stateIter ;
   }
 
 
@@ -2015,7 +2012,7 @@ RooPlot* RooAbsData::plotEffOn(RooPlot* frame, const RooAbsCategoryLValue& effCa
 
   // convert this histogram to a RooHist object on the heap
   RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.etype,o.xErrorSize,kTRUE);
-  graph->setYAxisLabel(Form("Efficiency of %s=%s",effCat.GetName(),effCat.lookupType(1)->GetName())) ;
+  graph->setYAxisLabel(Form("Efficiency of %s=%s", effCat.GetName(), effCat.lookupName(1).c_str()));
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);

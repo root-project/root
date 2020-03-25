@@ -123,7 +123,6 @@ protected:
   RooNumIntConfig* _iconfig ;
 
   mutable RooListProxy _sumCat ; //! do not persist  
-  TIterator* _sumCatIter ; //!
   
   Int_t _mode ;
   IntOperMode _intOperMode ;   // integration operation mode

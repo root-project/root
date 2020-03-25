@@ -137,7 +137,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     // Name the context after the associated state and add to list
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
-    _gcIndex.push_back(idxCat->lookupType(proxy->name())->getVal()) ;
+    _gcIndex.push_back(idxCat->lookupIndex(proxy->name()));
 
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&allPdfVars)) ;
@@ -232,23 +232,16 @@ RooDataSet* RooSimGenContext::createDataSet(const char* name, const char* title,
 
   if (!_protoData) {
     map<string,RooAbsData*> dmap ;
-    RooCatType* state ;
-    TIterator* iter = _idxCat->typeIterator() ;
-    while((state=(RooCatType*)iter->Next())) {
-      RooAbsPdf* slicePdf = _pdf->getPdf(state->GetName()) ;
+    for (const auto& nameIdx : *_idxCat) {
+      RooAbsPdf* slicePdf = _pdf->getPdf(nameIdx.first.c_str());
       RooArgSet* sliceObs = slicePdf->getObservables(obs) ;
-      std::string sliceName = Form("%s_slice_%s",name,state->GetName()) ;
-      std::string sliceTitle = Form("%s (index slice %s)",title,state->GetName()) ;
+      std::string sliceName = Form("%s_slice_%s", name, nameIdx.first.c_str());
+      std::string sliceTitle = Form("%s (index slice %s)", title, nameIdx.first.c_str());
       RooDataSet* dset = new RooDataSet(sliceName.c_str(),sliceTitle.c_str(),*sliceObs) ;
-      dmap[state->GetName()] = dset ;
+      dmap[nameIdx.first] = dset ;
       delete sliceObs ;
     }
-    delete iter ;
     _protoData = new RooDataSet(name, title, obs, Index((RooCategory&)*_idxCat), Link(dmap), OwnLinked()) ;    
-    
-//     RooDataSet* tmp = _protoData ;
-//     _protoData = 0 ;
-//     return tmp ;
   }
 
   RooDataSet* emptyClone =  new RooDataSet(*_protoData,name) ;

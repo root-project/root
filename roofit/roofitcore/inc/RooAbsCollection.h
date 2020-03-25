@@ -246,9 +246,6 @@ public:
   virtual void RecursiveRemove(TObject *obj);
 
 protected:
-
-  friend class RooMultiCatIter ;
-
   Storage_t _list; // Actual object storage
   using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
 
