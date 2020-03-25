@@ -99,7 +99,7 @@ RooAbsCategory::value_type RooBinningCategory::evaluate() const
   if (!hasIndex(ibin)) {
     string name = (_bname.Length()>0) ? Form("%s_%s_bin%d",_inputVar.arg().GetName(),_bname.Data(),ibin) 
 	                              : Form("%s_bin%d",_inputVar.arg().GetName(),ibin) ;
-    const_cast<RooBinningCategory*>(this)->defineState(name.c_str(),ibin);
+    const_cast<RooBinningCategory*>(this)->defineState(name,ibin);
   }
 
   return ibin;
