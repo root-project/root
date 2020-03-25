@@ -18,10 +18,10 @@ set(py_sources
 set(cppyy_backendDirName cling/python/cppyy_backend)
 
 foreach(val RANGE ${how_many_pythons})
-  list(GET python_version_strings ${val} python_version_string)
+  list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_executables ${val} python_executable)
 
-  set(libname cppyy_backend${python_version_string})
+  set(libname cppyy_backend${python_under_version_string})
 
   foreach(py_source ${py_sources})
     install(FILES cling/python/${py_source} DESTINATION ${runtimedir}/cppyy_backend)

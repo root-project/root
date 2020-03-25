@@ -81,13 +81,13 @@ set(ROOTDirName python/ROOT)
 set(ROOT_headers inc)
 
 foreach(val RANGE ${how_many_pythons})
-  list(GET python_version_strings ${val} python_version_string)
+  list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_include_dirs ${val} python_include_dir)
   list(GET python_executables ${val} python_executable)
 
-  set(libname ROOTPythonizations${python_version_string})
+  set(libname ROOTPythonizations${python_under_version_string})
 
-  ROOT_LINKER_LIBRARY(${libname} ${cpp_sources} DEPENDENCIES Core Tree cppyy${python_version_string} CMAKENOEXPORT)
+  ROOT_LINKER_LIBRARY(${libname} ${cpp_sources} DEPENDENCIES Core Tree cppyy${python_under_version_string} CMAKENOEXPORT)
 
   target_include_directories(${libname} PRIVATE ${ROOT_headers} ${python_include_dir})
 
