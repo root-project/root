@@ -18,8 +18,14 @@ namespace ROOT {
 
 
 /**
-    determines the relative floating point arithmetic precision. The
-    SetPrecision() method can be used to override Minuit's own determination,
+    Sets the relative floating point (double) arithmetic precision.
+    By default the precision values are obtained from the standard functions
+    std::numeric_limits<double>::epsilon.
+    The values can optionally be computed directly using the ComputePrecision()
+    member function. For a IEEE standard floating point arithmetic the computed values and
+    the one from std::numeric_limits<double>::epsilon  are the same.
+
+    SetPrecision() method can instead be used to override Minuit's own determination,
     when the user knows that the {FCN} function Value is not calculated to
     the nominal machine accuracy.
  */
@@ -51,6 +57,10 @@ public:
     fEpsMac = prec;
     fEpsMa2 = 2.*sqrt(fEpsMac);
   }
+
+   /// compute Machine precision directly instead
+   /// of using default values from std::numeric_limits
+   void ComputePrecision(); 
 
 private:
 
