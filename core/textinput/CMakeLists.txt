@@ -31,7 +31,7 @@ ROOT_OBJECT_LIBRARY(TextInput
   src/textinput/TextInputContext.cpp
   src/textinput/TextInput.cpp
   INCLUDES
-    src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 ROOT_INSTALL_HEADERS()

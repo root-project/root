@@ -8,4 +8,4 @@
 # CMakeLists.txt file for building ROOT io/rootpcm package
 ############################################################################
 
-ROOT_OBJECT_LIBRARY(RootPcmObjs src/rootclingIO.cxx INCLUDES ../io/inc ../../core/zip/inc)
+ROOT_OBJECT_LIBRARY(RootPcmObjs src/rootclingIO.cxx INCLUDES ${CMAKE_SOURCE_DIR}/io/io/inc ${CMAKE_SOURCE_DIR}/core/zip/inc)
