@@ -452,11 +452,11 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
     }
     // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
     if (!indexCat.lookupType(hiter->first.c_str())) {
-      indexCat.defineType(hiter->first.c_str()) ;
+      indexCat.defineType(hiter->first) ;
       coutI(InputArguments) << "RooDataHist::importTH1Set(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat.GetName() << endl ;
     }
     if (!icat->lookupType(hiter->first.c_str())) {	
-      icat->defineType(hiter->first.c_str()) ;
+      icat->defineType(hiter->first) ;
     }
   }
 
@@ -544,11 +544,11 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 
     // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
     if (!indexCat.lookupType(diter->first.c_str())) {
-      indexCat.defineType(diter->first.c_str()) ;
+      indexCat.defineType(diter->first) ;
       coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << diter->first << "\" in index category " << indexCat.GetName() << endl ;
     }
     if (!icat->lookupType(diter->first.c_str())) {	
-      icat->defineType(diter->first.c_str()) ;
+      icat->defineType(diter->first) ;
     }
   }
 
