@@ -173,7 +173,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 
 Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
-  TString name = proto->IsA()->GetName() ;
+  std::string name = proto->IsA()->GetName() ;
 
   // Register integrator for appropriate dimensionalities
   if (proto->canIntegrate1D()) {
@@ -199,7 +199,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
   
   // Store default configuration parameters
   RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
-  config->setName(name) ;
+  config->setName(name.c_str());
   _configSets.Add(config) ;
 
   return kFALSE ;

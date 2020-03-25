@@ -28,19 +28,21 @@ dataset to RooFit operations. A category tag will define which dataset has to be
 When iterated from start to finish, datasets will be traversed in the order of the category index.
 **/
 
-#include "RooFit.h"
-#include "RooMsgService.h"
 #include "RooCompositeDataStore.h"
 
+#include "RooFit.h"
+#include "RooMsgService.h"
 #include "Riostream.h"
-#include "TTree.h"
-#include "TChain.h"
-#include "TDirectory.h"
-#include "TROOT.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooTrace.h"
 #include "RooCategory.h"
+
+#include "TTree.h"
+#include "TChain.h"
+#include "TDirectory.h"
+#include "TROOT.h"
+
 #include <iomanip>
 using namespace std ;
 
@@ -63,8 +65,9 @@ RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _cu
 RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
   RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
-  for (map<string,RooAbsDataStore*>::iterator iter=inputData.begin() ; iter!=inputData.end() ; ++iter) {
-    _dataMap[indexCat.lookupType(iter->first.c_str())->getVal()] = iter->second ;
+  for (const auto& iter : inputData) {
+    const RooAbsCategory::value_type idx = indexCat.lookupIndex(iter.first);
+    _dataMap[idx] = iter.second;
   }
   TRACE_CREATE
 }

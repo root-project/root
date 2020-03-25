@@ -23,15 +23,19 @@ Roo1DTable implements a one-dimensional table. A table is the category
 equivalent of a plot. To create a table use the RooDataSet::table method.
 **/
 
-#include "RooFit.h"
+#include "Roo1DTable.h"
 
+#include "RooFit.h"
 #include "Riostream.h"
-#include <iomanip>
+#include "RooMsgService.h"
+#include "RooFitLegacy/RooCatTypeLegacy.h"
+
 #include "TString.h"
 #include "TMath.h"
-#include "Roo1DTable.h"
-#include "RooMsgService.h"
 #include "TClass.h"
+
+#include <iomanip>
+
 
 using namespace std ;
 

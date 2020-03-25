@@ -245,7 +245,7 @@ const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const
 
 Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
 {
-  TString name = proto->IsA()->GetName() ;
+  std::string name = proto->IsA()->GetName();
 
   // Register integrator for appropriate dimensionalities
   
@@ -272,7 +272,7 @@ Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const 
   
   // Store default configuration parameters
   RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
-  config->setName(name) ;
+  config->setName(name.c_str());
   _configSets.Add(config) ;
 
   return kFALSE ;

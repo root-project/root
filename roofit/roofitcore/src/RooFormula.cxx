@@ -172,13 +172,12 @@ std::string RooFormula::processFormula(std::string formula) const {
       continue;
     }
 
-    const RooCatType* catType = catVariable->lookupType(catState.c_str(), false);
-    if (!catType) {
+    if (!catVariable->hasLabel(catState)) {
       coutE(InputArguments) << "Formula " << GetName() << " uses '::' to reference a category state as '" << fullMatch
           << "' but the category '" << catName << "' does not seem to have the state '" << catState << "'." << endl;
       throw std::invalid_argument(formula);
     }
-    const int catNum = catType->getVal();
+    const int catNum = catVariable->lookupIndex(catState);
 
     categoryStates[fullMatch] = catNum;
     cxcoutD(InputArguments) << "\n\t" << fullMatch << "\tname=" << catName << "\tstate=" << catState << "=" << catNum;

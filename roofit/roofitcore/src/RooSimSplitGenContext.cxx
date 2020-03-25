@@ -127,11 +127,11 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
     delete compVars ;
 
-    const RooCatType* state = idxCat->lookupType(proxy->name()) ; 
+    const auto state = idxCat->lookupIndex(proxy->name());
 
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
-    _gcIndex.push_back(state->getVal()) ;
+    _gcIndex.push_back(state);
     
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + pdf->expectedEvents(&allPdfVars) ;

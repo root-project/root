@@ -65,7 +65,6 @@ RooRealIntegral::RooRealIntegral() :
   _respectCompSelect(true),
   _funcNormSet(0),
   _iconfig(0),
-  _sumCatIter(0),
   _mode(0),
   _intOperMode(Hybrid),
   _restartNumIntEngine(kFALSE),
@@ -105,7 +104,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
   _iconfig((RooNumIntConfig*)config),
   _sumCat("!sumCat","SuperCategory for summation",this,kFALSE,kFALSE),
-  _sumCatIter(0),
   _mode(0),
   _intOperMode(Hybrid), 
   _restartNumIntEngine(kFALSE),
@@ -549,7 +547,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   
   if (_sumList.getSize()>0) {
     RooSuperCategory *sumCat = new RooSuperCategory(Form("%s_sumCat",GetName()),"sumCat",_sumList) ;
-    _sumCatIter = sumCat->typeIterator() ;    
     _sumCat.addOwned(*sumCat) ;
   }
 
@@ -697,7 +694,6 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _function("!func",this,other._function), 
   _iconfig(other._iconfig),
   _sumCat("!sumCat",this,other._sumCat),
-  _sumCatIter(0),
   _mode(other._mode),
   _intOperMode(other._intOperMode), 
   _restartNumIntEngine(kFALSE),
@@ -732,7 +728,6 @@ RooRealIntegral::~RooRealIntegral()
   if (_numIntEngine) delete _numIntEngine ;
   if (_numIntegrand) delete _numIntegrand ;
   if (_funcNormSet) delete _funcNormSet ;
-  if (_sumCatIter)  delete _sumCatIter ;
   if (_params) delete _params ;
 
   TRACE_DESTROY
@@ -955,13 +950,11 @@ Double_t RooRealIntegral::sum() const
     // Add integrals for all permutations of categories summed over
     Double_t total(0) ;
 
-    _sumCatIter->Reset() ;
-    RooCatType* type ;
     RooSuperCategory* sumCat = (RooSuperCategory*) _sumCat.first() ;
-    while((type=(RooCatType*)_sumCatIter->Next())) {
-      sumCat->setIndex(type->getVal()) ;
+    for (const auto& nameIdx : *sumCat) {
+      sumCat->setIndex(nameIdx);
       if (!_rangeName || sumCat->inRange(RooNameReg::str(_rangeName))) {
-	total += integrate() / jacobianProduct() ;
+        total += integrate() / jacobianProduct() ;
       }
     }
 

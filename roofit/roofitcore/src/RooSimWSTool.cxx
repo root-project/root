@@ -102,12 +102,13 @@
 
 #include "RooFit.h"
 #include "RooSimWSTool.h"
+
+#include "RooFitLegacy/RooCatTypeLegacy.h"
 #include "RooMsgService.h"
 #include "RooCategory.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
 #include "RooSuperCategory.h"
-#include "RooCatType.h"
 #include "RooCustomizer.h"
 #include "RooMultiCategory.h"
 #include "RooSimultaneous.h"
