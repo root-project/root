@@ -19,7 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Monalisa
   DEPENDENCIES
     Net
     RIO
-  INCLUDES
-    ${MONALISA_INCLUDE_DIR}
-  
 )
+
+target_include_directories(Monalisa PRIVATE ${MONALISA_INCLUDE_DIR})

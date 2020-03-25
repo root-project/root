@@ -52,14 +52,15 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingTypedefInfo.cxx
   TClingTypeInfo.cxx
   TClingValue.cxx
-  INCLUDES
-     ${CMAKE_SOURCE_DIR}/core/metacling/res
-     ${CMAKE_SOURCE_DIR}/core/clingutils/res
-     ${CMAKE_SOURCE_DIR}/core/foundation/res
-     ${CMAKE_SOURCE_DIR}/core/zip/inc
-     ${CMAKE_SOURCE_DIR}/io/io/inc
-     ${CLING_INCLUDE_DIRS}
 )
+
+target_include_directories(MetaCling PRIVATE ${CMAKE_SOURCE_DIR}/core/metacling/res)
+target_include_directories(MetaCling PRIVATE ${CMAKE_SOURCE_DIR}/core/clingutils/res)
+target_include_directories(MetaCling PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
+target_include_directories(MetaCling PRIVATE ${CMAKE_SOURCE_DIR}/core/zip/inc)
+target_include_directories(MetaCling PRIVATE ${CMAKE_SOURCE_DIR}/io/io/inc)
+target_include_directories(MetaCling PRIVATE ${CLING_INCLUDE_DIRS})
+
 
 add_dependencies(MetaCling CLING)
 

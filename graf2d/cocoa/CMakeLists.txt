@@ -9,10 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(builtin_glew)
-   set(glew_includes ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   HEADERS
     TGCocoa.h
@@ -39,24 +35,28 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
   DEPENDENCIES
     GQuartz
     Gui
-  INCLUDES
-    ${FREETYPE_INCLUDE_DIRS}
-    ${OPENGL_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
-    ${glew_includes}
   LIBRARIES
     "-framework Cocoa"
     "-framework OpenGL"
     ${FREETYPE_LIBRARIES}
 )
 
+target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
+
 # We know GL is deprecated on macOS. And our answer is WebGUI/Graphics.
 target_compile_options(GCocoa PRIVATE -ObjC++ -Wno-deprecated-declarations)
 target_include_directories(GCocoa PRIVATE ${FREETYPE_INCLUDE_DIRS})
 
-if(NOT opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON)
+if(opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON)
+  target_include_directories(GCocoa PRIVATE ${OPENGL_INCLUDE_DIR})
+else()
   target_include_directories(GCocoa PRIVATE
     ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
     ${CMAKE_SOURCE_DIR}/graf3d/glew/inc
   )
+endif(opengl)
+
+if(builtin_glew)
+   target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
 endif()
+

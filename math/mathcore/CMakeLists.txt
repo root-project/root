@@ -199,10 +199,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${MATHCORE_DEPENDENCIES}
   BUILTINS
     ${MATHCORE_BUILTINS}
-  INCLUDES
-     ${Vc_INCLUDE_DIR}
-     ${VecCore_INCLUDE_DIRS}
 )
+
+target_include_directories(MathCore PRIVATE ${Vc_INCLUDE_DIR})
+target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
+
 
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})

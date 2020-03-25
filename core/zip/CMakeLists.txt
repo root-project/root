@@ -14,11 +14,11 @@ ROOT_OBJECT_LIBRARY(Zip
   src/ZInflate.c
   src/Compression.cxx
   src/RZip.cxx
-  INCLUDES
-    ${ZLIB_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/core/lzma/inc
-    ${CMAKE_SOURCE_DIR}/core/lz4/inc
-    ${CMAKE_SOURCE_DIR}/core/zstd/inc
 )
+
+target_include_directories(Zip PRIVATE ${ZLIB_INCLUDE_DIR})
+target_include_directories(Zip PRIVATE ${CMAKE_SOURCE_DIR}/core/lzma/inc)
+target_include_directories(Zip PRIVATE ${CMAKE_SOURCE_DIR}/core/lz4/inc)
+target_include_directories(Zip PRIVATE ${CMAKE_SOURCE_DIR}/core/zstd/inc)
 
 ROOT_INSTALL_HEADERS()

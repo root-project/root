@@ -31,8 +31,8 @@ ROOT_OBJECT_LIBRARY(Clib
   src/snprintf.c
   src/strlcat.c
   src/strlcpy.c
-  INCLUDES
-    ${CMAKE_SOURCE_DIR}/core/clib/res
 )
+
+target_include_directories(Clib PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 
 ROOT_INSTALL_HEADERS()

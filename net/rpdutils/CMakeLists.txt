@@ -51,8 +51,9 @@ ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx
     Net
   BUILTINS
     OPENSSL
-  INCLUDES
-    res
-    ${CMAKE_SOURCE_DIR}/net/auth/res
-    ${CMAKE_SOURCE_DIR}/net/auth/inc
 )
+
+target_include_directories(SrvAuth PRIVATE ${CMAKE_SOURCE_DIR}/net/auth/res 
+                                           ${CMAKE_SOURCE_DIR}/net/auth/inc 
+                                           ${CMAKE_SOURCE_DIR}/rpdutils/res)
+

@@ -20,15 +20,7 @@ endif()
 
 if(builtin_gl2ps)
   set(RGL_EXTRA_SOURCES ${RGL_EXTRA_SOURCES} src/gl2ps.cxx)
-  set(gl2ps_includes ${CMAKE_SOURCE_DIR}/graf3d/gl/src/gl2ps)
-else()
-  set(gl2ps_includes ${GL2PS_INCLUDE_DIRS})
 endif()
-
-if(builtin_glew)
-   set(glew_includes ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
-endif()
-
 
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
@@ -221,12 +213,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     Gui
     Ged
     RCsg
-  INCLUDES
-    ${OPENGL_INCLUDE_DIR}
-    ${FTGL_INCLUDE_DIR}
-    ${FREETYPE_INCLUDE_DIRS}
-    ${gl2ps_includes}
-    ${glew_includes}
   INSTALL_OPTIONS
     ${installoptions}
 )

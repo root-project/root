@@ -15,9 +15,10 @@ set(Unix_dict_headers
 
 ROOT_OBJECT_LIBRARY(Unix
   src/TUnixSystem.cxx
-  INCLUDES
-     ${CMAKE_SOURCE_DIR}/core/clib/res
-     ${CMAKE_SOURCE_DIR}/core/foundation/res
 )
+
+target_include_directories(Unix PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
+target_include_directories(Unix PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
+
 
 ROOT_INSTALL_HEADERS()

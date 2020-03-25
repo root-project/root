@@ -13,8 +13,8 @@ ROOT_LINKER_LIBRARY(New
   src/NewDelete.cxx
   DEPENDENCIES
     Core
-  INCLUDES  
-    ${CMAKE_SOURCE_DIR}/core/clib/res
 )
+
+target_include_directories(New PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
 
 ROOT_INSTALL_HEADERS()

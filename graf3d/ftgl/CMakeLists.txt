@@ -13,7 +13,6 @@ if(MACOSX_GLU_DEPRECATED)
 endif()
 
 if(builtin_glew)
-   set(glew_includes ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
    set(glew_dep GLEW)
 endif()
 
@@ -49,12 +48,15 @@ ROOT_LINKER_LIBRARY(FTGL
     FREETYPE
   DEPENDENCIES
     ${glew_dep}
-  INCLUDES
-    ${FREETYPE_INCLUDE_DIRS}
-    ${OPENGL_INCLUDE_DIR}
-    ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
-    ${glew_includes}
 )
+target_include_directories(FTGL PRIVATE ${FREETYPE_INCLUDE_DIRS})
+target_include_directories(FTGL PRIVATE ${OPENGL_INCLUDE_DIR})
+target_include_directories(FTGL PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
+
+if(builtin_glew)
+   target_include_directories(FTGL PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
+endif()
+
 
 target_include_directories(FTGL PRIVATE
       ${FREETYPE_INCLUDE_DIRS}

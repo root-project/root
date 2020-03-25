@@ -87,10 +87,11 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TViewPubDataMembers.cxx
   src/TViewPubFunctions.cxx
   src/TVirtualStreamerInfo.cxx
-  INCLUDES
-    ${CMAKE_SOURCE_DIR}/core/meta/res
-    ${CMAKE_SOURCE_DIR}/core/foundation/res
 )
+
+target_include_directories(Meta PRIVATE ${CMAKE_SOURCE_DIR}/core/meta/res)
+target_include_directories(Meta PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
+
 
 ROOT_INSTALL_HEADERS()
 ROOT_ADD_TEST_SUBDIRECTORY(test)

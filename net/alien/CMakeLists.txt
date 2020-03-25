@@ -45,6 +45,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RAliEn
     Netx
     Tree
     Proof
-  INCLUDES
-    ${ALIEN_INCLUDE_DIR}
 )
+
+target_include_directories(RAliEn PRIVATE ${ALIEN_INCLUDE_DIR})
