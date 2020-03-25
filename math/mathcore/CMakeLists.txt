@@ -121,17 +121,13 @@ if(veccore)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
 endif()
 
-# todo one can use build directory without exposing all includes again via ${CMAKE_BINARY_DIR}/include
-if(builtin_veccore OR builtin_vc)
-  set(veccore_path ${CMAKE_BINARY_DIR}/include)
-endif()
-
 ROOT_CONFIGURE_LIBRARY_INCLUDES(MathCore
    DIRS
      math/mathcore/inc
      math/mathmore/inc
    GDIRS
-     ${veccore_path}
+     ${Vc_INCLUDE_DIR}
+     ${VecCore_INCLUDE_DIRS}
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
@@ -204,7 +200,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   BUILTINS
     ${MATHCORE_BUILTINS}
   INCLUDES
-    ${veccore_path}
+     ${Vc_INCLUDE_DIR}
+     ${VecCore_INCLUDE_DIRS}
 )
 
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})

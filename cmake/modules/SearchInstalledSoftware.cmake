@@ -1234,8 +1234,8 @@ if(vc AND NOT Vc_FOUND)
 
   set(VC_TARGET Vc)
   set(Vc_LIBRARIES Vc)
-  set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
-  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/lib/cmake/Vc")
+  set(Vc_INCLUDE_DIR ${Vc_ROOTDIR}/include)
+  set(Vc_CMAKE_MODULES_DIR ${Vc_ROOTDIR}/lib/cmake/Vc)
 
   add_library(VcExt STATIC IMPORTED)
   set_property(TARGET VcExt PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
@@ -1318,7 +1318,7 @@ if(builtin_veccore)
 
   set(VECCORE_TARGET VecCore)
   set(VecCore_LIBRARIES VecCore)
-  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
+  list(APPEND VecCore_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
 
   add_library(VecCore INTERFACE)
   target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
@@ -1331,7 +1331,7 @@ if(builtin_veccore)
     set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
 
     set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
-    set(VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR} ${VecCore_INCLUDE_DIRS})
+    list(APPEND VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR})
     set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
     target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
   endif()
