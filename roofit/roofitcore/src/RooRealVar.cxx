@@ -311,6 +311,11 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
     return *_binning ;
   }
 
+  if (strchr(name, ',')) {
+    coutW(InputArguments) << "Asking variable " << GetName() << "for binning '" << name
+        << "', but comma in binning names is not supported." << std::endl;
+  }
+
   // Check if non-shared binning with this name has been created already
   RooAbsBinning* binning = (RooAbsBinning*) _altNonSharedBinning.FindObject(name) ;
   if (binning) {
