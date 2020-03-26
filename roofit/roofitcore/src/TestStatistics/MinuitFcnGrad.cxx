@@ -57,7 +57,7 @@ ROOT::Math::IMultiGradFunction *MinuitFcnGrad::Clone() const
    return new MinuitFcnGrad(*this);
 }
 
-double MinuitFcnGrad::DoDerivative(const double *x, unsigned int icoord) const
+double MinuitFcnGrad::DoDerivative(const double */*x*/, unsigned int /*icoord*/) const
 {
    throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
 }
@@ -65,7 +65,7 @@ double MinuitFcnGrad::DoDerivative(const double *x, unsigned int icoord) const
 double MinuitFcnGrad::DoSecondDerivative(const double * /*x*/, unsigned int /*icoord*/) const
 {
    throw std::runtime_error("MinuitFcnGrad::DoSecondDerivative is not implemented, please use G2ndDerivative instead.");
-};
+}
 
 double MinuitFcnGrad::DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const
 {
@@ -98,7 +98,7 @@ unsigned int MinuitFcnGrad::NDim() const
 bool MinuitFcnGrad::returnsInMinuit2ParameterSpace() const
 {
    return true;
-};
+}
 
 Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
                                                      Bool_t optConst, Bool_t verbose)
@@ -121,11 +121,11 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
    // Handle eventual migrations from constParamList -> floatParamList
    for (index = 0; index < _constParamList->getSize(); index++) {
 
-      RooRealVar *par = dynamic_cast<RooRealVar *>(_constParamList->at(index));
+      auto par = dynamic_cast<RooRealVar *>(_constParamList->at(index));
       if (!par)
          continue;
 
-      RooRealVar *oldpar = dynamic_cast<RooRealVar *>(_initConstParamList->at(index));
+      auto oldpar = dynamic_cast<RooRealVar *>(_initConstParamList->at(index));
       if (!oldpar)
          continue;
 
@@ -142,7 +142,7 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
 
          if (verbose) {
             oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-               << "RooGradientFunction::synchronize: parameter " << par->GetName() << " is now floating." << std::endl;
+               << "MinuitFcnGrad::synchronize: parameter " << par->GetName() << " is now floating." << std::endl;
          }
       }
 
@@ -167,7 +167,7 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
    // Synchronize MINUIT with function state
    // Handle floatParamList
    for (index = 0; index < _floatParamList->getSize(); index++) {
-      RooRealVar *par = dynamic_cast<RooRealVar *>(_floatParamList->at(index));
+      auto par = dynamic_cast<RooRealVar *>(_floatParamList->at(index));
 
       if (!par)
          continue;
@@ -181,7 +181,7 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
          // Verify that floating parameter is indeed of type RooRealVar
          if (!par->IsA()->InheritsFrom(RooRealVar::Class())) {
             oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
-               << "RooGradientFunction::fit: Error, non-constant parameter " << par->GetName()
+               << "MinuitFcnGrad::fit: Error, non-constant parameter " << par->GetName()
                << " is not of type RooRealVar, skipping" << std::endl;
             _floatParamList->remove(*par);
             index--;
@@ -219,8 +219,8 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
             }
             if (verbose) {
                oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
-                  << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
-                  << par->GetName() << ": using " << pstep << std::endl;
+                  << "MinuitFcnGrad::synchronize: WARNING: no initial error estimate available for " << par->GetName()
+                  << ": using " << pstep << std::endl;
             }
          }
       } else {
@@ -232,10 +232,9 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
       if (index >= Int_t(parameter_settings.size())) {
 
          if (par->hasMin() && par->hasMax()) {
-            parameter_settings.push_back(
-               ROOT::Fit::ParameterSettings(par->GetName(), par->getVal(), pstep, pmin, pmax));
+            parameter_settings.emplace_back(par->GetName(), par->getVal(), pstep, pmin, pmax);
          } else {
-            parameter_settings.push_back(ROOT::Fit::ParameterSettings(par->GetName(), par->getVal(), pstep));
+            parameter_settings.emplace_back(par->GetName(), par->getVal(), pstep);
             if (par->hasMin())
                parameter_settings.back().SetLowerLimit(pmin);
             else if (par->hasMax())
@@ -258,15 +257,15 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
             parameter_settings[index].SetValue(par->getVal());
             if (verbose) {
                oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-                  << "RooGradientFunction::synchronize: value of parameter " << par->GetName() << " changed from "
-                  << oldVar << " to " << par->getVal() << std::endl;
+                  << "MinuitFcnGrad::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar
+                  << " to " << par->getVal() << std::endl;
             }
          }
          parameter_settings[index].Fix();
          constStatChange = kTRUE;
          if (verbose) {
             oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-               << "RooGradientFunction::synchronize: parameter " << par->GetName() << " is now fixed." << std::endl;
+               << "MinuitFcnGrad::synchronize: parameter " << par->GetName() << " is now fixed." << std::endl;
          }
 
       } else if (par->isConstant() && oldFixed) {
@@ -278,7 +277,7 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
 
             if (verbose) {
                oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-                  << "RooGradientFunction::synchronize: value of fixed parameter " << par->GetName() << " changed from "
+                  << "MinuitFcnGrad::synchronize: value of fixed parameter " << par->GetName() << " changed from "
                   << oldVar << " to " << par->getVal() << std::endl;
             }
          }
@@ -290,8 +289,8 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
             constStatChange = kTRUE;
 
             if (verbose) {
-               oocoutI(static_cast<RooAbsArg *>(nullptr), Eval) << "RooGradientFunction::synchronize: parameter "
-                                                                << par->GetName() << " is now floating." << std::endl;
+               oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
+                  << "MinuitFcnGrad::synchronize: parameter " << par->GetName() << " is now floating." << std::endl;
             }
          }
 
@@ -313,20 +312,20 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
 
             if (oldVar != par->getVal()) {
                oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-                  << "RooGradientFunction::synchronize: value of parameter " << par->GetName() << " changed from "
-                  << oldVar << " to " << par->getVal() << std::endl;
+                  << "MinuitFcnGrad::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar
+                  << " to " << par->getVal() << std::endl;
             }
             if (oldVlo != pmin || oldVhi != pmax) {
                oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-                  << "RooGradientFunction::synchronize: limits of parameter " << par->GetName() << " changed from ["
-                  << oldVlo << "," << oldVhi << "] to [" << pmin << "," << pmax << "]" << std::endl;
+                  << "MinuitFcnGrad::synchronize: limits of parameter " << par->GetName() << " changed from [" << oldVlo
+                  << "," << oldVhi << "] to [" << pmin << "," << pmax << "]" << std::endl;
             }
 
             // If oldVerr=0, then parameter was previously fixed
             if (oldVerr != pstep && oldVerr != 0) {
                oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-                  << "RooGradientFunction::synchronize: error/step size of parameter " << par->GetName()
-                  << " changed from " << oldVerr << " to " << pstep << std::endl;
+                  << "MinuitFcnGrad::synchronize: error/step size of parameter " << par->GetName() << " changed from "
+                  << oldVerr << " to " << pstep << std::endl;
             }
          }
       }
@@ -340,13 +339,11 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
          RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
 
          oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-            << "RooGradientFunction::synchronize: set of constant parameters changed, rerunning const optimizer"
-            << std::endl;
+            << "MinuitFcnGrad::synchronize: set of constant parameters changed, rerunning const optimizer" << std::endl;
          likelihood->constOptimizeTestStatistic(RooAbsArg::ConfigChange);
       } else if (constValChange) {
          oocoutI(static_cast<RooAbsArg *>(nullptr), Eval)
-            << "RooGradientFunction::synchronize: constant parameter values changed, rerunning const optimizer"
-            << std::endl;
+            << "MinuitFcnGrad::synchronize: constant parameter values changed, rerunning const optimizer" << std::endl;
          likelihood->constOptimizeTestStatistic(RooAbsArg::ValueChange);
       }
 
@@ -365,24 +362,90 @@ Bool_t MinuitFcnGrad::synchronize_parameter_settings(std::vector<ROOT::Fit::Para
    t7 = get_time();
 
    oocxcoutD((TObject *)nullptr, Benchmarking2)
-      << "RooGradientFunction::synchronize_parameter_settings timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4
+      << "MinuitFcnGrad::synchronize_parameter_settings timestamps: " << t1 << " " << t2 << " " << t3 << " " << t4
       << " " << t5 << " " << t6 << " " << t7 << std::endl;
 
-   return 0;
+   return kFALSE;
 }
 
 void MinuitFcnGrad::updateFloatVec()
 {
    _floatParamVec.clear();
    RooFIter iter = _floatParamList->fwdIterator();
-   RooAbsArg* arg;
-   _floatParamVec = std::vector<RooAbsArg*>(_floatParamList->getSize());
+   RooAbsArg *arg;
+   _floatParamVec = std::vector<RooAbsArg *>(_floatParamList->getSize());
    Int_t i(0);
-   while((arg=iter.next())) {
+   while ((arg = iter.next())) {
       _floatParamVec[i++] = arg;
    }
 }
 
+RooArgList *MinuitFcnGrad::GetFloatParamList()
+{
+   return _floatParamList;
+}
+RooArgList *MinuitFcnGrad::GetConstParamList()
+{
+   return _constParamList;
+}
+RooArgList *MinuitFcnGrad::GetInitFloatParamList()
+{
+   return _initFloatParamList;
+}
+RooArgList *MinuitFcnGrad::GetInitConstParamList()
+{
+   return _initConstParamList;
+}
+
+void MinuitFcnGrad::SetEvalErrorWall(Bool_t flag)
+{
+   _doEvalErrorWall = flag;
+}
+void MinuitFcnGrad::SetPrintEvalErrors(Int_t numEvalErrors)
+{
+   _printEvalErrors = numEvalErrors;
+}
+
+Double_t &MinuitFcnGrad::GetMaxFCN()
+{
+   return _maxFCN;
+}
+Int_t MinuitFcnGrad::GetNumInvalidNLL()
+{
+   return _numBadNLL;
+}
+
+Int_t MinuitFcnGrad::evalCounter() const
+{
+   return _evalCounter;
+}
+void MinuitFcnGrad::zeroEvalCount()
+{
+   _evalCounter = 0;
+}
+
+void MinuitFcnGrad::SetVerbose(Bool_t flag)
+{
+   _verbose = flag;
+}
+
+void MinuitFcnGrad::SetPdfParamErr(Int_t index, Double_t value)
+{
+   // Modify PDF parameter error by ordinal index (needed by MINUIT)
+   ((RooRealVar *)_floatParamList->at(index))->setError(value);
+}
+
+void MinuitFcnGrad::ClearPdfParamAsymErr(Int_t index)
+{
+   // Modify PDF parameter error by ordinal index (needed by MINUIT)
+   ((RooRealVar *)_floatParamList->at(index))->removeAsymError();
+}
+
+void MinuitFcnGrad::SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal)
+{
+   // Modify PDF parameter error by ordinal index (needed by MINUIT)
+   ((RooRealVar *)_floatParamList->at(index))->setAsymError(loVal, hiVal);
+}
 
 } // namespace TestStatistics
 } // namespace RooFit
