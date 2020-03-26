@@ -12,13 +12,21 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 #include <TestStatistics/LikelihoodWrapper.h>
+#include <TestStatistics/RooAbsL.h> // need complete type for likelihood->...
 
 namespace RooFit {
 namespace TestStatistics {
 
 LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> _likelihood) : likelihood(std::move(_likelihood)) {}
 
-void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) {}
+void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options) {}
 
+void LikelihoodWrapper::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode)
+{
+   likelihood->constOptimizeTestStatistic(opcode);
 }
-}
+
+void LikelihoodWrapper::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) {}
+
+} // namespace TestStatistics
+} // namespace RooFit

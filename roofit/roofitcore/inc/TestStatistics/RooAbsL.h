@@ -31,7 +31,6 @@ public:
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    RooArgSet *getParameters();
-   // TODO: nog niet zeker of deze virtueel moet:
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode);
 
 private:

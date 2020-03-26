@@ -14,7 +14,8 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper
 
-#include <memory>  // shared_ptr
+#include <memory> // shared_ptr
+#include <Fit/ParameterSettings.h>
 #include "Math/MinimizerOptions.h"
 
 namespace RooFit {
@@ -31,12 +32,14 @@ public:
    virtual void fill_step_size(const double *x, double *gstep) = 0;
 
    // synchronize minimizer settings with calculators in child classes
-   virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options);
+   virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options);
+   virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
+
 private:
    std::shared_ptr<RooAbsL> likelihood;
 };
 
-}
-}
+} // namespace TestStatistics
+} // namespace RooFit
 
 #endif // ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientWrapper

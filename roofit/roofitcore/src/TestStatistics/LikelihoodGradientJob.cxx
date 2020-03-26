@@ -59,5 +59,9 @@ void LikelihoodGradientJob::fill_second_derivative(const double *x, double *g2) 
 
 void LikelihoodGradientJob::fill_step_size(const double *x, double *gstep) {}
 
+void LikelihoodGradientJob::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) {
+   _gradf.SetInitialGradient(parameter_settings);
+}
+
 } // namespace TestStatistics
 } // namespace RooFit

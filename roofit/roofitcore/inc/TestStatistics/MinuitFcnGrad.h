@@ -90,9 +90,7 @@ public:
    // inform Minuit through its parameter_settings vector of RooFit parameter properties
    Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
                                          Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
-
-   // let gradient calculator know of synced settings
-   void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
+   void updateFloatVec();  // used for synchronization
 
    // used inside Minuit:
    bool returnsInMinuit2ParameterSpace() const override;
@@ -112,9 +110,6 @@ public:
    void zeroEvalCount();
    void SetVerbose(Bool_t flag = kTRUE);
 
-   // TODO: for what is this used?
-   void updateFloatVec();
-
 private:
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
    void SetPdfParamErr(Int_t index, Double_t value);
@@ -122,7 +117,7 @@ private:
    void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
    inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const
    {
-      RooRealVar *par = (RooRealVar *)_floatParamVec[index];
+      auto par = (RooRealVar *)_floatParamVec[index];
 
       if (par->getVal() != value) {
          if (_verbose)

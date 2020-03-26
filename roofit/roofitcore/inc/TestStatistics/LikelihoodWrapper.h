@@ -15,6 +15,7 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
 
 #include <memory>  // shared_ptr
+#include <Fit/ParameterSettings.h>
 #include "Math/MinimizerOptions.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"  // enum ConstOpCode
@@ -32,6 +33,7 @@ public:
 
    // synchronize minimizer settings with calculators in child classes
    virtual void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options);
+   virtual void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings);
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
    RooArgSet* getParameters();

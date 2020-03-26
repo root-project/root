@@ -80,6 +80,7 @@ private:
 
    // TODO: implement override! Should call this from Synchronize. It should update strategy and errordef. See RooGradMinimizerFcn.
 //   void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) override;
+   void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 };
 
 }
