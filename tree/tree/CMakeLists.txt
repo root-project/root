@@ -10,8 +10,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Tree
-  HEADERSDIR
-    tree/tree/inc 
   HEADERS
     TBasket.h
     TBasketSQL.h

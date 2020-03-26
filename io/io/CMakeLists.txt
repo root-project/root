@@ -16,13 +16,6 @@ else ()
   set(rawfile_local_sources src/RRawFileUnix.cxx)
 endif ()
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(RIO
-   DIRS
-     io/io/inc
-   V7DIRS
-     io/io/v7/inc
-)
-
 ROOT_LINKER_LIBRARY(RIO
   src/RRawFile.cxx
   ${rawfile_local_sources}

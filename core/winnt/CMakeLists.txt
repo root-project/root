@@ -13,6 +13,8 @@ set(Winnt_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} Winnt PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(Winnt
   src/TWin32SplashThread.cxx
   src/TWinNTSystem.cxx

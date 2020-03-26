@@ -9,8 +9,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Physics
-  HEADERSDIR
-    math/physics/inc
   HEADERS
     TFeldmanCousins.h
     TGenPhaseSpace.h

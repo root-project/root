@@ -53,6 +53,8 @@ set(Meta_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} Meta PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(Meta
   src/TBaseClass.cxx
   src/TClass.cxx

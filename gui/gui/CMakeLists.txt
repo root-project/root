@@ -9,8 +9,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gui
-  HEADERSDIR
-    gui/gui/inc
   HEADERS
     HelpText.h
     TG3DLine.h

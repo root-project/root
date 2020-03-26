@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT core/imt package
 ############################################################################
 
+set(core_tgts ${core_tgts} Imt PARENT_SCOPE)
+
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
     src/TTaskGroup.cxx

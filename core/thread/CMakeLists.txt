@@ -27,6 +27,8 @@ else()
   )
 endif()
 
+set(core_tgts ${core_tgts} Thread PARENT_SCOPE)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Thread
   HEADERS
     ${PLATFORM_HEADERS}

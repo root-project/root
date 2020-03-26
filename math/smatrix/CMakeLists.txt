@@ -9,8 +9,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Smatrix
-  HEADERSDIR
-    math/smatrix/inc
   HEADERS
     Math/BinaryOperators.h
     Math/BinaryOpPolicy.h

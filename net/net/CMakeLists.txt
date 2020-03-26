@@ -30,8 +30,6 @@ if(ssl)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Net
-  HEADERSDIR
-    net/net/inc 
   HEADERS
     NetErrors.h
     RRemoteProtocol.h

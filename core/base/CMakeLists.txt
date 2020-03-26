@@ -215,6 +215,8 @@ endif()
 # only here complete list of headers can be propogated to parent cmake file
 set(Core_dict_headers ${BASE_HEADERS} PARENT_SCOPE)
 
+set(core_tgts ${core_tgts} Base PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
 
 target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/base/res)

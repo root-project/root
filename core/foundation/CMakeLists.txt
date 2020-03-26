@@ -22,6 +22,8 @@ set(Foundation_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} Foundation Foundation_Stage1 PARENT_SCOPE)
+
 set(sources
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx

@@ -1,6 +1,9 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/zstd package
 ############################################################################
+
+set(core_tgts ${core_tgts} Zstd PARENT_SCOPE)
+
 find_package(ZSTD REQUIRED)
 
 #---Declare ZipZSTD sources as part of libCore-------------------------------

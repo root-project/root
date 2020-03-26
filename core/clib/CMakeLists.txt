@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT core/clib package
 ############################################################################
 
+set(core_tgts ${core_tgts} Clib PARENT_SCOPE)
+
 set(Clib_dict_headers strlcpy.h
                       snprintf.h PARENT_SCOPE)
 

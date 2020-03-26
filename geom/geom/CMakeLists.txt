@@ -9,8 +9,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Geom 
-  HEADERSDIR
-    geom/geom/inc
   HEADERS
     TGDMLMatrix.h
     TGeoArb8.h

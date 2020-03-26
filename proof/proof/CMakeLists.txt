@@ -16,8 +16,6 @@ if(alien)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Proof
-  HEADERSDIR
-    proof/proof/inc
   HEADERS
     TCondor.h
     TDataSetManagerAliEn.h

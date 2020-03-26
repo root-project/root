@@ -16,6 +16,8 @@ set(ClingUtils_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} ClingUtils PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(ClingUtils
   src/RStl.cxx
   src/TClingUtils.cxx
@@ -23,7 +25,7 @@ ROOT_OBJECT_LIBRARY(ClingUtils
 
 add_dependencies(ClingUtils CLING)
 
-target_include_directories(ClingUtils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+target_include_directories(ClingUtils PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
 target_include_directories(ClingUtils PRIVATE ${CLING_INCLUDE_DIRS})
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off

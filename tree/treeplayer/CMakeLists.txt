@@ -23,8 +23,6 @@ if(imt)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
-  HEADERSDIR
-    tree/treeplayer/inc
   HEADERS
     ROOT/TTreeReaderFast.hxx
     ROOT/TTreeReaderValueFast.hxx

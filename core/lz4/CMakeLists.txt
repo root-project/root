@@ -4,6 +4,8 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+set(core_tgts ${core_tgts} Lz4 PARENT_SCOPE)
+
 find_package(LZ4 REQUIRED)
 find_package(xxHash REQUIRED)
 

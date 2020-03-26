@@ -9,8 +9,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Hist
-  HEADERSDIR
-    hist/hist/inc 
   HEADERS
     Foption.h
     HFitInterface.h

@@ -10,8 +10,6 @@
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
-  HEADERSDIR
-    graf2d/gpad/inc
   HEADERS
     TAttCanvas.h
     TButton.h

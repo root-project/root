@@ -121,15 +121,6 @@ if(veccore)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
 endif()
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(MathCore
-   DIRS
-     math/mathcore/inc
-     math/mathmore/inc
-   GDIRS
-     ${Vc_INCLUDE_DIR}
-     ${VecCore_INCLUDE_DIRS}
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   HEADERS
     ${HEADERS}
@@ -203,6 +194,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
 
 target_include_directories(MathCore PRIVATE ${Vc_INCLUDE_DIR})
 target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
+
+list(APPEND math_incl ${CMAKE_SOURCE_DIR}/math/mathcore/inc)
+list(APPEND math_incl ${CMAKE_SOURCE_DIR}/math/mathmore/inc)
+list(APPEND math_incl ${Vc_INCLUDE_DIR})
+list(APPEND math_incl ${VecCore_INCLUDE_DIRS})
+
+foreach(inlc ${math_incl})
+   target_include_directories(MathCore PUBLIC $<BUILD_INTERFACE:${incl}>)
+endforeach()   
 
 
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})

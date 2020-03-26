@@ -4,8 +4,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-find_package(ZLIB REQUIRED)
+set(core_tgts ${core_tgts} Zip PARENT_SCOPE)
 
+find_package(ZLIB REQUIRED)
 
 ROOT_OBJECT_LIBRARY(Zip
   src/Bits.c

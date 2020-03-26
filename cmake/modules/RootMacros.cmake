@@ -303,9 +303,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     if(TARGET ${ARG_MODULE})
        get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
-       foreach(dir ${target_incdirs})
-           list(APPEND incdirs ${dir})
-       endforeach()
+       if(target_incdirs)
+          foreach(dir ${target_incdirs})
+             string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+             list(APPEND incdirs ${dir})
+          endforeach()   
+       endif()  
     endif()
 
     if(ARG_MODULE STREQUAL Core)
@@ -969,27 +972,6 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_CONFIGURE_LIBRARY_INCLUDES( library DIRS incl1 incl2 ... GDIRS incl1 incl2 ... V7DIRS incl1 incl2 ...)
-#---------------------------------------------------------------------------------------------------
-function(ROOT_CONFIGURE_LIBRARY_INCLUDES library)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DIRS;GDIRS;V7DIRS" ${ARGN})
-  set(lst)
-  foreach(glbl ${ARG_GDIRS})
-     list(APPEND lst ${glbl})
-  endforeach()
-  foreach(src ${ARG_DIRS})
-     list(APPEND lst ${CMAKE_SOURCE_DIR}/${src})
-  endforeach()
-  if(root7)
-     foreach(src ${ARG_V7DIRS})
-        list(APPEND lst ${CMAKE_SOURCE_DIR}/${src})
-     endforeach()
-  endif(root7)
-
-  SET(root_incdirs_${library} ${lst} CACHE STRING "includes for ${library}" FORCE)
-endfunction()
-
-#---------------------------------------------------------------------------------------------------
 #---ROOT_ADD_INCLUDE_DIRECTORIES( library DEPENDENCIES dep1 dep2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
@@ -1000,31 +982,37 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       list(APPEND used_libs ${library})
       list(REMOVE_DUPLICATES used_libs)
 
-      set(fulllst)
-
+      set(dep_list)
+      
       foreach(lib ${used_libs})
-         foreach(incl ${root_incdirs_${lib}})
-            list(APPEND fulllst ${incl})
-         endforeach()
+        if(TARGET ${lib}) 
+          get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
+          if(lib_incdirs)
+             foreach(dir ${lib_incdirs})
+                string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+                list(APPEND dep_list ${dir})
+             endforeach()   
+          endif()  
+        endif()   
+      endforeach()
+
+      list(REMOVE_DUPLICATES dep_list)
+      
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+        target_include_directories(${library} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      endif()
+      
+      foreach(incl ${dep_list})
+        target_include_directories(${library} PRIVATE ${incl})
       endforeach()
 
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-         list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-       endif()
-
-      if(root7 AND (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc))
-         list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-       endif()
-
-      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-         list(APPEND fulllst ${CMAKE_CURRENT_SOURCE_DIR}/res)
+        target_include_directories(${library} BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
       endif()
 
-      list(REMOVE_DUPLICATES fulllst)
-
-      foreach(incl ${fulllst})
-          target_include_directories(${library} PRIVATE ${incl} INTERFACE $<BUILD_INTERFACE:${incl}>)
-      endforeach()
+      if(root7 AND (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc))
+        target_include_directories(${library} BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>) 
+      endif()
   endif()
 
 endfunction(ROOT_ADD_INCLUDE_DIRECTORIES)
@@ -1222,7 +1210,6 @@ endfunction()
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
-#                                 [HEADERSDIR dir]             : source directory where library headers are stored           
 #                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
 #                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
 #                                 [NO_HEADERS]                 : don't glob to fill HEADERS variable
@@ -1242,7 +1229,7 @@ endfunction()
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
-  set(multiValueArgs DEPENDENCIES HEADERSDIR HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
+  set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # Check if we have any unparsed arguments
@@ -1257,10 +1244,6 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     message(AUTHOR_WARNING "SOURCES and NO_SOURCES arguments are mutually exclusive.")
   endif()
   
-  if (ARG_HEADERSDIR)
-     ROOT_CONFIGURE_LIBRARY_INCLUDES(${libname} DIRS ${ARG_HEADERSDIR}) 
-  endif()  
-
   # Set default values
   # If HEADERS/SOURCES are not parsed, we glob for those files.
   if (NOT (ARG_HEADERS OR ARG_NO_HEADERS OR ARG_NODEPHEADERS))

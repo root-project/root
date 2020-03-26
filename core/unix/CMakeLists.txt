@@ -13,6 +13,8 @@ set(Unix_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} Unix PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(Unix
   src/TUnixSystem.cxx
 )

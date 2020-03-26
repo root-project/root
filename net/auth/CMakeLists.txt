@@ -14,8 +14,6 @@ target_include_directories(rsa PUBLIC res)
 set_property(TARGET rsa PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
-  HEADERSDIR
-    net/auth/inc
   HEADERS
     AuthConst.h
     TAuthenticate.h

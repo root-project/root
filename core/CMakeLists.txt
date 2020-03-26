@@ -28,25 +28,6 @@ else()
   set(platform_incl core/unix/inc)
 endif()
 
-ROOT_CONFIGURE_LIBRARY_INCLUDES(Core
-   GDIRS
-      ${CMAKE_BINARY_DIR}/ginclude
-   DIRS
-      core/base/inc
-      core/foundation/inc
-      core/cont/inc
-      core/gui/inc
-      core/meta/inc
-      core/clib/inc
-      core/rint/inc
-      core/zip/inc
-      core/thread/inc
-      core/textinput/inc
-      ${platform_incl}
-   V7DIRS
-      core/base/v7/inc
-)
-
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
 
@@ -67,6 +48,8 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
   DEPENDS
     ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
 )
+
+set(core_tgts Core BaseTROOT)
 
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RGitCommit.h ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
@@ -173,6 +156,45 @@ if (libcxx AND NOT APPLE)
   target_compile_definitions(Core PRIVATE __CORRECT_ISO_CPP_WCHAR_H_PROTO)
 endif()
 
+#while basic libs do not depend on Core, we have to add includes directly
+
+set(tgt_scope PUBLIC)
+
+foreach(tgt ${core_tgts})
+target_include_directories(${tgt} ${tgt_scope}
+   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/cont/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/meta/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clib/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/zip/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
+   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
+)
+
+if(root7)
+  target_include_directories(${tgt} ${tgt_scope} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
+endif(root7)
+
+set(tgt_scope PRIVATE)
+
+endforeach()
+
+
+if(ROOT_ARCHITECTURE MATCHES macosx)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc> $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/macosx/inc>)
+  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc ${CMAKE_SOURCE_DIR}/core/macosx/inc)
+elseif(ROOT_ARCHITECTURE MATCHES win32)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/winnt/inc>)
+  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+else()
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc>)
+  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
+endif()
+>>>>>>> d80fffa774... [cmake] fully rely on target_include_directories property
 
 ROOT_GENERATE_DICTIONARY(G__Core
   ${Core_dict_headers}

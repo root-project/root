@@ -9,17 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(builtin_vdt OR vdt)
-   set(vdt_includes ${VDT_INCLUDE_DIRS})
-endif()
-
-ROOT_CONFIGURE_LIBRARY_INCLUDES(RooFitCore
-   DIRS
-     roofit/roofitcore/inc
-   GDIRS
-     ${vdt_includes}
-)
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     Roo1DTable.h
@@ -478,5 +467,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 if(vdt AND NOT builtin_vdt)
   target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
 endif()
+
+list(APPEND fitcore_incl ${CMAKE_SOURCE_DIR}/roofit/roofitcore/inc)
+
+if(builtin_vdt OR vdt)
+   list(APPEND fitcore_incl ${VDT_INCLUDE_DIRS})
+endif()
+
+foreach(inlc ${fitcore_incl})
+   target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${incl}>)
+endforeach()   
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

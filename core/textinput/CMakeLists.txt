@@ -13,6 +13,8 @@ set(TextInput_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} TextInput PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(TextInput
   src/Getline_color.cxx
   src/Getline.cxx

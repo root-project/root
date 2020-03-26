@@ -26,6 +26,8 @@ set(GuiCore_dict_headers
   PARENT_SCOPE
 )
 
+set(core_tgts ${core_tgts} GuiCore PARENT_SCOPE)
+
 ROOT_OBJECT_LIBRARY(GuiCore
   src/InitGui.cxx
   src/TApplicationImp.cxx
