@@ -4,12 +4,15 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(core_tgts ${core_tgts} Lz4 PARENT_SCOPE)
-
 find_package(LZ4 REQUIRED)
 find_package(xxHash REQUIRED)
 
 ROOT_OBJECT_LIBRARY(Lz4 src/ZipLZ4.cxx)
-target_include_directories(Lz4 PRIVATE ${LZ4_INCLUDE_DIR} ${xxHash_INCLUDE_DIR})
+target_include_directories(Lz4 PRIVATE 
+   ${LZ4_INCLUDE_DIR} 
+   ${xxHash_INCLUDE_DIR}
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
 
 ROOT_INSTALL_HEADERS()

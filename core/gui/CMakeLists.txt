@@ -26,8 +26,6 @@ set(GuiCore_dict_headers
   PARENT_SCOPE
 )
 
-set(core_tgts ${core_tgts} GuiCore PARENT_SCOPE)
-
 ROOT_OBJECT_LIBRARY(GuiCore
   src/InitGui.cxx
   src/TApplicationImp.cxx
@@ -43,6 +41,16 @@ ROOT_OBJECT_LIBRARY(GuiCore
   src/TObjectSpy.cxx
   src/TToggle.cxx
   src/TToggleGroup.cxx
+)
+
+target_include_directories(GuiCore PRIVATE 
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_BINARY_DIR}/ginclude
 )
 
 ROOT_INSTALL_HEADERS()

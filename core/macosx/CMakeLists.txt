@@ -13,8 +13,6 @@ set(Macosx_dict_headers
   PARENT_SCOPE
 )
 
-set(core_tgts ${core_tgts} Macosx PARENT_SCOPE)
-
 ROOT_OBJECT_LIBRARY(Macosx
   src/CocoaUtils.mm
   src/TMacOSXSystem.mm
@@ -22,6 +20,17 @@ ROOT_OBJECT_LIBRARY(Macosx
 
 target_compile_options(Macosx PRIVATE -ObjC++)
 
-target_include_directories(Macosx PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
+target_include_directories(Macosx PRIVATE
+   ${CMAKE_SOURCE_DIR}/core/unix/inc
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/textinput/inc
+   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
 
 ROOT_INSTALL_HEADERS()

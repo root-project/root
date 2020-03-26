@@ -8,13 +8,16 @@
 # CMakeLists.txt file for building ROOT core/imt package
 ############################################################################
 
-set(core_tgts ${core_tgts} Imt PARENT_SCOPE)
-
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
     src/TTaskGroup.cxx
   BUILTINS
     TBB
+)
+
+target_include_directories(Clib PRIVATE
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_BINARY_DIR}/ginclude
 )
 
 target_link_libraries(Imt PRIVATE Thread INTERFACE Core)

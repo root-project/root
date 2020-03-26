@@ -10,6 +10,4 @@
 
 add_subdirectory(src)
 
-set(core_tgts ${core_tgts} MetaCling PARENT_SCOPE)
-
 ROOT_ADD_TEST_SUBDIRECTORY(test)

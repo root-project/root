@@ -19,15 +19,6 @@ file(WRITE ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
 #endif"
 )
 
-if(ROOT_ARCHITECTURE MATCHES macosx)
-  list(APPEND platform_incl core/unix/inc)
-  list(APPEND platform_incl core/macosx/inc)
-elseif(ROOT_ARCHITECTURE MATCHES win32)
-  set(platform_incl core/winnt/inc)
-else()
-  set(platform_incl core/unix/inc)
-endif()
-
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
 
@@ -48,8 +39,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
   DEPENDS
     ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
 )
-
-set(core_tgts Core BaseTROOT)
 
 add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RGitCommit.h ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
@@ -128,7 +117,17 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                ${winnt_objects})
 
 ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
-target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
+target_include_directories(BaseTROOT PRIVATE 
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
 
 add_dependencies(BaseTROOT gitcommit)
 #----------------------------------------------------------------------------------------
@@ -158,10 +157,7 @@ endif()
 
 #while basic libs do not depend on Core, we have to add includes directly
 
-set(tgt_scope PUBLIC)
-
-foreach(tgt ${core_tgts})
-target_include_directories(${tgt} ${tgt_scope}
+target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
@@ -176,12 +172,8 @@ target_include_directories(${tgt} ${tgt_scope}
 )
 
 if(root7)
-  target_include_directories(${tgt} ${tgt_scope} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
+  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
 endif(root7)
-
-set(tgt_scope PRIVATE)
-
-endforeach()
 
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
@@ -194,7 +186,6 @@ else()
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc>)
   target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
 endif()
->>>>>>> d80fffa774... [cmake] fully rely on target_include_directories property
 
 ROOT_GENERATE_DICTIONARY(G__Core
   ${Core_dict_headers}

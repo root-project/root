@@ -4,8 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(core_tgts ${core_tgts} Zip PARENT_SCOPE)
-
 find_package(ZLIB REQUIRED)
 
 ROOT_OBJECT_LIBRARY(Zip
@@ -17,9 +15,16 @@ ROOT_OBJECT_LIBRARY(Zip
   src/RZip.cxx
 )
 
-target_include_directories(Zip PRIVATE ${ZLIB_INCLUDE_DIR})
-target_include_directories(Zip PRIVATE ${CMAKE_SOURCE_DIR}/core/lzma/inc)
-target_include_directories(Zip PRIVATE ${CMAKE_SOURCE_DIR}/core/lz4/inc)
-target_include_directories(Zip PRIVATE ${CMAKE_SOURCE_DIR}/core/zstd/inc)
+target_include_directories(Zip PRIVATE 
+   ${ZLIB_INCLUDE_DIR}
+   ${CMAKE_SOURCE_DIR}/core/lzma/inc
+   ${CMAKE_SOURCE_DIR}/core/lz4/inc
+   ${CMAKE_SOURCE_DIR}/core/zstd/inc
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
 
 ROOT_INSTALL_HEADERS()

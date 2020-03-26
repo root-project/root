@@ -53,8 +53,6 @@ set(Meta_dict_headers
   PARENT_SCOPE
 )
 
-set(core_tgts ${core_tgts} Meta PARENT_SCOPE)
-
 ROOT_OBJECT_LIBRARY(Meta
   src/TBaseClass.cxx
   src/TClass.cxx
@@ -91,8 +89,23 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TVirtualStreamerInfo.cxx
 )
 
-target_include_directories(Meta PRIVATE ${CMAKE_SOURCE_DIR}/core/meta/res)
-target_include_directories(Meta PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
+target_include_directories(Meta PRIVATE
+  ${CMAKE_SOURCE_DIR}/core/meta/res
+  ${CMAKE_SOURCE_DIR}/core/foundation/res
+  ${CMAKE_SOURCE_DIR}/core/base/inc
+  ${CMAKE_SOURCE_DIR}/core/clib/inc
+  ${CMAKE_SOURCE_DIR}/core/cont/inc
+  ${CMAKE_SOURCE_DIR}/core/thread/inc
+  ${CMAKE_SOURCE_DIR}/core/gui/inc
+  ${CMAKE_SOURCE_DIR}/core/foundation/inc
+  ${CMAKE_BINARY_DIR}/ginclude
+)
+
+if(MSVC)
+   target_include_directories(Meta PRIVATE
+      ${CMAKE_SOURCE_DIR}/core/winnt/inc
+   )
+endif()
 
 
 ROOT_INSTALL_HEADERS()

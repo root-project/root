@@ -215,13 +215,25 @@ endif()
 # only here complete list of headers can be propogated to parent cmake file
 set(Core_dict_headers ${BASE_HEADERS} PARENT_SCOPE)
 
-set(core_tgts ${core_tgts} Base PARENT_SCOPE)
-
 ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
 
-target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/base/res)
-target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/foundation/res)
-target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
+target_include_directories(Base PRIVATE
+   ${PCRE_INCLUDE_DIR}
+   res
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
+
+if(MSVC)
+   target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+endif()
+
 
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
 generateHeader(Base
