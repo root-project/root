@@ -34,6 +34,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    EveElemControl.prototype.separateDraw = false;
 
+   EveElemControl.prototype.getTooltipText = function(intersect)
+   {
+      let el =  this.obj3d.eve_el;
+      return el.fTitle || el.fName || "";
+   }
+
    EveElemControl.prototype.elementHighlighted = function(indx)
    {
       // default is simple selection, we ignore the indx
@@ -695,6 +701,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          let idx = intersect.index + this.obj3d.eve_el.fLinePlexSize;
          return rnr_data.idxBuff[idx];
       }
+   }
+
+   StraightLineSetControl.prototype.getTooltipText = function(intersect)
+   {
+      var t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
+      var idx = this.extractIndex(intersect);
+      return t + " idx=" + idx;
    }
 
    StraightLineSetControl.prototype.elementSelected = function(indx)
