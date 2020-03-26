@@ -79,6 +79,7 @@ more information on how to modernise old code.
 
 ## 2D Graphics Libraries
 
+ * Universal time (correct time zone and daylight saving time) in PDF file.
 
 ## 3D Graphics Libraries
 
