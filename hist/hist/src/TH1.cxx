@@ -5809,6 +5809,24 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Normalize a 1D histogram to unit integral.
+///
+
+void TH1::Normalize()
+{
+  if(!this) return;
+  Double_t integ = this->Integral();
+  if(integ != 0)
+  {
+    this->Scale(1.0/integ);
+  }
+  else
+  {
+    Error("Normalize", "Attempt to normalize histogram with zero integral");
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Control routine to paint any kind of histograms.
 ///
 /// This function is automatically called by TCanvas::Update.
