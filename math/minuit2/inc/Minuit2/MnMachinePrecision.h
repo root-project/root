@@ -36,15 +36,6 @@ public:
 
   MnMachinePrecision();
 
-  ~MnMachinePrecision() {}
-
-  MnMachinePrecision(const MnMachinePrecision& prec) : fEpsMac(prec.fEpsMac), fEpsMa2(prec.fEpsMa2) {}
-
-  MnMachinePrecision& operator=(const MnMachinePrecision& prec) {
-    fEpsMac = prec.fEpsMac;
-    fEpsMa2 = prec.fEpsMa2;
-    return *this;
-  }
 
   /// eps returns the smallest possible number so that 1.+eps > 1.
   double Eps() const {return fEpsMac;}
