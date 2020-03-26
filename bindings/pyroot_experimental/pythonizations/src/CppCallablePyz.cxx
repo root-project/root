@@ -506,7 +506,6 @@ PyObject* NumbaCallableImpl_call(PyObject * /*self*/, PyObject *args)
       } else if (cpptype.compare("") == 0) { // No input, skip
       } else {
          Py_DECREF(iter);
-         Py_DECREF(item);
          PyErr_SetString(PyExc_RuntimeError,
                  ("Failed to create C++ callable: Input type " + cpptype + " is not valid for jitting with numba.").c_str());
          return NULL;
