@@ -443,7 +443,7 @@ sap.ui.define([
          this.highlighted_scene = c.obj3d.scene;
 
          if (c.obj3d && c.obj3d.eve_el)
-            this.ttip_text.innerHTML = c.obj3d.eve_el.fTitle || c.obj3d.eve_el.fName || "";
+            this.ttip_text.innerHTML = c.getTooltipText(intersect);
          else
             this.ttip_text.innerHTML = "";
 
