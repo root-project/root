@@ -122,7 +122,7 @@ public:
    // put Minuit results back into RooFit objects:
    void BackProp(const ROOT::Fit::FitResult &results);
 
-   // set different covariance matrix (TODO: check if this is ever used, if not, remove?)
+   // set different external covariance matrix
    void ApplyCovarianceMatrix(TMatrixDSym &V);
 
 private:
@@ -157,9 +157,6 @@ public:
 
    // part of IMultiGradFunction interface, used widely both in Minuit and in RooFit:
    unsigned int NDim() const override;
-
-   // miscellaneous
-   // TODO: hier getters, zoals bijv die covariance matrix, tenzij dat bij sync hoort, mss bij RooFitResult maken...
 
 private:
    // The following three overrides will not actually be used in this class, so they will throw:

@@ -22,8 +22,8 @@ RooArgSet *RooAbsL::getParameters()
    return pdf->getParameters(*data);
 }
 
-void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode) {
-   throw std::logic_error("RooAbsL::constOptimizeTestStatistic is not yet implemented.");
+void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode /*opcode*/) {
+   // yet to be implemented
 }
 
 } // namespace TestStatistics
