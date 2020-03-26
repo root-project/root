@@ -78,9 +78,14 @@ private:
    // ----- END PASTE UIT RooGradientFunction.h -----
    // ----- END PASTE UIT RooGradientFunction.h -----
 
-   // TODO: implement override! Should call this from Synchronize. It should update strategy and errordef. See RooGradMinimizerFcn.
-//   void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) override;
    void synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
+
+   void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) override;
+   void set_strategy(int istrat);
+   void set_step_tolerance(double step_tolerance) const;
+   void set_grad_tolerance(double grad_tolerance) const;
+   void set_ncycles(unsigned int ncycles) const;
+   void set_error_level(double error_level) const;
 };
 
 }

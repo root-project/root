@@ -57,7 +57,7 @@ ROOT::Math::IMultiGradFunction *MinuitFcnGrad::Clone() const
    return new MinuitFcnGrad(*this);
 }
 
-double MinuitFcnGrad::DoDerivative(const double */*x*/, unsigned int /*icoord*/) const
+double MinuitFcnGrad::DoDerivative(const double * /*x*/, unsigned int /*icoord*/) const
 {
    throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
 }
@@ -380,6 +380,14 @@ void MinuitFcnGrad::updateFloatVec()
    }
 }
 
+Bool_t MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters,
+                                        Bool_t optConst, Bool_t verbose) {
+   Bool_t returnee = synchronize_parameter_settings(parameters, optConst, verbose);
+   likelihood->synchronize_with_minimizer(_context.fitter()->Config().MinimizerOptions());
+   gradient->synchronize_with_minimizer(_context.fitter()->Config().MinimizerOptions());
+   return returnee;
+}
+
 RooArgList *MinuitFcnGrad::GetFloatParamList()
 {
    return _floatParamList;
@@ -445,6 +453,46 @@ void MinuitFcnGrad::SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal)
 {
    // Modify PDF parameter error by ordinal index (needed by MINUIT)
    ((RooRealVar *)_floatParamList->at(index))->setAsymError(loVal, hiVal);
+}
+
+void MinuitFcnGrad::BackProp(const ROOT::Fit::FitResult &results)
+{
+   // Transfer MINUIT fit results back into RooFit objects
+
+   for (unsigned index = 0; index < NDim(); index++) {
+      Double_t value = results.Value(index);
+      SetPdfParamVal(index, value);
+
+      // Set the parabolic error
+      Double_t err = results.Error(index);
+      SetPdfParamErr(index, err);
+
+      Double_t eminus = results.LowerError(index);
+      Double_t eplus = results.UpperError(index);
+
+      if (eplus > 0 || eminus < 0) {
+         // Store the asymmetric error, if it is available
+         SetPdfParamErr(index, eminus, eplus);
+      } else {
+         // Clear the asymmetric error
+         ClearPdfParamAsymErr(index);
+      }
+   }
+}
+
+void MinuitFcnGrad::ApplyCovarianceMatrix(TMatrixDSym &V)
+{
+   // Apply results of given external covariance matrix. i.e. propagate its errors
+   // to all RRV parameter representations and give this matrix instead of the
+   // HESSE matrix at the next save() call
+
+   for (unsigned i = 0; i < NDim(); i++) {
+      // Skip fixed parameters
+      if (GetFloatParamList()->at(i)->isConstant()) {
+         continue;
+      }
+      SetPdfParamErr(i, sqrt(V(i, i)));
+   }
 }
 
 } // namespace TestStatistics

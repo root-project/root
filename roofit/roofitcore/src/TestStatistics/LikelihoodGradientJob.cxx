@@ -12,6 +12,7 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 #include <TestStatistics/LikelihoodGradientJob.h>
+#include <Minuit2/MnStrategy.h>
 
 namespace RooFit {
 namespace TestStatistics {
@@ -61,6 +62,37 @@ void LikelihoodGradientJob::fill_step_size(const double */*x*/, double */*gstep*
 
 void LikelihoodGradientJob::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) {
    _gradf.SetInitialGradient(parameter_settings);
+}
+
+void LikelihoodGradientJob::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options)
+{
+   set_strategy(options.Strategy());
+   set_error_level(options.ErrorDef());
+}
+
+void LikelihoodGradientJob::set_strategy(int istrat) {
+   assert (istrat >= 0);
+   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(istrat));
+
+   set_step_tolerance(strategy.GradientStepTolerance());
+   set_grad_tolerance(strategy.GradientTolerance());
+   set_ncycles(strategy.GradientNCycles());
+}
+
+void LikelihoodGradientJob::set_step_tolerance(double step_tolerance) const {
+   _gradf.set_step_tolerance(step_tolerance);
+}
+
+void LikelihoodGradientJob::set_grad_tolerance(double grad_tolerance) const {
+   _gradf.set_grad_tolerance(grad_tolerance);
+}
+
+void LikelihoodGradientJob::set_ncycles(unsigned int ncycles) const {
+   _gradf.set_ncycles(ncycles);
+}
+
+void LikelihoodGradientJob::set_error_level(double error_level) const {
+   _gradf.set_error_level(error_level);
 }
 
 } // namespace TestStatistics

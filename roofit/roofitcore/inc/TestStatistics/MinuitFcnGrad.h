@@ -79,6 +79,12 @@ public:
       _initConstParamList = (RooArgList *)_constParamList->snapshot(kFALSE);
 
       synchronize_parameter_settings(_context.fitter()->Config().ParamsSettings());
+
+      std::cerr << "Possibly the following code (see code) does not give the same values as the code it replaced from RooGradMinimizerFcn (commented out below), make sure!" << std::endl;
+//      set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+//      set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
+      likelihood->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
+      gradient->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
    }
 
    MinuitFcnGrad(const MinuitFcnGrad &other);
@@ -91,6 +97,9 @@ public:
    Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
                                          Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
    void updateFloatVec();  // used for synchronization
+   // same, but also include gradient strategy synchronization:
+   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
+                      Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
 
    // used inside Minuit:
    bool returnsInMinuit2ParameterSpace() const override;
@@ -109,6 +118,12 @@ public:
    Int_t evalCounter() const;
    void zeroEvalCount();
    void SetVerbose(Bool_t flag = kTRUE);
+
+   // put Minuit results back into RooFit objects:
+   void BackProp(const ROOT::Fit::FitResult &results);
+
+   // set different covariance matrix (TODO: check if this is ever used, if not, remove?)
+   void ApplyCovarianceMatrix(TMatrixDSym &V);
 
 private:
    // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
