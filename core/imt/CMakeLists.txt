@@ -46,8 +46,23 @@ if(imt)
     src/TThreadExecutor.cxx
   )
 
+  
+#---Check for HPX--------------------------------------------------------------------
+if(hpx)
+  message(STATUS "Looking for HPX")
+  if(fail-on-missing)
+    find_package(HPX REQUIRED)
+  else()
+    find_package(HPX)
+#    if(NOT HPX_FOUND)
+#      message(STATUS "HPX not found, turning HPX option off")
+#      set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
+#    endif()
+  endif()
+endif()
+
   target_include_directories(Imt PRIVATE ${TBB_INCLUDE_DIRS})
-  target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES})
+  target_link_libraries(Imt PRIVATE ${TBB_LIBRARIES} ${HPX_LIBRARIES})
   set_target_properties(Imt PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
 
   ROOT_ADD_TEST_SUBDIRECTORY(test)
