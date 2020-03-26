@@ -19,14 +19,14 @@ namespace TestStatistics {
 
 LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> _likelihood) : likelihood(std::move(_likelihood)) {}
 
-void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &options) {}
+void LikelihoodWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions &/*options*/) {}
 
 void LikelihoodWrapper::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode)
 {
    likelihood->constOptimizeTestStatistic(opcode);
 }
 
-void LikelihoodWrapper::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) {}
+void LikelihoodWrapper::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &/*parameter_settings*/) {}
 
 } // namespace TestStatistics
 } // namespace RooFit

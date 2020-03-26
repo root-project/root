@@ -18,7 +18,7 @@ namespace TestStatistics {
 
 LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> _likelihood) : likelihood(std::move(_likelihood)) {}
 
-void LikelihoodGradientWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) {}
+void LikelihoodGradientWrapper::synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & /*options*/) {}
 
 }
 }

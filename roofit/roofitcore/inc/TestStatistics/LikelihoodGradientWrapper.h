@@ -27,6 +27,7 @@ class RooAbsL;
 class LikelihoodGradientWrapper {
 public:
    explicit LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood);
+   virtual ~LikelihoodGradientWrapper() = default;
    virtual void fill_gradient(const double *x, double *grad) = 0;
    virtual void fill_second_derivative(const double *x, double *g2) = 0;
    virtual void fill_step_size(const double *x, double *gstep) = 0;
