@@ -62,14 +62,23 @@ sys.modules['libcppyy'] = sys.modules[libcppyy_mod_name]
 
 # tell cppyy that libcppyy_backend is versioned
 if 'CPPYY_BACKEND_LIBRARY' in os.environ:
-    if os.environ['CPPYY_BACKEND_LIBRARY'].rfind('.') > 0:
-        lib_name, suff = os.environ['CPPYY_BACKEND_LIBRARY'].split('.')
-        if py_version_str not in lib_name:
+    cbl_var = os.environ['CPPYY_BACKEND_LIBRARY']
+    start = 0
+    last_sep = cbl_var.rfind(os.path.sep)
+    if last_sep >= 0:
+        start = last_sep + 1
+    first_dot = cbl_var.find('.', start)
+    if first_dot >= 0:
+        # lib_name = [/path/to/]libcppyy_backend[py_version_str]
+        # suffix = so | ...
+        lib_name = cbl_var[:first_dot]
+        suff = cbl_var[first_dot+1:]
+        if lib_name.find(py_version_str, start) < 0:
             lib_name += py_version_str
         os.environ['CPPYY_BACKEND_LIBRARY'] = '.'.join([
             lib_name, suff])
     else:
-        if py_version_str not in os.environ['CPPYY_BACKEND_LIBRARY']:
+        if cbl_var.find(py_version_str, start) < 0:
             os.environ['CPPYY_BACKEND_LIBRARY'] += py_version_str
 else:
     os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
