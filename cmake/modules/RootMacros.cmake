@@ -267,7 +267,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE;REDUCE_INCLUDES"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -316,8 +316,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        list(APPEND incdirs ${CMAKE_SOURCE_DIR}/core/clingutils/inc) # this path not exposed to Core source includes
     endif()
 
-    list(REMOVE_DUPLICATES incdirs)
-
+    if(incdirs)
+       list(REMOVE_DUPLICATES incdirs)
+    endif()
+    
     foreach(d ${incdirs})
        list(APPEND includedirs -I${d})
     endforeach()
@@ -651,6 +653,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
       set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
     endif()
+  endif()
+  
+  if(ARG_REDUCE_INCLUDES)
+    list(FILTER includedirs EXCLUDE REGEX "^-I${CMAKE_SOURCE_DIR}")
+    set(module_incs)
   endif()
 
   #---call rootcint------------------------------------------
@@ -996,15 +1003,17 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
         endif()   
       endforeach()
 
-      list(REMOVE_DUPLICATES dep_list)
-      
-      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-        target_include_directories(${library} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      if(dep_list)
+         list(REMOVE_DUPLICATES dep_list)
       endif()
       
       foreach(incl ${dep_list})
         target_include_directories(${library} PRIVATE ${incl})
       endforeach()
+
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+        target_include_directories(${library} BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      endif()
 
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
         target_include_directories(${library} BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
@@ -1224,10 +1233,11 @@ endfunction()
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
 #                                 NO_CXXMODULE                 : don't generate a C++ module for this package
+#                                 REDUCE_DICTINCLUDES          : reduce source dir includes provided for dictionary generation
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE REDUCE_DICTINCLUDES)
   set(oneValueArgs LINKDEF)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1262,6 +1272,10 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   if (ARG_NO_CXXMODULE)
     set(NO_CXXMODULE_FLAG "NO_CXXMODULE")
+  endif()
+  
+  if (ARG_REDUCE_DICTINCLUDES)
+    set(REDUCE_INCLUDES_FLAG "REDUCE_INCLUDES")
   endif()
 
   if(ARG_NO_SOURCES)
@@ -1306,6 +1320,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${NO_CXXMODULE_FLAG}
+                          ${REDUCE_INCLUDES_FLAG}
                           ${STAGE1_FLAG}
                           MODULE ${libname}
                           LINKDEF ${ARG_LINKDEF}
