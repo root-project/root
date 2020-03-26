@@ -255,6 +255,64 @@ function(ROOT_GET_INSTALL_DIR result)
 endfunction(ROOT_GET_INSTALL_DIR)
 
 #---------------------------------------------------------------------------------------------------
+#---ROOT_GENERATE_CXXMODULE( module_name DEPENDENCIES module_name1 module_name2 )
+#
+function(ROOT_GENERATE_CXXMODULE module_name headers_location)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES" ${ARGN})
+
+  # rootcling bare-cling -I etc/ -x c++ -I /usr/include/c++/7/ -fmodules-cache-path=lib/
+  #                      -fmodules -Xclang -emit-module -fmodule-name=std /usr/include/c++/7/module.modulemap
+  #                      -o std.pcm
+  set(root_libdir)
+  ROOT_GET_LIBRARY_OUTPUT_DIR(root_libdir)
+
+  # Get all available modulemaps which ROOT will use.
+  get_property(root_modulemaps GLOBAL PROPERTY ROOT_MODULEMAPS)
+
+  set(real_modulemap_file ${headers_location}/module.modulemap)
+
+  if (NOT ${real_modulemap_file} IN_LIST root_modulemaps)
+    # The modulemap may be virtual (automatically mounted by rootcling)
+    set(virtual_modulemap_location "${CMAKE_BINARY_DIR}/etc/cling")
+    if (${module_name} MATCHES "Cling_Runtime")
+      # Cling_Runtime and Cling_Runtime_Extra are special we copy their
+      # module.modulemap.build as a module.modulemap in etc/cling.
+      set(virtual_modulemap_location "${virtual_modulemap_location}/module.modulemap")
+    else()
+      set(virtual_modulemap_location "${virtual_modulemap_location}/${module_name}.modulemap")
+    endif()
+
+    if (${virtual_modulemap_location} IN_LIST root_modulemaps)
+      set(real_modulemap_file ${virtual_modulemap_location})
+    elseif(NOT EXISTS ${real_modulemap_file})
+      message(FATAL_ERROR "Neither '${headers_location}/module.modulemap' nor"
+                          " '${real_modulemap_file}' exists for module '${module_name}'!")
+    endif()
+  endif()
+
+  set(module_file_location ${root_libdir}/${module_name}.pcm)
+  set(dependencies ${real_modulemap_file})
+  foreach(dep ${ARG_DEPENDENCIES})
+    # Turn the target to a file.pcm. This allows us to add it as a file dependency
+    # in the DEPENDS clause of add_custom_command. This is the only way I found
+    # to trigger rebuild of the full chain of dependencies.
+    # Eg: a.pcm <- b.pcm <- c.pcm; rm a.pcm; ninja c.pcm; rebuilds a.pcm and b.pcm
+    list(APPEND dependencies ${root_libdir}/${dep}.pcm)
+  endforeach()
+
+  add_custom_command(OUTPUT ${module_file_location}
+    COMMAND $<TARGET_FILE:rootcling_stage1>
+                     bare-cling -xc++ -I${CMAKE_BINARY_DIR}/etc -I${headers_location}
+                     -fmodules -Xclang -emit-module -fmodule-name=${module_name}
+                     -fmodules-cache-path=${root_libdir} -o ${module_file_location}
+                     ${headers_location}/module.modulemap
+                     DEPENDS ${dependencies})
+
+  add_custom_target(${module_name} ALL DEPENDS ${module_file_location} ${dependencies})
+
+endfunction(ROOT_GENERATE_CXXMODULE)
+
+#---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_DICTIONARY( dictionary headerfiles NODEPHEADERS ghdr1 ghdr2 ...
 #                                                    MODULE module DEPENDENCIES dep1 dep2
 #                                                    BUILTINS dep1 dep2
