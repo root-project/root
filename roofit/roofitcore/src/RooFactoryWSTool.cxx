@@ -41,7 +41,6 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "TInterpreter.h"
 #include "TEnum.h"
 #include "RooAbsPdf.h"
-#include "RooGaussian.h"
 #include <fstream>
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"

@@ -460,7 +460,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-  LINKDEF inc/LinkDef.h
+  LINKDEF
+    inc/LinkDef.h
 )
 
 if(vdt AND NOT builtin_vdt)
