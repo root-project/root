@@ -24,8 +24,6 @@
 #include "TMath.h"
 #include "TObjString.h"
 
-#include "TCanvas.h"
-
 ClassImp(TH3);
 
 /** \addtogroup Hist
