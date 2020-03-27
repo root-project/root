@@ -33,7 +33,6 @@
 
 #include "TColor.h"
 #include "TGFrame.h"
-#include "TMessage.h"
 #include "TGWidget.h"
 #include "TGButton.h"
 #include "TGDockableFrame.h"

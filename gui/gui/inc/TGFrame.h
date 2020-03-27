@@ -52,6 +52,7 @@ enum EFrameCleanup {
 };
 
 //---- types of frames (and borders)
+//---- if modified, please update in TGWin32.cxx:4800, some bits are used there
 
 enum EFrameType {
    kChildFrame      = 0,
