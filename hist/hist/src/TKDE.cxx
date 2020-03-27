@@ -40,7 +40,7 @@
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TH1.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 #include "TKDE.h"
 
 
