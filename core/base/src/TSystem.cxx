@@ -1895,21 +1895,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    if (path) {
       // load any dependent libraries
       TString deplibs = gInterpreter->GetSharedLibDeps(path);
-      if (deplibs.IsNull()) {
-         TString libmapfilename;
-         libmapfilename = path;
-         idx = libmapfilename.Last('.');
-         if (idx != kNPOS) {
-            libmapfilename.Remove(idx);
-         }
-         libmapfilename += ".rootmap";
-         if (gSystem->GetPathInfo(libmapfilename, 0, (Long_t *)0, 0, 0) == 0) {
-            if (gDebug > 0)
-               Info("Load", "loading %s", libmapfilename.Data());
-            gInterpreter->LoadLibraryMap(libmapfilename);
-            deplibs = gInterpreter->GetSharedLibDeps(path);
-         }
-      } else {
+      if (!deplibs.IsNull()) {
          TString delim(" ");
          TObjArray *tokens = deplibs.Tokenize(delim);
          for (Int_t i = tokens->GetEntriesFast()-1; i > 0; i--) {
@@ -3402,9 +3388,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
 
-         if (gInterpreter->GetSharedLibDeps(library) == 0) {
-            gInterpreter->LoadLibraryMap(libmapfilename);
-         }
+         gInterpreter->GetSharedLibDeps(library);
 
          return LoadLibrary(library);
       }
