@@ -740,7 +740,7 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 //third sublist will be returned
 
    Long64_t result = GetEntry(index);
-   if (fLists)
+   if (fCurrent)
       treenum = fCurrent->fTreeNumber;
    else
       treenum = fTreeNumber;
