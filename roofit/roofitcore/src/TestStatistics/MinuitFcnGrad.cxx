@@ -17,6 +17,60 @@
 namespace RooFit {
 namespace TestStatistics {
 
+// Note: MinuitFcnGrad takes ownership of the wrappers, i.e. it will destroy them when it dies!
+MinuitFcnGrad::MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientWrapper *_gradient,
+                             RooMinimizerGenericPtr context, bool verbose)
+   : likelihood(_likelihood), gradient(_gradient), _context(std::move(context)), _verbose(verbose)
+{
+   // Examine parameter list
+   RooArgSet *paramSet = likelihood->getParameters();
+   RooArgList paramList(*paramSet);
+   delete paramSet;
+
+   _floatParamList = (RooArgList *)paramList.selectByAttrib("Constant", kFALSE);
+   if (_floatParamList->getSize() > 1) {
+      _floatParamList->sort();
+   }
+   _floatParamList->setName("floatParamList");
+
+   _constParamList = (RooArgList *)paramList.selectByAttrib("Constant", kTRUE);
+   if (_constParamList->getSize() > 1) {
+      _constParamList->sort();
+   }
+   _constParamList->setName("constParamList");
+
+   // Remove all non-RooRealVar parameters from list (MINUIT cannot handle them)
+   TIterator *pIter = _floatParamList->createIterator();
+   RooAbsArg *arg;
+   while ((arg = (RooAbsArg *)pIter->Next())) {
+      if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
+         oocoutW(static_cast<RooAbsArg *>(nullptr), Eval)
+            << "RooGradientFunction::RooGradientFunction: removing parameter " << arg->GetName()
+            << " from list because it is not of type RooRealVar" << std::endl;
+         _floatParamList->remove(*arg);
+      }
+   }
+   delete pIter;
+
+   _nDim = _floatParamList->getSize();
+
+   updateFloatVec();
+
+   // Save snapshot of initial lists
+   _initFloatParamList = (RooArgList *)_floatParamList->snapshot(kFALSE);
+   _initConstParamList = (RooArgList *)_constParamList->snapshot(kFALSE);
+
+   synchronize_parameter_settings(_context.fitter()->Config().ParamsSettings());
+
+   std::cerr << "Possibly the following code (see code) does not give the same values as the code it replaced from "
+                "RooGradMinimizerFcn (commented out below), make sure!"
+             << std::endl;
+   //      set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+   //      set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
+   likelihood->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
+   gradient->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
+}
+
 MinuitFcnGrad::MinuitFcnGrad(const MinuitFcnGrad &other)
    : ROOT::Math::IMultiGradFunction(other), _evalCounter(other._evalCounter), _maxFCN(other._maxFCN),
      _numBadNLL(other._numBadNLL), _printEvalErrors(other._printEvalErrors), _doEvalErrorWall(other._doEvalErrorWall),
@@ -380,8 +434,9 @@ void MinuitFcnGrad::updateFloatVec()
    }
 }
 
-Bool_t MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters,
-                                        Bool_t optConst, Bool_t verbose) {
+Bool_t
+MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose)
+{
    Bool_t returnee = synchronize_parameter_settings(parameters, optConst, verbose);
    likelihood->synchronize_with_minimizer(_context.fitter()->Config().MinimizerOptions());
    gradient->synchronize_with_minimizer(_context.fitter()->Config().MinimizerOptions());

@@ -28,5 +28,10 @@ void LikelihoodWrapper::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode
 
 void LikelihoodWrapper::synchronize_parameter_settings(const std::vector<ROOT::Fit::ParameterSettings> &/*parameter_settings*/) {}
 
+RooArgSet *LikelihoodWrapper::getParameters()
+{
+   return likelihood->getParameters();
+}
+
 } // namespace TestStatistics
 } // namespace RooFit
