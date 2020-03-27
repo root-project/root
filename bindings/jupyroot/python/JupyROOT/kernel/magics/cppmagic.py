@@ -38,7 +38,7 @@ class CppMagics(Magic):
 
              self.kernel.ioHandler.Clear()
              self.kernel.ioHandler.InitCapture()
-             execFunc(self.code.encode('utf8'))
+             execFunc(self.code)
              self.kernel.ioHandler.EndCapture()
              self.kernel.print_output(self.kernel.ioHandler)
 

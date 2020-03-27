@@ -85,7 +85,7 @@ class ROOTKernel(MetaKernel):
         status = 'ok'
         try:
             RunAsyncAndPrint(self.Executor,
-                             code.encode('utf8'),
+                             code,
                              self.ioHandler,
                              self.print_output,
                              silent,
