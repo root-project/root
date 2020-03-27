@@ -36,6 +36,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     src/TObjectHolder.cxx
   DEPENDENCIES
     RIO
+    Hist
 )
 
 # provider for drawing of v7 histograms on RCanvas
@@ -55,6 +56,7 @@ ROOT_LINKER_LIBRARY(ROOTObjectDraw6Provider
   DEPENDENCIES
      ROOTBrowsable
      Gpad
+     Hist
 )
 
 # provider for generic drawing of TObject on RCanvas
