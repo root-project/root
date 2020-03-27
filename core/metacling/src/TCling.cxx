@@ -3060,6 +3060,12 @@ Bool_t TCling::HasPCMForLibrary(const char *libname) const
    ModuleName = llvm::sys::path::stem(ModuleName);
    ModuleName.consume_front("lib");
 
+   // FIXME: In case when the modulemap is not yet loaded we will return the
+   // wrong result. Consider a call to HasPCMForLibrary(../test/libEvent.so)
+   // We will only load the modulemap for libEvent.so after we dlopen libEvent
+   // which may happen after calling this interface. Maybe we should also check
+   // if there is a Event.pcm file and a module.modulemap, load it and return
+   // true.
    clang::ModuleMap &moduleMap = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo().getModuleMap();
    clang::Module *M = moduleMap.findModule(ModuleName);
    return M && !M->IsMissingRequirement && M->getASTFile();
@@ -7186,6 +7192,34 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
    return Result;
 }
 
+static bool hasParsedRootmapForLibrary(llvm::StringRef lib)
+{
+   // Check if we have parsed a rootmap file.
+   llvm::SmallString<256> rootmapName;
+   if (!lib.startswith("lib"))
+      rootmapName.append("lib");
+
+   rootmapName.append(llvm::sys::path::filename(lib));
+   llvm::sys::path::replace_extension(rootmapName, "rootmap");
+
+   if (gCling->GetRootMapFiles()->FindObject(rootmapName.c_str()))
+      return true;
+
+   // Perform a last resort by dropping the lib prefix.
+   llvm::StringRef rootmapNameNoLib = rootmapName.str();
+   if (rootmapNameNoLib.consume_front("lib"))
+      return gCling->GetRootMapFiles()->FindObject(rootmapNameNoLib.data());
+
+   return false;
+}
+
+static bool hasPrecomputedLibraryDeps(llvm::StringRef lib)
+{
+   if (gCling->HasPCMForLibrary(lib.data()))
+      return true;
+
+   return hasParsedRootmapForLibrary(lib);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the list a libraries on which the specified lib depends. The
@@ -7199,6 +7233,21 @@ const char* TCling::GetSharedLibDeps(const char* lib, bool useDyld/* = false*/)
 {
    if (llvm::sys::path::is_absolute(lib) && !llvm::sys::fs::exists(lib))
       return nullptr;
+
+   if (!hasParsedRootmapForLibrary(lib)) {
+      llvm::SmallString<512> rootmapName(lib);
+      llvm::sys::path::replace_extension(rootmapName, "rootmap");
+      if (llvm::sys::fs::exists(rootmapName)) {
+         if (gDebug > 0)
+            Info("Load", "loading %s", rootmapName.c_str());
+         gInterpreter->LoadLibraryMap(rootmapName.c_str());
+      }
+   }
+
+   if (hasPrecomputedLibraryDeps(lib) && useDyld) {
+      if (gDebug > 0)
+         Warning("TCling::GetSharedLibDeps", "Precomputed dependencies available but scanning '%s'", lib);
+   }
 
    if (useDyld) {
       std::string libs = GetSharedLibImmediateDepsSlow(lib, GetInterpreterImpl());
