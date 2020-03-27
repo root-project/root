@@ -25,6 +25,7 @@ The following people have contributed to this new version:
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Alja Mrak-Tadel, UCSD/CMS,\
+ Jan Musinsky, SAS Kosice,\
  Axel Naumann, CERN/SFT,\
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
@@ -100,6 +101,7 @@ into RooFit's message stream number 2. The verbosity can therefore be adjusted u
 
 ## 2D Graphics Libraries
 
+ * Universal time (correct time zone and daylight saving time) in PDF file.
 
 ## 3D Graphics Libraries
 
