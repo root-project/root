@@ -57,6 +57,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
   DEPENDENCIES
     RIO
     Thread
+    Graf
 )
 
 target_compile_definitions(RHTTP PUBLIC -DUSE_WEBSOCKET)
