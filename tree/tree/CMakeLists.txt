@@ -119,6 +119,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     Imt
     Net
     RIO
+    MathCore
   LIBRARIES
     ${ROOT_ATOMIC_LIBS}
 )
