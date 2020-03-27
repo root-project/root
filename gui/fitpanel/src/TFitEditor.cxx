@@ -155,7 +155,8 @@
 #include "Fit/BinData.h"
 #include "TMultiGraph.h"
 #include "TTree.h"
-#include "TTreePlayer.h"
+#include "TVirtualTreePlayer.h"
+#include "TSelectorDraw.h"
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
 #include "TVirtualX.h"
@@ -2109,13 +2110,13 @@ void TFitEditor::DoFit()
          gROOT->ls();
          tree->Draw(variables,cuts,"goff");
 
-         TTreePlayer * player = (TTreePlayer*) tree->GetPlayer();
+         auto player = tree->GetPlayer();
          if ( !player ) {
             Error("DoFit","Player reference is NULL");
             return;
          }
 
-         TSelectorDraw * selector = (TSelectorDraw* ) player->GetSelector();
+         auto selector = dynamic_cast<TSelectorDraw *>(player->GetSelector());
          if ( !selector ) {
             Error("DoFit","Selector reference is NULL");
             return;
