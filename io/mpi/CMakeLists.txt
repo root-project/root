@@ -17,6 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
      src/TMPIFile.cxx
   DEPENDENCIES
      RIO
+     MathCore
 )
 
 target_link_libraries(RMPI
