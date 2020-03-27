@@ -188,6 +188,8 @@ def plot(sig, bkg, data, x_label, filename):
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetTextFont(42)
     d = ROOT.TCanvas("d", "", 800, 700)
+    # Make sure the canvas stays in the list of canvases after the macro execution
+    ROOT.SetOwnership(d, False)
     d.SetLeftMargin(0.15)
 
     # Get signal and background histograms and stack them to show Higgs signal
