@@ -58,6 +58,7 @@ by Olivier Couet (package X11INT).
 #include "TExMap.h"
 #include "TEnv.h"
 #include "RStipples.h"
+#include "GuiTypes.h"
 
 // DND protocol version
 #define XDND_PROTOCOL_VERSION   5
@@ -4800,11 +4801,6 @@ Window_t TGWin32::CreateWindow(Window_t parent, Int_t x, Int_t y,
    GdkWindow *newWin;
    GdkColor background_color;
    ULong_t xmask = 0;
-
-   /* copy these bits from TGFrame.h, otherwise one should link against gui lib */
-   UInt_t kMainFrame       = BIT(0);
-   UInt_t kTransientFrame  = BIT(11);
-   UInt_t kTempFrame       = BIT(12);
 
    if (attr) {
       MapSetWindowAttributes(attr, xmask, xattr);

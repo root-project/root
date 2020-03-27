@@ -51,29 +51,6 @@ enum EFrameCleanup {
    kDeepCleanup  = -1
 };
 
-//---- types of frames (and borders)
-//---- if modified, please update in TGWin32.cxx:4800, some bits are used there
-
-enum EFrameType {
-   kChildFrame      = 0,
-   kMainFrame       = BIT(0),
-   kVerticalFrame   = BIT(1),
-   kHorizontalFrame = BIT(2),
-   kSunkenFrame     = BIT(3),
-   kRaisedFrame     = BIT(4),
-   kDoubleBorder    = BIT(5),
-   kFitWidth        = BIT(6),
-   kFixedWidth      = BIT(7),
-   kFitHeight       = BIT(8),
-   kFixedHeight     = BIT(9),
-   kFixedSize       = (kFixedWidth | kFixedHeight),
-   kOwnBackground   = BIT(10),
-   kTransientFrame  = BIT(11),
-   kTempFrame       = BIT(12),
-   kMdiMainFrame    = BIT(13),
-   kMdiFrame        = BIT(14)
-};
-
 //---- MWM hints stuff
 
 enum EMWMHints {
