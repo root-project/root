@@ -513,6 +513,12 @@ if(opengl AND NOT builtin_glew)
     find_Package(GLEW REQUIRED)
   else()
     find_Package(GLEW)
+    # Bug was reported on newer version of CMake on Mac OS X:
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/19662
+    # https://github.com/microsoft/vcpkg/pull/7967
+    if(APPLE AND CMAKE_VERSION VERSION_GREATER 3.15)
+      message(FATAL_ERROR "Please enable builtin Glew due bug in latest CMake (use cmake option -Dbuiltin_glew=ON).")
+    endif()
     if(NOT GLEW_FOUND)
       # set variables to emulate find_package(GLEW)
       set(GLEW_FOUND TRUE CACHE INTERNAL "" FORCE)
