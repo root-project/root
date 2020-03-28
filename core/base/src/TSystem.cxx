@@ -1846,8 +1846,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
 {
    // don't load libraries that have already been loaded
    TString libs( GetLibraries() );
-   TString moduleBasename( BaseName(module) );
-   TString l(moduleBasename);
+   TString l(BaseName(module));
 
    Ssiz_t idx = l.Last('.');
    if (idx != kNPOS) {
@@ -1895,7 +1894,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    int ret = -1;
    if (path) {
       // load any dependent libraries
-      TString deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
+      TString deplibs = gInterpreter->GetSharedLibDeps(path);
       if (deplibs.IsNull()) {
          TString libmapfilename;
          libmapfilename = path;
@@ -1904,10 +1903,11 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
             libmapfilename.Remove(idx);
          }
          libmapfilename += ".rootmap";
-         if (gSystem->GetPathInfo(libmapfilename, 0, (Long_t*)0, 0, 0) == 0) {
-            if (gDebug > 0) Info("Load", "loading %s", libmapfilename.Data());
+         if (gSystem->GetPathInfo(libmapfilename, 0, (Long_t *)0, 0, 0) == 0) {
+            if (gDebug > 0)
+               Info("Load", "loading %s", libmapfilename.Data());
             gInterpreter->LoadLibraryMap(libmapfilename);
-            deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
+            deplibs = gInterpreter->GetSharedLibDeps(path);
          }
       } else {
          TString delim(" ");
@@ -3370,7 +3370,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
     false;
 #endif
 
-   auto LoadLibrary = [useCxxModules, produceRootmap](const TString& lib) {
+   auto LoadLibrary = [useCxxModules, produceRootmap](const TString &lib) {
       // We have no rootmap files or modules to construct `-l` flags enabling
       // explicit linking. We have to resolve the dependencies by ourselves
       // taking the job of the dyld.
@@ -3381,12 +3381,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       // the ACLiC library.
       if (useCxxModules && !produceRootmap) {
          using namespace std;
-         string deps = gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/true);
+         string deps = gInterpreter->GetSharedLibDeps(lib, /*tryDyld*/ true);
          istringstream iss(deps);
-         vector<string> libs {istream_iterator<std::string>{iss}, istream_iterator<string>{}};
+         vector<string> libs{istream_iterator<std::string>{iss}, istream_iterator<string>{}};
          // Skip the first element: it is a relative path to `lib`.
          for (auto I = libs.begin() + 1, E = libs.end(); I != E; ++I)
-            if (gInterpreter->Load(I->c_str(), /*system*/false) < 0)
+            if (gInterpreter->Load(I->c_str(), /*system*/ false) < 0)
                return false; // failure
       }
       return !gSystem->Load(lib);
@@ -3402,7 +3402,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
 
-         if (gInterpreter->GetSharedLibDeps(libname) == 0) {
+         if (gInterpreter->GetSharedLibDeps(library) == 0) {
             gInterpreter->LoadLibraryMap(libmapfilename);
          }
 
@@ -3518,7 +3518,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    Bool_t needLoadMap = kFALSE;
    if (!useCxxModules) {
-      if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
+      if (gInterpreter->GetSharedLibDeps(library) != nullptr) {
          gInterpreter->UnloadLibraryMap(libname);
          needLoadMap = kTRUE;
       }
@@ -3610,8 +3610,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    Int_t dictResult = gSystem->Exec(rcling);
    if (dictResult) {
-      if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
-      else ::Error("ACLiC","Dictionary generation failed!");
+      if (dictResult == 139)
+         ::Error("ACLiC", "Dictionary generation failed with a core dump!");
+      else
+         ::Error("ACLiC", "Dictionary generation failed!");
    }
 
    Bool_t result = !dictResult;
@@ -3782,10 +3784,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          ::Info("ACLiC","compiling the dictionary and script files");
          if (verboseLevel>4)  ::Info("ACLiC", "%s", cmd.Data());
       }
-      Int_t compilationResult = gSystem->Exec( cmd );
+      Int_t compilationResult = gSystem->Exec(cmd);
       if (compilationResult) {
-         if (compilationResult==139) ::Error("ACLiC","Compilation failed with a core dump!");
-         else ::Error("ACLiC","Compilation failed!");
+         if (compilationResult == 139)
+            ::Error("ACLiC", "Compilation failed with a core dump!");
+         else
+            ::Error("ACLiC", "Compilation failed!");
          if (produceRootmap) {
             gSystem->Unlink(libmapfilename);
          }
