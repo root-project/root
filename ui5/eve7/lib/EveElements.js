@@ -456,8 +456,70 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       var mesh = new THREE.Mesh(body, material);
+      if (boxset.fSecondarySelect)
+         mesh.get_ctrl = function() { return new BoxSetControl(mesh); };
+      else
+         mesh.get_ctrl = function() { return new EveElemControl(mesh); };
+
       return mesh;
    }
+
+   function BoxSetControl(mesh)
+   {
+      EveElemControl.call(this, mesh);
+   }
+
+   BoxSetControl.prototype = Object.create(EveElemControl.prototype);
+
+   BoxSetControl.prototype.DrawForSelection = function(sec_idcs, dest)
+   {
+      var geobox = new THREE.BufferGeometry();
+      geobox.addAttribute( 'position', this.obj3d.geometry.getAttribute("position") );
+
+      let protoIdcs = [0, 4, 5, 0, 5, 1, 1, 5, 6, 1, 6, 2, 2, 6, 7, 2, 7, 3, 3, 7, 4, 3, 4, 0, 1, 2, 3, 1, 3, 0, 4, 7, 6, 4, 6, 5];
+      let idxOff = sec_idcs[0] * 8;
+      for (let i = 0; i < protoIdcs.length; i++)
+         protoIdcs[i] += idxOff;
+
+      geobox.setIndex( protoIdcs );
+
+      let material = new THREE.MeshPhongMaterial({color:"purple", flatShading: true});
+      let mesh     = new THREE.Mesh(geobox, material);
+      dest.push(mesh);
+   }
+
+   BoxSetControl.prototype.extractIndex = function(intersect)
+   {
+      let idx  = Math.floor(intersect.faceIndex/12);
+      return idx;
+   }
+
+   BoxSetControl.prototype.getTooltipText = function(intersect)
+   {
+      var t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
+      var idx = this.extractIndex(intersect);
+      return t + " idx=" + idx;
+   }
+
+   BoxSetControl.prototype.elementSelected = function(indx)
+   {
+      this.invokeSceneMethod("processElementSelected", indx);
+   }
+
+   BoxSetControl.prototype.elementHighlighted = function(indx)
+   {
+      this.invokeSceneMethod("processElementHighlighted", indx);
+   }
+
+   BoxSetControl.prototype.checkHighlightIndex = function(indx)
+   {
+      if (this.obj3d && this.obj3d.scene)
+         return this.invokeSceneMethod("processCheckHighlight", indx);
+
+      return true; // means index is different
+   }
+   //==============================================================================
+
 
    EveElements.prototype.makeEveGeometry = function(rnr_data, force)
    {
@@ -826,9 +888,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       else
          octrl = new EveElemControl(obj3d);
 
-      line.get_ctrl = function() { return octrl; }
-      marker.get_ctrl = function() { return octrl; }
-      obj3d.get_ctrl = function() { return octrl; }
+      line.get_ctrl   = function() { return octrl; };
+      marker.get_ctrl = function() { return octrl; };
+      obj3d.get_ctrl  = function() { return octrl; };
 
       return obj3d;
    }

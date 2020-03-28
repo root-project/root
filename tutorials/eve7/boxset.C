@@ -53,9 +53,11 @@ REveBoxSet* boxset(Int_t num=100)
 
 #undef RND_BOX
 
+   // Uncomment these two lines to get internal highlight / selection.
+   q->SetPickable(1);
+   q->SetAlwaysSecSelect(1);
+
    eveMng->GetEventScene()->AddElement(q);
-   REveElement *jetHolder = new REveElement("Jets");
-   eveMng->GetEventScene()->AddElement(jetHolder);
 
    eveMng->Show();
    return q;
@@ -91,8 +93,8 @@ REveBoxSet* boxset_axisaligned(Float_t x=0, Float_t y=0, Float_t z=0,
    t.SetPos(x, y, z);
 
    // Uncomment these two lines to get internal highlight / selection.
-   // q->SetPickable(1);
-   // q->SetAlwaysSecSelect(1);
+   q->SetPickable(1);
+   q->SetAlwaysSecSelect(1);
 
    if (registerSet)
    {
