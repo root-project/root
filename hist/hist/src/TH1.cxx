@@ -5812,13 +5812,26 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 /// Normalize a 1D histogram to unit integral.
 ///
 
-void TH1::Normalize()
+void TH1::Normalize(Option_t *option)
 {
   if(!this) return;
+  
+  TString opt = option; opt.ToLower();
+  
+  if(opt.Contains("width"))
+  {
+    opt = "width"; 
+  }
+  else
+  {
+    opt = "";
+  }
+  
   Double_t integ = this->Integral();
+  
   if(integ != 0)
   {
-    this->Scale(1.0/integ);
+    this->Scale(1.0/integ, opt);
   }
   else
   {
