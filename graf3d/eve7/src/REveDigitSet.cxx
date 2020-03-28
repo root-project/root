@@ -478,6 +478,7 @@ Int_t REveDigitSet::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["fSingleColor"] = fSingleColor;
    j["fAntiFlick"] = GetAntiFlick();
+   j["fSecondarySelect"] = fAlwaysSecSelect;
 
    return ret;
 }
