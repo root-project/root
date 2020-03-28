@@ -5813,9 +5813,7 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 ///
 
 void TH1::Normalize(Option_t *option)
-{
-  if(!this) return;
-  
+{ 
   TString opt = option; opt.ToLower();
   
   if(opt.Contains("width"))
