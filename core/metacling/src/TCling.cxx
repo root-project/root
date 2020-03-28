@@ -7118,6 +7118,7 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          return "";
       }
    } else {
+      assert(llvm::sys::fs::exists(lib) && "Must exist!");
       lib = llvm::sys::path::filename(lib);
    }
 
@@ -7196,6 +7197,9 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
 
 const char* TCling::GetSharedLibDeps(const char* lib, bool useDyld/* = false*/)
 {
+   if (llvm::sys::path::is_absolute(lib) && !llvm::sys::fs::exists(lib))
+      return nullptr;
+
    if (useDyld) {
       std::string libs = GetSharedLibImmediateDepsSlow(lib, GetInterpreterImpl());
       if (!libs.empty()) {
