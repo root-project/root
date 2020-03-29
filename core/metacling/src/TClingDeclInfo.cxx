@@ -16,6 +16,8 @@
 
 #include "TClingDeclInfo.h"
 
+#include "TDictionary.h"
+
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 
@@ -42,4 +44,45 @@ const char* TClingDeclInfo::Name()
    ND->getNameForDiagnostic(stream, policy, /*Qualified=*/false);
    stream.flush();
    return fNameCache.c_str();
+}
+
+long TClingDeclInfo::Property(long property, clang::QualType qt) const
+{
+   if (!IsValid()) {
+      return 0L;
+   }
+   if (qt.isConstQualified()) {
+      property |= kIsConstant;
+   }
+   while (1) {
+      if (qt->isArrayType()) {
+         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
+         continue;
+      }
+      else if (qt->isReferenceType()) {
+         property |= kIsReference;
+         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
+         continue;
+      }
+      else if (qt->isPointerType()) {
+         property |= kIsPointer;
+         if (qt.isConstQualified()) {
+            property |= kIsConstPointer;
+         }
+         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
+         continue;
+      }
+      else if (qt->isMemberPointerType()) {
+         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
+         continue;
+      }
+      break;
+   }
+   if (qt->isBuiltinType()) {
+      property |= kIsFundamental;
+   }
+   if (qt.isConstQualified()) {
+      property |= kIsConstant;
+   }
+   return property;
 }

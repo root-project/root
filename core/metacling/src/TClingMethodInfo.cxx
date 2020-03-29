@@ -506,36 +506,9 @@ long TClingMethodInfo::Property() const
       property |= kIsStatic;
    }
    clang::QualType qt = fd->getReturnType().getCanonicalType();
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   while (1) {
-      if (qt->isArrayType()) {
-         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
-         continue;
-      }
-      else if (qt->isReferenceType()) {
-         property |= kIsReference;
-         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isPointerType()) {
-         property |= kIsPointer;
-         if (qt.isConstQualified()) {
-            property |= kIsConstPointer;
-         }
-         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isMemberPointerType()) {
-         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
-         continue;
-      }
-      break;
-   }
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
+
+   property = TClingDeclInfo::Property(property, qt);
+
    if (const clang::CXXMethodDecl *md =
             llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
       if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
