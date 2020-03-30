@@ -84,6 +84,7 @@ public:
    virtual Long64_t       GetN()            const {return fEntries.size();}
    virtual TTreeFormula  *GetMajorFormulaParent(const TTree *parent);
    virtual TTreeFormula  *GetMinorFormulaParent(const TTree *parent);
+   virtual Bool_t         IsValidFor(const TTree *parent);
    virtual void           UpdateFormulaLeaves(const TTree *parent);
    virtual void           SetTree(const TTree *T);
 

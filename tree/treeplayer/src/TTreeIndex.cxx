@@ -495,6 +495,18 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
    return fMinorFormulaParent;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if index can be applied to the TTree
+
+Bool_t TTreeIndex::IsValidFor(const TTree *parent)
+{
+   auto *majorFormula = GetMajorFormulaParent(parent);
+   auto *minorFormula = GetMinorFormulaParent(parent);
+   if ((majorFormula == nullptr || majorFormula->GetNdim() == 0) ||
+       (minorFormula == nullptr || minorFormula->GetNdim() == 0))
+         return kFALSE;
+   return kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the table with : serial number, majorname, minorname.
