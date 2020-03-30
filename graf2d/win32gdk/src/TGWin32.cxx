@@ -661,6 +661,60 @@ void TGWin32MainThread::UnlockMSG()
    if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Windows timer handling events while moving/resizing windows
+
+VOID CALLBACK MyTimerProc(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
+{
+   gSystem->ProcessEvents();
+   //gVirtualX->UpdateWindow(1); // cause problems with OpenGL in pad...
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Message processing function for the GUI thread.
+/// Kicks in once TGWin32 becomes active, and "replaces" the dummy one
+/// in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
+
+Bool_t GUIThreadMessageFunc(MSG *msg)
+{
+   Bool_t ret = kFALSE;
+   static Int_t m_timer = 0;
+
+   if ( (msg->message == WM_NCLBUTTONDOWN) ) {
+      if (m_timer == 0)
+         m_timer = SetTimer(NULL, 1, 20, (TIMERPROC) MyTimerProc);
+   }
+   else if (msg->message == WM_NCMOUSELEAVE ) {
+      if (m_timer) {
+         KillTimer(NULL, m_timer);
+      }
+      m_timer = 0;
+   }
+
+   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
+      if (msg->wParam) {
+         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
+         proxy->ExecuteCallBack(kTRUE);
+      } else {
+         ret = kTRUE;
+      }
+   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
+      TGWin32ProxyBase::GlobalUnlock();
+   } else {
+      //if ( (msg->message >= WM_NCMOUSEMOVE) &&
+      //     (msg->message <= WM_NCMBUTTONDBLCLK) ) {
+      //   TGWin32ProxyBase::GlobalLock();
+      //}
+      TGWin32MainThread::LockMSG();
+      TranslateMessage(msg);
+      DispatchMessage(msg);
+      TGWin32MainThread::UnlockMSG();
+   }
+   return ret;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 class TGWin32RefreshTimer : public TTimer {
 
@@ -677,7 +731,7 @@ public:
          if (!gVirtualX)
             Sleep(200); // avoid start-up race
          if (gVirtualX)
-            ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(&msg);
+            GUIThreadMessageFunc(&msg);
       }
       return kFALSE;
    }
@@ -726,15 +780,6 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
 }
 */
 
-Bool_t GUIThreadMessageWrapper(MSG* msg)
-{
-   // Static wrapper for handling GUI messages.
-   // Forwards from TWinNTSystem's GUIThreadMessageProcessingLoop()
-   // to TGWin32::GUIThreadMessageFunc()
-
-   return ((TGWin32*)gVirtualX)->GUIThreadMessageFunc(msg);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -746,7 +791,7 @@ TGWin32MainThread::TGWin32MainThread()
    ::InitializeCriticalSection(fMessageMutex);
    fHandle = ((TWinNTSystem*)gSystem)->GetGUIThreadHandle();
    fId = ((TWinNTSystem*)gSystem)->GetGUIThreadId();
-   ((TWinNTSystem*)gSystem)->SetGUIThreadMsgHandler(GUIThreadMessageWrapper);
+   ((TWinNTSystem*)gSystem)->SetGUIThreadMsgHandler(GUIThreadMessageFunc);
 }
 
 } // unnamed namespace
@@ -827,58 +872,6 @@ TGWin32::~TGWin32()
       delete col;
    }
    delete fColors;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Windows timer handling events while moving/resizing windows
-
-VOID CALLBACK MyTimerProc(HWND hwnd, UINT message, UINT idTimer, DWORD dwTime)
-{
-   gSystem->ProcessEvents();
-   //gVirtualX->UpdateWindow(1); // cause problems with OpenGL in pad...
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Message processing function for the GUI thread.
-/// Kicks in once TGWin32 becomes active, and "replaces" the dummy one
-/// in TWinNTSystem; see TWinNTSystem.cxx's GUIThreadMessageProcessingLoop().
-
-Bool_t TGWin32::GUIThreadMessageFunc(MSG* msg)
-{
-   Bool_t ret = kFALSE;
-   static Int_t m_timer = 0;
-
-   if ( (msg->message == WM_NCLBUTTONDOWN) ) {
-      if (m_timer == 0)
-         m_timer = SetTimer(NULL, 1, 20, (TIMERPROC) MyTimerProc);
-   }
-   else if (msg->message == WM_NCMOUSELEAVE ) {
-      if (m_timer) {
-         KillTimer(NULL, m_timer);
-      }
-      m_timer = 0;
-   }
-
-   if (msg->message == TGWin32ProxyBase::fgPostMessageId) {
-      if (msg->wParam) {
-         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg->wParam;
-         proxy->ExecuteCallBack(kTRUE);
-      } else {
-         ret = kTRUE;
-      }
-   } else if (msg->message == TGWin32ProxyBase::fgPingMessageId) {
-      TGWin32ProxyBase::GlobalUnlock();
-   } else {
-      //if ( (msg->message >= WM_NCMOUSEMOVE) &&
-      //     (msg->message <= WM_NCMBUTTONDBLCLK) ) {
-      //   TGWin32ProxyBase::GlobalLock();
-      //}
-      TGWin32MainThread::LockMSG();
-      TranslateMessage(msg);
-      DispatchMessage(msg);
-      TGWin32MainThread::UnlockMSG();
-   }
-   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
