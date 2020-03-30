@@ -321,6 +321,9 @@ public:
    static void TanhDerivative(Tensor_t & B,
                               const Tensor_t & A);
 
+   static void FastTanh(Tensor_t &B) { return Tanh(B);  }
+   static void FastTanhDerivative(Tensor_t &B, const Tensor_t &A) { return TanhDerivative(B, A); }
+
    static void SymmetricRelu(Tensor_t & B);
    static void SymmetricReluDerivative(Tensor_t & B,
                                        const Tensor_t & A);

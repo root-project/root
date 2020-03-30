@@ -617,6 +617,8 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          activationFunction = DNN::EActivationFunction::kRelu;
       } else if (strActFnc == "TANH") {
          activationFunction = DNN::EActivationFunction::kTanh;
+      } else if (strActFnc == "FTANH") {
+         activationFunction = DNN::EActivationFunction::kFastTanh;
       } else if (strActFnc == "SYMMRELU") {
          activationFunction = DNN::EActivationFunction::kSymmRelu;
       } else if (strActFnc == "SOFTSIGN") {
@@ -639,7 +641,6 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          TFormula fml("tmp", strNumNodes);
          width = fml.Eval(inputSize);
       }
-
    }
    // avoid zero width. assume is 1
    if (width == 0) width = 1;

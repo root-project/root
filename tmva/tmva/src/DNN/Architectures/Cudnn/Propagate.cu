@@ -176,7 +176,10 @@ void TCudnn<AFloat>::InitializeActivationDescriptor(TCudnn<AFloat>::ActivationDe
       case EActivationFunction::kTanh:
          activationMode = CUDNN_ACTIVATION_TANH;
          break;
-   // The activations otherwise used are not supported by cuDNN
+      case EActivationFunction::kFastTanh:
+         activationMode = CUDNN_ACTIVATION_TANH;
+         break;
+         // The activations otherwise used are not supported by cuDNN
       default:
          activationMode = CUDNN_ACTIVATION_RELU;
    };
