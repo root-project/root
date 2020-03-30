@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT R package
 ############################################################################
 
+include_directories(${R_INCLUDE_DIRS})
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
   HEADERS
     RExports.h
@@ -39,5 +41,4 @@ ROOT_ADD_CXX_FLAG(_R_FLAGS -Wno-overloaded-virtual)
 separate_arguments(_R_FLAGS)
 
 target_compile_options(RInterface PUBLIC ${_R_FLAGS})
-target_include_directories(RInterface BEFORE PUBLIC ${R_INCLUDE_DIRS})
 target_link_libraries(RInterface PUBLIC ${R_LIBRARIES} readline)

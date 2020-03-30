@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT sql/pgsql package
 ############################################################################
 
+include_directories(${PostgreSQL_INCLUDE_DIRS})
+
 ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
   HEADERS
     TPgSQLResult.h
@@ -26,5 +28,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
     MathCore
 )
 
-target_include_directories(PgSQL PUBLIC ${PostgreSQL_INCLUDE_DIRS})
 target_link_libraries(PgSQL PUBLIC ${PostgreSQL_LIBRARIES})

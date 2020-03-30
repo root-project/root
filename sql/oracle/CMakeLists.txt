@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT sql/oracle package
 ############################################################################
 
+include_directories(${ORACLE_INCLUDE_DIR})
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Oracle
   HEADERS
     TOracleResult.h
@@ -37,5 +39,4 @@ if(${GLIBCXX_USE_CXX11_ABI})
 endif()
 
 target_compile_definitions(Oracle PUBLIC ${ORACLE_DEFINITIONS})
-target_include_directories(Oracle PUBLIC ${ORACLE_INCLUDE_DIR})
 target_link_libraries(Oracle PUBLIC ${ORACLE_LIBRARIES})

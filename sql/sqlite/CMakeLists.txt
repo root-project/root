@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT sql/pgsql package
 ############################################################################
 
+include_directories(${SQLITE_INCLUDE_DIR})
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
   HEADERS
     TSQLiteResult.h
@@ -25,5 +27,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
     RIO
 )
 
-target_include_directories(RSQLite PUBLIC ${SQLITE_INCLUDE_DIR})
 target_link_libraries(RSQLite PUBLIC ${SQLITE_LIBRARIES})

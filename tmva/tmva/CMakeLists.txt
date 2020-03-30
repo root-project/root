@@ -433,7 +433,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     ${installoptions}
 )
 
-# vdt will be imported via MathCore
+if(vdt OR builtin_vdt)
+  target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
+endif()
 
 if(tmva-cpu)
   target_include_directories(TMVA PRIVATE ${TBB_INCLUDE_DIRS})

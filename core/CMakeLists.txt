@@ -171,6 +171,8 @@ target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
 )
 
+target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
+
 if(root7)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
 endif(root7)

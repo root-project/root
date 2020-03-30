@@ -267,7 +267,7 @@ endfunction(ROOT_GET_INSTALL_DIR)
 #   no error is emitted. The dictionary does not depend on these headers.
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE;REDUCE_INCLUDES"
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL;NO_CXXMODULE"
     "MODULE;LINKDEF" "NODEPHEADERS;OPTIONS;DEPENDENCIES;EXTRA_DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
@@ -301,27 +301,44 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        list(APPEND incdirs ${CMAKE_SOURCE_DIR}/io/io/inc)
     endif()
 
-    if(TARGET ${ARG_MODULE})
-       get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
-       if(target_incdirs)
-          foreach(dir ${target_incdirs})
-             string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+    set(headerdirs)
+
+    get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+    if(target_incdirs)
+       foreach(dir ${target_incdirs})
+          string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+          if(NOT ${dir} MATCHES "^[$]")
              list(APPEND incdirs ${dir})
-          endforeach()   
-       endif()  
+          endif()
+          if(${dir} MATCHES "^${CMAKE_SOURCE_DIR}")
+             list(APPEND headerdirs ${dir})
+          endif()
+       endforeach()
     endif()
+
+
+    # Comments from Sergey
+    # FIXME: we have to exclude all source directories from includes while they duplicated in ${CMAKE_BINARY_DIR}/include
+    # rootcling is not able to handle such situation, therefore ${CMAKE_BINARY_DIR}/include is used as source for ROOT headers
+    # Also ${CMAKE_BINARY_DIR}/ginclude is removed
+    # add slash at the end to prevent filtering include paths from roottest which may have same location as root
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}\/")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
+    list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
+    # end workaround
 
     if(ARG_MODULE STREQUAL Core)
        list(APPEND incdirs ${CMAKE_SOURCE_DIR}/core) # This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}/core
-       list(APPEND incdirs ${CMAKE_SOURCE_DIR}/core/clingutils/inc) # this path not exposed to Core source includes
     endif()
 
     if(incdirs)
        list(REMOVE_DUPLICATES incdirs)
     endif()
-    
-    foreach(d ${incdirs})
-       list(APPEND includedirs -I${d})
+
+    set(includedirs)
+    foreach(dir ${incdirs})
+       list(APPEND includedirs -I${dir})
     endforeach()
 
     set(pureincdirs ${incdirs})
@@ -329,51 +346,21 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(headerfiles)
     set(_list_of_header_dependencies)
     foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-      if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
-        file(GLOB files inc/${fp} ${fp}) # Elements of ${fp} have the complete path.
-        foreach(f ${files})
-          if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
-            set(add_inc_as_include On)
-            string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/inc/" "" f_no_inc ${f})
-            list(APPEND headerfiles ${f_no_inc})
-            list(APPEND _list_of_header_dependencies ${f})
-          endif()
-        endforeach()
-      else()
-        if(IS_ABSOLUTE ${fp})
+       if(IS_ABSOLUTE ${fp})
           set(headerFile ${fp})
-        else()
-          set(incdirs_in_build)
-          set(incdirs_in_prefix ${headerdirs_dflt})
-          foreach(incdir ${incdirs})
-            if(NOT IS_ABSOLUTE ${incdir})
-              list(APPEND incdirs_in_build ${incdir})
-            else()
-              list(APPEND incdirs_in_prefix ${incdir})
-            endif()
-          endforeach()
-          if(incdirs_in_build)
-            find_file(headerFile ${fp}
-              HINTS ${incdirs_in_build}
-              NO_DEFAULT_PATH
-              NO_SYSTEM_ENVIRONMENT_PATH
-              NO_CMAKE_FIND_ROOT_PATH)
-          endif()
-          # Try this even if NOT incdirs_in_prefix: might not need a HINT.
-          if(NOT headerFile)
-            find_file(headerFile ${fp}
-              HINTS ${incdirs_in_prefix}
-              NO_DEFAULT_PATH
-              NO_SYSTEM_ENVIRONMENT_PATH)
-          endif()
-        endif()
-        if(NOT headerFile)
+       else()
+          find_file(headerFile ${fp}
+                  HINTS ${headerdirs}
+                  NO_DEFAULT_PATH
+                  NO_SYSTEM_ENVIRONMENT_PATH
+                  NO_CMAKE_FIND_ROOT_PATH)
+       endif()
+       if(NOT headerFile)
           message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
-        endif()
-        list(APPEND headerfiles ${fp})
-        list(APPEND _list_of_header_dependencies ${headerFile})
-        unset(headerFile CACHE) # find_file, forget headerFile!
-      endif()
+       endif()
+       list(APPEND headerfiles ${fp})
+       list(APPEND _list_of_header_dependencies ${headerFile})
+       unset(headerFile CACHE) # find_file, forget headerFile!
     endforeach()
 
     foreach(fp ${ARG_NODEPHEADERS})
@@ -654,9 +641,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
     endif()
   endif()
-  
-  if(ARG_REDUCE_INCLUDES)
-    list(FILTER includedirs EXCLUDE REGEX "^-I${CMAKE_SOURCE_DIR}")
+
+  # for all ROOT dictionaries module includes already extracted
+  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
     set(module_incs)
   endif()
 
@@ -990,23 +977,21 @@ function(ROOT_ADD_INCLUDE_DIRECTORIES library)
       list(REMOVE_DUPLICATES used_libs)
 
       set(dep_list)
-      
       foreach(lib ${used_libs})
-        if(TARGET ${lib}) 
+        if(TARGET ${lib})
           get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
           if(lib_incdirs)
              foreach(dir ${lib_incdirs})
                 string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
                 list(APPEND dep_list ${dir})
-             endforeach()   
-          endif()  
-        endif()   
+             endforeach()
+          endif()
+        endif()
       endforeach()
 
       if(dep_list)
          list(REMOVE_DUPLICATES dep_list)
       endif()
-      
       foreach(incl ${dep_list})
         target_include_directories(${library} PRIVATE ${incl})
       endforeach()
@@ -1233,11 +1218,10 @@ endfunction()
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
 #                                 NO_CXXMODULE                 : don't generate a C++ module for this package
-#                                 REDUCE_DICTINCLUDES          : reduce source dir includes provided for dictionary generation
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE REDUCE_DICTINCLUDES)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1253,7 +1237,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   if (ARG_SOURCES AND ARG_NO_SOURCES)
     message(AUTHOR_WARNING "SOURCES and NO_SOURCES arguments are mutually exclusive.")
   endif()
-  
+
   # Set default values
   # If HEADERS/SOURCES are not parsed, we glob for those files.
   if (NOT (ARG_HEADERS OR ARG_NO_HEADERS OR ARG_NODEPHEADERS))
@@ -1272,10 +1256,6 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   if (ARG_NO_CXXMODULE)
     set(NO_CXXMODULE_FLAG "NO_CXXMODULE")
-  endif()
-  
-  if (ARG_REDUCE_DICTINCLUDES)
-    set(REDUCE_INCLUDES_FLAG "REDUCE_INCLUDES")
   endif()
 
   if(ARG_NO_SOURCES)
@@ -1320,7 +1300,6 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
 
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${NO_CXXMODULE_FLAG}
-                          ${REDUCE_INCLUDES_FLAG}
                           ${STAGE1_FLAG}
                           MODULE ${libname}
                           LINKDEF ${ARG_LINKDEF}
