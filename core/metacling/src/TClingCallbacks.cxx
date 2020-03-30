@@ -921,7 +921,7 @@ void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
 
 static bool shouldIgnore(llvm::StringRef FileName) {
    llvm::StringRef fileStem = llvm::sys::path::stem(FileName);
-   return fileStem.startswith("libNew");
+   return fileStem.startswith("libNew") || fileStem.startswith("libcppyy_backend");
 }
 
 static void SearchAndAddPath(const std::string& Path,
