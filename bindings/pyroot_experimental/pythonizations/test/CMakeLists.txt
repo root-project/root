@@ -4,116 +4,126 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-# Test ROOT module
-ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
+list(LENGTH python_executables len)
+math(EXPR how_many_pythons "${len} - 1")
 
-# General pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+foreach(val RANGE ${how_many_pythons})
+  list(GET python_executables ${val} python_executable)
+  list(GET python_version_majors ${val} py_maj)
+  list(GET numpys_found ${val} numpy_found)
 
-# TObject and subclasses pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
+  # Test ROOT module
+  ROOT_ADD_PYUNITTEST(pyroot_root_module_python${py_maj} root_module.py PY_EX ${python_executable})
 
-# TClass pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tclass_dynamiccast tclass_dynamiccast.py)
+  # General pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing_python${py_maj} pretty_printing.py)
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface_python${py_maj} array_interface.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
 
-# TDirectory and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax tdirectory_attrsyntax.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get tdirectoryfile_attrsyntax_get.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_attrsyntax_get_writeobject_open tfile_attrsyntax_get_writeobject_open.py)
+  # TObject and subclasses pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains_python${py_maj} tobject_contains.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops_python${py_maj} tobject_comparisonops.py PY_EX ${python_executable})
 
-# TTree and subclasses pythonizations
-file(COPY TreeHelper.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
-ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
-if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
-endif()
+  # TClass pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tclass_dynamiccast_python${py_maj} tclass_dynamiccast.py PY_EX ${python_executable})
 
-# TH1 and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
+  # TDirectory and subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax_python${py_maj} tdirectory_attrsyntax.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get_python${py_maj} tdirectoryfile_attrsyntax_get.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_attrsyntax_get_writeobject_open_python${py_maj} tfile_attrsyntax_get_writeobject_open.py PY_EX ${python_executable})
 
-# TGraph, TGraph2D and error subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters tgraph_getters.py)
+  # TTree and subclasses pythonizations
+  file(COPY TreeHelper.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr_python${py_maj} ttree_branch_attr.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable_python${py_maj} ttree_iterable.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress_python${py_maj} ttree_setbranchaddress.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_python${py_maj} ttree_branch.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
+  if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix_python${py_maj} ttree_asmatrix.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
+  endif()
 
-# TCollection and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len tcollection_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_listmethods tcollection_listmethods.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_operators tcollection_operators.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_iterable tcollection_iterable.py)
+  # TH1 and subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators_python${py_maj} th1_operators.py PY_EX ${python_executable})
 
-# TSeqCollection and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_itemaccess tseqcollection_itemaccess.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_listmethods tseqcollection_listmethods.py)
+  # TGraph, TGraph2D and error subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters_python${py_maj} tgraph_getters.py PY_EX ${python_executable})
 
-# TIter pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator titer_iterator.py)
+  # TCollection and subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_len_python${py_maj} tcollection_len.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_listmethods_python${py_maj} tcollection_listmethods.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_operators_python${py_maj} tcollection_operators.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_iterable_python${py_maj} tcollection_iterable.py PY_EX ${python_executable})
 
-# TClonesArray pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tclonesarray_itemaccess tclonesarray_itemaccess.py)
+  # TSeqCollection and subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_itemaccess_python${py_maj} tseqcollection_itemaccess.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_listmethods_python${py_maj} tseqcollection_listmethods.py PY_EX ${python_executable})
 
-# TArray and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_getitem tarray_getitem.py)
+  # TIter pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator_python${py_maj} titer_iterator.py PY_EX ${python_executable})
 
-# TVectorT pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_len tvectort_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem tvectort_getitem.py)
+  # TClonesArray pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tclonesarray_itemaccess_python${py_maj} tclonesarray_itemaccess.py PY_EX ${python_executable})
 
-# TVector3 pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_len tvector3_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_getitem tvector3_getitem.py)
+  # TArray and subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len_python${py_maj} tarray_len.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_getitem_python${py_maj} tarray_getitem.py PY_EX ${python_executable})
 
-# TString pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_str_repr tstring_str_repr.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_comparisonops tstring_comparisonops.py)
+  # TVectorT pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_len_python${py_maj} tvectort_len.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem_python${py_maj} tvectort_getitem.py PY_EX ${python_executable})
 
-# TString converter
-ROOT_ADD_PYUNITTEST(pyroot_conv_tstring tstring_converter.py)
+  # TVector3 pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_len_python${py_maj} tvector3_len.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_getitem_python${py_maj} tvector3_getitem.py PY_EX ${python_executable})
 
-# TObjString pythonisations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_len tobjstring_len.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops.py)
+  # TString pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len_python${py_maj} tstring_len.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_str_repr_python${py_maj} tstring_str_repr.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_comparisonops_python${py_maj} tstring_comparisonops.py PY_EX ${python_executable})
 
-# RVec and subclasses pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+  # TString converter
+  ROOT_ADD_PYUNITTEST(pyroot_conv_tstring_python${py_maj} tstring_converter.py PY_EX ${python_executable})
 
-# RDataFrame and subclasses pythonizations
-if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
-endif()
+  # TObjString pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_len_python${py_maj} tobjstring_len.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr_python${py_maj} tobjstring_str_repr.py PY_EX ${python_executable})
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops_python${py_maj} tobjstring_comparisonops.py PY_EX ${python_executable})
 
-# RTensor pythonizations
-if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
-endif()
+  # RVec and subclasses pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec_python${py_maj} rvec_asrvec.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
 
-# Passing Python callables to ROOT.TF
-ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
+  # RDataFrame and subclasses pythonizations
+  if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy_python${py_maj} rdataframe_asnumpy.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy_python${py_maj} rdataframe_makenumpy.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
+  endif()
 
-if(roofit)
-  # RooAbsCollection and subclasses pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_pyz_rooabscollection_len rooabscollection_len.py)
+  # RTensor pythonizations
+  if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor_python${py_maj} rtensor.py PY_EX ${python_executable} DEPENDENCIES_FOUND ${numpy_found})
+  endif()
 
-  # RooDataHist pythonisations
-  ROOT_ADD_PYUNITTEST(pyroot_pyz_roodatahist_ploton roodatahist_ploton.py)
-endif()
+  # Passing Python callables to ROOT.TF
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables_python${py_maj} tf_pycallables.py PY_EX ${python_executable})
 
-# std::string_view backport in CPyCppyy
-if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
-endif()
+  if(roofit)
+    # RooAbsCollection and subclasses pythonizations
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rooabscollection_len_python${py_maj} rooabscollection_len.py PY_EX ${python_executable})
 
-# Test wrapping Python callables for use in C++
-if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_cppcallable cppcallable.py)
-endif()
+    # RooDataHist pythonisations
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_roodatahist_ploton_python${py_maj} roodatahist_ploton.py PY_EX ${python_executable})
+  endif()
 
-# TComplex pythonizations
-ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
+  # std::string_view backport in CPyCppyy
+  if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_string_view_backport_python${py_maj} string_view_backport.py PY_EX ${python_executable})
+  endif()
+
+  # Test wrapping Python callables for use in C++
+  if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_cppcallable_python${py_maj} cppcallable.py PY_EX ${python_executable})
+  endif()
+
+  # TComplex pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_tcomplex_python${py_maj} tcomplex_operators.py PY_EX ${python_executable})
+
+endforeach()
