@@ -231,15 +231,15 @@ protected:
 
    // function actually running the test.
    // We define here the condition to say that the test is valid
-   bool RunFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
+   bool RunFit(ROOT::Internal::ExecutionPolicy executionPolicy) {
       fExecutionPolicy = executionPolicy;
       if (printLevel>0) {
          std::cout << "**************************************\n";
-         if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kSerial)
+         if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kSerial)
             std::cout << "   RUN SEQUENTIAL \n";
-         else if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread)
+         else if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread)
             std::cout << "   RUN MULTI-THREAD \n";
-         else if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess)
+         else if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kMultiprocess)
             std::cout << "   RUN MULTI-PROCESS \n";
 
          std::cout << "**************************************\n";
@@ -254,7 +254,7 @@ protected:
    typename T::FittingDataType *fData;
    TH2D *fHistogram;
    ROOT::Fit::Fitter fFitter;
-   ROOT::Fit::ExecutionPolicy fExecutionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   ROOT::Internal::ExecutionPolicy fExecutionPolicy = ROOT::Internal::ExecutionPolicy::kSerial; 
    static const unsigned fNumPoints = 401;
 };
 
@@ -275,12 +275,12 @@ TYPED_TEST_SUITE_P(GradientFittingTest);
 // Test the fitting using the gradient is successful
 TYPED_TEST_P(GradientFittingTest, Sequential)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Fit::ExecutionPolicy::kSerial));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::Internal::ExecutionPolicy::kSerial));
 }
 
 TYPED_TEST_P(GradientFittingTest, Multithread)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Fit::ExecutionPolicy::kMultithread));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::Internal::ExecutionPolicy::kMultithread));
 }
 
 REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential,Multithread);
