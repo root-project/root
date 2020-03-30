@@ -179,3 +179,16 @@ class ROOTFacade(types.ModuleType):
     @property
     def __version__(self):
         return self.gROOT.GetVersion()
+
+    # Inject numpy pythonizations in the Numpy "namespace"
+    @property
+    def Numpy(self):
+        # Dummy object to inject the pythonizations
+        class Numpy: pass
+        from libROOTPythonizations import AsRVec
+        # Add pythonizations
+        Numpy.AsRVec = AsRVec
+        # Add the pythonized dummy object to the ROOT facade and override this property
+        # so that we run the setup only once
+        self.__dict__['Numpy'] = Numpy
+        return Numpy

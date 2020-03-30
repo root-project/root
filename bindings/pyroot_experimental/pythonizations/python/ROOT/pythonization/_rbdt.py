@@ -9,7 +9,6 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPythonizations import AsRVec
 
 
 try:
@@ -29,6 +28,7 @@ def Compute(self, x):
     # numpy.array is a factory and the actual type of a numpy array is numpy.ndarray
     if isinstance(x, np.ndarray):
         if len(x.shape) == 1:
+            from libROOTPythonizations import AsRVec
             x_ = AsRVec(x)
             y = self._OriginalCompute(x_)
             return np.asarray(y)
