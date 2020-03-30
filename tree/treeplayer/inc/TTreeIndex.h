@@ -64,6 +64,7 @@ public:
    virtual TTreeFormula  *GetMinorFormula();
    virtual TTreeFormula  *GetMajorFormulaParent(const TTree *parent);
    virtual TTreeFormula  *GetMinorFormulaParent(const TTree *parent);
+   virtual Bool_t         IsValidFor(const TTree *parent);
    virtual void           Print(Option_t *option="") const;
    virtual void           UpdateFormulaLeaves(const TTree *parent);
    virtual void           SetTree(const TTree *T);
