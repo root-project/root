@@ -395,6 +395,10 @@ public:
    static void TanhDerivative(Tensor_t & B,
                               const Tensor_t & A);
 
+   // fast tanh (only when VDT is available)
+   static void FastTanh(Tensor_t &B);
+   static void FastTanhDerivative(Tensor_t &B, const Tensor_t &A);
+
    static void SymmetricRelu(Tensor_t & B);
    static void SymmetricReluDerivative(Tensor_t & B,
                                        const Tensor_t & A);

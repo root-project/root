@@ -71,12 +71,12 @@ public:
    ///@{
    /** Matrix-multiply \p input with the transpose of \pweights and
     *  write the results into \p output. */
- 
+
    static void MultiplyTranspose(TMatrixT<Scalar_t> &output,
                                  const TMatrixT<Scalar_t> &input,
                                  const TMatrixT<Scalar_t> &weights);
 
-   
+
    /** Add the vectors biases row-wise to the matrix output */
    static void AddRowWise(TMatrixT<Scalar_t> &output,
                           const TMatrixT<Scalar_t> &biases);
@@ -115,7 +115,7 @@ public:
                                             TMatrixT<Scalar_t> & input_gradient);
 
 
-   
+
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
 			                              TMatrixT<Scalar_t> & cell_gradients_backward,
@@ -181,7 +181,7 @@ public:
                                       const TMatrixT<Scalar_t> & weights_candidate_state,
                                       const TMatrixT<Scalar_t> & input,
                                       TMatrixT<Scalar_t> & input_gradient);
-  
+
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/
@@ -239,6 +239,9 @@ public:
    static void TanhDerivative(TMatrixT<AReal> & B,
                               const TMatrixT<AReal> & A);
 
+   static void FastTanh(Tensor_t &B) { return Tanh(B); }
+   static void FastTanhDerivative(Tensor_t &B, const Tensor_t &A) { return TanhDerivative(B, A); }
+
    static void SymmetricRelu(TMatrixT<AReal> & B);
    static void SymmetricReluDerivative(TMatrixT<AReal> & B,
                                        const TMatrixT<AReal> & A);
@@ -251,7 +254,7 @@ public:
    static void GaussDerivative(TMatrixT<AReal> & B,
                                const TMatrixT<AReal> & A);
 
-   
+
    ///@}
 
    //____________________________________________________________________________

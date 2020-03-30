@@ -22,7 +22,7 @@
 
 #ifndef R__HAS_CUDNN
 #error This file can be compiled only when cudnn is available in ROOT
-#else 
+#else
 
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
@@ -347,6 +347,7 @@ public:
    static void Relu(Tensor_t &) {}
    static void Sigmoid(Tensor_t &) {}
    static void Tanh(Tensor_t &) {}
+   static void FastTanh(Tensor_t &) {}
    static void SymmetricRelu(Tensor_t &) {}
    static void SoftSign(Tensor_t &) {}
    static void Gauss(Tensor_t &) {}
@@ -355,6 +356,7 @@ public:
    static void ReluDerivative(Tensor_t &, const Tensor_t &) {}
    static void SigmoidDerivative(Tensor_t &, const Tensor_t &) {}
    static void TanhDerivative(Tensor_t &, const Tensor_t &) {}
+   static void FastTanhDerivative(Tensor_t &, const Tensor_t &) {}
    static void SymmetricReluDerivative(Tensor_t & , const Tensor_t & ) {}
    static void SoftSignDerivative(Tensor_t & , const Tensor_t & ) {}
    static void GaussDerivative(Tensor_t & ,  const Tensor_t & ) {}
