@@ -123,6 +123,7 @@ include(RootMacros)
 include(CheckCompiler)
 include(CheckAssembler)
 include(CheckIntrinsics)
+include(SearchRootPythonDeps)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
