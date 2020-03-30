@@ -188,10 +188,10 @@ int testHisto1DFit() {
    opt = ROOT::Fit::DataOptions();
    opt.fIntegral = true;
    opt.fUseEmpty = true;
-   ROOT::Fit::ExecutionPolicy execPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   ROOT::Internal::ExecutionPolicy execPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
 
    // if (ROOT::IsImplicitMTEnabled()) {
-   //    execPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
+   //    execPolicy = ROOT::Internal::ExecutionPolicy::kMultithread;
    // }
    ROOT::Fit::BinData dl2(opt);
    ROOT::Fit::FillData(dl2,h1,func);

@@ -17,7 +17,6 @@ set(HEADERS
   Fit/FcnAdapter.h
   Fit/FitConfig.h
   Fit/FitData.h
-  Fit/FitExecutionPolicy.h
   Fit/FitResult.h
   Fit/FitUtil.h
   Fit/Fitter.h
