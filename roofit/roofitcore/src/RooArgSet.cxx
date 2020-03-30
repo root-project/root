@@ -680,13 +680,16 @@ Bool_t RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, co
 /// 
 /// The `<argValue>` part of each element is written by the arguments'
 /// writeToStream() function.
-/// \param os The stream to write to
-/// \param compact Write only the bare values, separated by ' '. Doing this,
-/// the stream cannot be read back into a RooArgSet, but only into a RooArgList, because the
-/// key names are lost.
-
-void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section*/) const
+/// \param os The stream to write to.
+/// \param compact Write only the bare values, separated by ' '.
+/// \note In compact mode, the stream cannot be read back into a RooArgSet,
+/// but only into a RooArgList, because the variable names are lost.
+/// \param section If non-null, add a section header like `[<section>]`.
+void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* section) const
 {
+  if (section && section[0] != '\0')
+    os << '[' << section << ']' << '\n';
+
   if (compact) {
     for (const auto next : _list) {
       next->writeToStream(os, true);
