@@ -412,6 +412,9 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   if(ARG_LIBRARIES)
     target_link_libraries(${executable} ${ARG_LIBRARIES})
   endif()
+  if(TARGET ROOT::ROOTStaticSanitizerConfig)
+    target_link_libraries(${executable} ROOT::ROOTStaticSanitizerConfig)
+  endif()
 
   if(ARG_COMPILE_FLAGS)
     set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_COMPILE_FLAGS})
@@ -855,6 +858,10 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   add_executable(${binary} ${unittests_SRC})
   target_include_directories(${binary} PRIVATE ${GTEST_INCLUDE_DIR})
   target_link_libraries(${binary} gtest gtest_main ${ARG_UNPARSED_ARGUMENTS})
+
+  if(TARGET ROOT::ROOTStaticSanitizerConfig)
+    target_link_libraries(${binary} ROOT::ROOTStaticSanitizerConfig)
+  endif()
 
   # Mark the test as known to fail.
   if(ARG_WILLFAIL)
