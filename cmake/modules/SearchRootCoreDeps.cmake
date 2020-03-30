@@ -46,7 +46,10 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
   endif()
 
   find_package(Python2 COMPONENTS Interpreter Development NumPy)
-  if(Python2_Development_FOUND)
+  if(DEFINED Python2_VERSION AND "${Python2_VERSION}" VERSION_LESS "2.7")
+    message(WARNING "Ignoring Python2 installation: unsupported version ${Python2_VERSION} (version>=2.7 required)")
+  endif()
+  if(Python2_Development_FOUND AND ${Python2_VERSION} VERSION_GREATER_EQUAL "2.7")
     if(NOT Python3_Development_FOUND)
       # Only Python2 was found, set as main
       set(PYTHON_EXECUTABLE "${Python2_EXECUTABLE}" CACHE INTERNAL "" FORCE)
@@ -72,8 +75,8 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     endif()
   endif()
 
-  if(NOT Python3_Development_FOUND AND NOT Python2_Development_FOUND)
-    message(FATAL_ERROR "No Python 2 or 3 were found")
+  if(NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR ${Python2_VERSION} VERSION_LESS "2.7"))
+    message(FATAL_ERROR "No supported Python 2 or 3 were found")
   endif()
 
   # Print message saying with which versions of Python are used to build
