@@ -402,7 +402,6 @@ End_Macro
 #include "TTreeCloner.h"
 #include "TTreeCache.h"
 #include "TTreeCacheUnzip.h"
-#include "TTreeFormula.h"
 #include "TVirtualCollectionProxy.h"
 #include "TEmulatedCollectionProxy.h"
 #include "TVirtualIndex.h"
@@ -1220,14 +1219,7 @@ bool CheckReshuffling(TTree &mainTree, TTree &friendTree)
    const auto isFriendReshuffled = friendTree.TestBit(TTree::kEntriesReshuffled);
    const auto friendHasValidIndex = [&] {
       auto idx = friendTree.GetTreeIndex();
-      if (idx == nullptr)
-         return false;
-      auto *majorFormula = idx->GetMajorFormulaParent(&mainTree);
-      auto *minorFormula = idx->GetMinorFormulaParent(&mainTree);
-      if ((majorFormula == nullptr || majorFormula->GetNdim() == 0) ||
-          (minorFormula == nullptr || minorFormula->GetNdim() == 0))
-         return false;
-      return true;
+      return idx ? idx->IsValidFor(&mainTree) : kFALSE;
    }();
 
    if ((isMainReshuffled || isFriendReshuffled) && !friendHasValidIndex) {
