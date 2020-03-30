@@ -1606,22 +1606,53 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(will_fail WILLFAIL)
   endif()
 
-  set(dependencies ON)
+  list(LENGTH python_executables how_many_pythons)
+  math(EXPR how_many_pythons_minus_one "${how_many_pythons} - 1")
+  # Set a list with a default TRUE for each python we're building with
+  foreach(py RANGE ${how_many_pythons})
+    list(APPEND dependencies TRUE)
+  endforeach()
   if(DEFINED ARG_DEPENDENCIES_FOUND)
-      foreach(dep ${ARG_DEPENDENCIES_FOUND})
-      if(NOT ${dep})
-        set(dependencies FALSE)
-      endif()
+    # Create list of lists; this is necessary since CMAKE_PARSE_ARGUMENTS returns
+    # a flat list if multiple lists are passed
+    list(LENGTH ARG_DEPENDENCIES_FOUND parsed_list_length)
+    MATH(EXPR how_many_deps_minus_one "${parsed_list_length}/${how_many_pythons} - 1")
+    set(start 0)
+    foreach(dep RANGE ${how_many_deps_minus_one})
+      list(SUBLIST ARG_DEPENDENCIES_FOUND ${start} ${how_many_pythons} deps${start})
+      list(APPEND deps_list deps${start})
+      math(EXPR start "${start} + ${how_many_deps_minus_one}")
+    endforeach()
+    # Loop over a list of lists with the form e.g.:
+    # ((numpy2_found, numpy3_found, ...), (other_dep2, other_dep3, ...), ...)
+    foreach(dep ${deps_list})
+      set(counter 0)
+      foreach(version_dep ${${dep}})
+        if(NOT ${version_dep})
+          list(REMOVE_AT dependencies ${counter})
+          list(INSERT dependencies ${counter} FALSE)
+        endif()
+        math(EXPR counter "${counter} + 1")
+      endforeach()
     endforeach()
   endif()
 
-  if(dependencies)
-    ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+  foreach(val RANGE ${how_many_pythons_minus_one})
+    list(GET python_executables ${val} python_executable)
+    list(GET python_version_majors ${val} py_maj)
+    list(GET dependencies ${val} dep)
+    set(test_name pyunittests-${good_name}-py${py_maj})
+    if(${dep})
+      ROOT_ADD_TEST(${test_name}
+                COMMAND ${python_executable} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                DEPENDS ${other_versions_test}
                 ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
                 ${copy_to_builddir}
                 ${will_fail})
-  endif()
+    endif()
+    list(APPEND other_versions_test ${test_name})
+  endforeach()
+
 endfunction()
 
 #----------------------------------------------------------------------------
