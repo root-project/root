@@ -69,6 +69,8 @@ class ImportLoadLibs(unittest.TestCase):
             print('Found whitelisted libraries after importing ROOT with the shown regex match:')
             for l, r in zip(good_libs, matched_re):
                 print(' - {} ({})'.format(l, r))
+            import sys
+            sys.stdout.flush()
 
         if bad_libs:
             raise Exception('Found not whitelisted libraries after importing ROOT:' \
