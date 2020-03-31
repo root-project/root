@@ -4,6 +4,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+# Test library loads during importing ROOT
+ROOT_ADD_PYUNITTEST(pyroot_import_load_libs import_load_libs.py)
+
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
