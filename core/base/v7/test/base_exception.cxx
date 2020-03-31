@@ -44,7 +44,7 @@ TEST(Exception, Report)
 {
    try {
       TestChain(false);
-      EXPECT_EQ("Above line should have thrown!", nullptr);
+      EXPECT_TRUE(false) << "Above line should have thrown!";
    } catch (const RException& e) {
       ASSERT_EQ(2U, e.GetError().GetStackTrace().size());
       EXPECT_THAT(e.GetError().GetStackTrace().at(0).fFunction, ::testing::HasSubstr("TestSyscall(bool)"));
