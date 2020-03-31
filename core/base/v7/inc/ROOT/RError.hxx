@@ -17,7 +17,7 @@
 #define ROOT7_RError
 
 #include <ROOT/RConfig.hxx> // for R__[un]likely
-#include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION
+#include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION, R__WARNING_HERE
 
 #include <cstddef>
 #include <memory>
@@ -192,6 +192,8 @@ public:
 #endif
          {
             throw RException(*fError);
+         } else {
+            R__WARNING_HERE("RError") << "unhandled RResult exception during stack unwinding";
          }
       }
    }
@@ -209,6 +211,10 @@ public:
    Get()
    {
       if (R__unlikely(fError)) {
+         // Get() can be wrapped in a try-catch block, so throwing the exception here is akin to checking the error.
+         // Setting fIsChecked to true also avoids a spurious warning in the RResult destructor
+         fIsChecked = true;
+
          fError->AppendToMessage(" (unchecked RResult access!)");
          throw RException(*fError);
       }
