@@ -76,6 +76,14 @@ Bool_t Test1(bool fixedCut)
    smallchain->Draw(">>elist_small", cut, "entrylist");
    TEntryList *elist_small = (TEntryList*)gDirectory->Get("elist_small");
 
+   if (fixedCut && elist_small->GetN() != 0) {
+      printf("Test1: Cut \"Entry$ >= %lld\" found entries in the small chain\n", smallchain->GetEntries());
+      return false;
+   } else if (!fixedCut && elist_small->GetN() == 0) {
+      printf("Test1: Cut \"x<0 && y>0\" found no entries in the small chain\n");
+      return false;
+   }
+
    //check if the entry list contains correct entries
    Int_t range = 100;
    TH1F *hx = new TH1F("hx", "hx", range, -range, range);
@@ -111,6 +119,16 @@ Bool_t Test1(bool fixedCut)
    //make an entry list for a big chain
    bigchain->Draw(">>elist_big", cut, "entrylist");
    TEntryList* elist_big = (TEntryList*)gDirectory->Get("elist_big");
+
+   if (fixedCut && elist_big->GetN() != smallchain->GetEntries()) {
+      printf("Test1: Cut \"Entry$ >= %lld\" did not find the right number of entries in the big chain (expected %lld got %lld\n",
+            smallchain->GetEntries(), smallchain->GetEntries(), elist_big->GetN());
+      return false;
+   } else if (!fixedCut && elist_big->GetN() == 0) {
+      printf("Test1: Cut \"x<0 && y>0\" found no entries in the big chain\n");
+      return false;
+   }
+
    //make a small entry list by extracting the lists, corresponding to the trees in
    //the small chain, from the big entry list
    TEntryList *list_extracted = new TEntryList("list_extracted", "list_extracted");
