@@ -4,4 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_ADD_UNITTEST_DIR(ROOTHistDraw ROOTGpadv7)
+if(NOT MSVC OR win_broken_tests)
+  ROOT_ADD_UNITTEST_DIR(ROOTHistDraw ROOTGpadv7)
+endif()
