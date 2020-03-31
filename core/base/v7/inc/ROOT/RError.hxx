@@ -80,6 +80,8 @@ public:
       RLocation() = default;
       RLocation(const std::string &func, const std::string &file, int line)
          : fFunction(func), fSourceFile(file), fSourceLine(line) {}
+
+      // TODO(jblomer) use std::source_location once available
       std::string fFunction;
       std::string fSourceFile;
       int fSourceLine;
@@ -93,9 +95,9 @@ private:
 
 public:
    /// Used by R__FAIL
-   RError(const std::string &message, const std::string &func, const std::string &file, int line);
+   RError(const std::string &message, RLocation &&sourceLocation);
    /// Used by R__FORWARD_RESULT
-   void AddFrame(const std::string &func, const std::string &file, int line);
+   void AddFrame(RLocation &&sourceLocation);
    /// Add more information to the diagnostics
    void AppendMessage(const std::string &info) { fMessage += info; }
    /// Format a dignostics report, e.g. for an exception message
@@ -127,7 +129,8 @@ struct RResultType {
    T fValue;
 };
 
-class RResultTypeVoid {};
+template <>
+struct RResultType<void> {};
 } // namespace Internal
 
 
@@ -143,7 +146,7 @@ new operator.  RResult is movable but not copyable to avoid throwing exceptions 
 */
 // clang-format on
 template <typename T>
-class RResult : public std::conditional_t<std::is_void<T>::value, Internal::RResultTypeVoid, Internal::RResultType<T>> {
+class RResult : public Internal::RResultType<T> {
 private:
    /// This is the nullptr for an RResult representing success
    std::unique_ptr<RError> fError;
@@ -218,10 +221,10 @@ public:
 /// Short-hand to return an RResult<void> indicating success
 #define R__SUCCESS return ROOT::Experimental::RResult<void>();
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
-#define R__FAIL(msg) return ROOT::Experimental::RError(msg, R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__)
+#define R__FAIL(msg) return ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
 #define R__FORWARD_RESULT(res) if (res.GetError()) \
-      { res.GetError()->AddFrame(R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__); } \
+      { res.GetError()->AddFrame({R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}); } \
    return res
 
 } // namespace Experimental

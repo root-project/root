@@ -16,6 +16,7 @@
 #include "ROOT/RError.hxx"
 
 #include <string>
+#include <utility>
 
 std::string ROOT::Experimental::RError::GetReport() const
 {
@@ -27,14 +28,14 @@ std::string ROOT::Experimental::RError::GetReport() const
 }
 
 ROOT::Experimental::RError::RError(
-   const std::string &message, const std::string &func, const std::string &file, int line)
+   const std::string &message, RLocation &&sourceLocation)
    : fMessage(message)
 
 {
-   AddFrame(func, file, line);
+   AddFrame(std::move(sourceLocation));
 }
 
-void ROOT::Experimental::RError::AddFrame(const std::string &func, const std::string &file, int line)
+void ROOT::Experimental::RError::AddFrame(RLocation &&sourceLocation)
 {
-   fStackTrace.emplace_back(RLocation(func, file, line));
+   fStackTrace.emplace_back(sourceLocation);
 }
