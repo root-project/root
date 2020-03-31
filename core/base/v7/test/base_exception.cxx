@@ -16,7 +16,7 @@ static ROOT::Experimental::RResult<void> TestFailure()
 
 static ROOT::Experimental::RResult<void> TestSuccess()
 {
-   R__SUCCESS
+   return ROOT::Experimental::RResult<void>::Success();
 }
 
 static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
@@ -42,16 +42,14 @@ public:
 
 TEST(Exception, Report)
 {
-   bool exceptionThrown = false;
    try {
       TestChain(false);
+      EXPECT_EQ("Above line should have thrown!", nullptr);
    } catch (const RException& e) {
-      exceptionThrown = true;
       ASSERT_EQ(2U, e.GetError().GetStackTrace().size());
       EXPECT_THAT(e.GetError().GetStackTrace().at(0).fFunction, ::testing::HasSubstr("TestSyscall(bool)"));
       EXPECT_THAT(e.GetError().GetStackTrace().at(1).fFunction, ::testing::HasSubstr("TestChain(bool)"));
    }
-   EXPECT_TRUE(exceptionThrown);
 }
 
 
