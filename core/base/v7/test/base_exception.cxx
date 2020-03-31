@@ -53,6 +53,14 @@ TEST(Exception, Report)
 }
 
 
+TEST(Exception, ForwardResult)
+{
+   auto res = TestChain(true);
+   ASSERT_TRUE(res);
+   EXPECT_EQ(42, res.Get());
+}
+
+
 TEST(Exception, DiscardReturnValue)
 {
    EXPECT_THROW(TestFailure(), RException);

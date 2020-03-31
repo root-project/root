@@ -60,7 +60,7 @@
 //     {
 //        if (failure)
 //           R__FAIL("user-facing error messge");
-//        R__SUCCESS
+//        return RResult<void>::Success();
 //     }
 
 
@@ -123,14 +123,15 @@ public:
 /// Wrapper class that generates a data member of type T in RResult<T> for all Ts except T == void
 namespace Internal {
 template <typename T>
-struct RResultType {
-   RResultType() = default;
-   explicit RResultType(const T &value) : fValue(value) {}
+class RResultType {
+protected:
    T fValue;
+   explicit RResultType() = default;
+   explicit RResultType(const T &value) : fValue(value) {}
 };
 
 template <>
-struct RResultType<void> {};
+class RResultType<void> { };
 } // namespace Internal
 
 
@@ -151,20 +152,26 @@ private:
    /// This is the nullptr for an RResult representing success
    std::unique_ptr<RError> fError;
    /// Switches to true once the user of an RResult object checks the object status
-   bool fIsChecked{false};
+   /// Declaring it mutable is safe because checking an RResult is not a multi-threaded operation
+   /// The alternative, making the bool operator non-const, has unwanted effects when using an RResult, e.g.
+   ///     auto res = Func();
+   ///     ASSERT_TRUE(res);
+   /// would not work anymore
+   mutable bool fIsChecked{false};
+
+   RResult() = default;
 
 public:
+   /// Returns a RResult<void> that captures the successful execution of the function
+   template <typename Dummy = T, typename = typename std::enable_if_t<std::is_void<T>::value, Dummy>>
+   static RResult Success() { return RResult(); }
    /// Constructor is _not_ explicit in order to allow for `return T();` for functions returning RResult<T>
    /// Only available if T is not void
    template <typename Dummy = T, typename = typename std::enable_if_t<!std::is_void<T>::value, Dummy>>
    RResult(const Dummy &value) : Internal::RResultType<T>(value) {}
    /// Constructor is _not_ explicit such that the RError returned by R__FAIL can be converted into an RResult<T>
    /// for any T
-   RResult(const RError &error) : fError(std::make_unique<RError>(error)) {}
-
-   /// RResult<void> has a default contructor that creates an object representing success
-   template <typename Dummy = T, typename = typename std::enable_if_t<std::is_void<T>::value, Dummy>>
-   RResult() {}
+   RResult(RError &&error) : fError(std::make_unique<RError>(std::move(error))) {}
 
    RResult(const RResult &other) = delete;
    RResult(RResult &&other) = default;
@@ -192,13 +199,13 @@ public:
    Get()
    {
       if (R__unlikely(fError)) {
-         fError->AppendToMessage(" (invalid access)");
+         fError->AppendToMessage(" (unchecked RResult access!)");
          throw RException(*fError);
       }
       return Internal::RResultType<T>::fValue;
    }
 
-   explicit operator bool()
+   explicit operator bool() const
    {
       fIsChecked = true;
       return !fError;
@@ -210,16 +217,14 @@ public:
 
    // Help to prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
    // an exception close to the error location. For stack allocated RResult objects, an exception is thrown
-   // the latest when leaving the scope. Heap allocated ill RResult objects can live much longer making it difficult
-   // to trace back the original failure.
+   // the latest when leaving the scope. Heap allocated RResult objects in failure state can live much longer making it
+   // difficult to trace back the original error.
    void *operator new(std::size_t size) = delete;
    void *operator new(std::size_t, void *) = delete;
    void *operator new[](std::size_t) = delete;
    void *operator new[](std::size_t, void *) = delete;
 };
 
-/// Short-hand to return an RResult<void> indicating success
-#define R__SUCCESS return ROOT::Experimental::RResult<void>();
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
 #define R__FAIL(msg) return ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
