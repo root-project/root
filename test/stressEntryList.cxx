@@ -534,7 +534,7 @@ Bool_t Test6()
 }
 
 
-void SetupTree(TTree* tree, Double_t x, Double_t y, Double_t z)
+void SetupTree(TTree* tree, Double_t &x, Double_t &y, Double_t &z)
 {
    tree->Branch("x", &x, "x/D");
    tree->Branch("y", &y, "y/D");
