@@ -78,12 +78,12 @@ class RError {
 public:
    struct RLocation {
       RLocation() = default;
-      RLocation(const std::string &func, const std::string &file, int line)
+      RLocation(const char *func, const char *file, int line)
          : fFunction(func), fSourceFile(file), fSourceLine(line) {}
 
       // TODO(jblomer) use std::source_location once available
-      std::string fFunction;
-      std::string fSourceFile;
+      const char *fFunction;
+      const char *fSourceFile;
       int fSourceLine;
    };
 
