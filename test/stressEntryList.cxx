@@ -51,11 +51,12 @@
 #include "TCut.h"
 #include "TFile.h"
 #include "TSystem.h"
+#include "TError.h"
 
 Int_t stressEntryList(Int_t nentries = 10000, Int_t nfiles = 10);
 void MakeTrees(Int_t nentries, Int_t nfiles);
 
-Bool_t Test1()
+Bool_t Test1(bool fixedCut)
 {
    //Test the functionality of entry lists for chains:
    //making new entry lists out of parts of other entry lists
@@ -70,7 +71,8 @@ Bool_t Test1()
    smallchain->Add("stressEntryListTrees*.root/tree1");
 
    //create an entry list for the small chain
-   TCut cut = "x<0 && y>0";
+   TString fixedCutStr; fixedCutStr.Form("Entry$ >= %lld", smallchain->GetEntries());
+   TCut cut = fixedCut ? fixedCutStr.Data() : "x<0 && y>0";
    smallchain->Draw(">>elist_small", cut, "entrylist");
    TEntryList *elist_small = (TEntryList*)gDirectory->Get("elist_small");
 
@@ -175,6 +177,14 @@ Bool_t Test1()
    if (wrongentries1>0 || wrongentries2>0 || wrongentries3>0 || wrongentries4>0 || wrongentries5>0)
       return kFALSE;
    return kTRUE;
+}
+
+Bool_t Test1a() {
+   return Test1(false);
+}
+
+Bool_t Test1b() {
+   return Test1(true);
 }
 
 Bool_t Test2()
@@ -607,21 +617,22 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
    CleanUp(nfiles);
 
    MakeTrees(nentries, nfiles);
-   printf("**********************************************************************\n");
-   printf("***************Starting TEntryList stress test************************\n");
-   printf("**********************************************************************\n");
-   printf("**********Generating %d data files, 2 trees of %d in each**********\n", nfiles, nentries);
-   printf("**********************************************************************\n");
+   printf("*************************************************************************\n");
+   printf("****************Starting TEntryList stress test**************************\n");
+   printf("*************************************************************************\n");
+   printf("***********Generating %d data files, 2 trees of %d in each************\n", nfiles, nentries);
+   printf("*************************************************************************\n");
 
    Int_t retval = 0;
    using fcnCharPtrPair = std::pair<std::function<bool()>,const char*>;
    std::list<fcnCharPtrPair> testDescrList = {
-      {Test1, "Test1: Applying different entry lists to different chains---------- "},
-      {Test2, "Test2: Adding and subtracting entry lists-------------------------- "},
-      {Test3, "Test3: TEntryList and TEventList for TChain------------------------ "},
-      {Test4, "Test4: TEntryList and TEventList for TTree------------------------- "},
-      {Test5, "Test5: Full and Empty TEntryList----------------------------------- "},
-      {Test6, "Test6: Full and Empty TEntryList w/ TTrees in TDirectories--------- "}
+      {Test1a, "Test1: Applying different entry lists to different chains------------ "},
+      {Test1b, "Test1: Applying different entry lists to different chains (bad cuts)- "},
+      {Test2,  "Test2: Adding and subtracting entry lists---------------------------- "},
+      {Test3,  "Test3: TEntryList and TEventList for TChain-------------------------- "},
+      {Test4,  "Test4: TEntryList and TEventList for TTree--------------------------- "},
+      {Test5,  "Test5: Full and Empty TEntryList------------------------------------- "},
+      {Test6,  "Test6: Full and Empty TEntryList w/ TTrees in TDirectories----------- "}
    };
 
    for (auto const & testDescrPair : testDescrList) {
@@ -632,9 +643,9 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
       printf("%s %s\n", descr, testRes ? "OK" : "FAILED" );
    }
 
-   printf("**********************************************************************\n");
-   printf("*******************Deleting the data files****************************\n");
-   printf("**********************************************************************\n");
+   printf("*************************************************************************\n");
+   printf("********************Deleting the data files******************************\n");
+   printf("*************************************************************************\n");
    CleanUp(nfiles);
    return retval;
 }
