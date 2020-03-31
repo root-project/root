@@ -66,8 +66,9 @@ private:
    std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
    std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
 
-   void MakeChain(const std::string &treeName, const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
-                  const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries);
+   void MakeChain(const std::vector<std::string> &treeName, const std::vector<std::string> &fileNames,
+                  const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
+                  const std::vector<std::vector<Long64_t>> &friendEntries);
    TreeReaderEntryListPair MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long64_t end);
    std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end);
 
@@ -75,7 +76,7 @@ public:
    TTreeView() = default;
    // no-op, we don't want to copy the local TChains
    TTreeView(const TTreeView &) {}
-   TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::string &treeName,
+   TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
                                          const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
                                          TEntryList entryList, const std::vector<Long64_t> &nEntries,
                                          const std::vector<std::vector<Long64_t>> &friendEntries);
@@ -85,7 +86,7 @@ public:
 class TTreeProcessorMT {
 private:
    const std::vector<std::string> fFileNames; ///< Names of the files
-   const std::string fTreeName;               ///< Name of the tree
+   const std::vector<std::string> fTreeNames; ///< TTree names (always same size and ordering as fFileNames)
    /// User-defined selection of entry numbers to be processed, empty if none was provided
    const TEntryList fEntryList; // const to be sure to avoid race conditions among TTreeViews
    const Internal::FriendInfo fFriendInfo;
@@ -95,7 +96,7 @@ private:
    ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{ROOT::kIMTPoolSize}; ///<! Thread-local TreeViews
 
    Internal::FriendInfo GetFriendInfo(TTree &tree);
-   std::string FindTreeName();
+   std::vector<std::string> FindTreeNames();
    static unsigned int fgMaxTasksPerFilePerWorker;
 
 public:
