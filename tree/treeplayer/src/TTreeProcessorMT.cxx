@@ -172,14 +172,14 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
       const auto fileNameC = fileName.c_str();
       std::unique_ptr<TFile> f(TFile::Open(fileNameC)); // need TFile::Open to load plugins if need be
       if (!f || f->IsZombie()) {
-         const auto msg = "TTreeProcessorMT::Process: an error occurred while opening file " + fileName;
+         const auto msg = "TTreeProcessorMT::Process: an error occurred while opening file \"" + fileName + "\"";
          throw std::runtime_error(msg);
       }
       auto *t = f->Get<TTree>(treeName.c_str());  // t will be deleted by f
 
       if (!t) {
-         const auto msg =
-            "TTreeProcessorMT::Process: an error occurred while getting tree" + treeName + " from file " + fileName;
+         const auto msg = "TTreeProcessorMT::Process: an error occurred while getting tree \"" + treeName +
+                          "\" from file \"" + fileName + "\"";
          throw std::runtime_error(msg);
       }
 

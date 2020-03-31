@@ -853,7 +853,7 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    } catch (const std::runtime_error &e) {
       const std::string expected_msg =
          ROOT::IsImplicitMTEnabled()
-            ? "TTreeProcessorMT::Process: an error occurred while opening file doesnotexist.root"
+            ? "TTreeProcessorMT::Process: an error occurred while opening file \"doesnotexist.root\""
             : "An error was encountered while processing the data. TTreeReader status code is: 5";
       EXPECT_EQ(e.what(), expected_msg);
       exceptionCaught = true;
