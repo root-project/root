@@ -256,42 +256,6 @@ int TClingTypeInfo::Size() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-const char *TClingTypeInfo::StemName() const
-{
-   if (!IsValid()) {
-      return 0;
-   }
-   clang::QualType QT = fQualType.getCanonicalType();
-   while (1) {
-      if (QT->isArrayType()) {
-         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
-         continue;
-      }
-      else if (QT->isReferenceType()) {
-         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
-         continue;
-      }
-      else if (QT->isPointerType()) {
-         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
-         continue;
-      }
-      else if (QT->isMemberPointerType()) {
-         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
-         continue;
-      }
-      break;
-   }
-   // Note: This *must* be static because we are returning a pointer inside it.
-   TTHREAD_TLS_DECL( std::string, buf);
-   buf.clear();
-   clang::PrintingPolicy Policy(fInterp->getCI()->getASTContext().
-                                getPrintingPolicy());
-   QT.getAsStringInternal(buf, Policy);
-   return buf.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the normalized name of the type (i.e. fully qualified and without
 /// the non-opaque typedefs.
 
