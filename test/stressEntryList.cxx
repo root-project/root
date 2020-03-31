@@ -531,7 +531,10 @@ Bool_t Test5And6(const std::list<const char*>& treeNamesForChain )
    elempty->Remove(3);
    //elempty->Print("all");
    chain->SetEntryList(elempty);
+   auto oldlevel = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kError; // Draw will print a warning about the empty histogram.
    Long64_t nen = chain->Draw("x", "", "goff");
+   gErrorIgnoreLevel = oldlevel;
    if (nen!=0) wrongentries5++;
 
    //printf("wrongentries5=%d\n", wrongentries5);
