@@ -4,6 +4,13 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
+# Test library loads during importing ROOT
+# Testing only the Linux systems is sufficient to detect unwanted links to libraries at import time.
+# Mac (and potentially Windows) pull in many system libraries which makes this test very complex.
+if (NOT APPLE AND NOT WIN32)
+    ROOT_ADD_PYUNITTEST(pyroot_import_load_libs import_load_libs.py)
+endif()
+
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
