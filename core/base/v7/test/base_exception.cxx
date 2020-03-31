@@ -9,6 +9,17 @@ using RException = ROOT::Experimental::RException;
 
 namespace {
 
+/// Used to verify that wrapped return values are not unnecessarily copied
+struct ComplexReturnType {
+   static int gNCopies;
+   ComplexReturnType() { gNCopies++; }
+   ComplexReturnType(const ComplexReturnType &) { gNCopies++; }
+   ComplexReturnType(ComplexReturnType &&other) = default;
+   ComplexReturnType &operator= (const ComplexReturnType &) { return *this; }
+   ComplexReturnType &operator= (ComplexReturnType &&other) = default;
+};
+int ComplexReturnType::gNCopies = 0;
+
 static ROOT::Experimental::RResult<void> TestFailure()
 {
    R__FAIL("test failure");
@@ -30,6 +41,11 @@ static ROOT::Experimental::RResult<int> TestChain(bool succeed)
 {
    auto rv = TestSyscall(succeed);
    return R__FORWARD_RESULT(rv);
+}
+
+static ROOT::Experimental::RResult<ComplexReturnType> TestComplex()
+{
+   return ComplexReturnType();
 }
 
 class ExceptionX : public std::runtime_error {
@@ -101,4 +117,10 @@ TEST(Exception, Syscall)
    EXPECT_EQ(42, fd.Get());
 
    EXPECT_THROW(TestSyscall(false).Get(), RException);
+}
+
+TEST(Exception, ComplexReturnType)
+{
+   auto res = TestComplex();
+   EXPECT_EQ(1, ComplexReturnType::gNCopies);
 }
