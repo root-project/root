@@ -99,7 +99,7 @@ public:
    /// Used by R__FORWARD_RESULT
    void AddFrame(RLocation &&sourceLocation);
    /// Add more information to the diagnostics
-   void AppendMessage(const std::string &info) { fMessage += info; }
+   void AppendToMessage(const std::string &info) { fMessage += info; }
    /// Format a dignostics report, e.g. for an exception message
    std::string GetReport() const;
    const std::vector<RLocation> &GetStackTrace() const { return fStackTrace; }
@@ -192,7 +192,7 @@ public:
    Get()
    {
       if (R__unlikely(fError)) {
-         fError->AppendMessage(" (invalid access)");
+         fError->AppendToMessage(" (invalid access)");
          throw RException(*fError);
       }
       return Internal::RResultType<T>::fValue;
