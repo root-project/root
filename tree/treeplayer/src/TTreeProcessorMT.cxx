@@ -158,7 +158,7 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::string &treeNa
 /// Return a vector of cluster boundaries for the given tree and files.
 // EntryClusters and number of entries per file
 using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
-static ClustersAndEntries MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNames)
+ClustersAndEntries MakeClusters(const std::string &treeName, const std::vector<std::string> &fileNames)
 {
    // Note that as a side-effect of opening all files that are going to be used in the
    // analysis once, all necessary streamers will be loaded into memory.
@@ -248,7 +248,7 @@ static ClustersAndEntries MakeClusters(const std::string &treeName, const std::v
 
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector containing the number of entries of each file of each friend TChain
-static std::vector<std::vector<Long64_t>>
+std::vector<std::vector<Long64_t>>
 GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendNames,
                  const std::vector<std::vector<std::string>> &friendFileNames)
 {
@@ -272,7 +272,7 @@ GetFriendEntries(const std::vector<std::pair<std::string, std::string>> &friendN
 
 ////////////////////////////////////////////////////////////////////////
 /// Return the full path of the tree
-static std::string GetTreeFullPath(const TTree &tree)
+std::string GetTreeFullPath(const TTree &tree)
 {
    // Case 1: this is a TChain: we get the name out of the first TChainElement
    if (0 == strcmp("TChain", tree.ClassName())) {
