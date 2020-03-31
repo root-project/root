@@ -113,11 +113,8 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
-
-
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-
   set(cling_exports
       __std_reverse_trivially_swappable_1
       __std_reverse_trivially_swappable_2

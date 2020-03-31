@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT geom/geom package
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(Geom 
+ROOT_STANDARD_LIBRARY_PACKAGE(Geom
   HEADERS
     TGDMLMatrix.h
     TGeoArb8.h

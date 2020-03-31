@@ -21,9 +21,9 @@ if(tmva-gpu)
 
   set(TMVA_GPU_HEADERS
        TMVA/DNN/Architectures/Cuda.h
-		#  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
-		#  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
-		#  TMVA/DNN/Architectures/Cuda/CudaTensor.h
+       #  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
+       #  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
+       #  TMVA/DNN/Architectures/Cuda/CudaTensor.h
   )
 
 else()
@@ -219,34 +219,34 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/TreeInference/BranchlessTree.hxx
     TMVA/TreeInference/Forest.hxx
     TMVA/TreeInference/Objectives.hxx
-	#  TMVA/DNN/Adadelta.h
-	#  TMVA/DNN/Adagrad.h
-	#  TMVA/DNN/Adam.h
-	#  TMVA/DNN/BatchNormLayer.h
-	#  TMVA/DNN/DataLoader.h
-	#  TMVA/DNN/DeepNet.h
-	#  TMVA/DNN/DenseLayer.h
-	#  TMVA/DNN/DLMinimizers.h
-	#  TMVA/DNN/Functions.h
-	#  TMVA/DNN/GeneralLayer.h
-	#  TMVA/DNN/ReshapeLayer.h
-	#  TMVA/DNN/RMSProp.h
-	#  TMVA/DNN/SGD.h
-	#  TMVA/DNN/TensorDataLoader.h
-	#  TMVA/DNN/CNN/ContextHandles.h
-	#  TMVA/DNN/CNN/ConvLayer.h
-	#  TMVA/DNN/CNN/MaxPoolLayer.h
-	#  TMVA/DNN/RNN/RNNLayer.h
-	#   TMVA/DNN/Architectures/Reference.h
-	#  TMVA/DNN/Architectures/Reference/DataLoader.h
-	#  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
-	#   TMVA/DNN/Architectures/Cpu.h
-	#  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
-	#  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
-	#  TMVA/DNN/Architectures/Cpu/CpuTensor.h
-	#  ${TMVA_CPU_HEADERS}
-	#  ${TMVA_GPU_HEADERS}
-	   ${TMVA_EXTRA_HEADERS}
+    #  TMVA/DNN/Adadelta.h
+    #  TMVA/DNN/Adagrad.h
+    #  TMVA/DNN/Adam.h
+    #  TMVA/DNN/BatchNormLayer.h
+    #  TMVA/DNN/DataLoader.h
+    #  TMVA/DNN/DeepNet.h
+    #  TMVA/DNN/DenseLayer.h
+    #  TMVA/DNN/DLMinimizers.h
+    #  TMVA/DNN/Functions.h
+    #  TMVA/DNN/GeneralLayer.h
+    #  TMVA/DNN/ReshapeLayer.h
+    #  TMVA/DNN/RMSProp.h
+    #  TMVA/DNN/SGD.h
+    #  TMVA/DNN/TensorDataLoader.h
+    #  TMVA/DNN/CNN/ContextHandles.h
+    #  TMVA/DNN/CNN/ConvLayer.h
+    #  TMVA/DNN/CNN/MaxPoolLayer.h
+    #  TMVA/DNN/RNN/RNNLayer.h
+    #   TMVA/DNN/Architectures/Reference.h
+    #  TMVA/DNN/Architectures/Reference/DataLoader.h
+    #  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
+    #   TMVA/DNN/Architectures/Cpu.h
+    #  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
+    #  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
+    #  TMVA/DNN/Architectures/Cpu/CpuTensor.h
+    #  ${TMVA_CPU_HEADERS}
+    #  ${TMVA_GPU_HEADERS}
+    ${TMVA_EXTRA_HEADERS}
   SOURCES
     src/BDTEventWrapper.cxx
     src/BinarySearchTree.cxx
@@ -464,7 +464,7 @@ if(tmva-gpu)
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/CudaTensor.cu
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
-		   src/DNN/Architectures/Cudnn.cu)
+                   src/DNN/Architectures/Cudnn.cu)
     target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS} )
     target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
   else()
@@ -473,7 +473,7 @@ if(tmva-gpu)
     target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
     target_sources(TMVA PRIVATE
                    src/DNN/Architectures/Cuda.cu
-    		   src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/CudaTensor.cu )
    endif()
