@@ -150,8 +150,8 @@ class RResult : public Internal::RResultType<T> {
 private:
    /// This is the nullptr for an RResult representing success
    std::unique_ptr<RError> fError;
-   /// This is safe because checking an RResult is not a multi-threaded operation
-   mutable bool fIsChecked{false};
+   /// Switches to true once the user of an RResult object checks the object status
+   bool fIsChecked{false};
 
 public:
    /// Constructor is _not_ explicit in order to allow for `return T();` for functions returning RResult<T>
@@ -198,7 +198,7 @@ public:
       return Internal::RResultType<T>::fValue;
    }
 
-   explicit operator bool() const
+   explicit operator bool()
    {
       fIsChecked = true;
       return !fError;
