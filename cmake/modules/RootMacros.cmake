@@ -297,7 +297,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        # we will need a module.modulemap file per `inc` directory.
        list(APPEND incdirs ${CMAKE_BINARY_DIR}/include)
     else()
-       # Comments from Sergey: because of TVirtualObject.h, appearing in each dictionary
+       # Comments from Sergey: because of TVirtualObject.h and TVirtualArray.h appearing in many dictionaries
        list(APPEND incdirs ${CMAKE_SOURCE_DIR}/io/io/inc)
     endif()
 
@@ -327,10 +327,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
     # end workaround
-
-    if(ARG_MODULE STREQUAL Core)
-       list(APPEND incdirs ${CMAKE_SOURCE_DIR}/core) # This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}/core
-    endif()
 
     if(incdirs)
        list(REMOVE_DUPLICATES incdirs)

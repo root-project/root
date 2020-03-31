@@ -210,10 +210,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
     base/inc/LinkDef.h
 )
 
-# This is needed because LinkDef.h includes other LinkDef starting from ${CMAKE_SOURCE_DIR}/core
-target_include_directories(G__Core PRIVATE ${CMAKE_SOURCE_DIR}/core)
 target_include_directories(G__Core PRIVATE ${CMAKE_SOURCE_DIR}/core/clingutils/inc)
-
 
 target_link_libraries(Core
   PRIVATE
