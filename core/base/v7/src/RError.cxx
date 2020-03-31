@@ -22,7 +22,8 @@ std::string ROOT::Experimental::RError::GetReport() const
 {
    auto report = fMessage + "\nAt:\n";
    for (const auto &loc : fStackTrace) {
-      report += "  " + loc.fFunction + " [" + loc.fSourceFile + ":" + std::to_string(loc.fSourceLine) + "]\n";
+      report += "  " + std::string(loc.fFunction) + " [" + std::string(loc.fSourceFile) + ":" +
+         std::to_string(loc.fSourceLine) + "]\n";
    }
    return report;
 }
@@ -32,6 +33,8 @@ ROOT::Experimental::RError::RError(
    : fMessage(message)
 
 {
+   // Avoid frequent reallocations as we move up the call stack
+   fStackTrace.reserve(32);
    AddFrame(std::move(sourceLocation));
 }
 
