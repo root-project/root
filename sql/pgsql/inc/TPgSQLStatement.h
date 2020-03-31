@@ -17,19 +17,16 @@
 #include <libpq-fe.h>
 #include <pg_config.h> // to get PG_VERSION_NUM
 
-#define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
-                        || ((x) == PGRES_COMMAND_OK) \
-                        || ((x) == PGRES_TUPLES_OK))
-
 struct PgSQL_Stmt_t {
    PGconn   *fConn;
    PGresult *fRes;
 };
 
-
 class TPgSQLStatement : public TSQLStatement {
 
 private:
+
+
    PgSQL_Stmt_t         *fStmt{nullptr};          //! executed statement
    Int_t                 fNumBuffers{0};          //! number of statement parameters
    char                **fBind{nullptr};          //! array of data for input

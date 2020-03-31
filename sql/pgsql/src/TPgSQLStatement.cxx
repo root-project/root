@@ -25,6 +25,11 @@
 
 #include <stdlib.h>
 
+#define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
+                        || ((x) == PGRES_COMMAND_OK) \
+                        || ((x) == PGRES_TUPLES_OK))
+
+
 ClassImp(TPgSQLStatement);
 
 #ifdef PG_VERSION_NUM
