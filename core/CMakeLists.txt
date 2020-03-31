@@ -99,7 +99,7 @@ endif()
 
 #---G__Core--------------------------------------------------------------------
 
-# Now includes path used from Core module, which configured before
+# Uses includes path as defined by Core module.
 
 set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Clib>
