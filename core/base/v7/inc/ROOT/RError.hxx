@@ -140,9 +140,9 @@ struct RResultType<void> {};
 \ingroup Base
 \brief The class is used as a return type for operations that can fail; wraps a value of type T or an RError
 
-The RResult enforces checking whether it contains a valid value or an error state. If the RResult leaves the scope
+RResult enforces checking whether it contains a valid value or an error state. If the RResult leaves the scope
 unchecked, it will throw an exception.  RResult should only be allocated on the stack, which is helped by deleting the
-new operator.  RResult is movable but not copyable to avoid throwing exceptions multiple times.
+new operator.  RResult is movable but not copyable to avoid throwing multiple exceptions about the same failure.
 */
 // clang-format on
 template <typename T>
