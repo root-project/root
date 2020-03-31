@@ -48,6 +48,8 @@ set(Meta_dict_headers
   TVirtualIsAProxy.h
   TVirtualRefProxy.h
   TVirtualStreamerInfo.h
+  TVirtualArray.h
+  TVirtualObject.h
   PARENT_SCOPE
 )
 
