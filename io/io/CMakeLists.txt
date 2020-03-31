@@ -99,8 +99,6 @@ ROOT_GENERATE_DICTIONARY(G__RIO
   TStreamerInfoActions.h
   TVirtualCollectionIterators.h
   TStreamerInfo.h
-  TVirtualObject.h
-  TVirtualArray.h
   TZIPFile.h
   ${RIO_EXTRA_HEADERS}
   STAGE1
