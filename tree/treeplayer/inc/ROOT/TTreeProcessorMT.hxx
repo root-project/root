@@ -24,7 +24,6 @@
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
 
-#include <string.h>
 #include <functional>
 #include <vector>
 
