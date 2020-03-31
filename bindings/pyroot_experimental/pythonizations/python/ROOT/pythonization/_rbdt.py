@@ -11,13 +11,6 @@
 from ROOT import pythonization
 
 
-try:
-    from libROOTPythonizations import AsRTensor
-    has_rtensor = True
-except:
-    has_rtensor = False
-
-
 def Compute(self, x):
     # Import numpy lazily
     try:
@@ -33,6 +26,7 @@ def Compute(self, x):
             y = self._OriginalCompute(x_)
             return np.asarray(y)
         elif len(x.shape) == 2:
+            from libROOTPythonizations import AsRTensor
             x_ = AsRTensor(x)
             y = self._OriginalCompute(x_)
             return np.asarray(y)
@@ -49,7 +43,7 @@ def pythonize_rbdt(klass, name):
     # klass: class to be pythonized
     # name: name of the class
 
-    if name.startswith("TMVA::Experimental::RBDT") and has_rtensor:
+    if name.startswith("TMVA::Experimental::RBDT"):
         klass._OriginalCompute = klass.Compute
         klass.Compute = Compute
 

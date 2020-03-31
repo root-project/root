@@ -27,7 +27,7 @@ class AsRTensor(unittest.TestCase):
         """
         for dtype in self.dtypes:
             np_obj = np.array([[1, 2], [3, 4], [5, 6]], dtype=dtype)
-            root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
+            root_obj = ROOT.Numpy.Experimental.AsRTensor(np_obj)
             self.assertTrue(check_shape(root_obj, np_obj))
             np_obj[0,0] = 42
             self.assertTrue(root_obj[0,0] == 42)
@@ -37,12 +37,12 @@ class AsRTensor(unittest.TestCase):
         Test adoption of the memory layout
         """
         np_obj = np.array([[1, 2], [3, 4], [5, 6]])
-        root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
+        root_obj = ROOT.Numpy.Experimental.AsRTensor(np_obj)
         self.assertTrue(np_obj.flags.c_contiguous)
         self.assertEqual(root_obj.GetMemoryLayout(), 1)
 
         np_obj2 = np_obj.T
-        root_obj2 = ROOT.TMVA.Experimental.AsRTensor(np_obj2)
+        root_obj2 = ROOT.Numpy.Experimental.AsRTensor(np_obj2)
         self.assertTrue(np_obj2.flags.f_contiguous)
         self.assertEqual(root_obj2.GetMemoryLayout(), 2)
 
@@ -54,7 +54,7 @@ class AsRTensor(unittest.TestCase):
         in bytes.
         """
         np_obj = np.array([[1, 2], [3, 4], [5, 6]], dtype="float32")
-        root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
+        root_obj = ROOT.Numpy.Experimental.AsRTensor(np_obj)
 
         np_strides = np_obj.strides
         root_strides = root_obj.GetStrides()
@@ -63,7 +63,7 @@ class AsRTensor(unittest.TestCase):
             self.assertEqual(x, y * 4)
 
         np_obj = np_obj.T
-        root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
+        root_obj = ROOT.Numpy.Experimental.AsRTensor(np_obj)
         np_strides = np_obj.strides
         root_strides = root_obj.GetStrides()
         self.assertEqual(len(np_strides), len(root_strides))

@@ -183,11 +183,16 @@ class ROOTFacade(types.ModuleType):
     # Inject numpy pythonizations in the Numpy "namespace"
     @property
     def Numpy(self):
-        # Dummy object to inject the pythonizations
+        # Dummy objects to inject the pythonizations
         class Numpy: pass
-        from libROOTPythonizations import AsRVec
+        class Experimental: pass
+        Numpy.Experimental = Experimental
+
         # Add pythonizations
+        from libROOTPythonizations import AsRVec, AsRTensor
         Numpy.AsRVec = AsRVec
+        Numpy.Experimental.AsRTensor = AsRTensor
+
         # Add the pythonized dummy object to the ROOT facade and override this property
         # so that we run the setup only once
         self.__dict__['Numpy'] = Numpy
