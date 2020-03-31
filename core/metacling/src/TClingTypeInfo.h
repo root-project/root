@@ -64,7 +64,6 @@ public:
    long                 Property() const; // Get properties of type.
    int                  RefType() const; // Get CINT reftype of type.
    int                  Size() const; // Get size in bytes of type.
-   const char          *StemName() const; // Get name of type chain leaf node.
    const char          *TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const; // Get name of type with no typedefs.
    std::string          NormalizedName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const; // Get name of type with no typedefs.
 
