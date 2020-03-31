@@ -582,7 +582,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     unset(cpp_module_file)
   endif()
 
-  if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file OR ARG_MULTIDICT)
+  if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
     set(rootmap_name)
     set(rootmapargs)
   else()
