@@ -128,6 +128,7 @@ protected:
    T fValue;
    explicit RResultType() = default;
    explicit RResultType(const T &value) : fValue(value) {}
+   explicit RResultType(T &&value) : fValue(std::move(value)) {}
 };
 
 template <>
@@ -168,7 +169,9 @@ public:
    /// Constructor is _not_ explicit in order to allow for `return T();` for functions returning RResult<T>
    /// Only available if T is not void
    template <typename Dummy = T, typename = typename std::enable_if_t<!std::is_void<T>::value, Dummy>>
-   RResult(const Dummy &value) : Internal::RResultType<T>(value) {}
+   RResult(const Dummy &value) : Internal::RResultType<T>(value) { }
+   template <typename Dummy = T, typename = typename std::enable_if_t<!std::is_void<T>::value, Dummy>>
+   RResult(Dummy &&value) : Internal::RResultType<T>(std::move(value)) { }
    /// Constructor is _not_ explicit such that the RError returned by R__FAIL can be converted into an RResult<T>
    /// for any T
    RResult(RError &&error) : fError(std::make_unique<RError>(std::move(error))) {}
