@@ -14,12 +14,12 @@
 
 #include "TSQLRow.h"
 
-struct sqlite3_stmt;
+#include <sqlite3.h>
 
 class TSQLiteRow : public TSQLRow {
 
 private:
-   sqlite3_stmt *fResult{nullptr};       // current result set
+   sqlite3_stmt *fResult{nullptr};       ///<! current result set
    Bool_t        IsValid(Int_t field);
 
 public:

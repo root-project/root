@@ -14,11 +14,7 @@
 
 #include "TSQLServer.h"
 
-#if !defined(__CINT__)
 #include <sqlite3.h>
-#else
-struct sqlite3;
-#endif
 
 class TSQLiteServer : public TSQLServer {
 
