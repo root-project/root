@@ -29,7 +29,7 @@ static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
 static ROOT::Experimental::RResult<int> TestChain(bool succeed)
 {
    auto rv = TestSyscall(succeed);
-   R__FORWARD_RESULT(rv);
+   return R__FORWARD_RESULT(rv);
 }
 
 class ExceptionX : public std::runtime_error {
