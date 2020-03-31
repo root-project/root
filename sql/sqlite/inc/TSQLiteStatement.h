@@ -21,7 +21,6 @@ struct SQLite3_Stmt_t {
    sqlite3_stmt *fRes;
 };
 
-
 class TSQLiteStatement : public TSQLStatement {
 
 private:
