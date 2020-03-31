@@ -41,7 +41,7 @@
 //           R__FAIL("user-facing error message");
 //        if (rv == kShortcut)
 //           return 42;
-//        R__FORWARD_RESULT(FuncThatReturnsRResultOfInt());
+//        return R__FORWARD_RESULT(FuncThatReturnsRResultOfInt());
 //     }
 //
 // Code using MyIOFunc might look like this:
@@ -193,6 +193,13 @@ public:
       }
    }
 
+   /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
+   static RResult &Forward(RResult &result, RError::RLocation &&sourceLocation) {
+      if (result.fError)
+         result.fError->AddFrame(std::move(sourceLocation));
+      return result;
+   }
+
    /// Only available if T is not void
    template <typename Dummy = T>
    typename std::enable_if_t<!std::is_void<T>::value, const Dummy &>
@@ -228,10 +235,7 @@ public:
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
 #define R__FAIL(msg) return ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
-#define R__FORWARD_RESULT(res) if (res.GetError()) \
-      { res.GetError()->AddFrame({R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}); } \
-   return res
-
+#define R__FORWARD_RESULT(res) std::move(res.Forward(res, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}))
 } // namespace Experimental
 } // namespace ROOT
 
