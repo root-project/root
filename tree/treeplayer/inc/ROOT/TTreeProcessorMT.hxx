@@ -23,7 +23,6 @@
 #include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 
-#include <string.h>
 #include <functional>
 #include <vector>
 
