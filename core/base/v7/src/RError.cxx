@@ -13,10 +13,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RError.hxx"
+#include <ROOT/RConfig.hxx> // for R__[un]likely
+#include <ROOT/RError.hxx>
+#include <ROOT/RLogger.hxx> // for R__WARNING_HERE
 
+#include <exception>
 #include <string>
 #include <utility>
+
 
 std::string ROOT::Experimental::RError::GetReport() const
 {
@@ -41,4 +45,22 @@ ROOT::Experimental::RError::RError(
 void ROOT::Experimental::RError::AddFrame(RLocation &&sourceLocation)
 {
    fStackTrace.emplace_back(sourceLocation);
+}
+
+
+ROOT::Experimental::Internal::RResultBase::~RResultBase() noexcept(false)
+{
+   if (R__unlikely(fError && !fIsChecked)) {
+      // Prevent from throwing if the object is deconstructed in the course of stack unwinding for another exception
+#if __cplusplus >= 201703L
+      if (std::uncaught_exceptions() == 0)
+#else
+      if (!std::uncaught_exception())
+#endif
+      {
+         throw RException(*fError);
+      } else {
+         R__WARNING_HERE("RError") << "unhandled RResult exception during stack unwinding";
+      }
+   }
 }

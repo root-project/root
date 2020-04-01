@@ -17,14 +17,13 @@
 #define ROOT7_RError
 
 #include <ROOT/RConfig.hxx> // for R__[un]likely
-#include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION, R__WARNING_HERE
+#include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION
 
 #include <cstddef>
 #include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -120,38 +119,23 @@ public:
 };
 
 
-/// Wrapper class that generates a data member of type T in RResult<T> for all Ts except T == void
 namespace Internal {
-template <typename T>
-class RResultType {
-protected:
-   T fValue;
-   explicit RResultType() = default;
-   explicit RResultType(const T &value) : fValue(value) {}
-   explicit RResultType(T &&value) : fValue(std::move(value)) {}
-};
-
-template <>
-class RResultType<void> { };
-} // namespace Internal
-
-
 // clang-format off
 /**
-\class ROOT::Experimental::RResult
+\class ROOT::Experimental::Internal::RResultBase
 \ingroup Base
-\brief The class is used as a return type for operations that can fail; wraps a value of type T or an RError
+\brief Common handling of the error case for RResult<T> (T != void) and RResult<void>
 
-RResult enforces checking whether it contains a valid value or an error state. If the RResult leaves the scope
-unchecked, it will throw an exception.  RResult should only be allocated on the stack, which is helped by deleting the
-new operator.  RResult is movable but not copyable to avoid throwing multiple exceptions about the same failure.
+RResultBase captures a possible runtime error that might have occured.  If the RResultBase leaves the scope unchecked,
+it will throw an exception.  RResultBase should only be allocated on the stack, which is helped by deleting the
+new operator.  RResultBase is movable but not copyable to avoid throwing multiple exceptions about the same failure.
 */
 // clang-format on
-template <typename T>
-class RResult : public Internal::RResultType<T> {
-private:
+class RResultBase {
+protected:
    /// This is the nullptr for an RResult representing success
    std::unique_ptr<RError> fError;
+   /// RResult<T> has a T data member, the union ensures that T is aligned
    /// Switches to true once the user of an RResult object checks the object status
    /// Declaring it mutable is safe because checking an RResult is not a multi-threaded operation
    /// The alternative, making the bool operator non-const, has unwanted effects when using an RResult, e.g.
@@ -160,75 +144,24 @@ private:
    /// would not work anymore
    mutable bool fIsChecked{false};
 
-   RResult() = default;
+   RResultBase() = default;
+   explicit RResultBase(RError &&error) : fError(std::make_unique<RError>(std::move(error))) {}
 
-public:
-   /// Returns a RResult<void> that captures the successful execution of the function
-   template <typename Dummy = T, typename = typename std::enable_if_t<std::is_void<T>::value, Dummy>>
-   static RResult Success() { return RResult(); }
-   /// Constructor is _not_ explicit in order to allow for `return T();` for functions returning RResult<T>
-   /// Only available if T is not void
-   template <typename Dummy = T, typename = typename std::enable_if_t<!std::is_void<T>::value, Dummy>>
-   RResult(const Dummy &value) : Internal::RResultType<T>(value) { }
-   template <typename Dummy = T, typename = typename std::enable_if_t<!std::is_void<T>::value, Dummy>>
-   RResult(Dummy &&value) : Internal::RResultType<T>(std::move(value)) { }
-   /// Constructor is _not_ explicit such that the RError returned by R__FAIL can be converted into an RResult<T>
-   /// for any T
-   RResult(RError &&error) : fError(std::make_unique<RError>(std::move(error))) {}
-
-   RResult(const RResult &other) = delete;
-   RResult(RResult &&other) = default;
-   RResult &operator =(const RResult &other) = delete;
-   RResult &operator =(RResult &&other) = default;
-
-   ~RResult() noexcept(false)
-   {
-      if (R__unlikely(fError && !fIsChecked)) {
-         // Prevent from throwing if the object is deconstructed in the course of stack unwinding for another exception
-#if __cplusplus >= 201703L
-         if (std::uncaught_exceptions() == 0)
-#else
-         if (!std::uncaught_exception())
-#endif
-         {
-            throw RException(*fError);
-         } else {
-            R__WARNING_HERE("RError") << "unhandled RResult exception during stack unwinding";
-         }
-      }
-   }
-
-   /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
-   static RResult &Forward(RResult &result, RError::RLocation &&sourceLocation) {
-      if (result.fError)
-         result.fError->AddFrame(std::move(sourceLocation));
-      return result;
-   }
-
-   /// Only available if T is not void
-   template <typename Dummy = T>
-   typename std::enable_if_t<!std::is_void<T>::value, const Dummy &>
-   Get()
-   {
-      if (R__unlikely(fError)) {
-         // Get() can be wrapped in a try-catch block, so throwing the exception here is akin to checking the error.
-         // Setting fIsChecked to true also avoids a spurious warning in the RResult destructor
-         fIsChecked = true;
-
-         fError->AppendToMessage(" (unchecked RResult access!)");
-         throw RException(*fError);
-      }
-      return Internal::RResultType<T>::fValue;
-   }
-
-   explicit operator bool() const
-   {
+   /// Used by the RResult<T> bool operator
+   bool Check() const {
       fIsChecked = true;
       return !fError;
    }
 
-   RError *GetError() { return fError.get(); }
+public:
+   RResultBase(const RResultBase &other) = delete;
+   RResultBase(RResultBase &&other) = default;
+   RResultBase &operator =(const RResultBase &other) = delete;
+   RResultBase &operator =(RResultBase &&other) = default;
 
+   ~RResultBase() noexcept(false);
+
+   RError *GetError() { return fError.get(); }
    void Throw() { throw RException(*fError); }
 
    // Help to prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
@@ -239,6 +172,88 @@ public:
    void *operator new(std::size_t, void *) = delete;
    void *operator new[](std::size_t) = delete;
    void *operator new[](std::size_t, void *) = delete;
+};
+
+} // namespace Internal
+
+
+
+// clang-format off
+/**
+\class ROOT::Experimental::RResult
+\ingroup Base
+\brief The class is used as a return type for operations that can fail; wraps a value of type T or an RError
+
+RResult enforces checking whether it contains a valid value or an error state. If the RResult leaves the scope
+unchecked, it will throw an exception (due to ~RResultBase).
+*/
+// clang-format on
+template <typename T>
+class RResult : public Internal::RResultBase {
+private:
+   /// The result value in case of successful execution
+   T fValue;
+
+public:
+   RResult(const T &value) : fValue(value) {}
+   RResult(T &&value) : fValue(std::move(value)) {}
+   RResult(RError &&error) : RResultBase(std::move(error)) {}
+
+   RResult(const RResult &other) = delete;
+   RResult(RResult &&other) = default;
+   RResult &operator =(const RResult &other) = delete;
+   RResult &operator =(RResult &&other) = default;
+
+   ~RResult() = default;
+
+   /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
+   static RResult &Forward(RResult &result, RError::RLocation &&sourceLocation) {
+      if (result.fError)
+         result.fError->AddFrame(std::move(sourceLocation));
+      return result;
+   }
+
+   const T &Get() {
+      if (R__unlikely(fError)) {
+         // Get() can be wrapped in a try-catch block, so throwing the exception here is akin to checking the error.
+         // Setting fIsChecked to true also avoids a spurious warning in the RResult destructor
+         fIsChecked = true;
+
+         fError->AppendToMessage(" (unchecked RResult access!)");
+         throw RException(*fError);
+      }
+      return fValue;
+   }
+
+   explicit operator bool() const { return Check(); }
+};
+
+/// RResult<void> has no data member and no Get() method but instead a Success() factory method
+template<>
+class RResult<void> : public Internal::RResultBase {
+private:
+   RResult() = default;
+
+public:
+   /// Returns a RResult<void> that captures the successful execution of the function
+   static RResult Success() { return RResult(); }
+   RResult(RError &&error) : RResultBase(std::move(error)) {}
+
+   RResult(const RResult &other) = delete;
+   RResult(RResult &&other) = default;
+   RResult &operator =(const RResult &other) = delete;
+   RResult &operator =(RResult &&other) = default;
+
+   ~RResult() = default;
+
+   /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
+   static RResult &Forward(RResult &result, RError::RLocation &&sourceLocation) {
+      if (result.fError)
+         result.fError->AddFrame(std::move(sourceLocation));
+      return result;
+   }
+
+   explicit operator bool() const { return Check(); }
 };
 
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
