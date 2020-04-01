@@ -613,21 +613,6 @@ AutoDict_*.cxx
 
 # /root/math/mathcore/
 
-# /root/math/smatrix/
-/root/math/smatrix/TestTimer.h
-/root/math/smatrix/matrix_util.h
-/root/math/smatrix/matrix_op.h
-/root/math/smatrix/testSMatrix.cxx
-/root/math/smatrix/testKalman.cxx
-/root/math/smatrix/testInversion.cxx
-
-# /root/math/unuran/
-/root/math/unuran/unuranDiscrete.cxx
-/root/math/unuran/unuranDistr.cxx
-/root/math/unuran/unuranMulti2D.cxx
-/root/math/unuran/unuranMultiDim.cxx
-/root/math/unuran/unuranSimple.cxx
-
 # /root/meta/
 /root/meta/loadernotapp
 /root/meta/loadernotapp.*
@@ -1008,10 +993,10 @@ root/tree/stl/vecptr.root
 /root/treeproxy/stlvec/tlorentzvecProxy.h
 
 # /root/tutorials/
-/root/tutorials/*.rs 
-/root/tutorials/Roo*.h 
-/root/tutorials/roostats 
-/root/tutorials/Roo*.cxx 
+/root/tutorials/*.rs
+/root/tutorials/Roo*.h
+/root/tutorials/roostats
+/root/tutorials/Roo*.cxx
 /root/tutorials/mc
 /root/tutorials/*.C
 /root/tutorials/*.gif
