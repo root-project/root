@@ -189,10 +189,21 @@ class ROOTFacade(types.ModuleType):
         Numpy.Experimental = Experimental
 
         # Add pythonizations
-        from libROOTPythonizations import AsRVec, AsRTensor, MakeNumpyDataFrame
-        Numpy.AsRVec = AsRVec
-        Numpy.Experimental.AsRTensor = AsRTensor
-        Numpy.MakeDataFrame = MakeNumpyDataFrame
+        try:
+            from libROOTPythonizations import AsRVec
+            Numpy.AsRVec = AsRVec
+        except:
+            pass
+        try:
+            from libROOTPythonizations import AsRTensor
+            Numpy.Experimental.AsRTensor = AsRTensor
+        except:
+            pass
+        try:
+            from libROOTPythonizations import MakeNumpyDataFrame
+            Numpy.MakeDataFrame = MakeNumpyDataFrame
+        except:
+            pass
 
         # Add the pythonized dummy object to the ROOT facade and override this property
         # so that we run the setup only once
