@@ -159,10 +159,11 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
    return std::make_pair(std::move(reader), std::move(localList));
 }
 
-////////////////////////////////////////////////////////////////////////
-/// Return a vector of cluster boundaries for the given tree and files.
 // EntryClusters and number of entries per file
 using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
+
+////////////////////////////////////////////////////////////////////////
+/// Return a vector of cluster boundaries for the given tree and files.
 static ClustersAndEntries
 MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames)
 {
