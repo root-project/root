@@ -80,6 +80,8 @@ TEST(RNTuple, Descriptor)
 
    EXPECT_EQ(1U, reference.FindNextClusterId(0));
    EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindNextClusterId(1));
+   EXPECT_EQ(0U, reference.FindPrevClusterId(1));
+   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, reference.FindPrevClusterId(0));
 
    auto szHeader = reference.SerializeHeader(nullptr);
    auto headerBuffer = new unsigned char[szHeader];
