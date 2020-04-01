@@ -2,6 +2,8 @@ if (ROOT_pyroot_FOUND AND NOT ROOT_CLASSIC_BUILD) # Do not run with classic buil
 
 configure_file(test.root . COPYONLY)
 configure_file(simpleTree.root . COPYONLY)
+configure_file(multipleNameCycles.root . COPYONLY)
+configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
 
 ############################## PATTERN TESTS ############################
 set (TESTPATTERN_EXE ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
@@ -64,6 +66,10 @@ ROOTTEST_ADD_TEST(WebRootls2
 ROOTTEST_ADD_TEST(TreeRootls1
                   COMMAND ${TOOLS_PREFIX}/rootls -t simpleTree.root
                   OUTREF TreeRootls.ref)
+
+ROOTTEST_ADD_TEST(NameCyclesRootls
+                  COMMAND ${TOOLS_PREFIX}/rootls -t multipleNameCycles.root:tree
+                  OUTREF MultipleNameCyclesRootls.ref)
 
 #########################################################################
 
@@ -348,6 +354,19 @@ ROOTTEST_ADD_TEST(SimpleRootmv5CheckOutput
 ROOTTEST_ADD_TEST(SimpleRootmv5Clean
                   COMMAND ${TOOLS_PREFIX}/rootrm -r move5.root
                   DEPENDS SimpleRootmv5CheckOutput)
+
+
+ROOTTEST_ADD_TEST(NameCyclesRootmvPrepareInput
+                  COMMAND root.exe -b -q -l MakeNameCyclesRootmvInput.C)
+
+ROOTTEST_ADD_TEST(NameCyclesRootmv
+                  COMMAND ${TOOLS_PREFIX}/rootmv nameCyclesRootmvInput.root:tree nameCyclesRootmvOutput.root
+                  DEPENDS NameCyclesRootmvPrepareInput)
+
+ROOTTEST_ADD_TEST(NameCyclesRootmvCheckOutput
+                  COMMAND ${TOOLS_PREFIX}/rootls -1 nameCyclesRootmvOutput.root
+                  OUTREF NameCyclesRootmvCheckOutput.ref
+                  DEPENDS NameCyclesRootmv)
 #########################################################################
 
 ROOTTEST_ADD_TEST(ROOT_8197
