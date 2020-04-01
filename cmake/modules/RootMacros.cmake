@@ -287,26 +287,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
     set(incdirs)
-
-    if (cxxmodules OR runtime_cxxmodules)
-       # Comments from Vassil:
-       # FIXME: We prepend ROOTSYS/include because if we have built a module
-       # and try to resolve the 'same' header from a different location we will
-       # get a redefinition error.
-       # We should remove these lines when the fallback include is removed. Then
-       # we will need a module.modulemap file per `inc` directory.
-       list(APPEND incdirs ${CMAKE_BINARY_DIR}/include)
-    else()
-       # Comments from Sergey: because of TVirtualObject.h and TVirtualArray.h appearing in many dictionaries
-       list(APPEND incdirs ${CMAKE_SOURCE_DIR}/io/io/inc)
-    endif()
-
     set(headerdirs)
 
     get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
     if(target_incdirs)
        foreach(dir ${target_incdirs})
           string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+          # check that dir not a empty dir like $<BUILD_INTERFACE:>
           if(NOT ${dir} MATCHES "^[$]")
              list(APPEND incdirs ${dir})
           endif()
@@ -317,16 +304,22 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
 
 
-    # Comments from Sergey
-    # FIXME: we have to exclude all source directories from includes while they duplicated in ${CMAKE_BINARY_DIR}/include
-    # rootcling is not able to handle such situation, therefore ${CMAKE_BINARY_DIR}/include is used as source for ROOT headers
-    # Also ${CMAKE_BINARY_DIR}/ginclude is removed
-    # add slash at the end to prevent filtering include paths from roottest which may have same location as root
+    # if (cxxmodules OR runtime_cxxmodules)
+    # Comments from Vassil:
+    # FIXME: We prepend ROOTSYS/include because if we have built a module
+    # and try to resolve the 'same' header from a different location we will
+    # get a redefinition error.
+    # We should remove these lines when the fallback include is removed. Then
+    # we will need a module.modulemap file per `inc` directory.
+    # Comments from Sergey:
+    # Remove all source dirs also while they preserved in root dictionaries and
+    # ends in the gInterpreter->GetIncludePath()
+
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}\/")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
-    # end workaround
+    # endif()
 
     if(incdirs)
        list(REMOVE_DUPLICATES incdirs)
