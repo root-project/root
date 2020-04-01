@@ -311,7 +311,7 @@ def manyOccurenceRemove(pathSplitList,fileName):
         for n in pathSplitList:
             if pathSplitList.count(n) != 1:
                 logging.warning(MANY_OCCURENCE_WARNING.format(joinPathSplit(n),fileName))
-                while n in pathSplitList: pathSplitList.remove(n)
+                while n in pathSplitList and pathSplitList.count(n) != 1 : pathSplitList.remove(n)
 
 def patternToPathSplitList(fileName,pattern):
     """
