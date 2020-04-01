@@ -9,6 +9,8 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+include_directories(${ALIEN_INCLUDE_DIR})
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RAliEn
   HEADERS
     TAlien.h
@@ -46,5 +48,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RAliEn
     Tree
     Proof
 )
-
-target_include_directories(RAliEn PRIVATE ${ALIEN_INCLUDE_DIR})

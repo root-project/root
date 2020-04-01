@@ -9,6 +9,8 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+include_directories(${MONALISA_INCLUDE_DIR})
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Monalisa
   HEADERS
     TMonaLisaWriter.h
@@ -20,5 +22,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Monalisa
     Net
     RIO
 )
-
-target_include_directories(Monalisa PRIVATE ${MONALISA_INCLUDE_DIR})
