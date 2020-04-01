@@ -43,6 +43,11 @@ struct EntryCluster {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct fChain, also adding friends if needed and injecting knowledge of offsets if available.
+/// \param[in] treeNames Name of the tree for each file in `fileNames`.
+/// \param[in] fileNames Files to be opened.
+/// \param[in] friendInfo Information about TTree friends, if any.
+/// \param[in] nEntries Number of entries to be processed.
+/// \param[in] friendEntries Number of entries in each friend. Expected to have same ordering as friendInfo.
 void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
                           const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
                           const std::vector<std::vector<Long64_t>> &friendEntries)
