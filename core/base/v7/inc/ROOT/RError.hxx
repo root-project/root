@@ -172,10 +172,8 @@ public:
    void *operator new(std::size_t, void *) = delete;
    void *operator new[](std::size_t) = delete;
    void *operator new[](std::size_t, void *) = delete;
-};
-
+}; // class RResultBase
 } // namespace Internal
-
 
 
 // clang-format off
