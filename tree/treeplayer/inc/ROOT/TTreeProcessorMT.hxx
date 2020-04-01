@@ -99,10 +99,11 @@ private:
    static unsigned int fgMaxTasksPerFilePerWorker;
 
 public:
-   TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
-   TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "");
-   TTreeProcessorMT(TTree &tree, const TEntryList &entries);
-   TTreeProcessorMT(TTree &tree);
+   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u);
+   TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "",
+                    UInt_t nThreads = 0u);
+   TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads = 0u);
+   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u);
 
    void Process(std::function<void(TTreeReader &)> func);
    static void SetMaxTasksPerFilePerWorker(unsigned int m);
