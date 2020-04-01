@@ -15,14 +15,19 @@
 
 #include "gtest/gtest.h"
 
-void WriteFiles(const std::string &treename, const std::vector<std::string> &filenames)
+void WriteFiles(const std::vector<std::string> &treenames, const std::vector<std::string> &filenames)
 {
    int v = 0;
-   for (const auto &f : filenames) {
-      TFile file(f.c_str(), "recreate");
+   const auto nFiles = filenames.size();
+   EXPECT_EQ(nFiles, treenames.size()) << "this should never happen, fix test logic";
+   for (auto i = 0u; i < nFiles; ++i) {
+      const auto &fname = filenames[i];
+      const auto &treename = treenames[i];
+
+      TFile file(fname.c_str(), "recreate");
       TTree t(treename.c_str(), treename.c_str());
       t.Branch("v", &v);
-      for (auto i = 0; i < 10; ++i) {
+      for (auto e = 0; e < 10; ++e) {
          ++v;
          t.Fill();
       }
@@ -69,9 +74,9 @@ TEST(TreeProcessorMT, ManyFiles)
    const std::string treename = "t";
    std::vector<std::string> filenames;
    for (auto i = 0u; i < nFiles; ++i)
-      filenames.emplace_back("treeprocmt_" + std::to_string(i) + ".root");
+      filenames.emplace_back("treeprocmt_manyfiles" + std::to_string(i) + ".root");
 
-   WriteFiles(treename, filenames);
+   WriteFiles(std::vector<std::string>(nFiles, treename), filenames);
 
    std::atomic_int sum(0);
    std::atomic_int count(0);
@@ -96,7 +101,76 @@ TEST(TreeProcessorMT, ManyFiles)
    proc.Process(sumValues);
 
    EXPECT_EQ(count.load(), int(nFiles * 10)); // 10 entries per file
-   EXPECT_EQ(sum.load(), 500500);             // sum 1..nFiles*10
+   EXPECT_EQ(sum.load(), 500500);             // sum of [1..nFiles*nEntriesPerFile] inclusive
+
+   DeleteFiles(filenames);
+}
+
+TEST(TreeProcessorMT, TreesWithDifferentNamesChainCtor)
+{
+   const std::vector<std::string> treenames{"t0","t1","t2"};
+   const std::vector<std::string> filenames{"treeprocmt_chainctor0.root", "treeprocmt_chainctor1.root",
+                                            "treeprocmt_chainctor2.root"};
+
+   WriteFiles(treenames, filenames);
+
+   std::atomic_int sum(0);
+   std::atomic_int count(0);
+   auto sumValues = [&sum, &count](TTreeReader &r) {
+      TTreeReaderValue<int> v(r, "v");
+      while (r.Next()) {
+         sum += *v;
+         ++count;
+      }
+   };
+
+   // TTreeProcMT requires a vector<string_view>
+   TChain chain;
+   const auto nFiles = filenames.size();
+   for (auto i = 0u; i < nFiles; ++i) {
+      const auto n = std::to_string(i);
+      const auto full_fname = "treeprocmt_chainctor" + n + ".root/t" + n;
+      chain.Add(full_fname.c_str());
+   }
+
+   // tree names are inferred from the files
+   ROOT::TTreeProcessorMT proc(chain);
+   proc.Process(sumValues);
+
+   EXPECT_EQ(count.load(), int(nFiles * 10)); // 10 entries per file
+   EXPECT_EQ(sum.load(), 465);                // sum of [1..nFiles*nEntriesPerFile] inclusive
+
+   DeleteFiles(filenames);
+}
+
+TEST(TreeProcessorMT, TreesWithDifferentNamesVecCtor)
+{
+   const std::vector<std::string> treenames{"t0","t1","t2"};
+   const std::vector<std::string> filenames{"treeprocmt_vecctor0.root", "treeprocmt_vecctor1.root",
+                                            "treeprocmt_vecctor2.root"};
+
+   WriteFiles(treenames, filenames);
+
+   std::atomic_int sum(0);
+   std::atomic_int count(0);
+   auto sumValues = [&sum, &count](TTreeReader &r) {
+      TTreeReaderValue<int> v(r, "v");
+      while (r.Next()) {
+         sum += *v;
+         ++count;
+      }
+   };
+
+   // TTreeProcMT requires a vector<string_view>
+   std::vector<std::string_view> fnames;
+   for (const auto &f : filenames)
+      fnames.emplace_back(f);
+
+   ROOT::TTreeProcessorMT proc(fnames);
+   proc.Process(sumValues);
+
+   EXPECT_EQ(count.load(), int(filenames.size() * 10)); // 10 entries per file
+   EXPECT_EQ(sum.load(), 465); // sum of [1..nFiles*nEntriesPerFile] inclusive
 
    DeleteFiles(filenames);
 }
