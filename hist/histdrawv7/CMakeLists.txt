@@ -11,8 +11,10 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHistDraw
   HEADERS
     ROOT/RHistDrawable.hxx
+    ROOT/RHistStatBox.hxx
   SOURCES
     src/RHistDrawable.cxx
+    src/RHistStatBox.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
