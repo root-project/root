@@ -1,5 +1,5 @@
 % ROOT Version 6.20 Release Notes
-% 2020-01-10
+% 2020-04-01
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -600,6 +600,19 @@ Released on March 15, 2020
 * Move RRawFile from Experimental::Detail to Detail
 * [DF] use RRawFile in SQlite data source, making Davix a plugin.
 * [CMake] Fix 'Numpy not found' bug.
+
+## Release 6.20/04
+
+Released on April 1, 2020
+
+### Bugs and Issues fixed in this release
+
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9556'>ROOT-9556</a>] -         [DF] Users might silently get wrong results when they process two trees as friends, one of which has been produced by a multi-thread Snapshot of the other
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10624'>ROOT-10624</a>] -         [Graphics][JSROOT] Broken histogram fill color with `%jsroot` on
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10630'>ROOT-10630</a>] -         Failed to run python code: `copy_string=history.history.keys()[0]`
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10631'>ROOT-10631</a>] -         Glew includes are not properly found on Mac OS X Catalina
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10647'>ROOT-10647</a>] -         Missing implementation of "section" in `RooArgSet::writeToStream`
+* Fix build configuration for CUDA in non-standard directory.
 
 ## HEAD of the v6-20-00-patches branch
 
