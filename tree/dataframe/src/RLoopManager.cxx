@@ -296,7 +296,7 @@ void RLoopManager::RunTreeProcessorMT()
    CheckIndexedFriends();
    RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList);
+   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
    std::atomic<ULong64_t> entryCount(0ull);
 
