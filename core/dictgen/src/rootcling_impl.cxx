@@ -3680,10 +3680,11 @@ gOptGeneratePCH("generate-pch",
                llvm::cl::desc("Generates a pch file from a predefined set of headers. See makepch.py."),
                llvm::cl::Hidden,
                llvm::cl::cat(gRootclingOptions));
- // FIXME: We should remove the IgnoreExistingDict option as it is not used.
+ // FIXME: We should remove after removal of r flag.
 static llvm::cl::opt<bool>
 gOptIgnoreExistingDict("r",
-               llvm::cl::desc("Deprecated, legacy flag which is ignored."),
+               llvm::cl::desc("Deprecated. Similar to -f but it ignores the dictionary generation. \
+When -r is present rootcling becomes a tool to generate rootmaps (and capability files)."),
                llvm::cl::Hidden,
                llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<std::string>
