@@ -4,6 +4,6 @@
 # define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
 #
 #-------------------------------------------------------------------------------
-if(NOT ROOT_runtime_cxxmodules_FOUND)
-  ROOTTEST_ADD_OLDTEST()
-endif()
+
+ROOTTEST_ADD_OLDTEST()
+
