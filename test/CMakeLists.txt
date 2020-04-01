@@ -285,8 +285,6 @@ ROOT_ADD_TEST(test-stressiterators-interpreted COMMAND ${ROOT_root_CMD} -b -q -l
               FAILREGEX "FAILED|Error in" DEPENDS test-stressiterators)
 
 #--stressInterpreter-------------------------------------------------------------------------
-# FIXME: Temporary workaround for runtime_cxxmodule
-if(NOT FIXME_TEMPORARILY_EXCLUDED_FOR_RUNTIME_CXXMODULES)
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
 if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
@@ -296,7 +294,6 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
               FAILREGEX Error|FAILED)
-endif()
 
 #--stressHepix-------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
