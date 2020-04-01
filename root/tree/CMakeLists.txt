@@ -1,7 +1,3 @@
-if(ROOT_runtime_cxxmodules_FOUND)
-  set(excluded_rtcxxmod_tests friend fastcloningeventtree)
-  ROOTTEST_ADD_TESTDIRS(EXCLUDED_DIRS ${excluded_rtcxxmod_tests})
-else()
-  set(excluded_tests fastcloningeventtree)
-  ROOTTEST_ADD_TESTDIRS(EXCLUDED_DIRS ${excluded_tests})
-endif()
+
+set(excluded_tests fastcloningeventtree)
+ROOTTEST_ADD_TESTDIRS(EXCLUDED_DIRS ${excluded_tests})
