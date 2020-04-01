@@ -716,6 +716,19 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
 }
 
 
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
+{
+   const auto &clusterDesc = GetClusterDescriptor(clusterId);
+   // TODO(jblomer): binary search?
+   for (const auto &cd : fClusterDescriptors) {
+      if (cd.second.GetFirstEntryIndex() + cd.second.GetNEntries() == clusterDesc.GetFirstEntryIndex())
+         return cd.second.GetId();
+   }
+   return kInvalidDescriptorId;
+}
+
+
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
