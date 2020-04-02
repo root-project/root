@@ -135,7 +135,6 @@ class RResultBase {
 protected:
    /// This is the nullptr for an RResult representing success
    std::unique_ptr<RError> fError;
-   /// RResult<T> has a T data member, the union ensures that T is aligned
    /// Switches to true once the user of an RResult object checks the object status
    /// Declaring it mutable is safe because checking an RResult is not a multi-threaded operation
    /// The alternative, making the bool operator non-const, has unwanted effects when using an RResult, e.g.
