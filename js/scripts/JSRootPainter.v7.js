@@ -1117,14 +1117,16 @@
 
       var h = this.frame_height(),
           w = this.frame_width(),
-          grid, grid_style = JSROOT.gStyle.fGridStyle,
+          gridx = this.v7EvalAttr("gridx", false),
+          gridy = this.v7EvalAttr("gridy", false),
+          grid_style = JSROOT.gStyle.fGridStyle,
           grid_color = (JSROOT.gStyle.fGridColor > 0) ? this.get_color(JSROOT.gStyle.fGridColor) : "black";
 
       if ((grid_style < 0) || (grid_style >= JSROOT.Painter.root_line_styles.length)) grid_style = 11;
 
       // add a grid on x axis, if the option is set
-      if (this.x_handle) {
-         grid = "";
+      if (this.x_handle && gridx) {
+         var grid = "";
          for (var n=0;n<this.x_handle.ticks.length;++n)
             if (this.swap_xy)
                grid += "M0,"+this.x_handle.ticks[n]+"h"+w;
@@ -1140,8 +1142,8 @@
       }
 
       // add a grid on y axis, if the option is set
-      if (this.y_handle) {
-         grid = "";
+      if (this.y_handle && gridy) {
+         var grid = "";
          for (var n=0;n<this.y_handle.ticks.length;++n)
             if (this.swap_xy)
                grid += "M"+this.y_handle.ticks[n]+",0v"+h;
@@ -3376,7 +3378,7 @@
             if (snap._typename == "ROOT::Experimental::RPadDisplayItem")  // subpad
                return objpainter.RedrawPadSnap(snap, draw_callback);
 
-            if (objpainter.UpdateObject(snap.fDrawable || snap.fObject, snap.fOption || ""))
+            if (objpainter.UpdateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || ""))
                objpainter.Redraw();
 
             continue; // call next
@@ -3425,7 +3427,7 @@
 
 
          // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
-         objpainter = JSROOT.draw(this.divid, snap.fDrawable || snap.fObject, snap.fOption || "", handle);
+         objpainter = JSROOT.draw(this.divid, snap.fDrawable || snap.fObject || snap, snap.fOption || "", handle);
 
          if (!handle.completed) return; // if callback will be invoked, break while loop
       }
@@ -4633,6 +4635,7 @@
 
    });
 
+   // =============================================================
 
    function RPalettePainter(palette) {
       JSROOT.TObjectPainter.call(this, palette);
@@ -4669,8 +4672,6 @@
 
       // zmin = Math.min(contour[0], framep.zmin);
       // zmax = Math.max(contour[contour.length-1], framep.zmax);
-
-
 
       var fx = this.frame_x(),
           fy = this.frame_y(),
@@ -4837,6 +4838,7 @@
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RText", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true, csstype: "text" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RFrameTitle", icon: "img_text", func: drawFrameTitle, opt: "", direct: true, csstype: "title" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RPaletteDrawable", icon: "img_text", func: drawPalette, opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::RDisplayHistStat", icon: "img_pavetext", prereq: "v7hist", func: "JSROOT.v7.drawHistStats", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RLine", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawLine", opt: "", direct: true, csstype: "line" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RBox", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawBox", opt: "", direct: true, csstype: "box" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::RMarker", icon: "img_graph", prereq: "v7more", func: "JSROOT.v7.drawMarker", opt: "", direct: true, csstype: "marker" });

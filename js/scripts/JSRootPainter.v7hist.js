@@ -832,7 +832,7 @@
           print_kurt = Math.floor(dostat / 100000000) % 10;
 
       // make empty at the beginning
-      stat.ClearPave();
+      stat.ClearStat();
 
       if (print_name > 0)
          stat.AddText(data.name);
@@ -1914,48 +1914,28 @@
    }
 
    TH2Painter.prototype.CountStat = function(cond) {
-      var histo = this.GetObject(),
+      var histo = this.GetHisto(),
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0, stat_sumxy = 0,
           xside, yside, xx, yy, zz,
           fp = this.frame_painter(),
           res = { name: "histo", entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
 
-      if (this.IsTH2Poly()) {
+      var xleft = this.GetSelectIndex("x", "left"),
+      xright = this.GetSelectIndex("x", "right"),
+      yleft = this.GetSelectIndex("y", "left"),
+      yright = this.GetSelectIndex("y", "right"),
+      xi, yi, xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y");
 
-         var len = histo.fBins.arr.length, i, bin, n, gr, ngr, numgraphs, numpoints,
-             pmain = this.frame_painter();
+      for (xi = 0; xi <= this.nbinsx + 1; ++xi) {
+         xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
+         xx = xaxis.GetBinCoord(xi - 0.5);
 
-         for (i=0;i<len;++i) {
-            bin = histo.fBins.arr[i];
+         for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
+            yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
+            yy = yaxis.GetBinCoord(yi - 0.5);
 
-            xside = 1; yside = 1;
-
-            if (bin.fXmin > pmain.scale_xmax) xside = 2; else
-            if (bin.fXmax < pmain.scale_xmin) xside = 0;
-            if (bin.fYmin > pmain.scale_ymax) yside = 2; else
-            if (bin.fYmax < pmain.scale_ymin) yside = 0;
-
-            xx = yy = numpoints = 0;
-            gr = bin.fPoly; numgraphs = 1;
-            if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
-
-            for (ngr=0;ngr<numgraphs;++ngr) {
-               if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
-
-               for (n=0;n<gr.fNpoints;++n) {
-                  ++numpoints;
-                  xx += gr.fX[n];
-                  yy += gr.fY[n];
-               }
-            }
-
-            if (numpoints > 1) {
-               xx = xx / numpoints;
-               yy = yy / numpoints;
-            }
-
-            zz = bin.fContent;
+            zz = histo.getBinContent(xi, yi);
 
             res.entries += zz;
 
@@ -1974,50 +1954,6 @@
             stat_sumy2 += yy * yy * zz;
             stat_sumxy += xx * yy * zz;
          }
-      } else {
-         var xleft = this.GetSelectIndex("x", "left"),
-             xright = this.GetSelectIndex("x", "right"),
-             yleft = this.GetSelectIndex("y", "left"),
-             yright = this.GetSelectIndex("y", "right"),
-             xi, yi, xaxis = this.GetAxis("x"), yaxis = this.GetAxis("y");
-
-         for (xi = 0; xi <= this.nbinsx + 1; ++xi) {
-            xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
-            xx = xaxis.GetBinCoord(xi - 0.5);
-
-            for (yi = 0; yi <= this.nbinsy + 1; ++yi) {
-               yside = (yi <= yleft) ? 0 : (yi > yright ? 2 : 1);
-               yy = yaxis.GetBinCoord(yi - 0.5);
-
-               zz = histo.getBinContent(xi, yi);
-
-               res.entries += zz;
-
-               res.matrix[yside * 3 + xside] += zz;
-
-               if ((xside != 1) || (yside != 1)) continue;
-
-               if ((cond!=null) && !cond(xx,yy)) continue;
-
-               if ((res.wmax==null) || (zz>res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
-
-               stat_sum0 += zz;
-               stat_sumx1 += xx * zz;
-               stat_sumy1 += yy * zz;
-               stat_sumx2 += xx * xx * zz;
-               stat_sumy2 += yy * yy * zz;
-               stat_sumxy += xx * yy * zz;
-            }
-         }
-      }
-
-      if (!fp.IsAxisZoomed("x") && !fp.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
-         stat_sum0 = histo.fTsumw;
-         stat_sumx1 = histo.fTsumwx;
-         stat_sumx2 = histo.fTsumwx2;
-         stat_sumy1 = histo.fTsumwy;
-         stat_sumy2 = histo.fTsumwy2;
-         stat_sumxy = histo.fTsumwxy;
       }
 
       if (stat_sum0 > 0) {
@@ -2030,7 +1966,7 @@
       if (res.wmax===null) res.wmax = 0;
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1) res.entries = histo.fEntries;
+      // if (histo.fEntries > 1) res.entries = histo.fEntries;
 
       return res;
    }
@@ -2038,7 +1974,7 @@
    TH2Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
-      if (this.IgnoreStatsFill()) return false;
+      // if (this.IgnoreStatsFill()) return false;
 
       var data = this.CountStat(),
           print_name = Math.floor(dostat % 10),
@@ -2051,7 +1987,7 @@
           print_skew = Math.floor(dostat / 10000000) % 10,
           print_kurt = Math.floor(dostat / 100000000) % 10;
 
-      stat.ClearPave();
+      stat.ClearStat();
 
       if (print_name > 0)
          stat.AddText(data.name);
@@ -3525,12 +3461,208 @@
       return painter;
    }
 
+   // =============================================================
+
+
+   function RHistStatsPainter(palette) {
+      JSROOT.TObjectPainter.call(this, palette);
+      this.csstype = "stats";
+   }
+
+   RHistStatsPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   RHistStatsPainter.prototype.ClearStat = function() {
+      this.stats_lines = [];
+   }
+
+   RHistStatsPainter.prototype.AddText = function(line) {
+      this.stats_lines.push(line);
+   }
+
+   RHistStatsPainter.prototype.FillStatistic = function() {
+
+      var pp = this.pad_painter();
+      if (pp && pp._fast_drawing) return false;
+
+      var stats = this.GetObject(),
+          main = this.main_painter();
+
+      // if (stats && stats.fLines) return true;
+
+      if (!main || (typeof main.FillStatistic !== 'function')) return false;
+
+      // we take statistic from main painter
+      return main.FillStatistic(this, JSROOT.gStyle.fOptStat, JSROOT.gStyle.fOptFit);
+   }
+
+   RHistStatsPainter.prototype.Format = function(value, fmt) {
+      if (!fmt) fmt = "stat";
+
+      switch(fmt) {
+         case "stat" : fmt = JSROOT.gStyle.fStatFormat; break;
+         case "fit": fmt = JSROOT.gStyle.fFitFormat; break;
+         case "entries": if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = "14.7g"; break;
+         case "last": fmt = this.lastformat; break;
+      }
+
+      delete this.lastformat;
+
+      var res = JSROOT.FFormat(value, fmt || "6.4g");
+
+      this.lastformat = JSROOT.lastFFormat;
+
+      return res;
+   }
+
+   RHistStatsPainter.prototype.DrawStats = function() {
+
+      var pthis = this,
+          framep = this.frame_painter();
+
+      // frame painter must  be there
+      if (!framep)
+         return console.log('no frame painter - no palette');
+
+      var fx = this.frame_x(),
+          fy = this.frame_y(),
+          fw = this.frame_width(),
+          fh = this.frame_height(),
+          pw = this.pad_width(),
+          ph = this.pad_height(),
+          visible       = this.v7EvalAttr("visible", true),
+          stats_cornerx = this.v7EvalLength("cornerx", pw, 0.02),
+          stats_cornery = this.v7EvalLength("cornery", ph, 0.02),
+          stats_width   = this.v7EvalLength("width", pw, 0.3),
+          stats_height  = this.v7EvalLength("height", ph, 0.3),
+          line_width   = this.v7EvalAttr("border_width", 1),
+          line_style   = this.v7EvalAttr("border_style", 1),
+          line_color   = this.v7EvalColor("border_color", "black"),
+          fill_color   = this.v7EvalColor("fill_color", "white"),
+          fill_style   = this.v7EvalAttr("fill_style", 1);
+
+      this.CreateG(false);
+
+      if (!visible) return;
+
+      if (fill_style == 0) fill_color = "none";
+
+      this.draw_g.attr("transform","translate(" + Math.round(fx + fw + stats_cornerx - stats_width) +  "," + (fy - stats_cornery)  + ")");
+
+      this.draw_g.append("svg:rect")
+                 .attr("x", 0)
+                 .attr("width", stats_width)
+                 .attr("y", 0)
+                 .attr("height", stats_height)
+                 .style("stroke", line_color)
+                 .attr("stroke-width", line_width)
+                 .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style])
+                 .attr("fill", fill_color);
+
+      if (this.FillStatistic())
+         this.DrawStatistic(stats_width, stats_height);
+   }
+
+   RHistStatsPainter.prototype.DrawStatistic = function(width, height) {
+
+      var text_size  = this.v7EvalAttr("stats_text_size", 12),
+          text_color = this.v7EvalColor("stats_text_color", "black"),
+          text_align = this.v7EvalAttr("stats_text_align", 22),
+          text_font  = this.v7EvalAttr("stats_text_font", 41),
+          first_stat = 0, num_cols = 0, maxlen = 0;
+
+      var stats = this.GetObject(),
+          lines = this.stats_lines || stats.fLines;
+
+      if (!lines) return;
+
+      var nlines = lines.length;
+      // adjust font size
+      for (var j = 0; j < nlines; ++j) {
+         var line = lines[j];
+         if (j>0) maxlen = Math.max(maxlen, line.length);
+         if ((j == 0) || (line.indexOf('|') < 0)) continue;
+         if (first_stat === 0) first_stat = j;
+         var parts = line.split("|");
+         if (parts.length > num_cols)
+            num_cols = parts.length;
+      }
+
+      // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
+      var stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
+
+      this.StartTextDrawing(text_font, height/(nlines * 1.2));
+
+      if (nlines == 1) {
+         this.DrawText({ align: text_align, width: width, height: height, text: lines[0], color: text_color, latex: 1 });
+      } else
+      for (var j = 0; j < nlines; ++j) {
+         var posy = j*stepy;
+
+         if (first_stat && (j >= first_stat)) {
+            var parts = lines[j].split("|");
+            for (var n = 0; n < parts.length; ++n)
+               this.DrawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
+                               width: width/num_cols, height: stepy, text: parts[n], color: text_color });
+         } else if (lines[j].indexOf('=') < 0) {
+            if (j==0) {
+               has_head = true;
+               if (lines[j].length > maxlen + 5)
+                  lines[j] = lines[j].substr(0,maxlen+2) + "...";
+            }
+            this.DrawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
+                            width: width-2*margin_x, height: stepy, text: lines[j], color: text_color });
+         } else {
+            var parts = lines[j].split("="), sumw = 0;
+            for (var n = 0; n < 2; ++n)
+               sumw += this.DrawText({ align: (n == 0) ? "start" : "end", x: margin_x, y: posy,
+                                       width: width-2*margin_x, height: stepy, text: parts[n], color: text_color });
+            this.TextScaleFactor(1.05*sumw/(width-2*margin_x), this.draw_g);
+         }
+      }
+
+      this.FinishTextDrawing();
+
+      var lpath = "";
+
+      if (has_head)
+         lpath += "M0," + Math.round(stepy) + "h" + width;
+
+      if ((first_stat > 0) && (num_cols > 1)) {
+         for (var nrow = first_stat; nrow < nlines; ++nrow)
+            lpath += "M0," + Math.round(nrow * stepy) + "h" + width;
+         for (var ncol = 0; ncol < num_cols - 1; ++ncol)
+            lpath += "M" + Math.round(width / num_cols * (ncol + 1)) + "," + Math.round(first_stat * stepy) + "V" + height;
+      }
+
+      if (lpath) this.draw_g.append("svg:path").attr("d",lpath) /*.call(this.lineatt.func)*/;
+
+   }
+
+   RHistStatsPainter.prototype.Redraw = function() {
+      this.DrawStats();
+   }
+
+   function drawHistStats(divid, stats, opt) {
+      var painter = new RHistStatsPainter(stats, opt);
+
+      painter.SetDivId(divid);
+
+      painter.CreateG(false);
+
+      painter.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
+
+      painter.DrawStats();
+
+      return painter.DrawingReady();
+   }
+
    JSROOT.v7.THistPainter = THistPainter;
    JSROOT.v7.TH1Painter = TH1Painter;
    JSROOT.v7.TH2Painter = TH2Painter;
 
    JSROOT.v7.drawHist1 = drawHist1;
    JSROOT.v7.drawHist2 = drawHist2;
+   JSROOT.v7.drawHistStats = drawHistStats;
 
    return JSROOT;
 

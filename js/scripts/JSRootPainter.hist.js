@@ -491,14 +491,14 @@
          this.DrawText({ align: pt.fTextAlign, width: width, height: height, text: lines[0], color: tcolor, latex: 1 });
       } else
       for (var j = 0; j < nlines; ++j) {
-         var posy = j*stepy, jcolor = tcolor;
+         var posy = j*stepy;
          this.UseTextColor = true;
 
          if (first_stat && (j >= first_stat)) {
             var parts = lines[j].split("|");
             for (var n = 0; n < parts.length; ++n)
                this.DrawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
-                               width: width/num_cols, height: stepy, text: parts[n], color: jcolor });
+                               width: width/num_cols, height: stepy, text: parts[n], color: tcolor });
          } else if (lines[j].indexOf('=') < 0) {
             if (j==0) {
                has_head = true;
@@ -506,12 +506,12 @@
                   lines[j] = lines[j].substr(0,maxlen+2) + "...";
             }
             this.DrawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
-                            width: width-2*margin_x, height: stepy, text: lines[j], color: jcolor });
+                            width: width-2*margin_x, height: stepy, text: lines[j], color: tcolor });
          } else {
             var parts = lines[j].split("="), sumw = 0;
             for (var n = 0; n < 2; ++n)
                sumw += this.DrawText({ align: (n == 0) ? "start" : "end", x: margin_x, y: posy,
-                                       width: width-2*margin_x, height: stepy, text: parts[n], color: jcolor });
+                                       width: width-2*margin_x, height: stepy, text: parts[n], color: tcolor });
             this.TextScaleFactor(1.05*sumw/(width-2*margin_x), this.draw_g);
          }
       }
@@ -689,9 +689,10 @@
       }
    }
 
+   /** Method used to convert value to string according specified format
+     * format can be like 5.4g or 4.2e or 6.4f
+     * @private */
    TPavePainter.prototype.Format = function(value, fmt) {
-      // method used to convert value to string according specified format
-      // format can be like 5.4g or 4.2e or 6.4f
       if (!fmt) fmt = "stat";
 
       var pave = this.GetObject();
@@ -758,8 +759,9 @@
              icol = i % ncols, irow = (i - icol) / ncols,
              x0 = icol * column_width,
              tpos_x = x0 + Math.round(legend.fMargin*column_width),
-             pos_y = Math.round(padding_y + irow*step_y), // top corner
-             mid_y = Math.round(padding_y + (irow+0.5)*step_y), // center line
+             mid_x = Math.round((x0 + tpos_x)/2),
+             pos_y = Math.round(irow*step_y + padding_y), // top corner
+             mid_y = Math.round((irow+0.5)*step_y + padding_y), // center line
              o_fill = leg, o_marker = leg, o_line = leg,
              mo = leg.fObject,
              painter = null, isany = false;
@@ -775,19 +777,25 @@
          // Draw fill pattern (in a box)
          if (lopt.indexOf('f') != -1) {
             var fillatt = (painter && painter.fillatt) ? painter.fillatt : this.createAttFill(o_fill);
+
             // box total height is yspace*0.7
             // define x,y as the center of the symbol for this entry
-            this.draw_g.append("svg:rect")
-                   .attr("x", x0 + padding_x)
-                   .attr("y", Math.round(pos_y+step_y*0.1))
-                   .attr("width", tpos_x - 2*padding_x - x0)
-                   .attr("height", Math.round(step_y*0.8))
-                   .call(fillatt.func);
+            var rect = this.draw_g.append("svg:rect")
+                           .attr("x", x0 + padding_x)
+                           .attr("y", Math.round(pos_y+step_y*0.1))
+                           .attr("width", tpos_x - 2*padding_x - x0)
+                           .attr("height", Math.round(step_y*0.8))
+                           .call(fillatt.func);
             if (!fillatt.empty()) isany = true;
+            if ((lopt.indexOf('l') < 0 && lopt.indexOf('e') < 0) && (lopt.indexOf('p') < 0)) {
+               var lineatt = (painter && painter.lineatt) ? painter.lineatt : new JSROOT.TAttLineHandler(o_line);
+               rect.call(lineatt.func);
+               if (lineatt.color !== 'none') isany = true;
+            }
          }
 
-         // Draw line
-         if (lopt.indexOf('l') != -1) {
+         // Draw line (also when error specified)
+         if (lopt.indexOf('l') != -1 || lopt.indexOf('e') != -1) {
             var lineatt = (painter && painter.lineatt) ? painter.lineatt : new JSROOT.TAttLineHandler(o_line);
             this.draw_g.append("svg:line")
                .attr("x1", x0 + padding_x)
@@ -799,7 +807,15 @@
          }
 
          // Draw error
-         if (lopt.indexOf('e') != -1  && (lopt.indexOf('l') == -1 || lopt.indexOf('f') != -1)) {
+         if (lopt.indexOf('e') != -1) {
+            var lineatt = (painter && painter.lineatt) ? painter.lineatt : new JSROOT.TAttLineHandler(o_line);
+            this.draw_g.append("svg:line")
+                .attr("x1", mid_x)
+                .attr("y1", Math.round(pos_y+step_y*0.1))
+                .attr("x2", mid_x)
+                .attr("y2", Math.round(pos_y+step_y*0.9))
+                .call(lineatt.func);
+            if (lineatt.color !== 'none') isany = true;
          }
 
          // Draw Polymarker
