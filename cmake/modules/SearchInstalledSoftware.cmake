@@ -836,20 +836,20 @@ endif()
 
 #---Check for Xrootd support---------------------------------------------------------
 if(xrootd AND NOT builtin_xrootd)
-    message(STATUS "Looking for XROOTD")
-    find_package(XROOTD)
-    if(NOT XROOTD_FOUND)
-      if(fail-on-missing)
-        message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
-                            "or inlcude the installation of XROOTD in the CMAKE_PREFIX_PATH. "
-                            "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
-      else()
-        message(STATUS "XROOTD not found, enabling 'builtin_xrootd' option")
-        set(builtin_xrootd ON CACHE BOOL "Enabled because xrootd is enabled, but external xrootd was not found (${xrootd_description})" FORCE)
-      endif()
+  message(STATUS "Looking for XROOTD")
+  find_package(XROOTD)
+  if(NOT XROOTD_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
+                          "or inlcude the installation of XROOTD in the CMAKE_PREFIX_PATH. "
+                          "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
     else()
-      set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
+      message(STATUS "XROOTD not found, enabling 'builtin_xrootd' option")
+      set(builtin_xrootd ON CACHE BOOL "Enabled because xrootd is enabled, but external xrootd was not found (${xrootd_description})" FORCE)
     endif()
+  else()
+    set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
+  endif()
 endif()
 
 if(builtin_xrootd)
