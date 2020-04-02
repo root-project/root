@@ -22,6 +22,7 @@
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFrameTitle.hxx"
 #include "ROOT/RPaletteDrawable.hxx"
+#include "ROOT/RHistStatBox.hxx"
 #include "ROOT/RFrame.hxx"
 #include "TRandom.h"
 
@@ -53,7 +54,10 @@ void draw_rh2_colz()
 
    canvas->Draw<RPaletteDrawable>(RPalette::GetPalette(), true);
 
-   auto draw1 = canvas->Draw(pHist);
+   canvas->Draw(pHist);
+
+   auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
+   stat->AttrFill().SetColor(RColor::kRed);
 
    canvas->Show("1000x700");
 }
