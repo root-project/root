@@ -198,45 +198,8 @@ TEST(TFormulaGradientPar, GausCrossCheck)
    ASSERT_FLOAT_EQ(result_num[2], result_clad[2]);
 }
 
-// FIXME: See vgvassilev/clad#105
-static void InitBreitWigner() {
-   static bool FirstCall = true;
-   if (FirstCall) {
-      std::string clad_breitwigner_pdf_grad = R"code(
-namespace custom_derivatives {
-   void breitwigner_pdf_grad(double x, double gamma, double x0, double *_result) {
-      double _t0 = 1 / (3.1415926535897931 * ((x - x0) * (x - x0) + (gamma / 2.) * (gamma / 2.)));
-      double _t1 = _t0 / 2.;
-      _result[1UL] += _t1;
-      double _t2 = _t0 * -gamma / (2. * 2.);
-      double _t3 = 1 * -(gamma / 2.) / ((3.1415926535897931 * ((x - x0) * (x - x0) + (gamma / 2.) * (gamma / 2.))) * (3.1415926535897931 * ((x - x0) * (x - x0) + (gamma / 2.) * (gamma / 2.))));
-      double _t4 = _t3 * ((x - x0) * (x - x0) + (gamma / 2.) * (gamma / 2.));
-      double _t5 = 3.1415926535897931 * _t3;
-      double _t6 = _t5 * (x - x0);
-      _result[0UL] += _t6;
-      _result[2UL] += -_t6;
-      double _t7 = (x - x0) * _t5;
-      _result[0UL] += _t7;
-      _result[2UL] += -_t7;
-      double _t8 = _t5 * (gamma / 2.);
-      double _t9 = _t8 / 2.;
-      _result[1UL] += _t9;
-      double _t10 = _t8 * -gamma / (2. * 2.);
-      double _t11 = (gamma / 2.) * _t5;
-      double _t12 = _t11 / 2.;
-      _result[1UL] += _t12;
-      double _t13 = _t11 * -gamma / (2. * 2.);
-   }
-}
-)code";
-   gInterpreter->Declare(clad_breitwigner_pdf_grad.c_str());
-   FirstCall = false;
-   }
-}
-
 TEST(TFormulaGradientPar, BreitWignerCrossCheck)
 {
-   InitBreitWigner();
    auto h = new TF1("f1", "breitwigner");
    double p[] = {3, 1, 2.1};
    h->SetParameters(p);
@@ -254,7 +217,6 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheck)
 
 TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
 {
-   InitBreitWigner();
    auto h = new TF1("f1", "breitwigner");
    double p[] = {3, 1, 2};
    h->SetParameters(p);
