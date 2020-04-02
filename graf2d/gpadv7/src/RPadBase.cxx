@@ -117,7 +117,7 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
    unsigned indx = 0;
 
    for (auto &drawable : fPrimitives) {
-      auto item = drawable->Display();
+      auto item = drawable->Display(*this);
       if (item) {
          item->SetObjectIDAsPtr(drawable.get());
          item->SetIndex(indx);

@@ -34,7 +34,7 @@ class RPad: public RPadBase {
 
 protected:
 
-   std::unique_ptr<RDisplayItem> Display() const final;
+   std::unique_ptr<RDisplayItem> Display(const RPadBase &) const final;
 
 
 public:

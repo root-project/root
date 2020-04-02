@@ -18,6 +18,7 @@ namespace Experimental {
 
 class RDrawable;
 class RStyle;
+class RAttrMap;
 
 /** \class RDisplayItem
 \ingroup GpadROOT7
@@ -75,6 +76,30 @@ public:
    }
 
 };
+
+
+/** \class RDrawableDisplayItem
+\ingroup GpadROOT7
+\brief Generic display item for RDrawable, just reference drawable itself
+\author Sergey Linev <s.linev@gsi.de>
+\date 2017-05-31
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RIndirectDisplayItem : public RDisplayItem {
+protected:
+
+   const RAttrMap *fAttr{nullptr};        ///< pointer on drawable attributes
+   const std::string *fCssClass{nullptr}; ///< pointer on drawable class
+   const std::string *fId{nullptr};       ///< pointer on drawable id
+
+public:
+
+   RIndirectDisplayItem() = default;
+
+   RIndirectDisplayItem(const RDrawable &dr);
+};
+
 
 /** \class RObjectDisplayItem
 \ingroup GpadROOT7

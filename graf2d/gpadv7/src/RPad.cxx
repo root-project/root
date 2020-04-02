@@ -22,7 +22,7 @@ ROOT::Experimental::RPad::~RPad() = default;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create pad display item
 
-std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RPad::Display() const
+std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RPad::Display(const RPadBase &) const
 {
    auto paditem = std::make_unique<RPadDisplayItem>();
 
