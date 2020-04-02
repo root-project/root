@@ -1608,7 +1608,6 @@
       if (streamer.length!==2) {
          console.error('Streamer for pair class contains ', streamer.length,'elements');
          return null;
-
       }
 
       for (var nn=0;nn<2;++nn)
@@ -2074,10 +2073,12 @@
                   if (cnt===0) return null;
                   var o = buf.o, ver = buf.ReadVersion();
                   this.member_wise = ((ver.val & JSROOT.IO.kStreamedMemberWise) !== 0);
+
                   this.stl_version = undefined;
                   if (this.member_wise) {
+                     ver.val = ver.val & ~JSROOT.IO.kStreamedMemberWise;
                      this.stl_version = { val: buf.ntoi2() };
-                     if (this.stl_version.val<=0) this.stl_version.checksum = buf.ntou4();
+                     if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
                   }
                   return ver;
                }
@@ -2980,6 +2981,7 @@
             var si = buf.fFile.FindStreamerInfo(this.pairtype, ver.val, ver.checksum);
 
             if (this.si !== si) {
+
                streamer = JSROOT.IO.GetPairStreamer(si, this.pairtype, buf.fFile);
                if (!streamer || streamer.length!==2) {
                   console.log('Fail to produce streamer for ', this.pairtype);
@@ -2990,6 +2992,12 @@
       }
 
       var i, n = buf.ntoi4(), res = new Array(n);
+      if (this.member_wise) {
+         if (buf.ntoi2() == JSROOT.IO.kStreamedMemberWise)
+            buf.shift(4);
+         else
+            buf.shift(-2); // rewind
+      }
 
       for (i=0;i<n;++i) {
          res[i] = { _typename: this.pairtype };
@@ -2999,7 +3007,8 @@
 
       // due-to member-wise streaming second element read after first is completed
       if (this.member_wise)
-         for (i=0;i<n;++i) streamer[1].func(buf, res[i]);
+         for (i=0;i<n;++i)
+            streamer[1].func(buf, res[i]);
 
       return res;
    }
