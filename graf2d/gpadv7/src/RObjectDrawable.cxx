@@ -20,7 +20,7 @@
 #include <iostream>
 
 
-std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RObjectDrawable::Display() const
+std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RObjectDrawable::Display(const RPadBase &) const
 {
    return std::make_unique<RObjectDisplayItem>(fObj.get(), fOpts);
 }

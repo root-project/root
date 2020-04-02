@@ -24,6 +24,7 @@ class RMenuItems;
 class RPadBase;
 class RAttrBase;
 class RDisplayItem;
+class RIndirectDisplayItem;
 class RLegend;
 
 
@@ -102,6 +103,7 @@ friend class RPadBase; // to access Display method and IsFrameRequired
 friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method
+friend class RIndirectDisplayItem;  // to access attributes and other members
 
 private:
    RAttrMap fAttr;               ///< attributes values
@@ -121,7 +123,7 @@ protected:
 
    bool MatchSelector(const std::string &selector) const;
 
-   virtual std::unique_ptr<RDisplayItem> Display() const;
+   virtual std::unique_ptr<RDisplayItem> Display(const RPadBase &) const;
 
 public:
 
