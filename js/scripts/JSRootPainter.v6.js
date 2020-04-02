@@ -3124,9 +3124,14 @@
 
    TPadPainter.prototype.CheckSpecial = function(obj) {
 
-      if (!obj || (obj._typename!=="TObjArray")) return false;
+      if (!obj) return false;
 
-      if (obj.name == "ListOfColors") {
+      if (obj._typename == "TStyle") {
+         JSROOT.extend(JSROOT.gStyle, style);
+         return true;
+      }
+
+      if ((obj._typename == "TObjArray") && (obj.name == "ListOfColors")) {
 
          if (this.options && this.options.CreatePalette) {
             var arr = [];
@@ -3147,7 +3152,7 @@
          return true;
       }
 
-      if (obj.name == "CurrentColorPalette") {
+      if ((obj._typename == "TObjArray") && (obj.name == "CurrentColorPalette")) {
          var arr = [], missing = false;
          for (var n = 0; n < obj.arr.length; ++n) {
             var col = obj.arr[n];
