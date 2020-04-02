@@ -67,8 +67,8 @@ public:
    void SetRange(int axis, double from, double to)
    {
       const RAxisBase &axisView = fHist.GetImpl()->GetAxis(axis);
-      fRange[axis] = axisView.FindBin(from);
-      fRange[axis] = axisView.FindBin(to);
+      fRange[axis] = axisView.FindAdjustedBin(from);
+      fRange[axis] = axisView.FindAdjustedBin(to);
    }
 
    const_iterator begin() const noexcept

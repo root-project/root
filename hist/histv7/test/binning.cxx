@@ -6,24 +6,24 @@
 
 using namespace ROOT::Experimental;
 
-// Test FindOverflowBin() in all its glory.
+// Test FindBin() in all its glory.
 
 // Basic binning on a Equidistant axis.
 TEST(AxisBinning, EquidistBasic) {
    RAxisEquidistant ax("RITLE", 10, -1., 1.);
-   EXPECT_EQ(1, ax.FindOverflowBin(-.999));
-   EXPECT_EQ(5, ax.FindOverflowBin(-.001));
-   EXPECT_EQ(10, ax.FindOverflowBin(0.999));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-2.));
-   EXPECT_EQ(-2, ax.FindOverflowBin(2000.));
+   EXPECT_EQ(1, ax.FindBin(-.999));
+   EXPECT_EQ(5, ax.FindBin(-.001));
+   EXPECT_EQ(10, ax.FindBin(0.999));
+   EXPECT_EQ(-1, ax.FindBin(-2.));
+   EXPECT_EQ(-2, ax.FindBin(2000.));
 
-   EXPECT_GE(6, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(5, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_GE(6, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
-   EXPECT_LE(5, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
+   EXPECT_GE(6, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_LE(5, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_GE(6, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_LE(5, ax.FindBin(-std::numeric_limits<double>::min()));
 
-   EXPECT_EQ(-2, ax.FindOverflowBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 
@@ -31,42 +31,42 @@ TEST(AxisBinning, EquidistBasic) {
 TEST(AxisBinning, EquidistEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
    RAxisEquidistant ax("RITLE", 10, 0., eps * 10.);
-   EXPECT_LE(-1, ax.FindOverflowBin(0.5*eps));
-   EXPECT_GE(1, ax.FindOverflowBin(0.5*eps));
+   EXPECT_LE(-1, ax.FindBin(0.5*eps));
+   EXPECT_GE(1, ax.FindBin(0.5*eps));
 
-   EXPECT_LE(5, ax.FindOverflowBin(5.*eps));
-   EXPECT_GE(6, ax.FindOverflowBin(5.*eps));
+   EXPECT_LE(5, ax.FindBin(5.*eps));
+   EXPECT_GE(6, ax.FindBin(5.*eps));
 
-   EXPECT_LE(10, ax.FindOverflowBin(10.*eps));
-   EXPECT_GE(11, ax.FindOverflowBin(10.*eps));
+   EXPECT_LE(10, ax.FindBin(10.*eps));
+   EXPECT_GE(11, ax.FindBin(10.*eps));
 
-   EXPECT_EQ(-1, ax.FindOverflowBin(-2000.*eps));
-   EXPECT_EQ(-2, ax.FindOverflowBin(2000.*eps));
-   EXPECT_LE(1, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_GE(2, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(-1, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
-   EXPECT_GE(1, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(-2, ax.FindOverflowBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-2000.*eps));
+   EXPECT_EQ(-2, ax.FindBin(2000.*eps));
+   EXPECT_LE(1, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_LE(-1, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_GE(1, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 
 // Basic binning on an Irregular axis.
 TEST(AxisBinning, IrregularBasic) {
    RAxisIrregular ax("RITLE", {-5., 0., 0.1, 1., 10., 100.});
-   EXPECT_EQ(2, ax.FindOverflowBin(.001));
-   EXPECT_EQ(1, ax.FindOverflowBin(-.001));
-   EXPECT_EQ(5, ax.FindOverflowBin(99.));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-6.));
-   EXPECT_EQ(-2, ax.FindOverflowBin(2000.));
+   EXPECT_EQ(2, ax.FindBin(.001));
+   EXPECT_EQ(1, ax.FindBin(-.001));
+   EXPECT_EQ(5, ax.FindBin(99.));
+   EXPECT_EQ(-1, ax.FindBin(-6.));
+   EXPECT_EQ(-2, ax.FindBin(2000.));
 
-   EXPECT_GE(2, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(1, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_GE(2, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
-   EXPECT_LE(1, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
+   EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_LE(1, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_GE(2, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_LE(1, ax.FindBin(-std::numeric_limits<double>::min()));
 
-   EXPECT_EQ(-2, ax.FindOverflowBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 
@@ -74,21 +74,21 @@ TEST(AxisBinning, IrregularBasic) {
 TEST(AxisBinning, IrregularEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
    RAxisIrregular ax("RITLE", {0., eps, 2.*eps, 3.*eps, 4.*eps, 5.*eps});
-   EXPECT_LE(-1, ax.FindOverflowBin(0.5*eps));
-   EXPECT_GE(1, ax.FindOverflowBin(0.5*eps));
+   EXPECT_LE(-1, ax.FindBin(0.5*eps));
+   EXPECT_GE(1, ax.FindBin(0.5*eps));
 
-   EXPECT_LE(3, ax.FindOverflowBin(3.*eps));
-   EXPECT_GE(4, ax.FindOverflowBin(3.*eps));
+   EXPECT_LE(3, ax.FindBin(3.*eps));
+   EXPECT_GE(4, ax.FindBin(3.*eps));
 
-   EXPECT_LE(5, ax.FindOverflowBin(5.*eps));
-   EXPECT_GE(6, ax.FindOverflowBin(5.*eps));
+   EXPECT_LE(5, ax.FindBin(5.*eps));
+   EXPECT_GE(6, ax.FindBin(5.*eps));
 
-   EXPECT_EQ(-1, ax.FindOverflowBin(-2000.*eps));
-   EXPECT_EQ(-2, ax.FindOverflowBin(2000.*eps));
-   EXPECT_EQ(1, ax.FindOverflowBin(std::numeric_limits<double>::min()));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(-2, ax.FindOverflowBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindOverflowBin(-std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-2000.*eps));
+   EXPECT_EQ(-2, ax.FindBin(2000.*eps));
+   EXPECT_EQ(1, ax.FindBin(std::numeric_limits<double>::min()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::min()));
+   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
+   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
 
 // Histogram binning on a Equidistant axis.

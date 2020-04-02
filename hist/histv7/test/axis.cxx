@@ -233,20 +233,12 @@ void test_axis_base(const RAxisBase& axis,
 
   const int underflow_bin = can_grow ? 0 : -1;
   EXPECT_EQ(axis.GetUnderflowBin(), underflow_bin);
-  EXPECT_EQ(axis.IsUnderflowBin(underflow_bin-1), true);
-  EXPECT_EQ(axis.IsUnderflowBin(underflow_bin), true);
-  EXPECT_EQ(axis.IsUnderflowBin(underflow_bin+1), can_grow ? false : true);
 
   const int overflow_bin = can_grow ? 0 : -2;
   EXPECT_EQ(axis.GetOverflowBin(), overflow_bin);
-  EXPECT_EQ(axis.IsOverflowBin(overflow_bin-1), false);
-  EXPECT_EQ(axis.IsOverflowBin(overflow_bin), false);
-  EXPECT_EQ(axis.IsOverflowBin(overflow_bin+1), false);
 
   EXPECT_EQ(*axis.begin(), can_grow ? underflow_bin+1 : underflow_bin+2);
-  EXPECT_EQ(*axis.begin_with_underflow(), can_grow ? underflow_bin+1 : underflow_bin+2);
   EXPECT_EQ(*axis.end(), n_bins_no_over);
-  EXPECT_EQ(*axis.end_with_overflow(), n_bins_no_over);
 
   EXPECT_DOUBLE_EQ(axis.GetMinimum(), minimum);
   EXPECT_DOUBLE_EQ(axis.GetMaximum(), maximum);
@@ -266,17 +258,17 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
   EXPECT_DOUBLE_EQ(axis.GetInverseBinWidth(), 1.0/bin_width);
 
   const int underflow_findbin_res = can_grow ? 0 : -1;
-  EXPECT_EQ(axis.FindOverflowBin(minimum-100*bin_width), underflow_findbin_res);
-  EXPECT_EQ(axis.FindOverflowBin(minimum-0.01*bin_width), underflow_findbin_res);
-  const int first_bin = can_grow ? 1 : 1;
-  EXPECT_EQ(axis.FindOverflowBin(minimum+0.01*bin_width), first_bin);
-  EXPECT_EQ(axis.FindOverflowBin(minimum+0.99*bin_width), first_bin);
-  EXPECT_EQ(axis.FindOverflowBin(minimum+1.01*bin_width), first_bin+1);
+  EXPECT_EQ(axis.FindBin(minimum-100*bin_width), underflow_findbin_res);
+  EXPECT_EQ(axis.FindBin(minimum-0.01*bin_width), underflow_findbin_res);
+  const int first_bin = 1;
+  EXPECT_EQ(axis.FindBin(minimum+0.01*bin_width), first_bin);
+  EXPECT_EQ(axis.FindBin(minimum+0.99*bin_width), first_bin);
+  EXPECT_EQ(axis.FindBin(minimum+1.01*bin_width), first_bin+1);
   const int last_bin = first_bin + n_bins_no_over - 1;
-  EXPECT_EQ(axis.FindOverflowBin(maximum-0.01*bin_width), last_bin);
+  EXPECT_EQ(axis.FindBin(maximum-0.01*bin_width), last_bin);
   const int overflow_findbin_res = can_grow ? 0 : -2;
-  EXPECT_EQ(axis.FindOverflowBin(maximum+0.01*bin_width), overflow_findbin_res);
-  EXPECT_EQ(axis.FindOverflowBin(maximum+100*bin_width), overflow_findbin_res);
+  EXPECT_EQ(axis.FindBin(maximum+0.01*bin_width), overflow_findbin_res);
+  EXPECT_EQ(axis.FindBin(maximum+100*bin_width), overflow_findbin_res);
 
   // NOTE: Result of GetBinFrom on underflow bins, GetBinTo on overflow bins and
   //       GetBinCenter on either is considered unspecified for now. If we do
@@ -374,16 +366,16 @@ TEST(AxisTest, Irregular) {
   auto test = [](const RAxisIrregular& axis, std::string_view title) {
     test_axis_base(axis, title, false, 3, 2.3, 17.19);
 
-    EXPECT_EQ(axis.FindOverflowBin(-100), -1);
-    EXPECT_EQ(axis.FindOverflowBin(2.29), -1);
-    EXPECT_EQ(axis.FindOverflowBin(2.31), 1);
-    EXPECT_EQ(axis.FindOverflowBin(5.69), 1);
-    EXPECT_EQ(axis.FindOverflowBin(5.71), 2);
-    EXPECT_EQ(axis.FindOverflowBin(11.1), 2);
-    EXPECT_EQ(axis.FindOverflowBin(11.2), 3);
-    EXPECT_EQ(axis.FindOverflowBin(17.1), 3);
-    EXPECT_EQ(axis.FindOverflowBin(17.3), -2);
-    EXPECT_EQ(axis.FindOverflowBin(1000), -2);
+    EXPECT_EQ(axis.FindBin(-100), -1);
+    EXPECT_EQ(axis.FindBin(2.29), -1);
+    EXPECT_EQ(axis.FindBin(2.31), 1);
+    EXPECT_EQ(axis.FindBin(5.69), 1);
+    EXPECT_EQ(axis.FindBin(5.71), 2);
+    EXPECT_EQ(axis.FindBin(11.1), 2);
+    EXPECT_EQ(axis.FindBin(11.2), 3);
+    EXPECT_EQ(axis.FindBin(17.1), 3);
+    EXPECT_EQ(axis.FindBin(17.3), -2);
+    EXPECT_EQ(axis.FindBin(1000), -2);
     EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), std::numeric_limits<double>::lowest());
     EXPECT_DOUBLE_EQ(axis.GetBinCenter(1), 4.0);
     EXPECT_DOUBLE_EQ(axis.GetBinCenter(2), 8.415);
