@@ -144,4 +144,7 @@ Not all features of TGeoPainter are supported - only plain drawing of selected T
 
 ## Build, Configuration and Testing Infrastructure
 
+By default, ROOT now falls back to the built-in version of xrootd if it can't find it in the system.
+This means that passing `-Dbuiltin_xrootd=ON` is not necessary anymore to build ROOT with xrootd support.
+Note that built-in xrootd requires a working network connection.
 
