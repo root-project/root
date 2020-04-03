@@ -15,120 +15,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOTUnitTestSupport.h"
+
 #include <Math/MinimizerOptions.h>
 #include <TFormula.h>
 #include <TF1.h>
 #include <TFitResult.h>
 #include <TH1.h>
-
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
-
-// Copied from TFileMergerTests.cxx.
-// FIXME: Factor out in a new testing library in ROOT.
-namespace {
-using testing::StartsWith;
-using testing::StrEq;
-using testing::internal::GetCapturedStderr;
-using testing::internal::CaptureStderr;
-using testing::internal::RE;
-class ExpectedDiagRAII {
-public:
-   enum ExpectedDiagKind {
-      EDK_NoDiag = 0,
-      EDK_Info,
-      EDK_Warning,
-      EDK_Error
-   };
-private:
-   ExpectedDiagKind fDiagKind;
-   std::string fExpectedRoutine;
-   std::string fExpectedDiag;
-   void pop()
-   {
-      // Diagnostics in ROOT have the format:
-      // Error|Warning|Info|...| in <Routine>: free text
-      std::string Seen = GetCapturedStderr();
-
-      // Try to reconstruct the precise expected string.
-      std::string Expected;
-      switch(fDiagKind) {
-      default:
-         assert (0 && "Unsupported diag kind.");
-         break;
-      case EDK_NoDiag:
-         EXPECT_THAT(Seen, StrEq(""));
-         return;
-      case EDK_Error:
-         Expected = "Error";
-         break;
-      case EDK_Warning:
-         Expected = "Warning";
-         break;
-      case EDK_Info:
-         Expected = "Info";
-         break;
-      }
-
-      // Check if the Diag kind matches what we saw.
-      EXPECT_THAT(Seen, StartsWith(Expected));
-
-      Expected += " in ";
-      Expected += "<" + fExpectedRoutine + ">: ";
-
-      // Check if the routine matches what we saw.
-      EXPECT_THAT(Seen, StartsWith(Expected));
-
-      Expected += fExpectedDiag;
-
-      // The captured stderr also includes new lines.
-      Expected += "\n";
-
-      EXPECT_THAT(Seen, StrEq(Expected));
-   }
-
-public:
-   ExpectedDiagRAII(ExpectedDiagKind DiagKind): fDiagKind(DiagKind) {
-      assert(DiagKind == ExpectedDiagRAII::EDK_NoDiag);
-      CaptureStderr();
-   }
-
-   ExpectedDiagRAII(ExpectedDiagKind DiagKind, std::string InRoutine,
-                    std::string E)
-      : fDiagKind(DiagKind), fExpectedRoutine(InRoutine), fExpectedDiag(E) {
-      CaptureStderr();
-   }
-   ~ExpectedDiagRAII() { pop(); }
-};
-}
-
-#define ROOT_EXPECT_ERROR(expression, where, expected_diag )            \
-   {                                                                    \
-      ExpectedDiagRAII EE(ExpectedDiagRAII::EDK_Error, where,           \
-                          expected_diag);                               \
-      expression;                                                       \
-   }
-
-#define ROOT_EXPECT_WARNING(expression, where, expected_diag)           \
-   {                                                                    \
-      ExpectedDiagRAII EE(ExpectedDiagRAII::EDK_Warning, where,         \
-                          expected_diag);                               \
-      expression;                                                       \
-   }
-
-#define ROOT_EXPECT_INFO(expression, where, expected_diag)              \
-   {                                                                    \
-      ExpectedDiagRAII EE(ExpectedDiagRAII::EDK_Info, where,            \
-                          expected_diag);                               \
-      expression;                                                       \
-   }
-
-#define ROOT_EXPECT_NODIAG(expression)                                  \
-   {                                                                    \
-      ExpectedDiagRAII EE(ExpectedDiagRAII::EDK_NoDiag);                \
-      expression;                                                       \
-   }
-
 
 TEST(TFormulaGradientPar, Sanity)
 {

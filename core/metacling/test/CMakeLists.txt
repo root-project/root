@@ -32,3 +32,4 @@ endif()
 
 ROOT_ADD_UNITTEST_DIR(Core RIO ${LLVM_DEPS})
 
+target_link_libraries(coremetaclingtestUnit ROOTUnitTestSupport)
