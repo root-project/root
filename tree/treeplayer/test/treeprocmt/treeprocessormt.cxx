@@ -193,8 +193,6 @@ TEST(TreeProcessorMT, TreeInSubDirectory)
       t.Write();
    }
 
-   ROOT::EnableThreadSafety();
-
    auto fullPath = "dir0/dir1/tree";
 
    // With a TTree
