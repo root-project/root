@@ -33,16 +33,17 @@ template <typename Architecture>
 auto printTensor(const typename Architecture::Tensor_t &A, const std::string name = "matrix")
 -> void
 {
-  std::cout << name << "\n";
-  for (size_t l = 0; l < A.GetFirstSize(); ++l) {
-     for (size_t i = 0; i < (size_t) A[l].GetNrows(); ++i) {
-        for (size_t j = 0; j < (size_t) A[l].GetNcols(); ++j) {
-            std::cout << A[l](i, j) << " ";
-        }
-        std::cout << "\n";
-      }
-      std::cout << "********\n";
-  }
+   Architecture::PrintTensor(A, name);
+//    std::cout << name << "\n";
+//    for (size_t l = 0; l < A.GetFirstSize(); ++l) {
+//       for (size_t i = 0; i < (size_t)A[l].GetNrows(); ++i) {
+//          for (size_t j = 0; j < (size_t)A[l].GetNcols(); ++j) {
+//             std::cout << A[l](i, j) << " ";
+//         }
+//         std::cout << "\n";
+//       }
+//       std::cout << "********\n";
+//   }
 }
 
 template <typename Architecture>
@@ -119,10 +120,13 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
 {
    bool failed = false;
-   if (options.size() == 0) options = std::vector<bool>(4);
+   const int nOpts = 4; // size of options
+   if (options.size() < nOpts)
+      options.resize(nOpts);
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
    bool addExtraGRU = options[2];
+   bool returnLastSequence = options[3];
 
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;;
@@ -131,46 +135,67 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
+   if (debug)
+      std::cout << std::endl;
+   std::cout
+      << "******************************************************************************************************\n";
+   std::cout << "Testing Weight Backprop using GRU with batchsize = " << batchSize << " input = " << inputSize
+             << " state = " << stateSize << " time = " << timeSteps;
+   if (randomInput)
+      std::cout << " using a random input";
+   else
+      std::cout << " with a fixed input";
+   if (addDenseLayer)
+      std::cout << " and a dense layer";
+   if (addExtraGRU)
+      std::cout << " and an extra GRU";
+   if (returnLastSequence)
+      std::cout << " and full output";
+   std::cout << std::endl;
+   std::cout
+      << "******************************************************************************************************\n";
+   if (debug)
+      std::cout << std::endl;
 
    Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
 
-
    // for random input (default)
    if (randomInput) {
-   for (size_t i = 0; i < batchSize; ++i) {
-         auto  mat = XArch[i];
-         for (size_t l = 0; l < (size_t) XArch[i].GetNrows(); ++l) {
-            for (size_t m = 0; m < (size_t) XArch[i].GetNcols(); ++m) {
-               mat(l, m) = gRandom->Uniform(-1,1);
-               //XArch[i](0, 0) = 0.5;
-               //XArch[i](1, 0) = 0.5;
+      for (size_t i = 0; i < batchSize; ++i) {
+         auto mat = XArch[i];
+         for (size_t l = 0; l < (size_t)XArch[i].GetNrows(); ++l) {
+            for (size_t m = 0; m < (size_t)XArch[i].GetNcols(); ++m) {
+               mat(l, m) = gRandom->Uniform(-1, 1);
+               // XArch[i](0, 0) = 0.5;
+               // XArch[i](1, 0) = 0.5;
             }
          }
       }
-   }
-   else {
+   } else {
       R__ASSERT(inputSize <= 6);
       R__ASSERT(timeSteps <= 3);
       R__ASSERT(batchSize <= 1);
-      double x_input[] = {-1,   1,  -2,  2, -3,  3 ,
-                          -0.5, 0.5,-0.8,0.9, -2, 1.5,
-                          -0.2, 0.1,-0.5,0.4, -1, 1.};
+      //double x_input[] = {-1, 1, -2, 2, -3, 3, -0.5, 0.5, -0.8, 0.9, -2, 1.5, -0.2, 0.1, -0.5, 0.4, -1, 1.};
+      double x_input[] = {-0.1, 0.1, -0.2, 0.2, -0.3, 0.3, -0.5, 0.5, -0.8, 0.9, -0.2, 0.15, -0.2, 0.1, -0.5, 0.4, -0.9, 0.9};
 
-      TMatrixD Input(3,6,x_input);
+      TMatrixD Input(3, 6, x_input);
       for (size_t i = 0; i < batchSize; ++i) {
          auto mat = XArch[i];
          // time 0
          for (size_t l = 0; l < timeSteps; ++l) {
             for (size_t m = 0; m < inputSize; ++m) {
-               mat(l,m) = Input(l,m);
+               if (Architecture::GetTensorLayout() == TMVA::Experimental::MemoryLayout::RowMajor)
+                  mat(m, l) = Input(l, m);
+               else
+                  mat(l, m) = Input(l, m);
             }
          }
       }
-      //gRandom->SetSeed(1); // for weights initizialization
+      // gRandom->SetSeed(1); // for weights initizialization
    }
    if (debug) printTensor<Architecture>(XArch,"input");
 
-   size_t outputSize = timeSteps*stateSize;
+   size_t outputSize = (returnLastSequence) ? timeSteps * stateSize : stateSize;
    if (addDenseLayer) outputSize = 1;
 
    Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
@@ -185,33 +210,27 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
     if (debug) printTensor<Architecture>(Y,"ground truth ");
    fillMatrix(weights, 1.0);
 
-
-
-   std::cout << "Testing Weight Backprop using GRU with batchsize = " << batchSize << " input = " << inputSize << " state = " << stateSize << " time = " << timeSteps;
-   if (randomInput) std::cout << "\tusing a random input";
-   else std::cout << "\twith a fixed input";
-   if (addDenseLayer)
-      std::cout << " and a dense layer";
-   if (addExtraGRU)
-      std::cout << " and an extra GRU";
-   std::cout << std::endl;
-
+   bool returnFirstSequence = addExtraGRU || returnLastSequence;
    Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps);
-   //size_t input2 = stateSize;
-   if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps);
-   //layer->Print();
-   gru.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
+   GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps, false, returnFirstSequence);
+
+   if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps, false, returnLastSequence);
+
+   size_t outputGRUSize = (returnLastSequence) ? timeSteps * stateSize : stateSize;
+   gru.AddReshapeLayer(1, 1, outputGRUSize, true);
 
    DenseLayer_t * dlayer1 = nullptr;
    DenseLayer_t * dlayer2 = nullptr;
    if (addDenseLayer) {
-      dlayer1 = gru.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kTanh);
+      dlayer1 = gru.AddDenseLayer(10, TMVA::DNN::EActivationFunction::kRelu);
       dlayer2 = gru.AddDenseLayer(1, TMVA::DNN::EActivationFunction::kIdentity);
    }
 
 
    gru.Initialize();
+   if (debug)
+      gru.Print();
+
    gru.Forward(XArch, true);
    gru.Backward(XArch, Y, weights);
 
@@ -230,6 +249,14 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       }
    }
 
+   // print dx for each layer
+   if (debug) {
+      for (int l = gru.GetDepth() - 1 ; l >= 0; l--) {
+         auto & dgx = gru.GetLayerAt(l)->GetActivationGradients();
+         printTensor<Architecture>(dgx, std::string(TString::Format("activation gradients layer %d", l)));
+      }
+   }
+
    Scalar_t maximum_error = 0.0;
    std::string maxerrorType;
 
@@ -239,6 +266,10 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
    auto & Wi = layer->GetWeightsAt(0);
    auto & dWi = layer->GetWeightGradientsAt(0);
+   if (debug) {
+      printTensor<Architecture>(Wi, "Weights Reset gate");
+      printTensor<Architecture>(dWi, "Weight Reset gate gradient");
+   }
    for (size_t i = 0; i < (size_t) Wi.GetNrows(); ++i) {
       for (size_t j = 0; j < (size_t) Wi.GetNcols(); ++j) {
          auto f = [&gru, &XArch, &Y, &weights, i, j](Scalar_t x) {

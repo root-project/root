@@ -26,7 +26,7 @@ template <typename RNNLayer>
 void TCudnn<AFloat>::InitializeRecurrentTensors(RNNLayer *layer)
 {
    // initialization of the RNN tensors for setting the right layout (ROW major)
-   size_t timeSteps = (layer->IsReturnSequence()) ? layer->GetTimeSteps() : 1;
+   size_t timeSteps = (layer->DoesReturnSequence()) ? layer->GetTimeSteps() : 1;
    layer->GetOutput() =
       Tensor_t(layer->GetOutput().GetDeviceBuffer(),
                {layer->GetBatchSize(), timeSteps, layer->GetStateSize()}, GetTensorLayout());
@@ -208,9 +208,8 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    auto &weightTensor = layer->GetWeightsTensor();
    auto &weightGradTensor = layer->GetWeightGradientsTensor();
 
-   size_t nW = dimW[0];
-   weightTensor = Tensor_t( {nW, 1, 1}, GetTensorLayout(), 0, 0);
-   weightGradTensor = Tensor_t({ nW, 1, 1}, GetTensorLayout(), 0, 0);
+   weightTensor = Tensor_t( { (size_t) dimW[0], 1, 1}, GetTensorLayout(), 0, 0);
+   weightGradTensor = Tensor_t({(size_t) dimW[0], 1, 1}, GetTensorLayout(), 0, 0);
 
    // initialize now RNN weights from RNNLayer:WeightInput, RNNLayer::WeightState and RNNLayer::BiasesState
 
@@ -443,33 +442,21 @@ void TCudnn<AFloat>::InitializeRecurrentWorkspace(TWorkspace *&workspace, TDescr
 
    bool bidirectional = false;
 
-   int numLayers = 1; // support now only one single layer
-   size_t nL = (!bidirectional) ? numLayers : 2*numLayers; // for bidirectional nL = 2 * numLayers;
+   size_t numLayers = 1; // support now only one single layer
+   if (bidirectional)  numLayers *= 2;  // bidirectional RNN is like having two layers
 
-   // reshape tensors ??
    // redefine shape of layer->GetShape
    Tensor_t &stateTensor = layer->GetState();
-   stateTensor = Tensor_t(stateTensor.GetDeviceBuffer(), { nL, layer->GetBatchSize(), layer->GetStateSize()},
+   stateTensor = Tensor_t(stateTensor.GetDeviceBuffer(), { numLayers, layer->GetBatchSize(), layer->GetStateSize()},
                           GetTensorLayout(), 0, 0 );
 
    if (layer->GetCell().GetSize() > 0) {  // in case of LSTM
       Tensor_t & cellStateTensor = layer->GetCell();
-      cellStateTensor = Tensor_t(cellStateTensor.GetDeviceBuffer(), {nL, layer->GetBatchSize(), layer->GetStateSize()}, GetTensorLayout(), 0, 0 );
+      cellStateTensor = Tensor_t(cellStateTensor.GetDeviceBuffer(), {numLayers, layer->GetBatchSize(), layer->GetStateSize()}, GetTensorLayout(), 0, 0 );
    }
-
-   //int numLinearLayers = 2; // for RNN_RELU and RNN_TANH
-   //  this could be set eq to layer.GetWeights().size()
-
-   // cudnnDataType_t mathPrec;
-   // if (std::is_same<AFloat, double>::value) {
-   //    mathPrec = CUDNN_DATA_DOUBLE;
-   // } else if (std::is_same<AFloat, float>::value) {
-   //    mathPrec = CUDNN_DATA_FLOAT;
-   // }
 
 
    // get workspace size
-   //size_t sizeInBytes = 0;
 
    // need to fill xDesc with input tensor descriptors for each layer
    CUDNNCHECK(cudnnGetRNNWorkspaceSize(handle, rnnDescriptors->LayerDescriptor, layer->GetTimeSteps(),
@@ -594,6 +581,12 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
 
    // now the weights
    //PrintTensor(dw, "weight grad before");
+   // std::cout << "RNN Backward weights !!! -remmber state" << rememberState << std::endl;
+   // PrintTensor(x, "x");
+   // PrintTensor(hx, "hx");
+   // PrintTensor(y, "y");
+   // PrintTensor(dx, "dx");
+   // PrintTensor(dw, "dw");
 
    status = cudnnRNNBackwardWeights(cudnnHandle, rnnDesc, seqLength, desc.xDesc.data(), x.GetDataPointer(),
                                     hx.GetTensorDescriptor(), (rememberState) ? dhx.GetDataPointer() : nullptr,
@@ -604,7 +597,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    assert(status == CUDNN_STATUS_SUCCESS);
    CUDNNCHECK(status);
 
-   //PrintTensor(dw, "weight grad after");
+   // PrintTensor(dw, "weight grad after");
 }
 
 
