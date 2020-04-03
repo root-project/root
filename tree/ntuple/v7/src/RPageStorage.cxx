@@ -62,6 +62,7 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
    R__ASSERT(fieldId != kInvalidDescriptorId);
    auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
    R__ASSERT(columnId != kInvalidDescriptorId);
+   fActiveColumns.emplace(columnId);
    return ColumnHandle_t(columnId, &column);
 }
 
