@@ -179,3 +179,43 @@ class ROOTFacade(types.ModuleType):
     @property
     def __version__(self):
         return self.gROOT.GetVersion()
+
+    # Overload VecOps namespace
+    # The property gets the C++ namespace, adds the pythonizations and
+    # eventually deletes itself so that following calls go directly
+    # to the C++ namespace. This mechanic ensures that we pythonize the
+    # namespace lazily.
+    @property
+    def VecOps(self):
+        ns = self._fallback_getattr('VecOps')
+        try:
+            from libROOTPythonizations import AsRVec
+            ns.AsRVec = AsRVec
+        except:
+            raise Exception('Failed to pythonize the namespace VecOps')
+        del type(self).VecOps
+        return ns
+
+    # Overload RDF namespace
+    @property
+    def RDF(self):
+        ns = self._fallback_getattr('RDF')
+        try:
+            from libROOTPythonizations import MakeNumpyDataFrame
+            ns.MakeNumpyDataFrame = MakeNumpyDataFrame
+        except:
+            raise Exception('Failed to pythonize the namespace RDF')
+        del type(self).RDF
+        return ns
+
+    # Overload TMVA namespace
+    @property
+    def TMVA(self):
+        ns = self._fallback_getattr('TMVA')
+        try:
+            from libROOTPythonizations import AsRTensor
+            ns.Experimental.AsRTensor = AsRTensor
+        except:
+            raise Exception('Failed to pythonize the namespace TMVA')
+        del type(self).TMVA
+        return ns
