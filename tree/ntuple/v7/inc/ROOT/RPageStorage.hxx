@@ -26,6 +26,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <unordered_set>
 
 namespace ROOT {
 namespace Experimental {
@@ -161,6 +162,8 @@ class RPageSource : public RPageStorage {
 protected:
    const RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
+   /// The columns which we expect to be read, i.e. for which AddColumn() has been called
+   std::unordered_set<DescriptorId_t> fActiveColumns;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
 
