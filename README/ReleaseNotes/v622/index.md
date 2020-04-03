@@ -40,6 +40,8 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+- `ROOT::GetImplicitMTPoolSize` has been deprecated in favor of the newly added `ROOT::GetThreadPoolSize` and
+  will be removed in v6.24.
 
 ## Core Libraries
 
