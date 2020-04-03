@@ -68,10 +68,11 @@ private:
    std::mutex fLockInFlightClusters;
    std::vector<RInFlightCluster> fInFlightClusters;
 
-   std::thread fThreadIo;
    std::mutex fLockWorkQueue;
    std::condition_variable fCvHasWork;
    std::queue<RWorkItem> fWorkQueue;
+
+   std::thread fThreadIo;
 
    std::shared_ptr<RCluster> FindInPool(DescriptorId_t clusterId);
    size_t FindFreeSlot();
