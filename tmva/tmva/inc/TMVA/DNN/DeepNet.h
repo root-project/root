@@ -156,7 +156,7 @@ public:
    /*! Function for adding LSTM Layer in the Deep Neural Network,
     * with given parameters */
    TBasicLSTMLayer<Architecture_t> *AddBasicLSTMLayer(size_t stateSize, size_t inputSize, size_t timeSteps,
-                                                    bool rememberState = false);
+                                                    bool rememberState = false, bool returnSequence = false);
 
    /*! Function for adding LSTM Layer in the Deep Neural Network,
     * when the layer is already created. */
@@ -165,7 +165,7 @@ public:
    /*! Function for adding GRU Layer in the Deep Neural Network,
     * with given parameters */
    TBasicGRULayer<Architecture_t> *AddBasicGRULayer(size_t stateSize, size_t inputSize, size_t timeSteps,
-                                                    bool rememberState = false);
+                                                    bool rememberState = false, bool returnSequence = false);
 
    /*! Function for adding GRU Layer in the Deep Neural Network,
     * when the layer is already created. */
@@ -566,7 +566,7 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TBasicLSTMLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicLSTMLayer(size_t stateSize, size_t inputSize,
-                                                                                      size_t timeSteps, bool rememberState)
+                                                                                      size_t timeSteps, bool rememberState, bool returnSequence)
 {
    // should check if input and time size are consistent
    size_t inputHeight, inputWidth, inputDepth;
@@ -588,7 +588,7 @@ TBasicLSTMLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicLSTM
    }
 
    TBasicLSTMLayer<Architecture_t> *basicLSTMLayer =
-      new TBasicLSTMLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
+      new TBasicLSTMLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState, returnSequence,
                                          DNN::EActivationFunction::kSigmoid,
                                          DNN::EActivationFunction::kTanh,
                                          fIsTraining, this->GetInitialization());
@@ -607,7 +607,7 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicLSTMLayer(TBasicLSTMLayer<Archit
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TBasicGRULayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicGRULayer(size_t stateSize, size_t inputSize,
-                                                                                      size_t timeSteps, bool rememberState)
+                                                                                      size_t timeSteps, bool rememberState, bool returnSequence)
 {
    // should check if input and time size are consistent
    size_t inputHeight, inputWidth, inputDepth;
@@ -629,7 +629,7 @@ TBasicGRULayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicGRULa
    }
 
    TBasicGRULayer<Architecture_t> *basicGRULayer =
-      new TBasicGRULayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
+      new TBasicGRULayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState, returnSequence,
                                          DNN::EActivationFunction::kSigmoid,
                                          DNN::EActivationFunction::kTanh,
                                          fIsTraining, this->GetInitialization());

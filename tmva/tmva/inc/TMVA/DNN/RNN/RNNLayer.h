@@ -74,7 +74,7 @@ private:
    size_t fTimeSteps;              ///< Timesteps for RNN
    size_t fStateSize;              ///< Hidden state size of RNN
    bool   fRememberState;          ///< Remember state in next pass
-   bool    fReturnSequence = true; ///< Return in output full sequence or just last element
+   bool   fReturnSequence = false; ///< Return in output full sequence or just last element in time
 
    DNN::EActivationFunction fF;  ///< Activation function of the hidden state
 
@@ -167,8 +167,8 @@ public:
    size_t GetTimeSteps() const { return fTimeSteps; }
    size_t GetStateSize() const { return fStateSize; }
    size_t GetInputSize() const { return this->GetInputWidth(); }
-   inline bool IsRememberState()  const {return fRememberState;}
-   inline bool IsReturnSequence() const { return fReturnSequence; }
+   inline bool DoesRememberState()  const {return fRememberState;}
+   inline bool DoesReturnSequence() const { return fReturnSequence; }
    inline DNN::EActivationFunction GetActivationFunction()  const {return fF;}
    Matrix_t        & GetState()            {return fState;}  // RNN Hidden state
    const Matrix_t & GetState()       const  {return fState;}
@@ -457,6 +457,9 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       // for cudnn Matrix_t and Tensor_t are same type
       const auto &weights = this->GetWeightsTensor();
       auto &weightGradients = this->GetWeightGradientsTensor();
+      // note that cudnnRNNBackwardWeights accumulate the weight gradients.
+      // We need then to initialize the tensor to zero every time
+      Architecture_t::InitializeZero(weightGradients);
 
       // hx is fState
       auto &hx = this->GetState();
@@ -588,8 +591,8 @@ void TBasicRNNLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->IsRememberState()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->IsReturnSequence()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
 
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "InputWeights", this -> GetWeightsAt(0));
