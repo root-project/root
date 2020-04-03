@@ -29,6 +29,11 @@ static std::shared_ptr<ROOT::Internal::TPoolManager> &R__GetPoolManagerMT()
    return schedMT;
 }
 
+extern "C" UInt_t ROOT_MT_GetThreadPoolSize()
+{
+   return ROOT::Internal::TPoolManager::GetPoolSize();
+};
+
 static bool &GetImplicitMTFlag()
 {
    static bool enabled = false;
@@ -69,12 +74,6 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
       ::Warning("ROOT_TImplicitMT_DisableImplicitMT", "Implicit multi-threading is already disabled");
    }
 };
-
-extern "C" UInt_t ROOT_TImplicitMT_GetImplicitMTPoolSize()
-{
-   return ROOT::Internal::TPoolManager::GetPoolSize();
-};
-
 
 extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
 {
