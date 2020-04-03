@@ -44,7 +44,7 @@ class AsRVec(unittest.TestCase):
         """
         for dtype in self.dtypes:
             np_obj = np.empty(2, dtype=dtype)
-            root_obj = ROOT.ROOT.VecOps.AsRVec(np_obj)
+            root_obj = ROOT.VecOps.AsRVec(np_obj)
             self.check_memory_adoption(root_obj, np_obj)
             self.check_size(2, root_obj)
 
@@ -53,7 +53,7 @@ class AsRVec(unittest.TestCase):
         Test adoption of multi-dimensional numpy arrays
         """
         np_obj = np.array([[1, 2], [3, 4]], dtype="float32")
-        rvec = ROOT.ROOT.VecOps.AsRVec(np_obj)
+        rvec = ROOT.VecOps.AsRVec(np_obj)
         self.assertEqual(rvec.size(), 4)
 
     def test_size_zero(self):
@@ -61,16 +61,16 @@ class AsRVec(unittest.TestCase):
         Test adoption of numpy array with size 0
         """
         np_obj = np.array([], dtype="float32")
-        rvec = ROOT.ROOT.VecOps.AsRVec(np_obj)
+        rvec = ROOT.VecOps.AsRVec(np_obj)
         self.assertEqual(rvec.size(), 0)
 
     def test_adopt_rvec(self):
         """
         Test adoption of RVecs
         """
-        rvec = ROOT.ROOT.VecOps.RVec("float")(1)
+        rvec = ROOT.VecOps.RVec("float")(1)
         rvec[0] = 42
-        rvec2 = ROOT.ROOT.VecOps.AsRVec(rvec)
+        rvec2 = ROOT.VecOps.AsRVec(rvec)
         self.assertEqual(rvec.size(), rvec2.size())
         self.assertEqual(rvec[0], rvec2[0])
         rvec2[0] = 43
@@ -81,7 +81,7 @@ class AsRVec(unittest.TestCase):
         Test ownership of returned RVec (to be owned by Python)
         """
         np_obj = np.array([1, 2])
-        rvec = ROOT.ROOT.VecOps.AsRVec(np_obj)
+        rvec = ROOT.VecOps.AsRVec(np_obj)
         self.assertEqual(rvec.__python_owns__, True)
 
     def test_attribute_adopted(self):
@@ -89,7 +89,7 @@ class AsRVec(unittest.TestCase):
         Test __adopted__ attribute of returned RVecs
         """
         np_obj = np.array([1, 2])
-        rvec = ROOT.ROOT.VecOps.AsRVec(np_obj)
+        rvec = ROOT.VecOps.AsRVec(np_obj)
         self.assertTrue(hasattr(rvec, "__adopted__"))
         self.assertEqual(id(rvec.__adopted__), id(np_obj))
 
@@ -104,7 +104,7 @@ class AsRVec(unittest.TestCase):
         is decreased.
         """
         np_obj = np.array([1, 2])
-        rvec = ROOT.ROOT.VecOps.AsRVec(np_obj)
+        rvec = ROOT.VecOps.AsRVec(np_obj)
         self.assertEqual(sys.getrefcount(rvec), 2)
         self.assertEqual(sys.getrefcount(np_obj), 3)
         del rvec

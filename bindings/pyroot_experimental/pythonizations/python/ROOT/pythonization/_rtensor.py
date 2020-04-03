@@ -130,11 +130,3 @@ def pythonize_rtensor(klass, name):
         klass.__getitem__ = RTensorGetitem
 
     return True
-
-# Add AsRTensor feature as free function to the ROOT module
-try:
-    from libROOTPythonizations import AsRTensor
-    import cppyy
-    cppyy.gbl.TMVA.Experimental.AsRTensor = AsRTensor
-except:
-    pass
