@@ -349,5 +349,100 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId)
 {
-   return std::make_unique<RCluster>(nullptr, clusterId);
+   const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
+   auto clusterLocator = clusterDesc.GetLocator();
+   auto clusterSize = clusterLocator.fBytesOnStorage;
+   R__ASSERT(clusterSize > 0);
+
+   struct ROnDiskPageLocator {
+      ROnDiskPageLocator() = default;
+      ROnDiskPageLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s)
+         : fColumnId(c), fPageNo(p), fOffset(o), fSize(s) {}
+      DescriptorId_t fColumnId = 0;
+      NTupleSize_t fPageNo = 0;
+      std::uint64_t fOffset = 0;
+      std::uint64_t fSize = 0;
+      std::size_t fBufPos = 0;
+   };
+
+   std::vector<ROnDiskPageLocator> onDiskPages;
+   auto activeSize = 0;
+   for (auto columnId : fActiveColumns) {
+      const auto &pageRange = clusterDesc.GetPageRange(columnId);
+      NTupleSize_t pageNo = 0;
+      for (const auto &pageInfo : pageRange.fPageInfos) {
+         const auto &pageLocator = pageInfo.fLocator;
+         activeSize += pageLocator.fBytesOnStorage;
+         onDiskPages.emplace_back(ROnDiskPageLocator(
+            columnId, pageNo, pageLocator.fPosition, pageLocator.fBytesOnStorage));
+         ++pageNo;
+      }
+   }
+
+   float extraFraction = 0.25;
+   std::sort(onDiskPages.begin(), onDiskPages.end(),
+      [](const ROnDiskPageLocator &a, const ROnDiskPageLocator &b) {return a.fOffset < b.fOffset;});
+   std::vector<std::size_t> gaps;
+   for (unsigned i = 1; i < onDiskPages.size(); ++i) {
+      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
+   }
+   std::sort(gaps.begin(), gaps.end());
+   std::size_t gapCut = 0;
+   float szExtra = 0.0;
+   for (auto g : gaps) {
+      szExtra += g;
+      if (szExtra  > extraFraction * float(activeSize))
+         break;
+      gapCut = g;
+   }
+
+   struct RReadRequest {
+      RReadRequest() = default;
+      RReadRequest(std::size_t b, std::uint64_t o, std::uint64_t s) : fBufPos(b), fOffset(o), fSize(s) {}
+      std::size_t fBufPos = 0;
+      std::uint64_t fOffset = 0;
+      std::uint64_t fSize = 0;
+   };
+   std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
+
+   ROOT::Internal::RRawFile::RIOVec req;
+   std::size_t szPayload = 0;
+   std::size_t szOverhead = 0;
+   for (auto &s : onDiskPages) {
+      R__ASSERT(s.fSize > 0);
+      auto readUpTo = req.fOffset + req.fSize;
+      R__ASSERT(s.fOffset >= readUpTo);
+      auto overhead = s.fOffset - readUpTo;
+      szPayload += s.fSize;
+      if (overhead <= gapCut) {
+         szOverhead += overhead;
+         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
+         req.fSize += overhead + s.fSize;
+         continue;
+      }
+
+      // close the current request and open new one
+      if (req.fSize > 0)
+         readRequests.emplace_back(req);
+
+      req.fBuffer = reinterpret_cast<unsigned char *>(req.fBuffer) + req.fSize;
+      s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer);
+
+      req.fOffset = s.fOffset;
+      req.fSize = s.fSize;
+   }
+   readRequests.emplace_back(req);
+
+   auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
+   auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
+   for (const auto &s : onDiskPages) {
+      ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
+      cluster->Insert(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
+   }
+   for (auto &r : readRequests) {
+      r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
+   }
+   fFile->ReadV(&readRequests[0], readRequests.size());
+
+   return cluster;
 }
