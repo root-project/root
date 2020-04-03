@@ -48,6 +48,11 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
 
+- A new status bit was added to `TTree`: `kEntriesReshuffled`, which indicates a `TTree` that is the output of the
+  processing of another tree during which its entry order has been changed (this can happen, for instance, when
+  processing a tree in a multi-thread application). To avoid silent entry number mismatches, trees with this bit set
+  cannot add friend trees nor can be added as friends, unless the friend `TTree` has an appropriate `TTreeIndex`.
+
 
 ## Histogram Libraries
 
