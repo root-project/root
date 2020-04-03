@@ -893,8 +893,12 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
                cout << "WARNING::Detected a bin with zero expected events- skip it" << endl;
          }
          // have a cut off for overflows ??
-         else
-            data.add(obs, fval*expectedEvents);
+         else {
+            // Here, we want to simulate that the data histogram has N events, that is
+            // pdfVal*binVolume*expectedEvents, and an error of sqrt(N).
+            // That means that sumW2 needs to be set to N as well
+            data.add(obs, fval*expectedEvents, fval*expectedEvents);
+         }
 
          if (debug) {
             cout << "bin " << ibin << "\t";
