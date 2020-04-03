@@ -25,6 +25,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TClingDeclInfo.h"
+
 #include "clang/AST/Type.h"
 
 namespace cling {
@@ -37,7 +39,7 @@ namespace ROOT {
    }
 }
 
-class TClingTypeInfo {
+class TClingTypeInfo final : public TClingDeclInfo {
 
 private:
    cling::Interpreter  *fInterp;    //Cling interpreter, we do *not* own.
@@ -46,10 +48,10 @@ private:
 public:
 
    explicit TClingTypeInfo(cling::Interpreter *interp)
-      : fInterp(interp) {}
+      : TClingDeclInfo(nullptr), fInterp(interp) {}
 
    TClingTypeInfo(cling::Interpreter *interp, clang::QualType ty)
-      : fInterp(interp), fQualType(ty) {}
+      : TClingDeclInfo(nullptr), fInterp(interp), fQualType(ty) {}
 
    TClingTypeInfo(cling::Interpreter *interp, const char *name);
 
@@ -59,8 +61,8 @@ public:
 
    void                 Init(const char *name); // Set type by name.
    void                 Init(clang::QualType ty) { fQualType = ty; }
-   bool                 IsValid() const { return !fQualType.isNull(); }
-   const char          *Name() const; // Get name of type.
+   bool                 IsValid() const override { return !fQualType.isNull(); }
+   const char          *Name() const override; // Get name of type.
    long                 Property() const; // Get properties of type.
    int                  RefType() const; // Get CINT reftype of type.
    int                  Size() const; // Get size in bytes of type.

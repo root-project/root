@@ -29,7 +29,7 @@ class TClingDeclInfo {
 protected:
    const clang::Decl* fDecl = nullptr;
    mutable std::string fNameCache;
-   long Property(long property, clang::QualType qt) const;
+   long Property(long property, clang::QualType &qt) const;
 public:
    TClingDeclInfo(const clang::Decl* D) : fDecl(D) {}
    virtual ~TClingDeclInfo();
