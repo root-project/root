@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RCluster.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -343,4 +344,10 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
    clone->fFile = fFile->Clone();
    clone->fReader = Internal::RMiniFileReader(clone->fFile.get());
    return std::unique_ptr<RPageSourceFile>(clone);
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RCluster>
+ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId)
+{
+   return std::make_unique<RCluster>(nullptr, clusterId);
 }

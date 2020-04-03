@@ -144,6 +144,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
+   std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId) final;
+
    RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
