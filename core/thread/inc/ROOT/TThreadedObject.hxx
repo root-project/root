@@ -190,7 +190,7 @@ namespace ROOT {
       {
          auto nslots = nslotsTag.fVal;
          if (nslotsTag == kIMTPoolSize) {
-            nslots = ROOT::GetImplicitMTPoolSize();
+            nslots = ROOT::GetThreadPoolSize();
             if (nslots == 0) {
                throw std::logic_error("Must enable IMT before constructing TThreadedObject(kIMT)!");
             }
@@ -205,7 +205,7 @@ namespace ROOT {
       template<class ...ARGS>
       TThreadedObject(ARGS&&... args) : fIsMerged(false)
       {
-         const auto imtPoolSize = ROOT::GetImplicitMTPoolSize();
+         const auto imtPoolSize = ROOT::GetThreadPoolSize();
          if (!imtPoolSize) {
             Warning("TThreadedObject()",
                "Use without IMT is deprecated, either enable IMT first, or use constructor overload taking TNumSlots!");

@@ -96,7 +96,7 @@ MakeClusters(const std::vector<std::string> &treeNames, const std::vector<std::s
    // 16 * 2 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() clusters will be created, at most
    // 16 * TTreeProcessorMT::GetMaxTasksPerFilePerWorker() per file.
 
-   const auto maxTasksPerFile = TTreeProcessorMT::GetMaxTasksPerFilePerWorker() * ROOT::GetImplicitMTPoolSize();
+   const auto maxTasksPerFile = TTreeProcessorMT::GetMaxTasksPerFilePerWorker() * ROOT::GetThreadPoolSize();
    std::vector<std::vector<EntryCluster>> eventRangesPerFile(clustersPerFile.size());
    auto clustersPerFileIt = clustersPerFile.begin();
    auto eventRangesPerFileIt = eventRangesPerFile.begin();
