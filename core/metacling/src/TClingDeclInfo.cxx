@@ -46,7 +46,7 @@ const char* TClingDeclInfo::Name() const
    return fNameCache.c_str();
 }
 
-long TClingDeclInfo::Property(long property, clang::QualType qt) const
+long TClingDeclInfo::Property(long property, clang::QualType &qt) const
 {
    if (!IsValid()) {
       return 0L;
