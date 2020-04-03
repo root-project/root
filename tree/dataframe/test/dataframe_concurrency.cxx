@@ -41,4 +41,39 @@ TEST(RDFConcurrency, NestedParallelismBetweenDefineCalls)
 
    ROOT::DisableImplicitMT();
 }
+
+// ROOT-10346:
+// [DF] Warn on mismatch between slot pool size and effective number of slots
+TEST(RDFSimpleTests, ThrowOnPoolSizeMismatch)
+{
+   // pool created after RDF
+   {
+      ROOT::RDataFrame df(1);
+      ROOT::EnableImplicitMT(3);
+      try {
+         df.Count().GetValue();
+      } catch (const std::runtime_error &e) {
+         const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool "
+                                   "was 1, but when starting the event loop it was 3. Maybe EnableImplicitMT() was "
+                                   "called after the RDataFrame was constructed?";
+         EXPECT_STREQ(e.what(), expected_msg);
+      }
+      ROOT::DisableImplicitMT();
+   }
+
+   // pool deleted after RDF creation
+   {
+      ROOT::EnableImplicitMT(3);
+      ROOT::RDataFrame df(1);
+      ROOT::DisableImplicitMT();
+      try {
+         df.Count().GetValue();
+      } catch (const std::runtime_error &e) {
+         const auto expected_msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool "
+                                   "was 3, but when starting the event loop it was 0. Maybe DisableImplicitMT() was "
+                                   "called after the RDataFrame was constructed?";
+         EXPECT_STREQ(e.what(), expected_msg);
+      }
+   }
+}
 #endif

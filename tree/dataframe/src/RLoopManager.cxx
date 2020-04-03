@@ -541,10 +541,30 @@ unsigned int RLoopManager::GetNextID()
    return id;
 }
 
+namespace {
+static void ThrowIfPoolSizeChanged(unsigned int nSlots)
+{
+   const auto poolSize = ROOT::GetImplicitMTPoolSize();
+   const bool isSingleThreadRun = (poolSize == 0 && nSlots == 1);
+   if (!isSingleThreadRun && poolSize != nSlots) {
+      std::string msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool was " +
+                        std::to_string(nSlots) + ", but when starting the event loop it was " +
+                        std::to_string(poolSize) + ".";
+      if (poolSize > nSlots)
+         msg += " Maybe EnableImplicitMT() was called after the RDataFrame was constructed?";
+      else
+         msg += " Maybe DisableImplicitMT() was called after the RDataFrame was constructed?";
+      throw std::runtime_error(msg);
+   }
+}
+} // namespace
+
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void RLoopManager::Run()
 {
+   ThrowIfPoolSizeChanged(GetNSlots());
+
    Jit();
 
    InitNodes();
