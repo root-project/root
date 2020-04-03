@@ -97,6 +97,7 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetImplicitMTPoolSize();
+   UInt_t GetThreadPoolSize();
 }
 
 class TROOT : public TDirectory {
