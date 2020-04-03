@@ -33,7 +33,7 @@ public:
    THnHelper(std::string_view name, std::string_view title, std::array<int, NDIM> nbins, std::array<double, NDIM> xmins,
              std::array<double, NDIM> xmax)
    {
-      const auto nSlots = ROOT::IsImplicitMTEnabled() ? ROOT::GetImplicitMTPoolSize() : 1;
+      const auto nSlots = ROOT::IsImplicitMTEnabled() ? ROOT::GetThreadPoolSize() : 1;
       for (auto i : ROOT::TSeqU(nSlots)) {
          fHistos.emplace_back(std::make_shared<THn_t>(std::string(name).c_str(), std::string(title).c_str(),
                                                       NDIM, nbins.data(), xmins.data(), xmax.data()));

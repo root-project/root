@@ -1774,7 +1774,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
 
 unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
-      auto ncpu  = ROOT::GetImplicitMTPoolSize();
+      auto ncpu  = ROOT::GetThreadPoolSize();
       if (nEvents/ncpu < 1000) return ncpu;
       return nEvents/1000;
       //return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula

@@ -389,16 +389,16 @@ TEST(TreeProcessorMT, ChainWithFriendChain)
 
 TEST(TreeProcessorMT, SetNThreads)
 {
-   EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 0u);
+   EXPECT_EQ(ROOT::GetThreadPoolSize(), 0u);
    {
       ROOT::TTreeProcessorMT p("somefile", "sometree", 1u);
-      EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 1u);
+      EXPECT_EQ(ROOT::GetThreadPoolSize(), 1u);
    }
-   EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 0u);
+   EXPECT_EQ(ROOT::GetThreadPoolSize(), 0u);
 
    {
       ROOT::TTreeProcessorMT p({"somefile", "some_other"}, "sometree", 1u);
-      EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 1u);
+      EXPECT_EQ(ROOT::GetThreadPoolSize(), 1u);
    }
 
    {
@@ -409,7 +409,7 @@ TEST(TreeProcessorMT, SetNThreads)
       t.Write();
       TEntryList l;
       ROOT::TTreeProcessorMT p(t, l, 1u);
-      EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 1u);
+      EXPECT_EQ(ROOT::GetThreadPoolSize(), 1u);
       f.Close();
       gSystem->Unlink("treeprocmt_setnthreads.root");
    }
@@ -421,7 +421,7 @@ TEST(TreeProcessorMT, SetNThreads)
       TTree t("t", "t");
       t.Write();
       ROOT::TTreeProcessorMT p(t, 1u);
-      EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 1u);
+      EXPECT_EQ(ROOT::GetThreadPoolSize(), 1u);
       gSystem->Unlink("treeprocmt_setnthreads.root");
    }
 }

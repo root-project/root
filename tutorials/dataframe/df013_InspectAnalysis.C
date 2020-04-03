@@ -15,7 +15,7 @@ using namespace ROOT; // RDataFrame lives in here
 void df013_InspectAnalysis()
 {
    ROOT::EnableImplicitMT();
-   const auto poolSize = ROOT::GetImplicitMTPoolSize();
+   const auto poolSize = ROOT::GetThreadPoolSize();
    const auto nSlots = 0 == poolSize ? 1 : poolSize;
 
    // ## Setup a simple RDataFrame

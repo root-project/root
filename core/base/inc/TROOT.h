@@ -96,7 +96,7 @@ namespace ROOT {
    void EnableImplicitMT(UInt_t numthreads = 0);
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
-   UInt_t GetImplicitMTPoolSize();
+   UInt_t GetImplicitMTPoolSize() _R__DEPRECATED_624("Please use ROOT::GetThreadPoolSize() instead");
    UInt_t GetThreadPoolSize();
 }
 
