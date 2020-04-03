@@ -71,6 +71,21 @@ All page source classes need to support the common options.
 */
 // clang-format on
 class RNTupleReadOptions {
+public:
+  enum EClusterCache {
+      kDefault,
+      kOff,
+      kOn,
+      kMMap,
+   };
+
+private:
+   EClusterCache fClusterCache = EClusterCache::kDefault;
+
+public:
+   RNTupleReadOptions() = default;
+   EClusterCache GetClusterCache() const { return fClusterCache; }
+   void SetClusterCache(EClusterCache val) { fClusterCache = val; }
 };
 
 } // namespace Experimental
