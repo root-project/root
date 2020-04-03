@@ -56,6 +56,7 @@ long TClingDeclInfo::Property(long property, clang::QualType qt) const
    }
    while (1) {
       if (qt->isArrayType()) {
+         property |= kIsArray;
          qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
          continue;
       }
