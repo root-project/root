@@ -25,6 +25,7 @@
 #include <future>
 #include <queue>
 #include <thread>
+#include <set>
 #include <vector>
 
 namespace ROOT {
@@ -46,30 +47,45 @@ private:
    struct RWorkItem {
       std::promise<std::unique_ptr<RCluster>> fPromise;
       DescriptorId_t fClusterId = kInvalidDescriptorId;
-
       RWorkItem() = default;
    };
-   using RWorkItemGroup = std::vector<RWorkItem>;
+
+   struct RInFlightCluster {
+      std::future<std::unique_ptr<RCluster>> fFuture;
+      DescriptorId_t fClusterId = kInvalidDescriptorId;
+      bool fIsExpired = false;
+      RInFlightCluster() = default;
+      bool operator== (const RInFlightCluster &other) const { return fClusterId == other.fClusterId; }
+      bool operator!= (const RInFlightCluster &other) const { return fClusterId != other.fClusterId; }
+      bool operator< (const RInFlightCluster &other) const { return fClusterId < other.fClusterId; }
+   };
 
    RPageSource *fPageSource;
-   std::shared_ptr<RCluster> fCurrent;
-   std::future<std::unique_ptr<RCluster>> fNext;
-   std::mutex fLock;
+   unsigned int fWindowPre;
+   unsigned int fWindowPost;
+   std::vector<std::shared_ptr<RCluster>> fPool;
+
+   std::mutex fLockInFlightClusters;
+   std::vector<RInFlightCluster> fInFlightClusters;
 
    std::thread fThreadIo;
    std::mutex fLockWorkQueue;
    std::condition_variable fCvHasWork;
-   std::condition_variable fCvHasSpace;
-   std::queue<RWorkItemGroup> fWorkQueue;
+   std::queue<RWorkItem> fWorkQueue;
 
+   std::shared_ptr<RCluster> FindInPool(DescriptorId_t clusterId);
+   size_t FindFreeSlot();
    void ExecLoadClusters();
 
 public:
-   explicit RClusterPool(RPageSource *pageSource);
+   static const unsigned int kDefaultPoolSize = 4;
+   RClusterPool(RPageSource *pageSource, unsigned int size);
+   explicit RClusterPool(RPageSource *pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
    explicit RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
 
+   /// Triggers preload, works well under
    std::shared_ptr<RCluster> GetCluster(DescriptorId_t clusterId);
 }; // class RClusterPool
 
