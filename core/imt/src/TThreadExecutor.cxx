@@ -132,11 +132,17 @@ namespace ROOT {
 
    //////////////////////////////////////////////////////////////////////////
    /// Class constructor.
-   /// If the scheduler is active, gets a pointer to it and works with the current pool of threads.
-   /// If not, initializes the pool of threads, spawning nThreads. nThreads' default value, 0, initializes the
-   /// pool with as many logical threads as there should be available in the system (see NLogicalCores in TPoolManager.cxx).
+   /// If the scheduler is active (e.g. because another TThreadExecutor is in flight, or ROOT::EnableImplicitMT() was
+   /// called), work with the current pool of threads.
+   /// If not, initialize the pool of threads, spawning nThreads. nThreads' default value, 0, initializes the
+   /// pool with as many logical threads as are available in the system (see NLogicalCores in TPoolManager.cxx).
+   ///
+   /// At construction time, TThreadExecutor automatically enables ROOT's thread-safety locks as per calling
+   /// ROOT::EnableThreadSafety().
    TThreadExecutor::TThreadExecutor(UInt_t nThreads)
    {
+      ROOT::EnableThreadSafety();
+
       auto current = ROOT::Internal::TPoolManager::GetPoolSize();
       if (nThreads && current && (current != nThreads))
       {
