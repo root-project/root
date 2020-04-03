@@ -146,18 +146,11 @@ private:
                           std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
                           TString delim);
 
-
+   enum ERecurrentLayerType { kLayerRNN = 0, kLayerLSTM = 1, kLayerGRU = 2 };
    template <typename Architecture_t, typename Layer_t>
-   void ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                      std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
-
-   template <typename Architecture_t, typename Layer_t>
-   void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+   void ParseRecurrentLayer(ERecurrentLayerType type, DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
-   template <typename Architecture_t, typename Layer_t>
-   void ParseGruLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
-                      std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & nets, TString layerString, TString delim);
 
    /// train of deep neural network using the defined architecture
    template <typename Architecture_t>

@@ -14,51 +14,62 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <climits>
 #include "TMVA/DNN/Architectures/TCudnn.h"
 #include "TestLSTMBackpropagation.h"
 #include "TROOT.h"
-#include "TMath.h"
-
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
-int main() {
-   std::cout << "Testing LSTM backward pass\n";
+int main()
+{
 
-   //ROOT::EnableImplicitMT(1);
+   std::cout << "Testing LSTM backward pass on GPU with Cudnn\n";
 
    using Scalar_t = Double_t;
    using Architecture_t = TCudnn<Scalar_t>;
 
-   gRandom->SetSeed(12345);
-   Architecture_t::SetRandomSeed(gRandom->Integer(TMath::Limits<UInt_t>::Max()));
+   int seed = 12345;
+   gRandom->SetSeed(seed);
+   Architecture_t::SetRandomSeed(gRandom->Integer(INT_MAX));
 
-   bool debug = true;
+   using Scalar_t = Double_t;
+
+   bool debug = false;
+
+   bool iret = false;
 
    // timesteps, batchsize, statesize, inputsize  { fixed input, with dense layer, with extra LSTM }
+   iret |= testLSTMBackpropagation<Architecture_t>(2, 1, 2, 3, 1e-5, {true, false, false}, debug);
 
-   testLSTMBackpropagation<Architecture_t>(2, 1, 2, 3, 1e-5, {}, debug);
+   iret |= testLSTMBackpropagation<Architecture_t>(1, 2, 1, 10, 1e-5, {}, debug);
 
-   gRandom->SetSeed(0);
-   testLSTMBackpropagation<Architecture_t>(2, 2, 3, 4, 1e-5, {}, debug);
+   iret |= testLSTMBackpropagation<Architecture_t>(1, 2, 3, 2, 1e-5);
 
+   iret |= testLSTMBackpropagation<Architecture_t>(2, 3, 4, 5, 1e-5);
 
-   testLSTMBackpropagation<Architecture_t>(2, 3, 4, 5, 1e-5);
+   iret |= testLSTMBackpropagation<Architecture_t>(4, 2, 10, 5, 1e-5);
 
+   iret |= testLSTMBackpropagation<Architecture_t>(5, 16, 10, 20, 1e-5);
 
-   testLSTMBackpropagation<Architecture_t>(4, 2, 10, 5, 1e-5);
+   // using a fixed input (input size must be <=6, time steps <=3 and batch size <=1  )
+   iret |= testLSTMBackpropagation<Architecture_t>(3, 1, 10, 5, 1e-5, {true, true}, debug);
 
-   // large batch size fail for numerical reason
-   testLSTMBackpropagation<Architecture_t>(5, 8, 10, 5, 1e-5, {} );
+   // test with a dense layer
+   iret |= testLSTMBackpropagation<Architecture_t>(4, 8, 20, 10, 1e-5, {false, true, false}, debug);
+   //iret |= testLSTMBackpropagation<Architecture_t>(4, 4, 10, 20, 1e-5, {false, true}, debug);
 
-   // with a dense layer
-   testLSTMBackpropagation<Architecture_t>(4, 4, 10, 20, 1e-5, {false, true});
+   // test returning the full sequence and dense layer
+   iret |= testLSTMBackpropagation<Architecture_t>(3, 8, 5, 4, 1e-5, {false, true, false, true}, debug);
+
    // with an additional LSTM layer
-   testLSTMBackpropagation<Architecture_t>(4, 8, 10, 5, 1e-5, {false, true, true});
+   iret |= testLSTMBackpropagation<Architecture_t>(4, 16, 10, 5, 1e-5, {false, true, true}, debug);
 
-   // using a fixed input (this fails )
-   testLSTMBackpropagation<Architecture_t>(3, 1, 10, 6, 1e-5, {true}, debug);
+   if (iret)
+      Error("testLSTMBackPropagationCudnn", "Test failed !!!");
+   else
+      Info("testLSTMBackPropagationCudnn", "All tests passed !!!");
 
-   return 0;
+   return iret;
 }

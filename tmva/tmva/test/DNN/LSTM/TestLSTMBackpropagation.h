@@ -104,10 +104,13 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
 
 {
    bool failed = false;
-   if (options.size() == 0) options = std::vector<bool>(4);
+   const int nOpts = 4; // size of options
+   if (options.size() < nOpts)
+      options.resize(nOpts);
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
    bool addExtraLSTM = options[2];
+   bool returnLastSequence = options[3];
 
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;
@@ -116,9 +119,29 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
+   if (debug)
+      std::cout << std::endl;
+   std::cout
+      << "******************************************************************************************************\n";
+   std::cout << "Testing Weight Backprop using LSTM with batchsize = " << batchSize << " input = " << inputSize
+             << " state = " << stateSize << " time = " << timeSteps;
+   if (randomInput)
+      std::cout << " using a random input";
+   else
+      std::cout << " with a fixed input";
+   if (addDenseLayer)
+      std::cout << " and a dense layer";
+   if (addExtraLSTM)
+      std::cout << " and an extra LSTM";
+   if (returnLastSequence)
+      std::cout << " and full output";
+   std::cout << std::endl;
+   std::cout
+      << "******************************************************************************************************\n";
+   if (debug)
+      std::cout << std::endl;
 
    Tensor_t XArch = Architecture::CreateTensor(batchSize,timeSteps, inputSize);
-
 
    // for random input (default)
    if (randomInput) {
@@ -155,7 +178,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
    }
    if (debug) printTensor<Architecture>(XArch,"input");
 
-   size_t outputSize = timeSteps*stateSize;
+   size_t outputSize = (returnLastSequence) ? timeSteps * stateSize : stateSize;
    if (addDenseLayer) outputSize = 1;
 
    Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
@@ -168,23 +191,15 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
     if (debug) printTensor<Architecture>(Y,"ground truth ");
    fillMatrix(weights, 1.0);
 
-
-
-   std::cout << "Testing Weight Backprop using LSTM with batchsize = " << batchSize << " input = " << inputSize << " state = " << stateSize << " time = " << timeSteps;
-   if (randomInput) std::cout << "\tusing a random input";
-   else std::cout << "\twith a fixed input";
-   if (addDenseLayer)
-      std::cout << " and a dense layer";
-   if (addExtraLSTM)
-      std::cout << " and an extra LSTM";
-   std::cout << std::endl;
-
+   bool returnFirstSequence = addExtraLSTM || returnLastSequence;
    Net_t lstm(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   LSTMLayer_t* layer = lstm.AddBasicLSTMLayer(stateSize, inputSize, timeSteps);
-   //size_t input2 = stateSize;
-   if (addExtraLSTM) lstm.AddBasicLSTMLayer(stateSize, stateSize, timeSteps);
-   //layer->Print();
-   lstm.AddReshapeLayer(1, 1, timeSteps*stateSize, true);
+   LSTMLayer_t* layer = lstm.AddBasicLSTMLayer(stateSize, inputSize, timeSteps, false, returnFirstSequence );
+
+   // input size second RNN is = stateSize
+   if (addExtraLSTM) lstm.AddBasicLSTMLayer(stateSize, stateSize, timeSteps, false, returnLastSequence);
+
+   size_t outputLSTMSize = (returnLastSequence) ? timeSteps * stateSize : stateSize;
+   lstm.AddReshapeLayer(1, 1, outputLSTMSize, true);
 
    DenseLayer_t * dlayer1 = nullptr;
    DenseLayer_t * dlayer2 = nullptr;
@@ -195,6 +210,9 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
 
 
    lstm.Initialize();
+
+   if (debug)
+      lstm.Print();
 
    if (debug)
       Architecture::PrintTensor(XArch,"input");
@@ -261,7 +279,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -305,7 +323,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -344,7 +362,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -383,7 +401,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -423,7 +441,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -463,7 +481,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -503,7 +521,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -542,7 +560,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
          // Compute the relative error if dy != 0.
          Scalar_t error;
          std::string errorType;
-         if (std::fabs(dy_ref) > 1e-15) {
+         if (std::fabs(dy_ref) > 1e-7) {
             error = std::fabs((dy - dy_ref) / dy_ref);
             errorType = "relative";
          } else {
@@ -581,7 +599,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
       // Compute the relative error if dy != 0.
       Scalar_t error;
       std::string errorType;
-      if (std::fabs(dy_ref) > 1e-15) {
+      if (std::fabs(dy_ref) > 1e-7) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
       } else {
@@ -618,7 +636,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
       // Compute the relative error if dy != 0.
       Scalar_t error;
       std::string errorType;
-      if (std::fabs(dy_ref) > 1e-15) {
+      if (std::fabs(dy_ref) > 1e-7) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
       } else {
@@ -655,7 +673,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
       // Compute the relative error if dy != 0.
       Scalar_t error;
       std::string errorType;
-      if (std::fabs(dy_ref) > 1e-15) {
+      if (std::fabs(dy_ref) > 1e-7) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
       } else {
@@ -692,7 +710,7 @@ bool testLSTMBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSiz
       // Compute the relative error if dy != 0.
       Scalar_t error;
       std::string errorType;
-      if (std::fabs(dy_ref) > 1e-15) {
+      if (std::fabs(dy_ref) > 1e-7) {
          error = std::fabs((dy - dy_ref) / dy_ref);
          errorType = "relative";
       } else {

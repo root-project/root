@@ -29,7 +29,7 @@ if (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
    target_link_libraries(testLSTMBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCudnn COMMAND testLSTMBackpropagationCudnn)
 
-endif (CUDA_FOUND)
+endif (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)

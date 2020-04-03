@@ -76,7 +76,7 @@ private:
    size_t fTimeSteps;                           ///< Timesteps for GRU
 
    bool fRememberState;                         ///< Remember state in next pass
-   bool fReturnSequence = true;                 ///< Return in output full sequence or just last element
+   bool fReturnSequence = false;                ///< Return in output full sequence or just last element
 
    DNN::EActivationFunction fF1;                ///< Activation function: sigmoid
    DNN::EActivationFunction fF2;                ///< Activaton function: tanh
@@ -137,7 +137,7 @@ public:
 
    /*! Constructor */
    TBasicGRULayer(size_t batchSize, size_t stateSize, size_t inputSize,
-                   size_t timeSteps, bool rememberState = false,
+                   size_t timeSteps, bool rememberState = false, bool returnSequence = false,
                    DNN::EActivationFunction f1 = DNN::EActivationFunction::kSigmoid,
                    DNN::EActivationFunction f2 = DNN::EActivationFunction::kTanh,
                    bool training = true, DNN::EInitialization fA = DNN::EInitialization::kZero);
@@ -200,7 +200,7 @@ public:
    size_t GetStateSize()               const { return fStateSize; }
 
    inline bool DoesRememberState()       const { return fRememberState; }
-   inline bool IsReturnSequence() const { return fReturnSequence; }
+   inline bool DoesReturnSequence() const { return fReturnSequence; }
 
    inline DNN::EActivationFunction     GetActivationFunctionF1()        const { return fF1; }
    inline DNN::EActivationFunction     GetActivationFunctionF2()        const { return fF2; }
@@ -304,33 +304,27 @@ public:
 
 template <typename Architecture_t>
 TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSize, size_t inputSize, size_t timeSteps,
-                                                 bool rememberState, DNN::EActivationFunction f1, DNN::EActivationFunction f2,
-                                                 bool /* training */, DNN::EInitialization fA)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 6,
-                                   {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize},
-                                   {inputSize, inputSize, inputSize, stateSize, stateSize, stateSize},
-                                   3, {stateSize, stateSize, stateSize}, {1, 1, 1}, batchSize, timeSteps, stateSize, fA),
-   fStateSize(stateSize),
-   fTimeSteps(timeSteps),
-   fRememberState(rememberState),
-   fF1(f1),
-   fF2(f2),
-   fResetValue(batchSize, stateSize),
-   fUpdateValue(batchSize, stateSize),
-   fCandidateValue(batchSize, stateSize),
-   fState(batchSize, stateSize),
-   fWeightsResetGate(this->GetWeightsAt(0)), fWeightsResetGateState(this->GetWeightsAt(3)),
-   fResetGateBias(this->GetBiasesAt(0)),
-   fWeightsUpdateGate(this->GetWeightsAt(1)), fWeightsUpdateGateState(this->GetWeightsAt(4)),
-   fUpdateGateBias(this->GetBiasesAt(1)),
-   fWeightsCandidate(this->GetWeightsAt(2)), fWeightsCandidateState(this->GetWeightsAt(5)),
-   fCandidateBias(this->GetBiasesAt(2)),
-   fWeightsResetGradients(this->GetWeightGradientsAt(0)), fWeightsResetStateGradients(this->GetWeightGradientsAt(3)),
-   fResetBiasGradients(this->GetBiasGradientsAt(0)),
-   fWeightsUpdateGradients(this->GetWeightGradientsAt(1)), fWeightsUpdateStateGradients(this->GetWeightGradientsAt(4)),
-   fUpdateBiasGradients(this->GetBiasGradientsAt(1)),
-   fWeightsCandidateGradients(this->GetWeightGradientsAt(2)), fWeightsCandidateStateGradients(this->GetWeightGradientsAt(5)),
-   fCandidateBiasGradients(this->GetBiasGradientsAt(2))
+                                               bool rememberState, bool returnSequence, DNN::EActivationFunction f1,
+                                               DNN::EActivationFunction f2, bool /* training */,
+                                               DNN::EInitialization fA)
+   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, (returnSequence) ? timeSteps : 1, stateSize,
+                                   6, {stateSize, stateSize, stateSize, stateSize, stateSize, stateSize},
+                                   {inputSize, inputSize, inputSize, stateSize, stateSize, stateSize}, 3,
+                                   {stateSize, stateSize, stateSize}, {1, 1, 1}, batchSize,
+                                   (returnSequence) ? timeSteps : 1, stateSize, fA),
+     fStateSize(stateSize), fTimeSteps(timeSteps), fRememberState(rememberState), fReturnSequence(returnSequence),
+     fF1(f1), fF2(f2), fResetValue(batchSize, stateSize), fUpdateValue(batchSize, stateSize),
+     fCandidateValue(batchSize, stateSize), fState(batchSize, stateSize), fWeightsResetGate(this->GetWeightsAt(0)),
+     fWeightsResetGateState(this->GetWeightsAt(3)), fResetGateBias(this->GetBiasesAt(0)),
+     fWeightsUpdateGate(this->GetWeightsAt(1)), fWeightsUpdateGateState(this->GetWeightsAt(4)),
+     fUpdateGateBias(this->GetBiasesAt(1)), fWeightsCandidate(this->GetWeightsAt(2)),
+     fWeightsCandidateState(this->GetWeightsAt(5)), fCandidateBias(this->GetBiasesAt(2)),
+     fWeightsResetGradients(this->GetWeightGradientsAt(0)), fWeightsResetStateGradients(this->GetWeightGradientsAt(3)),
+     fResetBiasGradients(this->GetBiasGradientsAt(0)), fWeightsUpdateGradients(this->GetWeightGradientsAt(1)),
+     fWeightsUpdateStateGradients(this->GetWeightGradientsAt(4)), fUpdateBiasGradients(this->GetBiasGradientsAt(1)),
+     fWeightsCandidateGradients(this->GetWeightGradientsAt(2)),
+     fWeightsCandidateStateGradients(this->GetWeightGradientsAt(5)),
+     fCandidateBiasGradients(this->GetBiasGradientsAt(2))
 {
    for (size_t i = 0; i < timeSteps; ++i) {
       fDerivativesReset.emplace_back(batchSize, stateSize);
@@ -350,6 +344,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
       fStateSize(layer.fStateSize),
       fTimeSteps(layer.fTimeSteps),
       fRememberState(layer.fRememberState),
+      fReturnSequence(layer.fReturnSequence),
       fF1(layer.GetActivationFunctionF1()),
       fF2(layer.GetActivationFunctionF2()),
       fResetValue(layer.GetBatchSize(), layer.GetStateSize()),
@@ -555,7 +550,17 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool isTrai
       Architecture_t::Copy(arrOutputMt, fState);
    }
 
-   Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
+   if (fReturnSequence)
+      Architecture_t::Rearrange(this->GetOutput(), arrOutput); // B x T x D
+   else {
+      // get T[end[]]
+      Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
+      assert(tmp.GetSize() == this->GetOutput().GetSize());
+      tmp = Tensor_t(tmp.GetDeviceBuffer(), this->GetOutput().GetShape(), Architecture_t::GetTensorLayout());
+      Architecture_t::Copy(this->GetOutput(), tmp);
+      // keep array output
+      fY = arrOutput;
+   }
 }
 
 //______________________________________________________________________________
@@ -619,6 +624,10 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       const auto &weights = this->GetWeightsTensor();
       auto &weightGradients = this->GetWeightGradientsTensor();
 
+      // note that cudnnRNNBackwardWeights accumulate the weight gradients.
+      // We need then to initialize the tensor to zero every time
+      Architecture_t::InitializeZero(weightGradients);
+
       // hx is fState
       auto &hx = this->GetState();
       auto &cx = this->GetCell();
@@ -666,15 +675,25 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
     *  We obtain outputs during forward propagation and place the results in arr_output tensor. */
    Tensor_t arr_output ( fTimeSteps, this->GetBatchSize(), fStateSize);
 
-   Architecture_t::Rearrange(arr_output, this->GetOutput());
-
    Matrix_t initState(this->GetBatchSize(), fStateSize); // B x H
    DNN::initialize<Architecture_t>(initState, DNN::EInitialization::kZero); // B x H
 
    // This will take partial derivative of state[t] w.r.t state[t-1]
    Tensor_t arr_actgradients ( fTimeSteps, this->GetBatchSize(), fStateSize);
 
-   Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
+   if (fReturnSequence) {
+      Architecture_t::Rearrange(arr_output, this->GetOutput());
+      Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
+   } else {
+      //
+      arr_output = fY;
+      Architecture_t::InitializeZero(arr_actgradients);
+      Tensor_t tmp_grad = arr_actgradients.At(fTimeSteps - 1);
+      assert(tmp_grad.GetSize() == this->GetActivationGradients().GetSize());
+      tmp_grad = Tensor_t(tmp_grad.GetDeviceBuffer(), this->GetActivationGradients().GetShape(),
+                          Architecture_t::GetTensorLayout());
+      Architecture_t::Copy(tmp_grad, this->GetActivationGradients());
+   }
 
    /*! There are total 8 different weight matrices and 4 bias vectors.
     *  Re-initialize them with zero because it should have some value. (can't be garbage values) */
@@ -784,6 +803,7 @@ auto inline TBasicGRULayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
 
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "ResetWeights", this->GetWeightsAt(0));
