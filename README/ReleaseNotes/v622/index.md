@@ -153,3 +153,13 @@ By default, ROOT now falls back to the built-in version of xrootd if it can't fi
 This means that passing `-Dbuiltin_xrootd=ON` is not necessary anymore to build ROOT with xrootd support.
 Note that built-in xrootd requires a working network connection.
 
+## RDataFrame
+
+- Starting from this version, when `RSnapshotOptions.fMode` is `"UPDATE"` (i.e. the output file is opened in "UPDATE"
+  mode), Snapshot will refuse to write out a TTree if one with the same name is already present in the output file.
+  Users can set the new flag `RSnapshotOption::fOverwriteIfExists` to `true` to force the deletion of the TTree that is
+  already present and the writing of a new TTree with the same name. See
+  [ROOT-10573](https://sft.its.cern.ch/jira/browse/ROOT-10573) for more details.
+- RDataFrame changed its error handling strategy in case of unreadable input files. Instead of simply logging an error
+  and skipping the file, it now throws an exception if any of the input files is unreadable (this could also happen in
+  the middle of an event loop). See [ROOT-10549](https://sft.its.cern.ch/jira/browse/ROOT-10549) for more details.
