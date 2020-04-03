@@ -35,6 +35,7 @@ class RNTupleModel;
 
 namespace Detail {
 
+class RCluster;
 class RColumn;
 class RPagePool;
 class RFieldBase;
@@ -186,6 +187,9 @@ public:
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
+
+   /// Populates all the pages but only of the attached columns of the given cluster
+   virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId) = 0;
 };
 
 } // namespace Detail
