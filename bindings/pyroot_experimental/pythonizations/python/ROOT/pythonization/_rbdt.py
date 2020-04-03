@@ -9,14 +9,7 @@
 ################################################################################
 
 from ROOT import pythonization
-from libROOTPythonizations import AsRVec
-
-
-try:
-    from libROOTPythonizations import AsRTensor
-    has_rtensor = True
-except:
-    has_rtensor = False
+from cppyy import gbl as gbl_namespace
 
 
 def Compute(self, x):
@@ -29,11 +22,11 @@ def Compute(self, x):
     # numpy.array is a factory and the actual type of a numpy array is numpy.ndarray
     if isinstance(x, np.ndarray):
         if len(x.shape) == 1:
-            x_ = AsRVec(x)
+            x_ = gbl_namespace.VecOps.AsRVec(x)
             y = self._OriginalCompute(x_)
             return np.asarray(y)
         elif len(x.shape) == 2:
-            x_ = AsRTensor(x)
+            x_ = gbl_namespace.TMVA.Experimental.AsRTensor(x)
             y = self._OriginalCompute(x_)
             return np.asarray(y)
         else:
@@ -49,7 +42,7 @@ def pythonize_rbdt(klass, name):
     # klass: class to be pythonized
     # name: name of the class
 
-    if name.startswith("TMVA::Experimental::RBDT") and has_rtensor:
+    if name.startswith("TMVA::Experimental::RBDT"):
         klass._OriginalCompute = klass.Compute
         klass.Compute = Compute
 

@@ -20,7 +20,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         """
         for dtype in self.dtypes:
             data = {"x": np.array([1, 2, 3], dtype=dtype)}
-            df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+            df = ROOT.RDF.MakeNumpyDataFrame(data)
             self.assertEqual(df.Mean("x").GetValue(), 2)
 
     def test_multiple_columns(self):
@@ -30,7 +30,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         data = {}
         for dtype in self.dtypes:
             data[dtype] = np.array([1, 2, 3], dtype=dtype)
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+        df = ROOT.RDF.MakeNumpyDataFrame(data)
         colnames = df.GetColumnNames()
         # Test column names
         for dtype in colnames:
@@ -47,7 +47,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         self.assertEqual(sys.getrefcount(data), 2)
         self.assertEqual(sys.getrefcount(data["x"]), 2)
 
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+        df = ROOT.RDF.MakeNumpyDataFrame(data)
         self.assertTrue(hasattr(df, "__data__"))
         self.assertEqual(sys.getrefcount(df), 2)
 
@@ -58,7 +58,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         Test the use of transformations
         """
         data = {"x": np.array([1, 2, 3], dtype="float32")}
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+        df = ROOT.RDF.MakeNumpyDataFrame(data)
         df2 = df.Filter("x>1").Define("y", "2*x")
         self.assertEqual(df2.Mean("x").GetValue(), 2.5)
         self.assertEqual(df2.Mean("y").GetValue(), 5)
@@ -68,7 +68,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         Test behaviour with data dictionary going out of scope
         """
         data = {"x": np.array([1, 2, 3], dtype="float32")}
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+        df = ROOT.RDF.MakeNumpyDataFrame(data)
         del data
         self.assertEqual(df.Mean("x").GetValue(), 2)
 
@@ -78,7 +78,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         """
         x = np.array([1, 2, 3], dtype="float32")
         data = {"x": x}
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame(data)
+        df = ROOT.RDF.MakeNumpyDataFrame(data)
         del x
         self.assertEqual(df.Mean("x").GetValue(), 2)
 
@@ -86,7 +86,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         """
         Test behaviour with inplace dictionary
         """
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame({"x": np.array([1, 2, 3], dtype="float32")})
+        df = ROOT.RDF.MakeNumpyDataFrame({"x": np.array([1, 2, 3], dtype="float32")})
         self.assertEqual(df.Mean("x").GetValue(), 2)
 
     def test_lifetime_numpy_array(self):
@@ -96,7 +96,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
         x = np.array([1, 2, 3], dtype="float32")
         ref1 = sys.getrefcount(x)
 
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame({"x": x})
+        df = ROOT.RDF.MakeNumpyDataFrame({"x": x})
         ref2 = sys.getrefcount(x)
         self.assertEqual(ref2, ref1 + 1)
 
@@ -115,7 +115,7 @@ class MakeNumpyDataFrame(unittest.TestCase):
 
         # Data source has dictionary with RVecs attached, which take a reference
         # to the numpy array
-        df = ROOT.ROOT.RDF.MakeNumpyDataFrame({"x": x})
+        df = ROOT.RDF.MakeNumpyDataFrame({"x": x})
         m = df.Mean("x")
         ref2 = sys.getrefcount(x)
         self.assertEqual(ref1 + 1, ref2)
