@@ -19,7 +19,7 @@
 #include "TClassRef.h"
 #include "TInterpreter.h"
 #include "TLeaf.h"
-#include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
+#include "TROOT.h" // IsImplicitMTEnabled, GetThreadPoolSize
 #include "TTree.h"
 
 #include <stdexcept>
@@ -258,7 +258,7 @@ unsigned int GetNSlots()
    unsigned int nSlots = 1;
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled())
-      nSlots = ROOT::GetImplicitMTPoolSize();
+      nSlots = ROOT::GetThreadPoolSize();
 #endif // R__USE_IMT
    return nSlots;
 }

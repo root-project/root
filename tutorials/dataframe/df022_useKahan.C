@@ -37,7 +37,7 @@ public:
    {
       static_assert(std::is_floating_point<T>::value, "Kahan sum makes sense only on floating point numbers");
 
-      fNSlots = ROOT::IsImplicitMTEnabled() ? ROOT::GetImplicitMTPoolSize() : 1;
+      fNSlots = ROOT::IsImplicitMTEnabled() ? ROOT::GetThreadPoolSize() : 1;
       fPartialSums.resize(fNSlots, 0.);
       fCompensations.resize(fNSlots, 0.);
    }

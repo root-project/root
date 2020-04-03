@@ -624,7 +624,7 @@ public:
 TEST_P(RDFSimpleTests, BookCustomAction)
 {
    RDataFrame d(1);
-   const auto nWorkers = std::max(1u, ROOT::GetImplicitMTPoolSize());
+   const auto nWorkers = std::max(1u, ROOT::GetThreadPoolSize());
    const auto expected = nWorkers-1;
 
    auto maxSlot0 = d.Book<unsigned int>(MaxSlotHelper(nWorkers), {"tdfslot_"});

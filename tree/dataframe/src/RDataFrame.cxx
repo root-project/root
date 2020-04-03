@@ -514,7 +514,7 @@ We can take advantage of `ForeachSlot` to evaluate a thread-safe root mean squar
 ~~~{.cpp}
 // Thread-safe evaluation of RMS of branch "b" using ForeachSlot
 ROOT::EnableImplicitMT();
-const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+const unsigned int nSlots = ROOT::GetThreadPoolSize();
 std::vector<double> sumSqs(nSlots, 0.);
 std::vector<unsigned int> ns(nSlots, 0);
 
@@ -735,7 +735,7 @@ from the names of the variables specified by the user.
 It is possible to create custom columns also as a function of the processing slot and entry numbers. The methods that can
 be invoked are:
 - `DefineSlot(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, T1, T2, ...)`: the
-first parameter is the slot number which ranges from 0 to ROOT::GetImplicitMTPoolSize() - 1.
+first parameter is the slot number which ranges from 0 to ROOT::GetThreadPoolSize() - 1.
 - `DefineSlotEntry(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, ULong64_t,
 T1, T2, ...)`: the first parameter is the slot number while the second one the number of the entry being processed.
 
@@ -776,7 +776,7 @@ In order to facilitate writing of thread-safe operations, some RDataFrame featur
 offer thread-aware counterparts (`ForeachSlot`, `DefineSlot`, `OnPartialResultSlot`): their only difference is that they
 will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
 concurrently, `RDataFrame` guarantees that different threads will employ different values of the `slot` parameter,
-where `slot` will be a number between 0 and `ROOT::GetImplicitMTPoolSize() - 1`.
+where `slot` will be a number between 0 and `ROOT::GetThreadPoolSize() - 1`.
 In other words, within a slot, computation runs sequentially and events are processed sequentially.
 Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
 will never receive the same slot at the same time.
