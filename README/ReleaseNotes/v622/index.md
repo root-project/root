@@ -70,7 +70,7 @@ accessed like this:
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg);
     assert(pdf); // This should work, but the proxy doesn't have a way to check
     pdf->fitTo(...);
-That is, a `RooRealProxy` stores a pointer to a RooAbsArg, and this pointer has to be casted. There was no type
+That is, a `RooRealProxy` stores a pointer to a RooAbsArg, and this pointer has to be cast. There was no type
 safety, *i.e.* any object deriving from RooAbsArg could be stored in that proxy, and the user had to take care
 of ensuring the correct types.
 Now, if the class uses
