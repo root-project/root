@@ -1,43 +1,11 @@
+#include "ROOTUnitTestSupport.h"
+
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Path.h"
-
-#include "gtest/gtest.h"
-#include "gmock/gmock.h"
-
-// Copied from TFileMergerTests.cxx.
-// FIXME: Factor out in a new testing library in ROOT.
-namespace {
-using testing::internal::GetCapturedStderr;
-using testing::internal::CaptureStderr;
-using testing::internal::RE;
-class ExpectedErrorRAII {
-   std::string ExpectedRegex;
-   void pop()
-   {
-      std::string Seen = GetCapturedStderr();
-      bool match = RE::FullMatch(Seen, RE(ExpectedRegex));
-      EXPECT_TRUE(match);
-      if (!match) {
-         std::string msg = "Match failed!\nSeen: '" + Seen + "'\nRegex: '" + ExpectedRegex + "'\n";
-         GTEST_NONFATAL_FAILURE_(msg.c_str());
-      }
-   }
-
-public:
-   ExpectedErrorRAII(std::string E) : ExpectedRegex(E) { CaptureStderr(); }
-   ~ExpectedErrorRAII() { pop(); }
-};
-}
-
-#define EXPECT_ROOT_ERROR(expression, expected_error) \
-   {                                                  \
-      ExpectedErrorRAII EE(expected_error);           \
-      expression;                                     \
-   }
 
 // FIXME: We should probably have such a facility in TCling.
 static void cleanup()
@@ -78,10 +46,10 @@ struct CleanupRAII {
 TEST_F(TClingTests, GenerateDictionaryErrorHandling)
 {
    // Check error reporting and handling.
-   EXPECT_ROOT_ERROR(ASSERT_FALSE(gInterpreter->GenerateDictionary("", "")),
-                     "Error in .* Cannot generate dictionary without passing classes.\n");
-   EXPECT_ROOT_ERROR(ASSERT_FALSE(gInterpreter->GenerateDictionary(nullptr, nullptr)),
-                     "Error in .* Cannot generate dictionary without passing classes.\n");
+   ROOT_EXPECT_ERROR(ASSERT_FALSE(gInterpreter->GenerateDictionary("", "")), "TInterpreter::TCling::GenerateDictionary",
+                     "Cannot generate dictionary without passing classes.");
+   ROOT_EXPECT_ERROR(ASSERT_FALSE(gInterpreter->GenerateDictionary(nullptr, nullptr)),
+                     "TInterpreter::TCling::GenerateDictionary", "Cannot generate dictionary without passing classes.");
 }
 
 TEST_F(TClingTests, GenerateDictionaryRegression)
@@ -219,10 +187,10 @@ TEST_F(TClingTests, GetSharedLibDeps)
    ASSERT_TRUE(SeenDepsRef.startswith("TreePlayer Gpad Graf Graf3d Hist"));
    ASSERT_TRUE(SeenDepsRef.contains("MultiProc Net Tree"));
 
-   EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")),
-                     "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library ''\n");
-   EXPECT_ROOT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")),
-                     "Error in <TCling__GetSharedLibImmediateDepsSlow>: Cannot find library '   '\n");
+   ROOT_EXPECT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("")), "TCling__GetSharedLibImmediateDepsSlow",
+                     "Cannot find library ''");
+   ROOT_EXPECT_ERROR(ASSERT_TRUE(nullptr == GetLibDeps("   ")), "TCling__GetSharedLibImmediateDepsSlow",
+                     "Cannot find library '   '");
 }
 #endif
 
