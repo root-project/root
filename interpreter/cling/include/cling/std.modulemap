@@ -66,6 +66,7 @@ module "std" [system] {
     header "complex"
   }
   module "complex.h" {
+    requires !header_existence //Required by Windows
     export *
     header "complex.h"
   }
@@ -142,6 +143,7 @@ module "std" [system] {
     header "cwctype"
   }
   module "cxxabi.h" {
+    requires !header_existence //Required by Windows
     export *
     header "cxxabi.h"
   }
@@ -154,6 +156,7 @@ module "std" [system] {
     header "exception"
   }
   module "fenv.h" {
+    requires !header_existence //Required by Windows
     export *
     header "fenv.h"
   }
@@ -378,6 +381,7 @@ module "std" [system] {
   //  header "experimental/algorithm"
   //}
   module "ext/functional" {
+    requires !header_existence //Required by Windows
     export *
     header "ext/functional"
   }
@@ -391,39 +395,48 @@ module "std" [system] {
   }
 */
   module "ext/numeric" {
+    requires !header_existence //Required by Windows
     export *
     header "ext/numeric"
   }
   module "bits/allocator.h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/allocator.h"
   }
   module "bits/basic_ios.h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/basic_ios.h"
   }
   module "bits/cpp_type_traits.h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/cpp_type_traits.h"
   }
   module "bits/exception_defines.h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/exception_defines.h"
   }
   module "bits/ios_base.h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/ios_base.h"
   }
   module "bits/locale_facets.h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/locale_facets.h"
   }
   module "bits/stl_map.h" {
+    requires !header_existence //Required by Windows
     export *
     export bits_stl_tree_h
     header "bits/stl_map.h"
   }
   explicit module "bits_stl_tree_h" {
+    requires !header_existence //Required by Windows
     export *
     header "bits/stl_tree.h"
   }
