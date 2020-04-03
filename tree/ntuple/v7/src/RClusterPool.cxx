@@ -56,20 +56,38 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
 void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
 {
    while (true) {
-      RWorkItem workItem;
+      std::vector<RWorkItem> workItems;
       {
          std::unique_lock<std::mutex> lock(fLockWorkQueue);
          fCvHasWork.wait(lock, [&]{ return !fWorkQueue.empty(); });
-         workItem = std::move(fWorkQueue.front());
-         fWorkQueue.pop();
+         while (!fWorkQueue.empty()) {
+            workItems.emplace_back(std::move(fWorkQueue.front()));
+            fWorkQueue.pop();
+         }
       }
 
-      if (workItem.fClusterId == kInvalidDescriptorId)
-         break;
+      for (auto &item : workItems) {
+         if (item.fClusterId == kInvalidDescriptorId)
+            return;
 
-      //workItem.fPromise.set_value(fPageSource.LoadCluster(workItem.fClusterId));
+         auto cluster = fPageSource->LoadCluster(item.fClusterId);
 
-      // Check which clusters are actually still wanted
+         bool discard = false;
+         {
+            std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockInFlightClusters);
+            for (auto &inFlight : fInFlightClusters) {
+               if (inFlight.fClusterId != item.fClusterId)
+                  continue;
+               discard = inFlight.fIsExpired;
+               break;
+            }
+         }
+         if (discard)
+            cluster.reset();
+
+         item.fPromise.set_value(std::move(cluster));
+      }
+
    }
 }
 
