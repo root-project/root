@@ -30,10 +30,10 @@
 
 ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource *pageSource, unsigned int size)
    : fPageSource(pageSource)
+   , fPool(size, nullptr)
    , fThreadIo(&RClusterPool::ExecLoadClusters, this)
 {
    R__ASSERT(size > 0);
-   fPool.resize(size);
    fWindowPre = 0;
    fWindowPost = size;
    while ((1u << fWindowPre) < (fWindowPost - (fWindowPre + 1))) {
@@ -72,6 +72,8 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
 
          auto cluster = fPageSource->LoadCluster(item.fClusterId);
 
+         // Meanwhile, the user might have requested clusters out of the look-ahead window, so that we don't
+         // need the cluster anymore, in which case we simply discard it before moving it to the pool
          bool discard = false;
          {
             std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockInFlightClusters);
@@ -87,7 +89,6 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
 
          item.fPromise.set_value(std::move(cluster));
       }
-
    }
 }
 
@@ -95,7 +96,7 @@ std::shared_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId)
 {
    for (const auto &cptr : fPool) {
-      if (cptr->GetId() == clusterId)
+      if (cptr && (cptr->GetId() == clusterId))
          return cptr;
    }
    return nullptr;

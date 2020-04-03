@@ -86,6 +86,9 @@ public:
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
 
+   unsigned int GetWindowPre() const { return fWindowPre; }
+   unsigned int GetWindowPost() const { return fWindowPost; }
+
    /// Triggers preload, works well under
    std::shared_ptr<RCluster> GetCluster(DescriptorId_t clusterId);
 }; // class RClusterPool
