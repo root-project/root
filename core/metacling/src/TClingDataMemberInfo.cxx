@@ -592,7 +592,7 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    return 0;
 }
 
-const char *TClingDataMemberInfo::Name()
+const char *TClingDataMemberInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
