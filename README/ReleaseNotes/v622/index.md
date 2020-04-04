@@ -45,6 +45,7 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+- The `ACLiC` can be configured to pass options to the `rootcling` invocation by enabling in the `.rootrc` the `ACLiC.ExtraRootclingFlags [-opts]` line.
 
 ## I/O Libraries
 

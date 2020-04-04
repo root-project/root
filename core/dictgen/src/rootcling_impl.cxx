@@ -2855,7 +2855,13 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include \"TCollectionProxyInfo.h\"\n"
                << "/*******************************************************************/\n\n"
                << "#include \"TDataMember.h\"\n\n"; // To set their transiency
-   dictStream  << "// The generated code does not explicitly qualify STL entities\n"
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void AddNamespaceSTDdeclaration(std::ostream &dictStream)
+{
+   dictStream  << "// The generated code does not explicitly qualifies STL entities\n"
                << "namespace std {} using namespace std;\n\n";
 }
 
@@ -3735,6 +3741,10 @@ gOptMultiDict("multiDict",
              llvm::cl::desc("If this library has multiple separate LinkDef files."),
              llvm::cl::cat(gRootclingOptions));
 static llvm::cl::opt<bool>
+gOptNoGlobalUsingStd("noGlobalUsingStd",
+             llvm::cl::desc("Do not declare {using namespace std} in dictionary global scope."),
+             llvm::cl::cat(gRootclingOptions));
+static llvm::cl::opt<bool>
 gOptInterpreterOnly("interpreteronly",
                    llvm::cl::desc("Generate minimal dictionary for interactivity (without IO information)."),
                    llvm::cl::cat(gRootclingOptions));
@@ -4562,6 +4572,13 @@ int RootClingMain(int argc,
       CreateDictHeader(*dictStream, main_dictname);
       if (gOptSplit)
          CreateDictHeader(*splitDictStream, main_dictname);
+
+      if (!gOptNoGlobalUsingStd) {
+         AddNamespaceSTDdeclaration(*dictStream);
+         if (gOptSplit) {
+            AddNamespaceSTDdeclaration(*splitDictStream);
+         }
+      }
    }
 
    //---------------------------------------------------------------------------
@@ -4809,7 +4826,15 @@ int RootClingMain(int argc,
          constructorTypes.emplace_back("", interp);
       }
    }
-
+   if (!gOptIgnoreExistingDict && gOptNoGlobalUsingStd) {
+      if (dictStream) {
+         AddNamespaceSTDdeclaration(*dictStream);
+      }
+      if (gOptSplit && splitDictStream) {
+         AddNamespaceSTDdeclaration(*splitDictStream);
+      }
+   }
+   
    if (gOptGeneratePCH) {
       AnnotateAllDeclsForPCH(interp, scan);
    } else if (gOptInterpreterOnly) {
@@ -5163,6 +5188,7 @@ namespace genreflex {
                        bool writeEmptyRootPCM,
                        bool selSyntaxOnly,
                        bool noIncludePaths,
+                       bool noGlobalUsingStd,
                        const std::vector<std::string> &headersNames,
                        bool failOnWarnings,
                        const std::string &ofilename)
@@ -5235,6 +5261,10 @@ namespace genreflex {
       // Multidict support
       if (multiDict)
          argvVector.push_back(string2charptr("-multiDict"));
+
+      // Don't declare "using namespace std"
+      if (noGlobalUsingStd)
+         argvVector.push_back(string2charptr("-noGlobalUsingStd"));
 
 
       AddToArgVectorSplit(argvVector, pcmsNames, "-m");
@@ -5312,6 +5342,7 @@ namespace genreflex {
                            bool writeEmptyRootPCM,
                            bool selSyntaxOnly,
                            bool noIncludePaths,
+                           bool noGlobalUsingStd,
                            const std::vector<std::string> &headersNames,
                            bool failOnWarnings,
                            const std::string &outputDirName_const = "")
@@ -5348,6 +5379,7 @@ namespace genreflex {
                                           writeEmptyRootPCM,
                                           selSyntaxOnly,
                                           noIncludePaths,
+                                          noGlobalUsingStd,
                                           namesSingleton,
                                           failOnWarnings,
                                           ofilenameFullPath);
@@ -5454,6 +5486,7 @@ int GenReflexMain(int argc, char **argv)
                        OFILENAME,
                        TARGETLIB,
                        MULTIDICT,
+                       NOGLOBALUSINGSTD,
                        SELECTIONFILENAME,
                        ROOTMAP,
                        ROOTMAPLIB,
@@ -5612,6 +5645,16 @@ int GenReflexMain(int argc, char **argv)
          "--multiDict\tSupport for many dictionaries in one library\n"
          "      Form correct pcm names if multiple dictionaries will be in the same\n"
          "      library (needs target library switch. See its documentation).\n"
+      },
+
+      
+      {
+         NOGLOBALUSINGSTD,
+         NOTYPE ,
+         "" , "noGlobalUsingStd" ,
+         ROOT::option::FullArg::None,
+         "--no-using-std\tDo not declare {using namespace std} in the dictionary global scope\n"
+         "      All header files must have sumbols from std:: namespace fully qualified\n"
       },
 
       {
@@ -5892,6 +5935,9 @@ int GenReflexMain(int argc, char **argv)
    bool multidict = false;
    if (options[MULTIDICT]) multidict = true;
 
+   bool noGlobalUsingStd = false;
+   if (options[NOGLOBALUSINGSTD]) noGlobalUsingStd = true;
+
    if (multidict && targetLibName.empty()) {
       ROOT::TMetaUtils::Error("",
                               "Multilib support is requested but no target lib is specified. A sane pcm name cannot be formed.\n");
@@ -5981,6 +6027,7 @@ int GenReflexMain(int argc, char **argv)
                                     writeEmptyRootPCM,
                                     selSyntaxOnly,
                                     noIncludePaths,
+                                    noGlobalUsingStd,
                                     headersNames,
                                     failOnWarnings,
                                     ofileName);
@@ -6003,6 +6050,7 @@ int GenReflexMain(int argc, char **argv)
                                         writeEmptyRootPCM,
                                         selSyntaxOnly,
                                         noIncludePaths,
+                                        noGlobalUsingStd,
                                         headersNames,
                                         failOnWarnings,
                                         ofileName);
