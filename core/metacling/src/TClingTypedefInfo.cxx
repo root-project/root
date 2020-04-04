@@ -248,7 +248,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the name of the current typedef.
 
-const char *TClingTypedefInfo::Name()
+const char *TClingTypedefInfo::Name() const
 {
    if (!IsValid()) {
       return "(unknown)";

@@ -101,7 +101,7 @@ public:
    TClingTypeInfo                              *Type() const;
    std::string                                  GetMangledName() const;
    const char                                  *GetPrototype();
-   const char                                  *Name() override;
+   const char                                  *Name() const override;
    const char                                  *TypeName() const;
    const char                                  *Title();
 };

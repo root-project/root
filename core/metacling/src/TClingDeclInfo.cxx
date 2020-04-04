@@ -26,7 +26,7 @@ using namespace clang;
 // pin the vtable here.
 TClingDeclInfo::~TClingDeclInfo() {}
 
-const char* TClingDeclInfo::Name()
+const char* TClingDeclInfo::Name() const
 {
    if (!IsValid())
       return 0;

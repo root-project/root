@@ -644,7 +644,7 @@ const char *TClingMethodInfo::GetPrototype()
    return buf.c_str();
 }
 
-const char *TClingMethodInfo::Name()
+const char *TClingMethodInfo::Name() const
 {
    if (!IsValid()) {
       return 0;
