@@ -3567,6 +3567,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
       rcling.Append(fromConfig);
+      TString extraFlags = gEnv->GetValue("ACLiC.ExtraRootclingFlags","");
+      if (!extraFlags.IsNull()) {
+        extraFlags.Prepend(" ");
+        extraFlags.Append(" ");
+        rcling.Append(extraFlags);
+      }
    }
 
    // Create a modulemap
