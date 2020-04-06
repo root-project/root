@@ -544,7 +544,7 @@ unsigned int RLoopManager::GetNextID()
 namespace {
 static void ThrowIfPoolSizeChanged(unsigned int nSlots)
 {
-   const auto poolSize = ROOT::GetImplicitMTPoolSize();
+   const auto poolSize = ROOT::GetThreadPoolSize();
    const bool isSingleThreadRun = (poolSize == 0 && nSlots == 1);
    if (!isSingleThreadRun && poolSize != nSlots) {
       std::string msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool was " +
