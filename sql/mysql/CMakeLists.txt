@@ -8,8 +8,6 @@
 # CMakeLists.txt file for building ROOT sql/mysql package
 ############################################################################
 
-include_directories(${MYSQL_INCLUDE_DIR})
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RMySQL
   HEADERS
     TMySQLResult.h
@@ -27,4 +25,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RMySQL
     RIO
 )
 
+target_include_directories(RMySQL PUBLIC ${MYSQL_INCLUDE_DIR})
 target_link_libraries(RMySQL PUBLIC ${MYSQL_LIBRARIES})

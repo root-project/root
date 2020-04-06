@@ -315,11 +315,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     # Remove all source dirs also while they preserved in root dictionaries and
     # ends in the gInterpreter->GetIncludePath()
 
-    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}\/")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
     # endif()
+
+    # this instruct rootcling do not store such paths in dictionary
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals)
 
     if(incdirs)
        list(REMOVE_DUPLICATES incdirs)
@@ -629,11 +632,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(module_incs $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
       set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
     endif()
-  endif()
-
-  # for all ROOT dictionaries module includes already extracted
-  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
-    set(module_incs)
   endif()
 
   #---call rootcint------------------------------------------

@@ -8,7 +8,6 @@
 # CMakeLists.txt file for building ROOT io/mpi package
 ############################################################################
 
-include_directories(${MPI_CXX_HEADER_DIR})
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
   HEADERS
@@ -22,6 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
      MathCore
 )
 
+target_include_directories(RMPI PUBLIC ${MPI_CXX_HEADER_DIR})
 target_link_libraries(RMPI
   PRIVATE
     MPI::MPI_CXX
