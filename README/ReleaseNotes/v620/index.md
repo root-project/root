@@ -329,6 +329,8 @@ prevent infinite loops or crashes.
 ## Build, Configuration and Testing Infrastructure
 
 - Option `python` was renamed to `pyroot`. The option spelled `python` is a deprecated alias for `pyroot`.
+- python-dev is now required and the compilation will fail if CMake is not able
+  to find it.
 - Make MLP optional via the `-Dmlp={OFF,ON}` switch for CMake
 - Make Spectrum optional via the `-Dspectrum={OFF,ON}` switch for CMake
 - ROOT now fails to configure when any package is missing
