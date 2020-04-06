@@ -50,7 +50,7 @@ def fillWorkspace(w):
             sig),
         ROOT.RooArgList(bkgfrac))
 
-    getattr(w, 'import')(model)
+    w.Import(model)
 
 
 # Create and fill workspace
