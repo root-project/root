@@ -453,53 +453,6 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Globally enables the parallel tree processing, which is a case of
-   /// implicit multi-threading in ROOT, activating the required locks.
-   /// This IMT use case, implemented in TTreeProcessor::Process, receives a user
-   /// function and applies it to subranges of the tree, which correspond to its
-   /// clusters. Hence, for every cluster, a task is spawned to potentially
-   /// process it in parallel with the other clusters.
-   void EnableParTreeProcessing()
-   {
-#ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParTreeProcessing");
-      if (sym)
-         sym();
-#else
-      ::Warning("EnableParTreeProcessing", "Cannot enable parallel tree processing, please build ROOT with -Dimt=ON");
-#endif
-   }
-
-   //////////////////////////////////////////////////////////////////////////////
-   /// Globally disables the IMT use case of parallel branch processing,
-   /// deactivating the corresponding locks.
-   void DisableParTreeProcessing()
-   {
-#ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParTreeProcessing");
-      if (sym)
-         sym();
-#else
-      ::Warning("DisableParTreeProcessing", "Cannot disable parallel tree processing, please build ROOT with -Dimt=ON");
-#endif
-   }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Returns true if parallel tree processing is enabled.
-   Bool_t IsParTreeProcessingEnabled()
-   {
-#ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
-      if (sym)
-         return sym();
-      else
-         return kFALSE;
-#else
-      return kFALSE;
-#endif
-   }
-
-   ////////////////////////////////////////////////////////////////////////////////
    /// Keeps track of the status of ImplicitMT w/o resorting to the load of
    /// libImt
    static Bool_t &IsImplicitMTEnabledImpl()
