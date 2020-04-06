@@ -134,7 +134,6 @@ using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
 using namespace ROOT;
 using namespace TClassEdit;
 
-namespace std {}
 using namespace std;
 
 namespace genreflex {

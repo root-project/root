@@ -28,6 +28,8 @@
 #include "ROOT/RStringView.hxx"
 #include <algorithm>
 
+using namespace std;
+
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
 
@@ -42,8 +44,6 @@ namespace {
       }
    };
 }
-
-namespace std {} using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the length, if any, taken by std:: and any
