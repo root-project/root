@@ -8,30 +8,6 @@ using namespace ROOT::Experimental;
 
 // Test FindBin() in all its glory.
 
-// Epsilon bin widths.
-TEST(AxisBinning, EquidistEpsBins) {
-   static constexpr auto eps = std::numeric_limits<double>::min();
-   RAxisEquidistant ax("RITLE", 10, 0., eps * 10.);
-   EXPECT_LE(-1, ax.FindBin(0.5*eps));
-   EXPECT_GE(1, ax.FindBin(0.5*eps));
-
-   EXPECT_LE(5, ax.FindBin(5.*eps));
-   EXPECT_GE(6, ax.FindBin(5.*eps));
-
-   EXPECT_LE(10, ax.FindBin(10.*eps));
-   EXPECT_GE(11, ax.FindBin(10.*eps));
-
-   EXPECT_EQ(-1, ax.FindBin(-2000.*eps));
-   EXPECT_EQ(-2, ax.FindBin(2000.*eps));
-   EXPECT_LE(1, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(-1, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_GE(1, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
-}
-
-
 // Limit bin widths on an Irregular axis.
 TEST(AxisBinning, IrregularEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();

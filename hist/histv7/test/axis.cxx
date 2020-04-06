@@ -313,27 +313,41 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
 }
 
 TEST(AxisTest, Equidistant) {
-  auto test = [](const RAxisEquidistant& axis, std::string_view title) {
-    test_axis_equidistant(axis, title, false, 10, 1.2, 3.4);
+  auto test = [](const RAxisEquidistant& axis,
+                 std::string_view title,
+                 int nbins,
+                 double min,
+                 double max) {
+    test_axis_equidistant(axis, title, false, nbins, min, max);
 
     RAxisConfig cfg(axis);
     EXPECT_EQ(cfg.GetTitle(), title);
-    EXPECT_EQ(cfg.GetNBinsNoOver(), 10);
+    EXPECT_EQ(cfg.GetNBinsNoOver(), nbins);
     EXPECT_EQ(cfg.GetKind(), RAxisConfig::kEquidistant);
     EXPECT_EQ(cfg.GetBinBorders().size(), 2u);
-    EXPECT_EQ(cfg.GetBinBorders()[0], 1.2);
-    EXPECT_DOUBLE_EQ(cfg.GetBinBorders()[1], 3.4);
+    EXPECT_EQ(cfg.GetBinBorders()[0], min);
+    EXPECT_DOUBLE_EQ(cfg.GetBinBorders()[1], max);
     EXPECT_EQ(cfg.GetBinLabels().size(), 0u);
   };
 
   {
-    SCOPED_TRACE("Equidistant axis w/o title");
-    test(RAxisEquidistant(10, 1.2, 3.4), "");
+    SCOPED_TRACE("Equidistant axis w/o title, normal binning");
+    test(RAxisEquidistant(10, 1.2, 3.4), "", 10, 1.2, 3.4);
   }
 
   {
-    SCOPED_TRACE("Equidistant axis with title");
-    test(RAxisEquidistant("RITLE_E2", 10, 1.2, 3.4), "RITLE_E2");
+    SCOPED_TRACE("Equidistant axis with title, normal binning");
+    test(RAxisEquidistant("RITLE_E2", 5, -8.9, -6.7),
+         "RITLE_E2",
+         5,
+         -8.9,
+         -6.7);
+  }
+
+  {
+    SCOPED_TRACE("Equidistant axis w/o title, smallest possible binning");
+    static constexpr auto eps = std::numeric_limits<double>::min();
+    test(RAxisEquidistant(7, 0.0, 7.0*eps), "", 7, 0.0, 7.0*eps);
   }
 }
 
