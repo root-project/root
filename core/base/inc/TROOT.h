@@ -75,16 +75,6 @@ namespace Internal {
       TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
       ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
    };
-
-   // Manage parallel tree processing
-   void EnableParTreeProcessing();
-   void DisableParTreeProcessing();
-   Bool_t IsParTreeProcessingEnabled();
-   class TParTreeProcessingRAII {
-   public:
-      TParTreeProcessingRAII()  { EnableParTreeProcessing();  }
-      ~TParTreeProcessingRAII() { DisableParTreeProcessing(); }
-   };
 } } // End ROOT::Internal
 
 namespace ROOT {
