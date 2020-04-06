@@ -263,7 +263,7 @@ public:
    /// if CanGrow()).
    int GetUnderflowBin() const noexcept {
       if (CanGrow())
-         return 0;
+         return kInvalidBin;
       else
          return (int) RAxisBase::EBinType::kUnderflowBin;
    }
@@ -272,7 +272,7 @@ public:
    /// if CanGrow()).
    int GetOverflowBin() const noexcept {
       if (CanGrow())
-         return 0;
+         return kInvalidBin;
       else
          return (int) RAxisBase::EBinType::kOverflowBin;
    }

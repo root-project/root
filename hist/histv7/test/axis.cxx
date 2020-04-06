@@ -231,10 +231,10 @@ void test_axis_base(const RAxisBase& axis,
   EXPECT_EQ(axis.GetNOverflowBins(), n_overflow_bins);
   EXPECT_EQ(axis.GetNBins(), n_bins_no_over + n_overflow_bins);
 
-  const int underflow_bin = can_grow ? 0 : -1;
+  const int underflow_bin = can_grow ? RAxisBase::kInvalidBin : -1;
   EXPECT_EQ(axis.GetUnderflowBin(), underflow_bin);
 
-  const int overflow_bin = can_grow ? 0 : -2;
+  const int overflow_bin = can_grow ? RAxisBase::kInvalidBin : -2;
   EXPECT_EQ(axis.GetOverflowBin(), overflow_bin);
 
   EXPECT_EQ(*axis.begin(), can_grow ? underflow_bin+1 : underflow_bin+2);
@@ -257,7 +257,8 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
   EXPECT_DOUBLE_EQ(axis.GetBinWidth(), bin_width);
   EXPECT_DOUBLE_EQ(axis.GetInverseBinWidth(), 1.0/bin_width);
 
-  const int underflow_findbin_res = can_grow ? 0 : -1;
+  const int kInvalidBin = RAxisBase::kInvalidBin;
+  const int underflow_findbin_res = can_grow ? kInvalidBin : -1;
   EXPECT_EQ(axis.FindBin(minimum-100*bin_width), underflow_findbin_res);
   EXPECT_EQ(axis.FindBin(minimum-0.01*bin_width), underflow_findbin_res);
   const int first_bin = 1;
@@ -266,7 +267,7 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
   EXPECT_EQ(axis.FindBin(minimum+1.01*bin_width), first_bin+1);
   const int last_bin = first_bin + n_bins_no_over - 1;
   EXPECT_EQ(axis.FindBin(maximum-0.01*bin_width), last_bin);
-  const int overflow_findbin_res = can_grow ? 0 : -2;
+  const int overflow_findbin_res = can_grow ? kInvalidBin : -2;
   EXPECT_EQ(axis.FindBin(maximum+0.01*bin_width), overflow_findbin_res);
   EXPECT_EQ(axis.FindBin(maximum+100*bin_width), overflow_findbin_res);
 
@@ -289,19 +290,19 @@ void test_axis_equidistant(const RAxisEquidistant& axis,
     EXPECT_DOUBLE_EQ(axis.GetBinFrom(n_bins_no_over+1), maximum);
   }
 
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-100*bin_width), 0);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-bin_width), 0);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-0.5*bin_width), 0);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-100*bin_width), kInvalidBin);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-bin_width), kInvalidBin);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum-0.5*bin_width), kInvalidBin);
   EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum), first_bin);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum+0.5*bin_width), 0);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum+0.5*bin_width), kInvalidBin);
   EXPECT_EQ(axis.GetBinIndexForLowEdge(minimum+bin_width), first_bin+1);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-1.5*bin_width), 0);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-1.5*bin_width), kInvalidBin);
   EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-bin_width), last_bin);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-0.5*bin_width), 0);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum-0.5*bin_width), kInvalidBin);
   EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum), last_bin+1);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+0.5*bin_width), 0);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+bin_width), 0);
-  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+100*bin_width), 0);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+0.5*bin_width), kInvalidBin);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+bin_width), kInvalidBin);
+  EXPECT_EQ(axis.GetBinIndexForLowEdge(maximum+100*bin_width), kInvalidBin);
 }
 
 TEST(AxisTest, Equidistant) {
@@ -397,16 +398,19 @@ TEST(AxisTest, Irregular) {
     EXPECT_EQ(axis.GetBinBorders()[2], 11.13);
     EXPECT_EQ(axis.GetBinBorders()[3], 17.19);
 
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::lowest()), 0);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.2), 0);
+    const int kInvalidBin = RAxisBase::kInvalidBin;
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::lowest()),
+              kInvalidBin);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.2), kInvalidBin);
     EXPECT_EQ(axis.GetBinIndexForLowEdge(2.3), 1);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.4), 0);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(5.6), 0);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.4), kInvalidBin);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(5.6), kInvalidBin);
     EXPECT_EQ(axis.GetBinIndexForLowEdge(5.7), 2);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.1),  0);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.1),  kInvalidBin);
     EXPECT_EQ(axis.GetBinIndexForLowEdge(17.19), 4);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.2),  0);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::max()), 0);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.2),  kInvalidBin);
+    EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::max()),
+              kInvalidBin);
 
     RAxisConfig cfg(axis);
     EXPECT_EQ(cfg.GetTitle(), title);
