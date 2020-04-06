@@ -463,11 +463,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   LINKDEF
     inc/LinkDef.h
 )
+
 list(APPEND fitcore_incl ${CMAKE_SOURCE_DIR}/roofit/roofitcore/inc)
 
 if(vdt OR builtin_vdt)
-  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIRS})
-  list(APPEND fitcore_incl ${VDT_INCLUDE_DIRS})
+   target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIRS})
+   list(APPEND fitcore_incl ${VDT_INCLUDE_DIRS})
 endif()
 
 foreach(inlc ${fitcore_incl})

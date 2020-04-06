@@ -36,6 +36,6 @@ if(${GLIBCXX_USE_CXX11_ABI})
       COMPILE_DEFINITIONS _GLIBCXX_USE_CXX11_ABI=0)
 endif()
 
-target_include_directories(Oracle PUBLIC ${ORACLE_INCLUDE_DIR})
 target_compile_definitions(Oracle PUBLIC ${ORACLE_DEFINITIONS})
+target_include_directories(Oracle PUBLIC ${ORACLE_INCLUDE_DIR})
 target_link_libraries(Oracle PUBLIC ${ORACLE_LIBRARIES})

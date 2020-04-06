@@ -207,7 +207,6 @@ foreach(inlc ${math_incl})
    target_include_directories(MathCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
 
-
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 

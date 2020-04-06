@@ -10,7 +10,6 @@
 
 if(builtin_vdt)
   link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-  set(vdt_includes ${HEADER_OUTPUT_PATH})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps

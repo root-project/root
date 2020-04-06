@@ -8,7 +8,6 @@
 # CMakeLists.txt file for building ROOT io/mpi package
 ############################################################################
 
-
 ROOT_STANDARD_LIBRARY_PACKAGE(RMPI
   HEADERS
      TMPIClientInfo.h
