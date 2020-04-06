@@ -574,9 +574,6 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    std::vector<std::size_t> fileIdxs(fFileNames.size());
    std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
 
-   // Enable this IMT use case (activate its locks)
-   Internal::TParTreeProcessingRAII ptpRAII;
-
    fPool.Foreach(processFile, fileIdxs);
 }
 
