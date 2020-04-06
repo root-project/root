@@ -318,11 +318,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
     # endif()
 
     # this instruct rootcling do not store such paths in dictionary
-    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals)
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
 
     if(incdirs)
        list(REMOVE_DUPLICATES incdirs)
