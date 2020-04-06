@@ -8,25 +8,6 @@ using namespace ROOT::Experimental;
 
 // Test FindBin() in all its glory.
 
-// Basic binning on a Equidistant axis.
-TEST(AxisBinning, EquidistBasic) {
-   RAxisEquidistant ax("RITLE", 10, -1., 1.);
-   EXPECT_EQ(1, ax.FindBin(-.999));
-   EXPECT_EQ(5, ax.FindBin(-.001));
-   EXPECT_EQ(10, ax.FindBin(0.999));
-   EXPECT_EQ(-1, ax.FindBin(-2.));
-   EXPECT_EQ(-2, ax.FindBin(2000.));
-
-   EXPECT_GE(6, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(5, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_GE(6, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_LE(5, ax.FindBin(-std::numeric_limits<double>::min()));
-
-   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
-}
-
-
 // Epsilon bin widths.
 TEST(AxisBinning, EquidistEpsBins) {
    static constexpr auto eps = std::numeric_limits<double>::min();
@@ -46,25 +27,6 @@ TEST(AxisBinning, EquidistEpsBins) {
    EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
    EXPECT_LE(-1, ax.FindBin(-std::numeric_limits<double>::min()));
    EXPECT_GE(1, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
-}
-
-
-// Basic binning on an Irregular axis.
-TEST(AxisBinning, IrregularBasic) {
-   RAxisIrregular ax("RITLE", {-5., 0., 0.1, 1., 10., 100.});
-   EXPECT_EQ(2, ax.FindBin(.001));
-   EXPECT_EQ(1, ax.FindBin(-.001));
-   EXPECT_EQ(5, ax.FindBin(99.));
-   EXPECT_EQ(-1, ax.FindBin(-6.));
-   EXPECT_EQ(-2, ax.FindBin(2000.));
-
-   EXPECT_GE(2, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_LE(1, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_GE(2, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_LE(1, ax.FindBin(-std::numeric_limits<double>::min()));
-
    EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
    EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
 }
