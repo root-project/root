@@ -422,6 +422,7 @@ TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view t
    : fFileNames({std::string(filename)}),
      fTreeNames(treename.empty() ? FindTreeNames() : std::vector<std::string>{std::string(treename)}), fFriendInfo(), fPool(nThreads)
 {
+   ROOT::EnableThreadSafety();
 }
 
 std::vector<std::string> CheckAndConvert(const std::vector<std::string_view> &views)
@@ -454,6 +455,7 @@ TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view> &filename
                                  : std::vector<std::string>(fFileNames.size(), std::string(treename))),
      fFriendInfo(), fPool(nThreads)
 {
+   ROOT::EnableThreadSafety();
 }
 
 std::vector<std::string> GetFilesFromTree(TTree &tree)
@@ -492,6 +494,7 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_
    : fFileNames(GetFilesFromTree(tree)), fTreeNames(GetTreeFullPaths(tree)), fEntryList(entries),
      fFriendInfo(GetFriendInfo(tree)), fPool(nThreads)
 {
+   ROOT::EnableThreadSafety();
 }
 
 ////////////////////////////////////////////////////////////////////////
