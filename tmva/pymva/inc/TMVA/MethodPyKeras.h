@@ -91,15 +91,15 @@ namespace TMVA {
       TString fNumValidationString;  // option string defining the number of validation events
       TString fGpuOptions;    // GPU options (for Tensorflow to set in session_config.gpu_options)
 
-      bool fModelIsSetup = false; // flag whether model is loaded, neede for getMvaValue during evaluation
+      bool fModelIsSetup = false; // flag whether model is loaded, needed for getMvaValue during evaluation
       float* fVals = nullptr; // variables array used for GetMvaValue
       std::vector<float> fOutput; // probability or regression output array used for GetMvaValue
       UInt_t fNVars {0}; // number of variables
       UInt_t fNOutputs {0}; // number of outputs (classes or targets)
       TString fFilenameTrainedModel; // output filename for trained model
 
-      void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables loads the model
-      UInt_t  GetNumValidationSamples();  // get numer of validation events according to given option
+      void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables, loads the model
+      UInt_t  GetNumValidationSamples();  // get number of validation events according to given option
 
       ClassDef(MethodPyKeras, 0);
    };
