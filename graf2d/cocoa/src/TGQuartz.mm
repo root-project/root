@@ -247,8 +247,17 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x2,y2        : end of line
 
    if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap)
+      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
+         if (!view) {
+             ::Warning("DrawLine", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         [view.fQuartzWindow addCrosshairWindow];
          fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);
+      }
+
       return;
    }
 
