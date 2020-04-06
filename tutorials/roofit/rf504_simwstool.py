@@ -48,7 +48,7 @@ d.defineType("bar")
 
 # Import ingredients in a workspace
 w = ROOT.RooWorkspace("w", "w")
-getattr(w, 'import')(ROOT.RooArgSet(model, c, d))
+w.Import(ROOT.RooArgSet(model, c, d))
 
 # Make Sim builder tool
 sct = ROOT.RooSimWSTool(w)

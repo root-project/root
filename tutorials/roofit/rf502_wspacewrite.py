@@ -53,10 +53,10 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 w = ROOT.RooWorkspace("w", "workspace")
 
 # Import model and all its components into the workspace
-getattr(w, 'import')(model)
+w.Import(model)
 
 # Import data into the workspace
-getattr(w, 'import')(data)
+w.Import(data)
 
 # Print workspace contents
 w.Print()
