@@ -460,7 +460,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-  LINKDEF 
+  LINKDEF
     inc/LinkDef.h
 )
 list(APPEND fitcore_incl ${CMAKE_SOURCE_DIR}/roofit/roofitcore/inc)
@@ -472,6 +472,6 @@ endif()
 
 foreach(inlc ${fitcore_incl})
    target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${incl}>)
-endforeach()   
+endforeach()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

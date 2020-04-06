@@ -49,18 +49,15 @@ ROOT_LINKER_LIBRARY(FTGL
   DEPENDENCIES
     ${glew_dep}
 )
-target_include_directories(FTGL PRIVATE ${FREETYPE_INCLUDE_DIRS})
-target_include_directories(FTGL PRIVATE ${OPENGL_INCLUDE_DIR})
-target_include_directories(FTGL PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
-
-if(builtin_glew)
-   target_include_directories(FTGL PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
-endif()
-
 
 target_include_directories(FTGL PRIVATE
       ${FREETYPE_INCLUDE_DIRS}
       ${OPENGL_INCLUDE_DIR}
+      ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
 )
+
+if(builtin_glew)
+   target_include_directories(FTGL PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
+endif()
 
 ROOT_INSTALL_HEADERS()
