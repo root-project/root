@@ -252,7 +252,7 @@ RooWorkspace::~RooWorkspace()
 ////////////////////////////////////////////////////////////////////////////////
 /// Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
 /// The arguments will be passed to the relevant import() or import(RooAbsData&, ...) import calls
-
+/// \note From python, use `Import()`, since `import` is a reserved keyword.
 Bool_t RooWorkspace::import(const char* fileSpec,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -314,7 +314,7 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 ////////////////////////////////////////////////////////////////////////////////
 /// Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
 /// of import() method for single RooAbsArg
-
+/// \note From python, use `Import()`, since `import` is a reserved keyword.
 Bool_t RooWorkspace::import(const RooArgSet& args,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -356,6 +356,7 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 ///  The RenameConflictNodes, RenameNodes and RecycleConflictNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
 ///  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
 ///  two comma separated lists.
+/// \note From python, use `Import()`, since `import` is a reserved keyword.
 Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -753,7 +754,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 /// <tr><td> `Rename(const char* suffix)` <td> Rename dataset upon insertion
 /// <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td> Change names of observables in dataset upon insertion
 /// <tr><td> `Silence` <td> Be quiet, except in case of errors
-
+/// \note From python, use `Import()`, since `import` is a reserved keyword.
 Bool_t RooWorkspace::import(RooAbsData& inData,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,

@@ -110,6 +110,9 @@ if(roofit)
 
   # RooDataHist pythonisations
   ROOT_ADD_PYUNITTEST(pyroot_pyz_roodatahist_ploton roodatahist_ploton.py)
+
+  # RooWorkspace pythonizations
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_rooworkspace rooworkspace.py)
 endif()
 
 # std::string_view backport in CPyCppyy
