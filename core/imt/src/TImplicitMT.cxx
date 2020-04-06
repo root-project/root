@@ -46,12 +46,6 @@ static std::atomic_int &GetParBranchProcessingCount()
    return count;
 }
 
-static std::atomic_int &GetParTreeProcessingCount()
-{
-   static std::atomic_int count(0);
-   return count;
-}
-
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetImplicitMTFlag()) {
@@ -88,19 +82,4 @@ extern "C" void ROOT_TImplicitMT_DisableParBranchProcessing()
 extern "C" bool ROOT_TImplicitMT_IsParBranchProcessingEnabled()
 {
    return GetParBranchProcessingCount() > 0;
-};
-
-extern "C" void ROOT_TImplicitMT_EnableParTreeProcessing()
-{
-   ++GetParTreeProcessingCount();
-};
-
-extern "C" void ROOT_TImplicitMT_DisableParTreeProcessing()
-{
-   --GetParTreeProcessingCount();
-};
-
-extern "C" bool ROOT_TImplicitMT_IsParTreeProcessingEnabled()
-{
-   return GetParTreeProcessingCount() > 0;
 };
