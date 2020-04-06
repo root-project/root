@@ -415,8 +415,6 @@ namespace Internal {
    void EnableParBranchProcessing()
    {
 #ifdef R__USE_IMT
-      if (!IsImplicitMTEnabled())
-         EnableImplicitMT();
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParBranchProcessing");
       if (sym)
          sym();
