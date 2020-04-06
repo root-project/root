@@ -343,12 +343,6 @@ TEST(AxisTest, Equidistant) {
          -8.9,
          -6.7);
   }
-
-  {
-    SCOPED_TRACE("Equidistant axis w/o title, smallest possible binning");
-    static constexpr auto eps = std::numeric_limits<double>::min();
-    test(RAxisEquidistant(7, 0.0, 7.0*eps), "", 7, 0.0, 7.0*eps);
-  }
 }
 
 TEST(AxisTest, Growable) {

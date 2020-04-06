@@ -6,29 +6,6 @@
 
 using namespace ROOT::Experimental;
 
-// Test FindBin() in all its glory.
-
-// Limit bin widths on an Irregular axis.
-TEST(AxisBinning, IrregularEpsBins) {
-   static constexpr auto eps = std::numeric_limits<double>::min();
-   RAxisIrregular ax("RITLE", {0., eps, 2.*eps, 3.*eps, 4.*eps, 5.*eps});
-   EXPECT_LE(-1, ax.FindBin(0.5*eps));
-   EXPECT_GE(1, ax.FindBin(0.5*eps));
-
-   EXPECT_LE(3, ax.FindBin(3.*eps));
-   EXPECT_GE(4, ax.FindBin(3.*eps));
-
-   EXPECT_LE(5, ax.FindBin(5.*eps));
-   EXPECT_GE(6, ax.FindBin(5.*eps));
-
-   EXPECT_EQ(-1, ax.FindBin(-2000.*eps));
-   EXPECT_EQ(-2, ax.FindBin(2000.*eps));
-   EXPECT_EQ(1, ax.FindBin(std::numeric_limits<double>::min()));
-   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::min()));
-   EXPECT_EQ(-2, ax.FindBin(std::numeric_limits<double>::max()));
-   EXPECT_EQ(-1, ax.FindBin(-std::numeric_limits<double>::max()));
-}
-
 // Histogram binning on a Equidistant axis.
 TEST(HistImplBinning, Equidist1D) {
    Detail::RHistImpl<Detail::RHistData<1, double, std::vector<double>, RHistStatContent>,
