@@ -462,8 +462,6 @@ namespace Internal {
    void EnableParTreeProcessing()
    {
 #ifdef R__USE_IMT
-      if (!IsImplicitMTEnabled())
-         EnableImplicitMT();
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParTreeProcessing");
       if (sym)
          sym();
