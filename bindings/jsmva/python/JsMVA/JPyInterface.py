@@ -145,7 +145,7 @@ class functions:
     # from DataLoader and Factory modules
     @staticmethod
     def register(noOutput=False):
-        from JupyROOT.utils import transformers
+        from JupyROOT.helpers.utils import transformers
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
         functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
         functions.__changeMethod(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Change"))
