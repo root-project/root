@@ -65,7 +65,15 @@ The following people have contributed to this new version:
 
 ## RooFit Libraries
 
-### Type safe proxies to RooFit objects
+### RooWorkspace::Import() for Python
+`RooWorkspace.import()` cannot be used in Python, since it is a reserved keyword. Users therefore had to resort
+to
+    getattr(workspace, 'import')(...)
+Now,
+    workspace.Import(...)
+has been defined for the new PyROOT, which makes calling the function easier.
+
+### Type-safe proxies for RooFit objects
 RooFit's proxy classes have been modernised. The new class `RooProxy` allows for access to other RooFit objects
 similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
 accessed like this:
