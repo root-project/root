@@ -2323,18 +2323,18 @@ void RooLagrangianMorphing::RooLagrangianMorphConfig::setCouplings(const RooAbsC
 template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setDiagrams(const std::vector<std::vector<T> >& diagrams)
 {
   for(size_t j=0; j<diagrams.size(); ++j){
-    std::vector<RooListProxy*> diagram;
+    std::vector<RooListProxy*> vertices;
     for(size_t i=0; i<diagrams[j].size(); i++){
-      diagram.push_back(new RooListProxy());
-      diagram[i]->add(diagrams[j][i]);
+      vertices.push_back(new RooListProxy());
+      vertices[i]->add(diagrams[j][i]);
     }
-   this->_configDiagrams.push_back(diagram);
-  }
+    this->_configDiagrams.push_back(vertices);
+ }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// config setter for vertices
-template <class T> void  RooLagrangianMorphing::RooLagrangianMorphConfig::setVertices(const std::vector<T>& vertices)
+template <class T> void RooLagrangianMorphing::RooLagrangianMorphConfig::setVertices(const std::vector<T>& vertices)
 {
   std::vector<std::vector<T> > diagrams;
   diagrams.push_back(vertices);
@@ -2474,16 +2474,13 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
       title << "set of couplings in the vertex " << i;
       RooListProxy* list = new RooListProxy(name.str().c_str(),this,*(diagrams[j][i]));
       diagram.push_back(list);
-      if(own){
-      // ownership of contents of diagrams[i][j]       
       }
+  // ownership of contents of diagrams[i][j]       
     this->_diagrams.push_back(diagram);
-  }
+   }
+ }
 
-    if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
-}
-
-  if(this->_config._couplings.size() > 0){
+  else if(this->_config._couplings.size() > 0){
     RooArgList operators;
     std::vector<RooListProxy*> vertices;
     DEBUG("couplings provided");
@@ -2523,6 +2520,7 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
   this->_diagrams.push_back(vertices);
   }
   if(this->_ownParameters) adjustParamRanges(this->_paramCards,this->_operators);
+
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// disable interference between the listed operators

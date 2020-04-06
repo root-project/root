@@ -328,6 +328,7 @@ public:
   RooRealSumFunc* cloneFunc() const;
   ClassDefOverride(RooLagrangianMorphFunc,2)
 };
+
 class RooLagrangianMorphPdf : public RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf> {
 public:
   RooLagrangianMorphPdf(const char *name, const char *title, const char* fileName, const char* obsName, const RooLagrangianMorphing::RooLagrangianMorphConfig& config, const char* basefolder, const RooArgList& folders, const char* objFilter = 0, bool allowNegativeYields=true) : RooLagrangianMorphBase(name,title,fileName,obsName,config,basefolder,folders,objFilter,allowNegativeYields){}
