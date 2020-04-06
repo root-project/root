@@ -91,9 +91,9 @@ else()
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
     # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
     # tag might end on "-rc1" or similar; parse version number in front.
-    string(REGEX REPLACE "v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALWAYS})
-    string(REGEX REPLACE "v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALWAYS})
-    string(REGEX REPLACE "v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALWAYS})
+    string(REGEX REPLACE "^tags/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
+    string(REGEX REPLACE "^tags/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
+    string(REGEX REPLACE "^tags/v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
   elseif("${GIT_DESCRIBE_ALL}" MATCHES "/v[0-9]+-[0-9]+.*-patches$")
     # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
     # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
@@ -107,6 +107,7 @@ else()
     set(ROOT_FULL_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
   endif()
   set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+  message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
 endif()
 
 
