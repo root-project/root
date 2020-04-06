@@ -1823,14 +1823,16 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
    TIter next(pidslist);
    TProcessID *p;
    bool found = false;
-   R__RWLOCK_ACQUIRE_READ(fgRwLock);
-   while ((p = (TProcessID*)next())) {
-      if (!strcmp(p->GetTitle(),pid->GetTitle())) {
-         found = true;
-         break;
+
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      while ((p = (TProcessID*)next())) {
+         if (!strcmp(p->GetTitle(),pid->GetTitle())) {
+            found = true;
+            break;
+         }
       }
    }
-   R__RWLOCK_RELEASE_READ(fgRwLock);
 
    if (found) {
       delete pid;
@@ -1842,11 +1844,12 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
    pids->AddAtAndExpand(pid,pidf);
    pid->IncrementCount();
 
-   R__RWLOCK_ACQUIRE_WRITE(fgRwLock);
-   pidslist->Add(pid);
-   Int_t ind = pidslist->IndexOf(pid);
-   pid->SetUniqueID((UInt_t)ind);
-   R__RWLOCK_RELEASE_WRITE(fgRwLock);
+   {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      pidslist->Add(pid);
+      Int_t ind = pidslist->IndexOf(pid);
+      pid->SetUniqueID((UInt_t)ind);
+   }
 
    return pid;
 }
