@@ -233,7 +233,6 @@ TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
       }
    };
 
-   ROOT::DisableImplicitMT();
    ROOT::EnableImplicitMT(4);
 
    ROOT::TTreeProcessorMT p(filename, treename);
@@ -276,7 +275,6 @@ TEST(TreeProcessorMT, LimitNTasks_CheckClusters)
    };
 
    for (auto nThreads = 0; nThreads <= 4; ++nThreads) {
-      ROOT::DisableImplicitMT();
       ROOT::EnableImplicitMT(nThreads);
 
       ROOT::TTreeProcessorMT p(filename, treename);
@@ -284,10 +282,10 @@ TEST(TreeProcessorMT, LimitNTasks_CheckClusters)
 
       CheckClusters(clusters, nEvents);
       clusters.clear();
+      ROOT::DisableImplicitMT();
    }
 
    gSystem->Unlink(filename);
-   ROOT::DisableImplicitMT();
 }
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
@@ -335,7 +333,9 @@ TEST(TreeProcessorMT, TreeWithFriendTree)
    ROOT::TTreeProcessorMT tp(*t1);
    tp.Process(procLambda);
 
+   // Clean-up
    DeleteFiles(fileNames);
+   ROOT::DisableImplicitMT();
 }
 
 TEST(TreeProcessorMT, ChainWithFriendChain)
@@ -384,11 +384,11 @@ TEST(TreeProcessorMT, ChainWithFriendChain)
 
    // Clean-up
    DeleteFiles(fileNames);
+   ROOT::DisableImplicitMT();
 }
 
 TEST(TreeProcessorMT, SetNThreads)
 {
-   ROOT::DisableImplicitMT();
    EXPECT_EQ(ROOT::GetImplicitMTPoolSize(), 0u);
    {
       ROOT::TTreeProcessorMT p("somefile", "sometree", 1u);
