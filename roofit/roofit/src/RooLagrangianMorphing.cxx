@@ -2448,23 +2448,6 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
       this->_operators.add(operators);
     }
 
-/*    for(size_t j=0; j<diagrams.size(); ++j){
-      std::vector<RooListProxy*> vertices;
-      for(size_t i=0; i<diagrams[j].size(); i++){
-        std::stringstream name;
-        name << "!vertex" << i;
-        std::stringstream title;
-        title << "set of couplings in the vertex " << i;
-        vertices.push_back(new RooListProxy(name.str().c_str(),title.str().c_str(),this,kTRUE,kFALSE));
-        if(own){
-          vertices[i]->addOwned(diagrams[j][i]);
-        } else {
-          vertices[i]->add(diagrams[j][i]);
-        }
-      }
-      this->_diagrams.push_back(vertices);
-    }*/
-
   for(size_t j=0; j<diagrams.size(); ++j){
     std::vector<RooListProxy*> diagram;
     for(size_t i=0; i<diagrams[j].size(); ++i){
@@ -2472,13 +2455,18 @@ void RooLagrangianMorphing::RooLagrangianMorphBase<Base>::setup(bool own)
       name << "!vertex" << i;
       std::stringstream title;
       title << "set of couplings in the vertex " << i;
-      RooListProxy* list = new RooListProxy(name.str().c_str(),this,*(diagrams[j][i]));
-      diagram.push_back(list);
+      diagram.push_back(new RooListProxy(name.str().c_str(),title.str().c_str(),this,kTRUE,kFALSE));
+      if(own){
+        diagram[i]->addOwned(*diagrams[j][i]);
+      } else {
+        diagram[i]->add(*diagrams[j][i]);
+      }
       }
   // ownership of contents of diagrams[i][j]       
     this->_diagrams.push_back(diagram);
    }
  }
+
 
   else if(this->_config._couplings.size() > 0){
     RooArgList operators;
