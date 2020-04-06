@@ -16,8 +16,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <ROOT/RConfig.hxx>
-#include <string>
 #include "TBuffer.h"
+
+#include <string>
 
 using namespace std;
 
