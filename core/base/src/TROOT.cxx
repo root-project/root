@@ -156,7 +156,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TVirtualX.h"
 
 #include <string>
-namespace std {} using namespace std;
 
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)

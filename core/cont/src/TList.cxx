@@ -78,7 +78,8 @@ LastLink() and lnk->Prev() or by using the Before() member.
 #include "TVirtualMutex.h"
 
 #include <string>
-namespace std {} using namespace std;
+
+using namespace std;
 
 ClassImp(TList);
 

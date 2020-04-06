@@ -34,7 +34,8 @@
 #include <iostream>
 
 #include <string>
-namespace std {} using namespace std;
+
+using namespace std;
 
 const Int_t kMaxLen = 1024;
 
