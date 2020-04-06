@@ -420,7 +420,8 @@ std::vector<std::string> TTreeProcessorMT::FindTreeNames()
 ///                     the same as for TThreadExecutor.
 TTreeProcessorMT::TTreeProcessorMT(std::string_view filename, std::string_view treename, UInt_t nThreads)
    : fFileNames({std::string(filename)}),
-     fTreeNames(treename.empty() ? FindTreeNames() : std::vector<std::string>{std::string(treename)}), fFriendInfo(), fPool(nThreads)
+     fTreeNames(treename.empty() ? FindTreeNames() : std::vector<std::string>{std::string(treename)}), fFriendInfo(),
+     fPool(nThreads)
 {
    ROOT::EnableThreadSafety();
 }
