@@ -27,8 +27,6 @@ which will hold the directory and its associate
 
 #include <algorithm>
 
-namespace std {} using namespace std;
-
 ClassImp(ROOT::Internal::TBranchProxyDirector);
 
 namespace ROOT {

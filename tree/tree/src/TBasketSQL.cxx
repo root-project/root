@@ -26,8 +26,6 @@
 
 ClassImp(TBasketSQL);
 
-namespace std {} using namespace std;
-
 /** \class TBasketSQL
 \ingroup tree
 
