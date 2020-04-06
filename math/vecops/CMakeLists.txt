@@ -10,7 +10,6 @@
 
 if(builtin_vdt)
   link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-  include_directories(${HEADER_OUTPUT_PATH})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
@@ -26,11 +25,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
     Core
 )
 
+if(builtin_vdt OR vdt)
+   target_include_directories(ROOTVecOps PRIVATE ${VDT_INCLUDE_DIRS} INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIRS}>)
+endif()
+
 if(builtin_vdt)
   target_link_libraries(ROOTVecOps PRIVATE ${VDT_LIBRARIES})
 elseif(vdt)
   target_link_libraries(ROOTVecOps PUBLIC ${VDT_LIBRARIES})
-  target_include_directories(ROOTVecOps PUBLIC ${VDT_INCLUDE_DIRS})
 endif()
 
 if(MSVC)
