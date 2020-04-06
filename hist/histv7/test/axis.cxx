@@ -379,74 +379,75 @@ TEST(AxisTest, Growable) {
 }
 
 TEST(AxisTest, Irregular) {
-  auto test = [](const RAxisIrregular& axis, std::string_view title) {
-    test_axis_base(axis, title, false, 3, 2.3, 17.19);
+  auto test = [&](const RAxisIrregular& axis,
+                  std::string_view title,
+                  const std::vector<double>& bin_borders) {
+    const int n_bins_no_over = bin_borders.size() - 1;
+    test_axis_base(axis,
+                   title,
+                   false,
+                   n_bins_no_over,
+                   bin_borders.front(),
+                   bin_borders.back());
 
     EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::lowest()), -1);
-    EXPECT_EQ(axis.FindBin(2.29), -1);
-    EXPECT_EQ(axis.FindBin(2.31), 1);
-    EXPECT_EQ(axis.FindBin(5.69), 1);
-    EXPECT_EQ(axis.FindBin(5.71), 2);
-    EXPECT_EQ(axis.FindBin(11.1), 2);
-    EXPECT_EQ(axis.FindBin(11.2), 3);
-    EXPECT_EQ(axis.FindBin(17.1), 3);
-    EXPECT_EQ(axis.FindBin(17.3), -2);
+    EXPECT_EQ(axis.FindBin(bin_borders.front() - 0.01), -1);
+    for (std::size_t bin = 1; bin <= n_bins_no_over; ++bin) {
+      const double bin_width = bin_borders[bin] - bin_borders[bin-1];
+      EXPECT_EQ(axis.FindBin(bin_borders[bin-1] + 0.01 * bin_width), bin);
+      EXPECT_EQ(axis.FindBin(bin_borders[bin] - 0.01 * bin_width), bin);
+    }
+    EXPECT_EQ(axis.FindBin(bin_borders.front() + 0.01), -2);
     EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::max()), -2);
+
     EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(1), 4.0);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(2), 8.415);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(3), 14.16);
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(4), std::numeric_limits<double>::max());
     EXPECT_DOUBLE_EQ(axis.GetBinFrom(0), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(1), 2.3);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(2), 5.7);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(3), 11.13);
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(4), 17.19);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), 2.3);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(1), 5.7);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(2), 11.13);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(3), 17.19);
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(4), std::numeric_limits<double>::max());
-    EXPECT_EQ(axis.GetBinBorders().size(), 4u);
-    EXPECT_EQ(axis.GetBinBorders()[0], 2.3);
-    EXPECT_EQ(axis.GetBinBorders()[1], 5.7);
-    EXPECT_EQ(axis.GetBinBorders()[2], 11.13);
-    EXPECT_EQ(axis.GetBinBorders()[3], 17.19);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), bin_borders[0]);
+    for (std::size_t bin = 1; bin <= n_bins_no_over; ++bin) {
+      const double left_border = bin_borders[bin-1];
+      const double right_border = bin_borders[bin];
+      EXPECT_DOUBLE_EQ(axis.GetBinCenter(bin), (left_border + right_border) / 2.0);
+      EXPECT_DOUBLE_EQ(axis.GetBinFrom(bin), left_border);
+      EXPECT_DOUBLE_EQ(axis.GetBinTo(bin), right_border);
+    }
+    EXPECT_DOUBLE_EQ(axis.GetBinCenter(n_bins_no_over+1),
+                     std::numeric_limits<double>::max());
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(n_bins_no_over+1), bin_borders.back());
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(n_bins_no_over+1),
+                     std::numeric_limits<double>::max());
+
+    EXPECT_EQ(axis.GetBinBorders(), bin_borders);
 
     const int kInvalidBin = RAxisBase::kInvalidBin;
     EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::lowest()),
               kInvalidBin);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.2), kInvalidBin);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.3), 1);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(2.4), kInvalidBin);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(5.6), kInvalidBin);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(5.7), 2);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.1),  kInvalidBin);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.19), 4);
-    EXPECT_EQ(axis.GetBinIndexForLowEdge(17.2),  kInvalidBin);
+    for (std::size_t iborder = 0; iborder < bin_borders.size(); ++iborder) {
+      const double border = bin_borders[iborder];
+      EXPECT_EQ(axis.GetBinIndexForLowEdge(border - 0.01), kInvalidBin);
+      EXPECT_EQ(axis.GetBinIndexForLowEdge(border), iborder + 1);
+      EXPECT_EQ(axis.GetBinIndexForLowEdge(border + 0.01), kInvalidBin);
+    }
     EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::max()),
               kInvalidBin);
 
     RAxisConfig cfg(axis);
     EXPECT_EQ(cfg.GetTitle(), title);
-    EXPECT_EQ(cfg.GetNBinsNoOver(), 3);
+    EXPECT_EQ(cfg.GetNBinsNoOver(), n_bins_no_over);
     EXPECT_EQ(cfg.GetKind(), RAxisConfig::kIrregular);
-    EXPECT_EQ(cfg.GetBinBorders().size(), 4u);
-    EXPECT_EQ(cfg.GetBinBorders()[0], 2.3);
-    EXPECT_EQ(cfg.GetBinBorders()[1], 5.7);
-    EXPECT_EQ(cfg.GetBinBorders()[2], 11.13);
-    EXPECT_EQ(cfg.GetBinBorders()[3], 17.19);
+    EXPECT_EQ(cfg.GetBinBorders(), bin_borders);
     EXPECT_EQ(cfg.GetBinLabels().size(), 0u);
   };
 
   {
     SCOPED_TRACE("Irregular axis w/o title");
-    test(RAxisIrregular({2.3, 5.7, 11.13, 17.19}), "");
+    test(RAxisIrregular({-1.2, 3.4, 5.6}), "", {-1.2, 3.4, 5.6});
   }
 
   {
     SCOPED_TRACE("Irregular axis with title");
-    test(RAxisIrregular("RITLE_I2", {2.3, 5.7, 11.13, 17.19}), "RITLE_I2");
+    test(RAxisIrregular("RITLE_I2", {2.3, 5.7, 11.13, 17.19}),
+         "RITLE_I2",
+         {2.3, 5.7, 11.13, 17.19});
   }
 }
 
