@@ -32,6 +32,16 @@ ROOT distribution, portability of workspaces can be enhanced by
 storing the source code of those classes in the workspace as well.
 This process is also organized by the workspace through the
 `importClassCode()` method.
+
+## Out-of-memory crashes when reading large workspaces
+When reading large workspaces with deeply nested PDFs, one can encounter
+ouf-of-memory errors if the stack size is too small. Unfortunately, ROOT cannot
+recover from this situation, and also not give useful instructions. When
+suspecting to have run out of stack memory, check
+```
+ulimit -s
+```
+and try to increase it.
 **/
 
 #include "RooWorkspace.h"
