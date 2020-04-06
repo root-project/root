@@ -29,6 +29,7 @@ The following people have contributed to this new version:
  Axel Naumann, CERN/SFT,\
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
+ Timur Pocheptsoff, Qt Company,\
  Fons Rademakers, CERN/SFT,\
  Oksana Shadura, Nebraska,\
  Enric Tejedor Saavedra, CERN/SFT,\
@@ -106,7 +107,10 @@ into RooFit's message stream number 2. The verbosity can therefore be adjusted u
 
 ## 2D Graphics Libraries
 
- * Universal time (correct time zone and daylight saving time) in PDF file.
+  - Universal time (correct time zone and daylight saving time) in PDF file. Implemented by
+    Jan Musinsky.
+  - The crosshair type cursor type did not work on MacOS Catalina. This has been fixed by
+    Timur Pocheptsoff.
 
 ## 3D Graphics Libraries
 
