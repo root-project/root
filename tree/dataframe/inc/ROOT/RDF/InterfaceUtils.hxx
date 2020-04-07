@@ -285,7 +285,7 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
-using ColumnNames_t = ROOT::Detail::RDF::ColumnNames_t;
+using ROOT::Detail::RDF::ColumnNames_t;
 
 template <typename T>
 void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RBookedCustomColumns &currentCols,

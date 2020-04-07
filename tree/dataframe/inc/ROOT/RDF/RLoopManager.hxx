@@ -50,11 +50,11 @@ namespace RDFInternal = ROOT::Internal::RDF;
 class RCustomColumnBase;
 class RFilterBase;
 class RRangeBase;
+using ROOT::RDF::RDataSource;
 
 /// The head node of a RDF computation graph.
 /// This class is responsible of running the event loop.
 class RLoopManager : public RNodeBase {
-   using RDataSource = ROOT::RDF::RDataSource;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
    using Callback_t = std::function<void(unsigned int)>;
    class TCallback {
