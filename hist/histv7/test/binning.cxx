@@ -8,8 +8,8 @@
 
 using namespace ROOT::Experimental;
 
-// Convenience tool for enumerating bins in row-major order along an axis, along
-// with expected bin properties.
+// Convenience tool for enumerating bins in row-major order along an axis,
+// collecting some useful bin properties along the way.
 struct BinProperties {
    int index;
    double from, center, to;
