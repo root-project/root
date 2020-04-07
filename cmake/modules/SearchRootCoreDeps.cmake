@@ -45,9 +45,9 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     if(PYTHON_LIBRARIES AND NOT Python2_LIBRARIES)
       set(Python2_LIBRARIES "${PYTHON_LIBRARIES}")
     endif()
-    find_package(Python2 COMPONENTS Interpreter Development REQUIRED)
-    # Search for NumPy, but not required:
-    find_package(Python2 COMPONENTS NumPy QUIET)
+    find_package(Python2 COMPONENTS Interpreter REQUIRED)
+    # Search for NumPy and Development, but not required:
+    find_package(Python2 COMPONENTS Development NumPy QUIET)
     # Compat with find_package(PythonInterp), find_package(PythonLibs)
     set(PYTHON_EXECUTABLE "${Python2_EXECUTABLE}" CACHE INTERNAL "" FORCE)
     set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
@@ -67,9 +67,9 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     if(PYTHON_LIBRARIES AND NOT Python_LIBRARIES)
       set(Python_LIBRARIES "${PYTHON_LIBRARIES}")
     endif()
-    find_package(Python COMPONENTS Interpreter Development REQUIRED)
-    # Search for NumPy, but not required:
-    find_package(Python COMPONENTS NumPy QUIET)
+    find_package(Python COMPONENTS Interpreter REQUIRED)
+    # Search for NumPy and Development, but not required:
+    find_package(Python COMPONENTS Development NumPy QUIET)
     # Compat with find_package(PythonInterp), find_package(PythonLibs), find_package(NumPy)
     set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}" CACHE INTERNAL "" FORCE)
     set(PYTHON_INCLUDE_DIRS "${Python_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
@@ -84,12 +84,12 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
 else()
   find_package(PythonInterp ${python_version} REQUIRED)
 
-  find_package(PythonLibs ${python_version} REQUIRED)
+  find_package(PythonLibs ${python_version})
 
   if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
     message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
-    " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
-    "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
+      " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
+      "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
   endif()
 
   find_package(NumPy QUIET)

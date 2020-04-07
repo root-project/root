@@ -307,6 +307,13 @@ elseif(APPLE)
   set(x11_defvalue OFF)
 endif()
 
+# Pyroot requires python-dev package; force to OFF if it was not found
+# PYTHONLIBS_FOUND is used for cmake < 3.12
+if(NOT PYTHONLIBS_FOUND AND NOT Python_Development_FOUND AND NOT Python2_Development_FOUND)
+  set(pyroot_defvalue OFF)
+  set(pyroot_experimental_defvalue OFF)
+endif()
+
 # Current limitations for modules:
 #---Modules are disabled on aarch64 platform (due ODR violations)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES aarch64)
