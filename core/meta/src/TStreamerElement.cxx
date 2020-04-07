@@ -1987,10 +1987,20 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
       return;
    } else {
       // To enable forward compatibility we actually save with the old value
-      Int_t tmp = fType;
-      fType = TVirtualStreamerInfo::kStreamer;
-      R__b.WriteClassBuffer(TStreamerSTL::Class(),this);
-      fType = tmp;
+      TStreamerSTL tmp;
+      // Hand coded copy constructor since the 'normal' one are intentionally
+      // deleted.
+      tmp.fName = fName;
+      tmp.fTitle = fTitle;
+      tmp.fType = TVirtualStreamerInfo::kStreamer;
+      tmp.fSize = fSize;
+      tmp.fArrayLength = fArrayLength;
+      for(int i = 0; i < 5; ++i)
+         tmp.fMaxIndex[i] = fMaxIndex[i];
+      tmp.fTypeName = fTypeName;
+      tmp.fSTLtype = fSTLtype;
+      tmp.fCtype = fCtype;
+      R__b.WriteClassBuffer(TStreamerSTL::Class(), &tmp);
    }
 }
 
