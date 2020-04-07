@@ -18,42 +18,44 @@
 /** \class RooAddPdf
     \ingroup Roofitcore
 
-
 RooAddPdf is an efficient implementation of a sum of PDFs of the form 
 
 \f[
- \sum_{i=1}^{n} c_i * \mathrm{PDF}_i
+ \sum_{i=1}^{n} c_i \cdot \mathrm{PDF}_i
 \f]
 
 or 
 \f[
- c_1*\mathrm{PDF}_1 + c_2*\mathrm{PDF}_2 + ... + (1-\sum_{i=1}^{n-1}c_i)*\mathrm{PDF}_n
+ c_1\cdot\mathrm{PDF}_1 + c_2\cdot\mathrm{PDF}_2 \; + \; ... \; + \; \left( 1-\sum_{i=1}^{n-1}c_i \right) \cdot \mathrm{PDF}_n
 \f]
 
 The first form is for extended likelihood fits, where the
 expected number of events is \f$ \sum_i c_i \f$. The coefficients \f$ c_i \f$
 can either be explicitly provided, or, if all components support
-extended likelihood fits, they can be calculated the contribution
-of each PDF to the total number of expected events.
+extended likelihood fits, they can be calculated from the contribution
+of each PDF to the total expected number of events.
 
-In the second form, the sum of the coefficients is required to be one or less,
-and the coefficient of the last PDF is calculated from that condition.
+In the second form, the sum of the coefficients is required to be 1 or less,
+and the coefficient of the last PDF is calculated automatically from the condition
+that the sum of all coefficients has to be 1.
 
-It is also possible to parameterize the coefficients recursively
+### Recursive coefficients
+It is also possible to parameterise the coefficients recursively
 
 \f[
-c_1*\mathrm{PDF}_1 + (1-c_1)(c_2*\mathrm{PDF}_2 + (1-c_2)*(c_3*\mathrm{PDF}_3 + ...))
+ \sum_{i=1}^n c_i \prod_{j=1}^{i-1} \left[ (1-c_j) \right] \cdot \mathrm{PDF}_i \\
+ = c_1 \cdot \mathrm{PDF}_1 + (1-c_1)\, c_2 \cdot \mathrm{PDF}_2 + \ldots + (1-c_1)\ldots(1-c_{n-1}) \cdot 1 \cdot \mathrm{PDF}_n \\
 \f]
 
 In this form the sum of the coefficients is always less than 1.0
 for all possible values of the individual coefficients between 0 and 1.
+\note Don't pass the \f$ n^\mathrm{th} \f$ coefficient. It is always 1, since the normalisation condition removes one degree of freedom.
 
 RooAddPdf relies on each component PDF to be normalized and will perform 
 no normalization other than calculating the proper last coefficient \f$ c_n \f$, if requested.
-An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ is independent
-of each \f$ c_i \f$.
+An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ is independent of each \f$ c_i \f$.
 
-### Difference between RooAddPdf / RooRealSum{Func|Pdf}
+## Difference between RooAddPdf / RooRealSumFunc / RooRealSumPdf
 - RooAddPdf is a PDF of PDFs, *i.e.* its components need to be normalised and non-negative.
 - RooRealSumPdf is a PDF of functions, *i.e.*, its components can be negative, but their sum cannot be. The normalisation
   is computed automatically, unless the PDF is extended (see above).
@@ -98,9 +100,12 @@ ClassImp(RooAddPdf);
 RooAddPdf::RooAddPdf() :
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
   _refCoefRangeName(0),
+  _projectCoefs(false),
   _codeReg(10),
   _snormList(0),
-  _recursive(kFALSE)
+  _haveLastCoef(false),
+  _allExtendable(false),
+  _recursive(false)
 {
   _coefErrCount = _errorCount ;
   TRACE_CREATE 
@@ -181,17 +186,22 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _coefList("!coefficients","List of coefficients",this),
   _haveLastCoef(kFALSE),
   _allExtendable(kFALSE),
-  _recursive(kFALSE)
+  _recursive(recursiveFractions)
 { 
   if (inPdfList.getSize()>inCoefList.getSize()+1 || inPdfList.getSize()<inCoefList.getSize()) {
-    coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() 
-			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
-    assert(0) ;
+    std::stringstream errorMsg;
+    errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
+			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1." << endl ;
+    coutE(InputArguments) << errorMsg.str();
+    throw std::invalid_argument(errorMsg.str().c_str());
   }
 
   if (recursiveFractions && inPdfList.getSize()!=inCoefList.getSize()+1) {
-    coutW(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() 
-			  << ") WARNING inconsistent input: recursive fractions options can only be used if Npdf=Ncoef+1, ignoring recursive fraction setting" << endl ;
+    std::stringstream errorMsg;
+    errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
+			  << "): Recursive fractions option can only be used if Npdf=Ncoef+1." << endl;
+    coutE(InputArguments) << errorMsg.str();
+    throw std::invalid_argument(errorMsg.str());
   }
  
   // Constructor with N PDFs and N or N-1 coefs
@@ -203,17 +213,23 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto coef = dynamic_cast<RooAbsReal*>(inCoefList.at(i));
     auto pdf  = dynamic_cast<RooAbsPdf*>(inPdfList.at(i));
     if (inPdfList.at(i) == nullptr) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() 
-			    << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
-      assert(0) ;
+      std::stringstream errorMsg;
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
+			        << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
+      coutE(InputArguments) << errorMsg.str();
+      throw std::invalid_argument(errorMsg.str());
     }
     if (!coef) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored" << endl ;
-      continue ;
+      std::stringstream errorMsg;
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored" << endl ;
+      coutE(InputArguments) << errorMsg.str();
+      throw std::invalid_argument(errorMsg.str());
     }
     if (!pdf) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored" << endl ;
-      continue ;
+      std::stringstream errorMsg;
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored" << endl ;
+      coutE(InputArguments) << errorMsg.str();
+      throw std::invalid_argument(errorMsg.str());
     }
     _pdfList.add(*pdf) ;
 
@@ -222,16 +238,16 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
       partinCoefList.add(*coef) ;
       if (first) {	
 
-	// The first fraction is the first plain fraction
-	first = kFALSE ;
-	_coefList.add(*coef) ;
+        // The first fraction is the first plain fraction
+        first = kFALSE ;
+        _coefList.add(*coef) ;
 
       } else {
 
-	// The i-th recursive fraction = (1-f1)*(1-f2)*...(fi) and is calculated from the list (f1,...,fi) by RooRecursiveFraction)
-	RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
-	addOwnedComponents(*rfrac) ;
-	_coefList.add(*rfrac) ;      	
+        // The i-th recursive fraction = (1-f1)*(1-f2)*...(fi) and is calculated from the list (f1,...,fi) by RooRecursiveFraction)
+        RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
+        addOwnedComponents(*rfrac) ;
+        _coefList.add(*rfrac) ;
 
       }
 
@@ -244,21 +260,21 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto pdf = dynamic_cast<RooAbsPdf*>(inPdfList.at(inCoefList.size()));
 
     if (!pdf) {
-      coutF(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") last pdf " << pdf->GetName() << " is not of type RooAbsPdf, fatal error" << endl ;
+      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") last argument " << inPdfList.at(inCoefList.size())->GetName() << " is not of type RooAbsPdf." << endl ;
       throw std::invalid_argument("Last argument for RooAddPdf is not a PDF.");
     }
     _pdfList.add(*pdf) ;  
 
-    // Process recursive fractions mode
+    // Process recursive fractions mode. Above, we verified that we don't have a last coefficient
     if (recursiveFractions) {
 
-      // The last recursive fraction = (1-f1)*(1-f2)*...(1-fN) and is calculated from the list (f1,...,fN,1) by RooRecursiveFraction)
+      // The last recursive fraction = (1-f1)*(1-f2)*...(1-fN) and is calculated from the list (f1,...,fN,1) by RooRecursiveFraction
       partinCoefList.add(RooFit::RooConst(1)) ;
       RooAbsReal* rfrac = new RooRecursiveFraction(Form("%s_recursive_fraction_%s",GetName(),pdf->GetName()),"Recursive Fraction",partinCoefList) ;
       addOwnedComponents(*rfrac) ;
       _coefList.add(*rfrac) ;      	
 
-      // In recursive mode we always have Ncoef=Npdf
+      // In recursive mode we always have Ncoef=Npdf, since we added it just above
       _haveLastCoef=kTRUE ;
     }
 
@@ -269,7 +285,6 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
   _coefCache.resize(_pdfList.size());
   _coefErrCount = _errorCount ;
-  _recursive = recursiveFractions ;
 
   TRACE_CREATE 
 }
