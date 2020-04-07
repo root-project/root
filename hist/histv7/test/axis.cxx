@@ -392,7 +392,7 @@ TEST(AxisTest, Irregular) {
 
     EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::lowest()), -1);
     EXPECT_EQ(axis.FindBin(bin_borders.front() - 0.01), -1);
-    for (std::size_t bin = 1; bin <= n_bins_no_over; ++bin) {
+    for (int bin = 1; bin <= n_bins_no_over; ++bin) {
       const double bin_width = bin_borders[bin] - bin_borders[bin-1];
       EXPECT_EQ(axis.FindBin(bin_borders[bin-1] + 0.01 * bin_width), bin);
       EXPECT_EQ(axis.FindBin(bin_borders[bin] - 0.01 * bin_width), bin);
@@ -403,7 +403,7 @@ TEST(AxisTest, Irregular) {
     EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), std::numeric_limits<double>::lowest());
     EXPECT_DOUBLE_EQ(axis.GetBinFrom(0), std::numeric_limits<double>::lowest());
     EXPECT_DOUBLE_EQ(axis.GetBinTo(0), bin_borders[0]);
-    for (std::size_t bin = 1; bin <= n_bins_no_over; ++bin) {
+    for (int bin = 1; bin <= n_bins_no_over; ++bin) {
       const double left_border = bin_borders[bin-1];
       const double right_border = bin_borders[bin];
       EXPECT_DOUBLE_EQ(axis.GetBinCenter(bin), (left_border + right_border) / 2.0);
@@ -421,7 +421,7 @@ TEST(AxisTest, Irregular) {
     const int kInvalidBin = RAxisBase::kInvalidBin;
     EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::lowest()),
               kInvalidBin);
-    for (std::size_t iborder = 0; iborder < bin_borders.size(); ++iborder) {
+    for (int iborder = 0; iborder < bin_borders.size(); ++iborder) {
       const double border = bin_borders[iborder];
       EXPECT_EQ(axis.GetBinIndexForLowEdge(border - 0.01), kInvalidBin);
       EXPECT_EQ(axis.GetBinIndexForLowEdge(border), iborder + 1);
