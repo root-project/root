@@ -38,7 +38,6 @@
 #pragma GCC diagnostic pop
 #endif
 
-#include <iosfwd>
 #include <set>
 #include <stdexcept>
 #include <string>
