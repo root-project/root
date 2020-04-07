@@ -1,5 +1,6 @@
 import types
 import sys
+import os
 from functools import partial
 
 import libcppyy as cppyy_backend
@@ -15,6 +16,7 @@ class PyROOTConfiguration(object):
     def __init__(self):
         self.IgnoreCommandLineOptions = False
         self.ShutDown = True
+        self.DisableRootLogon = False
 
 
 class _gROOTWrapper(object):
@@ -172,6 +174,9 @@ class ROOTFacade(types.ModuleType):
         self.__class__.__getattr__ = self._fallback_getattr
         self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)
 
+        # Run rootlogon if exists
+        self._run_rootlogon()
+
     def _getattr(self, name):
         # Special case, to allow "from ROOT import gROOT" w/o starting the graphics
         if name == '__path__':
@@ -185,6 +190,32 @@ class ROOTFacade(types.ModuleType):
         self._finalSetup()
 
         return setattr(self, name, val)
+
+    def _run_rootlogon(self):
+        hasargv = hasattr(sys, 'argv')
+        # custom logon file (must be after creation of ROOT globals)
+        if hasargv and not '-n' in sys.argv and not self.PyConfig.DisableRootLogon:
+            rootlogon = os.path.expanduser('~/.rootlogon.py')
+            if os.path.exists(rootlogon):
+                # could also have used execfile, but import is likely to give fewer surprises
+                import imp
+                imp.load_module('rootlogon', open(rootlogon, 'r'), rootlogon, ('.py','r',1))
+                del imp
+            else:
+                # if the .py version of rootlogon exists, the .C is ignored (the user can
+                # load the .C from the .py, if so desired)
+                # system logon, user logon, and local logon (skip Rint.Logon)
+                name = '.rootlogon.C'
+                logons = [
+                    os.path.join(str(self.TROOT.GetEtcDir()), 'system' + name),
+                    os.path.expanduser(os.path.join('~', name))
+                    ]
+                if logons[-1] != os.path.join(os.getcwd(), name):
+                    logons.append(name)
+                for rootlogon in logons:
+                    if os.path.exists(rootlogon):
+                        self.TApplication.ExecuteFile(rootlogon)
+                del rootlogon, logons
 
     # Inject version as __version__ property in ROOT module
     @property
