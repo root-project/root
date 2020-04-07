@@ -150,7 +150,8 @@ TEST(HistImplBinning, Grow) {
 //     A   UF  | -1   -2    -3   -4
 //     x  Reg1 | -5    1     2   -6
 //     .  Reg2 | -7    3     4   -8
-//     1   OF  | -9  -10   -11   -12
+//        Reg3 | -9    5     6   -10
+//     1   OF  | -11 -12   -13   -14
 TEST(HistImplBinning, EqEq) {
    SCOPED_TRACE("2D histogram with equidistant-equidistant axes");
    TestHistogramBinning(RAxisEquidistant(8, -9.5, 4.7),
@@ -161,7 +162,8 @@ TEST(HistImplBinning, EqEq) {
 //               UF  Reg1  Reg2  OF
 //        --------------------------
 //     A  Reg1 | -1    1     2   -2
-//     1  Reg2 | -3    3     4   -4
+//     x  Reg2 | -3    3     4   -4
+//     1  Reg3 | -5    5     6   -6
 TEST(HistImplBinning, EqGrow) {
    SCOPED_TRACE("2D histogram with equidistant-growable axes");
    TestHistogramBinning(RAxisEquidistant(3, -5.2, 3.1),
@@ -171,9 +173,10 @@ TEST(HistImplBinning, EqGrow) {
 //                Axis 0
 //              Reg1  Reg2
 //        ----------------
-//     A   UF  | -1    -2 
-//     x  Reg1 |  1     2 
-//     .  Reg2 |  3     4 
+//     A   UF  | -1    -2
+//     x  Reg1 |  1     2
+//     .  Reg2 |  3     4
+//        Reg3 |  5     6
 //     1   OF  | -3    -4 
 TEST(HistImplBinning, GrowEq) {
    SCOPED_TRACE("2D histogram with growable-equidistant axes");
@@ -184,8 +187,9 @@ TEST(HistImplBinning, GrowEq) {
 //                 Axis 0
 //               Reg1  Reg2
 //        ------------------
-//     A  Reg1 |   1     2 
-//     1  Reg2 |   3     4 
+//     A  Reg1 |   1     2
+//     x  Reg2 |   3     4
+//     1  Reg3 |   5     6
 TEST(HistImplBinning, GrowGrow) {
    SCOPED_TRACE("2D histogram with growable-growable axes");
    TestHistogramBinning(RAxisGrow(5, -7.2, -2.1),
@@ -198,10 +202,11 @@ TEST(HistImplBinning, GrowGrow) {
 // successive planes as one iterates over axis 2. Each plane is represented
 // using the same convention that was used for 2D histograms.
 
-//   -1   -2   -3   -4    |   -17  -18  -19  -20   |   -29  -30  -31  -32
-//   -5   -6   -7   -8    |   -21   1    2   -22   |   -33  -34  -35  -36
-//   -9   -10  -11  -12   |   -23   3    4   -24   |   -37  -38  -39  -40
-//   -13  -14  -15  -16   |   -25  -26  -27  -28   |   -41  -42  -43  -44
+//   -1   -2   -3   -4    |   -21  -22  -23  -24   |   -35  -36  -37  -38
+//   -5   -6   -7   -8    |   -25   1    2   -26   |   -39  -40  -41  -42
+//   -9   -10  -11  -12   |   -27   3    4   -28   |   -43  -44  -45  -46
+//   -13  -14  -15  -16   |   -29   5    6   -30   |   -47  -48  -49  -50
+//   -17  -18  -19  -20   |   -31  -32  -33  -34   |   -51  -52  -53  -54
 TEST(HistImplBinning, EqEqEq) {
    SCOPED_TRACE("3D histogram with equidistant-equidistant-equidistant axes");
    TestHistogramBinning(RAxisEquidistant(6, -2.2, 9.3),
@@ -212,7 +217,8 @@ TEST(HistImplBinning, EqEqEq) {
 //   -1   -2   -3   -4
 //   -5    1    2   -6
 //   -7    3    4   -8
-//   -9   -10  -11  -12
+//   -9    5    6   -10
+//   -11  -12  -13  -14
 TEST(HistImplBinning, EqEqGrow) {
    SCOPED_TRACE("3D histogram with equidistant-equidistant-growable axes");
    TestHistogramBinning(RAxisEquidistant(7, -7.8, -2.4),
@@ -220,8 +226,9 @@ TEST(HistImplBinning, EqEqGrow) {
                         RAxisGrow(7, -4.5, -3.1));
 }
 
-//   -1   -2   -3   -4    |   -9    1    2   -10   |   -13  -14  -15  -16
-//   -5   -6   -7   -8    |   -11   3    4   -12   |   -17  -18  -19  -20
+//   -1   -2   -3   -4    |   -13   1    2   -14   |   -19  -20  -21  -22
+//   -5   -6   -7   -8    |   -15   3    4   -16   |   -23  -24  -25  -26
+//   -9   -10  -11  -12   |   -17   5    6   -18   |   -27  -28  -29  -30
 TEST(HistImplBinning, EqGrowEq) {
    SCOPED_TRACE("3D histogram with equidistant-growable-equidistant axes");
    TestHistogramBinning(RAxisEquidistant(9, -4.5, 2.1),
@@ -231,6 +238,7 @@ TEST(HistImplBinning, EqGrowEq) {
 
 //   -1    1    2   -2
 //   -3    3    4   -4
+//   -5    5    6   -6
 TEST(HistImplBinning, EqGrowGrow) {
    SCOPED_TRACE("3D histogram with equidistant-growable-growable axes");
    TestHistogramBinning(RAxisEquidistant(7, 4.8, 7.8),
@@ -238,10 +246,11 @@ TEST(HistImplBinning, EqGrowGrow) {
                         RAxisGrow(9, 4.0, 6.7));
 }
 
-//   -1   -2    |   -9   -10   |  -13  -14
-//   -3   -4    |    1    2    |  -15  -16
-//   -5   -6    |    3    4    |  -17  -18
-//   -7   -8    |   -11  -12   |  -19  -20
+//   -1   -2    |   -11  -12   |  -15  -16
+//   -3   -4    |    1    2    |  -17  -18
+//   -5   -6    |    3    4    |  -19  -20
+//   -7   -8    |    5    6    |  -21  -22
+//   -9   -10   |   -13  -14   |  -23  -24
 TEST(HistImplBinning, GrowEqEq) {
    SCOPED_TRACE("3D histogram with growable-equidistant-equidistant axes");
    TestHistogramBinning(RAxisGrow(2, -7.8, 8.5),
@@ -252,6 +261,7 @@ TEST(HistImplBinning, GrowEqEq) {
 //   -1   -2
 //    1    2
 //    3    4
+//    5    6
 //   -3   -4
 TEST(HistImplBinning, GrowEqGrow) {
    SCOPED_TRACE("3D histogram with growable-equidistant-growable axes");
@@ -260,8 +270,9 @@ TEST(HistImplBinning, GrowEqGrow) {
                         RAxisGrow(4, -1.9, 4.0));
 }
 
-//   -1   -2    |    1    2    |  -5   -6
-//   -3   -4    |    3    4    |  -7   -8
+//   -1   -2    |    1    2    |  -7   -8
+//   -3   -4    |    3    4    |  -9   -10
+//   -5   -6    |    5    6    |  -11  -12
 TEST(HistImplBinning, GrowGrowEq) {
    SCOPED_TRACE("3D histogram with growable-growable-equidistant axes");
    TestHistogramBinning(RAxisGrow(3, -8.2, 0.0),
@@ -271,6 +282,7 @@ TEST(HistImplBinning, GrowGrowEq) {
 
 //   1    2
 //   3    4
+//   5    6
 TEST(HistImplBinning, GrowGrowGrow) {
    SCOPED_TRACE("3D histogram with growable-growable-growable axes");
    TestHistogramBinning(RAxisGrow(5, -1.7, 9.6),
