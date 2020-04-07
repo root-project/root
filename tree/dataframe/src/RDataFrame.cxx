@@ -794,7 +794,7 @@ class RCustomColumnBase;
 }
 } // namespace Detail
 
-using ColumnNames_t = ROOT::Detail::RDF::ColumnNames_t;
+using ROOT::Detail::RDF::ColumnNames_t;
 using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 
 namespace RDFInternal = ROOT::Internal::RDF;
