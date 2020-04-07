@@ -1387,7 +1387,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   if (weightedData && doSumW2==-1 && doAsymptotic==-1) {
     coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is requested of what appears to be weighted data.\n"
                           << "       While the estimated values of the parameters will always be calculated taking the weights into account,\n"
-			  << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an'n"
+			  << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an \n"
 			  << "       explicit choice for the error calculation:\n"
 			  << "           - Either provide SumW2Error(true), to calculate a sum-of-weights-corrected HESSE error matrix\n"
 			  << "             (error will be proportional to the number of events in MC).\n"
@@ -1527,9 +1527,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	std::vector<std::unique_ptr<RooDerivative> > derivatives;
 	const RooArgList& floated = rw->floatParsFinal();
 	std::unique_ptr<RooArgSet> floatingparams( (RooArgSet*)getParameters(data)->selectByAttrib("Constant", false) );
-	for (int k=0; k<floated.getSize(); k++) {	   
-	   RooRealVar* paramresult = (RooRealVar*)floated.at(k);
-	   RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
+	for (const auto paramresult : floated) {
+	   auto paraminternal = static_cast<RooRealVar*>(floatingparams->find(*paramresult));
+	   assert(floatingparams->find(*paramresult)->IsA() == RooRealVar::Class());
 	   std::unique_ptr<RooDerivative> deriv( derivative(*paraminternal, *obs, 1) );
 	   derivatives.push_back(std::move(deriv));
 	}
@@ -1540,9 +1540,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	   *obs = *data.get(j);
 	   //Determine first derivatives
 	   std::vector<Double_t> diffs(floated.getSize(), 0.0);
-	   for (int k=0; k<floated.getSize(); k++) {
-	      RooRealVar* paramresult = (RooRealVar*)floated.at(k);
-	      RooRealVar* paraminternal = (RooRealVar*)floatingparams->find(paramresult->getTitle());
+	   for (int k=0; k < floated.getSize(); k++) {
+	      const auto paramresult = static_cast<RooRealVar*>(floated.at(k));
+	      auto paraminternal = static_cast<RooRealVar*>(floatingparams->find(*paramresult));
 	      //first derivative to parameter k at best estimate point for this measurement
 	      Double_t diff = derivatives.at(k)->getVal();
 	      //need to reset to best fit point after differentiation
@@ -1556,7 +1556,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 	         num(k,l) += data.weight()*data.weight()*diffs.at(k)*diffs.at(l)/(prob*prob);
 	      }
 	   }
-	}	
+	}
 	num.Similarity(matV);
 
 	//Propagate corrected errors to parameters objects
