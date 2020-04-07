@@ -56,7 +56,6 @@ set(py_sources
 )
 
 set(cpp_sources
-    src/CppCallablePyz.cxx
     src/PyROOTModule.cxx
     src/PyROOTStrings.cxx
     src/PyROOTWrapper.cxx

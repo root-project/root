@@ -121,9 +121,9 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
 endif()
 
-# Test wrapping Python callables for use in C++
+# Test wrapping Python callables for use in C++ using numba
 if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_cppcallable cppcallable.py)
+    ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py)
 endif()
 
 # TComplex pythonizations

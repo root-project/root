@@ -71,8 +71,6 @@ static PyMethodDef gPyROOTMethods[] = {
    {(char *)"GetDataPointer", (PyCFunction)PyROOT::GetDataPointer, METH_VARARGS,
     (char *)"Get pointer to data of a C++ object"},
    {(char *)"GetSizeOfType", (PyCFunction)PyROOT::GetSizeOfType, METH_VARARGS, (char *)"Get size of data-type"},
-   {(char *)"GetCppCallableClass", (PyCFunction)PyROOT::GetCppCallableClass, METH_VARARGS,
-    (char *)"Get class to wrap Python callable as C++ callable"},
    {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O, (char *)"Get object with array interface as RVec"},
 #ifdef R__HAS_DATAFRAME
    {(char *)"AsRTensor", (PyCFunction)PyROOT::AsRTensor, METH_O, (char *)"Get object with array interface as RTensor"},
