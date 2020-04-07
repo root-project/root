@@ -16,6 +16,7 @@
 #ifndef ROOT7_RHistImpl
 #define ROOT7_RHistImpl
 
+#include <cassert>
 #include <cctype>
 #include <functional>
 #include "ROOT/RSpan.hxx"
