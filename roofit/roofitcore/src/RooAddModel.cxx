@@ -23,7 +23,7 @@
 /// or
 /// \f[
 ///  c_1*\mathrm{PDF}_1 + c_2*\mathrm{PDF}_2 + ... (1-\sum(c_1, \ldots, c_{n-1}))*\mathrm{PDF}_n
-///
+/// \f]
 /// The first form is for extended likelihood fits, where the
 /// expected number of events is \f$ \sum_i c_i \f$. The coefficients \f$ c_i \f$
 /// can either be explicitly provided, or, if all components support
