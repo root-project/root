@@ -593,9 +593,6 @@ std::string PrettyPrintAddr(const void *const addr)
    return s.str();
 }
 
-// Jit a string filter expression and jit-and-call this->Filter with the appropriate arguments
-// Return pointer to the new functional chain node returned by the call, cast to Long_t
-
 void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
                    const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
