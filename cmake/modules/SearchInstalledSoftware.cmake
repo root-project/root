@@ -1498,6 +1498,28 @@ else()
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
 endif()
 
+#---Check for Pyroot---------------------------------------------------------------------
+if(pyroot)
+  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND))
+    message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
+                        " (python executable: ${PYTHON_EXECUTABLE})")
+  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND)
+    message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
+    set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
+  endif()
+endif()
+
+#---Check for Pyroot Exp---------------------------------------------------------------------
+if(pyroot_experimental)
+  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND))
+    message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
+                        " (python executable: ${PYTHON_EXECUTABLE})")
+  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND)
+    message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_experimental option")
+    set(pyroot_experimental OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
+  endif()
+endif()
+
 #---Check for MPI---------------------------------------------------------------------
 if (mpi)
   message(STATUS "Looking for MPI")
