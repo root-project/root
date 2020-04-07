@@ -33,15 +33,16 @@ storing the source code of those classes in the workspace as well.
 This process is also organized by the workspace through the
 `importClassCode()` method.
 
-## Out-of-memory crashes when reading large workspaces
-When reading large workspaces with deeply nested PDFs, one can encounter
-ouf-of-memory errors if the stack size is too small. Unfortunately, ROOT cannot
-recover from this situation, and also not give useful instructions. When
-suspecting to have run out of stack memory, check
+### Seemingly random rashes when reading large workspaces
+When reading or loading workspaces with deeply nested PDFs, one can encounter
+ouf-of-memory errors if the stack size is too small. This manifests in crashes
+at seemingly random locations, or in the process silently ending.
+Unfortunately, ROOT neither recover from this situation, nor warn or give useful
+instructions. When suspecting to have run out of stack memory, check
 ```
 ulimit -s
 ```
-and try to increase it.
+and try reading again.
 **/
 
 #include "RooWorkspace.h"
@@ -341,10 +342,10 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 ///  <table>
 ///  <tr><th> Accepted arguments
 ///  <tr><td> `RenameConflictNodes(const char* suffix)`   <td>  Add suffix to branch node name if name conflicts with existing node in workspace
-///  <tr><td> `RenameAllNodes(const char* suffix)`    <td>  Add suffix to all branch node names including top level node
-///  <tr><td> `RenameAllVariables(const char* suffix)`    <td>  Add suffix to all variables names
+///  <tr><td> `RenameAllNodes(const char* suffix)`    <td>  Add suffix to all branch node names including top level node.
+///  <tr><td> `RenameAllVariables(const char* suffix)`    <td>  Add suffix to all variables of objects being imported.
 ///  <tr><td> `RenameAllVariablesExcept(const char* suffix, const char* exceptionList)`   <td>  Add suffix to all variables names, except ones listed
-///  <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td>  Rename variable as specified upon import.
+///  <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td>  Rename a single variable as specified upon import.
 ///  <tr><td> `RecycleConflictNodes()`    <td>  If any of the function objects to be imported already exist in the name space, connect the
 ///                            imported expression to the already existing nodes.
 ///                            \attention Use with care! If function definitions do not match, this alters the definition of your function upon import
@@ -355,7 +356,6 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 ///  The RenameConflictNodes, RenameNodes and RecycleConflictNodes arguments are mutually exclusive. The RenameVariable argument can be repeated
 ///  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
 ///  two comma separated lists.
-
 Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
