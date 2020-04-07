@@ -397,7 +397,7 @@ TEST(AxisTest, Irregular) {
       EXPECT_EQ(axis.FindBin(bin_borders[bin-1] + 0.01 * bin_width), bin);
       EXPECT_EQ(axis.FindBin(bin_borders[bin] - 0.01 * bin_width), bin);
     }
-    EXPECT_EQ(axis.FindBin(bin_borders.front() + 0.01), -2);
+    EXPECT_EQ(axis.FindBin(bin_borders.back() + 0.01), -2);
     EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::max()), -2);
 
     EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), std::numeric_limits<double>::lowest());
