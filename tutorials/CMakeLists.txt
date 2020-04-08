@@ -127,6 +127,7 @@ else()
                     roofit/rf409_NumPyPandasToRooFit.py
                     roofit/rf512_wsfactory_oper.C
                     roofit/rf512_wsfactory_oper.py
+                    roofit/rf515_hfJSON.py
                     roofit/rf708_bphysics.py
     )
   endif()
