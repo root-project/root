@@ -312,6 +312,7 @@ endif()
 if(NOT PYTHONLIBS_FOUND AND NOT Python_Development_FOUND AND NOT Python2_Development_FOUND)
   set(pyroot_defvalue OFF)
   set(pyroot_experimental_defvalue OFF)
+  set(tmva-pymva_defvalue OFF)
 endif()
 
 # Current limitations for modules:
