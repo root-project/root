@@ -1,12 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: examples on normalization and integration of p.d.fs, construction of cumulative distribution functions from monodimensional p.d.f.s
+##
+## Basic functionality: examples on normalization and integration of p.d.fs, construction
+## of cumulative distribution functions from monodimensional p.d.f.s
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT

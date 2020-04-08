@@ -2,12 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Multidimensional models: normalization and  integration of p.d.fs, construction of cumulative distribution functions from p.d.f.s in two dimensions
+## Multidimensional models: normalization and  integration of p.d.fs, construction of
+## cumulative distribution functions from p.d.f.s in two dimensions
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT

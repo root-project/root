@@ -1,13 +1,16 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
+///
 /// Likelihood and minimization: representing the parabolic approximation of the fit as a multi-variate Gaussian on the
 /// parameters of the fitted p.d.f.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

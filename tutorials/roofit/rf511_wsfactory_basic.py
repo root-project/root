@@ -2,12 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Organization and simultaneous fits: basic use of the 'object factory' associated with a workspace to rapidly build p.d.f.s functions and their parameter components
+## Organization and simultaneous fits: basic use of the 'object factory' associated with a
+## workspace to rapidly build p.d.f.s functions and their parameter components
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

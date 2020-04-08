@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+///
 /// Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author
+///
+/// \date February 2018
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
