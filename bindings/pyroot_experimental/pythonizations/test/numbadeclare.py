@@ -1,6 +1,9 @@
 import unittest
 import ROOT
 import sys
+import numba as nb
+import numpy as np
+
 
 # long does not exist anymore on Python 3, map it to int
 if sys.version_info[0] > 2:
@@ -10,9 +13,9 @@ if sys.version_info[0] > 2:
 default_test_inputs = [-1.0, 0.0, 100.0]
 
 
-class NumbaDeclare(unittest.TestCase):
+class NumbaDeclareSimple(unittest.TestCase):
     """
-    Test decorator to create C++ wrapper for Python callables using numba
+    Test decorator to create C++ wrapper for Python callables using numba with fundamental types
     """
 
     test_inputs = default_test_inputs
@@ -34,10 +37,11 @@ class NumbaDeclare(unittest.TestCase):
         def f2(x):
             return x
         fn0 = ROOT.Numba.Declare(["float"], "float")(f1)
-        import numba
-        ref = numba.cfunc("float32(float32)", nopython=True)(f2)
-        # ROOT holds an additional reference compared to plain numba
-        self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 1)
+        ref = nb.cfunc("float32(float32)", nopython=True)(f2)
+        if sys.version_info.major == 2:
+            self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 1)
+        else:
+            self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 2)
 
     # Test optional name
     def test_optional_name(self):
@@ -51,16 +55,24 @@ class NumbaDeclare(unittest.TestCase):
         self.assertTrue(hasattr(ROOT.Numba, optname))
 
     # Test attributes
-    def test_cpp_wrapper_code(self):
+    def test_additional_attributes(self):
         """
-        Test C++ wrapper code attribute
+        Test additional attributes
         """
         @ROOT.Numba.Declare(["float"], "float")
         def fn1(x):
             return x
+
         self.assertTrue(hasattr(fn1, "__cpp_wrapper__"))
         self.assertTrue(type(fn1.__cpp_wrapper__) == str)
         self.assertEqual(sys.getrefcount(fn1.__cpp_wrapper__), 2)
+
+        self.assertTrue(hasattr(fn1, "__py_wrapper__"))
+        self.assertTrue(type(fn1.__py_wrapper__) == str)
+        self.assertEqual(sys.getrefcount(fn1.__py_wrapper__), 2)
+
+        self.assertTrue(hasattr(fn1, "numba_func"))
+        self.assertEqual(sys.getrefcount(fn1.numba_func), 3)
 
     # Test cling integration
     def test_cling(self):
@@ -193,6 +205,293 @@ class NumbaDeclare(unittest.TestCase):
             x2 = ROOT.Numba.fn6b(v)
             self.assertEqual(x1, x2)
             self.assertEqual(type(x1), type(x2))
+
+    def test_wrapper_in_b(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["bool"], "bool")
+        def fn6b2(x):
+            return not x
+        for v in [True, False]:
+            x1 = fn6b2(v)
+            x2 = ROOT.Numba.fn6b2(v)
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x1), type(x2))
+
+    def test_wrapper_in_i(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["int"], "float")
+        def fn7i(x):
+            return 2.0 * x
+        for v in [-1, 0, 1, 999]:
+            x1 = fn7i(v)
+            x2 = ROOT.Numba.fn7i(v)
+            self.assertEqual(x1, x2)
+
+    def test_wrapper_in_l(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["long"], "float")
+        def fn7l(x):
+            return 2.0 * x
+        for v in [-1, 0, 1, 999]:
+            x1 = fn7l(v)
+            x2 = ROOT.Numba.fn7l(v)
+            self.assertEqual(x1, x2)
+
+    def test_wrapper_in_ui(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["unsigned int"], "float")
+        def fn7ui(x):
+            return 2.0 * x
+        for v in [0, 1, 999]:
+            x1 = fn7ui(v)
+            x2 = ROOT.Numba.fn7ui(v)
+            self.assertEqual(x1, x2)
+
+    def test_wrapper_in_ul(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["unsigned long"], "float")
+        def fn7ul(x):
+            return 2.0 * x
+        for v in [0, 1, 999]:
+            x1 = fn7ul(v)
+            x2 = ROOT.Numba.fn7ul(v)
+            self.assertEqual(x1, x2)
+
+
+class NumbaDeclareArray(unittest.TestCase):
+    """
+    Test decorator to create C++ wrapper for Python callables using numba with RVecs
+    """
+
+    test_inputs = [default_test_inputs]
+
+    def test_wrapper_in_vecf(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<float>"], "float")
+        def g1(x):
+            return x.sum()
+
+        for v in self.test_inputs:
+            x1 = g1(np.array(v, dtype=np.float32))
+            x2 = ROOT.Numba.g1(ROOT.VecOps.RVec('float')(v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), float)
+
+    def test_wrapper_in_vecf_vecd(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<float>", "RVec<double>"], "float")
+        def g1_2vec(x, y):
+            return x.sum() + y.sum()
+
+        for v in self.test_inputs:
+            x1 = g1_2vec(np.array(v, dtype=np.float32), np.array(v, dtype=np.float64))
+            x2 = ROOT.Numba.g1_2vec(ROOT.VecOps.RVec('float')(v), ROOT.VecOps.RVec('double')(v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), float)
+
+    def test_wrapper_in_vecd(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<double>"], "float")
+        def g1d(x):
+            return x.sum()
+
+        for v in self.test_inputs:
+            x1 = g1d(np.array(v, dtype=np.float64))
+            x2 = ROOT.Numba.g1d(ROOT.VecOps.RVec('double')(v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), float)
+
+    def test_wrapper_in_veci(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<int>"], "int")
+        def g1i(x):
+            return x.sum()
+
+        for v in self.test_inputs:
+            x1 = g1i(np.array(v, dtype=np.int32))
+            x2 = ROOT.Numba.g1i(ROOT.VecOps.RVec('int')(int(x) for x in v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), int)
+
+    def test_wrapper_in_vecl(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<long>"], "int")
+        def g1l(x):
+            return x.sum()
+
+        for v in self.test_inputs:
+            x1 = g1l(np.array(v, dtype=np.int64))
+            x2 = ROOT.Numba.g1l(ROOT.VecOps.RVec('long')(int(x) for x in v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), int)
+
+    def test_wrapper_in_vecui(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<unsigned int>"], "int")
+        def g1ui(x):
+            return x.sum()
+
+        for v in [[0, 1, 999]]:
+            x1 = g1ui(np.array(v, dtype=np.uint32))
+            x2 = ROOT.Numba.g1ui(ROOT.VecOps.RVec('unsigned int')(v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), int)
+
+    def test_wrapper_in_vecul(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<unsigned long>"], "int")
+        def g1ul(x):
+            return x.sum()
+
+        for v in [[0, 1, 999]]:
+            x1 = g1ul(np.array(v, dtype=np.uint64))
+            x2 = ROOT.Numba.g1ul(ROOT.VecOps.RVec('unsigned long')(v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), int)
+
+    def test_wrapper_in_vecb(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<bool>"], "int")
+        def g1b(x):
+            return x.sum()
+
+        for v in [[True, False, True]]:
+            x1 = g1b(np.array(v, dtype=np.float32))
+            x2 = ROOT.Numba.g1b(ROOT.VecOps.RVec('bool')(v))
+            self.assertEqual(x1, x2)
+            self.assertEqual(type(x2), int)
+
+    def test_wrapper_out_vecf(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<float>"], "RVec<float>")
+        def g2f(x):
+            return x[::-1]
+
+        for v in [[0, 1, 999]]:
+            x1 = g2f(np.array(v, dtype=np.float32))
+            x2 = ROOT.Numba.g2f(ROOT.VecOps.RVec('float')(v))
+            self.assertTrue((x1 == x2).all())
+
+    def test_wrapper_out_vecd(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<double>"], "RVec<double>")
+        def g2d(x):
+            return x[::-1]
+
+        for v in [[0, 1, 999]]:
+            x1 = g2d(np.array(v, dtype=np.float64))
+            x2 = ROOT.Numba.g2d(ROOT.VecOps.RVec('double')(v))
+            self.assertTrue((x1 == x2).all())
+
+    def test_wrapper_out_veci(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<int>"], "RVec<int>")
+        def g2i(x):
+            return x[::-1]
+
+        for v in [[0, 1, 999]]:
+            x1 = g2i(np.array(v, dtype=np.int32))
+            x2 = ROOT.Numba.g2i(ROOT.VecOps.RVec('int')(v))
+            self.assertTrue((x1 == x2).all())
+
+    def test_wrapper_out_vecl(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<long>"], "RVec<long>")
+        def g2l(x):
+            return x[::-1]
+
+        for v in [[0, 1, 999]]:
+            x1 = g2l(np.array(v, dtype=np.int64))
+            x2 = ROOT.Numba.g2l(ROOT.VecOps.RVec('long')(v))
+            self.assertTrue((x1 == x2).all())
+
+    def test_wrapper_out_vecul(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<unsigned long>"], "RVec<unsigned long>")
+        def g2ul(x):
+            return x[::-1]
+
+        for v in [[0, 1, 999]]:
+            x1 = g2ul(np.array(v, dtype=np.uint64))
+            x2 = ROOT.Numba.g2ul(ROOT.VecOps.RVec('unsigned long')(v))
+            self.assertTrue((x1 == x2).all())
+
+    def test_wrapper_out_vecui(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<unsigned int>"], "RVec<unsigned int>")
+        def g2ui(x):
+            return x[::-1]
+
+        for v in [[0, 1, 999]]:
+            x1 = g2ui(np.array(v, dtype=np.uint32))
+            x2 = ROOT.Numba.g2ui(ROOT.VecOps.RVec('unsigned int')(v))
+            self.assertTrue((x1 == x2).all())
+
+    def test_wrapper_out_vecb(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<bool>"], "RVec<bool>")
+        def g2b(x):
+            return x[::-1]
+
+        for v in [[True, False]]:
+            x1 = g2b(np.array(v, dtype=np.bool))
+            x2 = ROOT.Numba.g2b(ROOT.VecOps.RVec('bool')(v))
+            self.assertEqual(x1[0], bool(x2[0]))
+            self.assertEqual(x1[1], bool(x2[1]))
+
+    def test_wrapper_in_vecfb_out_vecf(self):
+        """
+        Test wrapper with different input/output configurations
+        """
+        @ROOT.Numba.Declare(["RVec<float>", "RVec<bool>"], "RVec<bool>")
+        def g2fb(x, y):
+            return (x > 1) | y
+
+        for vf, vb in [[[1.0, 2.0], [True, False]]]:
+            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=np.bool))
+            x2 = ROOT.Numba.g2fb(ROOT.VecOps.RVec('float')(vf), ROOT.VecOps.RVec('bool')(vb))
+            self.assertEqual(x1[0], bool(x2[0]))
+            self.assertEqual(x1[1], bool(x2[1]))
 
 
 if __name__ == '__main__':
