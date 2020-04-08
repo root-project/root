@@ -121,7 +121,7 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
       auto item = drawable->Display(*this, vers);
 
       if (!item)
-         item = std::make_unique<RDisplayItem>();
+         item = std::make_unique<RDisplayItem>(true);
 
       item->SetObjectIDAsPtr(drawable.get());
       item->SetIndex(indx++);
