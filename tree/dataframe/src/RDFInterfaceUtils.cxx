@@ -193,10 +193,22 @@ static std::vector<std::string> GetColumnTypes(const ParsedExpression &pExpr, TT
    return colTypes;
 }
 
+/// Return the static global map of Filter/Define lambda expressions that have been jitted.
+/// It's used to check whether a given expression has already been jitted, and
+/// to look up its associated variable name if it is.
+/// Keys in the map are the body of the expression, values are the name of the
+/// jitted variable that corresponds to that expression. For example, for:
+///     auto lambda1 = [] { return 42; };
+/// key would be "[] { return 42; }" and value would be "lambda1".
+static std::unordered_map<std::string, std::string> &GetJittedExprs() {
+   static std::unordered_map<std::string, std::string> jittedExpressions;
+   return jittedExpressions;
+}
+
 // returns the name of the lambda expression in the map returned by GetJittedExprs
 static std::string DeclareExpression(const std::string &lambdaExpr, ROOT::Detail::RDF::RLoopManager &lm)
 {
-   auto &exprMap = ROOT::Internal::RDF::GetJittedExprs();
+   auto &exprMap = GetJittedExprs();
    const auto exprIt = exprMap.find(lambdaExpr);
    if (exprIt != exprMap.end()) {
       // expression already there
@@ -248,6 +260,92 @@ static std::string TypeOfExpression(const std::string &expression, const ColumnN
    auto *ti = gInterpreter->TypedefInfo_Factory(("__rdf::test_type_" + std::to_string(iNs)).c_str());
    const char *type = gInterpreter->TypedefInfo_TrueName(ti);
    return type;
+}
+
+static std::string
+BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes, bool hasReturnStmt)
+{
+   R__ASSERT(vars.size() == varTypes.size());
+
+   std::stringstream ss;
+   ss << "[](";
+   for (auto i = 0u; i < vars.size(); ++i) {
+      // We pass by reference to avoid expensive copies
+      // It can't be const reference in general, as users might want/need to call non-const methods on the values
+      ss << varTypes[i] << "& " << vars[i] << ", ";
+   }
+   if (!vars.empty())
+      ss.seekp(-2, ss.cur);
+
+   if (hasReturnStmt)
+      ss << "){";
+   else
+      ss << "){return ";
+   ss << expr << "\n;}";
+
+   return ss.str();
+}
+
+static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                                       std::set<TTree *> &analysedTrees)
+{
+
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
+      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the top-level branches names, including the ones of the friend trees
+static ColumnNames_t GetTopLevelBranchNames(TTree &t)
+{
+   std::set<std::string> bNamesSet;
+   ColumnNames_t bNames;
+   std::set<TTree *> analysedTrees;
+   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
+}
+
+static bool IsValidCppVarName(const std::string &var)
+{
+   if (var.empty())
+      return false;
+   const char firstChar = var[0];
+
+   // first character must be either a letter or an underscore
+   auto isALetter = [](char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); };
+   const bool isValidFirstChar = firstChar == '_' || isALetter(firstChar);
+   if (!isValidFirstChar)
+      return false;
+
+   // all characters must be either a letter, an underscore or a number
+   auto isANumber = [](char c) { return c >= '0' && c <= '9'; };
+   auto isValidTok = [&isALetter, &isANumber](char c) { return c == '_' || isALetter(c) || isANumber(c); };
+   for (const char c : var)
+      if (!isValidTok(c))
+         return false;
+
+   return true;
 }
 
 } // anonymous namespace
@@ -314,7 +412,7 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & cu
    }
 
    if (tree) {
-      auto branchNames = RDFInternal::GetTopLevelBranchNames(*tree);
+      auto branchNames = GetTopLevelBranchNames(*tree);
       for (auto &branchName : branchNames) {
          if (isEmptyRegex || 0 != regexp.Match(branchName.c_str())) {
             selectedColumns.emplace_back(branchName);
@@ -342,68 +440,6 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & cu
       throw std::runtime_error(text);
    }
    return selectedColumns;
-}
-
-void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                                std::set<TTree *> &analysedTrees)
-{
-
-   if (!analysedTrees.insert(&t).second) {
-      return;
-   }
-
-   auto branches = t.GetListOfBranches();
-   if (branches) {
-      for (auto branchObj : *branches) {
-         auto name = branchObj->GetName();
-         if (bNamesReg.insert(name).second) {
-            bNames.emplace_back(name);
-         }
-      }
-   }
-
-   auto friendTrees = t.GetListOfFriends();
-
-   if (!friendTrees)
-      return;
-
-   for (auto friendTreeObj : *friendTrees) {
-      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Get all the top-level branches names, including the ones of the friend trees
-ColumnNames_t GetTopLevelBranchNames(TTree &t)
-{
-   std::set<std::string> bNamesSet;
-   ColumnNames_t bNames;
-   std::set<TTree *> analysedTrees;
-   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
-   return bNames;
-}
-
-bool IsValidCppVarName(const std::string &var)
-{
-   if (var.empty())
-      return false;
-   const char firstChar = var[0];
-
-   // first character must be either a letter or an underscore
-   auto isALetter = [](char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); };
-   const bool isValidFirstChar = firstChar == '_' || isALetter(firstChar);
-   if (!isValidFirstChar)
-      return false;
-
-   // all characters must be either a letter, an underscore or a number
-   auto isANumber = [](char c) { return c >= '0' && c <= '9'; };
-   auto isValidTok = [&isALetter, &isANumber](char c) { return c == '_' || isALetter(c) || isANumber(c); };
-   for (const char c : var)
-      if (!isValidTok(c))
-         return false;
-
-   return true;
 }
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
@@ -518,30 +554,6 @@ bool IsInternalColumn(std::string_view colName)
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager)
 {
    return loopManager->GetFiltersNames();
-}
-
-std::string
-BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes, bool hasReturnStmt)
-{
-   R__ASSERT(vars.size() == varTypes.size());
-
-   std::stringstream ss;
-   ss << "[](";
-   for (auto i = 0u; i < vars.size(); ++i) {
-      // We pass by reference to avoid expensive copies
-      // It can't be const reference in general, as users might want/need to call non-const methods on the values
-      ss << varTypes[i] << "& " << vars[i] << ", ";
-   }
-   if (!vars.empty())
-      ss.seekp(-2, ss.cur);
-
-   if (hasReturnStmt)
-      ss << "){";
-   else
-      ss << "){return ";
-   ss << expr << "\n;}";
-
-   return ss.str();
 }
 
 std::string PrettyPrintAddr(const void *const addr)
@@ -781,11 +793,6 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
    for (auto i = 0u; i < nColumns; ++i)
       mustBeDefined[i] = std::find(definedCols.begin(), definedCols.end(), requestedCols[i]) == definedCols.end();
    return mustBeDefined;
-}
-
-std::unordered_map<std::string, std::string> &GetJittedExprs() {
-   static std::unordered_map<std::string, std::string> jittedExpressions;
-   return jittedExpressions;
 }
 
 } // namespace RDF
