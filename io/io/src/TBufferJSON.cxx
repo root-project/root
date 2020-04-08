@@ -1889,8 +1889,13 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          jsonClassVersion = json->at(fTypeVersionTag.Data()).get<int>();
 
       if (objClass && (jsonClass != objClass)) {
-         Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s", objClass->GetName(),
-               jsonClass->GetName());
+         if (obj || !jsonClass->InheritsFrom(objClass)) {
+            Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s",
+                    objClass->GetName(), jsonClass->GetName());
+            if (process_stl)
+               PopStack();
+            return obj;
+         }
       }
 
       if (!obj)
