@@ -463,8 +463,6 @@ struct TNeedJitting<RInferredType> {
    static constexpr bool value = true;
 };
 
-ColumnNames_t GetTopLevelBranchNames(TTree &t);
-
 ///////////////////////////////////////////////////////////////////////////////
 /// Check preconditions for RInterface::Aggregate:
 /// - the aggregator callable must have signature `U(U,T)` or `void(U&,T)`.
@@ -545,15 +543,6 @@ struct IsDeque_t : std::false_type {};
 template <typename T>
 struct IsDeque_t<std::deque<T>> : std::true_type {};
 // clang-format on
-
-/// Return the static global map of expressions that have been jitted by RDF.
-/// It's used to check whether a given expression has already been jitted, and
-/// to look up its associated variable name if it is.
-/// Keys in the map are the body of the expression, values are the name of the
-/// jitted variable that corresponds to that expression. For example, for:
-///     auto lambda1 = [] { return 42; };
-/// key would be "[] { return 42; }" and value would be "lambda1".
-std::unordered_map<std::string, std::string> &GetJittedExprs();
 
 } // namespace RDF
 } // namespace Internal
