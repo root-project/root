@@ -15,6 +15,7 @@ class ImportLoadLibs(unittest.TestCase):
             'libCore',
             'libm',
             'liblz4',
+            'libxxhash',
             'liblzma',
             'libzstd',
             'libz',
