@@ -1,17 +1,22 @@
+/// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
 /// Plot a PDF in disjunct ranges, and get normalisation right.
 ///
-/// When comparing a fit to data, one should first plot the data, and then the PDF. In this case, the PDF can be normalised
-/// to match the number of data events. However, when e.g. a signal region has to be blinded, and the fit only runs in two
-/// side bands, what should the PDF be normalised to when being plotted?
-/// In this tutorial, we show how one can choose what a PDF is normalised to.
+/// Usually, when comparing a fit to data, one should first plot the data, and then the PDF.
+/// In this case, the PDF is automatically normalised to match the number of data events in the plot.
+/// However, when plotting only a sub-range, when e.g. a signal region has to be blinded,
+/// one has to exclude the blinded region from the computation of the normalisation.
+/// 
+/// In this tutorial, we show how to explicitly choose the normalisation when plotting using `NormRange()`.
+///
+/// Thanks to Marc Escalier for asking how to do this correctly.
 ///
 /// \macro_image
 /// \macro_code
 /// \macro_output
+///
 /// \author 03/2020 - Stephan Hageboeck.
-/// Thanks to Marc Escalier for providing a part of the code and for asking how to do this.
 
 #include <RooDataSet.h>
 #include <RooExponential.h>
@@ -21,7 +26,7 @@
 
 using namespace RooFit;
 
-void rf212_rangesAndBlinding()
+void rf212_plottingInRanges_blinding()
 {
   // Make a fit model
   RooRealVar x("x", "The observable", 1, 30);
@@ -33,15 +38,15 @@ void rf212_rangesAndBlinding()
   x.setRange("left", 1, 10);
   x.setRange("right", 20, 30);
 
-  // Generate toy data 
+  // Generate toy data, and cut out the blinded region.
   RooDataSet* data = exp.generate(x, 1000);
-  auto blindedData = data->reduce(CutRange("left,right")); 
+  auto blindedData = data->reduce(CutRange("left,right"));
   
-  // Kick tau to a different value, and run a blinded fit.
+  // Kick tau a bit, and run an unbinned fit where the blinded data are missing.
   // ----------------------------------------------------------------------------------------------------------
   tau.setVal(-2.);
   exp.fitTo(*blindedData);
- 
+
 
   // Here we will plot the results
   TCanvas *canvas=new TCanvas("canvas","canvas",800,600);
