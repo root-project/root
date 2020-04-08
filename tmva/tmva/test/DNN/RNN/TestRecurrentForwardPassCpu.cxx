@@ -38,9 +38,13 @@ int main() {
    std::cout << "Testing RNN Forward pass\n";
 
    // timesteps, batchsize, statesize, inputsize
-   std::cout << testForwardPass<TCpu<Scalar_t>>(2, 1, 1, 3)  << "\n";
-   //std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
-   //std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
+   double err = testForwardPass<TCpu<Scalar_t>>(2, 1, 1, 3);
+   bool ok = (err < 1.E-5);
+   if (ok) {
+      Info("testRecurrentForwardPassCpu", "test passed - max error is %f", err);
+   } else {
+      Error("testRecurrentForwardPassCpu", "test failed - max error is %f", err);
+   }
 
-   return 0;
+   return (ok) ? 0 : -1;
 }
