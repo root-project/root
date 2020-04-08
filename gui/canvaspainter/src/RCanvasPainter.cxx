@@ -99,7 +99,7 @@ private:
 
    typedef std::vector<ROOT::Experimental::Detail::RMenuItem> MenuItemsVector;
 
-   const RCanvas &fCanvas; ///<!  Canvas we are painting, *this will be owned by canvas
+   RCanvas &fCanvas; ///<!  Canvas we are painting, *this will be owned by canvas
 
    std::shared_ptr<RWebWindow> fWindow; ///!< configured display
 
@@ -137,7 +137,7 @@ private:
    void FrontCommandReplied(const std::string &reply);
 
 public:
-   RCanvasPainter(const RCanvas &canv);
+   RCanvasPainter(RCanvas &canv);
 
    virtual ~RCanvasPainter();
 
@@ -168,7 +168,7 @@ public:
    class GeneratorImpl : public Generator {
    public:
       /// Create a new RCanvasPainter to paint the given RCanvas.
-      std::unique_ptr<RVirtualCanvasPainter> Create(const ROOT::Experimental::RCanvas &canv) const override
+      std::unique_ptr<RVirtualCanvasPainter> Create(ROOT::Experimental::RCanvas &canv) const override
       {
          return std::make_unique<RCanvasPainter>(canv);
       }
@@ -201,7 +201,7 @@ struct TNewCanvasPainterReg {
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-ROOT::Experimental::RCanvasPainter::RCanvasPainter(const RCanvas &canv) : fCanvas(canv)
+ROOT::Experimental::RCanvasPainter::RCanvasPainter(RCanvas &canv) : fCanvas(canv)
 {
    auto comp = gEnv->GetValue("WebGui.JsonComp", -1);
    if (comp >= 0) fJsonComp = comp;
@@ -500,8 +500,8 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
          if (drawable && (cdata.length() > 0)) {
             R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for drawable " << id;
             drawable->Execute(cdata);
-            const_cast<RCanvas*>(&fCanvas)->Modified();
-            const_cast<RCanvas*>(&fCanvas)->Update(true);
+            fCanvas.Modified();
+            fCanvas.Update(true);
          } else if (id == "canvas") {
             R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for canvas itself (ignored)";
          }
@@ -509,8 +509,8 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
    } else if (check_header("ATTRCHANGE:")) {
       auto vect = TBufferJSON::FromJSON<std::vector<RChangeAttr>>(cdata);
       if (vect) {
-         if (const_cast<RCanvas*>(&fCanvas)->ApplyAttrChanges(*vect))
-            const_cast<RCanvas*>(&fCanvas)->Update(true);
+         if (fCanvas.ApplyAttrChanges(*vect))
+            fCanvas.Update(true);
       } else {
          R__ERROR_HERE("CanvasPainter") << "Fail to parse vector<RChangeAttr>";
       }
