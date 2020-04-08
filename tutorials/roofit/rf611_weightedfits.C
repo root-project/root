@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+///
 /// Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 11/2019 - Christoph Langenbruch
+///
+/// \date 11/2019
+/// \author Christoph Langenbruch
 
 #include "TH1D.h"
 #include "TCanvas.h"
@@ -26,10 +29,10 @@ int rf611_weightedfits(int acceptancemodel=2) {
   // P a r a m e t e r   u n c e r t a i n t i e s   f o r   w e i g h t e d   u n b i n n e d   M L   f i t s
   // ---------------------------------------------------------------------------------------------------------
   //
-  //Based on example from https://arxiv.org/abs/1911.01303 
+  //Based on example from https://arxiv.org/abs/1911.01303
   //
   //This example compares different approaches to determining parameter uncertainties in weighted unbinned maximum likelihood fits.
-  //Performing a weighted unbinned maximum likelihood fits can be useful to account for acceptance effects and to statistically subtract background events using the sPlot formalism. 
+  //Performing a weighted unbinned maximum likelihood fits can be useful to account for acceptance effects and to statistically subtract background events using the sPlot formalism.
   //It is however well known that the inverse Hessian matrix does not yield parameter uncertainties with correct coverage in the presence of event weights.
   //Three approaches to the determination of parameter uncertainties are compared in this example:
   //
@@ -59,9 +62,9 @@ int rf611_weightedfits(int acceptancemodel=2) {
   //The pull is defined as (lambda_i-\lambda_{gen})/\sigma(\lambda_i), where \lambda_i is the fitted parameter and \sigma(\lambda_i) its uncertainty for pseudoexperiment number i.
   //If the fit is unbiased and the parameter uncertainties are estimated correctly, the pull distribution should be a Gaussian centered around zero with a width of one.
 
-  
+
   // I n i t i a l i s a t i o n   a n d   S e t u p
-  //------------------------------------------------  
+  //------------------------------------------------
 
   //plotting options
   gStyle->SetPaintTextFormat(".1f");
@@ -86,7 +89,7 @@ int rf611_weightedfits(int acceptancemodel=2) {
   //accepted events and events weighted to account for the acceptance
   TH1D* haccepted = new TH1D("haccepted", "Generated events;cos(#theta);#events", 40, -1.0, 1.0);
   TH1D* hweighted = new TH1D("hweighted", "Generated events;cos(#theta);#events", 40, -1.0, 1.0);
-  //histograms holding pull distributions  
+  //histograms holding pull distributions
   //using the inverse Hessian matrix
   TH1D* hc0pull1 = new TH1D("hc0pull1", "Inverse weighted Hessian matrix [SumW2Error(false)];Pull (c_{0}^{fit}-c_{0}^{gen})/#sigma(c_{0});", 20, -5.0, 5.0);
   TH1D* hc1pull1 = new TH1D("hc1pull1", "Inverse weighted Hessian matrix [SumW2Error(false)];Pull (c_{1}^{fit}-c_{1}^{gen})/#sigma(c_{1});", 20, -5.0, 5.0);
@@ -125,7 +128,7 @@ int rf611_weightedfits(int acceptancemodel=2) {
       //G e n e r a t e   d a t a   s e t   f o r   p s e u d o e x p e r i m e n t   i
       //-------------------------------------------------------------------------------
       RooDataSet data("data","data",RooArgSet(costheta, weight), WeightVar("weight"));
-      //generate nstats events 
+      //generate nstats events
       for (unsigned int j=0; j<nstats; j++)
 	{
 	  bool finished = false;
@@ -155,19 +158,19 @@ int rf611_weightedfits(int acceptancemodel=2) {
       RooFitResult* result = pol.fitTo(data, Save(true), SumW2Error(false));//this uses the inverse weighted Hessian matrix
       hc0pull1->Fill((c0.getValV()-c0gen)/c0.getError());
       hc1pull1->Fill((c1.getValV()-c1gen)/c1.getError());
-      
+
       result = pol.fitTo(data, Save(true), SumW2Error(true));//this uses the correction with the Hesse matrix with squared weights
       hc0pull2->Fill((c0.getValV()-c0gen)/c0.getError());
       hc1pull2->Fill((c1.getValV()-c1gen)/c1.getError());
-      
+
       result = pol.fitTo(data, Save(true), AsymptoticError(true));//this uses the asymptotically correct approach
       hc0pull3->Fill((c0.getValV()-c0gen)/c0.getError());
-      hc1pull3->Fill((c1.getValV()-c1gen)/c1.getError());      
+      hc1pull3->Fill((c1.getValV()-c1gen)/c1.getError());
     }
-  
+
   // P l o t   o u t p u t   d i s t r i b u t i o n s
   //--------------------------------------------------
-  
+
   //plot accepted (weighted) events
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(0);
@@ -182,7 +185,7 @@ int rf611_weightedfits(int acceptancemodel=2) {
   leg->AddEntry(hweighted, "Weighted");
   leg->Draw();
   cevents->Update();
-  
+
   //plot pull distributions
   TCanvas* cpull = new TCanvas("cpull", "cpull", 1200, 800);
   cpull->Divide(3,2);

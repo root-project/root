@@ -1,12 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-## Addition and convolution: extended maximum likelihood fit with alternate range definition for observed number of events.
+##
+## Addition and convolution: extended maximum likelihood fit with alternate range definition
+## for observed number of events.
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
