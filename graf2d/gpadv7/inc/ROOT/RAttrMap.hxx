@@ -164,12 +164,15 @@ public:
       return (entry != m.end()) ? entry->second.get() : nullptr;
    }
 
+   /** Clear specified attribute */
    void Clear(const std::string &name)
    {
       auto entry = m.find(name);
       if (entry != m.end())
          m.erase(entry);
    }
+
+   bool Change(const std::string &name, Value_t *value = nullptr);
 
    auto begin() const { return m.begin(); }
    auto end() const { return m.end(); }

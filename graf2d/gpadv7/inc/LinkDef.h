@@ -36,7 +36,6 @@
 #pragma link C++ class ROOT::Experimental::Internal::RIOShared<TObject>+;
 #pragma link C++ class ROOT::Experimental::Internal::RIOShared<ROOT::Experimental::RDrawable>+;
 
-
 #pragma link C++ class ROOT::Experimental::Detail::RMenuItem+;
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::RMenuItem*>+;
 #pragma link C++ class ROOT::Experimental::Detail::RCheckedMenuItem+;
@@ -49,6 +48,7 @@
 #pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
 #pragma link C++ class ROOT::Experimental::RPadExtent+;
 #pragma link C++ class ROOT::Experimental::RPadPos+;
+#pragma link C++ struct ROOT::Experimental::RChangeAttr+;
 #pragma link C++ class ROOT::Experimental::RPadBase+;
 #pragma link C++ class ROOT::Experimental::RPad+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;

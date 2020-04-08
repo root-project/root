@@ -19,6 +19,12 @@
 namespace ROOT {
 namespace Experimental {
 
+struct RChangeAttr {
+   std::string id;      ///< drawable id where attribute is changed
+   std::string name;    ///< attribute name
+   std::unique_ptr<RAttrMap::Value_t> value;  ///< kind of the value
+};
+
 /** \class RCanvas
 \ingroup GpadROOT7
 \brief A window's topmost `RPad`.
@@ -38,7 +44,7 @@ private:
    std::array<RPadLength::Pixel, 2> fSize;
 
    /// Modify counter, incremented every time canvas is changed
-   uint64_t fModified{0}; ///<!
+   Version_t fModified{1}; ///<!
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
@@ -50,6 +56,11 @@ private:
 
    /// Disable assignment for now.
    RCanvas &operator=(const RCanvas &) = delete;
+
+   bool ApplyAttrChanges(const std::vector<RChangeAttr> &vect);
+
+   // Increment modify counter
+   uint64_t IncModified() { return ++fModified; }
 
 public:
    static std::shared_ptr<RCanvas> Create(const std::string &title);
@@ -102,8 +113,11 @@ public:
       return fPainter->AddPanel(panel->GetWindow());
    }
 
-   // Indicates that primitives list was changed or any primitive was modified
-   void Modified() { fModified++; }
+   // Get modify counter
+   uint64_t GetModified() const { return fModified; }
+
+   // Set newest version to all primitives
+   void Modified() { SetDrawableVersion(IncModified()); }
 
    // Return if canvas was modified and not yet updated
    bool IsModified() const;

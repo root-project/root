@@ -116,3 +116,44 @@ void RAttrMap::AddBestMatch(const std::string &name, const std::string &value)
 
    AddString(name, value);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Change attribute using string value and kind
+/// Used to change attributes from JS side
+/// Returns true if value was really changed
+
+bool RAttrMap::Change(const std::string &name, Value_t *value)
+{
+   auto entry = m.find(name);
+   if ((entry == m.end()) || (entry->second->Kind() == kNoValue)) {
+      if (!value) return false;
+      m[name] = value->Copy();
+      return true;
+   }
+
+   // specify nullptr means clear attribute
+   if (!value) {
+      m.erase(entry);
+      return true;
+   }
+
+   // error situation - conversion cannot be performed
+   if(!value->CanConvertTo(entry->second->Kind())) {
+      R__ERROR_HERE("gpadv7") << "Wrong data type provided for attribute " << name;
+      return false;
+   }
+
+   // no need to change something
+   if (entry->second->IsEqual(*value))
+      return false;
+
+   switch (entry->second->Kind()) {
+      case kNoValue: break; // just to avoid compiler warnings
+      case kBool: AddBool(name, value->GetBool()); break;
+      case kInt: AddInt(name, value->GetInt()); break;
+      case kDouble: AddDouble(name, value->GetDouble()); break;
+      case kString: AddString(name, value->GetString()); break;
+   }
+
+   return true;
+}

@@ -108,8 +108,9 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
 ///////////////////////////////////////////////////////////////////////////
 /// Create display items for all primitives in the pad
 /// Each display item gets its special id, which used later for client-server communication
+/// Second parameter is version id which already delivered to the client
 
-void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem) const
+void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem, Version_t vers) const
 {
    paditem.SetAttributes(&GetAttrMap());
    paditem.SetPadStyle(fStyle.lock());
@@ -117,14 +118,15 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
    unsigned indx = 0;
 
    for (auto &drawable : fPrimitives) {
-      auto item = drawable->Display(*this);
-      if (item) {
-         item->SetObjectIDAsPtr(drawable.get());
-         item->SetIndex(indx);
-         // add object with the style
-         paditem.Add(std::move(item), drawable->fStyle.lock());
-      }
-      ++indx;
+      auto item = drawable->Display(*this, vers);
+
+      if (!item)
+         item = std::make_unique<RDisplayItem>();
+
+      item->SetObjectIDAsPtr(drawable.get());
+      item->SetIndex(indx++);
+      // add object with the style
+      paditem.Add(std::move(item), drawable->fStyle.lock());
    }
 }
 
@@ -321,7 +323,9 @@ void ROOT::Experimental::RPadBase::SetAllAxisAutoBounds()
       frame->GetUserAxis(i).SetAutoBounds();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
 /// Convert user coordinates to normal coordinates.
+
 std::array<ROOT::Experimental::RPadLength::Normal, 2> ROOT::Experimental::RPadBase::UserToNormal(const std::array<RPadLength::User, 2> &pos) const
 {
    auto frame = GetFrame();
@@ -330,3 +334,13 @@ std::array<ROOT::Experimental::RPadLength::Normal, 2> ROOT::Experimental::RPadBa
    return frame->UserToNormal(pos);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Assign drawable version - for pad itself and all primitives
+
+void ROOT::Experimental::RPadBase::SetDrawableVersion(Version_t vers)
+{
+   RDrawable::SetDrawableVersion(vers);
+
+   for (auto &drawable : fPrimitives)
+      drawable->SetDrawableVersion(vers);
+}
