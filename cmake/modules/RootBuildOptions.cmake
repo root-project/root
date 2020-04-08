@@ -317,6 +317,7 @@ endif()
 if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
   set(pyroot_defvalue OFF)
   set(pyroot_experimental_defvalue OFF)
+  set(tmva-pymva_defvalue OFF)
 endif()
 
 # Current limitations for modules:
