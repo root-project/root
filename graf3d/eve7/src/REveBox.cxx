@@ -159,6 +159,7 @@ REveBoxProjected::~REveBoxProjected()
 
 void REveBoxProjected::ComputeBBox()
 {
+   BBoxInit();
    for (auto &pnt: fPoints)
       BBoxCheckPoint(pnt.fX, pnt.fY, fDepth);
 }
