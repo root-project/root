@@ -33,9 +33,11 @@ protected:
    std::string fObjectID;   ///< unique object identifier
    RStyle *fStyle{nullptr}; ///< style object
    unsigned fIndex{0};      ///<! index inside current pad, used to produce fully-qualified id, not send to client
+   bool fDummy{false};      ///< if true, just placeholder for drawable which does not changed
 
 public:
    RDisplayItem() = default;
+   RDisplayItem(bool dummy) : RDisplayItem() { fDummy = dummy; }
    virtual ~RDisplayItem() {}
 
    void SetObjectID(const std::string &id) { fObjectID = id; }
