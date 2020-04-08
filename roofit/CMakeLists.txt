@@ -20,3 +20,6 @@ if(xml)
 endif()
 add_subdirectory(RDataFrameHelpers)
 
+if(NOT MSVC)
+  add_subdirectory(hs3)
+endif()
