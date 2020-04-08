@@ -22,13 +22,20 @@ using namespace TMVA::DNN::RNN;
 
 int main() {
 
-   using Scalar_t = Double_t;
+   using Architecture_t = TCpu<Double_t>;
 
    std::cout << "Testing LSTM Forward pass\n";
-
+   bool debug = true;
    // timesteps, batchsize, statesize, inputsize
-   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2)  << "\n";
-   //std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
-   //std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
-   return 0;
+   bool ok = true;
+   ok &= testForwardPass<Architecture_t>(1, 2, 3, 2, debug);
+   ok &= testForwardPass<Architecture_t>(2, 4, 10, 5);
+   ok &= testForwardPass<Architecture_t>(5, 8, 5, 10);
+   if (ok) {
+      Info("testLSTMForwardPassCpu", "All LSTM Forward tests passed");
+   } else {
+      Error("testLSTMForwardPassCpu", "LSTM Forward pass test failed !");
+   }
+
+   return (ok) ? 0 : -1;
 }

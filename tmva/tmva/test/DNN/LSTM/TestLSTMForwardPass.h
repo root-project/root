@@ -41,7 +41,7 @@ auto printTensor1(const typename Architecture::Tensor_t &A, const std::string & 
          std::cout << "\n";
       }
       std::cout << "********\n";
-  } 
+  }
 }
 
 //______________________________________________________________________________
@@ -60,15 +60,15 @@ auto printMatrix1(const typename Architecture::Matrix_t &A, const std::string na
    std::cout << "********\n";
 }
 
-double sigmoid(double x) { 
-   return 1 /( 1 + exp(-x)); 
+double sigmoid(double x) {
+   return 1 /( 1 + exp(-x));
 }
 
 /*! Generic sample test for forward propagation in LSTM network. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_t inputSize)
--> Double_t
+auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_t inputSize, bool debug = false,
+                     double tol = 1.E-5) -> Bool_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
    using Tensor_t = typename Architecture::Tensor_t;
@@ -77,9 +77,9 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
 
 
    //______________________________________________________________________________
-   /* Input Gate: Numerical example. 
-    * Reference: https://medium.com/@aidangomez/let-s-do-this-f9b699de31d9 
-    * TODO: Numerical example for other gates to verify forward pass values and 
+   /* Input Gate: Numerical example.
+    * Reference: https://medium.com/@aidangomez/let-s-do-this-f9b699de31d9
+    * TODO: Numerical example for other gates to verify forward pass values and
     * backward pass values. */
    //______________________________________________________________________________
 
@@ -87,22 +87,23 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    Tensor_t XRef = Architecture::CreateTensor( timeSteps,batchSize, inputSize);
    Tensor_t arr_XArch = Architecture::CreateTensor( batchSize, timeSteps,inputSize);
    Tensor_t XArch = Architecture::CreateTensor( timeSteps,batchSize, inputSize);
-   
-   
+
+
    for (size_t i = 0; i < timeSteps; ++i) {
       Matrix_t m = XRef[i];
       randomMatrix(m);
    }
 
    Architecture::Copy(XArch, XRef); // Copy from XRef to XArch
-   Architecture::Rearrange( arr_XArch, XRef);  // rearrange to B x T x D  
+   Architecture::Rearrange( arr_XArch, XRef);  // rearrange to B x T x D
 
 
 
    Net_t lstm(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   LSTMLayer_t* layer = lstm.AddBasicLSTMLayer(stateSize, inputSize, timeSteps);
+   LSTMLayer_t* layer = lstm.AddBasicLSTMLayer(stateSize, inputSize, timeSteps, false, true); // output the full sequence
 
    layer->Initialize();
+   layer->Print();
 
    /*! unpack weights for each gate. */
    Matrix_t weightsInput = layer->GetWeightsInputGate();         // H x D
@@ -117,7 +118,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    Matrix_t candidateBiases = layer->GetCandidateBias();                 // H x 1
    Matrix_t forgetBiases = layer->GetForgetGateBias();                   // H x 1
    Matrix_t outputBiases = layer->GetOutputGateBias();                   // H x 1
- 
+
    /*! Get previous hidden state and previous cell state. */
    Matrix_t hiddenState(batchSize, stateSize);       // B x H
    Architecture::Copy(hiddenState, layer->GetState());
@@ -146,6 +147,8 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
    Architecture::Rearrange(arr_outputArch, outputArch); // B x T x H
 
    Double_t maximumError = 0.0;
+   Architecture::InitializeZero(hiddenState);
+   Architecture::InitializeZero(cellState);
 
    /*! Element-wise matrix multiplication of previous hidden
     *  state and weights of previous state followed by computing
@@ -174,13 +177,13 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
       Architecture::AddRowWise(forgetGate, forgetBiases);
       Architecture::AddRowWise(outputGate, outputBiases);
 
-      
+
       /*! Apply activation function to each computed gate values. */
       applyMatrix(inputGate, [](double i) { return sigmoid(i); });
       applyMatrix(candidateValue, [](double c) { return tanh(c); });
       applyMatrix(forgetGate, [](double f) { return sigmoid(f); });
       applyMatrix(outputGate, [](double o) { return sigmoid(o); });
- 
+
       /*! Computing next cell state and next hidden state. */
       Architecture::Hadamard(inputGate, candidateValue);
       Architecture::Hadamard(forgetGate, cellState);
@@ -188,18 +191,30 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, size_
       Architecture::ScaleAdd(cellState, forgetGate);
 
       Architecture::Copy(Tmp, cellState);
-      applyMatrix(Tmp, [](double y) { return tanh(y); }); 
+      applyMatrix(Tmp, [](double y) { return tanh(y); });
       Architecture::Hadamard(outputGate, Tmp);
       Architecture::Copy(hiddenState, outputGate);
 
-      Matrix_t output = arr_outputArch[t]; 
+      if (debug) {
+         Architecture::PrintTensor(Tensor_t(hiddenState), "Expected output at current time");
+         Architecture::PrintTensor(arr_outputArch[t], "LSTM forward output");
+      }
+      Matrix_t output = arr_outputArch[t];
       Double_t error = maximumRelativeError(output, hiddenState);
       std::cout << "Time " << t << " Error: " << error << "\n";
 
       maximumError = std::max(error, maximumError);
    }
 
-   return maximumError;
+   if (maximumError > tol)
+      std::cout << "ERROR: - LSTM Forward pass test failed !  - Max deviation is ";
+   else
+      std::cout << " Test LSTM forward passed ! -   Max deviation is ";
+
+   std::cout << maximumError << std::endl;
+
+   return maximumError < tol;
+
 }
 
 #endif // TMVA_TEST_DNN_TEST_RNN_TEST_LSTM_FWDPASS_H
