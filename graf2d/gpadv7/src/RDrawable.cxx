@@ -14,10 +14,12 @@
 #include <string>
 
 
-// pin vtable
-ROOT::Experimental::RDrawable::~RDrawable() {}
+using namespace ROOT::Experimental;
 
-void ROOT::Experimental::RDrawable::Execute(const std::string &)
+// pin vtable
+RDrawable::~RDrawable() {}
+
+void RDrawable::Execute(const std::string &)
 {
    assert(false && "Did not expect a menu item to be invoked!");
 }
@@ -30,7 +32,7 @@ void ROOT::Experimental::RDrawable::Execute(const std::string &)
 ///       id is drawable identifier, specified with RDrawable::SetId() method
 ///       class_name is drawable class name, specified with RDrawable::SetCssClass() method
 
-bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) const
+bool RDrawable::MatchSelector(const std::string &selector) const
 {
    return (selector == fCssType) || (!fCssClass.empty() && (selector == std::string(".") + fCssClass)) || (!fId.empty() && (selector == std::string("#") + fId));
 }
@@ -39,7 +41,10 @@ bool ROOT::Experimental::RDrawable::MatchSelector(const std::string &selector) c
 /// Creates display item for drawable
 /// By default item contains drawable data itself
 
-std::unique_ptr<ROOT::Experimental::RDisplayItem> ROOT::Experimental::RDrawable::Display(const RPadBase &) const
+std::unique_ptr<RDisplayItem> RDrawable::Display(const RPadBase &, Version_t vers) const
 {
-   return std::make_unique<RDrawableDisplayItem>(*this);
+   if (GetVersion() > vers)
+      return std::make_unique<RDrawableDisplayItem>(*this);
+
+   return nullptr;
 }

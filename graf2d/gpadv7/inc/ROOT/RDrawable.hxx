@@ -26,7 +26,7 @@ class RAttrBase;
 class RDisplayItem;
 class RIndirectDisplayItem;
 class RLegend;
-
+class RCanvas;
 
 namespace Internal {
 
@@ -104,6 +104,11 @@ friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method
 friend class RIndirectDisplayItem;  // to access attributes and other members
+friend class RCanvas; // access SetDrawableVersion
+
+public:
+
+using Version_t = uint64_t;
 
 private:
    RAttrMap fAttr;               ///< attributes values
@@ -111,6 +116,7 @@ private:
    std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
    std::string fCssClass;        ///< user defined drawable class, can later go inside map
    std::string fId;              ///< optional object identifier, may be used in CSS as well
+   Version_t fVersion{1};        ///<! drawable version, changed from the canvas
 
 protected:
 
@@ -123,7 +129,10 @@ protected:
 
    bool MatchSelector(const std::string &selector) const;
 
-   virtual std::unique_ptr<RDisplayItem> Display(const RPadBase &) const;
+   virtual std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const;
+
+   virtual void SetDrawableVersion(Version_t vers) { fVersion = vers; }
+   Version_t GetVersion() const { return fVersion; }
 
 public:
 
@@ -148,7 +157,6 @@ public:
 
    const std::string &GetId() const { return fId; }
    void SetId(const std::string &id) { fId = id; }
-
 };
 
 /// Central method to insert drawable in list of pad primitives
