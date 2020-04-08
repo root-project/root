@@ -148,33 +148,10 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
    if (!fPainter)
       return false;
 
-   if (fModified == 0)
-      fModified = 1;
-
-   // ensure that snapshot is created
-   fPainter->CanvasUpdated(fModified, false, nullptr);
-
    auto width = fSize[0].fVal;
    auto height = fSize[1].fVal;
 
    return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
-/*
-
-   if (fModified == 0)
-      fModified = 1;
-
-   // TODO: for the future one have to ensure only batch connection is updated
-   Update(); // ensure that snapshot is created
-
-   if (filename.find(".json") != std::string::npos) {
-      fPainter->DoWhenReady("JSON", filename, async, callback);
-   } else if (filename.find(".svg") != std::string::npos)
-      fPainter->DoWhenReady("SVG", filename, async, callback);
-   else if (filename.find(".png") != std::string::npos)
-      fPainter->DoWhenReady("PNG", filename, async, callback);
-   else if ((filename.find(".jpg") != std::string::npos) || (filename.find(".jpeg") != std::string::npos))
-      fPainter->DoWhenReady("JPEG", filename, async, callback);
-*/
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -266,4 +243,23 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
       }
 
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Apply attributes changes to the drawable
+/// Return mask with actions which were really applied
+
+bool ROOT::Experimental::RCanvas::ApplyAttrChanges(const std::vector<RChangeAttr> &vect)
+{
+   Version_t vers = 0;
+
+   for (auto & elem : vect) {
+      auto drawable = FindPrimitiveByDisplayId(elem.id);
+      if (drawable && drawable->GetAttrMap().Change(elem.name, elem.value.get())) {
+         if (!vers) vers = IncModified();
+         drawable->SetDrawableVersion(vers);
+      }
+   }
+
+   return vers > 0;
 }

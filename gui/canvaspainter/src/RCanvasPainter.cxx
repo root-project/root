@@ -107,8 +107,6 @@ private:
    std::list<std::shared_ptr<WebCommand>> fCmds; ///<! list of submitted commands
    uint64_t fCmdsCnt{0};                         ///<! commands counter
 
-   uint64_t fSnapshotVersion{0};     ///<! version of snapshot
-   std::string fSnapshot;            ///<! last produced snapshot
    uint64_t fSnapshotDelivered{0};   ///<! minimal version delivered to all connections
    std::list<WebUpdate> fUpdatesLst; ///<! list of callbacks for canvas update
 
@@ -128,7 +126,7 @@ private:
 
    void ProcessData(unsigned connid, const std::string &arg);
 
-   std::string CreateSnapshot(const ROOT::Experimental::RCanvas &can);
+   std::string CreateSnapshot(RDrawable::Version_t vers);
 
    std::shared_ptr<RDrawable> FindPrimitive(const RCanvas &can, const std::string &id);
 
@@ -142,12 +140,6 @@ public:
    RCanvasPainter(const RCanvas &canv);
 
    virtual ~RCanvasPainter();
-
-   //   virtual void AddDisplayItem(std::unique_ptr<RDisplayItem> &&item) override
-   //   {
-   //      item->SetObjectID(fCurrentDrawableId);
-   //      fDisplayList.Add(std::move(item));
-   //   }
 
    void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) final;
 
@@ -300,15 +292,14 @@ void ROOT::Experimental::RCanvasPainter::CheckDataToSend()
             R__ERROR_HERE("CanvasPainter") << "Drawable not found " << items.GetDrawableId();
          }
 
-      } else if ((conn.fSend != fSnapshotVersion) && (conn.fDelivered == conn.fSend)) {
-         // buf = "JSON";
-         // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
+      } else if ((conn.fSend != fCanvas.GetModified()) && (conn.fDelivered == conn.fSend)) {
 
-         conn.fSend = fSnapshotVersion;
          buf = "SNAP:";
-         buf += TString::ULLtoa(fSnapshotVersion, 10);
+         buf += TString::ULLtoa(fCanvas.GetModified(), 10);
          buf += ":";
-         buf += fSnapshot;
+         buf += CreateSnapshot(conn.fSend);
+
+         conn.fSend = fCanvas.GetModified();
       }
 
       if (buf.Length() > 0) {
@@ -350,9 +341,6 @@ void ROOT::Experimental::RCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
          callback(true);
       return;
    }
-
-   fSnapshotVersion = ver;
-   fSnapshot = CreateSnapshot(fCanvas);
 
    if (!fWindow || !fWindow->HasConnection(0, false)) {
       if (callback)
@@ -439,11 +427,13 @@ void ROOT::Experimental::RCanvasPainter::DoWhenReady(const std::string &name, co
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Produce batch output, runs always sync
+/// Produce batch output, using chrome headless mode with DOM dump
 
 bool ROOT::Experimental::RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int height)
 {
-   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fname, fSnapshot, width, height);
+   auto snapshot = CreateSnapshot(0);
+
+   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fname, snapshot, width, height);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -457,8 +447,13 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
    if (conn == fWebConn.end())
       return; // no connection found
 
-   auto check_header = [arg](const std::string &header) {
-      return arg.compare(0, header.length(), header) == 0;
+   std::string cdata;
+
+   auto check_header = [&arg, &cdata](const std::string &header) {
+      if (arg.compare(0, header.length(), header) != 0)
+         return false;
+      cdata = arg.substr(arg.length());
+      return true;
    };
 
    // R__DEBUG_HERE("CanvasPainter") << "from client " << connid << " got data len:" << arg.length() << " val:" <<
@@ -467,12 +462,8 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
    if (check_header("READY")) {
 
    } else if (check_header("SNAPDONE:")) {
-      std::string cdata = arg;
-      cdata.erase(0, 9);
       conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
    } else if (check_header("GETMENU:")) {
-      std::string cdata = arg;
-      cdata.erase(0, 8);
       conn->fGetMenu = cdata;
    } else if (arg == "QUIT") {
       // use window manager to correctly terminate http server and ROOT session
@@ -483,8 +474,6 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
    } else if (arg == "INTERRUPT") {
       gROOT->SetInterrupt();
    } else if (check_header("REPLY:")) {
-      std::string cdata = arg;
-      cdata.erase(0, 6);
       const char *sid = cdata.c_str();
       const char *separ = strchr(sid, ':');
       std::string id;
@@ -500,12 +489,8 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
          FrontCommandReplied(separ + 1);
       }
    } else if (check_header("SAVE:")) {
-      std::string cdata = arg;
-      cdata.erase(0, 5);
       SaveCreatedFile(cdata);
    } else if (check_header("OBJEXEC:")) {
-      std::string cdata = arg;
-      cdata.erase(0, 8);
       size_t pos = cdata.find(':');
 
       if ((pos != std::string::npos) && (pos > 0)) {
@@ -521,12 +506,23 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
             R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for canvas itself (ignored)";
          }
       }
+   } else if (check_header("ATTRCHANGE:")) {
+      auto vect = TBufferJSON::FromJSON<std::vector<RChangeAttr>>(cdata);
+      if (vect) {
+         if (const_cast<RCanvas*>(&fCanvas)->ApplyAttrChanges(*vect))
+            const_cast<RCanvas*>(&fCanvas)->Update(true);
+      } else {
+         R__ERROR_HERE("CanvasPainter") << "Fail to parse vector<RChangeAttr>";
+      }
    } else {
       R__ERROR_HERE("CanvasPainter") << "Got not recognized reply" << arg;
    }
 
    CheckDataToSend();
 }
+
+//////////////////////////////////////////////////////////////////////////
+/// Create web window for canvas
 
 void ROOT::Experimental::RCanvasPainter::CreateWindow()
 {
@@ -640,14 +636,14 @@ bool ROOT::Experimental::RCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> wi
 /// Here server-side painting is performed - each drawable adds own elements in
 /// so-called display list, which transferred to the clients
 
-std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(const ROOT::Experimental::RCanvas &can)
+std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(RDrawable::Version_t vers)
 {
    auto canvitem = std::make_unique<RCanvasDisplayItem>();
 
-   can.DisplayPrimitives(*canvitem.get());
+   fCanvas.DisplayPrimitives(*canvitem.get(), vers);
 
-   canvitem->SetTitle(can.GetTitle());
-   canvitem->SetWindowSize(can.GetSize());
+   canvitem->SetTitle(fCanvas.GetTitle());
+   canvitem->SetWindowSize(fCanvas.GetSize());
 
    canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
    canvitem->SetObjectID("canvas"); // for canvas itself use special id

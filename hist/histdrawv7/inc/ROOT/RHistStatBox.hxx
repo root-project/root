@@ -73,7 +73,7 @@ protected:
 
    virtual void FillStatistic(RDisplayHistStat &, const RPadBase &) const {}
 
-   std::unique_ptr<RDisplayItem> Display(const RPadBase &pad) const override
+   std::unique_ptr<RDisplayItem> Display(const RPadBase &pad, Version_t) const override
    {
       auto res = std::make_unique<RDisplayHistStat>(*this);
 
