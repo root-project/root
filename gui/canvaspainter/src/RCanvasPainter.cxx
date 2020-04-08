@@ -452,7 +452,7 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
    auto check_header = [&arg, &cdata](const std::string &header) {
       if (arg.compare(0, header.length(), header) != 0)
          return false;
-      cdata = arg.substr(arg.length());
+      cdata = arg.substr(header.length());
       return true;
    };
 

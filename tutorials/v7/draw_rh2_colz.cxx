@@ -45,10 +45,16 @@ void draw_rh2_colz()
    // Create a canvas to be displayed.
    auto canvas = RCanvas::Create("Canvas Title");
 
-   // should we made special style for frame with palette?
-   canvas->GetOrCreateFrame()->Margins().SetRight(0.2_normal);
+   auto frame = canvas->GetOrCreateFrame();
 
-   canvas->GetOrCreateFrame()->SetGridX(true).SetGridY(false);
+   // should we made special style for frame with palette?
+   frame->Margins().SetRight(0.2_normal);
+
+   frame->SetGridX(true).SetGridY(false);
+
+   frame->AttrX().SetZoomMinMax(2.,8.);
+
+   frame->AttrY().SetZoomMinMax(2.,8.);
 
    canvas->Draw<RFrameTitle>("2D histogram with color palette");
 
