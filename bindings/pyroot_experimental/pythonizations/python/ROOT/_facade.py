@@ -9,82 +9,7 @@ from cppyy import cppdef
 from libROOTPythonizations import gROOT, CreateBufferFromAddress
 
 from ._application import PyROOTApplication
-
-
-def _NumbaDeclareDecorator(input_types, return_type, name=None):
-    # Check for cfunc in numba
-    try:
-        from numba import cfunc
-    except:
-        raise Exception('Failed to import cfunc from numba')
-
-    # Check input and return types
-    typemap = {
-            'float': 'float32',
-            'double': 'float64',
-            'int': 'int32',
-            'unsigned int': 'uint32',
-            'long': 'int64',
-            'unsigned long': 'uint64',
-            'bool': 'boolean'
-            }
-
-    for t in input_types:
-        if not t in typemap:
-            raise Exception('Input type {} is not supported for jitting with numba. Valid types are {}'.format(
-                t, list(typemap.keys())))
-
-    if not return_type in typemap:
-        raise Exception('Return type {} is not supported for jitting with numba. Valid types are {}'.format(
-            return_type, list(typemap.keys())))
-
-    # Define inner decorator without arguments
-    def inner(func, input_types=input_types, return_type=return_type, name=name):
-        # Build signature for numba
-        # We checked above that all types are in the typemap
-        numba_signature = "{RETURN_TYPE}({INPUT_TYPES})".format(
-                RETURN_TYPE=typemap[return_type],
-                INPUT_TYPES=','.join([typemap[t] for t in input_types]))
-
-        # Compile the Python callable with numba
-        try:
-            cppfunc = cfunc(numba_signature, nopython=True)(func)
-        except:
-            raise Exception('Failed to jit Python callable {PYCALLABLE} with numba.cfunc("{SIGNATURE}", nopython=True)'.format(
-                PYCALLABLE=func, SIGNATURE=numba_signature))
-        func.__numba_cfunc__ = cppfunc
-
-        # Get address of jitted function
-        address = cppfunc.address
-
-        # Infer name of the C++ wrapper function
-        if not name:
-            name = func.__name__
-
-        # Build C++ wrapper for jitting with cling
-        code = """\
-namespace Numba {{
-{RETURN_TYPE} {FUNC_NAME}({INPUT_SIGNATURE}) {{
-    auto funcptr = reinterpret_cast<{RETURN_TYPE}(*)({INPUT_TYPES})>({FUNC_PTR});
-    return funcptr({INPUT_ARGS});
-}}
-}}""".format(
-                RETURN_TYPE=return_type,
-                FUNC_NAME=name,
-                INPUT_SIGNATURE=', '.join(['{} x_{}'.format(t, i) for i, t in enumerate(input_types)]),
-                INPUT_TYPES=', '.join(input_types),
-                FUNC_PTR=address,
-                INPUT_ARGS=', '.join(['x_{}'.format(i) for i in range(len(input_types))]))
-
-        # Jit wrapper code
-        err = gbl_namespace.gInterpreter.Declare(code)
-        if not err:
-            raise Exception('Failed to jit wrapper code with cling:\n{}'.format(code))
-        func.__cpp_wrapper__ = code
-
-        return func
-
-    return inner
+from ._numbadeclare import _NumbaDeclareDecorator
 
 
 class PyROOTConfiguration(object):
@@ -352,6 +277,6 @@ class ROOTFacade(types.ModuleType):
     def Numba(self):
         cppdef('namespace Numba {}')
         ns = self._fallback_getattr('Numba')
-        ns.Declare = _NumbaDeclareDecorator
+        ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
         return ns

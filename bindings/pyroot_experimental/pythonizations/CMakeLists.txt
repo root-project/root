@@ -21,6 +21,7 @@ endif()
 set(py_sources
   ROOT/__init__.py
   ROOT/_application.py
+  ROOT/_numbadeclare.py
   ROOT/_facade.py
   ROOT/pythonization/__init__.py
   ROOT/pythonization/_cppinstance.py
