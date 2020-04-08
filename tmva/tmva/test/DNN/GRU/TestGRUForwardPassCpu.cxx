@@ -26,9 +26,23 @@ int main() {
 
    std::cout << "Testing GRU Forward pass\n";
 
+   // // timesteps, batchsize, statesize, inputsize
+   // std::cout << testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2)  << "\n";
+   // std::cout << testForwardPass<TCpu<Scalar_t>>(2, 8, 100, 50)  << "\n";
+   // std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
+   // return 0;
+
    // timesteps, batchsize, statesize, inputsize
-   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2)  << "\n";
-   std::cout << testForwardPass<TCpu<Scalar_t>>(1, 8, 100, 50)  << "\n";
-   std::cout << testForwardPass<TCpu<Scalar_t>>(5, 9, 128, 64)  << "\n";
-   return 0;
+   bool ok = true;
+   ok &= testForwardPass<TCpu<Scalar_t>>(1, 2, 3, 2);
+   ok &= testForwardPass<TCpu<Scalar_t>>(2, 4, 10, 5);
+   ok &= testForwardPass<TCpu<Scalar_t>>(5, 8, 5, 10);
+   if (ok) {
+      Info("testRecurrentForwardPassCpu", "All GRU Forward tests passed");
+   } else {
+      Error("testRecurrentForwardPassCpu", "GRU Forward pass test failed !");
+   }
+
+
+   return (ok) ? 0 : -1;
 }
