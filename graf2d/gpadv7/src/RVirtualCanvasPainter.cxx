@@ -26,20 +26,19 @@ static void LoadCanvasPainterLibrary() {
 }
 } // unnamed namespace
 
+using namespace ROOT::Experimental::Internal;
 
 /// The implementation is here to pin the vtable.
-ROOT::Experimental::Internal::RVirtualCanvasPainter::~RVirtualCanvasPainter() = default;
+RVirtualCanvasPainter::~RVirtualCanvasPainter() = default;
 
-std::unique_ptr<ROOT::Experimental::Internal::RVirtualCanvasPainter::Generator>
-   &ROOT::Experimental::Internal::RVirtualCanvasPainter::GetGenerator()
+std::unique_ptr<RVirtualCanvasPainter::Generator> &RVirtualCanvasPainter::GetGenerator()
 {
    /// The generator for implementations.
    static std::unique_ptr<Generator> generator;
    return generator;
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RVirtualCanvasPainter> ROOT::Experimental::Internal::
-   RVirtualCanvasPainter::Create(const RCanvas &canv)
+std::unique_ptr<RVirtualCanvasPainter> RVirtualCanvasPainter::Create(ROOT::Experimental::RCanvas &canv)
 {
    if (!GetGenerator()) {
       LoadCanvasPainterLibrary();
@@ -52,5 +51,5 @@ std::unique_ptr<ROOT::Experimental::Internal::RVirtualCanvasPainter> ROOT::Exper
 }
 
 /// The implementation is here to pin the vtable.
-ROOT::Experimental::Internal::RVirtualCanvasPainter::Generator::~Generator() = default;
+RVirtualCanvasPainter::Generator::~Generator() = default;
 
