@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+///
 /// Likelihood and minimization: visualization of errors from a covariance matrix
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke
+///
+/// \date 04/2009
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataHist.h"

@@ -1,13 +1,17 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Speecial p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function to a dataset D(x,cut), where cut
-/// is a category encoding a selection whose
+///
+/// Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function
+/// to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function
+/// of x should be described by eff(x)
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author //
+///
+/// \date February 2018
+/// \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

@@ -1,14 +1,16 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Multidimensional models: multi-dimensional p.d.f.s through composition, e.g. substituting a p.d.f parameter with a function that depends on other observables
 ##
-## pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
+## Multidimensional models: multi-dimensional p.d.f.s through composition, e.g. substituting
+## a p.d.f parameter with a function that depends on other observables
+##
+## `pdf = gauss(x,f(y),s)` with `f(y) = a0 + a1*y`
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// Organization and simultaneous fits: RooCustomizer and RooSimWSTool interface in factory workspace tool in a complex
-/// standalone B physics example
+///
+/// Organization and simultaneous fits: RooCustomizer and RooSimWSTool interface in factory
+/// workspace tool in a complex standalone B physics example
 ///
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke
+///
+/// \date 04/2009
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

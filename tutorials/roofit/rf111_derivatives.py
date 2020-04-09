@@ -3,12 +3,14 @@
 ## \notebook
 ## Basic functionality: numerical 1st, and 3rd order derivatives w.r.t. observables and parameters
 ##
+## ```
 ## pdf = gauss(x,m,s)
+## ```
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

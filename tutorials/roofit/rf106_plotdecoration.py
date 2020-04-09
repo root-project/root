@@ -1,11 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+##
 ## Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
 ##
 ## \macro_code
 ##
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

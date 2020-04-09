@@ -3,12 +3,13 @@
 ## \notebook
 ##
 ## Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function
-## to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function of x should be described by eff(x)
+## to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function
+## of x should be described by eff(x)
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

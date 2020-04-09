@@ -1,13 +1,16 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Multidimensional models: using the likelihood ratio technique to construct a signal enhanced one-dimensional
-/// projection of a multi-dimensional p.d.f.
+///
+/// Multidimensional models: using the likelihood ratio technique to construct a signal
+/// enhanced one-dimensional projection of a multi-dimensional p.d.f.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

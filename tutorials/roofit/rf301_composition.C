@@ -1,15 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Multidimensional models: multi-dimensional p.d.f.s through composition
-///  e.g. substituting a p.d.f parameter with a function that depends on other observables
 ///
-///  pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
+/// Multidimensional models: multi-dimensional p.d.f.s through composition
+/// e.g. substituting a p.d.f parameter with a function that depends on other observables
+///
+///  `pdf = gauss(x,f(y),s)` with `f(y) = a0 + a1*y`
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

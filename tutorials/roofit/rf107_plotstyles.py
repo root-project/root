@@ -1,12 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+##
 ## Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

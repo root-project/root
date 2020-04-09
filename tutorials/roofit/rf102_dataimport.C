@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+///
 /// Basic functionality: importing data from ROOT TTrees and THx histograms
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

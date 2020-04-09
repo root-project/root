@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Speecial p.d.f.'s: using a p.d.f defined by a sum of real-valued amplitude components
+///
+/// Special p.d.f.'s: using a p.d.f defined by a sum of real-valued amplitude components
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

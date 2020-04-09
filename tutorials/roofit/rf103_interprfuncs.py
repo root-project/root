@@ -1,12 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+##
 ## Basic functionality: interpreted functions and p.d.f.s
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 

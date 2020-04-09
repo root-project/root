@@ -1,12 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+##
 ## Addition and convolution: fitting and plotting in sub ranges
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT
