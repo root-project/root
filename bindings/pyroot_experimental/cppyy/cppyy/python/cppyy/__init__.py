@@ -61,7 +61,21 @@ importlib.import_module(libcppyy_mod_name)
 sys.modules['libcppyy'] = sys.modules[libcppyy_mod_name]
 
 # tell cppyy that libcppyy_backend is versioned
+def _check_py_version(lib_name, cbl_var):
+    import re
+    if re.match('^libcppyy_backend\d_\d$', lib_name):
+       # library name already has version
+       if lib_name.endswith(py_version_str):
+           return ''
+       else:
+           raise RuntimeError('CPPYY_BACKEND_LIBRARY variable ({})'
+                              ' does not match Python version {}.{}'
+                              .format(cbl_var, major, minor))
+    else:
+       return py_version_str
+
 if 'CPPYY_BACKEND_LIBRARY' in os.environ:
+    clean_cbl = False
     cbl_var = os.environ['CPPYY_BACKEND_LIBRARY']
     start = 0
     last_sep = cbl_var.rfind(os.path.sep)
@@ -73,14 +87,14 @@ if 'CPPYY_BACKEND_LIBRARY' in os.environ:
         # suffix = so | ...
         lib_name = cbl_var[:first_dot]
         suff = cbl_var[first_dot+1:]
-        if lib_name.find(py_version_str, start) < 0:
-            lib_name += py_version_str
+        ver = _check_py_version(lib_name[start:], cbl_var)
         os.environ['CPPYY_BACKEND_LIBRARY'] = '.'.join([
-            lib_name, suff])
+            lib_name + ver, suff])
     else:
-        if cbl_var.find(py_version_str, start) < 0:
-            os.environ['CPPYY_BACKEND_LIBRARY'] += py_version_str
+        ver = _check_py_version(cbl_var[start:], cbl_var)
+        os.environ['CPPYY_BACKEND_LIBRARY'] += ver
 else:
+    clean_cbl = True
     os.environ['CPPYY_BACKEND_LIBRARY'] = 'libcppyy_backend' + py_version_str
 
 if not 'CLING_STANDARD_PCH' in os.environ:
@@ -102,6 +116,8 @@ if ispypy:
     from ._pypy_cppyy import *
 else:
     from ._cpython_cppyy import *
+if clean_cbl:
+    del os.environ['CPPYY_BACKEND_LIBRARY'] # we set it, so clean it
 
 
 #- allow importing from gbl --------------------------------------------------
