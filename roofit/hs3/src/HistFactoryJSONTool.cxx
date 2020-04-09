@@ -100,9 +100,6 @@ void RooStats::HistFactory::JSONTool::Export(JSONNode& n) const {
     if(!ch.CheckHistograms()) throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
   }
 
-  //   auto parlist = n["variables"];
-  //   parlist |= c4::yml::MAP;
-
   auto& pdflist = n["pdfs"];
   pdflist.set_map();
 
@@ -126,80 +123,7 @@ void RooStats::HistFactory::JSONTool::Export(JSONNode& n) const {
     }
   }
 
-  // parameters
-  
-  //  auto lumi = parlist["Lumi"];
-  //  lumi |= c4::yml::MAP;  
-  //  lumi["value"] << this->_measurement->GetLumi();  
-  //  lumi["relErr"] << this->_measurement->GetLumiRelErr();
-
-  //   for(const auto& par:this->_measurement->GetPOIList()){
-  //     auto node = parlist[c4::to_csubstr(par)];
-  //     node |= c4::yml::MAP;    
-  //     if(this->_measurement->GetParamValues().find(par) != this->_measurement->GetParamValues().end()){
-  //       node["value"] << this->_measurement->GetParamValues().at(par);
-  //     }    
-  //   }
-  //   for(const auto& par:this->_measurement->GetParamValues()){
-  //     auto node = parlist[c4::to_csubstr(par.first)];
-  //     node |= c4::yml::MAP;    
-  //     node["value"] << par.second;
-  //     if(std::find(this->_measurement->GetConstantParams().begin(),this->_measurement->GetConstantParams().end(),par.first) != this->_measurement->GetConstantParams().end()){
-  //       node["const"] << 1;
-  //     }
-  //   }
-  //   
-  //   for(const auto& norm:normfactors){
-  //     auto node = parlist[c4::to_csubstr(norm.second.GetName())];
-  //     node |= c4::yml::MAP;
-  //     node["value"] << norm.second.GetVal();        
-  //     node["min"] << norm.second.GetLow();
-  //     node["max"] << norm.second.GetHigh();
-  //     if(norm.second.GetConst()){
-  //       node["const"] << norm.second.GetConst();
-  //     }
-  //   }
-  
-  // pdfs
-  //   for(const auto& sys:constraints){
-  //     auto node = pdflist[c4::to_csubstr(sys.first)];
-  //     node |= c4::yml::MAP;
-  //     node["type"] << RooStats::HistFactory::Constraint::Name(sys.second);
-  //     if(sys.second == RooStats::HistFactory::Constraint::Gaussian){
-  //       std::string xname = std::string("alpha_")+sys.first;
-  //       auto xpar = parlist[c4::to_csubstr(RooJSONFactoryWSTool::incache(xname))];
-  //       xpar |= c4::yml::MAP;
-  //       xpar["value"] << 0;      
-  //       xpar["max"] << 5.;
-  //       xpar["min"] << -5.;
-  //       xpar["err"] << 1;            
-  //       node["x"] << xname;
-  //       node["mean"] << "0.";
-  //       node["sigma"] << "1.";
-  //     }
-  //   }
-
-  //  for(const auto& sys:this->_measurement->GetGammaSyst()){
-  //    auto node = pdflist[c4::to_csubstr(sys.first)];
-  //    node |= c4::yml::MAP;
-  //    node["value"] << sys.second;    
-  //  }
-  //  for(auto sys:this->_measurement->GetUniformSyst()){
-  //    auto node = pdflist[c4::to_csubstr(sys.first)];
-  //    node |= c4::yml::MAP;
-  //    node["value"] << sys.second;    
-  //  }
-  //  for(auto sys:this->_measurement->GetLogNormSyst()){
-  //    auto node = pdflist[c4::to_csubstr(sys.first)];    
-  //    node |= c4::yml::MAP;
-  //    node["value"] << sys.second;    
-  //  }
-  //  for(auto sys:this->_measurement->GetNoSyst()){
-  //    auto node = pdflist[c4::to_csubstr(sys.first)];    
-  //    node |= c4::yml::MAP;    
-  //    node["value"] << sys.second;
-  //  }
-
+  // preprocess functions
   if(this->_measurement->GetFunctionObjects().size() > 0){
     auto& funclist = n["functions"];
     funclist.set_map();
