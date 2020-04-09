@@ -303,9 +303,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       if ( testBreak < nPnts)
       {
          var mesh2 = this.makeFlatBox(ebox, rnrData, breakIdx, nPnts);
+         mesh2.get_ctrl = function() { return new EveElemControl(this); }
          mesh1.add(mesh2);
       }
 
+      mesh1.get_ctrl = function() { return new EveElemControl(this); }
       return mesh1;
    }
 
@@ -351,6 +353,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       var line = new THREE.LineSegments(geo_rim,  new THREE.LineBasicMaterial({ linewidth: 2, color: lcol, transparent: true, opacity: 0.5 }));
       mesh.add(line);
 
+      mesh.get_ctrl = function() { return new EveElemControl(this); }
       return mesh;
    }
 
