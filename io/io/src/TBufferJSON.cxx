@@ -1890,8 +1890,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       if (objClass && (jsonClass != objClass)) {
          if (obj || (jsonClass->GetBaseClassOffset(objClass) != 0)) {
-            Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s",
-                    objClass->GetName(), jsonClass->GetName());
+            Error("JsonReadObject", "Not possible to read %s and cast to %s pointer",
+                    jsonClass->GetName(), objClass->GetName());
             if (process_stl)
                PopStack();
             return obj;
