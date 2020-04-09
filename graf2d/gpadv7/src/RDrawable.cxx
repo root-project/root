@@ -17,7 +17,10 @@
 using namespace ROOT::Experimental;
 
 // pin vtable
-RDrawable::~RDrawable() {}
+RDrawableRequest::~RDrawableRequest() = default;
+
+// pin vtable
+RDrawable::~RDrawable() = default;
 
 void RDrawable::Execute(const std::string &)
 {

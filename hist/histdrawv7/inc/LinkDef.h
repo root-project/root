@@ -28,11 +28,16 @@
 #pragma link C++ class ROOT::Experimental::RHist1Drawable+;
 #pragma link C++ class ROOT::Experimental::RHist2Drawable+;
 
+#pragma link C++ class ROOT::Experimental::RHistStatRequest+;
+#pragma link C++ class ROOT::Experimental::RHistStatReply+;
+#pragma link C++ class ROOT::Experimental::RDisplayHistStat+;
+
+#pragma link C++ class ROOT::Experimental::RHistStatBoxBase+;
+
 #pragma link C++ class ROOT::Experimental::RHistStatBox<1>+;
 #pragma link C++ class ROOT::Experimental::RHistStatBox<2>+;
 #pragma link C++ class ROOT::Experimental::RHistStatBox<3>+;
 
-#pragma link C++ class ROOT::Experimental::RDisplayHistStat+;
 #pragma link C++ class ROOT::Experimental::RHist1StatBox+;
 #pragma link C++ class ROOT::Experimental::RHist2StatBox+;
 #pragma link C++ class ROOT::Experimental::RHist3StatBox+;
