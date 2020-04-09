@@ -640,10 +640,6 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
    for (auto &point : cross) {
       // From the view's coordinates to window's:
       point = [view convertPoint : point toView : nil];
-      // To screen coordinates:
-      point = [window convertPointToScreen : point];
-      // To crosshair window's:
-      point = [crosshairWindow convertPointFromScreen : point];
    }
 
    CrosshairView *cv = (CrosshairView *)crosshairWindow.contentView;
