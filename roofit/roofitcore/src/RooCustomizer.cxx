@@ -147,10 +147,7 @@
 */
 
 
-#include "RooFit.h"
-
-#include "TClass.h"
-#include "TStopwatch.h"
+#include "RooCustomizer.h"
 
 #include "RooAbsCategoryLValue.h" 
 #include "RooAbsCategory.h"
@@ -159,8 +156,7 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-
-#include "RooCustomizer.h"
+#include "RooHelpers.h"
 
 #include "Riostream.h"
 #include "RooWorkspace.h"
@@ -352,10 +348,10 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Build a clone of the prototype executing all registered 'replace' rules
-/// If verbose is set a message is printed for each leaf or branch node
+/// Build a clone of the prototype executing all registered 'replace' rules.
+/// If verbose is set, a message is printed for each leaf or branch node
 /// modification. The returned head node owns all cloned branch nodes
-/// that were created in the cloning proces
+/// that were created in the cloning process.
 
 RooAbsArg* RooCustomizer::build(Bool_t verbose) 
 {
@@ -770,9 +766,10 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
   if (instanceName) {
     // Set the desired name of the top level node
     targ->SetName(instanceName) ;
-    ft.ws().import(cust.cloneBranchList(),RooFit::Silence(),RooFit::NoRecursion(kTRUE)) ;
+    // Now import everything. What we didn't touch gets recycled, everything else was cloned here:
+    ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RecycleConflictNodes(true),    RooFit::NoRecursion(false));
   } else {
-    ft.ws().import(cust.cloneBranchList(),RooFit::Silence(),RooFit::RenameConflictNodes("orig",1),RooFit::NoRecursion(kTRUE)) ;    
+    ft.ws().import(cust.cloneBranchList(), RooFit::Silence(true), RooFit::RenameConflictNodes("orig",1), RooFit::NoRecursion(true));
   }
 
   return string(instanceName?instanceName:targ->GetName()) ;
