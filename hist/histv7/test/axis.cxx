@@ -24,6 +24,8 @@ TEST(AxisTest, Config) {
       RAxisEquidistant axis = Internal::AxisConfigToType<RAxisConfig::kEquidistant>()(cfg);
       EXPECT_EQ(axis.GetTitle(), title);
       EXPECT_EQ(axis.GetNBinsNoOver(), 10);
+      EXPECT_EQ(axis.GetNOverflowBins(), 2);
+      EXPECT_EQ(axis.GetNBins(), 12);
       EXPECT_EQ(axis.GetMinimum(), 1.2);
       EXPECT_DOUBLE_EQ(axis.GetMaximum(), 3.4);
     };
@@ -53,6 +55,8 @@ TEST(AxisTest, Config) {
       RAxisGrow axis = Internal::AxisConfigToType<RAxisConfig::kGrow>()(cfg);
       EXPECT_EQ(axis.GetTitle(), title);
       EXPECT_EQ(axis.GetNBinsNoOver(), 10);
+      EXPECT_EQ(axis.GetNOverflowBins(), 0);
+      EXPECT_EQ(axis.GetNBins(), 10);
       EXPECT_EQ(axis.GetMinimum(), 1.2);
       EXPECT_DOUBLE_EQ(axis.GetMaximum(), 3.4);
     };
@@ -83,6 +87,9 @@ TEST(AxisTest, Config) {
 
       RAxisIrregular axis = Internal::AxisConfigToType<RAxisConfig::kIrregular>()(cfg);
       EXPECT_EQ(axis.GetTitle(), title);
+      EXPECT_EQ(axis.GetNBinsNoOver(), 3);
+      EXPECT_EQ(axis.GetNOverflowBins(), 2);
+      EXPECT_EQ(axis.GetNBins(), 5);
       EXPECT_EQ(axis.GetBinBorders().size(), 4u);
       EXPECT_EQ(axis.GetBinBorders()[0], 2.3);
       EXPECT_EQ(axis.GetBinBorders()[1], 5.7);
@@ -117,6 +124,7 @@ TEST(AxisTest, Config) {
 
       RAxisLabels axis = Internal::AxisConfigToType<RAxisConfig::kLabels>()(cfg);
       EXPECT_EQ(axis.GetTitle(), title);
+      EXPECT_EQ(axis.GetNBinsNoOver(), 5);
       EXPECT_EQ(axis.GetBinLabels().size(), 5u);
       EXPECT_EQ(axis.GetBinLabels()[0], "abc");
       EXPECT_EQ(axis.GetBinLabels()[1], "de");

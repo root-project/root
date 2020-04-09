@@ -36,11 +36,11 @@ class RHist;
 
 namespace Hist {
 /// Iterator over n dimensional axes - an array of n axis iterators.
-template <int NDIM>
-using AxisIter_t = std::array<RAxisBase::const_iterator, NDIM>;
+template <int NDIMS>
+using AxisIter_t = std::array<RAxisBase::const_iterator, NDIMS>;
 /// Range over n dimensional axes - a pair of arrays of n axis iterators.
-template <int NDIM>
-using AxisIterRange_t = std::array<AxisIter_t<NDIM>, 2>;
+template <int NDIMS>
+using AxisIterRange_t = std::array<AxisIter_t<NDIMS>, 2>;
 
 /// Kinds of under- and overflow handling.
 enum class EOverflow {
@@ -148,6 +148,8 @@ public:
    using Stat_t = DATA;
    /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
    using CoordArray_t = Hist::CoordArray_t<DATA::GetNDim()>;
+   /// Type of the bins: a DIMENSIONS-dimensional array of integers.
+   using BinArray_t = std::array<int, DATA::GetNDim()>;
    /// Type of the bin content (and thus weights).
    using Weight_t = typename DATA::Weight_t;
 
@@ -311,186 +313,6 @@ int GetNOverflowBinsFromAxes(AXISCONFIG... axisArgs)
    return RGetNBinsCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...}) - RGetNBinsNoOverCount<sizeof...(AXISCONFIG) - 1, axesTuple>()(axesTuple{axisArgs...});
 }
 
-/// Recursively gets the total number of bins in all dimensions except the one to skip
-/// because the under- or overflow occurs in this particular dimension. The result is the
-/// offset to apply to the fOverflowBinContent to get the correct under- or overflow bin
-/// section of the array.
-/// Each call gets the current axis' (if not the axis of the dimension to skip) number of bins
-/// (including under- and overflow) multiplied by that of the next axis.
-template <int IDX, class AXISTUPLE>
-struct RGetUnderOverOffset;
-
-template <class AXES>
-struct RGetUnderOverOffset<0, AXES> {
-   int operator()(const AXES &axes, int axisToSkip) const
-   {
-      if (0 == axisToSkip) {
-         return 1;
-      } else {
-         return std::get<0>(axes).GetNBins();
-      }
-   }
-};
-
-template <int I, class AXES>
-struct RGetUnderOverOffset {
-   int operator()(const AXES &axes, int axisToSkip) const
-   {
-      if (I == axisToSkip) {
-         return RGetUnderOverOffset<I - 1, AXES>()(axes, axisToSkip);
-      } else {
-         return std::get<I>(axes).GetNBins() * RGetUnderOverOffset<I - 1, AXES>()(axes, axisToSkip);
-      }
-   }
-};
-
-/// Recursively gets the axis' index where the under- or overflow occurs for a given under- or
-/// overflow bin index.
-/// Each call tests if the given bin index is contained in the section of fOverflowBinContent
-/// dedicated to the current axis (by calculating the offset needed in the array for the current
-/// and next axes with RGetUnderOverOffset).
-template <int IDX, class HISTIMPL, class AXISTUPLE>
-struct RGetOverflowAxis;
-
-template <class HISTIMPL, class AXES>
-struct RGetOverflowAxis<-1, HISTIMPL, AXES> {
-   int operator()(HISTIMPL *, const AXES &, int) const
-   {
-      return -1;
-   }
-};
-
-template <int I, class HISTIMPL, class AXES>
-struct RGetOverflowAxis {
-   int operator()(HISTIMPL *hist, const AXES &axes, int binidx) const
-   {
-      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
-      int ret = 0, retPlus1 = 0;
-      for (int i = 0; i < thisAxis; ++i)
-         ret += 2 * RGetUnderOverOffset<HISTIMPL::GetNDim() - 1, decltype(axes)>()(axes, i);
-      for (int i = 0; i < thisAxis + 1; ++i)
-         retPlus1 += 2 * RGetUnderOverOffset<HISTIMPL::GetNDim() - 1, decltype(axes)>()(axes, i);
-      if (ret <= binidx && retPlus1 <= binidx) {
-         return RGetOverflowAxis<I - 1, HISTIMPL, AXES>()(hist, axes, binidx);
-      } else {
-         return thisAxis;
-      }
-   }
-};
-
-/// Recursively gets the type of bin (regular, underflow or overflow) for the given coordinates,
-/// as well as an axis' index as following:
-///      - if the type is under- or overflow, it returns the axis' index on which the under- or
-///        overflow occurs;
-///      - otherwise it returns -1.
-/// Each call tests if the bin found, given the coordinate on the current axis, is an under- or
-/// overflow (respectively -1 or -2).
-template <int IDX, class HISTIMPL, class AXES>
-struct RGetBinType;
-
-template <class HISTIMPL, class AXES>
-struct RGetBinType<-1, HISTIMPL, AXES> {
-   std::array<int, 2> operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &) const
-   {
-      return {-1, (int) RAxisBase::EBinType::kRegularBin};
-   }
-};
-
-template <int I, class HISTIMPL, class AXES>
-struct RGetBinType {
-   std::array<int, 2> operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x) const
-   {
-      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
-      int bin = std::get<thisAxis>(axes).FindBin(x[thisAxis]);
-      if (bin == (int) RAxisBase::EBinType::kUnderflowBin || bin == (int) RAxisBase::EBinType::kOverflowBin) {
-         return {thisAxis, bin};
-      } else {
-         return RGetBinType<I - 1, HISTIMPL, AXES>()(hist, axes, x);
-      }
-   }
-};
-
-/// Recursively gets the bin index for the given coordinates, if said coordinates were determined
-/// to be in under- or overflow in a particular dimension of the hist. It works the same way as for
-/// regular bin index calculation, only it skips the axis on which the under- or overflow occurs.
-/// The bin index so found is in 0-based indexing and is added to an offset further on so that it
-/// corresponds to the correct bin index in fOverflowBinContent.
-/// Each call adds the found bin on the current axis, and multiplies the call on the next axis by
-/// the total number of bins on the current axis (including under- and overflow bins).
-template <int IDX, class HISTIMPL, class AXES, bool GROW>
-struct RGetOverflowBinIndex;
-
-template <class HISTIMPL, class AXES, bool GROW>
-struct RGetOverflowBinIndex<-1, HISTIMPL, AXES, GROW> {
-   int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
-                  RAxisBase::EFindStatus &status, int) const
-   {
-      status = RAxisBase::EFindStatus::kValid;
-      return 0;
-   }
-};
-
-template <int I, class HISTIMPL, class AXES, bool GROW>
-struct RGetOverflowBinIndex {
-   int operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x,
-                  RAxisBase::EFindStatus &status, int axisInUnderOver) const
-   {
-      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
-      if (thisAxis == axisInUnderOver) {
-         return RGetOverflowBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status, axisInUnderOver);
-      } else {
-         int bin = std::get<thisAxis>(axes).FindAdjustedBin(x[thisAxis]) - 1;
-         if (GROW && std::get<thisAxis>(axes).CanGrow() && bin < 0) {
-            hist->GrowAxis(thisAxis, x[thisAxis]);
-            status = RAxisBase::EFindStatus::kCanGrow;
-
-            // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
-            return bin;
-         }
-         return bin +
-               RGetOverflowBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status, axisInUnderOver) * std::get<thisAxis>(axes).GetNBins();
-      }
-   }
-};
-
-/// Recursively gets the bin index for the given coordinates, if said coordinates were determined
-/// not to be in under- or overflow in any dimension. The bin index so found is in 0-based indexing
-/// and 1 is added to it further on so that it corresponds to the correct bin index in fBinContent.
-/// Each call adds the found bin on the current axis, and multiplies the call on the next axis by
-/// the number of regular bins on the current axis (excluding under- and overflow bins).
-template <int IDX, class HISTIMPL, class AXES, bool GROW>
-struct RGetRegularBinIndex;
-
-template <class HISTIMPL, class AXES, bool GROW>
-struct RGetRegularBinIndex<-1, HISTIMPL, AXES, GROW> {
-   int operator()(HISTIMPL *, const AXES &, const typename HISTIMPL::CoordArray_t &,
-                  RAxisBase::EFindStatus &status) const
-   {
-      status = RAxisBase::EFindStatus::kValid;
-      return 0;
-   }
-};
-
-template <int I, class HISTIMPL, class AXES, bool GROW>
-struct RGetRegularBinIndex {
-   int operator()(HISTIMPL *hist, const AXES &axes, const typename HISTIMPL::CoordArray_t &x,
-                  RAxisBase::EFindStatus &status) const
-   {
-      constexpr const int thisAxis = HISTIMPL::GetNDim() - I - 1;
-      int bin = std::get<thisAxis>(axes).FindAdjustedBin(x[thisAxis]) - 1;
-      if (GROW && std::get<thisAxis>(axes).CanGrow() && bin < 0) {
-         hist->GrowAxis(thisAxis, x[thisAxis]);
-         status = RAxisBase::EFindStatus::kCanGrow;
-
-         // Abort bin calculation; we don't care. Let RHist::GetBinIndex() retry!
-         return bin;
-      }
-      return bin +
-             RGetRegularBinIndex<I - 1, HISTIMPL, AXES, GROW>()(hist, axes, x, status) * std::get<thisAxis>(axes).GetNBinsNoOver();
-   }
-};
-
-
 /// Recursively fills the ranges of all axes, excluding under- and overflow.
 /// Each call fills `range` with begin() and end() of the current axis, excluding
 /// under- and overflow.
@@ -520,95 +342,356 @@ enum class EBinCoord {
    kBinTo      ///< Get the bin high edge
 };
 
-/// Recursively fills the lower edge, center or higher edge of the given coordinates,
-/// if said coordinates were determined to be in under- or overflow in a particular
-/// dimension of the hist.
-/// Each call fills `coord` with the lower edge, center or higher edge depending on
-/// the `kind` requested. Some adjustements are made to the calculations if the current
-/// axis has previously been determined as the one in under- or overflow for the given
-/// coordinates.
-template <int I, int NDIM, class COORD, class AXES>
-struct RFillOverflowBinCoord;
+///
+///
+///
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RGetNRegularBinsBefore;
 
-template <int NDIM, class COORD, class AXES>
-struct RFillOverflowBinCoord<-1, NDIM, COORD, AXES> {
-   void operator()(COORD & /*coord*/, const AXES & /*axes*/, EBinCoord /*kind*/, int /*binidx*/, int /*axisToSkip*/, int /*overflowType*/) const
+template <int NDIMS, typename BINS, class AXES>
+struct RGetNRegularBinsBefore<-1, NDIMS, BINS, AXES> {
+   void operator()(BINS &/*binSizes*/, const AXES &/*axes*/) const
    {}
 };
 
-template <int I, int NDIM, class COORD, class AXES>
-struct RFillOverflowBinCoord {
-   void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx, int axisInUnderOver, int overflowType) const
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RGetNRegularBinsBefore {
+   void operator()(BINS &binSizes, const AXES &axes) const
    {
-      constexpr const int thisAxis = NDIM - I - 1;
-      if (thisAxis == axisInUnderOver) {
-         if (overflowType == (int) RAxisBase::EBinType::kUnderflowBin) {
-            switch (kind) {
-               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(overflowType); break;
-               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(overflowType); break;
-               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(std::get<thisAxis>(axes).GetFirstBin()); break;
-            }
-         } else if (overflowType == (int) RAxisBase::EBinType::kOverflowBin) {
-            switch (kind) {
-               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(std::get<thisAxis>(axes).GetLastBin()); break;
-               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(overflowType); break;
-               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(overflowType); break;
-            }
-         }
-         RFillOverflowBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, binidx, axisInUnderOver, overflowType);
-      } else {
-         int axisbin = binidx % std::get<thisAxis>(axes).GetNBins();
-         if (axisbin < std::get<thisAxis>(axes).GetFirstBin()) {
-            switch (kind) {
-               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
-               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
-               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(std::get<thisAxis>(axes).GetFirstBin()); break;
-            }
-         } else if (std::get<thisAxis>(axes).GetLastBin() < axisbin) {
-            switch (kind) {
-               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(std::get<thisAxis>(axes).GetLastBin()); break;
-               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
-               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
-            }
-         } else {
-            switch (kind) {
-               case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
-               case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
-               case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
-            }
-         }
-         RFillOverflowBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind,
-            (binidx - axisbin + 1) / std::get<thisAxis>(axes).GetNBins(), axisInUnderOver, overflowType);
-      }
+      constexpr const int thisAxis = NDIMS - I - 1;
+      binSizes[thisAxis] = binSizes[thisAxis-1] * std::get<thisAxis>(axes).GetNBinsNoOver();
+      RGetNRegularBinsBefore<I - 1, NDIMS, BINS, AXES>()(binSizes, axes);
    }
 };
 
-/// Recursively fills the lower edge, center or higher edge of the given coordinates,
+///
+///
+///
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RComputeGlobalBin;
+
+template <int NDIMS, typename BINS, class AXES>
+struct RComputeGlobalBin<-1, NDIMS, BINS, AXES> {
+   int operator()(int total_regular_bins_before, const AXES &/*axes*/, const BINS &/*virtualBins*/, const BINS &/*binSizes*/, const BINS &/*localBins*/) const
+   {
+      return total_regular_bins_before;
+   }
+};
+
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RComputeGlobalBin {
+   int operator()(int total_regular_bins_before, const AXES &axes, const BINS &virtualBins, const BINS &binSizes, const BINS &localBins) const
+   {
+      // We can tell how many regular bins lie before us on this axis,
+      // accounting for the underflow bin of this axis if it has one.
+      const int num_underflow_bins = static_cast<int>(!std::get<I>(axes).CanGrow());
+      const int num_regular_bins_before =
+         std::max(virtualBins[I] - num_underflow_bins, 0);
+      total_regular_bins_before += num_regular_bins_before * binSizes[I];
+
+      // If we are on an overflow or underflow bin on this axis, we know that
+      // we don't need to look at the remaining axes. Projecting on those
+      // dimensions would only take us into an hyperplane of over/underflow
+      // bins for the current axis, and we know that by construction there
+      // will be no regular bins in there.
+      if (localBins[I] < 1)
+         return total_regular_bins_before;
+      
+      return RComputeGlobalBin<I - 1, NDIMS, BINS, AXES>()(total_regular_bins_before, axes, virtualBins, binSizes, localBins);
+   }
+};
+
+///
+///
+///
+template <int I, int NDIMS, class AXES>
+struct RComputeLocalBinsInitialisation;
+
+template <int NDIMS, class AXES>
+struct RComputeLocalBinsInitialisation<0, NDIMS, AXES> {
+   void operator()(std::array<int, NDIMS-1> /* bins_per_hyperplane */, std::array<int, NDIMS-1> /* regular_bins_per_hyperplane */, const AXES & /*axes*/) const
+   {}
+};
+
+template <int I, int NDIMS, class AXES>
+struct RComputeLocalBinsInitialisation {
+   void operator()(std::array<int, NDIMS-1>& bins_per_hyperplane, std::array<int, NDIMS-1>& regular_bins_per_hyperplane, const AXES &axes) const
+   {
+      constexpr const int thisAxis = NDIMS - I - 1;
+      bins_per_hyperplane[thisAxis] = Internal::RGetNBinsCount<thisAxis, AXES>()(axes);
+      regular_bins_per_hyperplane[thisAxis] = Internal::RGetNBinsNoOverCount<thisAxis, AXES>()(axes);
+      RComputeLocalBinsInitialisation<I - 1, NDIMS, AXES>()(bins_per_hyperplane, regular_bins_per_hyperplane, axes);
+   }
+};
+
+/// 
+/// 
+/// 
+template <int I, int NDIMS, class AXES>
+struct RComputeLocalBins;
+
+template <int NDIMS, class AXES>
+struct RComputeLocalBins<0, NDIMS, AXES> {
+   std::array<int, 2> operator()(const AXES &/*axes*/, std::array<int, 2> parameters_to_process,
+         std::array<int, NDIMS-1> /* bins_per_hyperplane */, std::array<int, NDIMS-1> /* regular_bins_per_hyperplane */,
+         int /* curr_bins_per_hyperplane */, int /* curr_regular_bins_per_hyperplane */) const
+   {
+      return parameters_to_process;
+   }
+};
+
+template <int I, int NDIMS, class AXES>
+struct RComputeLocalBins {
+   std::array<int, 2> operator()(const AXES &axes, std::array<int, 2> parameters_to_process,
+         std::array<int, NDIMS-1> bins_per_hyperplane, std::array<int, NDIMS-1> regular_bins_per_hyperplane,
+         int curr_bins_per_hyperplane, int curr_regular_bins_per_hyperplane) const
+   {
+      int unprocessed_previous_overflow_bin = parameters_to_process[0];
+      int num_regular_bins_before = parameters_to_process[1];
+
+      // Let's start by computing the contribution of the underflow
+      // hyperplane (if any), in which we know there will be no regular bins
+      const int num_underflow_hyperplanes =
+            static_cast<int>(!std::get<I>(axes).CanGrow());
+      const int bins_in_underflow_hyperplane =
+            num_underflow_hyperplanes * bins_per_hyperplane[I-1];
+
+      // Next, from the total number of bins per hyperplane and the number of
+      // regular bins per hyperplane that has them, we deduce the number of
+      // overflow bins per hyperplane that has regular bins.
+      const int overflow_bins_per_regular_hyperplane =
+            bins_per_hyperplane[I-1] - regular_bins_per_hyperplane[I-1];
+
+      // This allows us to answer a key question: are there any under/overflow
+      // bins on the hyperplanes that have regular bins? It may not be the
+      // case if some axes are growable, and thus don't have overflow bins.
+      if (overflow_bins_per_regular_hyperplane != 0) {
+            // If so, we start by cutting off the contribution of the underflow
+            // and overflow hyperplanes, to focus specifically on regular bins.
+            const int overflow_bins_in_regular_hyperplanes =
+               std::min(
+                  std::max(
+                     unprocessed_previous_overflow_bin
+                           - bins_in_underflow_hyperplane,
+                     0
+                  ),
+                  overflow_bins_per_regular_hyperplane
+                        * std::get<I>(axes).GetNBinsNoOver()
+               );
+
+            // We count how many _complete_ "regular" hyperplanes that leaves
+            // before us, and account for those in our regular bin count.
+            const int num_regular_hyperplanes_before =
+               overflow_bins_in_regular_hyperplanes
+                  / overflow_bins_per_regular_hyperplane;
+            num_regular_bins_before +=
+               num_regular_hyperplanes_before
+                  * regular_bins_per_hyperplane[I-1];
+
+            // This only leaves the _current_ hyperplane as a possible source of
+            // more regular bins that we haven't accounted for yet. We'll take
+            // those into account while processing previous dimensions.
+            unprocessed_previous_overflow_bin =
+               overflow_bins_in_regular_hyperplanes
+                  % overflow_bins_per_regular_hyperplane;
+      } else {
+            // If there are no overflow bins in regular hyperplane, then the
+            // rule changes: observing _one_ overflow bin after the underflow
+            // hyperplane means that _all_ regular hyperplanes on this axis are
+            // already before us.
+            if (unprocessed_previous_overflow_bin >= bins_in_underflow_hyperplane) {
+               num_regular_bins_before +=
+                  std::get<I>(axes).GetNBinsNoOver()
+                        * regular_bins_per_hyperplane[I-1];
+            }
+
+            // In this case, we're done, because the current bin may only lie
+            // in the underflow or underflow hyperplane of this axis. Which
+            // means that there are no further regular bins to be accounted for
+            // in the current hyperplane.
+            unprocessed_previous_overflow_bin = 0;
+      }
+      parameters_to_process[0] = unprocessed_previous_overflow_bin;
+      parameters_to_process[1] = num_regular_bins_before;
+
+      // No need to continue this loop if we've taken into account all
+      // overflow bins that were associated with regular bins.
+      if (unprocessed_previous_overflow_bin == 0)
+         return parameters_to_process;
+      
+      return Internal::RComputeLocalBins<I - 1, NDIMS, AXES>()
+                                 (axes, parameters_to_process, bins_per_hyperplane, regular_bins_per_hyperplane, 
+                                 curr_bins_per_hyperplane, curr_regular_bins_per_hyperplane);
+   }
+};
+
+///
+///
+///
+template <int I, int NDIMS, typename BINS, class AXES, class BINTYPE>
+struct RComputeLocalBinsRaw;
+
+template <int NDIMS, typename BINS, class AXES, class BINTYPE>
+struct RComputeLocalBinsRaw<-1, NDIMS, BINS, AXES, BINTYPE> {
+   void operator()(BINS & /*virtualBins*/, const AXES & /*axes*/, int /*zeroBasedGlobalBin*/, BINTYPE /*GetNBinType*/) const
+   {}
+};
+
+template <int I, int NDIMS, typename BINS, class AXES, class BINTYPE>
+struct RComputeLocalBinsRaw {
+   void operator()(BINS &virtualBins, const AXES &axes, int zeroBasedGlobalBin, BINTYPE GetNBinType) const
+   {
+      constexpr const int thisAxis = NDIMS - I - 1;
+      virtualBins[thisAxis] = zeroBasedGlobalBin % (std::get<thisAxis>(axes).*GetNBinType)();
+      RComputeLocalBinsRaw<I - 1, NDIMS, BINS, AXES, BINTYPE>()(virtualBins, axes, zeroBasedGlobalBin / (std::get<thisAxis>(axes).*GetNBinType)(), GetNBinType);
+   }
+};
+
+///
+///
+///
+template <int I, int NDIMS, typename BINS, class AXES, class BINTYPE>
+struct RComputeGlobalBinRaw;
+
+template <int NDIMS, typename BINS, class AXES, class BINTYPE>
+struct RComputeGlobalBinRaw<-1, NDIMS, BINS, AXES, BINTYPE> {
+   int operator()(int globalVirtualBin, const AXES & /*axes*/, const BINS & /*zeroBasedLocalBins*/, int /*binSize*/, BINTYPE /*GetNBinType*/) const
+   {
+      return globalVirtualBin;
+   }
+};
+
+template <int I, int NDIMS, typename BINS, class AXES, class BINTYPE>
+struct RComputeGlobalBinRaw {
+   int operator()(int globalVirtualBin, const AXES &axes, const BINS &zeroBasedLocalBins, int binSize, BINTYPE GetNBinType) const
+   {
+      constexpr const int thisAxis = NDIMS - I - 1;
+      globalVirtualBin += zeroBasedLocalBins[thisAxis] * binSize;
+      binSize *= (std::get<thisAxis>(axes).*GetNBinType)();
+      return Internal::RComputeGlobalBinRaw<I - 1, NDIMS, BINS, AXES, BINTYPE>()(globalVirtualBin, axes, zeroBasedLocalBins, binSize, GetNBinType);
+   }
+};
+
+///
+///
+///
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RVirtualBinsToLocalBins;
+
+template <int NDIMS, typename BINS, class AXES>
+struct RVirtualBinsToLocalBins<-1, NDIMS, BINS, AXES> {
+   void operator()(BINS & /*localBins*/, const AXES & /*axes*/, const BINS & /*virtualBins*/) const
+   {}
+};
+
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RVirtualBinsToLocalBins {
+   void operator()(BINS &localBins, const AXES &axes, const BINS &virtualBins) const
+   {
+      constexpr const int thisAxis = NDIMS - I - 1;
+      if ((!std::get<thisAxis>(axes).CanGrow()) && (virtualBins[thisAxis] == 0)) {
+         localBins[thisAxis] = -1;
+      } else if ((!std::get<thisAxis>(axes).CanGrow()) && (virtualBins[thisAxis] == (std::get<thisAxis>(axes).GetNBins() - 1))) {
+         localBins[thisAxis] = -2;
+      } else {
+         const int regular_bin_offset = -static_cast<int>(std::get<thisAxis>(axes).CanGrow());
+         localBins[thisAxis] = virtualBins[thisAxis] - regular_bin_offset;
+      }
+      RVirtualBinsToLocalBins<I - 1, NDIMS, BINS, AXES>()(localBins, axes, virtualBins);
+   }
+};
+
+///
+///
+///
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RLocalBinsToVirtualBins;
+
+template <int NDIMS, typename BINS, class AXES>
+struct RLocalBinsToVirtualBins<-1, NDIMS, BINS, AXES> {
+   void operator()(BINS & /*virtualBins*/, const AXES & /*axes*/, const BINS & /*localBins*/) const
+   {}
+};
+
+template <int I, int NDIMS, typename BINS, class AXES>
+struct RLocalBinsToVirtualBins {
+   void operator()(BINS &virtualBins, const AXES &axes, const BINS &localBins) const
+   {
+      constexpr const int thisAxis = NDIMS - I - 1;
+      switch (localBins[thisAxis]) {
+         case -1:
+               virtualBins[thisAxis] = 0; break;
+         case -2:
+               virtualBins[thisAxis] = std::get<thisAxis>(axes).GetNBins() - 1; break;
+         default:
+               virtualBins[thisAxis] = localBins[thisAxis] - static_cast<int>(std::get<thisAxis>(axes).CanGrow());
+      }
+      RLocalBinsToVirtualBins<I - 1, NDIMS, BINS, AXES>()(virtualBins, axes, localBins);
+   }
+};
+
+///
+///
+///
+template <int I, int NDIMS, typename BINS, typename COORD, class AXES>
+struct RCoordsToLocalBins;
+
+template <int NDIMS, typename BINS, typename COORD, class AXES>
+struct RCoordsToLocalBins<-1, NDIMS, BINS, COORD, AXES> {
+   void operator()(BINS & /*localBins*/, const AXES & /*axes*/, const COORD & /*coords*/) const
+   {}
+};
+
+template <int I, int NDIMS, typename BINS, typename COORD, class AXES>
+struct RCoordsToLocalBins {
+   void operator()(BINS &localBins, const AXES &axes, const COORD &coords) const
+   {
+      constexpr const int thisAxis = NDIMS - I - 1;
+      localBins[thisAxis] = std::get<thisAxis>(axes).FindBin(coords[thisAxis]);
+      RCoordsToLocalBins<I - 1, NDIMS, BINS, COORD, AXES>()(localBins, axes, coords);
+   }
+};
+
+/// Recursively fills the lower edge, center or higher edge of the given local bins,
 /// if said coordinates were determined not to be in under- or overflow in any dimension
 /// of the hist.
 /// Each call fills `coord` with the lower edge, center or higher edge depending on
 /// the `kind` requested.
-template <int I, int NDIM, class COORD, class AXES>
-struct RFillBinCoord;
+template <int I, int NDIMS, typename BINS, typename COORD, class AXES>
+struct RLocalBinsToCoords;
 
-template <int NDIM, class COORD, class AXES>
-struct RFillBinCoord<-1, NDIM, COORD, AXES> {
-   void operator()(COORD & /*coord*/, const AXES & /*axes*/, EBinCoord /*kind*/, int /*binidx*/) const
+template <int NDIMS, typename BINS, typename COORD, class AXES>
+struct RLocalBinsToCoords<-1, NDIMS, BINS, COORD, AXES> {
+   void operator()(COORD & /*coords*/, const AXES & /*axes*/, const BINS & /*localBins*/, EBinCoord /*kind*/) const
    {}
 };
 
-template <int I, int NDIM, class COORD, class AXES>
-struct RFillBinCoord {
-   void operator()(COORD &coord, const AXES &axes, EBinCoord kind, int binidx) const
+template <int I, int NDIMS, typename BINS, typename COORD, class AXES>
+struct RLocalBinsToCoords {
+   void operator()(COORD &coords, const AXES &axes, const BINS &localBins, EBinCoord kind) const
    {
-      constexpr const int thisAxis = NDIM - I - 1;
-      int axisbin = binidx % std::get<thisAxis>(axes).GetNBinsNoOver() + 1;
-      switch (kind) {
-      case EBinCoord::kBinFrom: coord[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
-      case EBinCoord::kBinCenter: coord[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
-      case EBinCoord::kBinTo: coord[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
+      constexpr const int thisAxis = NDIMS - I - 1;
+      int axisbin = localBins[thisAxis];
+      if (axisbin == -1) {
+         switch (kind) {
+            case EBinCoord::kBinFrom: coords[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
+            case EBinCoord::kBinCenter: coords[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+            case EBinCoord::kBinTo: coords[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(std::get<thisAxis>(axes).GetFirstBin()); break;
+         }
+      } else if (axisbin == -2) {
+         switch (kind) {
+            case EBinCoord::kBinFrom: coords[thisAxis] = std::get<thisAxis>(axes).GetBinTo(std::get<thisAxis>(axes).GetLastBin()); break;
+            case EBinCoord::kBinCenter: coords[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+            case EBinCoord::kBinTo: coords[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
+         }
+      } else {
+         switch (kind) {
+            case EBinCoord::kBinFrom: coords[thisAxis] = std::get<thisAxis>(axes).GetBinFrom(axisbin); break;
+            case EBinCoord::kBinCenter: coords[thisAxis] = std::get<thisAxis>(axes).GetBinCenter(axisbin); break;
+            case EBinCoord::kBinTo: coords[thisAxis] = std::get<thisAxis>(axes).GetBinTo(axisbin); break;
+         }
       }
-      RFillBinCoord<I - 1, NDIM, COORD, AXES>()(coord, axes, kind, (binidx - axisbin + 1) / std::get<thisAxis>(axes).GetNBinsNoOver());
+      RLocalBinsToCoords<I - 1, NDIMS, BINS, COORD, AXES>()(coords, axes, localBins, kind);
    }
 };
 
@@ -633,10 +716,11 @@ class RHistImpl final: public RHistImplBase<DATA> {
 public:
    using ImplBase_t = RHistImplBase<DATA>;
    using CoordArray_t = typename ImplBase_t::CoordArray_t;
+   using BinArray_t = typename ImplBase_t::BinArray_t;
    using Weight_t = typename ImplBase_t::Weight_t;
    using typename ImplBase_t::FillFunc_t;
-   template <int NDIM = DATA::GetNDim()>
-   using AxisIterRange_t = typename Hist::AxisIterRange_t<NDIM>;
+   template <int NDIMS = DATA::GetNDim()>
+   using AxisIterRange_t = typename Hist::AxisIterRange_t<NDIMS>;
 
 private:
    std::tuple<AXISCONFIG...> fAxes; ///< The histogram's axes
@@ -686,62 +770,229 @@ public:
    /// Normalized axes access, converting from actual axis type to base class
    const RAxisBase &GetAxis(int iAxis) const final { return *std::apply(Internal::GetAxisView<AXISCONFIG...>, fAxes)[iAxis]; }
 
-   /// Get the type of bin (regular, underflow or overflow) for the given coordinates
-   /// (at index 1 of the returned array), as well as an axis' index (at index 0 of the
-   /// returned array) as following:
-   ///      - if the type is under- or overflow, it it the axis' index on which the under- or
-   ///        overflow occurs;
-   ///      - otherwise it is -1.
-   std::array<int, 2> GetBinType(const CoordArray_t &x) const
-   {
-      return Internal::RGetBinType<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, x);
+   // Compute a zero-based global bin index given...
+   //
+   // - A set of zero-based per-axis bin indices
+   // - The number of considered bins on each axis (can be either GetNBinsNoOver
+   //   or GetNBins depending on what you are trying to do)
+   // - A policy of treating all bins qs regular (i.e. no negative indices)
+   //
+   template <int NDIMS, typename BINTYPE>
+   int ComputeGlobalBinRaw(const BinArray_t& zeroBasedLocalBins, BINTYPE GetNBinType) const {
+      int result = 0;
+      int binSize = 1;
+      return Internal::RComputeGlobalBinRaw<NDIMS - 1, NDIMS, BinArray_t, decltype(fAxes), BINTYPE>()(result, fAxes, zeroBasedLocalBins, binSize, GetNBinType);
    }
 
-   /// Get the total number of bins in all dimensions except the one to skip because
-   /// the under- or overflow occurs in this particular dimension. The result is the offset
-   /// (depending if it an underflow or an overflow) to apply to the section of fOverflowBinContent
-   /// (calculated by GetOverflowVectorOffset()) to get the correct under- or overflow bin.
-   int GetUnderOverOffset(int axis) const
-   {
-      return Internal::RGetUnderOverOffset<DATA::GetNDim() - 1, decltype(fAxes)>()(fAxes, axis);
+   // Compute zero-based local bin indices given...
+   //
+   // - A zero-based global bin index
+   // - The number of considered bins on each axis (can be either GetNBinsNoOver
+   //   or GetNBins depending on what you are trying to do)
+   // - A policy of treating all bins as regular (i.e. no negative indices)
+   //
+   template <int NDIMS, typename BINTYPE>
+   BinArray_t ComputeLocalBinsRaw(int zeroBasedGlobalBin, BINTYPE GetNBinType) const {
+      BinArray_t result;
+      Internal::RComputeLocalBinsRaw<NDIMS - 1, NDIMS, BinArray_t, decltype(fAxes), BINTYPE>()(result, fAxes, zeroBasedGlobalBin, GetNBinType);
+      return result;
    }
 
-   /// Get the offset to apply to the fOverflowBinContent to get the correct under- or
-   /// overflow bin section in which the bin index is.
-   int GetOverflowVectorOffset(int axis) const
-   {
-      int ret = 0;
-      for (int i = 0; i < axis; ++i)
-         ret += 2 * GetUnderOverOffset(i);
-      return ret;
+   // Convert a local axis bins from the standard -1/-2 under/overflow bin indexing
+   // convention to a "virtual bin" convention where the underflow bin has index 0
+   // and the overflow bin has index N+1 where N is the axis' regular bin count.
+   //
+   // For growable axes, subtract 1 from regular indices so that the indexing
+   // convention remains zero-based (this means that there will be no "holes" in
+   // global binning, which matters more than the choice of regular index base)
+   //
+   template <int NDIMS>
+   BinArray_t LocalBinsToVirtualBins(const BinArray_t& localBins) const {
+      BinArray_t virtualBins;
+      Internal::RLocalBinsToVirtualBins<NDIMS - 1, NDIMS, BinArray_t, decltype(fAxes)>()(virtualBins, fAxes, localBins);
+      return virtualBins;
    }
 
-   /// Get the bin index for the given coordinates, if said coordinates were determined
-   /// to be in under- or overflow in a particular dimension of the hist. It returns 0 if
-   /// there is no such bin, e.g. for axes without under- or overflow but coordinates out of range.
-   int GetOverflowBinIndex(const CoordArray_t &x, int axis, int type) const
-   {
-      assert(type == (int) RAxisBase::EBinType::kUnderflowBin || type == (int) RAxisBase::EBinType::kOverflowBin);
-      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
-      int offset = GetOverflowVectorOffset(axis) + (-type - 1) * GetUnderOverOffset(axis);
-      int ret =
-         Internal::RGetOverflowBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status, axis) + offset + (1 * DATA::GetNDim());
-      if (status != RAxisBase::EFindStatus::kValid)
-         return RAxisBase::kInvalidBin;
-      return -(ret);
+   // Convert back from zero-based virtual bins to the standard under/overflow bin
+   // indexing convention.
+   //
+   // For growable axes, add 1 in order to go back to the usual 1-based regular bin
+   // indexing convention, thus reversing the effect of LocalBinsToVirtualBins.
+   //
+   template <int NDIMS>
+   BinArray_t VirtualBinsToLocalBins(const BinArray_t& virtualBins) const {
+      BinArray_t localBins = {};
+      Internal::RVirtualBinsToLocalBins<NDIMS - 1, NDIMS, BinArray_t, decltype(fAxes)>()(localBins, fAxes, virtualBins);
+      return localBins;
    }
 
-   /// Get the bin index for the given coordinates, if said coordinates were determined
-   /// not to be in under- or overflow in any dimension of the hist. It returns 0 if
-   /// there is no such bin, e.g. for axes without under- or overflow but coordinates out of range.
-   int GetActualBinIndex(const CoordArray_t &x) const
-   {
-      RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kValid;
-      int ret =
-         Internal::RGetRegularBinIndex<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes), false>()(nullptr, fAxes, x, status) + 1;
-      if (status != RAxisBase::EFindStatus::kValid)
-         return RAxisBase::kInvalidBin;
-      return ret;
+   // Compute the global index of a certain bin on an N-dimensional histogram,
+   // knowing the local bin indices as returned by calling FindBin on each axis.
+   template <int NDIMS>
+   int ComputeGlobalBin(BinArray_t& local_bins) const {
+      // Get regular bins out of the way
+      if (std::all_of(local_bins.cbegin(), local_bins.cend(),
+                     [](int bin) { return bin >= 1; })) {
+         for (int bin = 0; bin < NDIMS; bin++)
+            local_bins[bin] -= 1;
+         return ComputeGlobalBinRaw<NDIMS>(local_bins, &ROOT::Experimental::RAxisBase::GetNBinsNoOver) + 1;
+      }
+
+      // Convert bin indices to a zero-based coordinate system where the underflow
+      // bin (if any) has coordinate 0 and the overflow bin (if any) has
+      // coordinate N-1, where N is the axis' total number of bins.
+      BinArray_t virtual_bins = LocalBinsToVirtualBins<NDIMS>(local_bins);
+
+      // Deduce what the global bin index would be in this coordinate system that
+      // unifies regular and overflow bins.
+      const int global_virtual_bin = ComputeGlobalBinRaw<NDIMS>(virtual_bins, &ROOT::Experimental::RAxisBase::GetNBins);
+
+      // Move to 1-based and negative indexing
+      const int neg_1based_virtual_bin = -global_virtual_bin - 1;
+
+      // At this point, we have an index that represents a count of all bins, both
+      // regular and overflow, that are located before the current bin when
+      // enumerating histogram bins in row-major order.
+      //
+      // We will next count the number of _regular_ bins which are located before
+      // the current bin, and by removing this offset from the above index, we
+      // will get a count of overflow bins that are located before the current bin
+      // in row-major order. Which is what we want as our overflow bin index.
+      //
+      int total_regular_bins_before = 0;
+
+      // First, we need to know how many regular bins we leave behind us for each
+      // step on each axis, assuming that the bin from which we come was regular.
+      //
+      // If mathematically inclined, you can also think of this as the size of an
+      // hyperplane of regular bins when projecting on lower-numbered dimensions.
+      // See the docs of ComputeLocalBins for more on this worldview.
+      //
+      BinArray_t bin_sizes;
+      bin_sizes[0] = 1;
+      Internal::RGetNRegularBinsBefore<NDIMS - 2, NDIMS, BinArray_t, decltype(fAxes)>()(bin_sizes, fAxes);
+
+      // Then, starting from the _last_ histogram dimension...
+      total_regular_bins_before = Internal::RComputeGlobalBin<NDIMS - 1, NDIMS, BinArray_t, decltype(fAxes)>()
+         (total_regular_bins_before, fAxes, virtual_bins, bin_sizes, local_bins);
+
+      // Now that we know how many bins lie before us, and how many of those are
+      // regular bins, we can trivially deduce how many overflow bins lie before
+      // us, and emit that as our global overflow bin index.
+      return neg_1based_virtual_bin + total_regular_bins_before;
+   }
+
+   // Given a global histogram bin index as generated by ComputeGlobalBin above,
+   // go back to per-axis "local" bin coordinates.
+   template <int NDIMS>
+   BinArray_t ComputeLocalBins(int global_bin) const {
+      // Get regular bins out of the way
+      if (global_bin >= 1) {
+         BinArray_t computed_bins = ComputeLocalBinsRaw<NDIMS>(global_bin - 1, &ROOT::Experimental::RAxisBase::GetNBinsNoOver);
+         for (int bin = 0; bin < NDIMS; ++bin)
+            computed_bins[bin] += 1;
+         return computed_bins;
+      }
+
+      // Convert our negative index to something positive and 0-based, as that is
+      // more convenient to work with. Note, however, that this is _not_
+      // equivalent to the virtual_bin that we had before, because what we have
+      // here is a count of overflow bins, not of all bins...
+      const int corrected_virtual_overflow_bin = -global_bin - 1;
+
+      // ...so we need to retrieve and bring back the regular bin count, and this
+      // is where the fun begins.
+      //
+      // The main difficulty is that the number of regular bins is not fixed as
+      // one slides along a histogram axis. Using a 2D binning case as a simple
+      // motivating example...
+      //
+      //    -1   -2   -3   -4   <- No regular bins on the underflow line of axis 1
+      //    -5    1    2   -6   <- Some of them on middle lines of axis 1
+      //    -7    3    4   -8
+      //    -9   -10  -11  -12  <- No regular bins on the overflow line of axis 1
+      //
+      // As we go to higher dimensions, the geometry becomes more complex, but
+      // if we replace "line" with "plane", we get a similar picture in 3D when we
+      // slide along axis 2:
+      //
+      //  No regular bins on the    Some of them on the     No regular bins again
+      //    UF plane of axis 2    regular planes of ax.2   on the OF plane of ax.2
+      //
+      //    -1   -2   -3   -4       -17  -18  -19  -20      -29  -30  -31  -32
+      //    -5   -6   -7   -8       -21   1    2   -22      -33  -34  -35  -36
+      //    -9   -10  -11  -12      -23   3    4   -24      -37  -37  -39  -40
+      //    -13  -14  -15  -16      -25  -26  -27  -28      -41  -42  -43  -44
+      //
+      // We can generalize this to N dimensions by saying that as we slide along
+      // the last axis of an N-d histogram, we see an hyperplane full of overflow
+      // bins, then some hyperplanes with regular bins in the "middle" surrounded
+      // by overflow bins, then a last hyperplane full of overflow bins.
+      //
+      // From this, we can devise a recursive algorithm to recover the number of
+      // regular bins before the overflow bin we're currently looking at:
+      //
+      // - Start by processing the last histogram axis.
+      // - Ignore the first and last hyperplane on this axis, which only contain
+      //   underflow and overflow bins respectively.
+      // - Count how many complete hyperplanes of regular bins lie before us on
+      //   this axis, which we can do indirectly in our overflow bin based
+      //   reasoning by computing the perimeter of the regular region and dividing
+      //   our "regular" overflow bin count by that amount.
+      // - Now we counted previous hyperplanes on this last histogram axis, but
+      //   we need to process the hyperplane that our bin is located in, if any.
+      //      * For this, we reduce our overflow bin count to a count of
+      //        _unaccounted_ overflow bins in the current hyperplane...
+      //      * ...which allows us to recursively continue the computation by
+      //        processing the next (well, previous) histogram axis in the context
+      //        of this hyperplane, in the same manner as above.
+      //
+      // Alright, now that the general plan is sorted out, let's compute some
+      // quantities that we are going to need, namely the total number of bins per
+      // hyperplane (overflow and regular) and the number of regular bins per
+      // hyperplane on the hyperplanes that have them.
+      //
+      std::array<int, NDIMS - 1> bins_per_hyperplane;
+      std::array<int, NDIMS - 1> regular_bins_per_hyperplane;
+      Internal::RComputeLocalBinsInitialisation<NDIMS - 1, NDIMS, decltype(fAxes)>()(bins_per_hyperplane, regular_bins_per_hyperplane, fAxes);
+      
+      int curr_bins_per_hyperplane = Internal::RGetNBinsCount<NDIMS - 1, decltype(fAxes)>()(fAxes);
+      int curr_regular_bins_per_hyperplane = Internal::RGetNBinsNoOverCount<NDIMS - 1, decltype(fAxes)>()(fAxes);
+
+      // Given that, and starting from the last axis...
+      std::array<int, 2> parameters_to_process = {corrected_virtual_overflow_bin, 0};
+      parameters_to_process = Internal::RComputeLocalBins<NDIMS - 1, NDIMS, decltype(fAxes)>()
+                                 (fAxes, parameters_to_process, bins_per_hyperplane, regular_bins_per_hyperplane, 
+                                 curr_bins_per_hyperplane, curr_regular_bins_per_hyperplane);
+
+      int unprocessed_previous_overflow_bin = parameters_to_process[0];
+      int num_regular_bins_before = parameters_to_process[1];
+
+      // By the time we reach the first axis, there should only be at most one
+      // full row of regular bins before us:
+      //
+      //    -1  1  2  3  -2
+      //     ^            ^
+      //     |            |
+      //     |        Option 2: one overflow bin before us
+      //     |
+      // Option 1: no overflow bin before us
+      //
+      num_regular_bins_before +=
+         unprocessed_previous_overflow_bin * std::get<0>(fAxes).GetNBinsNoOver();
+
+      // Now that we know the number of regular bins before us, we can add this to
+      // to the zero-based overflow bin index that we started with to get a global
+      // zero-based bin index accounting for both under/overflow bins and regular
+      // bins, just like what we had in the ComputeGlobalBin<DATA::GetNDim()>() implementation.
+      const int global_virtual_bin =
+         corrected_virtual_overflow_bin + num_regular_bins_before;
+
+      // We can then easily go back to zero-based "virtual" bin indices...
+      const BinArray_t virtual_bins = ComputeLocalBinsRaw<NDIMS>(global_virtual_bin, &ROOT::Experimental::RAxisBase::GetNBins);
+
+      // ...and from that go back to the -1/-2 overflow bin indexing convention.
+      return VirtualBinsToLocalBins<NDIMS>(virtual_bins);
    }
 
    /// Get the bin index for the given coordinates `x`. The use of GetBinType(x)
@@ -750,30 +1001,25 @@ public:
    /// there is no such bin, e.g. for axes without under- or overflow but coordinates out of range.
    int GetBinIndex(const CoordArray_t &x) const final
    {
-      std::array<int, 2> binType = GetBinType(x);
-      int ret = 0;
-      if (binType[0] != -1) {
-         ret = GetOverflowBinIndex(x, binType[0], binType[1]);
-      } else {
-         ret = GetActualBinIndex(x);
-      }
-      return ret;
+      BinArray_t localBins = {};
+      Internal::RCoordsToLocalBins<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(localBins, fAxes, x);
+      int result = ComputeGlobalBin<DATA::GetNDim()>(localBins);
+      return result;
    }
 
    /// Gets the bin index for coordinate `x`, growing the axes as needed and
    /// possible. Returns 0 if there is no such bin,
    /// e.g. for axes without over / underflow but coordinate out of range.
+   ///
+   /// RODO: implement growable behavior
    int GetBinIndexAndGrow(const CoordArray_t &x) final
    {
       RAxisBase::EFindStatus status = RAxisBase::EFindStatus::kCanGrow;
       int ret = 0;
+      BinArray_t localBins = {};
       while (status == RAxisBase::EFindStatus::kCanGrow) {
-         std::array<int, 2> binType = GetBinType(x);
-         if (binType[0] != -1) {
-            ret = GetOverflowBinIndex(x, binType[0], binType[1]);
-         } else {
-            ret = GetActualBinIndex(x);
-         }
+         Internal::RCoordsToLocalBins<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(localBins, fAxes, x);
+         ret = ComputeGlobalBin<DATA::GetNDim()>(localBins);
          status = RAxisBase::EFindStatus::kValid;
       }
       return ret;
@@ -782,61 +1028,28 @@ public:
    /// Get the center coordinate of the bin.
    CoordArray_t GetBinCenter(int binidx) const final
    {
-      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
-      using RFillOverflowBinCoord = Internal::RFillOverflowBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
-      CoordArray_t coord;
-      int axis = 0, type = 0, offset = 0, overflow = 0;
-      if (binidx < 0) {
-         binidx = -binidx - 1;
-         axis = Internal::RGetOverflowAxis<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, binidx);
-         overflow = GetOverflowVectorOffset(axis) + GetUnderOverOffset(axis);
-         type = -(binidx / overflow) - 1;
-         offset = GetOverflowVectorOffset(axis) + (-type - 1) * GetUnderOverOffset(axis);
-         RFillOverflowBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx - offset, axis, type);
-      } else { 
-         RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinCenter, binidx - 1);
-      }
-      return coord;
+      BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
+      CoordArray_t coords;
+      Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinCenter);
+      return coords;
    }
 
    /// Get the coordinate of the low limit of the bin.
    CoordArray_t GetBinFrom(int binidx) const final
    {
-      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
-      using RFillOverflowBinCoord = Internal::RFillOverflowBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
-      CoordArray_t coord;
-      int axis = 0, type = 0, offset = 0, overflow = 0;
-      if (binidx < 0) {
-         binidx = -binidx - 1;
-         axis = Internal::RGetOverflowAxis<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, binidx);
-         overflow = GetOverflowVectorOffset(axis) + GetUnderOverOffset(axis);
-         type = -(binidx / overflow) - 1;
-         offset = GetOverflowVectorOffset(axis) + (-type - 1) * GetUnderOverOffset(axis);
-         RFillOverflowBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx - offset, axis, type);
-      } else { 
-         RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinFrom, binidx - 1);
-      }
-      return coord;
+      BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
+      CoordArray_t coords;
+      Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinFrom);
+      return coords;
    }
 
    /// Get the coordinate of the high limit of the bin.
    CoordArray_t GetBinTo(int binidx) const final
    {
-      using RFillBinCoord = Internal::RFillBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
-      using RFillOverflowBinCoord = Internal::RFillOverflowBinCoord<DATA::GetNDim() - 1, DATA::GetNDim(), CoordArray_t, decltype(fAxes)>;
-      CoordArray_t coord;
-      int axis = 0, type = 0, offset = 0, overflow = 0;
-      if (binidx < 0) {
-         binidx = -binidx - 1;
-         axis = std::abs(Internal::RGetOverflowAxis<DATA::GetNDim() - 1, RHistImpl, decltype(fAxes)>()(nullptr, fAxes, binidx));
-         overflow = GetOverflowVectorOffset(axis) + GetUnderOverOffset(axis);
-         type = -(binidx / overflow) - 1;
-         offset = GetOverflowVectorOffset(axis) + (-type - 1) * GetUnderOverOffset(axis);
-         RFillOverflowBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx - offset, axis, type);
-      } else { 
-         RFillBinCoord()(coord, fAxes, Internal::EBinCoord::kBinTo, binidx - 1);
-      }
-      return coord;
+      BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
+      CoordArray_t coords;
+      Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinTo);
+      return coords;
    }
 
    /// Fill an array of `weightN` to the bins specified by coordinates `xN`.
