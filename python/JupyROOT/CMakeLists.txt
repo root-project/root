@@ -14,7 +14,8 @@ execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c" "import metakernel" RESULT_V
 if(FoundMetakernel EQUAL 0)
   set(NOTEBOOKS ${NOTEBOOKS}
                 ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
-                ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb)
+                ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb
+                ${CMAKE_CURRENT_SOURCE_DIR}/tpython.ipynb)
 endif()
 
 find_python_module(IPython QUIET)
