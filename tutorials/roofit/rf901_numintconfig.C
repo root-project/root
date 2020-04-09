@@ -1,11 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
+///
 /// Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

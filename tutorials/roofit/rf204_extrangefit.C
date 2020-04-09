@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
+///
 ///  'ADDITION AND CONVOLUTION' RooFit tutorial macro #204
 ///
 ///  Extended maximum likelihood fit with alternate range definition
@@ -11,7 +12,9 @@
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -60,10 +63,10 @@ void rf204_extrangefit()
    // Associated nsig/nbkg as expected number of events with sig/bkg _in_the_range_ "signalRange"
    RooRealVar nsig("nsig", "number of signal events in signalRange", 500, 0., 10000) ;
    RooRealVar nbkg("nbkg", "number of background events in signalRange", 500, 0, 10000) ;
-   
+
    // Use AddPdf to extend the model:
    RooAddPdf  model("model","(g1+g2)+a", RooArgList(bkg,sig), RooArgList(nbkg,nsig)) ;
-   
+
    // Clone these models here because the interpretation of normalisation coefficients changes
    // when different ranges are used:
    RooAddPdf model2(model);
@@ -76,7 +79,7 @@ void rf204_extrangefit()
    // Generate 1000 events from model so that nsig,nbkg come out to numbers <<500 in fit
    RooDataSet *data = model.generate(x, 1000);
 
-   
+
    auto canv = new TCanvas("Canvas", "Canvas", 1500, 600);
    canv->Divide(3,1);
 

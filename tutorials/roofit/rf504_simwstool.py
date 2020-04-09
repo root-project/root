@@ -2,12 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
-## Organization and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f that is built of variations of an input p.d.f
+## Organization and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f
+## that is built of variations of an input p.d.f
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -47,7 +48,7 @@ d.defineType("bar")
 
 # Import ingredients in a workspace
 w = ROOT.RooWorkspace("w", "w")
-w.Import(ROOT.RooArgSet(model, c, d))
+getattr(w, 'import')(ROOT.RooArgSet(model, c, d))
 
 # Make Sim builder tool
 sct = ROOT.RooSimWSTool(w)

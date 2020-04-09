@@ -1,4 +1,4 @@
-## \file rf505_asciicfg.py 
+## \file rf505_asciicfg.py
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
 ##
@@ -7,7 +7,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 from __future__ import print_function
 import ROOT

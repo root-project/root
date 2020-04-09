@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+///
 /// Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
 ///
 /// ## Parameter uncertainties for weighted unbinned ML fits
@@ -50,7 +51,9 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 11/2019 - Christoph Langenbruch
+///
+/// \date 11/2019
+/// \author Christoph Langenbruch
 
 #include "TH1D.h"
 #include "TCanvas.h"
@@ -68,7 +71,7 @@ using namespace RooFit;
 
 int rf611_weightedfits(int acceptancemodel=2) {
   // I n i t i a l i s a t i o n   a n d   S e t u p
-  //------------------------------------------------  
+  //------------------------------------------------
 
   //plotting options
   gStyle->SetPaintTextFormat(".1f");
@@ -93,7 +96,7 @@ int rf611_weightedfits(int acceptancemodel=2) {
   //accepted events and events weighted to account for the acceptance
   TH1D* haccepted = new TH1D("haccepted", "Generated events;cos(#theta);#events", 40, -1.0, 1.0);
   TH1D* hweighted = new TH1D("hweighted", "Generated events;cos(#theta);#events", 40, -1.0, 1.0);
-  //histograms holding pull distributions  
+  //histograms holding pull distributions
   //using the inverse Hessian matrix
   TH1D* hc0pull1 = new TH1D("hc0pull1", "Inverse weighted Hessian matrix [SumW2Error(false)];Pull (c_{0}^{fit}-c_{0}^{gen})/#sigma(c_{0});", 20, -5.0, 5.0);
   TH1D* hc1pull1 = new TH1D("hc1pull1", "Inverse weighted Hessian matrix [SumW2Error(false)];Pull (c_{1}^{fit}-c_{1}^{gen})/#sigma(c_{1});", 20, -5.0, 5.0);
@@ -178,12 +181,12 @@ int rf611_weightedfits(int acceptancemodel=2) {
     hc0pull3->Fill((c0.getVal()-c0gen)/c0.getError());
     hc1pull3->Fill((c1.getVal()-c1gen)/c1.getError());
   }
-  
+
   std::cout << "... done." << std::endl;
 
   // P l o t   o u t p u t   d i s t r i b u t i o n s
   //--------------------------------------------------
-  
+
   //plot accepted (weighted) events
   gStyle->SetOptStat(0);
   gStyle->SetOptFit(0);
@@ -198,7 +201,7 @@ int rf611_weightedfits(int acceptancemodel=2) {
   leg->AddEntry(hweighted, "Weighted");
   leg->Draw();
   cevents->Update();
-  
+
   //plot pull distributions
   TCanvas* cpull = new TCanvas("cpull", "cpull", 1200, 800);
   cpull->Divide(3,2);
