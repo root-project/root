@@ -146,23 +146,6 @@
 
    THistPainter.prototype.CheckHistDrawAttributes = function() {
 
-/*      if (this.options._pfc || this.options._plc || this.options._pmc) {
-         if (!this.pallette && JSROOT.Painter.GetColorPalette)
-            this.palette = JSROOT.Painter.GetColorPalette();
-
-         var pp = this.pad_painter();
-         if (this.palette && pp) {
-            var icolor = pp.GetAutoColor(this);
-
-            if (this.options._pfc) { this.histo.fFillColor = icolor; delete this.fillatt; }
-            if (this.options._plc) { this.histo.fLineColor = icolor; delete this.lineatt; }
-            if (this.options._pmc) { this.histo.fMarkerColor = icolor; delete this.markeratt; }
-         }
-
-         this.options._pfc = this.options._plc = this.options._pmc = false;
-      }
-*/
-
       this.createAttFill( { pattern: 0, color: 0 });
 
       var lcol = this.v7EvalColor( "line_color", "black"),
@@ -3479,13 +3462,30 @@
       this.stats_lines.push(line);
    }
 
-   RHistStatsPainter.prototype.FillStatistic = function() {
+   RHistStatsPainter.prototype.UpdateStatistic = function(reply) {
+      this.stats_lines = reply.lines;
+      this.DrawStatistic(this.stats_lines);
+   }
 
+   RHistStatsPainter.prototype.FillStatistic = function() {
       var pp = this.pad_painter();
       if (pp && pp._fast_drawing) return false;
 
-      var stats = this.GetObject(),
-          main = this.main_painter();
+      var fp = this.frame_painter();
+
+      if (fp && this.v7CanSubmitRequest()) {
+         // submit request to server
+         // last request will be always submittef
+         var req = {
+            _typename: "ROOT::Experimental::RHistStatRequest",
+            xmin: [fp.scale_xmin, fp.scale_ymin],
+            xmax: [fp.scale_xmax, fp.scale_ymax]
+         };
+         this.v7SubmitRequest("stat", req, this.UpdateStatistic);
+         return !!this.stats_lines; // if old statistic there - show it
+      }
+
+      var main = this.main_painter();
 
       // if (stats && stats.fLines) return true;
 
@@ -3516,8 +3516,7 @@
 
    RHistStatsPainter.prototype.DrawStats = function() {
 
-      var pthis = this,
-          framep = this.frame_painter();
+      var framep = this.frame_painter();
 
       // frame painter must  be there
       if (!framep)
@@ -3558,20 +3557,23 @@
                  .style("stroke-dasharray", JSROOT.Painter.root_line_styles[line_style])
                  .attr("fill", fill_color);
 
+      this.draw_g.append("svg:g").attr("class","statlines");
+
+      this.stats_width = stats_width;
+      this.stats_height = stats_height;
+
       if (this.FillStatistic())
-         this.DrawStatistic(stats_width, stats_height);
+         this.DrawStatistic(this.stats_lines);
    }
 
-   RHistStatsPainter.prototype.DrawStatistic = function(width, height) {
+   RHistStatsPainter.prototype.DrawStatistic = function(lines) {
 
       var text_size  = this.v7EvalAttr("stats_text_size", 12),
           text_color = this.v7EvalColor("stats_text_color", "black"),
           text_align = this.v7EvalAttr("stats_text_align", 22),
           text_font  = this.v7EvalAttr("stats_text_font", 41),
-          first_stat = 0, num_cols = 0, maxlen = 0;
-
-      var stats = this.GetObject(),
-          lines = this.stats_lines || stats.fLines;
+          first_stat = 0, num_cols = 0, maxlen = 0,
+          width = this.stats_width, height = this.stats_height;
 
       if (!lines) return;
 
@@ -3590,10 +3592,13 @@
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       var stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
 
-      this.StartTextDrawing(text_font, height/(nlines * 1.2));
+      var text_g = this.draw_g.select(".statlines");
+      text_g.selectAll("*").remove();
+
+      this.StartTextDrawing(text_font, height/(nlines * 1.2), text_g);
 
       if (nlines == 1) {
-         this.DrawText({ align: text_align, width: width, height: height, text: lines[0], color: text_color, latex: 1 });
+         this.DrawText({ align: text_align, width: width, height: height, text: lines[0], color: text_color, latex: 1, draw_g: text_g });
       } else
       for (var j = 0; j < nlines; ++j) {
          var posy = j*stepy;
@@ -3602,7 +3607,7 @@
             var parts = lines[j].split("|");
             for (var n = 0; n < parts.length; ++n)
                this.DrawText({ align: "middle", x: width * n / num_cols, y: posy, latex: 0,
-                               width: width/num_cols, height: stepy, text: parts[n], color: text_color });
+                               width: width/num_cols, height: stepy, text: parts[n], color: text_color, draw_g: text_g });
          } else if (lines[j].indexOf('=') < 0) {
             if (j==0) {
                has_head = true;
@@ -3610,17 +3615,17 @@
                   lines[j] = lines[j].substr(0,maxlen+2) + "...";
             }
             this.DrawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y: posy,
-                            width: width-2*margin_x, height: stepy, text: lines[j], color: text_color });
+                            width: width-2*margin_x, height: stepy, text: lines[j], color: text_color, draw_g: text_g });
          } else {
             var parts = lines[j].split("="), sumw = 0;
             for (var n = 0; n < 2; ++n)
                sumw += this.DrawText({ align: (n == 0) ? "start" : "end", x: margin_x, y: posy,
-                                       width: width-2*margin_x, height: stepy, text: parts[n], color: text_color });
-            this.TextScaleFactor(1.05*sumw/(width-2*margin_x), this.draw_g);
+                                       width: width-2*margin_x, height: stepy, text: parts[n], color: text_color, draw_g: text_g });
+            this.TextScaleFactor(1.05*sumw/(width-2*margin_x), text_g);
          }
       }
 
-      this.FinishTextDrawing();
+      this.FinishTextDrawing(text_g);
 
       var lpath = "";
 
