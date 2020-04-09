@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <queue>
 #include <thread>
 #include <chrono>
 #include <fstream>
@@ -54,10 +55,11 @@ namespace Experimental {
 class RCanvasPainter : public Internal::RVirtualCanvasPainter {
 private:
    struct WebConn {
-      unsigned fConnId{0};    ///<! connection id
-      std::string fGetMenu;   ///<! object id for menu request
-      uint64_t fSend{0};      ///<! indicates version send to connection
-      uint64_t fDelivered{0}; ///<! indicates version confirmed from canvas
+      unsigned fConnId{0};                 ///<! connection id
+      std::string fGetMenu;                ///<! object id for menu request
+      std::queue<std::string> fSendQueue;  ///<! send queue for the connection
+      RDrawable::Version_t fSend{0};       ///<! indicates version send to connection
+      RDrawable::Version_t fDelivered{0};  ///<! indicates version confirmed from canvas
       WebConn() = default;
       WebConn(unsigned connid) : fConnId(connid) {}
    };
@@ -292,6 +294,10 @@ void ROOT::Experimental::RCanvasPainter::CheckDataToSend()
             R__ERROR_HERE("CanvasPainter") << "Drawable not found " << items.GetDrawableId();
          }
 
+      } else if (!conn.fSendQueue.empty()) {
+         buf = conn.fSendQueue.front().c_str();
+         conn.fSendQueue.pop();
+
       } else if ((conn.fSend != fCanvas.GetModified()) && (conn.fDelivered == conn.fSend)) {
 
          buf = "SNAP:";
@@ -514,8 +520,27 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
       } else {
          R__ERROR_HERE("CanvasPainter") << "Fail to parse vector<RChangeAttr>";
       }
+   } else if (check_header("REQ:")) {
+      auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
+      if (req) {
+         std::shared_ptr<RDrawable> drawable;
+
+         if (!req->GetId().empty())
+            drawable = FindPrimitive(fCanvas, req->GetId());
+
+         auto reply = req->Process(drawable);
+         if (!reply)
+            reply = std::make_unique<RDrawableRequest>();
+
+         reply->CopyIds(req.get());
+
+         auto json = TBufferJSON::ToJSON(reply.get(), TBufferJSON::kNoSpaces);
+         conn->fSendQueue.emplace("REPL_REQ:"s + json.Data());
+      } else {
+         R__ERROR_HERE("CanvasPainter") << "Fail to parse RDrawableRequest";
+      }
    } else {
-      R__ERROR_HERE("CanvasPainter") << "Got not recognized reply" << arg;
+      R__ERROR_HERE("CanvasPainter") << "Got not recognized message" << arg;
    }
 
    CheckDataToSend();

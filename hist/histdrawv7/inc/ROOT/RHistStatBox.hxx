@@ -25,36 +25,53 @@
 namespace ROOT {
 namespace Experimental {
 
+
+class RHistStatRequest : public RDrawableRequest {
+   std::vector<double> xmin; // vector of axis min values
+   std::vector<double> xmax; // vector of axis max values
+
+public:
+
+   std::unique_ptr<RDrawableRequest> Process(std::shared_ptr<RDrawable> &drawable) override;
+
+   double GetMin(unsigned indx) const { return indx < xmin.size() ? xmin[indx] : 0; }
+   double GetMax(unsigned indx) const { return indx < xmax.size() ? xmax[indx] : 0; }
+};
+
+class RHistStatReply : public RDrawableRequest {
+   std::vector<std::string> lines;   ///< text lines displayed in the stat box
+public:
+
+   void AddLine(const std::string &line) { lines.emplace_back(line); }
+
+   // pin vtable
+   virtual ~RHistStatReply() = default;
+};
+
 class RDisplayHistStat : public RIndirectDisplayItem {
-   std::vector<std::string> fLines;   ///< text lines displayed in the stat box
 public:
    RDisplayHistStat() = default;
-
-   RDisplayHistStat(const RDrawable &box) : RIndirectDisplayItem(box) {}
-
-   void AddLine(const std::string &line) { fLines.emplace_back(line); }
+   RDisplayHistStat(const RDrawable &dr) : RIndirectDisplayItem(dr) {}
+   virtual ~RDisplayHistStat() = default;
 };
 
 
-/** \class ROOT::Experimental::RHistStatBox
+/** \class ROOT::Experimental::RHistStatBoxBase
 \ingroup GrafROOT7
-\brief Statistic box for RHist class
+\brief Base class for histogram statistic box, provides graphics attributes and virtual method for fill statistic
 \author Sergey Linev <s.linev@gsi.de>
 \date 2020-04-01
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
+class RHistStatBoxBase : public RDrawable {
 
-template <int DIMENSIONS>
-class RHistStatBox : public RDrawable {
-public:
-   using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
+friend class RHistStatRequest; // access fill statistic method
 
 private:
-   Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
 
    class RHistStatBoxAttrs : public RAttrBase {
-      // friend class RHistStatBox<DIMENSIONS>;
+      friend class RHistStatBoxBase;
       R__ATTR_CLASS(RHistStatBoxAttrs, "", AddString("cornerx","0.02").AddString("cornery","0.02").AddString("width","0.5").AddString("height","0.2"));
    };
 
@@ -63,46 +80,28 @@ private:
    RAttrText fAttrText{this, "text_"};       ///<! text attributes
    RAttrLine fAttrBorder{this, "border_"};   ///<! border attributes
    RAttrFill fAttrFill{this, "fill_"};       ///<! line attributes
-   RHistStatBoxAttrs fAttr{this,""};         ///<! title direct attributes
+   RHistStatBoxAttrs fAttr{this,""};         ///<! stat box direct attributes
 
 protected:
 
    bool IsFrameRequired() const final { return true; }
 
-   void CollectShared(Internal::RIOSharedVector_t &vect) override { vect.emplace_back(&fHistImpl); }
+   virtual void FillStatistic(const RHistStatRequest &, RHistStatReply &) const {}
 
-   virtual void FillStatistic(RDisplayHistStat &, const RPadBase &) const {}
-
-   std::unique_ptr<RDisplayItem> Display(const RPadBase &pad, Version_t) const override
+   std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const override
    {
-      auto res = std::make_unique<RDisplayHistStat>(*this);
-
-      if (!GetTitle().empty())
-         res->AddLine(GetTitle());
-
-      FillStatistic(*res.get(), pad);
-
-      return res;
+      // do not send stat box itself while it includes histogram which is not required on client side
+      return std::make_unique<RDisplayHistStat>(*this);
    }
 
 public:
 
-   RHistStatBox() : RDrawable("stats") {}
-
-   template <class HIST>
-   RHistStatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox()
-   {
-      fHistImpl = std::shared_ptr<HistImpl_t>(hist, hist->GetImpl());
-      SetTitle(title);
-   }
-
-   std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
-
+   RHistStatBoxBase() : RDrawable("stats") {}
 
    void SetTitle(const std::string &title) { fTitle = title; }
    const std::string &GetTitle() const { return fTitle; }
 
-   RHistStatBox &SetCornerX(const RPadLength &pos)
+   RHistStatBoxBase &SetCornerX(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("cornerx");
@@ -121,7 +120,7 @@ public:
       return res;
    }
 
-   RHistStatBox &SetCornerY(const RPadLength &pos)
+   RHistStatBoxBase &SetCornerY(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("cornery");
@@ -140,7 +139,7 @@ public:
       return res;
    }
 
-   RHistStatBox &SetWidth(const RPadLength &pos)
+   RHistStatBoxBase &SetWidth(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("width");
@@ -159,7 +158,7 @@ public:
       return res;
    }
 
-   RHistStatBox &SetHeight(const RPadLength &pos)
+   RHistStatBoxBase &SetHeight(const RPadLength &pos)
    {
       if (pos.Empty())
          fAttr.ClearValue("height");
@@ -179,22 +178,57 @@ public:
    }
 
    const RAttrText &GetAttrText() const { return fAttrText; }
-   RHistStatBox &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
+   RHistStatBoxBase &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
    RAttrText &AttrText() { return fAttrText; }
 
    const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RHistStatBox &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
+   RHistStatBoxBase &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
    RAttrLine &AttrBorder() { return fAttrBorder; }
 
    const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RHistStatBox &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
+   RHistStatBoxBase &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
    RAttrFill &AttrFill() { return fAttrFill; }
+};
+
+
+
+/** \class ROOT::Experimental::RHistStatBox
+\ingroup GrafROOT7
+\brief Template class for statistic box for RHist class
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-01
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+
+template <int DIMENSIONS>
+class RHistStatBox : public RHistStatBoxBase {
+public:
+   using HistImpl_t = Detail::RHistImplPrecisionAgnosticBase<DIMENSIONS>;
+
+private:
+   Internal::RIOShared<HistImpl_t> fHistImpl;  ///< I/O capable reference on histogram
+
+protected:
+
+   void CollectShared(Internal::RIOSharedVector_t &vect) override { vect.emplace_back(&fHistImpl); }
+
+public:
+
+   template <class HIST>
+   RHistStatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "")
+   {
+      fHistImpl = std::shared_ptr<HistImpl_t>(hist, hist->GetImpl());
+      SetTitle(title);
+   }
+
+   std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
 };
 
 
 class RHist1StatBox final : public RHistStatBox<1> {
 protected:
-   void FillStatistic(RDisplayHistStat &, const RPadBase &) const override;
+   void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
 public:
    RHist1StatBox() = default;
    template <class HIST>
@@ -205,7 +239,7 @@ public:
 class RHist2StatBox final : public RHistStatBox<2> {
 protected:
 
-   void FillStatistic(RDisplayHistStat &, const RPadBase &) const override;
+   void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
 
 public:
    RHist2StatBox() = default;
@@ -217,7 +251,7 @@ public:
 class RHist3StatBox final : public RHistStatBox<3> {
 protected:
 
-   void FillStatistic(RDisplayHistStat &, const RPadBase &) const override;
+   void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
 
 public:
    RHist3StatBox() = default;

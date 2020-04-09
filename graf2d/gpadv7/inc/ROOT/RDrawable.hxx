@@ -86,7 +86,8 @@ public:
    void reset() { fShared.reset(); fIO = nullptr; }
 };
 
-}
+} // namespace Internal
+
 
 /** \class RDrawable
 \ingroup GpadROOT7
@@ -166,6 +167,28 @@ inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable)
 {
    return drawable;
 }
+
+class RDrawableRequest {
+   std::string id; ///< drawable id
+   uint64_t reqid{0}; ///< request id
+public:
+   const std::string &GetId() const { return id; }
+   uint64_t GetRequestId() const { return reqid; }
+
+   void CopyIds(const RDrawableRequest *src)
+   {
+      id = src->id;
+      reqid = src->reqid;
+   }
+
+   virtual ~RDrawableRequest();
+
+   virtual std::unique_ptr<RDrawableRequest> Process(std::shared_ptr<RDrawable> &) { return nullptr; }
+};
+
+
+
+
 
 } // namespace Experimental
 } // namespace ROOT
