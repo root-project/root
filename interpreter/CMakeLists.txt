@@ -93,8 +93,8 @@ endif()
 if(MSVC)
   # FIXME: since Visual Studio v16.4.0 the /O2 optimization flag make many (25%) of the tests failing
   # Try to re-enable /O2 after the upgrade of llvm & clang
-  string(REPLACE "-O2" "-O1" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-  string(REPLACE "-O2" "-O1" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+  string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
   # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
   string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   string(REPLACE " -GR" " /GR" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
