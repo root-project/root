@@ -1890,8 +1890,12 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       if (objClass && (jsonClass != objClass)) {
          if (obj || (jsonClass->GetBaseClassOffset(objClass) != 0)) {
-            Error("JsonReadObject", "Not possible to read %s and cast to %s pointer",
-                    jsonClass->GetName(), objClass->GetName());
+            if (jsonClass->GetBaseClassOffset(objClass) < 0) 
+               Error("JsonReadObject", "Not possible to read %s and casting to %s pointer as the two classes are unrelated",
+                     jsonClass->GetName(), objClass->GetName());
+            else 
+               Error("JsonReadObject", "Reading %s and casting to %s pointer is currently not supported",
+                     jsonClass->GetName(), objClass->GetName());
             if (process_stl)
                PopStack();
             return obj;
