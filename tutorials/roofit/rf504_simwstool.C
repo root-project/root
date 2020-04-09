@@ -1,12 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// Organisation and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f that is built of variations
-/// of an input p.d.f
+///
+/// Organisation and simultaneous fits: using RooSimWSTool to construct a simultaneous p.d.f
+/// that is built of variations of an input p.d.f
 ///
 /// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+///
+/// \date 07/2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooCategory.h"

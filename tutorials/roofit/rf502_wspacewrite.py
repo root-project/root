@@ -7,7 +7,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -53,10 +53,10 @@ data = model.generate(ROOT.RooArgSet(x), 1000)
 w = ROOT.RooWorkspace("w", "workspace")
 
 # Import model and all its components into the workspace
-w.Import(model)
+getattr(w, 'import')(model)
 
 # Import data into the workspace
-w.Import(data)
+getattr(w, 'import')(data)
 
 # Print workspace contents
 w.Print()

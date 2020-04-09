@@ -1,12 +1,16 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Organization and simultaneous fits: easy interactive access to workspace contents - CINT to CLING code migration
+///
+/// Organization and simultaneous fits: easy interactive access to workspace contents - CINT
+/// to CLING code migration
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke
+///
+/// \date 04/2009
+/// \author Wouter Verkerke
 
 using namespace RooFit;
 

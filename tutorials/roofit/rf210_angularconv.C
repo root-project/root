@@ -1,20 +1,25 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+///
 /// Addition and convolution: convolution in cyclical angular observables theta
 ///
 /// and construction of p.d.f in terms of transformed angular coordinates, e.g. cos(theta),
 /// where the convolution is performed in theta rather than cos(theta)
 ///
-///  pdf(theta)    = T(theta)          (x) gauss(theta)
-///  pdf(cosTheta) = T(acos(cosTheta)) (x) gauss(acos(cosTheta))
+/// ```
+///   pdf(theta)    = T(theta)          (x) gauss(theta)
+///   pdf(cosTheta) = T(acos(cosTheta)) (x) gauss(acos(cosTheta))
+/// ```
 ///
 /// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke
+///
+/// \date 04/2009
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"

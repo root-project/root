@@ -2,12 +2,13 @@
 ## \ingroup tutorial_roofit
 ## \notebook
 ##
-## Organization and simultaneous fits: easy interactive access to workspace contents - CINT to CLING code migration
+## Organization and simultaneous fits: easy interactive access to workspace contents - CINT
+## to CLING code migration
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -50,7 +51,7 @@ def fillWorkspace(w):
             sig),
         ROOT.RooArgList(bkgfrac))
 
-    w.Import(model)
+    getattr(w, 'import')(model)
 
 
 # Create and fill workspace

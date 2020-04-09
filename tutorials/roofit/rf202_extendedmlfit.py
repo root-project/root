@@ -1,12 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+##
 ## Addition and convolution: setting up an extended maximum likelihood fit
 ##
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
