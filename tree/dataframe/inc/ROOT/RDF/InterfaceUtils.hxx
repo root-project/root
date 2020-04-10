@@ -352,7 +352,7 @@ void JitFilterHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RJ
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
-   jittedFilter->SetFilter(std::make_unique<F_t>(std::move(f), cols, *prevNodeOnHeap, newColumns, name));
+   jittedFilter->SetFilter(std::make_unique<F_t>(std::forward<F>(f), cols, *prevNodeOnHeap, newColumns, name));
    delete prevNodeOnHeap;
 }
 
@@ -375,7 +375,7 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
 
    // use unique_ptr<RCustomColumnBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
    jittedCustomCol.SetCustomColumn(
-      std::unique_ptr<RCustomColumnBase>(new NewCol_t(lm, name, std::move(f), cols, lm->GetNSlots(), newColumns)));
+      std::unique_ptr<RCustomColumnBase>(new NewCol_t(lm, name, std::forward<F>(f), cols, lm->GetNSlots(), newColumns)));
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
