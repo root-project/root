@@ -366,3 +366,11 @@ TEST(RDataFrameInterface, DefineAliasedColumn)
    auto r1 = r0.Alias("newVar", "myVar");
    EXPECT_ANY_THROW(r0.Define("newVar", [](int i){return i;}, {"myVar"})) << "No exception thrown when defining a column with a name which is already an alias.";
 }
+
+// ROOT-10678
+TEST(RDataFrameInterface, CountAndCustomColumns)
+{
+   ROOT::RDataFrame df(10);
+   df.Count().GetValue();
+   df.Filter([](ULong64_t e) { return e == 0; }, {"rdfslot_"}).Count().GetValue();
+}
