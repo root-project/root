@@ -526,10 +526,9 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
 
 TKey::~TKey()
 {
-   //   delete [] fBuffer; fBuffer = 0;
-   //   delete fBufferRef; fBufferRef = 0;
-
-   DeleteBuffer();
+   if (fMotherDir && fMotherDir->GetListOfKeys())
+      fMotherDir->GetListOfKeys()->Remove(this);
+   TKey::DeleteBuffer();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -540,6 +539,15 @@ TKey::~TKey()
 
 void TKey::Delete(Option_t *option)
 {
+   if (TestBit(kIsDirectoryFile)) {
+      // TDirectoryFile assumes that its location on file never change (for example updates are partial)
+      // and never checks if the space might have been released and thus over-write any data that might
+      // have been written there.
+      if (option && option[0] == 'v')
+         printf("Rejected attempt to delete TDirectoryFile key: %s at address %lld, nbytes = %d\n",
+                GetName(), fSeekKey, fNbytes);
+      return;
+   }
    if (option && option[0] == 'v') printf("Deleting key: %s at address %lld, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
    Long64_t first = fSeekKey;
    Long64_t last  = fSeekKey + fNbytes -1;
