@@ -4519,10 +4519,7 @@ int RootClingMain(int argc,
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    string main_dictname(gOptDictionaryFileName.getValue());
-   std::ostream *dictStreamPtr = NULL;
-   std::ostream *dictStream = nullptr;
    std::ostream *splitDictStream = nullptr;
-   std::ostream *splitDictStreamPtr = nullptr;
    std::unique_ptr<std::ostream> splitDeleter(nullptr);
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
@@ -4530,26 +4527,24 @@ int RootClingMain(int argc,
       if (!gOptDictionaryFileName.empty()) {
          tmpCatalog.addFileName(gOptDictionaryFileName.getValue());
          fileout.open(gOptDictionaryFileName.c_str());
-         dictStreamPtr = &fileout;
-         if (!(*dictStreamPtr)) {
+         if (!fileout) {
             ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
                                     gOptDictionaryFileName.c_str());
             return 1;
          }
-      } else {
-         dictStreamPtr = &std::cout;
       }
+   }
 
+   std::ostream &dictStream = (!gOptIgnoreExistingDict && !gOptDictionaryFileName.empty()) ? fileout : std::cout;
+
+   if (!gOptIgnoreExistingDict) {
       // Now generate a second stream for the split dictionary if it is necessary
       if (gOptSplit) {
-         splitDictStreamPtr = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
-         splitDeleter.reset(splitDictStreamPtr);
+         splitDictStream = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
+         splitDeleter.reset(splitDictStream);
       } else {
-         splitDictStreamPtr = dictStreamPtr;
+         splitDictStream = &dictStream;
       }
-
-      dictStream = dictStreamPtr;
-      splitDictStream = splitDictStreamPtr;
 
       size_t dh = main_dictname.rfind('.');
       if (dh != std::string::npos) {
@@ -4559,7 +4554,7 @@ int RootClingMain(int argc,
       std::string main_dictname_copy(main_dictname);
       TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
 
-      CreateDictHeader(*dictStream, main_dictname);
+      CreateDictHeader(dictStream, main_dictname);
       if (gOptSplit)
          CreateDictHeader(*splitDictStream, main_dictname);
    }
@@ -4696,17 +4691,17 @@ int RootClingMain(int argc,
    /////////////////////////////////////////////////////////////////////////////
 
    if ((!ROOT::gReadRules.empty() || !ROOT::gReadRawRules.empty()) && !gOptIgnoreExistingDict) {
-      *dictStream << "#include \"TBuffer.h\"\n"
-                  << "#include \"TVirtualObject.h\"\n"
-                  << "#include <vector>\n"
-                  << "#include \"TSchemaHelper.h\"\n\n";
+      dictStream << "#include \"TBuffer.h\"\n"
+                 << "#include \"TVirtualObject.h\"\n"
+                 << "#include <vector>\n"
+                 << "#include \"TSchemaHelper.h\"\n\n";
 
       std::list<std::string> includes;
       GetRuleIncludes(includes);
       for (auto & incFile : includes) {
-         *dictStream << "#include <" << incFile << ">" << std::endl;
+         dictStream << "#include <" << incFile << ">" << std::endl;
       }
-      *dictStream << std::endl;
+      dictStream << std::endl;
    }
 
    selectionRules.SearchNames(interp);
@@ -4791,7 +4786,7 @@ int RootClingMain(int argc,
 
    if (!gOptGeneratePCH) {
       if (!gOptIgnoreExistingDict) {
-         GenerateNecessaryIncludes(*dictStream, includeForSource, extraIncludes);
+         GenerateNecessaryIncludes(dictStream, includeForSource, extraIncludes);
          if (gOptSplit) {
             GenerateNecessaryIncludes(*splitDictStream, includeForSource, extraIncludes);
          }
@@ -4873,7 +4868,7 @@ int RootClingMain(int argc,
                fwdDeclsString = GenerateFwdDeclString(scan, interp);
          }
       }
-      modGen.WriteRegistrationSource(*dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
+      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString,
                                      extraIncludes, gOptCxxModule);
       // If we just want to inline the input header, we don't need
       // to generate any files.
