@@ -64,10 +64,10 @@ class RFilter final : public RFilterBase {
    std::array<bool, ColumnTypes_t::list_size> fIsCustomColumn;
 
 public:
-   RFilter(FilterF &&f, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
+   RFilter(FilterF f, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
            const RDFInternal::RBookedCustomColumns &customColumns, std::string_view name = "")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), customColumns),
-        fFilter(std::forward<FilterF>(f)), fColumnNames(columns), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),
+        fFilter(std::move(f)), fColumnNames(columns), fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr),
         fValues(fNSlots), fIsCustomColumn()
    {
       const auto nColumns = fColumnNames.size();
