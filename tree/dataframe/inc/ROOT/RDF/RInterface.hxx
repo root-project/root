@@ -2257,7 +2257,7 @@ private:
 
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
-                                std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }";
+                                std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }\n";
       fLoopManager->ToJitDeclare(retTypeDeclaration);
 
       // Slot number column
