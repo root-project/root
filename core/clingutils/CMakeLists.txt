@@ -103,8 +103,12 @@ set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 set(custom_modulemaps)
 if (runtime_cxxmodules)
   set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
+  if (NOT libcxx)
+    set(custom_modulemaps ${custom_modulemaps} std.modulemap)
+  endif()
   if (NOT APPLE)
-    set(custom_modulemaps ${custom_modulemaps} libc.modulemap std.modulemap)
+    # Apple's libc is modularized
+    set(custom_modulemaps ${custom_modulemaps} libc.modulemap)
   endif()
 endif(runtime_cxxmodules)
 
