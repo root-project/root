@@ -4598,6 +4598,12 @@ int RootClingMain(int argc,
       }
    }
 
+   if (!gOptNoGlobalUsingStd) {
+     AddNamespaceSTDdeclaration(dictStream);
+     if (gOptSplit) {
+       AddNamespaceSTDdeclaration(splitDictStream);
+     }
+   }
    //---------------------------------------------------------------------------
    // Parse the linkdef or selection.xml file.
    /////////////////////////////////////////////////////////////////////////////
@@ -4850,7 +4856,12 @@ int RootClingMain(int argc,
          AddNamespaceSTDdeclaration(*splitDictStream);
       }
    }
-
+   if (!gOptIgnoreExistingDict && gOptNoGlobalUsingStd) {
+     AddNamespaceSTDdeclaration(dictStream);
+     if (gOptSplit) {
+       AddNamespaceSTDdeclaration(splitDictStream);
+     }
+   }
    if (gOptGeneratePCH) {
       AnnotateAllDeclsForPCH(interp, scan);
    } else if (gOptInterpreterOnly) {
