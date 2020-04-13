@@ -4569,7 +4569,7 @@ int RootClingMain(int argc,
          CreateDictHeader(*splitDictStream, main_dictname);
 
       if (!gOptNoGlobalUsingStd) {
-         AddNamespaceSTDdeclaration(*dictStream);
+         AddNamespaceSTDdeclaration(dictStream);
          if (gOptSplit) {
             AddNamespaceSTDdeclaration(*splitDictStream);
          }
@@ -4823,7 +4823,7 @@ int RootClingMain(int argc,
    }
    if (!gOptIgnoreExistingDict && gOptNoGlobalUsingStd) {
       if (dictStream) {
-         AddNamespaceSTDdeclaration(*dictStream);
+         AddNamespaceSTDdeclaration(dictStream);
       }
       if (gOptSplit && splitDictStream) {
          AddNamespaceSTDdeclaration(*splitDictStream);
