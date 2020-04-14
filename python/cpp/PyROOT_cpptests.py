@@ -232,11 +232,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       Z = ROOT.Z
 
       o = TObject()
-      if self.exp_pyroot:
-         # In new Cppyy, addressof returns an integer/long
-         oaddr = AddressOf(o)
-      else:
-         oaddr = AddressOf(o)[0]
+      oaddr = AddressOf(o)[0]
 
       self.assertEqual( oaddr, Z.GimeAddressPtr( o ) )
       self.assertEqual( oaddr, Z.GimeAddressPtrRef( o ) )
@@ -270,20 +266,14 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       if self.exp_pyroot:
          # New Cppyy does not raise ValueError,
          # it just returns zero
-         self.assertEqual(AddressOf(ptr), 0)
+         self.assertEqual(AddressOf(ptr)[0], 0)
       else:
          self.assertRaises( ValueError, AddressOf, ptr )
       Z.SetAddressPtrRef( ptr )
 
-      if self.exp_pyroot:
-         # In new Cppyy, addressof returns an integer/long
-         self.assertEqual(AddressOf(ptr), 0x1234 )
-         Z.SetAddressPtrPtr( ptr )
-         self.assertEqual(AddressOf(ptr), 0x4321 )
-      else:
-         self.assertEqual( AddressOf( ptr )[0], 0x1234 )
-         Z.SetAddressPtrPtr( ptr )
-         self.assertEqual( AddressOf( ptr )[0], 0x4321 )
+      self.assertEqual( AddressOf( ptr )[0], 0x1234 )
+      Z.SetAddressPtrPtr( ptr )
+      self.assertEqual( AddressOf( ptr )[0], 0x4321 )
 
    def test13Macro( self ):
       """Test access to cpp macro's"""
@@ -318,11 +308,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       s = TString( "Hello World!" )
       co = AsCObject( s )
       
-      if self.exp_pyroot:
-         # In new Cppyy, addressof returns an integer/long
-         ad = AddressOf(s)
-      else:
-         ad = AddressOf( s )[ 0 ]
+      ad = AddressOf( s )[ 0 ]
 
       self.assert_( s == BindObject( co, s.__class__ ) )
       self.assert_( s == BindObject( co, "TString" ) )
