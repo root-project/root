@@ -38,13 +38,13 @@ protected:
 
    std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const override;
 
+   /// Fill menu items for the object
+   void PopulateMenu(RMenuItems &) final;
+
 public:
    RObjectDrawable() : RDrawable("tobject") {}
 
    RObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : RDrawable("tobject"), fObj(obj), fOpts(opt) {}
-
-   /// Fill menu items for the object
-   void PopulateMenu(RMenuItems &) final;
 
    /// Executes menu item
    void Execute(const std::string &) final;

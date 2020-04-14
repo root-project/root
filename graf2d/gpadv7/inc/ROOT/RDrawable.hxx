@@ -28,6 +28,7 @@ class RIndirectDisplayItem;
 class RLegend;
 class RCanvas;
 class RChangeAttrRequest;
+class RDrawableMenuRequest;
 
 namespace Internal {
 
@@ -107,6 +108,7 @@ friend class RStyle;
 friend class RLegend; // to access CollectShared method
 friend class RIndirectDisplayItem;  // to access attributes and other members
 friend class RChangeAttrRequest; // access SetDrawableVersion and AttrMap
+friend class RDrawableMenuRequest; // access PopulateMenu method
 
 public:
 
@@ -136,6 +138,9 @@ protected:
    virtual void SetDrawableVersion(Version_t vers) { fVersion = vers; }
    Version_t GetVersion() const { return fVersion; }
 
+   /** Method can be used to provide menu items for the drawn object */
+   virtual void PopulateMenu(RMenuItems &) {}
+
 public:
 
    explicit RDrawable(const std::string &type) : fCssType(type) {}
@@ -143,9 +148,6 @@ public:
    virtual ~RDrawable();
 
    // copy constructor and assign operator !!!
-
-   /** Method can be used to provide menu items for the drawn object */
-   virtual void PopulateMenu(RMenuItems &) {}
 
    virtual void Execute(const std::string &);
 
@@ -215,11 +217,7 @@ public:
    virtual std::unique_ptr<RDrawableReply> Process() { return nullptr; }
 
    virtual bool NeedCanvasUpdate() const { return false; }
-
 };
-
-
-
 
 
 } // namespace Experimental

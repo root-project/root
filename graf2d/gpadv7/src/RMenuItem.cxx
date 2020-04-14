@@ -15,36 +15,18 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
-#include "TBufferJSON.h"
+
+using namespace ROOT::Experimental;
 
 //////////////////////////////////////////////////////////
-/// Returns drawable id coded, fullid can include # with extra specifier
+/// destructor - pin vtable
 
-std::string ROOT::Experimental::RMenuItems::GetDrawableId()
-{
-   auto p = fId.find("#");
-   if (p == std::string::npos)
-      return fId;
-   return fId.substr(0, p);
-}
-
-
-//////////////////////////////////////////////////////////
-/// Returns specifier string after # in fullid
-
-std::string ROOT::Experimental::RMenuItems::GetSpecifier()
-{
-   auto p = fId.find("#");
-   if (p == std::string::npos)
-      return "";
-   return fId.substr(p+1);
-}
-
+RMenuItems::~RMenuItems() = default;
 
 //////////////////////////////////////////////////////////
 /// Fill menu for provided object, using *MENU* as indicator in method comments
 
-void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
+void RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
 {
    fItems.clear();
 
@@ -109,4 +91,19 @@ void ROOT::Experimental::RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          }
       }
    }
+}
+
+//////////////////////////////////////////////////////////
+/// fill menu items for the drawable
+
+std::unique_ptr<RDrawableReply> RDrawableMenuRequest::Process()
+{
+   auto drawable = GetDrawable();
+   if (!drawable) return nullptr;
+
+   auto items = std::make_unique<RMenuItems>(menureqid, menukind);
+
+   drawable->PopulateMenu(*items);
+
+   return items;
 }

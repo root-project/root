@@ -49,6 +49,11 @@ protected:
 
    bool IsFrameRequired() const final { return true; }
 
+   void PopulateMenu(RMenuItems &) override
+   {
+      // populate menu
+   }
+
 public:
    RHistDrawable();
    virtual ~RHistDrawable() = default;
@@ -60,11 +65,6 @@ public:
    }
 
    std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
-
-   void PopulateMenu(RMenuItems &) override
-   {
-      // populate menu
-   }
 
    void Execute(const std::string &) override
    {
