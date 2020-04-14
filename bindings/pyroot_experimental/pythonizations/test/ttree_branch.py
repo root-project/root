@@ -2,7 +2,7 @@ import unittest
 from array import array
 
 import ROOT
-from libcppyy import SetOwnership, addressof
+from ROOT import SetOwnership, addressof
 import numpy as np
 
 
