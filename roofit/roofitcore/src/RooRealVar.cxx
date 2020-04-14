@@ -484,10 +484,14 @@ void RooRealVar::setMax(const char* name, Double_t value)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set range named 'name to [min,max]. If name is null
-/// range of default range is adjusted. If no range with
-/// 'name' exists it is created on the fly
-
+/// Set a fit or plotting range.
+/// Ranges can be selected for e.g. fitting, plotting or integration. Note that multiple
+/// variables can have ranges with the same name, so multi-dimensional PDFs can be sliced.
+/// See also the tutorial rf203_ranges.C
+/// \param[in] name Name this range (so it can be selected later for fitting or
+/// plotting). If the name is `nullptr`, the function sets the limits of the default range.
+/// \param[in] min Miniminum of the range.
+/// \param[in] max Maximum of the range.
 void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
 {
   Bool_t exists = name ? (sharedProp()->_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
@@ -516,9 +520,9 @@ void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create or modify a parameterized range named 'name' that has external functions
-/// min and max parameterizing its boundaries.
-
+/// Set or modify a parameterised range, i.e., a range the varies in dependence
+/// of parameters.
+/// See setRange() for more details.
 void RooRealVar::setRange(const char* name, RooAbsReal& min, RooAbsReal& max)
 {
   RooParamBinning pb(min,max,100) ;
