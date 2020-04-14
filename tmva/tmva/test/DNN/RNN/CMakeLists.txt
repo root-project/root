@@ -60,6 +60,11 @@ ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCuda COMMAND testRecurrentBackpropagat
 set_tests_properties(TMVA-DNN-RNN-BackpropagationCuda PROPERTIES WILL_FAIL true)
 
 if (tmva-cudnn)
+
+CUDA_ADD_EXECUTABLE(testRecurrentForwardPassCudnn TestRecurrentForwardPassCudnn.cxx)
+target_link_libraries(testRecurrentForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-RNN-Forwaed-Cudnn COMMAND testRecurrentForwardPassCudnn)
+
 CUDA_ADD_EXECUTABLE(testRecurrentBackpropagationCudnn TestRecurrentBackpropagationCudnn.cxx)
 target_link_libraries(testRecurrentBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCudnn COMMAND testRecurrentBackpropagationCudnn)

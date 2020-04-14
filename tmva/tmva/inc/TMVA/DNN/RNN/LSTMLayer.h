@@ -638,9 +638,12 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool  isTr
    else {
       // get T[end[]]
       Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
+      // shape of tmp is  for CPU (columnwise) B x D ,   need to reshape to  make a B x D x 1
+      //  and transpose it to 1 x D x B  (this is how output is expected in columnmajor format)
+      tmp = tmp.Reshape( {tmp.GetShape()[0], tmp.GetShape()[1], 1});
       assert(tmp.GetSize() == this->GetOutput().GetSize());
-      tmp = Tensor_t(tmp.GetDeviceBuffer(), this->GetOutput().GetShape(), Architecture_t::GetTensorLayout());
-      Architecture_t::Copy(this->GetOutput(), tmp);
+      assert( tmp.GetShape()[0] == this->GetOutput().GetShape()[2]);  // B is last dim in output and first in tmp
+      Architecture_t::Rearrange(this->GetOutput(), tmp);
       // keep array output
       fY = arrOutput;
    }
@@ -690,16 +693,6 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
       // input size is stride[1] of input tensor that is B x T x inputSize
       assert(activations_backward.GetStrides()[1] == this->GetInputSize());
 
-      // Tensor_t x({fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout());
-      // Tensor_t y({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
-      // Tensor_t dx = (gradients_backward.GetSize() != 0)
-      //    ? Tensor_t({fTimeSteps, this->GetBatchSize(), inputSize}, Architecture_t::GetTensorLayout()) :
-      //    Tensor_t({0});
-      // always have a valid dx since it is needed to compute before dw
-      // Tensor_t dx({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
-
-      // Tensor_t dy({fTimeSteps, this->GetBatchSize(), fStateSize}, Architecture_t::GetTensorLayout());
-
       Architecture_t::Rearrange(x, activations_backward);
 
       if (!fReturnSequence) {
@@ -708,6 +701,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
          Architecture_t::InitializeZero(dy);
 
          // Tensor_t tmp1 = y.At(y.GetShape()[0] - 1).Reshape({y.GetShape()[1], 1, y.GetShape()[2]});
+         // dy is a tensor of shape (rowmajor for Cudnn): T x B x S
+         // and this->ActivatuonGradients is  B x (T=1) x S
          Tensor_t tmp2 = dy.At(dy.GetShape()[0] - 1).Reshape({dy.GetShape()[1], 1, dy.GetShape()[2]});
 
          // Architecture_t::Copy(tmp1, this->GetOutput());
@@ -791,14 +786,15 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
       Architecture_t::Rearrange(arr_output, this->GetOutput());
       Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
    } else {
-      //
+      // here for CPU need to transpose the input activatuon gradients into the right format
       arr_output = fY;
       Architecture_t::InitializeZero(arr_actgradients);
-      Tensor_t tmp_grad = arr_actgradients.At(fTimeSteps - 1);
+      // need to reshape to pad a time dimension = 1 (note here is columnmajor tensors)
+      Tensor_t tmp_grad = arr_actgradients.At(fTimeSteps - 1).Reshape( {this->GetBatchSize(), fStateSize, 1});
       assert(tmp_grad.GetSize() == this->GetActivationGradients().GetSize());
-      tmp_grad = Tensor_t(tmp_grad.GetDeviceBuffer(), this->GetActivationGradients().GetShape(),
-                          Architecture_t::GetTensorLayout());
-      Architecture_t::Copy(tmp_grad, this->GetActivationGradients());
+      assert(tmp_grad.GetShape()[0] == this->GetActivationGradients().GetShape()[2]);  // B in tmp is [0] and [2] in input act. gradients
+
+      Architecture_t::Rearrange(tmp_grad, this->GetActivationGradients());
    }
 
    /*! There are total 8 different weight matrices and 4 bias vectors.
