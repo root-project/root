@@ -24,6 +24,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <cstring>
 #include <typeinfo>
 
 using namespace ROOT::Detail::RDF;
@@ -175,7 +176,7 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
             if (mother && mother->InheritsFrom(tbranchelement)) {
                auto beMom = static_cast<TBranchElement *>(mother);
                auto beMomClass = beMom->GetClass();
-               if (beMomClass && 0 == strcmp("TClonesArray", beMomClass->GetName()))
+               if (beMomClass && 0 == std::strcmp("TClonesArray", beMomClass->GetName()))
                   return be->GetTypeName();
             }
             return be->GetClassName();

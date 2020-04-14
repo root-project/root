@@ -107,7 +107,7 @@ public:
       fCustomColumn = customColumn;
       // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
       // and a jitted one.
-      const auto diffTypes = (0 != strcmp(customColumn->GetTypeId().name(), typeid(T).name()));
+      const auto diffTypes = (0 != std::strcmp(customColumn->GetTypeId().name(), typeid(T).name()));
       auto inheritedType = [&](){
          auto colTClass = TClass::GetClass(customColumn->GetTypeId());
          return colTClass && colTClass->InheritsFrom(TClass::GetClass<T>());
