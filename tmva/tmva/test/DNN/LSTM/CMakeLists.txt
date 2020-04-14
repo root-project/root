@@ -25,6 +25,10 @@ if (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
    set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
 
+   CUDA_ADD_EXECUTABLE(testLSTMForwardPassCudnn TestLSTMForwardPassCudnn.cxx)
+   target_link_libraries(testLSTMForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+   ROOT_ADD_TEST(TMVA-DNN-LSTM-Forwaed-Cudnn COMMAND testLSTMForwardPassCudnn)
+
    CUDA_ADD_EXECUTABLE(testLSTMBackpropagationCudnn TestLSTMBackpropagationCudnn.cxx)
    target_link_libraries(testLSTMBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCudnn COMMAND testLSTMBackpropagationCudnn)
