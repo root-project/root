@@ -33,6 +33,7 @@ protected:
    RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
                                /// guaranteed to contain a valid address during an event loop.
    const std::string fName; ///< The name of the custom column
+   const std::string fType; ///< The type of the custom column as a text string
    unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
@@ -47,8 +48,8 @@ protected:
    static unsigned int GetNextID();
 
 public:
-   RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots, const bool isDSColumn,
-                     const RDFInternal::RBookedCustomColumns &customColumns);
+   RCustomColumnBase(RLoopManager *lm, std::string_view name, std::string_view type, unsigned int nSlots,
+                     bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns);
 
    RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
    RCustomColumnBase &operator=(RCustomColumnBase &&) = delete;
@@ -58,6 +59,7 @@ public:
    virtual const std::type_info &GetTypeId() const = 0;
    RLoopManager *GetLoopManagerUnchecked() const;
    std::string GetName() const;
+   std::string GetTypeName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }

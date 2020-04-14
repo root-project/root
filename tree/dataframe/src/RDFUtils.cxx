@@ -10,6 +10,7 @@
 
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
+#include "ROOT/RDF/RCustomColumnBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
@@ -194,8 +195,8 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
 /// customColID is only used if isCustomColumn is true, and must correspond to the custom column's unique identifier
 /// returned by its `GetID()` method.
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds, bool isCustomColumn,
-                                      bool vector2rvec, unsigned int customColID)
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds,
+                                      RCustomColumnBase *customColumn, bool vector2rvec)
 {
    std::string colType;
 
@@ -213,9 +214,8 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
       }
    }
 
-   if (colType.empty() && isCustomColumn) {
-      // this must be a temporary branch, we know there is an alias for its type
-      colType = "__rdf::" + colName + std::to_string(customColID) + "_type";
+   if (colType.empty() && customColumn) {
+      colType = customColumn->GetTypeName();
    }
 
    if (colType.empty())

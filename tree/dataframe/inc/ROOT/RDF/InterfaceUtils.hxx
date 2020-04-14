@@ -254,9 +254,9 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
                    const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
                    RDataSource *ds);
 
-void BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
-                   const std::shared_ptr<RJittedCustomColumn> &jittedCustomColumn,
-                   const RDFInternal::RBookedCustomColumns &customCols, const ColumnNames_t &branches);
+std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
+                                                   RDataSource *ds, const RDFInternal::RBookedCustomColumns &customCols,
+                                                   const ColumnNames_t &branches);
 
 std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
                            void *r, TTree *tree, const unsigned int nSlots,
@@ -296,8 +296,8 @@ void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RB
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = RCustomColumn<decltype(getValue), CustomColExtraArgs::Slot>;
 
-   auto newCol = std::make_shared<NewCol_t>(&lm, name, std::move(getValue), ColumnNames_t{}, nSlots, currentCols,
-                                            /*isDSColumn=*/true);
+   auto newCol = std::make_shared<NewCol_t>(&lm, name, ds.GetTypeName(name), std::move(getValue), ColumnNames_t{},
+                                            nSlots, currentCols, /*isDSColumn=*/true);
 
    lm.RegisterCustomColumn(newCol.get());
    currentCols.AddName(name);
@@ -379,9 +379,13 @@ void JitDefineHelper(F &&f, const ColumnNames_t &cols, std::string_view name, RL
    // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
    delete customColumns;
 
+   // will never actually be used (trumped by jittedCustomCol->GetTypeName()), but we set it to something meaningful
+   // to help devs debugging
+   const auto dummyType = "jittedCol_t";
    // use unique_ptr<RCustomColumnBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
-   (*jittedCustomCol)->SetCustomColumn(
-      std::unique_ptr<RCustomColumnBase>(new NewCol_t(lm, name, std::forward<F>(f), cols, lm->GetNSlots(), newColumns)));
+   (*jittedCustomCol)
+      ->SetCustomColumn(std::unique_ptr<RCustomColumnBase>(
+         new NewCol_t(lm, name, dummyType, std::forward<F>(f), cols, lm->GetNSlots(), newColumns)));
 
    delete jittedCustomCol;
 }
