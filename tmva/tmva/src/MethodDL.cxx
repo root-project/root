@@ -991,11 +991,12 @@ void MethodDL::ParseRecurrentLayer(ERecurrentLayerType rnnType, DNN::TDeepNet<Ar
          fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
    }
    else if (rnnType == kLayerGRU) {
-      auto *recurrentLayer = deepNet.AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+      bool resetGateAfter = (Architecture_t::IsCudnn()) ? true : false;
+      auto *recurrentLayer = deepNet.AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
       recurrentLayer->Initialize();
       // Add same layer to fNet
       if (fBuildNet)
-         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
    }
    else {
       Log() << kFATAL << "Invalid Recurrent layer type " << Endl;
@@ -2290,14 +2291,19 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
          // read RNN layer info
          size_t  stateSize,inputSize, timeSteps = 0;
-         int rememberState, returnSequence = 0;
+         int rememberState, returnSequence, resetGateAfter = 0;
          gTools().ReadAttr(layerXML, "StateSize", stateSize);
          gTools().ReadAttr(layerXML, "InputSize", inputSize);
          gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
          gTools().ReadAttr(layerXML, "RememberState", rememberState );
          gTools().ReadAttr(layerXML, "ReturnSequence", returnSequence);
+         gTools().ReadAttr(layerXML, "ResetGateAfter", resetGateAfter);
 
-         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+         if (!resetGateAfter && ArchitectureImpl_t::IsCudnn())
+            Warning("ReadWeightsFromXML",
+                    "Cannot use a reset gate after to false with CudNN - use implementation with resetgate=true");
+
+         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
       }
       // BatchNorm Layer
       else if (layerName == "BatchNormLayer") {

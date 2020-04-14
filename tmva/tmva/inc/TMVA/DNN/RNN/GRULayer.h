@@ -77,6 +77,7 @@ private:
 
    bool fRememberState;                         ///< Remember state in next pass
    bool fReturnSequence = false;                ///< Return in output full sequence or just last element
+   bool fResetGateAfter = false;                ///< GRU variant to Apply the reset gate multiplication afterwards (used by cuDNN)
 
    DNN::EActivationFunction fF1;                ///< Activation function: sigmoid
    DNN::EActivationFunction fF2;                ///< Activaton function: tanh
@@ -138,6 +139,7 @@ public:
    /*! Constructor */
    TBasicGRULayer(size_t batchSize, size_t stateSize, size_t inputSize,
                    size_t timeSteps, bool rememberState = false, bool returnSequence = false,
+                   bool resetGateAfter = false,
                    DNN::EActivationFunction f1 = DNN::EActivationFunction::kSigmoid,
                    DNN::EActivationFunction f2 = DNN::EActivationFunction::kTanh,
                    bool training = true, DNN::EInitialization fA = DNN::EInitialization::kZero);
@@ -304,7 +306,7 @@ public:
 
 template <typename Architecture_t>
 TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSize, size_t inputSize, size_t timeSteps,
-                                               bool rememberState, bool returnSequence, DNN::EActivationFunction f1,
+                                               bool rememberState, bool returnSequence, bool resetGateAfter, DNN::EActivationFunction f1,
                                                DNN::EActivationFunction f2, bool /* training */,
                                                DNN::EInitialization fA)
    : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, (returnSequence) ? timeSteps : 1, stateSize,
@@ -312,7 +314,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(size_t batchSize, size_t stateSiz
                                    {inputSize, inputSize, inputSize, stateSize, stateSize, stateSize}, 3,
                                    {stateSize, stateSize, stateSize}, {1, 1, 1}, batchSize,
                                    (returnSequence) ? timeSteps : 1, stateSize, fA),
-     fStateSize(stateSize), fTimeSteps(timeSteps), fRememberState(rememberState), fReturnSequence(returnSequence),
+     fStateSize(stateSize), fTimeSteps(timeSteps), fRememberState(rememberState), fReturnSequence(returnSequence), fResetGateAfter(resetGateAfter),
      fF1(f1), fF2(f2), fResetValue(batchSize, stateSize), fUpdateValue(batchSize, stateSize),
      fCandidateValue(batchSize, stateSize), fState(batchSize, stateSize), fWeightsResetGate(this->GetWeightsAt(0)),
      fWeightsResetGateState(this->GetWeightsAt(3)), fResetGateBias(this->GetBiasesAt(0)),
@@ -345,6 +347,7 @@ TBasicGRULayer<Architecture_t>::TBasicGRULayer(const TBasicGRULayer &layer)
       fTimeSteps(layer.fTimeSteps),
       fRememberState(layer.fRememberState),
       fReturnSequence(layer.fReturnSequence),
+      fResetGateAfter(layer.fResetGateAfter),
       fF1(layer.GetActivationFunctionF1()),
       fF2(layer.GetActivationFunctionF2()),
       fResetValue(layer.GetBatchSize(), layer.GetStateSize()),
@@ -409,6 +412,10 @@ void TBasicGRULayer<Architecture_t>::Initialize()
 
    Architecture_t::InitializeGRUDescriptors(fDescriptors, this);
    Architecture_t::InitializeGRUWorkspace(fWorkspace, fDescriptors, this);
+
+   //cuDNN only supports resetGate after
+   if (Architecture_t::IsCudnn())
+      fResetGateAfter = true;
 }
 
 //______________________________________________________________________________
@@ -452,13 +459,29 @@ template <typename Architecture_t>
 auto inline TBasicGRULayer<Architecture_t>::CandidateValue(const Matrix_t &input, Matrix_t &dc)
 -> void
 {
-   /*! candidate_value = act(W_input . input + W_state . (reset*state) + bias)
-    *  activation function = tanh. */
+   /*!
+        vanilla GRU:
+        candidate_value = act(W_input . input + W_state . (reset*state) + bias)
+
+        but CuDNN uses reset_after variant that is faster (with bias mode = input)
+        (apply reset gate multiplication after matrix multiplication)
+        candidate_value = act(W_input . input + reset * (W_state . state) + bias
+
+        activation function = tanh.
+
+    */
+
    const DNN::EActivationFunction fCan = this->GetActivationFunctionF2();
-   Matrix_t tmpState(fResetValue);
-   Architecture_t::Hadamard(tmpState, fState);
    Matrix_t tmp(fCandidateValue.GetNrows(), fCandidateValue.GetNcols());
-   Architecture_t::MultiplyTranspose(tmp, tmpState, fWeightsCandidateState);
+   if (!fResetGateAfter) {
+      Matrix_t tmpState(fResetValue); // I think here tmpState uses fResetValue buffer
+      Architecture_t::Hadamard(tmpState, fState);
+      Architecture_t::MultiplyTranspose(tmp, tmpState, fWeightsCandidateState);
+   } else {
+      // variant GRU used in cuDNN slightly faster
+      Architecture_t::MultiplyTranspose(tmp, fState, fWeightsCandidateState);
+      Architecture_t::Hadamard(tmp, fResetValue);
+   }
    Architecture_t::MultiplyTranspose(fCandidateValue, input, fWeightsCandidate);
    Architecture_t::ScaleAdd(fCandidateValue, tmp);
    Architecture_t::AddRowWise(fCandidateValue, fCandidateBias);
@@ -537,10 +560,6 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool isTrai
       CandidateValue(arrInput[t], fDerivativesCandidate[t]);
       Architecture_t::Copy(this->GetCandidateGateTensorAt(t), fCandidateValue);
 
-      // std::cout << "iteration time " << t << std::endl;
-      // Architecture_t::PrintTensor(this->GetResetGateTensorAt(t), "reset");
-      // Architecture_t::PrintTensor(this->GetUpdateGateTensorAt(t), "update");
-      // Architecture_t::PrintTensor(this->GetCandidateGateTensorAt(t), "candidate");
 
       CellForward(fUpdateValue, fCandidateValue);
 
@@ -555,9 +574,12 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool isTrai
    else {
       // get T[end[]]
       Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
+      // shape of tmp is  for CPU (columnwise) B x D ,   need to reshape to  make a B x D x 1
+      //  and transpose it to 1 x D x B  (this is how output is expected in columnmajor format)
+      tmp = tmp.Reshape({tmp.GetShape()[0], tmp.GetShape()[1], 1});
       assert(tmp.GetSize() == this->GetOutput().GetSize());
-      tmp = Tensor_t(tmp.GetDeviceBuffer(), this->GetOutput().GetShape(), Architecture_t::GetTensorLayout());
-      Architecture_t::Copy(this->GetOutput(), tmp);
+      assert(tmp.GetShape()[0] == this->GetOutput().GetShape()[2]); // B is last dim in output and first in tmp
+      Architecture_t::Rearrange(this->GetOutput(), tmp);
       // keep array output
       fY = arrOutput;
    }
@@ -688,11 +710,13 @@ auto inline TBasicGRULayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       //
       arr_output = fY;
       Architecture_t::InitializeZero(arr_actgradients);
-      Tensor_t tmp_grad = arr_actgradients.At(fTimeSteps - 1);
+      // need to reshape to pad a time dimension = 1 (note here is columnmajor tensors)
+      Tensor_t tmp_grad = arr_actgradients.At(fTimeSteps - 1).Reshape({this->GetBatchSize(), fStateSize, 1});
       assert(tmp_grad.GetSize() == this->GetActivationGradients().GetSize());
-      tmp_grad = Tensor_t(tmp_grad.GetDeviceBuffer(), this->GetActivationGradients().GetShape(),
-                          Architecture_t::GetTensorLayout());
-      Architecture_t::Copy(tmp_grad, this->GetActivationGradients());
+      assert(tmp_grad.GetShape()[0] ==
+             this->GetActivationGradients().GetShape()[2]); // B in tmp is [0] and [2] in input act. gradients
+
+      Architecture_t::Rearrange(tmp_grad, this->GetActivationGradients());
    }
 
    /*! There are total 8 different weight matrices and 4 bias vectors.
@@ -804,6 +828,7 @@ auto inline TBasicGRULayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
    gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
    gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "ResetGateAfter", gTools().StringFromInt(this->fResetGateAfter));
 
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "ResetWeights", this->GetWeightsAt(0));

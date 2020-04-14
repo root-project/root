@@ -384,10 +384,14 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
       Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
    else {
       // get T[end[]]
-      Tensor_t tmp = arrOutput.At( fTimeSteps - 1); // take last time step
+
+      Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
+      // shape of tmp is  for CPU (columnwise) B x D ,   need to reshape to  make a B x D x 1
+      //  and transpose it to 1 x D x B  (this is how output is expected in columnmajor format)
+      tmp = tmp.Reshape({tmp.GetShape()[0], tmp.GetShape()[1], 1});
       assert(tmp.GetSize() == this->GetOutput().GetSize());
-      tmp = Tensor_t(tmp.GetDeviceBuffer(), this->GetOutput().GetShape(), Architecture_t::GetTensorLayout());
-      Architecture_t::Copy(this->GetOutput(), tmp);
+      assert(tmp.GetShape()[0] == this->GetOutput().GetShape()[2]); // B is last dim in output and first in tmp
+      Architecture_t::Rearrange(this->GetOutput(), tmp);
       // keep array output
       fY = arrOutput;
    }
@@ -523,10 +527,13 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       arr_output = fY;
 
       Architecture_t::InitializeZero(arr_actgradients);
-      Tensor_t tmp_grad = arr_actgradients.At( fTimeSteps-1);
-      assert(tmp_grad.GetSize() == this->GetActivationGradients().GetSize() );
-      tmp_grad = Tensor_t(tmp_grad.GetDeviceBuffer(), this->GetActivationGradients().GetShape(),Architecture_t::GetTensorLayout());
-      Architecture_t::Copy(tmp_grad, this->GetActivationGradients());
+      // need to reshape to pad a time dimension = 1 (note here is columnmajor tensors)
+      Tensor_t tmp_grad = arr_actgradients.At(fTimeSteps - 1).Reshape({this->GetBatchSize(), fStateSize, 1});
+      assert(tmp_grad.GetSize() == this->GetActivationGradients().GetSize());
+      assert(tmp_grad.GetShape()[0] ==
+             this->GetActivationGradients().GetShape()[2]); // B in tmp is [0] and [2] in input act. gradients
+
+      Architecture_t::Rearrange(tmp_grad, this->GetActivationGradients());
    }
 
    // reinitialize weights and biases gradients to 0

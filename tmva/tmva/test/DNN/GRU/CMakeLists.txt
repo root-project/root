@@ -29,6 +29,10 @@ if (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
    target_link_libraries(testGRUBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-GRU-BackpropagationCudnn COMMAND testGRUBackpropagationCudnn)
 
+   CUDA_ADD_EXECUTABLE(testGRUForwardPassCudnn TestGRUForwardPassCudnn.cxx)
+   target_link_libraries(testGRUForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+   ROOT_ADD_TEST(TMVA-DNN-GRU-Forwaed-Cudnn COMMAND testGRUForwardPassCudnn)
+
 endif (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
 #--- CPU tests. ----------------------------

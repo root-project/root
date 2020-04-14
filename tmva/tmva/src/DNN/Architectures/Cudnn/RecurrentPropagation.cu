@@ -139,8 +139,8 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    // set bias mode
    cudnnRNNBiasMode_t biasMode = CUDNN_RNN_NO_BIAS;
    if (layer->GetBiases().size() > 0)
-      biasMode = CUDNN_RNN_SINGLE_REC_BIAS;
-      //biasMode = CUDNN_RNN_DOUBLE_BIAS;
+      biasMode = CUDNN_RNN_SINGLE_INP_BIAS;
+      //biasMode = CUDNN_RNN_REC_BIAS;  // difference is only for GRU
 
    CUDNNCHECK(cudnnSetRNNBiasMode(rnnDescriptors->LayerDescriptor, biasMode));
 
@@ -244,37 +244,18 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
          // copy layer weights in linLayerMat
          // if (linLayerID == 0)
          // {
-            // copy from GetStateWeights (tensor is state x state)
-            int wsize = layer->GetWeightsAt(linLayerID).GetSize();
+         // copy from GetStateWeights (tensor is state x state)
+         int wsize = layer->GetWeightsAt(linLayerID).GetSize();
 
-            // std::cout << "input weight size = " << wsize << "  { " << layer->GetWeightsInput().GetNrows() << "  "
-            //           << layer->GetWeightsInput().GetNcols() << "} should be " << filterDimA[1] << " x "
-            //           << filterDimA[2] << std::endl;
+         // std::cout << "input weight size = " << wsize << "  { " << layer->GetWeightsInput().GetNrows() << "  "
+         //           << layer->GetWeightsInput().GetNcols() << "} should be " << filterDimA[1] << " x "
+         //           << filterDimA[2] << std::endl;
 
-            //PrintTensor(layer->GetWeightsInput(), "Weight input");
 
-            assert(wsize == filterDimA[1] * filterDimA[2]);
-            cudaMemcpyAsync(linLayerMat, layer->GetWeightsAt(linLayerID).GetDataPointer(), wsize * sizeof(AFloat),
-                            cudaMemcpyDeviceToDevice, layer->GetWeightsAt(linLayerID).GetComputeStream());
+         assert(wsize == filterDimA[1] * filterDimA[2]);
+         cudaMemcpyAsync(linLayerMat, layer->GetWeightsAt(linLayerID).GetDataPointer(), wsize * sizeof(AFloat),
+                         cudaMemcpyDeviceToDevice, layer->GetWeightsAt(linLayerID).GetComputeStream());
 
-            //PrintTensor(weightTensor, "After inputW WeightTensor");
-         // }
-         // if (linLayerID == 1) {
-         //    // copy from GetStateWeights (tensor is state x state)
-         //    int wsize = layer->GetWeightsState().GetSize();
-
-         //    // std::cout << "state weight size = " << wsize << "  { " << layer->GetWeightsState().GetNrows() << " , "
-         //    //           << layer->GetWeightsState().GetNcols() << "}  should be " << filterDimA[1] << " x " << filterDimA[2]
-         //    //           << std::endl;
-
-         //    //PrintTensor(layer->GetWeightsState(), "Weight state");
-
-         //    assert(wsize == filterDimA[1] * filterDimA[2]);
-         //    cudaMemcpyAsync(linLayerMat, layer->GetWeightsState().GetDataPointer(), wsize * sizeof(AFloat),
-         //                    cudaMemcpyDeviceToDevice, layer->GetWeightsState().GetComputeStream());
-
-         //    //PrintTensor(weightTensor, "After stateW WeightTensor");
-         // }
 
          CUDNNCHECK(cudnnDestroyFilterDescriptor(linLayerMatDesc));
 
@@ -289,13 +270,19 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
 
          CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerBiasDesc, 3, &dataType, &format, &nbDims, filterDimA));
 
-         // for the bias since I am using a single bias mode - only state bias will be there
-         assert(biasMode == CUDNN_RNN_SINGLE_REC_BIAS);
-         int biasID = linLayerID - 1;
-         if (mode == CUDNN_LSTM)  biasID = linLayerID - 4;
-         if (mode == CUDNN_GRU)  biasID = linLayerID - 3;
+         // Here for the bias : standard is input bias mode
 
-         if (filterDimA[0] > 0 ) {
+         // linLayerID = 0 (RNN) 0,1,2,3 LSTM   0,1,2 GRU if CUDNN_RNN_SINGLE_INP_BIAS mode
+         int biasID = linLayerID;
+         if (biasMode == CUDNN_RNN_SINGLE_REC_BIAS) {
+            // case of state bias
+            //linLayerID = 1 (RNN), (4,5,6,7) LSTM , (3,4,5) GRU
+            biasID = linLayerID - 1;
+            if (mode == CUDNN_LSTM)  biasID = linLayerID - 4;
+            if (mode == CUDNN_GRU)  biasID = linLayerID - 3;
+         }
+
+         if (filterDimA[0] > 0) {
 
             // check if above definitions are valid
             assert(biasID >= 0);
@@ -303,10 +290,11 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
             // copy from GetStateWeights (tensor is state x state)
             int wsize = layer->GetBiasesAt(biasID).GetSize();
 
-            // std::cout << "state bias " << wsize << "  { " << layer->GetBiasesState().GetNrows() << "  "
-            //           << layer->GetBiasesState().GetNcols() << "}  should be " << filterDimA[1] << " x " <<
-            //           filterDimA[2]
-            //           << std::endl;
+            // std::cout << "state bias " << wsize << " bias ID " << biasID << "  { " <<
+            // layer->GetBiasesAt(biasID).GetNrows() << "  "
+            //            << layer->GetBiasesAt(biasID).GetNcols() << "}  should be " << filterDimA[1] << " x " <<
+            //            filterDimA[2]
+            //            << std::endl;
 
             // PrintTensor(layer->GetBiasesState(), "Bias state");
 
@@ -315,19 +303,7 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
                             cudaMemcpyDeviceToDevice, layer->GetBiasesAt(biasID).GetComputeStream());
 
             // PrintTensor(weightTensor, "After biasW WeightTensor");
-            }
-         // else if (linLayerID == 1) {
-         //    // copy from GetStateWeights (tensor is state x state)
-         //    int wsize = layer->GetWeightsInput().GetNoOfElements();
-
-         //    std::cout << "input weight " << wsize << "  { " << layer->GetWeightsInput().GetNrows() << "  "
-         //              << layer->GetWeightsState().GetNcols() << " should be " << filterDimA[1] << "  " <<
-         //              filterDimA[2]
-         //              << std::endl;
-
-         //    cudaMemcpyAsync(linLayerMat, layer->GetWeightsInput().GetDataPointer(), wsize * sizeof(AFloat),
-         //                    cudaMemcpyDeviceToDevice, layer->GetWeightsInput().GetComputeStream());
-         // }
+         }
 
          CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerBiasDesc, 3, &dataType, &format, &nbDims, filterDimA));
 
