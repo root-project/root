@@ -320,7 +320,10 @@ public:
 
    /// Get the high bin border ("right edge") for the given bin index.
    /// The result of this method on an overflow bin is unspecified
-   double GetBinTo(int bin) const { return GetBinFrom(bin + 1); }
+   double GetBinTo(int bin) const {
+      const double result = (bin == -1) ? GetMinimum() : GetBinFrom(bin + 1);
+      return result;
+   }
 
    /// Get the low end of the axis range.
    double GetMinimum() const { return GetBinFrom(GetFirstBin()); }
@@ -503,7 +506,10 @@ public:
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.
    /// The result of this method on an underflow bin is unspecified
-   double GetBinFrom(int bin) const final override { return fLow + (bin - *begin()) / fInvBinWidth; }
+   double GetBinFrom(int bin) const final override {
+      const double result = (bin == -2) ? GetMaximum() : fLow + (bin - *begin()) / fInvBinWidth;
+      return result;
+   }
 
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,

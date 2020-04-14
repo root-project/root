@@ -72,6 +72,8 @@ class RHistImplPrecisionAgnosticBase {
 public:
    /// Type of the coordinate: a DIMENSIONS-dimensional array of doubles.
    using CoordArray_t = Hist::CoordArray_t<DIMENSIONS>;
+   /// Type of the bins: a DIMENSIONS-dimensional array of integers.
+   using BinArray_t = std::array<int, DIMENSIONS>;
    /// Range type.
    using AxisIterRange_t = Hist::AxisIterRange_t<DIMENSIONS>;
 
@@ -98,6 +100,8 @@ public:
 
    /// Given the coordinate `x`, determine the index of the bin.
    virtual int GetBinIndex(const CoordArray_t &x) const = 0;
+   /// Given the coordinate `x`, determine the index of the bin.
+   virtual int GetBinIndexFromLocalBins(const BinArray_t &x) const = 0;
    /// Given the coordinate `x`, determine the index of the bin, possibly growing
    /// axes for which `x` is out of range.
    virtual int GetBinIndexAndGrow(const CoordArray_t &x) = 0;
@@ -359,7 +363,7 @@ struct RGetNRegularBinsBefore {
    void operator()(BINS &binSizes, const AXES &axes) const
    {
       constexpr const int thisAxis = NDIMS - I - 1;
-      binSizes[thisAxis] = binSizes[thisAxis-1] * std::get<thisAxis>(axes).GetNBinsNoOver();
+      binSizes[thisAxis] = binSizes[thisAxis-1] * std::get<thisAxis-1>(axes).GetNBinsNoOver();
       RGetNRegularBinsBefore<I - 1, NDIMS, BINS, AXES>()(binSizes, axes);
    }
 };
@@ -1003,6 +1007,17 @@ public:
    {
       BinArray_t localBins = {};
       Internal::RCoordsToLocalBins<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(localBins, fAxes, x);
+      int result = ComputeGlobalBin<DATA::GetNDim()>(localBins);
+      return result;
+   }
+
+   /// Get the bin index for the given local bins. The use of GetBinType(x)
+   /// determines if the bin index is in under- or overflow, or not. Given the result,
+   /// the correct sub-function is called to get the correct bin index. The result is 0 if
+   /// there is no such bin, e.g. for axes without under- or overflow but coordinates out of range.
+   int GetBinIndexFromLocalBins(const BinArray_t &x) const final
+   {
+      BinArray_t localBins = x;
       int result = ComputeGlobalBin<DATA::GetNDim()>(localBins);
       return result;
    }

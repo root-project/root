@@ -429,7 +429,7 @@ TEST(AxisTest, Irregular) {
     const int kInvalidBin = RAxisBase::kInvalidBin;
     EXPECT_EQ(axis.GetBinIndexForLowEdge(std::numeric_limits<double>::lowest()),
               kInvalidBin);
-    for (int iborder = 0; iborder < bin_borders.size(); ++iborder) {
+    for (int iborder = 0; iborder < (int) bin_borders.size(); ++iborder) {
       const double border = bin_borders[iborder];
       EXPECT_EQ(axis.GetBinIndexForLowEdge(border - 0.01), kInvalidBin);
       EXPECT_EQ(axis.GetBinIndexForLowEdge(border), iborder + 1);
