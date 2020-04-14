@@ -4186,12 +4186,9 @@
    TObjectPainter.prototype.WebCanvasExec = function(exec, snapid) {
       if (!exec || (typeof exec != 'string')) return;
 
-      if (!snapid) snapid = this.snapid;
-      if (!snapid || (typeof snapid != 'string')) return;
-
       var canp = this.canv_painter();
-      if (canp && !canp._readonly && canp._websocket)
-         canp.SendWebsocket("OBJEXEC:" + snapid + ":" + exec);
+      if (canp && (typeof canp.SubmitExec == "function"))
+         canp.SubmitExec(this, exec, snapid);
    }
 
    /** @summary Fill object menu in web canvas

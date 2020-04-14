@@ -29,6 +29,7 @@ class RLegend;
 class RCanvas;
 class RChangeAttrRequest;
 class RDrawableMenuRequest;
+class RDrawableExecRequest;
 
 namespace Internal {
 
@@ -109,6 +110,7 @@ friend class RLegend; // to access CollectShared method
 friend class RIndirectDisplayItem;  // to access attributes and other members
 friend class RChangeAttrRequest; // access SetDrawableVersion and AttrMap
 friend class RDrawableMenuRequest; // access PopulateMenu method
+friend class RDrawableExecRequest; // access Execute() method
 
 public:
 
@@ -138,18 +140,18 @@ protected:
    virtual void SetDrawableVersion(Version_t vers) { fVersion = vers; }
    Version_t GetVersion() const { return fVersion; }
 
-   /** Method can be used to provide menu items for the drawn object */
-   virtual void PopulateMenu(RMenuItems &) {}
+   virtual void PopulateMenu(RMenuItems &);
+
+   virtual void Execute(const std::string &);
+
+   RDrawable(const RDrawable &) = delete;
+   RDrawable &operator=(const RDrawable &) = delete;
 
 public:
 
    explicit RDrawable(const std::string &type) : fCssType(type) {}
 
    virtual ~RDrawable();
-
-   // copy constructor and assign operator !!!
-
-   virtual void Execute(const std::string &);
 
    virtual void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
    void ClearStyle() { UseStyle(nullptr); }
@@ -165,11 +167,22 @@ public:
 
 /// Central method to insert drawable in list of pad primitives
 /// By default drawable placed as is.
+
 template <class DRAWABLE, std::enable_if_t<std::is_base_of<RDrawable, DRAWABLE>{}>* = nullptr>
 inline auto GetDrawable(const std::shared_ptr<DRAWABLE> &drawable)
 {
    return drawable;
 }
+
+
+
+/** \class RDrawableReply
+\ingroup GpadROOT7
+\brief Base class for replies on RDrawableRequest
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-14
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RDrawableReply {
    uint64_t reqid{0}; ///< request id
@@ -182,6 +195,14 @@ public:
    virtual ~RDrawableReply();
 };
 
+
+/** \class RDrawableRequest
+\ingroup GpadROOT7
+\brief Base class for requests which can be submitted from the clients
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-14
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RDrawableRequest {
    std::string id; ///< drawable id
@@ -219,6 +240,23 @@ public:
    virtual bool NeedCanvasUpdate() const { return false; }
 };
 
+
+/** \class RDrawableExecRequest
+\ingroup GpadROOT7
+\brief Base class for requests which can be submitted from the clients
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-14
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RDrawableExecRequest : public RDrawableRequest {
+   std::string exec; ///< that to execute
+
+public:
+
+   std::unique_ptr<RDrawableReply> Process() override;
+
+};
 
 } // namespace Experimental
 } // namespace ROOT

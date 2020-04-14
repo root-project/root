@@ -8,14 +8,18 @@
 
 #include "ROOT/RDrawable.hxx"
 #include "ROOT/RDisplayItem.hxx"
+#include "ROOT/RMenuItem.hxx"
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RCanvas.hxx"
 
+#include "TClass.h"
+#include "TROOT.h"
 
 #include <cassert>
 #include <string>
-
+#include <sstream>
 
 using namespace ROOT::Experimental;
-
 
 // destructor, pin vtable
 RDrawableReply::~RDrawableReply() = default;
@@ -26,9 +30,29 @@ RDrawableRequest::~RDrawableRequest() = default;
 // destructor, pin vtable
 RDrawable::~RDrawable() = default;
 
-void RDrawable::Execute(const std::string &)
+
+/////////////////////////////////////////////////////////////////////
+// Fill context menu items for the ROOT class
+
+void RDrawable::PopulateMenu(RMenuItems &items)
 {
-   assert(false && "Did not expect a menu item to be invoked!");
+   auto isA = TClass::GetClass(typeid(*this));
+   if (isA)
+      items.PopulateObjectMenu(this, isA);
+}
+
+/////////////////////////////////////////////////////////////////////
+// Execute command for the drawable
+
+void RDrawable::Execute(const std::string &exec)
+{
+   auto isA = TClass::GetClass(typeid(*this));
+   if (!isA) return;
+
+   std::stringstream cmd;
+   cmd << "((" << isA->GetName() << " *) " << std::hex << std::showbase << (size_t)this << ")->" << exec << ";";
+   R__DEBUG_HERE("drawable") << "RDrawable::Execute Obj " << this << " cmd " << exec;
+   gROOT->ProcessLine(cmd.str().c_str());
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -52,6 +76,21 @@ std::unique_ptr<RDisplayItem> RDrawable::Display(const RPadBase &, Version_t ver
 {
    if (GetVersion() > vers)
       return std::make_unique<RDrawableDisplayItem>(*this);
+
+   return nullptr;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+/// Execute method of the drawable
+
+std::unique_ptr<RDrawableReply> RDrawableExecRequest::Process()
+{
+   if (!exec.empty() && GetDrawable())
+      GetDrawable()->Execute(exec);
+
+   if (GetCanvas())
+      const_cast<RCanvas*>(GetCanvas())->Modified();
 
    return nullptr;
 }

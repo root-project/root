@@ -4603,6 +4603,15 @@
       this.SendWebsocket('GETMENU:' + reqid); // request menu items for given painter
    }
 
+   TCanvasPainter.prototype.SubmitExec = function(painter, exec, snapid) {
+      if (this._readonly || !painter) return;
+
+      if (!snapid) snapid = painter.snapid;
+      if (!snapid || (typeof snapid != 'string')) return;
+
+      this.SendWebsocket("OBJEXEC:" + snapid + ":" + exec);
+   }
+
    TCanvasPainter.prototype.WindowBeforeUnloadHanlder = function() {
       // when window closed, close socket
       this.CloseWebsocket(true);

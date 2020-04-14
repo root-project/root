@@ -478,22 +478,6 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (check_header("SAVE:")) {
       SaveCreatedFile(cdata);
-   } else if (check_header("OBJEXEC:")) {
-      size_t pos = cdata.find(':');
-
-      if ((pos != std::string::npos) && (pos > 0)) {
-         std::string id(cdata, 0, pos);
-         cdata.erase(0, pos + 1);
-         auto drawable = FindPrimitive(fCanvas, id);
-         if (drawable && (cdata.length() > 0)) {
-            R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for drawable " << id;
-            drawable->Execute(cdata);
-            fCanvas.Modified();
-            fCanvas.Update(true);
-         } else if (id == "canvas") {
-            R__DEBUG_HERE("CanvasPainter") << "execute " << cdata << " for canvas itself (ignored)";
-         }
-      }
    } else if (check_header("REQ:")) {
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
       if (req) {
