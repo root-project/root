@@ -32,13 +32,13 @@ class RHistStatRequest : public RDrawableRequest {
 
 public:
 
-   std::unique_ptr<RDrawableRequest> Process(std::shared_ptr<RDrawable> &drawable) override;
+   std::unique_ptr<RDrawableReply> Process() override;
 
    double GetMin(unsigned indx) const { return indx < xmin.size() ? xmin[indx] : 0; }
    double GetMax(unsigned indx) const { return indx < xmax.size() ? xmax[indx] : 0; }
 };
 
-class RHistStatReply : public RDrawableRequest {
+class RHistStatReply : public RDrawableReply {
    std::vector<std::string> lines;   ///< text lines displayed in the stat box
 public:
 

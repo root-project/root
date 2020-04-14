@@ -130,7 +130,7 @@ private:
 
    std::string CreateSnapshot(RDrawable::Version_t vers);
 
-   std::shared_ptr<RDrawable> FindPrimitive(const RCanvas &can, const std::string &id);
+   std::shared_ptr<RDrawable> FindPrimitive(const RCanvas &can, const std::string &id, const RPadBase **subpad = nullptr);
 
    void CreateWindow();
 
@@ -525,14 +525,21 @@ void ROOT::Experimental::RCanvasPainter::ProcessData(unsigned connid, const std:
       if (req) {
          std::shared_ptr<RDrawable> drawable;
 
-         if (!req->GetId().empty())
-            drawable = FindPrimitive(fCanvas, req->GetId());
+         req->SetCanvas(&fCanvas);
 
-         auto reply = req->Process(drawable);
+         if (!req->GetId().empty()) {
+            const RPadBase *subpad = nullptr;
+            drawable = FindPrimitive(fCanvas, req->GetId(), &subpad);
+            req->SetPad(subpad);
+            req->SetDrawable(drawable.get());
+         }
+
+         auto reply = req->Process();
+
          if (!reply)
-            reply = std::make_unique<RDrawableRequest>();
+            reply = std::make_unique<RDrawableReply>();
 
-         reply->CopyIds(req.get());
+         reply->SetRequestId(req->GetRequestId());
 
          auto json = TBufferJSON::ToJSON(reply.get(), TBufferJSON::kNoSpaces);
          conn->fSendQueue.emplace("REPL_REQ:"s + json.Data());
@@ -703,13 +710,15 @@ std::string ROOT::Experimental::RCanvasPainter::CreateSnapshot(RDrawable::Versio
 /// Used to communicate with the clients, which does not have any pointer
 
 std::shared_ptr<ROOT::Experimental::RDrawable>
-ROOT::Experimental::RCanvasPainter::FindPrimitive(const ROOT::Experimental::RCanvas &can, const std::string &id)
+ROOT::Experimental::RCanvasPainter::FindPrimitive(const ROOT::Experimental::RCanvas &can, const std::string &id, const RPadBase **subpad)
 {
    std::string search = id;
    size_t pos = search.find("#");
    // exclude extra specifier, later can be used for menu and commands execution
    if (pos != std::string::npos)
       search.resize(pos);
+
+   if (subpad) *subpad = can.FindPadForPrimitiveWithDisplayId(search);
 
    return can.FindPrimitiveByDisplayId(search);
 }

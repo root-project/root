@@ -80,6 +80,29 @@ std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::Fin
 }
 
 ///////////////////////////////////////////////////////////////////////////
+/// Find subpad which contains primitive with given display id
+
+const ROOT::Experimental::RPadBase *ROOT::Experimental::RPadBase::FindPadForPrimitiveWithDisplayId(const std::string &id) const
+{
+   auto p = id.find("_");
+   if (p == std::string::npos)
+      return nullptr;
+
+   auto prim = GetPrimitive(std::stoul(id.substr(0,p)));
+   if (!prim)
+      return nullptr;
+
+   auto subid = id.substr(p+1);
+
+   if (RDisplayItem::ObjectIDFromPtr(prim.get()) == subid)
+      return this;
+
+   auto subpad = std::dynamic_pointer_cast<RPadBase>(prim);
+
+   return subpad ? subpad->FindPadForPrimitiveWithDisplayId(subid) : nullptr;
+}
+
+///////////////////////////////////////////////////////////////////////////
 /// Method collect existing colors and assign new values if required
 
 void ROOT::Experimental::RPadBase::AssignAutoColors()
