@@ -50,7 +50,7 @@
 #pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;
 #pragma link C++ class ROOT::Experimental::RPadExtent+;
 #pragma link C++ class ROOT::Experimental::RPadPos+;
-#pragma link C++ struct ROOT::Experimental::RChangeAttr+;
+#pragma link C++ class ROOT::Experimental::RChangeAttrRequest+;
 #pragma link C++ class ROOT::Experimental::RPadBase+;
 #pragma link C++ class ROOT::Experimental::RPad+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;

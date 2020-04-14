@@ -27,6 +27,7 @@ class RDisplayItem;
 class RIndirectDisplayItem;
 class RLegend;
 class RCanvas;
+class RChangeAttrRequest;
 
 namespace Internal {
 
@@ -105,7 +106,7 @@ friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method
 friend class RIndirectDisplayItem;  // to access attributes and other members
-friend class RCanvas; // access SetDrawableVersion
+friend class RChangeAttrRequest; // access SetDrawableVersion and AttrMap
 
 public:
 
@@ -190,7 +191,6 @@ class RDrawableRequest {
 
 protected:
 
-
    /// Returns canvas assign to request, should be accessed from Process method
    const RCanvas *GetCanvas() const { return fCanvas; }
 
@@ -210,7 +210,12 @@ public:
 
    virtual ~RDrawableRequest();
 
+   bool ShouldBeReplyed() const { return GetRequestId() > 0; }
+
    virtual std::unique_ptr<RDrawableReply> Process() { return nullptr; }
+
+   virtual bool NeedCanvasUpdate() const { return false; }
+
 };
 
 

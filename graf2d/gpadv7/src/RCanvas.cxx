@@ -249,17 +249,36 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
 /// Apply attributes changes to the drawable
 /// Return mask with actions which were really applied
 
-bool ROOT::Experimental::RCanvas::ApplyAttrChanges(const std::vector<RChangeAttr> &vect)
+std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeAttrRequest::Process()
 {
+   auto canv = const_cast<ROOT::Experimental::RCanvas *>(GetCanvas());
+   if (!canv) return nullptr;
+
+   if ((ids.size() != names.size()) || (ids.size() != values.size())) {
+      R__ERROR_HERE("Gpadv7") << "Mismatch of arrays size in RChangeAttrRequest";
+      return nullptr;
+   }
+
    Version_t vers = 0;
 
-   for (auto & elem : vect) {
-      auto drawable = FindPrimitiveByDisplayId(elem.id);
-      if (drawable && drawable->GetAttrMap().Change(elem.name, elem.value.get())) {
-         if (!vers) vers = IncModified();
-         drawable->SetDrawableVersion(vers);
+   for(int indx = 0; indx < (int) ids.size(); indx++) {
+      if (ids[indx] == "canvas") {
+         if (canv->GetAttrMap().Change(names[indx], values[indx].get())) {
+            if (!vers) vers = canv->IncModified();
+            canv->SetDrawableVersion(vers);
+         }
+      } else {
+         auto drawable = canv->FindPrimitiveByDisplayId(ids[indx]);
+         if (drawable && drawable->GetAttrMap().Change(names[indx], values[indx].get())) {
+            if (!vers) vers = canv->IncModified();
+            drawable->SetDrawableVersion(vers);
+         }
       }
    }
 
-   return vers > 0;
+   fNeedUpdate = (vers > 0);
+
+   printf("RCanvas::Change attributes vers %d needupdate %d\n", (int) vers, (int) fNeedUpdate);
+
+   return nullptr;
 }

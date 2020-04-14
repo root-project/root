@@ -15,14 +15,24 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <list>
 
 namespace ROOT {
 namespace Experimental {
 
-struct RChangeAttr {
-   std::string id;      ///< drawable id where attribute is changed
-   std::string name;    ///< attribute name
-   std::unique_ptr<RAttrMap::Value_t> value;  ///< kind of the value
+class RChangeAttrRequest : public RDrawableRequest {
+   /* FIXME: values from vectors can be packed as special simple class like RChangeAttr
+      But such class with std::unique_ptr<RAttrMap::Value_t> as member fails for TCollectionProxy
+      Need to be fixed in the future */
+   std::vector<std::string> ids;    ///< array of ids
+   std::vector<std::string> names;  ///< array of attribute names
+   std::vector<std::unique_ptr<RAttrMap::Value_t>> values; ///< array of values
+   bool fNeedUpdate{false};       ///<! is canvas update required
+   RChangeAttrRequest(const RChangeAttrRequest &) = delete;
+   RChangeAttrRequest& operator=(const RChangeAttrRequest &) = delete;
+public:
+   std::unique_ptr<RDrawableReply> Process() override;
+   bool NeedCanvasUpdate() const override { return fNeedUpdate; }
 };
 
 /** \class RCanvas
@@ -36,6 +46,7 @@ struct RChangeAttr {
 class RCanvas: public RPadBase {
 friend class RPadBase;  /// use for ID generation
 friend class RCanvasPainter; /// used for primitives drawing
+friend class RChangeAttrRequest; /// to apply attributes changes
 private:
    /// Title of the canvas.
    std::string fTitle;
@@ -56,8 +67,6 @@ private:
 
    /// Disable assignment for now.
    RCanvas &operator=(const RCanvas &) = delete;
-
-   bool ApplyAttrChanges(const std::vector<RChangeAttr> &vect);
 
    // Increment modify counter
    uint64_t IncModified() { return ++fModified; }
