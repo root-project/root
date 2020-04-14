@@ -100,8 +100,8 @@ const std::type_info &TypeName2TypeID(const std::string &name);
 
 std::string TypeID2TypeName(const std::type_info &id);
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, bool isCustomColumn,
-                                      bool vector2rvec = true, unsigned int customColID = 0);
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RCustomColumnBase *,
+                                      bool vector2rvec = true);
 
 char TypeName2ROOTTypeName(const std::string &b);
 

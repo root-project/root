@@ -34,8 +34,8 @@ class RJittedCustomColumn : public RCustomColumnBase {
    std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
 
 public:
-   RJittedCustomColumn(RLoopManager *lm, std::string_view name, unsigned int nSlots)
-      : RCustomColumnBase(lm, name, nSlots, /*isDSColumn=*/false, RDFInternal::RBookedCustomColumns())
+   RJittedCustomColumn(RLoopManager *lm, std::string_view name, std::string_view type, unsigned int nSlots)
+      : RCustomColumnBase(lm, name, type, nSlots, /*isDSColumn=*/false, RDFInternal::RBookedCustomColumns())
    {
    }
 

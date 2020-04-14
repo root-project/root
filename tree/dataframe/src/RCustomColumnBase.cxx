@@ -27,10 +27,11 @@ unsigned int RCustomColumnBase::GetNextID()
    return id;
 }
 
-RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
-                                     const bool isDSColumn, const RDFInternal::RBookedCustomColumns &customColumns)
-   : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fCustomColumns(customColumns),
-     fIsInitialized(nSlots, false)
+RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, std::string_view type,
+                                     unsigned int nSlots, bool isDSColumn,
+                                     const RDFInternal::RBookedCustomColumns &customColumns)
+   : fLoopManager(lm), fName(name), fType(type), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn),
+     fCustomColumns(customColumns), fIsInitialized(nSlots, false)
 {
    fLoopManager->RegisterCustomColumn(this);
 }
@@ -44,6 +45,11 @@ RCustomColumnBase::~RCustomColumnBase()
 std::string RCustomColumnBase::GetName() const
 {
    return fName;
+}
+
+std::string RCustomColumnBase::GetTypeName() const
+{
+   return fType;
 }
 
 void RCustomColumnBase::InitNode()

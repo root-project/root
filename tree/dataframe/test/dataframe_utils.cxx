@@ -72,8 +72,7 @@ TEST(RDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr,
-                                                        /*custom=*/false);
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*customCol=*/nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
@@ -100,8 +99,7 @@ TEST(RDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
                                                      {"vararrint.a", "ROOT::VecOps::RVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
-      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr,
-                                                        /*custom=*/false);
+      auto typeName = RDFInt::ColumnName2ColumnTypeName(nameType.first, &t, /*ds=*/nullptr, /*customCol=*/nullptr);
       EXPECT_STREQ(nameType.second, typeName.c_str());
    }
 }
