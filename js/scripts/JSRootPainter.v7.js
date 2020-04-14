@@ -153,43 +153,45 @@
    }
 
    /** Create RChangeAttr, which can be applied on the server side */
-   JSROOT.TObjectPainter.prototype.v7AttrChange = function(arr,name,value,kind) {
+   JSROOT.TObjectPainter.prototype.v7AttrChange = function(req,name,value,kind) {
       if (!this.snapid)
          return false;
 
-      var obj = {
-        _typename: "ROOT::Experimental::RChangeAttr",
-        id: this.snapid,
-        name: name,
-        value: null
+      if (!req._typename) {
+         req._typename = "ROOT::Experimental::RChangeAttrRequest";
+         req.ids = [];
+         req.names = [];
+         req.values = [];
       }
+
+      req.ids.push(this.snapid);
+      req.names.push(name);
+      var obj = null;
 
       if ((value !== null) && (value !== undefined)) {
          if (!kind) {
             if (typeof value == "string") kind = "string"; else
             if (typeof value == "number") kind = "double";
          }
-         obj.value = { _typename: "ROOT::Experimental::RAttrMap::" };
+         obj = { _typename: "ROOT::Experimental::RAttrMap::" };
          switch(kind) {
-            case "none": obj.value._typename += "NoValue_t"; break;
-            case "bool": obj.value._typename += "BoolValue_t"; obj.value.v = value ? true : false; break;
-            case "int": obj.value._typename += "IntValue_t"; obj.value.v = parseInt(value); break;
-            case "double": obj.value._typename += "DoubleValue_t"; obj.value.v = parseFloat(value); break;
-            default: obj.value._typename += "StringValue_t"; obj.value.v = (typeof value == "string") ? value : JSON.stringify(value); break;
+            case "none": obj._typename += "NoValue_t"; break;
+            case "bool": obj._typename += "BoolValue_t"; obj.v = value ? true : false; break;
+            case "int": obj._typename += "IntValue_t"; obj.v = parseInt(value); break;
+            case "double": obj._typename += "DoubleValue_t"; obj.v = parseFloat(value); break;
+            default: obj._typename += "StringValue_t"; obj.v = (typeof value == "string") ? value : JSON.stringify(value); break;
          }
       }
 
-      arr.push(obj);
+      req.values.push(obj);
       return true;
    }
 
    /** Sends accumulated attribute changes to server */
-   JSROOT.TObjectPainter.prototype.v7SendAttrChanges = function(arr) {
-      if (!arr || !arr.length) return;
-
+   JSROOT.TObjectPainter.prototype.v7SendAttrChanges = function(req) {
       var canp = this.canv_painter();
-      if (canp && canp._websocket)
-         canp.SendWebsocket("ATTRCHANGE:" + JSON.stringify(arr));
+      if (canp && req && req._typename)
+         canp.v7SubmitRequest("", req);
    }
 
    /** @brief Submit request to server-side drawable
@@ -201,17 +203,41 @@
       var canp = this.canv_painter();
       if (!canp || !canp.SubmitDrawableRequest) return false;
 
+      // special situation when snapid not yet assigned - just keep ref until snapid is there
+      // maybe keep full list - for now not clear if really needed
+      if (!this.snapid) {
+         this._pending_request = { _kind: kind, _req: req, _method: method};
+         return false;
+      }
+
       return canp.SubmitDrawableRequest(kind, req, this, method);
    }
 
-   /** Check if we could submit request to server */
-   JSROOT.TObjectPainter.prototype.v7CanSubmitRequest = function() {
-      if (!this.snapid) return false;
+   /** @summary Assign snapid to the painter
+   * @desc Overwrite default method
+   * @private */
 
+   JSROOT.TObjectPainter.prototype.AssignSnapId = function(id) {
+      this.snapid = id;
+      if (this.snapid && this._pending_request) {
+         var req = this._pending_request;
+         this.v7SubmitRequest(req._kind, req._req, req._method);
+         delete this._pending_request;
+      }
+   }
+
+   JSROOT.v7.CommMode = { kNormal: 1, kLessTraffic: 2, kOffline: 3 }
+
+   /** Return communication mode with the server
+    * kOffline means no server there,
+    * kLessTraffic advise not to send commands if offline functionality available
+    * kNormal is standard functionality with RCanvas on server side*/
+   JSROOT.TObjectPainter.prototype.v7CommMode = function() {
       var canp = this.canv_painter();
-      if (!canp || !canp.SubmitDrawableRequest || canp._readonly || !canp._websocket) return false;
+      if (!canp || !canp.SubmitDrawableRequest || canp._readonly || !canp._websocket)
+         return JSROOT.v7.CommMode.kOffline;
 
-      return true;
+      return JSROOT.v7.CommMode.kNormal;
    }
 
    // ================================================================================
@@ -1563,9 +1589,8 @@
                 ymin = this.v7EvalAttr("y_zoommin"),
                 ymax = this.v7EvalAttr("y_zoommax");
 
-            console.log('RFrame zooming update', xmin, xmax, ymin, ymax);
+            console.log('TODO: RFrame zooming update', xmin, xmax, ymin, ymax);
          }
-
       }
 
       this.axes_drawn = false;
@@ -1761,7 +1786,7 @@
          unzoom_z = (zmin === zmax) && (zmin === 0);
       }
 
-      var changed = false, fp = this, changes = [];
+      var changed = false, fp = this, changes = {};
 
       // first process zooming (if any)
       if (zoom_x || zoom_y || zoom_z)
@@ -3410,7 +3435,7 @@
          if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
             // keep snap id in painter, will be used for the
             if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
-            objpainter.snapid = lst[indx].fObjectID;
+            objpainter.AssignSnapId(lst[indx].fObjectID);
             if (!objpainter.rstyle) objpainter.rstyle = lst[indx].fStyle || this.rstyle;
          }
 
@@ -3467,7 +3492,7 @@
             var padpainter = new RPadPainter(subpad, false);
             padpainter.DecodeOptions("");
             padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
-            padpainter.snapid = snap.fObjectID;
+            padpainter.AssignSnapId(snap.fObjectID);
             padpainter.rstyle = snap.fStyle;
 
             padpainter.CreatePadSvg();
@@ -3556,7 +3581,7 @@
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 
-         this.snapid = snap.fObjectID;
+         this.AssignSnapId(snap.fObjectID);
 
          this.draw_object = snap;
          this.pad = snap;
@@ -4189,6 +4214,14 @@
 
    RCanvasPainter.prototype = Object.create(RPadPainter.prototype);
 
+   /** @brief Cleanup canvas painter */
+   RCanvasPainter.prototype.Cleanup = function() {
+      delete this._websocket;
+      delete this._submreq;
+
+      RPadPainter.prototype.Cleanup.call(this);
+   }
+
    RCanvasPainter.prototype.ChangeLayout = function(layout_kind, call_back) {
       var current = this.get_layout_kind();
       if (current == layout_kind) return JSROOT.CallBack(call_back, true);
@@ -4476,8 +4509,7 @@
 
       if (this._readonly || !this._websocket) return false;
 
-      if (!req || !req._typename || !kind ||
-          !painter.snapid || (typeof painter.snapid != "string")) return false;
+      if (!req || !req._typename || !painter.snapid || (typeof painter.snapid != "string")) return false;
 
       if (kind) {
          // if kind specified - check if such request already was submitted
@@ -4497,23 +4529,37 @@
          painter._requests[kind] = req; // keep reference on the request
       }
 
-      if (!this._nextreqid) this._nextreqid = 1;
-
       req.id = painter.snapid;
-      req.reqid = this._nextreqid++;
+
+      if (method) {
+         if (!this._nextreqid) this._nextreqid = 1;
+         req.reqid = this._nextreqid++;
+      } else {
+         req.reqid = 0; // request will not be replied
+      }
 
       var msg = JSON.stringify(req);
 
-      req._kind = kind;
-      req._painter = painter;
-      req._method = method;
-      req._tm = new Date().getTime();
+      if (req.reqid) {
+         req._kind = kind;
+         req._painter = painter;
+         req._method = method;
+         req._tm = new Date().getTime();
 
-      if (!this._submreq) this._submreq = {};
-      this._submreq[req.reqid] = req; // fast access to submitted requests
+         if (!this._submreq) this._submreq = {};
+         this._submreq[req.reqid] = req; // fast access to submitted requests
+      }
 
       this.SendWebsocket("REQ:" + msg);
       return true;
+   }
+
+   RCanvasPainter.prototype.SubmitMenuRequest = function(painter, menukind, reqid, call_back) {
+      this.SubmitDrawableRequest("", {
+         _typename: "ROOT::Experimental::RDrawableMenuRequest",
+         menukind: menukind || "",
+         menureqid: reqid, // used to identify menu request
+      }, painter, call_back);
    }
 
    /** Process reply from request to RDrawable */
@@ -4532,8 +4578,8 @@
          if (req._painter._requests[req._kind] === req)
             delete req._painter._requests[req._kind];
 
-      if (req._painter && req._method)
-         req._method.call(req._painter, reply);
+      if (req._method)
+         req._method(reply);
 
       // resubmit last request of that kind
       if (req._nextreq && !req._painter._requests[req._kind])
