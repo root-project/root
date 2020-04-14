@@ -13,9 +13,9 @@
 using namespace ROOT::Experimental;
 using namespace std::string_literals;
 
-std::unique_ptr<RDrawableRequest> RHistStatRequest::Process(std::shared_ptr<RDrawable> &drawable)
+std::unique_ptr<RDrawableReply> RHistStatRequest::Process()
 {
-   auto stat = std::dynamic_pointer_cast<RHistStatBoxBase>(drawable);
+   auto stat = dynamic_cast<RHistStatBoxBase *>(GetDrawable());
 
    auto reply = std::make_unique<RHistStatReply>();
 
@@ -24,7 +24,6 @@ std::unique_ptr<RDrawableRequest> RHistStatRequest::Process(std::shared_ptr<RDra
 
    return reply;
 }
-
 
 void RHist1StatBox::FillStatistic(const RHistStatRequest &req, RHistStatReply &reply) const
 {
