@@ -80,7 +80,9 @@ public:
   void setRange(const char* name, RooAbsReal& min, RooAbsReal& max) ;
   inline void setMin(Double_t value) { setMin(0,value) ; }
   inline void setMax(Double_t value) { setMax(0,value) ; }
+  /// Set the limits of the default range.
   inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
+  /// Set parameterised limits of the default range. See setRange(const char*, RooAbsReal&, RooAbsReal&).
   inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(0,min,max) ; }
 
   void setBins(Int_t nBins, const char* name=0);
