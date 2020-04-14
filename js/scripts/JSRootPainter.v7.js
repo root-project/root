@@ -234,7 +234,7 @@
     * kNormal is standard functionality with RCanvas on server side*/
    JSROOT.TObjectPainter.prototype.v7CommMode = function() {
       var canp = this.canv_painter();
-      if (!canp || !canp.SubmitDrawableRequest || canp._readonly || !canp._websocket)
+      if (!canp || !canp.SubmitDrawableRequest || !canp._websocket)
          return JSROOT.v7.CommMode.kOffline;
 
       return JSROOT.v7.CommMode.kNormal;
@@ -2761,7 +2761,6 @@
    }
 
    RFramePainter.prototype.ToggleLog = function(axis) {
-
       var curr  = this["log" + axis];
 
       // do not allow log scale for labels
@@ -2772,12 +2771,12 @@
          if (kind === "labels") return;
       }
 
-      var canp = this.canv_painter();
-      if (this.snapid && canp && canp._websocket) {
-         canp.SendWebsocket("OBJEXEC:" + this.snapid + ":Attr" + axis.toUpperCase() + "().SetLog" + (curr ? "(false)" : "(true)"));
-      } else {
+      if (this.v7CommMode() == JSROOT.v7.CommMode.kOffline) {
          this.v7SetAttr(axis + "_log", !curr);
          this.RedrawPad();
+      } else {
+         // should we use here attributes change?
+         this.WebCanvasExec("Attr" + axis.toUpperCase() + "().SetLog" + (curr ? "(false)" : "(true)"));
       }
    }
 
@@ -4507,9 +4506,7 @@
    /** Submit request to RDrawable object on server side */
    RCanvasPainter.prototype.SubmitDrawableRequest = function(kind, req, painter, method) {
 
-      if (this._readonly || !this._websocket) return false;
-
-      if (!req || !req._typename || !painter.snapid || (typeof painter.snapid != "string")) return false;
+      if (!this._websocket || !req || !req._typename || !painter.snapid || (typeof painter.snapid != "string")) return false;
 
       if (kind) {
          // if kind specified - check if such request already was submitted
@@ -4560,6 +4557,19 @@
          menukind: menukind || "",
          menureqid: reqid, // used to identify menu request
       }, painter, call_back);
+   }
+
+   RCanvasPainter.prototype.SubmitExec = function(painter, exec, snapid) {
+      console.log('SubmitExec', exec, painter.snapid);
+
+      // snapid is intentionally ignored - only painter.snapid has to be used
+
+      if (!this._websocket) return;
+
+      this.SubmitDrawableRequest("", {
+         _typename: "ROOT::Experimental::RDrawableExecRequest",
+         exec: exec
+      }, painter);
    }
 
    /** Process reply from request to RDrawable */
