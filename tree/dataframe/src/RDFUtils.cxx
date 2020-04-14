@@ -193,8 +193,8 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
 /// customColID is only used if isCustomColumn is true, and must correspond to the custom column's unique identifier
 /// returned by its `GetID()` method.
-std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int namespaceID, TTree *tree,
-                                      RDataSource *ds, bool isCustomColumn, bool vector2rvec, unsigned int customColID)
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds, bool isCustomColumn,
+                                      bool vector2rvec, unsigned int customColID)
 {
    std::string colType;
 
@@ -214,7 +214,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int n
 
    if (colType.empty() && isCustomColumn) {
       // this must be a temporary branch, we know there is an alias for its type
-      colType = "__rdf" + std::to_string(namespaceID) + "::" + colName + std::to_string(customColID) + "_type";
+      colType = "__rdf::" + colName + std::to_string(customColID) + "_type";
    }
 
    if (colType.empty())
