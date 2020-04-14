@@ -32,7 +32,7 @@ class RCustomColumnBase {
 protected:
    RLoopManager *fLoopManager; ///< A raw pointer to the RLoopManager at the root of this functional graph. It is only
                                /// guaranteed to contain a valid address during an event loop.
-   const std::string fName;
+   const std::string fName; ///< The name of the custom column
    unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
