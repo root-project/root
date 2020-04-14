@@ -2727,8 +2727,20 @@
 
    TObjectPainter.prototype = Object.create(TBasePainter.prototype);
 
+   /** @summary Assign object to the painter */
+
    TObjectPainter.prototype.AssignObject = function(obj) {
-      this.draw_object = ((obj!==undefined) && (typeof obj == 'object')) ? obj : null;
+      this.draw_object = ((obj !== undefined) && (typeof obj == 'object')) ? obj : null;
+   }
+
+   /** @summary Assign snapid to the painter
+   *
+   * @desc Identifier used to communicate with server side and identifies object on the server
+   * @private
+   */
+
+   TObjectPainter.prototype.AssignSnapId = function(id) {
+      this.snapid = id;
    }
 
    /** @summary Generic method to cleanup painter.
@@ -4188,7 +4200,7 @@
 
       var canvp = this.canv_painter();
 
-      if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket || canvp._getmenu_callback)
+      if (!this.snapid || !canvp || canvp._readonly || !canvp._websocket)
          return JSROOT.CallBack(call_back);
 
       function DoExecMenu(arg) {
@@ -4217,8 +4229,8 @@
       function DoFillMenu(_menu, _reqid, _call_back, reply) {
 
          // avoid multiple call of the callback after timeout
-         if (!canvp._getmenu_callback) return;
-         delete canvp._getmenu_callback;
+         if (this._got_menu) return;
+         this._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
             console.error('missmatch between request ' + _reqid + ' and reply ' + reply.fId + ' identifiers');
@@ -4261,15 +4273,18 @@
       var reqid = this.snapid;
       if (kind) reqid += "#" + kind; // use # to separate object id from member specifier like 'x' or 'z'
 
+      var menu_callback = DoFillMenu.bind(this, menu, reqid, call_back);
+
+      this._got_menu = false;
+
       // if menu painter differs from this, remember it for further usage
       if (menu.painter)
          menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
 
-      canvp._getmenu_callback = DoFillMenu.bind(this, menu, reqid, call_back);
+      canvp.SubmitMenuRequest(this, kind, reqid, menu_callback);
 
-      canvp.SendWebsocket('GETMENU:' + reqid); // request menu items for given painter
-
-      setTimeout(canvp._getmenu_callback, 2000); // set timeout to avoid menu hanging
+      // set timeout to avoid menu hanging
+      setTimeout(menu_callback, 2000);
    }
 
    /** @summary remove all created draw attributes

@@ -4596,6 +4596,13 @@
       this.SendWebsocket("PRODUCE:" + fname);
    }
 
+   TCanvasPainter.prototype.SubmitMenuRequest = function(painter, kind, reqid, call_back) {
+      // only single request can be handled
+      this._getmenu_callback = call_back;
+
+      this.SendWebsocket('GETMENU:' + reqid); // request menu items for given painter
+   }
+
    TCanvasPainter.prototype.WindowBeforeUnloadHanlder = function() {
       // when window closed, close socket
       this.CloseWebsocket(true);
@@ -4664,8 +4671,10 @@
       } else if (msg.substr(0,5)=='MENU:') {
          // this is menu with exact identifier for object
          var lst = JSROOT.parse(msg.substr(5));
-         if (typeof this._getmenu_callback == 'function')
+         if (typeof this._getmenu_callback == 'function') {
             this._getmenu_callback(lst);
+            delete this._getmenu_callback;
+         }
       } else if (msg.substr(0,4)=='CMD:') {
          msg = msg.substr(4);
          var p1 = msg.indexOf(":"),
