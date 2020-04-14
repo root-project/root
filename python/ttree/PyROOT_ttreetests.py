@@ -9,16 +9,9 @@ import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
-from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, TObjArray, TNamed
+from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, MakeNullPointer, TObjArray, TNamed
 
 exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
-if exp_pyroot:
-    # MakeNullPointer(klass) does not exist anymore in new Cppyy,
-    # but it is equivalent to bind_object(0, klass)
-    from functools import partial
-    MakeNullPointer = partial(ROOT.bind_object, 0) 
-else:
-    from ROOT import MakeNullPointer
 
 from common import *
 
