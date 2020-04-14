@@ -56,13 +56,12 @@ class ROOTFacade(types.ModuleType):
         self.gROOT = _gROOTWrapper(self)
 
         # Expose some functionality from CPyCppyy extension module
-        self._cppyy_exports = [ 'nullptr', 'bind_object', 'as_cobject',
+        self._cppyy_exports = [ 'nullptr', 'bind_object', 'as_cobject', 'addressof',
                                 'SetMemoryPolicy', 'kMemoryHeuristics', 'kMemoryStrict',
                                 'SetOwnership' ]
         for name in self._cppyy_exports:
             setattr(self, name, getattr(cppyy_backend, name))
         # For backwards compatibility
-        self.AddressOf = cppyy_backend.addressof
         self.MakeNullPointer = partial(self.bind_object, 0)
         self.BindObject = self.bind_object
         self.AsCObject = self.as_cobject
@@ -81,6 +80,19 @@ class ROOTFacade(types.ModuleType):
 
         # Setup import hook
         self._set_import_hook()
+
+    def AddressOf(self, *args):
+        # Return an array of size 1 which contains the address of the object in args
+        if sys.version_info >= (3, 3):
+            import array
+            return array.array('q', [ self.addressof(*args) ])
+        else:
+            # In Python<3.3, array.array does not support long long type, fall back to NumPy
+            try:
+                import numpy as np
+            except ImportError:
+                raise RuntimeError("Error importing NumPy: in Python<3.3, AddressOf requires NumPy")
+            return np.array([ self.addressof(*args) ], dtype=np.longlong)
 
     def _set_import_hook(self):
         # This hook allows to write e.g:
