@@ -21,9 +21,6 @@ namespace ROOT {
 namespace Experimental {
 
 class RChangeAttrRequest : public RDrawableRequest {
-   /* FIXME: values from vectors can be packed as special simple class like RChangeAttr
-      But such class with std::unique_ptr<RAttrMap::Value_t> as member fails for TCollectionProxy
-      Need to be fixed in the future */
    std::vector<std::string> ids;    ///< array of ids
    std::vector<std::string> names;  ///< array of attribute names
    std::vector<std::unique_ptr<RAttrMap::Value_t>> values; ///< array of values
@@ -31,6 +28,8 @@ class RChangeAttrRequest : public RDrawableRequest {
    RChangeAttrRequest(const RChangeAttrRequest &) = delete;
    RChangeAttrRequest& operator=(const RChangeAttrRequest &) = delete;
 public:
+   RChangeAttrRequest() = default; // for I/O
+   virtual ~RChangeAttrRequest() = default;
    std::unique_ptr<RDrawableReply> Process() override;
    bool NeedCanvasUpdate() const override { return fNeedUpdate; }
 };

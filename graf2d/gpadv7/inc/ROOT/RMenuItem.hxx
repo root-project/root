@@ -13,6 +13,8 @@
 #include <vector>
 #include <memory>
 
+#include <ROOT/RDrawable.hxx>
+
 class TClass;
 
 namespace ROOT {
@@ -148,16 +150,24 @@ public:
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RMenuItems {
+class RMenuItems : public RDrawableReply {
 protected:
    std::string fId;                                        ///< object identifier
+   std::string fSpecifier;                                 ///<! extra specifier, used only on server
    std::vector<std::unique_ptr<Detail::RMenuItem>> fItems; ///< list of items in the menu
 public:
-   void SetFullId(const std::string &id) { fId = id; }
-   const std::string &GetFullId() const { return fId; }
+   RMenuItems() = default;
 
-   std::string GetDrawableId();
-   std::string GetSpecifier();
+   RMenuItems(const std::string &_id, const std::string &_specifier)
+   {
+      fId = _id;
+      fSpecifier = _specifier;
+   }
+
+   virtual ~RMenuItems();
+
+   const std::string &GetFullId() const { return fId; }
+   const std::string &GetSpecifier() const { return fSpecifier; }
 
    auto Size() const { return fItems.size(); }
 
@@ -179,6 +189,23 @@ public:
 
    void PopulateObjectMenu(void *obj, TClass *cl);
 };
+
+
+/** \class RDrawableMenuRequest
+\ingroup GpadROOT7
+\brief Request menu items for the drawable object
+\author Sergey Linev
+\date 2020-04-14
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RDrawableMenuRequest : public RDrawableRequest {
+   std::string menukind;
+   std::string menureqid;
+public:
+   std::unique_ptr<RDrawableReply> Process() override;
+};
+
 
 } // namespace Experimental
 } // namespace ROOT

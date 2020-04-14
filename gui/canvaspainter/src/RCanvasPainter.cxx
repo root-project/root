@@ -57,7 +57,6 @@ class RCanvasPainter : public Internal::RVirtualCanvasPainter {
 private:
    struct WebConn {
       unsigned fConnId{0};                 ///<! connection id
-      std::string fGetMenu;                ///<! object id for menu request
       std::queue<std::string> fSendQueue;  ///<! send queue for the connection
       RDrawable::Version_t fSend{0};       ///<! indicates version send to connection
       RDrawable::Version_t fDelivered{0};  ///<! indicates version confirmed from canvas
@@ -278,22 +277,6 @@ void RCanvasPainter::CheckDataToSend()
          buf.Append(cmd->fId);
          buf.Append(":");
          buf.Append(cmd->fName);
-      } else if (!conn.fGetMenu.empty()) {
-
-         RMenuItems items;
-         items.SetFullId(conn.fGetMenu);
-         conn.fGetMenu.clear();
-
-         auto drawable = FindPrimitive(fCanvas, items.GetDrawableId());
-
-         if (drawable) {
-            R__DEBUG_HERE("CanvasPainter") << "Request menu for drawable " << items.GetDrawableId();
-            drawable->PopulateMenu(items);
-            buf = "MENU:";
-            buf.Append(TBufferJSON::ToJSON(&items, fJsonComp).Data());
-         } else {
-            R__ERROR_HERE("CanvasPainter") << "Drawable not found " << items.GetDrawableId();
-         }
 
       } else if (!conn.fSendQueue.empty()) {
          buf = conn.fSendQueue.front().c_str();
@@ -470,8 +453,6 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
 
    } else if (check_header("SNAPDONE:")) {
       conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
-   } else if (check_header("GETMENU:")) {
-      conn->fGetMenu = cdata;
    } else if (arg == "QUIT") {
       // use window manager to correctly terminate http server and ROOT session
       fWindow->TerminateROOT();
@@ -514,15 +495,10 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
          }
       }
    } else if (check_header("REQ:")) {
-      printf("Parsing req %s\n", cdata.c_str());
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
       if (req) {
          std::shared_ptr<RDrawable> drawable;
-
          req->SetCanvas(&fCanvas);
-
-         printf("Assign drawable %s\n", req->GetId().c_str());
-
          if (req->GetId().empty() || (req->GetId() == "canvas")) {
             req->SetDrawable(&fCanvas); // drawable is canvas itself
             req->SetPad(nullptr); // no subpad for the canvas
@@ -532,8 +508,6 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
             req->SetDrawable(drawable.get());
             req->SetPad(subpad);
          }
-
-         printf("Calling process\n");
 
          auto reply = req->Process();
 

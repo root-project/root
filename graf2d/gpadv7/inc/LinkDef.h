@@ -45,6 +45,7 @@
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::RMenuArgument>+;
 #pragma link C++ class ROOT::Experimental::Detail::RArgsMenuItem+;
 #pragma link C++ class ROOT::Experimental::RMenuItems+;
+#pragma link C++ class ROOT::Experimental::RDrawableMenuRequest+;
 #pragma link C++ class ROOT::Experimental::RObjectDrawable+;
 #pragma link C++ class ROOT::Experimental::RPadUserAxisBase+;
 #pragma link C++ class ROOT::Experimental::RPadCartesianUserAxis+;

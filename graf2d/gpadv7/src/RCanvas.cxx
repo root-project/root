@@ -245,6 +245,7 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
    }
 }
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Apply attributes changes to the drawable
 /// Return mask with actions which were really applied
@@ -278,7 +279,5 @@ std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeA
 
    fNeedUpdate = (vers > 0);
 
-   printf("RCanvas::Change attributes vers %d needupdate %d\n", (int) vers, (int) fNeedUpdate);
-
-   return nullptr;
+   return nullptr; // no need for any reply
 }

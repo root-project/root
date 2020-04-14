@@ -68,6 +68,10 @@ private:
    /// Constructor taking user coordinate system, position and extent.
    explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
 
+protected:
+
+   void PopulateMenu(RMenuItems &) override;
+
 public:
 
    RFrame(TRootIOCtor*) : RFrame() {}
@@ -101,8 +105,6 @@ public:
 
    RFrame &SetGridY(bool on = true) { fAttr.SetValue("gridy", on); return *this; }
    bool GetGridY() const { return fAttr.GetValue<bool>("gridy"); }
-
-   void PopulateMenu(RMenuItems &) override;
 
    void Execute(const std::string &) override;
 
