@@ -51,6 +51,7 @@ public:
                      const RDFInternal::RBookedCustomColumns &customColumns);
 
    RCustomColumnBase &operator=(const RCustomColumnBase &) = delete;
+   RCustomColumnBase &operator=(RCustomColumnBase &&) = delete;
    virtual ~RCustomColumnBase();
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
