@@ -254,8 +254,7 @@ public:
       const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(fLoopManager, name);
 
       RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, name, expression, fLoopManager->GetAliasMap(),
-                                 fLoopManager->GetBranchNames(), fCustomColumns, fLoopManager->GetTree(), fDataSource,
-                                 fLoopManager->GetID());
+                                 fLoopManager->GetBranchNames(), fCustomColumns, fLoopManager->GetTree(), fDataSource);
 
       fLoopManager->Book(jittedFilter.get());
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fCustomColumns,
@@ -492,7 +491,6 @@ public:
          return MakeResultPtr(snapshotRDF, *fLoopManager, nullptr);
       }
       auto tree = fLoopManager->GetTree();
-      const auto nsID = fLoopManager->GetID();
       std::stringstream snapCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
@@ -514,7 +512,7 @@ public:
       for (auto &c : validColumnNames) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
          const auto customColID = isCustom ? fCustomColumns.GetColumns().at(c)->GetID() : 0;
-         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom, dontConvertVector,
+         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, tree, fDataSource, isCustom, dontConvertVector,
                                                             customColID)
                   << ", ";
       };
@@ -631,7 +629,6 @@ public:
       }
 
       auto tree = fLoopManager->GetTree();
-      const auto nsID = fLoopManager->GetID();
       std::stringstream cacheCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
@@ -649,7 +646,7 @@ public:
       for (auto &c : validColumnNames) {
          const auto isCustom = std::find(customCols.begin(), customCols.end(), c) != customCols.end();
          const auto customColID = isCustom ? fCustomColumns.GetColumns().at(c)->GetID() : 0;
-         cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, nsID, tree, fDataSource, isCustom,
+         cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, tree, fDataSource, isCustom,
                                                              /*vector2rvec=*/true, customColID)
                    << ", ";
       };
@@ -1885,14 +1882,13 @@ public:
       const bool convertVector2RVec = true;
       const auto isCustom = std::find(customCols.begin(), customCols.end(), column) != customCols.end();
       if (!isCustom) {
-         return RDFInternal::ColumnName2ColumnTypeName(std::string(column), fLoopManager->GetID(),
-                                                       fLoopManager->GetTree(), fLoopManager->GetDataSource(), isCustom,
-                                                       convertVector2RVec);
+         return RDFInternal::ColumnName2ColumnTypeName(std::string(column), fLoopManager->GetTree(),
+                                                       fLoopManager->GetDataSource(), isCustom, convertVector2RVec);
       } else {
          // must convert the alias "__rdf::column_type" to a readable type
          const auto colID = std::to_string(fCustomColumns.GetColumns().at(std::string(column))->GetID());
-         const auto call = "ROOT::Internal::RDF::TypeID2TypeName(typeid(__rdf" + std::to_string(fLoopManager->GetID()) +
-                           "::" + std::string(column) + colID + "_type))";
+         const auto call =
+            "ROOT::Internal::RDF::TypeID2TypeName(typeid(__rdf::" + std::string(column) + colID + "_type))";
          fLoopManager->JitDeclarations(); // some type aliases might be needed by the code jitted in the next line
          const auto calcRes = RDFInternal::InterpreterCalc(call);
          return *reinterpret_cast<std::string *>(calcRes); // copy result to stack
@@ -2243,7 +2239,7 @@ private:
       RDFInternal::RBookedCustomColumns newCols;
 
       // Entry number column
-      const auto entryColName = "rdfentry_";
+      const std::string entryColName = "rdfentry_";
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
       using NewColEntry_t =
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
@@ -2256,12 +2252,12 @@ private:
       fLoopManager->RegisterCustomColumn(entryColumn.get());
 
       // Declare return type to the interpreter, for future use by jitted actions
-      auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
+      auto retTypeDeclaration = "namespace __rdf { using " + entryColName +
                                 std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }\n";
       fLoopManager->ToJitDeclare(retTypeDeclaration);
 
       // Slot number column
-      const auto slotColName = "rdfslot_";
+      const std::string slotColName = "rdfslot_";
       auto slotColGen = [](unsigned int slot) { return slot; };
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
@@ -2276,7 +2272,7 @@ private:
       fCustomColumns = std::move(newCols);
 
       // Declare return type to the interpreter, for future use by jitted actions
-      retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + slotColName +
+      retTypeDeclaration = "namespace __rdf { using " + slotColName +
                            std::to_string(slotColumn->GetID()) + "_type = unsigned int; }";
       fLoopManager->ToJitDeclare(retTypeDeclaration);
 
@@ -2348,9 +2344,9 @@ private:
       auto jittedActionOnHeap =
          RDFInternal::MakeSharedOnHeap(std::make_shared<RDFInternal::RJittedAction>(*fLoopManager));
 
-      auto toJit = RDFInternal::JitBuildAction(
-         validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap,
-         tree, nSlots, fCustomColumns, fDataSource, jittedActionOnHeap, fLoopManager->GetID());
+      auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap,
+                                               typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap,
+                                               tree, nSlots, fCustomColumns, fDataSource, jittedActionOnHeap);
       fLoopManager->Book(jittedActionOnHeap->get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, *jittedActionOnHeap);
@@ -2391,9 +2387,8 @@ private:
          retTypeName = "void /* The type of column \"" + std::string(name) + "\" (" + demangledType +
                        ") is not known to the interpreter. */";
       }
-      const auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) +
-                                      " { " + +" using " + std::string(name) + std::to_string(newColumn->GetID()) +
-                                      "_type = " + retTypeName + "; }";
+      const auto retTypeDeclaration = "namespace __rdf { using " + std::string(name) +
+                                      std::to_string(newColumn->GetID()) + "_type = " + retTypeName + "; }\n";
       fLoopManager->ToJitDeclare(retTypeDeclaration);
 
       fLoopManager->RegisterCustomColumn(newColumn.get());
