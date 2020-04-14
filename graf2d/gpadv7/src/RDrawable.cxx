@@ -16,10 +16,14 @@
 
 using namespace ROOT::Experimental;
 
-// pin vtable
+
+// destructor, pin vtable
+RDrawableReply::~RDrawableReply() = default;
+
+// destructor, pin vtable
 RDrawableRequest::~RDrawableRequest() = default;
 
-// pin vtable
+// destructor, pin vtable
 RDrawable::~RDrawable() = default;
 
 void RDrawable::Execute(const std::string &)

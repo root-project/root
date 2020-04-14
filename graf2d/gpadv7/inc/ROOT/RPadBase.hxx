@@ -134,6 +134,8 @@ public:
 
    std::shared_ptr<RDrawable> FindPrimitiveByDisplayId(const std::string &display_id) const;
 
+   const RPadBase *FindPadForPrimitiveWithDisplayId(const std::string &display_id) const;
+
    /// Get all primitives contained in the pad.
    auto GetPrimitives() const
    {
