@@ -400,6 +400,10 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
    if (beginEntry - 1 < 0)
       Restart();
    else {
+      // SetEntry() calls internally SetProxies() which in turn calls SetCacheEntryRange
+      // with fBeginEntry as an arg. If we do not set fBeginEntry to beginEntry in the
+      // next line the Cache will have wrong information about the first entry.
+      fBeginEntry = beginEntry; 
       EEntryStatus es = SetEntry(beginEntry - 1);
       if (es != kEntryValid) {
          Error("SetEntriesRange()", "Error setting first entry %lld: %s",
