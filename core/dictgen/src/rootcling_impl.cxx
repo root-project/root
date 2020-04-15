@@ -3895,6 +3895,14 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
    return true;
 }
 
+static llvm::StringRef GetModuleNameFromRdictName(llvm::StringRef rdictName)
+{
+   // Try to get the module name in the modulemap based on the filepath.
+   llvm::StringRef moduleName = llvm::sys::path::filename(rdictName);
+   moduleName.consume_front("lib");
+   moduleName.consume_back("_rdict.pcm");
+   return moduleName;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4198,9 +4206,7 @@ int RootClingMain(int argc,
       // Specify the module name that we can lookup the module in the modulemap.
       outputFile = llvm::sys::path::stem(gOptSharedLibFileName).str();
       // Try to get the module name in the modulemap based on the filepath.
-      moduleName = llvm::sys::path::filename(outputFile);
-      moduleName.consume_front("lib");
-      moduleName.consume_back("_rdict.pcm");
+      moduleName = GetModuleNameFromRdictName(outputFile);
 
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
@@ -4284,8 +4290,18 @@ int RootClingMain(int argc,
       // RuntimeUniverse.h (via <new>).
       // FIXME: This should really go in the build system as for the rest of the
       // implicitly created modules.
-      if (gOptCxxModule)
+      if (gOptCxxModule) {
          interpPtr->loadModule("_Builtin_intrinsics", /*Complain*/ true);
+         for (llvm::StringRef DepMod : gOptModuleDependencies) {
+            if (DepMod.endswith("_rdict.pcm")) {
+               ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpat>]%s.pcm\n",
+                                         DepMod.data(),
+                                         GetModuleNameFromRdictName(DepMod).str().data());
+               DepMod = GetModuleNameFromRdictName(DepMod);
+            }
+            interpPtr->loadModule(DepMod, /*complain*/true);
+         }
+      }
    }
    cling::Interpreter &interp = *interpPtr;
    clang::CompilerInstance *CI = interp.getCI();
