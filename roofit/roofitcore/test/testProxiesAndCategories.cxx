@@ -42,7 +42,7 @@ TEST(RooCategory, WriteAndReadBack) {
   RooCategory* readCat = nullptr;
   file.GetObject("myCat", readCat);
   ASSERT_NE(readCat, nullptr);
-  EXPECT_EQ(readCat->getIndex(), myCat.getIndex());
+  EXPECT_EQ(readCat->getCurrentIndex(), myCat.getCurrentIndex());
   EXPECT_STREQ(readCat->getLabel(), myCat.getLabel());
   EXPECT_EQ(readCat->size(), 4u);
 

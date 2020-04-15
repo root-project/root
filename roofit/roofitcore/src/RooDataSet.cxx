@@ -306,7 +306,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
         icat->defineType(hiter->first.c_str()) ;
       }
       icat->setLabel(hiter->first.c_str()) ;
-      storeMap[icat->getLabel()]=hiter->second->store() ;
+      storeMap[icat->getCurrentLabel()]=hiter->second->store() ;
 
       // Take ownership of slice if requested
       if (ownLinked) {

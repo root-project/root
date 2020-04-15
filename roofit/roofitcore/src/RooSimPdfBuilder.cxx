@@ -1047,7 +1047,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       // Find selected state list 
       TList* slist = (TList*) splitStateList.FindObject(splitCat->GetName()) ;
       if (!slist) continue ;
-      RooCatType* type = (RooCatType*) slist->FindObject(splitCat->getLabel()) ;
+      RooCatType* type = (RooCatType*) slist->FindObject(splitCat->getCurrentLabel()) ;
       if (!type) {
 	select = kFALSE ;
       }
@@ -1058,7 +1058,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
     // Select appropriate PDF for this physCat state
     RooCustomizer* physCustomizer ;
     if (physCat) {      
-      RooStringVar* physNameVar = (RooStringVar*) stateMap.find(physCat->getLabel()) ;
+      RooStringVar* physNameVar = (RooStringVar*) stateMap.find(physCat->getCurrentLabel()) ;
       if (!physNameVar) continue ;
       physCustomizer = (RooCustomizer*) customizerList->FindObject(physNameVar->getVal());  
     } else {
@@ -1069,7 +1069,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		     << " for mode " << fcState->GetName() << endl ;    
 
     // Customizer PDF for current state and add to master simPdf
-    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat.getLabel(),verbose) ;
+    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat.getCurrentLabel(),verbose) ;
     simPdf->addPdf(*fcPdf,fcState->GetName()) ;
   }
   delete fcIter ;

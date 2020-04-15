@@ -161,7 +161,7 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
 RooAbsCategory::value_type RooMappedCategory::evaluate() const
 {
     const RooMappedCategoryCache* cache = getOrCreateCache();
-    return cache->lookup(_inputCat->getIndex());
+    return cache->lookup(_inputCat->getCurrentIndex());
 }
 
 const RooMappedCategoryCache* RooMappedCategory::getOrCreateCache() const
@@ -289,7 +289,7 @@ void RooMappedCategory::writeToStream(std::ostream& os, Bool_t compact) const
   // Write object contents to given stream
   if (compact) {
     // Write value only
-    os << getLabel() ;
+    os << getCurrentLabel() ;
   } else {
     // Write mapping expression
 

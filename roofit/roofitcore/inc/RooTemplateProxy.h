@@ -222,7 +222,7 @@ public:
 
   /// Get the label of the current category state. This function only makes sense for category proxies.
   const char* label() const {
-    return arg().getLabel();
+    return arg().getCurrentLabel();
   }
 
   /// Check if the stored object has a range with the given name.
@@ -317,7 +317,7 @@ private:
 
   /// Retrieve index state from a category.
   typename T::value_type retrieveValue(const RooAbsCategory& cat) const {
-    return cat.getIndex();
+    return cat.getCurrentIndex();
   }
 
   /// Retrieve value from a real-valued object.

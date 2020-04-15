@@ -41,7 +41,7 @@ public:
   virtual void writeToStream(std::ostream& os, Bool_t compact) const override;
 
   const RooArgSet& inputCatList() const { return _catSet ; }
-  const char* getLabel() const override;
+  const char* getCurrentLabel() const override;
 
 protected:
 

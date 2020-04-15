@@ -178,15 +178,15 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
   TString method ;
   switch(ndim) {
   case 1:
-    method = config.method1D(cond,hasCat).getLabel() ;
+    method = config.method1D(cond,hasCat).getCurrentLabel() ;
     break ;
 
   case 2:
-    method = config.method2D(cond,hasCat).getLabel() ;
+    method = config.method2D(cond,hasCat).getCurrentLabel() ;
     break ;
 
   default:
-    method = config.methodND(cond,hasCat).getLabel() ;
+    method = config.methodND(cond,hasCat).getCurrentLabel() ;
     break ;
   }
 

@@ -177,7 +177,7 @@ void RooCompositeDataStore::forceCacheUpdate()
 
 Int_t RooCompositeDataStore::fill()
 {
-  RooAbsDataStore* subset = _dataMap[_indexCat->getIndex()] ;
+  RooAbsDataStore* subset = _dataMap[_indexCat->getCurrentIndex()] ;
   const_cast<RooArgSet*>((subset->get()))->assignValueOnly(_vars) ;
   return subset->fill() ;
 }

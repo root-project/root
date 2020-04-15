@@ -106,9 +106,9 @@ RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other)
 {
   if (&other==this) return *this ;
 
-  const auto index = lookupIndex(other.getLabel());
+  const auto index = lookupIndex(other.getCurrentLabel());
   if (index == std::numeric_limits<value_type>::min()) {
-    coutE(ObjectHandling) << "Trying to assign the label '" << other.getLabel() << "' to category'"
+    coutE(ObjectHandling) << "Trying to assign the label '" << other.getCurrentLabel() << "' to category'"
         << GetName() << "', but such a label is not defined." << std::endl;
     return *this;
   }

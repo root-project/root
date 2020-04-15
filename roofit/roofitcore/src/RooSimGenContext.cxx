@@ -270,7 +270,7 @@ void RooSimGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
   if (_haveIdxProto) {
 
     // Lookup pdf from selected prototype index state
-    Int_t gidx(0), cidx =_idxCat->getIndex() ;
+    Int_t gidx(0), cidx =_idxCat->getCurrentIndex() ;
     for (Int_t i=0 ; i<(Int_t)_gcIndex.size() ; i++) {
       if (_gcIndex[i]==cidx) { gidx = i ; break ; }
     }

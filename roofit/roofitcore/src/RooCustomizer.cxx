@@ -437,7 +437,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
       TString newName(node->GetName()) ;
       if (masterCatState) {
 	newName.Append("_") ;
-	newName.Append(splitCat->getLabel()) ;	
+	newName.Append(splitCat->getCurrentLabel()) ;	
       }
 
       // Check if this node instance already exists
@@ -471,7 +471,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
 	TString newTitle(node->GetTitle()) ;
 	newTitle.Append(" (") ;
-	newTitle.Append(splitCat->getLabel()) ;
+	newTitle.Append(splitCat->getCurrentLabel()) ;
 	newTitle.Append(")") ;
       
 	// Create a new clone

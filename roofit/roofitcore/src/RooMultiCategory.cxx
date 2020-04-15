@@ -100,7 +100,7 @@ std::string RooMultiCategory::createLabel() const
     auto cat = static_cast<const RooAbsCategory*>(arg);
 
     label += first ? '{' : ';';
-    label += cat->getLabel();
+    label += cat->getCurrentLabel();
     first = false;
   }
   label += '}';
@@ -189,9 +189,9 @@ void RooMultiCategory::writeToStream(ostream& os, Bool_t compact) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Get current label. If labels haven't been computed, yet, or if the shape is
 /// dirty, a recomputation is triggered.
-const char* RooMultiCategory::getLabel() const {
+const char* RooMultiCategory::getCurrentLabel() const {
   for (const auto& item : stateNames()) {
-    if (item.second == getIndex())
+    if (item.second == getCurrentIndex())
       return item.first.c_str();
   }
 
