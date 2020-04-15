@@ -1,5 +1,5 @@
-// @(#)root/tmva/tmva/dnn:$Id$ 
-// Authors: Surya S Dwivedi 01/08/2019, Saurav Shekhar 23/06/17 
+// @(#)root/tmva/tmva/dnn:$Id$
+// Authors: Surya S Dwivedi 01/08/2019, Saurav Shekhar 23/06/17
 /*************************************************************************
  * Copyright (C) 2019, Surya S Dwivedi, Saurav Shekhar                   *
  * All rights reserved.                                                  *
@@ -67,12 +67,12 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
    if (state_weight_gradients.GetNoElements() > 0) {
       TransposeMultiply(state_weight_gradients, df, state, 1. , 1. ); // H x B . B x H
    }
-	
+
    // Bias gradients.
    if (bias_gradients.GetNoElements() > 0) {
       SumColumns(bias_gradients, df, 1., 1.);  // could be probably do all here
    }
-	
+
    return input_gradient;
 }
 
@@ -119,19 +119,19 @@ auto inline TCpu<Scalar_t>::LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradi
    //some temporary varibales used later
    TCpuMatrix<Scalar_t> tmpInp(input_gradient.GetNrows(), input_gradient.GetNcols());
    TCpuMatrix<Scalar_t> tmpState(state_gradients_backward.GetNrows(), state_gradients_backward.GetNcols());
-   
+
    TCpuMatrix<Scalar_t> input_gate_gradient(fInput.GetNrows(), fInput.GetNcols());
    TCpuMatrix<Scalar_t> forget_gradient(fForget.GetNrows(), fForget.GetNcols());
    TCpuMatrix<Scalar_t> candidate_gradient(fCandidate.GetNrows(), fCandidate.GetNcols());
    TCpuMatrix<Scalar_t> output_gradient(fOutput.GetNrows(), fOutput.GetNcols());
-   
+
    // cell gradient
-   Hadamard(cell_gradient, fOutput); 
+   Hadamard(cell_gradient, fOutput);
    Hadamard(cell_gradient, state_gradients_backward);
    ScaleAdd(cell_gradient, cell_gradients_backward);
    Copy(cell_gradients_backward, cell_gradient);
    Hadamard(cell_gradients_backward, fForget);
-   
+
    // candidate gradient
    Copy(candidate_gradient, cell_gradient);
    Hadamard(candidate_gradient, fInput);
@@ -174,10 +174,10 @@ auto inline TCpu<Scalar_t>::LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradi
 
    // input weight gradient
    TransposeMultiply(input_weight_gradients, input_gate_gradient, input, 1. , 1.); // H x B . B x D
-   TransposeMultiply(forget_weight_gradients, forget_gradient, input, 1. , 1.); 
+   TransposeMultiply(forget_weight_gradients, forget_gradient, input, 1. , 1.);
    TransposeMultiply(candidate_weight_gradients, candidate_gradient, input, 1. , 1.);
-   TransposeMultiply(output_weight_gradients, output_gradient, input, 1. , 1.); 
-  
+   TransposeMultiply(output_weight_gradients, output_gradient, input, 1. , 1.);
+
    // state weight gradients
    TransposeMultiply(input_state_weight_gradients, input_gate_gradient, precStateActivations, 1. , 1. ); // H x B . B x H
    TransposeMultiply(forget_state_weight_gradients, forget_gradient, precStateActivations, 1. , 1. );
@@ -185,10 +185,10 @@ auto inline TCpu<Scalar_t>::LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradi
    TransposeMultiply(output_state_weight_gradients, output_gradient, precStateActivations, 1. , 1. );
 
    // bias gradient
-   SumColumns(input_bias_gradients, input_gate_gradient, 1., 1.);  
-   SumColumns(forget_bias_gradients, forget_gradient, 1., 1.);  
-   SumColumns(candidate_bias_gradients, candidate_gradient, 1., 1.);  
-   SumColumns(output_bias_gradients, output_gradient, 1., 1.);  
+   SumColumns(input_bias_gradients, input_gate_gradient, 1., 1.);
+   SumColumns(forget_bias_gradients, forget_gradient, 1., 1.);
+   SumColumns(candidate_bias_gradients, candidate_gradient, 1., 1.);
+   SumColumns(output_bias_gradients, output_gradient, 1., 1.);
 
    return input_gradient;
 }
@@ -220,32 +220,42 @@ auto inline TCpu<Scalar_t>::GRULayerBackward(TCpuMatrix<Scalar_t> & state_gradie
                                              const TCpuMatrix<Scalar_t> & weights_update_state,
                                              const TCpuMatrix<Scalar_t> & weights_candidate_state,
                                              const TCpuMatrix<Scalar_t> & input,
-                                             TCpuMatrix<Scalar_t> & input_gradient)
+                                             TCpuMatrix<Scalar_t> & input_gradient,
+                                             bool resetGateAfter)
 -> TCpuMatrix<Scalar_t> &
 {
    // reset gradient
    int r = fUpdate.GetNrows(), c = fUpdate.GetNcols();
    TCpuMatrix<Scalar_t> reset_gradient(r, c);
    Copy(reset_gradient, fUpdate);
-   for (size_t j = 0; j < (size_t) reset_gradient.GetNcols(); j++) {
-      for (size_t i = 0; i < (size_t) reset_gradient.GetNrows(); i++) {
-         reset_gradient(i,j) = 1 - reset_gradient(i,j);
+   for (size_t j = 0; j < (size_t)reset_gradient.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t)reset_gradient.GetNrows(); i++) {
+         reset_gradient(i, j) = 1 - reset_gradient(i, j);
       }
    }
    Hadamard(reset_gradient, dc);
    Hadamard(reset_gradient, state_gradients_backward);
    TCpuMatrix<Scalar_t> tmpMul(r, c);
-   Multiply(tmpMul, reset_gradient, weights_candidate_state);
-   Hadamard(tmpMul, precStateActivations);
+
+   if (!resetGateAfter) {
+      // case resetGateAfter is false    U * ( r * h)
+      // dr = h * (UT * dy)
+      Multiply(tmpMul, reset_gradient, weights_candidate_state);
+      Hadamard(tmpMul, precStateActivations);
+   } else {
+      // case true :   r * ( U * h) -->  dr = dy * (U * h)
+      MultiplyTranspose(tmpMul, precStateActivations, weights_candidate_state);
+      Hadamard(tmpMul, reset_gradient);
+   }
    Hadamard(tmpMul, dr);
    Copy(reset_gradient, tmpMul);
-   
+
    // update gradient
    TCpuMatrix<Scalar_t> update_gradient(r, c); // H X 1
    Copy(update_gradient, precStateActivations);
-   for (size_t j = 0; j < (size_t) update_gradient.GetNcols(); j++) {
-      for (size_t i = 0; i < (size_t) update_gradient.GetNrows(); i++) {
-         update_gradient(i,j) = update_gradient(i,j) - fCandidate(i,j);
+   for (size_t j = 0; j < (size_t)update_gradient.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t)update_gradient.GetNrows(); i++) {
+         update_gradient(i, j) = update_gradient(i, j) - fCandidate(i, j);
       }
    }
    Hadamard(update_gradient, du);
@@ -254,14 +264,14 @@ auto inline TCpu<Scalar_t>::GRULayerBackward(TCpuMatrix<Scalar_t> & state_gradie
    // candidate gradient
    TCpuMatrix<Scalar_t> candidate_gradient(r, c);
    Copy(candidate_gradient, fUpdate);
-   for (size_t j = 0; j < (size_t) candidate_gradient.GetNcols(); j++) {
-      for (size_t i = 0; i < (size_t) candidate_gradient.GetNrows(); i++) {
-         candidate_gradient(i,j) = 1 - candidate_gradient(i,j);
+   for (size_t j = 0; j < (size_t)candidate_gradient.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t)candidate_gradient.GetNrows(); i++) {
+         candidate_gradient(i, j) = 1 - candidate_gradient(i, j);
       }
    }
    Hadamard(candidate_gradient, dc);
    Hadamard(candidate_gradient, state_gradients_backward);
-    
+
    // calculating state gradient backwards term by term
    // term 1
    TCpuMatrix<Scalar_t> temp(r, c);
@@ -271,7 +281,7 @@ auto inline TCpu<Scalar_t>::GRULayerBackward(TCpuMatrix<Scalar_t> & state_gradie
    Hadamard(term, temp);
    Copy(state_gradients_backward, term);
 
-   //term 2
+   // term 2
    Copy(term, precStateActivations);
    Hadamard(term, du);
    Hadamard(term, temp);
@@ -282,42 +292,62 @@ auto inline TCpu<Scalar_t>::GRULayerBackward(TCpuMatrix<Scalar_t> & state_gradie
 
    // term 3
    Copy(term, fCandidate);
-   for (size_t j = 0; j < (size_t) term.GetNcols(); j++) {
-      for (size_t i = 0; i < (size_t) term.GetNrows(); i++) {
-         term(i,j) = - term(i,j);
+   for (size_t j = 0; j < (size_t)term.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t)term.GetNrows(); i++) {
+         term(i, j) = -term(i, j);
       }
    }
    Hadamard(term, du);
    Hadamard(term, temp);
    Multiply(var, term, weights_update_state);
    Copy(term, var);
-   ScaleAdd(state_gradients_backward, term);   
+   ScaleAdd(state_gradients_backward, term);
 
    // term 4
    Copy(term, fUpdate);
-   for (size_t j = 0; j < (size_t) term.GetNcols(); j++) {
-      for (size_t i = 0; i < (size_t) term.GetNrows(); i++) {
-         term(i,j) = 1 - term(i,j);
+   for (size_t j = 0; j < (size_t)term.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t)term.GetNrows(); i++) {
+         term(i, j) = 1 - term(i, j);
       }
    }
    Hadamard(term, dc);
    Hadamard(term, temp);
-   Multiply(var, term, weights_candidate_state);
-   Hadamard(var, fReset);
+
+   if (!resetGateAfter) {
+      // case resetGateAfter is false   : U * ( r * h)
+      // dh = r * (UT * dy)
+      Multiply(var, term, weights_candidate_state);
+      Hadamard(var, fReset);
+   } else {
+      // case resetGateAfter = true
+      // dh = UT * ( r * dy )
+      Hadamard(term, fReset);
+      Multiply(var, term, weights_candidate_state);
+   }
+   //
    Copy(term, var);
    ScaleAdd(state_gradients_backward, term);
 
    // term 5
    Copy(term, fUpdate);
-   for (size_t j = 0; j < (size_t) term.GetNcols(); j++) {
-      for (size_t i = 0; i < (size_t) term.GetNrows(); i++) {
-         term(i,j) = 1 - term(i,j);
+   for (size_t j = 0; j < (size_t)term.GetNcols(); j++) {
+      for (size_t i = 0; i < (size_t)term.GetNrows(); i++) {
+         term(i, j) = 1 - term(i, j);
       }
    }
+   // here we re-compute dr (probably we could be more eficient)
    Hadamard(term, dc);
    Hadamard(term, temp);
-   Multiply(var, term, weights_candidate_state);
-   Hadamard(var, precStateActivations);
+   if (!resetGateAfter) {
+      // case reset gate after = false
+      // recompute dr/dh (as above for dr): // dr = h * (UT * dy)
+      Multiply(var, term, weights_candidate_state);
+      Hadamard(var, precStateActivations);
+   } else {
+      // case = true  dr = dy * (U * h)
+      MultiplyTranspose(var, precStateActivations, weights_candidate_state);
+      Hadamard(var, term);
+   }
    Hadamard(var, dr);
    Multiply(term, var, weights_reset_state);
    ScaleAdd(state_gradients_backward, term);
@@ -330,24 +360,36 @@ auto inline TCpu<Scalar_t>::GRULayerBackward(TCpuMatrix<Scalar_t> & state_gradie
    ScaleAdd(input_gradient, tmpInp);
    Multiply(tmpInp, candidate_gradient, weights_candidate);
    ScaleAdd(input_gradient, tmpInp);
-   
+
    // input weight gradients
-   TransposeMultiply(reset_weight_gradients, reset_gradient, input, 1. , 1.); // H x B . B x D
-   TransposeMultiply(update_weight_gradients, update_gradient, input, 1. , 1.); 
-   TransposeMultiply(candidate_weight_gradients, candidate_gradient, input, 1. , 1.);
-  
+   TransposeMultiply(reset_weight_gradients, reset_gradient, input, 1., 1.); // H x B . B x D
+   TransposeMultiply(update_weight_gradients, update_gradient, input, 1., 1.);
+   TransposeMultiply(candidate_weight_gradients, candidate_gradient, input, 1., 1.);
+
    // state weight gradients
-   TransposeMultiply(reset_state_weight_gradients, reset_gradient, precStateActivations, 1. , 1. ); // H x B . B x H
-   TransposeMultiply(update_state_weight_gradients, update_gradient, precStateActivations, 1. , 1. );
+   TransposeMultiply(reset_state_weight_gradients, reset_gradient, precStateActivations, 1., 1.); // H x B . B x H
+   TransposeMultiply(update_state_weight_gradients, update_gradient, precStateActivations, 1., 1.);
    TCpuMatrix<Scalar_t> tempvar(r, c);
-   Copy(tempvar, precStateActivations);
-   Hadamard(tempvar, fReset);
-   TransposeMultiply(candidate_state_weight_gradients, candidate_gradient, tempvar, 1. , 1. );
+
+   // candidate weight gradients
+   // impl case reseyGateAfter = false
+   if (!resetGateAfter) {
+      // dU = ( h * r) * dy
+      Copy(tempvar, precStateActivations);
+      Hadamard(tempvar, fReset);
+      TransposeMultiply(candidate_state_weight_gradients, candidate_gradient, tempvar, 1., 1.);
+   } else {
+      // case resetAfter=true
+      // dU  = h * ( r * dy)
+      Copy(tempvar, candidate_gradient);
+      Hadamard(tempvar, fReset);
+      TransposeMultiply(candidate_state_weight_gradients, tempvar, precStateActivations, 1., 1.);
+   }
 
    // bias gradients
-   SumColumns(reset_bias_gradients, reset_gradient, 1., 1.);  // could be probably do all here
-   SumColumns(update_bias_gradients, update_gradient, 1., 1.);  
-   SumColumns(candidate_bias_gradients, candidate_gradient, 1., 1.);  
+   SumColumns(reset_bias_gradients, reset_gradient, 1., 1.); // could be probably do all here
+   SumColumns(update_bias_gradients, update_gradient, 1., 1.);
+   SumColumns(candidate_bias_gradients, candidate_gradient, 1., 1.);
 
    return input_gradient;
 }

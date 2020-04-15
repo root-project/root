@@ -40,7 +40,7 @@ int main() {
 
    bool iret = false;
 
-   // timesteps, batchsize, statesize, inputsize  { fixed input, with dense layer, with extra GRU, output full sequence }
+   // timesteps, batchsize, statesize, inputsize  { fixed input, with dense layer, with extra GRU, output full sequence, resetAfter }
    iret |= testGRUBackpropagation<Architecture_t>(2, 1, 2, 3, 1e-5, {true, false, false}, debug);
 
    iret |= testGRUBackpropagation<Architecture_t>(1, 2, 1, 10, 1e-5, {}, debug);
@@ -64,6 +64,9 @@ int main() {
 
    // with an additional GRU layer
    iret |= testGRUBackpropagation<Architecture_t>(4, 8, 10, 5, 1e-5, {false, true, true});
+
+   // test using reset gate after =On as for cudnn
+   iret |= testGRUBackpropagation<Architecture_t>(4, 8, 10, 5, 1e-5, {false, true, true, true, true});
 
    if (iret)
       Error("testGRUBackPropagationCpu", "Test failed !!!");

@@ -706,7 +706,8 @@ public:
                                       const TCpuMatrix<Scalar_t> & weights_update_state,
                                       const TCpuMatrix<Scalar_t> & weights_candidate_state,
                                       const TCpuMatrix<Scalar_t> & input,
-                                      TCpuMatrix<Scalar_t> & input_gradient);
+                                      TCpuMatrix<Scalar_t> & input_gradient,
+                                      bool resetGateAfter);
 
 
    ///@}
