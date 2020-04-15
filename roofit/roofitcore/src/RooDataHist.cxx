@@ -503,7 +503,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
   Int_t ic(0),ix(0),iy(0),iz(0) ;
   for (ic=0 ; ic < icat->numBins(0) ; ic++) {
     icat->setBin(ic) ;
-    histo = hmap[icat->getLabel()] ;
+    histo = hmap[icat->getCurrentLabel()] ;
     for (ix=0 ; ix < xvar->getBins() ; ix++) {
       xvar->setBin(ix) ;
       if (yvar) {

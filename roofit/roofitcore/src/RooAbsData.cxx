@@ -1543,9 +1543,9 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
   const bool propWeightSquared = isWeighted();
   for (Int_t i = 0; i < numEntries(); ++i) {
     const RooArgSet* row =  get(i);
-    RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getLabel());
+    RooAbsData* subset = (RooAbsData*) dsetList->FindObject(cloneCat->getCurrentLabel());
     if (!subset) {
-      subset = emptyClone(cloneCat->getLabel(),cloneCat->getLabel(),&subsetVars,(addWV?"weight":0));
+      subset = emptyClone(cloneCat->getCurrentLabel(),cloneCat->getCurrentLabel(),&subsetVars,(addWV?"weight":0));
       dsetList->Add((RooAbsArg*)subset);
     }
     if (!propWeightSquared) {

@@ -2174,7 +2174,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 	  if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
 	    cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
 	  } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
-	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getIndex())) ;
+	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
 	  }
 	}
 	delete iter2 ;
@@ -2576,7 +2576,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
  	  if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
 	    cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
 	  } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
-	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getIndex())) ;
+	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
 	  }
  	}
 	delete iter ;

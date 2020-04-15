@@ -48,12 +48,12 @@ public:
   virtual ~RooAbsCategory();
   
   // Value accessors
-  virtual value_type getIndex() const ;
+  virtual value_type getCurrentIndex() const ;
   /// Retrieve a batch of category values for events in the range [begin, begin+batchSize).
   virtual RooSpan<const value_type> getValBatch(std::size_t /*begin*/, std::size_t /*batchSize*/) const {
     throw std::logic_error("Batch values are not implemented for RooAbsCategory.");
   }
-  virtual const char* getLabel() const ;
+  virtual const char* getCurrentLabel() const ;
 
   const std::map<std::string, value_type>::value_type& getOrdinal(unsigned int n) const;
   unsigned int getCurrentOrdinalNumber() const;
@@ -127,7 +127,7 @@ public:
   }
 
 
-  /// \name Legacy type interface
+  /// \name Legacy interface
   /// Previous versions of RooAbsCategory were based on RooCatType, a class containing a state and a label.
   /// It has been replaced by integers, which use less space and allow for faster access. The following part of the interface
   /// should not be used if possible.
@@ -150,6 +150,10 @@ public:
   Int_t numTypes(const char* /*rangeName*/=0) const {
     return stateNames().size();
   }
+  /// Retrieve the current index. Use getCurrentIndex() for more clarity.
+  Int_t getIndex() const { return getCurrentIndex(); }
+  /// Retrieve current label. Use getCurrentLabel() for more clarity.
+  const char* getLabel() const { return getCurrentLabel(); }
 protected:
   virtual Bool_t
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use hasIndex() or hasLabel().")

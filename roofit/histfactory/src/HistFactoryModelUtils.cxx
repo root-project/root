@@ -92,7 +92,7 @@ namespace HistFactory{
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
             cat->setBin(ic);
-            FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getLabel()), obsTerms, constraints);
+            FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getCurrentLabel()), obsTerms, constraints);
          }
          delete cat;
       } else if (pdf.dependsOn(observables)) {

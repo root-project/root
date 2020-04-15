@@ -107,7 +107,7 @@ RooAbsCategory::~RooAbsCategory()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return index number of current state
 
-RooAbsCategory::value_type RooAbsCategory::getIndex() const
+RooAbsCategory::value_type RooAbsCategory::getCurrentIndex() const
 {
   if (isValueDirty() || isShapeDirty()) {
     _currentIndex = evaluate();
@@ -123,7 +123,7 @@ RooAbsCategory::value_type RooAbsCategory::getIndex() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label string of current state
 
-const char* RooAbsCategory::getLabel() const
+const char* RooAbsCategory::getCurrentLabel() const
 {
   for (const auto& item : stateNames()) {
     if (item.second == _currentIndex)
@@ -139,7 +139,7 @@ const char* RooAbsCategory::getLabel() const
 
 Bool_t RooAbsCategory::operator==(RooAbsCategory::value_type index) const
 {
-  return (index==getIndex()) ;
+  return (index==getCurrentIndex()) ;
 }
 
 
@@ -149,7 +149,7 @@ Bool_t RooAbsCategory::operator==(RooAbsCategory::value_type index) const
 
 Bool_t RooAbsCategory::operator==(const char* label) const
 {
-  return strcmp(label, getLabel()) == 0;
+  return strcmp(label, getCurrentLabel()) == 0;
 }
 
 
@@ -161,7 +161,7 @@ Bool_t RooAbsCategory::operator==(const char* label) const
 Bool_t RooAbsCategory::operator==(const RooAbsArg& other) const
 {
   const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
-  return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
+  return otherCat ? operator==(otherCat->getCurrentIndex()) : kFALSE ;
 }
 
 
@@ -171,9 +171,9 @@ Bool_t RooAbsCategory::isIdentical(const RooAbsArg& other, Bool_t assumeSameType
 {
   if (!assumeSameType) {
     const RooAbsCategory* otherCat = dynamic_cast<const RooAbsCategory*>(&other) ;
-    return otherCat ? operator==(otherCat->getIndex()) : kFALSE ;
+    return otherCat ? operator==(otherCat->getCurrentIndex()) : kFALSE ;
   } else {
-    return getIndex() == static_cast<const RooAbsCategory&>(other).getIndex();
+    return getCurrentIndex() == static_cast<const RooAbsCategory&>(other).getCurrentIndex();
   }
 }
 
@@ -377,7 +377,7 @@ Bool_t RooAbsCategory::readFromStream(istream&, Bool_t, Bool_t)
 
 void RooAbsCategory::writeToStream(ostream& os, Bool_t /* compact */) const
 {
-  os << getLabel() ;
+  os << getCurrentLabel() ;
 }
 
 
@@ -387,7 +387,7 @@ void RooAbsCategory::writeToStream(ostream& os, Bool_t /* compact */) const
 
 void RooAbsCategory::printValue(ostream& os) const
 {
-  os << getLabel() << "(idx = " << getIndex() << ")" << endl ;
+  os << getCurrentLabel() << "(idx = " << getCurrentIndex() << ")" << endl ;
 }
 
 
@@ -407,7 +407,7 @@ void RooAbsCategory::printMultiline(ostream& os, Int_t contents, Bool_t verbose,
     os << indent << "  ** No values defined **" << endl;
     return;
   }
-  os << indent << "  Value = " << getIndex() << " \"" << getLabel() << ')' << endl;
+  os << indent << "  Value = " << getCurrentIndex() << " \"" << getCurrentLabel() << ')' << endl;
   os << indent << "  Possible states:" << endl;
   indent.Append("    ");
   for (const auto& type : stateNames()) {
@@ -511,7 +511,7 @@ void RooAbsCategory::setTreeBranchStatus(TTree& t, Bool_t active)
 
 void RooAbsCategory::syncCache(const RooArgSet*)
 {
-  getIndex() ;
+  getCurrentIndex() ;
 }
 
 
@@ -588,7 +588,7 @@ unsigned int RooAbsCategory::getCurrentOrdinalNumber() const {
     clearShapeDirty();
   }
 
-  const value_type currentState = getIndex();
+  const value_type currentState = getCurrentIndex();
   auto item = std::find(_insertionOrder.begin(), _insertionOrder.end(), currentState);
   assert(item != _insertionOrder.end());
 

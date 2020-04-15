@@ -141,12 +141,12 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
   // Copy common properties
   _epsAbs = other._epsAbs ;
   _epsRel = other._epsRel ;
-  _method1D.setIndex(other._method1D.getIndex()) ;
-  _method2D.setIndex(other._method2D.getIndex()) ;
-  _methodND.setIndex(other._methodND.getIndex()) ;
-  _method1DOpen.setIndex(other._method1DOpen.getIndex()) ;
-  _method2DOpen.setIndex(other._method2DOpen.getIndex()) ;
-  _methodNDOpen.setIndex(other._methodNDOpen.getIndex()) ;
+  _method1D.setIndex(other._method1D.getCurrentIndex()) ;
+  _method2D.setIndex(other._method2D.getCurrentIndex()) ;
+  _methodND.setIndex(other._methodND.getCurrentIndex()) ;
+  _method1DOpen.setIndex(other._method1DOpen.getCurrentIndex()) ;
+  _method2DOpen.setIndex(other._method2DOpen.getCurrentIndex()) ;
+  _methodNDOpen.setIndex(other._methodNDOpen.getCurrentIndex()) ;
 
   // Delete old integrator-specific configuration data
   _configSets.Delete() ;
@@ -286,21 +286,21 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
     os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
   }
   
-  os << indent << "1-D integration method: " << _method1D.getLabel() ;
-  if (_method1DOpen.getIndex()!=_method1D.getIndex()) {
-    os << " (" << _method1DOpen.getLabel() << " if open-ended)" << endl ;
+  os << indent << "1-D integration method: " << _method1D.getCurrentLabel() ;
+  if (_method1DOpen.getCurrentIndex()!=_method1D.getCurrentIndex()) {
+    os << " (" << _method1DOpen.getCurrentLabel() << " if open-ended)" << endl ;
   } else {
     os << endl ;
   }
-  os << indent << "2-D integration method: " << _method2D.getLabel() ;
-  if (_method2DOpen.getIndex()!=_method2D.getIndex()) {
-    os << " (" << _method2DOpen.getLabel() << " if open-ended)" << endl ;
+  os << indent << "2-D integration method: " << _method2D.getCurrentLabel() ;
+  if (_method2DOpen.getCurrentIndex()!=_method2D.getCurrentIndex()) {
+    os << " (" << _method2DOpen.getCurrentLabel() << " if open-ended)" << endl ;
   } else {
     os << endl ;
   }
-  os << indent << "N-D integration method: " << _methodND.getLabel() ;
-  if (_methodNDOpen.getIndex()!=_methodND.getIndex()) {
-    os << " (" << _methodNDOpen.getLabel() << " if open-ended)" << endl ;
+  os << indent << "N-D integration method: " << _methodND.getCurrentLabel() ;
+  if (_methodNDOpen.getCurrentIndex()!=_methodND.getCurrentIndex()) {
+    os << " (" << _methodNDOpen.getCurrentLabel() << " if open-ended)" << endl ;
   } else {
     os << endl ;
   }

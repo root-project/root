@@ -524,7 +524,7 @@ const char* RooArgSet::getCatLabel(const char* name, const char* defVal, Bool_t 
     if (verbose) coutE(InputArguments) << "RooArgSet::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
     return defVal ;
   }
-  return rac->getLabel() ;
+  return rac->getCurrentLabel() ;
 }
 
 
@@ -567,7 +567,7 @@ Int_t RooArgSet::getCatIndex(const char* name, Int_t defVal, Bool_t verbose) con
     if (verbose) coutE(InputArguments) << "RooArgSet::getCatLabel(" << GetName() << ") ERROR object '" << name << "' is not of type RooAbsCategory" << endl ;
     return defVal ;
   }
-  return rac->getIndex() ;
+  return rac->getCurrentIndex() ;
 }
 
 
