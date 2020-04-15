@@ -20,17 +20,72 @@
 #endif
 
 #include <atomic>
-#include <functional>
-#include <memory>
 #include <exception>
+#include <functional>
+#include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
-#include <iostream>
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
+namespace {
+/// A helper class to let different RLoopManager instances share the code to just-in-time compile.
+/// We want RLoopManagers to be able to add their code to global lists of "code to declare to cling"
+/// and "code to execute via cling", so that, lazily, we can jit everything that's needed by all RDFs
+/// in one go, which is potentially much faster than jitting each RLoopManager's code separately.
+/// When RLoopManagers go out of scope, they will inform the global CodeToJit instance so that their
+/// outstanding code snippets can be removed from the lists.
+class CodeToJit {
+   using LoopManagerToCodeMap = std::unordered_map<const RLoopManager *, std::string>;
+   LoopManagerToCodeMap fCodeToDeclare;
+   LoopManagerToCodeMap fCodeToExec;
+
+   std::string PopCode(LoopManagerToCodeMap &c) {
+      std::size_t size = 0;
+      for (auto e : c)
+         size += e.second.size();
+
+      std::string code;
+      code.reserve(size);
+
+      for (auto e: c)
+         code.append(e.second);
+
+      c.clear();
+
+      return code;
+   }
+
+public:
+   void AddCodeToDeclare(const RLoopManager *ptr, const std::string &code) { fCodeToDeclare[ptr].append(code); }
+
+   void AddCodeToExec(const RLoopManager *ptr, const std::string &code) { fCodeToExec[ptr].append(code); }
+
+   /// Retrieve all code registered for declaration. Clears the list of code to declare.
+   std::string PopCodeToDeclare() { return PopCode(fCodeToDeclare); }
+
+   /// Retrieve all code registered for execution. Clears the list of code to execute.
+   std::string PopCodeToExec() { return PopCode(fCodeToExec); }
+
+   void RemoveCodeForLoopManager(const RLoopManager *lm)
+   {
+      fCodeToDeclare.erase(lm);
+      fCodeToExec.erase(lm);
+   }
+};
+
+CodeToJit &GetCodeToJit()
+{
+   static CodeToJit code;
+   return code;
+}
+} // namespace
+
+// FIXME move all of these helper functions to anonymous namespace, declare static
 bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 {
    return (leaves.find(leaf) != leaves.end());
@@ -207,6 +262,11 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
      fDataSource(std::move(ds))
 {
    fDataSource->SetNSlots(fNSlots);
+}
+
+RLoopManager::~RLoopManager()
+{
+   GetCodeToJit().RemoveCodeForLoopManager(this);
 }
 
 // ROOT-9559: we cannot handle indexed friends
@@ -498,26 +558,25 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 }
 
 /// Declare to the interpreter type aliases and other entities required by RDF jitted nodes.
-/// This method clears the `fToJitDeclare` member variable.
 void RLoopManager::JitDeclarations()
 {
-   if (fToJitDeclare.empty())
+   const auto code = GetCodeToJit().PopCodeToDeclare();
+   if (code.empty())
       return;
 
-   RDFInternal::InterpreterDeclare(fToJitDeclare);
-   fToJitDeclare.clear();
+   RDFInternal::InterpreterDeclare(code);
 }
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.
-/// This method also invokes JitDeclarations() if needed, and clears the `fToJitExec` member variable.
+/// This method also invokes JitDeclarations() if needed, and clears the contents of GetCodeToJitExec().
 void RLoopManager::Jit()
 {
-   if (fToJitExec.empty())
-      return;
+   const auto code = GetCodeToJit().PopCodeToExec();
+   if (code.empty())
+      return; // if nothing needs to be executed, we don't need the declarations either. can return early
 
    JitDeclarations();
-   RDFInternal::InterpreterCalc(fToJitExec, "RLoopManager::Run");
-   fToJitExec.clear();
+   RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
@@ -634,6 +693,16 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 {
    for (const auto &fPtr : fBookedNamedFilters)
       fPtr->FillReport(rep);
+}
+
+void RLoopManager::ToJitDeclare(const std::string &code) const
+{
+   GetCodeToJit().AddCodeToDeclare(this, code);
+}
+
+void RLoopManager::ToJitExec(const std::string &code) const
+{
+   GetCodeToJit().AddCodeToExec(this, code);
 }
 
 void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)

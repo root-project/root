@@ -289,7 +289,9 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
 void InterpreterDeclare(const std::string &code)
 {
    if (!gInterpreter->Declare(code.c_str())) {
-      const auto msg = "\nAn error occurred while jitting. The lines above might indicate the cause of the crash\n";
+      const auto msg =
+         "\nRDataFrame: An error occurred during just-in-time compilation. The lines above might indicate the cause of "
+         "the crash\n All RDF objects that have not run an event loop yet should be considered in an invalid state.\n";
       throw std::runtime_error(msg);
    }
 }
@@ -299,10 +301,11 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context)
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
    auto res = gInterpreter->Calc(code.c_str(), &errorCode);
    if (errorCode != TInterpreter::EErrorCode::kNoError) {
-      std::string msg = "\nAn error occurred while jitting";
+      std::string msg = "\nAn error occurred during just-in-time compilation";
       if (!context.empty())
          msg += " in " + context;
-      msg += ". The lines above might indicate the cause of the crash\n";
+      msg += ". The lines above might indicate the cause of the crash\nAll RDF objects that have not run their event "
+             "loop yet should be considered in an invalid state.\n";
       throw std::runtime_error(msg);
    }
    return res;
