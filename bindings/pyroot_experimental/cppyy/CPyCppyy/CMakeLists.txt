@@ -93,7 +93,7 @@ foreach(val RANGE ${how_many_pythons})
 
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
-  # Installation
+  # Install library
   install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
 endforeach()
 
