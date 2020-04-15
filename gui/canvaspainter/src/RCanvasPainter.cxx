@@ -18,7 +18,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RDisplayItem.hxx>
 #include <ROOT/RPadDisplayItem.hxx>
-#include <ROOT/RMenuItem.hxx>
+#include <ROOT/RMenuItems.hxx>
 #include <ROOT/RWebDisplayArgs.hxx>
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RWebWindow.hxx>

@@ -10,6 +10,7 @@
 #define ROOT7_RHistStatBox
 
 #include <ROOT/RDrawable.hxx>
+#include <ROOT/RDrawableRequest.hxx>
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RAttrFill.hxx>

@@ -20,7 +20,7 @@
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistImpl.hxx>
-#include <ROOT/RMenuItem.hxx>
+#include <ROOT/RMenuItems.hxx>
 
 #include <memory>
 

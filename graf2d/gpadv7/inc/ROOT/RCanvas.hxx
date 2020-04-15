@@ -11,6 +11,7 @@
 
 #include "ROOT/RPadBase.hxx"
 #include "ROOT/RVirtualCanvasPainter.hxx"
+#include "ROOT/RDrawableRequest.hxx"
 
 #include <memory>
 #include <string>

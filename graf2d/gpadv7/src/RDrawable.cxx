@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -8,7 +8,7 @@
 
 #include "ROOT/RDrawable.hxx"
 #include "ROOT/RDisplayItem.hxx"
-#include "ROOT/RMenuItem.hxx"
+#include "ROOT/RMenuItems.hxx"
 #include "ROOT/RLogger.hxx"
 #include "ROOT/RCanvas.hxx"
 
@@ -22,14 +22,7 @@
 using namespace ROOT::Experimental;
 
 // destructor, pin vtable
-RDrawableReply::~RDrawableReply() = default;
-
-// destructor, pin vtable
-RDrawableRequest::~RDrawableRequest() = default;
-
-// destructor, pin vtable
 RDrawable::~RDrawable() = default;
-
 
 /////////////////////////////////////////////////////////////////////
 // Fill context menu items for the ROOT class
@@ -76,21 +69,6 @@ std::unique_ptr<RDisplayItem> RDrawable::Display(const RPadBase &, Version_t ver
 {
    if (GetVersion() > vers)
       return std::make_unique<RDrawableDisplayItem>(*this);
-
-   return nullptr;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////
-/// Execute method of the drawable
-
-std::unique_ptr<RDrawableReply> RDrawableExecRequest::Process()
-{
-   if (!exec.empty() && GetDrawable())
-      GetDrawable()->Execute(exec);
-
-   if (GetCanvas())
-      const_cast<RCanvas*>(GetCanvas())->Modified();
 
    return nullptr;
 }
