@@ -82,7 +82,7 @@ set(ROOTPySrcDir python/ROOT)
 set(ROOT_headers inc)
 
 file(COPY ${ROOTPySrcDir} DESTINATION ${localruntimedir})
-# Copy headers inside build_dir/include/Pythonizations
+# Copy headers inside build_dir/include/ROOT
 file(COPY ${ROOT_headers}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
 # Install .py source files
