@@ -120,13 +120,14 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
 
 {
    bool failed = false;
-   const int nOpts = 4; // size of options
+   const int nOpts = 5; // size of options
    if (options.size() < nOpts)
       options.resize(nOpts);
    bool randomInput = !options[0];
    bool addDenseLayer = options[1];
    bool addExtraGRU = options[2];
    bool returnLastSequence = options[3];
+   bool resetGateAfter = options[4];
 
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = typename Architecture::Tensor_t;;
@@ -142,7 +143,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    std::cout << "Testing Weight Backprop using GRU with batchsize = " << batchSize << " input = " << inputSize
              << " state = " << stateSize << " time = " << timeSteps;
    if (randomInput)
-      std::cout << " using a random input";
+      std::cout << "\n\t using a random input";
    else
       std::cout << " with a fixed input";
    if (addDenseLayer)
@@ -151,6 +152,8 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
       std::cout << " and an extra GRU";
    if (returnLastSequence)
       std::cout << " and full output";
+   if (returnLastSequence)
+      std::cout << " and  reset gate after";
    std::cout << std::endl;
    std::cout
       << "******************************************************************************************************\n";
@@ -211,10 +214,11 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
    fillMatrix(weights, 1.0);
 
    bool returnFirstSequence = addExtraGRU || returnLastSequence;
-   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps, false, returnFirstSequence);
+   Net_t gru(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
+             EInitialization::kGauss);
+   GRULayer_t* layer = gru.AddBasicGRULayer(stateSize, inputSize, timeSteps, false, returnFirstSequence, resetGateAfter);
 
-   if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps, false, returnLastSequence);
+   if (addExtraGRU) gru.AddBasicGRULayer(stateSize, stateSize, timeSteps, false, returnLastSequence, resetGateAfter);
 
    size_t outputGRUSize = (returnLastSequence) ? timeSteps * stateSize : stateSize;
    gru.AddReshapeLayer(1, 1, outputGRUSize, true);

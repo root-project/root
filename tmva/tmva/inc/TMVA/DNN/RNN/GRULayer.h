@@ -791,7 +791,7 @@ auto inline TBasicGRULayer<Architecture_t>::CellBackward(Matrix_t & state_gradie
                                            reset_gate, update_gate, candidate_gate,
                                            fWeightsResetGate, fWeightsUpdateGate, fWeightsCandidate,
                                            fWeightsResetGateState, fWeightsUpdateGateState, fWeightsCandidateState,
-                                           input, input_gradient);
+                                           input, input_gradient, fResetGateAfter);
 }
 
 
