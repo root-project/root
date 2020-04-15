@@ -79,11 +79,11 @@ set(cpp_sources
 )
 
 set(ROOTPySrcDir python/ROOT)
-set(ROOT_headers inc)
+set(ROOT_headers_dir inc)
 
 file(COPY ${ROOTPySrcDir} DESTINATION ${localruntimedir})
 # Copy headers inside build_dir/include/ROOT
-file(COPY ${ROOT_headers}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
+file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
 # Install .py source files
 install(DIRECTORY ${ROOTPySrcDir} DESTINATION ${runtimedir})
@@ -97,7 +97,7 @@ foreach(val RANGE ${how_many_pythons})
 
   ROOT_LINKER_LIBRARY(${libname} ${cpp_sources} DEPENDENCIES Core Tree cppyy${python_under_version_string} CMAKENOEXPORT)
 
-  target_include_directories(${libname} PRIVATE ${ROOT_headers} ${python_include_dir})
+  target_include_directories(${libname} PRIVATE ${ROOT_headers_dir} ${python_include_dir})
 
   # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
   if(NOT MSVC)
