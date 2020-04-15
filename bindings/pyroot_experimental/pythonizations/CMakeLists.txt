@@ -78,8 +78,15 @@ set(cpp_sources
     ${PYROOT_EXTRA_SOURCE}
 )
 
-set(ROOTDirName python/ROOT)
+set(ROOTPySrcDir python/ROOT)
 set(ROOT_headers inc)
+
+file(COPY ${ROOTPySrcDir} DESTINATION ${localruntimedir})
+# Copy headers inside build_dir/include/Pythonizations
+file(COPY ${ROOT_headers}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
+
+# Install .py source files
+install(DIRECTORY ${ROOTPySrcDir} DESTINATION ${runtimedir})
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
@@ -106,16 +113,12 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
+  # Install compiled .py files
   foreach(py_source ${py_sources})
     install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
   endforeach()
 
 endforeach()
-
-file(COPY ${ROOTDirName} DESTINATION ${localruntimedir})
-# Copy headers inside build_dir/include/Pythonizations
-file(COPY ${ROOT_headers}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
-install(DIRECTORY ${ROOTDirName} DESTINATION ${runtimedir})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

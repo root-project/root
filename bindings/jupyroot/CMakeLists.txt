@@ -8,8 +8,6 @@
 # CMakeLists.txt file for building JupyROOT bindings/pyroot_experimental/PyROOT package
 #######################################################################################
 
-set(JupyROOTDirName python/JupyROOT)
-
 set(py_sources
   JupyROOT/__init__.py
   JupyROOT/helpers/__init__.py
@@ -28,6 +26,12 @@ set(py_sources
   JupyROOT/magics/cppmagic.py
   JupyROOT/magics/jsrootmagic.py
 )
+
+set(JupyROOTPySrcDir python/JupyROOT)
+file(COPY ${JupyROOTPySrcDir} DESTINATION ${localruntimedir})
+
+# Install .py source files
+install(DIRECTORY ${JupyROOTPySrcDir} DESTINATION ${runtimedir})
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
@@ -55,15 +59,13 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
+  # Install compiled .py files
   foreach(py_source ${py_sources})
     install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
   endforeach()
 
-  # Installation
+  # Install library
   install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
 
 endforeach()
-
-file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
-install(DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
