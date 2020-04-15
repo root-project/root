@@ -6344,6 +6344,10 @@ void THistPainter::PaintErrors(Option_t *)
       // apply offset on errors for bar histograms
       Double_t xminTmp = gPad->XtoPad(fXaxis->GetBinLowEdge(k));
       Double_t xmaxTmp = gPad->XtoPad(fXaxis->GetBinUpEdge(k));
+      if (Hoption.Logx) {
+        xminTmp = TMath::Power(10, xminTmp);
+        xmaxTmp = TMath::Power(10, xmaxTmp);
+      }
       Double_t w    = (xmaxTmp-xminTmp)*width;
       xminTmp += offset*(xmaxTmp-xminTmp);
       xmaxTmp = xminTmp + w;
