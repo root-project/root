@@ -479,7 +479,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
-      set(newargs ${newargs} -m  ${libprefix}${dep}_rdict.pcm)
+      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+      if (runtime_cxxmodules)
+        set(dependent_pcm ${dep}.pcm)
+      endif()
+      set(newargs ${newargs} -m  ${dependent_pcm})
     endforeach()
   endif()
 
