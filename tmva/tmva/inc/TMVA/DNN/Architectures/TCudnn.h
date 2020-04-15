@@ -714,7 +714,7 @@ public:
       const Matrix_t & /*weights_reset*/, const Matrix_t & /*weights_update*/,
       const Matrix_t & /*weights_candidate*/, const Matrix_t & /*weights_reset_state*/,
       const Matrix_t & /*weights_update_state*/, const Matrix_t & /*weights_candidate_state*/,
-      const Matrix_t & /*input*/, Matrix_t & /*input_gradient*/)
+      const Matrix_t & /*input*/, Matrix_t & /*input_gradient*/, bool)
    {
       return state_gradients_backward;
    }
