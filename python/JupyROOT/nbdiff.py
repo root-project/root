@@ -7,7 +7,14 @@ import sys
 import tempfile
 
 nbExtension=".ipynb"
-convCmdTmpl = "%s nbconvert  --to notebook --ExecutePreprocessor.kernel_name=%s --ExecutePreprocessor.enabled=True --ExecutePreprocessor.timeout=3600 %s --output %s"
+convCmdTmpl = "%s nbconvert " \
+"--to notebook " \
+"--ExecutePreprocessor.kernel_name=%s " \
+"--ExecutePreprocessor.enabled=True " \
+"--ExecutePreprocessor.timeout=3600 " \
+"--ExecutePreprocessor.startup_timeout=180 " \
+"%s " \
+"--output %s"
 pythonInterpName = 'python3' if sys.version_info >= (3, 0) else 'python2'
 
 rootKernelFileContent = '''{
