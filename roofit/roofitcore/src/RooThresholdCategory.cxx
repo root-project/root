@@ -126,7 +126,7 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   if (compact) {
     // Write value only
-    os << getLabel() ;
+    os << getCurrentLabel() ;
   } else {
     // Write mapping expression
 

@@ -371,7 +371,7 @@ Double_t RooProduct::evaluate() const
   for (const auto item : _compCSet) {
     auto ccomp = static_cast<const RooAbsCategory*>(item);
 
-    prod *= ccomp->getIndex() ;
+    prod *= ccomp->getCurrentIndex() ;
   }
   
   return prod ;

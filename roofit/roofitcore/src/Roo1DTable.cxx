@@ -107,7 +107,7 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
   //Bool_t found(kFALSE) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
-    if (cat.getIndex()==entry->getVal()) {
+    if (cat.getCurrentIndex()==entry->getVal()) {
       _count[i] += weight ; ;
       //found=kTRUE ;
       return;

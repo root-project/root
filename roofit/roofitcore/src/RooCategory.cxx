@@ -267,9 +267,9 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
 void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   if (compact) {
-    os << getIndex() ;
+    os << getCurrentIndex() ;
   } else {
-    os << getLabel() ;
+    os << getCurrentLabel() ;
   }
 }
 
