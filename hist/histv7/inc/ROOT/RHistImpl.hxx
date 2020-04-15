@@ -604,7 +604,7 @@ struct RComputeGlobalBinRaw {
 
 /// Recursively converts zero-based virtual bins where the underflow bin
 /// has index `0` and the overflow bin has index `N+1` where `N` is the axis'
-/// number of regular bins, to the standard `-1`/`-2` for under/overflow
+/// number of regular bins, to the standard `kUnderflowBin`/`kOverflowBin` for under/overflow
 /// bin indexing convention.
 ///
 /// For growable axes, add 1 from regular indices so that the indexing
@@ -636,7 +636,7 @@ struct RVirtualBinsToLocalBins {
    }
 };
 
-/// Recursively converts local axis bins from the standard `-1`/`-2` for under/overflow
+/// Recursively converts local axis bins from the standard `kUnderflowBin`/`kOverflowBin` for under/overflow
 /// bin indexing convention, to a "virtual bin" convention where the underflow bin
 /// has index `0` and the overflow bin has index `N+1` where `N` is the axis'
 /// number of regular bins.
@@ -671,7 +671,7 @@ struct RLocalBinsToVirtualBins {
 };
 
 /// Recursively converts bin coordinates to the corresponding local axis bins
-/// from the standard `-1`/`-2` for under/overflow bin indexing convention.
+/// from the standard `kUnderflowBin`/`kOverflowBin` for under/overflow bin indexing convention.
 template <int I, int NDIMS, typename BINS, typename COORD, class AXES>
 struct RCoordsToLocalBins;
 
@@ -691,7 +691,7 @@ struct RCoordsToLocalBins {
    }
 };
 
-/// Recursively converts local axis bins from the standard `-1`/`-2` for
+/// Recursively converts local axis bins from the standard `kUnderflowBin`/`kOverflowBin` for
 /// under/overflow bin indexing convention, to the corresponding bin coordinates.
 template <int I, int NDIMS, typename BINS, typename COORD, class AXES>
 struct RLocalBinsToCoords;
@@ -832,7 +832,7 @@ public:
       return result;
    }
 
-   /// Converts local axis bins from the standard `-1`/`-2` for under/overflow
+   /// Converts local axis bins from the standard `kUnderflowBin`/`kOverflowBin` for under/overflow
    /// bin indexing convention, to a "virtual bin" convention where the underflow bin
    /// has index `0` and the overflow bin has index `N+1` where `N` is the axis'
    /// number of regular bins.
@@ -845,7 +845,7 @@ public:
 
    /// Converts zero-based virtual bins where the underflow bin has
    /// index `0` and the overflow bin has index `N+1` where `N` is the axis'
-   /// number of regular bins, to the standard `-1`/`-2` for under/overflow
+   /// number of regular bins, to the standard `kUnderflowBin`/`kOverflowBin` for under/overflow
    /// bin indexing convention.
    template <int NDIMS>
    BinArray_t VirtualBinsToLocalBins(const BinArray_t& virtualBins) const {

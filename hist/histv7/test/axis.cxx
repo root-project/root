@@ -239,10 +239,11 @@ void test_axis_base(const RAxisBase& axis,
   EXPECT_EQ(axis.GetNOverflowBins(), n_overflow_bins);
   EXPECT_EQ(axis.GetNBins(), n_bins_no_over + n_overflow_bins);
 
-  const int underflow_bin = can_grow ? RAxisBase::kInvalidBin : -1;
+  const int kInvalidBin = RAxisBase::kInvalidBin;
+  const int underflow_bin = can_grow ? kInvalidBin : -1;
   EXPECT_EQ(axis.GetUnderflowBin(), underflow_bin);
 
-  const int overflow_bin = can_grow ? RAxisBase::kInvalidBin : -2;
+  const int overflow_bin = can_grow ? kInvalidBin : -2;
   EXPECT_EQ(axis.GetOverflowBin(), overflow_bin);
 
   EXPECT_EQ(axis.GetFirstBin(), 1);
@@ -398,19 +399,19 @@ TEST(AxisTest, Irregular) {
                    bin_borders.front(),
                    bin_borders.back());
 
-    EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::lowest()), -1);
-    EXPECT_EQ(axis.FindBin(bin_borders.front() - 0.01), -1);
+    const int underflow_findbin_res = -1;
+    const int overflow_findbin_res = -2;
+    EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::lowest()), underflow_findbin_res);
+    EXPECT_EQ(axis.FindBin(bin_borders.front() - 0.01), underflow_findbin_res);
     for (int bin = 1; bin <= n_bins_no_over; ++bin) {
       const double bin_width = bin_borders[bin] - bin_borders[bin-1];
       EXPECT_EQ(axis.FindBin(bin_borders[bin-1] + 0.01 * bin_width), bin);
       EXPECT_EQ(axis.FindBin(bin_borders[bin] - 0.01 * bin_width), bin);
     }
-    EXPECT_EQ(axis.FindBin(bin_borders.back() + 0.01), -2);
-    EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::max()), -2);
+    EXPECT_EQ(axis.FindBin(bin_borders.back() + 0.01), overflow_findbin_res);
+    EXPECT_EQ(axis.FindBin(std::numeric_limits<double>::max()), overflow_findbin_res);
 
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(0), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(0), std::numeric_limits<double>::lowest());
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(0), bin_borders[0]);
+    EXPECT_DOUBLE_EQ(axis.GetBinTo(underflow_findbin_res), bin_borders[0]);
     for (int bin = 1; bin <= n_bins_no_over; ++bin) {
       const double left_border = bin_borders[bin-1];
       const double right_border = bin_borders[bin];
@@ -418,11 +419,7 @@ TEST(AxisTest, Irregular) {
       EXPECT_DOUBLE_EQ(axis.GetBinFrom(bin), left_border);
       EXPECT_DOUBLE_EQ(axis.GetBinTo(bin), right_border);
     }
-    EXPECT_DOUBLE_EQ(axis.GetBinCenter(n_bins_no_over+1),
-                     std::numeric_limits<double>::max());
-    EXPECT_DOUBLE_EQ(axis.GetBinFrom(n_bins_no_over+1), bin_borders.back());
-    EXPECT_DOUBLE_EQ(axis.GetBinTo(n_bins_no_over+1),
-                     std::numeric_limits<double>::max());
+    EXPECT_DOUBLE_EQ(axis.GetBinFrom(overflow_findbin_res), bin_borders.back());
 
     EXPECT_EQ(axis.GetBinBorders(), bin_borders);
 

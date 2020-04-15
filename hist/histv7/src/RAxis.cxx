@@ -82,7 +82,7 @@ int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const no
 {
    // Check in which bin `x` resides
    double fracBinIdx = FindRawBin(x);
-   const int binIdx = std::round(fracBinIdx);
+   const int binIdx = fracBinIdx;
 
    // Are we close to the lower and upper bin boundaries, if any?
    constexpr double tol = 10 * std::numeric_limits<double>::epsilon();

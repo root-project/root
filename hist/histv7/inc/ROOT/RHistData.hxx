@@ -85,15 +85,34 @@ public:
    RHistStatContent() = default;
    RHistStatContent(size_t bin_size, size_t overflow_size): fBinContent(bin_size), fOverflowBinContent(overflow_size) {}
 
-   /// Add weight to the bin content at binidx of the correct bin content array
-   /// i.e. depending if binidx is a regular bin or an under- / overflow bin.
+   /// Get a reference to the bin corresponding to `binidx` of the correct bin
+   /// content array 
+   /// i.e. depending if `binidx` is a regular bin or an under- / overflow bin.
+   Weight_t GetBinArray(int binidx) const
+   {
+      if (binidx < 0){
+         return fOverflowBinContent[-binidx - 1];
+      } else {
+         return fBinContent[binidx - 1];
+      }
+   }
+
+   /// Get a reference to the bin corresponding to `binidx` of the correct bin
+   /// content array (non-const)
+   /// i.e. depending if `binidx` is a regular bin or an under- / overflow bin.
+   Weight_t& GetBinArray(int binidx)
+   {
+      if (binidx < 0){
+         return fOverflowBinContent[-binidx - 1];
+      } else {
+         return fBinContent[binidx - 1];
+      }
+   }
+
+   /// Add weight to the bin content at `binidx`.
    void Fill(const CoordArray_t & /*x*/, int binidx, Weight_t weight = 1.)
    {
-      if (binidx < 0) {
-         fOverflowBinContent[-binidx - 1] += weight;
-      } else {
-         fBinContent[binidx - 1] += weight;
-      }
+      GetBinArray(binidx) += weight;
       ++fEntries;
    }
 
@@ -111,42 +130,14 @@ public:
    size_t sizeUnderOver() const noexcept { return fOverflowBinContent.size(); }
 
    /// Get the bin content for the given bin.
-   Weight_t operator[](int idx) const 
-   {
-      if (idx < 0){
-         return fOverflowBinContent[-idx - 1];
-      } else {
-         return fBinContent[idx - 1];
-      }
-   }
+   Weight_t operator[](int binidx) const { return GetBinArray(binidx); }
    /// Get the bin content for the given bin (non-const).
-   Weight_t &operator[](int idx) 
-   {
-      if (idx < 0){
-         return fOverflowBinContent[-idx - 1];
-      } else {
-         return fBinContent[idx - 1];
-      }
-   }
+   Weight_t &operator[](int binidx) { return GetBinArray(binidx); }
 
    /// Get the bin content for the given bin.
-   Weight_t GetBinContent(int idx) const 
-   {
-      if (idx < 0){
-         return fOverflowBinContent[-idx - 1];
-      } else {
-         return fBinContent[idx - 1];
-      }
-   }
+   Weight_t GetBinContent(int binidx) const { return GetBinArray(binidx); }
    /// Get the bin content for the given bin (non-const).
-   Weight_t &GetBinContent(int idx) 
-   {
-      if (idx < 0){
-         return fOverflowBinContent[-idx - 1];
-      } else {
-         return fBinContent[idx - 1];
-      }
-   }
+   Weight_t &GetBinContent(int binidx) { return GetBinArray(binidx); }
 
    /// Retrieve the content array.
    const Content_t &GetContentArray() const { return fBinContent; }
@@ -316,45 +307,44 @@ public:
    RHistStatUncertainty() = default;
    RHistStatUncertainty(size_t bin_size, size_t overflow_size): fSumWeightsSquared(bin_size), fOverflowSumWeightsSquared(overflow_size) {}
 
-   /// Add weight to the bin at binidx; the coordinate was x.
-   void Fill(const CoordArray_t & /*x*/, int binidx, Weight_t weight = 1.)
+   /// Get a reference to the bin corresponding to `binidx` of the correct bin
+   /// content array 
+   /// i.e. depending if `binidx` is a regular bin or an under- / overflow bin.
+   Weight_t GetBinArray(int binidx) const
    {
       if (binidx < 0){
-         fOverflowSumWeightsSquared[-binidx - 1] += weight * weight;
+         return fOverflowSumWeightsSquared[-binidx - 1];
       } else {
-         fSumWeightsSquared[binidx - 1] += weight * weight;
+         return fSumWeightsSquared[binidx - 1];
       }
+   }
+
+   /// Get a reference to the bin corresponding to `binidx` of the correct bin
+   /// content array (non-const)
+   /// i.e. depending if `binidx` is a regular bin or an under- / overflow bin.
+   Weight_t& GetBinArray(int binidx)
+   {
+      if (binidx < 0){
+         return fOverflowSumWeightsSquared[-binidx - 1];
+      } else {
+         return fSumWeightsSquared[binidx - 1];
+      }
+   }
+
+   /// Add weight to the bin at `binidx`; the coordinate was `x`.
+   void Fill(const CoordArray_t & /*x*/, int binidx, Weight_t weight = 1.)
+   {
+      GetBinArray(binidx) += weight * weight;
    }
 
    /// Calculate a bin's (Poisson) uncertainty of the bin content as the
    /// square-root of the bin's sum of squared weights.
-   double GetBinUncertaintyImpl(int binidx) const 
-   { 
-      if (binidx < 0){
-         return std::sqrt(fOverflowSumWeightsSquared[-binidx - 1]);
-      } else {
-         return std::sqrt(fSumWeightsSquared[binidx - 1]); 
-      }
-   }
+   double GetBinUncertaintyImpl(int binidx) const { return std::sqrt(GetBinArray(binidx)); }
 
    /// Get a bin's sum of squared weights.
-   Weight_t GetSumOfSquaredWeights(int binidx) const 
-   { 
-      if (binidx < 0){
-         return fOverflowSumWeightsSquared[-binidx - 1];
-      } else {
-         return fSumWeightsSquared[binidx - 1]; 
-      }
-   }
+   Weight_t GetSumOfSquaredWeights(int binidx) const { return GetBinArray(binidx); }
    /// Get a bin's sum of squared weights.
-   Weight_t &GetSumOfSquaredWeights(int binidx) 
-   { 
-      if (binidx < 0){
-         return fOverflowSumWeightsSquared[-binidx - 1];
-      } else {
-         return fSumWeightsSquared[binidx - 1]; 
-      }
-   }
+   Weight_t &GetSumOfSquaredWeights(int binidx) { return GetBinArray(binidx); }
 
    /// Get the structure holding the sum of squares of weights.
    const std::vector<double> &GetSumOfSquaredWeights() const { return fSumWeightsSquared; }

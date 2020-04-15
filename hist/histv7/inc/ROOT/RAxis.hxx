@@ -299,7 +299,7 @@ public:
    /// below the bin border. I.e. don't do that for reliable results!
    virtual int FindAdjustedBin(double x) const noexcept = 0;
 
-   /// Find the adjusted bin index (returning `-1` for underflow and `-2`
+   /// Find the adjusted bin index (returning `kUnderflowBin` for underflow and `kOverflowBin`
    /// for overflow) for the given coordinate.
    /// \note Passing a bin border coordinate can either return the bin above or
    /// below the bin border. I.e. don't do that for reliable results!
@@ -316,7 +316,7 @@ public:
    /// Get the high bin border ("right edge") for the given bin index.
    /// The result of this method on an overflow bin is unspecified.
    double GetBinTo(int bin) const {
-      const double result = (bin == -1) ? GetMinimum() : GetBinFrom(bin + 1);
+      const double result = (bin == kUnderflowBin) ? GetMinimum() : GetBinFrom(bin + 1);
       return result;
    }
 
@@ -335,7 +335,7 @@ public:
 
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
-   /// return `0` (`kInvalidBin`).
+   /// return `kInvalidBin`.
    virtual int GetBinIndexForLowEdge(double x) const noexcept = 0;
 
 private:
@@ -472,8 +472,8 @@ public:
       return ret;
    }
 
-   /// Find the adjusted bin index (returning `-1` for underflow and `-2`
-   /// for overflow) for the given coordinate.
+   /// Find the adjusted bin index (returning `kUnderflowBin` for underflow and
+   /// `kOverflowBin` for overflow) for the given coordinate.
    /// \note Passing a bin border coordinate can either return the bin above or
    /// below the bin border. I.e. don't do that for reliable results!
    int FindBin(double x) const noexcept final override
@@ -502,13 +502,13 @@ public:
    /// returns 0.
    /// The result of this method on an underflow bin is unspecified.
    double GetBinFrom(int bin) const final override {
-      const double result = (bin == -2) ? GetMaximum() : fLow + (bin - *begin()) / fInvBinWidth;
+      const double result = (bin == kOverflowBin) ? GetMaximum() : fLow + (bin - *begin()) / fInvBinWidth;
       return result;
    }
 
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
-   /// return `0` (`kInvalidBin`).
+   /// return `kInvalidBin`.
    int GetBinIndexForLowEdge(double x) const noexcept final override;
 };
 
@@ -734,44 +734,21 @@ public:
    }
 
    /// Get the bin center of the bin with the given index.
-   ///
-   /// For the bin at index `0` (i.e. the underflow bin), a bin center of
-   /// `std::numeric_limits<double>::lowest()` is returned, i.e. the smallest
-   /// value that can be held in a double.
-   /// Similarly, for the bin at index `N + 1` (i.e. the overflow bin), a bin
-   /// center of `std::numeric_limits<double>::max()` is returned, i.e. the
-   /// largest value that can be held in a double.
-   double GetBinCenter(int bin) const final override
-   {
-      if (bin < GetFirstBin())
-         return std::numeric_limits<double>::lowest();
-      if (bin >= GetLastBin() + 1)
-         return std::numeric_limits<double>::max();
-      return 0.5 * (fBinBorders[bin - 1] + fBinBorders[bin]);
-   }
+   /// The result of this method on an overflow or underflow bin is unspecified.
+   double GetBinCenter(int bin) const final override { return 0.5 * (fBinBorders[bin - 1] + fBinBorders[bin]); }
 
    /// Get the lower bin border for a given bin index.
-   ///
-   /// For the bin at index `0` (i.e. the underflow bin), a lower bin border of
-   /// `std::numeric_limits<double>::lowest()` is returned, i.e. the smallest
-   /// value that can be held in a double.
-   /// Similarly, for the bin at index `N + 2` (i.e. after the overflow bin), a
-   /// lower bin border of `std::numeric_limits<double>::max()` is returned,
-   /// i.e. the largest value that can be held in a double.
+   /// The result of this method on an underflow bin is unspecified.
    double GetBinFrom(int bin) const final override
    {
-      if (bin < GetFirstBin())
-         return std::numeric_limits<double>::lowest();
-      if (bin >= GetLastBin() + 2)
-         return std::numeric_limits<double>::max();
-      // bin 0 is underflow;
-      // bin 1 starts at fBinBorders[0]
+      if (bin == kOverflowBin)
+         return fBinBorders[GetLastBin()];
       return fBinBorders[bin - 1];
    }
 
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
-   /// return `0` (`kInvalidBin`).
+   /// return `kInvalidBin`.
    int GetBinIndexForLowEdge(double x) const noexcept final override;
 
    /// This axis cannot be extended.
