@@ -10,7 +10,7 @@
 
 #include <ROOT/RDisplayItem.hxx>
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RMenuItem.hxx>
+#include <ROOT/RMenuItems.hxx>
 
 #include "TROOT.h"
 

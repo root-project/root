@@ -10,7 +10,7 @@
 
 #include "ROOT/RLogger.hxx"
 #include "ROOT/RPadUserAxis.hxx"
-#include "ROOT/RMenuItem.hxx"
+#include "ROOT/RMenuItems.hxx"
 
 #include "TROOT.h"
 
