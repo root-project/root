@@ -16,18 +16,20 @@ set(py_sources
   cppyy/ll.py
 )
 
-set(cppyyDirName python/cppyy)
+set(cppyyPySrcDir python/cppyy)
+file(COPY ${cppyyPySrcDir} DESTINATION ${localruntimedir})
+
+# Install .py source files
+foreach(py_source ${py_sources})
+  install(FILES python/${py_source} DESTINATION ${runtimedir}/cppyy)
+endforeach()
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_executables ${val} python_executable)
 
+  # Install compiled .py files
   foreach(py_source ${py_sources})
     install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${d}/${py_source})")
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
   endforeach()
-endforeach()
-
-file(COPY ${cppyyDirName} DESTINATION ${localruntimedir})
-foreach(py_source ${py_sources})
-  install(FILES python/${py_source} DESTINATION ${runtimedir}/cppyy)
 endforeach()
