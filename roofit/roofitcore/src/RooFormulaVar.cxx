@@ -120,7 +120,7 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
   _formExpr(other._formExpr)
 {
   if (other._formula && other._formula->ok()) {
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars));
+    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, /*checkVariables=*/false));
     _formExpr = _formula->formulaString().c_str();
   }
 }
