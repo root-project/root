@@ -163,7 +163,7 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
   if (selExpr && *selExpr) {
     // Create a RooFormulaVar cut from given cut expression
-    RooFormulaVar select(selExpr,selExpr,_vars) ;
+    RooFormulaVar select(selExpr, selExpr, _vars, /*checkVariables=*/false);
     loadValues(&t,&select);
   } else {
     loadValues(&t);
@@ -212,7 +212,7 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
   if (selExpr && *selExpr) {
     // Create a RooFormulaVar cut from given cut expression
-    RooFormulaVar select(selExpr,selExpr,_vars) ;
+    RooFormulaVar select(selExpr, selExpr, _vars, /*checkVariables=*/false);
     loadValues(&ads,&select);
   } else {
     loadValues(&ads);

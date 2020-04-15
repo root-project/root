@@ -717,12 +717,12 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// operating exclusively and directly on the data set dimensions, the equivalent
 /// constructor with a string based cut expression is recommended.
 
-RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree, 
-		       const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
+RooDataSet::RooDataSet(const char *name, const char *title, TTree *theTree,
+    const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
   // Create tree version of datastore 
-  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*intree,cutVar,wgtVarName) ;
+  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*theTree,cutVar,wgtVarName) ;
 
   // Convert to vector datastore if needed
   if (defaultStorageType==Tree) {
@@ -744,27 +744,33 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) an ROOT TTRee. The dimensions
-/// of the data set are defined by the 'vars' RooArgSet. For each dimension
+/// Constructor of a data set from (part of) a ROOT TTree.
+///
+/// \param[in] name Name of this dataset.
+/// \param[in] title Title for e.g. plotting.
+/// \param[in] tree Tree to be imported.
+/// \param[in] vars Defines the columns of the data set. For each dimension
 /// specified, the TTree must have a branch with the same name. For category
 /// branches, this branch should contain the numeric index value. Real dimensions
 /// can be constructed from either 'Double_t' or 'Float_t' tree branches. In the
 /// latter case, an automatic conversion is applied.
-///
-/// The 'cuts' string is an optional
-/// RooFormula expression and can be used to select the subset of the data points 
-/// in 'dset' to be copied. The cut expression can refer to any variable in the
-/// vars argset. For cuts involving variables other than those contained in
-/// the vars argset, such as intermediate formula objects, use the 
-/// equivalent constructor accepting RooFormulaVar reference as cut specification
-///
-
-RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree, 
-		       const RooArgSet& vars, const char *selExpr, const char* wgtVarName) :
+/// \param[in] cuts Optional RooFormula expression to select the subset of the data points
+/// to be imported. The cut expression can refer to any variable in `vars`.
+/// \warning The expression only evaluates variables that are also in `vars`.
+/// Passing e.g.
+/// ```
+/// RooDataSet("data", "data", tree, RooArgSet(x), "x>y")
+/// ```
+/// Will load `x` from the tree, but leave `y` at an undefined value.
+/// If other expressions are needed, such as intermediate formula objects, use
+/// RooDataSet::RooDataSet(const char*,const char*,TTree*,const RooArgSet&,const RooFormulaVar&,const char*)
+/// \param[in] wgtVarName Name of the variable in `vars` that represents an event weight.
+RooDataSet::RooDataSet(const char* name, const char* title, TTree* theTree,
+    const RooArgSet& vars, const char* cuts, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
   // Create tree version of datastore 
-  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*intree,selExpr,wgtVarName) ;
+  RooTreeDataStore* tstore = new RooTreeDataStore(name,title,_vars,*theTree,cuts,wgtVarName);
 
   // Convert to vector datastore if needed
   if (defaultStorageType==Tree) {

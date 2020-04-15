@@ -58,9 +58,9 @@ public:
 
 
   // Constructor importing data from external ROOT Tree
-  RooDataSet(const char *name, const char *title, TTree *ntuple, const RooArgSet& vars, 
+  RooDataSet(const char *name, const char *title, TTree *tree, const RooArgSet& vars,
 	     const char *cuts=0, const char* wgtVarName=0); 
-  RooDataSet(const char *name, const char *title, TTree *t, const RooArgSet& vars, 
+  RooDataSet(const char *name, const char *title, TTree *tree, const RooArgSet& vars,
 	     const RooFormulaVar& cutVar, const char* wgtVarName=0) ;  
   
 
