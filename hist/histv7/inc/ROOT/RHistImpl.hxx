@@ -101,11 +101,14 @@ public:
 
    /// Given the coordinate `x`, determine the index of the bin.
    virtual int GetBinIndex(const CoordArray_t &x) const = 0;
-   /// Given the local axis bins `x`, determine the index of the bin.
+   /// Given the local per-axis bins `x`, determine the index of the bin.
    virtual int GetBinIndexFromLocalBins(const BinArray_t &x) const = 0;
-   /// Given the coordinate `x`, determine the index of the bin, possibly growing
-   /// axes for which `x` is out of range.
-   virtual int GetBinIndexAndGrow(const CoordArray_t &x) = 0;
+   /// Given the coordinate `x`, determine the index of the bin, possibly
+   /// growing axes for which `x` is out of range.
+   virtual int GetBinIndexAndGrow(const CoordArray_t &x) const = 0;
+   /// Given the local per-axis bins `x`, determine the index of the bin,
+   /// possibly growing axes for which `x` is out of range.
+   virtual int GetBinIndexFromLocalBinsAndGrow(const BinArray_t &x) const = 0;
 
    /// Get the center in all dimensions of the bin with index `binidx`.
    virtual CoordArray_t GetBinCenter(int binidx) const = 0;
@@ -113,6 +116,13 @@ public:
    virtual CoordArray_t GetBinFrom(int binidx) const = 0;
    /// Get the upper edge in all dimensions of the bin with index `binidx`.
    virtual CoordArray_t GetBinTo(int binidx) const = 0;
+
+   /// Get the center in all dimensions of the bin with local per-axis bins `x`.
+   virtual CoordArray_t GetBinCenterFromLocalBins(const BinArray_t &x) const = 0;
+   /// Get the lower edge in all dimensions of the bin with local per-axis bins `x`.
+   virtual CoordArray_t GetBinFromFromLocalBins(const BinArray_t &x) const = 0;
+   /// Get the upper edge in all dimensions of the bin with local per-axis bins `x`.
+   virtual CoordArray_t GetBinToFromLocalBins(const BinArray_t &x) const = 0;
 
    /// Get the uncertainty of the bin with index `binidx`.
    virtual double GetBinUncertainty(int binidx) const = 0;
@@ -1038,7 +1048,7 @@ public:
    /// per-axis bin indices before using `ComputeGlobalBin()`.
    ///
    /// RODO: implement growable behavior
-   int GetBinIndexAndGrow(const CoordArray_t &x) final
+   int GetBinIndexAndGrow(const CoordArray_t &x) const final
    {
       Internal::EFindStatus status = Internal::EFindStatus::kCanGrow;
       int ret = 0;
@@ -1051,7 +1061,23 @@ public:
       return ret;
    }
 
-   /// Get the center coordinates of the bin.
+   /// Get the bin index for the given local per-axis bin indices `x`, growing
+   /// the axes as neededusing `ComputeGlobalBin()`.
+   ///
+   /// RODO: implement growable behavior
+   int GetBinIndexFromLocalBinsAndGrow(const BinArray_t &x) const final
+   {
+      Internal::EFindStatus status = Internal::EFindStatus::kCanGrow;
+      int ret = 0;
+      BinArray_t localBins = x;
+      while (status == Internal::EFindStatus::kCanGrow) {
+         ret = ComputeGlobalBin<DATA::GetNDim()>(localBins);
+         status = Internal::EFindStatus::kValid;
+      }
+      return ret;
+   }
+
+   /// Get the center coordinates of the bin with index `binidx`.
    CoordArray_t GetBinCenter(int binidx) const final
    {
       BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
@@ -1060,7 +1086,16 @@ public:
       return coords;
    }
 
-   /// Get the coordinates of the low limit of the bin.
+   /// Get the center coordinates of the bin with local per-axis bin indices `x`.
+   CoordArray_t GetBinCenterFromLocalBins(const BinArray_t &x) const final
+   {
+      BinArray_t localBins = x;
+      CoordArray_t coords;
+      Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinCenter);
+      return coords;
+   }
+
+   /// Get the coordinates of the low limit of the bin with index `binidx`.
    CoordArray_t GetBinFrom(int binidx) const final
    {
       BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
@@ -1069,10 +1104,28 @@ public:
       return coords;
    }
 
-   /// Get the coordinates of the high limit of the bin.
+   /// Get the coordinates of the low limit of the bin with local per-axis bin indices `x`.
+   CoordArray_t GetBinFromFromLocalBins(const BinArray_t &x) const final
+   {
+      BinArray_t localBins = x;
+      CoordArray_t coords;
+      Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinFrom);
+      return coords;
+   }
+
+   /// Get the coordinates of the high limit of the bin with index `binidx`.
    CoordArray_t GetBinTo(int binidx) const final
    {
       BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
+      CoordArray_t coords;
+      Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinTo);
+      return coords;
+   }
+
+   /// Get the coordinates of the high limit of the bin with local per-axis bin indices `x`.
+   CoordArray_t GetBinToFromLocalBins(const BinArray_t &x) const final
+   {
+      BinArray_t localBins = x;
       CoordArray_t coords;
       Internal::RLocalBinsToCoords<DATA::GetNDim() - 1, DATA::GetNDim(), BinArray_t, CoordArray_t, decltype(fAxes)>()(coords, fAxes, localBins, Internal::EBinCoord::kBinTo);
       return coords;
