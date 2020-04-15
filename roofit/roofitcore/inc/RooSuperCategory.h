@@ -48,7 +48,7 @@ public:
 
 protected:
   value_type evaluate() const override {
-    return _multiCat->getIndex();
+    return _multiCat->getCurrentIndex();
   }
 
   /// Ask server category to recompute shape, and copy its information.

@@ -91,7 +91,7 @@ namespace RooStats {
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().clone(sim->indexCat().GetName());
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
             cat->setBin(ic);
-            RooAbsPdf* catPdf = sim->getPdf(cat->getLabel());
+            RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
             // it is possible that a pdf is not defined for every category
             if (catPdf != 0) FactorizePdf(observables, *catPdf, obsTerms, constraints);
          }
@@ -180,7 +180,7 @@ namespace RooStats {
 
          for (int ic = 0, nc = cat->numBins((const char *)NULL); ic < nc; ++ic) {
             cat->setBin(ic);
-            RooAbsPdf* catPdf = sim->getPdf(cat->getLabel());
+            RooAbsPdf* catPdf = sim->getPdf(cat->getCurrentLabel());
             RooAbsPdf* newPdf = NULL;
             // it is possible that a pdf is not defined for every category
             if (catPdf != NULL) newPdf = StripConstraints(*catPdf, observables);

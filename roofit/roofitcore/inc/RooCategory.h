@@ -32,7 +32,7 @@ public:
   virtual TObject* clone(const char* newname) const override { return new RooCategory(*this,newname); }
 
   /// Return current index.
-  virtual value_type getIndex() const override final {
+  virtual value_type getCurrentIndex() const override final {
     return _currentIndex;
   }
 

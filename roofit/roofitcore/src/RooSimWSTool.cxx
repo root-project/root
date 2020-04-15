@@ -585,7 +585,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 	
 	list<const RooCatType*>::iterator sli ;
 	for (sli=slist.begin() ; sli!=slist.end() ; ++sli) {
-	  if (string(splitCat->getLabel())==(*sli)->GetName()) {
+	  if (string(splitCat->getCurrentLabel())==(*sli)->GetName()) {
 	    select=kTRUE ;
 	  }
 	}      
@@ -598,7 +598,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
     // Select appropriate PDF for this physCat state
     RooCustomizer* physCustomizer ;
     if (physCat) {      
-      RooAbsPdf* pdf = stateMap[physCat->getLabel()] ;
+      RooAbsPdf* pdf = stateMap[physCat->getCurrentLabel()] ;
       if (pdf==0) {
 	continue ;
       }
@@ -611,7 +611,7 @@ RooSimultaneous* RooSimWSTool::executeBuild(const char* simPdfName, ObjBuildConf
 				       << " for mode " << fcState->GetName() << endl ;    
 
     // Customizer PDF for current state and add to master simPdf
-    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat->getLabel(),kFALSE) ;
+    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat->getCurrentLabel(),kFALSE) ;
     simPdf->addPdf(*fcPdf,fcState->GetName()) ;
   }
   delete fcIter ;
