@@ -14,8 +14,9 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/DNN/Architectures/Cpu.h"
 #include "TestFullRNN.h"
+// order is important
+#include "TMVA/DNN/Architectures/TCudnn.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
@@ -24,7 +25,7 @@ using namespace TMVA::DNN::RNN;
 int main() {
    TString rnnType = "RNN";
 
-   using Architecture_t = TCpu<Double_t>;
+   using Architecture_t = TCudnn<Double_t>;
 
    std::cout << "Training RNN to identity first";
 
@@ -38,8 +39,8 @@ int main() {
    // test a full RNN with 5 time steps and different signal/backgrund time dependent shapes
    // batchsize, statesize , inputsize, seed
    int seed = 111;
-   debug = false;
    std::cout << "Training RNN to simple time dependent data " << std::endl;
+   debug = false;
    iret &= testFullRNN2<Architecture_t>(rnnType, 64, 10, 5, seed, debug);
 
    return iret ? 0 : -1;

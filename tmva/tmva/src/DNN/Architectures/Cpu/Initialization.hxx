@@ -48,11 +48,8 @@ void TCpu<AFloat>::InitializeGauss(TCpuMatrix<AFloat> & A)
 
    AFloat sigma = sqrt(2.0 / ((AFloat) n));
 
-   // do a row-wise initialization
-   for (size_t i = 0; i < A.GetNrows(); ++i) {
-      for (size_t j = 0; j < A.GetNcols(); ++j) {
-         A(i,j)= rand.Gaus(0.0, sigma);
-      }
+   for (size_t i = 0; i < A.GetSize(); ++i) {
+      A.GetRawDataPointer()[i] = rand.Gaus(0.0, sigma);
    }
    // for (size_t i = 0; i < A.GetSize(); ++i) {
    //    A.GetRawDataPointer()[i] = rand.Gaus(0.0, sigma);
