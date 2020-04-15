@@ -1,19 +1,19 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RMenuItem
-#define ROOT7_RMenuItem
+#ifndef ROOT7_RMenuItems
+#define ROOT7_RMenuItems
 
 #include <string>
 #include <vector>
 #include <memory>
 
-#include <ROOT/RDrawable.hxx>
+#include <ROOT/RDrawableRequest.hxx>
 
 class TClass;
 

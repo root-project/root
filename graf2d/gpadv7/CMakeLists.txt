@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
   HEADERS
     ROOT/RCanvas.hxx
     ROOT/RFrame.hxx
-    ROOT/RMenuItem.hxx
+    ROOT/RMenuItems.hxx
     ROOT/RObjectDrawable.hxx
     ROOT/RColor.hxx
     ROOT/RDisplayItem.hxx
@@ -30,6 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
     ROOT/RPalette.hxx
     ROOT/RPaletteDrawable.hxx
     ROOT/RDrawable.hxx
+    ROOT/RDrawableRequest.hxx
     ROOT/RStyle.hxx
     ROOT/RPadDisplayItem.hxx
     ROOT/RPadExtent.hxx
@@ -42,11 +43,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
   SOURCES
     src/RCanvas.cxx
     src/RFrame.cxx
-    src/RMenuItem.cxx
+    src/RMenuItems.cxx
     src/RObjectDrawable.cxx
     src/RColor.cxx
     src/RDisplayItem.cxx
     src/RDrawable.cxx
+    src/RDrawableRequest.cxx
     src/RAttrMap.cxx
     src/RAttrBase.cxx
     src/RPalette.cxx
