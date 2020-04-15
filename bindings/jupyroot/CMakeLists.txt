@@ -60,6 +60,9 @@ foreach(val RANGE ${how_many_pythons})
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${d}/${py_source})")
   endforeach()
 
+  # Installation
+  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
+
 endforeach()
 
 file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
