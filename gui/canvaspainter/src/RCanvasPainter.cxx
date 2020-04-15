@@ -27,7 +27,6 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <queue>
 #include <thread>
 #include <chrono>
 #include <fstream>
@@ -57,7 +56,7 @@ class RCanvasPainter : public Internal::RVirtualCanvasPainter {
 private:
    struct WebConn {
       unsigned fConnId{0};                 ///<! connection id
-      std::queue<std::string> fSendQueue;  ///<! send queue for the connection
+      std::list<std::string> fSendQueue;   ///<! send queue for the connection
       RDrawable::Version_t fSend{0};       ///<! indicates version send to connection
       RDrawable::Version_t fDelivered{0};  ///<! indicates version confirmed from canvas
       WebConn() = default;
@@ -247,54 +246,79 @@ void RCanvasPainter::CancelCommands(unsigned connid)
          remainingCmds.emplace_back(std::move(cmd));
       }
    }
-   swap(fCmds, remainingCmds);
+
+   std::swap(fCmds, remainingCmds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if canvas need to sand data to the clients
+/// Check if canvas need to send data to the clients
 
 void RCanvasPainter::CheckDataToSend()
 {
    uint64_t min_delivered = 0;
+   bool is_any_send = true;
+   int loopcnt = 0;
 
-   for (auto &conn : fWebConn) {
+   while (is_any_send && (++loopcnt < 10)) {
 
-      if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
-         min_delivered = conn.fDelivered;
+      is_any_send = false;
 
-      // check if direct data sending is possible
-      if (!fWindow->CanSend(conn.fConnId, true))
-         continue;
+      for (auto &conn : fWebConn) {
 
-      TString buf;
+         if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
+            min_delivered = conn.fDelivered;
 
-      if (conn.fDelivered && !fCmds.empty() && (fCmds.front()->fState == WebCommand::sInit) &&
-          ((fCmds.front()->fConnId == 0) || (fCmds.front()->fConnId == conn.fConnId))) {
-         auto &cmd = fCmds.front();
-         cmd->fState = WebCommand::sRunning;
-         cmd->fConnId = conn.fConnId; // assign command to the connection
-         buf = "CMD:";
-         buf.Append(cmd->fId);
-         buf.Append(":");
-         buf.Append(cmd->fName);
+         // flag indicates that next version of canvas has to be send to that client
+         bool need_send_snapshot = (conn.fSend != fCanvas.GetModified()) && (conn.fDelivered == conn.fSend);
 
-      } else if (!conn.fSendQueue.empty()) {
-         buf = conn.fSendQueue.front().c_str();
-         conn.fSendQueue.pop();
+         // ensure place in the queue for the send snapshot operation
+         if (need_send_snapshot && (loopcnt == 0))
+            if (std::find(conn.fSendQueue.begin(), conn.fSendQueue.end(), ""s) == conn.fSendQueue.end())
+               conn.fSendQueue.emplace_back(""s);
 
-      } else if ((conn.fSend != fCanvas.GetModified()) && (conn.fDelivered == conn.fSend)) {
+         // check if direct data sending is possible
+         if (!fWindow->CanSend(conn.fConnId, true))
+            continue;
 
-         buf = "SNAP:";
-         buf += TString::ULLtoa(fCanvas.GetModified(), 10);
-         buf += ":";
-         buf += CreateSnapshot(conn.fSend);
+         TString buf;
 
-         conn.fSend = fCanvas.GetModified();
-      }
+         if (conn.fDelivered && !fCmds.empty() && (fCmds.front()->fState == WebCommand::sInit) &&
+               ((fCmds.front()->fConnId == 0) || (fCmds.front()->fConnId == conn.fConnId))) {
 
-      if (buf.Length() > 0) {
-         // sending of data can be moved into separate thread - not to block user code
-         fWindow->Send(conn.fConnId, buf.Data());
+            auto &cmd = fCmds.front();
+            cmd->fState = WebCommand::sRunning;
+            cmd->fConnId = conn.fConnId; // assign command to the connection
+            buf = "CMD:";
+            buf.Append(cmd->fId);
+            buf.Append(":");
+            buf.Append(cmd->fName);
+
+         } else if (!conn.fSendQueue.empty()) {
+
+            buf = conn.fSendQueue.front().c_str();
+            conn.fSendQueue.pop_front();
+
+            // empty string reserved for sending snapshot, if it no longer required process next entry
+            if (!need_send_snapshot && (buf.Length() == 0) && !conn.fSendQueue.empty()) {
+               buf = conn.fSendQueue.front().c_str();
+               conn.fSendQueue.pop_front();
+            }
+         }
+
+         if ((buf.Length() == 0) && need_send_snapshot) {
+            buf = "SNAP:";
+            buf += TString::ULLtoa(fCanvas.GetModified(), 10);
+            buf += ":";
+            buf += CreateSnapshot(conn.fSend);
+
+            conn.fSend = fCanvas.GetModified();
+         }
+
+         if (buf.Length() > 0) {
+            // sending of data can be moved into separate thread - not to block user code
+            fWindow->Send(conn.fConnId, buf.Data());
+            is_any_send = true;
+         }
       }
    }
 
@@ -319,8 +343,7 @@ void RCanvasPainter::CheckDataToSend()
 /// Method invoked when canvas should be updated on the client side
 /// Depending from delivered status, each client will received new data
 
-void RCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
-                                                       CanvasCallback_t callback)
+void RCanvasPainter::CanvasUpdated(uint64_t ver, bool async, CanvasCallback_t callback)
 {
    if (fWindow)
       fWindow->Sync();
@@ -502,7 +525,7 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
             reply->SetRequestId(req->GetRequestId());
 
             auto json = TBufferJSON::ToJSON(reply.get(), TBufferJSON::kNoSpaces);
-            conn->fSendQueue.emplace("REPL_REQ:"s + json.Data());
+            conn->fSendQueue.emplace_back("REPL_REQ:"s + json.Data());
          }
 
          // real update will be performed by CheckDataToSend()
