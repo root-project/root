@@ -293,7 +293,8 @@ void TCudaTensor<AFloat>::SetTensorDescriptor() {
       // cuDNN NdTensor format has a minsize of 4 tensor dimensions
       // 4D tensor is more performant on lower dimensions and supports all folowing operations
       // is this really true ???
-      if (fNDim == 4 || fNDim > 1 && fMemoryLayout == MemoryLayout::ColumnMajor) {
+      if (fNDim == 4 || fNDim > 1 && fMemoryLayout == MemoryLayout::ColumnMajor || fNDim == 2) {
+         // pad cudnn tensor column major with extra elements (these are used in the convolutions)
          Shape_t shape = fShape;
 
          if (fNDim < 4 && fNDim > 1) {
@@ -326,11 +327,11 @@ void TCudaTensor<AFloat>::SetTensorDescriptor() {
 
          // Some operations in cudnn may not work with this tensor description
          // do not support tensors with dims < 1
-      } else if (fNDim > 2 || fNDim > 4) {
-
+      } else if (fNDim >2  || fNDim > 4) {
+         // these are used in the RNN layers
 
          // seems to work for 3d tensor with row major (case of RNN tensors)
-         // rnn wnats 3d tensors
+         // rnn wnats 3d tensors but it does not work for 2d tensors
          std::vector<int> shape(fShape.begin(), fShape.end());
          std::vector<int> strides(fStrides.begin(), fStrides.end());
          auto status = cudnnSetTensorNdDescriptor(fTensorDescriptor->fCudnnDesc, fDataType, (int)fNDim, shape.data(),

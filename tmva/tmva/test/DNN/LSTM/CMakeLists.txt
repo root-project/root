@@ -33,6 +33,11 @@ if (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
    target_link_libraries(testLSTMBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
    ROOT_ADD_TEST(TMVA-DNN-LSTM-BackpropagationCudnn COMMAND testLSTMBackpropagationCudnn)
 
+   # LSTM - Full Test GPU
+   CUDA_ADD_EXECUTABLE(testFullLSTMCudnn TestFullLSTMCudnn.cxx)
+   target_link_libraries(testFullLSTMCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+   ROOT_ADD_TEST(TMVA-DNN-LSTM-Full-Cudnn COMMAND testFullLSTMCudnn)
+
 endif (CUDA_FOUND AND tmva-gpu AND tmva-cudnn)
 
 #--- CPU tests. ----------------------------
@@ -49,6 +54,6 @@ if (BLAS_FOUND AND imt)
 
     # LSTM - Full Test Reference
     ROOT_EXECUTABLE(testFullLSTMCpu TestFullLSTMCpu.cxx LIBRARIES ${Libraries})
-    ROOT_ADD_TEST(TMVA-DNN-LSTM-FullLSTM-Cpu COMMAND testFullLSTMCpu)
+    ROOT_ADD_TEST(TMVA-DNN-LSTM-Full-Cpu COMMAND testFullLSTMCpu)
 
 endif (BLAS_FOUND AND imt)
