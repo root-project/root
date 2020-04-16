@@ -162,7 +162,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(ROOT::Experimental::Descrip
             continue;
          }
 
-         auto cptr = std::move(itr->fFuture.get());
+         auto cptr = itr->fFuture.get();
          // If cptr is nullptr, the cluster expired and was released by the I/O thread
          if (cptr) {
             if (itr->fIsExpired) {
@@ -212,7 +212,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(ROOT::Experimental::Descrip
    for (; itr != fInFlightClusters.end(); ++itr) {
       if (itr->fClusterId != clusterId)
          continue;
-      fPool[slot] = std::move(itr->fFuture.get());
+      fPool[slot] = itr->fFuture.get();
       break;
    }
    R__ASSERT(itr != fInFlightClusters.end());
