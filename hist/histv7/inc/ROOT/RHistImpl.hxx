@@ -109,6 +109,8 @@ public:
    /// Given the local per-axis bins `x`, determine the index of the bin,
    /// possibly growing axes for which `x` is out of range.
    virtual int GetBinIndexFromLocalBinsAndGrow(const BinArray_t &x) const = 0;
+   /// Given the index of the bin, determine the local per-axis bins `x`.
+   virtual BinArray_t GetLocalBins(int binidx) const = 0;
 
    /// Get the center in all dimensions of the bin with index `binidx`.
    virtual CoordArray_t GetBinCenter(int binidx) const = 0;
@@ -1039,6 +1041,14 @@ public:
          status = Internal::EFindStatus::kValid;
       }
       return ret;
+   }
+
+   /// Get the local per-axis bin indices `x` for the given bin index, using
+   /// `ComputeLocalBins()`.
+   BinArray_t GetLocalBins(int binidx) const final
+   {
+      BinArray_t localBins = ComputeLocalBins<DATA::GetNDim()>(binidx);
+      return localBins;
    }
 
    /// Get the center coordinates of the bin with index `binidx`.
