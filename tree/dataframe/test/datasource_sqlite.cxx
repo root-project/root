@@ -226,6 +226,7 @@ TEST(RSqliteDS, IMT)
 
 TEST(RSqliteDS, Davix)
 {
+   (void)url1; // silence -Wunused-const-variable
 #ifdef R__HAS_DAVIX
    auto rdf = MakeSqliteDataFrame(url0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));
