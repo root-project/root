@@ -81,7 +81,7 @@ protected:
          return CanGrow() ? kInvalidBin : GetUnderflowBin();
 
       // Overflow: Put in overflow bin if any, otherwise ignore
-      if (rawbin > GetLastBin() + 1)
+      if (rawbin >= GetLastBin() + 1)
          return CanGrow() ? kInvalidBin : GetOverflowBin();
 
       // Bin index is in range and has been corrected for over/underflow
