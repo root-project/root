@@ -42,7 +42,7 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
    // an integer if it's an axis border.
-   double fracBinIdx = *begin() + FindRawBin(x);
+   double fracBinIdx = *begin() + FindBinRaw(x);
 
    // fracBinIdx might be 12.99999999. It's a bin border if the deviation from
    // an regular bin border is "fairly small".
@@ -81,7 +81,7 @@ bool ROOT::Experimental::RAxisEquidistant::HasSameBinBordersAs(const RAxisBase& 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept
 {
    // Check in which bin `x` resides
-   double fracBinIdx = FindRawBin(x);
+   double fracBinIdx = FindBinRaw(x);
    const int binIdx = fracBinIdx;
 
    // Are we close to the lower and upper bin boundaries, if any?

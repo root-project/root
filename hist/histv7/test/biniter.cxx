@@ -29,9 +29,9 @@ TEST(BinIterNBins, BinRef) {
   h.Fill({x, y}, 2. * w);
   EXPECT_FLOAT_EQ(3. * w, h.GetBinContent({x,y}));
 
-  int xbin = h.GetImpl()->GetAxis(0).FindAdjustedBin(x);
+  int xbin = h.GetImpl()->GetAxis(0).FindBin(x);
   EXPECT_EQ(6, xbin);
-  int ybin = h.GetImpl()->GetAxis(1).FindAdjustedBin(y);
+  int ybin = h.GetImpl()->GetAxis(1).FindBin(y);
   EXPECT_EQ(7, ybin);
 
   int linbin =  h.GetImpl()->GetBinIndex({x, y});
