@@ -9,7 +9,7 @@ import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
-from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, MakeNullPointer, TObjArray, TNamed
+from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, addressof, MakeNullPointer, TObjArray, TNamed
 
 exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
 
@@ -141,8 +141,25 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
     # safe to use d.Floats directly in the Branch() call
       fl = d.Floats
       t.Branch( 'floats', fl )
-      t.Branch( 'nlabel', AddressOf( d, 'NLabel' ), 'NLabel/I' )
-      t.Branch( 'label',  AddressOf( d, 'Label' ),  'Label/C' )
+
+      if exp_pyroot:
+          # The Branch pythonization expects an integer with the
+          # address of the field of the struct
+          addressof_nlabel = addressof( d, 'NLabel' )
+          addressof_label  = addressof( d, 'Label' )
+      else:
+          # Old PyROOT has a bug in AddressOf(o, 'field').
+          # Instead of returning a buffer whose first position
+          # contains the address of the field, it just returns the
+          # address of the field (which is what we need here).
+          # addressof(o, 'field'), which is what we should really
+          # use, is also broken in old PyROOT, so we need to use
+          # AddressOf here
+          addressof_nlabel = AddressOf( d, 'NLabel' )
+          addressof_label  = AddressOf( d, 'Label' )
+
+      t.Branch( 'nlabel', addressof_nlabel, 'NLabel/I' )
+      t.Branch( 'label',  addressof_label,  'Label/C' )
 
       for i in range( self.N ):
          for j in range( self.M ):
