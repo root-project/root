@@ -938,6 +938,7 @@ void MethodDL::ParseRecurrentLayer(ERecurrentLayerType rnnType, DNN::TDeepNet<Ar
    int timeSteps = 0;
    bool rememberState = false;
    bool returnSequence = false;
+   bool resetGateAfter = false;
 
    // Split layer details
    TObjArray *subStrings = layerString.Tokenize(delim);
@@ -951,27 +952,37 @@ void MethodDL::ParseRecurrentLayer(ERecurrentLayerType rnnType, DNN::TDeepNet<Ar
          {
             TString strstateSize(token->GetString());
             stateSize = strstateSize.Atoi();
-         } break;
+            break;
+         }
          case 2:  // input size
          {
             TString strinputSize(token->GetString());
             inputSize = strinputSize.Atoi();
-         } break;
+            break;
+         }
          case 3:  // time steps
          {
             TString strtimeSteps(token->GetString());
             timeSteps = strtimeSteps.Atoi();
+            break;
          }
-         case 4: // remember state (1 or 0)
+         case 4: // returnSequence (option stateful in Keras)
          {
             TString strrememberState(token->GetString());
             rememberState = (bool) strrememberState.Atoi();
-         } break;
+            break;
+         }
          case 5: // return full output sequence (1 or 0)
          {
             TString str(token->GetString());
             returnSequence = (bool)str.Atoi();
-         } break;
+            break;
+         }
+         case 6: // resetGate after option (only for GRU)
+         {
+            TString str(token->GetString());
+            resetGateAfter = (bool)str.Atoi();
+         }
       }
       ++idxToken;
    }
@@ -991,7 +1002,7 @@ void MethodDL::ParseRecurrentLayer(ERecurrentLayerType rnnType, DNN::TDeepNet<Ar
          fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
    }
    else if (rnnType == kLayerGRU) {
-      bool resetGateAfter = (Architecture_t::IsCudnn()) ? true : false;
+      if (Architecture_t::IsCudnn()) resetGateAfter = true; // needed for Cudnn
       auto *recurrentLayer = deepNet.AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
       recurrentLayer->Initialize();
       // Add same layer to fNet
