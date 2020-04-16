@@ -196,18 +196,6 @@ public:
    /// Retrieve the pointer to the overridden `Fill(x, w)` function.
    virtual FillFunc_t GetFillFunc() const = 0;
 
-   /// Apply a function (lambda) to all bins of the histogram. The function takes
-   /// the bin reference.
-   virtual void Apply(std::function<void(RHistBinRef<const RHistImplBase>)>) const = 0;
-
-   /// Apply a function (lambda) to all bins of the histogram. The function takes
-   /// the bin coordinate and content.
-   virtual void ApplyXC(std::function<void(const CoordArray_t &, Weight_t)>) const = 0;
-
-   /// Apply a function (lambda) to all bins of the histogram. The function takes
-   /// the bin coordinate, content and uncertainty ("error") of the content.
-   virtual void ApplyXCE(std::function<void(const CoordArray_t &, Weight_t, double)>) const = 0;
-
    /// Get the bin content (sum of weights) for the bin at coordinate `x`.
    virtual Weight_t GetBinContent(const CoordArray_t &x) const = 0;
 
@@ -774,30 +762,6 @@ public:
    /// the virtual function call for high-frequency fills.
    FillFunc_t GetFillFunc() const final { 
       return (FillFunc_t)&RHistImpl::Fill; 
-   }
-
-   /// Apply a function (lambda) to all bins of the histogram. The function takes
-   /// the bin reference.
-   void Apply(std::function<void(RHistBinRef<const ImplBase_t>)> op) const final
-   {
-      for (RHistBinRef<const ImplBase_t> binref: *this)
-         op(binref);
-   }
-
-   /// Apply a function (lambda) to all bins of the histogram. The function takes
-   /// the bin coordinate and content.
-   void ApplyXC(std::function<void(const CoordArray_t &, Weight_t)> op) const final
-   {
-      for (auto binref: *this)
-         op(binref.GetCenter(), binref.GetContent());
-   }
-
-   /// Apply a function (lambda) to all bins of the histogram. The function takes
-   /// the bin coordinate, content and uncertainty ("error") of the content.
-   virtual void ApplyXCE(std::function<void(const CoordArray_t &, Weight_t, double)> op) const final
-   {
-      for (auto binref: *this)
-         op(binref.GetCenter(), binref.GetContent(), binref.GetUncertainty());
    }
 
    /// Get the axes of this histogram.
