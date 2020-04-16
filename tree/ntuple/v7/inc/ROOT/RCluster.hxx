@@ -113,6 +113,8 @@ public:
 
    DescriptorId_t GetId() const { return fClusterId; }
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
+
+   size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
 };
 
 // clang-format off
