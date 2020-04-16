@@ -1598,6 +1598,8 @@ if (testing)
   ExternalProject_Get_Property(googletest source_dir)
   set(GTEST_INCLUDE_DIR ${source_dir}/googletest/include)
   set(GMOCK_INCLUDE_DIR ${source_dir}/googlemock/include)
+  # Create the directories. Prevents bug https://gitlab.kitware.com/cmake/cmake/issues/15052
+  file(MAKE_DIRECTORY ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
 
   # Libraries
   ExternalProject_Get_Property(googletest binary_dir)
@@ -1612,6 +1614,9 @@ if (testing)
       target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
     endif()
   endforeach()
+  target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
+  target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
+
   set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
   set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
   set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
