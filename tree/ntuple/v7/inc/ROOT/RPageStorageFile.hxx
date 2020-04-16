@@ -38,6 +38,7 @@ class RRawFile;
 namespace Experimental {
 namespace Detail {
 
+class RClusterPool;
 class RPageAllocatorHeap;
 class RPagePool;
 
@@ -117,8 +118,10 @@ private:
    RNTupleMetrics fMetrics;
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
-   /// The page pool migh, at some point, be used by multiple page sources
+   /// The page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
+   /// The cluster pool asynchronoulsy preloads the next few clusters
+   std::unique_ptr<RClusterPool> fClusterPool;
    /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
    RNTupleDecompressor fDecompressor;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file

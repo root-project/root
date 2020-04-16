@@ -14,6 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -121,7 +122,7 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
 
    auto offsetData = fWriter->WriteBlob(buffer, zippedBytes, packedBytes);
    fClusterMinOffset = std::min(offsetData, fClusterMinOffset);
-   fClusterMaxOffset = std::max(offsetData, fClusterMaxOffset);
+   fClusterMaxOffset = std::max(offsetData + zippedBytes, fClusterMaxOffset);
 
    if (!isAdoptedBuffer)
       delete[] buffer;
@@ -203,7 +204,10 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    , fMetrics("RPageSourceFile")
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
+   , fClusterPool(std::make_unique<RClusterPool>(this, 4))
 {
+   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kDefault)
+      fOptions.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
 }
 
 
@@ -257,12 +261,14 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    decltype(clusterIndex) firstInPage = 0;
+   NTupleSize_t pageNo = 0;
    for (const auto &pi : pageRange.fPageInfos) {
       if (firstInPage + pi.fNElements > clusterIndex) {
          pageInfo = pi;
          break;
       }
       firstInPage += pi.fNElements;
+      ++pageNo;
    }
    R__ASSERT(firstInPage <= clusterIndex);
    R__ASSERT((firstInPage + pageInfo.fNElements) > clusterIndex);
@@ -270,19 +276,26 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    const auto element = columnHandle.fColumn->GetElement();
    const auto elementSize = element->GetSize();
 
-   auto pageSize = pageInfo.fLocator.fBytesOnStorage;
-   auto pageBuffer = new unsigned char[
-      std::max(pageSize, static_cast<std::uint32_t>(elementSize * pageInfo.fNElements))];
-   fReader.ReadBuffer(pageBuffer, pageInfo.fLocator.fBytesOnStorage, pageInfo.fLocator.fPosition);
+   const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   const auto bytesPacked = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
+   const auto pageSize = elementSize * pageInfo.fNElements;
 
-   const auto bytesOnStorage = (element->GetBitsOnStorage() * pageInfo.fNElements + 7) / 8;
-   if (pageSize != bytesOnStorage) {
-      fDecompressor(pageBuffer, pageSize, bytesOnStorage);
-      pageSize = bytesOnStorage;
+   auto pageBuffer = new unsigned char[bytesPacked];
+   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
+      fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
+   } else {
+      auto cluster = fClusterPool->GetCluster(clusterId);
+      ROnDiskPage::Key key(columnId, pageNo);
+      auto onDiskPage = cluster->GetOnDiskPage(key);
+      R__ASSERT(onDiskPage);
+      R__ASSERT(bytesOnStorage == onDiskPage->GetSize());
+      memcpy(pageBuffer, onDiskPage->GetAddress(), onDiskPage->GetSize());
    }
 
+   if (bytesOnStorage != bytesPacked)
+      fDecompressor(pageBuffer, bytesOnStorage, bytesPacked);
+
    if (!element->IsMappable()) {
-      pageSize = elementSize * pageInfo.fNElements;
       auto unpackedBuffer = new unsigned char[pageSize];
       element->Unpack(unpackedBuffer, pageBuffer, pageInfo.fNElements);
       delete[] pageBuffer;

@@ -103,7 +103,7 @@ up to the given entry number are committed.
 // clang-format on
 class RPageSink : public RPageStorage {
 protected:
-   const RNTupleWriteOptions fOptions;
+   RNTupleWriteOptions fOptions;
 
    /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
@@ -160,7 +160,7 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 // clang-format on
 class RPageSource : public RPageStorage {
 protected:
-   const RNTupleReadOptions fOptions;
+   RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
    /// The columns which we expect to be read, i.e. for which AddColumn() has been called
    std::unordered_set<DescriptorId_t> fActiveColumns;

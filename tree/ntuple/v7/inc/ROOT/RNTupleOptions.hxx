@@ -76,7 +76,6 @@ public:
       kDefault,
       kOff,
       kOn,
-      kMMap,
    };
 
 private:
