@@ -39,7 +39,6 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 #include "Riostream.h"
 
 #include "RooExtendPdf.h"
-#include "RooExtendPdf.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"

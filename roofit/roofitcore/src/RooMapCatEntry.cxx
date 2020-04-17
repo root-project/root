@@ -23,7 +23,6 @@
 #include "RooFit.h"
 
 #include "RooMapCatEntry.h"
-#include "RooMapCatEntry.h"
 #include "TString.h"
 
 using namespace std;

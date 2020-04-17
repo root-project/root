@@ -32,7 +32,6 @@
 //#include "RooMinuit.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooMsgService.h"
 #include "RooNLLVar.h"
 
 #include "RooStats/RooStatsUtils.h"

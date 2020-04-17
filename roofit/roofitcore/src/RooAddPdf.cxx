@@ -68,7 +68,6 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooMsgService.h"
 
 #include "TIterator.h"
-#include "TIterator.h"
 #include "TList.h"
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
@@ -78,7 +77,6 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooAddGenContext.h"
 #include "RooRealConstant.h"
 #include "RooNameReg.h"
-#include "RooMsgService.h"
 #include "RooRecursiveFraction.h"
 #include "RooGlobalFunc.h"
 #include "RooRealIntegral.h"

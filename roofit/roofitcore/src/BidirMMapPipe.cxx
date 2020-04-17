@@ -21,9 +21,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <string.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>

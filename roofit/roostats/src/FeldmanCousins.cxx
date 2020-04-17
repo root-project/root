@@ -22,7 +22,6 @@
 
 #include "RooStats/ProfileLikelihoodTestStat.h"
 #include "RooStats/NeymanConstruction.h"
-#include "RooStats/RooStatsUtils.h"
 
 #include "RooDataSet.h"
 #include "RooDataHist.h"

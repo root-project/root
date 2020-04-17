@@ -35,7 +35,6 @@ points for its contents and provides an iterator over its elements
 #include "TMath.h"
 #include "TTree.h"
 
-#include "RooAbsData.h"
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"

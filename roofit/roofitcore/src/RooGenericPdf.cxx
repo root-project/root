@@ -46,7 +46,6 @@ the names of the arguments are not hard coded.
 #include "Riostream.h"
 
 #include "RooGenericPdf.h"
-#include "RooGenericPdf.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooArgList.h"
