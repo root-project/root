@@ -78,7 +78,6 @@ extra libraries (Histogram, display, etc).
 #include "TVirtualMutex.h"
 
 #include "HFitInterface.h"
-#include "Foption.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"

@@ -25,7 +25,6 @@
 #include "TColor.h"
 #include "TG3DLine.h"
 #include "TGSlider.h"
-#include "TGComboBox.h"
 #include "TGDoubleSlider.h"
 #include "TTree.h"
 #include "TGListBox.h"
