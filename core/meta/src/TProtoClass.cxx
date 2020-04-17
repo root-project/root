@@ -68,8 +68,6 @@ TProtoClass::TProtoClass(TClass* cl):
       // The data members are ordered as follows:
       // - this class's data members,
       // - foreach base: base class's data members.
-      // fPRealData encodes all TProtoRealData objects with a
-      // TObjString to signal a new class.
       TClass* clCurrent = cl;
       fDepClasses.push_back(cl->GetName() );
       for (auto realDataObj: *cl->GetListOfRealData()) {
