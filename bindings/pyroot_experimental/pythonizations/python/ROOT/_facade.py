@@ -82,17 +82,12 @@ class ROOTFacade(types.ModuleType):
         self._set_import_hook()
 
     def AddressOf(self, *args):
-        # Return an array of size 1 which contains the address of the object in args
-        if sys.version_info >= (3, 3):
-            import array
-            return array.array('q', [ self.addressof(*args) ])
-        else:
-            # In Python<3.3, array.array does not support long long type, fall back to NumPy
-            try:
-                import numpy as np
-            except ImportError:
-                raise RuntimeError("Error importing NumPy: in Python<3.3, AddressOf requires NumPy")
-            return np.array([ self.addressof(*args) ], dtype=np.longlong)
+        # Return a bytearray that can fit a long long, which is what addressof
+        # returns (wrapped in a Python integer). The bytes of the bytearray
+        # correspond to the address of the object in args
+        import struct
+        ad = self.addressof(*args)
+        return bytearray(struct.pack('q', ad))
 
     def _set_import_hook(self):
         # This hook allows to write e.g:
