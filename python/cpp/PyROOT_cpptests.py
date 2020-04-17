@@ -349,6 +349,22 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertNotEqual( l3, l5 )
       self.assertNotEqual( l5, l3 )
 
+   def test16AddressOfaddressof(self):
+      """Test addresses returned by AddressOf and addressof"""
+      import ROOT
+
+      o = ROOT.TObject()
+
+      addr_as_int    = ROOT.addressof(o)
+      addr_as_buffer = ROOT.AddressOf(o)
+
+      # The result of AddressOf can be passed to a function that expects a void*
+      ROOT.gInterpreter.Declare("""
+      long long get_address_in_buffer(void *p) { return *(long long*)p; }
+      """)
+
+      self.assertEqual(addr_as_int, ROOT.get_address_in_buffer(addr_as_buffer))
+
 
 ### C++ language naming of classes ===========================================
 class Cpp2ClassNamingTestCase( MyTestCase ):
