@@ -45,10 +45,8 @@ See TDSet.
 #include "TProofChain.h"
 #include "TProofServ.h"
 #include "TPluginManager.h"
-#include "TChain.h"
 #include "TChainElement.h"
 #include "TSystem.h"
-#include "THashList.h"
 #include "TSelector.h"
 
 #include "TVirtualStreamerInfo.h"
