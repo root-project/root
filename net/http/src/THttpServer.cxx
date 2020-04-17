@@ -32,8 +32,7 @@
 
 #include <string>
 #include <cstdlib>
-#include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <fstream>
 #include <chrono>
 
