@@ -28,6 +28,7 @@ Persistent version of a TClass.
 #include "TError.h"
 
 #include <cassert>
+#include <unordered_map>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TProtoClass from a TClass.
@@ -61,6 +62,30 @@ TProtoClass::TProtoClass(TClass* cl):
    }
 
    fPRealData.reserve(100);
+   class DepClassDedup {
+      std::vector<TString> &fDepClasses;
+      std::unordered_map<std::string, int> fDepClassIdx;
+   public:
+      DepClassDedup(std::vector<TString> &depClasses): fDepClasses(depClasses)
+      {
+         R__ASSERT(fDepClasses.empty() && "Expected fDepClasses to be empty before fililng it!");
+      }
+
+      ~DepClassDedup()
+      {
+         if (fDepClasses.size() != fDepClassIdx.size())
+            ::Error("TProtoClass::DepClassDedup::~DepClassDedup",
+                    "Mismatching size of fDepClasses and index map! Please report.");
+      }
+
+      int GetIdx(const char *name) {
+         auto itins = fDepClassIdx.insert({name, fDepClasses.size()});
+         if (itins.second) {
+            fDepClasses.emplace_back(name);
+         }
+         return itins.first->second;
+      }
+   } depClassDedup(fDepClasses);
 
    if (!cl->GetCollectionProxy()) {
       // Build the list of RealData before we access it:
@@ -68,24 +93,16 @@ TProtoClass::TProtoClass(TClass* cl):
       // The data members are ordered as follows:
       // - this class's data members,
       // - foreach base: base class's data members.
-      TClass* clCurrent = cl;
-      fDepClasses.push_back(cl->GetName() );
       for (auto realDataObj: *cl->GetListOfRealData()) {
          TRealData *rd = (TRealData*)realDataObj;
-         TClass* clRD = rd->GetDataMember()->GetClass();
          TProtoRealData protoRealData(rd);
-         if (clRD != clCurrent) {
-            // here I have a new class
-            fDepClasses.push_back(clRD->GetName() );
-            clCurrent = clRD;
-            protoRealData.fClassIndex = fDepClasses.size()-1;
-            if (rd->TestBit(TRealData::kTransient)) {
-               protoRealData.SetFlag(TProtoRealData::kIsTransient,true);
-            }
-            else
-               protoRealData.SetFlag(TProtoRealData::kIsTransient,false);
-         }
-         fPRealData.push_back(protoRealData);
+
+         if (TClass* clRD = rd->GetDataMember()->GetClass())
+            protoRealData.fClassIndex = depClassDedup.GetIdx(clRD->GetName());
+
+         protoRealData.SetFlag(TProtoRealData::kIsTransient, rd->TestBit(TRealData::kTransient));
+
+         fPRealData.emplace_back(protoRealData);
       }
 
       // if (gDebug > 2) {
