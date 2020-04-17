@@ -39,7 +39,6 @@
 #include "RooMsgService.h"
 
 #include "RooAbsReal.h"
-#include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooBinning.h"
@@ -71,7 +70,6 @@
 #include "RooDerivative.h"
 #include "RooGenFunction.h"
 #include "RooMultiGenFunction.h"
-#include "RooCmdConfig.h"
 #include "RooXYChi2Var.h"
 #include "RooMinuit.h"
 #include "RooMinimizer.h"
@@ -4927,7 +4925,6 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 
 
 #include "TSystem.h"
-#include "RooHelpers.h"
 
 using RooHelpers::CachingError;
 using RooHelpers::FormatPdfTree;

@@ -64,7 +64,6 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooWorkspace.h"
-#include "RooBinning.h"
 
 //using namespace std;
 

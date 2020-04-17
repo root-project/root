@@ -63,7 +63,6 @@ in each category.
 #include "RooCmdConfig.h"
 #include "RooNameReg.h"
 #include "RooGlobalFunc.h"
-#include "RooNameReg.h"
 #include "RooMsgService.h"
 #include "RooCategory.h"
 #include "RooSuperCategory.h"

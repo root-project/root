@@ -34,7 +34,6 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf.
 #include "RooMath.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
-#include "RooMath.h"
 #include "TMath.h"
 
 

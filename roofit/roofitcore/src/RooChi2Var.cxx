@@ -30,7 +30,6 @@
 #include "RooFit.h"
 
 #include "RooChi2Var.h"
-#include "RooChi2Var.h"
 #include "RooDataHist.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"

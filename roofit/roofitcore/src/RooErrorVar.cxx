@@ -30,7 +30,6 @@ error, such as calculating the pull value.
 #include "Riostream.h"
 
 #include "RooErrorVar.h"
-#include "RooErrorVar.h"
 #include "RooAbsBinning.h"
 #include "RooStreamParser.h"
 #include "RooRangeBinning.h"

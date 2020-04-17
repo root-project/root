@@ -40,7 +40,6 @@
 #include "RooFitResult.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
-#include "RooProduct.h"
 #include "RooWorkspace.h"
 #include "RooCustomizer.h"
 #include "RooPlot.h"

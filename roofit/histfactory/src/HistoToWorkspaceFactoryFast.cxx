@@ -46,7 +46,6 @@
 #include "RooHistFunc.h"
 #include "RooHistPdf.h"
 #include "RooRealSumPdf.h"
-#include "RooProduct.h"
 #include "RooWorkspace.h"
 #include "RooCustomizer.h"
 #include "RooPlot.h"

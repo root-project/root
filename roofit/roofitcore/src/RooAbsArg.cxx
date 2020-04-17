@@ -57,7 +57,6 @@ setting/clearing/testing named attributes.
 #include "RooTrace.h"
 #include "RooRealIntegral.h"
 #include "RooConstVar.h"
-#include "RooMsgService.h"
 #include "RooExpensiveObjectCache.h"
 #include "RooAbsDataStore.h"
 #include "RooResolutionModel.h"

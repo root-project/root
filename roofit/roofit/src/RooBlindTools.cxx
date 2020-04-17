@@ -22,7 +22,6 @@
 #include "RooFit.h"
 
 #include "RooBlindTools.h"
-#include "RooBlindTools.h"
 
 #include "RooErrorHandler.h"
 #include "Riostream.h"

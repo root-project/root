@@ -17,7 +17,6 @@
 #include "RooFit.h"
 
 #include "RooArgProxy.h"
-#include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 #include <iostream>

@@ -35,7 +35,6 @@ with a probability proportional to its associated coefficient.
 
 #include "RooMsgService.h"
 #include "RooAddGenContext.h"
-#include "RooAddGenContext.h"
 #include "RooAddPdf.h"
 #include "RooDataSet.h"
 #include "RooRandom.h"
