@@ -22,7 +22,6 @@
 #include "TFriendProxy.h"
 #include "TLeaf.h"
 #include "TTreeProxyGenerator.h"
-#include "TTreeReaderValue.h"
 #include "TRegexp.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"

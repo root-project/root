@@ -429,8 +429,6 @@ End_Macro
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #include <thread>
-#include <string>
-#include <sstream>
 #endif
 
 constexpr Int_t   kNEntriesResort    = 100;
