@@ -109,58 +109,6 @@ TProtoClass::TProtoClass(TClass* cl):
    fOffsetStreamer = cl->fOffsetStreamer;
 }
 
-// // conversion of a new TProtoClass from an old TProtoClass
-// //______________________________________________________________________________
-// TProtoClass::TProtoClass(TProtoClassOld * pc):
-//    TNamed(pc->GetName(),pc->GetTitle()), fBase(pc->fBase),
-//    fEnums(pc->fEnums), fSizeof(pc->fSizeof), fCanSplit(pc->fCanSplit),
-//    fStreamerType(pc->fStreamerType), fProperty(pc->fProperty),
-//    fClassProperty(pc->fClassProperty), fOffsetStreamer( pc->fOffsetStreamer)
-// {
-
-//    fBase = (pc->fBase) ? (TList*) pc->fBase->Clone() : 0;
-//    //fData = (pc->fData) ? (TList*) pc->fData->Clone() : 0;
-//    fEnums = (pc->fEnums) ? (TList*) pc->fEnums->Clone() : 0;
-
-//    // initialize list of data members (fData)
-//    TList * dataMembers = pc->fData;
-//    if (dataMembers && dataMembers->GetSize() > 0) {
-//       fData.reserve(dataMembers->GetSize() );
-//       for (auto * obj : *dataMembers) {
-//          TDataMember * dm = dynamic_cast<TDataMember*>(obj);
-//          if (dm) {
-//             TDataMember * dm2 = (TDataMember *) dm->Clone();
-//             if (dm2)   fData.push_back(dm2);
-//          }
-//       }
-//    }
-
-//    fPRealData.reserve(100);
-
-//    TString className;
-//    for (auto dataPtr : *(pc->fPRealData) ) {
-
-//       const auto classType = dataPtr->IsA();
-//       if (classType == TObjString::Class()) {
-//          className = dataPtr->GetName();
-//       }
-//       else if (classType == TProtoClass::TProtoRealData::Class()) {
-//          TProtoRealData protoRealData;
-//          TProtoClass::TProtoRealData * oldData= ( TProtoClass::TProtoRealData * )dataPtr;
-//          TClass * cl = TClass::GetClass(className);
-//          //protoRealData.fName = dataPtr->GetName();
-//          //TObject * obj =  cl->GetListOfDataMembers()->FindObject(  );
-//          protoRealData.fDMIndex = DataMemberIndex(cl, dataPtr->GetName() );
-//          //  protoRealData.fTitle = dataPtr->GetTitle();
-//          //protoRealData.fClass = className;
-//          className.Clear();
-//          protoRealData.fIsTransient = dataPtr->TestBit(TRealData::kTransient);
-//          protoRealData.fOffset = oldData->GetOffset();
-//          protoRealData.fIsObject = dataPtr->TestBit(BIT(15));
-//          fPRealData.push_back(protoRealData);
-//       }
-//    }
-// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
