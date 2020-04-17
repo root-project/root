@@ -33,7 +33,6 @@
 #include "TClass.h"
 #include "TTimeStamp.h"
 #include "TSystem.h"
-#include "TTimeStamp.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis

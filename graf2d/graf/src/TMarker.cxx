@@ -20,7 +20,6 @@
 #include "TPoint.h"
 #include "TText.h"
 #include "TClass.h"
-#include "TPoint.h"
 
 ClassImp(TMarker);
 
