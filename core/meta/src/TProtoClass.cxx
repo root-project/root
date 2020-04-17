@@ -72,10 +72,8 @@ TProtoClass::TProtoClass(TClass* cl):
       // TObjString to signal a new class.
       TClass* clCurrent = cl;
       fDepClasses.push_back(cl->GetName() );
-      TRealData* precRd = nullptr;
       for (auto realDataObj: *cl->GetListOfRealData()) {
          TRealData *rd = (TRealData*)realDataObj;
-         if (!precRd) precRd = rd;
          TClass* clRD = rd->GetDataMember()->GetClass();
          TProtoRealData protoRealData(rd);
          if (clRD != clCurrent) {
@@ -93,7 +91,6 @@ TProtoClass::TProtoClass(TClass* cl):
                protoRealData.SetFlag(TProtoRealData::kIsTransient,false);
 
             //      fPRealData->AddLast(clstr);
-            precRd = rd;
          }
          //fPRealData->AddLast(new TProtoRealData(rd));
          fPRealData.push_back(protoRealData);
