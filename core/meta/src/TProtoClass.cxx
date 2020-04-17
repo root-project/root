@@ -81,18 +81,12 @@ TProtoClass::TProtoClass(TClass* cl):
             fDepClasses.push_back(clRD->GetName() );
             clCurrent = clRD;
             protoRealData.fClassIndex = fDepClasses.size()-1;
-            //protoRealData.fClass = clRD->GetName();
-            //TObjString *clstr = new TObjString(clRD->GetName());
             if (rd->TestBit(TRealData::kTransient)) {
-               //clstr->SetBit(TRealData::kTransient);
                protoRealData.SetFlag(TProtoRealData::kIsTransient,true);
             }
             else
                protoRealData.SetFlag(TProtoRealData::kIsTransient,false);
-
-            //      fPRealData->AddLast(clstr);
          }
-         //fPRealData->AddLast(new TProtoRealData(rd));
          fPRealData.push_back(protoRealData);
       }
 
