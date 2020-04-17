@@ -749,41 +749,41 @@ TObject *TKey::ReadObj()
       return (TObject*)ReadObjectAny(0);
    }
 
-   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
-   if (!fBufferRef) {
+   TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
+   if (!bufferRef.Buffer()) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
    if (GetFile()==0) return 0;
-   fBufferRef->SetParent(GetFile());
-   fBufferRef->SetPidOffset(fPidOffset);
+   bufferRef.SetParent(GetFile());
+   bufferRef.SetPidOffset(fPidOffset);
 
+   std::unique_ptr<char []> compressedBuffer;
+   auto storeBuffer = fBuffer;
    if (fObjlen > fNbytes-fKeylen) {
-      fBuffer = new char[fNbytes];
+      compressedBuffer.reset(new char[fNbytes]);
+      fBuffer = compressedBuffer.get();
       if( !ReadFile() )                    //Read object structure from file
       {
-        delete fBufferRef;
-        delete [] fBuffer;
-        fBufferRef = 0;
         fBuffer = 0;
         return 0;
       }
-      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      memcpy(bufferRef.Buffer(),fBuffer,fKeylen);
    } else {
-      fBuffer = fBufferRef->Buffer();
+      fBuffer = bufferRef.Buffer();
       if( !ReadFile() ) {                   //Read object structure from file
-         delete fBufferRef;
-         fBufferRef = 0;
+
          fBuffer = 0;
          return 0;
       }
    }
+   fBuffer = storeBuffer;
 
    // get version of key
-   fBufferRef->SetBufferOffset(sizeof(fNbytes));
-   Version_t kvers = fBufferRef->ReadVersion();
+   bufferRef.SetBufferOffset(sizeof(fNbytes));
+   Version_t kvers = bufferRef.ReadVersion();
 
-   fBufferRef->SetBufferOffset(fKeylen);
+   bufferRef.SetBufferOffset(fKeylen);
    TObject *tobj = 0;
    // Create an instance of this class
 
@@ -802,11 +802,11 @@ TObject *TKey::ReadObj()
    }
    tobj = (TObject*)(pobj+baseOffset);
    if (kvers > 1)
-      fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
+      bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = fBufferRef->Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
+      char *objbuf = bufferRef.Buffer() + fKeylen;
+      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
@@ -819,20 +819,17 @@ TObject *TKey::ReadObj()
          bufcur += nin;
          objbuf += nout;
       }
+      compressedBuffer.reset(nullptr);
       if (nout) {
-         tobj->Streamer(*fBufferRef); //does not work with example 2 above
-         delete [] fBuffer;
+         tobj->Streamer(bufferRef); //does not work with example 2 above
       } else {
-         delete [] fBuffer;
          // Even-though we have a TObject, if the class is emulated the virtual
          // table may not be 'right', so let's go via the TClass.
          cl->Destructor(pobj);
-         pobj = 0;
-         tobj = 0;
-         goto CLEAR;
+         return nullptr;
       }
    } else {
-      tobj->Streamer(*fBufferRef);
+      tobj->Streamer(bufferRef);
    }
 
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
@@ -852,11 +849,6 @@ TObject *TKey::ReadObj()
          addfunc(pobj, fMotherDir);
       }
    }
-
-CLEAR:
-   delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
 
    return tobj;
 }
@@ -892,28 +884,30 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       return (TObject*)ReadObjectAny(0);
    }
 
-   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
-   if (!fBufferRef) {
+   TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
+   if (!bufferRef.Buffer()) {
       Error("ReadObjWithBuffer", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
    if (GetFile()==0) return 0;
-   fBufferRef->SetParent(GetFile());
-   fBufferRef->SetPidOffset(fPidOffset);
+   bufferRef.SetParent(GetFile());
+   bufferRef.SetPidOffset(fPidOffset);
 
+   auto storeBuffer = fBuffer;
    if (fObjlen > fNbytes-fKeylen) {
       fBuffer = bufferRead;
-      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      memcpy(bufferRef.Buffer(),fBuffer,fKeylen);
    } else {
-      fBuffer = fBufferRef->Buffer();
+      fBuffer = bufferRef.Buffer();
       ReadFile();                    //Read object structure from file
    }
+   fBuffer = storeBuffer;
 
    // get version of key
-   fBufferRef->SetBufferOffset(sizeof(fNbytes));
-   Version_t kvers = fBufferRef->ReadVersion();
+   bufferRef.SetBufferOffset(sizeof(fNbytes));
+   Version_t kvers = bufferRef.ReadVersion();
 
-   fBufferRef->SetBufferOffset(fKeylen);
+   bufferRef.SetBufferOffset(fKeylen);
    TObject *tobj = 0;
    // Create an instance of this class
 
@@ -933,11 +927,11 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    tobj = (TObject*)(pobj+baseOffset);
 
    if (kvers > 1)
-      fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
+      bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = fBufferRef->Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
+      char *objbuf = bufferRef.Buffer() + fKeylen;
+      UChar_t *bufcur = (UChar_t *)&bufferRead[fKeylen];
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
@@ -951,17 +945,15 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
          objbuf += nout;
       }
       if (nout) {
-         tobj->Streamer(*fBufferRef); //does not work with example 2 above
+         tobj->Streamer(bufferRef); //does not work with example 2 above
       } else {
          // Even-though we have a TObject, if the class is emulated the virtual
          // table may not be 'right', so let's go via the TClass.
          cl->Destructor(pobj);
-         pobj = 0;
-         tobj = 0;
-         goto CLEAR;
+         return nullptr;
       }
    } else {
-      tobj->Streamer(*fBufferRef);
+      tobj->Streamer(bufferRef);
    }
 
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
@@ -981,11 +973,6 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
          addfunc(pobj, fMotherDir);
       }
    }
-
-CLEAR:
-   delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
 
    return tobj;
 }
@@ -1017,29 +1004,33 @@ CLEAR:
 
 void *TKey::ReadObjectAny(const TClass* expectedClass)
 {
-   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
-   if (!fBufferRef) {
+   TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
+   if (!bufferRef.Buffer()) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
    }
    if (GetFile()==0) return 0;
-   fBufferRef->SetParent(GetFile());
-   fBufferRef->SetPidOffset(fPidOffset);
+   bufferRef.SetParent(GetFile());
+   bufferRef.SetPidOffset(fPidOffset);
 
+   std::unique_ptr<char []> compressedBuffer;
+   auto storeBuffer = fBuffer;
    if (fObjlen > fNbytes-fKeylen) {
-      fBuffer = new char[fNbytes];
+      compressedBuffer.reset(new char[fNbytes]);
+      fBuffer = compressedBuffer.get();
       ReadFile();                    //Read object structure from file
-      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      memcpy(bufferRef.Buffer(),fBuffer,fKeylen);
    } else {
-      fBuffer = fBufferRef->Buffer();
+      fBuffer = bufferRef.Buffer();
       ReadFile();                    //Read object structure from file
    }
+   fBuffer = storeBuffer;
 
    // get version of key
-   fBufferRef->SetBufferOffset(sizeof(fNbytes));
-   Version_t kvers = fBufferRef->ReadVersion();
+   bufferRef.SetBufferOffset(sizeof(fNbytes));
+   Version_t kvers = bufferRef.ReadVersion();
 
-   fBufferRef->SetBufferOffset(fKeylen);
+   bufferRef.SetBufferOffset(fKeylen);
    TClass *cl = TClass::GetClass(fClassName.Data());
    TClass *clOnfile = 0;
    if (!cl) {
@@ -1080,11 +1071,11 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    }
 
    if (kvers > 1)
-      fBufferRef->MapObject(pobj,cl);  //register obj in map to handle self reference
+      bufferRef.MapObject(pobj,cl);  //register obj in map to handle self reference
 
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = fBufferRef->Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
+      char *objbuf = bufferRef.Buffer() + fKeylen;
+      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
@@ -1098,16 +1089,13 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
          objbuf += nout;
       }
       if (nout) {
-         cl->Streamer((void*)pobj, *fBufferRef, clOnfile);    //read object
-         delete [] fBuffer;
+         cl->Streamer((void*)pobj, bufferRef, clOnfile);    //read object
       } else {
-         delete [] fBuffer;
          cl->Destructor(pobj);
-         pobj = 0;
-         goto CLEAR;
+         return nullptr;
       }
    } else {
-      cl->Streamer((void*)pobj, *fBufferRef, clOnfile);    //read object
+      cl->Streamer((void*)pobj, bufferRef, clOnfile);    //read object
    }
 
    if (cl->IsTObject()) {
@@ -1138,11 +1126,6 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       }
    }
 
-   CLEAR:
-   delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
-
    return ( ((char*)pobj) + baseOffset );
 }
 
@@ -1157,25 +1140,30 @@ Int_t TKey::Read(TObject *obj)
 {
    if (!obj || (GetFile()==0)) return 0;
 
-   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
-   fBufferRef->SetParent(GetFile());
-   fBufferRef->SetPidOffset(fPidOffset);
+   TBufferFile bufferRef(TBuffer::kRead, fObjlen+fKeylen);
+   bufferRef.SetParent(GetFile());
+   bufferRef.SetPidOffset(fPidOffset);
 
    if (fVersion > 1)
-      fBufferRef->MapObject(obj);  //register obj in map to handle self reference
+      bufferRef.MapObject(obj);  //register obj in map to handle self reference
 
+   std::unique_ptr<char []> compressedBuffer;
+   auto storeBuffer = fBuffer;
    if (fObjlen > fNbytes-fKeylen) {
-      fBuffer = new char[fNbytes];
+      compressedBuffer.reset(new char[fNbytes]);
+      fBuffer = compressedBuffer.get();
       ReadFile();                    //Read object structure from file
-      memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
+      memcpy(bufferRef.Buffer(),fBuffer,fKeylen);
    } else {
-      fBuffer = fBufferRef->Buffer();
+      fBuffer = bufferRef.Buffer();
       ReadFile();                    //Read object structure from file
    }
-   fBufferRef->SetBufferOffset(fKeylen);
+   fBuffer = storeBuffer;
+
+   bufferRef.SetBufferOffset(fKeylen);
    if (fObjlen > fNbytes-fKeylen) {
-      char *objbuf = fBufferRef->Buffer() + fKeylen;
-      UChar_t *bufcur = (UChar_t *)&fBuffer[fKeylen];
+      char *objbuf = bufferRef.Buffer() + fKeylen;
+      UChar_t *bufcur = (UChar_t *)&compressedBuffer[fKeylen];
       Int_t nin, nout = 0, nbuf;
       Int_t noutot = 0;
       while (1) {
@@ -1188,10 +1176,9 @@ Int_t TKey::Read(TObject *obj)
          bufcur += nin;
          objbuf += nout;
       }
-      if (nout) obj->Streamer(*fBufferRef);
-      delete [] fBuffer;
+      if (nout) obj->Streamer(bufferRef);
    } else {
-      obj->Streamer(*fBufferRef);
+      obj->Streamer(bufferRef);
    }
 
    // Append the object to the directory if requested:
@@ -1202,9 +1189,6 @@ Int_t TKey::Read(TObject *obj)
       }
    }
 
-   delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
    return fNbytes;
 }
 
