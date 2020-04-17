@@ -37,7 +37,6 @@ TApplication (see TRint).
 #include "TVirtualPad.h"
 #include "TEnv.h"
 #include "TColor.h"
-#include "TClassTable.h"
 #include "TPluginManager.h"
 #include "TClassTable.h"
 #include "TBrowser.h"

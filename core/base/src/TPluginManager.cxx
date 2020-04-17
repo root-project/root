@@ -86,7 +86,6 @@ TFile, TSQLServer, TGrid, etc. functionality.
 #include "TSortedList.h"
 #include "THashList.h"
 #include "THashTable.h"
-#include "Varargs.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TMethod.h"

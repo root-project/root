@@ -69,8 +69,6 @@ General purpose message signal
 #include "Riostream.h"
 #include "RQ_OBJECT.h"
 #include "TVirtualMutex.h"
-#include "Varargs.h"
-#include "TInterpreter.h"
 #include "RConfigure.h"
 
 void *gTQSender; // A pointer to the object that sent the last signal.
