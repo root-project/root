@@ -10,7 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
 from ROOT import TObject, TLorentzVector, kRed, kGreen, kBlue, TVectorF, TROOT, TCanvas, gInterpreter, gROOT, TMatrixD, TString, std
-from ROOT import MakeNullPointer, AsCObject, BindObject, AddressOf
+from ROOT import MakeNullPointer, AsCObject, BindObject, AddressOf, addressof
 from common import *
 from functools import partial
 
@@ -232,7 +232,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       Z = ROOT.Z
 
       o = TObject()
-      oaddr = AddressOf(o)[0]
+      oaddr = addressof(o)
 
       self.assertEqual( oaddr, Z.GimeAddressPtr( o ) )
       self.assertEqual( oaddr, Z.GimeAddressPtrRef( o ) )
@@ -266,14 +266,14 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       if self.exp_pyroot:
          # New Cppyy does not raise ValueError,
          # it just returns zero
-         self.assertEqual(AddressOf(ptr)[0], 0)
+         self.assertEqual(addressof(ptr), 0)
       else:
          self.assertRaises( ValueError, AddressOf, ptr )
       Z.SetAddressPtrRef( ptr )
 
-      self.assertEqual( AddressOf( ptr )[0], 0x1234 )
+      self.assertEqual( addressof( ptr ), 0x1234 )
       Z.SetAddressPtrPtr( ptr )
-      self.assertEqual( AddressOf( ptr )[0], 0x4321 )
+      self.assertEqual( addressof( ptr ), 0x4321 )
 
    def test13Macro( self ):
       """Test access to cpp macro's"""
@@ -308,7 +308,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       s = TString( "Hello World!" )
       co = AsCObject( s )
       
-      ad = AddressOf( s )[ 0 ]
+      ad = addressof( s )
 
       self.assert_( s == BindObject( co, s.__class__ ) )
       self.assert_( s == BindObject( co, "TString" ) )
