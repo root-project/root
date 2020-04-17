@@ -39,7 +39,6 @@
 #include "TApplication.h"
 #include "TKey.h"
 #include "TGTableLayout.h"
-#include "TGFileDialog.h"
 #include "TProof.h"
 #include "TFileInfo.h"
 #include "TGMsgBox.h"
