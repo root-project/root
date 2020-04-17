@@ -26,7 +26,6 @@
 #include "TGColorSelect.h"
 #include "TGComboBox.h"
 #include "TGDoubleSlider.h"
-#include "TGComboBox.h"
 #include "TAttMarkerEditor.h"
 
 /** \class TEveTrackPropagatorSubEditor
