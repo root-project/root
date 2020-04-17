@@ -41,7 +41,6 @@
 #include "TToggle.h"
 #include "TRootDialog.h"
 #include "TDataType.h"
-#include "TCanvas.h"
 #include "TBrowser.h"
 #include "TRootCanvas.h"
 #include "TRootBrowser.h"
