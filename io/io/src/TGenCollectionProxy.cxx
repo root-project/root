@@ -16,15 +16,13 @@
 #include "TClass.h"
 #include "TError.h"
 #include "TROOT.h"
-#include "TInterpreter.h"
+#include "TInterpreter.h" // For gInterpreterMutex
 #include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "TStreamerInfoActions.h"
 #include "THashTable.h"
 #include "THashList.h"
 #include <stdlib.h>
-
-#include "TInterpreter.h" // For gInterpreterMutex
 
 #define MESSAGE(which,text)
 

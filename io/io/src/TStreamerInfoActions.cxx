@@ -20,7 +20,6 @@
 #include "TBufferFile.h"
 #include "TBufferText.h"
 #include "TMemberStreamer.h"
-#include "TError.h"
 #include "TClassEdit.h"
 #include "TVirtualCollectionIterators.h"
 #include "TProcessID.h"
