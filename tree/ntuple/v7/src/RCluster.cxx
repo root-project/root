@@ -33,8 +33,3 @@ ROOT::Experimental::Detail::RHeapCluster::~RHeapCluster()
 {
    delete[] static_cast<unsigned char *>(fMemory);
 }
-
-
-ROOT::Experimental::Detail::RMMapCluster::~RMMapCluster()
-{
-}

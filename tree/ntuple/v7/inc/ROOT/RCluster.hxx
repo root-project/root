@@ -130,20 +130,6 @@ public:
    ~RHeapCluster();
 };
 
-// clang-format off
-/**
-\class ROOT::Experimental::RHeapCluster
-\ingroup NTuple
-\brief An RCluster that provides the on-disk pages using mmap
-*/
-// clang-format on
-class RMMapCluster : public RCluster {
-public:
-   RMMapCluster(void *memory, DescriptorId_t clusterId) : RCluster(memory, clusterId) {}
-   ~RMMapCluster();
-};
-
-
 } // namespace Detail
 } // namespace Experimental
 } // namespace ROOT
