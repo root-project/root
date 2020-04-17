@@ -105,7 +105,6 @@ TProtoClass::TProtoClass(TClass* cl):
       // }
    }
 
-   // this crashes
    cl->CalculateStreamerOffset();
    fOffsetStreamer = cl->fOffsetStreamer;
 }
