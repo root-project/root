@@ -52,7 +52,6 @@
 #include "TMath.h"
 #include "TRandom2.h"
 #include "TObjArray.h"
-#include "TVectorD.h"
 #include "Hoption.h"
 #include "Hparam.h"
 #include "TPluginManager.h"
