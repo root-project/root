@@ -144,7 +144,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TPluginManager.h"
 #include "TMap.h"
 #include "TVirtualMutex.h"
-#include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnumsWithLock.h"
@@ -154,8 +153,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "ThreadLocalStorage.h"
 #include "TVirtualRWMutex.h"
 #include "TVirtualX.h"
-
-#include <string>
 
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)

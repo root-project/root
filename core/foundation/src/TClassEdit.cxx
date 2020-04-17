@@ -18,7 +18,6 @@
 #include <assert.h>
 #include <string.h>
 #include "TClassEdit.h"
-#include <ctype.h>
 #include <cctype>
 #include "Rstrstream.h"
 #include <set>

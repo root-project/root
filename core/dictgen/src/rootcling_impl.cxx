@@ -31,7 +31,6 @@ const char *shortHelp =
 #include <errno.h>
 #include <string>
 #include <list>
-#include <vector>
 #include <sstream>
 #include <map>
 #include <fstream>
