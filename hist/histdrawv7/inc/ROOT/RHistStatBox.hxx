@@ -35,6 +35,7 @@ namespace Experimental {
 */
 
 class RHistStatRequest : public RDrawableRequest {
+   unsigned mask{0xff};      // mask of items to show
    std::vector<double> xmin; // vector of axis min values
    std::vector<double> xmax; // vector of axis max values
 
@@ -42,6 +43,7 @@ public:
 
    std::unique_ptr<RDrawableReply> Process() override;
 
+   unsigned GetMask() const { return mask; }
    double GetMin(unsigned indx) const { return indx < xmin.size() ? xmin[indx] : 0; }
    double GetMax(unsigned indx) const { return indx < xmax.size() ? xmax[indx] : 0; }
 };
@@ -73,10 +75,15 @@ public:
 */
 
 class RDisplayHistStat : public RIndirectDisplayItem {
+   unsigned fShowMask{0};   ///< initial show mask
+   std::vector<std::string> fEntries; ///< names of entries for context menu
 public:
    RDisplayHistStat() = default;
-   RDisplayHistStat(const RDrawable &dr) : RIndirectDisplayItem(dr) {}
+   RDisplayHistStat(const RDrawable &dr, unsigned mask, const std::vector<std::string> &entries) : RIndirectDisplayItem(dr), fShowMask(mask), fEntries(entries) {}
    virtual ~RDisplayHistStat() = default;
+
+   unsigned GetShowMask() const { return fShowMask; }
+   const std::vector<std::string> &GetEntries() const { return fEntries; }
 };
 
 
@@ -100,6 +107,7 @@ private:
    };
 
    std::string fTitle;                       ///< stat box title
+   unsigned fShowMask{0xff};                 ///< show stat box lines
 
    RAttrText fAttrText{this, "text_"};       ///<! text attributes
    RAttrLine fAttrBorder{this, "border_"};   ///<! border attributes
@@ -108,14 +116,18 @@ private:
 
 protected:
 
+   enum EShowBits { kShowTitle = 0x1, kShowEntries = 0x2, kShowMean = 0x4, kShowDev = 0x8, kShowRange = 0x10 };
+
    bool IsFrameRequired() const final { return true; }
 
    virtual void FillStatistic(const RHistStatRequest &, RHistStatReply &) const {}
 
+   virtual const std::vector<std::string> &GetEntriesNames() const;
+
    std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const override
    {
       // do not send stat box itself while it includes histogram which is not required on client side
-      return std::make_unique<RDisplayHistStat>(*this);
+      return std::make_unique<RDisplayHistStat>(*this, fShowMask, GetEntriesNames());
    }
 
 public:
@@ -222,7 +234,6 @@ class RHist1StatBox final : public RHistStatBox<1> {
 protected:
    void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
 public:
-   RHist1StatBox() = default;
    template <class HIST>
    RHist1StatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox<1>(hist, title) {}
 };
@@ -230,24 +241,16 @@ public:
 
 class RHist2StatBox final : public RHistStatBox<2> {
 protected:
-
    void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
-
 public:
-   RHist2StatBox() = default;
-
    template <class HIST>
    RHist2StatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox<2>(hist, title) {}
 };
 
 class RHist3StatBox final : public RHistStatBox<3> {
 protected:
-
    void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
-
 public:
-   RHist3StatBox() = default;
-
    template <class HIST>
    RHist3StatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox<3>(hist, title) {}
 };

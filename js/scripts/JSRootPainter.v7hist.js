@@ -3479,6 +3479,7 @@
          // last request will be always submittef
          var req = {
             _typename: "ROOT::Experimental::RHistStatRequest",
+            mask: this.GetObject().fShowMask,
             xmin: [fp.scale_xmin, fp.scale_ymin],
             xmax: [fp.scale_xmax, fp.scale_ymax]
          };
@@ -3565,6 +3566,38 @@
 
       if (this.FillStatistic())
          this.DrawStatistic(this.stats_lines);
+
+      if (JSROOT.gStyle.ContextMenu)
+         this.draw_g.on("contextmenu", this.ShowContextMenu.bind(this));
+   }
+
+   RHistStatsPainter.prototype.ChangeMask = function(nbit) {
+      var obj = this.GetObject(), mask = (1<<nbit);
+      if (obj.fShowMask & mask)
+         obj.fShowMask = obj.fShowMask & ~mask;
+      else
+         obj.fShowMask = obj.fShowMask | mask;
+
+      if (this.FillStatistic())
+         this.DrawStatistic(this.stats_lines);
+   }
+
+   RHistStatsPainter.prototype.ShowContextMenu = function() {
+      d3.event.preventDefault();
+      d3.event.stopPropagation(); // disable main context menu
+      var evnt = d3.event;
+
+      JSROOT.Painter.createMenu(this, function(menu) {
+         var obj = menu.painter.GetObject(),
+             action = menu.painter.ChangeMask.bind(menu.painter);
+
+         menu.add("header: StatBox");
+
+         for (var n=0;n<obj.fEntries.length; ++n)
+            menu.addchk((obj.fShowMask & (1<<n)), obj.fEntries[n], n, action);
+
+         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(evnt); });
+      });
    }
 
    RHistStatsPainter.prototype.DrawStatistic = function(lines) {
