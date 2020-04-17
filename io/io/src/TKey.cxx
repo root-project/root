@@ -749,20 +749,6 @@ TObject *TKey::ReadObj()
       return (TObject*)ReadObjectAny(0);
    }
 
-   struct CleanUp {
-      TKey *fKey;
-      CleanUp(TKey *key) : fKey(key) {}
-      ~CleanUp() {
-         delete fKey->fBufferRef;
-         fKey->fBufferRef = nullptr;
-         // This 'if' is why we can't use TKey::DeleteBuffer
-         if (fKey->fObjlen > fKey->fNbytes - fKey->fKeylen)
-            delete [] fKey->fBuffer;
-         fKey->fBuffer = nullptr;
-      }
-   };
-   CleanUp clean(this);
-
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
@@ -906,20 +892,6 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       return (TObject*)ReadObjectAny(0);
    }
 
-   struct CleanUp {
-      TKey *fKey;
-      CleanUp(TKey *key) : fKey(key) {}
-      ~CleanUp() {
-         delete fKey->fBufferRef;
-         fKey->fBufferRef = nullptr;
-         // This 'if' is why we can't use TKey::DeleteBuffer
-         if (fKey->fObjlen > fKey->fNbytes - fKey->fKeylen)
-            delete [] fKey->fBuffer;
-         fKey->fBuffer = nullptr;
-      }
-   };
-   CleanUp clean(this);
-
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObjWithBuffer", "Cannot allocate buffer: fObjlen = %d", fObjlen);
@@ -1045,20 +1017,6 @@ CLEAR:
 
 void *TKey::ReadObjectAny(const TClass* expectedClass)
 {
-   struct CleanUp {
-      TKey *fKey;
-      CleanUp(TKey *key) : fKey(key) {}
-      ~CleanUp() {
-         delete fKey->fBufferRef;
-         fKey->fBufferRef = nullptr;
-         // This 'if' is why we can't use TKey::DeleteBuffer
-         if (fKey->fObjlen > fKey->fNbytes - fKey->fKeylen)
-            delete [] fKey->fBuffer;
-         fKey->fBuffer = nullptr;
-      }
-   };
-   CleanUp clean(this);
-
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
@@ -1198,20 +1156,6 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 Int_t TKey::Read(TObject *obj)
 {
    if (!obj || (GetFile()==0)) return 0;
-
-   struct CleanUp {
-      TKey *fKey;
-      CleanUp(TKey *key) : fKey(key) {}
-      ~CleanUp() {
-         delete fKey->fBufferRef;
-         fKey->fBufferRef = nullptr;
-         // This 'if' is why we can't use TKey::DeleteBuffer
-         if (fKey->fObjlen > fKey->fNbytes - fKey->fKeylen)
-            delete [] fKey->fBuffer;
-         fKey->fBuffer = nullptr;
-      }
-   };
-   CleanUp clean(this);
 
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    fBufferRef->SetParent(GetFile());
