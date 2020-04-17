@@ -253,7 +253,7 @@ public:
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fCustomColumns, fDataSource);
       const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(fLoopManager, name);
 
-      RDFInternal::BookFilterJit(jittedFilter.get(), upcastNodeOnHeap, name, expression, fLoopManager->GetAliasMap(),
+      RDFInternal::BookFilterJit(jittedFilter, upcastNodeOnHeap, name, expression, fLoopManager->GetAliasMap(),
                                  fLoopManager->GetBranchNames(), fCustomColumns, fLoopManager->GetTree(), fDataSource);
 
       fLoopManager->Book(jittedFilter.get());

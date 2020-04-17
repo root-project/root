@@ -592,7 +592,7 @@ std::string PrettyPrintAddr(const void *const addr)
    return s.str();
 }
 
-void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::string_view name,
+void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
                    const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
                    RDataSource *ds)
@@ -616,12 +616,10 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
 
    const auto filterLambda = BuildLambdaString(dotlessExpr, varNames, usedColTypes, hasReturnStmt);
 
-   const auto jittedFilterAddr = PrettyPrintAddr(jittedFilter);
-   const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
-
    // columnsOnHeap is deleted by the jitted call to JitFilterHelper
    ROOT::Internal::RDF::RBookedCustomColumns *columnsOnHeap = new ROOT::Internal::RDF::RBookedCustomColumns(customCols);
    const auto columnsOnHeapAddr = PrettyPrintAddr(columnsOnHeap);
+   const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
@@ -635,8 +633,13 @@ void BookFilterJit(RJittedFilter *jittedFilter, void *prevNodeOnHeap, std::strin
    }
    if (!usedBranches.empty())
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
+   // lifetime of pointees:
+   // - jittedFilter: kept alive by heap-allocated shared_ptr that will be deleted by JitFilterHelper after usage
+   // - prevNodeOnHeap: kept alive by heap-allocated shared_ptr that will be deleted by JitFilterHelper after usage
+   // - columnsOnHeap: heap-allocated, will be deleted by JitFilterHelper
    filterInvocation << "}, \"" << name << "\", "
-                    << "reinterpret_cast<ROOT::Detail::RDF::RJittedFilter*>(" << jittedFilterAddr << "), "
+                    << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RJittedFilter>*>("
+                    << PrettyPrintAddr(MakeSharedOnHeap(jittedFilter)) << "), "
                     << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>(" << prevNodeAddr << "),"
                     << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << columnsOnHeapAddr << ")"
                     << ");\n";
@@ -693,9 +696,14 @@ void BookDefineJit(std::string_view name, std::string_view expression, RLoopMana
    }
    if (!usedBranches.empty())
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
+   // lifetime of pointees:
+   // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
+   // - jittedCustomColumn: kept alive by heap-allocated shared_ptr that will be deleted by JitDefineHelper after usage
+   // - customColumnsAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
-                    << PrettyPrintAddr(&lm) << "), *reinterpret_cast<ROOT::Detail::RDF::RJittedCustomColumn*>("
-                    << PrettyPrintAddr(jittedCustomColumn.get()) << "),"
+                    << PrettyPrintAddr(&lm)
+                    << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RJittedCustomColumn>*>("
+                    << PrettyPrintAddr(MakeSharedOnHeap(jittedCustomColumn)) << "),"
                     << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr << ")"
                     << ");\n";
 
