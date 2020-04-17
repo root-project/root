@@ -151,6 +151,7 @@ protected:
    void SetValue(const std::string &name, double value);
    void SetValue(const std::string &name, int value);
    void SetValue(const std::string &name, const std::string &value);
+   void SetValue(const std::string &name, const RPadLength &value);
 
    const std::string &GetPrefix() const { return fPrefix; }
 

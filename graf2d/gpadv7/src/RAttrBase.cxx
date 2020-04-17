@@ -164,6 +164,17 @@ void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std:
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/// Set PadLength value
+
+void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const RPadLength &value)
+{
+   if (value.Empty())
+      ClearValue(name);
+   else
+      SetValue(name, value.AsString());
+}
+
+///////////////////////////////////////////////////////////////////////////////
 /// Clear all respective values from drawable. Only defaults can be used
 
 void ROOT::Experimental::RAttrBase::Clear()

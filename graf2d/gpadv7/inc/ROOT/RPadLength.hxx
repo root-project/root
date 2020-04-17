@@ -113,6 +113,9 @@ public:
    /// Constructor from a `Normal` coordinate.
    RPadLength(Normal normal): RPadLength() { SetNormal(normal.fVal); }
 
+   /// By default all numeric values are normal values
+   RPadLength(double normal): RPadLength() { SetNormal(normal); }
+
    /// Constructor from a `Pixel` coordinate.
    RPadLength(Pixel px): RPadLength() { SetPixel(px.fVal); }
 
@@ -125,6 +128,9 @@ public:
    /// Constructor for normal, pixel and user coordinate.
    RPadLength(Normal normal, Pixel px, User user): RPadLength() { SetUser(user.fVal); SetPixel(px.fVal); SetNormal(normal.fVal);  }
 
+   /// Constructor from string representation
+   RPadLength(const std::string &csscode) : RPadLength() { if (!csscode.empty()) ParseString(csscode); }
+
    bool HasNormal() const { return fArr.size() > 0; }
    bool HasPixel() const { return fArr.size() > 1; }
    bool HasUser() const { return fArr.size() > 2; }
@@ -136,6 +142,7 @@ public:
       fArr[0] = v;
       return *this;
    }
+
    RPadLength &SetPixel(double v)
    {
       if (fArr.size() < 2)
@@ -143,6 +150,7 @@ public:
       fArr[1] = v;
       return *this;
    }
+
    RPadLength &SetUser(double v)
    {
       if (fArr.size() < 3)
@@ -231,6 +239,7 @@ public:
       return *this;
    };
 
+   /// Multiply a `RPadLength`.
    RPadLength &operator*=(double scale)
    {
       if (HasUser()) SetUser(scale*GetUser());
