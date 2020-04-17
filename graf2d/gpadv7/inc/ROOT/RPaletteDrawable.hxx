@@ -33,7 +33,7 @@ class RPaletteDrawable final : public RDrawable {
 
    class ROwnAttrs : public RAttrBase {
       friend class RPaletteDrawable;
-      R__ATTR_CLASS(ROwnAttrs, "", AddBool("visible", true).AddString("margin","0.02").AddString("size","0.05"));
+      R__ATTR_CLASS(ROwnAttrs, "", AddBool("visible", true).AddPadLength("margin",0.02).AddPadLength("size",0.05));
    };
 
    RPalette   fPalette;                     ///  color palette to draw
@@ -57,40 +57,24 @@ public:
 
    RPaletteDrawable &SetMargin(const RPadLength &pos)
    {
-      if (pos.Empty())
-         fAttr.ClearValue("margin");
-      else
-         fAttr.SetValue("margin", pos.AsString());
-
+      fAttr.SetValue("margin", pos);
       return *this;
    }
 
    RPadLength GetMargin() const
    {
-      RPadLength res;
-      auto value = fAttr.GetValue<std::string>("margin");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
+      return fAttr.GetValue<RPadLength>("margin");
    }
 
    RPaletteDrawable &SetSize(const RPadLength &sz)
    {
-      if (sz.Empty())
-         fAttr.ClearValue("size");
-      else
-         fAttr.SetValue("size", sz.AsString());
-
+      fAttr.SetValue("size", sz);
       return *this;
    }
 
    RPadLength GetSize() const
    {
-      RPadLength res;
-      auto value = fAttr.GetValue<std::string>("size");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
+      return fAttr.GetValue<RPadLength>("size");
    }
 
    const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }

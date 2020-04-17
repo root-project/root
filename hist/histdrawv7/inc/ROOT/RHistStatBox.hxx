@@ -26,6 +26,13 @@
 namespace ROOT {
 namespace Experimental {
 
+/** \class ROOT::Experimental::RHistStatRequest
+\ingroup GrafROOT7
+\brief Data request from stat box, send when client starts drawing
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-17
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RHistStatRequest : public RDrawableRequest {
    std::vector<double> xmin; // vector of axis min values
@@ -39,15 +46,31 @@ public:
    double GetMax(unsigned indx) const { return indx < xmax.size() ? xmax[indx] : 0; }
 };
 
+/** \class ROOT::Experimental::RHistStatReply
+\ingroup GrafROOT7
+\brief Reply of stat box on RHistStatRequest, contains text lines to display
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-17
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
 class RHistStatReply : public RDrawableReply {
    std::vector<std::string> lines;   ///< text lines displayed in the stat box
 public:
 
    void AddLine(const std::string &line) { lines.emplace_back(line); }
 
-   // pin vtable
+   // virtual destructor - required to pin vtable
    virtual ~RHistStatReply() = default;
 };
+
+/** \class ROOT::Experimental::RDisplayHistStat
+\ingroup GrafROOT7
+\brief Object send to client for display of RHistStat, required to avoid sending histogram to the client
+\author Sergey Linev <s.linev@gsi.de>
+\date 2020-04-17
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
 
 class RDisplayHistStat : public RIndirectDisplayItem {
 public:
@@ -73,7 +96,7 @@ private:
 
    class RHistStatBoxAttrs : public RAttrBase {
       friend class RHistStatBoxBase;
-      R__ATTR_CLASS(RHistStatBoxAttrs, "", AddString("cornerx","0.02").AddString("cornery","0.02").AddString("width","0.5").AddString("height","0.2"));
+      R__ATTR_CLASS(RHistStatBoxAttrs, "", AddPadLength("cornerx",0.02).AddPadLength("cornery",0.02).AddPadLength("width",0.5).AddPadLength("height",0.2));
    };
 
    std::string fTitle;                       ///< stat box title
@@ -81,7 +104,7 @@ private:
    RAttrText fAttrText{this, "text_"};       ///<! text attributes
    RAttrLine fAttrBorder{this, "border_"};   ///<! border attributes
    RAttrFill fAttrFill{this, "fill_"};       ///<! line attributes
-   RHistStatBoxAttrs fAttr{this,""};         ///<! stat box direct attributes
+   RHistStatBoxAttrs fAttr{this, ""};        ///<! stat box direct attributes
 
 protected:
 
@@ -104,78 +127,46 @@ public:
 
    RHistStatBoxBase &SetCornerX(const RPadLength &pos)
    {
-      if (pos.Empty())
-         fAttr.ClearValue("cornerx");
-      else
-         fAttr.SetValue("cornerx", pos.AsString());
-
+      fAttr.SetValue("cornerx", pos);
       return *this;
    }
 
    RPadLength GetCornerX() const
    {
-      RPadLength res;
-      auto value = fAttr.template GetValue<std::string>("cornerx");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
+      return fAttr.template GetValue<RPadLength>("cornerx");
    }
 
    RHistStatBoxBase &SetCornerY(const RPadLength &pos)
    {
-      if (pos.Empty())
-         fAttr.ClearValue("cornery");
-      else
-         fAttr.SetValue("cornery", pos.AsString());
-
+      fAttr.SetValue("cornery", pos);
       return *this;
    }
 
    RPadLength GetCornerY() const
    {
-      RPadLength res;
-      auto value = fAttr.template GetValue<std::string>("cornery");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
+      return fAttr.template GetValue<RPadLength>("cornery");
    }
 
-   RHistStatBoxBase &SetWidth(const RPadLength &pos)
+   RHistStatBoxBase &SetWidth(const RPadLength &width)
    {
-      if (pos.Empty())
-         fAttr.ClearValue("width");
-      else
-         fAttr.SetValue("width", pos.AsString());
-
+      fAttr.SetValue("width", width);
       return *this;
    }
 
    RPadLength GetWidth() const
    {
-      RPadLength res;
-      auto value = fAttr.template GetValue<std::string>("width");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
+      return fAttr.template GetValue<RPadLength>("width");
    }
 
-   RHistStatBoxBase &SetHeight(const RPadLength &pos)
+   RHistStatBoxBase &SetHeight(const RPadLength &height)
    {
-      if (pos.Empty())
-         fAttr.ClearValue("height");
-      else
-         fAttr.SetValue("height", pos.AsString());
-
+      fAttr.SetValue("height", height);
       return *this;
    }
 
    RPadLength GetHeight() const
    {
-      RPadLength res;
-      auto value = fAttr.template GetValue<std::string>("height");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
+      return fAttr.template GetValue<RPadLength>("height");
    }
 
    const RAttrText &GetAttrText() const { return fAttrText; }
