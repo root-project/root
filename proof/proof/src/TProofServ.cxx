@@ -97,7 +97,6 @@ using namespace std;
 #include "TParameter.h"
 #include "TMap.h"
 #include "TSortedList.h"
-#include "TParameter.h"
 #include "TFileCollection.h"
 #include "TLockFile.h"
 #include "TDataSetManagerFile.h"
