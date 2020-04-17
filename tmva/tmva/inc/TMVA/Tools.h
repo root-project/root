@@ -53,8 +53,6 @@
 
 #include "TVectorDfwd.h"
 
-#include "TVectorDfwd.h"
-
 #include "TMVA/Types.h"
 
 #include "TMVA/VariableTransformBase.h"

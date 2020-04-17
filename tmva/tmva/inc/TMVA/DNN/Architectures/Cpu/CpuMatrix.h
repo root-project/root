@@ -27,7 +27,6 @@
 #include "TMatrix.h"
 #include "TMVA/Config.h"
 #include "CpuBuffer.h"
-#include <TMVA/Config.h>
 
 // #define DEBUG_TMVA_TCPUMATRIX
 #if defined(DEBUG_TMVA_TCPUMATRIX)
