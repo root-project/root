@@ -86,8 +86,8 @@ public:
    /// of allocating pages.
    virtual void ReleasePage(RPage &page) = 0;
 
-   /// Page storage implementations usually have their own metrics
-   virtual RNTupleMetrics &GetMetrics() = 0;
+   /// Returns an empty metrics.  Page storage implementations usually have their own metrics.
+   virtual RNTupleMetrics &GetMetrics();
 };
 
 // clang-format off
