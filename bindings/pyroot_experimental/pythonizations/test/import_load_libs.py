@@ -58,6 +58,7 @@ class ImportLoadLibs(unittest.TestCase):
             'cStringIO',
             'binascii',
             'libbz2',
+            'libexpat',
             # System libraries and others
             'libnss_.*',
             'ld.*',
