@@ -6,7 +6,6 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
-#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -24,7 +23,6 @@ using RCluster = ROOT::Experimental::Detail::RCluster;
 using RClusterPool = ROOT::Experimental::Detail::RClusterPool;
 using RHeapCluster = ROOT::Experimental::Detail::RHeapCluster;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
 using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using ROnDiskPage = ROOT::Experimental::Detail::ROnDiskPage;
 using RPage = ROOT::Experimental::Detail::RPage;
@@ -51,9 +49,6 @@ public:
  * Used to track LoadCluster calls triggered by ClusterPool::GetCluster
  */
 class RPageSourceMock : public RPageSource {
-private:
-   RNTupleMetrics fMetrics;
-
 protected:
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
 
@@ -61,7 +56,7 @@ public:
    /// Records the cluster IDs requests by LoadCluster() calls
    std::vector<ROOT::Experimental::DescriptorId_t> fLoadRequests;
 
-   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()), fMetrics("test") {
+   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
       descBuilder.AddCluster(0, RNTupleVersion(), 0, ClusterSize_t(1));
       descBuilder.AddCluster(1, RNTupleVersion(), 1, ClusterSize_t(1));
@@ -78,7 +73,6 @@ public:
       fLoadRequests.push_back(clusterId);
       return std::make_unique<RCluster>(nullptr, clusterId);
    }
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 } // anonymous namespace
