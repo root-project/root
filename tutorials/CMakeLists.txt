@@ -525,7 +525,9 @@ if(ROOT_pyroot_FOUND)
     set(dataframe_veto_py dataframe/*.py)
     file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
     list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
-    list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
+    list(REMOVE_ITEM pytutorials
+        pyroot/pyroot002_TTreeAsMatrix.py
+        pyroot/pyroot004_NumbaDeclare.py)
   endif()
 
   find_python_module(xgboost QUIET)
