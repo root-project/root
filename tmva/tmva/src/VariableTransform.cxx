@@ -27,7 +27,6 @@
 
 #include "TMVA/VariableTransformBase.h"
 #include "TMVA/VariableIdentityTransform.h"
-#include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableDecorrTransform.h"
 #include "TMVA/VariableInfo.h"
 #include "TMVA/VariablePCATransform.h"
@@ -40,10 +39,8 @@
 #include "TMVA/Ranking.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
-#include "TMVA/VariableInfo.h"
 #include "TMVA/Version.h"
 #include "TMVA/TransformationHandler.h"
-#include "TMVA/MsgLogger.h"
 
 #include "TH1.h"
 #include "TH2.h"

@@ -22,20 +22,17 @@
 #include "TTreeFormula.h"
 #include "TXMLEngine.h"
 #include "TROOT.h"
-#include "TMatrixDSymEigen.h"
 #include "TColor.h"
 #include "TMVA/Config.h"
 
 
 #include "TMVA/Tools.h"
 #include "TMVA/ROCCalc.h"
-#include "TMVA/Config.h"
 #include "TMVA/Event.h"
 #include "TMVA/Version.h"
 #include "TMVA/PDF.h"
 #include "TMVA/MsgLogger.h"
 
-#include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/TSpline2.h"
 #include "TMVA/Types.h"

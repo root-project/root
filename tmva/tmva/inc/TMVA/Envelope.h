@@ -22,12 +22,9 @@
 #include <TProcPool.h>
 #endif
 
-#include <TStopwatch.h>
-
 #include <TMVA/OptionMap.h>
 #include <TMVA/Config.h>
 #include <TMVA/Tools.h>
-#include <TMVA/DataLoader.h>
 #include <TMVA/DataLoader.h>
 
 /*! \class TMVA::Envelope

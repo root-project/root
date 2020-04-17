@@ -62,7 +62,6 @@ more signal respective background events from the training sample.
 #include <vector>
 #include <limits>
 #include <fstream>
-#include <algorithm>
 #include <cassert>
 
 #include "TRandom3.h"

@@ -80,7 +80,6 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/PDF.h"
 #include "TMVA/Ranking.h"
-#include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Results.h"
@@ -89,7 +88,6 @@
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/RootFinder.h"
 #include "TMVA/Timer.h"
-#include "TMVA/Tools.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableDecorrTransform.h"
@@ -142,7 +140,6 @@ const Int_t    NBIN_HIST_HIGH = 10000;
 #endif
 
 
-#include "TGraph.h"
 #include "TMultiGraph.h"
 
 ////////////////////////////////////////////////////////////////////////////////
