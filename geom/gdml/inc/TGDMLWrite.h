@@ -27,7 +27,6 @@
 #include "TGeoTorus.h"
 #include "TGeoPgon.h"
 #include "TGeoXtru.h"
-#include "TGeoPgon.h"
 #include "TGeoEltu.h"
 #include "TGeoHype.h"
 #include "TGeoBoolNode.h"

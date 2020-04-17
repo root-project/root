@@ -150,7 +150,6 @@ See that function for details.
 #include "TGeoEltu.h"
 #include "TGeoXtru.h"
 #include "TGeoScaledShape.h"
-#include "TGeoVolume.h"
 #include "TROOT.h"
 #include "TMath.h"
 #include "TGeoBoolNode.h"
