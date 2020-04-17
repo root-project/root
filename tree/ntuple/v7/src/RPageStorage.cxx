@@ -17,6 +17,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageStorageFile.hxx>
@@ -35,6 +36,12 @@ ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : 
 
 ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 {
+}
+
+ROOT::Experimental::Detail::RNTupleMetrics &ROOT::Experimental::Detail::RPageStorage::GetMetrics()
+{
+   static RNTupleMetrics metrics("");
+   return metrics;
 }
 
 

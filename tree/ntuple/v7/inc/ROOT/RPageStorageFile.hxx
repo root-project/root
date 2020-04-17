@@ -115,7 +115,6 @@ public:
    static constexpr std::size_t kMaxPageSize = 1024 * 1024;
 
 private:
-   RNTupleMetrics fMetrics;
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    /// The page pool might, at some point, be used by multiple page sources
@@ -128,6 +127,17 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
    Internal::RMiniFileReader fReader;
+
+   /// Wraps the I/O counters
+   RNTupleMetrics fMetrics;
+   RNTupleAtomicCounter *fCtrNReadV = nullptr;
+   RNTupleAtomicCounter *fCtrSzRead = nullptr;
+   RNTuplePlainCounter *fCtrSzUnzip = nullptr;
+   RNTuplePlainCounter *fCtrNPage = nullptr;
+   RNTupleAtomicCounter *fCtrTimeWallRead = nullptr;
+   RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
+   RNTupleTickCounter<RNTupleAtomicCounter> *fCtrTimeCpuRead = nullptr;
+   RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
