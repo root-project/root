@@ -93,6 +93,11 @@ if (NOT dataframe)
     list(APPEND dataframe_veto tmva/tmva*.C)
 endif()
 
+if(NOT sqlite)
+    # RDF+SQlite tutorials
+    list(APPEND dataframe_veto dataframe/*SQlite*)
+endif()
+
 if(NOT ROOT_mlp_FOUND)
    set(mlp_veto legacy/mlp/*.C)
 endif()
