@@ -31,7 +31,6 @@ convergence of a Monte Carlo integration.
 #include "RooFit.h"
 
 #include "RooQuasiRandomGenerator.h"
-#include "RooQuasiRandomGenerator.h"
 #include "RooMsgService.h"
 #include "TMath.h"
 

@@ -45,7 +45,6 @@ derivator class.
 #include "RooFormulaVar.h"
 #include "RooLinearVar.h"
 #include "RooProduct.h"
-#include "RooGlobalFunc.h"
 #include <string>
 using namespace std;
 
