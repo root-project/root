@@ -50,7 +50,6 @@
 #include "TSessionLogView.h"
 #include "TQueryResult.h"
 #include "TGTextView.h"
-#include "TGMenu.h"
 #include "TGToolBar.h"
 #include "TGTab.h"
 #include "TRootEmbeddedCanvas.h"

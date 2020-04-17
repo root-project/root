@@ -152,7 +152,6 @@
 #include "TMath.h"
 #include "Fit/UnBinData.h"
 #include "Fit/BinData.h"
-#include "Fit/BinData.h"
 #include "TMultiGraph.h"
 #include "TTree.h"
 #include "TVirtualTreePlayer.h"
