@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <thread>
+#include <stdexcept> // std::runtime_error
 
 #include "gtest/gtest.h"
 
@@ -47,15 +48,11 @@ TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
    ASSERT_EQ(&lm, lm.GetLoopManagerUnchecked());
 }
 
-TEST(RDataFrameNodes, RLoopManagerJit)
+TEST(RDataFrameNodes, RLoopManagerJitWrongCode)
 {
    ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
    lm.ToJitExec("souble d = 3.14");
-   auto op = [&](){
-      testing::internal::CaptureStderr();
-      lm.Run();
-   };
-   EXPECT_ANY_THROW(op()) << "Bogus C++ code was jitted and nothing was detected!";
+   EXPECT_THROW(lm.Run(), std::runtime_error) << "Bogus C++ code was jitted and nothing was detected!";
 }
 
 TEST(RDataFrameNodes, DoubleEvtLoop)
