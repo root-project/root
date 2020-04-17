@@ -56,12 +56,13 @@ ROOT_ADD_TEST(TMVA-DNN-RNN-Forwaed-Cudnn COMMAND testRecurrentForwardPassCudnn)
 CUDA_ADD_EXECUTABLE(testRecurrentBackpropagationCudnn TestRecurrentBackpropagationCudnn.cxx)
 target_link_libraries(testRecurrentBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCudnn COMMAND testRecurrentBackpropagationCudnn)
-endif()
 
 # Full Test GPU
 CUDA_ADD_EXECUTABLE(testFullRNNCudnn TestFullRNNCudnn.cxx)
 target_link_libraries(testFullRNNCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
 ROOT_ADD_TEST(TMVA-DNN-RNN-Full-Cudnn COMMAND testFullRNNCudnn)
+
+endif()
 
 endif()
 

@@ -86,6 +86,11 @@ auto testFullRNN(TString rnnType, size_t batchSize, size_t stateSize,
    // so make sure time = 1, in the current case
    size_t timeSteps = 1;
 
+   // fix random seed
+   TRandom3 rndm(12345);
+   UInt_t arch_seed = rndm.Integer(TMath::Limits<UInt_t>::Max());
+   Architecture::SetRandomSeed(arch_seed);
+
    Tensor_t XArch = Architecture::CreateTensor(batchSize, timeSteps, inputSize); // B x T x D
 
    randomBatch(XArch);
