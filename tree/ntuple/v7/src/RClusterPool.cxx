@@ -36,6 +36,7 @@ ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource *pageSource, 
    R__ASSERT(size > 0);
    fWindowPre = 0;
    fWindowPost = size;
+   // Large pools maintain a small look-back window together with the large look-ahead window
    while ((1u << fWindowPre) < (fWindowPost - (fWindowPre + 1))) {
       fWindowPre++;
       fWindowPost--;
@@ -46,6 +47,7 @@ ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource *pageSource, 
 ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
 {
    {
+      // Controlled shutdown of the I/O thread
       std::unique_lock<std::mutex> lock(fLockWorkQueue);
       fWorkQueue.emplace(RWorkItem());
       fCvHasWork.notify_one();
@@ -70,9 +72,10 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
          if (item.fClusterId == kInvalidDescriptorId)
             return;
 
+         // TODO(jblomer): the page source needs to be capable of loading multiple clusters in one go
          auto cluster = fPageSource->LoadCluster(item.fClusterId);
 
-         // Meanwhile, the user might have requested clusters out of the look-ahead window, so that we don't
+         // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
          // need the cluster anymore, in which case we simply discard it before moving it to the pool
          bool discard = false;
          {
@@ -89,7 +92,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecLoadClusters()
 
          item.fPromise.set_value(std::move(cluster));
       }
-   }
+   } // while (true)
 }
 
 std::shared_ptr<ROOT::Experimental::Detail::RCluster>
@@ -183,6 +186,8 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(ROOT::Experimental::Descrip
       }
 
       // Update the work queue and the in-flight cluster list with new requests
+      // TODO(jblomer): we should ensure that clusterId is given first to the I/O thread.  That is usually the
+      // case but it's not ensured by the code
       std::unique_lock<std::mutex> lockWorkQueue(fLockWorkQueue);
       for (auto id : cidProvide) {
          RWorkItem workItem;
