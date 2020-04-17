@@ -28,7 +28,6 @@
 #include "Minuit2/MinuitParameter.h"
 #include "Minuit2/MnUserFcn.h"
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/VariableMetricMinimizer.h"
 #include "Minuit2/SimplexMinimizer.h"
 #include "Minuit2/CombinedMinimizer.h"

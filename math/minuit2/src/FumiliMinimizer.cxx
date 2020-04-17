@@ -21,8 +21,6 @@
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FumiliFCNBase.h"
-#include "Minuit2/FumiliFCNBase.h"
-#include "Minuit2/FumiliGradientCalculator.h"
 #include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
