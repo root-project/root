@@ -44,7 +44,6 @@
 #include "TPaveLabel.h"
 #include "TLegend.h"
 #include "TH1.h"
-#include "TCanvas.h"
 //#include "TLegend.h"
 
 bool showGraphics = false;
