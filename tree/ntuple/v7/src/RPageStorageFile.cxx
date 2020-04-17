@@ -378,6 +378,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       std::size_t fBufPos = 0;
    };
 
+   // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    for (auto columnId : fActiveColumns) {
@@ -392,9 +393,16 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       }
    }
 
-   float extraFraction = 0.25;
+   // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),
       [](const ROnDiskPageLocator &a, const ROnDiskPageLocator &b) {return a.fOffset < b.fOffset;});
+
+   // In order to coalesce close-by pages, we collect the sizes of the gaps between pages on disk.  We then order
+   // the gaps by size, sum them up and find a cutoff for the largest gap that we tolerate when coalescing pages.
+   // The size of the cutoff is given by the fraction of extra bytes we are willing to read in order to reduce
+   // the number of read requests.  We thus schedule the lowest number of requests given a tolerable fraction
+   // of extra bytes.
+   float extraFraction = 0.25;
    std::vector<std::size_t> gaps;
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
       gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
@@ -409,6 +417,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       gapCut = g;
    }
 
+   // Prepare the input vector for the RRawFile::ReadV() call
    struct RReadRequest {
       RReadRequest() = default;
       RReadRequest(std::size_t b, std::uint64_t o, std::uint64_t s) : fBufPos(b), fOffset(o), fSize(s) {}
@@ -446,6 +455,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    }
    readRequests.emplace_back(req);
 
+   // Register the on disk pages in the RCluster
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
    auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
    for (const auto &s : onDiskPages) {
@@ -455,6 +465,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    for (auto &r : readRequests) {
       r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
    }
+
    fFile->ReadV(&readRequests[0], readRequests.size());
 
    return cluster;
