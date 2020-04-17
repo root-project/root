@@ -24,7 +24,6 @@
 
 // TMVA
 #include "TMVA/Config.h"
-#include "TMVA/efficienciesMulticlass.h"
 #include "TMVA/tmvaglob.h"
 
 // ROOT

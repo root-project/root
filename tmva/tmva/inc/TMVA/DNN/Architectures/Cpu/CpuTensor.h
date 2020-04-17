@@ -24,7 +24,6 @@
 #include "TMVA/Config.h"
 #include "CpuBuffer.h"
 #include "CpuMatrix.h"
-#include <TMVA/Config.h>
 #include <TMVA/RTensor.hxx>
 
 namespace TMVA {
