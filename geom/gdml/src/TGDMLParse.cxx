@@ -99,7 +99,6 @@ When most solids or volumes are added to the geometry they
 #include "TGeoXtru.h"
 #include "TGeoScaledShape.h"
 #include "TGeoTessellated.h"
-#include "TGeoVolume.h"
 #include "TROOT.h"
 #include "TMath.h"
 #include "TMap.h"
