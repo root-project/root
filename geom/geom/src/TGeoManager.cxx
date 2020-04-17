@@ -258,7 +258,6 @@ in order to enhance rays.
 #include "TGeoMatrix.h"
 #include "TGeoNode.h"
 #include "TGeoPhysicalNode.h"
-#include "TGeoManager.h"
 #include "TGeoPara.h"
 #include "TGeoParaboloid.h"
 #include "TGeoTube.h"
