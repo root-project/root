@@ -3940,7 +3940,8 @@ static llvm::StringRef GetModuleNameFromRdictName(llvm::StringRef rdictName)
    // Try to get the module name in the modulemap based on the filepath.
    llvm::StringRef moduleName = llvm::sys::path::filename(rdictName);
    moduleName.consume_front("lib");
-   moduleName.consume_back("_rdict.pcm");
+   moduleName.consume_back(".pcm");
+   moduleName.consume_back("_rdict");
    return moduleName;
 }
 
