@@ -366,3 +366,12 @@ TEST(RDataFrameInterface, DefineAliasedColumn)
    auto r1 = r0.Alias("newVar", "myVar");
    EXPECT_ANY_THROW(r0.Define("newVar", [](int i){return i;}, {"myVar"})) << "No exception thrown when defining a column with a name which is already an alias.";
 }
+
+// ROOT-10619
+TEST(RDataFrameInterface, UnusedJittedNodes)
+{
+   ROOT::RDataFrame df(1);
+   df.Filter("true");
+   df.Define("x", "true");
+   df.Foreach([]{}); // crashes if ROOT-10619 not fixed
+}
