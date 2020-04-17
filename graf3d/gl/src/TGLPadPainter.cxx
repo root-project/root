@@ -26,7 +26,6 @@
 #include "TGLPadPainter.h"
 #include "TGLIncludes.h"
 #include "TGLUtil.h"
-#include "TError.h"
 #include "TMath.h"
 
 namespace {

@@ -47,11 +47,9 @@
 #include "TWin32SplashThread.h"
 #endif
 
-#include "TGLPhysicalShape.h"
 #include "TGLWidget.h"
 #include "TGLSAViewer.h"
 #include "TGLSAFrame.h"
-#include "TGLOutput.h"
 #include "TGLEventHandler.h"
 
 

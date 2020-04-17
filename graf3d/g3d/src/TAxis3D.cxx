@@ -21,7 +21,6 @@
 #include "TVirtualPad.h"
 #include "TGaxis.h"
 #include "TView.h"
-#include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TBrowser.h"
 #include "TStyle.h"

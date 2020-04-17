@@ -17,7 +17,6 @@
 #include "TGTab.h"
 #include "TGSlider.h"
 #include "TGNumberEntry.h"
-#include "TGButtonGroup.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 

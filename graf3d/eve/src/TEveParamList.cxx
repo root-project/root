@@ -19,7 +19,6 @@
 #include "TGDoubleSlider.h"
 
 #include "TEveGValuators.h"
-#include "TGNumberEntry.h"
 #include "TGedEditor.h"
 
 /** \class TEveParamList
