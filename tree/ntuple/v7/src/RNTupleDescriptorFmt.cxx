@@ -168,7 +168,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (unsigned int i = 0; i < clusters.size(); ++i) {
       output << "  # " << std::setw(5) << i
              << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
-             << clusters[i].fFirstEntry + clusters[i].fNEntries << ")  --  " << clusters[i].fNEntries << std::endl;
+             << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << std::endl;
       output << "         "
              << "   # Pages:         " << clusters[i].fNPages << std::endl;
       output << "         "
