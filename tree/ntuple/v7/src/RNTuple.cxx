@@ -61,8 +61,6 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
    , fMetrics("RNTupleReader")
 {
    fSource->Attach();
-   fModel = fSource->GetDescriptor().GenerateModel();
-   ConnectModel();
    fMetrics.ObserveMetrics(fSource->GetMetrics());
 }
 

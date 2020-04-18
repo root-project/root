@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
+#include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
@@ -134,6 +135,12 @@ public:
    void LoadEntry(NTupleSize_t index) { LoadEntry(index, fModel->GetDefaultEntry()); }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(NTupleSize_t index, REntry* entry) {
+      // TODO(jblomer): can be templated depending on the factory method / constructor
+      if (R__unlikely(!fModel)) {
+         fModel = fSource->GetDescriptor().GenerateModel();
+         ConnectModel();
+      }
+
       for (auto& value : *entry) {
          value.GetField()->Read(index, &value);
       }
