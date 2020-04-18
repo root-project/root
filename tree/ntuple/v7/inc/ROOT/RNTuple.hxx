@@ -118,7 +118,7 @@ public:
    std::unique_ptr<RNTupleReader> Clone() { return std::make_unique<RNTupleReader>(fSource->Clone()); }
    ~RNTupleReader();
 
-   RNTupleModel *GetModel() { return fModel.get(); }
+   RNTupleModel *GetModel();
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
 
