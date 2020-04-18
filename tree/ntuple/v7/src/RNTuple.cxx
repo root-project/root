@@ -83,6 +83,15 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage));
 }
 
+ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
+{
+   if (!fModel) {
+      fModel = fSource->GetDescriptor().GenerateModel();
+      ConnectModel();
+   }
+   return fModel.get();
+}
+
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
 {
    // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out from the terminal.
@@ -140,7 +149,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
 
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
 {
-   auto entry = fModel->CreateEntry();
+   auto entry = GetModel()->CreateEntry();
    LoadEntry(index, entry.get());
 
    switch(format) {
