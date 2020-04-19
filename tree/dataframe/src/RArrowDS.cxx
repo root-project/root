@@ -400,6 +400,9 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
       }
    };
 
+   // To support both arrow 0.14.0 and 0.16.0
+   using ColumnType = decltype(fTable->column(0));
+
    auto getRecordsFirstColumn = [&columnNames, &table]() {
       if (columnNames.empty()) {
          throw std::runtime_error("At least one column required");
@@ -410,21 +413,21 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
    };
 
    // All columns are supposed to have the same number of entries.
-   auto verifyColumnSize = [](std::shared_ptr<arrow::Column> column, int nRecords) {
+   auto verifyColumnSize = [schema = fTable->schema()](ColumnType column, int columnIdx, int nRecords) {
       if (column->length() != nRecords) {
          std::string msg = "Column ";
-         msg += column->name() + " has a different number of entries.";
+         msg += schema->field(columnIdx)->name() + " has a different number of entries.";
          throw std::runtime_error(msg);
       }
    };
 
    /// For the moment we support only a few native types.
-   auto verifyColumnType = [](std::shared_ptr<arrow::Column> column) {
+   auto verifyColumnType = [schema = fTable->schema()](ColumnType column, int columnIdx) {
       auto verifyType = std::make_unique<VerifyValidColumnType>();
       auto result = column->type()->Accept(verifyType.get());
       if (result.ok() == false) {
          std::string msg = "Column ";
-         msg += column->name() + " contains an unsupported type.";
+         msg += schema->field(columnIdx)->name() + " contains an unsupported type.";
          throw std::runtime_error(msg);
       }
    };
@@ -446,8 +449,8 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
       addColumnToGetterIndex(columnIdx);
 
       auto column = fTable->column(columnIdx);
-      verifyColumnSize(column, nRecords);
-      verifyColumnType(column);
+      verifyColumnSize(column, columnIdx, nRecords);
+      verifyColumnType(column, columnIdx);
    }
 }
 
@@ -534,6 +537,19 @@ int getNRecords(std::shared_ptr<arrow::Table> &table, std::vector<std::string> &
    return table->column(index)->length();
 };
 
+template <typename T>
+std::shared_ptr<arrow::ChunkedArray> getData(T p)
+{
+   return p->data();
+}
+
+template <>
+std::shared_ptr<arrow::ChunkedArray>
+getData<std::shared_ptr<arrow::ChunkedArray>>(std::shared_ptr<arrow::ChunkedArray> p)
+{
+   return p;
+}
+
 void RArrowDS::SetNSlots(unsigned int nSlots)
 {
    assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
@@ -543,7 +559,7 @@ void RArrowDS::SetNSlots(unsigned int nSlots)
 
    fValueGetters.clear();
    for (size_t ci = 0; ci != nColumns; ++ci) {
-      auto chunkedArray = fTable->column(fGetterIndex[ci].first)->data();
+      auto chunkedArray = getData(fTable->column(fGetterIndex[ci].first));
       fValueGetters.emplace_back(std::make_unique<ROOT::Internal::RDF::TValueGetter>(nSlots, chunkedArray->chunks()));
    }
 }
