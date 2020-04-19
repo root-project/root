@@ -4311,9 +4311,12 @@ int RootClingMain(int argc,
                ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpat>]%s.pcm\n",
                                          DepMod.data(),
                                          GetModuleNameFromRdictName(DepMod).str().data());
-               DepMod = GetModuleNameFromRdictName(DepMod);
             }
-            interpPtr->loadModule(DepMod, /*complain*/true);
+            DepMod = GetModuleNameFromRdictName(DepMod);
+            if (!interpPtr->loadModule(DepMod, /*complain*/false)) {
+               ROOT::TMetaUtils::Error(0, "Module '%s' not failed to load.\n",
+                                       DepMod.data());
+            }
          }
       }
    }
