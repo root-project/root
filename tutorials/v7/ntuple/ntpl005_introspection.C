@@ -44,8 +44,6 @@ private:
    double fZ = 0;
 
 public:
-   Vector3() = default;
-
    double x() const { return fX; }
    double y() const { return fY; }
    double z() const { return fZ; }
@@ -78,7 +76,6 @@ void Generate()
 
 void ntpl005_introspection() {
    Generate();
-
 
    auto ntuple = RNTupleReader::Open("Vector3", kNTupleFileName);
 
