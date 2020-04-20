@@ -32,6 +32,8 @@
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/GlobalModuleIndex.h"
 
+#include "llvm/Object/ELFObjectFile.h"
+#include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 
@@ -42,6 +44,7 @@ using namespace clang;
 using namespace cling;
 using namespace ROOT::Internal;
 
+R__EXTERN int gDebug;
 class TObject;
 
 // Functions used to forward calls from code compiled with no-rtti to code
@@ -919,7 +922,50 @@ void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
    TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
 }
 
-static bool shouldIgnore(llvm::StringRef FileName) {
+static bool shouldIgnore(const std::string& FileName,
+                         const cling::DynamicLibraryManager& dyLibManager) {
+   if (llvm::sys::fs::is_directory(FileName))
+     return true;
+
+   if (!cling::DynamicLibraryManager::isSharedLibrary(FileName))
+     return true;
+
+   // No need to check linked libraries, as this function is only invoked
+   // for symbols that cannot be found (neither by dlsym nor in the JIT).
+   if (dyLibManager.isLibraryLoaded(FileName.c_str()))
+      return true;
+
+
+   auto ObjF = llvm::object::ObjectFile::createObjectFile(FileName);
+   if (!ObjF) {
+      if (gDebug > 1)
+         ROOT::TMetaUtils::Warning("[DyLD]", "Failed to read object file %s",
+                                   FileName.c_str());
+      return true;
+   }
+
+   llvm::object::ObjectFile *file = ObjF.get().getBinary();
+
+   if (isa<llvm::object::ELFObjectFileBase>(*file)) {
+      for (auto S : file->sections()) {
+         StringRef name;
+         S.getName(name);
+         if (name == ".text") {
+            // Check if the library has only debug symbols, usually when
+            // stripped with objcopy --only-keep-debug. This check is done by
+            // reading the manual of objcopy and inspection of stripped with
+            // objcopy libraries.
+            auto SecRef = static_cast<llvm::object::ELFSectionRef&>(S);
+            if (SecRef.getType() == llvm::ELF::SHT_NOBITS)
+               return true;
+
+            return (SecRef.getFlags() & llvm::ELF::SHF_ALLOC) == 0;
+         }
+      }
+      return true;
+   }
+   //FIXME: Handle osx using isStripped after upgrading to llvm9.
+
    llvm::StringRef fileStem = llvm::sys::path::stem(FileName);
    return fileStem.startswith("libNew") || fileStem.startswith("libcppyy_backend");
 }
@@ -942,16 +988,7 @@ static void SearchAndAddPath(const std::string& Path,
          DirIt != DirEnd && !EC; DirIt.increment(EC)) {
 
       std::string FileName(DirIt->path());
-      if (llvm::sys::fs::is_directory(FileName))
-         continue;
-      if (!cling::DynamicLibraryManager::isSharedLibrary(FileName))
-         continue;
-      // No need to check linked libraries, as this function is only invoked
-      // for symbols that cannot be found (neither by dlsym nor in the JIT).
-      if (dyLibManager->isLibraryLoaded(FileName.c_str()))
-         continue;
-
-      if (shouldIgnore(FileName))
+      if (shouldIgnore(FileName, *dyLibManager))
          continue;
 
       sLibraries.push_back(std::make_pair(sPaths.size(), llvm::sys::path::filename(FileName)));
