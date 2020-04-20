@@ -161,7 +161,8 @@ public:
    ~RResultBase() noexcept(false);
 
    RError *GetError() { return fError.get(); }
-   void Throw() { throw RException(*fError); }
+   /// Throws an RException with fError
+   void Throw();
 
    // Help to prevent heap construction of RResult objects. Unchecked RResult objects in failure state should throw
    // an exception close to the error location. For stack allocated RResult objects, an exception is thrown

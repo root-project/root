@@ -64,3 +64,9 @@ ROOT::Experimental::Internal::RResultBase::~RResultBase() noexcept(false)
       }
    }
 }
+
+
+void ROOT::Experimental::Internal::RResultBase::Throw()
+{
+   throw ROOT::Experimental::RException(*fError);
+}
