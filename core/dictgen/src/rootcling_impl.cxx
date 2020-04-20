@@ -4313,7 +4313,7 @@ int RootClingMain(int argc,
             }
             DepMod = GetModuleNameFromRdictName(DepMod);
             if (!interpPtr->loadModule(DepMod, /*complain*/false)) {
-               ROOT::TMetaUtils::Error(0, "Module '%s' not failed to load.\n",
+               ROOT::TMetaUtils::Error(0, "Module '%s' failed to load.\n",
                                        DepMod.data());
             }
          }
