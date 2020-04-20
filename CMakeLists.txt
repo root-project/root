@@ -6,6 +6,8 @@
 
 cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
+message(FATAL_ERROR "This is a CI test intentionally failing to configure.")
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR
     " ROOT must be built out-of-source.\n"
