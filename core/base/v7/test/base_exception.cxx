@@ -72,7 +72,7 @@ TEST(Exception, Report)
 TEST(Exception, ForwardResult)
 {
    auto res = TestChain(true);
-   ASSERT_TRUE(res);
+   ASSERT_TRUE(static_cast<bool>(res));
    EXPECT_EQ(42, res.Get());
 }
 
