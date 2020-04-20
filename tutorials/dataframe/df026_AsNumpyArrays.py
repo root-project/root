@@ -63,8 +63,8 @@ print("Access to all methods and data members of the C++ object:\nObject: {}\nAc
 try:
     import pandas
 except:
-    print("Failed to import pandas.")
-    exit()
+    print("Please install the pandas package to run this section of the tutorial.")
+    exit(1)
 
 df = pandas.DataFrame(npy5)
 print("Content of the ROOT.RDataFrame as pandas.DataFrame:\n{}\n".format(df))
