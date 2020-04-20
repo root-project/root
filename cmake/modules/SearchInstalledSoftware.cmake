@@ -1610,7 +1610,7 @@ if (testing)
 
   # Use gmock_main instead of gtest_main because it initializes gtest as well.
   # Note: The libraries are listed in reverse order of their dependancies.
-  foreach(lib gtest gmock gmock_main)
+  foreach(lib gtest gtest_main gmock gmock_main)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     set_target_properties(${lib} PROPERTIES
       IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
