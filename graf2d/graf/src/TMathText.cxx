@@ -590,6 +590,11 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    Short_t saveAlign = fTextAlign;
 
    TAttText::Modify();
+   if (gVirtualPS) { // Initialise TMathTextRenderer
+      if (gPad->IsBatch()) {
+         if (gVirtualPS->InheritsFrom("TImageDump")) gPad->PaintText(0, 0, "");
+      }
+   }
 
    // Do not use Latex if font is low precision.
    if (fTextFont % 10 < 2) {
