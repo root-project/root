@@ -413,21 +413,21 @@ RArrowDS::RArrowDS(std::shared_ptr<arrow::Table> inTable, std::vector<std::strin
    };
 
    // All columns are supposed to have the same number of entries.
-   auto verifyColumnSize = [schema = fTable->schema()](ColumnType column, int columnIdx, int nRecords) {
+   auto verifyColumnSize = [&table](ColumnType column, int columnIdx, int nRecords) {
       if (column->length() != nRecords) {
          std::string msg = "Column ";
-         msg += schema->field(columnIdx)->name() + " has a different number of entries.";
+         msg += table->schema()->field(columnIdx)->name() + " has a different number of entries.";
          throw std::runtime_error(msg);
       }
    };
 
    /// For the moment we support only a few native types.
-   auto verifyColumnType = [schema = fTable->schema()](ColumnType column, int columnIdx) {
+   auto verifyColumnType = [&table](ColumnType column, int columnIdx) {
       auto verifyType = std::make_unique<VerifyValidColumnType>();
       auto result = column->type()->Accept(verifyType.get());
       if (result.ok() == false) {
          std::string msg = "Column ";
-         msg += schema->field(columnIdx)->name() + " contains an unsupported type.";
+         msg += table->schema()->field(columnIdx)->name() + " contains an unsupported type.";
          throw std::runtime_error(msg);
       }
    };
