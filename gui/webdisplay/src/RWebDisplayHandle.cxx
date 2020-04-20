@@ -658,6 +658,12 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
       fclose(df);
    }
 
+   // When true, place HTML file into home directory
+   // Some Crome installation do not allow run html code from files, created in /tmp directory
+   static bool chrome_tmp_workaround = false;
+
+try_again:
+
    TString tmp_name("canvasbody");
    FILE *hf = gSystem->TempFileName(tmp_name);
    if (!hf) {
@@ -669,10 +675,25 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
 
    TString html_name = tmp_name + ".html";
 
-   if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file into .html";
+   if (chrome_tmp_workaround) {
+      std::string homedir = gSystem->GetHomeDirectory();
+      auto pos = html_name.Last('/');
+      if (pos == kNPOS)
+         html_name = TString::Format("/random%d.html", gRandom->Integer(1000000));
+      else
+         html_name.Remove(0,pos);
+      html_name = homedir + html_name.Data();
+      gSystem->Unlink(html_name.Data());
       gSystem->Unlink(tmp_name.Data());
-      return false;
+
+      std::ofstream ofs (html_name.Data(), std::ofstream::out);
+      ofs << filecont;
+   } else {
+      if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
+         R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file " << tmp_name << " into " << html_name;
+         gSystem->Unlink(tmp_name.Data());
+         return false;
+      }
    }
 
    R__DEBUG_HERE("CanvasPainter") << "Using " << html_name << " content_len " << filecont.length() << " to produce batch image " << fname;
@@ -726,13 +747,19 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
       R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;
       return false;
    }
-   R__DEBUG_HERE("CanvasPainter") << "Create file " << fname;
 
    if (draw_kind != "draw") {
 
       auto dumpcont = THttpServer::ReadFileContent(dump_name.Data());
 
       gSystem->Unlink(dump_name.Data());
+
+      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround) {
+         // chrome creates dummy html file with mostly no content
+         // problem running chrome from /tmp directory, lets try work from home directory
+         chrome_tmp_workaround = true;
+         goto try_again;
+      }
 
       if (dumpcont.length() < 100) {
          R__ERROR_HERE("CanvasPainter") << "Fail to dump HTML code into " << dump_name;
@@ -770,6 +797,8 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
          }
       }
    }
+
+   R__DEBUG_HERE("CanvasPainter") << "Create file " << fname;
 
    return true;
 }
