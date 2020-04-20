@@ -137,17 +137,13 @@ protected:
    std::unique_ptr<RError> fError;
    /// Switches to true once the user of an RResult object checks the object status
    /// Declaring it mutable is safe because checking an RResult is not a multi-threaded operation
-   /// The alternative, making the bool operator non-const, has unwanted effects when using an RResult, e.g.
-   ///     auto res = Func();
-   ///     ASSERT_TRUE(res);
-   /// would not work anymore
-   mutable bool fIsChecked{false};
+   bool fIsChecked{false};
 
    RResultBase() = default;
    explicit RResultBase(RError &&error) : fError(std::make_unique<RError>(std::move(error))) {}
 
    /// Used by the RResult<T> bool operator
-   bool Check() const {
+   bool Check() {
       fIsChecked = true;
       return !fError;
    }
@@ -223,7 +219,7 @@ public:
       return fValue;
    }
 
-   explicit operator bool() const { return Check(); }
+   explicit operator bool() { return Check(); }
 };
 
 /// RResult<void> has no data member and no Get() method but instead a Success() factory method
@@ -251,7 +247,7 @@ public:
       return result;
    }
 
-   explicit operator bool() const { return Check(); }
+   explicit operator bool() { return Check(); }
 };
 
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
