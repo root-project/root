@@ -13,9 +13,11 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
     if batch:
         ROOT.gROOT.SetBatch(1)
 
-    sys.argv = [MacroName]
-    if py: exec(open(MacroName).read(), globals())
-    else: ROOT.gInterpreter.ProcessLine(".x " + MacroName)
+    if py:
+        sys.argv = [MacroName]
+        exec(open(MacroName).read(), globals())
+    else:
+        ROOT.gInterpreter.ProcessLine(".x " + MacroName)
 
     if cp:
         MN = MacroName.split("(")[0]
