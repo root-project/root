@@ -1832,8 +1832,9 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
       TMemFile pcmMemFile(RDictFileOpts.c_str(), range);
 
       LoadPCMImpl(pcmMemFile);
-
-      fPendingRdicts.erase(pendingRdict);
+      // FIXME: Uncomment this when we implement UnLoadPCM as per
+      // root-project/root#5420
+      //fPendingRdicts.erase(pendingRdict);
 
       return;
    }
