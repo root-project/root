@@ -22,7 +22,16 @@
 \ingroup TEve
 Abstract base-class for interfacing to magnetic field needed by the
 TEveTrackPropagator.
-See sub-classes for two simple implementations.
+
+To implement your own version, redefine the following virtual functions:
+   virtual Double_t    GetMaxFieldMagD() const;
+   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const;
+
+See sub-classes TEveMagFieldConst and TEveMagFieldDuo for two simple implementations.
+
+NOTE: For backward compatibility float versions are the primary
+sources of field information in this base-class. The float versions are
+not used in TEve and can be ignored in sub-classes.
 
 NOTE: Magnetic field direction convention is inverted.
 */
