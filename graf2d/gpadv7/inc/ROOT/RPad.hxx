@@ -34,7 +34,7 @@ class RPad: public RPadBase {
 
 protected:
 
-   std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const final;
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) final;
 
 public:
    /// Create a topmost, non-paintable pad.

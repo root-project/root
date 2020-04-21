@@ -62,7 +62,7 @@ protected:
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
-   void DisplayPrimitives(RPadBaseDisplayItem &paditem, Version_t vers) const;
+   void DisplayPrimitives(RPadBaseDisplayItem &paditem, RDisplayContext &ctxt);
 
    void SetDrawableVersion(Version_t vers) override;
 
