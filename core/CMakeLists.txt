@@ -148,6 +148,15 @@ add_subdirectory(rootcling_stage1)
 #-------------------------------------------------------------------------------
 ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
 
+if (libcxx AND NOT APPLE)
+  # In case we use libcxx and glibc together there is a mismatch of the
+  # signatures of functions in the header wchar.h. This macro tweaks the
+  # header in rootcling resource directory to be compatible with the one from
+  # libc++.
+  target_compile_definitions(Core PRIVATE __CORRECT_ISO_CPP_WCHAR_H_PROTO)
+endif()
+
+
 ROOT_GENERATE_DICTIONARY(G__Core
   ${Core_dict_headers}
   ${Clib_dict_headers}
