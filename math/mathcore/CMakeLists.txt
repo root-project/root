@@ -68,11 +68,8 @@ set(HEADERS
   Math/MultiDimParamFunctionAdapter.h
   Math/OneDimFunctionAdapter.h
   Math/ParamFunctor.h
-  Math/PdfFunc.h
   Math/PdfFuncMathCore.h
-  Math/ProbFunc.h
   Math/ProbFuncMathCore.h
-  Math/QuantFunc.h
   Math/QuantFuncMathCore.h
   Math/Random.h
   Math/RandomFunctions.h
