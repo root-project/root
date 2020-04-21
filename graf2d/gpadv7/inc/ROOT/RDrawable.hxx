@@ -16,7 +16,6 @@
 #include <ROOT/RAttrMap.hxx>
 #include <ROOT/RStyle.hxx>
 
-
 namespace ROOT {
 namespace Experimental {
 
@@ -123,8 +122,6 @@ public:
       unsigned fIndex{0};            ///<! index in list of primitives
 
    public:
-
-      RDisplayContext() = default;
 
       RDisplayContext(RCanvas *canv, RPadBase *pad, Version_t vers = 0) :
          fCanvas(canv), fPad(pad), fLastVersion(vers)
