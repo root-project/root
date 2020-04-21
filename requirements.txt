@@ -1,0 +1,9 @@
+# ROOT requirements for third-party Python packages
+
+# PyROOT: ROOT.Numba.Declare decorator
+numba>=0.47.0
+cffi>=1.9.1
+
+# Notebooks: ROOT C++ kernel
+notebook>=4.4.1
+metakernel>=0.20.0

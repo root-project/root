@@ -14,6 +14,9 @@ endif()
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
+# Test versions of Python dependencies
+ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
+
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
