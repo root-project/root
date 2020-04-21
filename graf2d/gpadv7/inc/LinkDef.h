@@ -27,6 +27,7 @@
 #pragma link C++ class ROOT::Experimental::RStyle::Block_t+;
 
 #pragma link C++ class ROOT::Experimental::RDrawable+;
+#pragma link C++ class ROOT::Experimental::RDrawable::RUserRanges+;
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RIndirectDisplayItem+;

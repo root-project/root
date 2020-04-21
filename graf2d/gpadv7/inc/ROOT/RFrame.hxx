@@ -72,6 +72,8 @@ protected:
 
    void PopulateMenu(RMenuItems &) override;
 
+   void GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const;
+
 public:
 
    RFrame(TRootIOCtor*) : RFrame() {}
@@ -106,7 +108,7 @@ public:
    RFrame &SetGridY(bool on = true) { fAttr.SetValue("gridy", on); return *this; }
    bool GetGridY() const { return fAttr.GetValue<bool>("gridy"); }
 
-   void Execute(const std::string &) override;
+   void GetVisibleRanges(RUserRanges &) const override;
 
    /// Create `nDimensions` default axes for the user coordinate system.
    void GrowToDimensions(size_t nDimensions);

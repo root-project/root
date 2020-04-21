@@ -91,7 +91,6 @@ public:
 
 } // namespace Internal
 
-
 /** \class RDrawable
 \ingroup GpadROOT7
 \brief Base class for drawable entities: objects that can be painted on a `RPad`.
@@ -117,13 +116,15 @@ public:
    using Version_t = uint64_t;
 
    class RDisplayContext {
-      RCanvas *fCanvas;           ///<! canvas where drawable is displayed
-      RPadBase *fPad;             ///<! subpad where drawable is displayed
-      RDrawable *fDrawable;       ///<! reference on the drawable
-      Version_t fLastVersion{0};  ///<! last version used to di
-      unsigned fIndex{0};         ///<! index in list of primitives
+      RCanvas *fCanvas{nullptr};     ///<! canvas where drawable is displayed
+      RPadBase *fPad{nullptr};       ///<! subpad where drawable is displayed
+      RDrawable *fDrawable{nullptr}; ///<! reference on the drawable
+      Version_t fLastVersion{0};     ///<! last version used to di
+      unsigned fIndex{0};            ///<! index in list of primitives
 
    public:
+
+      RDisplayContext() = default;
 
       RDisplayContext(RCanvas *canv, RPadBase *pad, Version_t vers = 0) :
          fCanvas(canv), fPad(pad), fLastVersion(vers)
@@ -143,6 +144,74 @@ public:
       RDrawable *GetDrawable() const { return fDrawable; }
       unsigned GetIndex() const { return fIndex; }
       Version_t GetLastVersion() const { return fLastVersion; }
+   };
+
+   class RUserRanges {
+      std::vector<double> values;  ///< min/max values for all dimensions
+      std::vector<bool> flags;     ///< flag if values available
+   public:
+      // Default constructor - for I/O
+      RUserRanges() = default;
+
+      // Constructor for 1-d ranges
+      RUserRanges(double xmin, double xmax)
+      {
+         AssignMin(0, xmin);
+         AssignMax(0, xmax);
+      }
+
+      // Constructor for 2-d ranges
+      RUserRanges(double xmin, double xmax, double ymin, double ymax)
+      {
+         AssignMin(0, xmin);
+         AssignMax(0, xmax);
+         AssignMin(1, ymin);
+         AssignMax(1, ymax);
+      }
+
+      // Extend number of dimensions which can be stored in the object
+      void Extend(unsigned ndim = 3)
+      {
+         if (ndim*2 > values.size()) {
+            values.resize(ndim*2, 0.);
+            flags.resize(ndim*2, false);
+         }
+      }
+
+      bool HasMin(unsigned ndim) const { return (ndim*2 < flags.size()) && flags[ndim*2]; }
+      double GetMin(unsigned ndim) const { return (ndim*2 < values.size()) ? values[ndim*2] : 0.; }
+
+      // Assign minimum for specified dimension
+      void AssignMin(unsigned ndim, double value, bool force = false)
+      {
+         if (!HasMin(ndim) || force) {
+            Extend(ndim+1);
+            values[ndim*2] = value;
+            flags[ndim*2] = true;
+         }
+      }
+
+      bool HasMax(unsigned ndim) const { return (ndim*2+1 < flags.size()) && flags[ndim*2+1]; }
+      double GetMax(unsigned ndim) const { return (ndim*2+1 < values.size()) ? values[ndim*2+1] : 0.; }
+
+      // Assign maximum for specified dimension
+      void AssignMax(unsigned ndim, double value, bool force = false)
+      {
+         if (!HasMax(ndim) || force) {
+            Extend(ndim+1);
+            values[ndim*2+1] = value;
+            flags[ndim*2+1] = true;
+         }
+      }
+
+      // Returns true if any value is specified
+      bool IsAny() const
+      {
+         for (auto fl : flags)
+            if (fl) return true;
+         return false;
+      }
+
    };
 
 private:
@@ -192,6 +261,8 @@ public:
 
    const std::string &GetId() const { return fId; }
    void SetId(const std::string &id) { fId = id; }
+
+   virtual void GetVisibleRanges(RUserRanges &) const {}
 };
 
 /// Central method to insert drawable in list of pad primitives
