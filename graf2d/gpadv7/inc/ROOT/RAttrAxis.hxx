@@ -47,6 +47,8 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetMax(double max) { SetValue("max", max); return *this; }
    double GetMin() const { return GetValue<double>("min"); }
    double GetMax() const { return GetValue<double>("max"); }
+   bool HasMin() const { return HasValue<double>("min"); }
+   bool HasMax() const { return HasValue<double>("max"); }
 
    RAttrAxis &SetMinMax(double min, double max) { SetMin(min); SetMax(max); return *this; }
    void ClearMinMax() { ClearValue("min"); ClearValue("max"); }
@@ -55,6 +57,8 @@ class RAttrAxis : public RAttrBase {
    RAttrAxis &SetZoomMax(double max) { SetValue("zoommax", max); return *this; }
    double GetZoomMin() const { return GetValue<double>("zoommin"); }
    double GetZoomMax() const { return GetValue<double>("zoommax"); }
+   bool HasZoomMin() const { return HasValue<double>("zoommin"); }
+   bool HasZoomMax() const { return HasValue<double>("zoommax"); }
 
    RAttrAxis &SetZoomMinMax(double min, double max) { SetZoomMin(min); SetZoomMax(max); return *this; }
    void ClearZoomMinMax() { ClearValue("zoommin"); ClearValue("zoommax"); }

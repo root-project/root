@@ -66,11 +66,6 @@ public:
 
    std::shared_ptr<HistImpl_t> GetHist() const { return fHistImpl.get_shared(); }
 
-   void Execute(const std::string &) override
-   {
-      // should execute menu item
-   }
-
 //   template <class HIST>
 //   RHistDrawable(std::unique_ptr<HIST> &&hist)
 //      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(*hist).TakeImpl())), fOpts(opts)
@@ -94,6 +89,12 @@ public:
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
    RAttrLine &AttrLine() { return fAttrLine; }
+
+   void GetVisibleRanges(RUserRanges &) const override
+   {
+      // TODO: provide implementation to get ranges from 1D histogram
+   }
+
 };
 
 
@@ -103,6 +104,11 @@ public:
 
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
+
+   void GetVisibleRanges(RUserRanges &) const override
+   {
+      // TODO: provide implementation to get ranges from 2D histogram
+   }
 };
 
 

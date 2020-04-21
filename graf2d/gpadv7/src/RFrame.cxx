@@ -22,11 +22,26 @@ ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>
    fUserCoord = std::move(coords);
 }
 
-void ROOT::Experimental::RFrame::Execute(const std::string &arg)
+void ROOT::Experimental::RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
 {
-   std::stringstream cmd;
-   cmd << "((RFrame *) " << std::hex << std::showbase << (size_t)this << ")->" << arg << ";";
-   gROOT->ProcessLine(cmd.str().c_str());
+   if (axis.HasMin())
+      ranges.AssignMin(ndim, axis.GetMin());
+
+   if (axis.HasMax())
+      ranges.AssignMax(ndim, axis.GetMax());
+
+   if (axis.HasZoomMin())
+      ranges.AssignMin(ndim, axis.GetZoomMin(), true);
+
+   if (axis.HasZoomMax())
+      ranges.AssignMax(ndim, axis.GetZoomMax(), true);
+}
+
+void ROOT::Experimental::RFrame::GetVisibleRanges(RUserRanges &ranges) const
+{
+   GetAxisRanges(0, GetAttrX(), ranges);
+   GetAxisRanges(1, GetAttrY(), ranges);
+   GetAxisRanges(2, GetAttrZ(), ranges);
 }
 
 void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)

@@ -211,6 +211,8 @@ public:
    /// Access to the top-most canvas, if any (non-const version).
    virtual RCanvas *GetCanvas() = 0;
 
+   void GetVisibleRanges(RUserRanges &) const override;
+
    /// Convert user coordinates to normal coordinates.
    std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const;
 

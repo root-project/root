@@ -36,16 +36,19 @@ namespace Experimental {
 
 class RHistStatRequest : public RDrawableRequest {
    unsigned mask{0xff};      // mask of items to show
-   std::vector<double> xmin; // vector of axis min values
-   std::vector<double> xmax; // vector of axis max values
+
+   RDrawable::RUserRanges ranges; // specified ranges
 
 public:
 
-   std::unique_ptr<RDrawableReply> Process() override;
+   RHistStatRequest() = default;
 
    unsigned GetMask() const { return mask; }
-   double GetMin(unsigned indx) const { return indx < xmin.size() ? xmin[indx] : 0; }
-   double GetMax(unsigned indx) const { return indx < xmax.size() ? xmax[indx] : 0; }
+
+   const RDrawable::RUserRanges &GetRanges() const { return ranges; }
+
+   std::unique_ptr<RDrawableReply> Process() override;
+
 };
 
 /** \class ROOT::Experimental::RHistStatReply
@@ -57,10 +60,13 @@ public:
 */
 
 class RHistStatReply : public RDrawableReply {
+   unsigned mask{0};                 ///< mask used to create lines
    std::vector<std::string> lines;   ///< text lines displayed in the stat box
 public:
 
-   void AddLine(const std::string &line) { lines.emplace_back(line); }
+   std::vector<std::string> &GetLines() { return lines; }
+
+   void SetMask(unsigned _mask) { mask = _mask; }
 
    // virtual destructor - required to pin vtable
    virtual ~RHistStatReply() = default;
@@ -77,9 +83,11 @@ public:
 class RDisplayHistStat : public RIndirectDisplayItem {
    unsigned fShowMask{0};   ///< initial show mask
    std::vector<std::string> fEntries; ///< names of entries for context menu
+   std::vector<std::string> fLines;   ///< filled lines to show in stat box
 public:
    RDisplayHistStat() = default;
-   RDisplayHistStat(const RDrawable &dr, unsigned mask, const std::vector<std::string> &entries) : RIndirectDisplayItem(dr), fShowMask(mask), fEntries(entries) {}
+   RDisplayHistStat(const RDrawable &dr, unsigned mask, const std::vector<std::string> &entries, const std::vector<std::string> &lines) :
+         RIndirectDisplayItem(dr), fShowMask(mask), fEntries(entries), fLines(lines) {}
    virtual ~RDisplayHistStat() = default;
 
    unsigned GetShowMask() const { return fShowMask; }
@@ -120,15 +128,11 @@ protected:
 
    bool IsFrameRequired() const final { return true; }
 
-   virtual void FillStatistic(const RHistStatRequest &, RHistStatReply &) const {}
+   virtual void FillStatistic(unsigned, const RDrawable::RUserRanges &, std::vector<std::string> &) const {}
 
    virtual const std::vector<std::string> &GetEntriesNames() const;
 
-   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) override
-   {
-      // do not send stat box itself while it includes histogram which is not required on client side
-      return std::make_unique<RDisplayHistStat>(*this, fShowMask, GetEntriesNames());
-   }
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) override;
 
 public:
 
@@ -232,7 +236,7 @@ public:
 
 class RHist1StatBox final : public RHistStatBox<1> {
 protected:
-   void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
+   void FillStatistic(unsigned, const RDrawable::RUserRanges &, std::vector<std::string> &) const override;
 public:
    template <class HIST>
    RHist1StatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox<1>(hist, title) {}
@@ -241,7 +245,7 @@ public:
 
 class RHist2StatBox final : public RHistStatBox<2> {
 protected:
-   void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
+   void FillStatistic(unsigned, const RDrawable::RUserRanges &, std::vector<std::string> &) const override;
 public:
    template <class HIST>
    RHist2StatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox<2>(hist, title) {}
@@ -249,7 +253,7 @@ public:
 
 class RHist3StatBox final : public RHistStatBox<3> {
 protected:
-   void FillStatistic(const RHistStatRequest &, RHistStatReply &) const override;
+   void FillStatistic(unsigned, const RDrawable::RUserRanges &, std::vector<std::string> &) const override;
 public:
    template <class HIST>
    RHist3StatBox(const std::shared_ptr<HIST> &hist, const std::string &title = "") : RHistStatBox<3>(hist, title) {}
