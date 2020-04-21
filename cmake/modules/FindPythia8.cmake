@@ -53,12 +53,26 @@ set(PYTHIA8_INCLUDE_DIRS ${PYTHIA8_INCLUDE_DIR} ${PYTHIA8_INCLUDE_DIR}/Pythia8 )
 
 find_path(PYTHIA8_DATA 
           NAMES MainProgramSettings.xml
-          HINTS ${_pythia8dirs}
-          PATH_SUFFIXES xmldoc)
+          HINTS ${_pythia8dirs} ${_pythia8dirs}/share/Pythia8
+          PATH_SUFFIXES xmldoc
+          DOC "Specify the Pythia8 data directory here.")
 
-# handle the QUIETLY and REQUIRED arguments and set PYTHIA8_FOUND to TRUE if
-# all listed variables are TRUE
+if(PYTHIA8_INCLUDE_DIR AND PYTHIA8_LIBRARY)
+  set(PYTHIA8_FOUND TRUE)
+endif()      
+       
+if(PYTHIA8_FOUND)
+  message(STATUS "Found Pythia8 library: ${PYTHIA8_LIBRARY}")
+  message(STATUS "Found Pythia8 include directory: ${PYTHIA8_INCLUDE_DIR}")
+endif()
+
+if(PYTHIA8_DATA)
+  message(STATUS "Found Pythia8 data directory to be used in tutorials: ${PYTHIA8_DATA}")
+elseif($ENV{PYTHIA8DATA})
+  message(STATUS "Found Pythia8 data directory to be used in tutorials: $ENV{PYTHIA8DATA}")
+endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Pythia8 DEFAULT_MSG PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY)
-mark_as_advanced(PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_LIBRARY)
+find_package_handle_standard_args(Pythia8 DEFAULT_MSG PYTHIA8_FOUND PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY)
+mark_as_advanced(PYTHIA8_FOUND PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_LIBRARY)
+
