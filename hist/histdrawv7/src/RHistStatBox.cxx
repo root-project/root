@@ -15,7 +15,7 @@ using namespace std::string_literals;
 
 std::unique_ptr<RDrawableReply> RHistStatRequest::Process()
 {
-   auto stat = dynamic_cast<RHistStatBoxBase *>(GetDrawable());
+   auto stat = dynamic_cast<RHistStatBoxBase *>(GetContext().GetDrawable());
 
    auto reply = std::make_unique<RHistStatReply>();
 

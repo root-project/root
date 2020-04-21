@@ -100,7 +100,7 @@ void RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
 
 std::unique_ptr<RDrawableReply> RDrawableMenuRequest::Process()
 {
-   auto drawable = GetDrawable();
+   auto drawable = GetContext().GetDrawable();
    if (!drawable) return nullptr;
 
    auto items = std::make_unique<RMenuItems>(menureqid, menukind);

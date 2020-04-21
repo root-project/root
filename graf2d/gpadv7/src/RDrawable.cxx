@@ -65,9 +65,9 @@ bool RDrawable::MatchSelector(const std::string &selector) const
 /// Creates display item for drawable
 /// By default item contains drawable data itself
 
-std::unique_ptr<RDisplayItem> RDrawable::Display(const RPadBase &, Version_t vers) const
+std::unique_ptr<RDisplayItem> RDrawable::Display(const RDisplayContext &ctxt)
 {
-   if (GetVersion() > vers)
+   if (GetVersion() > ctxt.GetLastVersion())
       return std::make_unique<RDrawableDisplayItem>(*this);
 
    return nullptr;

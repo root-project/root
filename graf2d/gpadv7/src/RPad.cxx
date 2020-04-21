@@ -24,11 +24,13 @@ ROOT::Experimental::RPad::~RPad() = default;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create pad display item
 
-std::unique_ptr<RDisplayItem> RPad::Display(const RPadBase &, Version_t vers) const
+std::unique_ptr<RDisplayItem> RPad::Display(const RDisplayContext &ctxt)
 {
    auto paditem = std::make_unique<RPadDisplayItem>();
 
-   DisplayPrimitives(*paditem.get(), vers);
+   RDisplayContext subctxt(ctxt.GetCanvas(), this, ctxt.GetLastVersion());
+
+   DisplayPrimitives(*paditem.get(), subctxt);
 
    paditem->SetPadPosSize(&fPos, &fSize);
 

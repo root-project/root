@@ -133,7 +133,7 @@ void ROOT::Experimental::RPadBase::AssignAutoColors()
 /// Each display item gets its special id, which used later for client-server communication
 /// Second parameter is version id which already delivered to the client
 
-void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem, Version_t vers) const
+void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem, RDisplayContext &ctxt)
 {
    paditem.SetAttributes(&GetAttrMap());
    paditem.SetPadStyle(fStyle.lock());
@@ -141,13 +141,16 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
    unsigned indx = 0;
 
    for (auto &drawable : fPrimitives) {
-      auto item = drawable->Display(*this, vers);
+
+      ctxt.SetDrawable(drawable.get(), indx++);
+
+      auto item = drawable->Display(ctxt);
 
       if (!item)
          item = std::make_unique<RDisplayItem>(true);
 
       item->SetObjectIDAsPtr(drawable.get());
-      item->SetIndex(indx++);
+      item->SetIndex(ctxt.GetIndex());
       // add object with the style
       paditem.Add(std::move(item), drawable->fStyle.lock());
    }

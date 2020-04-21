@@ -252,7 +252,7 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
 
 std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeAttrRequest::Process()
 {
-   auto canv = const_cast<ROOT::Experimental::RCanvas *>(GetCanvas());
+   auto canv = const_cast<ROOT::Experimental::RCanvas *>(GetContext().GetCanvas());
    if (!canv) return nullptr;
 
    if ((ids.size() != names.size()) || (ids.size() != values.size())) {

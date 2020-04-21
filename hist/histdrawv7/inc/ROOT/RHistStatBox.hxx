@@ -124,7 +124,7 @@ protected:
 
    virtual const std::vector<std::string> &GetEntriesNames() const;
 
-   std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const override
+   std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) override
    {
       // do not send stat box itself while it includes histogram which is not required on client side
       return std::make_unique<RDisplayHistStat>(*this, fShowMask, GetEntriesNames());

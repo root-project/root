@@ -30,11 +30,11 @@ RDrawableRequest::~RDrawableRequest() = default;
 
 std::unique_ptr<RDrawableReply> RDrawableExecRequest::Process()
 {
-   if (!exec.empty() && GetDrawable())
-      GetDrawable()->Execute(exec);
+   if (!exec.empty() && GetContext().GetDrawable())
+      GetContext().GetDrawable()->Execute(exec);
 
-   if (GetCanvas())
-      const_cast<RCanvas*>(GetCanvas())->Modified();
+   if (GetContext().GetCanvas())
+      GetContext().GetCanvas()->Modified();
 
    return nullptr;
 }
