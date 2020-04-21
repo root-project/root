@@ -123,6 +123,8 @@ public:
 
    public:
 
+      RDisplayContext() = default;
+
       RDisplayContext(RCanvas *canv, RPadBase *pad, Version_t vers = 0) :
          fCanvas(canv), fPad(pad), fLastVersion(vers)
       {
