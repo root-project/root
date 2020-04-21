@@ -903,7 +903,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 ////////////////////////////////////////////////////////////////////////////////
 /// Substitute our servers with those listed in newSet. If nameChange is false, servers and
 /// and substitutes are matched by name. If nameChange is true, servers are matched to args
-/// in newSet that have the 'ORIGNAME:<servername>' attribute set. If mustReplaceAll is set,
+/// in newSet that have the `ORIGNAME:<servername>` attribute set. If mustReplaceAll is set,
 /// a warning is printed and error status is returned if not all servers could be successfully
 /// substituted.
 
