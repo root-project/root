@@ -167,15 +167,12 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
   Bool_t cond = (condVars.getSize() > 0) ? kTRUE : kFALSE ;
 
   Bool_t hasCat(kFALSE) ;
-  TIterator* iter = genVars.createIterator() ;
-  RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*)iter->Next())) {
+  for (const auto arg : genVars) {
     if (arg->IsA()==RooCategory::Class()) {
       hasCat=kTRUE ;
       break ;
     }
   }
-  delete iter ;
 
 
   TString method ;
