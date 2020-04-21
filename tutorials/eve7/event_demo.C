@@ -93,7 +93,7 @@ void addTracks()
 
    REX::REveElement* event = eveMng->GetEventScene();
    auto prop = new REX::REveTrackPropagator();
-   prop->SetMagFieldObj(new REX::REveMagFieldDuo(350, -3.5, 2.0));
+   prop->SetMagFieldObj(new REX::REveMagFieldDuo(350, 3.5, -2.0));
    prop->SetMaxR(300);
    prop->SetMaxZ(600);
    prop->SetMaxOrbs(6);
@@ -108,7 +108,7 @@ void addTracks()
    {
       TParticle* p = new TParticle();
 
-      int pdg = 11* (r.Integer(2) -1);
+      int pdg = 11 * (r.Integer(2) > 0 ? 1 : -1);
       p->SetPdgCode(pdg);
 
       p->SetProductionVertex(r.Uniform(-v,v), r.Uniform(-v,v), r.Uniform(-v,v), 1);

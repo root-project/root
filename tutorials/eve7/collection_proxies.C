@@ -260,7 +260,7 @@ public:
       float r = 300;
       float z = 300;
       auto prop = new REveTrackPropagator();
-      prop->SetMagFieldObj(new REveMagFieldDuo(350, -3.5, 2.0));
+      prop->SetMagFieldObj(new REveMagFieldDuo(350, 3.5, -2.0));
       prop->SetMaxR(r);
       prop->SetMaxZ(z);
       prop->SetMaxOrbs(6);
