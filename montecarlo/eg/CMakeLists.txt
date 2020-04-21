@@ -37,4 +37,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EG
     Graf3d
     MathCore
     Physics
+  LIBRARIES
+    ${CMAKE_DL_LIBS}
 )
