@@ -27,3 +27,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Foam
     Hist
     MathCore
 )
+
+add_subdirectory(test)
