@@ -505,15 +505,15 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
       if (req) {
          std::shared_ptr<RDrawable> drawable;
-         req->SetCanvas(&fCanvas);
+         req->GetContext().SetCanvas(&fCanvas);
          if (req->GetId().empty() || (req->GetId() == "canvas")) {
-            req->SetDrawable(&fCanvas); // drawable is canvas itself
-            req->SetPad(nullptr); // no subpad for the canvas
+            req->GetContext().SetPad(nullptr); // no subpad for the canvas
+            req->GetContext().SetDrawable(&fCanvas, 0); // drawable is canvas itself
          } else {
             const RPadBase *subpad = nullptr;
             drawable = FindPrimitive(fCanvas, req->GetId(), &subpad);
-            req->SetDrawable(drawable.get());
-            req->SetPad(subpad);
+            req->GetContext().SetPad(const_cast<RPadBase *>(subpad));
+            req->GetContext().SetDrawable(drawable.get(), 0);
          }
 
          auto reply = req->Process();
@@ -661,7 +661,9 @@ std::string RCanvasPainter::CreateSnapshot(RDrawable::Version_t vers)
 {
    auto canvitem = std::make_unique<RCanvasDisplayItem>();
 
-   fCanvas.DisplayPrimitives(*canvitem.get(), vers);
+   RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, vers);
+
+   fCanvas.DisplayPrimitives(*canvitem, ctxt);
 
    canvitem->SetTitle(fCanvas.GetTitle());
    canvitem->SetWindowSize(fCanvas.GetSize());

@@ -114,7 +114,36 @@ friend class RDrawableExecRequest; // access Execute() method
 
 public:
 
-using Version_t = uint64_t;
+   using Version_t = uint64_t;
+
+   class RDisplayContext {
+      RCanvas *fCanvas;           ///<! canvas where drawable is displayed
+      RPadBase *fPad;             ///<! subpad where drawable is displayed
+      RDrawable *fDrawable;       ///<! reference on the drawable
+      Version_t fLastVersion{0};  ///<! last version used to di
+      unsigned fIndex{0};         ///<! index in list of primitives
+
+   public:
+
+      RDisplayContext(RCanvas *canv, RPadBase *pad, Version_t vers = 0) :
+         fCanvas(canv), fPad(pad), fLastVersion(vers)
+      {
+      }
+
+      void SetCanvas(RCanvas *canv) { fCanvas = canv; }
+      void SetPad(RPadBase *pad) { fPad = pad; }
+      void SetDrawable(RDrawable *dr, unsigned indx)
+      {
+         fDrawable = dr;
+         fIndex = indx;
+      }
+
+      RCanvas *GetCanvas() const { return fCanvas; }
+      RPadBase *GetPad() const { return fPad; }
+      RDrawable *GetDrawable() const { return fDrawable; }
+      unsigned GetIndex() const { return fIndex; }
+      Version_t GetLastVersion() const { return fLastVersion; }
+   };
 
 private:
    RAttrMap fAttr;               ///< attributes values
@@ -135,7 +164,7 @@ protected:
 
    bool MatchSelector(const std::string &selector) const;
 
-   virtual std::unique_ptr<RDisplayItem> Display(const RPadBase &, Version_t) const;
+   virtual std::unique_ptr<RDisplayItem> Display(const RDisplayContext &);
 
    virtual void SetDrawableVersion(Version_t vers) { fVersion = vers; }
    Version_t GetVersion() const { return fVersion; }
