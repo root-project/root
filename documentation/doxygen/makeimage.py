@@ -3,6 +3,7 @@
 import ROOT
 import shutil
 import os
+import sys
 
 def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
     '''Generates the ImageName output of the macro MacroName'''
@@ -12,14 +13,18 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
     if batch:
         ROOT.gROOT.SetBatch(1)
 
-    if py: exec(open(MacroName).read(), globals())
-    else: ROOT.gInterpreter.ProcessLine(".x " + MacroName)
+    if py:
+        sys.argv = [MacroName]
+        exec(open(MacroName).read(), globals())
+    else:
+        ROOT.gInterpreter.ProcessLine(".x " + MacroName)
 
     if cp:
         MN = MacroName.split("(")[0]
         MNBase = os.path.basename(MN)
         shutil.copyfile("%s" %MN,"%s/macros/%s" %(OutDir,MNBase))
 
+    ImageNum = 0
     s = open ("ImagesSizes.dat","w")
 
     canvases = ROOT.gROOT.GetListOfCanvases()
