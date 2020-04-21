@@ -890,8 +890,9 @@ Bool_t TEveTrackPropagator::HelixIntersectPlane(const TEveVectorD& p,
       }
       if (new_d > 0)
       {
-         delta = forwV - pos;
-         itsect = pos + delta * (d / (d - new_d));
+         delta  = forwV - pos4;
+         itsect = pos4 + delta * ((point - pos4).Dot(n) / delta.Dot(n));
+
          return kTRUE;
       }
       pos4 = forwV;
@@ -942,7 +943,7 @@ Bool_t TEveTrackPropagator::IntersectPlane(const TEveVectorD& p,
                                            const TEveVectorD& normal,
                                                  TEveVectorD& itsect)
 {
-   if (fH.fCharge && fMagFieldObj && p.Perp2() > kPtMinSqr)
+   if (fH.fCharge && fMagFieldObj)
       return HelixIntersectPlane(p, point, normal, itsect);
    else
       return LineIntersectPlane(p, point, normal, itsect);
