@@ -196,8 +196,8 @@ struct RTFKey {
           std::uint32_t szObjInMem, std::uint32_t szObjOnDisk = 0)
    {
       fObjLen = szObjInMem;
-      if ((seekKey > std::numeric_limits<std::int32_t>::max()) ||
-          (seekPdir > std::numeric_limits<std::int32_t>::max()))
+      if ((seekKey > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) ||
+          (seekPdir > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())))
       {
          fKeyHeaderSize = 18 + sizeof(fInfoLong);
          fKeyLen = fKeyHeaderSize + clName.GetSize() + objName.GetSize() + titleName.GetSize();
@@ -295,7 +295,7 @@ struct RTFHeader {
    }
 
    bool IsBigFile(std::uint64_t offset = 0) const {
-      return (fVersion >= 1000000) || (offset > std::numeric_limits<std::int32_t>::max());
+      return (fVersion >= 1000000) || (offset > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max()));
    }
 
    std::uint32_t GetSize() const {
@@ -396,7 +396,7 @@ struct RTFFreeEntry {
 
    RTFFreeEntry() : fInfoShort() {}
    void Set(std::uint64_t first, std::uint64_t last) {
-      if (last > std::numeric_limits<std::int32_t>::max()) {
+      if (last > static_cast<unsigned int>(std::numeric_limits<std::int32_t>::max())) {
          fVersion = fVersion + 1000;
          fInfoLong.fFirst = first;
          fInfoLong.fLast = last;
