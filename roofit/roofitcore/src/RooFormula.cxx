@@ -31,12 +31,12 @@ forms equivalent:
   RooFormula("formula", "x[0]*x[1]", RooArgList(x,y))
 ```
 Note that `x[i]` is an expression reserved for TFormula. If a variable with
-the name `x` is given, the RooFormula interprets `x[i]` as a list position,
-but `x` without brackets as a variable name.
+the name `x` is given, the RooFormula interprets `x` as a variable name,
+but `x[i]` as an index in the list of variables.
 
 ### Category expressions
 State information of RooAbsCategories can be accessed using the '::' operator,
-*e.g.*, `tagCat::Kaon` will resolve to the numerical value of
+*i.e.*, `tagCat::Kaon` will resolve to the numerical value of
 the `Kaon` state of the RooAbsCategory object named `tagCat`.
 
 A formula to switch between lepton categories could look like this:
@@ -47,7 +47,7 @@ A formula to switch between lepton categories could look like this:
 ```
 
 ### Debugging a formula that won't compile
-When the formula is preprocessed, RooFit prints some information in the message stream.
+When the formula is preprocessed, RooFit can print information in the debug stream.
 These can be retrieved by activating the RooFit::MsgLevel `RooFit::DEBUG`
 and the RooFit::MsgTopic `RooFit::InputArguments`.
 Check the tutorial rf506_msgservice.C for details.
@@ -69,6 +69,23 @@ using namespace std;
 
 ClassImp(RooFormula);
 
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find all input arguments which are categories, and save this information in
+/// with the names of the variables that are being used to evaluate it.
+std::vector<bool> findCategoryServers(const RooAbsCollection& collection) {
+  std::vector<bool> output;
+  output.reserve(collection.size());
+
+  for (unsigned int i = 0; i < collection.size(); ++i) {
+    output.push_back(collection[i]->InheritsFrom(RooAbsCategory::Class()));
+  }
+
+  return output;
+}
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -94,31 +111,13 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
   _origList.add(varList);
   _isCategory = findCategoryServers(_origList);
 
-  std::string processedFormula = processFormula(formula);
-
-  cxcoutD(InputArguments) << "RooFormula '" << GetName() << "' will be compiled as "
-      << "\n\t" << processedFormula
-      << "\n  and used as"
-      << "\n\t" << reconstructFormula(processedFormula)
-      << "\n  with the parameters " << _origList << endl;
-
-
-  if (!processedFormula.empty())
-    _tFormula = std::make_unique<TFormula>(name, processedFormula.c_str(), false);
-
-  if (!_tFormula || !_tFormula->IsValid()) {
-    coutF(InputArguments) << "RooFormula '" << GetName() << "' did not compile."
-        << "\nInput:\n\t" << formula
-        << "\nProcessed:\n\t" << processedFormula << endl;
-    _tFormula.reset(nullptr);
-  }
+  installFormulaOrThrow(formula);
 
   RooArgList useList = usedVariables();
   if (checkVariables && _origList.size() != useList.size()) {
     coutI(InputArguments) << "The formula " << GetName() << " claims to use the variables " << _origList
         << " but only " << useList << " seem to be in use."
-        << "\n  inputs:         " << formula
-        << "\n  interpretation: " << reconstructFormula(processedFormula) << std::endl;
+        << "\n  inputs:         " << formula << std::endl;
   }
 }
 
@@ -270,18 +269,7 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
 #endif //GCC < 4.9 Check
 #endif //_MSC_VER
 
-////////////////////////////////////////////////////////////////////////////////
-/// Find all input arguments which are categories, and save this information in
-/// with the names of the variables that are being used to evaluate it.
-std::vector<bool> RooFormula::findCategoryServers(const RooAbsCollection& collection) const {
-  std::vector<bool> output;
 
-  for (unsigned int i = 0; i < collection.size(); ++i) {
-    output.push_back(dynamic_cast<const RooAbsCategory*>(collection[i]));
-  }
-
-  return output;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,15 +277,14 @@ std::vector<bool> RooFormula::findCategoryServers(const RooAbsCollection& collec
 /// retained.
 Bool_t RooFormula::reCompile(const char* newFormula)
 {
-  std::string processed = processFormula(newFormula);
-  auto newTF = std::make_unique<TFormula>(GetName(), processed.c_str(), false);
-
-  if (!newTF->IsValid()) {
-    coutE(InputArguments) << __func__ << ": new equation doesn't compile, formula unchanged" << endl;
+  try {
+    installFormulaOrThrow(newFormula);
+  } catch (std::runtime_error& e) {
+    coutE(InputArguments) << __func__ << ": new equation doesn't compile, formula unchanged."
+        << "\n" << e.what() << endl;
     return true;
   }
 
-  _tFormula = std::move(newTF);
   SetTitle(newFormula);
   return false;
 }
@@ -356,7 +343,7 @@ Double_t RooFormula::eval(const RooArgSet* nset) const
     std::string what = "Formula ";
     what += GetTitle();
     what += " didn't compile.";
-    throw std::invalid_argument(what);
+    throw std::runtime_error(what);
   }
 
   std::vector<double> pars;
@@ -438,7 +425,53 @@ void RooFormula::printArgs(ostream& os) const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Check that the formula compiles, and also fulfills the assumptions.
+///
+void RooFormula::installFormulaOrThrow(const std::string& formula) {
+  const std::string processedFormula = processFormula(formula);
 
+  cxcoutD(InputArguments) << "RooFormula '" << GetName() << "' will be compiled as "
+      << "\n\t" << processedFormula
+      << "\n  and used as"
+      << "\n\t" << reconstructFormula(processedFormula)
+      << "\n  with the parameters " << _origList << endl;
+
+  auto theFormula = std::make_unique<TFormula>(GetName(), processedFormula.c_str(), false);
+
+  if (!theFormula || !theFormula->IsValid()) {
+    std::stringstream msg;
+    msg << "RooFormula '" << GetName() << "' did not compile or is invalid."
+        << "\nInput:\n\t" << formula
+        << "\nPassed over to TFormula:\n\t" << processedFormula << std::endl;
+    coutF(InputArguments) << msg.str();
+    throw std::runtime_error(msg.str());
+  }
+
+  if (theFormula && theFormula->GetNdim() != 1) {
+    // TFormula thinks that we have a multi-dimensional formula, e.g. with variables x,y,z,t.
+    // We have to check now that this is not the case, as RooFit only uses the syntax x[0], x[1], x[2], ...
+    bool haveProblem = false;
+    std::stringstream msg;
+    msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim() << "-dimensional with the variable(s) {";
+    for (int i=1; i < theFormula->GetNdim(); ++i) {
+      const TString varName = theFormula->GetVarName(i);
+      if (varName.BeginsWith("x[") && varName[varName.Length()-1] == ']')
+        continue;
+
+      haveProblem = true;
+      msg << theFormula->GetVarName(i) << ",";
+    }
+    if (haveProblem) {
+      msg << "}, which could not be supplied by RooFit."
+          << "\nThe formula must be modified, or those variables must be supplied in the list of variables." << std::endl;
+      coutF(InputArguments) << msg.str();
+      throw std::invalid_argument(msg.str());
+    }
+  }
+
+  _tFormula = std::move(theFormula);
+}
 
 
 #ifndef ROOFORMULA_HAVE_STD_REGEX
