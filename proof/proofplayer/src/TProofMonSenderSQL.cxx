@@ -27,6 +27,7 @@ TProofMonSender implementation for the SQL writers
 #include "TProofDebug.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TObjString.h"
 #include "TVirtualMonitoring.h"
 
 ////////////////////////////////////////////////////////////////////////////////

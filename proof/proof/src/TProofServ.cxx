@@ -78,6 +78,7 @@ using namespace std;
 #include "TQueryResultManager.h"
 #include "TRegexp.h"
 #include "TROOT.h"
+#include "TObjArray.h"
 #include "TSocket.h"
 #include "TStopwatch.h"
 #include "TSystem.h"

@@ -28,6 +28,7 @@ TProofMonSender implementation for the ML writer
 #include "TProofDebug.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TObjString.h"
 #include "TVirtualMonitoring.h"
 
 ////////////////////////////////////////////////////////////////////////////////
