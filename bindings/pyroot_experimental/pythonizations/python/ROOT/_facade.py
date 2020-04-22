@@ -215,7 +215,6 @@ class ROOTFacade(types.ModuleType):
                 for rootlogon in logons:
                     if os.path.exists(rootlogon):
                         self.TApplication.ExecuteFile(rootlogon)
-                del rootlogon, logons
 
     # Inject version as __version__ property in ROOT module
     @property
