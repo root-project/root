@@ -115,6 +115,7 @@ class Container {
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TMap.h"
+#include "TRef.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TFile.h"
