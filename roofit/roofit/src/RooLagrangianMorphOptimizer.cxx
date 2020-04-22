@@ -33,7 +33,7 @@
     std::cerr << arg << std::endl;                                      \
   }}
 #define INFO(arg) std::cout << arg << std::endl;
-
+/*
 RooLagrangianMorphOptimizer* RooLagrangianMorphOptimizer::gActiveInstance = NULL;
 
 RooLagrangianMorphOptimizer::ParamCard RooLagrangianMorphOptimizer::RandomLagrangianGenerator::generate(){
@@ -159,10 +159,10 @@ std::vector<double> RooLagrangianMorphOptimizer::getParameterBounds(const std::v
   }
   return pars_limit;
 }
-
-void RooLagrangianMorphOptimizer::targetFcn(Int_t&npar, Double_t* /*gin*/, Double_t&f, Double_t*par, Int_t /*flag*/){
+*/
+//void RooLagrangianMorphOptimizer::targetFcn(Int_t&npar, Double_t* /*gin*/, Double_t&f, Double_t*par, Int_t /*flag*/){
   // putting it all together
-  std::vector<double> pars(par, par + npar);
+/*  std::vector<double> pars(par, par + npar);
   try {
     std::vector<double> pars_limit = RooLagrangianMorphOptimizer::gActiveInstance->getParameterBounds(pars);
     RooLagrangianMorphOptimizer::gActiveInstance->setupMorphing(pars_limit);
@@ -722,6 +722,7 @@ int RooLagrangianMorphOptimizer::optimize(){
   Int_t nvpar,nparx,icstat;
   ptMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
   //void mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &npari, Int_t &nparx, Int_t &istat) 
+*/
   //*-*-*-*-*Returns concerning the current status of the minimization*-*-*-*-*
   //*-*      =========================================================
   //*-*       User-called
@@ -737,6 +738,7 @@ int RooLagrangianMorphOptimizer::optimize(){
   //*-*                    2= full matrix, but forced positive-definite
   //*-*                    3= full accurate covariance matrix
   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/*
   std::cout << "\n";
   std::cout << " Minimum target function square = " << amin << "\n";
   std::cout << " Estimated vert. distance to min. = " << edm << "\n";
@@ -746,6 +748,7 @@ int RooLagrangianMorphOptimizer::optimize(){
 
   std::cout << "\n";
   ptMinuit->mnprin(3,amin);
+*/
   //*-*-*-*Prints the values of the parameters at the time of the call*-*-*-*-*
   //*-*    ===========================================================
   //*-*        also prints other relevant information such as function value,
@@ -759,6 +762,6 @@ int RooLagrangianMorphOptimizer::optimize(){
   //*-*                  4    values, parabolic errors, MINOS errors
   //*-*    when INKODE=5, MNPRIN chooses IKODE=1,2, or 3, according to ISW(2)
   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
+/*
   return 0;
-}
+}*/
