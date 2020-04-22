@@ -22,6 +22,7 @@
 #include "TDataMember.h"
 #include "TDataType.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TUrl.h"
 #include "TImage.h"
 #include "TVirtualMutex.h"

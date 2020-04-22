@@ -21,6 +21,7 @@
 #include "TClass.h"
 #include "RConfigure.h"
 #include "TRegexp.h"
+#include "TObjArray.h"
 
 #include "THttpEngine.h"
 #include "THttpLongPollEngine.h"
