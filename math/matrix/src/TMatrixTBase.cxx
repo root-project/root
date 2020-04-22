@@ -221,6 +221,7 @@
 
 #include "TMatrixTBase.h"
 #include "TVectorT.h"
+#include "TBuffer.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TMath.h"
