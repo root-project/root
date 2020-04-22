@@ -11,7 +11,7 @@
 file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
   "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
 
-file(WRITE ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 "#ifndef ROOT_RGITCOMMIT_H
 #define ROOT_RGITCOMMIT_H
   #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
@@ -31,16 +31,25 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
     ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
 )
 
+add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+  DEPENDS
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+)
+
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
     ${CMAKE_BINARY_DIR}/include/RGitCommit.h
   DEPENDS
-    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
+    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 )
 
-add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RGitCommit.h ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RConfigure.h)
+add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h ${CMAKE_BINARY_DIR}/include/RGitCommit.h ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
