@@ -12,6 +12,7 @@
 #include "RConfigure.h"
 
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClassTree.h"
 #include "TClassTable.h"
 #include "TClass.h"

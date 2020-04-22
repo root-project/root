@@ -85,6 +85,7 @@ A Graphical cut may be saved to a file via TCutG::Write.
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TCutG.h"
+#include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TH2.h"
