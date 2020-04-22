@@ -1,4 +1,4 @@
-  # Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -23,6 +23,7 @@ if (opengl)
   if(builtin_ftgl)
     add_subdirectory(ftgl)
   endif()
+  add_subdirectory(rglew)
   add_subdirectory(eve)
   add_subdirectory(gl)
   add_subdirectory(gviz3d)

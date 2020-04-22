@@ -8,8 +8,6 @@
 # CMakeLists.txt file for building ROOT graf3d/gviz3d package
 ############################################################################
 
-include_directories(${GLEW_INCLUDE_DIRS})
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Gviz3d
   HEADERS
     TStructNode.h
@@ -23,10 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz3d
     src/TStructNodeProperty.cxx
     src/TStructViewer.cxx
     src/TStructViewerGUI.cxx
-  BUILTINS
-    GLEW
   LIBRARIES
-    GLEW
     ${FTGL_LIBRARIES}
   DEPENDENCIES
     Gui

@@ -39,9 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     "-framework Cocoa"
     "-framework OpenGL"
     ${FREETYPE_LIBRARIES}
-    GLEW
-  BUILTINS
-    GLEW
+    RGlew
 )
 
 target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)
@@ -57,8 +55,4 @@ else()
     ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
   )
 endif(opengl)
-
-if(builtin_glew)
-   target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
-endif()
 
