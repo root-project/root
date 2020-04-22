@@ -16,6 +16,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TGaxis.h"
 #include "TAxisModLab.h"
 #include "TVirtualPad.h"

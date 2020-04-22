@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"

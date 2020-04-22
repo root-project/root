@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TVirtualPad.h"
 #  include <ft2build.h>
 #  include FT_FREETYPE_H

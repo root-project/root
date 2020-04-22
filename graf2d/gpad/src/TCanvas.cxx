@@ -14,7 +14,9 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TCanvas.h"
+#include "TDatime.h"
 #include "TClass.h"
 #include "TStyle.h"
 #include "TText.h"
@@ -29,6 +31,7 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TColor.h"
+#include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"
