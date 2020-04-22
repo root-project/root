@@ -30,6 +30,7 @@
 #include "TKey.h"
 #include "TObject.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 #include "TSeqCollection.h"
 
 #include "TTree.h"
