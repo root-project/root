@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/TIOFeatures.hxx"
+#include "TBasket.h"
 #include "TBranch.h"
 #include "TEnum.h"
 #include "TEnumConstant.h"
@@ -16,6 +17,7 @@
 #include "TTree.h"
 
 #include <bitset>
+#include <sstream>
 
 using namespace ROOT;
 

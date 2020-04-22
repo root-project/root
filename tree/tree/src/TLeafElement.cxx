@@ -21,6 +21,7 @@ a TStreamerInfo (i.e. using TBranchElement).
 
 #include "TVirtualStreamerInfo.h"
 #include "Bytes.h"
+#include "TBuffer.h"
 
 ClassImp(TLeafElement);
 
