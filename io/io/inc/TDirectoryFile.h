@@ -23,6 +23,8 @@
 
 #include "Compression.h"
 #include "TDirectory.h"
+#include "TDatime.h"
+#include "TList.h"
 
 class TList;
 class TBrowser;

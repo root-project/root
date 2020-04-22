@@ -20,6 +20,9 @@
 
 #include "TVirtualCollectionProxy.h"
 
+#include "TObjArray.h"
+
+
 /**
 \class TStreamerInfo
 \ingroup IO
