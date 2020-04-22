@@ -1416,6 +1416,11 @@ if(vdt OR builtin_vdt)
 endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
+if(vecgeom AND builtin_veccore)
+  message(WARNING "VecGeom doesn't support external VecCore (veccore & builtin_veccore options), but only native VecCore built together with VecGeom. Option VecGeom will be disabled.")
+  set(vecgeom OFF CACHE BOOL "Disabled because VecGeom doesn't support external Vecore" FORCE)
+endif()
+
 if (vecgeom)
   message(STATUS "Looking for VecGeom")
   find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
