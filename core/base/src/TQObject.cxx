@@ -58,6 +58,7 @@ General purpose message signal
 #include "THashList.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include "TMethod.h"

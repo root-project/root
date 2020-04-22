@@ -76,6 +76,7 @@ LastLink() and lnk->Prev() or by using the Before() member.
 #include "TClass.h"
 #include "TROOT.h"
 #include "TVirtualMutex.h"
+#include "TBuffer.h"
 
 #include <string>
 

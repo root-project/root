@@ -36,6 +36,7 @@ class hierarchies (watch out for overlaps).
 #include "Varargs.h"
 #include "Riostream.h"
 #include "TObject.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TGuiFactory.h"
 #include "TMethod.h"

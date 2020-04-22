@@ -243,6 +243,7 @@ The 3 arrays mytracks,pions and muons may be written separately.
 
 #include "TRef.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TProcessUUID.h"
 #include "TRefTable.h"

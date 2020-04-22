@@ -52,6 +52,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClassTable.h"
 #include "TDataMember.h"
 #include "TDataType.h"
+#include "TDatime.h"
 #include "TError.h"
 #include "TExMap.h"
 #include "TFunctionTemplate.h"
@@ -62,6 +63,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 #include "TProtoClass.h"
 #include "TROOT.h"
 #include "TRealData.h"
@@ -81,6 +83,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TSchemaRule.h"
 #include "TSystem.h"
 #include "TThreadSlots.h"
+#include "ThreadLocalStorage.h"
 
 #include <cstdio>
 #include <cctype>
@@ -137,6 +140,30 @@ namespace {
          fSave(ROOT::Internal::gMmallocDesc) { ROOT::Internal::gMmallocDesc = value; }
       ~TMmallocDescTemp() { ROOT::Internal::gMmallocDesc = fSave; }
    };
+
+   // When a new class is created, we need to be able to find
+   // if there are any existing classes that have the same name
+   // after any typedefs are expanded.  (This only really affects
+   // template arguments.)  To avoid having to search through all classes
+   // in that case, we keep a hash table mapping from the fully
+   // typedef-expanded names to the original class names.
+   // An entry is made in the table only if they are actually different.
+   //
+   // In these objects, the TObjString base holds the typedef-expanded
+   // name (the hash key), and fOrigName holds the original class name
+   // (the value to which the key maps).
+   //
+   class TNameMapNode : public TObjString {
+   public:
+      TString fOrigName;
+
+      TNameMapNode(const char *typedf, const char *orig)  :
+         TObjString (typedf),
+         fOrigName (orig)
+     {
+     }
+   };
+
 }
 
 std::atomic<Int_t> TClass::fgClassCount;
@@ -694,16 +721,6 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
 }
 
 THashTable* TClass::fgClassTypedefHash = 0;
-
-//______________________________________________________________________________
-//______________________________________________________________________________
-////////////////////////////////////////////////////////////////////////////////
-
-TClass::TNameMapNode::TNameMapNode (const char* typedf, const char* orig)
-  : TObjString (typedf),
-    fOrigName (orig)
-{
-}
 
 //______________________________________________________________________________
 
