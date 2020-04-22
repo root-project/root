@@ -28,6 +28,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
