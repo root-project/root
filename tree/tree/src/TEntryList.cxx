@@ -148,10 +148,12 @@ See comments to those functions for more details
 #include "TEntryListBlock.h"
 #include "TError.h"
 #include "TKey.h"
+#include "TBuffer.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TRegexp.h"
 #include "TSystem.h"
+#include "TObjString.h"
 
 ClassImp(TEntryList);
 

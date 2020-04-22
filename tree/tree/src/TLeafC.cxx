@@ -16,6 +16,7 @@ A TLeaf for a variable length string.
 */
 
 #include "TLeafC.h"
+#include "TBuffer.h"
 #include "TBranch.h"
 #include "TBasket.h"
 #include "TClonesArray.h"

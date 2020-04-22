@@ -18,6 +18,7 @@ See TBranch structure in TTree.
 
 #include "TLeaf.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"

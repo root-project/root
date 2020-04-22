@@ -1,6 +1,8 @@
 
 #include "ROOT/TIOFeatures.hxx"
 
+#include "TBasket.h"
+
 #include "gtest/gtest.h"
 
 #include <vector>

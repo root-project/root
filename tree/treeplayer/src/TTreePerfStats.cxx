@@ -87,6 +87,7 @@ The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
 #include "TTree.h"
 #include "TTreeCache.h"
 #include "TAxis.h"
+#include "TBranch.h"
 #include "TBrowser.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
