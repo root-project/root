@@ -33,19 +33,26 @@
 #include "TAttFill.h"
 #include "TAttLine.h"
 #include "TAttMarker.h"
-#include "TBranch.h"
-#include "TBuffer.h"
 #include "TClass.h"
 #include "TDataType.h"
 #include "TDirectory.h"
 #include "TObjArray.h"
 #include "TVirtualTreePlayer.h"
 
+#ifdef R__LESS_INCLUDES
+class TBranch;
+class TList;
+#else
+#include "TBranch.h"
+// #include "TBuffer.h"
+#include "TList.h"
+#endif
+
 #include <array>
 #include <atomic>
 
 
-class TBranch;
+class TBuffer;
 class TBrowser;
 class TFile;
 class TLeaf;
@@ -54,7 +61,6 @@ class TTreeFormula;
 class TPolyMarker;
 class TEventList;
 class TEntryList;
-class TList;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
@@ -554,7 +560,7 @@ public:
    virtual Long64_t        ReadStream(std::istream& inputStream, const char* branchDescriptor = "", char delimiter = ' ');
    virtual void            Refresh();
    virtual void            RegisterExternalFriend(TFriendElement *);
-   virtual void            RemoveExternalFriend(TFriendElement *fe) { if (fExternalFriends) fExternalFriends->Remove((TObject*)fe); }
+   virtual void            RemoveExternalFriend(TFriendElement *);
    virtual void            RemoveFriend(TTree*);
    virtual void            RecursiveRemove(TObject *obj);
    virtual void            Reset(Option_t* option = "");
