@@ -138,6 +138,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include "TDataMember.h"
 
 #include "Strlen.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TDataType.h"

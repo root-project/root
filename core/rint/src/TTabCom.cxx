@@ -123,6 +123,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <set>
 
 #include "RConfigure.h"
 #include "TTabCom.h"
@@ -137,6 +138,7 @@
 #include "TGlobal.h"
 #include "TList.h"
 #include "THashList.h"
+#include "TObjString.h"
 #include "Getline.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
