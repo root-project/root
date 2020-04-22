@@ -192,6 +192,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     ${MATHCORE_BUILTINS}
 )
 
+target_include_directories(MathCore PRIVATE ${Vc_INCLUDE_DIR})
+target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
+
+list(APPEND math_incl ${Vc_INCLUDE_DIR})
+list(APPEND math_incl ${VecCore_INCLUDE_DIRS})
+
+foreach(inlc ${math_incl})
+   target_include_directories(MathCore PUBLIC $<BUILD_INTERFACE:${incl}>)
+endforeach()
+
 target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 

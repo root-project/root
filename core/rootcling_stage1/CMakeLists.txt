@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/rootcling_stage1 package
 ############################################################################
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../dictgen/res)
+include_directories(${CMAKE_SOURCE_DIR}/core/dictgen/res)
 
 if(WIN32)
   set_source_files_properties(src/rootcling_stage1.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX")

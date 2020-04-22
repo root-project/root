@@ -419,7 +419,7 @@ else()
     COMMAND
       ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
-      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
     DEPENDS
       rootcling ${__pch_dependencies} ${__pch_dictionaries}
       ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py

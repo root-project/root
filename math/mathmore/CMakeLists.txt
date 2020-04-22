@@ -84,7 +84,7 @@ SOURCES
     GSL
 )
 
-target_include_directories(MathMore PRIVATE ${GSL_INCLUDE_DIR})
+target_include_directories(MathMore SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
 target_link_libraries(MathMore PRIVATE ${GSL_LIBRARIES})
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

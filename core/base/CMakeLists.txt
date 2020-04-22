@@ -216,12 +216,29 @@ endif()
 set(Core_dict_headers ${BASE_HEADERS} PARENT_SCOPE)
 
 ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
-target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
+
+target_include_directories(Base PRIVATE
+   ${PCRE_INCLUDE_DIR}
+   res
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
+
+if(MSVC)
+   target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+endif()
+
 
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
 generateHeader(Base
   ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/include/TApplicationCommandLineOptionsHelp.h
+  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
