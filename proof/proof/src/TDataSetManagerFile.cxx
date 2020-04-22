@@ -34,6 +34,7 @@
 #include "TMD5.h"
 #include "TMacro.h"
 #include "TMessage.h"
+#include "TObjString.h"
 #include "TSystem.h"
 #include "TError.h"
 #include "TPRegexp.h"
