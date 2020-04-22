@@ -7,6 +7,7 @@
 
 import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from sys import maxsize
 
 import ROOT
 from ROOT import TObject, TLorentzVector, kRed, kGreen, kBlue, TVectorF, TROOT, TCanvas, gInterpreter, gROOT, TMatrixD, TString, std
@@ -359,11 +360,21 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       addr_as_buffer = ROOT.AddressOf(o)
 
       # The result of AddressOf can be passed to a function that expects a void*
-      ROOT.gInterpreter.Declare("""
-      long long get_address_in_buffer(void *p) { return *(long long*)p; }
-      """)
-
-      self.assertEqual(addr_as_int, ROOT.get_address_in_buffer(addr_as_buffer))
+      # or an integer pointer (Long64_t* for 64bit, Int_t* for 32bit)
+      is_64bit = maxsize > 2**32
+      if is_64bit:
+         ROOT.gInterpreter.Declare("""
+         Long64_t get_address_in_buffer_vp(void *p) { return *(Long64_t*)p; }
+         Long64_t get_address_in_buffer_ip(Long64_t *p) { return *p; }
+         """)
+      else:
+         ROOT.gInterpreter.Declare("""
+         Int_t get_address_in_buffer_vp(void *p) { return *(Int_t*)p; }
+         Int_t get_address_in_buffer_ip(Int_t *p) { return *p; }
+         """)
+      self.assertEqual(addr_as_int, ROOT.get_address_in_buffer_vp(addr_as_buffer))
+      self.assertEqual(addr_as_int, ROOT.get_address_in_buffer_ip(addr_as_buffer))
+      self.assertEqual(addr_as_int, addr_as_buffer[0])
 
 
 ### C++ language naming of classes ===========================================
