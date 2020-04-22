@@ -26,8 +26,11 @@ the trees in the chain.
 
 #include "TChain.h"
 
+#include <iostream>
+
 #include "TBranch.h"
 #include "TBrowser.h"
+#include "TBuffer.h"
 #include "TChainElement.h"
 #include "TClass.h"
 #include "TColor.h"
@@ -2104,7 +2107,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    // General case
    TUrl url(name, kTRUE);
    filename = (strcmp(url.GetProtocol(), "file")) ? url.GetUrl() : url.GetFileAndOptions();
-   
+
    TString fn = url.GetFile();
    // Extract query, if any
    if (url.GetOptions() && (strlen(url.GetOptions()) > 0))
@@ -2295,7 +2298,7 @@ void TChain::ResetAfterMerge(TFileMergeInfo *info)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save TChain as a C++ statements on output stream out.
-/// With the option "friend" save the description of all the 
+/// With the option "friend" save the description of all the
 /// TChain's friend trees or chains as well.
 
 void TChain::SavePrimitive(std::ostream &out, Option_t *option)
