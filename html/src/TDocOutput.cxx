@@ -23,6 +23,7 @@
 #include "TMethod.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TSystem.h"
 #include "TUrl.h"
 #include "TVirtualMutex.h"
