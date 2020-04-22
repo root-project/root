@@ -28,4 +28,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Foam
     MathCore
 )
 
-add_subdirectory(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
