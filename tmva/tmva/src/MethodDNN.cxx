@@ -36,6 +36,7 @@ Deep Neural Network Implementation.
 #include "TTree.h"
 #include "TFile.h"
 #include "TFormula.h"
+#include "TObjString.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Configurable.h"

@@ -11,6 +11,7 @@
 #include "TPad.h"
 #include "TObjArray.h"
 #include "TText.h"
+#include "TObjString.h"
 
 #include <vector>
 #include "TMVA/network.h"

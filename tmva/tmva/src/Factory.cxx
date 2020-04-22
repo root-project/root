@@ -73,6 +73,7 @@ evaluation phases.
 #include "TMVA/ResultsMulticlass.h"
 #include <list>
 #include <bitset>
+#include <set>
 
 #include "TMVA/Types.h"
 

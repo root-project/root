@@ -45,6 +45,7 @@ Linear interpolation class.
 #include "TH2.h"
 #include "THashTable.h"
 #include "TList.h"
+#include "TObjString.h"
 #include "TMath.h"
 #include "TProfile.h"
 #include "TVectorD.h"
