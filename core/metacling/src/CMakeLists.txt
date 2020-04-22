@@ -16,13 +16,6 @@ include_directories(SYSTEM
   ${CLAD_INCLUDE_DIRS}
 )
 
-include_directories(
-  ../res
-  ../../clingutils/res
-  ../../foundation/res
-  ${CLING_INCLUDE_DIRS}
-)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
@@ -61,6 +54,30 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingValue.cxx
 )
 
+target_include_directories(MetaCling PRIVATE
+   ${CLING_INCLUDE_DIRS}
+   ${CMAKE_SOURCE_DIR}/core/metacling/res
+   ${CMAKE_SOURCE_DIR}/core/clingutils/res
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/zip/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/res
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/cont/inc
+   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_SOURCE_DIR}/io/io/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
+
+if(MSVC)
+   target_include_directories(MetaCling PRIVATE
+      ${CMAKE_SOURCE_DIR}/core/winnt/inc
+   )
+endif()
+
 add_dependencies(MetaCling CLING)
 
 ##### libCling #############################################################
@@ -95,7 +112,6 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:Dictgen>
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
-
 
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

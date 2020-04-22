@@ -29,10 +29,24 @@ set(sources
 )
 
 ROOT_OBJECT_LIBRARY(Foundation ${sources})
-target_include_directories(Foundation PRIVATE res)
+target_include_directories(Foundation PRIVATE
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
 
 ROOT_OBJECT_LIBRARY(Foundation_Stage1 ${sources}) # used by rootcling_stage1
-target_include_directories(Foundation_Stage1 PRIVATE res)
+target_include_directories(Foundation_Stage1 PRIVATE
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_BINARY_DIR}/ginclude
+)
+
+if(MSVC)
+   target_include_directories(Foundation PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+   target_include_directories(Foundation_Stage1 PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+endif()
+
 set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}")
 
 ROOT_INSTALL_HEADERS()

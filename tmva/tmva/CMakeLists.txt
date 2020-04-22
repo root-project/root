@@ -18,12 +18,14 @@ endif()
 
 if(tmva-gpu)
   set(dictoptions -I${CUDA_TOOLKIT_INCLUDE})
+
   set(TMVA_GPU_HEADERS
        TMVA/DNN/Architectures/Cuda.h
-		#  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
-		#  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
-		#  TMVA/DNN/Architectures/Cuda/CudaTensor.h
+       #  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
+       #  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
+       #  TMVA/DNN/Architectures/Cuda/CudaTensor.h
   )
+
 else()
   set(installoptions ${installoptions} FILTER "Cuda")
 endif()
@@ -217,34 +219,34 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/TreeInference/BranchlessTree.hxx
     TMVA/TreeInference/Forest.hxx
     TMVA/TreeInference/Objectives.hxx
-	#  TMVA/DNN/Adadelta.h
-	#  TMVA/DNN/Adagrad.h
-	#  TMVA/DNN/Adam.h
-	#  TMVA/DNN/BatchNormLayer.h
-	#  TMVA/DNN/DataLoader.h
-	#  TMVA/DNN/DeepNet.h
-	#  TMVA/DNN/DenseLayer.h
-	#  TMVA/DNN/DLMinimizers.h
-	#  TMVA/DNN/Functions.h
-	#  TMVA/DNN/GeneralLayer.h
-	#  TMVA/DNN/ReshapeLayer.h
-	#  TMVA/DNN/RMSProp.h
-	#  TMVA/DNN/SGD.h
-	#  TMVA/DNN/TensorDataLoader.h
-	#  TMVA/DNN/CNN/ContextHandles.h
-	#  TMVA/DNN/CNN/ConvLayer.h
-	#  TMVA/DNN/CNN/MaxPoolLayer.h
-	#  TMVA/DNN/RNN/RNNLayer.h
-	#   TMVA/DNN/Architectures/Reference.h
-	#  TMVA/DNN/Architectures/Reference/DataLoader.h
-	#  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
-	#   TMVA/DNN/Architectures/Cpu.h
-	#  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
-	#  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
-	#  TMVA/DNN/Architectures/Cpu/CpuTensor.h
-	#  ${TMVA_CPU_HEADERS}
-	#  ${TMVA_GPU_HEADERS}
-	   ${TMVA_EXTRA_HEADERS}
+    #  TMVA/DNN/Adadelta.h
+    #  TMVA/DNN/Adagrad.h
+    #  TMVA/DNN/Adam.h
+    #  TMVA/DNN/BatchNormLayer.h
+    #  TMVA/DNN/DataLoader.h
+    #  TMVA/DNN/DeepNet.h
+    #  TMVA/DNN/DenseLayer.h
+    #  TMVA/DNN/DLMinimizers.h
+    #  TMVA/DNN/Functions.h
+    #  TMVA/DNN/GeneralLayer.h
+    #  TMVA/DNN/ReshapeLayer.h
+    #  TMVA/DNN/RMSProp.h
+    #  TMVA/DNN/SGD.h
+    #  TMVA/DNN/TensorDataLoader.h
+    #  TMVA/DNN/CNN/ContextHandles.h
+    #  TMVA/DNN/CNN/ConvLayer.h
+    #  TMVA/DNN/CNN/MaxPoolLayer.h
+    #  TMVA/DNN/RNN/RNNLayer.h
+    #   TMVA/DNN/Architectures/Reference.h
+    #  TMVA/DNN/Architectures/Reference/DataLoader.h
+    #  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
+    #   TMVA/DNN/Architectures/Cpu.h
+    #  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
+    #  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
+    #  TMVA/DNN/Architectures/Cpu/CpuTensor.h
+    #  ${TMVA_CPU_HEADERS}
+    #  ${TMVA_GPU_HEADERS}
+    ${TMVA_EXTRA_HEADERS}
   SOURCES
     src/BDTEventWrapper.cxx
     src/BinarySearchTree.cxx
@@ -405,12 +407,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/VarTransformHandler.cxx
     src/Volume.cxx
     src/DNN/Architectures/Reference.cxx
-	 src/DNN/Architectures/Reference/DataLoader.cxx
-	 src/DNN/Architectures/Reference/TensorDataLoader.cxx
-	 src/DNN/Architectures/Cpu.cxx
+    src/DNN/Architectures/Reference/DataLoader.cxx
+    src/DNN/Architectures/Reference/TensorDataLoader.cxx
+    src/DNN/Architectures/Cpu.cxx
     src/DNN/Architectures/Cpu/CpuBuffer.cxx
-	 src/DNN/Architectures/Cpu/CpuMatrix.cxx
-	 ${TMVA_EXTRA_SOURCES}
+    src/DNN/Architectures/Cpu/CpuMatrix.cxx
+    ${TMVA_EXTRA_SOURCES}
   DEPENDENCIES
     TreePlayer
     Tree
@@ -431,11 +433,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     ${installoptions}
 )
 
-if(builtin_vdt)
-  # cannot export include for vdt, as it points to build dir
+if(vdt OR builtin_vdt)
   target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
-elseif(vdt)
-  target_include_directories(TMVA PUBLIC ${VDT_INCLUDE_DIRS})
 endif()
 
 if(tmva-cpu)
@@ -447,7 +446,7 @@ if(tmva-cpu)
     target_link_libraries(TMVA PRIVATE ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
   elseif(GSL_FOUND)
     target_compile_definitions(TMVA PRIVATE -DDNN_USE_CBLAS)
-    target_include_directories(TMVA PRIVATE ${GSL_INCLUDE_DIR})
+    target_include_directories(TMVA SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
     target_link_libraries(TMVA PRIVATE ${GSL_CBLAS_LIBRARY})
   else()
     message(FATAL_ERROR "tmva-cpu enabled but neither BLAS nor GSL BLAS were found")
@@ -463,7 +462,7 @@ if(tmva-gpu)
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/CudaTensor.cu
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
-		   src/DNN/Architectures/Cudnn.cu)
+                   src/DNN/Architectures/Cudnn.cu)
     target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS} )
     target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
   else()
@@ -472,7 +471,7 @@ if(tmva-gpu)
     target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
     target_sources(TMVA PRIVATE
                    src/DNN/Architectures/Cuda.cu
-    		   src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu
                    src/DNN/Architectures/Cuda/CudaTensor.cu )
    endif()

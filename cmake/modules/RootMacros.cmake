@@ -285,115 +285,219 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(libprefix "")
   endif()
 
-  #---Get the list of include directories------------------
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
-  # rootcling invoked on foo.h should find foo.h in the current source dir,
-  # no matter what.
-  list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR})
+  if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
+    set(incdirs)
+    set(headerdirs)
 
-  if(TARGET ${ARG_MODULE})
     get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
-    foreach(dir ${target_incdirs})
-      string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
-      if(NOT ${dir} MATCHES "^[$]")
-        list(APPEND incdirs ${dir})
-      endif()
-    endforeach()
-  endif()
+    if(target_incdirs)
+       foreach(dir ${target_incdirs})
+          string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+          # check that dir not a empty dir like $<BUILD_INTERFACE:>
+          if(NOT ${dir} MATCHES "^[$]")
+             list(APPEND incdirs ${dir})
+          endif()
+          if(${dir} MATCHES "^${CMAKE_SOURCE_DIR}")
+             list(APPEND headerdirs ${dir})
+          endif()
+       endforeach()
+    endif()
 
-  #---Get the list of header files-------------------------
-  # CMake needs dependencies from ${CMAKE_CURRENT_SOURCE_DIR} while rootcling wants
-  # header files "as included" (and thus as passed as argument to this CMake function).
-  set(headerfiles)
-  set(_list_of_header_dependencies)
-  foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
-      file(GLOB files inc/${fp} ${fp}) # Elements of ${fp} have the complete path.
-      foreach(f ${files})
-        if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
-          set(add_inc_as_include On)
-          string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/inc/" "" f_no_inc ${f})
-          list(APPEND headerfiles ${f_no_inc})
-          list(APPEND _list_of_header_dependencies ${f})
+
+    # if (cxxmodules OR runtime_cxxmodules)
+    # Comments from Vassil:
+    # FIXME: We prepend ROOTSYS/include because if we have built a module
+    # and try to resolve the 'same' header from a different location we will
+    # get a redefinition error.
+    # We should remove these lines when the fallback include is removed. Then
+    # we will need a module.modulemap file per `inc` directory.
+    # Comments from Sergey:
+    # Remove all source dirs also while they preserved in root dictionaries and
+    # ends in the gInterpreter->GetIncludePath()
+
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_SOURCE_DIR}")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/ginclude")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
+    list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
+    list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
+    # endif()
+
+    # this instruct rootcling do not store such paths in dictionary
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
+
+    if(incdirs)
+       list(REMOVE_DUPLICATES incdirs)
+    endif()
+
+    set(includedirs)
+    foreach(dir ${incdirs})
+       list(APPEND includedirs -I${dir})
+    endforeach()
+
+    set(pureincdirs ${incdirs})
+
+    set(headerfiles)
+    set(_list_of_header_dependencies)
+    foreach(fp ${ARG_UNPARSED_ARGUMENTS})
+       if(IS_ABSOLUTE ${fp})
+          set(headerFile ${fp})
+       else()
+          find_file(headerFile ${fp}
+                  HINTS ${headerdirs}
+                  NO_DEFAULT_PATH
+                  NO_SYSTEM_ENVIRONMENT_PATH
+                  NO_CMAKE_FIND_ROOT_PATH)
+       endif()
+       if(NOT headerFile)
+          message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
+       endif()
+       list(APPEND headerfiles ${fp})
+       list(APPEND _list_of_header_dependencies ${headerFile})
+       unset(headerFile CACHE) # find_file, forget headerFile!
+    endforeach()
+
+    foreach(fp ${ARG_NODEPHEADERS})
+      list(APPEND headerfiles ${fp})
+      # no dependency - think "vector" etc.
+    endforeach()
+
+    if(NOT (headerfiles OR ARG_LINKDEF))
+      message(FATAL_ERROR "No headers nor LinkDef.h supplied / found for dictionary ${dictionary}!")
+    endif()
+
+  else()
+
+    ####################### old-style includes/headers generation - starts ##################
+
+    #---Get the list of include directories------------------
+    get_directory_property(incdirs INCLUDE_DIRECTORIES)
+    # rootcling invoked on foo.h should find foo.h in the current source dir,
+    # no matter what.
+    list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR})
+
+    if(TARGET ${ARG_MODULE})
+      get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
+      foreach(dir ${target_incdirs})
+        string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+        if(NOT ${dir} MATCHES "^[$]")
+          list(APPEND incdirs ${dir})
         endif()
       endforeach()
-    else()
-      if(IS_ABSOLUTE ${fp})
-        set(headerFile ${fp})
-      else()
-        set(incdirs_in_build)
-        set(incdirs_in_prefix)
-        string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _source_dir "${CMAKE_SOURCE_DIR}")
-        string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _binary_dir "${CMAKE_BINARY_DIR}")
-        string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _curr_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
-        foreach(incdir ${incdirs})
-          if(NOT IS_ABSOLUTE ${incdir}
-             OR ${incdir} MATCHES "^${_source_dir}"
-             OR ${incdir} MATCHES "^${_binary_dir}"
-             OR ${incdir} MATCHES "^${_curr_binary_dir}")
-            list(APPEND incdirs_in_build
-                 ${incdir})
-          else()
-            list(APPEND incdirs_in_prefix
-                 ${incdir})
+    endif()
+
+    set(headerdirs_dflt)
+
+    if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+        list(APPEND headerdirs_dflt ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      endif()
+      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+        list(APPEND headerdirs_dflt ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
+      endif()
+    endif()
+
+    #---Get the list of header files-------------------------
+    # CMake needs dependencies from ${CMAKE_CURRENT_SOURCE_DIR} while rootcling wants
+    # header files "as included" (and thus as passed as argument to this CMake function).
+    set(headerfiles)
+    set(_list_of_header_dependencies)
+    foreach(fp ${ARG_UNPARSED_ARGUMENTS})
+      if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
+        file(GLOB files inc/${fp} ${fp}) # Elements of ${fp} have the complete path.
+        foreach(f ${files})
+          if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
+            set(add_inc_as_include On)
+            string(REGEX REPLACE "^${CMAKE_CURRENT_SOURCE_DIR}/inc/" "" f_no_inc ${f})
+            list(APPEND headerfiles ${f_no_inc})
+            list(APPEND _list_of_header_dependencies ${f})
           endif()
         endforeach()
-        if(incdirs_in_build)
-          find_file(headerFile ${fp}
-            HINTS ${incdirs_in_build}
-            NO_DEFAULT_PATH
-            NO_SYSTEM_ENVIRONMENT_PATH
-            NO_CMAKE_FIND_ROOT_PATH)
+      else()
+        if(IS_ABSOLUTE ${fp})
+          set(headerFile ${fp})
+        else()
+          set(incdirs_in_build)
+          set(incdirs_in_prefix ${headerdirs_dflt})
+          string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _source_dir "${CMAKE_SOURCE_DIR}")
+          string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _binary_dir "${CMAKE_BINARY_DIR}")
+          string(REGEX REPLACE "([][+.*()^])" "\\\\\\1" _curr_binary_dir "${CMAKE_CURRENT_BINARY_DIR}")
+          foreach(incdir ${incdirs})
+            if(NOT IS_ABSOLUTE ${incdir}
+               OR ${incdir} MATCHES "^${_source_dir}"
+               OR ${incdir} MATCHES "^${_binary_dir}"
+               OR ${incdir} MATCHES "^${_curr_binary_dir}")
+              list(APPEND incdirs_in_build
+                   ${incdir})
+            else()
+              list(APPEND incdirs_in_prefix
+                   ${incdir})
+            endif()
+          endforeach()
+          if(incdirs_in_build)
+            find_file(headerFile ${fp}
+              HINTS ${incdirs_in_build}
+              NO_DEFAULT_PATH
+              NO_SYSTEM_ENVIRONMENT_PATH
+              NO_CMAKE_FIND_ROOT_PATH)
+          endif()
+          # Try this even if NOT incdirs_in_prefix: might not need a HINT.
+          if(NOT headerFile)
+            find_file(headerFile ${fp}
+              HINTS ${incdirs_in_prefix}
+              NO_DEFAULT_PATH
+              NO_SYSTEM_ENVIRONMENT_PATH)
+          endif()
         endif()
-        # Try this even if NOT incdirs_in_prefix: might not need a HINT.
         if(NOT headerFile)
-          find_file(headerFile ${fp}
-            HINTS ${incdirs_in_prefix}
-            NO_DEFAULT_PATH
-            NO_SYSTEM_ENVIRONMENT_PATH)
+          message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
         endif()
+        list(APPEND headerfiles ${fp})
+        list(APPEND _list_of_header_dependencies ${headerFile})
+        unset(headerFile CACHE) # find_file, forget headerFile!
       endif()
-      if(NOT headerFile)
-        message(FATAL_ERROR "Cannot find header ${fp} to generate dictionary ${dictionary} for. Did you forget to set the INCLUDE_DIRECTORIES property for the current directory?")
-      endif()
+    endforeach()
+
+    foreach(fp ${ARG_NODEPHEADERS})
       list(APPEND headerfiles ${fp})
-      list(APPEND _list_of_header_dependencies ${headerFile})
-      unset(headerFile CACHE) # find_file, forget headerFile!
+      # no dependency - think "vector" etc.
+    endforeach()
+
+    if(NOT (headerfiles OR ARG_LINKDEF))
+      message(FATAL_ERROR "No headers nor LinkDef.h supplied / found for dictionary ${dictionary}!")
     endif()
-  endforeach()
 
-  foreach(fp ${ARG_NODEPHEADERS})
-    list(APPEND headerfiles ${fp})
-    # no dependency - think "vector" etc.
-  endforeach()
-
-  if(NOT (headerfiles OR ARG_LINKDEF))
-    message(FATAL_ERROR "No headers nor LinkDef.h supplied / found for dictionary ${dictionary}!")
-  endif()
-
-  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    set(includedirs -I${CMAKE_SOURCE_DIR}
-                    -I${CMAKE_BINARY_DIR}/etc/cling/ # This is for the RuntimeUniverse
-                    -I${CMAKE_BINARY_DIR}/include)
-    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-  elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-    set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
-  endif()
-  foreach( d ${incdirs})
-   set(includedirs ${includedirs} -I${d})
-  endforeach()
-
-  foreach(dep ${ARG_DEPENDENCIES})
-    if(TARGET ${dep})
-      get_property(dep_include_dirs TARGET ${dep} PROPERTY INCLUDE_DIRECTORIES)
-      foreach(d ${dep_include_dirs})
-        set(includedirs ${includedirs} -I${d})
-      endforeach()
+    if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+      list(APPEND includedirs -I${CMAKE_BINARY_DIR}/include)
+      list(APPEND includedirs -I${CMAKE_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
+      # list(APPEND includedirs -I${CMAKE_SOURCE_DIR})
+      set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
     endif()
-  endforeach()
+    foreach( d ${incdirs})
+      list(APPEND includedirs -I${d})
+    endforeach()
 
-  if(includedirs)
-    list(REMOVE_DUPLICATES includedirs)
+    foreach(dep ${ARG_DEPENDENCIES})
+      if(TARGET ${dep})
+        get_property(dep_include_dirs TARGET ${dep} PROPERTY INCLUDE_DIRECTORIES)
+        foreach(d ${dep_include_dirs})
+          list(APPEND includedirs -I${d})
+        endforeach()
+      endif()
+    endforeach()
+
+    if(includedirs)
+      list(REMOVE_DUPLICATES includedirs)
+    endif()
+
+    set(pureincdirs)
+    foreach(dir ${includedirs})
+      string(SUBSTRING ${dir} 2 -1 dir0)
+      set(pureincdirs ${pureincdirs} ${dir0})
+    endforeach()
+
+    ####################### old-style includes/headers generation - end  ##################
   endif()
 
   #---Get the list of definitions---------------------------
@@ -472,8 +576,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
-    set(rootmap_name )
-    set(rootmapargs )
+    set(rootmap_name)
+    set(rootmapargs)
   else()
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
   endif()
@@ -559,8 +663,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_compile_definitions(${dictionary} PRIVATE
       ${definitions} $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
 
+    # remove all -I prefixes from list of include dirs
+    set(pureincdirs)
+    foreach(dir ${includedirs})
+      string(SUBSTRING ${dir} 2 -1 dir0)
+      set(pureincdirs ${pureincdirs} ${dir0})
+    endforeach()
+
     target_include_directories(${dictionary} PRIVATE
-      ${includedirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+      ${pureincdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
   else()
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   endif()
@@ -731,6 +842,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
 #                        [NOINSTALL] LIBRARIES library1 library2 ...
+#                        DEPENDENCIES dep1 dep2
 #                        BUILTINS dep1 dep2)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
@@ -797,6 +909,32 @@ function(ROOT_LINKER_LIBRARY library)
 
   ROOT_ADD_INCLUDE_DIRECTORIES(${library})
 
+  if(PROJECT_NAME STREQUAL "ROOT")
+    set(dep_list)
+    if(ARG_DEPENDENCIES)
+      foreach(lib ${ARG_DEPENDENCIES})
+        if((TARGET ${lib}) AND NOT (${lib} STREQUAL Core))
+          get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
+          if(lib_incdirs)
+            foreach(dir ${lib_incdirs})
+              string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+              list(APPEND dep_list ${dir})
+            endforeach()
+          endif()
+        endif()
+      endforeach()
+    endif()
+
+    if(dep_list)
+      list(REMOVE_DUPLICATES dep_list)
+    endif()
+    foreach(incl ${dep_list})
+       target_include_directories(${library} PRIVATE ${incl})
+    endforeach()
+  endif()
+  
+  
+
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
   endif()
@@ -842,48 +980,33 @@ function(ROOT_LINKER_LIBRARY library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_ADD_INCLUDE_DIRECTORIES( library )
+#---ROOT_ADD_INCLUDE_DIRECTORIES(library)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_ADD_INCLUDE_DIRECTORIES library)
+
   if(PROJECT_NAME STREQUAL "ROOT")
 
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-      )
-    endif()
+      if(TARGET Core)
+        get_target_property(lib_incdirs Core INCLUDE_DIRECTORIES)
+        if(lib_incdirs)
+          foreach(dir ${lib_incdirs})
+            string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
+            target_include_directories(${library} BEFORE PRIVATE ${dir})
+          endforeach()
+        endif()
+      endif()
 
-    if(root7 AND IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc
-        INTERFACE
-          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
-      )
-    endif()
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
+        target_include_directories(${library} BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res)
+      endif()
 
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/res)
-      target_include_directories(${library}
-        PRIVATE
-          ${CMAKE_CURRENT_SOURCE_DIR}/res
-      )
-    endif()
+      if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+        target_include_directories(${library} BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
+      endif()
 
-    if (cxxmodules)
-      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-      # FIXME: We prepend ROOTSYS/include because if we have built a module
-      # and try to resolve the 'same' header from a different location we will
-      # get a redefinition error.
-      # We should remove these lines when the fallback include is removed. Then
-      # we will need a module.modulemap file per `inc` directory.
-      target_include_directories(${library} BEFORE PRIVATE ${CMAKE_BINARY_DIR}/include)
-    else()
-      # needed for generated headers like RConfigure.h and ROOT/RConfig.hxx
-      target_include_directories(${library} PRIVATE ${CMAKE_BINARY_DIR}/include)
-    endif()
+      if(root7 AND (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc))
+        target_include_directories(${library} BEFORE PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>)
+      endif()
 
   endif()
 
@@ -1190,7 +1313,9 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Dictionary might include things from the current src dir, e.g. tests. Alas
   # there is no way to set the include directory for a source file (except for
   # the generic COMPILE_FLAGS), so this needs to be glued to the target.
-  target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  if(NOT (CMAKE_PROJECT_NAME STREQUAL ROOT))
+     target_include_directories(${libname} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  endif()
 
   # Install headers if we have any headers and if the user didn't explicitly
   # disabled this.

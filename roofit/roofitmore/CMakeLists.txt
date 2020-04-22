@@ -47,8 +47,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     Foam
 )
 
-#if(vdt AND NOT builtin_vdt)
-#  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
-#endif()
 
 #ROOT_ADD_TEST_SUBDIRECTORY(test)
