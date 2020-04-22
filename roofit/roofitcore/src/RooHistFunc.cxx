@@ -26,6 +26,7 @@ discrete dimensions and may have negative values.
 
 #include "RooFit.h"
 #include "Riostream.h"
+#include "TBuffer.h"
 
 #include "RooHistFunc.h"
 #include "RooDataHist.h"

@@ -31,6 +31,7 @@
 #include "Riostream.h"
 
 #include <iomanip>
+#include "TBuffer.h"
 #include "TMinuit.h"
 #include "TMath.h"
 #include "TMarker.h"
