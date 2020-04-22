@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "THashList.h"
 #include "TH2.h"
@@ -23,6 +24,7 @@
 #include "TError.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TVirtualHistPainter.h"
 
 

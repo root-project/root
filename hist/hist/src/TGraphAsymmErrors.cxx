@@ -14,6 +14,7 @@
 #include "Riostream.h"
 #include "TEfficiency.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphErrors.h"
 #include "TStyle.h"

@@ -14,6 +14,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TBuffer.h"
 #include "v5/TFormula.h"
 #include "TMath.h"
 #include "TRandom.h"
