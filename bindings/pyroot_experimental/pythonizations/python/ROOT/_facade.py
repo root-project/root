@@ -81,13 +81,29 @@ class ROOTFacade(types.ModuleType):
         # Setup import hook
         self._set_import_hook()
 
-    def AddressOf(self, *args):
-        # Return a bytearray that can fit a long long, which is what addressof
-        # returns (wrapped in a Python integer). The bytes of the bytearray
-        # correspond to the address of the object in args
-        import struct
-        ad = self.addressof(*args)
-        return bytearray(struct.pack('q', ad))
+    def AddressOf(self, obj):
+        # Return an indexable buffer of length 1, whose only element
+        # is the address of the object.
+        # The address of the buffer is the same as the address of the
+        # address of the object
+
+        # addr is the address of the address of the object
+        addr = self.addressof(instance = obj, byref = True)
+
+        # get_llv returns a buffer (LowLevelView)
+        try:
+            get_llv = gbl_namespace.PyROOT.get_llv
+        except AttributeError:
+            gbl_namespace.gInterpreter.Declare("""
+            namespace PyROOT {
+               long long *get_llv(long long addr) {
+                  return reinterpret_cast<long long*>(addr);
+               }
+            }
+            """)
+            get_llv = gbl_namespace.PyROOT.get_llv
+
+        return get_llv(addr)
 
     def _set_import_hook(self):
         # This hook allows to write e.g:
