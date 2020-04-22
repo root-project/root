@@ -11,6 +11,7 @@
 #include "TLatex.h"
 #include "TMacro.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
 #include "TStyle.h"
