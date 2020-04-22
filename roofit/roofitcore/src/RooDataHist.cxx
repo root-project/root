@@ -52,6 +52,7 @@ or RooStringVar objects, thus data can be binned in real and/or discrete dimensi
 #include "TH1.h"
 #include "TTree.h"
 #include "TDirectory.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "Math/Util.h"
 

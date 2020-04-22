@@ -16,6 +16,7 @@ NamespaceImp(RooStats)
 #endif
 
 #include "TTree.h"
+#include "TBranch.h"
 
 #include "RooUniform.h"
 #include "RooProdPdf.h"

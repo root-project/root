@@ -59,6 +59,7 @@ and try reading again.
 #include "RooResolutionModel.h"
 #include "RooPlot.h"
 #include "RooRandom.h"
+#include "TBuffer.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
