@@ -292,9 +292,10 @@ sap.ui.define([
          lc[1].position.set(-extR, extR,  extR);
          lc[2].position.set( extR, extR,  extR);
 
+         let s = 1.02;
          if (this.camera.isPerspectiveCamera)
          {
-            let posC = new THREE.Vector3(-0.7 * extR, 0.5 * extR, -0.7 * extR);
+            let posC = new THREE.Vector3(-s * extR, s * extR, -s * extR);
 
             this.camera.position.copy(posC);
 
@@ -307,9 +308,23 @@ sap.ui.define([
             let posC = new THREE.Vector3(0, 0, 1000);
 
             this.camera.position.copy(posC);
+            let ex, ey;
+            if (extV.x > extV.y)
+            {
+               ex = extV.x;
+               ey = ex / this.get_width() * this.get_height();
+               if (ey < extV.y)
+                  s *= extV.y/ey;
+            }
+            else {
+               ey = extV.y;
+               ex = ey / this.get_height() * this.get_width();
+               if (ex < extV.x)
+                  s *= extV.x/ex;
+            }
 
-            let ey = 1.02 * extV.y;
-            let ex = ey / this.get_height() * this.get_width();
+            ex *= s;
+            ey *= s;
             this.camera.left   = -ex;
             this.camera.right  =  ex;
             this.camera.top    =  ey;
