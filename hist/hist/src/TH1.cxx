@@ -18,6 +18,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TEnv.h"
 #include "TClass.h"
 #include "TMath.h"

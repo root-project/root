@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TROOT.h"
+#include "TBuffer.h"
 #include "TGraph2DErrors.h"
 #include "TMath.h"
 #include "TH2.h"

@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TGraphErrors.h"
 #include "TStyle.h"
 #include "TMath.h"

@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TEnv.h"
 #include "TGraph.h"
 #include "TH1.h"
