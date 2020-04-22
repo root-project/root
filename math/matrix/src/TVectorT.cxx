@@ -36,6 +36,7 @@
 */
 
 #include "TVectorT.h"
+#include "TBuffer.h"
 #include "TClass.h"
 #include "TMath.h"
 #include "TROOT.h"
