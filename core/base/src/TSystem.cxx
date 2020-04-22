@@ -35,6 +35,7 @@ allows a simple partial implementation for new OS'es.
 #include "TInterpreter.h"
 #include "TRegexp.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TUrl.h"
@@ -43,11 +44,13 @@ allows a simple partial implementation for new OS'es.
 #include "compiledata.h"
 #include "RConfigure.h"
 #include "THashList.h"
+#include "ThreadLocalStorage.h"
 
 #include <functional>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
+#include <set>
 
 #ifdef WIN32
 #include <io.h>

@@ -13,6 +13,7 @@
 #include "Riostream.h"
 #include "Strlen.h"
 #include "TDirectory.h"
+#include "TBuffer.h"
 #include "TClassTable.h"
 #include "TInterpreter.h"
 #include "THashList.h"

@@ -37,6 +37,7 @@
 #include "TInterpreter.h"
 #include "TVirtualX.h"
 #include "TUrl.h"
+#include "ThreadLocalStorage.h"
 
 #include <sys/utime.h>
 #include <sys/timeb.h>

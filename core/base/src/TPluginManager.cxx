@@ -95,6 +95,7 @@ TFile, TSQLServer, TGrid, etc. functionality.
 #include "TVirtualMutex.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "ThreadLocalStorage.h"
 
 #include <memory>
