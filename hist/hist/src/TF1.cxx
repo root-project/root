@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "TF1.h"
 #include "TH1.h"
@@ -18,6 +19,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 #include "TRandom.h"
+#include "TObjString.h"
 #include "TInterpreter.h"
 #include "TPluginManager.h"
 #include "TBrowser.h"

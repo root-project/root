@@ -22,7 +22,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
-#include "TVirtualHistPainter.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
@@ -30,10 +29,12 @@
 class TAxis;
 class TList;
 class TF2;
+class TH1;
 class TH2;
 class TH2D;
 class TView;
 class TDirectory;
+class TVirtualHistPainter;
 
 #include "TFitResultPtr.h"
 
