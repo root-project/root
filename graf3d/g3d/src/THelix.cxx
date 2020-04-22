@@ -68,6 +68,7 @@ This initializes a helix with its axis in Z direction (rtype=kHelixZ).
 */
 
 #include "Riostream.h"
+#include "TBuffer.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "THelix.h"

@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TPolyLine3D.h"
 #include "TVirtualPad.h"
 #include "TView.h"
