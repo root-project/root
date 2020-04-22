@@ -41,6 +41,8 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "RooUniformBinning.h"
 
 #include "TTree.h"
+#include "TBuffer.h"
+#include "TBranch.h"
 
 using namespace std;
 

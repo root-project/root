@@ -52,6 +52,7 @@ object onto a one-dimensional plot.
 #include "RooMsgService.h"
 
 #include "TClass.h"
+#include "TBuffer.h"
 #include "TH1D.h"
 #include "TBrowser.h"
 #include "TVirtualPad.h"

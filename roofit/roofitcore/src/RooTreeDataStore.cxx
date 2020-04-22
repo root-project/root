@@ -55,6 +55,8 @@ RooAbsData::convertToVectorStore().
 #include "TFile.h"
 #include "TChain.h"
 #include "TDirectory.h"
+#include "TBuffer.h"
+#include "TBranch.h"
 #include "TROOT.h"
 
 #include <iomanip>

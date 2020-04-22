@@ -36,6 +36,7 @@ has a public interface to define the possible value states.
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooTrace.h"
+#include "TBuffer.h"
 
 using namespace std;
 

@@ -39,6 +39,7 @@ use a TTree as internal storage mechanism
 #include "TTree.h"
 #include "TChain.h"
 #include "TDirectory.h"
+#include "TBuffer.h"
 #include "TROOT.h"
 
 #include <iomanip>
