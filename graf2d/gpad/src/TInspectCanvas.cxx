@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TGuiFactory.h"
 #include "TInspectCanvas.h"
 #include "TButton.h"
