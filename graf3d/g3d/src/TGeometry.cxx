@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "THashList.h"
 #include "TObjArray.h"
 #include "TGeometry.h"
