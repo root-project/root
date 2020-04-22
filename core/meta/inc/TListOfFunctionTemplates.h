@@ -64,7 +64,7 @@ public:
    virtual TList     *GetListForObject(const char* name) const;
    virtual TList     *GetListForObject(const TObject* obj) const;
 
-   TFunctionTemplate *Get(DeclId_t id);
+   TFunctionTemplate *Get(DeclId_t id, bool verify = true);
 
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);

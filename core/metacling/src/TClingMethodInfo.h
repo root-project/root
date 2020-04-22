@@ -54,6 +54,7 @@ class TClingTypeInfo;
 
 class TClingMethodInfo final : public TClingDeclInfo {
 private:
+   class UsingIterator;
    cling::Interpreter                          *fInterp; // Cling interpreter, we do *not* own.
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
    bool                                         fFirstTime; // Flag for first time incrementing iterator, cint semantics are weird.
@@ -61,6 +62,7 @@ private:
    clang::DeclContext::decl_iterator            fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
    const clang::FunctionDecl                   *fTemplateSpec; // an all-default-template-args function.
+   UsingIterator                               *fUsingIter; // for internal loop over using functions. [We own]
    llvm::SmallVector<clang::Decl *,4>           fDefDataSpecFuns; // decl_begin() will skip these special members, materialized from DefinitionData
    llvm::SmallVector<clang::Decl *,4>::const_iterator fDefDataSpecFunIter; // Iterator over fDefDataSpecFuns
 
@@ -69,7 +71,7 @@ private:
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp)
       : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-        fTemplateSpec(0) {}
+        fTemplateSpec(nullptr), fUsingIter(nullptr) {}
 
    TClingMethodInfo(const TClingMethodInfo&);
    TClingMethodInfo& operator=(const TClingMethodInfo &in);

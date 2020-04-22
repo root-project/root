@@ -4178,7 +4178,13 @@ void TCling::LoadFunctionTemplates(TClass* cl) const
          for (clang::DeclContext::decl_iterator DI = (*declIter)->decls_begin(),
               DE = (*declIter)->decls_end(); DI != DE; ++DI) {
             if (const clang::FunctionTemplateDecl* FTD = dyn_cast<clang::FunctionTemplateDecl>(*DI)) {
-                  funcTempList->Get(FTD);
+               funcTempList->Get(FTD);
+            } else if (const clang::UsingDecl* UD = llvm::dyn_cast<clang::UsingDecl>(*DI)) {
+               for (auto it = UD->shadow_begin(); it != UD->shadow_end(); ++it) {
+                  if ((FTD = dyn_cast<clang::FunctionTemplateDecl>(it->getTargetDecl()))) {
+                     funcTempList->Get(FTD, false);
+                  }
+               }
             }
          }
       }

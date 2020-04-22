@@ -80,7 +80,7 @@ public:
 
 
    TFunction *Find(DeclId_t id) const;
-   TFunction *Get(DeclId_t id);
+   TFunction *Get(DeclId_t id, bool verify = true);
 
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);

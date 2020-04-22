@@ -259,7 +259,7 @@ TFunction *TListOfFunctions::Find(DeclId_t id) const
 /// Return (after creating it if necessary) the TMethod or TFunction
 /// describing the function corresponding to the Decl 'id'.
 
-TFunction *TListOfFunctions::Get(DeclId_t id)
+TFunction *TListOfFunctions::Get(DeclId_t id, bool verify)
 {
    if (!id) return 0;
 
@@ -268,10 +268,12 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
    TFunction *f = Find(id);
    if (f) return f;
 
-   if (fClass) {
-      if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
-   } else {
-      if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+   if (verify) {
+      if (fClass) {
+         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+      } else {
+         if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+      }
    }
 
    MethodInfo_t *m = gInterpreter->MethodInfo_Factory(id);
@@ -393,7 +395,7 @@ void TListOfFunctions::Load()
          TDictionary::DeclId_t mid = gInterpreter->GetDeclId(t);
          // Get will check if there is already there or create a new one
          // (or re-use a previously unloaded version).
-         Get(mid);
+         Get(mid, false /* verify */);
       }
    }
    gInterpreter->MethodInfo_Delete(t);

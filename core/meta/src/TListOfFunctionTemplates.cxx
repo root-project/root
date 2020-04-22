@@ -250,16 +250,18 @@ TList* TListOfFunctionTemplates::GetListForObject(const TObject* obj) const
 /// Return (after creating it if necessary) the TMethod or TFunction
 /// describing the function corresponding to the Decl 'id'.
 
-TFunctionTemplate *TListOfFunctionTemplates::Get(DeclId_t id)
+TFunctionTemplate *TListOfFunctionTemplates::Get(DeclId_t id, bool verify)
 {
    if (!id) return 0;
 
    TFunctionTemplate *f = (TFunctionTemplate*)fIds->GetValue((Long64_t)id);
    if (!f) {
-      if (fClass) {
-         if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
-      } else {
-         if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+      if (verify) {
+         if (fClass) {
+            if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+         } else {
+            if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+         }
       }
 
       R__LOCKGUARD(gInterpreterMutex);
