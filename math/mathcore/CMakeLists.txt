@@ -195,11 +195,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
 target_include_directories(MathCore PRIVATE ${Vc_INCLUDE_DIR})
 target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
 
-list(APPEND math_incl ${CMAKE_SOURCE_DIR}/math/mathcore/inc)
-if(mathmore)
-   target_include_directories(MathCore PRIVATE ${CMAKE_SOURCE_DIR}/math/mathmore/inc)
-   list(APPEND math_incl ${CMAKE_SOURCE_DIR}/math/mathmore/inc)
-endif()
 list(APPEND math_incl ${Vc_INCLUDE_DIR})
 list(APPEND math_incl ${VecCore_INCLUDE_DIRS})
 
