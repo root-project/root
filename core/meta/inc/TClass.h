@@ -22,17 +22,22 @@
 
 #include "TDictionary.h"
 #include "TString.h"
+
+#ifdef R__LESS_INCLUDES
+class TObjArray;
+#else
 #include "TObjArray.h"
-#include "TObjString.h"
+// Not used in this header file; user code should #include this directly.
+// #include "TObjString.h"
+// #include "ThreadLocalStorage.h"
+// #include <set>
+#endif
 
 #include <map>
 #include <string>
-#include <set>
 #include <unordered_set>
 #include <vector>
-
 #include <atomic>
-#include "ThreadLocalStorage.h"
 
 class TBaseClass;
 class TBrowser;
@@ -298,25 +303,6 @@ private:
    enum { kLoading = kReservedLoading, kUnloading = kReservedLoading };
    // Internal streamer type.
    enum EStreamerType {kDefault=0, kEmulatedStreamer=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
-
-   // When a new class is created, we need to be able to find
-   // if there are any existing classes that have the same name
-   // after any typedefs are expanded.  (This only really affects
-   // template arguments.)  To avoid having to search through all classes
-   // in that case, we keep a hash table mapping from the fully
-   // typedef-expanded names to the original class names.
-   // An entry is made in the table only if they are actually different.
-   //
-   // In these objects, the TObjString base holds the typedef-expanded
-   // name (the hash key), and fOrigName holds the original class name
-   // (the value to which the key maps).
-   //
-   class TNameMapNode : public TObjString
-   {
-   public:
-      TNameMapNode (const char* typedf, const char* orig);
-      TString fOrigName;
-   };
 
    // These are the above-referenced hash tables.  (The pointers are null
    // if no entries have been made.)
