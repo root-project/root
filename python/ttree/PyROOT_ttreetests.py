@@ -295,7 +295,14 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       f = TFile( self.fname, 'RECREATE' )
       t = TTree( self.tname, self.ttitle )
       s = SomeDataStruct()
-      t.Branch( 'cpu_packet_time', AddressOf(s, 'NLabel'), 'time/I' );
+
+      # Same reason for this difference as in test05WriteSomeDataObjectBranched
+      if exp_pyroot:
+         addressof_nlabel = addressof(s, 'NLabel')
+      else:
+         addressof_nlabel = AddressOf(s, 'NLabel')
+
+      t.Branch( 'cpu_packet_time', addressof_nlabel, 'time/I' );
 
       for i in range(self.N):
          s.NLabel = i
