@@ -188,6 +188,7 @@ void FilterClass()
          gLineString = gLine;
 
          if (gInMacro && gLineString.find("End_Macro") != string::npos) {
+            gImageSource = false;
             gInMacro = 0;
             spos = 0;
             if (m) {
@@ -206,8 +207,6 @@ void FilterClass()
             remove("ImagesSizes.dat");
             ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
             ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
-            if(!gImageSource) ReplaceAll(gLineString,"/// ","");
-            gImageSource = false;
          }
 
          if (gInMacro) {
