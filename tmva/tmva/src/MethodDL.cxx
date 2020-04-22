@@ -28,6 +28,7 @@
 #include "TFormula.h"
 #include "TString.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 #include "TMVA/Tools.h"
 #include "TMVA/Configurable.h"
