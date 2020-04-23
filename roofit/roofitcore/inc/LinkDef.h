@@ -10,7 +10,7 @@
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-4]" source="TList _proxyList" target="_proxyList" \
     code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }" 
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[5]" source="TRefArray _proxyList" target="_proxyList" \
-  code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = new TRefArray(onfile._proxyList) ; } }" 
+  code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = std::make_unique<TRefArray>(onfile._proxyList); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
   source="RooRefCountList _serverList" target="_serverList" \
   code="{ _serverList = RooFit::STLRefCountListHelpers::convert(onfile._serverList); }"

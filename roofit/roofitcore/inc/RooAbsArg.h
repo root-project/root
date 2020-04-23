@@ -651,12 +651,15 @@ private:
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
 
+  /// \cond Internal
   // Legacy streamers need the following statics:
   friend class RooFitResult;
+
  public:
-  static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution
+  static std::map<RooAbsArg*,std::unique_ptr<TRefArray>> _ioEvoList; // temporary holding list for proxies needed in schema evolution
  protected:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
+  /// \endcond
 
   ClassDef(RooAbsArg,7) // Abstract variable
 };
