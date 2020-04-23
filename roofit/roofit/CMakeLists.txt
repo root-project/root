@@ -9,6 +9,10 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if(mathmore)
+   set(roofit_more MathMore)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
     Roo2DKeysPdf.h
@@ -141,6 +145,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RIO
     Matrix
     MathCore
+    ${roofit_more}
 )
 
 if(vdt AND NOT builtin_vdt)
