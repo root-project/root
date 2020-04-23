@@ -1125,7 +1125,8 @@ Bool_t TTreeCache::FillBuffer()
          }
       }
       if (fIsLearning) { //  Learning mode
-         entry = 0;
+         // The learning phase should start from the minimum entry in the cache
+         entry = fEntryMin;
       }
       if (fFirstTime) {
          //try to detect if it is normal or reverse read
@@ -1243,17 +1244,17 @@ Bool_t TTreeCache::FillBuffer()
    auto entryCurrent = clusterIter();
    auto entryNext    = clusterIter.GetNextEntry();
 
-   // Moving this before the if fixes the wrong cache behaviour with TTreeReader/RDataFrame
-   // but introduces the "Inconsistency Error" at line 1277 when using only TTree/TChain 
-   fEntryCurrent = entryCurrent;
-   fEntryNext = entryNext;
-
    if (entryNext < fEntryMin || fEntryMax < entryCurrent) {
       // There is no overlap between the cluster we found [entryCurrent, entryNext[
       // and the authorized range [fEntryMin, fEntryMax]
       // so we have nothing to do
       return kFALSE;
    }
+
+   // If there is overlap between the found cluster and the authorized range
+   // update the cache data members with the information about the current cluster.
+   fEntryCurrent = entryCurrent;
+   fEntryNext = entryNext;
 
    auto firstClusterEnd = fEntryNext;
    if (showMore || gDebug > 6)
