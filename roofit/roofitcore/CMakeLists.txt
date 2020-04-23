@@ -472,7 +472,7 @@ if(vdt OR builtin_vdt)
    list(APPEND fitcore_incl ${VDT_INCLUDE_DIRS})
 endif()
 
-foreach(inlc ${fitcore_incl})
+foreach(incl ${fitcore_incl})
    target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
 
