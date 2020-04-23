@@ -4290,18 +4290,8 @@ int RootClingMain(int argc,
       // RuntimeUniverse.h (via <new>).
       // FIXME: This should really go in the build system as for the rest of the
       // implicitly created modules.
-      if (gOptCxxModule) {
+      if (gOptCxxModule)
          interpPtr->loadModule("_Builtin_intrinsics", /*Complain*/ true);
-         for (llvm::StringRef DepMod : gOptModuleDependencies) {
-            if (DepMod.endswith("_rdict.pcm")) {
-               ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpat>]%s.pcm\n",
-                                         DepMod.data(),
-                                         GetModuleNameFromRdictName(DepMod).str().data());
-               DepMod = GetModuleNameFromRdictName(DepMod);
-            }
-            interpPtr->loadModule(DepMod, /*complain*/true);
-         }
-      }
    }
    cling::Interpreter &interp = *interpPtr;
    clang::CompilerInstance *CI = interp.getCI();
@@ -4351,6 +4341,20 @@ int RootClingMain(int argc,
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
+   if (gOptCxxModule) {
+      for (llvm::StringRef DepMod : gOptModuleDependencies) {
+         if (DepMod.endswith("_rdict.pcm")) {
+            ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpat>]%s.pcm\n",
+                                      DepMod.data(),
+                                      GetModuleNameFromRdictName(DepMod).str().data());
+         }
+         DepMod = GetModuleNameFromRdictName(DepMod);
+         if (!interp.loadModule(DepMod, /*complain*/false)) {
+            ROOT::TMetaUtils::Error(0, "Module '%s' failed to load.\n",
+                                    DepMod.data());
+         }
+      }
+   }
    if (isGenreflex) {
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
          // There was an error.
