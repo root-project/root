@@ -33,9 +33,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     src/X11Events.mm
     src/XLFDParser.mm
   DEPENDENCIES
-    GQuartz
     Gui
   LIBRARIES
+    GQuartz
     "-framework Cocoa"
     "-framework OpenGL"
     ${FREETYPE_LIBRARIES}
