@@ -414,7 +414,7 @@ void TProcessID::RecursiveRemove(TObject *obj)
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == GetObjectWithID(uid)) {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
-      if (fgObjPIDs) {
+      if (fgObjPIDs && ((obj->GetUniqueID()&0xff000000)==0xff000000)) {
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);
       }
