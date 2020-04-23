@@ -74,6 +74,7 @@ set(cpp_sources
     src/PyzCppHelpers.cxx
     src/PyzPythonHelpers.cxx
     src/CPPInstancePyz.cxx
+    src/FacadeHelpers.cxx
     ${PYROOT_EXTRA_SOURCE}
 )
 
