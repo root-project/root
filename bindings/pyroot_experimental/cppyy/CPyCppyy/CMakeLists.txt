@@ -84,11 +84,15 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
   endif()
 
-  target_include_directories(${libname} PRIVATE ${CMAKE_BINARY_DIR}/include) # needed for string_view backport
+  target_include_directories(${libname}
+     PRIVATE
+        ${CMAKE_SOURCE_DIR}/core/foundation/inc   # needed for string_view backport
+     PUBLIC
+        ${python_include_dir}
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+  )
 
-  target_include_directories(${libname} PUBLIC ${python_include_dir}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>)
   target_link_libraries(${libname} cppyy_backend${python_under_version_string} ${python_library})
 
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
