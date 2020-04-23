@@ -26,14 +26,8 @@ can have several ranges. These can be accessed with names, to e.g. limit fits
 or integrals to sub ranges. The range without any name is used as default range.
 **/
 
-
-#include "RooFit.h"
-#include "Riostream.h"
-#include "RooTrace.h"
-
-#include <math.h>
-#include "TTree.h"
 #include "RooRealVar.h"
+
 #include "RooStreamParser.h"
 #include "RooErrorVar.h"
 #include "RooRangeBinning.h"
@@ -41,6 +35,10 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "RooMsgService.h"
 #include "RooParamBinning.h"
 #include "RooVectorDataStore.h"
+#include "RooTrace.h"
+#include "RooRealVarSharedProperties.h"
+
+#include "TTree.h"
 
 using namespace std;
 
@@ -49,14 +47,14 @@ ClassImp(RooRealVar);
 
 Bool_t RooRealVar::_printScientific(kFALSE) ;
 Int_t  RooRealVar::_printSigDigits(5) ;
-RooSharedPropertiesList RooRealVar::_sharedPropList ;
-RooRealVarSharedProperties RooRealVar::_nullProp("00000000-0000-0000-0000-000000000000") ;
+std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>> RooRealVar::_sharedPropList;
+const std::unique_ptr<RooRealVarSharedProperties> RooRealVar::_nullProp(new RooRealVarSharedProperties("00000000-0000-0000-0000-000000000000"));
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning()), _sharedProp(0)
+RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning())
 {
   _fast = kTRUE ;
   TRACE_CREATE
@@ -68,7 +66,7 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(n
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
-  _binning(new RooUniformBinning(-1,1,100)), _sharedProp(0)
+  _binning(new RooUniformBinning(-1,1,100))
 {
   _value = value ;
   _fast = kTRUE ;
@@ -85,7 +83,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
-  _binning(new RooUniformBinning(minValue,maxValue,100)), _sharedProp(0)
+  _binning(new RooUniformBinning(minValue,maxValue,100))
 {
   _fast = kTRUE ;
 
@@ -120,7 +118,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
-  _binning(new RooUniformBinning(minValue,maxValue,100)), _sharedProp(0)
+  _binning(new RooUniformBinning(minValue,maxValue,100))
 {
     _fast = kTRUE ;
     setRange(minValue,maxValue) ;
@@ -142,7 +140,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   _asymErrLo(other._asymErrLo),
   _asymErrHi(other._asymErrHi)
 {
-  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
+  _sharedProp = other.sharedProp();
   if (other._binning) {
      _binning.reset(other._binning->clone());
      _binning->insertHook(*this) ;
@@ -188,7 +186,7 @@ RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
     abc->insertHook(*this) ;
   }
 
-  _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp());
+  _sharedProp = other.sharedProp();
 
   return *this;
 }
@@ -201,10 +199,6 @@ RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
 RooRealVar::~RooRealVar()
 {
   _altNonSharedBinning.Delete() ;
-
-  if (_sharedProp) {
-    _sharedPropList.unregisterProperties(_sharedProp) ;
-  }
 
   TRACE_DESTROY
 }
@@ -1188,18 +1182,16 @@ void RooRealVar::Streamer(TBuffer &R__b)
       _binning.reset(binning);
     }
     if (R__v==3) {
-      R__b >> _sharedProp ;
-      _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(_sharedProp,kFALSE) ;
+      // In v3, properties were written as pointers, so read now and install:
+      RooRealVarSharedProperties* tmpProp;
+      R__b >> tmpProp;
+      installSharedProp(std::shared_ptr<RooRealVarSharedProperties>(tmpProp));
     }
     if (R__v>=4) {
-      RooRealVarSharedProperties* tmpSharedProp = new RooRealVarSharedProperties() ;
-      tmpSharedProp->Streamer(R__b) ;
-      if (!(_nullProp==*tmpSharedProp)) {
-	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
-      } else {
-	delete tmpSharedProp ;
-	_sharedProp = 0 ;
-      }
+      // In >= v4, properties were written directly, but they might be the "_nullProp"
+      auto tmpProp = std::make_shared<RooRealVarSharedProperties>();
+      tmpProp->Streamer(R__b);
+      installSharedProp(std::move(tmpProp));
     }
 
     R__b.CheckByteCount(R__s, R__c, RooRealVar::IsA());
@@ -1215,23 +1207,63 @@ void RooRealVar::Streamer(TBuffer &R__b)
     if (_sharedProp) {
       _sharedProp->Streamer(R__b) ;
     } else {
-      _nullProp.Streamer(R__b) ;
+      _nullProp->Streamer(R__b) ;
     }
     R__b.SetByteCount(R__c, kTRUE);
 
   }
 }
 
+/// Hand out our shared property, create on the fly and register
+/// in shared map if necessary.
+std::shared_ptr<RooRealVarSharedProperties> RooRealVar::sharedProp() const {
+  if (!_sharedProp) {
+    const_cast<RooRealVar*>(this)->installSharedProp(std::make_shared<RooRealVarSharedProperties>());
+  }
+
+  return _sharedProp;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// No longer used?
+/// Install the shared property into the member _sharedProp.
+/// If a property with same name already exists, discard the incoming one,
+/// and share the existing.
+/// `nullptr` and properties equal to the RooRealVar::_nullProp will not be installed.
+void RooRealVar::installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&& prop) {
+  if (prop == nullptr || (*prop == *_nullProp)) {
+    _sharedProp = nullptr;
+    return;
+  }
 
+
+  auto& weakPtr = _sharedPropList[prop->asString().Data()];
+  std::shared_ptr<RooRealVarSharedProperties> existingProp;
+  if ( (existingProp = weakPtr.lock()) ) {
+    // Property exists, discard incoming
+    _sharedProp = std::move(existingProp);
+    // Incoming is not allowed to delete the binnings now - they are owned by the other instance
+    prop->disownBinnings();
+  } else {
+    // Doesn't exist. Install, register weak pointer for future sharing
+    _sharedProp = std::move(prop);
+    weakPtr = _sharedProp;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stop sharing properties.
 void RooRealVar::deleteSharedProperties()
 {
-  if (_sharedProp) {
-    _sharedPropList.unregisterProperties(_sharedProp) ;
-    _sharedProp = 0 ;
+  _sharedProp.reset();
+
+  for (auto it = _sharedPropList.begin(); it != _sharedPropList.end();) {
+    if (it->second.expired()) {
+      it = _sharedPropList.erase(it);
+    } else {
+      ++it;
+    }
   }
 }
 
