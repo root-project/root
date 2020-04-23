@@ -46,7 +46,7 @@ public:
    THelix(Double_t x,  Double_t y,  Double_t z,
           Double_t vx, Double_t vy, Double_t vz,
           Double_t w);
-   THelix(Double_t const* p, Double_t const* v, Double_t w,
+   THelix(Double_t const* xyz, Double_t const* v, Double_t w,
           Double_t const* range=0, EHelixRangeType rtype=kHelixZ,
           Double_t const* axis=0);
    THelix(const THelix &helix);
@@ -62,7 +62,7 @@ public:
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);
    virtual void    SetRange(Double_t * range, EHelixRangeType rtype=kHelixZ);
    virtual void    SetRange(Double_t r1, Double_t r2, EHelixRangeType rtype=kHelixZ);
-   void            SetHelix(Double_t const* p,  Double_t const* v, Double_t w,
+   void            SetHelix(Double_t const* xyz,  Double_t const* v, Double_t w,
                             Double_t const* range=0, EHelixRangeType type=kUnchanged,
                             Double_t const* axis=0);
 

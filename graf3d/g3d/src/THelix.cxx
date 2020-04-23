@@ -38,12 +38,12 @@ The second constructor has 6 parameters,
 Example:
 
 ~~~ {.cpp}
-      THelix pl1(p, v, w, range, rtype, axis);
+      THelix pl1(xyz, v, w, range, rtype, axis);
 ~~~
 
 where:
 
-  - p    : array of initial position
+  - xyz  : array of initial position
   - v    : array of initial velocity
   - w    : angular frequency
   - range: helix range
@@ -81,7 +81,7 @@ ClassImp(THelix);
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all helix parameters.
 
-void  THelix::SetHelix(Double_t const* p,  Double_t const* v,  Double_t w,
+void  THelix::SetHelix(Double_t const* xyz,  Double_t const* v,  Double_t w,
                        Double_t const* range, EHelixRangeType rType,
                        Double_t const* axis )
 {
@@ -98,9 +98,9 @@ void  THelix::SetHelix(Double_t const* p,  Double_t const* v,  Double_t w,
    fVt   = TMath::Sqrt(vx0*vx0 + vy0*vy0);
    fPhi0 = TMath::ATan2(vy0,vx0);
    fVz   = vz0;
-   fX0   = p[0] * m[0] +  p[1] * m[1] +  p[2] * m[2];
-   fY0   = p[0] * m[3] +  p[1] * m[4] +  p[2] * m[5];
-   fZ0   = p[0] * m[6] +  p[1] * m[7] +  p[2] * m[8];
+   fX0   = xyz[0] * m[0] +  xyz[1] * m[1] +  xyz[2] * m[2];
+   fY0   = xyz[0] * m[3] +  xyz[1] * m[4] +  xyz[2] * m[5];
+   fZ0   = xyz[0] * m[6] +  xyz[1] * m[7] +  xyz[2] * m[8];
    if (fW != 0) {
       fX0 += fVt / fW * TMath::Sin(fPhi0);
       fY0 -= fVt / fW * TMath::Cos(fPhi0);
@@ -154,7 +154,7 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
 ////////////////////////////////////////////////////////////////////////////////
 /// Helix normal constructor.
 
-THelix::THelix(Double_t const* p, Double_t const* v, Double_t w,
+THelix::THelix(Double_t const* xyz, Double_t const* v, Double_t w,
                Double_t const* range, EHelixRangeType rType, Double_t const* axis)
         : TPolyLine3D()
 {
@@ -167,9 +167,9 @@ THelix::THelix(Double_t const* p, Double_t const* v, Double_t w,
 
    fRotMat   = 0;
    if ( axis ) {                        // specify axis
-      SetHelix(p, v, w, r, rType, axis);
+      SetHelix(xyz, v, w, r, rType, axis);
    } else {                             // default axis
-      SetHelix(p, v, w, r, rType);
+      SetHelix(xyz, v, w, r, rType);
    }
 
    fOption = "";
