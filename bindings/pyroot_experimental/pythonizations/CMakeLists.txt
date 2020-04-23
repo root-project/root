@@ -96,7 +96,7 @@ foreach(val RANGE ${how_many_pythons})
 
   ROOT_LINKER_LIBRARY(${libname} ${cpp_sources} DEPENDENCIES Core Tree cppyy${python_under_version_string} CMAKENOEXPORT)
 
-  target_include_directories(${libname} PRIVATE ${ROOT_headers_dir} ${python_include_dir})
+  target_include_directories(${libname} PRIVATE ${python_include_dir})
 
   # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
   if(NOT MSVC)
