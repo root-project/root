@@ -54,11 +54,12 @@ RooRealVarSharedProperties::RooRealVarSharedProperties(const char* uuidstr) : Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
-
 RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedProperties& other) :
-  RooSharedProperties(other), 
-  _altBinning(other._altBinning)
+  RooSharedProperties(other),
+  _altBinning(other._altBinning),
+  _ownBinnings(false)
 {
+  std::cerr << "Warning: RooRealVarSharedProperties should not be copied. The copy will not own the binnings." << std::endl;
 }
 
 
@@ -68,7 +69,9 @@ RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedPro
 
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
-  _altBinning.Delete() ;
+  if (_ownBinnings) {
+    _altBinning.Delete() ;
+  }
 } 
 
 

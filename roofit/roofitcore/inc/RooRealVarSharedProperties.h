@@ -24,18 +24,25 @@ class RooRealVarSharedProperties : public RooSharedProperties {
 public:
 
   RooRealVarSharedProperties() ;
-  RooRealVarSharedProperties(const RooRealVarSharedProperties&) ;
+  RooRealVarSharedProperties(const RooRealVarSharedProperties&);
   RooRealVarSharedProperties(const char* uuidstr) ;
   virtual ~RooRealVarSharedProperties() ;
+  void disownBinnings() {
+    _ownBinnings = false;
+  }
 
-  RooSharedProperties* clone() { return new RooRealVarSharedProperties(*this)  ; }
+  RooSharedProperties* clone() {
+    auto tmp = new RooRealVarSharedProperties(*this);
+    tmp->disownBinnings();
+    return tmp;
+  }
 
 protected:
 
   friend class RooRealVar ;
 
   RooLinkedList _altBinning ;  // Optional alternative ranges and binnings
-
+  bool _ownBinnings{true}; //!
   ClassDef(RooRealVarSharedProperties,1) // Shared properties of a RooRealVar clone set
 };
 
