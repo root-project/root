@@ -1179,7 +1179,12 @@ if(builtin_tbb)
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
-  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+  ExternalProject_Add_Step(
+     TBB tbb2externals
+     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${CMAKE_BINARY_DIR}/ginclude/tbb
+     DEPENDEES install
+  )
+  set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
   set(TBB_TARGET TBB)
 endif()
@@ -1394,8 +1399,13 @@ if(vdt OR builtin_vdt)
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${VDT_LIBRARIES}
     )
-    set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+    ExternalProject_Add_Step(
+       VDT copy2externals
+       COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
+       DEPENDEES install
+    )
+    set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
+    set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
