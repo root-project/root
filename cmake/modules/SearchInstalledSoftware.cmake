@@ -1417,8 +1417,8 @@ endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
 if(vecgeom AND builtin_veccore)
-  message(WARNING "VecGeom doesn't support external VecCore (veccore & builtin_veccore options), but only native VecCore built together with VecGeom. Option VecGeom will be disabled.")
-  set(vecgeom OFF CACHE BOOL "Disabled because VecGeom doesn't support external Vecore" FORCE)
+  message(WARNING "ROOT must be built against the VecCore installation that was used to build VecGeom; builtin_veccore cannot be used. Option VecGeom will be disabled.")
+  set(vecgeom OFF CACHE BOOL "Disabled because non-builtin VecGeom specified but its VecCore cannot be found" FORCE)
 endif()
 
 if (vecgeom)
