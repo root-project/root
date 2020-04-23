@@ -14,6 +14,7 @@
 #include "PyROOTStrings.h"
 #include "PyROOTWrapper.h"
 #include "RPyROOTApplication.h"
+#include "FacadeHelpers.hxx"
 
 // Cppyy
 #include "CPyCppyy.h"
@@ -86,6 +87,8 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Deserialize a pickled object"},
    {(char *)"ClearProxiedObjects", (PyCFunction)PyROOT::ClearProxiedObjects, METH_NOARGS,
     (char *)"Clear proxied objects regulated by PyROOT"},
+   {(char *)"CreateBufferFromAddress", (PyCFunction)PyROOT::CreateBufferFromAddress, METH_O,
+    (char *)"Create a LowLevelView object on the received address"},
    {NULL, NULL, 0, NULL}};
 
 #define QuoteIdent(ident) #ident

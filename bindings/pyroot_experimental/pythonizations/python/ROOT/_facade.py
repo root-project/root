@@ -4,7 +4,7 @@ from functools import partial
 
 import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
-from libROOTPythonizations import gROOT
+from libROOTPythonizations import gROOT, CreateBufferFromAddress
 
 from ._application import PyROOTApplication
 
@@ -90,20 +90,8 @@ class ROOTFacade(types.ModuleType):
         # addr is the address of the address of the object
         addr = self.addressof(instance = obj, byref = True)
 
-        # get_llv returns a buffer (LowLevelView)
-        try:
-            get_llv = gbl_namespace.PyROOT.get_llv
-        except AttributeError:
-            gbl_namespace.gInterpreter.Declare("""
-            namespace PyROOT {
-               long long *get_llv(long long addr) {
-                  return reinterpret_cast<long long*>(addr);
-               }
-            }
-            """)
-            get_llv = gbl_namespace.PyROOT.get_llv
-
-        return get_llv(addr)
+        # Create a buffer (LowLevelView) from address
+        return CreateBufferFromAddress(addr)
 
     def _set_import_hook(self):
         # This hook allows to write e.g:
