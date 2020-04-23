@@ -43,11 +43,12 @@ if(dataframe)
     set(TMVA_EXTRA_SOURCES
         RBDT.cxx
     )
-    set(TMVA_EXTRA_DEPENDENCIES
-        ROOTDataFrame
-        ROOTVecOps
-    )
+    list(APPEND TMVA_EXTRA_DEPENDENCIES ROOTDataFrame ROOTVecOps)
 endif()
+
+if (imt)
+  list(APPEND TMVA_EXTRA_DEPENDENCIES Imt)
+endif(imt)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   HEADERS
@@ -422,7 +423,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     MLP
     MathCore
     Core
-    Imt
     RIO
     XMLIO
     ${TMVA_EXTRA_DEPENDENCIES}

@@ -9,6 +9,10 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+if (imt)
+  list(APPEND TREE_EXTRA_DEPENDENCIES Imt)
+endif(imt)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Tree
   HEADERS
     TBasket.h
@@ -116,7 +120,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
-    Imt
+    ${TREE_EXTRA_DEPENDENCIES}
     Net
     RIO
     MathCore
