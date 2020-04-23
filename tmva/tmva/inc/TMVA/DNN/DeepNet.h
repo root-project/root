@@ -855,15 +855,9 @@ TBatchNormLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBatchNorm
          for (size_t i = 3; i < shape.size(); ++i)
             shape[2] *= shape[i];
       }
-      // if  (axis == 1) {
-      //    shape[0] = batchSize;
-      //    shape[1] = inputDepth;
-      //    shape[2] = inputHeight * inputWidth;
-      // }
-      // for RNN ?
    }
-   std::cout << "addBNormLayer " << inputDepth << " , " << inputHeight << " , " << inputWidth << " , " << shape[0]
-             << "  " << shape[1] << "  " << shape[2] << std::endl;
+   // std::cout << "addBNormLayer " << inputDepth << " , " << inputHeight << " , " << inputWidth << " , " << shape[0]
+   //           << "  " << shape[1] << "  " << shape[2] << std::endl;
 
    auto bnormLayer =
       new TBatchNormLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, shape, axis, momentum, epsilon);
