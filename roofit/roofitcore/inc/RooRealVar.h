@@ -16,10 +16,6 @@
 #ifndef ROO_REAL_VAR
 #define ROO_REAL_VAR
 
-#include <list>
-#include <string>
-#include <cmath>
-#include <float.h>
 #include "TString.h"
 
 #include "RooAbsRealLValue.h"
@@ -27,6 +23,9 @@
 #include "RooNumber.h"
 #include "RooSharedPropertiesList.h"
 #include "RooRealVarSharedProperties.h"
+
+#include <list>
+#include <memory>
 
 class RooArgSet ;
 class RooErrorVar ;
@@ -152,7 +151,7 @@ public:
   Double_t _error;      // Symmetric error associated with current value
   Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
   Double_t _asymErrHi ; // High side of asymmetric error associated with current value
-  RooAbsBinning* _binning ; 
+  std::unique_ptr<RooAbsBinning> _binning; 
   RooLinkedList _altNonSharedBinning ; // Non-shareable alternative binnings
 
   inline RooRealVarSharedProperties* sharedProp() const {
@@ -168,7 +167,7 @@ public:
   static RooRealVarSharedProperties _nullProp ; // Null property
   mutable RooRealVarSharedProperties* _sharedProp ; //! Shared properties associated with this instance
 
-  ClassDef(RooRealVar,5) // Real-valued variable 
+  ClassDef(RooRealVar,6) // Real-valued variable
 };
 
 
