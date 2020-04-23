@@ -39,6 +39,7 @@ namespace Experimental {
  Index -1 is for the underflow bin, representing values that are lower than
  the axis range. Index -2 is the overflow bin for values larger than the axis
  range.
+ Growable axes do not have underflow or overflow bins, as they don't need them.
  */
 class RAxisBase {
 protected:
@@ -63,14 +64,13 @@ protected:
    ///\param[in] title - axis title used for graphics and text representation.
    RAxisBase(std::string_view title) noexcept: fTitle(title) {}
 
-   /// Given rawbin (`<GetFirstBin()` for underflow, `>GetLastBin()+1` for overflow),
-   /// determine the regular bin number taking into account how over/underflow
+   /// Given rawbin (`<0` for underflow, `>=GetNBinsNoOver()` for overflow),
+   /// determine the bin number taking into account how over/underflow
    /// should be handled.
    ///
    /// \param[out] result status of the bin determination.
    /// \return Returns the bin number adjusted for potential over- and underflow
-   /// bins. Returns `kInvalidBin` if the axis cannot handle the over- / underflow,
-   /// in which case the status will tell how to deal with this overflow.
+   /// bins. Returns `kInvalidBin` if the axis cannot handle the over- / underflow.
    ///
    int AdjustOverflowBinNumber(double rawbin) const
    {
@@ -81,6 +81,7 @@ protected:
          return CanGrow() ? kInvalidBin : GetUnderflowBin();
 
       // Overflow: Put in overflow bin if any, otherwise ignore
+      // `rawbin` is not an integer, cannot compare `rawbin > GetLastBin()`.
       if (rawbin >= GetLastBin() + 1)
          return CanGrow() ? kInvalidBin : GetOverflowBin();
 
@@ -221,16 +222,13 @@ public:
       friend bool operator!=(const_iterator lhs, const_iterator rhs) noexcept;
    };
 
-   /// Signals that the bin number is invalid
+   /// Special bin index returned to signify that no bin matches a request.
    constexpr static const int kInvalidBin = 0;
 
-   /// Signals that the bin number is that of a regular bin.
-   constexpr static const int kRegularBin = 0;
-
-   /// Signals that the bin number is that of an underflow bin.
+   /// Index of the underflow bin, if any.
    constexpr static const int kUnderflowBin = -1;
 
-   /// Signals that the bin number is that of an overflow bin.
+   /// Index of the overflow bin, if any.
    constexpr static const int kOverflowBin = -2;
 
    /// Get the axis's title
@@ -284,8 +282,8 @@ public:
    /// Get a const_iterator pointing to the first regular bin.
    const_iterator begin() const noexcept { return const_iterator{GetFirstBin()}; }
 
-   /// Get a const_iterator pointing to the last regular bin
-   const_iterator end() const noexcept { return const_iterator{GetLastBin()}; }
+   /// Get a const_iterator pointing beyond the last regular bin
+   const_iterator end() const noexcept { return const_iterator{GetLastBin() + 1}; }
    ///\}
 
    /// Find the adjusted bin index (returning `kUnderflowBin` for underflow and `kOverflowBin`
@@ -401,6 +399,15 @@ protected:
    /// See RAxisBase::HasSameBinBordersAs
    bool HasSameBinBordersAs(const RAxisBase& other) const override;
 
+   /// Find the raw bin index (not adjusted) for the given coordinate.
+   /// The resulting raw bin is 0-based.
+   /// \note Passing a bin border coordinate can either return the bin above or
+   /// below the bin border. I.e. don't do that for reliable results!
+   double FindBinRaw(double x) const noexcept
+   {
+      return (x - fLow) * fInvBinWidth;
+   }
+
 public:
    RAxisEquidistant() = default;
 
@@ -437,22 +444,13 @@ public:
    /// Get the number of bins, excluding under- and overflow.
    int GetNBinsNoOver() const noexcept final override { return fNBinsNoOver; }
 
-   /// Find the raw bin index (not adjusted) for the given coordinate.
-   /// \note Passing a bin border coordinate can either return the bin above or
-   /// below the bin border. I.e. don't do that for reliable results!
-   double FindBinRaw(double x) const noexcept
-   {
-      double rawbin = (x - fLow) * fInvBinWidth;
-      return rawbin;
-   }
-
    /// Find the adjusted bin index (returning `kUnderflowBin` for underflow and
    /// `kOverflowBin` for overflow) for the given coordinate.
    /// \note Passing a bin border coordinate can either return the bin above or
    /// below the bin border. I.e. don't do that for reliable results!
    int FindBin(double x) const noexcept final override
    {
-      double rawbin = (x - fLow) * fInvBinWidth;
+      double rawbin = FindBinRaw(x);
       return AdjustOverflowBinNumber(rawbin);
    }
 
@@ -469,14 +467,14 @@ public:
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.25.
    /// The result of this method on an overflow or underflow bin is unspecified.
-   double GetBinCenter(int bin) const final override { return fLow + (bin - *begin() + 0.5) / fInvBinWidth; }
+   double GetBinCenter(int bin) const final override { return fLow + (bin - GetFirstBin() + 0.5) / fInvBinWidth; }
 
    /// Get the low bin border for the given bin index.
    /// For the bin == 1 (the first bin) of 2 bins for an axis (0., 1.), this
    /// returns 0.
    /// The result of this method on an underflow bin is unspecified.
    double GetBinFrom(int bin) const final override {
-      const double result = (bin == kOverflowBin) ? GetMaximum() : fLow + (bin - *begin()) / fInvBinWidth;
+      const double result = (bin == kOverflowBin) ? GetMaximum() : fLow + (bin - GetFirstBin()) / fInvBinWidth;
       return result;
    }
 
@@ -599,6 +597,19 @@ protected:
    /// See RAxisBase::HasSameBinBordersAs
    bool HasSameBinBordersAs(const RAxisBase& other) const override;
 
+   /// Find the raw bin index (not adjusted) for the given coordinate `x`.
+   /// The resulting raw bin is 1-based.
+   /// \note Passing a bin border coordinate can either return the bin above or
+   /// below the bin border. I.e. don't do that for reliable results!
+   double FindBinRaw(double x) const noexcept
+   {
+      const auto bBegin = fBinBorders.begin();
+      const auto bEnd = fBinBorders.end();
+      // lower_bound finds the first bin border that is >= x.
+      auto iNotLess = std::lower_bound(bBegin, bEnd, x);
+      return iNotLess - bBegin;
+   }
+
 public:
    RAxisIrregular() = default;
 
@@ -656,29 +667,12 @@ public:
    /// Get the number of bins, excluding under- and overflow.
    int GetNBinsNoOver() const noexcept final override { return fBinBorders.size() - 1; }
 
-   /// Find the raw bin index (not adjusted) for the given coordinate `x`.
-   /// \note Passing a bin border coordinate can either return the bin above or
-   /// below the bin border. I.e. don't do that for reliable results!
-   double FindBinRaw(double x) const noexcept
-   {
-      const auto bBegin = fBinBorders.begin();
-      const auto bEnd = fBinBorders.end();
-      // lower_bound finds the first bin border that is >= x.
-      auto iNotLess = std::lower_bound(bBegin, bEnd, x);
-      double rawbin = iNotLess - bBegin;
-      return rawbin;
-   }
-
    /// Find the bin index (adjusted with under- and overflow) for the given coordinate `x`.
    /// \note Passing a bin border coordinate can either return the bin above or
    /// below the bin border. I.e. don't do that for reliable results!
    int FindBin(double x) const noexcept final override
    {
-      const auto bBegin = fBinBorders.begin();
-      const auto bEnd = fBinBorders.end();
-      // lower_bound finds the first bin border that is >= x.
-      auto iNotLess = std::lower_bound(bBegin, bEnd, x);
-      int rawbin = iNotLess - bBegin;
+      int rawbin = FindBinRaw(x);
       // No need for AdjustOverflowBinNumber(rawbin) here; lower_bound() is the
       // answer: e.g. for x < *bBegin, rawbin is -1.
       if (rawbin < GetFirstBin())

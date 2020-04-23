@@ -151,8 +151,10 @@ public:
 
    /// Merge with other RHistStatContent, assuming same bin configuration.
    void Add(const RHistStatContent& other) {
-      assert(fBinContent.size() == other.fBinContent.size());
-      assert(fOverflowBinContent.size() == other.fOverflowBinContent.size());
+      assert(fBinContent.size() == other.fBinContent.size()
+               && "this and other have incompatible bin configuration!");
+      assert(fOverflowBinContent.size() == other.fOverflowBinContent.size()
+               && "this and other have incompatible bin configuration!");
       fEntries += other.fEntries;
       for (size_t b = 0; b < fBinContent.size(); ++b)
          fBinContent[b] += other.fBinContent[b];
@@ -358,7 +360,10 @@ public:
 
    /// Merge with other `RHistStatUncertainty` data, assuming same bin configuration.
    void Add(const RHistStatUncertainty& other) {
-      assert(fSumWeightsSquared.size() + fOverflowSumWeightsSquared.size() == other.fSumWeightsSquared.size() + other.fOverflowSumWeightsSquared.size());
+      assert(fSumWeightsSquared.size() == other.fSumWeightsSquared.size()
+               && "this and other have incompatible bin configuration!");
+      assert(fOverflowSumWeightsSquared.size() == other.fOverflowSumWeightsSquared.size()
+               && "this and other have incompatible bin configuration!");
       for (size_t b = 0; b < fSumWeightsSquared.size(); ++b)
          fSumWeightsSquared[b] += other.fSumWeightsSquared[b];
       for (size_t b = 0; b < fOverflowSumWeightsSquared.size(); ++b)

@@ -104,10 +104,6 @@ void TestHistogramBinning(Axes&&... axes) {
       EXPECT_EQ(hist.GetBinCenter(global_bin), bin_center);
       EXPECT_EQ(hist.GetBinFrom(global_bin), bin_from);
       EXPECT_EQ(hist.GetBinTo(global_bin), bin_to);
-      
-      EXPECT_EQ(hist.GetBinCenterFromLocalBins(local_bin_indices), bin_center);
-      EXPECT_EQ(hist.GetBinFromFromLocalBins(local_bin_indices), bin_from);
-      EXPECT_EQ(hist.GetBinToFromLocalBins(local_bin_indices), bin_to);
 
       // Go to the next bin in row-major order
       for (std::size_t axis = 0; axis < NDIMS; ++axis) {

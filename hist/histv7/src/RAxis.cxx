@@ -42,7 +42,7 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
    // an integer if it's an axis border.
-   double fracBinIdx = *begin() + FindBinRaw(x);
+   double fracBinIdx = GetFirstBin() + FindBinRaw(x);
 
    // fracBinIdx might be 12.99999999. It's a bin border if the deviation from
    // an regular bin border is "fairly small".
@@ -146,4 +146,4 @@ ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(const RAxisEqu
    return EAxisCompatibility::kSampling;
 }
 
-// RODO: the other CanMap() overloads
+// TODO: the other CanMap() overloads
