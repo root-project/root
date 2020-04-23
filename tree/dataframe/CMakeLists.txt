@@ -27,6 +27,10 @@ if(root7)
   list(APPEND RDATAFRAME_EXTRA_DEPS ROOTNTuple)
 endif()
 
+if (imt)
+  list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
+endif(imt)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/RCsvDS.hxx
@@ -99,7 +103,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     Hist
     RIO
     ROOTVecOps
-    Imt
     ${RDATAFRAME_EXTRA_DEPS}
 )
 
