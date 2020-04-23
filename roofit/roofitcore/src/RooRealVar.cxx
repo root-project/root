@@ -42,7 +42,6 @@ optionally a series of alternate named ranges.
 #include "RooParamBinning.h"
 #include "RooVectorDataStore.h"
 
-
 using namespace std;
 
 ClassImp(RooRealVar);
@@ -57,9 +56,8 @@ RooRealVarSharedProperties RooRealVar::_nullProp("00000000-0000-0000-0000-000000
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0), _sharedProp(0)
+RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning()), _sharedProp(0)
 {
-  _binning = new RooUniformBinning() ;
   _fast = kTRUE ;
   TRACE_CREATE
 }
@@ -70,10 +68,9 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
+  _binning(new RooUniformBinning(-1,1,100)), _sharedProp(0)
 {
-  // _instanceList.registerInstance(this) ;
-  _binning = new RooUniformBinning(-1,1,100) ;
   _value = value ;
   _fast = kTRUE ;
   removeRange();
@@ -88,9 +85,9 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
+  _binning(new RooUniformBinning(minValue,maxValue,100)), _sharedProp(0)
 {
-  _binning = new RooUniformBinning(minValue,maxValue,100) ;
   _fast = kTRUE ;
 
   if (RooNumber::isInfinite(minValue)) {
@@ -123,10 +120,10 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
+  _binning(new RooUniformBinning(minValue,maxValue,100)), _sharedProp(0)
 {
     _fast = kTRUE ;
-    _binning = new RooUniformBinning(minValue,maxValue,100) ;
     setRange(minValue,maxValue) ;
 
     Double_t clipValue ;
@@ -148,7 +145,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
 {
   _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(other.sharedProp()) ;
   if (other._binning) {
-     _binning = other._binning->clone() ;
+     _binning.reset(other._binning->clone());
      _binning->insertHook(*this) ;
   }
   _fast = kTRUE ;
@@ -177,10 +174,9 @@ RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
   _asymErrLo = other._asymErrLo;
   _asymErrHi = other._asymErrHi;
 
-  delete _binning;
-  _binning = nullptr;
+  _binning.reset();
   if (other._binning) {
-    _binning = other._binning->clone() ;
+    _binning.reset(other._binning->clone());
     _binning->insertHook(*this) ;
   }
 
@@ -205,7 +201,6 @@ RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
 
 RooRealVar::~RooRealVar()
 {
-  delete _binning ;
   _altNonSharedBinning.Delete() ;
 
   if (_sharedProp) {
@@ -397,10 +392,9 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
     RooAbsBinning* newBinning = binning.clone() ;
     if (_binning) {
       _binning->removeHook(*this) ;
-      delete _binning ;
     }
     newBinning->insertHook(*this) ;
-    _binning = newBinning ;
+    _binning.reset(newBinning);
   } else {
 
     RooLinkedList* altBinning = binning.isShareable() ? &(sharedProp()->_altBinning) : &_altNonSharedBinning ;
@@ -1198,13 +1192,15 @@ void RooRealVar::Streamer(TBuffer &R__b)
       R__b >> fitMin;
       R__b >> fitMax;
       R__b >> fitBins;
-      _binning = new RooUniformBinning(fitMin,fitMax,fitBins) ;
+      _binning.reset(new RooUniformBinning(fitMin,fitMax,fitBins));
     }
     R__b >> _error;
     R__b >> _asymErrLo;
     R__b >> _asymErrHi;
     if (R__v>=2) {
-      R__b >> _binning;
+      RooAbsBinning* binning;
+      R__b >> binning;
+      _binning.reset(binning);
     }
     if (R__v==3) {
       R__b >> _sharedProp ;
@@ -1230,7 +1226,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
     R__b << _error;
     R__b << _asymErrLo;
     R__b << _asymErrHi;
-    R__b << _binning;
+    R__b << _binning.get();
     if (_sharedProp) {
       _sharedProp->Streamer(R__b) ;
     } else {
