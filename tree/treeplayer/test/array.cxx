@@ -208,3 +208,24 @@ TEST(TTreeReaderArray, Float16_t)
       }
    }
 }
+
+TEST(TTreeReaderArray, ROOT10397)
+{
+   TTree t("t", "t");
+   float x[10];
+   int n;
+   t.Branch("n", &n, "n/I");
+   t.Branch("x", &x, "y[n]/F");
+   for (int i = 7; i < 10; i++) {
+      n = i;
+      for (int j = 0; j < n; j++) {
+         x[j] = j;
+      }
+      t.Fill();
+   };
+
+   TTreeReader r(&t);
+   TTreeReaderArray<float> xr(r, "x.y");
+   r.Next();
+   EXPECT_EQ(xr.GetSize(), 7);
+}
