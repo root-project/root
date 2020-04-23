@@ -25,6 +25,7 @@
 #include "TestStatistics/LikelihoodGradientJob.h"
 #include "TestStatistics/RooAbsL.h"
 #include "RooMinimizer.h"
+#include "RooAbsMinimizerFcn.h"
 
 // forward declaration
 class RooAbsL;
@@ -33,66 +34,20 @@ class RooAbsReal;
 namespace RooFit {
 namespace TestStatistics {
 
-class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction {
+class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
-   MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientWrapper *_gradient, RooMinimizerGenericPtr context,
+   MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientWrapper *_gradient, RooMinimizer* context,
                  bool verbose = false);
-   MinuitFcnGrad(const MinuitFcnGrad &other);
    ROOT::Math::IMultiGradFunction *Clone() const override;
-   ~MinuitFcnGrad() override;
 
-   // inform Minuit through its parameter_settings vector of RooFit parameter properties
-   Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings,
-                                         Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
-   void updateFloatVec(); // used for synchronization
-   // same, but also include gradient strategy synchronization:
+   // override to include gradient strategy synchronization:
    Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst = kTRUE,
-                      Bool_t verbose = kFALSE);
+                      Bool_t verbose = kFALSE) override;
 
    // used inside Minuit:
    bool returnsInMinuit2ParameterSpace() const override;
 
-   // used for export to RooFitResult from Minimizer:
-   RooArgList *GetFloatParamList();
-   RooArgList *GetConstParamList();
-   RooArgList *GetInitFloatParamList();
-   RooArgList *GetInitConstParamList();
-   Int_t GetNumInvalidNLL();
-
-   // need access from Minimizer:
-   void SetEvalErrorWall(Bool_t flag);
-   void SetPrintEvalErrors(Int_t numEvalErrors);
-   Double_t &GetMaxFCN();
-   Int_t evalCounter() const;
-   void zeroEvalCount();
-   void SetVerbose(Bool_t flag = kTRUE);
-
-   // put Minuit results back into RooFit objects:
-   void BackProp(const ROOT::Fit::FitResult &results);
-
-   // set different external covariance matrix
-   void ApplyCovarianceMatrix(TMatrixDSym &V);
-
 private:
-   // used in BackProp (Minuit results -> RooFit) and ApplyCovarianceMatrix
-   void SetPdfParamErr(Int_t index, Double_t value);
-   void ClearPdfParamAsymErr(Int_t index);
-   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
-   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const
-   {
-      auto par = (RooRealVar *)_floatParamVec[index];
-
-      if (par->getVal() != value) {
-         if (_verbose)
-            std::cout << par->GetName() << "=" << value << ", ";
-
-         par->setVal(value);
-         return kTRUE;
-      }
-
-      return kFALSE;
-   }
-
    // IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient, (has)G2ndDerivative and (has)GStepSize
    double DoEval(const double *x) const override;
 
@@ -112,27 +67,11 @@ private:
    double DoSecondDerivative(const double * /*x*/, unsigned int /*icoord*/) const override;
    double DoStepSize(const double * /*x*/, unsigned int /*icoord*/) const override;
 
+   void optimizeConstantTerms(bool constStatChange, bool constValChange) override;
+
    // members
    std::unique_ptr<LikelihoodWrapper> likelihood;
    std::unique_ptr<LikelihoodGradientWrapper> gradient;
-   // the following four are mutable because DoEval is const
-   mutable Int_t _evalCounter = 0;
-   // Reset the *largest* negative log-likelihood value we have seen so far:
-   mutable double _maxFCN = -1e30;
-   mutable int _numBadNLL = 0;
-   mutable int _printEvalErrors = 10;
-
-   Bool_t _doEvalErrorWall = kTRUE;
-   unsigned int _nDim = 0;
-
-   RooArgList *_floatParamList{};
-   std::vector<RooAbsArg *> _floatParamVec;
-   RooArgList *_constParamList{};
-   RooArgList *_initFloatParamList{};
-   RooArgList *_initConstParamList{};
-
-   RooMinimizerGenericPtr _context;
-   bool _verbose;
 };
 
 } // namespace TestStatistics

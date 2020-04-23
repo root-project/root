@@ -23,13 +23,22 @@
 #include "TStopwatch.h"
 #include <fstream>
 #include "TMatrixDSymfwd.h"
+#include "Math/IFunction.h"
 
 #include "RooArgList.h" // cannot just use forward decl due to default argument in lastMinuitFit
 
+#include "RooMinimizerFcn.h"
+#include "RooGradMinimizerFcn.h"
+#include "TestStatistics/MinuitFcnGrad.h"
+
+#include "RooSentinel.h"
+#include "RooMsgService.h"
+
 #include "Fit/Fitter.h"
-#include "RooMinimizerType.h"
 //#include <ROOT/RMakeUnique.hxx>  // make_unique
 #include <memory>  // make_shared
+#include <stdexcept>  // logic_error
+
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -39,13 +48,16 @@ class TH2F ;
 class RooPlot ;
 
 
-template <class MinimizerFcn, RooFit::MinimizerType default_minimizer_type,
-    typename... MinimizerFcnCtorAdditionalArgs>
-class RooMinimizerTemplate : public TObject {
+class RooMinimizer : public TObject {
 public:
 
-  RooMinimizerTemplate(RooAbsReal& function, MinimizerFcnCtorAdditionalArgs... minFcnCArgs) ;
-  virtual ~RooMinimizerTemplate() ;
+   enum class FcnMode {
+      classic, gradient, generic_wrapper
+   };
+
+   template <typename MinimizerFcn = RooMinimizerFcn>
+   RooMinimizer(RooAbsReal& function);
+  virtual ~RooMinimizer() ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
@@ -56,7 +68,7 @@ public:
   void setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
   void setOffsetting(Bool_t flag) ;
   void setMaxIterations(Int_t n) ;
-  void setMaxFunctionCalls(Int_t n) ; 
+  void setMaxFunctionCalls(Int_t n) ;
 
   RooFitResult* fit(const char* options) ;
 
@@ -71,11 +83,11 @@ public:
   Int_t minimize(const char* type, const char* alg=0) ;
 
   RooFitResult* save(const char* name=0, const char* title=0) ;
-  RooPlot* contour(RooRealVar& var1, RooRealVar& var2, 
+  RooPlot* contour(RooRealVar& var1, RooRealVar& var2,
                    Double_t n1=1, Double_t n2=2, Double_t n3=0,
                    Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
 
-  Int_t setPrintLevel(Int_t newLevel) ; 
+  Int_t setPrintLevel(Int_t newLevel) ;
   void setPrintEvalErrors(Int_t numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
   void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; fitterFcn()->SetVerbose(flag); }
   void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
@@ -93,7 +105,7 @@ public:
 
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
-  
+
 protected:
 
   friend class RooAbsPdf ;
@@ -102,13 +114,12 @@ protected:
   void profileStart() ;
   void profileStop() ;
 
-  inline Int_t getNPar() const { return fitterFcn()->NDim() ; }
+  inline Int_t getNPar() const { return fitterFcn()->get_nDim() ; }
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
 
-  // dynamic cast necessary due to e.g. GradMinimizerFcn which has virtual inheritance
-  const MinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<MinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
-  MinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<MinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+   const RooAbsMinimizerFcn* fitterFcn() const;
+   RooAbsMinimizerFcn* fitterFcn();
 
 private:
 
@@ -125,76 +136,80 @@ private:
 
   TMatrixDSym* _extV = 0;
 
-  MinimizerFcn *_fcn;
-  std::string _minimizerType = RooFit::minimizer_type(default_minimizer_type);
+  RooAbsMinimizerFcn *_fcn;
+  std::string _minimizerType = "Minuit2";
+  FcnMode _fcnMode;
 
   static ROOT::Fit::Fitter *_theFitter ;
 
   std::vector<std::pair<std::string,int> > _statusHistory ;
 
-  RooMinimizerTemplate(const RooMinimizerTemplate&) ;
+  RooMinimizer(const RooMinimizer&) ;
 
-  ClassDef(RooMinimizerTemplate,0) // RooFit interface to ROOT::Fit::Fitter
+  ClassDef(RooMinimizer,1) // RooFit interface to ROOT::Fit::Fitter
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// Construct MINUIT interface to given function. Function can be anything,
+/// but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
+/// (implemented by RooChi2Var). Other frequent use cases are a RooAddition
+/// of a RooNLLVar plus a penalty or constraint term. This class propagates
+/// all RooFit information (floating parameters, their values and errors)
+/// to MINUIT before each MINUIT call and propagates all MINUIT information
+/// back to the RooFit object at the end of each call (updated parameter
+/// values, their (asymmetric errors) etc. The default MINUIT error level
+/// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
+/// value of the input function.
 
-// In RooGradMinimizerFcn (and maybe other places) we need to erase the exact
-// type of the RooMinimizerTemplate instance, so that we can pass any instance
-// type as an argument, without needing those instances to inherit from a
-// common base class.
+template <typename MinimizerFcn>
+RooMinimizer::RooMinimizer(RooAbsReal& function)
+{
+   RooSentinel::activate() ;
 
-class RooMinimizerGenericPtr {
-  struct InnerBase {
-    virtual ~InnerBase() = default; // virtual dtor necessary for silencing warnings from -Wdelete-non-virtual-dtor; the destruction of val below (shared_ptr<InnerBase>) otherwise will not call the destructor of Inner, because it only knows about the non-virtual InnerBase dtor
-    virtual ROOT::Fit::Fitter* fitter() const = 0;
-    virtual TObject * get_ptr() const = 0;
-  };
+   // Store function reference
+   _func = &function ;
 
-  template<typename T>
-  struct Inner : public InnerBase {
-    Inner(T * const ptr) {
-      _ptr = ptr;
-    };
-    ROOT::Fit::Fitter* fitter() const override {
-      return _ptr->fitter();
-    };
-    // note that this constrains T to be a TObject subclass:
-    TObject * get_ptr() const override {
-      return static_cast<TObject *>(_ptr);
-    }
+   if (_theFitter) delete _theFitter ;
+   _theFitter = new ROOT::Fit::Fitter;
+   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+   setEps(1.0); // default tolerance
 
-   private:
-    T* _ptr;
-  };
+   _fcn = new MinimizerFcn(_func, this, _verbose);
 
-  std::shared_ptr<InnerBase> val;
+   // make sure to order correctly so that child classes get checked for first TODO
+   if (dynamic_cast<RooGradMinimizerFcn*>(_fcn)) {
+      _fcnMode = FcnMode::gradient;
+   } else if (dynamic_cast<RooMinimizerFcn*>(_fcn)) {
+      _fcnMode = FcnMode::classic;
+   } else if (dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad*>(_fcn)) {
+      _fcnMode = FcnMode::generic_wrapper;
+   } else {
+      throw std::logic_error("RooMinimizer's MinimizerFcn template argument must be (a subclass of) RooMinimizerFcn, RooGradMinimizerFcn or MinuitFcnGrad.");
+   }
 
- public:
-  template <typename T>
-  explicit RooMinimizerGenericPtr(T * const roo_minimizer_tmpl_inst) :
-      val(std::make_shared< RooMinimizerGenericPtr::Inner<T> >(roo_minimizer_tmpl_inst)) {};
+   // default max number of calls
+   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->get_nDim());
+   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500*_fcn->get_nDim());
 
-  // fitter() is needed in RooGradMinimizerFcn::parameter_settings:
-  ROOT::Fit::Fitter* fitter() const;
-  // the logging functions in RooMsgService need to get a raw pointer
-  operator TObject * () const;
-};
+   // Shut up for now
+   setPrintLevel(-1) ;
 
-#endif
+   // Use +0.5 for 1-sigma errors
+   setErrorLevel(_func->defaultErrorLevel()) ;
 
-#endif
+   // Declare our parameters to MINUIT
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+                     _optConst,_verbose) ;
 
-// template implementation file
-#include "RooMinimizer_impl.h"
+   // Now set default verbosity
+   if (RooMsgService::instance().silentMode()) {
+      setPrintLevel(-1) ;
+   } else {
+      setPrintLevel(1) ;
+   }
+}
 
 
-// template instantiation for backwards compatibility
-#include <RooMinimizerFcn.h>
-// we must also forward declare RooMinimizerFcn, because when some file only
-// includes RooMinimizerFcn.h, it will first include RooMinimizer.h from
-// RooMinimizerFcn.h before actually defining RooMinimizerFcn, so then at
-// this point the above RooMinimizerFcn.h include won't include the
-// RooMinimizerFcn definition in this file, because the include guard will
-// have been defined by the initial RooMinimizerFcn.h include
-class RooMinimizerFcn;
-using RooMinimizer = RooMinimizerTemplate<RooMinimizerFcn, RooFit::MinimizerType::Minuit>;
+#endif  // ROO_MINIMIZER
+
+#endif  // __ROOFIT_NOROOMINIMIZER

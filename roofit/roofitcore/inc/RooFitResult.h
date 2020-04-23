@@ -20,7 +20,6 @@
 #include "RooPrintable.h"
 #include "RooDirItem.h"
 #include "RooArgList.h"
-#include "RooMinimizerType.h"
 
 #include "RVersion.h"
 #include "TMatrixFfwd.h"
@@ -161,8 +160,7 @@ public:
 protected:
   
   friend class RooMinuit ;
-  template <class MF, RooFit::MinimizerType dmt, typename... MinFcnCArgs>
-  friend class RooMinimizerTemplate;
+  friend class RooMinimizer;
   void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;

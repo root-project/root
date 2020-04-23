@@ -247,8 +247,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         RooGradMinimizer.h
         RooGradMinimizerFcn.h
         RooGradientFunction.h
-        RooMinimizerType.h
-        RooMinimizer_impl.h
         MultiProcess/BidirMMapPipe.h
 #        TestStatistics/GradMinimizer.h
         TestStatistics/LikelihoodGradientJob.h
@@ -266,6 +264,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         TestStatistics/RooMultiL.h
         TestStatistics/RooRealL.h
         TestStatistics/RooUnbinnedL.h
+        RooAbsMinimizerFcn.h
   SOURCES
     src/Roo1DTable.cxx
     src/RooAbsAnaConvPdf.cxx
@@ -490,7 +489,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/NumericalDerivatorMinuit2.cxx
         src/RooGradMinimizerFcn.cxx
         src/RooGradientFunction.cxx
-        src/RooMinimizerType.cxx
         src/MultiProcess/BidirMMapPipe.cxx
 #        src/TestStatistics/GradMinimizerFcn.cxx
         src/TestStatistics/LikelihoodGradientJob.cxx
@@ -507,6 +505,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/TestStatistics/RooMultiL.cxx
         src/TestStatistics/RooRealL.cxx
         src/TestStatistics/RooUnbinnedL.cxx
+        src/RooAbsMinimizerFcn.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
 #    -I${ZeroMQ_INCLUDE_DIR} # necessary because zmq.h is included in the RooFitCore dictionary as well via MultiProcess
