@@ -768,7 +768,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   endif()
 
   # For modules GCocoa and GQuartz we need objc and cplusplus context.
-  if (NOT ${library} MATCHES "(GCocoa|GQuartz)")
+  if (NOT ${library} MATCHES "GCocoa")
     set (modulemap_entry "${modulemap_entry}\n  requires cplusplus\n")
   endif()
   if (library_headers)
