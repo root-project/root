@@ -16,21 +16,23 @@
 #ifndef ROO_REAL_VAR
 #define ROO_REAL_VAR
 
-#include "TString.h"
-
 #include "RooAbsRealLValue.h"
 #include "RooUniformBinning.h"
 #include "RooNumber.h"
-#include "RooSharedPropertiesList.h"
-#include "RooRealVarSharedProperties.h"
+
+#include "TString.h"
 
 #include <list>
+#include <string>
+#include <map>
 #include <memory>
+
 
 class RooArgSet ;
 class RooErrorVar ;
 class RooVectorDataStore ;
 class RooExpensiveObjectCache ;
+class RooRealVarSharedProperties;
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -151,21 +153,17 @@ public:
   Double_t _error;      // Symmetric error associated with current value
   Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
   Double_t _asymErrHi ; // High side of asymmetric error associated with current value
-  std::unique_ptr<RooAbsBinning> _binning; 
+  std::unique_ptr<RooAbsBinning> _binning;
   RooLinkedList _altNonSharedBinning ; // Non-shareable alternative binnings
 
-  inline RooRealVarSharedProperties* sharedProp() const {
-    if (!_sharedProp) {
-      _sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(new RooRealVarSharedProperties()) ;
-    }
-    return _sharedProp ;
-  }
+  std::shared_ptr<RooRealVarSharedProperties> sharedProp() const;
+  void installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&& prop);
 
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache&) { ; } // variables don't need caches 
   
-  static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
-  static RooRealVarSharedProperties _nullProp ; // Null property
-  mutable RooRealVarSharedProperties* _sharedProp ; //! Shared properties associated with this instance
+  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>> _sharedPropList; // List of properties shared among clones of a variable
+  static const std::unique_ptr<RooRealVarSharedProperties> _nullProp ; // Null property
+  std::shared_ptr<RooRealVarSharedProperties> _sharedProp; //! Shared binnings associated with this instance
 
   ClassDef(RooRealVar,6) // Real-valued variable
 };
