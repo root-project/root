@@ -198,7 +198,7 @@ target_include_directories(MathCore PRIVATE ${VecCore_INCLUDE_DIRS})
 list(APPEND math_incl ${Vc_INCLUDE_DIR})
 list(APPEND math_incl ${VecCore_INCLUDE_DIRS})
 
-foreach(inlc ${math_incl})
+foreach(incl ${math_incl})
    target_include_directories(MathCore PUBLIC $<BUILD_INTERFACE:${incl}>)
 endforeach()
 
