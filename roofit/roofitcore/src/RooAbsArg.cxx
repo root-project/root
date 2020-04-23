@@ -62,6 +62,7 @@ setting/clearing/testing named attributes.
 #include "RooResolutionModel.h"
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <sstream>
 #include <string.h>
@@ -80,7 +81,7 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Bool_t RooAbsArg::inhibitDirty() const { return _inhibitDirty && !_localNoInhibitDirty; }
 
-std::map<RooAbsArg*,TRefArray*> RooAbsArg::_ioEvoList ;
+std::map<RooAbsArg*,std::unique_ptr<TRefArray>> RooAbsArg::_ioEvoList;
 std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 
 
@@ -2274,9 +2275,8 @@ void RooAbsArg::Streamer(TBuffer &R__b)
 
 void RooAbsArg::ioStreamerPass2()
 {
-
   // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
-  map<RooAbsArg*,TRefArray*>::iterator iter = _ioEvoList.find(this) ;
+  auto iter = _ioEvoList.find(this);
   if (iter != _ioEvoList.end()) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
@@ -2286,8 +2286,7 @@ void RooAbsArg::ioStreamerPass2()
        _proxyList.Add(iter->second->At(i));
     }
     // Delete TRefArray and remove from list
-    delete iter->second ;
-    _ioEvoList.erase(iter) ;
+    _ioEvoList.erase(iter);
   }
 }
 
@@ -2304,30 +2303,20 @@ void RooAbsArg::ioStreamerPass2()
 
 void RooAbsArg::ioStreamerPass2Finalize()
 {
-
   // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
-  map<RooAbsArg*,TRefArray*>::iterator iter = _ioEvoList.begin() ;
-  while (iter != _ioEvoList.end()) {
+  for (const auto& iter : _ioEvoList) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
-    if (!iter->first->_proxyList.GetEntriesFast())
-       iter->first->_proxyList.Expand(iter->second->GetEntriesFast());
-    for (int i = 0; i < iter->second->GetEntriesFast(); i++) {
-       iter->first->_proxyList.Add(iter->second->At(i));
+    if (!iter.first->_proxyList.GetEntriesFast())
+       iter.first->_proxyList.Expand(iter.second->GetEntriesFast());
+    for (int i = 0; i < iter.second->GetEntriesFast(); i++) {
+       iter.first->_proxyList.Add(iter.second->At(i));
     }
-
-    // Save iterator position for deletion after increment
-    map<RooAbsArg*,TRefArray*>::iterator iter_tmp = iter ;
-
-    ++iter ;
-
-    // Delete TRefArray and remove from list
-    delete iter_tmp->second ;
-    _ioEvoList.erase(iter_tmp) ;
-
   }
 
+  _ioEvoList.clear();
 }
+
 
 RooAbsArg::RefCountListLegacyIterator_t *
 RooAbsArg::makeLegacyIterator(const RooAbsArg::RefCountList_t& list) const {
@@ -2345,12 +2334,12 @@ void RooRefArray::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
 
       // Make temporary refArray and read that from the streamer
-      TRefArray* refArray = new TRefArray ;
+      auto refArray = std::make_unique<TRefArray>();
       refArray->Streamer(R__b) ;
       R__b.CheckByteCount(R__s, R__c, refArray->IsA());
 
       // Schedule deferred processing of TRefArray into proxy list
-      RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = refArray ;
+      RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = std::move(refArray);
 
    } else {
 
