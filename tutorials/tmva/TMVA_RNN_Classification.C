@@ -1,11 +1,23 @@
-
+/// \file
+/// \ingroup tutorial_tmva
+/// \notebook
+///  TMVA Classification Example Using a Recurrent Neural Network
+///
+/// This is an example of using a RNN in TMVA. We do classification using a toy time dependent data set
+/// that is generated when running this example macro
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 /***
 
     # TMVA Classification Example Using a Recurrent Neural Network
 
-    This is an example of using a RNN in TMVA. We do classification using a toy  data set
-    containing a time series of data sample ntimes and with dimension ndim
-   that is generated when running the provided function `MakeTimeData (nevents, ntime, ndim)
+    This is an example of using a RNN in TMVA.
+    We do the classification using a toy data set containing a time series of data sample ntimes
+    and with dimension ndim that is generated when running the provided function `MakeTimeData (nevents, ntime, ndim)`
 
 
 **/
@@ -22,10 +34,10 @@
 #include "TFile.h"
 #include "TTree.h"
 
-// make some time data but not of fixed length.
-//  use a poisson with mu = 5 and troncated at 10
-//
-
+///  Helper function to generate the time data set
+///  make some time data but not of fixed length.
+///  use a poisson with mu = 5 and troncated at 10
+///
 void MakeTimeData(int n, int ntime, int ndim )
 {
 
@@ -130,7 +142,7 @@ void MakeTimeData(int n, int ntime, int ndim )
 ///    use_type = 2    use GRU
 ///    use_type = 3    build 3 different networks with RNN, LSTM and GRU
 
-void TMVA_RNN_Classification(int use_type = 1)  
+void TMVA_RNN_Classification(int use_type = 1)
 {
 
    const int ninput = 30;
@@ -175,7 +187,7 @@ void TMVA_RNN_Classification(int use_type = 1)
 
    TMVA::PyMethodBase::PyInitialize();
 
-   ROOT::EnableImplicitMT(1);
+   ROOT::EnableImplicitMT();
    TMVA::Config::Instance();
 
    std::cout << "nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
@@ -296,7 +308,7 @@ the option string
          TString rnnLayout = TString::Format("%s|10|%d|%d|0|1", rnn_type, ninput, ntime);
 
          /// add after RNN a reshape layer (needed top flatten the output) and a dense layer with 64 units and a last one
-         /// NOte the last layer is linear because  when using Crossentropy a Sigmoid is applied
+         /// Note the last layer is linear because  when using Crossentropy a Sigmoid is applied already
          TString layoutString = TString("Layout=") + rnnLayout + TString(",RESHAPE|FLAT,DENSE|64|TANH,LINEAR");
 
          /// Defining Training strategies. Different training strings can be concatenate. Use however only one
@@ -309,7 +321,7 @@ the option string
          TString trainingStrategyString("TrainingStrategy=");
          trainingStrategyString += trainingString1; // + "|" + trainingString2
 
-         /// Define the full RN Noption string adding the final options for all network
+         /// Define the full RNN Noption string adding the final options for all network
          TString rnnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=None:"
                             "WeightInitialization=XAVIERUNIFORM:ValidationSize=0.2:RandomSeed=1234");
 
@@ -384,9 +396,9 @@ the option string
             TString modelName = TString::Format("model_%s.h5", rnn_types[i].c_str());
             TString trainedModelName = TString::Format("trained_model_%s.h5", rnn_types[i].c_str());
 
-            Info("TMVA_RNN_Classification", "Building recurrent keras model of type %s",rnn_types[i].c_str());
+            Info("TMVA_RNN_Classification", "Building recurrent keras model using a %s layer", rnn_types[i].c_str());
             // create python script which can be executed
-            // crceate 2 conv2d layer + maxpool + dense
+            // create 2 conv2d layer + maxpool + dense
             TMacro m;
             m.AddLine("import keras");
             m.AddLine("from keras.models import Sequential");
@@ -408,8 +420,9 @@ the option string
             m.AddLine("model.add(Flatten())"); // needed if returning the full time output sequence
             m.AddLine("model.add(Dense(64, activation = 'tanh')) ");
             m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
-            m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
-            m.AddLine(TString::Format("modelName = '%s'",modelName.Data()));
+            m.AddLine(
+               "model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
+            m.AddLine(TString::Format("modelName = '%s'", modelName.Data()));
             m.AddLine("model.save(modelName)");
             m.AddLine("model.summary()");
 
@@ -418,18 +431,17 @@ the option string
             gSystem->Exec("python make_rnn_model.py");
 
             if (gSystem->AccessPathName(modelName)) {
-               Error("TMVA_RNN_Classification", "Error creating Keras RNN model file - exit");
-               return;
+               Warning("TMVA_RNN_Classification", "Error creating Keras recurrennt model file - Skip using Keras");
+            } else {
+               // book PyKeras method only if Keras model could be created
+               Info("TMVA_RNN_Classification", "Booking Keras %s model", rnn_types[i].c_str());
+               factory->BookMethod(dataloader, TMVA::Types::kPyKeras,
+                                   TString::Format("PyKeras_%s", rnn_types[i].c_str()),
+                                   TString::Format("!H:!V:VarTransform=None:FilenameModel=%s:"
+                                                   "FilenameTrainedModel=%s:GpuOptions=allow_growth=True:"
+                                                   "NumEpochs=%d:BatchSize=%d",
+                                                   modelName.Data(), trainedModelName.Data(), maxepochs, batchSize));
             }
-
-            std::cout << "Booking Keras recurrent model of type " << rnn_types[i] << std::endl;
-
-            factory->BookMethod(
-               dataloader, TMVA::Types::kPyKeras, TString::Format("PyKeras_%s", rnn_types[i].c_str()),
-               TString::Format("!H:!V:VarTransform=None:FilenameModel=%s:"
-                               "FilenameTrainedModel=%s:GpuOptions=allow_growth=True:"
-                               "NumEpochs=%d:BatchSize=%d", modelName.Data(), trainedModelName.Data(),
-                               maxepochs, batchSize));
          }
       }
    }

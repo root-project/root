@@ -1,10 +1,17 @@
 /// \file
 /// \ingroup tutorial_tmva
-/// Classification example of TNVA  using Higgs UCI dataset
+/// \notebook
+/// Classification example of TMVA based on public Higgs UCI dataset
+///
 ///  The UCI data set is a public HIGGS data set , see http://archive.ics.uci.edu/ml/datasets/HIGGS
-// used in this paper: Baldi, P., P. Sadowski, and D. Whiteson. “Searching for Exotic Particles in High-energy Physics
+/// used in this paper: Baldi, P., P. Sadowski, and D. Whiteson. “Searching for Exotic Particles in High-energy Physics
 ///                     with Deep Learning.” Nature Communications 5 (July 2, 2014).
 ///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 /***
 ## Declare Factory
@@ -33,7 +40,7 @@ void TMVA_Higgs_Classification() {
    bool useFischer = true;       // Fischer discriminant
    bool useMLP = false;          // Multi Layer Perceptron (old TMVA NN implementation)
    bool useBDT = true;           // BOosted Decision Tree
-   bool useDL = true;            // TMVA Deep learning ( CPU ot GPU)
+   bool useDL = true;            // TMVA Deep learning ( CPU or GPU)
 
 
 
@@ -57,7 +64,12 @@ Define now input data file and signal and background trees
 
    TString inputFileName = "Higgs_data.root";
 
-   auto inputFile = TFile::Open( inputFileName );
+   TFile *inputFile = nullptr;
+
+   if (!gSystem->AccessPathName(inputFileName)) {
+      // file exists
+      inputFile = TFile::Open( inputFileName );
+   }
 
    if (!inputFile) {
       // download file from Cernbox location
@@ -130,7 +142,7 @@ note that you may also use variable expressions, which can be parsed by TTree::D
 /***
 ## Booking Methods
 
-Here we book the TMVA methods. We book firat a Likelihood based on KDE (Kernel Density Estimation), a Fischer discriminant, a BDT
+Here we book the TMVA methods. We book first a Likelihood based on KDE (Kernel Density Estimation), a Fischer discriminant, a BDT
 and a shallow neural network
 
  */
@@ -173,11 +185,11 @@ if (useMLP) {
 
 ## Booking Deep Neural Network
 
-Here we define the option string for builfing the Deep Neural network model.
+Here we define the option string for building the Deep Neural network model.
 
 #### 1. Define DNN layout
 
-The DNN configuration os defined using a string. Note that whitespaces between characters are not allowed.
+The DNN configuration is defined using a string. Note that whitespaces between characters are not allowed.
 
 We define first the DNN layout:
 
@@ -221,12 +233,12 @@ We define the general DNN options concateneting in the final string the previous
 Note we use the ``":"`` separator to separate the different higher level options, as in the other TMVA methods.
 In addition to input layout, batch layout and training strategy we add now:
 
-- Type of Loss function (e.g. cross entropy)
+- Type of Loss function (e.g. CROSSENTROPY)
 - Weight Initizalization (e.g XAVIER, XAVIERUNIFORM, NORMAL )
 - Variable Transformation
 - Type of Architecture (e.g. CPU, GPU, Standard)
 
-We can then book the DL method using the built otion string
+We can then book the DL method using the built option string
 
     ***/
 
