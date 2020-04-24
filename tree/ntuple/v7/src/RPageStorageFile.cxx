@@ -210,7 +210,11 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
       fOptions.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
 
    fCtrNReadV = fMetrics.MakeCounter<decltype(fCtrNReadV)>("nReadV", "", "number of vector read requests");
-   fCtrSzRead = fMetrics.MakeCounter<decltype(fCtrSzRead)>("szRead", "B", "volume read from file");
+   fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of byte ranges read");
+   fCtrSzReadPayload = fMetrics.MakeCounter<decltype(fCtrSzReadPayload)>("szReadPayload", "B",
+      "volume read from file (required)");
+   fCtrSzReadOverhead = fMetrics.MakeCounter<decltype(fCtrSzReadOverhead)>("szReadOverhead", "B",
+      "volume read from file (overhead)");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
    fCtrNPage = fMetrics.MakeCounter<decltype(fCtrNPage)>("nPage", "", "number of populated pages");
    fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
@@ -471,7 +475,8 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       req.fSize = s.fSize;
    }
    readRequests.emplace_back(req);
-   fCtrSzRead->Add(szPayload + szOverhead);
+   fCtrSzReadPayload->Add(szPayload);
+   fCtrSzReadOverhead->Add(szOverhead);
 
    // Register the on disk pages in the RCluster
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
@@ -484,11 +489,13 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
    }
 
+   auto nReqs = readRequests.size();
    {
       RNTupleAtomicTimer timer(*fCtrTimeWallRead, *fCtrTimeCpuRead);
-      fFile->ReadV(&readRequests[0], readRequests.size());
+      fFile->ReadV(&readRequests[0], nReqs);
    }
    fCtrNReadV->Inc();
+   fCtrNRead->Add(nReqs);
 
    return cluster;
 }
