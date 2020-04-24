@@ -21,8 +21,8 @@
 #include "RooCFunction2Binding.h"
 #include "RooCFunction3Binding.h"
 #include "RooCFunction4Binding.h"
-#include "Math/SpecFunc.h"
-#include "Math/DistFunc.h"
+#include "Math/SpecFuncMathCore.h"
+#include "Math/DistFuncMathCore.h"
 
 static RooMathCoreReg dummy ;
 
