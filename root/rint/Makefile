@@ -60,7 +60,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 TabCom.log: TabCom_input.txt
-	$(CMDECHO) python driveTabCom.py < $< 2> $(@:.log=.err) | grep -v TObjectSet > $@ || true
+	$(CMDECHO) $(PYTHON) driveTabCom.py < $< 2> $(@:.log=.err) | grep -v TObjectSet > $@ || true
 
 TabCom: TabCom.log
 	$(TestDiff)

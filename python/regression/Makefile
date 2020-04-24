@@ -17,9 +17,9 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-pylib = $(strip $(shell python pythonlib.py) )
+pylib = $(strip $(shell $(PYTHON) pythonlib.py) )
 ifeq ($(PLATFORM),win32)
-pylibpath = $(strip $(shell python -c 'import os, sys; path = os.path.join(sys.prefix, "libs"); upath = path.replace("\\","/"); print upath; ' ) )
+pylibpath = $(strip $(shell $(PYTHON) -c 'import os, sys; path = os.path.join(sys.prefix, "libs"); upath = path.replace("\\","/"); print upath; ' ) )
 export LIB:=$(pylibpath);$(LIB)
 endif
 
