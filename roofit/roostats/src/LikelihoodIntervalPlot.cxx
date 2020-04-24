@@ -36,7 +36,9 @@
 #include "TGraph.h"
 #include "TPad.h"
 #include "TCanvas.h"
-#include "Math/DistFunc.h"
+// need chisquare_quantile function - can use mathcore implementation
+// for plotting not crucial that is less precise
+#include "Math/QuantFuncMathCore.h"
 
 
 #include "RooRealVar.h"
