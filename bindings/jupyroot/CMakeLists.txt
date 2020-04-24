@@ -43,9 +43,7 @@ foreach(val RANGE ${how_many_pythons})
 
   add_library(${libname} SHARED src/IOHandler.cxx)
 
-  # libJupyROOT uses ROOT headers from binary directory
-  add_dependencies(${libname} move_headers)
-  target_include_directories(${libname} PRIVATE ${CMAKE_BINARY_DIR}/include)
+  # libJupyROOT uses ROOT headers from source dirs and depends on Core
   target_include_directories(${libname} PRIVATE ${python_include_dir})
 
   target_link_libraries(${libname} ${python_library} Core ${CMAKE_DL_LIBS})
