@@ -4,6 +4,7 @@
 
 #include "gtest/gtest.h"
 
+#include <thread>
 
 void IsHistEqual(const TH1F &a, const TH1F &b)
 {
@@ -123,4 +124,25 @@ TEST(TThreadedObject, SnapshotMerge)
    IsHistEqual(*hsum1, m0);
    IsHistEqual(*hsum1, *hsum0);
    EXPECT_TRUE(hsum1 != hsum0);
+}
+
+TEST(TThreadedObject, GrowSlots)
+{
+   // create a TThreadedObject with 3 slots...
+   ROOT::TThreadedObject<int> tto(ROOT::TNumSlots{3}, 42);
+
+   // and then use it from 4 threads
+   auto task = [&tto] { *tto.Get() = 1; };
+   std::vector<std::thread> threads;
+   for (int i = 0; i < 4; ++i)
+      threads.emplace_back(task);
+   for (auto &t : threads)
+      t.join();
+
+   auto sum_ints = [](std::shared_ptr<int> first, std::vector<std::shared_ptr<int>> &all) {
+      for (auto &e : all)
+         if (e != first)
+            *first += *e;
+   };
+   EXPECT_EQ(*tto.Merge(sum_ints), 4);
 }
