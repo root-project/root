@@ -50,6 +50,15 @@ or RooStringVar objects, thus data can be binned in real and/or discrete dimensi
 #include "RooTrace.h"
 #include "RooTreeData.h"
 #include "RooHelpers.h"
+#include "RooFormulaVar.h"
+#include "RooFormula.h"
+#include "RooUniformBinning.h"
+
+#include "TH1.h"
+#include "TTree.h"
+#include "TDirectory.h"
+#include "TMath.h"
+#include "Math/Util.h"
 
 using namespace std ;
 

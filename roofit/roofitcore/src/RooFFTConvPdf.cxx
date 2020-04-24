@@ -130,6 +130,7 @@
 #include "RooConstVar.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include "RooUniformBinning.h"
 
 using namespace std ;
 
