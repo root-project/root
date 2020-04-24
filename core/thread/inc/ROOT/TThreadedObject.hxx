@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <deque>
 #include <functional>
 #include <map>
 #include <memory>
@@ -44,17 +45,12 @@ namespace ROOT {
       friend bool operator!=(TNumSlots lhs, TNumSlots rhs) { return lhs.fVal != rhs.fVal; }
    };
 
-   static constexpr const TNumSlots kIMTPoolSize{-1}; // Whatever the IMT pool size is.
+   static constexpr const TNumSlots kIMTPoolSize{-1}; // Whatever ROOT's thread-pool size is.
 
    namespace Internal {
 
       namespace TThreadedObjectUtils {
 
-         /// Get the unique index identifying a TThreadedObject.
-         inline unsigned GetTThreadedObjectIndex() {
-            static unsigned fgTThreadedObjectIndex = 0;
-            return fgTThreadedObjectIndex++;
-         }
 
          template<typename T, bool ISHISTO = std::is_base_of<TH1,T>::value>
          struct Detacher{
@@ -101,34 +97,27 @@ namespace ROOT {
             }
          };
 
-         template<class T, bool ISHISTO = std::is_base_of<TH1,T>::value>
-         struct DirCreator{
-            static std::vector<TDirectory*> Create(unsigned maxSlots) {
-               std::string dirName = "__TThreaded_dir_";
-               dirName += std::to_string(ROOT::Internal::TThreadedObjectUtils::GetTThreadedObjectIndex()) + "_";
-               std::vector<TDirectory*> dirs;
-               dirs.reserve(maxSlots);
-               for (unsigned i=0; i< maxSlots;++i) {
-                  auto dir = gROOT->mkdir((dirName+std::to_string(i)).c_str());
-                  dirs.emplace_back(dir);
-               }
-               return dirs;
+         template <class T, bool ISHISTO = std::is_base_of<TH1, T>::value>
+         struct DirCreator {
+            static TDirectory *Create()
+            {
+               static unsigned dirCounter = 0;
+               const std::string dirName = "__TThreaded_dir_" + std::to_string(dirCounter++) + "_";
+               return gROOT->mkdir(dirName.c_str());
             }
          };
 
-         template<class T>
-         struct DirCreator<T, true>{
-            static std::vector<TDirectory*> Create(unsigned maxSlots) {
-               std::vector<TDirectory*> dirs(maxSlots, nullptr);
-               return dirs;
-            }
+         template <class T>
+         struct DirCreator<T, true> {
+            static TDirectory *Create() { return nullptr; }
          };
 
          struct MaxSlots_t {
             unsigned fVal;
             operator unsigned() const { return fVal; }
             MaxSlots_t &operator=(unsigned val)
-               R__DEPRECATED(6, 24, "Superior interface exists: construct TThreadedObject using TNumSlots instead.")
+               R__DEPRECATED(6, 24,
+                             "TThreadedObject now adds new slots as needed, on demand, possibly beyond fgMaxSlots")
             {
                fVal = val;
                return *this;
@@ -142,6 +131,7 @@ namespace ROOT {
 
       template<class T>
       using MergeFunctionType = std::function<void(std::shared_ptr<T>, std::vector<std::shared_ptr<T>>&)>;
+
       /// Merge TObjects
       template<class T>
       void MergeTObjects(std::shared_ptr<T> target, std::vector<std::shared_ptr<T>> &objs)
@@ -174,73 +164,98 @@ namespace ROOT {
    template<class T>
    class TThreadedObject {
    public:
-      /// The maximum number of processing slots (distinct threads) which the instances can manage.
-      /// Deprecated; please use the `TNumSlots` constructor instead.
+      /// The initial number of empty processing slots that a TThreadedObject is constructed with by default.
+      /// Deprecated: TThreadedObject grows as more slots are required.
       static Internal::TThreadedObjectUtils::MaxSlots_t fgMaxSlots;
 
       TThreadedObject(const TThreadedObject&) = delete;
 
-      /// Construct the TThreaded object and the "model" of the thread private
-      /// objects. This is the preferred constructor.
-      /// \param nslotsTag - set the number of slots (traditionally one per thread) of the
-      ///   TThreadedObject: each slot will hold one `T`. If `kIMTPoolSize` is passed, the
-      ///   number of slots is defined by ROOT's implicit MT pool size; IMT must be enabled.
+      /// Construct the TThreadedObject with initSlots empty slots and the "model" of the thread private objects.
+      /// \param initSlots Set the initial number of slots of the TThreadedObject. If `kIMTPoolSize` is passed, the
+      ///                  number of slots is defined by ROOT's thread-pool size.
       /// \tparam ARGS Arguments of the constructor of T
-      template<class ...ARGS>
-      TThreadedObject(TNumSlots nslotsTag, ARGS&&... args) : fIsMerged(false)
+      ///
+      /// This form of the constructor is useful to manually pre-set the content of a given number of slots
+      /// when used in combination with TThreadedObject::SetAtSlot().
+      template <class... ARGS>
+      TThreadedObject(TNumSlots initSlots, ARGS &&... args) : fIsMerged(false)
       {
-         auto nslots = nslotsTag.fVal;
-         if (nslotsTag == kIMTPoolSize) {
-            nslots = ROOT::GetThreadPoolSize();
-            if (nslots == 0) {
-               throw std::logic_error("Must enable IMT before constructing TThreadedObject(kIMT)!");
+         auto nSlots = initSlots.fVal;
+         if (initSlots == kIMTPoolSize) {
+            nSlots = ROOT::GetThreadPoolSize();
+            if (nSlots == 0) {
+               throw std::logic_error(
+                  "No ROOT thread-pool present when constructing TThreadedObject(kIMTPoolSize)!");
             }
          }
+         fObjPointers.resize(nSlots);
 
-         Create(nslots, args...);
+         // create at least one directory (we need it for fModel), plus others as needed by the size of fObjPointers
+         fDirectories.emplace_back(Internal::TThreadedObjectUtils::DirCreator<T>::Create());
+         for (auto i = 1; i < nSlots; ++i)
+            fDirectories.emplace_back(Internal::TThreadedObjectUtils::DirCreator<T>::Create());
+
+         TDirectory::TContext ctxt(fDirectories[0]);
+         fModel.reset(Internal::TThreadedObjectUtils::Detacher<T>::Detach(new T(std::forward<ARGS>(args)...)));
       }
 
-      /// Construct the TThreaded object and the "model" of the thread private
-      /// objects, assuming IMT usage. This constructor is equivalent to `TThreadedObject(kIMTPoolSize,...)`
+      /// Construct the TThreadedObject and the "model" of the thread private objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS&&... args) : fIsMerged(false)
-      {
-         const auto imtPoolSize = ROOT::GetThreadPoolSize();
-         if (!imtPoolSize) {
-            Warning("TThreadedObject()",
-               "Use without IMT is deprecated, either enable IMT first, or use constructor overload taking TNumSlots!");
-         }
-         auto nslots = std::max((unsigned)fgMaxSlots, imtPoolSize);
-         Create(nslots, args...);
-      }
+      TThreadedObject(ARGS&&... args) : TThreadedObject(TNumSlots{int(fgMaxSlots)}, args...) { }
 
-      /// Access a particular processing slot. This method is thread-safe as long as
-      /// concurrent calls request different slots (i.e. pass a different argument).
+      /// Access a particular processing slot.
+      ///
+      /// This method is thread-safe as long as concurrent calls request different slots (i.e. pass a different
+      /// argument) and no thread accesses slot `i` via the arrow operator, so mixing usage of GetAtSlot
+      /// with usage of the arrow operator can be dangerous.
       std::shared_ptr<T> GetAtSlot(unsigned i)
       {
-         if ( i >= fObjPointers.size()) {
-            Warning("TThreadedObject::GetAtSlot", "Maximum number of slots reached.");
+         std::size_t nAvailableSlots;
+         {
+            // fObjPointers can grow due to a concurrent operation on this TThreadedObject, need to lock
+            std::lock_guard<ROOT::TSpinMutex> lg(fSpinMutex);
+            nAvailableSlots = fObjPointers.size();
+         }
+
+         if (i >= nAvailableSlots) {
+            Warning("TThreadedObject::GetAtSlot", "This slot does not exist.");
             return nullptr;
          }
-         auto objPointer = fObjPointers[i];
-         if (!objPointer) {
+
+         auto &objPointer = fObjPointers[i];
+         if (!objPointer)
             objPointer.reset(Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get(), fDirectories[i]));
-            fObjPointers[i] = objPointer;
-         }
          return objPointer;
       }
 
       /// Set the value of a particular slot.
+      ///
+      /// This method is thread-safe as long as concurrent calls access different slots (i.e. pass a different
+      /// argument) and no thread accesses slot `i` via the arrow operator, so mixing usage of SetAtSlot
+      /// with usage of the arrow operator can be dangerous.
       void SetAtSlot(unsigned i, std::shared_ptr<T> v)
       {
+         std::size_t nAvailableSlots;
+         {
+            // fObjPointers can grow due to a concurrent operation on this TThreadedObject, need to lock
+            std::lock_guard<ROOT::TSpinMutex> lg(fSpinMutex);
+            nAvailableSlots = fObjPointers.size();
+         }
+
+         if (i >= nAvailableSlots) {
+            Warning("TThreadedObject::SetAtSlot", "This slot does not exist, doing nothing.");
+            return;
+         }
+
          fObjPointers[i] = v;
       }
 
       /// Access a particular slot which corresponds to a single thread.
       /// This is in general faster than the GetAtSlot method but it is
-      /// responsibility of the caller to make sure that an object is
-      /// initialised for the particular slot.
+      /// responsibility of the caller to make sure that the slot exists
+      /// and to check that the contained object is initialized (and not
+      /// a nullptr).
       std::shared_ptr<T> GetAtSlotUnchecked(unsigned i) const
       {
          return fObjPointers[i];
@@ -248,9 +263,10 @@ namespace ROOT {
 
       /// Access a particular slot which corresponds to a single thread.
       /// This overload is faster than the GetAtSlotUnchecked method but
-      /// the caller is responsible to make sure that an object is
-      /// initialised for the particular slot and that the returned pointer
-      /// will not outlive the TThreadedObject that returned it.
+      /// the caller is responsible to make sure that the slot exists, to
+      /// check that the contained object is initialized and that the returned
+      /// pointer will not outlive the TThreadedObject that returned it, which
+      /// maintains ownership of the actual object.
       T* GetAtSlotRaw(unsigned i) const
       {
          return fObjPointers[i].get();
@@ -292,7 +308,9 @@ namespace ROOT {
             Warning("TThreadedObject::Merge", "This object was already merged. Returning the previous result.");
             return fObjPointers[0];
          }
-         mergeFunction(fObjPointers[0], fObjPointers);
+         // need to convert to std::vector because historically mergeFunction requires a vector
+         auto vecOfObjPtrs = std::vector<std::shared_ptr<T>>(fObjPointers.begin(), fObjPointers.end());
+         mergeFunction(fObjPointers[0], vecOfObjPtrs);
          fIsMerged = true;
          return fObjPointers[0];
       }
@@ -309,41 +327,39 @@ namespace ROOT {
          }
          auto targetPtr = Internal::TThreadedObjectUtils::Cloner<T>::Clone(fModel.get());
          std::shared_ptr<T> targetPtrShared(targetPtr, [](T *) {});
-         mergeFunction(targetPtrShared, fObjPointers);
+         // need to convert to std::vector because historically mergeFunction requires a vector
+         auto vecOfObjPtrs = std::vector<std::shared_ptr<T>>(fObjPointers.begin(), fObjPointers.end());
+         mergeFunction(targetPtrShared, vecOfObjPtrs);
          return std::unique_ptr<T>(targetPtr);
       }
 
    private:
       std::unique_ptr<T> fModel;                         ///< Use to store a "model" of the object
-      std::vector<std::shared_ptr<T>> fObjPointers;      ///< A pointer per thread is kept.
-      std::vector<TDirectory*> fDirectories;             ///< A TDirectory per thread is kept.
+      // std::deque's guarantee that references to the elements are not invalidated when appending new slots
+      std::deque<std::shared_ptr<T>> fObjPointers;       ///< An object pointer per slot
+      // If the object is a histogram, we also create dummy directories that the histogram associates with
+      // so we do not pollute gDirectory
+      std::deque<TDirectory*> fDirectories;              ///< A TDirectory per slot
       std::map<std::thread::id, unsigned> fThrIDSlotMap; ///< A mapping between the thread IDs and the slots
-      unsigned fCurrMaxSlotIndex = 0;                    ///< The maximum slot index
-      ROOT::TSpinMutex fThrIDSlotMutex;                  ///< Mutex to protect the ID-slot map access
+      ROOT::TSpinMutex fSpinMutex;                       ///< Protects concurrent access to fThrIDSlotMap, fObjPointers
       bool fIsMerged : 1;                                ///< Remember if the objects have been merged already
 
-      /// Get the slot number for this threadID.
+      /// Get the slot number for this threadID, make a slot if needed
       unsigned GetThisSlotNumber()
       {
          const auto thisThreadID = std::this_thread::get_id();
-         unsigned thisIndex;
-         {
-            std::lock_guard<ROOT::TSpinMutex> lg(fThrIDSlotMutex);
-            auto thisSlotNumIt = fThrIDSlotMap.find(thisThreadID);
-            if (thisSlotNumIt != fThrIDSlotMap.end()) return thisSlotNumIt->second;
-            thisIndex = fCurrMaxSlotIndex++;
-            fThrIDSlotMap[thisThreadID] = thisIndex;
+         std::lock_guard<ROOT::TSpinMutex> lg(fSpinMutex);
+         const auto thisSlotNumIt = fThrIDSlotMap.find(thisThreadID);
+         if (thisSlotNumIt != fThrIDSlotMap.end())
+            return thisSlotNumIt->second;
+         const auto newIndex = fThrIDSlotMap.size();
+         fThrIDSlotMap[thisThreadID] = newIndex;
+         R__ASSERT(newIndex <= fObjPointers.size() && "This should never happen, we should create new slots as needed");
+         if (newIndex == fObjPointers.size()) {
+            fDirectories.emplace_back(Internal::TThreadedObjectUtils::DirCreator<T>::Create());
+            fObjPointers.emplace_back(nullptr);
          }
-         return thisIndex;
-      }
-
-      template<class ...ARGS>
-      void Create(int nslots, ARGS&&... args) {
-         fObjPointers = std::vector<std::shared_ptr<T>>(nslots, nullptr);
-         fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(nslots);
-
-         TDirectory::TContext ctxt(fDirectories[0]);
-         fModel.reset(Internal::TThreadedObjectUtils::Detacher<T>::Detach(new T(std::forward<ARGS>(args)...)));
+         return newIndex;
       }
    };
 
