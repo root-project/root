@@ -26,6 +26,7 @@
 #include <atomic>
 #include <cstddef>
 #include <memory>
+#include <stack>
 #include <unordered_set>
 
 namespace ROOT {
@@ -67,11 +68,17 @@ public:
    RPageStorage& operator =(const RPageStorage &other) = delete;
    virtual ~RPageStorage();
 
+   /// Whether the concrete implementation is a sink or a source
+   virtual EPageStorageType GetType() = 0;
+
    struct RColumnHandle {
-      RColumnHandle() : fId(-1), fColumn(nullptr) {}
+      int fId = -1;
+      const RColumn *fColumn = nullptr;
+
+      RColumnHandle() = default;
       RColumnHandle(int id, const RColumn *column) : fId(id), fColumn(column) {}
-      int fId;
-      const RColumn *fColumn;
+      /// Returns true for a valid column handle
+      operator bool() const { return fId >= 0; }
    };
    /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
@@ -79,8 +86,9 @@ public:
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
    virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) = 0;
-   /// Whether the concrete implementation is a sink or a source
-   virtual EPageStorageType GetType() = 0;
+   /// Unregisteres a column.  A page source decreases the reference counter for the corresponding active column.
+   /// For a page sink, dropping columns is currently a no-op.
+   virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
 
    /// Every page store needs to be able to free pages it handed out.  But Sinks and sources have different means
    /// of allocating pages.
@@ -131,6 +139,7 @@ public:
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// To do so, Create() calls CreateImpl() after updating the descriptor.
@@ -159,15 +168,33 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+public:
+   /// Derived from the model (fields) that are actually being requested at a given point in time
+   using ColumnSet_t = std::unordered_set<DescriptorId_t>;
+
 protected:
    RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
-   /// The columns which we expect to be read, i.e. for which AddColumn() has been called
-   std::unordered_set<DescriptorId_t> fActiveColumns;
+   /// During the life time of the pages storage, different active column sets can overlap
+   std::stack<ColumnSet_t> fActiveColumns;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
 
 public:
+   /// An RAII wrapper around the set of active columns of a page source. Used, e.g., by RNTupleReader::Show()
+   /// in order to temporarily activate all columns
+   class RColumnGuard {
+   private:
+      RPageSource *fPageSource;
+   public:
+      explicit RColumnGuard(RPageSource *pageSource) : fPageSource(pageSource) { fPageSource->StashColumns(); }
+      RColumnGuard(const RColumnGuard&) = delete;
+      RColumnGuard(RColumnGuard&&) = default;
+      RColumnGuard& operator=(const RColumnGuard&) = delete;
+      RColumnGuard& operator=(RColumnGuard&&) = default;
+      ~RColumnGuard() { fPageSource->PopColumns(); }
+   };
+
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
    virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
@@ -179,6 +206,14 @@ public:
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+   void DropColumn(ColumnHandle_t columnHandle) final;
+
+   /// During the life time of a column reader, we may have different periods with different
+   /// sets of active columns.  For instance, RNTupleReader::Show() will temporarily connect all columns.
+   void StashColumns();
+   /// Swap in a previously stashed set of columns and replace the current set of active columns
+   void PopColumns();
+   RColumnGuard GetColumnGuard() { return RColumnGuard(this); }
 
    /// Open the physical storage container for the tree
    void Attach() { fDescriptor = AttachImpl(); }
