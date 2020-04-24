@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
@@ -350,8 +351,6 @@ namespace ROOT {
    template<class T> Internal::TThreadedObjectUtils::MaxSlots_t TThreadedObject<T>::fgMaxSlots{64};
 
 } // End ROOT namespace
-
-#include <sstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TThreadedObject at the prompt:
