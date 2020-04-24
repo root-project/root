@@ -60,7 +60,7 @@ public:
 
    bool IsBinOutOfRange(int idx) const noexcept
    {
-      // RODO: use fRange!
+      // TODO: use fRange!
       return idx < 0 || idx > fNBins;
    }
 
