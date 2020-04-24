@@ -78,7 +78,7 @@ private:
    std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
 
-   void ConnectModel();
+   void ConnectModel(RNTupleModel *model);
 
 public:
    // Browse through the entries
@@ -138,7 +138,7 @@ public:
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
          fModel = fSource->GetDescriptor().GenerateModel();
-         ConnectModel();
+         ConnectModel(fModel.get());
       }
 
       for (auto& value : *entry) {
