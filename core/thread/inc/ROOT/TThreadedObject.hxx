@@ -40,12 +40,10 @@ namespace ROOT {
     * \brief Defines the number of threads in some of ROOT's interfaces.
     */
    struct TNumSlots {
-      int fVal; // number of slots
+      unsigned int fVal; // number of slots
       friend bool operator==(TNumSlots lhs, TNumSlots rhs) { return lhs.fVal == rhs.fVal; }
       friend bool operator!=(TNumSlots lhs, TNumSlots rhs) { return lhs.fVal != rhs.fVal; }
    };
-
-   static constexpr const TNumSlots kIMTPoolSize{-1}; // Whatever ROOT's thread-pool size is.
 
    namespace Internal {
 
@@ -171,8 +169,7 @@ namespace ROOT {
       TThreadedObject(const TThreadedObject&) = delete;
 
       /// Construct the TThreadedObject with initSlots empty slots and the "model" of the thread private objects.
-      /// \param initSlots Set the initial number of slots of the TThreadedObject. If `kIMTPoolSize` is passed, the
-      ///                  number of slots is defined by ROOT's thread-pool size.
+      /// \param initSlots Set the initial number of slots of the TThreadedObject.
       /// \tparam ARGS Arguments of the constructor of T
       ///
       /// This form of the constructor is useful to manually pre-set the content of a given number of slots
@@ -180,19 +177,12 @@ namespace ROOT {
       template <class... ARGS>
       TThreadedObject(TNumSlots initSlots, ARGS &&... args) : fIsMerged(false)
       {
-         auto nSlots = initSlots.fVal;
-         if (initSlots == kIMTPoolSize) {
-            nSlots = ROOT::GetThreadPoolSize();
-            if (nSlots == 0) {
-               throw std::logic_error(
-                  "No ROOT thread-pool present when constructing TThreadedObject(kIMTPoolSize)!");
-            }
-         }
+         const auto nSlots = initSlots.fVal;
          fObjPointers.resize(nSlots);
 
          // create at least one directory (we need it for fModel), plus others as needed by the size of fObjPointers
          fDirectories.emplace_back(Internal::TThreadedObjectUtils::DirCreator<T>::Create());
-         for (auto i = 1; i < nSlots; ++i)
+         for (auto i = 1u; i < nSlots; ++i)
             fDirectories.emplace_back(Internal::TThreadedObjectUtils::DirCreator<T>::Create());
 
          TDirectory::TContext ctxt(fDirectories[0]);
@@ -202,7 +192,7 @@ namespace ROOT {
       /// Construct the TThreadedObject and the "model" of the thread private objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS&&... args) : TThreadedObject(TNumSlots{int(fgMaxSlots)}, args...) { }
+      TThreadedObject(ARGS&&... args) : TThreadedObject(TNumSlots{fgMaxSlots}, args...) { }
 
       /// Access a particular processing slot.
       ///

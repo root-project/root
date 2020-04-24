@@ -91,8 +91,9 @@ private:
    const Internal::FriendInfo fFriendInfo;
    ROOT::TThreadExecutor fPool; ///<! Thread pool for processing.
 
+   /// Thread-local TreeViews
    // Must be declared after fPool, for IMT to be initialized first!
-   ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{ROOT::kIMTPoolSize}; ///<! Thread-local TreeViews
+   ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{TNumSlots{ROOT::GetThreadPoolSize()}};
 
    Internal::FriendInfo GetFriendInfo(TTree &tree);
    std::vector<std::string> FindTreeNames();
