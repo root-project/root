@@ -194,6 +194,7 @@ class ROOTFacade(types.ModuleType):
     def _run_rootlogon(self):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, 'argv')
+        # -n disables the reading of the logon file, just like with root
         if hasargv and not '-n' in sys.argv and not self.PyConfig.DisableRootLogon:
             file_path = os.path.expanduser('~/.rootlogon.py')
             if os.path.exists(file_path):
