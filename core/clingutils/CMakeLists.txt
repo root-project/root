@@ -60,7 +60,6 @@ set(stldicts
 if(NOT WIN32)
   list(APPEND stldicts valarray)
 endif()
-include_directories(${CMAKE_BINARY_DIR}/etc/cling/cint)
 foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
@@ -71,6 +70,7 @@ foreach(dict ${stldicts})
                                 NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
                                 DEPENDENCIES Core)
+  target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint)
 endforeach()
 
 set(CLANG_RESOURCE_DIR_STEM)
