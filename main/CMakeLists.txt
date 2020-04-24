@@ -35,7 +35,7 @@ ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
   ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py
-  ${CMAKE_BINARY_DIR}/include/haddCommandLineOptionsHelp.h
+  ${CMAKE_BINARY_DIR}/ginclude/haddCommandLineOptionsHelp.h
 )
 
 if(fortran AND CMAKE_Fortran_COMPILER)
