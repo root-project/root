@@ -48,6 +48,7 @@ points for its contents and provides an iterator over its elements
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
 #include "RooTrace.h"
+#include "RooUniformBinning.h"
 
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"

@@ -19,7 +19,8 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a variable that can be changed by e.g. the fitter.
+RooRealVar represents a variable that can be changed from the outside.
+For example by the user or a fitter.
 
 It can be written into datasets, can hold a (possibly asymmetric) error, and
 can have several ranges. These can be accessed with names, to e.g. limit fits
@@ -37,6 +38,7 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "RooVectorDataStore.h"
 #include "RooTrace.h"
 #include "RooRealVarSharedProperties.h"
+#include "RooUniformBinning.h"
 
 #include "TTree.h"
 
@@ -360,10 +362,28 @@ std::list<std::string> RooRealVar::getBinningNames() const
   return binningNames;
 }
 
+void RooRealVar::removeMin(const char* name) {
+  getBinning(name).setMin(-RooNumber::infinity());
+}
+void RooRealVar::removeMax(const char* name) {
+  getBinning(name).setMax(RooNumber::infinity());
+}
+void RooRealVar::removeRange(const char* name) {
+  getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity());
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a uniform binning under name 'name' for this variable.
+/// \param[in] nBins Number of bins. The limits are taken from the currently set limits.
+/// \param[in] name Optional name. If name is null, install as default binning.
+void RooRealVar::setBins(Int_t nBins, const char* name) {
+  setBinning(RooUniformBinning(getMin(name),getMax(name),nBins),name);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Add given binning under name 'name' with this variable. If name is null
 /// the binning is installed as the default binning
-
 void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
 {
   // Process insert hooks required for parameterized binnings
