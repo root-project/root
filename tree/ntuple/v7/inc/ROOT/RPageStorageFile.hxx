@@ -131,7 +131,9 @@ private:
    /// Wraps the I/O counters
    RNTupleMetrics fMetrics;
    RNTupleAtomicCounter *fCtrNReadV = nullptr;
-   RNTupleAtomicCounter *fCtrSzRead = nullptr;
+   RNTupleAtomicCounter *fCtrNRead = nullptr;
+   RNTupleAtomicCounter *fCtrSzReadPayload = nullptr;
+   RNTupleAtomicCounter *fCtrSzReadOverhead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
    RNTuplePlainCounter *fCtrNPage = nullptr;
    RNTupleAtomicCounter *fCtrTimeWallRead = nullptr;
