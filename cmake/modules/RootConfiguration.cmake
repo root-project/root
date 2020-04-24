@@ -814,8 +814,8 @@ if (XROOTD_FOUND AND XROOTD_NOMAIN)
                  DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
-              ${CMAKE_BINARY_DIR}/include/compiledata.h
+install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigOptions.h
+              ${CMAKE_BINARY_DIR}/ginclude/compiledata.h
               DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
