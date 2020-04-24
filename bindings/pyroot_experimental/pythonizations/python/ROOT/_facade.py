@@ -195,12 +195,20 @@ class ROOTFacade(types.ModuleType):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, 'argv')
         if hasargv and not '-n' in sys.argv and not self.PyConfig.DisableRootLogon:
-            rootlogon = os.path.expanduser('~/.rootlogon.py')
-            if os.path.exists(rootlogon):
+            file_path = os.path.expanduser('~/.rootlogon.py')
+            if os.path.exists(file_path):
                 # Could also have used execfile, but import is likely to give fewer surprises
-                import imp
-                imp.load_module('rootlogon', open(rootlogon, 'r'), rootlogon, ('.py','r',1))
-                del imp
+                module_name = 'rootlogon'
+                if sys.version_info >= (3,5):
+                    import importlib.util
+                    spec = importlib.util.spec_from_file_location(module_name, file_path)
+                    module = importlib.util.module_from_spec(spec)
+                    sys.modules[module_name] = module
+                    spec.loader.exec_module(module)
+                else:
+                    import imp
+                    imp.load_module(module_name, open(file_path, 'r'), file_path, ('.py','r',1))
+                    del imp
             else:
                 # If the .py version of rootlogon exists, the .C is ignored (the user can
                 # load the .C from the .py, if so desired).
