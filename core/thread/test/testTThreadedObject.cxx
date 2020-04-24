@@ -4,7 +4,6 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT;
 
 void IsHistEqual(const TH1F &a, const TH1F &b)
 {
