@@ -1168,12 +1168,12 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       if (fMinimum != -1111) {
          hzmin = fMinimum;
       } else {
-         hzmin = GetZmin();
+         hzmin = GetZminE();
       }
       if (fMaximum != -1111) {
          hzmax = fMaximum;
       } else {
-         hzmax = GetZmax();
+         hzmax = GetZmaxE();
       }
       if (hzmin == hzmax) {
          Double_t hz = hzmin;
