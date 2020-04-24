@@ -110,6 +110,6 @@ void ntpl005_introspection() {
    }
    h2.DrawCopy();
 
-   // Display the I/O operations performed by RNTuple
+   // Display the I/O operation statistics performed by the RNTuple reader
    ntuple->PrintInfo(ENTupleInfo::kMetrics);
 }

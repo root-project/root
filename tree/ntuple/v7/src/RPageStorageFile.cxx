@@ -302,9 +302,10 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
    } else {
-      auto cluster = fClusterPool->GetCluster(clusterId);
+      if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId))
+         fCurrentCluster = fClusterPool->GetCluster(clusterId);
       ROnDiskPage::Key key(columnId, pageNo);
-      auto onDiskPage = cluster->GetOnDiskPage(key);
+      auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage);
       R__ASSERT(bytesOnStorage == onDiskPage->GetSize());
       memcpy(pageBuffer, onDiskPage->GetAddress(), onDiskPage->GetSize());

@@ -34,6 +34,15 @@ namespace Detail {
 
 class RPageSource;
 
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RClusterPool
+\ingroup NTuple
+\brief Managed a set of clusters containing compressed and packed pages
+
+The cluster pool steers the preloading of (partial) clusters.
+*/
+// clang-format on
 class RClusterPool {
 private:
    /// Maximum number of queued cluster requests for the I/O thread. A single request can span mutliple clusters.
