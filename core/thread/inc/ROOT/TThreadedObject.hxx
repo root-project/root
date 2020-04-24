@@ -163,7 +163,7 @@ namespace ROOT {
     * \ingroup Multicore
     *
     * A wrapper which makes objects thread private. The methods of the underlying
-    * object can be invoked via the the arrow operator. The object is created in
+    * object can be invoked via the arrow operator. The object is created in
     * a specific thread lazily, i.e. upon invocation of one of its methods.
     * The correct object pointer from within a particular thread can be accessed
     * with the overloaded arrow operator or with the Get method.
@@ -215,9 +215,8 @@ namespace ROOT {
          Create(nslots, args...);
       }
 
-      /// Access a particular processing slot. This
-      /// method is *thread-unsafe*: it cannot be invoked from two different
-      /// threads with the same argument.
+      /// Access a particular processing slot. This method is thread-safe as long as
+      /// concurrent calls request different slots (i.e. pass a different argument).
       std::shared_ptr<T> GetAtSlot(unsigned i)
       {
          if ( i >= fObjPointers.size()) {
