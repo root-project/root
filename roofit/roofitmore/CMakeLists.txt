@@ -19,6 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     RooAdaptiveGaussKronrodIntegrator1D.h
     RooGaussKronrodIntegrator1D.h
     RooLegendre.h
+    RooMathMoreReg.h
     RooSpHarmonic.h
     RooNonCentralChiSquare.h
     RooHypatia2.h
@@ -27,6 +28,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     src/RooAdaptiveGaussKronrodIntegrator1D.cxx
     src/RooGaussKronrodIntegrator1D.cxx
     src/RooLegendre.cxx
+    src/RooMathMoreReg.cxx
     src/RooSpHarmonic.cxx
     src/RooNonCentralChiSquare.cxx
     src/RooHypatia2.cxx
