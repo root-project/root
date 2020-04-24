@@ -337,7 +337,15 @@ endif
 ObjSuf   = o
 
 ifeq ($(PYTHON),)
-   export PYTHON := python
+   ifneq (, $(shell command -v python 2>/dev/null))
+      export PYTHON := python
+   else ifneq (, $(shell command -v python3 2>/dev/null 2>&1))
+      export PYTHON := python3
+   else ifneq (, $(shell command -v python2 2>/dev/null 2>&1))
+      export PYTHON := python2
+   else
+      $(error "Cannot find python, python3, nor python2!")
+   endif
 endif
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON := $(shell root-config --has-python)
