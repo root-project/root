@@ -40,6 +40,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     ${ROOT_MATHMORE_LIBRARY}
     Core
     RooFitCore
+    RooFit
     Hist
     Matrix
     Tree
