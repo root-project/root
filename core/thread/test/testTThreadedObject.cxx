@@ -6,7 +6,7 @@
 
 using namespace ROOT;
 
-void IsSameHist(const TH1F &a, const TH1F &b)
+void IsHistEqual(const TH1F &a, const TH1F &b)
 {
    EXPECT_STREQ(a.GetName(), b.GetName()) << "The names of the histograms differ: " << a.GetName() << " " << b.GetName()
                                           << std::endl;
@@ -43,7 +43,7 @@ TEST(TThreadedObject, Get)
    TH1F model("h", "h", 64, -4, 4);
    ROOT::TThreadedObject<TH1F> tto("h", "h", 64, -4, 4);
    auto h = tto.Get();
-   IsSameHist(model, *h);
+   IsHistEqual(model, *h);
 }
 
 TEST(TThreadedObject, GetAtSlot)
@@ -51,7 +51,7 @@ TEST(TThreadedObject, GetAtSlot)
    TH1F model("h", "h", 64, -4, 4);
    ROOT::TThreadedObject<TH1F> tto("h", "h", 64, -4, 4);
    auto h = tto.GetAtSlot(0);
-   IsSameHist(model, *h);
+   IsHistEqual(model, *h);
 }
 
 TEST(TThreadedObject, GetAtSlotUnchecked)
@@ -60,7 +60,7 @@ TEST(TThreadedObject, GetAtSlotUnchecked)
    ROOT::TThreadedObject<TH1F> tto("h", "h", 64, -4, 4);
    tto->SetName("h");
    auto h = tto.GetAtSlot(0);
-   IsSameHist(model, *h);
+   IsHistEqual(model, *h);
 }
 
 TEST(TThreadedObject, GetAtSlotRaw)
@@ -69,7 +69,7 @@ TEST(TThreadedObject, GetAtSlotRaw)
    ROOT::TThreadedObject<TH1F> tto("h", "h", 64, -4, 4);
    tto->SetName("h");
    auto h = tto.GetAtSlotRaw(0);
-   IsSameHist(model, *h);
+   IsHistEqual(model, *h);
 }
 
 TEST(TThreadedObject, SetAtSlot)
@@ -78,7 +78,7 @@ TEST(TThreadedObject, SetAtSlot)
    tto.SetAtSlot(1, std::make_shared<TH1F>("h", "h", 64, -4, 4));
    auto h0 = tto.GetAtSlot(0);
    auto h1 = tto.GetAtSlot(1);
-   IsSameHist(*h0, *h1);
+   IsHistEqual(*h0, *h1);
 }
 
 TEST(TThreadedObject, Merge)
@@ -99,7 +99,7 @@ TEST(TThreadedObject, Merge)
    tto->FillRandom("gaus");
    tto.GetAtSlot(1)->FillRandom("gaus");
    auto hsum = tto.Merge();
-   IsSameHist(*hsum, m0);
+   IsHistEqual(*hsum, m0);
 }
 
 TEST(TThreadedObject, SnapshotMerge)
@@ -120,9 +120,9 @@ TEST(TThreadedObject, SnapshotMerge)
    tto->FillRandom("gaus", 100);
    tto.GetAtSlot(1)->FillRandom("gaus", 100);
    auto hsum0 = tto.SnapshotMerge();
-   IsSameHist(*hsum0, m0);
+   IsHistEqual(*hsum0, m0);
    auto hsum1 = tto.SnapshotMerge();
-   IsSameHist(*hsum1, m0);
-   IsSameHist(*hsum1, *hsum0);
+   IsHistEqual(*hsum1, m0);
+   IsHistEqual(*hsum1, *hsum0);
    EXPECT_TRUE(hsum1 != hsum0);
 }
