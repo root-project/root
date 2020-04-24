@@ -531,8 +531,8 @@ void TGraph2DPainter::Paint(Option_t *option)
    fYmin = yaxis->GetBinLowEdge(first);
    if (Hoption.Logy && fYmin <= 0) fYmin = yaxis->GetBinUpEdge(yaxis->FindFixBin(0.01*yaxis->GetBinWidth(first)));
    fYmax = yaxis->GetBinUpEdge(yaxis->GetLast());
-   fZmax = fGraph2D->GetZmax();
-   fZmin = fGraph2D->GetZmin();
+   fZmax = fGraph2D->GetZmaxE();
+   fZmin = fGraph2D->GetZminE();
    if (Hoption.Logz && fZmin <= 0) fZmin = TMath::Min((Double_t)1, (Double_t)0.001*fGraph2D->GetZmax());
 
    if (triangles) PaintTriangles(option);
