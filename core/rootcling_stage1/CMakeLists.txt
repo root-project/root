@@ -37,5 +37,11 @@ ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:Foundation_Stage1>
                               LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                               NOINSTALL)
+
+target_include_directories(rootcling_stage1 PRIVATE
+   ${CMAKE_SOURCE_DIR}/core/base/inc    # for RConfig.hxx
+   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h
+)
+
 set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
 add_dependencies(rootcling_stage1 ClingUtils)
