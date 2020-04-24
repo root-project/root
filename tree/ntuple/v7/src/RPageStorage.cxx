@@ -51,6 +51,7 @@ ROOT::Experimental::Detail::RNTupleMetrics &ROOT::Experimental::Detail::RPageSto
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
    : RPageStorage(name), fOptions(options)
 {
+   fActiveColumns.emplace(ColumnSet_t());
 }
 
 ROOT::Experimental::Detail::RPageSource::~RPageSource()
@@ -69,8 +70,32 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
    R__ASSERT(fieldId != kInvalidDescriptorId);
    auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
    R__ASSERT(columnId != kInvalidDescriptorId);
-   fActiveColumns.emplace(columnId);
+   auto activeColumns = fActiveColumns.top();
+   fActiveColumns.pop();
+   activeColumns.emplace(columnId);
+   fActiveColumns.emplace(activeColumns);
    return ColumnHandle_t(columnId, &column);
+}
+
+void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
+{
+   auto activeColumns = fActiveColumns.top();
+   fActiveColumns.pop();
+   activeColumns.erase(columnHandle.fId);
+   fActiveColumns.emplace(activeColumns);
+}
+
+void ROOT::Experimental::Detail::RPageSource::StashColumns()
+{
+   fActiveColumns.emplace(ColumnSet_t());
+}
+
+void ROOT::Experimental::Detail::RPageSource::PopColumns()
+{
+   R__ASSERT(!fActiveColumns.empty());
+   fActiveColumns.pop();
+   if (fActiveColumns.empty())
+      fActiveColumns.emplace(ColumnSet_t());
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
