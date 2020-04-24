@@ -24,7 +24,7 @@
 #include "TFile.h"  // for loading the workspace file
 #include <stdio.h>  // remove redundant workspace files
 
-#include <RooGradMinimizer.h>
+#include <RooGradMinimizerFcn.h>
 
 #include "gtest/gtest.h"
 #include "test_lib.h"
@@ -77,7 +77,7 @@ TEST(GradMinimizer, Gaussian1D) {
 
     *values = *savedValues;
 
-    RooGradMinimizer m1(*nll);
+    RooMinimizer<RooGradMinimizerFcn> m1(*nll);
     m1.setMinimizerType("Minuit2");
 
     m1.setStrategy(0);
@@ -136,7 +136,7 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer) {
   // when c++17 support arrives, change to this:
 //  auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
-  RooGradMinimizer m1(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
   m1.setMinimizerType("Minuit2");
 
   m1.setStrategy(0);
@@ -226,7 +226,7 @@ TEST(GradMinimizer, Gaussian2DVarToConst) {
   values = *savedValues;
   mu1->setConstant(kFALSE);
 
-  RooGradMinimizer m1(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
   m1.setMinimizerType("Minuit2");
 
   m1.setStrategy(0);
@@ -339,7 +339,7 @@ TEST(GradMinimizer, Gaussian2DConstToVar) {
   values = *savedValues;
   mu1->setConstant(kTRUE);
 
-  RooGradMinimizer m1(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
   m1.setMinimizerType("Minuit2");
 
   m1.setStrategy(0);
@@ -374,7 +374,7 @@ TEST(GradMinimizer, Gaussian2DConstToVar) {
 */
 
 TEST(GradMinimizer, GaussianND) {
-  // test RooGradMinimizer class with simple N-dimensional pdf
+  // test RooMinimizer<RooGradMinimizerFcn> class with simple N-dimensional pdf
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
@@ -437,7 +437,7 @@ TEST(GradMinimizer, GaussianND) {
 
   // --------
 
-  RooGradMinimizer m1(*(nll.get()));
+  RooMinimizer<RooGradMinimizerFcn> m1(*(nll.get()));
 
   m1.setStrategy(0);
   m1.setPrintLevel(-1);
@@ -475,7 +475,7 @@ TEST(GradMinimizer, GaussianND) {
 
 
 TEST(GradMinimizerReverse, GaussianND) {
-  // test RooGradMinimizer class with simple N-dimensional pdf
+  // test RooMinimizer<RooGradMinimizerFcn> class with simple N-dimensional pdf
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
@@ -504,7 +504,7 @@ TEST(GradMinimizerReverse, GaussianND) {
 
   // --------
 
-  RooGradMinimizer m0(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m0(*nll);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
@@ -578,7 +578,7 @@ TEST(GradMinimizerReverse, GaussianND) {
 
 
 TEST(GradMinimizer, BranchingPDF) {
-  // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
+  // test RooMinimizer<RooGradMinimizerFcn> class with an N-dimensional pdf that forms a tree of
   // pdfs, where one subpdf is the parameter of a higher level pdf
 
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -698,7 +698,7 @@ TEST(GradMinimizer, BranchingPDF) {
 
   // --------
 
-  RooGradMinimizer m1(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
 
   m1.setStrategy(0);
   m1.setPrintLevel(-1);
@@ -751,7 +751,7 @@ TEST(GradMinimizer, BranchingPDF) {
 
 
 TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace) {
-  // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
+  // test RooMinimizer<RooGradMinimizerFcn> class with an N-dimensional pdf that forms a tree of
   // pdfs, where one subpdf is the parameter of a higher level pdf
 
   // This version of the BranchingPDF test loads the random parameters written
@@ -821,7 +821,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace) {
 
   all_values.Print("v");
 
-  RooGradMinimizer m1(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m1(*nll);
   m1.setMinimizerType("Minuit2");
 
   m1.setStrategy(0);
@@ -895,7 +895,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
   RooDataSet *data = static_cast<RooDataSet *>(w.data(""));
   auto nll = sum.createNLL(*data);
 
-  RooGradMinimizer m0(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m0(*nll);
   m0.setMinimizerType("Minuit2");
   m0.setStrategy(0);
   m0.migrad();

@@ -23,7 +23,7 @@ MinuitFcnGrad::MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientW
    : RooAbsMinimizerFcn(RooArgList(*likelihood->getParameters()), context, verbose),
    likelihood(_likelihood), gradient(_gradient)
 {
-   auto parameters = _context.fitter()->Config().ParamsSettings();
+   auto parameters = _context->fitter()->Config().ParamsSettings();
    synchronize_parameter_settings(parameters);
    likelihood->synchronize_parameter_settings(parameters);
    gradient->synchronize_parameter_settings(parameters);

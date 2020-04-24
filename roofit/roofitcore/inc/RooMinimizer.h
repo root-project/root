@@ -40,12 +40,19 @@
 #include <stdexcept>  // logic_error
 
 
+// forward declarations
 class RooAbsReal ;
 class RooFitResult ;
 class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
 class RooPlot ;
+// this one is necessary due to circular include dependencies
+namespace RooFit {
+namespace TestStatistics {
+class MinuitFcnGrad;
+}
+}
 
 
 class RooMinimizer : public TObject {

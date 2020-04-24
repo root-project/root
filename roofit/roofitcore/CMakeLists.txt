@@ -244,9 +244,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         RooGaussMinimizer.h
         RooGaussMinimizerFcn.h
         NumericalDerivatorMinuit2.h
-        RooGradMinimizer.h
         RooGradMinimizerFcn.h
-        RooGradientFunction.h
         MultiProcess/BidirMMapPipe.h
 #        TestStatistics/GradMinimizer.h
         TestStatistics/LikelihoodGradientJob.h
@@ -488,7 +486,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
         src/RooGaussMinimizerFcn.cxx
         src/NumericalDerivatorMinuit2.cxx
         src/RooGradMinimizerFcn.cxx
-        src/RooGradientFunction.cxx
         src/MultiProcess/BidirMMapPipe.cxx
 #        src/TestStatistics/GradMinimizerFcn.cxx
         src/TestStatistics/LikelihoodGradientJob.cxx

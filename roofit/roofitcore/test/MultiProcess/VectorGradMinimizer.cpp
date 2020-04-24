@@ -18,6 +18,7 @@
 #include <RooWorkspace.h>
 #include <RooTimer.h>
 
+#include <RooGradMinimizerFcn.h>
 
 #include <MultiProcess/GradMinimizer.h>
 
@@ -54,7 +55,7 @@ TEST_P(MPGradMinimizer, Gaussian1D) {
 
   // --------
 
-  RooGradMinimizer m0(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m0(*nll);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
@@ -105,7 +106,7 @@ TEST(MPGradMinimizerDEBUGGING, DISABLED_Gaussian1DNominal) {
   std::unique_ptr<RooArgSet> _;
   std::tie(nll, _) = generate_1D_gaussian_pdf_nll(w, 10000);
 
-  RooGradMinimizer m0(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m0(*nll);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
@@ -218,7 +219,7 @@ TEST_P(MPGradMinimizer, GaussianND) {
 
   // --------
 
-  RooGradMinimizer m0(*nll);
+  RooMinimizer<RooGradMinimizerFcn> m0(*nll);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
