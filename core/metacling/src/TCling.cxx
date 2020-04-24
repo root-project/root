@@ -3874,7 +3874,8 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 
    }
 
-   TClingClassInfo* info = new TClingClassInfo(GetInterpreterImpl(), name.c_str());
+   bool instantiateTemplate = !cl->TestBit(TClass::kUnloading);
+   TClingClassInfo* info = new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
    if (!info->IsValid()) {
       if (cl->fState != TClass::kHasTClassInit) {
          if (cl->fStreamerInfo->GetEntries() != 0) {
