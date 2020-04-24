@@ -23,8 +23,8 @@
 /// \param[in] self Always null, since this is a module function.
 /// \param[in] addr Address to create buffer from
 ///
-/// Returns a cppyy LowLevelView object on the received address, i.e. an
-/// indexable buffer starting at that address.
+/// \return A cppyy LowLevelView object on the received address, i.e. an
+///         indexable buffer starting at that address.
 PyObject *PyROOT::CreateBufferFromAddress(PyObject * /* self */, PyObject *addr)
 {
    if (!addr) {
