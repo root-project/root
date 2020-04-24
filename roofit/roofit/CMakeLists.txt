@@ -9,9 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(mathmore)
-   set(roofit_more MathMore)
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
@@ -50,7 +47,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooLandau.h
     RooLognormal.h
     RooMathCoreReg.h
-    RooMathMoreReg.h
     RooMomentMorphFunc.h
     RooMomentMorphFuncND.h
     RooMomentMorph.h
@@ -110,7 +106,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooLandau.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
-    src/RooMathMoreReg.cxx
     src/RooMomentMorph.cxx
     src/RooMomentMorphFunc.cxx
     src/RooMomentMorphFuncND.cxx
@@ -145,7 +140,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RIO
     Matrix
     MathCore
-    ${roofit_more}
 )
 
 if(vdt AND NOT builtin_vdt)
