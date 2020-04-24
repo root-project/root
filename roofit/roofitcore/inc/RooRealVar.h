@@ -17,8 +17,6 @@
 #define ROO_REAL_VAR
 
 #include "RooAbsRealLValue.h"
-#include "RooUniformBinning.h"
-#include "RooNumber.h"
 
 #include "TString.h"
 
@@ -85,7 +83,7 @@ public:
   inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
   inline void setRange(RooAbsReal& min, RooAbsReal& max) { setRange(0,min,max) ; }
 
-  void setBins(Int_t nBins, const char* name=0) { setBinning(RooUniformBinning(getMin(name),getMax(name),nBins),name) ; } 
+  void setBins(Int_t nBins, const char* name=0);
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
 
   // RooAbsRealLValue implementation
@@ -95,9 +93,12 @@ public:
   std::list<std::string> getBinningNames() const ;
 
   // Set infinite fit range limits
-  inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity()) ; }
-  inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity()) ; }
-  inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity(),RooNumber::infinity()) ; }
+  /// Remove lower range limit for binning with given name. Empty name means default range.
+  void removeMin(const char* name=0);
+  /// Remove upper range limit for binning with given name. Empty name means default range.
+  void removeMax(const char* name=0);
+  /// Remove range limits for binning with given name. Empty name means default range.
+  void removeRange(const char* name=0);
  
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
