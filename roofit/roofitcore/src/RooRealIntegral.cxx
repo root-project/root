@@ -218,13 +218,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
   exclLVBranches.remove(depList,kTRUE,kTRUE) ;
-//    cout << "exclLVBranches = " << exclLVBranches << endl ;
 
   // Initial fill of list of LValue leaf servers (put in intDepList)
   RooArgSet exclLVServers("exclLVServers") ;
   exclLVServers.add(intDepList) ;
-
-//    cout << "begin exclLVServers = " << exclLVServers << endl ;
   
   // Obtain mutual exclusive dependence by iterative reduction
   Bool_t converged(kFALSE) ;
@@ -236,35 +233,36 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     for (auto server : exclLVServers) {
       if (!servesExclusively(server,exclLVBranches,branchListVD)) {
         toBeRemoved.push_back(server);
-        //  	cout << "removing " << server->GetName() << " from exclLVServers because servesExclusively(" << server->GetName() << "," << exclLVBranches << ") faile" << endl ;
         converged=kFALSE ;
       }
-      exclLVServers.remove(toBeRemoved.begin(), toBeRemoved.end());
     }
+    exclLVServers.remove(toBeRemoved.begin(), toBeRemoved.end());
     
-    // Reduce exclLVBranches to only those depending exclusisvely on exclLVservers
-    for (auto branch : exclLVBranches) {
+    // Reduce exclLVBranches to only those depending exclusively on exclLVservers
+    // Attention: counting loop, since erasing from container
+    for (std::size_t i=0; i < exclLVBranches.size(); ++i) {
+      const RooAbsArg* branch = exclLVBranches[i];
       RooArgSet* brDepList = branch->getObservables(&intDepList) ;
       RooArgSet bsList(*brDepList,"bsList") ;
       delete brDepList ;
       bsList.remove(exclLVServers,kTRUE,kTRUE) ;
       if (bsList.getSize()>0) {
-	exclLVBranches.remove(*branch,kTRUE,kTRUE) ;
-// 	cout << "removing " << branch->GetName() << " from exclLVBranches" << endl ;
-	converged=kFALSE ;
+        exclLVBranches.remove(*branch,kTRUE,kTRUE) ;
+        --i;
+        converged=kFALSE ;
       }
     }
   }
 
   // Eliminate exclLVBranches that do not depend on any LVServer
-  for (auto branch : exclLVBranches) {
+  // Attention: Counting loop, since modifying container
+  for (std::size_t i=0; i < exclLVBranches.size(); ++i) {
+    const RooAbsArg* branch = exclLVBranches[i];
     if (!branch->dependsOnValue(exclLVServers)) {
-      //cout << "LV branch " << branch->GetName() << " does not depend on any LVServer (" << exclLVServers << ") and will be removed" << endl ; 
       exclLVBranches.remove(*branch,kTRUE,kTRUE) ;
+      --i;
     }
   }
-
-//   cout << "end exclLVServers = " << exclLVServers << endl ;
      
   // Replace exclusive lvalue branch servers with lvalue branches
   // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaroes
