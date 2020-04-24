@@ -28,7 +28,6 @@ void IsHistEqual(const TH1F &a, const TH1F &b)
       auto bineb = b.GetBinError(i);
       EXPECT_DOUBLE_EQ(binea, bineb) << "The error of bin " << i << "  of the histograms differ: " << binea << " "
                                      << bineb << std::endl;
-      ;
    }
 }
 
