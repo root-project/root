@@ -90,7 +90,7 @@ public:
    ///     RHist<2,int> h2i({{ {10, 0., 1.}, {{-1., 0., 1., 10., 100.}} }});
    explicit RHist(std::array<RAxisConfig, DIMENSIONS> axes);
 
-   /// Constructor overload taking the histogram title
+   /// Constructor overload taking the histogram title.
    RHist(std::string_view histTitle, std::array<RAxisConfig, DIMENSIONS> axes);
 
    /// Constructor overload that's only available for a 1-dimensional histogram.
@@ -160,7 +160,7 @@ public:
 
    const_iterator begin() const { return const_iterator(*fImpl); }
 
-   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
+   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver()); }
 
    /// Swap *this and other.
    ///
@@ -172,8 +172,8 @@ public:
    }
 
 private:
-   std::unique_ptr<ImplBase_t> fImpl; ///<  The actual histogram implementation
-   FillFunc_t fFillFunc = nullptr;    ///<! Pinter to RHistImpl::Fill() member function
+   std::unique_ptr<ImplBase_t> fImpl; ///< The actual histogram implementation.
+   FillFunc_t fFillFunc = nullptr;    ///< Pointer to RHistImpl::Fill() member function.
 
    friend RHist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
 };

@@ -30,7 +30,7 @@ namespace Experimental {
 Objects used to configure the different axis types. It can store the
 properties of all ROOT-provided axis types, together with the type of the axis.
 
-RODO: that's what a variant will be invented for!
+TODO: that's what a variant will be invented for!
 */
 class RAxisConfig {
 public:
