@@ -79,6 +79,12 @@ void ntpl005_introspection() {
 
    auto ntuple = RNTupleReader::Open("Vector3", kNTupleFileName);
 
+   // Display the schema of the ntuple
+   ntuple->PrintInfo();
+
+   // Display information about the storage layout of the data
+   ntuple->PrintInfo(ENTupleInfo::kStorageDetails);
+
    // Collect I/O runtime counters when processing the data set.
    // Maintaining the counters comes with a small performance overhead, so it has to be explicitly enabled
    ntuple->EnableMetrics();
@@ -103,14 +109,6 @@ void ntpl005_introspection() {
       h2.Fill(viewY(i));
    }
    h2.DrawCopy();
-
-   // TODO(jblomer): PrintInfo() triggers connecting all the columns. Fix me.
-
-   // Display the schema of the ntuple
-   ntuple->PrintInfo();
-
-   // Display information about the storage layout of the data
-   ntuple->PrintInfo(ENTupleInfo::kStorageDetails);
 
    // Display the I/O operations performed by RNTuple
    ntuple->PrintInfo(ENTupleInfo::kMetrics);
