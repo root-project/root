@@ -8,8 +8,6 @@
 # CMakeLists.txt file for building ROOT core/rootcling_stage1 package
 ############################################################################
 
-include_directories(${CMAKE_SOURCE_DIR}/core/dictgen/res)
-
 if(WIN32)
   set_source_files_properties(src/rootcling_stage1.cxx PROPERTIES COMPILE_FLAGS "-D_WIN32 -DNOMINMAX")
 else()
@@ -40,6 +38,7 @@ ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
 
 target_include_directories(rootcling_stage1 PRIVATE
    ${CMAKE_SOURCE_DIR}/core/base/inc    # for RConfig.hxx
+   ${CMAKE_SOURCE_DIR}/core/dictgen/res # for rootcling_impl.h
    ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h
 )
 
