@@ -228,13 +228,13 @@ if(MSVC)
       OpenGL::GL
       OpenGL::GLU
       ${FTGL_LIBRARIES}
+      RGlew
     DEPENDENCIES
       Core
       EG
       Ged
       Geom
       RGL
-      RGlew
       Physics
   )
 
