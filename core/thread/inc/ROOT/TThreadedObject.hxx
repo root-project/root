@@ -194,6 +194,17 @@ namespace ROOT {
       template<class ...ARGS>
       TThreadedObject(ARGS&&... args) : TThreadedObject(TNumSlots{fgMaxSlots}, args...) { }
 
+      /// Return the number of currently available slot.
+      ///
+      /// The method is safe to call concurrently to other TThreadedObject methods.
+      /// Note that slots could be available but contain no data (i.e. a nullptr) if
+      /// they have not been used yet.
+      unsigned GetNSlots() const
+      {
+         std::lock_guard<ROOT::TSpinMutex> lg(fSpinMutex);
+         return fObjPointers.size();
+      }
+
       /// Access a particular processing slot.
       ///
       /// This method is thread-safe as long as concurrent calls request different slots (i.e. pass a different
@@ -331,7 +342,7 @@ namespace ROOT {
       // so we do not pollute gDirectory
       std::deque<TDirectory*> fDirectories;              ///< A TDirectory per slot
       std::map<std::thread::id, unsigned> fThrIDSlotMap; ///< A mapping between the thread IDs and the slots
-      ROOT::TSpinMutex fSpinMutex;                       ///< Protects concurrent access to fThrIDSlotMap, fObjPointers
+      mutable ROOT::TSpinMutex fSpinMutex;               ///< Protects concurrent access to fThrIDSlotMap, fObjPointers
       bool fIsMerged : 1;                                ///< Remember if the objects have been merged already
 
       /// Get the slot number for this threadID, make a slot if needed
