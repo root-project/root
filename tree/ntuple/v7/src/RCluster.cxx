@@ -15,9 +15,47 @@
 
 #include <ROOT/RCluster.hxx>
 
-ROOT::Experimental::Detail::RCluster::~RCluster()
+#include <TError.h>
+
+#include <iterator>
+#include <utility>
+
+
+ROOT::Experimental::Detail::ROnDiskPageMap::ROnDiskPageMap(ROnDiskPageMap &&other)
+   : fMemory(other.fMemory), fOnDiskPages(std::move(other.fOnDiskPages))
+{
+   other.fMemory = nullptr;
+   other.fOnDiskPages.clear();
+}
+
+
+ROOT::Experimental::Detail::ROnDiskPageMap &
+ROOT::Experimental::Detail::ROnDiskPageMap::operator =(ROnDiskPageMap &&other)
+{
+   fMemory = other.fMemory;
+   fOnDiskPages = std::move(other.fOnDiskPages);
+   other.fMemory = nullptr;
+   other.fOnDiskPages.clear();
+   return *this;
+}
+
+
+ROOT::Experimental::Detail::ROnDiskPageMap::~ROnDiskPageMap()
 {
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+ROOT::Experimental::Detail::ROnDiskPageMapHeap::~ROnDiskPageMapHeap()
+{
+   delete[] static_cast<unsigned char *>(fMemory);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 const ROOT::Experimental::Detail::ROnDiskPage *
 ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key) const
@@ -28,8 +66,28 @@ ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key)
    return nullptr;
 }
 
-
-ROOT::Experimental::Detail::RHeapCluster::~RHeapCluster()
+void ROOT::Experimental::Detail::RCluster::MergeColumns(ROnDiskPageMap &&pageMap)
 {
-   delete[] static_cast<unsigned char *>(fMemory);
+   for (const auto &entry : pageMap.fOnDiskPages) {
+      fAvailColumns.insert(entry.first.fColumnId);
+      fOnDiskPages.emplace(entry.first, entry.second);
+   }
+   pageMap.fOnDiskPages.clear();
+   fPageMaps.emplace_back(std::move(pageMap));
+}
+
+
+void ROOT::Experimental::Detail::RCluster::MergeCluster(RCluster &&other)
+{
+   R__ASSERT(fClusterId == other.fClusterId);
+
+   for (const auto &entry : other.fOnDiskPages) {
+      fOnDiskPages.emplace(entry.first, entry.second);
+   }
+   other.fOnDiskPages.clear();
+
+   fAvailColumns.insert(other.fAvailColumns.begin(), other.fAvailColumns.end());
+   other.fAvailColumns.clear();
+   std::move(other.fPageMaps.begin(), other.fPageMaps.end(), std::back_inserter(fPageMaps));
+   other.fPageMaps.clear();
 }

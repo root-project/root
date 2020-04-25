@@ -21,7 +21,6 @@
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using RCluster = ROOT::Experimental::Detail::RCluster;
 using RClusterPool = ROOT::Experimental::Detail::RClusterPool;
-using RHeapCluster = ROOT::Experimental::Detail::RHeapCluster;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using ROnDiskPage = ROOT::Experimental::Detail::ROnDiskPage;
@@ -71,7 +70,7 @@ public:
    void ReleasePage(RPage &) final {}
    std::unique_ptr<RCluster> LoadCluster(ROOT::Experimental::DescriptorId_t clusterId) final {
       fLoadRequests.push_back(clusterId);
-      return std::make_unique<RCluster>(nullptr, clusterId);
+      return std::make_unique<RCluster>(clusterId);
    }
 };
 
@@ -80,11 +79,11 @@ public:
 
 TEST(Cluster, Allocate)
 {
-   auto cluster = new RHeapCluster(nullptr, 0);
+   auto cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(nullptr);
    delete cluster;
 
    auto memory = new char[1];
-   cluster = new RHeapCluster(memory, 0);
+   cluster = new ROOT::Experimental::Detail::ROnDiskPageMapHeap(memory);
    delete cluster;
 }
 
@@ -92,9 +91,11 @@ TEST(Cluster, Allocate)
 TEST(Cluster, Basics)
 {
    auto memory = new char[3];
-   auto cluster = std::make_unique<RHeapCluster>(memory, 0);
-   cluster->Insert(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
-   cluster->Insert(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
+   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap(memory);
+   pageMap.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
+   pageMap.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
+   auto cluster = std::make_unique<RCluster>(0);
+   cluster->MergeColumns(std::move(pageMap));
 
    EXPECT_EQ(nullptr, cluster->GetOnDiskPage(ROnDiskPage::Key(5, 2)));
    EXPECT_EQ(nullptr, cluster->GetOnDiskPage(ROnDiskPage::Key(4, 0)));
@@ -105,6 +106,69 @@ TEST(Cluster, Basics)
    EXPECT_EQ(&memory[1], onDiskPage->GetAddress());
    EXPECT_EQ(2U, onDiskPage->GetSize());
 }
+
+TEST(Cluster, MergePageMaps)
+{
+   auto mem1 = new char[3];
+   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap1(mem1);
+   pageMap1.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
+   pageMap1.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
+   // Column 5 is in both mem1 and mem2 but that should not hurt
+   auto mem2 = new char[4];
+   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap2(mem2);
+   pageMap2.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
+   pageMap2.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
+   pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
+
+   auto cluster = std::make_unique<RCluster>(0);
+   cluster->MergeColumns(std::move(pageMap1));
+   cluster->MergeColumns(std::move(pageMap2));
+
+   EXPECT_EQ(3U, cluster->GetNOnDiskPages());
+   auto onDiskPage = cluster->GetOnDiskPage(ROnDiskPage::Key(6, 0));
+   EXPECT_EQ(&mem2[3], onDiskPage->GetAddress());
+   EXPECT_EQ(1U, onDiskPage->GetSize());
+   onDiskPage = cluster->GetOnDiskPage(ROnDiskPage::Key(5, 0));
+   EXPECT_TRUE((onDiskPage->GetAddress() == &mem1[0]) || (onDiskPage->GetAddress() == &mem2[0]));
+   EXPECT_EQ(1U, onDiskPage->GetSize());
+   onDiskPage = cluster->GetOnDiskPage(ROnDiskPage::Key(5, 1));
+   EXPECT_TRUE((onDiskPage->GetAddress() == &mem1[1]) || (onDiskPage->GetAddress() == &mem2[1]));
+   EXPECT_EQ(2U, onDiskPage->GetSize());
+}
+
+
+TEST(Cluster, MergeClusters)
+{
+   auto mem1 = new char[3];
+   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap1(mem1);
+   pageMap1.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
+   pageMap1.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
+   auto cluster1 = std::make_unique<RCluster>(0);
+   cluster1->MergeColumns(std::move(pageMap1));
+
+   // Column 5 is in both clusters but that should not hurt
+   auto mem2 = new char[4];
+   ROOT::Experimental::Detail::ROnDiskPageMapHeap pageMap2(mem2);
+   pageMap2.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem2[0], 1));
+   pageMap2.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
+   pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
+   auto cluster2 = std::make_unique<RCluster>(0);
+   cluster2->MergeColumns(std::move(pageMap2));
+
+   cluster2->MergeCluster(std::move(*cluster1));
+
+   EXPECT_EQ(3U, cluster2->GetNOnDiskPages());
+   auto onDiskPage = cluster2->GetOnDiskPage(ROnDiskPage::Key(6, 0));
+   EXPECT_EQ(&mem2[3], onDiskPage->GetAddress());
+   EXPECT_EQ(1U, onDiskPage->GetSize());
+   onDiskPage = cluster2->GetOnDiskPage(ROnDiskPage::Key(5, 0));
+   EXPECT_TRUE((onDiskPage->GetAddress() == &mem1[0]) || (onDiskPage->GetAddress() == &mem2[0]));
+   EXPECT_EQ(1U, onDiskPage->GetSize());
+   onDiskPage = cluster2->GetOnDiskPage(ROnDiskPage::Key(5, 1));
+   EXPECT_TRUE((onDiskPage->GetAddress() == &mem1[1]) || (onDiskPage->GetAddress() == &mem2[1]));
+   EXPECT_EQ(2U, onDiskPage->GetSize());
+}
+
 
 TEST(ClusterPool, Windows)
 {
