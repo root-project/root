@@ -16,6 +16,8 @@
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 #ifndef ROOT7_RCluster
 #define ROOT7_RCluster
@@ -88,46 +90,87 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RCluster
+\class ROOT::Experimental::Detail::ROnDiskPageMap
 \ingroup NTuple
-\brief A map of on disk pages for a particular cluster
+\brief A memory region that contains packed and compressed pages
 
 Derived classes implement how the on disk pages are stored in memory, e.g. mmap'd or in a special area.
 */
 // clang-format on
-class RCluster {
+class ROnDiskPageMap {
+   friend class RCluster;
+
 protected:
-   /// The memory region containing the on-disk pages. Ownership of the memory region is passed to the cluster.
+   /// The memory region containing the on-disk pages. Ownership of the memory region is passed to the page map.
    /// Therefore, the region needs to be allocated in a way that fits the derived class and its destructor.
    void *fMemory;
-   DescriptorId_t fClusterId;
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
 
 public:
-   RCluster(void *memory, DescriptorId_t clusterId) : fMemory(memory), fClusterId(clusterId) {}
-   RCluster(const RCluster &other) = delete;
-   RCluster &operator =(const RCluster &other) = delete;
-   virtual ~RCluster();
+   explicit ROnDiskPageMap(void *memory) : fMemory(memory) {}
+   ROnDiskPageMap(const ROnDiskPageMap &other) = delete;
+   ROnDiskPageMap(ROnDiskPageMap &&other);
+   ROnDiskPageMap &operator =(const ROnDiskPageMap &other) = delete;
+   ROnDiskPageMap &operator =(ROnDiskPageMap &&other);
+   virtual ~ROnDiskPageMap();
 
-   void Insert(const ROnDiskPage::Key &key, const ROnDiskPage &onDiskPage) { fOnDiskPages[key] = onDiskPage; }
+   /// Inserts information about a page stored in fMemory.  Therefore, the address referenced by onDiskPage
+   /// needs to be owned by the fMemory block.  If a page map contains a page of a given column, it is expected
+   /// that _all_ the pages of that column in that cluster are part of the page map.
+   void Register(const ROnDiskPage::Key &key, const ROnDiskPage &onDiskPage) { fOnDiskPages.emplace(key, onDiskPage); }
+};
 
-   DescriptorId_t GetId() const { return fClusterId; }
-   const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
 
-   size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::ROnDiskPageMapHeap
+\ingroup NTuple
+\brief An ROnDiskPageMap that is used for an fMemory allocated as an array of unsigned char.
+*/
+// clang-format on
+class ROnDiskPageMapHeap : public ROnDiskPageMap {
+public:
+   explicit ROnDiskPageMapHeap(void *memory) : ROnDiskPageMap(memory) {}
+   ~ROnDiskPageMapHeap();
 };
 
 // clang-format off
 /**
-\class ROOT::Experimental::RHeapCluster
+\class ROOT::Experimental::Detail::RCluster
 \ingroup NTuple
-\brief An RCluster that provides the on-disk pages using new[]
+\brief An in-memory subset of the packed and compressed pages of a cluster
+
+Binds together several page maps that represent all the pages of certain columns of a cluster
 */
 // clang-format on
-class RHeapCluster : public RCluster {
+class RCluster {
+protected:
+   /// References the cluster identifier in the page source that created the cluster
+   DescriptorId_t fClusterId;
+   /// Multiple page maps can be combined in a single RCluster
+   std::vector<ROnDiskPageMap> fPageMaps;
+   /// List of the (complete) columns represented by the RCluster
+   std::unordered_set<DescriptorId_t> fAvailColumns;
+   /// Lookup table for the on-disk pages
+   std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
+
 public:
-   RHeapCluster(void *memory, DescriptorId_t clusterId) : RCluster(memory, clusterId) {}
-   ~RHeapCluster();
+   explicit RCluster(DescriptorId_t clusterId) : fClusterId(clusterId) {}
+   RCluster(const RCluster &other) = delete;
+   RCluster(RCluster &&other) = default;
+   RCluster &operator =(const RCluster &other) = delete;
+   RCluster &operator =(RCluster &&other) = default;
+   ~RCluster() = default;
+
+   /// Move the given page map into this cluster; overlapping page ranges are ignored
+   void MergeColumns(ROnDiskPageMap &&pageMap);
+   /// Move the contents of other into this cluster; overlapping page ranges are ignored
+   void MergeCluster(RCluster &&other);
+   const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
+
+   DescriptorId_t GetId() const { return fClusterId; }
+   const std::unordered_set<DescriptorId_t> &GetAvailColumns() const { return fAvailColumns; }
+   size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
 };
 
 } // namespace Detail
