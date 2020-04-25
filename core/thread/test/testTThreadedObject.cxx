@@ -4,6 +4,8 @@
 
 #include "gtest/gtest.h"
 
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 
 void IsHistEqual(const TH1F &a, const TH1F &b)
@@ -145,4 +147,33 @@ TEST(TThreadedObject, GrowSlots)
             *first += *e;
    };
    EXPECT_EQ(*tto.Merge(sum_ints), 4);
+}
+
+TEST(TThreadedObject, GetNSlots)
+{
+   // default ctor produces fgMaxSlots slots
+   EXPECT_EQ(ROOT::TThreadedObject<int>(42).GetNSlots(), ROOT::TThreadedObject<int>::fgMaxSlots);
+
+   ROOT::TThreadedObject<int> tto(ROOT::TNumSlots{0});
+   EXPECT_EQ(tto.GetNSlots(), 0u);
+
+   // we need to make sure all threads will be in flight at the same time so the OS cannot re-use thread IDs,
+   // otherwise TThreadedObject could count less than 4 threads.
+   std::mutex m;
+   std::condition_variable cv;
+   bool ready = false;
+   auto task = [&] {
+      std::unique_lock<std::mutex> lk(m);
+      cv.wait(lk, [&] { return ready; });
+      tto.Get();
+   };
+   std::vector<std::thread> threads;
+   for (int i = 0; i < 4; ++i)
+      threads.emplace_back(task);
+   ready = true;
+   cv.notify_all();
+   for (auto &t : threads)
+      t.join();
+
+   EXPECT_EQ(tto.GetNSlots(), 4u);
 }
