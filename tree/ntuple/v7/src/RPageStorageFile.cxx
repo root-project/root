@@ -424,7 +424,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    // The size of the cutoff is given by the fraction of extra bytes we are willing to read in order to reduce
    // the number of read requests.  We thus schedule the lowest number of requests given a tolerable fraction
    // of extra bytes.
-   float extraFraction = 0.25;
+   float maxOverhead = 0.25 * float(activeSize);
    std::vector<std::size_t> gaps;
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
       gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
@@ -434,7 +434,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    float szExtra = 0.0;
    for (auto g : gaps) {
       szExtra += g;
-      if (szExtra  > extraFraction * float(activeSize))
+      if (szExtra  > maxOverhead)
          break;
       gapCut = g;
    }
@@ -479,12 +479,12 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    fCtrSzReadPayload->Add(szPayload);
    fCtrSzReadOverhead->Add(szOverhead);
 
-   // Register the on disk pages in the RCluster
+   // Register the on disk pages in a page map
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
-   auto cluster = std::make_unique<RHeapCluster>(buffer, clusterId);
+   ROnDiskPageMapHeap pageMap(buffer);
    for (const auto &s : onDiskPages) {
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-      cluster->Insert(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
+      pageMap.Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
    }
    for (auto &r : readRequests) {
       r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
@@ -498,5 +498,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    fCtrNReadV->Inc();
    fCtrNRead->Add(nReqs);
 
+   auto cluster = std::make_unique<RCluster>(clusterId);
+   cluster->MergeColumns(std::move(pageMap));
    return cluster;
 }
