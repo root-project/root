@@ -163,7 +163,9 @@ public:
    ~RCluster() = default;
 
    /// Move the given page map into this cluster; overlapping page ranges are ignored
-   void MergeColumns(ROnDiskPageMap &&pageMap);
+   void MergePageMap(ROnDiskPageMap &&pageMap);
+   /// Marks the column as complete; must be done for all columns, even empty ones without associated pages
+   void CommitColumn(DescriptorId_t columnId);
    /// Move the contents of other into this cluster; overlapping page ranges are ignored
    void MergeCluster(RCluster &&other);
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;

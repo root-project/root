@@ -226,7 +226,8 @@ public:
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
 
-   /// Populates all the pages but only of the attached columns of the given cluster
+   /// Populates all the pages of the given cluster id and columns; some of the columns might not contain
+   /// any pages, but the corresponding column ids must be registered in the cluster nevertheless
    virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
 };
 

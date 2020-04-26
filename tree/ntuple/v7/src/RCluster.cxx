@@ -66,14 +66,19 @@ ROOT::Experimental::Detail::RCluster::GetOnDiskPage(const ROnDiskPage::Key &key)
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RCluster::MergeColumns(ROnDiskPageMap &&pageMap)
+void ROOT::Experimental::Detail::RCluster::MergePageMap(ROnDiskPageMap &&pageMap)
 {
    for (const auto &entry : pageMap.fOnDiskPages) {
-      fAvailColumns.insert(entry.first.fColumnId);
       fOnDiskPages.emplace(entry.first, entry.second);
    }
    pageMap.fOnDiskPages.clear();
    fPageMaps.emplace_back(std::move(pageMap));
+}
+
+
+void ROOT::Experimental::Detail::RCluster::CommitColumn(DescriptorId_t columnId)
+{
+   fAvailColumns.insert(columnId);
 }
 
 
