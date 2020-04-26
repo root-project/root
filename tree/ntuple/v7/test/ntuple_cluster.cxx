@@ -75,12 +75,14 @@ public:
    {
       fReqsClusterIds.emplace_back(clusterId);
       fReqsColumns.emplace_back(columns);
+      auto cluster = std::make_unique<RCluster>(clusterId);
       ROOT::Experimental::Detail::ROnDiskPageMap pageMap(nullptr);
-      for (auto colId : columns)
+      for (auto colId : columns) {
          pageMap.Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
-      auto result = std::make_unique<RCluster>(clusterId);
-      result->MergeColumns(std::move(pageMap));
-      return result;
+         cluster->CommitColumn(colId);
+      }
+      cluster->MergePageMap(std::move(pageMap));
+      return cluster;
    }
 };
 
@@ -105,7 +107,8 @@ TEST(Cluster, Basics)
    pageMap.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&memory[0], 1));
    pageMap.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&memory[1], 2));
    auto cluster = std::make_unique<RCluster>(0);
-   cluster->MergeColumns(std::move(pageMap));
+   cluster->MergePageMap(std::move(pageMap));
+   cluster->CommitColumn(5);
 
    EXPECT_EQ(nullptr, cluster->GetOnDiskPage(ROnDiskPage::Key(5, 2)));
    EXPECT_EQ(nullptr, cluster->GetOnDiskPage(ROnDiskPage::Key(4, 0)));
@@ -131,8 +134,10 @@ TEST(Cluster, MergePageMaps)
    pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
 
    auto cluster = std::make_unique<RCluster>(0);
-   cluster->MergeColumns(std::move(pageMap1));
-   cluster->MergeColumns(std::move(pageMap2));
+   cluster->MergePageMap(std::move(pageMap1));
+   cluster->MergePageMap(std::move(pageMap2));
+   cluster->CommitColumn(5);
+   cluster->CommitColumn(6);
 
    EXPECT_EQ(3U, cluster->GetNOnDiskPages());
    EXPECT_TRUE(cluster->ContainsColumn(5));
@@ -158,7 +163,8 @@ TEST(Cluster, MergeClusters)
    pageMap1.Register(ROnDiskPage::Key(5, 0), ROnDiskPage(&mem1[0], 1));
    pageMap1.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem1[1], 2));
    auto cluster1 = std::make_unique<RCluster>(0);
-   cluster1->MergeColumns(std::move(pageMap1));
+   cluster1->MergePageMap(std::move(pageMap1));
+   cluster1->CommitColumn(5);
 
    // Column 5 is in both clusters but that should not hurt
    auto mem2 = new char[4];
@@ -167,7 +173,9 @@ TEST(Cluster, MergeClusters)
    pageMap2.Register(ROnDiskPage::Key(5, 1), ROnDiskPage(&mem2[1], 2));
    pageMap2.Register(ROnDiskPage::Key(6, 0), ROnDiskPage(&mem2[3], 1));
    auto cluster2 = std::make_unique<RCluster>(0);
-   cluster2->MergeColumns(std::move(pageMap2));
+   cluster2->MergePageMap(std::move(pageMap2));
+   cluster2->CommitColumn(5);
+   cluster2->CommitColumn(6);
 
    cluster2->MergeCluster(std::move(*cluster1));
 
@@ -227,6 +235,7 @@ TEST(ClusterPool, GetClusterBasics)
    c1.GetCluster(3, {0});
    ASSERT_EQ(1U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p1.fReqsColumns[0]);
 
    RPageSourceMock p2;
    {
@@ -236,6 +245,8 @@ TEST(ClusterPool, GetClusterBasics)
    ASSERT_EQ(2U, p2.fReqsClusterIds.size());
    EXPECT_EQ(0U, p2.fReqsClusterIds[0]);
    EXPECT_EQ(1U, p2.fReqsClusterIds[1]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p2.fReqsColumns[0]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p2.fReqsColumns[1]);
 
    RPageSourceMock p3;
    {
@@ -246,6 +257,25 @@ TEST(ClusterPool, GetClusterBasics)
    EXPECT_EQ(2U, p3.fReqsClusterIds[0]);
    EXPECT_EQ(3U, p3.fReqsClusterIds[1]);
    EXPECT_EQ(4U, p3.fReqsClusterIds[2]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p3.fReqsColumns[0]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p3.fReqsColumns[1]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p3.fReqsColumns[2]);
+}
+
+
+TEST(ClusterPool, GetClusterIncrementally)
+{
+   RPageSourceMock p1;
+   RClusterPool c1(&p1, 1);
+   c1.GetCluster(3, {0});
+   ASSERT_EQ(1U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({0U}), p1.fReqsColumns[0]);
+
+   c1.GetCluster(3, {1});
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[1]);
+   EXPECT_EQ(RPageSource::ColumnSet_t({1U}), p1.fReqsColumns[1]);
 }
 
 

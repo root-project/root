@@ -69,7 +69,7 @@ private:
       RInFlightCluster() = default;
       bool operator== (const RInFlightCluster &other) const { return fClusterId == other.fClusterId && fColumns == other.fColumns; }
       bool operator!= (const RInFlightCluster &other) const { return !(*this == other); }
-      /// First order by cluster id, then by number of columns, than by the column ids
+      /// First order by cluster id, then by number of columns, than by the column ids in fColumns
       bool operator< (const RInFlightCluster &other) const;
    };
 

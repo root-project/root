@@ -500,6 +500,8 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    fCtrNRead->Add(nReqs);
 
    auto cluster = std::make_unique<RCluster>(clusterId);
-   cluster->MergeColumns(std::move(pageMap));
+   cluster->MergePageMap(std::move(pageMap));
+   for (auto colId : columns)
+      cluster->CommitColumn(colId);
    return cluster;
 }
