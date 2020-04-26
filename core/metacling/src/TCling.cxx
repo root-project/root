@@ -196,22 +196,6 @@ extern "C" {
 #endif
 #endif
 
-//______________________________________________________________________________
-// Infrastructure to detect and react to libCling being teared down.
-//
-namespace {
-   class TCling_UnloadMarker {
-   public:
-      ~TCling_UnloadMarker() {
-         if (ROOT::Internal::gROOTLocal) {
-            ROOT::Internal::gROOTLocal->~TROOT();
-         }
-      }
-   };
-   static TCling_UnloadMarker gTClingUnloadMarker;
-}
-
-
 
 //______________________________________________________________________________
 // These functions are helpers for debugging issues with non-LLVMDEV builds.
