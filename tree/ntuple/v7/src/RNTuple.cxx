@@ -156,7 +156,9 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
 
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
 {
-   auto entry = GetModel()->CreateEntry();
+   auto columnGuard = fSource->GetColumnGuard();
+   auto fullModel = fSource->GetDescriptor().GenerateModel();
+   auto entry = fullModel->CreateEntry();
    LoadEntry(index, entry.get());
 
    switch(format) {

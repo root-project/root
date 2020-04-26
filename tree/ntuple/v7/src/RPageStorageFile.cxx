@@ -302,8 +302,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
    } else {
-      if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId))
-         fCurrentCluster = fClusterPool->GetCluster(clusterId);
+      if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
+         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns.top());
+      R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
       ROnDiskPage::Key key(columnId, pageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage);
@@ -382,7 +383,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
-ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId)
+ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns)
 {
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
    auto clusterLocator = clusterDesc.GetLocator();
@@ -403,7 +404,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
    // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
-   for (auto columnId : fActiveColumns.top()) {
+   for (auto columnId : columns) {
       const auto &pageRange = clusterDesc.GetPageRange(columnId);
       NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
