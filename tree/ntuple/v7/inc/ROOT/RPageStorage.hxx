@@ -227,7 +227,7 @@ public:
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
 
    /// Populates all the pages but only of the attached columns of the given cluster
-   virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId) = 0;
+   virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
 };
 
 } // namespace Detail

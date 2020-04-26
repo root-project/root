@@ -170,6 +170,7 @@ public:
 
    DescriptorId_t GetId() const { return fClusterId; }
    const std::unordered_set<DescriptorId_t> &GetAvailColumns() const { return fAvailColumns; }
+   bool ContainsColumn(DescriptorId_t columnId) const { return fAvailColumns.count(columnId) > 0; }
    size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
 };
 
