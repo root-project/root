@@ -17,7 +17,8 @@ TEST(HistFillTest, FillCoordEntries)
    hist.Fill({0.1111});
    EXPECT_EQ(1, hist.GetEntries());
    hist.Fill({0.1111});
-   EXPECT_EQ(2, hist.GetEntries());
+   hist.Fill({0.2222});
+   EXPECT_EQ(3, hist.GetEntries());
 }
 
 // Test Fill() without weight and GetBinContent()
@@ -28,6 +29,7 @@ TEST(HistFillTest, FillCoordContent)
    hist.Fill({0.1111});
    EXPECT_FLOAT_EQ(1.f, hist.GetBinContent({0.1111}));
    hist.Fill({0.1111});
+   hist.Fill({0.2222});
    EXPECT_FLOAT_EQ(2.f, hist.GetBinContent({0.1111}));
 }
 
@@ -39,6 +41,7 @@ TEST(HistFillTest, FillCoordUncertainty)
    hist.Fill({0.1111});
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.1111}));
    hist.Fill({0.1111});
+   hist.Fill({0.2222});
    EXPECT_FLOAT_EQ(std::sqrt(2.f), hist.GetBinUncertainty({0.1111}));
 }
 
@@ -50,7 +53,8 @@ TEST(HistFillTest, FillCoordWeightEntries)
    hist.Fill({0.1111}, .42f);
    EXPECT_EQ(1, hist.GetEntries());
    hist.Fill({0.1111}, .32f);
-   EXPECT_EQ(2, hist.GetEntries());
+   hist.Fill({0.2222}, .52f);
+   EXPECT_EQ(3, hist.GetEntries());
 }
 
 // Test Fill() with weight and GetBinContent()
@@ -61,6 +65,7 @@ TEST(HistFillTest, FillCoordWeightContent)
    hist.Fill({0.1111}, .42f);
    EXPECT_FLOAT_EQ(.42f, hist.GetBinContent({0.1111}));
    hist.Fill({0.1111}, .32f);
+   hist.Fill({0.2222}, .52f);
    EXPECT_FLOAT_EQ(.42f + .32f, hist.GetBinContent({0.1111}));
 }
 
@@ -76,6 +81,7 @@ TEST(HistFillTest, FillCoordWeightUncertainty)
 
    float weight2 = .32f;
    hist.Fill({0.1111}, weight2);
+   hist.Fill({0.2222}, .52f);
    EXPECT_FLOAT_EQ(std::sqrt((weight1 * weight1) + (weight2 * weight2)), hist.GetBinUncertainty({0.1111}));
 }
 
