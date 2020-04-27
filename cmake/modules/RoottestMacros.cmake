@@ -803,7 +803,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${outref}
                         ${errref}
                         WORKING_DIR ${test_working_dir}
-                        DIFFCMD ${ROOTTEST_DIR}/scripts/custom_diff.py
+                        DIFFCMD ${PYTHON_EXECUTABLE} ${ROOTTEST_DIR}/scripts/custom_diff.py
                         TIMEOUT ${timeout}
                         ${environment}
                         ${build}

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import os, sys, re
 
 if len(sys.argv) < 2 :

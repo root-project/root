@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ Clever (with filters) compare command using difflib.py providing diffs in four formats:
   
   * ndiff:    lists every line and highlights interline changes.
