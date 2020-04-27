@@ -17,6 +17,7 @@
 #define ROOT7_RNTupleMetrics
 
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RStringView.hxx>
 
 #include <TError.h>
 
@@ -63,7 +64,8 @@ public:
    std::string GetDescription() const { return fDescription; }
    std::string GetUnit() const { return fUnit; }
 
-   virtual std::string ValueToString() const = 0;
+   virtual std::int64_t GetValueAsInt() const = 0;
+   virtual std::string GetValueAsString() const = 0;
    std::string ToString() const;
 };
 
@@ -90,7 +92,8 @@ public:
    R__ALWAYS_INLINE void Add(int64_t delta) { fCounter += delta; }
    R__ALWAYS_INLINE int64_t GetValue() const { return fCounter; }
    R__ALWAYS_INLINE void SetValue(int64_t val) { fCounter = val; }
-   std::string ValueToString() const override { return std::to_string(fCounter); }
+   std::int64_t GetValueAsInt() const override { return fCounter; }
+   std::string GetValueAsString() const override { return std::to_string(fCounter); }
 };
 
 
@@ -147,7 +150,8 @@ public:
          fCounter.store(val);
    }
 
-   std::string ValueToString() const override { return std::to_string(GetValue()); }
+   std::int64_t GetValueAsInt() const override { return GetValue(); }
+   std::string GetValueAsString() const override { return std::to_string(GetValue()); }
 };
 
 
@@ -169,10 +173,13 @@ public:
       R__ASSERT(unit == "ns");
    }
 
-   std::string ValueToString() const final {
+   std::int64_t GetValueAsInt() const final {
       auto ticks = BaseCounterT::GetValue();
-      return std::to_string(std::uint64_t(
-         (double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.)));
+      return std::uint64_t((double(ticks) / double(CLOCKS_PER_SEC)) * (1000. * 1000. * 1000.));
+   }
+
+   std::string GetValueAsString() const final {
+      return std::to_string(GetValueAsInt());
    }
 };
 
@@ -260,6 +267,9 @@ public:
       fCounters.emplace_back(std::move(counter));
       return ptrCounter;
    }
+
+   /// Searches this object and all the observed sub metrics. Returns nullptr if name is not found.
+   const RNTuplePerfCounter *GetCounter(std::string_view name) const;
 
    void ObserveMetrics(RNTupleMetrics &observee);
 

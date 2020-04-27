@@ -27,6 +27,25 @@ TEST(Metrics, Counters)
    EXPECT_EQ(6, ctrTwo->GetValue());
 }
 
+TEST(Metrics, Nested)
+{
+   RNTupleMetrics inner("inner");
+   auto ctr = inner.MakeCounter<RNTuplePlainCounter *>("plain", "s", "example 1");
+
+   RNTupleMetrics outer("outer");
+   outer.ObserveMetrics(inner);
+
+   outer.Enable();
+   EXPECT_TRUE(ctr->IsEnabled());
+   ctr->SetValue(42);
+
+   EXPECT_EQ(nullptr, outer.GetCounter("a.b.c.d"));
+   EXPECT_EQ(nullptr, outer.GetCounter("outer.xyz"));
+   auto ctest = outer.GetCounter("outer.inner.plain");
+   ASSERT_EQ(ctr, ctest);
+   EXPECT_EQ(std::string("42"), ctest->GetValueAsString());
+}
+
 TEST(Metrics, Timer)
 {
    RNTupleAtomicCounter ctrWallTime("wall time", "ns", "");
