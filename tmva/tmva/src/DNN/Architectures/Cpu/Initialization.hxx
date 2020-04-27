@@ -101,7 +101,6 @@ void TCpu<AFloat>::InitializeGlorotNormal(TCpuMatrix<AFloat> & A)
       do {
          value = rand.Gaus(0.0, sigma);
       } while (std::abs(value) > 2 * sigma);
-      R__ASSERT(std::abs(value) < 2 * sigma);
       A.GetRawDataPointer()[i] = value;
    }
 }
