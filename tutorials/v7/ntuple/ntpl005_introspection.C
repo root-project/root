@@ -118,7 +118,7 @@ void ntpl005_introspection() {
    // Display the I/O operation statistics performed by the RNTuple reader
    ntuple->PrintInfo(ENTupleInfo::kMetrics);
 
-   // We read 2/3 fields from the ntuple and thus should have requested approximately two thirds of the file
+   // We read 2 out of the 3 Vector3 members and thus should have requested approximately 2/3 of the file
    FileStat_t fileStat;
    auto retval = gSystem->GetPathInfo(kNTupleFileName, fileStat);
    assert(retval == 0);
