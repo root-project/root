@@ -9,7 +9,10 @@ from cppyy import cppdef
 from libROOTPythonizations import gROOT, CreateBufferFromAddress
 
 from ._application import PyROOTApplication
-from ._numbadeclare import _NumbaDeclareDecorator
+_numba_pyversion = (2, 7, 5)
+if sys.version_info[:3] > _numba_pyversion:
+    # Python <= 2.7.5 cannot use exec in an inner function
+    from ._numbadeclare import _NumbaDeclareDecorator
 
 
 class PyROOTConfiguration(object):
@@ -275,6 +278,8 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
+        if sys.version_info[:3] <= _numba_pyversion:
+            raise Exception('ROOT.Numba requires Python above version {}.{}.{}'.format(*_numba_pyversion))
         cppdef('namespace Numba {}')
         ns = self._fallback_getattr('Numba')
         ns.Declare = staticmethod(_NumbaDeclareDecorator)

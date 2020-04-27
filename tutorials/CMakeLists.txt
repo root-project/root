@@ -530,6 +530,11 @@ if(ROOT_pyroot_FOUND)
         pyroot/pyroot004_NumbaDeclare.py)
   endif()
 
+  if(${PYTHON_VERSION_STRING} VERSION_LESS_EQUAL 2.7.5)
+    list(REMOVE_ITEM pytutorials
+        pyroot/pyroot004_NumbaDeclare.py)
+  endif()
+
   find_python_module(xgboost QUIET)
   if (NOT PY_XGBOOST_FOUND OR NOT dataframe)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva10*.py)

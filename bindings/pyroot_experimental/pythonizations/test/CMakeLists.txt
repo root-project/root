@@ -122,7 +122,7 @@ if (dataframe)
 endif()
 
 # Test wrapping Python callables for use in C++ using numba
-if (dataframe)
+if (dataframe AND ${PYTHON_VERSION_STRING} VERSION_GREATER 2.7.5)
     ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py)
 endif()
 
