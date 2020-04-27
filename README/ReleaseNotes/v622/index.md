@@ -30,6 +30,7 @@ The following people have contributed to this new version:
  Vincenzo Eduardo Padulano, Bicocca/SFT,\
  Danilo Piparo, CERN/SFT,\
  Timur Pocheptsoff, Qt Company,\
+ Renato Quagliani, LPNHE, CNRS/IN2P3, Sorbonne Université,\
  Fons Rademakers, CERN/SFT,\
  Oksana Shadura, Nebraska,\
  Enric Tejedor Saavedra, CERN/SFT,\
