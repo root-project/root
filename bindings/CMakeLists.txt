@@ -15,10 +15,13 @@ if(pyroot)
     list(LENGTH python_executables len)
     math(EXPR how_many_pythons "${len} - 1")
 
+    # install_dir_lib contains the path to installation_directory/lib
+    # where the python packages like ROOT, cppyy, cppyy_backend are
+    # installed
     if(IS_ABSOLUTE ${runtimedir})
-      set(d $ENV{DESTDIR}/${runtimedir})
+      set(install_dir_lib $ENV{DESTDIR}/${runtimedir})
     else()
-      set(d $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
+      set(install_dir_lib $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
     endif()
 
     add_subdirectory(pyroot_experimental)
