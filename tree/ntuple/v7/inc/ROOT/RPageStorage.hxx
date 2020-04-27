@@ -227,7 +227,8 @@ public:
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) = 0;
 
    /// Populates all the pages of the given cluster id and columns; some of the columns might not contain
-   /// any pages, but the corresponding column ids must be registered in the cluster nevertheless
+   /// any pages, but the corresponding column ids must be registered in the cluster nevertheless.
+   /// LoadCluster in general runs in parallel to other methods of the page source.
    virtual std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) = 0;
 };
 

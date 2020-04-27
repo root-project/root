@@ -201,10 +201,10 @@ void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& pag
 ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
    const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options)
+   , fMetrics("RPageSourceFile")
    , fPageAllocator(std::make_unique<RPageAllocatorFile>())
    , fPagePool(std::make_shared<RPagePool>())
    , fClusterPool(std::make_unique<RClusterPool>(this))
-   , fMetrics("RPageSourceFile")
 {
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kDefault)
       fOptions.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);

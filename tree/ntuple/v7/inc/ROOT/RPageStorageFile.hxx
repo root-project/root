@@ -116,21 +116,6 @@ public:
    static constexpr std::size_t kMaxPageSize = 1024 * 1024;
 
 private:
-   /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
-   std::unique_ptr<RPageAllocatorFile> fPageAllocator;
-   /// The page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
-   /// The cluster pool asynchronoulsy preloads the next few clusters
-   std::unique_ptr<RClusterPool> fClusterPool;
-   /// The last cluster from which a page got populated
-   std::shared_ptr<RCluster> fCurrentCluster;
-   /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
-   RNTupleDecompressor fDecompressor;
-   /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
-   std::unique_ptr<ROOT::Internal::RRawFile> fFile;
-   /// Takes the fFile to read ntuple blobs from it
-   Internal::RMiniFileReader fReader;
-
    /// Wraps the I/O counters
    RNTupleMetrics fMetrics;
    RNTupleAtomicCounter *fCtrNReadV = nullptr;
@@ -143,6 +128,21 @@ private:
    RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
    RNTupleTickCounter<RNTupleAtomicCounter> *fCtrTimeCpuRead = nullptr;
    RNTupleTickCounter<RNTuplePlainCounter> *fCtrTimeCpuUnzip = nullptr;
+
+   /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
+   std::unique_ptr<RPageAllocatorFile> fPageAllocator;
+   /// The page pool might, at some point, be used by multiple page sources
+   std::shared_ptr<RPagePool> fPagePool;
+   /// The last cluster from which a page got populated
+   std::shared_ptr<RCluster> fCurrentCluster;
+   /// Helper to unzip pages and header/footer; comprises a 16MB unzip buffer
+   RNTupleDecompressor fDecompressor;
+   /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
+   std::unique_ptr<ROOT::Internal::RRawFile> fFile;
+   /// Takes the fFile to read ntuple blobs from it
+   Internal::RMiniFileReader fReader;
+   /// The cluster pool asynchronoulsy preloads the next few clusters
+   std::unique_ptr<RClusterPool> fClusterPool;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,

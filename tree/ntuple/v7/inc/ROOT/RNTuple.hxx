@@ -165,6 +165,7 @@ public:
    RIterator end() { return RIterator(GetNEntries()); }
 
    void EnableMetrics() { fMetrics.Enable(); }
+   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
 // clang-format off
