@@ -414,6 +414,10 @@ void TProcessID::RecursiveRemove(TObject *obj)
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == GetObjectWithID(uid)) {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      // Only attempt to remove from the map the items that are already
+      // registered (because they are associated with a TProcessID with index 
+      // greater than 255.  Attempting to remove an item that is not in the map
+      // issues a Warning message.  
       if (fgObjPIDs && ((obj->GetUniqueID()&0xff000000)==0xff000000)) {
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);
