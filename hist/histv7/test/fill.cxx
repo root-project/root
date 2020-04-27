@@ -85,6 +85,48 @@ TEST(HistFillTest, FillCoordWeightUncertainty)
    EXPECT_FLOAT_EQ(std::sqrt((weight1 * weight1) + (weight2 * weight2)), hist.GetBinUncertainty({0.1111}));
 }
 
+// Test Fill() with NaN and GetEntries()
+TEST(HistFillTest, FillCoordNaNEntries)
+{
+   ROOT::Experimental::RH1F hist({100, 0., 1});
+   EXPECT_EQ(0, hist.GetEntries());
+   hist.Fill({0.1111}, NAN);
+   EXPECT_EQ(1, hist.GetEntries());
+   hist.Fill({0.1111}, .32f);
+   hist.Fill({0.2222}, NAN);
+   EXPECT_EQ(3, hist.GetEntries());
+}
+
+// Test Fill() with NaN and GetBinContent()
+TEST(HistFillTest, FillCoordNaNContent)
+{
+   ROOT::Experimental::RH1F hist({100, 0., 1});
+   EXPECT_FLOAT_EQ(.0f, hist.GetBinContent({0.1111}));
+   hist.Fill({0.1111}, NAN);
+   EXPECT_EQ(true, std::isnan(hist.GetBinContent({0.1111})));
+   hist.Fill({0.1111}, .32f);
+   hist.Fill({0.2222}, NAN);
+   EXPECT_EQ(true, std::isnan(hist.GetBinContent({0.1111})));
+}
+
+// Test Fill() with NaN and GetBinUncertainty()
+TEST(HistFillTest, FillCoordNaNUncertainty)
+{
+   ROOT::Experimental::RH1F hist({100, 0., 1});
+   EXPECT_FLOAT_EQ(.0f, hist.GetBinUncertainty({0.1111}));
+   hist.Fill({0.1111}, NAN);
+   EXPECT_EQ(true, std::isnan(hist.GetBinUncertainty({0.1111})));
+
+   float weight1 = .42f;
+   hist.Fill({0.1111}, weight1);
+   EXPECT_EQ(true, std::isnan(hist.GetBinUncertainty({0.1111})));
+
+   float weight2 = .32f;
+   hist.Fill({0.1111}, weight2);
+   hist.Fill({0.2222}, NAN);
+   EXPECT_EQ(true, std::isnan(hist.GetBinUncertainty({0.1111})));
+}
+
 // Test FillN() without weights and GetEntries()
 TEST(HistFillTest, FillNCoordsEntries)
 {
