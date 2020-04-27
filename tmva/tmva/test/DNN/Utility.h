@@ -594,7 +594,7 @@ std::string print_error(AFloat &e)
 {
    std::ostringstream out{};
 
-   out << ("\e[");
+   out << ("\033[");
 
    if (e > 1e-5)
       out << "31m";
@@ -604,7 +604,7 @@ std::string print_error(AFloat &e)
       out << "32m";
 
    out << e;
-   out << "\e[39m";
+   out << "\033[39m";
 
    return out.str();
 }
