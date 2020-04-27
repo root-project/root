@@ -1895,22 +1895,16 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
 
     // Composite case: multiple ranges
     RooArgList chi2List ;
-    const size_t bufSize = strlen(rangeName)+1;
-    char* buf = new char[bufSize] ;
-    strlcpy(buf,rangeName,bufSize) ;
-    char* token = strtok(buf,",") ;
-    while(token) {
-      RooCmdArg subRangeCmd = RooFit::Range(token) ;
+    for (std::string& token : RooHelpers::tokenise(rangeName, ",")) {
+      RooCmdArg subRangeCmd = RooFit::Range(token.c_str()) ;
       // Construct chi2 while substituting original RangeWithName argument with subrange argument created above
-      RooAbsReal* chi2Comp = new RooChi2Var(Form("%s_%s",baseName.c_str(),token),"chi^2",*this,data,
+      RooAbsReal* chi2Comp = new RooChi2Var(Form("%s_%s", baseName.c_str(), token.c_str()), "chi^2", *this, data,
 					    &arg1==rarg?subRangeCmd:arg1,&arg2==rarg?subRangeCmd:arg2,
 					    &arg3==rarg?subRangeCmd:arg3,&arg4==rarg?subRangeCmd:arg4,
 					    &arg5==rarg?subRangeCmd:arg5,&arg6==rarg?subRangeCmd:arg6,
 					    &arg7==rarg?subRangeCmd:arg7,&arg8==rarg?subRangeCmd:arg8) ;
       chi2List.add(*chi2Comp) ;
-      token = strtok(0,",") ;
     }
-    delete[] buf ;
     chi2 = new RooAddition(baseName.c_str(),"chi^2",chi2List,kTRUE) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -1928,7 +1922,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
 RooAbsReal* RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList) 
 {
   // Select the pdf-specific commands 
-  RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
+  RooCmdConfig pc(Form("RooAbsPdf::createChi2(%s)",GetName())) ;
 
   pc.defineInt("integrate","Integrate",0,0) ;
   pc.defineObject("yvar","YVar",0,0) ;
