@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-
 '''
 To cope with the fact that rlibmap exists with CMake builds and not Makefile ones.
 '''
