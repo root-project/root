@@ -1,5 +1,3 @@
-#! /usr//bin/env python
-
 usage = '''Usage: watch.py .2 -- root -e "sleep(7)"'''
 
 import os
