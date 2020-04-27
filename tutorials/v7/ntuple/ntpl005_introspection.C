@@ -123,9 +123,10 @@ void ntpl005_introspection() {
    auto retval = gSystem->GetPathInfo(kNTupleFileName, fileStat);
    assert(retval == 0);
    float fileSize = static_cast<float>(fileStat.fSize);
-   std::cout << "File size:      " << fileSize / 1024. / 1024. << " MiB" << std::endl;
    float nbytesRead = ntuple->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.szReadPayload")->GetValueAsInt() +
                       ntuple->GetMetrics().GetCounter("RNTupleReader.RPageSourceFile.szReadOverhead")->GetValueAsInt();
+
+   std::cout << "File size:      " << fileSize / 1024. / 1024. << " MiB" << std::endl;
    std::cout << "Read from file: " << nbytesRead / 1024. / 1024. << " MiB" << std::endl;
    std::cout << "Ratio:          " << nbytesRead / fileSize << std::endl;
 }
