@@ -163,7 +163,7 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 ///  - param[6] = Rmax1
 /// ...
 
-TGeoPgon::TGeoPgon(Double_t *param) : TGeoPcon()
+TGeoPgon::TGeoPgon(Double_t *param) : TGeoPcon("")
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
