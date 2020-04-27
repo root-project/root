@@ -933,6 +933,8 @@ namespace {
          ::SetConsoleTitle("ROOT session");
       }
       hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+      // adding the ENABLE_VIRTUAL_TERMINAL_PROCESSING flag would enable the ANSI control
+      // character sequences (e.g. `\033[39m`), but then it breaks the WRAP_AT_EOL_OUTPUT
       ::SetConsoleMode(hStdout, ENABLE_PROCESSED_OUTPUT |
                        ENABLE_WRAP_AT_EOL_OUTPUT);
       if (!::GetConsoleScreenBufferInfo(hStdout, &csbiInfo))
