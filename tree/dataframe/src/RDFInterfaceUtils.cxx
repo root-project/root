@@ -547,7 +547,8 @@ std::string PrettyPrintAddr(const void *const addr)
    return s.str();
 }
 
-void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *prevNodeOnHeap, std::string_view name,
+void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
+                   std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
                    std::string_view expression, const std::map<std::string, std::string> &aliasMap,
                    const ColumnNames_t &branches, const RDFInternal::RBookedCustomColumns &customCols, TTree *tree,
                    RDataSource *ds)
@@ -576,12 +577,12 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
    if (!parsedExpr.fUsedCols.empty())
       filterInvocation.seekp(-2, filterInvocation.cur); // remove the last ",
    // lifetime of pointees:
-   // - jittedFilter: kept alive by heap-allocated shared_ptr that will be deleted by JitFilterHelper after usage
-   // - prevNodeOnHeap: kept alive by heap-allocated shared_ptr that will be deleted by JitFilterHelper after usage
+   // - jittedFilter: heap-allocated weak_ptr to the actual jittedFilter that will be deleted by JitFilterHelper
+   // - prevNodeOnHeap: heap-allocated shared_ptr to the actual previous node that will be deleted by JitFilterHelper
    // - columnsOnHeap: heap-allocated, will be deleted by JitFilterHelper
    filterInvocation << "}, \"" << name << "\", "
-                    << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RJittedFilter>*>("
-                    << PrettyPrintAddr(MakeSharedOnHeap(jittedFilter)) << "), "
+                    << "reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedFilter>*>("
+                    << PrettyPrintAddr(MakeWeakOnHeap(jittedFilter)) << "), "
                     << "reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>(" << prevNodeAddr << "),"
                     << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << columnsOnHeapAddr << ")"
                     << ");\n";
@@ -593,7 +594,8 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
 // Jit a Define call
 std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
                                                    RDataSource *ds, const RDFInternal::RBookedCustomColumns &customCols,
-                                                   const ColumnNames_t &branches)
+                                                   const ColumnNames_t &branches,
+                                                   std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
    const auto &aliasMap = lm.GetAliasMap();
    auto *const tree = lm.GetTree();
@@ -618,14 +620,15 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
       defineInvocation.seekp(-2, defineInvocation.cur); // remove the last ",
    // lifetime of pointees:
    // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
-   // - jittedCustomColumn: kept alive by heap-allocated shared_ptr that will be deleted by JitDefineHelper after usage
+   // - jittedCustomColumn: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
    // - customColumnsAddr: heap-allocated, will be deleted by JitDefineHelper after usage
    defineInvocation << "}, \"" << name << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>("
                     << PrettyPrintAddr(&lm)
-                    << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RJittedCustomColumn>*>("
-                    << PrettyPrintAddr(MakeSharedOnHeap(jittedCustomColumn)) << "),"
-                    << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr << ")"
-                    << ");\n";
+                    << "), reinterpret_cast<std::weak_ptr<ROOT::Detail::RDF::RJittedCustomColumn>*>("
+                    << PrettyPrintAddr(MakeWeakOnHeap(jittedCustomColumn))
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr
+                    << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
+                    << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
 
    lm.ToJitExec(defineInvocation.str());
    return jittedCustomColumn;
@@ -633,10 +636,10 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::type_info &art, const std::type_info &at,
-                           void *rOnHeap, TTree *tree, const unsigned int nSlots,
-                           const RDFInternal::RBookedCustomColumns &customCols, RDataSource *ds,
-                           std::shared_ptr<RJittedAction> *jittedActionOnHeap)
+std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
+                           const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
+                           const unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customCols,
+                           RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
    auto nBranches = bl.size();
 
@@ -676,8 +679,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
    // Build a call to CallBuildAction with the appropriate argument. When run through the interpreter, this code will
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::RDF::CallBuildAction"
-                    << "<" << actionTypeName;
+   createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
@@ -689,12 +691,11 @@ std::string JitBuildAction(const ColumnNames_t &bl, void *prevNode, const std::t
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
-   createAction_str << "}, " << std::dec << std::noshowbase << nSlots << ", reinterpret_cast<" << actionResultTypeName
-                    << "*>(" << PrettyPrintAddr(rOnHeap) << ")"
-                    << ", reinterpret_cast<std::shared_ptr<ROOT::Internal::RDF::RJittedAction>*>("
-                    << PrettyPrintAddr(jittedActionOnHeap) << "),"
-                    << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr << ")"
-                    << ");";
+   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>("
+                    << PrettyPrintAddr(rOnHeap)
+                    << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
+                    << PrettyPrintAddr(jittedActionOnHeap)
+                    << "), reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << customColumnsAddr << "));";
    return createAction_str.str();
 }
 
