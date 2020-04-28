@@ -21,7 +21,6 @@
 #include <TFriendElement.h>
 #include <TInterpreter.h>
 #include <TObject.h>
-#include <TRegexp.h>
 #include <TPRegexp.h>
 #include <TString.h>
 #include <TTree.h>
@@ -210,9 +209,8 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
 {
    R__ASSERT(vars.size() == varTypes.size());
 
-   TRegexp re("[^a-zA-Z0-9_]?return[^a-zA-Z0-9_]");
-   Ssiz_t matchedLen;
-   const bool hasReturnStmt = re.Index(expr, &matchedLen) != -1;
+   TPRegexp re(R"(\breturn\b)");
+   const bool hasReturnStmt = re.Match(expr) == 1;
 
    std::stringstream ss;
    ss << "[](";
@@ -387,7 +385,7 @@ ColumnNames_t ConvertRegexToColumns(const RDFInternal::RBookedCustomColumns & cu
    selectedColumns.reserve(32);
 
    // Since we support gcc48 and it does not provide in its stl std::regex,
-   // we need to use TRegexp
+   // we need to use TPRegexp
    TPRegexp regexp(theRegex);
    for (auto &&branchName : customColumns.GetNames()) {
       if ((isEmptyRegex || 0 != regexp.Match(branchName.c_str())) &&
