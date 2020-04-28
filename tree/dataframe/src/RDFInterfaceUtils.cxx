@@ -205,67 +205,14 @@ static std::unordered_map<std::string, std::string> &GetJittedExprs() {
    return jittedExpressions;
 }
 
-// returns the name of the lambda expression in the map returned by GetJittedExprs
-static std::string DeclareExpression(const std::string &lambdaExpr, ROOT::Detail::RDF::RLoopManager &lm)
-{
-   auto &exprMap = GetJittedExprs();
-   const auto exprIt = exprMap.find(lambdaExpr);
-   if (exprIt != exprMap.end()) {
-      // expression already there
-      const auto lambdaName = exprIt->second;
-      return lambdaName;
-   }
-
-   // new expression
-   const auto lambdaBaseName = "lambda" + std::to_string(exprMap.size());
-   const auto lambdaFullName = "__rdf::" + lambdaBaseName;
-   exprMap.insert({lambdaExpr, lambdaFullName});
-   lm.ToJitDeclare("namespace __rdf { auto " + lambdaBaseName + " = " + lambdaExpr + "; }");
-   return lambdaFullName;
-}
-
-// Jit expression "in the vacuum", throw if cling exits with an error, return the type of the expression as string
-// As a side-effect, this ensures that column names, types and expression string are valid C++
-static std::string TypeOfExpression(const std::string &expression, const ColumnNames_t &colNames,
-                                    const std::vector<std::string> &colTypes, bool hasReturnStmt)
-{
-   R__ASSERT(colNames.size() == colTypes.size());
-
-   static unsigned int iNs = 0U;
-   std::stringstream dummyDecl;
-   dummyDecl << "namespace __rdf {\nauto test_func_" << ++iNs << " = []() {";
-
-   for (auto col = colNames.begin(), type = colTypes.begin(); col != colNames.end(); ++col, ++type) {
-      dummyDecl << *type << " " << *col << "; ";
-   }
-
-   // Now that branches are declared as variables, put the body of the
-   // lambda in dummyDecl and close scopes of f and namespace __rdf
-   if (hasReturnStmt)
-      dummyDecl << expression << "\n;};\n";
-   else
-      dummyDecl << "return " << expression << "\n;};\n";
-
-   dummyDecl << "using test_type_" << iNs << " = typename ROOT::TypeTraits::CallableTraits<decltype(test_func_" << iNs
-             << ")>::ret_type;\n}\n";
-
-   // Try to declare the dummy lambda, error out if it does not compile
-   if (!gInterpreter->Declare(dummyDecl.str().c_str())) {
-      auto msg =
-         "Cannot interpret the following expression:\n" + std::string(expression) + "\n\nMake sure it is valid C++.";
-      throw std::runtime_error(msg);
-   }
-
-   // If all went well, return the type of the expression by resolving the test_type_N alias we declared
-   auto *ti = gInterpreter->TypedefInfo_Factory(("__rdf::test_type_" + std::to_string(iNs)).c_str());
-   const char *type = gInterpreter->TypedefInfo_TrueName(ti);
-   return type;
-}
-
 static std::string
-BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes, bool hasReturnStmt)
+BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes)
 {
    R__ASSERT(vars.size() == varTypes.size());
+
+   TRegexp re("[^a-zA-Z0-9_]?return[^a-zA-Z0-9_]");
+   Ssiz_t matchedLen;
+   const bool hasReturnStmt = re.Index(expr, &matchedLen) != -1;
 
    std::stringstream ss;
    ss << "[](";
@@ -285,6 +232,44 @@ BuildLambdaString(const std::string &expr, const ColumnNames_t &vars, const Colu
 
    return ss.str();
 }
+
+/// Declare a lambda expression to the interpreter in namespace __rdf, return the name of the jitted lambda.
+/// If the lambda expression is already in GetJittedExprs, return the name for the lambda that has already been jitted.
+static std::string DeclareLambda(const std::string &expr, const ColumnNames_t &vars, const ColumnNames_t &varTypes)
+{
+   const auto lambdaExpr = BuildLambdaString(expr, vars, varTypes);
+   auto &exprMap = GetJittedExprs();
+   const auto exprIt = exprMap.find(lambdaExpr);
+   if (exprIt != exprMap.end()) {
+      // expression already there
+      const auto lambdaName = exprIt->second;
+      return lambdaName;
+   }
+
+   // new expression
+   const auto lambdaBaseName = "lambda" + std::to_string(exprMap.size());
+   const auto lambdaFullName = "__rdf::" + lambdaBaseName;
+
+   const auto toDeclare = "namespace __rdf {\nauto " + lambdaBaseName + " = " + lambdaExpr + ";\nusing " +
+                          lambdaBaseName + "_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(" +
+                          lambdaBaseName + ")>::ret_type;\n}";
+   ROOT::Internal::RDF::InterpreterDeclare(toDeclare.c_str());
+
+   // InterpreterDeclare could throw. If it doesn't, mark the lambda as already jitted
+   exprMap.insert({lambdaExpr, lambdaFullName});
+
+   return lambdaFullName;
+}
+
+/// Each jitted lambda comes with a lambda_ret_t type alias for its return type.
+/// Resolve that alias and return the true type as string.
+static std::string RetTypeOfLambda(const std::string &lambdaName)
+{
+   auto *ti = gInterpreter->TypedefInfo_Factory((lambdaName + "_ret_t").c_str());
+   const char *type = gInterpreter->TypedefInfo_TrueName(ti);
+   return type;
+}
+
 
 static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
                                        std::set<TTree *> &analysedTrees)
@@ -574,18 +559,10 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
    const auto parsedExpr =
       ParseRDFExpression(std::string(expression), branches, customCols.GetNames(), dsColumns, aliasMap);
    const auto exprVarTypes = GetColumnTypes(parsedExpr, tree, ds, customCols);
-
-   TRegexp re("[^a-zA-Z0-9_]?return[^a-zA-Z0-9_]");
-   Ssiz_t matchedLen;
-   const bool hasReturnStmt = re.Index(parsedExpr.fExpr, &matchedLen) != -1;
-
-   auto lm = jittedFilter->GetLoopManagerUnchecked();
-   const auto type = TypeOfExpression(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
+   const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
+   const auto type = RetTypeOfLambda(lambdaName);
    if (type != "bool")
       std::runtime_error("Filter: the following expression does not evaluate to bool:\n" + std::string(expression));
-
-   const auto filterLambda = BuildLambdaString(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
-   const auto lambdaName = DeclareExpression(filterLambda, *lm);
 
    // columnsOnHeap is deleted by the jitted call to JitFilterHelper
    ROOT::Internal::RDF::RBookedCustomColumns *columnsOnHeap = new ROOT::Internal::RDF::RBookedCustomColumns(customCols);
@@ -611,6 +588,7 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, void *pre
                     << "reinterpret_cast<ROOT::Internal::RDF::RBookedCustomColumns*>(" << columnsOnHeapAddr << ")"
                     << ");\n";
 
+   auto lm = jittedFilter->GetLoopManagerUnchecked();
    lm->ToJitExec(filterInvocation.str());
 }
 
@@ -626,15 +604,8 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
    const auto parsedExpr =
       ParseRDFExpression(std::string(expression), branches, customCols.GetNames(), dsColumns, aliasMap);
    const auto exprVarTypes = GetColumnTypes(parsedExpr, tree, ds, customCols);
-
-   TRegexp re("[^a-zA-Z0-9_]?return[^a-zA-Z0-9_]");
-   Ssiz_t matchedLen;
-   const bool hasReturnStmt = re.Index(parsedExpr.fExpr, &matchedLen) != -1;
-
-   const auto type = TypeOfExpression(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
-
-   const auto defineLambda = BuildLambdaString(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes, hasReturnStmt);
-   const auto lambdaName = DeclareExpression(defineLambda, lm);
+   const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
+   const auto type = RetTypeOfLambda(lambdaName);
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
