@@ -3379,7 +3379,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       // the ACLiC library.
       if (useCxxModules && !produceRootmap) {
          std::function<bool(const char *)> LoadLibF = [](const char *dep) {
-            return gInterpreter->Load(dep, /*system*/ false) >= 0;
+            return gInterpreter->Load(dep, /*skipReload*/ true) >= 0;
          };
          ForeachSharedLibDep(lib, LoadLibF);
       }
