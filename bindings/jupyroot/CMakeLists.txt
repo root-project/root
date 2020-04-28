@@ -41,12 +41,9 @@ foreach(val RANGE ${how_many_pythons})
 
   set(libname JupyROOT${python_under_version_string})
 
-  add_library(${libname} SHARED src/IOHandler.cxx)
-
   # libJupyROOT uses ROOT headers from source dirs and depends on Core
+  ROOT_LINKER_LIBRARY(${libname} src/IOHandler.cxx LIBRARIES ${python_library} DEPENDENCIES Core CMAKENOEXPORT)
   target_include_directories(${libname} PRIVATE ${python_include_dir})
-
-  target_link_libraries(${libname} ${python_library} Core ${CMAKE_DL_LIBS})
 
   # Disables warnings originating from deprecated register keyword in Python
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
