@@ -1,8 +1,25 @@
 import unittest
 import ROOT
 import sys
-import numba as nb
+import os
 import numpy as np
+
+
+# Check whether these tests should be skipped
+skip = False
+skip_reason = ""
+if sys.version_info[:3] <= (2, 7, 5):
+    skip = True
+    skip_reason = "Python version <= 2.7.5"
+elif sys.version_info[0] == 2 and "ROOTTEST_IGNORE_NUMBA_PY2" in os.environ:
+    skip = True
+    skip_reason = "Running python2 and ROOTTEST_IGNORE_NUMBA_PY2 was set"
+elif sys.version_info[0] == 3 and "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
+    skip = True
+    skip_reason = "Running python3 and ROOTTEST_IGNORE_NUMBA_PY3 was set"
+
+if not skip:
+    import numba as nb
 
 
 # long does not exist anymore on Python 3, map it to int
@@ -20,7 +37,9 @@ class NumbaDeclareSimple(unittest.TestCase):
 
     test_inputs = default_test_inputs
 
+
     # Test refcounts
+    @unittest.skipIf(skip, skip_reason)
     def test_refcount_decorator(self):
         """
         Test refcount of decorator
@@ -28,6 +47,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         x = ROOT.Numba.Declare(["float"], "float")
         self.assertEqual(sys.getrefcount(x), 2)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_refcount_pycallable(self):
         """
         Test refcount of decorated callable
@@ -44,6 +64,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 2)
 
     # Test optional name
+    @unittest.skipIf(skip, skip_reason)
     def test_optional_name(self):
         """
         Test optional name of wrapper function
@@ -55,6 +76,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertTrue(hasattr(ROOT.Numba, optname))
 
     # Test attributes
+    @unittest.skipIf(skip, skip_reason)
     def test_additional_attributes(self):
         """
         Test additional attributes
@@ -75,6 +97,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(fn1.numba_func), 3)
 
     # Test cling integration
+    @unittest.skipIf(skip, skip_reason)
     def test_cling(self):
         """
         Test function call in cling
@@ -86,6 +109,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertEqual(fn12(42.0), ROOT.y12)
 
     # Test RDataFrame integration
+    @unittest.skipIf(skip, skip_reason)
     def test_rdataframe(self):
         """
         Test function call as part of RDataFrame
@@ -100,6 +124,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertEqual(mean_y.GetValue(), 3.0)
 
     # Test wrappings
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_void(self):
         """
         Test wrapper with different input/output configurations
@@ -112,6 +137,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertEqual(x1, x2)
         self.assertEqual(type(x1), type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_f(self):
         """
         Test wrapper with different input/output configurations
@@ -125,6 +151,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x1), type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_d(self):
         """
         Test wrapper with different input/output configurations
@@ -139,6 +166,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             # NOTE: There is no double in Python because everything is a double.
             self.assertEqual(type(x1), type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_i(self):
         """
         Test wrapper with different input/output configurations
@@ -152,6 +180,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x1), type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_l(self):
         """
         Test wrapper with different input/output configurations
@@ -165,6 +194,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(long, type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_u(self):
         """
         Test wrapper with different input/output configurations
@@ -180,6 +210,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             # This could be fixed but as well should not have any impact.
             self.assertEqual(type(x2), long)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_k(self):
         """
         Test wrapper with different input/output configurations
@@ -193,6 +224,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(long, type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_b(self):
         """
         Test wrapper with different input/output configurations
@@ -206,6 +238,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x1), type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_b(self):
         """
         Test wrapper with different input/output configurations
@@ -219,6 +252,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x1), type(x2))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_i(self):
         """
         Test wrapper with different input/output configurations
@@ -231,6 +265,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x2 = ROOT.Numba.fn7i(v)
             self.assertEqual(x1, x2)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_l(self):
         """
         Test wrapper with different input/output configurations
@@ -243,6 +278,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x2 = ROOT.Numba.fn7l(v)
             self.assertEqual(x1, x2)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_ui(self):
         """
         Test wrapper with different input/output configurations
@@ -255,6 +291,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x2 = ROOT.Numba.fn7ui(v)
             self.assertEqual(x1, x2)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_ul(self):
         """
         Test wrapper with different input/output configurations
@@ -275,6 +312,7 @@ class NumbaDeclareArray(unittest.TestCase):
 
     test_inputs = [default_test_inputs]
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecf(self):
         """
         Test wrapper with different input/output configurations
@@ -289,6 +327,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), float)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecf_vecd(self):
         """
         Test wrapper with different input/output configurations
@@ -303,6 +342,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), float)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecd(self):
         """
         Test wrapper with different input/output configurations
@@ -317,6 +357,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), float)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_veci(self):
         """
         Test wrapper with different input/output configurations
@@ -331,6 +372,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), int)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecl(self):
         """
         Test wrapper with different input/output configurations
@@ -345,6 +387,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), int)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecui(self):
         """
         Test wrapper with different input/output configurations
@@ -359,6 +402,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), int)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecul(self):
         """
         Test wrapper with different input/output configurations
@@ -373,6 +417,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), int)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecb(self):
         """
         Test wrapper with different input/output configurations
@@ -387,6 +432,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1, x2)
             self.assertEqual(type(x2), int)
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_vecf(self):
         """
         Test wrapper with different input/output configurations
@@ -400,6 +446,7 @@ class NumbaDeclareArray(unittest.TestCase):
             x2 = ROOT.Numba.g2f(ROOT.VecOps.RVec('float')(v))
             self.assertTrue((x1 == x2).all())
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_vecd(self):
         """
         Test wrapper with different input/output configurations
@@ -413,6 +460,7 @@ class NumbaDeclareArray(unittest.TestCase):
             x2 = ROOT.Numba.g2d(ROOT.VecOps.RVec('double')(v))
             self.assertTrue((x1 == x2).all())
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_veci(self):
         """
         Test wrapper with different input/output configurations
@@ -426,6 +474,7 @@ class NumbaDeclareArray(unittest.TestCase):
             x2 = ROOT.Numba.g2i(ROOT.VecOps.RVec('int')(v))
             self.assertTrue((x1 == x2).all())
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_vecl(self):
         """
         Test wrapper with different input/output configurations
@@ -439,6 +488,7 @@ class NumbaDeclareArray(unittest.TestCase):
             x2 = ROOT.Numba.g2l(ROOT.VecOps.RVec('long')(v))
             self.assertTrue((x1 == x2).all())
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_vecul(self):
         """
         Test wrapper with different input/output configurations
@@ -452,6 +502,7 @@ class NumbaDeclareArray(unittest.TestCase):
             x2 = ROOT.Numba.g2ul(ROOT.VecOps.RVec('unsigned long')(v))
             self.assertTrue((x1 == x2).all())
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_vecui(self):
         """
         Test wrapper with different input/output configurations
@@ -465,6 +516,7 @@ class NumbaDeclareArray(unittest.TestCase):
             x2 = ROOT.Numba.g2ui(ROOT.VecOps.RVec('unsigned int')(v))
             self.assertTrue((x1 == x2).all())
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_vecb(self):
         """
         Test wrapper with different input/output configurations
@@ -479,6 +531,7 @@ class NumbaDeclareArray(unittest.TestCase):
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
 
+    @unittest.skipIf(skip, skip_reason)
     def test_wrapper_in_vecfb_out_vecf(self):
         """
         Test wrapper with different input/output configurations
