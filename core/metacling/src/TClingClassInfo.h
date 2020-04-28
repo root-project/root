@@ -81,7 +81,7 @@ public: // Types
 public:
 
    explicit TClingClassInfo(cling::Interpreter *, Bool_t all = kTRUE);
-   explicit TClingClassInfo(cling::Interpreter *, const char *);
+   explicit TClingClassInfo(cling::Interpreter *, const char *classname, bool intantiateTemplate = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
    explicit TClingClassInfo(cling::Interpreter *, const clang::Decl *);
    void                 AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func) { fOffsetCache[decl] = std::make_pair(0L, func); }
