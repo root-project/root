@@ -79,7 +79,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
    fType = 0;
 }
 
-TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
+TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name, bool intantiateTemplate /* = true */)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fIsIter(false),
      fType(0), fTitle(""), fOffsetCache(0)
 {
@@ -88,14 +88,14 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    const Decl *decl = lh.findScope(name,
                                    gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                    : cling::LookupHelper::NoDiagnostics,
-                                   &type, /* intantiateTemplate= */ true );
+                                   &type, intantiateTemplate);
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(name);
       if (buf != name) {
          decl = lh.findScope(buf,
                              gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                              : cling::LookupHelper::NoDiagnostics,
-                             &type, /* intantiateTemplate= */ true );
+                             &type, intantiateTemplate);
       }
    }
    if (!decl && type) {
