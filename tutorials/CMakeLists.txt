@@ -527,11 +527,13 @@ if(ROOT_pyroot_FOUND)
     file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
     list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
     list(REMOVE_ITEM pytutorials
-        pyroot/pyroot002_TTreeAsMatrix.py
-        pyroot/pyroot004_NumbaDeclare.py)
+        pyroot/pyroot002_TTreeAsMatrix.py)
   endif()
 
-  if(${PYTHON_VERSION_STRING} VERSION_LESS_EQUAL 2.7.5)
+  if(NOT dataframe
+     OR ${PYTHON_VERSION_STRING} VERSION_LESS_EQUAL 2.7.5
+     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR EQUAL 2)
+     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR EQUAL 3))
     list(REMOVE_ITEM pytutorials
         pyroot/pyroot004_NumbaDeclare.py)
   endif()
