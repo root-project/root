@@ -164,7 +164,6 @@ public:
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
-   void ToJitDeclare(const std::string &) const;
    void ToJitExec(const std::string &) const;
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }

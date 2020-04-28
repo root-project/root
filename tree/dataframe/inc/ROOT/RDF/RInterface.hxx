@@ -518,7 +518,6 @@ public:
                << RDFInternal::PrettyPrintAddr(&columnList) << "),"
                << "*reinterpret_cast<ROOT::RDF::RSnapshotOptions*>(" << RDFInternal::PrettyPrintAddr(&options) << "));";
       // jit snapCall, return result
-      fLoopManager->JitDeclarations(); // some type aliases might be needed by the code jitted in the next line
       RDFInternal::InterpreterCalc(snapCall.str(), "Snapshot");
       return resPtr;
    }
@@ -648,7 +647,6 @@ public:
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                 << RDFInternal::PrettyPrintAddr(&columnList) << "));";
       // jit cacheCall, return result
-      fLoopManager->JitDeclarations(); // some type aliases might be needed by the code jitted in the next line
       RDFInternal::InterpreterCalc(cacheCall.str(), "Cache");
       return resRDF;
    }

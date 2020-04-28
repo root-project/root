@@ -34,51 +34,37 @@ using namespace ROOT::Internal::RDF;
 
 namespace {
 /// A helper class to let different RLoopManager instances share the code to just-in-time compile.
-/// We want RLoopManagers to be able to add their code to global lists of "code to declare to cling"
-/// and "code to execute via cling", so that, lazily, we can jit everything that's needed by all RDFs
-/// in one go, which is potentially much faster than jitting each RLoopManager's code separately.
+/// We want RLoopManagers to be able to add their code to global lists of "code to execute via cling",
+/// so that, lazily, we can jit everything that's needed by all RDFs in one go, which is potentially
+/// much faster than jitting each RLoopManager's code separately.
 /// When RLoopManagers go out of scope, they will inform the global CodeToJit instance so that their
 /// outstanding code snippets can be removed from the lists.
 class CodeToJit {
    using LoopManagerToCodeMap = std::unordered_map<const RLoopManager *, std::string>;
-   LoopManagerToCodeMap fCodeToDeclare;
-   LoopManagerToCodeMap fCodeToExec;
+   LoopManagerToCodeMap fCode;
 
-   std::string PopCode(LoopManagerToCodeMap &c) {
+public:
+   void AddCodeToExec(const RLoopManager *ptr, const std::string &code) { fCode[ptr].append(code); }
+
+   /// Retrieve all code registered for execution. Clears the list of code to execute.
+   std::string PopCodeToExec()
+   {
       std::size_t size = 0;
-      for (auto e : c)
+      for (auto e : fCode)
          size += e.second.size();
 
       std::string code;
       code.reserve(size);
 
-      for (auto e: c)
+      for (auto e : fCode)
          code.append(e.second);
 
-      c.clear();
+      fCode.clear();
 
       return code;
    }
 
-public:
-   void AddCodeToDeclare(const RLoopManager *ptr, const std::string &code) { fCodeToDeclare[ptr].append(code); }
-
-   void AddCodeToExec(const RLoopManager *ptr, const std::string &code) { fCodeToExec[ptr].append(code); }
-
-   /// Retrieve all code registered for declaration. Clears the list of code to declare.
-   std::string PopCodeToDeclare() { return PopCode(fCodeToDeclare); }
-
-   /// Retrieve all code registered for execution. Clears the list of code to execute.
-   std::string PopCodeToExec() { return PopCode(fCodeToExec); }
-
-   void RemoveCodeForLoopManager(const RLoopManager *lm)
-   {
-      // fCodeToDeclare for old RLoopManagers is left in fCodeToDeclare, as it might contain
-      // the definition of lambdas that are also used by other RLoopManagers. It's not expensive
-      // to jit-declare a bit more than strictly needed. fCodeToExec for RLoopManagers that went out
-      // of scope must be erased: it would refer to variables that are not in scope anymore.
-      fCodeToExec.erase(lm);
-   }
+   void RemoveCodeForLoopManager(const RLoopManager *lm) { fCode.erase(lm); }
 };
 
 CodeToJit &GetCodeToJit()
@@ -560,25 +546,14 @@ void RLoopManager::CleanUpTask(unsigned int slot)
       ptr->ClearTask(slot);
 }
 
-/// Declare to the interpreter type aliases and other entities required by RDF jitted nodes.
-void RLoopManager::JitDeclarations()
-{
-   const auto code = GetCodeToJit().PopCodeToDeclare();
-   if (code.empty())
-      return;
-
-   RDFInternal::InterpreterDeclare(code);
-}
-
 /// Add RDF nodes that require just-in-time compilation to the computation graph.
-/// This method also invokes JitDeclarations() if needed, and clears the contents of GetCodeToJitExec().
+/// This method also clears the contents of GetCodeToJitExec().
 void RLoopManager::Jit()
 {
    const auto code = GetCodeToJit().PopCodeToExec();
    if (code.empty())
       return; // if nothing needs to be executed, we don't need the declarations either. can return early
 
-   JitDeclarations();
    RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
 }
 
@@ -696,11 +671,6 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 {
    for (const auto &fPtr : fBookedNamedFilters)
       fPtr->FillReport(rep);
-}
-
-void RLoopManager::ToJitDeclare(const std::string &code) const
-{
-   GetCodeToJit().AddCodeToDeclare(this, code);
 }
 
 void RLoopManager::ToJitExec(const std::string &code) const
