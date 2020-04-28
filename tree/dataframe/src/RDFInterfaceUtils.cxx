@@ -71,7 +71,7 @@ struct ParsedExpression {
    /// The list of valid column names that were used in the original string expression.
    /// Duplicates are removed and column aliases (created with Alias calls) are resolved.
    ColumnNames_t fUsedCols;
-   /// The list of variable names used in fExpr, with same ordering and size as fVarUsedCols
+   /// The list of variable names used in fExpr, with same ordering and size as fUsedCols
    ColumnNames_t fVarNames;
 };
 
