@@ -63,16 +63,8 @@ TEST(RNTupleShow, BasicTypes)
       *fieldchar = 98;
       ntuple->Fill();
    }
-   auto model2 = RNTupleModel::Create();
-   auto fieldPt2 = model2->MakeField<float>("pt");
-   auto fielddb = model2->MakeField<double>("db");
-   auto fieldint = model2->MakeField<int>("int");
-   auto fielduint = model2->MakeField<unsigned>("uint");
-   auto field64uint = model2->MakeField<std::uint64_t>("uint64");
-   auto fieldstring = model2->MakeField<std::string>("string");
-   auto fieldbool = model2->MakeField<bool>("boolean");
-   auto fieldchar = model2->MakeField<uint8_t>("uint8");
-   auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
+
+   auto ntuple2 = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
    ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
