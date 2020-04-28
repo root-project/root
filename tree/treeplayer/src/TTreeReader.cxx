@@ -393,13 +393,20 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
       return kEntryNotFound;
    }
 
+   // Update data members to correctly reflect the defined range
    if (endEntry > beginEntry)
       fEndEntry = endEntry;
    else
       fEndEntry = -1;
-   if (beginEntry - 1 < 0)
+
+   fBeginEntry = beginEntry;
+
+   if (beginEntry - 1 < 0) 
+      // Reset the cache if reading from the first entry of the tree
       Restart();
    else {
+      // Load the first entry in the range. SetEntry() will also call SetProxies(),
+      // thus adding all the branches to the cache and triggering the learning phase.
       EEntryStatus es = SetEntry(beginEntry - 1);
       if (es != kEntryValid) {
          Error("SetEntriesRange()", "Error setting first entry %lld: %s",
@@ -407,8 +414,6 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
          return es;
       }
    }
-
-   fBeginEntry = beginEntry;
 
    return kEntryValid;
 }
