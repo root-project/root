@@ -17,6 +17,10 @@
 namespace RooFit {
 namespace TestStatistics {
 
+LikelihoodGradientJob* LikelihoodGradientJob::clone() const {
+   return new LikelihoodGradientJob(*this);
+}
+
 /*
 void LikelihoodGradientJob::CalculateAll(const double *x) {
 //   auto get_time = [](){return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();};

@@ -16,5 +16,9 @@
 namespace RooFit {
 namespace TestStatistics {
 
+LikelihoodJob* LikelihoodJob::clone() const {
+   return new LikelihoodJob(*this);
+}
+
 }
 }

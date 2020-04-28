@@ -81,8 +81,8 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 }
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
-   : ROOT::Math::IBaseFunctionMultiDim(other), _evalCounter(other._evalCounter),
-     _context(other._context), _maxFCN(other._maxFCN), _numBadNLL(other._numBadNLL),
+   : _context(other._context), _evalCounter(other._evalCounter),
+     _maxFCN(other._maxFCN), _numBadNLL(other._numBadNLL),
      _printEvalErrors(other._printEvalErrors), _doEvalErrorWall(other._doEvalErrorWall), _nDim(other._nDim),
      _logfile(other._logfile), _verbose(other._verbose), _floatParamVec(other._floatParamVec)
 {
@@ -100,10 +100,10 @@ RooAbsMinimizerFcn::~RooAbsMinimizerFcn()
    delete _initConstParamList;
 }
 
-ROOT::Math::IBaseFunctionMultiDim *RooAbsMinimizerFcn::Clone() const
-{
-   return new RooAbsMinimizerFcn(*this);
-}
+//ROOT::Math::IBaseFunctionMultiDim *RooAbsMinimizerFcn::Clone() const
+//{
+//   return new RooAbsMinimizerFcn(*this);
+//}
 
 Bool_t
 RooAbsMinimizerFcn::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings> &parameters, Bool_t optConst, Bool_t verbose)
@@ -378,7 +378,7 @@ void RooAbsMinimizerFcn::BackProp(const ROOT::Fit::FitResult &results)
 {
    // Transfer MINUIT fit results back into RooFit objects
 
-   for (Int_t index = 0; index < _nDim; index++) {
+   for (unsigned index = 0; index < _nDim; index++) {
       Double_t value = results.Value(index);
       SetPdfParamVal(index, value);
 
@@ -428,7 +428,7 @@ void RooAbsMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym &V)
    // to all RRV parameter representations and give this matrix instead of the
    // HESSE matrix at the next save() call
 
-   for (Int_t i = 0; i < _nDim; i++) {
+   for (unsigned i = 0; i < _nDim; i++) {
       // Skip fixed parameters
       if (_floatParamList->at(i)->isConstant()) {
          continue;

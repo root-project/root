@@ -24,12 +24,12 @@
 #include "TestStatistics/LikelihoodJob.h"
 #include "TestStatistics/LikelihoodGradientJob.h"
 #include "TestStatistics/RooAbsL.h"
-#include "RooMinimizer.h"
 #include "RooAbsMinimizerFcn.h"
 
 // forward declaration
 class RooAbsL;
 class RooAbsReal;
+class RooMinimizer;
 
 namespace RooFit {
 namespace TestStatistics {
@@ -38,6 +38,7 @@ class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimi
 public:
    MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientWrapper *_gradient, RooMinimizer* context,
                  bool verbose = false);
+   MinuitFcnGrad(const MinuitFcnGrad& other);
    ROOT::Math::IMultiGradFunction *Clone() const override;
 
    // override to include gradient strategy synchronization:

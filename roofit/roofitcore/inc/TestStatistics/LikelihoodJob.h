@@ -22,6 +22,8 @@ namespace RooFit {
 namespace TestStatistics {
 
 class LikelihoodJob : MultiProcess::Job, LikelihoodWrapper {
+   LikelihoodJob* clone() const override;
+
    // TODO: implement override if necessary
 //   void synchronize_with_minimizer(const ROOT::Math::MinimizerOptions & options) override;
 };

@@ -128,6 +128,8 @@ protected:
    const RooAbsMinimizerFcn* fitterFcn() const;
    RooAbsMinimizerFcn* fitterFcn();
 
+   bool fitFcn() const;
+
 private:
 
   Int_t       _printLevel = 1;

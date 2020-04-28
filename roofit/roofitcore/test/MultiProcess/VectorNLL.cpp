@@ -19,7 +19,6 @@
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
 #include <RooMinimizer.h>
-#include <RooGradMinimizer.h>
 #include <RooFitResult.h>
 #include <RooProdPdf.h>
 #include <RooChebychev.h>

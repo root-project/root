@@ -68,7 +68,6 @@ automatic PDF optimization.
 
 #include "RooFitResult.h"
 #include "RooMinimizer.h"
-#include "RooGradMinimizer.h"
 
 #include "Math/Minimizer.h"
 
@@ -256,6 +255,36 @@ RooFitResult* RooMinimizer::fit(const char* options)
 }
 
 
+bool RooMinimizer::fitFcn() const {
+   bool ret;
+
+   switch (_fcnMode) {
+   case FcnMode::classic: {
+      ret = _theFitter->FitFCN(*static_cast<RooMinimizerFcn *>(_fcn));
+      break;
+   }
+   case FcnMode::gradient: {
+      auto thing = dynamic_cast<RooGradMinimizerFcn *>(_fcn);
+      if (thing != nullptr) {
+         ret = _theFitter->FitFCN(*thing);
+      } else {
+         throw std::logic_error("In RooMinimizer::fitFcn: Minimizer fcnMode was set to gradient, but fit function type does not match RooGradMinimizerFcn!");
+      }
+      break;
+   }
+   case FcnMode::generic_wrapper: {
+      auto thing = dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(_fcn);
+      if (thing != nullptr) {
+         ret = _theFitter->FitFCN(*thing);
+      } else {
+         throw std::logic_error("In RooMinimizer::fitFcn: Minimizer fcnMode was set to generic_wrapper, but fit function type does not match RooFit::TestStatistics::MinuitFcnGrad!");
+      }
+      break;
+   }
+   }
+
+   return ret;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +300,7 @@ Int_t RooMinimizer::minimize(const char* type, const char* alg)
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
    RooAbsReal::clearEvalErrorLog() ;
 
-   bool ret = _theFitter->FitFCN(*_fcn);
+   bool ret = fitFcn();
    _status = ((ret) ? _theFitter->Result().Status() : -1);
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -312,7 +341,7 @@ Int_t RooMinimizer::migrad()
 
    _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"migrad");
    t6 = get_time();
-   bool ret = _theFitter->FitFCN(*_fcn);
+   bool ret = fitFcn();
    t7 = get_time();
    _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -478,7 +507,7 @@ Int_t RooMinimizer::seek()
    RooAbsReal::clearEvalErrorLog() ;
 
    _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"seek");
-   bool ret = _theFitter->FitFCN(*_fcn);
+   bool ret = fitFcn();
    _status = ((ret) ? _theFitter->Result().Status() : -1);
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -507,7 +536,7 @@ Int_t RooMinimizer::simplex()
    RooAbsReal::clearEvalErrorLog() ;
 
    _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"simplex");
-   bool ret = _theFitter->FitFCN(*_fcn);
+   bool ret = fitFcn();
    _status = ((ret) ? _theFitter->Result().Status() : -1);
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -536,7 +565,7 @@ Int_t RooMinimizer::improve()
    RooAbsReal::clearEvalErrorLog() ;
 
    _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"migradimproved");
-   bool ret = _theFitter->FitFCN(*_fcn);
+   bool ret = fitFcn();
    _status = ((ret) ? _theFitter->Result().Status() : -1);
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
@@ -804,7 +833,7 @@ const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
          if (thing != nullptr) {
             return static_cast<RooAbsMinimizerFcn *>(thing);
          } else {
-            throw std::logic_error("In RooMinimizer::fitterFcn: Minimizer fcnMode was set to gradient, but fit function type does not match RooGradMinimizerFcn!");
+            throw std::logic_error("In RooMinimizer::fitterFcn: Minimizer fcnMode was set to generic_wrapper, but fit function type does not match RooFit::TestStatistics::MinuitFcnGrad!");
          }
       }
       }

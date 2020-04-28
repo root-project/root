@@ -25,6 +25,8 @@ namespace TestStatistics {
 
 class LikelihoodGradientJob : MultiProcess::Job, LikelihoodGradientWrapper {
 public:
+   LikelihoodGradientJob* clone() const override;
+
    void fill_gradient(const double *x, double *grad) override;
    void fill_second_derivative(const double *x, double *g2) override;
    void fill_step_size(const double *x, double *gstep) override;

@@ -12,6 +12,8 @@
  *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
+#include "RooMsgService.h"
+#include "RooMinimizer.h"
 #include "TestStatistics/MinuitFcnGrad.h"
 
 namespace RooFit {
@@ -24,7 +26,7 @@ MinuitFcnGrad::MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientW
    likelihood(_likelihood), gradient(_gradient)
 {
    auto parameters = _context->fitter()->Config().ParamsSettings();
-   synchronize_parameter_settings(parameters);
+   synchronize_parameter_settings(parameters, kTRUE, verbose);
    likelihood->synchronize_parameter_settings(parameters);
    gradient->synchronize_parameter_settings(parameters);
 
@@ -36,6 +38,9 @@ MinuitFcnGrad::MinuitFcnGrad(LikelihoodWrapper *_likelihood, LikelihoodGradientW
    likelihood->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
    gradient->synchronize_with_minimizer(ROOT::Math::MinimizerOptions());
 }
+
+MinuitFcnGrad::MinuitFcnGrad(const MinuitFcnGrad & other)
+: RooAbsMinimizerFcn(other), likelihood(other.likelihood->clone()), gradient(other.gradient->clone()) {};
 
 // IMultiGradFunction overrides necessary for Minuit: DoEval, Gradient, G2ndDerivative and GStepSize
 // The likelihood and gradient wrappers do the actual calculations.
@@ -127,8 +132,8 @@ MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters
    likelihood->synchronize_parameter_settings(parameters);
    gradient->synchronize_parameter_settings(parameters);
 
-   likelihood->synchronize_with_minimizer(_context.fitter()->Config().MinimizerOptions());
-   gradient->synchronize_with_minimizer(_context.fitter()->Config().MinimizerOptions());
+   likelihood->synchronize_with_minimizer(_context->fitter()->Config().MinimizerOptions());
+   gradient->synchronize_with_minimizer(_context->fitter()->Config().MinimizerOptions());
    return returnee;
 }
 

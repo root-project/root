@@ -37,9 +37,8 @@
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 
-//#include "RooMinimizer.h"
+#include "RooMinimizer.h"
 #include "RooGradMinimizerFcn.h"
-#include "RooGradMinimizer.h"
 
 #include "Fit/Fitter.h"
 #include "Math/Minimizer.h"
@@ -48,21 +47,20 @@
 #include <algorithm> // std::equal
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList(*funct->getParameters(RooArgSet())), context, verbose), _funct(funct),
-     _grad(get_nDim()), _gradf(nullptr, _grad), _grad_params(get_nDim()), _parameter_settings(get_nDim()),
+   : RooAbsMinimizerFcn(RooArgList(*funct->getParameters(RooArgSet())), context, verbose),
+     _grad(get_nDim()), _funct(funct), _grad_params(get_nDim()), _gradf(nullptr, _grad),
      has_been_calculated(get_nDim())
 {
    // TODO: added "parameters" after rewrite in april 2020, check if correct
-   auto parameters = _context.fitter()->Config().ParamsSettings();
-   synchronize_parameter_settings(parameters);
+   auto parameters = _context->fitter()->Config().ParamsSettings();
+   synchronize_parameter_settings(parameters, kTRUE, verbose);
    synchronize_gradient_parameter_settings(parameters);
    set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
    set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
 }
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn &other)
-   : RooAbsMinimizerFcn(other), _funct(other._funct), _grad(other._grad), _gradf(other._gradf, _grad),
-     _grad_params(other._grad_params), _parameter_settings(other._parameter_settings),
+   : RooAbsMinimizerFcn(other), _grad(other._grad), _funct(other._funct), _grad_params(other._grad_params), _gradf(other._gradf, _grad),
      has_been_calculated(other.has_been_calculated), none_have_been_calculated(other.none_have_been_calculated)
 {
 }
@@ -213,7 +211,7 @@ void RooGradMinimizerFcn::run_derivator(unsigned int i_component) const
    if (!has_been_calculated[i_component]) {
       // Calculate the derivative etc for these parameters
       std::tie(mutable_grad()(i_component), mutable_g2()(i_component), mutable_gstep()(i_component)) =
-         _gradf.partial_derivative(_grad_params.data(), _context.fitter()->Config().ParamsSettings(), i_component);
+         _gradf.partial_derivative(_grad_params.data(), _context->fitter()->Config().ParamsSettings(), i_component);
       has_been_calculated[i_component] = true;
       none_have_been_calculated = false;
    }
@@ -277,8 +275,8 @@ RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &para
 {
    Bool_t returnee = synchronize_parameter_settings(parameters, optConst, verbose);
    synchronize_gradient_parameter_settings(parameters);
-   set_strategy(_context.fitter()->Config().MinimizerOptions().Strategy());
-   set_error_level(_context.fitter()->Config().MinimizerOptions().ErrorDef());
+   set_strategy(_context->fitter()->Config().MinimizerOptions().Strategy());
+   set_error_level(_context->fitter()->Config().MinimizerOptions().ErrorDef());
    return returnee;
 }
 

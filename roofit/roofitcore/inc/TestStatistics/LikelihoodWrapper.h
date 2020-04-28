@@ -30,6 +30,8 @@ class LikelihoodWrapper {
 public:
    explicit LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood);
    virtual ~LikelihoodWrapper() = default;
+   virtual LikelihoodWrapper* clone() const = 0;
+
    virtual double get_value(const double *x) = 0 ;
 
    // synchronize minimizer settings with calculators in child classes
