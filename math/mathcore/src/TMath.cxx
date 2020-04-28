@@ -567,19 +567,7 @@ Double_t TMath::Normalize(Double_t v[3])
 
 Double_t TMath::Poisson(Double_t x, Double_t par)
 {
-   if (x<0)
-      return 0;
-   else if (x == 0.0)
-      return 1./Exp(par);
-   else {
-      Double_t lnpoisson = x*log(par)-par-LnGamma(x+1.);
-      return Exp(lnpoisson);
-   }
-   // An alternative strategy is to transition to a Gaussian approximation for
-   // large values of par ...
-   //   else {
-   //     return Gaus(x,par,Sqrt(par),kTRUE);
-   //   }
+   return ::ROOT::Math::poisson_pdf(x,par);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
