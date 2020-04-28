@@ -187,3 +187,11 @@ See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanit
 - RDataFrame changed its error handling strategy in case of unreadable input files. Instead of simply logging an error
   and skipping the file, it now throws an exception if any of the input files is unreadable (this could also happen in
   the middle of an event loop). See [ROOT-10549](https://sft.its.cern.ch/jira/browse/ROOT-10549) for more details.
+
+
+## PyROOT
+
+- Introduce the `ROOT.Numba.Declare` decorator which provides a simple way to call Python callables from C++. The Python callables are
+  just-in-time compiled with [numba](http://numba.pydata.org/), which ensures a runtime performance similar to a C++ implementation.
+  The feature is targeted to improve the performance of Python based analyses, e.g., allows seamless integration into `RDataFrame` workflows.
+  See the tutorial [`pyroot004_NumbaDeclare.py`](https://root.cern/doc/master/pyroot004__NumbaDeclare_8py.html) for further information.
