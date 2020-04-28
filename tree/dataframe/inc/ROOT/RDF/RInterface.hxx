@@ -374,8 +374,9 @@ public:
                                      fLoopManager->GetAliasMap(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedCustomColumn = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fCustomColumns,
-                                                           fLoopManager->GetBranchNames());
+                                                           fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RBookedCustomColumns newCols(fCustomColumns);
       newCols.AddName(name);
@@ -2310,21 +2311,21 @@ private:
       const unsigned int nSlots = fLoopManager->GetNSlots();
 
       auto tree = fLoopManager->GetTree();
-      auto rOnHeap = RDFInternal::MakeSharedOnHeap(r);
+      auto rOnHeap = RDFInternal::MakeWeakOnHeap(r);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer<decltype(upcastNodeOnHeap)>::type::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fCustomColumns, fDataSource);
 
-      auto jittedActionOnHeap =
-         RDFInternal::MakeSharedOnHeap(std::make_shared<RDFInternal::RJittedAction>(*fLoopManager));
+      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
+      auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
       auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap,
-                                               typeid(std::shared_ptr<ActionResultType>), typeid(ActionTag), rOnHeap,
+                                               typeid(std::weak_ptr<ActionResultType>), typeid(ActionTag), rOnHeap,
                                                tree, nSlots, fCustomColumns, fDataSource, jittedActionOnHeap);
-      fLoopManager->Book(jittedActionOnHeap->get());
+      fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
-      return MakeResultPtr(r, *fLoopManager, *jittedActionOnHeap);
+      return MakeResultPtr(r, *fLoopManager, jittedAction);
    }
 
    template <typename F, typename CustomColumnType, typename RetType = typename TTraits::CallableTraits<F>::ret_type>
