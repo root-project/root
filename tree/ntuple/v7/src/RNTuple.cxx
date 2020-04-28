@@ -158,6 +158,7 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFo
 {
    auto columnGuard = fSource->GetColumnGuard();
    auto fullModel = fSource->GetDescriptor().GenerateModel();
+   ConnectModel(fullModel.get());
    auto entry = fullModel->CreateEntry();
    LoadEntry(index, entry.get());
 
