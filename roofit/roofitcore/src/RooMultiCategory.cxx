@@ -111,7 +111,7 @@ std::string RooMultiCategory::createLabel() const
 
 #ifndef NDEBUG
 
-#include "RooMultiCatIter.h"
+#include "RooFitLegacy/RooMultiCatIter.h"
 namespace {
 /// Check that root-6.22 redesign of category interfaces yields same labels
 std::string computeLabelOldStyle(const RooArgSet& catSet, unsigned int index) {
