@@ -39,13 +39,13 @@ private:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
- std::string _refRangeName ;
+  std::string _refRangeName ;
 
   Double_t evaluate() const;
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
 
-  ClassDef(RooBernstein,1) // Bernstein polynomial PDF
+  ClassDef(RooBernstein,2) // Bernstein polynomial PDF
 };
 
 #endif
