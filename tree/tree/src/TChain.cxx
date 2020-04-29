@@ -192,7 +192,7 @@ TChain::~TChain()
    fFiles = 0;
 
    //first delete cache if exists
-   auto tc = fFile ? fTree->GetReadCache(fFile) : nullptr;
+   auto tc = fFile && fTree ? fTree->GetReadCache(fFile) : nullptr;
    if (tc) {
       delete tc;
       fFile->SetCacheRead(0, fTree);
