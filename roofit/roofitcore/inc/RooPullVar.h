@@ -16,7 +16,7 @@
 #ifndef ROO_PULL_VAR
 #define ROO_PULL_VAR
 
-#include "RooProxy.h"
+#include "RooTemplateProxy.h"
 #include "RooRealVar.h"
 #include "RooRealProxy.h"
 
@@ -34,7 +34,7 @@ public:
 
 protected:
 
-  RooProxy<RooRealVar> _meas ;
+  RooTemplateProxy<RooRealVar> _meas ;
   RooRealProxy _true ;
 
   Double_t evaluate() const;

@@ -20,6 +20,7 @@
 #include "RooAbsCategory.h"
 #include "RooRealProxy.h"
 #include "RooCatType.h"
+#include "TString.h"
 
 class RooBinningCategory : public RooAbsCategory {
 

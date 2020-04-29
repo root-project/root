@@ -23,28 +23,28 @@
 #include "RooMsgService.h"
 
 /**
-\class RooProxy
+\class RooTemplateProxy
 \ingroup Roofitcore
 
-A RooProxy is used to hold references to other RooFit objects in an expression tree.
-A `RooGaussian(..., x, mean, sigma)` can e.g. store `x, mean, sigma` as `RooProxy<RooAbsReal>`.
+A RooTemplateProxy is used to hold references to other RooFit objects in an expression tree.
+A `RooGaussian(..., x, mean, sigma)` can e.g. store `x, mean, sigma` as `RooTemplateProxy<RooAbsReal>`.
 Any object deriving from RooAbsArg can be stored, *e.g.*, variables, PDFs and categories.
 
-RooProxy's base class RooArgProxy registers the proxied objects as "servers" of the object
+RooTemplateProxy's base class RooArgProxy registers the proxied objects as "servers" of the object
 that holds the proxy. When the value of the proxied object is changed, the owner is
 notified, and can recalculate its own value. Renaming or exchanging objects that
 serve values to the owner of the proxy is handled automatically.
 
 ## Modernisation of proxies in ROOT 6.22
-In ROOT 6.22, the classes RooRealProxy and RooCategoryProxy were replaced by RooProxy<class T>.
+In ROOT 6.22, the classes RooRealProxy and RooCategoryProxy were replaced by RooTemplateProxy<class T>.
 
 Two typedefs have been defined for backward compatibility:
-- `RooRealProxy = RooProxy<RooAbsReal>`. Any generic object that converts to a real value.
-- `RooCategoryProxy = RooProxy<RooAbsCategory>`. Any category object.
+- `RooRealProxy = RooTemplateProxy<RooAbsReal>`. Any generic object that converts to a real value.
+- `RooCategoryProxy = RooTemplateProxy<RooAbsCategory>`. Any category object.
 
 When choosing the template argument according to which type of object should be stored in the proxy,
-RooProxy allows for type-safely accessing all properties of the stored object. For this, it
-provides `operator*` and `operator->`, so that the RooProxy can be used similarly to a smart pointer.
+RooTemplateProxy allows for type-safely accessing all properties of the stored object. For this, it
+provides `operator*` and `operator->`, so that the RooTemplateProxy can be used similarly to a smart pointer.
 
 <table>
 <tr><th> RooFit before ROOT 6.22 <th> RooFit starting with ROOT 6.22
@@ -70,7 +70,7 @@ pdf->fitTo(...);
 <td>
 ~~~{.cpp}
 // In class definition
-RooProxy<RooAbsPdf> pdfProxy;
+RooTemplateProxy<RooAbsPdf> pdfProxy;
 
 
 // Initialise proxy in constructor
@@ -89,18 +89,18 @@ pdfProxy->fitTo(...);
 ### How to modernise old code
 
 1. Choose the proper template argument for the proxy.
- - If a PDF is stored: `RooProxy<RooAbsPdf>`.
- - If a real-valued object is stored: `RooProxy<RooAbsReal>`.
- - If a category is stored: `RooProxy<RooCategory>`.
- - If a variable is stored (i.e. one want to be able to assign values to it): `RooProxy<RooRealVar>`
+ - If a PDF is stored: `RooTemplateProxy<RooAbsPdf>`.
+ - If a real-valued object is stored: `RooTemplateProxy<RooAbsReal>`.
+ - If a category is stored: `RooTemplateProxy<RooCategory>`.
+ - If a variable is stored (i.e. one want to be able to assign values to it): `RooTemplateProxy<RooRealVar>`
  Other template arguments are possible, as long as they derive from RooAbsArg.
 2. Make sure that the right type is passed in the constructor of the proxy.
 3. Always use `proxy->` and `*proxy` to work with the stored object. No need to cast.
-4. **Only if necessary** If errors about missing symbols connected to RooProxy appear at link time,
-   a specific template instantiation for RooProxy is not yet in ROOT's dictionaries.
+4. **Only if necessary** If errors about missing symbols connected to RooTemplateProxy appear at link time,
+   a specific template instantiation for RooTemplateProxy is not yet in ROOT's dictionaries.
    These two lines should be added to the LinkDef.h of the project:
-       #pragma link C++ class RooProxy<RooMultiCategory>+;
-       #pragma read sourceClass="RooCategoryProxy" targetClass="RooProxy<RooMultiCategory>"
+       #pragma link C++ class RooTemplateProxy<RooMultiCategory>+;
+       #pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooMultiCategory>"
    Replace `RooMultiCategory` by the proper type. If the proxy was holding a real-valued object, use `sourceClass="RooRealProxy"`.
 
    The first line adds the proxy class to the dictionary, the second line enables reading a legacy
@@ -114,10 +114,10 @@ pdfProxy->fitTo(...);
 **/
 
 template<class T>
-class RooProxy : public RooArgProxy {
+class RooTemplateProxy : public RooArgProxy {
 public:
 
-  RooProxy() {} ;
+  RooTemplateProxy() {} ;
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Constructor with owner.
@@ -128,7 +128,7 @@ public:
   /// \param[in] valueServer Notify the owner if value changes.
   /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
-  RooProxy(const char* theName, const char* desc, RooAbsArg* owner,
+  RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner,
       Bool_t valueServer=true, Bool_t shapeServer=false, Bool_t proxyOwnsArg=false)
   : RooArgProxy(theName, desc, owner, valueServer, shapeServer, proxyOwnsArg) { }
 
@@ -142,14 +142,14 @@ public:
   /// \param[in] valueServer Notify the owner if value changes.
   /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
-  RooProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
+  RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
       Bool_t valueServer=true, Bool_t shapeServer=false, Bool_t proxyOwnsArg=false) :
         RooArgProxy(theName, desc, owner, ref, valueServer, shapeServer, proxyOwnsArg) { }
 
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Copy from an existing proxy.
-  /// It will accept any RooProxy instance, and attempt a dynamic_cast on its payload.
+  /// It will accept any RooTemplateProxy instance, and attempt a dynamic_cast on its payload.
   /// \param[in] theName Name of this proxy.
   /// \param[in] owner Pointer to the owner this proxy should be registered to.
   /// \param[in] other Instance of a differen proxy whose payload should be copied.
@@ -158,18 +158,18 @@ public:
   /// when reading back legacy types. Defaults to false.
   /// \throw std::invalid_argument if the types of the payloads are incompatible.
   template<typename U>
-  RooProxy(const char* theName, RooAbsArg* owner, const RooProxy<U>& other, bool allowWrongTypes = false) :
+  RooTemplateProxy(const char* theName, RooAbsArg* owner, const RooTemplateProxy<U>& other, bool allowWrongTypes = false) :
     RooArgProxy(theName, owner, other) {
     if (_arg && !dynamic_cast<const T*>(_arg)) {
       if (allowWrongTypes) {
         coutE(InputArguments) << "Error trying to copy an argument from a proxy with an incompatible payload." << std::endl;
       } else {
-        throw std::invalid_argument("Tried to construct a RooProxy with incompatible payload.");
+        throw std::invalid_argument("Tried to construct a RooTemplateProxy with incompatible payload.");
       }
     }
   }
 
-  virtual TObject* Clone(const char* newName=0) const { return new RooProxy<T>(newName,_owner,*this); }
+  virtual TObject* Clone(const char* newName=0) const { return new RooTemplateProxy<T>(newName,_owner,*this); }
  
 
   /// Return reference to the proxied object.
@@ -217,7 +217,7 @@ public:
   /// for forwarding calls to the proxied objects were necessary. The functions in this group can all be
   /// replaced by directly accessing the proxied objects using `proxy->function()` or `*proxy = value`.
   /// For this to work, choose the template argument appropriately. That is, if the
-  /// proxy stores a PDF, use `RooProxy<RooAbsPdf>`, *etc.*.
+  /// proxy stores a PDF, use `RooTemplateProxy<RooAbsPdf>`, *etc.*.
   /// @{
 
   /// Get the label of the current category state. This function only makes sense for category proxies.
@@ -247,12 +247,12 @@ public:
 
   /// Assign a new value to the object pointed to by the proxy.
   /// This requires the payload to be assignable (RooAbsRealLValue or derived, RooAbsCategoryLValue).
-  RooProxy<T>& operator=(typename T::value_type value) {
+  RooTemplateProxy<T>& operator=(typename T::value_type value) {
     lvptr(static_cast<T*>(nullptr))->operator=(value);
     return *this;
   }
   /// Set a category state using its state name. This function can only work for category-type proxies.
-  RooProxy<T>& operator=(const std::string& newState) {
+  RooTemplateProxy<T>& operator=(const std::string& newState) {
     static_assert(std::is_base_of<RooAbsCategory, T>::value, "Strings can only be assigned to category proxies.");
     lvptr(static_cast<RooAbsCategoryLValue*>(nullptr))->operator=(newState.c_str());
     return *this;
@@ -293,7 +293,7 @@ private:
   }
   /// \copydoc const LValue_t* lvptr(const LValue_t*) const
   const LValue_t* lvptr(const RooAbsArg*) const
-  R__SUGGEST_ALTERNATIVE("The template argument of RooProxy needs to derive from RooAbsRealLValue or RooAbsCategoryLValue to safely call this function.") {
+  R__SUGGEST_ALTERNATIVE("The template argument of RooTemplateProxy needs to derive from RooAbsRealLValue or RooAbsCategoryLValue to safely call this function.") {
 #ifdef NDEBUG
     return static_cast<const LValue_t*>(_arg);
 #else
@@ -304,7 +304,7 @@ private:
   }
   /// \copydoc const LValue_t* lvptr(const LValue_t*) const
   LValue_t* lvptr(RooAbsArg*)
-  R__SUGGEST_ALTERNATIVE("The template argument of RooProxy needs to derive from RooAbsRealLValue or RooAbsCategoryLValue to safely call this function.") {
+  R__SUGGEST_ALTERNATIVE("The template argument of RooTemplateProxy needs to derive from RooAbsRealLValue or RooAbsCategoryLValue to safely call this function.") {
 #ifdef NDEBUG
     return static_cast<LValue_t*>(_arg);
 #else
@@ -335,7 +335,7 @@ private:
     return real.getValBatch(begin, batchSize, _nset);
   }
 
-  ClassDef(RooProxy,1) // Proxy for a RooAbsReal object
+  ClassDef(RooTemplateProxy,1) // Proxy for a RooAbsReal object
 };
 
 #endif
