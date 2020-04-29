@@ -146,7 +146,6 @@
 #pragma link C++ class RooMinuit+ ;
 #pragma link C++ class RooMPSentinel+ ;
 #pragma link C++ class RooMultiCategory+ ;
-#pragma link C++ class RooMultiCatIter+ ;
 #pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNameSet+ ;
 #pragma link C++ class RooNLLVar+ ;

@@ -59,7 +59,7 @@ for advanced uses of categories.
 #include "RooMsgService.h"
 #include "RooTrace.h"
 #include "RooHelpers.h"
-#include "RooCategorySharedProperties.h"
+#include "RooFitLegacy/RooCategorySharedProperties.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
 #include "TBuffer.h"
