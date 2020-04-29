@@ -1,7 +1,7 @@
-// Tests for the RooProxy
+// Tests for the RooTemplateProxy and RooCategory, and if they work together
 // Author: Stephan Hageboeck, CERN  01/2019
 
-#include "RooProxy.h"
+#include "RooTemplateProxy.h"
 #include "RooCategoryProxy.h"
 
 #include "RooRealVar.h"
@@ -9,6 +9,8 @@
 #include "RooCategory.h"
 #include "RooDataSet.h"
 #include "RooGenericPdf.h"
+#include "RooWorkspace.h"
+#include "TFile.h"
 
 #include "gtest/gtest.h"
 
@@ -35,12 +37,12 @@ struct DummyClass : public RooAbsPdf {
     }
 
     RooCategoryProxy cat;
-    RooProxy<RooRealVar> var;
-    RooProxy<RooAbsPdf>  pdf;
+    RooTemplateProxy<RooRealVar> var;
+    RooTemplateProxy<RooAbsPdf>  pdf;
 };
 
 
-TEST(RooProxy, CategoryProxy) {
+TEST(RooTemplateProxy, CategoryProxy) {
   RooCategory myCat("myCat", "A category");
   myCat.defineType("A", 1);
   myCat.defineType("B", 2);
@@ -78,7 +80,25 @@ TEST(RooProxy, CategoryProxy) {
 }
 
 
-TEST(RooProxy, CategoryProxyBatchAccess) {
+// Read a simple v6.20 workspace to test proxy schema evolution
+TEST(RooTemplateProxy, Read6_20) {
+  TFile file("testProxiesAndCategories_1.root", "READ");
+  ASSERT_TRUE(file.IsOpen());
+
+  RooWorkspace* ws = nullptr;
+  file.GetObject("ws", ws);
+  ASSERT_NE(ws, nullptr);
+
+  auto pdf = ws->pdf("gaus");
+  EXPECT_NE(pdf, nullptr);
+  const char* names[3] = {"x", "m", "s"};
+  for (int i=0; i<3; ++i) {
+    ASSERT_NE(pdf->findServer(names[i]), nullptr);
+  }
+}
+
+
+TEST(RooTemplateProxy, DISABLED_CategoryProxyBatchAccess) {
   RooCategory myCat("myCat", "A category");
   myCat.defineType("A", 1);
   myCat.defineType("B", 2);
@@ -114,7 +134,7 @@ TEST(RooProxy, CategoryProxyBatchAccess) {
 }
 
 
-TEST(RooProxy, RealProxyBatchAccess) {
+TEST(RooTemplateProxy, RealProxyBatchAccess) {
   RooCategory myCat("myCat", "A category");
   RooRealVar x("x", "x", -10, 10);
   DummyClass dummy(myCat, x);
@@ -143,7 +163,7 @@ TEST(RooProxy, RealProxyBatchAccess) {
 }
 
 
-TEST(RooProxy, PdfProxyBatchAccess) {
+TEST(RooTemplateProxy, PdfProxyBatchAccess) {
   RooCategory myCat("myCat", "A category");
   RooRealVar x("x", "x", -10, 10);
   RooGenericPdf generic("generic", "generic", "1.+x", x);
