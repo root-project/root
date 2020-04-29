@@ -199,7 +199,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSetPair.h
     RooSetProxy.h
     RooSharedProperties.h
-    RooSharedPropertiesList.h
     RooSimGenContext.h
     RooSimPdfBuilder.h
     RooSimSplitGenContext.h
@@ -416,7 +415,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSetPair.cxx
     src/RooSetProxy.cxx
     src/RooSharedProperties.cxx
-    src/RooSharedPropertiesList.cxx
     src/RooSimGenContext.cxx
     src/RooSimPdfBuilder.cxx
     src/RooSimSplitGenContext.cxx
