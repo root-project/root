@@ -54,6 +54,70 @@ TEST(RooCategory, WriteAndReadBack) {
 }
 
 
+class RooCategoryIO : public testing::TestWithParam<const char*> {
+public:
+  /* Test the reading of a simple mock category that has the states
+   * one = 0
+   * two = 1
+   * three = 2
+   * four = 3
+   * The ranges "evens" and "odds" for even and odd state names are defined.
+   * Now, we check that set ranges are read and written properly, and that
+   * sharing of those ranges works even after reading back.
+   */
+  void SetUp() override {
+    TFile file(GetParam(), "READ");
+    ASSERT_TRUE(file.IsOpen());
+
+    file.GetObject("catOrig", cat);
+    ASSERT_NE(cat, nullptr);
+
+    file.GetObject("data", data);
+    ASSERT_NE(data, nullptr);
+
+    catFromDataset = dynamic_cast<RooCategory*>(data->get(0)->find("cat"));
+    ASSERT_NE(catFromDataset, nullptr);
+  }
+
+  void TearDown() override {
+    delete cat;
+    delete data;
+  }
+
+protected:
+  enum State_t {one = 0, two = 1, three = 2, four = 3};
+  RooCategory* cat;
+  RooDataSet* data;
+  RooCategory* catFromDataset;
+};
+
+TEST_P(RooCategoryIO, ReadWithRanges) {
+  for (RooCategory* theCat : {cat, catFromDataset}) {
+    ASSERT_TRUE(theCat->hasRange("odds"));
+    ASSERT_TRUE(theCat->hasRange("evens"));
+
+    EXPECT_TRUE(theCat->isStateInRange("odds",  one));
+    EXPECT_TRUE(theCat->isStateInRange("odds",  "three"));
+    EXPECT_TRUE(theCat->isStateInRange("evens", two));
+    EXPECT_TRUE(theCat->isStateInRange("evens", "four"));
+
+    EXPECT_FALSE(theCat->isStateInRange("odds",  "two"));
+    EXPECT_FALSE(theCat->isStateInRange("odds",  four));
+    EXPECT_FALSE(theCat->isStateInRange("evens", "one"));
+    EXPECT_FALSE(theCat->isStateInRange("evens", three));
+  }
+}
+
+TEST_P(RooCategoryIO, TestThatRangesAreShared) {
+  cat->addToRange("evens", "three");
+  EXPECT_TRUE(catFromDataset->isStateInRange("evens", "three"));
+}
+
+INSTANTIATE_TEST_CASE_P(IO_SchemaEvol, RooCategoryIO,
+    testing::Values("categories_v620.root", "categories_v621.root", "categories_v622.root"));
+
+
+
 TEST(RooCategory, BracketOperator) {
   RooCategory myCat;
   myCat["0Lep"] = 0;
