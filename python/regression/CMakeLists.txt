@@ -22,7 +22,7 @@ if(ROOT_pyroot_FOUND)
                     ENVIRONMENT EXP_PYROOT=${exp_pyroot})
 
   ROOTTEST_ADD_TEST(root_6023
-                    MACRO exec_root_6023.py OPTS -b
+                    MACRO exec_root_6023.py
                     COPY_TO_BUILDDIR root_6023.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e gSystem->AddLinkedLibs\(\"${PYTHON_LIBRARIES}\"\)
                                                      -e .L\ root_6023.h+
