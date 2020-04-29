@@ -162,6 +162,15 @@ public:
          fOverflowBinContent[b] += other.fOverflowBinContent[b];
    }
 
+   /// Multiply by a scalar.
+   template <typename T>
+   void MultiplyByScalar(const T scalar) {
+      for (size_t b = 0; b < fBinContent.size(); ++b)
+         fBinContent[b] *= scalar;
+      for (size_t b = 0; b < fOverflowBinContent.size(); ++b)
+         fOverflowBinContent[b] *= scalar;
+   }
+
    /// Divide by an other RHistStatContent, assuming same bin configuration.
    void Divide(const RHistStatContent& other) {
       assert(fBinContent.size() == other.fBinContent.size());
@@ -223,6 +232,12 @@ public:
       fSumWeights += other.fSumWeights;
    }
 
+   /// Multiply by a scalar.
+   template <typename T>
+   void MultiplyByScalar(const T scalar) {
+      fSumWeights *= scalar;
+   }
+
    /// Divide by an other RHistStatTotalSumOfWeights data, assuming same bin configuration.
    void Divide(const RHistStatTotalSumOfWeights& other) {
       fSumWeights /= other.fSumWeights;
@@ -276,6 +291,12 @@ public:
    /// Add an other RHistStatTotalSumOfSquaredWeights data, assuming same bin configuration.
    void Add(const RHistStatTotalSumOfSquaredWeights& other) {
       fSumWeights2 += other.fSumWeights2;
+   }
+
+   /// Multiply by a scalar.
+   template <typename T>
+   void MultiplyByScalar(const T scalar) {
+      fSumWeights2 *= scalar;
    }
 
    /// Divide by an other RHistStatTotalSumOfSquaredWeights data, assuming same bin configuration.
@@ -414,6 +435,15 @@ public:
          fOverflowSumWeightsSquared[b] += other.fOverflowSumWeightsSquared[b];
    }
 
+   /// Multiply by a scalar.
+   template <typename T>
+   void MultiplyByScalar(const T scalar) {
+      for (size_t b = 0; b < fSumWeightsSquared.size(); ++b)
+         fSumWeightsSquared[b] *= scalar;
+      for (size_t b = 0; b < fOverflowSumWeightsSquared.size(); ++b)
+         fOverflowSumWeightsSquared[b] *= scalar;
+   }
+
    /// Divide by an other `RHistStatUncertainty` data, assuming same bin configuration.
    void Divide(const RHistStatUncertainty& other) {
       assert(fSumWeightsSquared.size() == other.fSumWeightsSquared.size());
@@ -499,6 +529,15 @@ public:
       for (size_t d = 0; d < DIMENSIONS; ++d) {
          fMomentXW[d] += other.fMomentXW[d];
          fMomentX2W[d] += other.fMomentX2W[d];
+      }
+   }
+
+   /// Multiply by a scalar.
+   template <typename T>
+   void MultiplyByScalar(const T scalar) {
+      for (size_t d = 0; d < DIMENSIONS; ++d) {
+         fMomentXW[d] *= scalar;
+         fMomentX2W[d] *= scalar;
       }
    }
 
@@ -668,6 +707,15 @@ public:
       // Call `Add()` on all base classes, using the same tricks as `Fill()`.
       using trigger_base_add = int[];
       (void)trigger_base_add{(STAT<DIMENSIONS, PRECISION>::Add(other), 0)...};
+   }
+
+   /// Multiply the current data by a scalar.
+   template <typename OtherData>
+   void MultiplyByScalar(const OtherData scalar)
+   {
+      // Call `MultiplyByScalar()` on all base classes, using the same tricks as `Fill()`.
+      using trigger_base_add = int[];
+      (void)trigger_base_add{(STAT<DIMENSIONS, PRECISION>::MultiplyByScalar(scalar), 0)...};
    }
 
    /// Divide current data by some other statistical data.

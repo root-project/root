@@ -171,6 +171,13 @@ public:
       std::swap(fFillFunc, other.fFillFunc);
    }
 
+   /// Multiply all stats of a histogram by a certain scalar.
+   template <typename T>
+   RHist &operator*=(T scalar) {
+      fImpl->GetStat().MultiplyByScalar(scalar);
+      return *this;
+   }
+
 private:
    std::unique_ptr<ImplBase_t> fImpl; ///< The actual histogram implementation.
    FillFunc_t fFillFunc = nullptr;    ///< Pointer to RHistImpl::Fill() member function.
