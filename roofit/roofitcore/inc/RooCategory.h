@@ -107,7 +107,7 @@ protected:
     return _currentIndex;
   }
 
-  /// This categorie's shape does not depend on others, and does not need recomputing.
+  /// This category's shape does not depend on others, and does not need recomputing.
   void recomputeShape() override { };
 
 private:
@@ -118,7 +118,12 @@ private:
   std::shared_ptr<RangeMap_t> _ranges{new RangeMap_t()}; //!
   RangeMap_t* _rangesPointerForIO{nullptr}; // Pointer to the same object as _ranges, but not shared for I/O.
 
-  void _readLegacySharedProp(const RooCategorySharedProperties* sp);
+  void installLegacySharedProp(const RooCategorySharedProperties* sp);
+  void installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap);
+  // Helper for restoring shared ranges from old versions of this class read from files. Maps TUUID names to shared ranges.
+  static std::map<std::string, std::weak_ptr<RangeMap_t>> _uuidToSharedRangeIOHelper;
+  // Helper for restoring shared ranges from current versions of this class read from files. Maps category names to shared ranges.
+  static std::map<std::string, std::weak_ptr<RangeMap_t>> _sharedRangeIOHelper;
 
   ClassDefOverride(RooCategory, 3) // Discrete valued variable type
 };
