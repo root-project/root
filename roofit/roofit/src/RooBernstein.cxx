@@ -86,11 +86,8 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 
 void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
 {
-  if (rangeName && (force || !_refRangeName)) {
+  if (rangeName && (force || !_refRangeName.empty())) {
      _refRangeName = static_cast<const TNamed*> (RooNameReg::instance().constPtr(rangeName));
-  }
-  if (!rangeName) {
-     _refRangeName = nullptr;
   }
 }
 
@@ -98,11 +95,9 @@ void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
 
 Double_t RooBernstein::evaluate() const
 {
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmax = _x.max(_refRangeName?_refRangeName.c_str():0);
+  const Double_t xmin = _x.min(_refRangeName?_refRangeName.c_str():0);
   Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
-//  std::cout << "inside evaluate" << "xmin=" << xmin << ",xmax=" << xmax << std::endl;
-//  std::cout << "inside evaluate" << "_x.xmin(0)" << _x.min(0) << "_xmax(0)" << _x.max(0) << std::endl;
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
   RooFIter iter = _coefList.fwdIterator();
 
@@ -237,8 +232,8 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
+  const Double_t xmax = _x.max(_refRangeName.empty()?_refRangeName.c_str():0);
+  const Double_t xmin = _x.min(_refRangeName.empty()?_refRangeName.c_str():0);
   const Double_t xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
   const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
 
@@ -254,7 +249,6 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     temp = 0;
     for (int j=i; j<=degree; ++j){ // power basis≈ß
       temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) * (TMath::Power(xhi,j+1) - TMath::Power(xlo,j+1)) / (j+1);
- //   temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) / (j+1);
     }
     temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
