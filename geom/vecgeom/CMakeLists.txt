@@ -9,7 +9,7 @@
 # @author Mihaela Gheata, CERN
 ############################################################################
 
-include_directories(AFTER SYSTEM ${VECGEOM_INCLUDE_DIR})
+include_directories(AFTER SYSTEM ${VECGEOM_INCLUDE_DIRS})
 if ( Vc_FOUND )
    include_directories( AFTER SYSTEM ${Vc_INCLUDE_DIRS})
    if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
