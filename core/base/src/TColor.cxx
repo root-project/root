@@ -1758,6 +1758,8 @@ void TColor::Allocate()
 /// hex color string of form: "#rrggbb", where rr, gg and bb are in
 /// hex between [0,FF], e.g. "#c0c0c0".
 ///
+/// The color retrieval is done using a threshold defined by SetColorThreshold.
+///
 /// If specified color does not exist it will be created with as
 /// name "#rrggbb" with rr, gg and bb in hex between [0,FF].
 
@@ -1775,6 +1777,8 @@ Int_t TColor::GetColor(const char *hexcolor)
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning color number for color specified by
 /// r, g and b. The r,g,b should be in the range [0,1].
+///
+/// The color retrieval is done using a threshold defined by SetColorThreshold.
 ///
 /// If specified color does not exist it will be created
 /// with as name "#rrggbb" with rr, gg and bb in hex between
@@ -1794,6 +1798,9 @@ Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
 /// Static method returning color number for color specified by
 /// system dependent pixel value. Pixel values can be obtained, e.g.,
 /// from the GUI color picker.
+///
+/// The color retrieval is done using a threshold defined by SetColorThreshold.
+
 
 Int_t TColor::GetColor(ULong_t pixel)
 {
@@ -1839,6 +1846,9 @@ void TColor::SetColorThreshold(Float_t t)
 /// If the specified color does not exist it will be created
 /// with as name "#rrggbb" with rr, gg and bb in hex between
 /// [0,FF].
+///
+/// The color retrieval is done using a threshold defined by SetColorThreshold.
+
 
 Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 {
