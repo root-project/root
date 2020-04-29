@@ -87,7 +87,7 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
 {
   if (rangeName && (force || !_refRangeName.empty())) {
-     _refRangeName = static_cast<const TNamed*> (RooNameReg::instance().constPtr(rangeName));
+     _refRangeName = rangeName;
   }
 }
 
