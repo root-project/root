@@ -95,8 +95,8 @@ void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
 
 Double_t RooBernstein::evaluate() const
 {
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName.c_str():0);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName.c_str():0);
+  double xmin, xmax;
+  std::tie(xmin, xmax) = _x.getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
   Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
   RooFIter iter = _coefList.fwdIterator();
