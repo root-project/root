@@ -358,7 +358,7 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp,
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName()
 			   << "): PROHIBITED SERVER ADDITION REQUESTED: adding server " << server.GetName()
 			   << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
-    assert(0) ;
+    throw std::logic_error("PROHIBITED SERVER ADDITION REQUESTED in RooAbsArg::addServer");
   }
 
   cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): adding server " << server.GetName()
