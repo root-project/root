@@ -43,10 +43,8 @@ static std::string &GetCodeToJit()
    static std::string code;
    return code;
 }
-} // anonymous namespace
 
-// FIXME move all of these helper functions to anonymous namespace, declare static
-bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
+static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 {
    return (leaves.find(leaf) != leaves.end());
 }
@@ -54,8 +52,8 @@ bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 ///////////////////////////////////////////////////////////////////////////////
 /// This overload does not perform any check on the duplicates.
 /// It is used for TBranch objects.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                const std::string &friendName)
+static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                       const std::string &friendName)
 {
 
    if (!friendName.empty()) {
@@ -71,8 +69,8 @@ void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const s
 
 ///////////////////////////////////////////////////////////////////////////////
 /// This overloads makes sure that the TLeaf has not been already inserted.
-void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                       const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
 {
    const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
    if (!canAdd) {
@@ -84,8 +82,8 @@ void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const s
    foundLeaves.insert(leaf);
 }
 
-void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b, std::string prefix,
-                   std::string &friendName)
+static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
+                          std::string prefix, std::string &friendName)
 {
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch *>(sb);
@@ -107,8 +105,8 @@ void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bN
    }
 }
 
-void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
-                        std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
+static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                               std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
 {
    std::set<TLeaf *> foundLeaves;
    if (!analysedTrees.insert(&t).second) {
@@ -190,6 +188,24 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
    }
 }
 
+static void ThrowIfPoolSizeChanged(unsigned int nSlots)
+{
+   const auto poolSize = ROOT::GetThreadPoolSize();
+   const bool isSingleThreadRun = (poolSize == 0 && nSlots == 1);
+   if (!isSingleThreadRun && poolSize != nSlots) {
+      std::string msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool was " +
+                        std::to_string(nSlots) + ", but when starting the event loop it was " +
+                        std::to_string(poolSize) + ".";
+      if (poolSize > nSlots)
+         msg += " Maybe EnableImplicitMT() was called after the RDataFrame was constructed?";
+      else
+         msg += " Maybe DisableImplicitMT() was called after the RDataFrame was constructed?";
+      throw std::runtime_error(msg);
+   }
+}
+
+} // anonymous namespace
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Get all the branches names, including the ones of the friend trees
 ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates)
@@ -201,7 +217,6 @@ ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates
    GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
    return bNames;
 }
-
 
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
@@ -536,24 +551,6 @@ void RLoopManager::EvalChildrenCounts()
    for (auto &namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->TriggerChildrenCount();
 }
-
-namespace {
-static void ThrowIfPoolSizeChanged(unsigned int nSlots)
-{
-   const auto poolSize = ROOT::GetThreadPoolSize();
-   const bool isSingleThreadRun = (poolSize == 0 && nSlots == 1);
-   if (!isSingleThreadRun && poolSize != nSlots) {
-      std::string msg = "RLoopManager::Run: when the RDataFrame was constructed the size of the thread pool was " +
-                        std::to_string(nSlots) + ", but when starting the event loop it was " +
-                        std::to_string(poolSize) + ".";
-      if (poolSize > nSlots)
-         msg += " Maybe EnableImplicitMT() was called after the RDataFrame was constructed?";
-      else
-         msg += " Maybe DisableImplicitMT() was called after the RDataFrame was constructed?";
-      throw std::runtime_error(msg);
-   }
-}
-} // namespace
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
