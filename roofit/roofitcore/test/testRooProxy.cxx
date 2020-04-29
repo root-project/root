@@ -80,24 +80,6 @@ TEST(RooTemplateProxy, CategoryProxy) {
 }
 
 
-// Read a simple v6.20 workspace to test proxy schema evolution
-TEST(RooTemplateProxy, Read6_20) {
-  TFile file("testProxiesAndCategories_1.root", "READ");
-  ASSERT_TRUE(file.IsOpen());
-
-  RooWorkspace* ws = nullptr;
-  file.GetObject("ws", ws);
-  ASSERT_NE(ws, nullptr);
-
-  auto pdf = ws->pdf("gaus");
-  EXPECT_NE(pdf, nullptr);
-  const char* names[3] = {"x", "m", "s"};
-  for (int i=0; i<3; ++i) {
-    ASSERT_NE(pdf->findServer(names[i]), nullptr);
-  }
-}
-
-
 TEST(RooTemplateProxy, DISABLED_CategoryProxyBatchAccess) {
   RooCategory myCat("myCat", "A category");
   myCat.defineType("A", 1);
