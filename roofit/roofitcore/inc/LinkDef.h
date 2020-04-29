@@ -202,7 +202,6 @@
 #pragma link C++ class RooSetPair+ ;
 #pragma link C++ class RooSetProxy+ ;
 #pragma link C++ class RooSharedProperties+ ;
-#pragma link C++ class RooSharedPropertiesList+ ;
 #pragma link C++ class RooSimGenContext+ ;
 #pragma link C++ class RooSimSplitGenContext+ ;
 #pragma link C++ class RooStreamParser+ ;
