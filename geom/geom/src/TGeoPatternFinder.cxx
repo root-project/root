@@ -350,7 +350,7 @@ void TGeoPatternX::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 Bool_t TGeoPatternX::IsOnBoundary(const Double_t *point) const
 {
    Double_t seg = (point[0]-fStart)/fStep;
-   Double_t diff = seg - Int_t(seg);
+   Double_t diff = seg - Long64_t(seg);
    if (diff>0.5) diff = 1.-diff;
    if (diff<1e-8) return kTRUE;
    return kFALSE;
