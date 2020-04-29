@@ -5840,6 +5840,80 @@ Int_t TCling::AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// Get the list of 'published'/'known' library for the class and load them.
+Int_t TCling::ShallowAutoLoadImpl(const char *cls)
+{
+   Int_t status = 0;
+
+   // lookup class to find list of dependent libraries
+   TString deplibs = GetClassSharedLibs(cls);
+   if (!deplibs.IsNull()) {
+      TString delim(" ");
+      TObjArray* tokens = deplibs.Tokenize(delim);
+      for (Int_t i = (tokens->GetEntriesFast() - 1); i > 0; --i) {
+         const char* deplib = ((TObjString*)tokens->At(i))->GetName();
+         if (gROOT->LoadClass(cls, deplib) == 0) {
+            if (gDebug > 0) {
+               Info("TCling::AutoLoad",
+                  "loaded dependent library %s for %s", deplib, cls);
+            }
+         }
+         else {
+            Error("TCling::AutoLoad",
+                  "failure loading dependent library %s for %s",
+                  deplib, cls);
+         }
+      }
+      const char* lib = ((TObjString*)tokens->At(0))->GetName();
+      if (lib && lib[0]) {
+         if (gROOT->LoadClass(cls, lib) == 0) {
+            if (gDebug > 0) {
+               Info("TCling::AutoLoad",
+                  "loaded library %s for %s", lib, cls);
+            }
+            status = 1;
+         }
+         else {
+            Error("TCling::AutoLoad",
+                  "failure loading library %s for %s", lib, cls);
+         }
+      }
+      delete tokens;
+   }
+
+   return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Iterate through the data member of the class (either through the TProtoClass
+// or through Cling) and trigger, recursively, the loading the necessary libraries.
+Int_t TCling::DeepAutoLoadImpl(const char *cls)
+{
+   Int_t status = ShallowAutoLoadImpl(cls);
+   if (status) {
+      // Now look through the TProtoClass to load the required library/dictionary
+      TProtoClass *proto = TClassTable::GetProto(cls);
+      if (proto) {
+         for(auto element : proto->GetData()) {
+            const char *subtypename = element->GetTypeName();
+            if (!element->IsBasic() && !TClassTable::GetDictNorm(subtypename)) {
+               // Failure to load a dictionary is not (quite) a failure load
+               // the top-level library.  If we return false here, then
+               // we would end up in a situation where the library and thus
+               // the dictionary is loaded for "cls" but the TClass is
+               // not created and/or marked as unavailable (in case where
+               // AutoLoad is called from TClass::GetClass).
+               (void) DeepAutoLoadImpl(subtypename);
+            }
+         }
+      }
+      // NOTE:  Need to test if adding use of ClassInfo here would be
+      // 'bad'
+   }
+   return status;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Load library containing the specified class. Returns 0 in case of error
 /// and 1 in case if success.
 
@@ -5891,44 +5965,8 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
       if (success)
          return success;
    }
-   // lookup class to find list of dependent libraries
-   Int_t status = 0;
-   TString deplibs = GetClassSharedLibs(cls);
-   if (!deplibs.IsNull()) {
-      TString delim(" ");
-      TObjArray* tokens = deplibs.Tokenize(delim);
-      for (Int_t i = (tokens->GetEntriesFast() - 1); i > 0; --i) {
-         const char* deplib = ((TObjString*)tokens->At(i))->GetName();
-         if (gROOT->LoadClass(cls, deplib) == 0) {
-            if (gDebug > 0) {
-               Info("TCling::AutoLoad",
-                    "loaded dependent library %s for %s", deplib, cls);
-            }
-         }
-         else {
-            Error("TCling::AutoLoad",
-                  "failure loading dependent library %s for %s",
-                  deplib, cls);
-         }
-      }
-      const char* lib = ((TObjString*)tokens->At(0))->GetName();
-      if (lib && lib[0]) {
-         if (gROOT->LoadClass(cls, lib) == 0) {
-            if (gDebug > 0) {
-               Info("TCling::AutoLoad",
-                    "loaded library %s for %s", lib, cls);
-            }
-            status = 1;
-         }
-         else {
-            Error("TCling::AutoLoad",
-                  "failure loading library %s for %s", lib, cls);
-         }
-      }
-      delete tokens;
-   }
 
-   return status;
+   return DeepAutoLoadImpl(cls);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
