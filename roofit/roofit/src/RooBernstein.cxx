@@ -79,8 +79,7 @@ RooBernstein::RooBernstein(const char* name, const char* title,
 RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
   RooAbsPdf(other, name),
   _x("x", this, other._x),
-  _coefList("coefList",this,other._coefList),
-  _refRangeName(other._refRangeName)
+  _coefList("coefList",this,other._coefList)
 {
 }
 
