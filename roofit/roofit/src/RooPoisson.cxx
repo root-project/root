@@ -21,6 +21,7 @@ Poisson pdf
 #include "RooMath.h"
 #include "TMath.h"
 #include "Math/ProbFuncMathCore.h"
+#include "RooNaNPacker.h"
 
 #include "BatchHelpers.h"
 #include "RooVDTHeaders.h"
@@ -65,8 +66,11 @@ RooPoisson::RooPoisson(const char *name, const char *title,
 Double_t RooPoisson::evaluate() const
 {
   Double_t k = _noRounding ? x : floor(x);
-  if(_protectNegative && mean<0)
-    return 1e-3;
+  if(_protectNegative && mean<0) {
+    RooNaNPacker np;
+    np.setPayload(-mean);
+    return np._payload;
+  }
   return TMath::Poisson(k,mean) ;
 }
 
