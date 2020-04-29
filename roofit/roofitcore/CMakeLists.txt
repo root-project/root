@@ -64,8 +64,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooCacheManager.h
     RooCategory.h
     RooCategoryProxy.h
-    RooCategorySharedProperties.h
-    RooCatType.h
     RooChangeTracker.h
     RooChi2Var.h
     RooClassFactory.h
@@ -145,7 +143,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMPSentinel.h
     RooMsgService.h
     RooMultiCategory.h
-    RooMultiCatIter.h
     RooMultiGenFunction.h
     RooMultiVarGaussian.h
     RooNameReg.h
@@ -234,6 +231,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooVDTHeaders.h
     RooWrapperPdf.h
     RooFitLegacy/RooCatTypeLegacy.h
+    RooFitLegacy/RooCategorySharedProperties.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
@@ -288,7 +286,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooCachedReal.cxx
     src/RooCacheManager.cxx
     src/RooCategory.cxx
-    src/RooCategorySharedProperties.cxx
     src/RooChangeTracker.cxx
     src/RooChi2Var.cxx
     src/RooClassFactory.cxx
@@ -365,7 +362,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMPSentinel.cxx
     src/RooMsgService.cxx
     src/RooMultiCategory.cxx
-    src/RooMultiCatIter.cxx
     src/RooMultiGenFunction.cxx
     src/RooMultiVarGaussian.cxx
     src/RooNameReg.cxx
@@ -449,6 +445,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/BatchHelpers.cxx
     src/RooWrapperPdf.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
+    src/RooFitLegacy/RooCategorySharedProperties.cxx
+    src/RooFitLegacy/RooMultiCatIter.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   DEPENDENCIES

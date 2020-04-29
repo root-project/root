@@ -57,7 +57,7 @@ protected:
   TString _rangeName ;           // Range name (optional)
   TObject* _curItem;             // Current item returned by Next()
 
-  ClassDef(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
+//  ClassDef(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
 };
 
 #endif
