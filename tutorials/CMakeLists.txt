@@ -574,7 +574,7 @@ if(ROOT_pyroot_FOUND)
     endif()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
+                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
