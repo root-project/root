@@ -1533,6 +1533,15 @@ if(pyroot)
     message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
     set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
   endif()
+  mark_as_advanced(FORCE pyroot2 pyroot3)
+  if(fail-on-missing AND pyroot2 AND NOT Python2_Development_FOUND)
+    message(FATAL_ERROR "PyROOT2: Python2 development package not found and pyroot2 component required"
+                        " (python2 executable: ${Python2_EXECUTABLE})")
+  endif()
+  if(fail-on-missing AND pyroot3 AND NOT Python3_Development_FOUND)
+    message(FATAL_ERROR "PyROOT3: Python3 development package not found and pyroot3 component required"
+                        " (python3 executable: ${Python3_EXECUTABLE})")
+  endif()
 endif()
 
 #---Check for Pyroot Exp---------------------------------------------------------------------
