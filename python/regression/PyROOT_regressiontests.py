@@ -19,6 +19,7 @@ except ImportError:
    def WEXITSTATUS(arg): return arg
 
 import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = False
 from ROOT import gROOT, gInterpreter
 from ROOT import TClass, TObject, TFile
 from ROOT import TH1I, TVector3, TGraph, TMatrixD
