@@ -19,7 +19,7 @@ class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
 
     def __init__(self):
-        self.IgnoreCommandLineOptions = False
+        self.IgnoreCommandLineOptions = True
         self.ShutDown = True
         self.DisableRootLogon = False
 
