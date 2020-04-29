@@ -149,7 +149,7 @@ public:
    /// Retrieve the under-/overflow content array (non-const).
    Content_t &GetOverflowContentArray() { return fOverflowBinContent; }
 
-   /// Merge with other RHistStatContent, assuming same bin configuration.
+   /// Add an other RHistStatContent, assuming same bin configuration.
    void Add(const RHistStatContent& other) {
       assert(fBinContent.size() == other.fBinContent.size()
                && "this and other have incompatible bin configuration!");
@@ -201,7 +201,7 @@ public:
    /// Get the sum of weights.
    Weight_t GetSumOfWeights() const { return fSumWeights; }
 
-   /// Merge with other RHistStatTotalSumOfWeights data, assuming same bin configuration.
+   /// Add an other RHistStatTotalSumOfWeights data, assuming same bin configuration.
    void Add(const RHistStatTotalSumOfWeights& other) {
       fSumWeights += other.fSumWeights;
    }
@@ -245,7 +245,7 @@ public:
    /// Get the sum of weights.
    Weight_t GetSumOfSquaredWeights() const { return fSumWeights2; }
 
-   /// Merge with other RHistStatTotalSumOfSquaredWeights data, assuming same bin configuration.
+   /// Add an other RHistStatTotalSumOfSquaredWeights data, assuming same bin configuration.
    void Add(const RHistStatTotalSumOfSquaredWeights& other) {
       fSumWeights2 += other.fSumWeights2;
    }
@@ -358,7 +358,7 @@ public:
    /// Get the structure holding the under-/overflow sum of squares of weights (non-const).
    std::vector<double> &GetOverflowSumOfSquaredWeights() { return fOverflowSumWeightsSquared; }
 
-   /// Merge with other `RHistStatUncertainty` data, assuming same bin configuration.
+   /// Add an other `RHistStatUncertainty` data, assuming same bin configuration.
    void Add(const RHistStatUncertainty& other) {
       assert(fSumWeightsSquared.size() == other.fSumWeightsSquared.size()
                && "this and other have incompatible bin configuration!");
@@ -417,8 +417,10 @@ public:
 
    // FIXME: Add a way to query the inner data
 
-   /// Merge with other RHistDataMomentUncert data, assuming same bin configuration.
+   /// Add an other RHistDataMomentUncert data, assuming same bin configuration.
    void Add(const RHistDataMomentUncert& other) {
+      assert(fMomentXW.size() == other.fMomentXW.size());
+      assert(fMomentX2W.size() == other.fMomentX2W.size());
       for (size_t d = 0; d < DIMENSIONS; ++d) {
          fMomentXW[d] += other.fMomentXW[d];
          fMomentX2W[d] += other.fMomentX2W[d];
