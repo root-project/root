@@ -4,6 +4,7 @@
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include <TInterpreter.h>
 #include "TTree.h"
 #include "gtest/gtest.h"
 #include <limits>
@@ -703,6 +704,19 @@ void ReadWriteTClonesArray()
 TEST(RDFSnapshotMore, TClonesArray)
 {
    ReadWriteTClonesArray();
+}
+
+// ROOT-10702
+TEST(RDFSnapshotMore, CompositeTypeWithNameClash)
+{
+   const auto fname = "snap_compositetypewithnameclash.root";
+   gInterpreter->Declare("struct Int { int x; };");
+   ROOT::RDataFrame df(3);
+   auto snap_df = df.Define("i", "Int{-1};").Define("x", [] { return 1; }).Snapshot("t", fname);
+   EXPECT_EQ(snap_df->Sum<int>("x").GetValue(), 3); // prints -3 if the wrong "x" is written out
+   EXPECT_EQ(snap_df->Sum<int>("i.x").GetValue(), -3);
+
+   gSystem->Unlink(fname);
 }
 
 /********* MULTI THREAD TESTS ***********/
