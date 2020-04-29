@@ -33,46 +33,17 @@ using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
 namespace {
-/// A helper class to let different RLoopManager instances share the code to just-in-time compile.
-/// We want RLoopManagers to be able to add their code to global lists of "code to execute via cling",
+/// A helper function that returns all RDF code that is currently scheduled for just-in-time compilation.
+/// This allows different RLoopManager instances to share these data.
+/// We want RLoopManagers to be able to add their code to a global "code to execute via cling",
 /// so that, lazily, we can jit everything that's needed by all RDFs in one go, which is potentially
 /// much faster than jitting each RLoopManager's code separately.
-/// When RLoopManagers go out of scope, they will inform the global CodeToJit instance so that their
-/// outstanding code snippets can be removed from the lists.
-class CodeToJit {
-   using LoopManagerToCodeMap = std::unordered_map<const RLoopManager *, std::string>;
-   LoopManagerToCodeMap fCode;
-
-public:
-   void AddCodeToExec(const RLoopManager *ptr, const std::string &code) { fCode[ptr].append(code); }
-
-   /// Retrieve all code registered for execution. Clears the list of code to execute.
-   std::string PopCodeToExec()
-   {
-      std::size_t size = 0;
-      for (auto e : fCode)
-         size += e.second.size();
-
-      std::string code;
-      code.reserve(size);
-
-      for (auto e : fCode)
-         code.append(e.second);
-
-      fCode.clear();
-
-      return code;
-   }
-
-   void RemoveCodeForLoopManager(const RLoopManager *lm) { fCode.erase(lm); }
-};
-
-CodeToJit &GetCodeToJit()
+static std::string &GetCodeToJit()
 {
-   static CodeToJit code;
+   static std::string code;
    return code;
 }
-} // namespace
+} // anonymous namespace
 
 // FIXME move all of these helper functions to anonymous namespace, declare static
 bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
@@ -251,11 +222,6 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
      fDataSource(std::move(ds))
 {
    fDataSource->SetNSlots(fNSlots);
-}
-
-RLoopManager::~RLoopManager()
-{
-   GetCodeToJit().RemoveCodeForLoopManager(this);
 }
 
 // ROOT-9559: we cannot handle indexed friends
@@ -547,12 +513,12 @@ void RLoopManager::CleanUpTask(unsigned int slot)
 }
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.
-/// This method also clears the contents of GetCodeToJitExec().
+/// This method also clears the contents of GetCodeToJit().
 void RLoopManager::Jit()
 {
-   const auto code = GetCodeToJit().PopCodeToExec();
+   const std::string code = std::move(GetCodeToJit());
    if (code.empty())
-      return; // if nothing needs to be executed, we don't need the declarations either. can return early
+      return;
 
    RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
 }
@@ -675,7 +641,7 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 
 void RLoopManager::ToJitExec(const std::string &code) const
 {
-   GetCodeToJit().AddCodeToExec(this, code);
+   GetCodeToJit().append(code);
 }
 
 void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)

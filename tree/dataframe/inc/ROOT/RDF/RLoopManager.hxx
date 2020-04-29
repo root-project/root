@@ -139,7 +139,6 @@ public:
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
-   ~RLoopManager();
 
    void JitDeclarations();
    void Jit();
