@@ -131,7 +131,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooLinTransBinning.h
     RooList.h
     RooListProxy.h
-    RooMapCatEntry.h
     RooMappedCategory.h
     RooMath.h
     RooMCIntegrator.h
@@ -349,7 +348,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooLinTransBinning.cxx
     src/RooList.cxx
     src/RooListProxy.cxx
-    src/RooMapCatEntry.cxx
     src/RooMappedCategory.cxx
     src/RooMath.cxx
     src/RooMCIntegrator.cxx
