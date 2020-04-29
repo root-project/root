@@ -47,7 +47,7 @@ ClassImp(RooBernstein);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBernstein::RooBernstein() : _refRangeName(nullptr)
+RooBernstein::RooBernstein()
 {
 }
 
