@@ -229,6 +229,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooWrapperPdf.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
+    RooNaNPacker.h
   SOURCES
     src/BidirMMapPipe.cxx
     src/BidirMMapPipe.h
