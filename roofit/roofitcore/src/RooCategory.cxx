@@ -64,10 +64,14 @@ for advanced uses of categories.
 
 #include "TBuffer.h"
 #include "TString.h"
+#include "ROOT/RMakeUnique.hxx"
 
 using namespace std;
 
 ClassImp(RooCategory); 
+
+std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
+std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_sharedRangeIOHelper;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,60 +401,122 @@ void RooCategory::Streamer(TBuffer &R__b)
     
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
-    if (R__v > 2) {
-      // Before version 3, ranges were shared using RooCategorySharedProperties.
-      // Now, it is a shared pointer, which cannot be read by ROOT's I/O. Instead,
-      // a normal pointer is read, and later assigned to the shared pointer. Like this
-      // clones of this category will share the same ranges.
-      R__b.ReadClassBuffer(RooCategory::Class(), this, R__v, R__s, R__c);
-      if (_rangesPointerForIO) {
-        _ranges.reset(_rangesPointerForIO);
-        _rangesPointerForIO = nullptr;
-      }
-    } else {
-
+    if (R__v==1) {
       RooAbsCategoryLValue::Streamer(R__b);
 
+      // In v1, properties were a direct pointer:
       RooCategorySharedProperties* props = nullptr;
-      if (R__v==1) {
-        // Implement V1 streamer here
-        R__b >> props;
-      } else {
-        props = new RooCategorySharedProperties();
-        props->Streamer(R__b);
-        if (*props == RooCategorySharedProperties("00000000-0000-0000-0000-000000000000")) {
-          delete props;
-          props = nullptr;
-        }
-      }
+      R__b >> props;
+      installLegacySharedProp(props);
+      // props was allocated by I/O system, we cannot delete here in case it gets reused
 
-      if (props) {
-        _ranges.reset(new std::map<std::string, std::vector<value_type>>());
-        auto& rangesMap = *_ranges;
-        std::unique_ptr<TIterator> iter(props->_altRanges.MakeIterator());
-        TList* olist;
-        while((olist=(TList*)iter->Next())) {
-          std::vector<value_type>& vec = rangesMap[olist->GetName()];
+    } else if (R__v == 2) {
+      RooAbsCategoryLValue::Streamer(R__b);
 
-          RooCatType* ctype ;
-          std::unique_ptr<TIterator> citer(olist->MakeIterator());
-          while ((ctype=(RooCatType*)citer->Next())) {
-            vec.push_back(ctype->getVal());
-          }
-        }
-      }
-      delete props;
+      // In v2, properties were written directly into the class buffer
+      auto props = std::make_unique<RooCategorySharedProperties>();
+      props->Streamer(R__b);
+      installLegacySharedProp(props.get());
+
+    } else {
+      // Starting at v3, ranges are shared using a shared pointer, which cannot be read by ROOT's I/O.
+      // Instead, ranges are written as a normal pointer, and here we restore the sharing.
+      R__b.ReadClassBuffer(RooCategory::Class(), this, R__v, R__s, R__c);
+      installSharedRange(std::unique_ptr<RangeMap_t>(_rangesPointerForIO));
+      _rangesPointerForIO = nullptr;
     }
 
     R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
     
   } else {
-    // Since we cannot write shared pointers yet, assign the shared ranges to a normal pointer
-    // while we are writing.
+    // Since we cannot write shared pointers yet, assign the shared ranges to a normal pointer,
+    // write, and restore.
     if (_ranges)
       _rangesPointerForIO = _ranges.get();
 
     R__b.WriteClassBuffer(RooCategory::Class(), this);
     _rangesPointerForIO = nullptr;
+  }
+}
+
+
+/// When reading old versions of the class, we get instances of shared properties.
+/// Since these only contain ranges with numbers, just convert to vectors of numbers.
+void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* props) {
+  if (props == nullptr || (*props == RooCategorySharedProperties("00000000-0000-0000-0000-000000000000")))
+    return;
+
+  auto& weakPtr = _uuidToSharedRangeIOHelper[props->asString().Data()];
+  if (auto existingObject = weakPtr.lock()) {
+    // We know this range, start sharing
+    _ranges = std::move(existingObject);
+  } else {
+    // This range is unknown, make a new object
+    _ranges = std::make_shared<std::map<std::string, std::vector<value_type>>>();
+    auto& rangesMap = *_ranges;
+
+    // Copy the data:
+    std::unique_ptr<TIterator> iter(props->_altRanges.MakeIterator());
+    while (TList* olist = (TList*)iter->Next()) {
+      std::vector<value_type>& vec = rangesMap[olist->GetName()];
+
+
+      std::unique_ptr<TIterator> citer(olist->MakeIterator());
+      while (RooCatType* ctype = (RooCatType*)citer->Next()) {
+        vec.push_back(ctype->getVal());
+      }
+    }
+
+    // Register the shared_ptr for future sharing
+    weakPtr = _ranges;
+  }
+}
+
+
+/// In current versions of the class, a map with ranges can be shared between instances.
+/// If an instance with the same name alreday uses the same map, the instances will start sharing.
+/// Otherwise, this instance will be registered, and future copies being read will share with this
+/// one.
+void RooCategory::installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap) {
+  if (rangeMap == nullptr)
+    return;
+
+  auto checkRangeMapsEqual = [](const RooCategory::RangeMap_t& a, const RooCategory::RangeMap_t& b) {
+    if (&a == &b)
+      return true;
+
+    if (a.size() != b.size())
+      return false;
+
+    auto vecsEqual = [](const std::vector<RooAbsCategory::value_type>& aa, const std::vector<RooAbsCategory::value_type>& bb) {
+      return aa.size() == bb.size() && std::equal(aa.begin(), aa.end(), bb.begin());
+    };
+
+    for (const auto& itemA : a) {
+      const auto itemB = b.find(itemA.first);
+      if (itemB == b.end())
+        return false;
+
+      if (!vecsEqual(itemA.second, itemB->second))
+        return false;
+    }
+
+    return true;
+  };
+
+
+  auto& weakPtr = _sharedRangeIOHelper[GetName()];
+  auto existingMap = weakPtr.lock();
+  if (existingMap && checkRangeMapsEqual(*rangeMap, *existingMap)) {
+    // We know this map, use the shared one.
+    _ranges = std::move(existingMap);
+    if (rangeMap.get() == existingMap.get()) {
+      // This happens when ROOT's IO has written the same pointer twice. We cannot delete now.
+      (void) rangeMap.release(); // clang-tidy is normally right that this leaks. Here, we need to leave the result unused, though.
+    }
+  } else {
+    // We don't know this map. Register for sharing.
+    _ranges = std::move(rangeMap);
+    weakPtr = _ranges;
   }
 }
