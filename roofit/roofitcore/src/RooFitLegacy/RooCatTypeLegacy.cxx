@@ -24,13 +24,14 @@ a single category state. The class holds a string label and an integer
 index value which define the state
 **/
 
+#include "RooFitLegacy/RooCatTypeLegacy.h"
+
 #include "RooFit.h"
 
-#include <stdlib.h>
 #include "TClass.h"
-#include "RooCatType.h"
 
-#include "Riostream.h"
+#include <iostream>
+
 
 
 using namespace std;
@@ -46,7 +47,7 @@ ClassImp(RooCatType);
 void RooCatType::SetName(const Text_t* name) 
 { 
   if (strlen(name)>255) {
-    std::cout << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
+    std::cerr << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
     _label[255]=0 ;
   }
   strncpy(_label,name,255) ;

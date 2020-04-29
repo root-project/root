@@ -57,11 +57,6 @@ ClassImp(RooVectorDataStore::RealVector);
 
 RooVectorDataStore::RooVectorDataStore() :
   _wgtVar(0),
-  _nRealF(0),
-  _nCat(0),
-  _nEntries(0),	 
-  _firstRealF(0),
-  _firstCat(0),
   _sumWeight(0),
   _sumWeightCarry(0),
   _extWgtArray(0),
@@ -87,11 +82,6 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _varsww(vars),
   _wgtVar(weightVar(vars,wgtVarName)),
-  _nRealF(0),
-  _nCat(0),
-  _nEntries(0),	   
-  _firstRealF(0),
-  _firstCat(0),
   _sumWeight(0),
   _sumWeightCarry(0),
   _extWgtArray(0),
@@ -177,9 +167,6 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   RooAbsDataStore(other,newname), 
   _varsww(other._varsww),
   _wgtVar(other._wgtVar),
-  _nRealF(0),
-  _nCat(0),
-  _nEntries(other._nEntries),	 
   _sumWeight(other._sumWeight),
   _sumWeightCarry(other._sumWeightCarry),
   _extWgtArray(other._extWgtArray),
@@ -200,18 +187,14 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
 
   for (const auto realFullVec : other._realfStoreList) {
     _realfStoreList.push_back(new RealFullVector(*realFullVec, (RooAbsReal*)_varsww.find(realFullVec->_nativeReal->GetName()))) ;
-    _nRealF++ ;
   }
 
   for (const auto catVec : other._catStoreList) {
     _catStoreList.push_back(new CatVector(*catVec, (RooAbsCategory*)_varsww.find(catVec->_cat->GetName()))) ;
-    _nCat++ ;
  }
 
   setAllBuffersNative() ;
   
-  _firstRealF = _realfStoreList.size()>0 ? &_realfStoreList.front() : 0 ;
-  _firstCat = _catStoreList.size()>0 ? &_catStoreList.front() : 0 ;
   TRACE_CREATE
 }
 
@@ -222,11 +205,6 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
   RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():0),newname),
   _varsww(vars),
   _wgtVar(weightVar(vars,other._wgtVar?other._wgtVar->GetName():0)),
-  _nRealF(0),
-  _nCat(0),
-  _nEntries(0),	   
-  _firstRealF(0),
-  _firstCat(0),
   _sumWeight(0),
   _sumWeightCarry(0),
   _extWgtArray(0),
@@ -269,9 +247,6 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
   RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():0),newname),
   _varsww(vars),
   _wgtVar(other._wgtVar?weightVar(vars,other._wgtVar->GetName()):0),
-  _nRealF(0),
-  _nCat(0),
-  _nEntries(other._nEntries),	 
   _sumWeight(other._sumWeight),
   _sumWeightCarry(other._sumWeightCarry),
   _extWgtArray(other._extWgtArray),
@@ -303,7 +278,6 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
       _realfStoreList.push_back(new RealFullVector(**fiter,real)) ;
       // Adjust buffer pointer
       real->attachToVStore(*this) ;
-      _nRealF++ ;
     }
   }
 
@@ -315,14 +289,11 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
       _catStoreList.push_back(new CatVector(**citer,cat)) ;
       // Adjust buffer pointer
       cat->attachToVStore(*this) ;
-      _nCat++ ;
     }
   }
 
   setAllBuffersNative() ;
 
-  _firstRealF = _realfStoreList.size()>0 ? &_realfStoreList.front() : 0 ;
-  _firstCat = _catStoreList.size()>0 ? &_catStoreList.front() : 0 ;
   TRACE_CREATE
 
 }
@@ -340,11 +311,6 @@ RooVectorDataStore::RooVectorDataStore(const char *name, const char *title, RooA
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _varsww(vars),
   _wgtVar(weightVar(vars,wgtVarName)),
-  _nRealF(0),
-  _nCat(0),
-  _nEntries(0),	   
-  _firstRealF(0),
-  _firstCat(0),
   _sumWeight(0),
   _sumWeightCarry(0),
   _extWgtArray(0),
@@ -447,7 +413,6 @@ Int_t RooVectorDataStore::fill()
   Double_t t = _sumWeight + y;
   _sumWeightCarry = (t - _sumWeight) - y;
   _sumWeight = t;
-  _nEntries++ ;  
 
   return 0 ;
 }
@@ -455,28 +420,22 @@ Int_t RooVectorDataStore::fill()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load the n-th data point (n='index') in memory
-/// and return a pointer to the internal RooArgSet
-/// holding its coordinates.
-
+/// Load the n-th data point (n='index') into the variables of this dataset,
+/// and return a pointer to the RooArgSet that holds them.
 const RooArgSet* RooVectorDataStore::get(Int_t index) const 
 {
-  if (index>=_nEntries) return 0 ;
+  if (index < 0 || static_cast<std::size_t>(index) >= size()) return 0;
     
   for (const auto realV : _realStoreList) {
-    realV->get(index);
+    realV->load(index);
   }
 
-  if (_nRealF>0) {
-    for (Int_t i=0 ; i<_nRealF ; i++) {
-      (*(_firstRealF+i))->get(index) ;
-    }
+  for (const auto fullRealP : _realfStoreList) {
+    fullRealP->get(index);
   }
 
-  if (_nCat>0) {
-    for (Int_t i=0 ; i<_nCat ; i++) {
-      (*(_firstCat+i))->get(index) ;
-    }
+  for (const auto catP : _catStoreList) {
+    catP->load(index);
   }
 
   if (_doDirtyProp) {
@@ -522,28 +481,22 @@ const RooArgSet* RooVectorDataStore::get(Int_t index) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Load the n-th data point (n='index') in memory
-/// and return a pointer to the internal RooArgSet
-/// holding its coordinates.
-
+/// Load the n-th data point (n='index') into the variables of this dataset,
+/// and return a pointer to the RooArgSet that holds them.
 const RooArgSet* RooVectorDataStore::getNative(Int_t index) const 
 {
-  if (index>=_nEntries) return 0 ;
+  if (index < 0 || static_cast<std::size_t>(index) >= size()) return 0;
     
   for (const auto realV : _realStoreList) {
-    realV->getNative(index) ;
+    realV->loadToNative(index) ;
   }
 
-  if (_nRealF>0) {
-    for (Int_t i=0 ; i<_nRealF ; i++) {
-      (*(_firstRealF+i))->getNative(index) ;
-    }
+  for (const auto fullRealP : _realfStoreList) {
+    fullRealP->loadToNative(index);
   }
 
-  if (_nCat>0) {
-    for (Int_t i=0 ; i<_nCat ; i++) {
-      (*(_firstCat+i))->getNative(index) ;
-    }
+  for (const auto catP : _catStoreList) {
+    catP->loadToNative(index);
   }
 
   if (_doDirtyProp) {
@@ -760,7 +713,7 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
 
   reserve(numEntries() + (nevent - nStart));
   for(auto i=nStart; i < nevent ; ++i) {
-    ads->get(i) ;
+    ads->get(i);
 
     // Does this event pass the cuts?
     if (selectClone && selectClone->getVal()==0) {
@@ -781,11 +734,16 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
       _varsww.assignValueOnly(*ads->get()) ;
     }
 
-    // Check that all copied values are valid
+    // Check that all copied values are valid and in range
     bool allValid = true;
     for (const auto arg : _varsww) {
-      allValid = arg->isValid() && (ranges.empty() || std::any_of(ranges.begin(), ranges.end(),
-          [arg](const std::string& range){return arg->inRange(range.c_str());}) );
+      allValid &= arg->isValid();
+      if (allValid && !ranges.empty()) {
+        // If we have one or multiple ranges to be selected, the value
+        // must be in one of them to be valid
+        allValid &= std::any_of(ranges.begin(), ranges.end(), [arg](const std::string& range){
+          return arg->inRange(range.c_str());});
+      }
       if (!allValid)
         break ;
     }
@@ -845,6 +803,9 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, Bool_t /*adjustRange
     return 0;
   }
 
+  // Attention: need to do this now, as adding an empty column might give 0 as size
+  const std::size_t numEvt = size();
+
   // Clone variable and attach to cloned tree 
   RooAbsArg* newVarClone = newVar.cloneTree() ;
   newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
@@ -854,18 +815,19 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, Bool_t /*adjustRange
   _vars.add(*valHolder) ;
   _varsww.add(*valHolder) ;
 
-  // Fill values of of placeholder
+  // Fill values of placeholder
   RealVector* rv(0) ;
   CatVector* cv(0) ;
+  assert(numEvt != 0);
   if (dynamic_cast<RooAbsReal*>(valHolder)) {
     rv = addReal((RooAbsReal*)valHolder); 
-    rv->resize(numEntries()) ;
+    rv->resize(numEvt) ;
   } else if (dynamic_cast<RooAbsCategory*>((RooAbsCategory*)valHolder)) {
     cv = addCategory((RooAbsCategory*)valHolder) ;
-    cv->resize(numEntries()) ;
+    cv->resize(numEvt) ;
   } 
 
-  for (int i=0 ; i<numEntries() ; i++) {
+  for (std::size_t i=0; i < numEvt; i++) {
     getNative(i) ;
 
     newVarClone->syncCache(&_vars) ;
@@ -888,16 +850,16 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, Bool_t /*adjustRange
 
 RooArgSet* RooVectorDataStore::addColumns(const RooArgList& varList)
 {
-  TIterator* vIter = varList.createIterator() ;
-  RooAbsArg* var ;
-
   checkInit() ;
 
   TList cloneSetList ;
   RooArgSet cloneSet ;
   RooArgSet* holderSet = new RooArgSet ;
 
-  while((var=(RooAbsArg*)vIter->Next())) {
+  // Attention: need to do this now, as adding an empty column might give 0 as size
+  const std::size_t numEvt = size();
+
+  for (const auto var : varList) {
     // Create a fundamental object of the right type to hold newVar values
     RooAbsArg* valHolder= var->createFundamental();
     holderSet->add(*valHolder) ;
@@ -927,45 +889,35 @@ RooArgSet* RooVectorDataStore::addColumns(const RooArgList& varList)
     valHolder->attachToVStore(*this) ;
     _vars.add(*valHolder) ;
   }
-  delete vIter ;
-
-
-  TIterator* cIter = cloneSet.createIterator() ;
-  TIterator* hIter = holderSet->createIterator() ;
-  RooAbsArg *cloneArg, *holder ;
 
   // Dimension storage area for new vectors
-  while((holder = (RooAbsArg*)hIter->Next())) {
-      if (dynamic_cast<RooAbsReal*>(holder)) {
-	addReal((RooAbsReal*)holder)->resize(numEntries()) ;
-      } else {
-	addCategory((RooAbsCategory*)holder)->resize(numEntries()) ;
-      }
+  for (const auto holder : *holderSet) {
+    if (dynamic_cast<RooAbsReal*>(holder)) {
+      addReal((RooAbsReal*)holder)->resize(numEvt) ;
+    } else {
+      addCategory((RooAbsCategory*)holder)->resize(numEvt);
     }
+  }
 
   // Fill values of of placeholder
-  for (int i=0 ; i<numEntries() ; i++) {
+  for (std::size_t i=0; i < numEvt; i++) {
     getNative(i) ;
 
-    cIter->Reset() ;
-    hIter->Reset() ;
-    while((cloneArg=(RooAbsArg*)cIter->Next())) {
-      holder = (RooAbsArg*)hIter->Next() ;
+    for (unsigned int j=0; j < holderSet->size(); ++j) {
+      const auto holder = (*holderSet)[j];
+      const auto cloneArg = cloneSet[j];
 
       cloneArg->syncCache(&_vars) ;
 
       holder->copyCache(cloneArg) ;
 
       if (dynamic_cast<RooAbsReal*>(holder)) {
-	addReal((RooAbsReal*)holder)->write(i) ;
+        addReal((RooAbsReal*)holder)->write(i) ;
       } else {
-	addCategory((RooAbsCategory*)holder)->write(i) ;
+        addCategory((RooAbsCategory*)holder)->write(i) ;
       }
     }
   }
-  
-  delete cIter ;
-  delete hIter ;
 
   cloneSetList.Delete() ;
   return holderSet ;
@@ -1039,18 +991,8 @@ void RooVectorDataStore::append(RooAbsDataStore& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooVectorDataStore::numEntries() const 
-{
-  return _nEntries ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
 void RooVectorDataStore::reset() 
 {
-  _nEntries=0 ;
   _sumWeight=_sumWeightCarry=0 ;
 
   for (auto elm : _realStoreList) {
@@ -1182,11 +1124,12 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
 
   // Fill values of of placeholder
-  newCache->reserve(numEntries());
-  for (int i=0 ; i<numEntries() ; i++) {
+  const std::size_t numEvt = size();
+  newCache->reserve(numEvt);
+  for (std::size_t i=0; i < numEvt; i++) {
     getNative(i) ;
     if (weight()!=0 || !skipZeroWeights) {    
-      for (std::size_t j = 0; j < cloneSet.size(); ++j) {
+      for (unsigned int j = 0; j < cloneSet.size(); ++j) {
         auto& cloneArg = cloneSet[j];
         auto argNSet = nsetList[j];
         // WVE need to intervene here for condobs from ProdPdf
@@ -1433,11 +1376,6 @@ void RooVectorDataStore::Streamer(TBuffer &R__b)
   if (R__b.IsReading()) {
     R__b.ReadClassBuffer(RooVectorDataStore::Class(),this);
 
-    if (_realfStoreList.size() > 0)
-      _firstRealF = &_realfStoreList.front() ;
-    if (_catStoreList.size() > 0)
-      _firstCat = &_catStoreList.front() ;
-
     for (auto elm : _realStoreList) {
       RooAbsArg* arg = _varsww.find(elm->_nativeReal->GetName()) ;
       arg->attachToVStore(*this) ;
@@ -1456,19 +1394,6 @@ void RooVectorDataStore::Streamer(TBuffer &R__b)
   }
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class RooVectorDataStore::RealVector.
-
-void RooVectorDataStore::RealVector::Streamer(TBuffer &R__b)
-{
-   if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(RooVectorDataStore::RealVector::Class(),this);
-   } else {
-      R__b.WriteClassBuffer(RooVectorDataStore::RealVector::Class(),this);
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class RooVectorDataStore::RealFullVector.
@@ -1489,18 +1414,6 @@ void RooVectorDataStore::RealFullVector::Streamer(TBuffer &R__b)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class RooVectorDataStore::CatVector.
-
-void RooVectorDataStore::CatVector::Streamer(TBuffer &R__b)
-{
-   if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(RooVectorDataStore::CatVector::Class(),this);
-      _vec0 = _vec.size()>0 ? &_vec.front() : 0 ;
-   } else {
-      R__b.WriteClassBuffer(RooVectorDataStore::CatVector::Class(),this);
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a batch of the data columns for all events in [firstEvent, lastEvent[.
@@ -1548,3 +1461,108 @@ RooSpan<const double> RooVectorDataStore::getWeightBatch(std::size_t first, std:
 
 
 
+RooVectorDataStore::CatVector* RooVectorDataStore::addCategory(RooAbsCategory* cat) {
+
+  // First try a match by name
+  for (auto catVec : _catStoreList) {
+    if (std::string(catVec->bufArg()->GetName())==cat->GetName()) {
+      return catVec;
+    }
+  }
+
+  // If nothing found this will make an entry
+  _catStoreList.push_back(new CatVector(cat)) ;
+
+  return _catStoreList.back() ;
+}
+
+
+RooVectorDataStore::RealVector* RooVectorDataStore::addReal(RooAbsReal* real) {
+
+  // First try a match by name
+  for (auto realVec : _realStoreList) {
+    if (realVec->bufArg()->namePtr()==real->namePtr()) {
+      return realVec;
+    }
+  }
+
+  // Then check if an entry already exists for a full real
+  for (auto fullVec : _realfStoreList) {
+    if (fullVec->bufArg()->namePtr()==real->namePtr()) {
+      // Return full vector as RealVector base class here
+      return fullVec;
+    }
+  }
+
+  // If nothing found this will make an entry
+  _realStoreList.push_back(new RealVector(real)) ;
+
+  return _realStoreList.back() ;
+}
+
+
+Bool_t RooVectorDataStore::isFullReal(RooAbsReal* real) {
+
+  // First try a match by name
+  for (auto fullVec : _realfStoreList) {
+    if (std::string(fullVec->bufArg()->GetName())==real->GetName()) {
+      return kTRUE ;
+    }
+  }
+  return kFALSE ;
+}
+
+
+Bool_t RooVectorDataStore::hasError(RooAbsReal* real) {
+
+  // First try a match by name
+  for (auto fullVec : _realfStoreList) {
+    if (std::string(fullVec->bufArg()->GetName())==real->GetName()) {
+      return fullVec->_vecE ? kTRUE : kFALSE ;
+    }
+  }
+  return kFALSE ;
+}
+
+
+Bool_t RooVectorDataStore::hasAsymError(RooAbsReal* real) {
+
+  // First try a match by name
+  for (auto fullVec : _realfStoreList) {
+    if (std::string(fullVec->bufArg()->GetName())==real->GetName()) {
+      return fullVec->_vecEL ? kTRUE : kFALSE ;
+    }
+  }
+  return kFALSE ;
+}
+
+
+RooVectorDataStore::RealFullVector* RooVectorDataStore::addRealFull(RooAbsReal* real) {
+
+  // First try a match by name
+  for (auto fullVec : _realfStoreList) {
+    if (std::string(fullVec->bufArg()->GetName())==real->GetName()) {
+    return fullVec;
+    }
+  }
+
+  // Then check if an entry already exists for a bare real
+  for (auto realVec : _realStoreList) {
+    if (std::string(realVec->bufArg()->GetName())==real->GetName()) {
+
+      // Convert element to full and add to full list
+      _realfStoreList.push_back(new RealFullVector(*realVec,real)) ;
+
+      // Delete bare element
+      _realStoreList.erase(std::find(_realStoreList.begin(), _realStoreList.end(), realVec));
+      delete realVec;
+
+      return _realfStoreList.back() ;
+    }
+  }
+
+  // If nothing found this will make an entry
+  _realfStoreList.push_back(new RealFullVector(real)) ;
+
+  return _realfStoreList.back() ;
+}

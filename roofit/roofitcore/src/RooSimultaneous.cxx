@@ -242,9 +242,9 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
       RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
 
       // Iterator over all states of repliSuperCat
-      for (const auto type : repliSuperCat) {
+      for (const auto& type : repliSuperCat) {
         // Set value
-        repliSuperCat.setLabel(type->GetName()) ;
+        repliSuperCat.setLabel(type.first.c_str()) ;
         // Retrieve corresponding label of superIndex
         string superLabel = superIndex->getLabel() ;
         failure |= addPdf(*citer->second.pdf,superLabel.c_str()) ;
@@ -259,10 +259,10 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
         // Case 1 -- No replication of components of RooSim component are required
 
-        for (const RooCatType* type : *citer->second.subIndex) {
-          const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(type->GetName()) ;
+        for (const auto& type : *citer->second.subIndex) {
+          const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(type.first.c_str());
           string superLabel = superIndex->getLabel() ;
-          RooAbsPdf* compPdf = citer->second.simPdf->getPdf(type->GetName()) ;
+          RooAbsPdf* compPdf = citer->second.simPdf->getPdf(type.first.c_str());
           if (compPdf) {
             failure |= addPdf(*compPdf,superLabel.c_str()) ;
             cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
@@ -270,7 +270,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 				        << ") to super label " << superLabel << endl ;
           } else {
             coutW(InputArguments) << "RooSimultaneous::initialize(" << GetName() << ") WARNING: No p.d.f. associated with label "
-                << type->GetName() << " for component RooSimultaneous p.d.f " << citer->second.pdf->GetName()
+                << type.second << " for component RooSimultaneous p.d.f " << citer->second.pdf->GetName()
                 << "which is associated with master index label " << citer->first << endl ;
           }
         }
@@ -282,13 +282,13 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
         // Make replication supercat
         RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
 
-        for (const RooCatType* stype : *citer->second.subIndex) {
-          const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(stype->GetName()) ;
+        for (const auto& stype : *citer->second.subIndex) {
+          const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(stype.first.c_str());
 
-          for (const RooCatType* rtype : repliSuperCat) {
-            repliSuperCat.setLabel(rtype->GetName()) ;
+          for (const auto& rtype : repliSuperCat) {
+            repliSuperCat.setLabel(rtype.first.c_str()) ;
             string superLabel = superIndex->getLabel() ;
-            RooAbsPdf* compPdf = citer->second.simPdf->getPdf(stype->GetName()) ;
+            RooAbsPdf* compPdf = citer->second.simPdf->getPdf(stype.first.c_str());
             if (compPdf) {
               failure |= addPdf(*compPdf,superLabel.c_str()) ;
               cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
@@ -296,7 +296,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 				          << ") to super label " << superLabel << endl ;
             } else {
               coutW(InputArguments) << "RooSimultaneous::initialize(" << GetName() << ") WARNING: No p.d.f. associated with label "
-                  << stype->GetName() << " for component RooSimultaneous p.d.f " << citer->second.pdf->GetName()
+                  << stype.second << " for component RooSimultaneous p.d.f " << citer->second.pdf->GetName()
                   << "which is associated with master index label " << citer->first << endl ;
             }
           }

@@ -56,6 +56,8 @@ LocalChangeMsgLevel::~LocalChangeMsgLevel() {
 /// tokenised strings, and no emtpy strings are returned.
 std::vector<std::string> tokenise(const std::string &str, const std::string &delims) {
   std::vector<std::string> tokens;
+  if (str.empty())
+    return tokens;
 
   auto beg = str.find_first_not_of(delims, 0);
   auto end = str.find_first_of(delims, beg);

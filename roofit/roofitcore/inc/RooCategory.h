@@ -18,79 +18,109 @@
 
 #include "RooAbsCategoryLValue.h"
 
-#include "RooSharedPropertiesList.h"
-#include "RooCategorySharedProperties.h"
+class RooCategorySharedProperties;
 
-class RooCategory : public RooAbsCategoryLValue {
+class RooCategory final : public RooAbsCategoryLValue {
 public:
   // Constructor, assignment etc.
   RooCategory() ;
   RooCategory(const char *name, const char *title);
+  RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates);
   RooCategory(const RooCategory& other, const char* name=0) ;
+  RooCategory& operator=(const RooCategory&) = delete;
   virtual ~RooCategory();
-  virtual TObject* clone(const char* newname) const { return new RooCategory(*this,newname); }
+  virtual TObject* clone(const char* newname) const override { return new RooCategory(*this,newname); }
 
-  // Value modifiers
-  virtual Int_t getIndex() const { 
-    return _value.getVal() ; 
-    // Return index value
-  }
-  
-  virtual const char* getLabel() const { 
-    const char* ret = _value.GetName() ;
-    if (ret==0) {
-      _value.SetName(lookupType(_value.getVal())->GetName()) ;    
-    }
-    return _value.GetName() ;
+  /// Return current index.
+  virtual value_type getIndex() const override final {
+    return _currentIndex;
   }
 
-  virtual Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) ;
-  virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
+  virtual Bool_t setIndex(Int_t index, bool printError = true) override;
+  virtual Bool_t setLabel(const char* label, bool printError = true) override;
   
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override;
+  virtual void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
-  // We implement a fundamental type of AbsArg that can be stored in a dataset
-  inline virtual Bool_t isFundamental() const { 
-    // Return true as a RooCategory is a fundamental (non-derived) type
-    return kTRUE; 
+  bool defineType(const std::string& label);
+  bool defineType(const std::string& label, Int_t index);
+  void defineTypes(const std::map<std::string, int>& allowedStates);
+  value_type& operator[](const std::string& stateName);
+  std::map<std::string, RooAbsCategory::value_type>& states();
+
+  /// \cond LEGACY
+  bool defineType(const char* label) {
+    return defineType(std::string(label));
+  }
+  /// \cond LEGACY
+  bool defineType(const char* label, Int_t index) {
+    return defineType(std::string(label), index);
   }
 
-  virtual Bool_t isDerived() const { 
-    // Does value or shape of this arg depend on any other arg?
-    return kFALSE ;
+  /// Clear all defined category states.
+  void clear() {
+    clearTypes();
   }
-
-  Bool_t defineType(const char* label) ;
-  Bool_t defineType(const char* label, Int_t index) ;
-  void clearTypes() { RooAbsCategory::clearTypes() ; }
 
   void clearRange(const char* name, Bool_t silent) ;
   void setRange(const char* rangeName, const char* stateNameList) ;
+  void addToRange(const char* rangeName, RooAbsCategory::value_type stateIndex);
   void addToRange(const char* rangeName, const char* stateNameList) ;
-  Bool_t isStateInRange(const char* rangeName, const char* stateName) const ;
-  virtual Bool_t inRange(const char* rangeName) const { 
-    // Returns true of current value of category is inside given range
-    return isStateInRange(rangeName,getLabel()) ; 
-  } 
-  virtual Bool_t hasRange(const char* rangeName) const { 
-    // Returns true if category has range with given name
-    return _sharedProp->_altRanges.FindObject(rangeName) ? kTRUE : kFALSE ; 
+
+
+  /// \group RooFit interface
+  /// @{
+
+  /// Tell whether we can be stored in a dataset. Always true for RooCategory.
+  inline virtual Bool_t isFundamental() const override {
+    return true;
   }
- 
+
+  /// Does our value or shape depend on any other arg? Always false for RooCategory.
+  virtual Bool_t isDerived() const override {
+    return false;
+  }
+
+  virtual RooSpan<const value_type> getValBatch(std::size_t /*begin*/, std::size_t /*batchSize*/) const override {
+    throw std::logic_error("Not implemented yet.");
+  }
+
+  Bool_t isStateInRange(const char* rangeName, RooAbsCategory::value_type stateIndex) const ;
+  Bool_t isStateInRange(const char* rangeName, const char* stateName) const ;
+  /// Check if the currently defined category state is in the range with the given name.
+  /// If no ranges are defined, the state counts as being in range.
+  virtual Bool_t inRange(const char* rangeName) const override {
+    return isStateInRange(rangeName, _currentIndex);
+  }
+  /// Returns true if category has a range with given name defined.
+  virtual bool hasRange(const char* rangeName) const override {
+    return _ranges->find(rangeName) != _ranges->end();
+  }
+
+  ///@}
+
 protected:
-  
-  static RooSharedPropertiesList _sharedPropList; // List of properties shared among clone sets 
-  static RooCategorySharedProperties _nullProp ; // Null property
-  RooCategorySharedProperties* _sharedProp ; //! Shared properties associated with this instance
+  /// \copydoc RooAbsCategory::evaluate() const
+  /// Simply returns the currently set state index.
+  virtual value_type evaluate() const override {
+    return _currentIndex;
+  }
 
-  virtual RooCatType evaluate() const { 
-    // Dummy implementation
-    return RooCatType() ;
-  } 
+  /// This categorie's shape does not depend on others, and does not need recomputing.
+  void recomputeShape() override { };
 
-  ClassDef(RooCategory,2) // Discrete valued variable type
+private:
+
+  using RangeMap_t = std::map<std::string, std::vector<value_type>>;
+  /// Map range names to allowed category states. Note that this must be shared between copies,
+  /// so categories in datasets have the same ranges as their counterparts outside of the dataset.
+  std::shared_ptr<RangeMap_t> _ranges{new RangeMap_t()}; //!
+  RangeMap_t* _rangesPointerForIO{nullptr}; // Pointer to the same object as _ranges, but not shared for I/O.
+
+  void _readLegacySharedProp(const RooCategorySharedProperties* sp);
+
+  ClassDefOverride(RooCategory, 3) // Discrete valued variable type
 };
 
 #endif

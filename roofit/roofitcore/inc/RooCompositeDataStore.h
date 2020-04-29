@@ -17,7 +17,6 @@
 #define ROO_COMPOSITE_DATA_STORE
 
 #include "RooAbsDataStore.h" 
-#include "TString.h"
 #include <map>
 #include <string>
 
@@ -101,7 +100,7 @@ public:
   virtual std::vector<RooSpan<const double>> getBatch(std::size_t first, std::size_t last) const {
     //TODO
     std::cerr << "This functionality is not yet implemented for composite data stores." << std::endl;
-    assert(false);
+    throw std::logic_error("RooCompositeDataStore doesn't have batch access yet.");
 
     std::vector<double> vec(first, last);
     return {RooSpan<const double>(vec)};
