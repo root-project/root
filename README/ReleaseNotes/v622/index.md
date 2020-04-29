@@ -90,7 +90,7 @@ Now, if one uses
     RooTemplateProxy<RooAbsPdf> pdfProxy;
 instead of
     RooRealProxy realProxy;
-the above code can be simplified to
+in RooFit classes, the above code can be simplified to
     pdfProxy->fitTo(...);
 
 Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooTemplateProxy.html) for `RooTemplateProxy` for

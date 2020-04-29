@@ -11,8 +11,62 @@
 #include "RooGenericPdf.h"
 #include "RooWorkspace.h"
 #include "TFile.h"
+#include "TMemFile.h"
 
 #include "gtest/gtest.h"
+
+
+TEST(RooCategory, CategoryDefineMultiState) {
+  RooCategory myCat("myCat", "A category", { {"0Lep", 0}, {"1Lep", 1}, {"2Lep", 2}, {"3Lep", 3} });
+
+  std::vector<std::string> targets{"0Lep", "1Lep", "2Lep", "3Lep"};
+  int i = 0;
+  for (const auto& nameAndIdx : myCat) {
+    EXPECT_EQ(nameAndIdx.second, i);
+    EXPECT_EQ(nameAndIdx.first, targets[i]);
+    i++;
+  }
+  EXPECT_EQ(myCat.lookupName(1), "1Lep");
+  EXPECT_EQ(myCat.lookupIndex("2Lep"), 2);
+}
+
+
+TEST(RooCategory, WriteAndReadBack) {
+  RooCategory myCat("myCat", "A category", {
+      {"0Lep", 0}, {"1Lep", 1}, {"2Lep", 2}, {"3Lep", 3} });
+  myCat.setIndex(2);
+
+  TMemFile file("memfile", "RECREATE");
+  file.WriteObject(&myCat, "myCat");
+
+  RooCategory* readCat = nullptr;
+  file.GetObject("myCat", readCat);
+  ASSERT_NE(readCat, nullptr);
+  EXPECT_EQ(readCat->getIndex(), myCat.getIndex());
+  EXPECT_STREQ(readCat->getLabel(), myCat.getLabel());
+  EXPECT_EQ(readCat->size(), 4u);
+
+  auto readIt = std::next(readCat->begin());
+  auto origIt = std::next(myCat.begin());
+  EXPECT_EQ(readIt->first, origIt->first);
+  EXPECT_EQ(readIt->second, origIt->second);
+}
+
+
+TEST(RooCategory, BracketOperator) {
+  RooCategory myCat;
+  myCat["0Lep"] = 0;
+  myCat["1Lep"];
+  myCat["Negative"] = -1;
+  myCat["2Lep"];
+
+  std::map<int, std::string> targets{{-1,"Negative"}, {0,"0Lep"}, {1,"1Lep"}, {2,"2Lep"}};
+  for (const auto& nameAndIndex : myCat) {
+    ASSERT_NE(targets.find(nameAndIndex.second), targets.end());
+    EXPECT_EQ(nameAndIndex.first, targets[nameAndIndex.second]);
+  }
+}
+
 
 struct DummyClass : public RooAbsPdf {
     DummyClass(RooAbsCategory& theCat, RooRealVar& theVar, RooAbsPdf* thePdf = nullptr) :
@@ -48,7 +102,7 @@ TEST(RooTemplateProxy, CategoryProxy) {
   myCat.defineType("B", 2);
   myCat.defineType("NotA", -1);
   std::string longStr(500, '*');
-  myCat.defineType(longStr.c_str(), 500);
+  myCat.defineType(longStr, 500);
 
   RooRealVar x("x", "x", -10, 10);
 
@@ -86,7 +140,7 @@ TEST(RooTemplateProxy, DISABLED_CategoryProxyBatchAccess) {
   myCat.defineType("B", 2);
   myCat.defineType("NotA", -1);
   std::string longStr(500, '*');
-  myCat.defineType(longStr.c_str(), 500);
+  myCat.defineType(longStr, 500);
 
   RooRealVar x("x", "x", -10, 10);
 
@@ -106,7 +160,9 @@ TEST(RooTemplateProxy, DISABLED_CategoryProxyBatchAccess) {
 
   data.attachBuffers(*dummy.getVariables());
 
-  auto theBatch = dummy.cat->getValBatch(0, 10);
+  ASSERT_THROW(dummy.cat->getValBatch(0, 10), std::logic_error);
+  return; // Have to stop here for now until above is implemented.
+  auto theBatch = dummy.cat.getValBatch(0, 10);
   ASSERT_FALSE(theBatch.empty());
   EXPECT_EQ(theBatch.size(), 10ul);
   EXPECT_EQ(theBatch[0], 1);
