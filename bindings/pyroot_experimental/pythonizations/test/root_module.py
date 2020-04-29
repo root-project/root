@@ -42,5 +42,5 @@ class ROOTModule(unittest.TestCase):
         Test module flag to ignore command line options
         """
         import ROOT
-        self.assertEqual(ROOT.PyConfig.IgnoreCommandLineOptions, False)
-        ROOT.PyConfig.IgnoreCommandLineOptions = True
+        self.assertEqual(ROOT.PyConfig.IgnoreCommandLineOptions, True)
+        ROOT.PyConfig.IgnoreCommandLineOptions = False
