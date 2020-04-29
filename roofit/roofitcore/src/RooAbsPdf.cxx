@@ -170,6 +170,7 @@ called for each data event.
 #include "RooMinimizer.h"
 #include "RooRealIntegral.h"
 #include "RooWorkspace.h"
+#include "RooNaNPacker.h"
 
 #include "RooHelpers.h"
 #include "RooVDTHeaders.h"
@@ -284,12 +285,8 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
     _normSet = 0 ;
     Double_t val = evaluate() ;
     _normSet = tmp ;
-    Bool_t error = traceEvalPdf(val) ;
 
-    if (error) {
-      return 0 ;
-    }
-    return val ;
+    return TMath::IsNaN(val) ? 0. : val;
   }
 
 
@@ -303,26 +300,32 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
   if (isValueDirty() || nsetChanged || _norm->isValueDirty()) {
 
     // Evaluate numerator
-    Double_t rawVal = evaluate() ;
-    Bool_t error = traceEvalPdf(rawVal) ; // Error checking and printing
+    const double rawVal = evaluate();
 
     // Evaluate denominator
-    Double_t normVal(_norm->getVal()) ;
+    const double normVal = _norm->getVal();
 
     if (normVal < 0. || (normVal == 0. && rawVal != 0)) {
-      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes.
-      error=kTRUE ;
-      std::stringstream msg;
-      msg << "p.d.f normalization integral is zero or negative: " << normVal;
-      logEvalError(msg.str().c_str());
+      //Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+      const std::string msg = "p.d.f normalization integral is zero or negative: " + std::to_string(normVal);
+      logEvalError(msg.c_str());
+      clearValueAndShapeDirty();
+      return _value = RooNaNPacker::packFloatIntoNaN(-normVal + (rawVal < 0. ? -rawVal : 0.));
     }
 
-    // Raise global error flag if problems occur
-    if (error || (rawVal == 0. && normVal == 0.)) {
-      _value = 0 ;
-    } else {
-      _value = rawVal / normVal ;
+    if (rawVal < 0.) {
+      logEvalError(Form("p.d.f value is less than zero (%f), trying to recover", rawVal));
+      clearValueAndShapeDirty();
+      return _value = RooNaNPacker::packFloatIntoNaN(-rawVal);
     }
+
+    if (TMath::IsNaN(rawVal)) {
+      logEvalError("p.d.f value is Not-a-Number");
+      clearValueAndShapeDirty();
+      return _value = rawVal;
+    }
+
+    _value = (rawVal == 0. && normVal == 0.) ? 0. : rawVal / normVal;
 
     clearValueAndShapeDirty();
   }
@@ -666,8 +669,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
   if(prob < 0) {
     logEvalError("getLogVal() top-level p.d.f evaluates to a negative number") ;
-
-    return std::numeric_limits<double>::quiet_NaN();
+    return RooNaNPacker::packFloatIntoNaN(-prob);
   }
 
   if(prob == 0) {
@@ -679,7 +681,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   if (TMath::IsNaN(prob)) {
     logEvalError("getLogVal() top-level p.d.f evaluates to NaN") ;
 
-    return -std::numeric_limits<double>::infinity();
+    return prob;
   }
 
   return log(prob);

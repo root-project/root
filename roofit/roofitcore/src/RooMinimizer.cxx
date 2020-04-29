@@ -663,10 +663,17 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
   fitRes->setConstParList(saveConstList) ;
   fitRes->setInitParList(saveFloatInitList) ;
 
+  // The fitter often clones the function. We therefore have to ask it for its copy.
+  const auto fitFcn = dynamic_cast<const RooMinimizerFcn*>(_theFitter->GetFCN());
+  double removeOffset = 0.;
+  if (fitFcn) {
+    fitRes->setNumInvalidNLL(fitFcn->GetNumInvalidNLL());
+    removeOffset = - fitFcn->getOffset();
+  }
+
   fitRes->setStatus(_status) ;
   fitRes->setCovQual(_theFitter->GetMinimizer()->CovMatrixStatus()) ;
-  fitRes->setMinNLL(_theFitter->Result().MinFcnValue()) ;
-  fitRes->setNumInvalidNLL(_fcn->GetNumInvalidNLL()) ;
+  fitRes->setMinNLL(_theFitter->Result().MinFcnValue() + removeOffset);
   fitRes->setEDM(_theFitter->Result().Edm()) ;
   fitRes->setFinalParList(saveFloatFinalList) ;
   if (!_extV) {
