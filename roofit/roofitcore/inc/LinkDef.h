@@ -171,13 +171,18 @@
 #pragma link C++ class RooRealConstant+ ;
 #pragma link C++ class RooRealIntegral+ ;
 #pragma link C++ class RooRealMPFE+ ;
-#pragma link C++ class RooRealProxy+ ;
-#pragma link C++ class RooProxy<RooAbsPdf>+;
-#pragma read sourceClass="RooRealProxy" targetClass="RooProxy<RooAbsPdf>"
-#pragma link C++ class RooProxy<RooAbsRealLValue>+;
-#pragma read sourceClass="RooRealProxy" targetClass="RooProxy<RooAbsRealLValue>"
-#pragma link C++ class RooProxy<RooRealVar>+;
-#pragma read sourceClass="RooRealProxy" targetClass="RooProxy<RooRealVar>"
+#pragma link C++ class RooTemplateProxy<RooAbsReal>+;
+#pragma link C++ class RooTemplateProxy<RooAbsPdf>+;
+#pragma read sourceClass="RooRealProxy" targetClass="RooTemplateProxy<RooAbsPdf>";
+#pragma link C++ class RooTemplateProxy<RooAbsRealLValue>+;
+#pragma read sourceClass="RooRealProxy" targetClass="RooTemplateProxy<RooAbsRealLValue>";
+#pragma link C++ class RooTemplateProxy<RooRealVar>+;
+#pragma read sourceClass="RooRealProxy" targetClass="RooTemplateProxy<RooRealVar>";
+#pragma link C++ class RooCategoryProxy+ ;
+#pragma link C++ class RooTemplateProxy<RooMultiCategory>+;
+#pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooMultiCategory>";
+#pragma link C++ class RooTemplateProxy<RooAbsCategoryLValue>+;
+#pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooAbsCategoryLValue>";
 #pragma link C++ class RooRealVar- ;
 #pragma link C++ class RooRealVarSharedProperties+ ;
 #pragma link C++ class RooRefCountList+ ;

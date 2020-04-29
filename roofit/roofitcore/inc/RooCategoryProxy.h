@@ -18,10 +18,10 @@
 
 #include "RooAbsCategory.h"
 #include "RooAbsCategoryLValue.h"
-#include "RooProxy.h"
+#include "RooTemplateProxy.h"
 
 /// Compatibility typedef replacing the RooCategoryProxy class.
-/// \deprecated Use RooProxy<RooAbsCategory> or more appropriate template parameters.
-using RooCategoryProxy = RooProxy<RooAbsCategory>;
+/// \deprecated Use RooTemplateProxy<RooAbsCategory> or more appropriate template parameters.
+using RooCategoryProxy = RooTemplateProxy<RooAbsCategory>;
 
 #endif
