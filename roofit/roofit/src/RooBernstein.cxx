@@ -58,8 +58,7 @@ RooBernstein::RooBernstein(const char* name, const char* title,
                            RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this),
-  _refRangeName(nullptr)
+  _coefList("coefficients","List of coefficients",this)
 {
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
