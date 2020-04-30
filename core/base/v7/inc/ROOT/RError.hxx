@@ -37,7 +37,7 @@
 //     {
 //        int rv = syscall(...);
 //        if (rv == -1)
-//           R__FAIL("user-facing error message");
+//           return R__FAIL("user-facing error message");
 //        if (rv == kShortcut)
 //           return 42;
 //        return R__FORWARD_RESULT(FuncThatReturnsRResultOfInt());
@@ -58,7 +58,7 @@
 //     RResult<void> DoSomething()
 //     {
 //        if (failure)
-//           R__FAIL("user-facing error messge");
+//           return R__FAIL("user-facing error messge");
 //        return RResult<void>::Success();
 //     }
 
@@ -136,7 +136,6 @@ protected:
    /// This is the nullptr for an RResult representing success
    std::unique_ptr<RError> fError;
    /// Switches to true once the user of an RResult object checks the object status
-   /// Declaring it mutable is safe because checking an RResult is not a multi-threaded operation
    bool fIsChecked{false};
 
    RResultBase() = default;
@@ -251,7 +250,7 @@ public:
 };
 
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
-#define R__FAIL(msg) return ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
+#define R__FAIL(msg) ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
 #define R__FORWARD_RESULT(res) std::move(res.Forward(res, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}))
 } // namespace Experimental

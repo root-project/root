@@ -22,7 +22,7 @@ int ComplexReturnType::gNCopies = 0;
 
 static ROOT::Experimental::RResult<void> TestFailure()
 {
-   R__FAIL("test failure");
+   return R__FAIL("test failure");
 }
 
 static ROOT::Experimental::RResult<void> TestSuccess()
@@ -34,7 +34,7 @@ static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
 {
    if (succeed)
       return 42;
-   R__FAIL("failure");
+   return R__FAIL("failure");
 }
 
 static ROOT::Experimental::RResult<int> TestChain(bool succeed)
