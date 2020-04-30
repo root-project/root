@@ -14,7 +14,8 @@
 #define ROO_BERNSTEIN
 
 #include "RooAbsPdf.h"
-#include "RooRealProxy.h"
+#include "RooTemplateProxy.h"
+#include "RooRealVar.h"
 #include "RooListProxy.h"
 
 class RooRealVar;
@@ -33,17 +34,19 @@ public:
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
 
 private:
-
-  RooRealProxy _x;
+  
+  RooTemplateProxy<RooRealVar> _x ;
   RooListProxy _coefList ;
+  std::string _refRangeName ;
 
   Double_t evaluate() const;
   RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
 
 
-  ClassDef(RooBernstein,1) // Bernstein polynomial PDF
+  ClassDef(RooBernstein,2) // Bernstein polynomial PDF
 };
 
 #endif
