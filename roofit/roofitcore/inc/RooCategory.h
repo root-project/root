@@ -37,7 +37,9 @@ public:
   }
 
   virtual Bool_t setIndex(Int_t index, bool printError = true) override;
+  using RooAbsCategoryLValue::setIndex;
   virtual Bool_t setLabel(const char* label, bool printError = true) override;
+  using RooAbsCategoryLValue::setLabel;
   
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override;

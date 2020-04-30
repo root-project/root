@@ -34,7 +34,9 @@ public:
   virtual ~RooSuperCategory() { };
 
   virtual bool setIndex(value_type index, bool printError = true) override ;
+  using RooAbsCategoryLValue::setIndex;
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) override;
+  using RooAbsCategoryLValue::setLabel;
 
   // Printing interface (human readable)
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
