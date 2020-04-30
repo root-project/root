@@ -19,12 +19,16 @@
 \class RooCategory
 \ingroup Roofitcore
 
-RooCategory represents a fundamental (non-derived) discrete category object. "Fundamental" means that
-it can be written into a dataset. (Objects in datasets cannot depend on other objects' values,
-they need to have their own value). A category object can be used to *e.g.* conduct a simultaneous fit of
-the same observable in multiple categories
-The states of the category can be denoted by integers (faster) or state names.
+RooCategory is an object to represent discrete states.
+States have names and index numbers, and the index numbers can be written into datasets and
+used in calculations.
+A category is "fundamental", i.e., its value doesn't depend on the value of other objects.
+(Objects in datasets cannot depend on other objects' values, they need to be self-consistent.)
 
+A category object can be used to *e.g.* conduct a simultaneous fit of
+the same observable in multiple categories.
+
+### Setting up a category
 A category can be set up like this:
 ~~~{.cpp}
 RooCategory myCat("myCat", "Lepton multiplicity category", {
@@ -33,6 +37,12 @@ RooCategory myCat("myCat", "Lepton multiplicity category", {
                   {"2Lep", 2},
                   {"3Lep", 3}
 });
+~~~{.cpp}
+Like this:
+~~~
+RooCategory myCat("myCat", "Asymmetry");
+myCat["left"]  = -1;
+myCat["right"] =  1;
 ~~~
 Or like this:
 ~~~{.cpp}
@@ -40,10 +50,21 @@ RooCategory myCat("myCat", "Asymmetry");
 myCat.defineType("left", -1);
 myCat.defineType("right", 1);
 ~~~
-Inspect the pairs of index number and state names like this:
+Inspect the pairs of state names and state numbers like this:
 ~~~{.cpp}
-for (const auto& idxAndName : myCat) {
-  std::cout << idxAndName.first << " --> " << idxAndName.second << std::endl;
+for (const auto& nameIdx : myCat) {
+  std::cout << nameIdx.first << " --> " << nameIdx.second << std::endl;
+}
+~~~
+
+### Changing category states
+Category states can be modified either by using the index state (faster) or state names.
+For example:
+~~~{.cpp}
+myCat.setIndex(5);
+myCat.setLabel("left");
+for (const auto& otherNameIdx : otherCat) {
+  myCat.setIndex(otherNameIdx);
 }
 ~~~
 

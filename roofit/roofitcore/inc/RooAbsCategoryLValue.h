@@ -31,13 +31,43 @@ public:
 
   // Value modifiers
   ////////////////////////////////////////////////////////////////////////////////
-  /// Set value by specifying the index code of the desired state.
+  /// Change category state by specifying the index code of the desired state.
   /// If printError is set, a message will be printed if
   /// the specified index does not represent a valid state.
   /// \return bool to signal an error.
   virtual bool setIndex(value_type index, bool printError = true) = 0;
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Change category state to state specified by another category state.
+  /// If printError is set, a message will be printed if
+  /// the specified index does not represent a valid state.
+  /// \note The state name of the other category is ignored.
+  /// \return bool to signal an error.
+  bool setIndex(const std::pair<std::string,value_type>& nameIdxPair, bool printError = true) {
+    return setIndex(nameIdxPair.second, printError);
+  }
   bool setOrdinal(unsigned int index);
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Change category state by specifying a state name.
+  /// If printError is set, a message will be printed if
+  /// the specified state name does not represent a valid state.
+  /// \return bool to signal an error.
   virtual bool setLabel(const char* label, Bool_t printError=kTRUE) = 0;
+  /// \copydoc setLabel(const char*, Bool_t)
+  bool setLabel(const std::string& label, bool printError = true) {
+    return setLabel(label.c_str(), printError);
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Change category state to the state name of another category.
+  /// If printError is set, a message will be printed if
+  /// the specified state name does not represent a valid state.
+  /// \note The state index of the other category is ignored.
+  /// \return bool to signal an error.
+  bool setLabel(const std::pair<std::string,value_type>& nameIdxPair, bool printError = true) {
+    return setLabel(nameIdxPair.first.c_str(), printError);
+  }
+
+
   RooAbsArg& operator=(int index) ; 
   RooAbsArg& operator=(const char* label) ; 
   RooAbsArg& operator=(const RooAbsCategory& other) ;
