@@ -1,7 +1,7 @@
 
-Processing runbadmix.C...
+Processing /local2/pcanal/cint_working/rootcling/root/roottest/root/tree/fastcloning/runbadmix.C...
 ************************
-*    Row   *    values *
+*    Row   * values.va *
 ************************
 *        0 *        97 *
 *        1 *        98 *
@@ -9,7 +9,7 @@ Processing runbadmix.C...
 *        3 *       100 *
 ************************
 ************************
-*    Row   *    values *
+*    Row   * values.va *
 ************************
 *        0 *        97 *
 *        1 *        98 *
