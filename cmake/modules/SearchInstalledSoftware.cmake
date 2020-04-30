@@ -1525,10 +1525,10 @@ endif()
 
 #---Check for Pyroot Exp---------------------------------------------------------------------
 if(pyroot_experimental)
-  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python_Development_FOUND))
+  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND))
     message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
                         " (python executable: ${PYTHON_EXECUTABLE})")
-  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python_Development_FOUND)
+  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND)
     message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_experimental option")
     set(pyroot_experimental OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
   endif()

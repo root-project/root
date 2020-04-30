@@ -15,7 +15,7 @@ endif()
 
 # Python is required by header and manpage generation
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14 AND NOT MSVC)
 
   # Determine whether we should prefer Python 2 or Python 3:
   set(PYTHON_PREFER_VERSION "3")
@@ -58,14 +58,14 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
     set(NUMPY_FOUND ${Python2_NumPy_FOUND} CACHE INTERNAL "" FORCE)
     set(NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
   else()
-    if(PYTHON_EXECUTABLE AND NOT Python_EXECUTABLE)
-      set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+    if(PYTHON_EXECUTABLE AND NOT Python3_EXECUTABLE)
+      set(Python3_EXECUTABLE "${PYTHON_EXECUTABLE}")
     endif()
-    if(PYTHON_INCLUDE_DIRS AND NOT Python_INCLUDE_DIRS)
-      set(Python_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
+    if(PYTHON_INCLUDE_DIRS AND NOT Python3_INCLUDE_DIRS)
+      set(Python3_INCLUDE_DIRS "${PYTHON_INCLUDE_DIRS}")
     endif()
-    if(PYTHON_LIBRARIES AND NOT Python_LIBRARIES)
-      set(Python_LIBRARIES "${PYTHON_LIBRARIES}")
+    if(PYTHON_LIBRARIES AND NOT Python3_LIBRARIES)
+      set(Python3_LIBRARIES "${PYTHON_LIBRARIES}")
     endif()
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     # Search for NumPy and Development, but not required:
