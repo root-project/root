@@ -124,6 +124,9 @@ public:
     *  course match. */
    TCpuMatrix(const TCpuBuffer<AFloat> &buffer, size_t m, size_t n);
 
+   /** copy from a TMAtrixT . Deep copy without re-creating a new buffer */
+   TCpuMatrix<AFloat> &operator=(const TMatrixT<AFloat> &);
+
    // N.B the default copy constructor does a shallow copy (NOT a deep one) !
    TCpuMatrix(const TCpuMatrix &) = default;
    TCpuMatrix(TCpuMatrix &&) = default;

@@ -189,11 +189,11 @@ void MethodDL::DeclareOptions()
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
 
    DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
-   AddPreDefVal(TString("STANDARD"));
+   AddPreDefVal(TString("STANDARD"));   // deprecated
    AddPreDefVal(TString("CPU"));
    AddPreDefVal(TString("GPU"));
-   AddPreDefVal(TString("OPENCL"));
-   AddPreDefVal(TString("CUDNN"));
+   AddPreDefVal(TString("OPENCL"));    // not yet implemented
+   AddPreDefVal(TString("CUDNN"));     // not needed (by default GPU is now CUDNN if available)
 
    // define training stratgey separated by a separator "|"
    DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-1,"
@@ -254,12 +254,10 @@ void MethodDL::ProcessOptions()
          "you have CUDA installed and it was successfully "
          "detected by CMAKE by using -Dtmva-gpu=On  "
             << Endl;
-#ifdef R__HAS_TMVACPU
       fArchitectureString = "CPU";
       Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#else
-      fArchitectureString = "Standard";
-      Log() << kINFO << "Will now use the Standard architecture !" << Endl;
+#ifndef R__HAS_TMVACPU
+      Log() << kINFO << "BLAS is not found : will use CPU with single thread and slower CPU performance" << Endl;
 #endif
 #else
       Log() << kINFO << "Will now use the GPU architecture !" << Endl;
@@ -271,12 +269,10 @@ void MethodDL::ProcessOptions()
             "you have CUDNN and CUDA installed and that the GPU capability/CUDA "
             "was successfully detected by CMAKE by using -Dtmva-gpu=On"
             << Endl;
-#ifdef R__HAS_TMVACPU
       fArchitectureString = "CPU";
       Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#else
-      fArchitectureString = "Standard";
-      Log() << kINFO << "Will now use the Standard architecture !" << Endl;
+#ifndef R__HAS_TMVACPU
+      Log() << kINFO << "BLAS is not found : will use CPU with single thread and slower CPU performance" << Endl;
 #endif
 #else
       Log() << kINFO << "Will now use the GPU architecture !" << Endl;
@@ -285,7 +281,7 @@ void MethodDL::ProcessOptions()
 
    else if (fArchitectureString == "CPU") {
 #ifndef R__HAS_TMVACPU  // TMVA has no CPU support
-      Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
+      Log() << kINFO << "Multi-core CPU backend not enabled. Please make sure "
                           "you have a BLAS implementation and it was successfully "
                          "detected by CMake as well that the imt CMake flag is set."
             << Endl;
@@ -293,8 +289,8 @@ void MethodDL::ProcessOptions()
       fArchitectureString = "GPU";
       Log() << kINFO << "Will now use the GPU architecture !" << Endl;
 #else
-      fArchitectureString = "STANDARD";
-      Log() << kINFO << "Will now use the Standard architecture !" << Endl;
+      fArchitectureString = "CPU";
+      Log() << kINFO << "Will use anyway the CPU architecture but with slower performance" << Endl;
 #endif
 #else
       Log() << kINFO << "Will now use the CPU architecture !" << Endl;
@@ -302,8 +298,8 @@ void MethodDL::ProcessOptions()
    }
 
    else {
-      Log() << kINFO << "Will use the deprecated STANDARD architecture !" << Endl;
-      fArchitectureString = "STANDARD";
+      Log() << kWARNING << "STANDARD architecture is deprecated! Use CPU with lower performace if BLAS is not available" << Endl;
+      fArchitectureString = "CPU";
    }
 
    // Input Layout
@@ -1672,19 +1668,15 @@ void MethodDL::Train()
       // e.g use openblas_set_num_threads(num_threads) for OPENBLAS backend
       Log() << kINFO << "Start of deep neural network training on CPU using (for ROOT-IMT) nthreads = "
             << gConfig().GetNCpu() << Endl << Endl;
-      TrainDeepNet<DNN::TCpu<ScalarImpl_t> >();
 #else
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set."
+      Log() << kINFO << "Start of deep neural network training on single thread CPU (no ROOT-IMT support) " << Endl
             << Endl;
+#endif
+      TrainDeepNet<DNN::TCpu<ScalarImpl_t> >();
       return;
-#endif
    } else if (this->GetArchitectureString() == "STANDARD") {
-      Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
-#if HAVE_REFERENCE
-      TrainDeepNet<DNN::TReference<ScalarImpl_t> >();
-#endif
+      Log() << kFATAL << "The STANDARD architecture is not supported anymore !" << Endl << Endl;
+      //TrainDeepNet<DNN::TReference<ScalarImpl_t> >();
    }
    else {
       Log() << kFATAL << this->GetArchitectureString() <<
@@ -1692,16 +1684,6 @@ void MethodDL::Train()
             << Endl;
    }
 
-// /// definitions for CUDA
-// #ifdef R__HAS_TMVAGPU // Included only if DNNCUDA flag is set.
-//    using Architecture_t = DNN::TCuda<Double_t>;
-// #else
-// #ifdef R__HAS_TMVACPU // Included only if DNNCPU flag is set.
-//    using Architecture_t = DNN::TCpu<Double_t>;
-// #else
-//    using Architecture_t = DNN::TReference<Double_t>;
-// #endif
-// #endif
 }
 
 
@@ -2054,20 +2036,13 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
 #endif
 
 #endif
-   } else if (this->GetArchitectureString() == "CPU") {
-//#ifdef R__HAS_TMVACPU
+   } else {
       Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
       return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-//#endif
    }
-   Log() << kINFO << "ERROR:  STANDARD architecture  is not supported anymore for MethodDL ! "
-         << Endl << Endl;
-// #if HAVE_REFERENCE
-//    return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-// #else
-   return std::vector<Double_t>(nEvents,TMath::QuietNaN());
-//#endif
-
+   Log() << kERROR << "STANDARD architecture  is deprecated for MethodDL ! " << Endl << Endl;
+   //        return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
+   return std::vector<Double_t>(nEvents, TMath::QuietNaN());
 }
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const

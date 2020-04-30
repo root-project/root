@@ -118,9 +118,8 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 #ifndef R__HAS_TMVACPU
 #ifndef R__HAS_TMVAGPU
    Warning("TMVA_CNN_Classification",
-           "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning");
+           "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning for CNN");
    useTMVACNN = false;
-   useTMVADNN = false;
 #endif
 #endif
 
@@ -165,7 +164,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    TMVA::Factory factory(
       "TMVA_CNN_Classification", outputFile,
-      "!V:ROC:!Silent:Color:!DrawProgressBar:AnalysisType=Classification:Transformations=None:!Correlations");
+      "!V:ROC:!Silent:Color:AnalysisType=Classification:Transformations=None:!Correlations");
 
    /***
 
@@ -279,7 +278,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
    // Boosted Decision Trees
    if (useTMVABDT) {
       factory.BookMethod(loader, TMVA::Types::kBDT, "BDT",
-                         "!V:NTrees=800:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
+                         "!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
                          "UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
    }
    /**

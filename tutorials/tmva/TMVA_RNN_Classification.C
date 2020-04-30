@@ -170,9 +170,8 @@ void TMVA_RNN_Classification(int use_type = 1)
 #ifndef R__HAS_TMVAGPU
    useGPU = false;
 #ifndef R__HAS_TMVACPU
-   Warning("TMVA_RNN_Classification", "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning");
+   Warning("TMVA_RNN_Classification", "TMVA is not build with GPU or CPU multi-thread support. Cannot use TMVA Deep Learning for RNN");
    useTMVA_RNN = false;
-   useTMVA_DNN = false;
 #endif
 #endif
 
@@ -432,6 +431,7 @@ the option string
 
             if (gSystem->AccessPathName(modelName)) {
                Warning("TMVA_RNN_Classification", "Error creating Keras recurrennt model file - Skip using Keras");
+               useKeras = false;
             } else {
                // book PyKeras method only if Keras model could be created
                Info("TMVA_RNN_Classification", "Booking Keras %s model", rnn_types[i].c_str());
@@ -446,6 +446,10 @@ the option string
       }
    }
 
+   // use BDT in case not using Keras or TMVA DL
+   if (!useKeras || !useTMVA_BDT)
+      useTMVA_BDT = true;
+
    /**
          ## Book TMVA BDT
    **/
@@ -453,7 +457,7 @@ the option string
    if (useTMVA_BDT) {
 
       factory->BookMethod(dataloader, TMVA::Types::kBDT, "BDTG",
-                          "!H:!V:NTrees=500:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:"
+                          "!H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:"
                           "BaggedSampleFraction=0.5:nCuts=20:"
                           "MaxDepth=2");
 
