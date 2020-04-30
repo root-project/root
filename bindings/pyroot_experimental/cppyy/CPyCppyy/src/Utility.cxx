@@ -624,6 +624,8 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
             // ctypes is inconsistent in format on Windows; either way these types are the same size
                 || (tc == 'I' && strchr(bufinfo.format, 'L')) || (tc == 'i' && strchr(bufinfo.format, 'l'))
 #endif
+            // allow 'signed char' ('b') from array to pass through '?' (bool as from struct)
+                || (tc == '?' && strchr(bufinfo.format, 'b'))
                     ) {
                 buf = bufinfo.buf;
                 if (buf && bufinfo.ndim == 0) {
@@ -638,7 +640,7 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
             // have buf, but format mismatch: bail out now, otherwise the old
             // code will return based on itemsize match
                 PyBuffer_Release(&bufinfo);
-                return 0;                
+                return 0;
             }
         }
         PyErr_Clear();
@@ -676,7 +678,8 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
         // determine buffer compatibility (use "buf" as a status flag)
             PyObject* pytc = PyObject_GetAttr(pyobject, PyStrings::gTypeCode);
             if (pytc != 0) {      // for array objects
-                if (CPyCppyy_PyText_AsString(pytc)[0] != tc)
+                char cpytc = CPyCppyy_PyText_AsString(pytc)[0];
+                if (!(cpytc == tc || (tc == '?' && cpytc == 'b')))
                     buf = 0;      // no match
                 Py_DECREF(pytc);
             } else if (seqmeths->sq_length &&

@@ -696,7 +696,7 @@ bool CPyCppyy::name##RefConverter::SetArg(                                   \
 }                                                                            \
 CPPYY_IMPL_REFCONVERTER_FROM_MEMORY(name, ctype)
 
-CPPYY_IMPL_REFCONVERTER(Bool,    c_bool,       bool,               'b');
+CPPYY_IMPL_REFCONVERTER(Bool,    c_bool,       bool,               '?');
 CPPYY_IMPL_REFCONVERTER(Char,    c_char,       char,               'b');
 CPPYY_IMPL_REFCONVERTER(WChar,   c_wchar,      wchar_t,            'u');
 CPPYY_IMPL_REFCONVERTER(Char16,  c_uint16,     char16_t,           'H');
@@ -1552,7 +1552,7 @@ bool CPyCppyy::name##ArrayPtrConverter::SetArg(                              \
 
 
 //----------------------------------------------------------------------------
-CPPYY_IMPL_ARRAY_CONVERTER(Bool,     c_bool,       bool,                 'b') // signed char
+CPPYY_IMPL_ARRAY_CONVERTER(Bool,     c_bool,       bool,                 '?')
 CPPYY_IMPL_ARRAY_CONVERTER(SChar,    c_char,       signed char,          'b')
 CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B')
 #if __cplusplus > 201402L
