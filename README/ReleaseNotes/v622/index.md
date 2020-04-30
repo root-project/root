@@ -187,6 +187,7 @@ See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanit
 - RDataFrame changed its error handling strategy in case of unreadable input files. Instead of simply logging an error
   and skipping the file, it now throws an exception if any of the input files is unreadable (this could also happen in
   the middle of an event loop). See [ROOT-10549](https://sft.its.cern.ch/jira/browse/ROOT-10549) for more details.
+- New analysis examples based on the recent ATLAS Open Data release ([`Higgs to two photons`](https://root.cern/doc/master/df104__HiggsToTwoPhotons_8py.html), [`W boson analysis`](https://root.cern/doc/master/df105__WBosonAnalysis_8py.html), [`Higgs to four leptons`](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py.html))
 
 
 ## PyROOT
