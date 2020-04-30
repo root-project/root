@@ -172,8 +172,11 @@ public:
    }
 
 private:
-   std::unique_ptr<ImplBase_t> fImpl; ///< The actual histogram implementation.
-   FillFunc_t fFillFunc = nullptr;    ///< Pointer to RHistImpl::Fill() member function.
+   /// The actual histogram implementation.
+   std::unique_ptr<ImplBase_t> fImpl;
+
+   /// Pointer to RHistImpl::Fill() member function.
+   FillFunc_t fFillFunc = nullptr;    //!
 
    friend RHist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
 };
