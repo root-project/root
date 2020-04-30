@@ -84,10 +84,20 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
+{
+  if (rangeName && (force || !_refRangeName.empty())) {
+     _refRangeName = rangeName;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooBernstein::evaluate() const
 {
-  Double_t xmin = _x.min();
-  Double_t x = (_x - xmin) / (_x.max() - xmin); // rescale to [0,1]
+  double xmax,xmin;
+  std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
+  Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
   RooFIter iter = _coefList.fwdIterator();
 
@@ -222,7 +232,12 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
-  Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
+
+  double xmax,xmin;
+  std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
+  const Double_t xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
+  const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
+
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;
 
@@ -234,7 +249,7 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     // where the integral is straight forward.
     temp = 0;
     for (int j=i; j<=degree; ++j){ // power basis≈ß
-      temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) / (j+1);
+      temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) * (TMath::Power(xhi,j+1) - TMath::Power(xlo,j+1)) / (j+1);
     }
     temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
