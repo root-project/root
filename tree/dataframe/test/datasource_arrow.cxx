@@ -1,6 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RArrowDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TROOT.h>
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -90,7 +91,7 @@ TEST(RArrowDS, ColTypeNames)
    EXPECT_STREQ("Long64_t", tds.GetTypeName("Age").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("Height").c_str());
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
-   EXPECT_STREQ("ULong_t", tds.GetTypeName("Babies").c_str());
+   EXPECT_STREQ("UInt_t", tds.GetTypeName("Babies").c_str());
 }
 
 TEST(RArrowDS, EntryRanges)
@@ -117,18 +118,23 @@ TEST(RArrowDS, ColumnReaders)
 
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<Long64_t>("Age");
+   auto valsAge = tds.GetColumnReaders<Long64_t>("Age");
+   auto valsBabies = tds.GetColumnReaders<unsigned int>("Babies");
+
    tds.Initialise();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
-   std::vector<Long64_t> ages = {64, 50, 40, 30, 2, 0};
+   std::vector<Long64_t> RefsAge = {64, 50, 40, 30, 2, 0};
+   std::vector<unsigned int> RefsBabies = {1, 0, 2, 3, 4, 21};
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
-      ASSERT_LT(slot, vals.size());
+      ASSERT_LT(slot, valsAge.size());
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = **vals[slot];
-         EXPECT_EQ(ages[i], val);
+         auto valAge = **valsAge[slot];
+         EXPECT_EQ(RefsAge[i], valAge);
+         auto valBabies = **valsBabies[slot];
+         EXPECT_EQ(RefsBabies[i], valBabies);
       }
       slot++;
    }
