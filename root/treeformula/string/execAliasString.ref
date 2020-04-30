@@ -2,7 +2,7 @@
 Processing execAliasString.C...
 Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 ************************************
-*    Row   *      name *     count *
+*    Row   * name.name * count.cou *
 ************************************
 *        0 *       16A *         3 *
 *        1 *       17B *         2 *
