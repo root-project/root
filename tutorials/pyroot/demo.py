@@ -61,6 +61,10 @@ ROOT.gROOT.SaveContext()
 if __name__ == '__main__':
    rep = ''
    while not rep in [ 'q', 'Q' ]:
-      rep = raw_input( 'enter "q" to quit: ' )
+      # Check if we are in Python 2 or 3
+      if sys.version_info[0] > 2:
+         rep = input( 'enter "q" to quit: ' )
+      else:
+         rep = raw_input( 'enter "q" to quit: ' )
       if 1 < len(rep):
          rep = rep[0]
