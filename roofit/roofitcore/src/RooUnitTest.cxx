@@ -435,9 +435,13 @@ Bool_t RooUnitTest::runCompTests()
       }
 
       if (!iter4->first->isIdentical(*bmark)) {
-	cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName()
-	     <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
-	ret = kFALSE ;
+        cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName()
+	         <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
+        if (_verb) {
+          iter4->first->Print("V");
+          bmark->Print("V");
+        }
+        ret = false;
       }
 
       // Delete RooTable when comparison is finished to avoid noise in leak checking
