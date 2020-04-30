@@ -313,7 +313,7 @@ endif()
 
 # Pyroot requires python-dev package; force to OFF if it was not found
 # PYTHONLIBS_FOUND is used for cmake < 3.12
-if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
+if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7") AND NOT Python_Development_FOUND)
   set(pyroot_defvalue OFF)
   set(pyroot_experimental_defvalue OFF)
   set(tmva-pymva_defvalue OFF)

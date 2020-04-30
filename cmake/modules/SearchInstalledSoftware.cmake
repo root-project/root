@@ -1506,10 +1506,10 @@ if(tmva)
     set(tmva-gpu OFF CACHE BOOL "Disabled because cuda not found" FORCE)
   endif()
   if(tmva-pymva)
-    if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND)))
+    if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND AND NOT Python_Development_FOUND)))
       message(FATAL_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
-    elseif(NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND))
+    elseif(NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND AND NOT Python_Development_FOUND))
       message(STATUS "TMVA: Numpy or Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off tmva-pymva option")
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
@@ -1526,10 +1526,10 @@ endif()
 
 #---Check for Pyroot---------------------------------------------------------------------
 if(pyroot)
-  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND))
+  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND AND NOT Python_Development_FOUND))
     message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
                         " (python executable: ${PYTHON_EXECUTABLE})")
-  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND)
+  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND AND NOT Python_Development_FOUND)
     message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
     set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
   endif()
@@ -1537,10 +1537,10 @@ endif()
 
 #---Check for Pyroot Exp---------------------------------------------------------------------
 if(pyroot_experimental)
-  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND))
+  if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND AND NOT Python_Development_FOUND))
     message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
                         " (python executable: ${PYTHON_EXECUTABLE})")
-  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND)
+  elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Development_FOUND AND NOT Python3_Development_FOUND AND NOT Python_Development_FOUND)
     message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_experimental option")
     set(pyroot_experimental OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
   endif()
