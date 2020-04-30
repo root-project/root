@@ -1,4 +1,4 @@
-#if !defined(ROOT_TGLIncludes) && !defined(GLEW_BUILD)
+#if !defined(GLEW_BUILD)
 #ifndef __building_module
 # define __building_module(X) 0
 #endif

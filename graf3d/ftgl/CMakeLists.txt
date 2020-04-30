@@ -12,10 +12,6 @@ if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
 
-if(builtin_glew)
-   set(glew_dep GLEW)
-endif()
-
 ROOT_LINKER_LIBRARY(FTGL
     src/FTBitmapGlyph.cxx
     src/FTCharmap.cxx
@@ -44,10 +40,9 @@ ROOT_LINKER_LIBRARY(FTGL
     OpenGL::GLU
     ${FREETYPE_LIBRARIES}
     ZLIB::ZLIB
+    RGlew
   BUILTINS
     FREETYPE
-  DEPENDENCIES
-    ${glew_dep}
 )
 
 target_include_directories(FTGL PRIVATE
@@ -55,9 +50,5 @@ target_include_directories(FTGL PRIVATE
       ${OPENGL_INCLUDE_DIR}
       ${CMAKE_SOURCE_DIR}/graf3d/gl/inc
 )
-
-if(builtin_glew)
-   target_include_directories(FTGL PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/glew/inc)
-endif()
 
 ROOT_INSTALL_HEADERS()

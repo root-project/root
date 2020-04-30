@@ -204,10 +204,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   LIBRARIES
     OpenGL::GL
     OpenGL::GLU
-    GLEW
     ${FTGL_LIBRARIES}
     ${GL2PS_LIBRARIES}
     ${X11_LIBRARIES}
+    RGlew
   DEPENDENCIES
     Hist
     Gui
@@ -229,6 +229,10 @@ else()
   target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
 endif()
 
+
+if(MSVC)
+  target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
+endif()
 
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
