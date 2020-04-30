@@ -161,8 +161,7 @@ std::string RRootDS::GetLabel()
 
 RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
 {
-   ROOT::RDataFrame tdf(std::make_unique<RRootDS>(treeName, fileNameGlob));
-   return tdf;
+   return ROOT::RDataFrame(treeName, fileNameGlob);
 }
 
 } // ns RDF
