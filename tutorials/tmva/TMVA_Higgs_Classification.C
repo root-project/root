@@ -49,7 +49,7 @@ void TMVA_Higgs_Classification() {
    auto outputFile = TFile::Open("Higgs_ClassificationOutput.root", "RECREATE");
 
    TMVA::Factory factory("TMVA_Higgs_Classification", outputFile,
-                         "!V:ROC:!Silent:Color:!DrawProgressBar:AnalysisType=Classification" );
+                         "!V:ROC:!Silent:Color:AnalysisType=Classification" );
 
 /**
 
@@ -59,10 +59,8 @@ Define now input data file and signal and background trees
 
  **/
 
-   TString downloadLinkFile = "https://cernbox.cern.ch/index.php/s/EJqhbcDdyXKeswy/download";
-
-
    TString inputFileName = "Higgs_data.root";
+   TString inputFileLink = "http://root.cern.ch/files/" + inputFileName;
 
    TFile *inputFile = nullptr;
 
@@ -74,8 +72,9 @@ Define now input data file and signal and background trees
    if (!inputFile) {
       // download file from Cernbox location
       Info("TMVA_Higgs_Classification","Download Higgs_data.root file");
-      gSystem->Exec( TString::Format("wget -O %s %s",inputFileName.Data(), downloadLinkFile.Data() ) );
-      inputFile = TFile::Open( inputFileName );
+      inputFile = TFile::Open(inputFileLink, "CACHEREAD");
+      //gSystem->Exec( TString::Format("wget -O %s %s",inputFileName.Data(), downloadLinkFile.Data() ) );
+      //inputFile = TFile::Open( inputFileName);
       if (!inputFile) {
          Error("TMVA_Higgs_Classification","Input file cannot be downloaded - exit");
          return;
@@ -244,11 +243,7 @@ We can then book the DL method using the built option string
 
    if (useDL) {
 
-      bool useDLCPU = false;
       bool useDLGPU = false;
-#ifdef R__HAS_TMVACPU
-      useDLCPU = true;
-#endif
 #ifdef R__HAS_TMVAGPU
       useDLGPU = true;
 #endif
@@ -284,8 +279,9 @@ We can then book the DL method using the built option string
       if (useDLGPU) {
          dnnOptions += ":Architecture=GPU";
          dnnMethodName = "DNN_GPU";
-      } else
+      } else  {
          dnnOptions += ":Architecture=CPU";
+      }
 
       factory.BookMethod(loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
 

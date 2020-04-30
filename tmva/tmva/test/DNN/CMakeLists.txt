@@ -103,8 +103,10 @@ endif()
 endif ()
 
 #--- CPU tests. ----------------------------
-if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
-  include_directories(${TBB_INCLUDE_DIRS})
+#
+# always run them
+#if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
+#  include_directories(${TBB_INCLUDE_DIRS})
 
   # DNN - Arithmetic Functions CPU
   ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
@@ -190,7 +192,7 @@ endif ()
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Regression-Cpu COMMAND testRegressionCpu)
 
-endif ()
+####endif()
 
 if ( reference-tests)
 
