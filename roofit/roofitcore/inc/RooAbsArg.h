@@ -107,7 +107,13 @@ public:
   Bool_t hasClients() const { return !_clientList.empty(); }
 
   ////////////////////////////////////////////////////////////////////////////
-  // Legacy iterators
+  /// \name Deprecated functions
+  /// Don't use these iterators, since they are inefficient. References to the
+  /// underlying containers can be obtained using `clients()` instead of `clientIterator()`,
+  /// `valueClients()` instead of `valueClientIterator()` etc.
+  /// These containers allow for range-based for loops and index access. This makes the
+  /// iterators in this section unnecessary.
+  /// @{
   inline TIterator* clientIterator() const
   R__SUGGEST_ALTERNATIVE("Use clients() and begin(), end() or range-based loops.") {
     // Return iterator over all client RooAbsArgs
@@ -138,10 +144,10 @@ public:
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListShape)));
   }
   inline RooFIter serverMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+  R__SUGGEST_ALTERNATIVE("Use servers() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_serverList)));
   }
-
+  /// @}
   ////////////////////////////////////////////////////////////////////////////
 
   /// List of all clients of this object.
