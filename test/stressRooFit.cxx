@@ -312,7 +312,7 @@ int main(int argc,const char *argv[])
       doDump=kTRUE ;
     }
 
-    if (arg=="-h") {
+    if (arg=="-h" || arg == "--help") {
       cout << "usage: stressRooFit [ options ] " << endl ;
       cout << "" << endl ;
       cout << "       -f <file> : use given reference file instead of default (" <<  refFileName << ")" << endl ;
