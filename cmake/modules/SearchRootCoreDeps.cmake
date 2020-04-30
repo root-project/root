@@ -8,11 +8,6 @@
 
 message(STATUS "Looking for Python")
 
-if(pyroot_experimental)
-  unset(PYTHON_INCLUDE_DIR CACHE)
-  unset(PYTHON_LIBRARY CACHE)
-endif()
-
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
 
   if(PYTHON_EXECUTABLE OR Python_EXECUTABLE)
