@@ -750,7 +750,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         libcpp_string_view.h
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h
-                        TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
+                        TBranchProxyTemplate.h TGLWSIncludes.h
                         snprintf.h strlcpy.h)
 
    # Deprecated header files.
@@ -914,7 +914,13 @@ function(ROOT_LINKER_LIBRARY library)
     if(ARG_DEPENDENCIES)
       foreach(lib ${ARG_DEPENDENCIES})
         if((TARGET ${lib}) AND NOT (${lib} STREQUAL Core))
-          get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
+          # Include directories property is different for INTERFACE libraries
+          get_target_property(_target_type ${lib} TYPE)
+          if(${_target_type} STREQUAL "INTERFACE_LIBRARY")
+            get_target_property(lib_incdirs ${lib} INTERFACE_INCLUDE_DIRECTORIES)
+          else()
+            get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
+          endif()
           if(lib_incdirs)
             foreach(dir ${lib_incdirs})
               string(REGEX REPLACE "^[$]<BUILD_INTERFACE:(.+)>" "\\1" dir ${dir})
