@@ -21,7 +21,10 @@ namespace ROOT {
 
 namespace RDF {
 
-class RRootDS final : public ROOT::RDF::RDataSource {
+class R__DEPRECATED(6, 24,
+                    "RRootDS will be removed from the public namespace. Please use standard RDataFrame constructors "
+                    "and interfaces instead")
+RRootDS final : public ROOT::RDF::RDataSource {
 private:
    unsigned int fNSlots = 0U;
    std::string fTreeName;
