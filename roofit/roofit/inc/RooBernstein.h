@@ -17,6 +17,7 @@
 #include "RooTemplateProxy.h"
 #include "RooRealVar.h"
 #include "RooListProxy.h"
+#include "RooAbsRealLValue.h"
 
 class RooRealVar;
 class RooArgList ;
@@ -26,7 +27,7 @@ public:
 
   RooBernstein() ;
   RooBernstein(const char *name, const char *title,
-               RooAbsReal& _x, const RooArgList& _coefList) ;
+               RooAbsRealLValue& _x, const RooArgList& _coefList) ;
 
   RooBernstein(const RooBernstein& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooBernstein(*this, newname); }
@@ -38,7 +39,7 @@ public:
 
 private:
   
-  RooTemplateProxy<RooRealVar> _x ;
+  RooTemplateProxy<RooAbsRealLValue> _x ;
   RooListProxy _coefList ;
   std::string _refRangeName ;
 
