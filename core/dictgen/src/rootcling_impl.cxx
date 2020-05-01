@@ -5669,7 +5669,7 @@ int GenReflexMain(int argc, char **argv)
          NOTYPE ,
          "" , "noGlobalUsingStd" ,
          ROOT::option::FullArg::None,
-         "--no-using-std\tDo not declare {using namespace std} in the dictionary global scope\n"
+         "--noGlobalUsingStd\tDo not declare {using namespace std} in the dictionary global scope\n"
          "      All header files must have sumbols from std:: namespace fully qualified\n"
       },
 
