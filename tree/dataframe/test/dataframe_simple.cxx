@@ -950,9 +950,9 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
 }
 
 // run single-thread tests
-INSTANTIATE_TEST_CASE_P(Seq, RDFSimpleTests, ::testing::Values(false));
+INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
 // run multi-thread tests
 #ifdef R__USE_IMT
-   INSTANTIATE_TEST_CASE_P(MT, RDFSimpleTests, ::testing::Values(true));
+   INSTANTIATE_TEST_SUITE_P(MT, RDFSimpleTests, ::testing::Values(true));
 #endif

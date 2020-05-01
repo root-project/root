@@ -1,9 +1,3 @@
-
-// As the reference implementation is deprecated and
-// can't be instantiated, we can only run this test
-// if there if we can run CPU or CUDA versions.
-#if (defined DNNCPU || defined DNNCUDA)
-
 #include "gtest/gtest.h"
 
 #include "TMVA/DataLoader.h"
@@ -168,4 +162,8 @@ TEST(MethodDnnValidationSize, Absolute)
    EXPECT_THROW(context.GetProcessedValidationOption("ValidationSize=101"), std::runtime_error);
 }
 
-#endif
+int main(int argc, char *argv[])
+{
+   ::testing::InitGoogleTest(&argc, argv);
+   return RUN_ALL_TESTS();
+}

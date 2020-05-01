@@ -1572,20 +1572,22 @@ if (testing)
   # http://stackoverflow.com/questions/9689183/cmake-googletest
 
   set(_gtest_byproduct_binary_dir
-    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/googlemock/)
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build)
   set(_gtest_byproducts
-    ${_gtest_byproduct_binary_dir}/gtest/libgtest.a
-    ${_gtest_byproduct_binary_dir}/gtest/libgtest_main.a
-    ${_gtest_byproduct_binary_dir}/libgmock.a
-    ${_gtest_byproduct_binary_dir}/libgmock_main.a
+    ${_gtest_byproduct_binary_dir}/lib/libgtest.a
+    ${_gtest_byproduct_binary_dir}/lib/libgtest_main.a
+    ${_gtest_byproduct_binary_dir}/lib/libgmock.a
+    ${_gtest_byproduct_binary_dir}/lib/libgmock_main.a
     )
 
   if(MSVC)
     set(EXTRA_GTEST_OPTS
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=\\\"\\\"
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\"
-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=\\\"\\\")
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
+      -Dgtest_force_shared_crt=ON
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release)
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
@@ -1596,7 +1598,7 @@ if (testing)
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_SHALLOW 1
-    GIT_TAG release-1.8.0
+    GIT_TAG release-1.10.0
     UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
@@ -1605,7 +1607,7 @@ if (testing)
     #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
     #            -Dgtest_force_shared_crt=ON
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
-                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                  -DCMAKE_BUILD_TYPE=Release
                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                   -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -1630,11 +1632,16 @@ if (testing)
 
   # Libraries
   ExternalProject_Get_Property(googletest binary_dir)
-  set(_G_LIBRARY_PATH ${binary_dir}/googlemock/)
+  set(_G_LIBRARY_PATH ${binary_dir}/lib/)
 
-  # Register gtest, gtest_main, gmock, gmock_main
-  foreach (lib gtest gtest_main gmock gmock_main)
+  # Use gmock_main instead of gtest_main because it initializes gtest as well.
+  # Note: The libraries are listed in reverse order of their dependancies.
+  foreach(lib gtest gtest_main gmock gmock_main)
     add_library(${lib} IMPORTED STATIC GLOBAL)
+    set_target_properties(${lib} PROPERTIES
+      IMPORTED_LOCATION "${_G_LIBRARY_PATH}${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIRS}"
+    )
     add_dependencies(${lib} googletest)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
         ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
@@ -1649,8 +1656,8 @@ if (testing)
   #target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
   #target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
 
-  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
   set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
   set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
 

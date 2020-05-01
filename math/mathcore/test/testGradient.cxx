@@ -451,7 +451,7 @@ typedef ::testing::Types<> TestTypes;
 #endif
 
 
-TYPED_TEST_CASE(LogLikelihoodGradientTest, TestTypes);
+TYPED_TEST_SUITE(LogLikelihoodGradientTest, TestTypes);
 
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
@@ -470,7 +470,7 @@ TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
 }
 
 
-TYPED_TEST_CASE(Chi2GradientTest, TestTypes);
+TYPED_TEST_SUITE(Chi2GradientTest, TestTypes);
 
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(Chi2GradientTest, Chi2Gradient)
@@ -488,7 +488,7 @@ TYPED_TEST(Chi2GradientTest, Chi2Gradient)
    }
 }
 
-TYPED_TEST_CASE(PoissonLikelihoodGradientTest, TestTypes);
+TYPED_TEST_SUITE(PoissonLikelihoodGradientTest, TestTypes);
 
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
 TYPED_TEST(PoissonLikelihoodGradientTest, PoissonLikelihoodGradient)
