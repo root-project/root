@@ -514,6 +514,7 @@ if(opengl)
 endif()
 
 #---Check for GLEW -------------------------------------------------------------------
+# Opengl is "must" requirement for Glew.
 if(opengl AND NOT builtin_glew)
   message(STATUS "Looking for GLEW")
   if(fail-on-missing)
