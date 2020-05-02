@@ -335,6 +335,15 @@ if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(dataframe_defvalue OFF)
 endif()
 
+# OpenGL should be working only with x11 (Linux),
+# in case when -Dall=ON -Dx11=OFF, we will just disable opengl.
+if(NOT WIN32 AND NOT APPLE)
+  if(opengl AND NOT x11)
+    message(STATUS "OpenGL was disabled, since it is required to have enabled x11 on Linux")
+    set(opengl OFF CACHE BOOL "OpenGL requires to have enabled x11" FORCE)
+  endif()
+endif()
+
 #---Options depending of CMake Generator-------------------------------------------------------
 if( CMAKE_GENERATOR STREQUAL Ninja)
    set(fortran_defvalue OFF)
