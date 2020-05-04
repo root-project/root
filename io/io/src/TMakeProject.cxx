@@ -20,6 +20,7 @@ Helper class implementing the TFile::MakeProject.
 #include "TMakeProject.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TList.h"
 #include "TROOT.h"
 #include "TMD5.h"
 #include "TStreamerInfo.h"
