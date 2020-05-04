@@ -12,7 +12,7 @@
 
 using namespace RooFit;
 
-void simpleIntegration(double a0, double a1, double a2, double a3)
+void IntegrationChecker(double a0, double a1, double a2, double a3)
 {
   RooRealVar x("x", "x", 0., 100.);
 
@@ -83,5 +83,5 @@ void simpleIntegration(double a0, double a1, double a2, double a3)
 
 TEST(RooBernstein, NumInt)
 {
-  simpleIntegration(0.3, 0.7, 0.2, 0.5);
+  IntegrationChecker(0.3, 0.7, 0.2, 0.5);
 }
