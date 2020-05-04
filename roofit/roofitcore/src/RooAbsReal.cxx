@@ -102,6 +102,7 @@
 #include "TF3.h"
 #include "TMatrixD.h"
 #include "TVector.h"
+#include "ROOT/RMakeUnique.hxx"
 
 #include <sstream>
 
@@ -124,7 +125,7 @@ map<const RooAbsArg*,pair<string,list<RooAbsReal::EvalError> > > RooAbsReal::_ev
 /// coverity[UNINIT_CTOR]
 /// Default constructor
 
-RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE), _lastNSet(0)
+RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _selectComp(kTRUE), _lastNSet(0)
 {
 }
 
@@ -135,7 +136,7 @@ RooAbsReal::RooAbsReal() : _specIntegratorConfig(0), _treeVar(kFALSE), _selectCo
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
   RooAbsArg(name,title), _plotMin(0), _plotMax(0), _plotBins(100),
-  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE), _lastNSet(0)
+  _value(0),  _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _selectComp(kTRUE), _lastNSet(0)
 {
   setValueDirty() ;
   setShapeDirty() ;
@@ -150,7 +151,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 		       Double_t inMaxVal, const char *unit) :
   RooAbsArg(name,title), _plotMin(inMinVal), _plotMax(inMaxVal), _plotBins(100),
-  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _treeVar(kFALSE), _selectComp(kTRUE), _lastNSet(0)
+  _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _selectComp(kTRUE), _lastNSet(0)
 {
   setValueDirty() ;
   setShapeDirty() ;
@@ -164,7 +165,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
   RooAbsArg(other,name), _plotMin(other._plotMin), _plotMax(other._plotMax),
   _plotBins(other._plotBins), _value(other._value), _unit(other._unit), _label(other._label),
-  _forceNumInt(other._forceNumInt), _treeVar(other._treeVar), _selectComp(other._selectComp), _lastNSet(0)
+  _forceNumInt(other._forceNumInt), _selectComp(other._selectComp), _lastNSet(0)
 {
   if (other._specIntegratorConfig) {
     _specIntegratorConfig = new RooNumIntConfig(*other._specIntegratorConfig) ;
@@ -186,7 +187,6 @@ RooAbsReal& RooAbsReal::operator=(const RooAbsReal& other) {
   _unit = other._unit;
   _label = other._label;
   _forceNumInt = other._forceNumInt;
-  _treeVar = other._treeVar;
   _selectComp = other._selectComp;
   _lastNSet = other._lastNSet;
 
@@ -3211,6 +3211,12 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
 
 
+struct TreeReadBuffer {
+  virtual ~TreeReadBuffer() = default;
+  virtual operator double() = 0;
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the cached value of another RooAbsArg to our cache.
 /// Warning: This function just copies the cached values of source,
@@ -3221,23 +3227,8 @@ void RooAbsReal::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t
   auto other = static_cast<const RooAbsReal*>(source);
   assert(dynamic_cast<const RooAbsReal*>(source));
 
-  if (!other->_treeVar) {
-    _value = other->_value ;
-  } else {
-    if (source->getAttribute("FLOAT_TREE_BRANCH")) {
-      _value = other->_floatValue ;
-    } else if (source->getAttribute("INTEGER_TREE_BRANCH")) {
-      _value = other->_intValue ;
-    } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
-      _value = other->_byteValue ;
-    } else if (source->getAttribute("BOOL_TREE_BRANCH")) {
-      _value = other->_boolValue ;
-    } else if (source->getAttribute("SIGNEDBYTE_TREE_BRANCH")) {
-      _value = other->_sbyteValue ;
-    } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
-      _value = other->_uintValue ;
-    }
-  }
+  _value = other->_treeReadBuffer ? other->_treeReadBuffer->operator double() : other->_value;
+
   if (setValDirty) {
     setValueDirty() ;
   }
@@ -3256,6 +3247,28 @@ void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)
 }
 
 
+namespace {
+/// Helper for reading branches with various types from a TTree, and convert all to double.
+template<typename T>
+struct TypedTreeReadBuffer final : public TreeReadBuffer {
+  operator double() override {
+    return _value;
+  }
+  T _value;
+};
+
+/// Create a TreeReadBuffer to hold the specified type, and attach to the branch passed as argument.
+/// \tparam T Type of branch to be read.
+/// \param[in] branchName Attach to this branch.
+/// \param[in] tree Tree to attach to.
+template<typename T>
+std::unique_ptr<TreeReadBuffer> createTreeReadBuffer(const TString& branchName, TTree& tree) {
+  auto buf = new TypedTreeReadBuffer<T>();
+  tree.SetBranchAddress(branchName.Data(), &buf->_value);
+  return std::unique_ptr<TreeReadBuffer>(buf);
+}
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3263,13 +3276,11 @@ void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)
 /// register the internal value cache RooAbsReal::_value as branch
 /// buffer for a Double_t tree branch with the same name as this
 /// object. If no Double_t branch is found with the name of this
-/// object, this method looks for a Float_t Int_t, UChar_t and UInt_t
-/// branch in that order. If any of these are found the buffer for
-/// that branch is set to a correctly typed conversion buffer in this
-/// RooRealVar.  A flag is set that will cause copyCache to copy the
-/// object value from the appropriate conversion buffer instead of
-/// the _value buffer.
-
+/// object, this method looks for a Float_t Int_t, UChar_t and UInt_t, etc
+/// branch. If any of these are found, a TreeReadBuffer
+/// that branch is created, and saved in _treeReadBuffer.
+/// TreeReadBuffer::operator double() can be used to convert the values.
+/// This is used by copyCache().
 void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 {
   // First determine if branch is taken
@@ -3291,56 +3302,44 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
     TString typeName(leaf->GetTypeName()) ;
 
-    if (!typeName.CompareTo("Float_t")) {
-      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Float_t branch " << GetName()
-		  << " will be converted to double precision" << endl ;
-      setAttribute("FLOAT_TREE_BRANCH",kTRUE) ;
-      _treeVar = kTRUE ;
-      t.SetBranchAddress(cleanName,&_floatValue) ;
-    } else if (!typeName.CompareTo("Int_t")) {
-      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Int_t branch " << GetName()
-		  << " will be converted to double precision" << endl ;
-      setAttribute("INTEGER_TREE_BRANCH",kTRUE) ;
-      _treeVar = kTRUE ;
-      t.SetBranchAddress(cleanName,&_intValue) ;
-    } else if (!typeName.CompareTo("UChar_t")) {
-      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName()
-		  << " will be converted to double precision" << endl ;
-      setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
-      _treeVar = kTRUE ;
-      t.SetBranchAddress(cleanName,&_byteValue) ;
-    } else if (!typeName.CompareTo("Bool_t")) {
-      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Bool_t branch " << GetName()
-		  << " will be converted to double precision" << endl ;
-      setAttribute("BOOL_TREE_BRANCH",kTRUE) ;
-      _treeVar = kTRUE ;
-      t.SetBranchAddress(cleanName,&_boolValue) ;
-    } else if (!typeName.CompareTo("Char_t")) {
-      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree Char_t branch " << GetName()
-		  << " will be converted to double precision" << endl ;
-      setAttribute("SIGNEDBYTE_TREE_BRANCH",kTRUE) ;
-      _treeVar = kTRUE ;
-      t.SetBranchAddress(cleanName,&_sbyteValue) ;
-    }  else if (!typeName.CompareTo("UInt_t")) {
-      coutI(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName()
-		  << " will be converted to double precision" << endl ;
-      setAttribute("UNSIGNED_INTEGER_TREE_BRANCH",kTRUE) ;
-      _treeVar = kTRUE ;
-      t.SetBranchAddress(cleanName,&_uintValue) ;
-    } else if (!typeName.CompareTo("Double_t")) {
-      t.SetBranchAddress(cleanName,&_value) ;
+
+    // For different type names, store three items:
+    // first: A tag attached to this instance. Not used inside RooFit, any more, but users might rely on it.
+    // second: A function to attach
+    std::map<std::string, std::pair<std::string, std::function<std::unique_ptr<TreeReadBuffer>()>>> typeMap {
+      {"Float_t",   {"FLOAT_TREE_BRANCH",            [&](){ return createTreeReadBuffer<Float_t  >(cleanName, t); }}},
+      {"Int_t",     {"INTEGER_TREE_BRANCH",          [&](){ return createTreeReadBuffer<Int_t    >(cleanName, t); }}},
+      {"UChar_t",   {"BYTE_TREE_BRANCH",             [&](){ return createTreeReadBuffer<UChar_t  >(cleanName, t); }}},
+      {"Bool_t",    {"BOOL_TREE_BRANCH",             [&](){ return createTreeReadBuffer<Bool_t   >(cleanName, t); }}},
+      {"Char_t",    {"SIGNEDBYTE_TREE_BRANCH",       [&](){ return createTreeReadBuffer<Char_t   >(cleanName, t); }}},
+      {"UInt_t",    {"UNSIGNED_INTEGER_TREE_BRANCH", [&](){ return createTreeReadBuffer<UInt_t   >(cleanName, t); }}},
+      {"Long64_t",  {"LONG_TREE_BRANCH",             [&](){ return createTreeReadBuffer<Long64_t >(cleanName, t); }}},
+      {"ULong64_t", {"UNSIGNED_LONG_TREE_BRANCH",    [&](){ return createTreeReadBuffer<ULong64_t>(cleanName, t); }}},
+      {"Short_t",   {"SHORT_TREE_BRANCH",            [&](){ return createTreeReadBuffer<Short_t  >(cleanName, t); }}},
+      {"UShort_t",  {"UNSIGNED_SHORT_TREE_BRANCH",   [&](){ return createTreeReadBuffer<UShort_t >(cleanName, t); }}},
+    };
+
+    auto typeDetails = typeMap.find(typeName.Data());
+    if (typeDetails != typeMap.end()) {
+      coutI(DataHandling) << "RooAbsReal::attachToTree(" << GetName() << ") TTree " << typeDetails->first << " branch " << GetName()
+                  << " will be converted to double precision." << endl ;
+      setAttribute(typeDetails->second.first.c_str(), true);
+      _treeReadBuffer = typeDetails->second.second();
     } else {
-      coutE(InputArguments) << "RooAbsReal::attachToTree(" << GetName() << ") data type " << typeName << " is not supported" << endl ;
+      _treeReadBuffer = nullptr;
+
+      if (!typeName.CompareTo("Double_t")) {
+        t.SetBranchAddress(cleanName, &_value);
+      }
+      else {
+        coutE(InputArguments) << "RooAbsReal::attachToTree(" << GetName() << ") data type " << typeName << " is not supported." << endl ;
+      }
     }
-
-//      cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " << (void*)&t << ", changing address" << endl ;
-
   } else {
 
     TString format(cleanName);
     format.Append("/D");
     branch = t.Branch(cleanName, &_value, (const Text_t*)format, bufSize);
-    //      cout << "RooAbsReal::attachToTree(" << cleanName << "): creating new branch in tree " << (void*)&t << endl ;
   }
 
 }
