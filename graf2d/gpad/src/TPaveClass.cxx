@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "Buttons.h"
 #include "TPaveClass.h"
+#include "TClassTree.h"
 
 ClassImp(TPaveClass);
 

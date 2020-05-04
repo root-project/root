@@ -24,6 +24,7 @@
 #include <TPaveText.h>
 #include <TH1.h>
 #include <TColor.h>
+#include <TLine.h>
 
 ClassImp(TPie);
 

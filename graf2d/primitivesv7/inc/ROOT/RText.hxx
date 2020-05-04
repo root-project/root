@@ -13,7 +13,6 @@
 #include <ROOT/RAttrText.hxx>
 #include <ROOT/RPadPos.hxx>
 
-#include <memory>
 #include <string>
 
 namespace ROOT {
