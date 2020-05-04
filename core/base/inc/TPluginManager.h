@@ -94,7 +94,6 @@ class TEnv;
 class TList;
 class THashTable;
 class TFunction;
-class TMethodCall;
 class TPluginManager;
 
 #include <atomic>

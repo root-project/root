@@ -1,6 +1,8 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTaskGroup.hxx"
 
+#include "TROOT.h"
+
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"

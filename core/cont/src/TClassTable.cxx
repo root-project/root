@@ -22,6 +22,7 @@ initialized when the program starts (see the ClassImp macro).
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TProtoClass.h"
+#include "TList.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TError.h"

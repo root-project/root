@@ -21,14 +21,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
-
-#include "TUrl.h"
-
-#include "TUUID.h"
-
-#include "TMD5.h"
-
 #include "TList.h"
+
+#ifdef R__LESS_INCLUDES
+class TUrl;
+class TUUID;
+class TMD5;
+#else
+#include "TUrl.h"
+#include "TUUID.h"
+#include "TMD5.h"
+#endif
 
 class TFileInfoMeta;
 

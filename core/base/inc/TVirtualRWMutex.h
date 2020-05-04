@@ -25,6 +25,7 @@
 
 #include "TVirtualMutex.h"
 
+#include <memory>
 
 namespace ROOT {
 

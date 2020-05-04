@@ -26,6 +26,8 @@ collection of TFile names.
 #include "TObjString.h"
 #include "TUri.h"
 #include "TUrl.h"
+#include "TUUID.h"
+#include "TMD5.h"
 #include "TSystem.h"
 #include "Riostream.h"
 #include "TRegexp.h"

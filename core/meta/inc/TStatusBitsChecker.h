@@ -12,7 +12,6 @@
 #ifndef ROOT_TStatusBitsChecker
 #define ROOT_TStatusBitsChecker
 
-#include <string>
 #include <map>
 #include <list>
 

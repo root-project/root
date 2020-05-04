@@ -86,6 +86,7 @@ if this pointer is used frequently or inside loops.
 #include "Strlen.h"
 #include "TFolder.h"
 #include "TBrowser.h"
+#include "TList.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TError.h"
