@@ -55,7 +55,7 @@ RooBernstein::RooBernstein()
 /// Constructor
 
 RooBernstein::RooBernstein(const char* name, const char* title,
-                           RooAbsReal& x, const RooArgList& coefList):
+                           RooAbsRealLValue& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this)
@@ -216,7 +216,7 @@ RooSpan<double> RooBernstein::evaluateBatch(std::size_t begin, std::size_t batch
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
+Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
 
   if (matchArgs(allVars, analVars, _x)) return 1;
