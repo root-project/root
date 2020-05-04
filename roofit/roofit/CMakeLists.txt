@@ -25,6 +25,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooBukinPdf.h
     RooCBShape.h
     RooDSCBShape.h
+    RooSDSCBShape.h
     RooCFunction1Binding.h
     RooCFunction2Binding.h
     RooCFunction3Binding.h
@@ -85,6 +86,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
     src/RooDSCBShape.cxx
+    src/RooSDSCBShape.cxx
     src/RooCFunction1Binding.cxx
     src/RooCFunction2Binding.cxx
     src/RooCFunction3Binding.cxx
