@@ -189,7 +189,7 @@ void MethodDL::DeclareOptions()
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
 
    DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
-   AddPreDefVal(TString("STANDARD"));   // deprecated
+   AddPreDefVal(TString("STANDARD"));   // deprecated and not supported anymore
    AddPreDefVal(TString("CPU"));
    AddPreDefVal(TString("GPU"));
    AddPreDefVal(TString("OPENCL"));    // not yet implemented
@@ -231,11 +231,13 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "STANDARD") {
-      Log() << kINFO << "The STANDARD architecture has been deprecated. "
+      Log() << kWARNING << "The STANDARD architecture is not supported anymore. "
                          "Please use Architecture=CPU or Architecture=CPU."
                          "See the TMVA Users' Guide for instructions if you "
                          "encounter problems."
             << Endl;
+      Log() << kINFO << "We will use instead the CPU architecture" << Endl;
+      fArchitectureString = "CPU";
    }
    if (fArchitectureString == "OPENCL") {
       Log() << kERROR << "The OPENCL architecture has not been implemented yet. "
@@ -243,63 +245,37 @@ void MethodDL::ProcessOptions()
                          "time being. See the TMVA Users' Guide for instructions "
                          "if you encounter problems."
             << Endl;
+      // use instead GPU
+      Log() << kINFO << "We will try using the GPU-CUDA architecture if available" << Endl;
+      fArchitectureString = "GPU";
    }
 
    // the architecture can now be set at runtime as an option
 
 
-   if (fArchitectureString == "GPU") {
-#ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
+   if (fArchitectureString == "GPU" || fArchitectureString == "CUDNN") {
+#ifdef R__HAS_TMVAGPU
+      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
+#else  // case TMVA does not support GPU
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
          "detected by CMAKE by using -Dtmva-gpu=On  "
             << Endl;
       fArchitectureString = "CPU";
-      Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#ifndef R__HAS_TMVACPU
-      Log() << kINFO << "BLAS is not found : will use CPU with single thread and slower CPU performance" << Endl;
-#endif
-#else
-      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
-#endif
-   }
-  else if (fArchitectureString == "CUDNN") {
-#ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
-      Log() << kERROR << "CUDA+CUDNN backend not enabled. Please make sure "
-            "you have CUDNN and CUDA installed and that the GPU capability/CUDA "
-            "was successfully detected by CMAKE by using -Dtmva-gpu=On"
-            << Endl;
-      fArchitectureString = "CPU";
-      Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#ifndef R__HAS_TMVACPU
-      Log() << kINFO << "BLAS is not found : will use CPU with single thread and slower CPU performance" << Endl;
-#endif
-#else
-      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
+      Log() << kINFO << "Will now use instead the CPU architecture !" << Endl;
 #endif
    }
 
-   else if (fArchitectureString == "CPU") {
-#ifndef R__HAS_TMVACPU  // TMVA has no CPU support
-      Log() << kINFO << "Multi-core CPU backend not enabled. Please make sure "
+   if (fArchitectureString == "CPU") {
+#ifdef R__HAS_TMVACPU  // TMVA has CPU BLAS and IMT support
+      Log() << kINFO << "Will now use the CPU architecture with BLAS and IMT support !" << Endl;
+#else  // TMVA has no CPU BLAS or IMT support
+      Log() << kINFO << "Multi-core CPU backend not enabled. For better performances, make sure "
                           "you have a BLAS implementation and it was successfully "
                          "detected by CMake as well that the imt CMake flag is set."
             << Endl;
-#ifdef R__HAS_TMVAGPU
-      fArchitectureString = "GPU";
-      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
-#else
-      fArchitectureString = "CPU";
       Log() << kINFO << "Will use anyway the CPU architecture but with slower performance" << Endl;
 #endif
-#else
-      Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#endif
-   }
-
-   else {
-      Log() << kWARNING << "STANDARD architecture is deprecated! Use CPU with lower performace if BLAS is not available" << Endl;
-      fArchitectureString = "CPU";
    }
 
    // Input Layout
@@ -1659,28 +1635,22 @@ void MethodDL::Train()
              << Endl;
       return;
 #endif
-   } else if (this->GetArchitectureString() == "OPENCL") {
-      Log() << kFATAL << "OPENCL backend not yet supported." << Endl;
-      return;
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
       // note that number of threads used for BLAS might be different
       // e.g use openblas_set_num_threads(num_threads) for OPENBLAS backend
-      Log() << kINFO << "Start of deep neural network training on CPU using (for ROOT-IMT) nthreads = "
+      Log() << kINFO << "Start of deep neural network training on CPU using MT,  nthreads = "
             << gConfig().GetNCpu() << Endl << Endl;
 #else
-      Log() << kINFO << "Start of deep neural network training on single thread CPU (no ROOT-IMT support) " << Endl
+      Log() << kINFO << "Start of deep neural network training on single thread CPU (without ROOT-MT support) " << Endl
             << Endl;
 #endif
       TrainDeepNet<DNN::TCpu<ScalarImpl_t> >();
       return;
-   } else if (this->GetArchitectureString() == "STANDARD") {
-      Log() << kFATAL << "The STANDARD architecture is not supported anymore !" << Endl << Endl;
-      //TrainDeepNet<DNN::TReference<ScalarImpl_t> >();
    }
    else {
       Log() << kFATAL << this->GetArchitectureString() <<
-                      " is not  a supported archiectire for TMVA::MethodDL"
+                      " is not  a supported architecture for TMVA::MethodDL"
             << Endl;
    }
 
@@ -2036,13 +2006,9 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
 #endif
 
 #endif
-   } else {
-      Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
-      return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
    }
-   Log() << kERROR << "STANDARD architecture  is deprecated for MethodDL ! " << Endl << Endl;
-   //        return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-   return std::vector<Double_t>(nEvents, TMath::QuietNaN());
+   Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
+   return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
 }
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const
