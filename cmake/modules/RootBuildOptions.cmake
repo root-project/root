@@ -178,6 +178,7 @@ ROOT_BUILD_OPTION(winrtdebug OFF "Link against the Windows debug runtime library
 ROOT_BUILD_OPTION(x11 ON "Enable support for X11/Xft")
 ROOT_BUILD_OPTION(xml ON "Enable support for XML (requires libxml2)")
 ROOT_BUILD_OPTION(xrootd ON "Enable support for XRootD file server and client")
+ROOT_BUILD_OPTION(xproofd OFF "Enable LEGACY support for XProofD file server and client (requires XRootD v4 with private-devel)")
 
 option(all "Enable all optional components by default" OFF)
 option(clingtest "Enable cling tests (Note: that this makes llvm/clang symbols visible in libCling)" OFF)
@@ -260,6 +261,7 @@ if(all)
  set(x11_defvalue ON)
  set(xml_defvalue ON)
  set(xrootd_defvalue ON)
+ set(xproofd_defvalue OFF)
 endif()
 
 #--- The 'builtin_all' option swithes ON old the built in options-------------------------------
@@ -306,6 +308,7 @@ if(WIN32)
   set(vdt_defvalue OFF)
   set(x11_defvalue OFF)
   set(xrootd_defvalue OFF)
+  set(xproofd_defvalue OFF)
 elseif(APPLE)
   set(cocoa_defvalue ON)
   set(x11_defvalue OFF)

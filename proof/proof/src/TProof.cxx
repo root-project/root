@@ -657,19 +657,21 @@ TProof::~TProof()
    if (TestBit(TProof::kIsClient)) {
       // iterate over all packages
       TList *epl = fPackMgr->GetListOfEnabled();
-      TIter nxp(epl);
-      while (TObjString *pck = (TObjString *)(nxp())) {
-         FileStat_t stat;
-         if (gSystem->GetPathInfo(pck->String(), stat) == 0) {
-            // check if symlink, if so unlink
-            // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
-            // existing file or to a directory, but if fIsLink is true the symlink exists
-            if (stat.fIsLink)
-               gSystem->Unlink(pck->String());
+      if (epl) {
+         TIter nxp(epl);
+         while (TObjString *pck = (TObjString *)(nxp())) {
+            FileStat_t stat;
+            if (gSystem->GetPathInfo(pck->String(), stat) == 0) {
+               // check if symlink, if so unlink
+               // NOTE: GetPathInfo() returns 1 in case of symlink that does not point to
+               // existing file or to a directory, but if fIsLink is true the symlink exists
+               if (stat.fIsLink)
+                  gSystem->Unlink(pck->String());
+            }
          }
+         epl->Delete();
+         delete epl;
       }
-      epl->Delete();
-      delete epl;
    }
 
    Close();
