@@ -8,8 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TGeoGlobalMagField.h"
+
+#include "TROOT.h"
+#include "TList.h"
 
 /** \class TGeoGlobalMagField
 \ingroup Geometry_classes

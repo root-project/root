@@ -14,8 +14,6 @@
 
 #include "TNamed.h"
 
-#include "TObjArray.h"
-
 #include "TAttLine.h"
 
 // forward declarations
@@ -25,6 +23,7 @@ class TGeoVolume;
 class TGeoNode;
 class TGeoShape;
 class TGeoNavigator;
+class TObjArray;
 
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //

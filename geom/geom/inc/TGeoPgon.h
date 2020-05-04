@@ -12,9 +12,10 @@
 #ifndef ROOT_TGeoPgon
 #define ROOT_TGeoPgon
 
-#include <mutex>
-
 #include "TGeoPcon.h"
+
+#include <mutex>
+#include <vector>
 
 class TGeoPgon : public TGeoPcon
 {

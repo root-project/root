@@ -14,7 +14,9 @@
 
 #include <mutex>
 #include <thread>
+#include <map>
 
+#include "TNamed.h"
 #include "TObjArray.h"
 #include "TGeoNavigator.h"
 

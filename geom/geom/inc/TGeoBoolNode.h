@@ -12,9 +12,10 @@
 #ifndef ROOT_TGeoBoolNode
 #define ROOT_TGeoBoolNode
 
-#include <mutex>
-
 #include "TObject.h"
+
+#include <mutex>
+#include <vector>
 
 // forward declarations
 class TGeoShape;

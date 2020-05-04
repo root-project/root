@@ -11,8 +11,7 @@
 #ifndef ROOT_TGeoParallelWorld
 #define ROOT_TGeoParallelWorld
 
-
-#include "TGeoVolume.h"
+#include "TNamed.h"
 
 // forward declarations
 class TGeoManager;
