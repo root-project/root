@@ -17,6 +17,7 @@
 #include "TMethodArg.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TList.h"
 #include "TBaseClass.h"
 
 #include "json.hpp"

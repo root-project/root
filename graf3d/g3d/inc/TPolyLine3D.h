@@ -22,10 +22,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-#include "TList.h"
 #include "TString.h"
 #include "TAttLine.h"
 #include "TAtt3D.h"
+
+class TList;
 
 
 class TPolyLine3D : public TObject, public TAttLine, public TAtt3D

@@ -21,6 +21,7 @@
 #include <ROOT/RLogger.hxx>
 
 #include "TGeoManager.h"
+#include "TGeoMatrix.h"
 #include "TObjString.h"
 #include "TROOT.h"
 #include "TFile.h"
