@@ -23,6 +23,7 @@ TProofMonSender implementation for the SQL writers
 #include "TFileInfo.h"
 #include "THashList.h"
 #include "TList.h"
+#include "TUrl.h"
 #include "TPluginManager.h"
 #include "TProofDebug.h"
 #include "TROOT.h"

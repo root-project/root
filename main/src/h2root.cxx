@@ -27,6 +27,7 @@
 #include "TFile.h"
 #include "TDirectoryFile.h"
 #include "TTree.h"
+#include "TBranch.h"
 #include "TLeafI.h"
 #include "TH1.h"
 #include "TH2.h"

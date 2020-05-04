@@ -68,6 +68,7 @@
 #include <TGImageMap.h>
 #include <TASPaletteEditor.h>
 #include <TControlBar.h>
+#include <TControlBarImp.h>
 #include <TGSpeedo.h>
 #include <TGShapedFrame.h>
 #include <TGSplitFrame.h>
