@@ -35,6 +35,7 @@
 #include "TContextMenu.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
+#include "TMethodCall.h"
 #include "TClass.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"
