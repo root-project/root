@@ -23,9 +23,9 @@
 #include "TXMLEngine.h"
 #include "TROOT.h"
 #include "TColor.h"
+#include "TGraph.h"
+
 #include "TMVA/Config.h"
-
-
 #include "TMVA/Tools.h"
 #include "TMVA/ROCCalc.h"
 #include "TMVA/Event.h"

@@ -51,6 +51,7 @@ PDF wrapper for histograms; uses user-defined spline interpolation.
 #include "TH1F.h"
 #include "TMath.h"
 #include "TVectorD.h"
+#include "TGraph.h"
 
 #include <cstdlib>
 #include <iomanip>
