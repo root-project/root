@@ -6,7 +6,6 @@
 
 #include "TBufferText.h"
 #include "TString.h"
-#include "TObjArray.h"
 
 class TMap;
 class TExMap;

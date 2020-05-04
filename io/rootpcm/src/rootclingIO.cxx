@@ -17,6 +17,7 @@
 #include "TError.h"
 #include "TFile.h"
 #include "TProtoClass.h"
+#include "TDataMember.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
