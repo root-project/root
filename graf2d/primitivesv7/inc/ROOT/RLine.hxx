@@ -13,8 +13,6 @@
 #include <ROOT/RAttrLine.hxx>
 #include <ROOT/RPadPos.hxx>
 
-#include <memory>
-
 namespace ROOT {
 namespace Experimental {
 

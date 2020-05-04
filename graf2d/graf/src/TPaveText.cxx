@@ -25,6 +25,7 @@
 #include "TError.h"
 #include "TColor.h"
 #include "TClass.h"
+#include "TLine.h"
 
 ClassImp(TPaveText);
 
