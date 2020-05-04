@@ -984,7 +984,7 @@ class TestClassDATATYPES:
         try:
             import numpy as np
         except:
-            return
+            raise ImportError("Cannot import numpy")
 
         import cppyy
         c = cppyy.gbl.CppyyTestData()
@@ -1035,6 +1035,24 @@ class TestClassDATATYPES:
         for res in ROOT.f_cstring(bytes_val), ROOT.f_constcstring(bytes_val):
             assert res._0 == 'ℕ'
             assert res._1 == len(bytes_val)
+
+    def test27_boolarray2cpp(self):
+        '''
+        Pass an bool array to a C++ function taking a bool*
+        Fixes ROOT-10731
+        '''
+        try:
+            import numpy as np
+        except:
+            raise ImportError("Cannot import numpy")
+        import cppyy
+        cppyy.cppdef('int convert(bool* x) { return x[0]; }')
+        x1 = np.array([True], '?') # bool
+        x2 = np.array([True], 'b') # signed char, treated as bool before
+        y1 = cppyy.gbl.convert(x1)
+        y2 = cppyy.gbl.convert(x2)
+        assert y1 == 1
+        assert y2 == 1
 
 
 ## actual test run
