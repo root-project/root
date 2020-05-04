@@ -34,13 +34,13 @@
   code="{for (const auto* obj : onfile._types) { \
            auto catType = dynamic_cast<const RooCatType*>(obj); assert(catType); \
            _stateNames[catType->GetName()] = catType->getVal(); \
-           _insertionOrder.push_back(catType->getVal()); \
+           _insertionOrder.push_back(catType->GetName()); \
          }}";
 #pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[2]" \
   include="RooFitLegacy/RooCatTypeLegacy.h" \
   source="std::vector<RooCatType*> _types" target="_stateNames,_insertionOrder" \
   code="{for (const auto catType : onfile._types) { _stateNames[catType->GetName()] = catType->getVal();\
-                                                    _insertionOrder.push_back(catType->getVal());\
+                                                    _insertionOrder.push_back(catType->GetName());\
                                                   } }";
 #pragma read sourceClass="RooAbsCategory" targetClass="RooAbsCategory" version="[1-2]" include="RooFitLegacy/RooCatTypeLegacy.h" \
   source="RooCatType _value" target="_currentIndex" code="{ _currentIndex = onfile._value.getVal(); }"
