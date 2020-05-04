@@ -129,6 +129,7 @@
 #include "TTabCom.h"
 #include "TClass.h"
 #include "TClassTable.h"
+#include "TDataMember.h"
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TMethod.h"
