@@ -25,6 +25,7 @@
 #include "TStreamerElement.h"
 #include "TVirtualCollectionProxy.h"
 #include "TRef.h"
+#include "TError.h"
 #include <algorithm>
 
 ClassImp(TVirtualBranchBrowsable);
