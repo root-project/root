@@ -467,7 +467,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
     TString format(cleanName);
     format.Append("/I");
     void* ptr = &_currentIndex;
-    branch = t.Branch(cleanName, ptr, (const Text_t*)format, bufSize);
+    t.Branch(cleanName, ptr, (const Text_t*)format, bufSize);
   }
 }
 
