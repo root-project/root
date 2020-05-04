@@ -83,6 +83,7 @@ S. Jadach, Computer Physics Communications 152 (2003) 55.
 #include "TFoamCell.h"
 #include "Riostream.h"
 #include "TH1.h"
+#include "TRefArray.h"
 #include "TObjArray.h"
 #include "TMethodCall.h"
 #include "TRandom.h"
