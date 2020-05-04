@@ -5267,6 +5267,9 @@ void TPad::RecursiveRemove(TObject *obj)
 ///   gPad->RedrawAxis();
 ///   gPad->RedrawAxis("G");
 /// ~~~
+///
+///  If option="f" is specified, this will force the drawing of the frame
+/// around the plot.
 
 void TPad::RedrawAxis(Option_t *option)
 {
@@ -5307,6 +5310,16 @@ void TPad::RedrawAxis(Option_t *option)
    if (hobj) {
       if (opt.Contains("g")) hobj->DrawCopy("sameaxig");
       else                   hobj->DrawCopy("sameaxis");
+   }
+
+   if (opt.Contains("f")) {
+      auto b = new TBox(gPad->GetUxmin(), gPad->GetUymin(),
+                        gPad->GetUxmax(), gPad->GetUymax());
+      b->SetFillStyle(0);
+      b->SetLineStyle(1);
+      b->SetLineWidth(gPad->GetFrameLineWidth());
+      b->SetLineColor(gPad->GetFrameLineColor());
+      b->Draw();
    }
 
    if (padsav) padsav->cd();
