@@ -40,8 +40,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TTime.h"
-#include "TString.h"
+#include "Rtypes.h"
 
 class TGTransientFrame;
 class TGTextButton;
