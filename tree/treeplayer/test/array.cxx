@@ -214,18 +214,28 @@ TEST(TTreeReaderArray, ROOT10397)
    TTree t("t", "t");
    float x[10];
    int n;
+   struct {
+      int n = 10;
+      float z[10];
+   } z;
    t.Branch("n", &n, "n/I");
    t.Branch("x", &x, "y[n]/F");
+   t.Branch("z", &z, "n/I:z[n]/F");
    for (int i = 7; i < 10; i++) {
       n = i;
       for (int j = 0; j < n; j++) {
          x[j] = j;
       }
+      z.n = 13 - i;
+      for (int j = 0; j < 10; ++j)
+         z.z[j] = z.n;
       t.Fill();
    };
 
    TTreeReader r(&t);
    TTreeReaderArray<float> xr(r, "x.y");
+   TTreeReaderArray<float> zr(r, "z.z");
    r.Next();
    EXPECT_EQ(xr.GetSize(), 7);
+   EXPECT_EQ(zr.GetSize(), 13 - 7);
 }
