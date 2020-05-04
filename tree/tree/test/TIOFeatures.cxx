@@ -6,6 +6,7 @@
 #include "gtest/gtest.h"
 
 #include <vector>
+#include "TBasket.h"
 
 TEST(TIOFeatures, IOBits)
 {

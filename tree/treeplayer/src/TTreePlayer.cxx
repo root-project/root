@@ -76,6 +76,7 @@ extra libraries (Histogram, display, etc).
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 
 #include "HFitInterface.h"
 #include "Fit/BinData.h"

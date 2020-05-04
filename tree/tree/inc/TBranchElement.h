@@ -27,8 +27,6 @@
 
 #include "TTree.h"
 
-#include "TError.h"
-
 class TFolder;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
