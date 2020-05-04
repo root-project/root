@@ -46,6 +46,7 @@ the trees in the chain.
 #include "TPluginManager.h"
 #include "TROOT.h"
 #include "TRegexp.h"
+#include "Riostream.h"
 #include "TSelector.h"
 #include "TSystem.h"
 #include "TTree.h"

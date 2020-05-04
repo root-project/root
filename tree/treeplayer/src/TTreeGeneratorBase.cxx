@@ -20,6 +20,7 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TTree.h"
+#include "TError.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 

@@ -17,7 +17,7 @@ class TBasket;
 class TBranch;
 class TTree;
 
-// keep it here to have a note that was removed  
+// keep it here to have a note that was removed
 // #ifndef R__LESS_INCLUDES
 // #include "TBasket.h"
 // #include <memory>

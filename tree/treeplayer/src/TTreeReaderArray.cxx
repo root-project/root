@@ -21,6 +21,7 @@
 #include "TFriendElement.h"
 #include "TFriendProxy.h"
 #include "TLeaf.h"
+#include "TList.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"

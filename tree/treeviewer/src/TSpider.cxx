@@ -16,6 +16,7 @@
 #include "TGraphPolargram.h"
 #include "TPolyLine.h"
 #include "TNtuple.h"
+#include "TBranch.h"
 #include "TTreeFormula.h"
 #include "TTreeFormulaManager.h"
 #include "TList.h"

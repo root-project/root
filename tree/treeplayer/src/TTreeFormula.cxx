@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TTreeFormula.h"
+#include "TList.h"
 #include "TTree.h"
 #include "TBuffer.h"
 #include "TBranch.h"
