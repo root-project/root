@@ -18,6 +18,7 @@
 #include <TLatex.h>
 #include <TPaveText.h>
 #include <TH1.h>
+#include <TPie.h>
 
 ClassImp(TPieSlice);
 

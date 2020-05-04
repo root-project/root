@@ -14,7 +14,7 @@
 #include <ROOT/RPadPos.hxx>
 
 #include <initializer_list>
-#include <memory>
+
 
 namespace ROOT {
 namespace Experimental {
