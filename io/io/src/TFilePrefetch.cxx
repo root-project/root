@@ -15,6 +15,8 @@
 #include "TMD5.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualMonitoring.h"
+#include "TSemaphore.h"
+#include "TFPBlock.h"
 
 #include <iostream>
 #include <string>
