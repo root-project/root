@@ -16,7 +16,12 @@
 #include <TAttFill.h>
 #include <TList.h>
 
+#ifdef R__LESS_INCLUDES
+class TGeoElement;
+class TGeoElementTable;
+#else
 #include "TGeoElement.h"
+#endif
 
 // forward declarations
 class TGeoExtension;

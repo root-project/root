@@ -12,9 +12,10 @@
 #ifndef ROOT_TGeoXtru
 #define ROOT_TGeoXtru
 
-#include <mutex>
-
 #include "TGeoBBox.h"
+
+#include <mutex>
+#include <vector>
 
 class TGeoPolygon;
 
