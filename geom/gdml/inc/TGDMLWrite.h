@@ -13,6 +13,7 @@
 #define ROOT_TGDMLWRITE
 
 #include "TGeoMatrix.h"
+#include "TGeoElement.h"
 #include "TXMLEngine.h"
 #include "TGeoVolume.h"
 #include "TGeoParaboloid.h"

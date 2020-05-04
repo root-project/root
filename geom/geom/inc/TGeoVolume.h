@@ -13,8 +13,8 @@
 #ifndef ROOT_TGeoVolume
 #define ROOT_TGeoVolume
 
-#include <mutex>
 
+#include "TNamed.h"
 #include "TGeoAtt.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -22,6 +22,8 @@
 #include "TObjArray.h"
 #include "TGeoMedium.h"
 #include "TGeoShape.h"
+#include <mutex>
+#include <vector>
 
 // forward declarations
 class TH2F;

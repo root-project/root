@@ -20,6 +20,7 @@ Editors for materials.
 #include "TGeoMaterialEditor.h"
 #include "TGeoTabManager.h"
 #include "TGeoMaterial.h"
+#include "TGeoElement.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
 #include "TView.h"
