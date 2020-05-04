@@ -151,10 +151,25 @@ void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, 
 /// If the result is not in the range, the randomisation is repeated.
 void RooAbsCategoryLValue::randomize(const char* rangeName) 
 {
-  do {
-    UInt_t ordinal= RooRandom::integer(numTypes(rangeName));
-    setOrdinal(ordinal);
-  } while (!inRange(rangeName));
+  const auto& theStateNames = stateNames();
+
+  if (_insertionOrder.size() == theStateNames.size()) {
+    // If users didn't manipulate the state map directly, the order of insertion has to be respected to
+    // ensure backward compatibility.
+    // This heavily uses strings, though.
+    do {
+      const UInt_t ordinal = RooRandom::integer(theStateNames.size());
+      const auto item = theStateNames.find(_insertionOrder[ordinal]);
+      setIndex(item->second);
+    } while (!inRange(rangeName));
+  } else {
+    // When not having to respect the insertion order, can just advance the iterator
+    do {
+      const UInt_t ordinal = RooRandom::integer(theStateNames.size());
+      const auto it = std::next(theStateNames.begin(), ordinal);
+      setIndex(it->second);
+    } while (!inRange(rangeName));
+  }
 }
 
 

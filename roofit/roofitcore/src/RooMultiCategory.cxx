@@ -230,7 +230,7 @@ void RooMultiCategory::recomputeShape() {
     defineStateUnchecked(catName, i);
   }
   assert(_stateNames.size() == totalSize);
-  assert(std::is_sorted(_insertionOrder.begin(), _insertionOrder.end())); // Check that we inserted as 0, 1, 2, 3
+  assert(_insertionOrder.size() == totalSize);
 
   // Possible new state numbers will invalidate all cached numbers
   setValueDirty();
