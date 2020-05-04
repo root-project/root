@@ -217,7 +217,7 @@ const std::map<std::string, RooAbsCategory::value_type>::value_type& RooAbsCateg
 void RooAbsCategory::defineStateUnchecked(const std::string& label, RooAbsCategory::value_type index)
 {
   _stateNames.emplace(label, index);
-  _insertionOrder.push_back(index);
+  _insertionOrder.push_back(label);
 
   if (_stateNames.size() == 1)
     _currentIndex = index;
@@ -247,7 +247,7 @@ const std::map<std::string, RooAbsCategory::value_type>::value_type& RooAbsCateg
   }
 
   const auto result = theStateNames.emplace(label, index);
-  _insertionOrder.push_back(index);
+  _insertionOrder.push_back(label);
 
   if (theStateNames.size() == 1)
     _currentIndex = index;
@@ -558,23 +558,26 @@ void RooAbsCategory::copyCache(const RooAbsArg *source, Bool_t /*valueOnly*/, Bo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return name and index of the `n`th defined state.
+/// Return name and index of the `n`th defined state. When states are defined using
+/// defineType() or operator[], the order of insertion is tracked, to mimic the behaviour
+/// before modernising the category classes.
+/// When directly manipulating the map with state names using states(), the order of insertion
+/// is not known, so alphabetical ordering as usual for std::map is used. The latter is faster.
 /// \param[in] n Number of state to be retrieved.
 /// \return A pair with name and index.
-const std::map<std::string, RooAbsCategory::value_type>::value_type& RooAbsCategory::getOrdinal(unsigned int n) const
-{
-  if (isShapeDirty()) {
-    const_cast<RooAbsCategory*>(this)->recomputeShape();
-    clearShapeDirty();
-  }
+const std::map<std::string, RooAbsCategory::value_type>::value_type& RooAbsCategory::getOrdinal(unsigned int n) const {
+  // Retrieve state names, trigger possible recomputation
+  auto& theStateNames = stateNames();
 
-  if (n >= _stateNames.size())
+  if (n >= theStateNames.size())
     return _invalidCategory;
 
-  for (const auto& item : stateNames()) {
-    if (item.second == _insertionOrder[n])
-      return item;
-  }
+  if (theStateNames.size() != _insertionOrder.size())
+    return *std::next(theStateNames.begin(), n);
+
+  const auto item = theStateNames.find(_insertionOrder[n]);
+  if (item != theStateNames.end())
+    return *item;
 
   return _invalidCategory;
 }
@@ -583,13 +586,21 @@ const std::map<std::string, RooAbsCategory::value_type>::value_type& RooAbsCateg
 ////////////////////////////////////////////////////////////////////////////////
 /// Return ordinal number of the current state.
 unsigned int RooAbsCategory::getCurrentOrdinalNumber() const {
-  if (isShapeDirty()) {
-    const_cast<RooAbsCategory*>(this)->recomputeShape();
-    clearShapeDirty();
+  // Retrieve state names, trigger possible recomputation
+  auto& theStateNames = stateNames();
+
+  const auto currentIndex = getCurrentIndex();
+
+  // If we don't have the full history if inserted state names, have to go by map ordering:
+  if (theStateNames.size() != _insertionOrder.size()) {
+    for (auto it = theStateNames.begin(); it != theStateNames.end(); ++it) {
+      if (it->second == currentIndex)
+        return std::distance(theStateNames.begin(), it);
+    }
   }
 
-  const value_type currentState = getCurrentIndex();
-  auto item = std::find(_insertionOrder.begin(), _insertionOrder.end(), currentState);
+  // With full insertion history, find index of current label:
+  auto item = std::find(_insertionOrder.begin(), _insertionOrder.end(), getCurrentLabel());
   assert(item != _insertionOrder.end());
 
   return item - _insertionOrder.begin();

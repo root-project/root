@@ -230,8 +230,11 @@ void RooCategory::defineTypes(const std::map<std::string, int>& allowedStates) {
 /// \return Reference to the category index. If no state exists, it will be created on the fly.
 RooAbsCategory::value_type& RooCategory::operator[](const std::string& stateName) {
   setShapeDirty();
-  if (stateNames().count(stateName) == 0)
+  if (stateNames().count(stateName) == 0) {
+    _insertionOrder.push_back(stateName);
     return stateNames()[stateName] = nextAvailableStateIndex();
+
+  }
 
   return stateNames()[stateName];
 }
@@ -242,11 +245,13 @@ RooAbsCategory::value_type& RooCategory::operator[](const std::string& stateName
 /// This can be used to manipulate the category.
 /// \note Calling this function will **always** trigger recomputations of
 /// of **everything** that depends on this category, since in case the map gets
-/// manipulated, names or indices might change.
+/// manipulated, names or indices might change. Also, the order that states have
+/// been inserted in gets lost. This changes what is returned by getOrdinal().
 std::map<std::string, RooAbsCategory::value_type>& RooCategory::states() {
   auto& theStates = stateNames();
   setValueDirty();
   setShapeDirty();
+  _insertionOrder.clear();
   return theStates;
 }
 

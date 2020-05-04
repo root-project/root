@@ -219,7 +219,7 @@ protected:
 
   mutable value_type _currentIndex{std::numeric_limits<int>::min()}; /// Current category state
   std::map<std::string, value_type> _stateNames; /// Map state names to index numbers. Make sure state names are updated in recomputeShape().
-  std::vector<int> _insertionOrder; /// Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
+  std::vector<std::string> _insertionOrder; /// Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
   mutable UChar_t _byteValue{0}; //! Transient cache for byte values from tree branches
   mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
   bool _treeVar{false}; /// Is this category attached to a tree?
