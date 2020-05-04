@@ -50,7 +50,6 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 
 #include "RooDataSet.h"
 
-#include "Riostream.h"
 #include "RooPlot.h"
 #include "RooAbsReal.h"
 #include "Roo1DTable.h"
@@ -78,6 +77,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "TBuffer.h"
 #include "ROOT/RMakeUnique.hxx"
 
+#include <iostream>
 #include <fstream>
 
 

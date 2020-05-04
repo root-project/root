@@ -25,7 +25,6 @@ component pdfs.
 **/
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "RooSimSplitGenContext.h"
 #include "RooSimultaneous.h"
@@ -37,15 +36,15 @@ component pdfs.
 #include "RooRandom.h"
 #include "RooGlobalFunc.h"
 
-using namespace RooFit ;
+using namespace RooFit;
 
+#include <iostream>
 #include <string>
 
 using namespace std;
 
 ClassImp(RooSimSplitGenContext);
-;
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of specialized generator context for RooSimultaneous p.d.f.s. This
