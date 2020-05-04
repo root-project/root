@@ -12,15 +12,17 @@
 #ifndef ROOT_TStyle
 #define ROOT_TStyle
 
-
 #include "TNamed.h"
-#include "TAttAxis.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
-#include "TAttText.h"
 #include "TAttMarker.h"
-#include "TArrayI.h"
+#include "TAttText.h"
+#include "TAttAxis.h"
 #include "TColor.h"
+
+#ifndef R__LESS_INCLUDES
+#include "TArrayI.h"
+#endif
 
 class TBrowser;
 

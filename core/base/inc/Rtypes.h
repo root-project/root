@@ -21,7 +21,7 @@
 
 
 #include "RtypesCore.h"
-#include "DllImport.h"
+// #include "DllImport.h" // included via RtypesCore.h, not used here
 
 #include "snprintf.h"   // part of stdio.h on systems that have it
 #include "strlcpy.h"    // part of string.h on systems that have it

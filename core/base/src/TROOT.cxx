@@ -1801,6 +1801,21 @@ TCollection *TROOT::GetListOfTypes(Bool_t /* load */)
    return fTypes;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of classes.
+
+Int_t TROOT::GetNclasses() const
+{
+   return fClasses->GetSize();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of types.
+
+Int_t TROOT::GetNtypes() const
+{
+   return fTypes->GetSize();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute command when system has been idle for idleTimeInSec seconds.

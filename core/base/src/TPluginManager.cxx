@@ -79,7 +79,6 @@ TFile, TSQLServer, TGrid, etc. functionality.
 */
 
 #include "TPluginManager.h"
-#include "Varargs.h"
 #include "TEnv.h"
 #include "TRegexp.h"
 #include "TROOT.h"

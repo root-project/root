@@ -24,14 +24,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TObject.h"
-#include "TCondition.h"
+#include "TNamed.h"
 #include "TTimer.h"
-#include "Varargs.h"
+#include <stdarg.h>
+
+#ifdef R__LESS_INCLUDES
+class TCondition;
+#else
+#include "TCondition.h"
+#endif
 
 class TMutex;
 class TThreadImp;
-
 
 class TThread : public TNamed {
 

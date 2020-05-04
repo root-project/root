@@ -52,7 +52,6 @@ as an identifier of the modifier method.
 General purpose message signal
 */
 
-#include "Varargs.h"
 #include "TQObject.h"
 #include "TQConnection.h"
 #include "THashList.h"

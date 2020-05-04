@@ -24,7 +24,6 @@
 
 #include "ROOT/TExecutor.hxx"
 #include "ROOT/TPoolManager.hxx"
-#include "TROOT.h"
 #include "TError.h"
 #include <functional>
 #include <memory>

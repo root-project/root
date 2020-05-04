@@ -26,6 +26,7 @@
 #include "TThreadImp.h"
 #include "TThreadFactory.h"
 #include "TROOT.h"
+#include "TCondition.h"
 #include "TApplication.h"
 #include "TVirtualPad.h"
 #include "TMethodCall.h"

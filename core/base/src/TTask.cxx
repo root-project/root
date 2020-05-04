@@ -81,6 +81,7 @@ the following script:
 #include "Riostream.h"
 #include "TTask.h"
 #include "TBrowser.h"
+#include "TList.h"
 #include "TROOT.h"
 #include "TRegexp.h"
 
@@ -163,6 +164,16 @@ TTask::~TTask()
    fTasks->Delete();
    delete fTasks;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add TTask to this.
+
+void  TTask::Add(TTask *task) 
+{
+   fTasks->Add(task);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abort current tree of tasks.
