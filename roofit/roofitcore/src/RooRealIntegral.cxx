@@ -28,13 +28,11 @@ The actual analytical integrations (if any) are done in the PDF themselves, the 
 integration is performed in the various implementations of the RooAbsIntegrator base class.
 **/
 
+#include "RooRealIntegral.h"
+
 #include "RooFit.h"
 
-#include "TClass.h"
 #include "RooMsgService.h"
-#include "Riostream.h"
-#include "TH1.h"
-#include "RooRealIntegral.h"
 #include "RooArgSet.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
@@ -50,9 +48,13 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooDouble.h"
 #include "RooTrace.h"
 
+#include "TClass.h"
+
+#include <iostream>
+
 using namespace std;
 
-ClassImp(RooRealIntegral); 
+ClassImp(RooRealIntegral);
 
 
 Int_t RooRealIntegral::_cacheAllNDim(2) ;

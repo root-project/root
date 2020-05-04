@@ -41,6 +41,7 @@ use a TTree as internal storage mechanism
 #include "TDirectory.h"
 #include "TBuffer.h"
 #include "TROOT.h"
+#include "TList.h"
 
 #include <iomanip>
 using namespace std ;

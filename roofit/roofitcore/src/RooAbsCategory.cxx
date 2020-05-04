@@ -59,6 +59,7 @@ the following replacements should be used:
 #include "TTree.h"
 #include "TLeaf.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "TBranch.h"
 
 using namespace std;
 

@@ -17,13 +17,13 @@
 #define ROO_ABS_ARG
 
 #include "TNamed.h"
-#include "THashList.h"
+#include "TObjArray.h"
 #include "TRefArray.h"
 #include "RooPrintable.h"
 #include "RooSTLRefCountList.h"
 #include "RooAbsCache.h"
-#include "RooLinkedListIter.h"
 #include "RooNameReg.h"
+#include "RooLinkedListIter.h"
 #include <map>
 #include <set>
 #include <deque>
@@ -31,8 +31,11 @@
 
 #include <iostream>
 
-
+#ifndef R__LESS_INCLUDES
 #include "TClass.h"
+#include "THashList.h"
+#endif
+
 
 class TTree ;
 class RooArgSet ;
