@@ -1,5 +1,5 @@
 // Test for RooBernstein
-// Authors: Rahul Balasubramanian, CERN  10/2019
+// Authors: Rahul Balasubramanian, CERN  05/2020
 
 #include "RooRealVar.h"
 #include "RooNumIntConfig.h"
@@ -63,22 +63,22 @@ void simpleIntegration(double a0, double a1, double a2, double a3)
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range1->getVal())
   << "Analytical vs numerical integral"
-  << " within " << accAnaVsNum << "%. With ";
+  << " within " << accAnaVsNum << "%. ";
   
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range2->getVal())
   << "Analytical vs numerical integral"
-  << " within " << accAnaVsNum << "%. With ";
+  << " within " << accAnaVsNum << "%. ";
 
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range3->getVal())
   << "Analytical vs numerical integral"
-  << " within " << accAnaVsNum << "%. With ";
+  << " within " << accAnaVsNum << "%. ";
 
   EXPECT_NEAR(int_full->getVal(), numInt_full->getVal(),
       accAnaVsNum/100.*numInt_full->getVal())
   << "Analytical vs numerical integral"
-  << " within " << accAnaVsNum << "%. With ";
+  << " within " << accAnaVsNum << "%. ";
 }
 
 TEST(RooBernstein, NumInt)
