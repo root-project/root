@@ -44,7 +44,9 @@ When iterated from start to finish, datasets will be traversed in the order of t
 #include "TROOT.h"
 
 #include <iomanip>
-using namespace std ;
+#include <iostream>
+
+using namespace std;
 
 ClassImp(RooCompositeDataStore);
 ;

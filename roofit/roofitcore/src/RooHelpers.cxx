@@ -17,6 +17,8 @@
 #include "RooHelpers.h"
 #include "RooAbsRealLValue.h"
 
+#include "TClass.h"
+
 namespace RooHelpers {
 
 LocalChangeMsgLevel::LocalChangeMsgLevel(RooFit::MsgLevel lvl,

@@ -26,7 +26,6 @@ equivalent of a plot. To create a table use the RooDataSet::table method.
 #include "Roo1DTable.h"
 
 #include "RooFit.h"
-#include "Riostream.h"
 #include "RooMsgService.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
@@ -34,8 +33,8 @@ equivalent of a plot. To create a table use the RooDataSet::table method.
 #include "TMath.h"
 #include "TClass.h"
 
+#include <iostream>
 #include <iomanip>
-
 
 using namespace std ;
 

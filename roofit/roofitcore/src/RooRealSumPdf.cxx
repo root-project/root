@@ -50,6 +50,7 @@ to the fractions of the various functions. **This requires setting the last argu
 #include "TError.h"
 #include "TIterator.h"
 #include "TList.h"
+#include "TClass.h"
 #include "RooRealSumPdf.h"
 #include "RooRealProxy.h"
 #include "RooPlot.h"

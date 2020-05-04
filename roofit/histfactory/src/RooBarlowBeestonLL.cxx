@@ -21,9 +21,8 @@
 */
 
 #include <stdexcept>
-#include <math.h>
-
-#include "Riostream.h" 
+#include <cmath>
+#include <iostream>
 
 #include "RooFit.h"
 #include "RooStats/HistFactory/RooBarlowBeestonLL.h" 

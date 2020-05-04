@@ -36,6 +36,7 @@
 #include "RooMsgService.h"
 
 #include "Riostream.h"
+#include "TClass.h"
 
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
