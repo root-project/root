@@ -37,7 +37,7 @@ public:
   /// \return bool to signal an error.
   virtual bool setIndex(value_type index, bool printError = true) = 0;
   bool setOrdinal(unsigned int index);
-  virtual bool setLabel(const char* label, Bool_t printError=kTRUE) = 0 ;
+  virtual bool setLabel(const char* label, Bool_t printError=kTRUE) = 0;
   RooAbsArg& operator=(int index) ; 
   RooAbsArg& operator=(const char* label) ; 
   RooAbsArg& operator=(const RooAbsCategory& other) ;
@@ -73,11 +73,6 @@ public:
     // Object is an l-value
     return kTRUE; 
   }
-
-  /// Not implemented.
-  virtual Bool_t readFromStream(std::istream&, Bool_t, Bool_t) { return true; }
-  /// Not implemented.
-  virtual void writeToStream(std::ostream&, Bool_t) const { }
 
 protected:
 
