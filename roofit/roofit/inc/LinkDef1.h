@@ -14,6 +14,7 @@
 #pragma link C++ class RooBukinPdf+ ;
 #pragma link C++ class RooCBShape+ ;
 #pragma link C++ class RooDSCBShape+ ;
+#pragma link C++ class RooSDSCBShape+ ;
 #pragma link C++ class RooChebychev+ ;
 #pragma link C++ class RooDecay+ ;
 #pragma link C++ class RooDstD0BG+ ;
