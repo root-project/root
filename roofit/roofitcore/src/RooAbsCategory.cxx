@@ -51,6 +51,7 @@ the following replacements should be used:
 #include "RooCategory.h"
 #include "RooMsgService.h"
 #include "RooVectorDataStore.h"
+#include "RooLinkedListIter.h"
 #include "RooFitLegacy/RooAbsCategoryLegacyIterator.h"
 
 #include "Compression.h"
@@ -59,6 +60,7 @@ the following replacements should be used:
 #include "TTree.h"
 #include "TLeaf.h"
 #include "ROOT/RMakeUnique.hxx"
+#include "TBranch.h"
 
 using namespace std;
 

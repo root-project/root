@@ -28,11 +28,11 @@ dataset to RooFit operations. A category tag will define which dataset has to be
 When iterated from start to finish, datasets will be traversed in the order of the category index.
 **/
 
+#include "RooCompositeDataStore.h"
 #include "RooFit.h"
 #include "RooMsgService.h"
-#include "RooCompositeDataStore.h"
+#include "RooCatType.h"
 
-#include "Riostream.h"
 #include "TTree.h"
 #include "TChain.h"
 #include "TDirectory.h"
@@ -42,7 +42,9 @@ When iterated from start to finish, datasets will be traversed in the order of t
 #include "RooTrace.h"
 #include "RooCategory.h"
 #include <iomanip>
-using namespace std ;
+#include <iostream>
+
+using namespace std;
 
 ClassImp(RooCompositeDataStore);
 ;

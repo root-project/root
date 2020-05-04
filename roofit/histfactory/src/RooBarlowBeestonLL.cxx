@@ -21,14 +21,13 @@
 */
 
 #include <stdexcept>
-#include <math.h>
-
-#include "Riostream.h" 
+#include <cmath>
+#include <iostream>
 
 #include "RooFit.h"
-#include "RooStats/HistFactory/RooBarlowBeestonLL.h" 
-#include "RooAbsReal.h" 
-#include "RooAbsData.h" 
+#include "RooStats/HistFactory/RooBarlowBeestonLL.h"
+#include "RooAbsReal.h"
+#include "RooAbsData.h"
 //#include "RooMinuit.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -37,6 +36,7 @@
 #include "RooStats/RooStatsUtils.h"
 #include "RooProdPdf.h"
 #include "RooCategory.h"
+#include "RooCatType.h"
 #include "RooSimultaneous.h"
 #include "RooArgList.h"
 #include "RooAbsCategoryLValue.h"

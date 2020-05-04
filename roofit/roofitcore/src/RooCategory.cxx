@@ -62,13 +62,19 @@ for advanced uses of categories.
 #include "RooFitLegacy/RooCategorySharedProperties.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
+#include <iostream>
+#include <cstdlib>
+#include "TTree.h"
+#include "TString.h"
+#include "TH1.h"
+#include "TList.h"
 #include "TBuffer.h"
 #include "TString.h"
 #include "ROOT/RMakeUnique.hxx"
 
 using namespace std;
 
-ClassImp(RooCategory); 
+ClassImp(RooCategory);
 
 std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
 std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_sharedRangeIOHelper;

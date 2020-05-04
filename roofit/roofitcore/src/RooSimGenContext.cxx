@@ -31,11 +31,11 @@ that an event originates from a certain category.
 **/
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "RooSimGenContext.h"
 #include "RooSimultaneous.h"
 #include "RooRealProxy.h"
+#include "RooCatType.h"
 #include "RooDataSet.h"
 #include "Roo1DTable.h"
 #include "RooCategory.h"
@@ -43,8 +43,9 @@ that an event originates from a certain category.
 #include "RooRandom.h"
 #include "RooGlobalFunc.h"
 
-using namespace RooFit ;
+using namespace RooFit;
 
+#include <iostream>
 #include <string>
 
 using namespace std;

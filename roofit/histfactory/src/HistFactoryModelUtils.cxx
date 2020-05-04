@@ -1,9 +1,9 @@
 /**
- *  \ingroup HistFactory 
+ *  \ingroup HistFactory
  */
 
 // A set of utils for navegating HistFactory models
-#include <stdexcept>    
+#include <stdexcept>
 #include <typeinfo>
 
 #include "RooStats/HistFactory/ParamHistFunc.h"
@@ -14,6 +14,7 @@
 #include "RooArgList.h"
 #include "RooSimultaneous.h"
 #include "RooCategory.h"
+#include "RooCatType.h"
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 #include "TH1.h"

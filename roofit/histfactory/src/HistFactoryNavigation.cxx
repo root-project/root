@@ -1,6 +1,6 @@
 
 /** \class RooStats::HistFactory::HistFactoryNavigation
- *  \ingroup HistFactory 
+ *  \ingroup HistFactory
  */
 
 #include <iomanip>
@@ -16,6 +16,7 @@
 #include "RooProduct.h"
 #include "RooMsgService.h"
 #include "RooCategory.h"
+#include "RooCatType.h"
 #include "RooSimultaneous.h"
 #include "RooWorkspace.h"
 

@@ -26,9 +26,10 @@ points for its contents and provides an iterator over its elements
 **/
 
 #include "RooAbsData.h"
-
 #include "RooFit.h"
-#include "Riostream.h"
+#include "RooCatType.h"
+
+#include <iostream>
 
 #include "TBuffer.h"
 #include "TClass.h"

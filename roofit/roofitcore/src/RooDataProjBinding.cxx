@@ -30,7 +30,6 @@ constructed from all the categories in the dataset
 **/
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "RooDataProjBinding.h"
 #include "RooAbsReal.h"
@@ -38,12 +37,12 @@ constructed from all the categories in the dataset
 #include "Roo1DTable.h"
 #include "RooSuperCategory.h"
 #include "RooCategory.h"
+#include "RooCatType.h"
 #include "RooAbsPdf.h"
 #include "RooMsgService.h"
 
-#include <assert.h>
-
-
+#include <iostream>
+#include <cassert>
 
 using namespace std;
 

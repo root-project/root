@@ -57,12 +57,13 @@ Check the tutorial rf506_msgservice.C for details.
 
 #include "RooFit.h"
 #include "RooAbsReal.h"
+#include "RooCatType.h"
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
 #include "ROOT/RMakeUnique.hxx"
 #include "TObjString.h"
-
+#include "TClass.h"
 
 #include <sstream>
 #include <regex>

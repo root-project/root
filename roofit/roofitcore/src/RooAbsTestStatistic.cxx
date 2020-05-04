@@ -40,6 +40,7 @@ combined in the main thread.
 #include "RooAbsPdf.h"
 #include "RooSimultaneous.h"
 #include "RooAbsData.h"
+#include "RooCatType.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNLLVar.h"
@@ -51,7 +52,7 @@ combined in the main thread.
 #include "RooAbsCategoryLValue.h"
 
 #include "TTimeStamp.h"
-
+#include "TClass.h"
 #include <string>
 
 using namespace std;

@@ -47,12 +47,12 @@ in each category.
 **/
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "RooSimultaneous.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
+#include "RooCatType.h"
 #include "RooRealVar.h"
 #include "RooAddPdf.h"
 #include "RooAbsData.h"
@@ -71,11 +71,11 @@ in each category.
 #include "RooArgSet.h"
 #include "RooHelpers.h"
 
-using namespace std ;
+#include <iostream>
+
+using namespace std;
 
 ClassImp(RooSimultaneous);
-;
-
 
 
 

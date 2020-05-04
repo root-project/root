@@ -30,14 +30,12 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 
 #include "RooFit.h"
 
-#include "TClass.h"
 #include "RooMsgService.h"
-#include "Riostream.h"
-#include "TH1.h"
 #include "RooRealIntegral.h"
 #include "RooArgSet.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
+#include "RooCatType.h"
 #include "RooRealBinding.h"
 #include "RooRealAnalytic.h"
 #include "RooInvTransform.h"
@@ -50,9 +48,14 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooDouble.h"
 #include "RooTrace.h"
 
+#include "TClass.h"
+#include "TH1.h"
+
+#include <iostream>
+
 using namespace std;
 
-ClassImp(RooRealIntegral); 
+ClassImp(RooRealIntegral);
 
 
 Int_t RooRealIntegral::_cacheAllNDim(2) ;
