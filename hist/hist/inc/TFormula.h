@@ -15,13 +15,15 @@
 
 #include "TNamed.h"
 #include "TBits.h"
-#include "TMethodCall.h"
 #include "TInterpreter.h"
 #include <cassert>
 #include <vector>
 #include <list>
 #include <map>
 #include <Math/Types.h>
+
+class TMethodCall;
+
 
 class TFormulaFunction
 {
