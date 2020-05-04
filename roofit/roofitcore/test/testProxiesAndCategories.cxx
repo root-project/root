@@ -113,7 +113,7 @@ TEST_P(RooCategoryIO, TestThatRangesAreShared) {
   EXPECT_TRUE(catFromDataset->isStateInRange("evens", "three"));
 }
 
-INSTANTIATE_TEST_CASE_P(IO_SchemaEvol, RooCategoryIO,
+INSTANTIATE_TEST_SUITE_P(IO_SchemaEvol, RooCategoryIO,
     testing::Values("categories_v620.root", "categories_v621.root", "categories_v622.root"));
 
 
