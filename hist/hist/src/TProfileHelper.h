@@ -23,7 +23,6 @@
 
 #include "TH1.h"
 #include "TError.h"
-#include "TCollection.h"
 #include "THashList.h"
 #include "TMath.h"
 

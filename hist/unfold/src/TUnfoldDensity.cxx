@@ -151,6 +151,7 @@ whichever algorithm is used, the output has to be checked:
 #include "TUnfoldDensity.h"
 #include <TMath.h>
 #include <TVectorD.h>
+#include "TGraph.h"
 #include <iostream>
 #include <map>
 
