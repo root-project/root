@@ -104,96 +104,77 @@ endif ()
 
 #--- CPU tests. ----------------------------
 #
-# always run them
-#if ( (BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
-#  include_directories(${TBB_INCLUDE_DIRS})
+# always run the Cpu tests. If tmva-cpu is off (no Blas or no imt)
+# they will work using TMatrix operations
 
-  # DNN - Arithmetic Functions CPU
-  ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Arithmetic-Cpu COMMAND testArithmeticCpu)
+# DNN - Arithmetic Functions CPU
+ROOT_EXECUTABLE(testArithmeticCpu TestMatrixArithmeticCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Arithmetic-Cpu COMMAND testArithmeticCpu)
 
-  # DNN - Activation Functions CPU
-  ROOT_EXECUTABLE(testActivationFunctionsCpu TestActivationFunctionsCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Activation-Functions-Cpu COMMAND testActivationFunctionsCpu)
+# DNN - Activation Functions CPU
+ROOT_EXECUTABLE(testActivationFunctionsCpu TestActivationFunctionsCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Activation-Functions-Cpu COMMAND testActivationFunctionsCpu)
 
-  # DNN - Loss Functions CPU
-  ROOT_EXECUTABLE(testLossFunctionsCpu TestLossFunctionsCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Loss-Functions-Cpu COMMAND testLossFunctionsCpu)
+# DNN - Loss Functions CPU
+ROOT_EXECUTABLE(testLossFunctionsCpu TestLossFunctionsCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Loss-Functions-Cpu COMMAND testLossFunctionsCpu)
 
-  # DNN - Derivatives CPU
-  ROOT_EXECUTABLE(testDerivativesCpu TestDerivativesCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Derivatives-Cpu COMMAND testDerivativesCpu)
+# DNN - Derivatives CPU
+ROOT_EXECUTABLE(testDerivativesCpu TestDerivativesCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Derivatives-Cpu COMMAND testDerivativesCpu)
 
-  # DNN - Backpropagation CPU
-  ROOT_EXECUTABLE(testBackpropagationCpu TestBackpropagationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-Cpu COMMAND testBackpropagationCpu)
+# DNN - Backpropagation CPU
+ROOT_EXECUTABLE(testBackpropagationCpu TestBackpropagationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Backpropagation-Cpu COMMAND testBackpropagationCpu)
 
-  # DNN - BackpropagationDL CPU
-  ROOT_EXECUTABLE(testBackpropagationDLCpu TestBackpropagationDLCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL-Cpu COMMAND testBackpropagationDLCpu)
+# DNN - BackpropagationDL CPU
+ROOT_EXECUTABLE(testBackpropagationDLCpu TestBackpropagationDLCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL-Cpu COMMAND testBackpropagationDLCpu)
 
-    # DNN - Batch normalization
-  ROOT_EXECUTABLE(testBatchNormalizationCpu TestBatchNormalizationCpu.cxx LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cpu COMMAND testBatchNormalizationCpu)
-
-if ( old-dnn-test )
-  # DNN - DataLoader CPU
-  ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Data-Loader-Cpu COMMAND testDataLoaderCpu)
-
-  # DNN - Minimization CPU
-  ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
-
-endif ()
+# DNN - Batch normalization
+ROOT_EXECUTABLE(testBatchNormalizationCpu TestBatchNormalizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-BatchNormalization-Cpu COMMAND testBatchNormalizationCpu)
 
 
+# DNN - Optimization CPU
+ROOT_EXECUTABLE(testOptimizationCpu TestOptimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Optimization-Cpu COMMAND testOptimizationCpu)
 
-  # DNN - Optimization CPU
-  ROOT_EXECUTABLE(testOptimizationCpu TestOptimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Optimization-Cpu COMMAND testOptimizationCpu)
+# DNN - MethodDL SGD Optimization CPU
+ROOT_EXECUTABLE(testMethodDLSGDOptimizationCpu TestMethodDLSGDOptimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-MethodDL-SGD-Optimization-Cpu COMMAND testMethodDLSGDOptimizationCpu)
 
-  # DNN - MethodDL SGD Optimization CPU
-  ROOT_EXECUTABLE(testMethodDLSGDOptimizationCpu TestMethodDLSGDOptimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-MethodDL-SGD-Optimization-Cpu COMMAND testMethodDLSGDOptimizationCpu)
+# DNN - MethodDL Adam Optimization CPU
+ROOT_EXECUTABLE(testMethodDLAdamOptimizationCpu TestMethodDLAdamOptimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adam-Optimization-Cpu COMMAND testMethodDLAdamOptimizationCpu)
 
-  # DNN - MethodDL Adam Optimization CPU
-  ROOT_EXECUTABLE(testMethodDLAdamOptimizationCpu TestMethodDLAdamOptimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adam-Optimization-Cpu COMMAND testMethodDLAdamOptimizationCpu)
+# DNN - MethodDL Adagrad Optimization CPU
+ROOT_EXECUTABLE(testMethodDLAdagradOptimizationCpu TestMethodDLAdagradOptimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adagrad-Optimization-Cpu COMMAND testMethodDLAdagradOptimizationCpu)
 
-  # DNN - MethodDL Adagrad Optimization CPU
-  ROOT_EXECUTABLE(testMethodDLAdagradOptimizationCpu TestMethodDLAdagradOptimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adagrad-Optimization-Cpu COMMAND testMethodDLAdagradOptimizationCpu)
+# DNN - MethodDL RMSProp Optimization CPU
+ROOT_EXECUTABLE(testMethodDLRMSPropOptimizationCpu TestMethodDLRMSPropOptimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-MethodDL-RMSProp-Optimization-Cpu COMMAND testMethodDLRMSPropOptimizationCpu)
 
-  # DNN - MethodDL RMSProp Optimization CPU
-  ROOT_EXECUTABLE(testMethodDLRMSPropOptimizationCpu TestMethodDLRMSPropOptimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-MethodDL-RMSProp-Optimization-Cpu COMMAND testMethodDLRMSPropOptimizationCpu)
+# DNN - MethodDL Adadelta Optimization CPU
+ROOT_EXECUTABLE(testMethodDLAdadeltaOptimizationCpu TestMethodDLAdadeltaOptimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adadelta-Optimization-Cpu COMMAND testMethodDLAdadeltaOptimizationCpu)
 
-  # DNN - MethodDL Adadelta Optimization CPU
-  ROOT_EXECUTABLE(testMethodDLAdadeltaOptimizationCpu TestMethodDLAdadeltaOptimizationCpu.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-MethodDL-Adadelta-Optimization-Cpu COMMAND testMethodDLAdadeltaOptimizationCpu)
+# DNN - Regression CPU
+ROOT_EXECUTABLE(testRegressionCpu TestRegressionMethodDL.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Regression-Cpu COMMAND testRegressionCpu)
 
-  # DNN - Regression CPU
-  ROOT_EXECUTABLE(testRegressionCpu TestRegressionMethodDL.cxx
-    LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Regression-Cpu COMMAND testRegressionCpu)
+#( old-dnn-test )
+# DNN - DataLoader CPU
+ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Data-Loader-Cpu COMMAND testDataLoaderCpu)
 
-####endif()
+# DNN - Minimization CPU
+ROOT_EXECUTABLE(testMinimizationCpu TestMinimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Minimization-Cpu COMMAND testMinimizationCpu)
 
+
+# tests using TReference architecture
 if ( reference-tests)
 
   # DNN - Activation Functions
