@@ -110,22 +110,6 @@ public:
     return stateNames().size();
   }
 
-  /// Access the map of state names to index numbers. Triggers a recomputation
-  /// if the shape is dirty.
-  const std::map<std::string, value_type>& stateNames() const {
-    return const_cast<RooAbsCategory*>(this)->stateNames();
-  }
-  /// \copydoc stateNames()
-  std::map<std::string, value_type>& stateNames() {
-    if (isShapeDirty()) {
-      _legacyStates.clear();
-      const_cast<RooAbsCategory*>(this)->recomputeShape();
-      clearShapeDirty();
-    }
-
-    return _stateNames;
-  }
-
 
   /// \name Legacy interface
   /// Previous versions of RooAbsCategory were based on RooCatType, a class containing a state and a label.
@@ -174,6 +158,30 @@ protected:
 
 
 protected:
+  /// Access the map of state names to index numbers. Triggers a recomputation
+  /// if the shape is dirty.
+  const std::map<std::string, value_type>& stateNames() const {
+    if (isShapeDirty()) {
+      _legacyStates.clear();
+      const_cast<RooAbsCategory*>(this)->recomputeShape();
+      clearShapeDirty();
+    }
+
+    return _stateNames;
+  }
+  /// \copydoc stateNames()
+  std::map<std::string, value_type>& stateNames() {
+    if (isShapeDirty()) {
+      _legacyStates.clear();
+      recomputeShape();
+      clearShapeDirty();
+    }
+
+    //Somebody might modify the states
+    setShapeDirty();
+
+    return _stateNames;
+  }
 
   /// Evaluate the category state and return.
   /// The returned state index should correspond to a state name that has been defined via e.g. defineType().
@@ -213,7 +221,7 @@ protected:
   std::map<std::string, value_type> _stateNames; /// Map state names to index numbers. Make sure state names are updated in recomputeShape().
   std::vector<int> _insertionOrder; /// Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
   mutable UChar_t _byteValue{0}; //! Transient cache for byte values from tree branches
-  std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
+  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
   bool _treeVar{false}; /// Is this category attached to a tree?
 
   ClassDef(RooAbsCategory, 3) // Abstract discrete variable

@@ -658,8 +658,7 @@ const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, value_t
 RooCatType* RooAbsCategory::retrieveLegacyState(value_type index) const {
   auto result = _legacyStates.find(index);
   if (result == _legacyStates.end()) {
-    result = const_cast<RooAbsCategory*>(this)->_legacyStates.emplace(
-        index,
+    result = _legacyStates.emplace(index,
         std::unique_ptr<RooCatType>(new RooCatType(lookupName(index).c_str(), index))).first;
   }
 
