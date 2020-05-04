@@ -505,6 +505,16 @@ if(ROOT_pyroot_FOUND)
              sql/sqlfilldb.py       # same as the C++ case
              sql/sqlselect.py       # same as the C++ case
              )
+
+  if(NOT pyroot_experimental)
+    # Disable in old PyROOT, which lacks Import pythonization
+    list(APPEND pyveto
+        roofit/rf502_wspacewrite.py
+        roofit/rf504_simwstool.py
+        roofit/rf509_wsinteractive.py
+        roofit/rf511_wsfactory_basic.py)
+  endif()
+
   if(NOT ROOT_mathmore_FOUND)
     list(APPEND pyveto math/Legendre.py)
     list(APPEND pyveto math/Bessel.py)
