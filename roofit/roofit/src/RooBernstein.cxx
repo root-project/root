@@ -84,6 +84,8 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Force use of a given normalisation range.
+/// Needed for functions or PDFs (e.g. RooAddPdf) whose shape depends on the choice of normalisation.
 void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
 {
   if (rangeName && (force || !_refRangeName.empty())) {
