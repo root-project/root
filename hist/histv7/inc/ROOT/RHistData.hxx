@@ -165,10 +165,10 @@ public:
    /// Multiply by a scalar.
    template <typename T>
    void MultiplyByScalar(const T scalar) {
-      for (size_t b = 0; b < fBinContent.size(); ++b)
-         fBinContent[b] *= scalar;
-      for (size_t b = 0; b < fOverflowBinContent.size(); ++b)
-         fOverflowBinContent[b] *= scalar;
+      for (auto &b: fBinContent)
+         b *= scalar;
+      for (auto &b: fOverflowBinContent)
+         b *= scalar;
    }
 
    /// Divide by an other RHistStatContent, assuming same bin configuration.
@@ -296,7 +296,7 @@ public:
    /// Multiply by a scalar.
    template <typename T>
    void MultiplyByScalar(const T scalar) {
-      fSumWeights2 *= scalar;
+      fSumWeights2 *= scalar * scalar;
    }
 
    /// Divide by an other RHistStatTotalSumOfSquaredWeights data, assuming same bin configuration.
@@ -438,10 +438,10 @@ public:
    /// Multiply by a scalar.
    template <typename T>
    void MultiplyByScalar(const T scalar) {
-      for (size_t b = 0; b < fSumWeightsSquared.size(); ++b)
-         fSumWeightsSquared[b] *= scalar;
-      for (size_t b = 0; b < fOverflowSumWeightsSquared.size(); ++b)
-         fOverflowSumWeightsSquared[b] *= scalar;
+      for (auto &b: fSumWeightsSquared)
+         b *= scalar * scalar;
+      for (auto &b: fOverflowSumWeightsSquared)
+         b *= scalar * scalar;
    }
 
    /// Divide by an other `RHistStatUncertainty` data, assuming same bin configuration.
