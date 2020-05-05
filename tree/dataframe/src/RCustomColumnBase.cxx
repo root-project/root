@@ -32,14 +32,10 @@ RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, co
    : fLoopManager(lm), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn), fLastCheckedEntry(fNSlots, -1),
      fCustomColumns(customColumns), fIsInitialized(nSlots, false)
 {
-   fLoopManager->RegisterCustomColumn(this);
 }
 
 // pin vtable. Work around cling JIT issue.
-RCustomColumnBase::~RCustomColumnBase()
-{
-   fLoopManager->DeRegisterCustomColumn(this);
-}
+RCustomColumnBase::~RCustomColumnBase() {}
 
 std::string RCustomColumnBase::GetName() const
 {
