@@ -43,10 +43,16 @@ The following people have contributed to this new version:
 
 - `ROOT::GetImplicitMTPoolSize` has been deprecated in favor of the newly added `ROOT::GetThreadPoolSize` and
   will be removed in v6.24.
+- Manually setting `TThreadedObject::fgMaxSlots` is deprecated: TThreadedObject now increases the number of slots
+  on-demand rather than running out and throwing an exception
 
 ## Core Libraries
 
 - The `ACLiC` can be configured to pass options to the `rootcling` invocation by enabling in the `.rootrc` the `ACLiC.ExtraRootclingFlags [-opts]` line.
+- A call to `ROOT::EnableThreadSafety` is not required before using `TThreadExecutor` or `TTreeProcessorMT` anymore
+- `TTreeProcessorMT` does not silently activate implicit multi-threading features anymore. An explicit call to
+  `ROOT::EnableImplicitMT` is required instead
+- `TTreeProcessorMT` now has a constructor argument to set the number of threads for its thread-pool
 
 ## I/O Libraries
 
@@ -208,6 +214,9 @@ See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanit
   and skipping the file, it now throws an exception if any of the input files is unreadable (this could also happen in
   the middle of an event loop). See [ROOT-10549](https://sft.its.cern.ch/jira/browse/ROOT-10549) for more details.
 - New analysis examples based on the recent ATLAS Open Data release ([`Higgs to two photons`](https://root.cern/doc/master/df104__HiggsToTwoPhotons_8py.html), [`W boson analysis`](https://root.cern/doc/master/df105__WBosonAnalysis_8py.html), [`Higgs to four leptons`](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py.html))
+- An exception is now thrown in case the size of ROOT's thread-pool changes between RDataFrame construction time and the time the event loop begins.
+- Just-in-time compilation of large portions of the computation graph has been optimized, and it is now much faster. Please report any regressions you might encounter on [our issue tracker](https://sft.its.cern.ch/jira/projects/ROOT).
+- `MakeRootDataFrame` is now a safe way to construct RDFs. It used to return RDFs with more limited functionality.
 
 
 ## PyROOT
