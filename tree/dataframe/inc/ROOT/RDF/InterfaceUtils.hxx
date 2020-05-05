@@ -307,7 +307,6 @@ void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RB
    auto newCol = std::make_shared<NewCol_t>(&lm, name, ds.GetTypeName(name), std::move(getValue), ColumnNames_t{},
                                             nSlots, currentCols, /*isDSColumn=*/true);
 
-   lm.RegisterCustomColumn(newCol.get());
    currentCols.AddName(name);
    currentCols.AddColumn(newCol, name);
 }
