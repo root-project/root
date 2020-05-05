@@ -32,7 +32,7 @@ int main() {
    // evaluation of RMS of branch "b" using ForeachSlot
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT(2);
-   unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+   unsigned int nSlots = ROOT::GetThreadPoolSize();
 #else
    unsigned int nSlots = 1;
 #endif
