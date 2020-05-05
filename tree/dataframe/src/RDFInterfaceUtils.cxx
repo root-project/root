@@ -609,7 +609,7 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
 
    auto customColumnsCopy = new RDFInternal::RBookedCustomColumns(customCols);
    auto customColumnsAddr = PrettyPrintAddr(customColumnsCopy);
-   auto jittedCustomColumn = std::make_shared<RDFDetail::RJittedCustomColumn>(&lm, name, type, lm.GetNSlots());
+   auto jittedCustomColumn = std::make_shared<RDFDetail::RJittedCustomColumn>(name, type, lm.GetNSlots());
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper(" << lambdaName << ", {";
