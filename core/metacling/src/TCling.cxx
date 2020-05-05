@@ -1530,6 +1530,18 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
+   // helper for lambdas
+   if (!fromRootCling) { fInterpreter->declare(
+      "#ifndef CLING_INTERNAL_DECLARE_FT\n"
+      "#define CLING_INTERNAL_DECLARE_FT\n"
+      "#include <functional>\n"
+      "namespace __cling_internal { template <typename F>"
+      "struct FT : public FT<decltype(&F::operator())> {};"
+      "template <typename C, typename R, typename... Args>"
+      "struct FT<R(C::*)(Args...) const> { typedef std::function<R(Args...)> F; };}\n"
+      "#endif\n"
+   ); }
+
    if (!fromRootCling) {
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.

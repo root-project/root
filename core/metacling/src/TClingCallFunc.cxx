@@ -409,38 +409,32 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
    // we supply the object parameter.
    // Therefore we only use it in cases where we know it works and set this variable
    // to true when we do.
-   bool ShouldCastFunction = !isa<CXXMethodDecl>(FD) && N == FD->getNumParams();
+   bool ShouldCastFunction = !isa<CXXMethodDecl>(FD) && N == FD->getNumParams()
+                             && !FD->isTemplateInstantiation() && return_type != "(lambda)";
    if (ShouldCastFunction) {
-      callbuf << "(";
-      callbuf << "(";
-      callbuf << return_type << " (&)";
-      {
-         callbuf << "(";
-         for (unsigned i = 0U; i < N; ++i) {
-            if (i) {
-               callbuf << ',';
-               if (i % 2) {
-                  callbuf << ' ';
-               } else {
-                  callbuf << "\n";
-                  for (int j = 0; j <= indent_level; ++j) {
-                     callbuf << kIndentString;
-                  }
+      callbuf << "((" << return_type << " (&)(";
+      for (unsigned i = 0U; i < N; ++i) {
+         if (i) {
+            callbuf << ',';
+            if (i % 2) {
+               callbuf << ' ';
+            } else {
+               callbuf << "\n";
+               for (int j = 0; j <= indent_level; ++j) {
+                  callbuf << kIndentString;
                }
             }
-            const ParmVarDecl *PVD = FD->getParamDecl(i);
-            QualType Ty = PVD->getType();
-            QualType QT = Ty.getCanonicalType();
-            std::string arg_type;
-            ROOT::TMetaUtils::GetNormalizedName(arg_type, QT, *fInterp, fNormCtxt);
-            callbuf << arg_type;
          }
-         if (FD->isVariadic())
-            callbuf << ", ...";
-         callbuf << ")";
+         const ParmVarDecl *PVD = FD->getParamDecl(i);
+         QualType Ty = PVD->getType();
+         QualType QT = Ty.getCanonicalType();
+         std::string arg_type;
+         ROOT::TMetaUtils::GetNormalizedName(arg_type, QT, *fInterp, fNormCtxt);
+         callbuf << arg_type;
       }
-
-      callbuf << ")";
+      if (FD->isVariadic())
+         callbuf << ", ...";
+      callbuf << "))";
    }
 
    if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD)) {
@@ -1014,21 +1008,29 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
-         callbuf << "new (ret) ";
          collect_type_info(QT, typedefbuf, callbuf, type_name,
                            refType, isPointer, indent_level, false);
-         //
-         //  Write the type part of the placement new.
-         //
-         callbuf << "(" << type_name.c_str();
-         if (refType != kNotReference) {
-            callbuf << "*) (&";
-            type_name += "&";
-         } else if (isPointer) {
-            callbuf << "*) (";
-            type_name += "*";
+
+         bool IsNotLambda = type_name != "(lambda)";
+         if (IsNotLambda) {
+            callbuf << "new (ret) ";
+            //
+            //  Write the type part of the placement new.
+            //
+            callbuf << "(" << type_name.c_str();
+            if (refType != kNotReference) {
+               callbuf << "*) (&";
+               type_name += "&";
+            } else if (isPointer) {
+               callbuf << "*) (";
+               type_name += "*";
+            } else {
+               callbuf << ") (";
+            }
          } else {
             callbuf << ") (";
+            // no cast for lambda's (return type wrapped later)
+            callbuf << "auto lll = (";
          }
          //
          //  Write the actual function call.
@@ -1038,6 +1040,12 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //  End the placement new.
          //
          callbuf << ");\n";
+         if (!IsNotLambda) {
+            for (int i = 0; i < indent_level; ++i) {
+               callbuf << kIndentString;
+            }
+            callbuf << "new (ret) __cling_internal::FT<decltype(lll)>::F{lll};\n";
+         }
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
