@@ -382,8 +382,6 @@ public:
       newCols.AddName(name);
       newCols.AddColumn(jittedCustomColumn, name);
 
-      fLoopManager->RegisterCustomColumn(jittedCustomColumn.get());
-
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
       return newInterface;
@@ -2234,8 +2232,6 @@ private:
       newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
-      fLoopManager->RegisterCustomColumn(entryColumn.get());
-
       // Slot number column
       const std::string slotColName = "rdfslot_";
       const std::string slotColType = "unsigned int";
@@ -2247,8 +2243,6 @@ private:
 
       newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
-
-      fLoopManager->RegisterCustomColumn(slotColumn.get());
 
       fCustomColumns = std::move(newCols);
 
@@ -2365,7 +2359,6 @@ private:
                                                   validColumnNames, fLoopManager->GetNSlots(), newCols);
 
 
-      fLoopManager->RegisterCustomColumn(newColumn.get());
       newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 

@@ -177,13 +177,6 @@ public:
    /// For all the actions, either booked or run
    std::vector<RDFInternal::RActionBase *> GetAllActions();
 
-   void RegisterCustomColumn(RCustomColumnBase *column) { fCustomColumns.push_back(column); }
-
-   void DeRegisterCustomColumn(RCustomColumnBase *column)
-   {
-      fCustomColumns.erase(std::remove(fCustomColumns.begin(), fCustomColumns.end(), column), fCustomColumns.end());
-   }
-
    std::vector<RDFInternal::RActionBase *> GetBookedActions() { return fBookedActions; }
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
 
