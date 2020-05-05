@@ -124,6 +124,8 @@ into RooFit's message stream number 2. The verbosity can therefore be adjusted u
   - The crosshair type cursor type did not work on MacOS Catalina. This has been fixed by
     Timur Pocheptsoff.
   - Take into account the Z errors when defining the frame to paint a TGraph2DErrors.
+  - Implement the of "F" in `TPad::RedrawAxis` to allow the plot's frame redrawing when
+    erased.
 
 ## 3D Graphics Libraries
 
