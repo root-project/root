@@ -308,6 +308,20 @@ using RH3I = RHist<3, int, RHistStatContent>;
 using RH3LL = RHist<3, int64_t, RHistStatContent>;
 ///\}
 
+template <int DIMENSIONS, class PRECISION,
+          template <int D_, class P_> class... STAT_FIRST,
+          template <int D_, class P_> class... STAT_SECOND>
+void SameAxesOrThrow(RHist<DIMENSIONS, PRECISION, STAT_FIRST...> &first, const RHist<DIMENSIONS, PRECISION, STAT_SECOND...> &second)
+{
+   auto& firstImpl = *first.GetImpl();
+   const auto& secondImpl = *second.GetImpl();
+   for (int dim = 0; dim < DIMENSIONS; ++dim) {
+      if (!firstImpl.GetAxis(dim).HasSameBinningAs(secondImpl.GetAxis(dim))) {
+         throw std::runtime_error("Attempted to merge two RHists with incompatible axis binning!");
+      }
+   }
+}
+
 /// Add two histograms.
 ///
 /// This operation may currently only be performed if the two histograms have
@@ -327,16 +341,12 @@ template <int DIMENSIONS, class PRECISION,
 void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &from)
 {
    // Enforce "same axis configuration" policy.
-   auto& toImpl = *to.GetImpl();
-   const auto& fromImpl = *from.GetImpl();
-   for (int dim = 0; dim < DIMENSIONS; ++dim) {
-      if (!toImpl.GetAxis(dim).HasSameBinningAs(fromImpl.GetAxis(dim))) {
-         throw std::runtime_error("Attempted to add RHists with incompatible axis binning");
-      }
-   }
+   SameAxesOrThrow(to, from);
 
    // Now that we know that the two axes have the same binning, we can just add
    // the statistics directly.
+   auto& toImpl = *to.GetImpl();
+   const auto& fromImpl = *from.GetImpl();
    toImpl.GetStat().Add(fromImpl.GetStat());
 }
 
@@ -362,20 +372,16 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_> class... STAT_TO,
           template <int D_, class P_> class... STAT_FROM>
-void Divide(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &from)
+void Divide(RHist<DIMENSIONS, PRECISION, STAT_TO...> &hist, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &dividor)
 {
    // Enforce "same axis configuration" policy.
-   auto& toImpl = *to.GetImpl();
-   const auto& fromImpl = *from.GetImpl();
-   for (int dim = 0; dim < DIMENSIONS; ++dim) {
-      if (!toImpl.GetAxis(dim).HasSameBinningAs(fromImpl.GetAxis(dim))) {
-         throw std::runtime_error("Attempted to divide two RHists with incompatible axis binning");
-      }
-   }
+   SameAxesOrThrow(hist, dividor);
 
    // Now that we know that the two axes have the same binning, we can call
    // `Divide` directly on the statistics.
-   toImpl.GetStat().Divide(fromImpl.GetStat());
+   auto& histImpl = *hist.GetImpl();
+   const auto& dividingImpl = *dividor.GetImpl();
+   histImpl.GetStat().Divide(dividingImpl.GetStat());
 }
 
 /// Divide the `to` histogram by `from`.
@@ -399,20 +405,16 @@ void Divide(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_> class... STAT_TO,
           template <int D_, class P_> class... STAT_FROM>
-void DivideBinomial(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &from)
+void DivideBinomial(RHist<DIMENSIONS, PRECISION, STAT_TO...> &hist, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &dividor)
 {
    // Enforce "same axis configuration" policy.
-   auto& toImpl = *to.GetImpl();
-   const auto& fromImpl = *from.GetImpl();
-   for (int dim = 0; dim < DIMENSIONS; ++dim) {
-      if (!toImpl.GetAxis(dim).HasSameBinningAs(fromImpl.GetAxis(dim))) {
-         throw std::runtime_error("Attempted to divide two RHists with incompatible axis binning");
-      }
-   }
-   
+   SameAxesOrThrow(hist, dividor);
+
    // Now that we know that the two axes have the same binning, we can call
-   // `DivideBinomial` directly on the statistics.
-   toImpl.GetStat().DivideBinomial(fromImpl.GetStat());
+   // `Divide` directly on the statistics.
+   auto& histImpl = *hist.GetImpl();
+   const auto& dividingImpl = *dividor.GetImpl();
+   histImpl.GetStat().DivideBinomial(dividingImpl.GetStat());
 }
 
 } // namespace Experimental
