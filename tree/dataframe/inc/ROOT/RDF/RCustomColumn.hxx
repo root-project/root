@@ -114,6 +114,7 @@ public:
       if (!fIsInitialized[slot]) {
          fIsInitialized[slot] = true;
          RDFInternal::InitRDFValues(slot, fValues[slot], r, fColumnNames, fCustomColumns, TypeInd_t(), fIsCustomColumn);
+         fLastCheckedEntry[slot] = -1;
       }
    }
 
