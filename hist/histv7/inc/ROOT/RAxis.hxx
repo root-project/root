@@ -850,6 +850,74 @@ struct AxisConfigToType<RAxisConfig::kLabels> {
 
 } // namespace Internal
 
+/// Result of an axis/histogram binning comparison
+///
+/// A bitmap is returned, encoded as an integer, whose individual bits'
+/// semantics are documented as variants of this enum. These bits represent
+/// various possible differences in the binning of two axes or histograms. The
+/// differences are not mutually exclusive.
+///
+/// Although all variant descriptions are spelled out in terms of axis binning,
+/// the same notions can be used when comparing the binnings of
+/// multi-dimensional histograms, in which case it should be understood that at
+/// least one of the histograms' axes exhibits the described binning difference.
+///
+enum BinningCmpFlags {
+   /// The source and target axes have rigorously identical binning
+   kIdentical = 0,
+
+   // TODO: Decide what to do with the parenthesized design notes
+
+   /// Some bin borders are not identical, but match up to specified tolerance
+   kSimilar = (1 << 0);  // (can rebin or ignore, at the cost of inexact
+                         //  accounting of past Fills close to bin borders)
+                         // (it's not clear if this should be reported as soon
+                         //  as _some_ bin borders match, or whether _all_ bin
+                         //  borders need to match before this is useful)
+
+   /// The target axis spans some range that is not covered by the source axis
+   kSubset = (1 << 1);  // (can rebin or merge as-is as long as source histogram
+                        //  does not have overflow in the relevant direction(s),
+                        //  otherwise it's not clear where that data should go
+                        //  so we should probably forbid the merge)
+
+   /// The source axis spans some range that is not covered by the target axis
+   kSuperset = (1 << 2);  // (may not even be a user-visible issue if the
+                          //  target axis is growable, otherwise the two options
+                          //  are to merge the source data as overflow or to
+                          //  extend the target axis' range)
+
+   /// Multiple source axis bins map into a single target axis bin
+   kSampling = (1 << 3);  // (it is trivial to merge or rebin the source data
+                          //  into the target, but we may not want to do it
+                          //  silently as that results in precision loss)
+
+   /// A single source bin maps into multiple target bins
+   kAliasing = (1 << 4);  // (for now, we consider this to be a fatal error, as
+                          //  it's not clear how source data should be spread
+                          //  across the matching target bins)
+
+   /// Some bins are present in both source and target, but in a different order
+   kOrder = (1 << 5);  // (can only happen for labeled axes at this point in
+                       //  time, not clear if this should even be a user-visible
+                       //  issue or a problem that is silently taken care of by
+                       //  histogram operations)
+
+   /// The source and target bin types are fundamentally incompatible
+   kIncompatible = (1 << 6);  // (most obvious example : labeled axis vs
+                              //  axis with floating-point binning)
+                              // (more contentious : should float binning vs
+                              //  integer binning be considered to match ?)
+};
+
+// NOTE: Should probably be an RAxisBase method, to benefit from vtable
+//       infrastructure and e.g. get specialized equidistant-equidistant code
+BinningCmpFlags CompareBinning(const RAxisBase& target,
+                               const RAxisBase& source,
+                               double tolerance = 0.0);
+
+// TODO: Rework CanMap into a CompareBinning + add tolerance as parameter w/ default value
+
 ///\name Axis Compatibility
 ///\{
 enum class EAxisCompatibility {
