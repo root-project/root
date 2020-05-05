@@ -15,6 +15,9 @@
  TMatrixT
 
  Template class of a general matrix in the linear algebra package
+
+ See \ref MatrixPage for the documentation of the linear algebra package
+
 */
 
 #include <iostream>
