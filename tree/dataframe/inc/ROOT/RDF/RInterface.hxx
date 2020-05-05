@@ -2226,9 +2226,8 @@ private:
       using NewColEntry_t =
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
-      std::shared_ptr<RDFDetail::RCustomColumnBase> entryColumn{
-         new NewColEntry_t(fLoopManager, entryColName, entryColType, std::move(entryColGen), ColumnNames_t{},
-                           fLoopManager->GetNSlots(), newCols)};
+      std::shared_ptr<RDFDetail::RCustomColumnBase> entryColumn{new NewColEntry_t(
+         entryColName, entryColType, std::move(entryColGen), ColumnNames_t{}, fLoopManager->GetNSlots(), newCols)};
       newCols.AddName(entryColName);
       newCols.AddColumn(std::move(entryColumn), entryColName);
 
@@ -2238,9 +2237,8 @@ private:
       auto slotColGen = [](unsigned int slot) { return slot; };
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
-      std::shared_ptr<RDFDetail::RCustomColumnBase> slotColumn{new NewColSlot_t(fLoopManager, slotColName, slotColType,
-                                                                                std::move(slotColGen), ColumnNames_t{},
-                                                                                fLoopManager->GetNSlots(), newCols)};
+      std::shared_ptr<RDFDetail::RCustomColumnBase> slotColumn{new NewColSlot_t(
+         slotColName, slotColType, std::move(slotColGen), ColumnNames_t{}, fLoopManager->GetNSlots(), newCols)};
 
       newCols.AddName(slotColName);
       newCols.AddColumn(std::move(slotColumn), slotColName);
@@ -2356,9 +2354,8 @@ private:
 
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
       RDFInternal::RBookedCustomColumns newCols(newColumns);
-      std::shared_ptr<RDFDetail::RCustomColumnBase> newColumn{
-         new NewCol_t(fLoopManager, name, retTypeName, std::forward<F>(expression), validColumnNames,
-                      fLoopManager->GetNSlots(), newCols)};
+      std::shared_ptr<RDFDetail::RCustomColumnBase> newColumn{new NewCol_t(
+         name, retTypeName, std::forward<F>(expression), validColumnNames, fLoopManager->GetNSlots(), newCols)};
 
       newCols.AddName(name);
       newCols.AddColumn(std::move(newColumn), name);
@@ -2482,11 +2479,10 @@ protected:
    RDFInternal::RBookedCustomColumns
    CheckAndFillDSColumns(ColumnNames_t validCols, std::index_sequence<S...>, TTraits::TypeList<ColumnTypes...>)
    {
-      return fDataSource
-                ? RDFInternal::AddDSColumns(*fLoopManager, validCols, fCustomColumns, *fDataSource,
-                                            fLoopManager->GetNSlots(), std::index_sequence_for<ColumnTypes...>(),
-                                            TTraits::TypeList<ColumnTypes...>())
-                : fCustomColumns;
+      return fDataSource ? RDFInternal::AddDSColumns(validCols, fCustomColumns, *fDataSource, fLoopManager->GetNSlots(),
+                                                     std::index_sequence_for<ColumnTypes...>(),
+                                                     TTraits::TypeList<ColumnTypes...>())
+                         : fCustomColumns;
    }
 };
 

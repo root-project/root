@@ -42,9 +42,3 @@ void RJittedCustomColumn::ClearValueReaders(unsigned int slot)
    R__ASSERT(fConcreteCustomColumn != nullptr);
    fConcreteCustomColumn->ClearValueReaders(slot);
 }
-
-void RJittedCustomColumn::InitNode()
-{
-   R__ASSERT(fConcreteCustomColumn != nullptr);
-   fConcreteCustomColumn->InitNode();
-}
