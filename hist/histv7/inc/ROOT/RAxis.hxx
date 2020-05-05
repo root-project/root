@@ -800,13 +800,13 @@ public:
       kLabelsCmpSame = 0,
 
       /// The other axis doesn't have some labels from this axis
-      kLabelsCmpSubset = 0b1,
+      kLabelsCmpSubset = (1 << 0),
 
       /// The other axis has some labels which this axis doesn't have
-      kLabelsCmpSuperset = 0b10,
+      kLabelsCmpSuperset = (1 << 1),
 
       /// The labels shared by both axes do not map into the same bins
-      kLabelsCmpDisordered = 0b100,
+      kLabelsCmpDisordered = (1 << 2),
    };
 
    /// Compare the labels of this axis with those of another axis
