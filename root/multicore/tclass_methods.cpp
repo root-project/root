@@ -62,8 +62,14 @@ int main(int argc, char** argv)
         while(firstMethodGotten !=0) {}
         TMethod* method2 = thingClass->GetMethodWithPrototype("operator=","edmtest::Simple const&",false /*is const*/, ROOT::kConversionMatch);
 
-        assert(nullptr != method);
-        assert(nullptr != method2);
+        if (!method) {
+          std::cerr << "'method' is NULL!\n";
+          exit(1);
+        }
+        if (!method2) {
+          std::cerr << "'method2' is NULL!\n";
+          exit(1);
+        }
       });
   }
   canStart = true;
