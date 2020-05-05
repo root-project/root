@@ -31,7 +31,7 @@ RCustomColumnBase::RCustomColumnBase(RLoopManager *lm, std::string_view name, st
                                      unsigned int nSlots, bool isDSColumn,
                                      const RDFInternal::RBookedCustomColumns &customColumns)
    : fLoopManager(lm), fName(name), fType(type), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn),
-     fCustomColumns(customColumns), fIsInitialized(nSlots, false)
+     fLastCheckedEntry(fNSlots, -1), fCustomColumns(customColumns), fIsInitialized(nSlots, false)
 {
    fLoopManager->RegisterCustomColumn(this);
 }
@@ -54,5 +54,4 @@ std::string RCustomColumnBase::GetTypeName() const
 
 void RCustomColumnBase::InitNode()
 {
-   fLastCheckedEntry = std::vector<Long64_t>(fNSlots, -1);
 }
