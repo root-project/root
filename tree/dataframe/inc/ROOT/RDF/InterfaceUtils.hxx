@@ -304,8 +304,8 @@ void AddDSColumnsHelper(RLoopManager &lm, std::string_view name, RDFInternal::RB
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
    using NewCol_t = RCustomColumn<decltype(getValue), CustomColExtraArgs::Slot>;
 
-   auto newCol = std::make_shared<NewCol_t>(&lm, name, ds.GetTypeName(name), std::move(getValue), ColumnNames_t{},
-                                            nSlots, currentCols, /*isDSColumn=*/true);
+   auto newCol = std::shared_ptr<RCustomColumnBase>(new NewCol_t(
+      &lm, name, ds.GetTypeName(name), std::move(getValue), ColumnNames_t{}, nSlots, currentCols, /*isDSColumn=*/true));
 
    currentCols.AddName(name);
    currentCols.AddColumn(newCol, name);
