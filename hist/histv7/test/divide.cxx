@@ -13,7 +13,7 @@ TEST(HistDivideTest, DivideEmptyHist) {
   EXPECT_FLOAT_EQ(.00f, hTo.GetBinContent({0.1111}));
 }
 
-// Test "x / 0 = 0"
+// Test "x / +0 = +∞"
 TEST(HistDivideTest, DivideEmptySelf) {
    ROOT::Experimental::RH1F hFrom({100,0.,1});
    ROOT::Experimental::RH1F hTo({100,0.,1});

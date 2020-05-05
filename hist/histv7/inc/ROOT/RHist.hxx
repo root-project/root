@@ -329,8 +329,8 @@ void SameAxesOrThrow(RHist<DIMENSIONS, PRECISION, STAT_FIRST...> &first, const R
 /// at least the same statistics as `to` (recording more stats is fine).
 ///
 /// Adding histograms with incompatible axis binning will be reported at runtime
-/// with an `std::runtime_error`. Insufficient statistics in the source
-/// histogram will be detected at compile-time and result in a compiler error.
+/// with an `std::runtime_error`. Incompatible statistics' size in the source
+/// histograms will be detected at compile-time and result in a compiler error.
 ///
 /// In the future, we may either adopt a more relaxed definition of histogram
 /// addition or provide a mechanism to convert from one histogram type to
@@ -350,16 +350,16 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
    toImpl.GetStat().Add(fromImpl.GetStat());
 }
 
-/// Divide the `to` histogram by `from`.
+/// Divide the `hist` by the `dividor`.
 ///
-/// `to = to/from`
-/// This operation may currently only be performed if the two histograms have
-/// the same axis configuration, use the same precision, and if `from` records
-/// at least the same statistics as `to` (recording more stats is fine).
+/// `hist = hist/dividor`
+/// This operation may only be performed if the two histograms have
+/// the same axis configuration, use the same precision, and if `dividor` records
+/// at least the same statistics as `hist` (recording more stats is fine).
 ///
 /// Dividing histograms with incompatible axis binning will be reported at runtime
-/// with an `std::runtime_error`. Insufficient statistics in the source
-/// histogram will be detected at compile-time and result in a compiler error.
+/// with an `std::runtime_error`. Incompatible statistics' size in the source
+/// histograms will be detected at compile-time and result in a compiler error.
 ///
 /// In the future, we may either adopt a more relaxed definition of histogram
 /// division or provide a mechanism to convert from one histogram type to
@@ -367,8 +367,7 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
 ///
 /// NOTE : The resulting errors are calculated assuming uncorrelated histograms,
 /// using Gaussian error propagation.
-/// See the other ROOT::Experimental::DivideBinomial to compute binomial
-/// error propagation.
+/// See ROOT::Experimental::DivideBinomial for binomial error propagation.
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_> class... STAT_TO,
           template <int D_, class P_> class... STAT_FROM>
@@ -384,24 +383,23 @@ void Divide(RHist<DIMENSIONS, PRECISION, STAT_TO...> &hist, const RHist<DIMENSIO
    histImpl.GetStat().Divide(dividingImpl.GetStat());
 }
 
-/// Divide the `to` histogram by `from`.
+/// Divide the `hist` by the `dividor`.
 ///
-/// `to = to/from`
-/// This operation may currently only be performed if the two histograms have
-/// the same axis configuration, use the same precision, and if `from` records
-/// at least the same statistics as `to` (recording more stats is fine).
+/// `hist = hist/dividor`
+/// This operation may only be performed if the two histograms have
+/// the same axis configuration, use the same precision, and if `dividor` records
+/// at least the same statistics as `hist` (recording more stats is fine).
 ///
 /// Dividing histograms with incompatible axis binning will be reported at runtime
-/// with an `std::runtime_error`. Insufficient statistics in the source
-/// histogram will be detected at compile-time and result in a compiler error.
+/// with an `std::runtime_error`. Incompatible statistics' size in the source
+/// histograms will be detected at compile-time and result in a compiler error.
 ///
 /// In the future, we may either adopt a more relaxed definition of histogram
 /// division or provide a mechanism to convert from one histogram type to
 /// another. We currently favor the latter path.
 ///
 /// NOTE : The resulting errors are calculated using binomial error propagation.
-/// See the other ROOT::Experimental::Divide to compute Gaussian error
-/// propagation.
+/// See ROOT::Experimental::Divide for Gaussian error propagation.
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_> class... STAT_TO,
           template <int D_, class P_> class... STAT_FROM>
