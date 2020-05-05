@@ -24,8 +24,6 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 
-class RLoopManager;
-
 /// A wrapper around a concrete RCustomColumn, which forwards all calls to it
 /// RJittedCustomColumn is a placeholder that is put in the collection of custom columns in place of a RCustomColumn
 /// that will be just-in-time compiled. Jitted code will assign the concrete RCustomColumn to this RJittedCustomColumn
@@ -34,8 +32,8 @@ class RJittedCustomColumn : public RCustomColumnBase {
    std::unique_ptr<RCustomColumnBase> fConcreteCustomColumn = nullptr;
 
 public:
-   RJittedCustomColumn(RLoopManager *lm, std::string_view name, std::string_view type, unsigned int nSlots)
-      : RCustomColumnBase(lm, name, type, nSlots, /*isDSColumn=*/false, RDFInternal::RBookedCustomColumns())
+   RJittedCustomColumn(std::string_view name, std::string_view type, unsigned int nSlots)
+      : RCustomColumnBase(name, type, nSlots, /*isDSColumn=*/false, RDFInternal::RBookedCustomColumns())
    {
    }
 
@@ -46,7 +44,6 @@ public:
    const std::type_info &GetTypeId() const final;
    void Update(unsigned int slot, Long64_t entry) final;
    void ClearValueReaders(unsigned int slot) final;
-   void InitNode() final;
 };
 
 } // ns RDF

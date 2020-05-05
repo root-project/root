@@ -1,6 +1,6 @@
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RActionBase.hxx"
-#include "ROOT/RDF/RCustomColumnBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
@@ -485,8 +485,6 @@ void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 void RLoopManager::InitNodes()
 {
    EvalChildrenCounts();
-   for (auto column : fCustomColumns)
-      column->InitNode();
    for (auto &filter : fBookedFilters)
       filter->InitNode();
    for (auto &range : fBookedRanges)

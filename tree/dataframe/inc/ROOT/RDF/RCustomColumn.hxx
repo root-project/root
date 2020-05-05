@@ -95,10 +95,9 @@ class RCustomColumn final : public RCustomColumnBase {
    }
 
 public:
-   RCustomColumn(RLoopManager *lm, std::string_view name, std::string_view type, F expression,
-                 const ColumnNames_t &columns, unsigned int nSlots,
-                 const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
-      : RCustomColumnBase(lm, name, type, nSlots, isDSColumn, customColumns), fExpression(std::move(expression)),
+   RCustomColumn(std::string_view name, std::string_view type, F expression, const ColumnNames_t &columns,
+                 unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customColumns, bool isDSColumn = false)
+      : RCustomColumnBase(name, type, nSlots, isDSColumn, customColumns), fExpression(std::move(expression)),
         fColumnNames(columns), fLastResults(fNSlots), fValues(fNSlots), fIsCustomColumn()
    {
       const auto nColumns = fColumnNames.size();

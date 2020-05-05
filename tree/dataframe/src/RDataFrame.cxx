@@ -861,11 +861,6 @@ This extra parameter might facilitate writing safe parallel code by having each 
 // clang-format on
 
 namespace ROOT {
-namespace Detail {
-namespace RDF {
-class RCustomColumnBase;
-}
-} // namespace Detail
 
 using ROOT::Detail::RDF::ColumnNames_t;
 using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
