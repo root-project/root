@@ -385,8 +385,6 @@ public:
       newCols.AddName(name);
       newCols.AddColumn(jittedCustomColumn, name);
 
-      fLoopManager->RegisterCustomColumn(jittedCustomColumn.get());
-
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
       return newInterface;
@@ -2236,8 +2234,6 @@ private:
       newCols.AddName(entryColName);
       newCols.AddColumn(entryColumn, entryColName);
 
-      fLoopManager->RegisterCustomColumn(entryColumn.get());
-
       // Declare return type to the interpreter, for future use by jitted actions
       auto retTypeDeclaration = "namespace __rdf" + std::to_string(fLoopManager->GetID()) + " { using " + entryColName +
                                 std::to_string(entryColumn->GetID()) + "_type = ULong64_t; }";
@@ -2253,8 +2249,6 @@ private:
 
       newCols.AddName(slotColName);
       newCols.AddColumn(slotColumn, slotColName);
-
-      fLoopManager->RegisterCustomColumn(slotColumn.get());
 
       fCustomColumns = std::move(newCols);
 
@@ -2379,7 +2373,6 @@ private:
                                       "_type = " + retTypeName + "; }";
       fLoopManager->ToJitDeclare(retTypeDeclaration);
 
-      fLoopManager->RegisterCustomColumn(newColumn.get());
       newCols.AddName(name);
       newCols.AddColumn(newColumn, name);
 
