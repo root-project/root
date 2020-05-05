@@ -5316,7 +5316,7 @@ void TPad::RedrawAxis(Option_t *option)
       auto b = new TBox(gPad->GetUxmin(), gPad->GetUymin(),
                         gPad->GetUxmax(), gPad->GetUymax());
       b->SetFillStyle(0);
-      b->SetLineStyle(1);
+      b->SetLineStyle(gPad->GetFrameLineStyle());
       b->SetLineWidth(gPad->GetFrameLineWidth());
       b->SetLineColor(gPad->GetFrameLineColor());
       b->Draw();
