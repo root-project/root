@@ -9,6 +9,7 @@
 #include "ROOT/RHistStatBox.hxx"
 
 #include "ROOT/RPadBase.hxx"
+#include "ROOT/RFrame.hxx"
 
 #include <string>
 
@@ -18,6 +19,10 @@ using namespace std::string_literals;
 std::unique_ptr<RDrawableReply> RHistStatRequest::Process()
 {
    auto stat = dynamic_cast<RHistStatBoxBase *>(GetContext().GetDrawable());
+
+   auto frame = GetContext().GetPad()->GetFrame();
+   RDrawable::RUserRanges ranges;
+   if (frame) frame->GetClientRanges(0, ranges);
 
    auto reply = std::make_unique<RHistStatReply>();
 
@@ -29,7 +34,7 @@ std::unique_ptr<RDrawableReply> RHistStatRequest::Process()
       if (GetMask() & RHistStatBoxBase::kShowTitle)
          reply->GetLines().emplace_back(stat->GetTitle());
 
-      stat->FillStatistic(GetMask(), GetRanges(), reply->GetLines());
+      stat->FillStatistic(GetMask(), ranges, reply->GetLines());
    }
 
    return reply;
@@ -44,10 +49,10 @@ const std::vector<std::string> &RHistStatBoxBase::GetEntriesNames() const
 
 std::unique_ptr<RDisplayItem> RHistStatBoxBase::Display(const RDisplayContext &ctxt)
 {
-
    RDrawable::RUserRanges ranges;
 
-   ctxt.GetPad()->GetVisibleRanges(ranges);
+   auto frame = ctxt.GetPad()->GetFrame();
+   if (frame) frame->GetClientRanges(0, ranges);
 
    std::vector<std::string> lines;
 

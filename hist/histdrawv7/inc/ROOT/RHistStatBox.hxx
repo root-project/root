@@ -36,19 +36,10 @@ namespace Experimental {
 
 class RHistStatRequest : public RDrawableRequest {
    unsigned mask{0xff};      // mask of items to show
-
-   RDrawable::RUserRanges ranges; // specified ranges
-
 public:
-
    RHistStatRequest() = default;
-
    unsigned GetMask() const { return mask; }
-
-   const RDrawable::RUserRanges &GetRanges() const { return ranges; }
-
    std::unique_ptr<RDrawableReply> Process() override;
-
 };
 
 /** \class ROOT::Experimental::RHistStatReply

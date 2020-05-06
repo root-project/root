@@ -17,12 +17,20 @@
 #include <cassert>
 #include <sstream>
 
-ROOT::Experimental::RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame()
+using namespace ROOT::Experimental;
+
+////////////////////////////////////////////////////////////////////////////
+/// Deprecated constructor, to be removed soon
+
+RFrame::RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords) : RFrame()
 {
    fUserCoord = std::move(coords);
 }
 
-void ROOT::Experimental::RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
+////////////////////////////////////////////////////////////////////////////
+/// Internal - extract range for specified axis
+
+void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
 {
    if (axis.HasMin())
       ranges.AssignMin(ndim, axis.GetMin());
@@ -37,14 +45,10 @@ void ROOT::Experimental::RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &a
       ranges.AssignMax(ndim, axis.GetZoomMax(), true);
 }
 
-void ROOT::Experimental::RFrame::GetVisibleRanges(RUserRanges &ranges) const
-{
-   GetAxisRanges(0, GetAttrX(), ranges);
-   GetAxisRanges(1, GetAttrY(), ranges);
-   GetAxisRanges(2, GetAttrZ(), ranges);
-}
+////////////////////////////////////////////////////////////////////////////
+/// Deprecated, to be removed soon
 
-void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)
+void RFrame::GrowToDimensions(size_t nDimensions)
 {
    std::size_t oldSize = fUserCoord.size();
    if (oldSize >= nDimensions)
@@ -55,7 +59,10 @@ void ROOT::Experimental::RFrame::GrowToDimensions(size_t nDimensions)
          fUserCoord[idx].reset(new RPadCartesianUserAxis);
 }
 
-void ROOT::Experimental::RFrame::PopulateMenu(RMenuItems &items)
+////////////////////////////////////////////////////////////////////////////
+/// Provide context menu items
+
+void RFrame::PopulateMenu(RMenuItems &items)
 {
    auto is_x = items.GetSpecifier() == "x";
    auto is_y = items.GetSpecifier() == "y";
@@ -65,5 +72,43 @@ void ROOT::Experimental::RFrame::PopulateMenu(RMenuItems &items)
       std::string name = is_x ? "AttrX()" : "AttrY()";
       items.AddChkMenuItem("Log scale", "Change log scale", attr.GetLog(), name + ".SetLog" + (attr.GetLog() ? "(false)" : "(true)"));
    }
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Remember client range, can be used for drawing or stats box calculations
+
+void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges)
+{
+   fClientRanges[connid] = ranges;
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+/// Return ranges configured for the client
+
+void RFrame::GetClientRanges(unsigned connid, RUserRanges &ranges)
+{
+   auto iter = fClientRanges.find(connid);
+
+   if (iter != fClientRanges.end()) {
+      ranges = iter->second;
+   } else {
+      GetAxisRanges(0, GetAttrX(), ranges);
+      GetAxisRanges(1, GetAttrY(), ranges);
+      GetAxisRanges(2, GetAttrZ(), ranges);
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+/// Apply zoom range from the client
+
+std::unique_ptr<RDrawableReply> RFrameZoomRequest::Process()
+{
+   auto frame = dynamic_cast<RFrame *>(GetContext().GetDrawable());
+
+   if (frame) frame->SetClientRanges(0, ranges);
+
+   return nullptr;
 }
 
