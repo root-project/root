@@ -292,6 +292,13 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// values for creation and modification date of TKey/TDirectory objects and
 /// null value for TUUID objects inside TFile. As drawback, TRef objects stored
 /// in such file cannot be read correctly.
+///
+/// In case the name of the file is not reproducible either (in case of
+/// creating temporary filenames) a value can be passed to the reproducible
+/// option to replace the name stored in the file.
+/// ~~~{.cpp}
+///   TFile *f = TFile::Open("tmpname.root?reproducible=fixedname","RECREATE","File title");
+/// ~~~
 
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectoryFile(), fCompress(compress), fUrl(fname1,kTRUE)
@@ -400,6 +407,14 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    } else {
       Error("TFile", "error expanding path %s", fname1);
       goto zombie;
+   }
+
+   // If the user supplied a value to the option take it as the name to set for
+   // the file instead of the actual filename
+   if (TestBit(kReproducible)) {
+      if(auto name=fUrl.GetValueFromOptions("reproducible")) {
+         SetName(name);
+      }
    }
 
    if (recreate) {
