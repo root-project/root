@@ -47,7 +47,7 @@ RooTemplateProxy allows for type-safely accessing all properties of the stored o
 provides `operator*` and `operator->`, so that the RooTemplateProxy can be used similarly to a smart pointer.
 
 <table>
-<tr><th> RooFit before ROOT 6.22 <th> RooFit starting with ROOT 6.22
+<tr><th> %RooFit before %ROOT 6.22 <th> %RooFit starting with %ROOT 6.22
 <tr><td>
 ~~~{.cpp}
 // In class definition
@@ -99,8 +99,10 @@ pdfProxy->fitTo(...);
 4. **Only if necessary** If errors about missing symbols connected to RooTemplateProxy appear at link time,
    a specific template instantiation for RooTemplateProxy is not yet in ROOT's dictionaries.
    These two lines should be added to the LinkDef.h of the project:
+   ~~~{.cpp}
        #pragma link C++ class RooTemplateProxy<RooMultiCategory>+;
        #pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooMultiCategory>"
+   ~~~
    Replace `RooMultiCategory` by the proper type. If the proxy was holding a real-valued object, use `sourceClass="RooRealProxy"`.
 
    The first line adds the proxy class to the dictionary, the second line enables reading a legacy
@@ -287,11 +289,11 @@ private:
   const LValue_t* lvptr(const LValue_t*) const {
     return static_cast<const LValue_t*>(_arg);
   }
-  /// \copydoc const LValue_t* lvptr(const LValue_t*) const
+  /// \copydoc lvptr(const LValue_t*) const
   LValue_t* lvptr(LValue_t*) {
     return static_cast<LValue_t*>(_arg);
   }
-  /// \copydoc const LValue_t* lvptr(const LValue_t*) const
+  /// \copydoc lvptr(const LValue_t*) const
   const LValue_t* lvptr(const RooAbsArg*) const
   R__SUGGEST_ALTERNATIVE("The template argument of RooTemplateProxy needs to derive from RooAbsRealLValue or RooAbsCategoryLValue to safely call this function.") {
 #ifdef NDEBUG
@@ -302,7 +304,7 @@ private:
     return theArg;
 #endif
   }
-  /// \copydoc const LValue_t* lvptr(const LValue_t*) const
+  /// \copydoc lvptr(const LValue_t*) const
   LValue_t* lvptr(RooAbsArg*)
   R__SUGGEST_ALTERNATIVE("The template argument of RooTemplateProxy needs to derive from RooAbsRealLValue or RooAbsCategoryLValue to safely call this function.") {
 #ifdef NDEBUG

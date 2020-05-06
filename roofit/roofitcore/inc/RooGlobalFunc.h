@@ -70,9 +70,9 @@ enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 /**
- * \defgroup CmdArgs RooFit command arguments.
+ * \defgroup CmdArgs RooFit command arguments
  * These arguments can be passed to functions of RooFit objects.
- * \ingroup CmdArgs
+ * \ingroup Roofitmain
  * @{
  */
 

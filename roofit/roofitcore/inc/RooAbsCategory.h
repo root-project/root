@@ -169,7 +169,7 @@ protected:
 
     return _stateNames;
   }
-  /// \copydoc stateNames()
+  /// \copydoc stateNames() const
   std::map<std::string, value_type>& stateNames() {
     if (isShapeDirty()) {
       _legacyStates.clear();

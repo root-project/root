@@ -15,9 +15,8 @@
  *****************************************************************************/
 
 /**
-\file RooCatType.cxx
 \class RooCatType
-\ingroup Roofitcore
+\ingroup Roofitlegacy
 
 RooCatType is an auxilary class for RooAbsCategory and defines a 
 a single category state. The class holds a string label and an integer 

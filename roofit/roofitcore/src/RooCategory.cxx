@@ -15,7 +15,6 @@
  *****************************************************************************/
 
 /**
-\file RooCategory.cxx
 \class RooCategory
 \ingroup Roofitcore
 
@@ -37,9 +36,9 @@ RooCategory myCat("myCat", "Lepton multiplicity category", {
                   {"2Lep", 2},
                   {"3Lep", 3}
 });
-~~~{.cpp}
-Like this:
 ~~~
+Like this:
+~~~{.cpp}
 RooCategory myCat("myCat", "Asymmetry");
 myCat["left"]  = -1;
 myCat["right"] =  1;
@@ -68,7 +67,7 @@ for (const auto& otherNameIdx : otherCat) {
 }
 ~~~
 
-Also refer to the RooFit tutorials rf404_categories.C for an introduction, and to rf405_realtocatfuncs.C and rf406_cattocatfuncs.C
+Also refer to \ref tutorial_roofit, especially rf404_categories.C for an introduction, and to rf405_realtocatfuncs.C and rf406_cattocatfuncs.C
 for advanced uses of categories.
 **/
 
