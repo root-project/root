@@ -176,7 +176,7 @@ _**Example**_
 
 A Hilbert matrix is created by copying an array.
 
-{% highlight C++ %}
+~~~ {.cpp}
    TMatrixD h(5,5);
    TArrayD data(25);
    for (Int_t = 0; i < 25; i++) {
@@ -185,20 +185,20 @@ A Hilbert matrix is created by copying an array.
       data[i] = 1./(ir+ic);
    }
    h.SetMatrixArray(data.GetArray());
-{% endhighlight %}
+~~~
 
 You can also assign the data array to the matrix without actually copying it.
 
-{% highlight C++ %}
+~~~ {.cpp}
    TMatrixD h; h.Use(5,5,data.GetArray());
    h.Invert();
-{% endhighlight %}
+~~~
 
 The array data now contains the inverted matrix.
 
 Now a unit matrix in sparse format is created.
 
-{% highlight C++ %}
+~~~ {.cpp}
    TMatrixDSparse unit1(5,5);
    TArrayI row(5),col(5);
    for (Int_t i = 0; i < 5; i++) row[i] = col[i] = i;
@@ -210,25 +210,23 @@ Now a unit matrix in sparse format is created.
    unit2.SetRowIndexArray(row.GetArray());
    unit2.SetColIndexArray(col.GetArray());
    unit2.SetMatrixArray(data.GetArray());
-{% endhighlight %}
+~~~
 
 ### Inverting a matrix
 
 - Use the `Invert(Double_t &det=0)` function to invert a matrix:
 
-{% highlight C++ %}
+~~~ {.cpp}
    TMatrixD a(...);
    a.Invert();
-{% endhighlight %}
-
+~~~
 -- or --
 
 - Use the appropriate constructor to invert a matrix:
 
-{% highlight C++ %}
+~~~ {.cpp}
    TMatrixD b(kInvert,a);
-{% endhighlight %}
-
+~~~
 Both methods are available for general and symmetric matrices.
 
 For matrices whose size is less than or equal to 6x6, the `InvertFast(Double_t &det=0)` function is available. Here the Cramer algorithm will be applied, which is faster but less accurate.
@@ -237,8 +235,7 @@ For matrices whose size is less than or equal to 6x6, the `InvertFast(Double_t &
 
 You can also use the following decomposition classes (see → [Matrix decompositions](#matrix-decompositions")) for inverting a matrix:
 
-<table width="100%" border="0">
-  <tbody>
+<table width="100%">
     <tr>
       <th scope="col">Name</th>
       <th scope="col">Matrix type</th>
@@ -274,7 +271,6 @@ You can also use the following decomposition classes (see → [Matrix decomposit
       <td>Sparse</td>
       <td></td>
     </tr>
-  </tbody>
 </table>
 
 If the required matrix type is general, you also can handle symmetric matrices.
@@ -283,7 +279,7 @@ _**Example**_
 
 This example shows how to check whether the matrix is singular before attempting to invert it.
 
-{% highlight C++ %}
+~~~ {.cpp}
    TDecompLU lu(a);
    TMatrixD b;
    if (!lu.Decompose()) {
@@ -292,8 +288,7 @@ This example shows how to check whether the matrix is singular before attempting
    } else {
       lu.Invert(b);
    }
-{% endhighlight %}
-
+~~~
 
 ### Matrix operators and methods
 
@@ -301,8 +296,7 @@ The matrix/vector operations are classified according to BLAS (basic linear alge
 
 #### Arithmetic operations between matrices
 
-<table width="100%" border="0">
-  <tbody>
+<table width="100%">
     <tr>
       <th scope="col">Description</th>
       <th scope="col">Format</th>
@@ -343,13 +337,11 @@ C.Mult(A,B)<br>TMatrixD(A,TMatrixD::kMult,B)<br>TMatrixD(A, TMatrixD(A, TMatrixD
       <td>ElementDiv(A,B)</td>
       <td>A(i,j)/= B(i,j)</td>
     </tr>
-  </tbody>
 </table>
 
 #### Arithmetic operations between matrices and real numbers
 
-<table width="100%" border="0">
-  <tbody>
+<table width="100%">
     <tr>
       <th scope="col">Description</th>
       <th scope="col">Format</th>
@@ -370,15 +362,13 @@ C.Mult(A,B)<br>TMatrixD(A,TMatrixD::kMult,B)<br>TMatrixD(A, TMatrixD(A, TMatrixD
       <td>C=r*A C=A*r A*=r</td>
       <td>overwrites A</td>
     </tr>
-  </tbody>
 </table>
 
 #### Comparison and Boolean operations
 
 **Comparison between two matrices**
 
-<table width="100%" border="0">
-  <tbody>
+<table width="100%">
     <tr>
       <th scope="col">Description</th>
       <th scope="col">Output</th>
@@ -429,13 +419,11 @@ C.Mult(A,B)<br>TMatrixD(A,TMatrixD::kMult,B)<br>TMatrixD(A, TMatrixD(A, TMatrixD
       <td>&nbsp;</td>
       <td>check matrix identity within maxDev tolerance</td>
     </tr>
-  </tbody>
 </table>
 
 **Comparison between matrix and real number**
 
-<table width="100%" border="0">
-  <tbody>
+<table width="100%">
     <tr>
       <th scope="col">Format</th>
       <th scope="col">Output</th>
@@ -531,7 +519,6 @@ C.Mult(A,B)<br>TMatrixD(A,TMatrixD::kMult,B)<br>TMatrixD(A, TMatrixD(A, TMatrixD
       <td>TMatrixD</td>
       <td>&nbsp;</td>
     </tr>
-  </tbody>
 </table>
 
 ### Matrix views
@@ -549,8 +536,7 @@ For the matrix view classes `TMatrixDRow`, `TMatrixDColumn` and `TMatrixDDiag`, 
 
 The next table summarizes how to access the individual matrix elements in the matrix view classes.
 
-<table width="100%" border="0">
-  <tbody>
+<table width="100%">
     <tr>
 
       <th scope="col">Format</th>
@@ -576,7 +562,6 @@ The next table summarizes how to access the individual matrix elements in the ma
       <td>TMatrixDSub(A(i) TMatrixDSub(A,rl,rh,cl,ch)(i,j)</td>
       <td>element A<sub>ij</sub><br>element A<sub>rl+i,cl+j</sub></td>
     </tr>
-  </tbody>
 </table>
 
 #### Matrix decompositions
@@ -612,52 +597,60 @@ With the `TMatrixDEigen` and `TMatrixDSymEigen` classes, you can compute eigenva
 
 #### 1. Never return complex objects (matrices or vectors)
    Danger: For example, when the following snippet:
-~~~
+
+~~~ {.cpp}
    TMatrixD foo(int n)
    {
      TMatrixD foom(n,n); fill_in(foom); return foom;
    }
    TMatrixD m = foo(5);
 ~~~
-   runs, it constructs matrix foo:foom, copies it onto stack as a
-   return value and destroys foo:foom. Return value (a matrix)
-   from foo() is then copied over to m (via a copy constructor),
-   and the return value is destroyed. So, the matrix constructor is
-   called 3 times and the destructor 2 times. For big matrices,
-   the cost of multiple constructing/copying/destroying of objects
-   may be very large. *Some* optimized compilers can cut down on 1
-   copying/destroying, but still it leaves at least two calls to
-   the constructor. Note, TMatrixDLazy (see below) can construct
-   TMatrixD m "inplace", with only a _single_ call to the
-   constructor.
+
+runs, it constructs matrix foo:foom, copies it onto stack as a
+return value and destroys foo:foom. Return value (a matrix)
+from foo() is then copied over to m (via a copy constructor),
+and the return value is destroyed. So, the matrix constructor is
+called 3 times and the destructor 2 times. For big matrices,
+the cost of multiple constructing/copying/destroying of objects
+may be very large. *Some* optimized compilers can cut down on 1
+copying/destroying, but still it leaves at least two calls to
+the constructor. Note, TMatrixDLazy (see below) can construct
+TMatrixD m "inplace", with only a _single_ call to the
+constructor.
 
 #### 2. Use "two-address instructions"
-~~~
+
+~~~ {.cpp}
    "void TMatrixD::operator += (const TMatrixD &B);"
 ~~~
-    as much as possible.
-    That is, to add two matrices, it's much more efficient to write
-~~~
+
+as much as possible.
+That is, to add two matrices, it's much more efficient to write
+
+~~~ {.cpp}
    A += B;
 ~~~
-    than
-~~~
+
+than
+
+~~~ {.cpp}
    TMatrixD C = A + B;
 ~~~
-   (if both operand should be preserved,
-     TMatrixD C = A; C += B;
-   is still better).
+
+(if both operand should be preserved, `TMatrixD C = A; C += B;`
+is still better).
 
 #### 3. Use glorified constructors when returning of an object seems inevitable:
-~~~
+
+~~~ {.cpp}
    "TMatrixD A(TMatrixD::kTransposed,B);"
    "TMatrixD C(A,TMatrixD::kTransposeMult,B);"
 ~~~
 
-  like in the following snippet (from $ROOTSYS/test/vmatrix.cxx)
-  that verifies that for an orthogonal matrix T, T'T = TT' = E.
+like in the following snippet (from $ROOTSYS/test/vmatrix.cxx)
+that verifies that for an orthogonal matrix T, T'T = TT' = E.
 
-~~~
+~~~ {.cpp}
    TMatrixD haar = THaarMatrixD(5);
    TMatrixD unit(TMatrixD::kUnit,haar);
    TMatrixD haar_t(TMatrixD::kTransposed,haar);
@@ -670,20 +663,22 @@ With the `TMatrixDEigen` and `TMatrixDSymEigen` classes, you can compute eigenva
 ~~~
 
 #### 4. Accessing row/col/diagonal of a matrix without much fuss
-   (and without moving a lot of stuff around):
 
-~~~
+(and without moving a lot of stuff around):
+
+~~~ {.cpp}
    TMatrixD m(n,n); TVectorD v(n); TMatrixDDiag(m) += 4;
    v = TMatrixDRow(m,0);
    TMatrixDColumn m1(m,1); m1(2) = 3; // the same as m(2,1)=3;
 ~~~
-   Note, constructing of, say, TMatrixDDiag does *not* involve any
-   copying of any elements of the source matrix.
+
+Note, constructing of, say, TMatrixDDiag does *not* involve any
+copying of any elements of the source matrix.
 
 #### 5. It's possible (and encouraged) to use "nested" functions
-   For example, creating of a Hilbert matrix can be done as follows:
+For example, creating of a Hilbert matrix can be done as follows:
 
-~~~
+~~~ {.cpp}
    void foo(const TMatrixD &m)
    {
     TMatrixD m1(TMatrixD::kZero,m);
@@ -695,17 +690,17 @@ With the `TMatrixDEigen` and `TMatrixDSymEigen` classes, you can compute eigenva
    }
 ~~~
 
-   of course, using a special method THilbertMatrixD() is
-   still more optimal, but not by a whole lot. And that's right,
-   class MakeHilbert is declared *within* a function and local to
-   that function. It means one can define another MakeHilbert class
-   (within another function or outside of any function, that is, in
-   the global scope), and it still will be OK. Note, this currently
-   is not yet supported by the interpreter CINT.
+of course, using a special method THilbertMatrixD() is
+still more optimal, but not by a whole lot. And that's right,
+class MakeHilbert is declared *within* a function and local to
+that function. It means one can define another MakeHilbert class
+(within another function or outside of any function, that is, in
+the global scope), and it still will be OK. Note, this currently
+is not yet supported by the interpreter CINT.
 
-   Another example is applying of a simple function to each matrix element:
+Another example is applying of a simple function to each matrix element:
 
-~~~
+~~~ {.cpp}
    void foo(TMatrixD &m,TMatrixD &m1)
    {
     typedef  double (*dfunc_t)(double);
@@ -721,23 +716,26 @@ With the `TMatrixDEigen` and `TMatrixDSymEigen` classes, you can compute eigenva
    }
 ~~~
 
-   Validation code $ROOTSYS/test/vmatrix.cxx and vvector.cxx contain
-   a few more examples of that kind.
+Validation code $ROOTSYS/test/vmatrix.cxx and vvector.cxx contain
+a few more examples of that kind.
 
 #### 6. Lazy matrices:
-   instead of returning an object return a "recipe"
-   how to make it. The full matrix would be rolled out only when
-   and where it's needed:
-~~~
+
+instead of returning an object return a "recipe"
+how to make it. The full matrix would be rolled out only when
+and where it's needed:
+
+~~~ {.cpp}
    TMatrixD haar = THaarMatrixD(5);
 ~~~
-   THaarMatrixD() is a *class*, not a simple function. However
-   similar this looks to a returning of an object (see note #1
-   above), it's dramatically different. THaarMatrixD() constructs a
-   TMatrixDLazy, an object of just a few bytes long. A special
-   "TMatrixD(const TMatrixDLazy &recipe)" constructor follows the
-   recipe and makes the matrix haar() right in place. No matrix
-   element is moved whatsoever!
+
+THaarMatrixD() is a *class*, not a simple function. However
+similar this looks to a returning of an object (see note #1
+above), it's dramatically different. THaarMatrixD() constructs a
+TMatrixDLazy, an object of just a few bytes long. A special
+"TMatrixD(const TMatrixDLazy &recipe)" constructor follows the
+recipe and makes the matrix haar() right in place. No matrix
+element is moved whatsoever!
 
 ### Acknowledgements
 
@@ -762,6 +760,3 @@ With the `TMatrixDEigen` and `TMatrixDSymEigen` classes, you can compute eigenva
     C++ . We started with his implementation
  5. Siegmund Brandt (http://siux00.physik.uni-siegen.de/~brandt/datan
     We adapted his (very-well) documented SVD routines
-
-
-*/
