@@ -23,11 +23,12 @@
 #else
 
 #include "ROOT/TExecutor.hxx"
-#include "ROOT/TPoolManager.hxx"
+#include "RTaskArena.hxx"
 #include "TError.h"
 #include <functional>
 #include <memory>
 #include <numeric>
+
 
 namespace ROOT {
 
@@ -103,7 +104,7 @@ namespace ROOT {
       template<class T, class R>
       auto SeqReduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-      std::shared_ptr<ROOT::Internal::TPoolManager> fSched = nullptr;
+      std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> fTaskArenaW = nullptr;
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
