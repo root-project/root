@@ -2221,7 +2221,8 @@ PREDEFINED             = "ClassDef(x,y)=//" \
                          templateClassImp(x)=// \
                          NamespaceImp(x)=// \
                          R__CLING_PTRCHECK \
-                         R__USE_IMT
+                         R__USE_IMT \
+                         R__SUGGEST_ALTERNATIVE(x)=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
