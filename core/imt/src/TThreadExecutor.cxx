@@ -1,11 +1,11 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTaskGroup.hxx"
+#include "RArena.hxx"
 
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
-
 #include "tbb/tbb.h"
 
 #if !defined(_MSC_VER)
@@ -153,19 +153,25 @@ namespace ROOT {
 
    void TThreadExecutor::ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f)
    {
-      tbb::this_task_arena::isolate([&]{
-         tbb::parallel_for(start, end, step, f);
+      fSched->Arena()->execute([&]{
+         tbb::this_task_arena::isolate([&]{
+            tbb::parallel_for(start, end, step, f);
+         });
       });
    }
 
    double TThreadExecutor::ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc)
    {
-      return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc);
+      return fSched->Arena()->execute([&]{
+               return ROOT::Internal::ParallelReduceHelper<double>(objs, redfunc);
+      });
    }
 
    float TThreadExecutor::ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc)
    {
-      return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc);
+      return fSched->Arena()->execute([&]{
+               return ROOT::Internal::ParallelReduceHelper<float>(objs, redfunc);
+      });
    }
 
    unsigned TThreadExecutor::GetPoolSize(){

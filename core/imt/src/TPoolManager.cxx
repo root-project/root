@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #endif
-#include "tbb/task_scheduler_init.h"
-
+#include <thread>
+#include "RArena.hxx"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the available number of logical cores.
@@ -52,7 +52,7 @@ namespace ROOT {
             }
          }
       #endif
-         return tbb::task_scheduler_init::default_num_threads();
+         return std::thread::hardware_concurrency();
       }
 
       //Returns the weak_ptr reflecting a shared_ptr to the only instance of the Pool Manager.
@@ -65,15 +65,15 @@ namespace ROOT {
 
       UInt_t TPoolManager::fgPoolSize = 0;
 
-      TPoolManager::TPoolManager(UInt_t nThreads): fSched(new tbb::task_scheduler_init(tbb::task_scheduler_init::deferred))
+      TPoolManager::TPoolManager(UInt_t nThreads): fArena(new RArena())
       {
          //Is it there another instance of the tbb scheduler running?
-         if (fSched->is_active()) {
+         if ((*fArena)->is_active()) {
             mustDelete = false;
          }
 
          nThreads = nThreads != 0 ? nThreads : NLogicalCores();
-         fSched ->initialize(nThreads);
+         (*fArena)->initialize(nThreads);
          fgPoolSize = nThreads;
       };
 
@@ -82,7 +82,7 @@ namespace ROOT {
          //Only terminate the tbb scheduler if there was not another instance already
          // running when the constructor was called.
          if (mustDelete) {
-            fSched->terminate();
+            (*fArena)->terminate();
             fgPoolSize = 0;
          }
       }

@@ -29,15 +29,19 @@
 #  error "Cannot use ROOT::TPoolManager without defining R__USE_IMT."
 # endif
 #else
-
 #include<memory>
 
-namespace tbb {
-   class task_scheduler_init;
-}
 
 namespace ROOT {
    namespace Internal {
+      /// Wrapper for tbb::task_arena.
+      ///
+      /// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
+      /// to forward declare tbb::task_arena. To avoid code breaking on tbb interface changes
+      /// we don't forward declare tbb::interface7::task_arena and instead we wrap tbb::task_arena
+      /// in the forward declared class RArena
+      class RArena;
+
       /**
       \class ROOT::TPoolManager
       \ingroup TPoolManager
@@ -52,6 +56,9 @@ namespace ROOT {
          friend std::shared_ptr<TPoolManager> GetPoolManager(UInt_t nThreads);
          /// Returns the number of threads running when the scheduler has been instantiated within ROOT.
          static UInt_t GetPoolSize();
+         RArena &Arena() {
+            return *fArena;
+         }
          /// Terminates the scheduler instantiated within ROOT.
          ~TPoolManager();
       private:
@@ -61,7 +68,7 @@ namespace ROOT {
          TPoolManager(UInt_t nThreads = 0);
          static UInt_t fgPoolSize;
          bool mustDelete = true;
-         tbb::task_scheduler_init *fSched = nullptr;
+         std::unique_ptr<RArena> fArena;
       };
       /// Get a shared pointer to the manager. Initialize the manager with nThreads if not active. If active,
       /// the number of threads, even if specified otherwise, will remain the same.
