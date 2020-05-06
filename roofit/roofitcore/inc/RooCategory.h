@@ -55,10 +55,10 @@ public:
   bool defineType(const char* label) {
     return defineType(std::string(label));
   }
-  /// \cond LEGACY
   bool defineType(const char* label, Int_t index) {
     return defineType(std::string(label), index);
   }
+  /// \endcond
 
   /// Clear all defined category states.
   void clear() {
@@ -71,7 +71,7 @@ public:
   void addToRange(const char* rangeName, const char* stateNameList) ;
 
 
-  /// \group RooFit interface
+  /// \name RooFit interface
   /// @{
 
   /// Tell whether we can be stored in a dataset. Always true for RooCategory.
