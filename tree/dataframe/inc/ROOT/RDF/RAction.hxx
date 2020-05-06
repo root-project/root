@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -131,6 +131,12 @@ public:
    ~RActionCRTP() { fLoopManager->Deregister(this); }
 
    Helper &GetHelper() { return fHelper; }
+
+   // Helper for RMergeableValue
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
+   {
+      return fHelper.GetMergeableValue();
+   }
 
    void Initialize() final { fHelper.Initialize(); }
 

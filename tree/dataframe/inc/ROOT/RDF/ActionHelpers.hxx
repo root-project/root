@@ -1,7 +1,7 @@
-// Author: Enrico Guiraud, Danilo Piparo CERN  12/2016
+// Author: Enrico Guiraud, Danilo Piparo CERN  12/2016, Vincenzo Eduardo Padulano 05/2020
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -33,6 +33,7 @@
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
+#include "ROOT/RDF/RMergeableValue.hxx"
 
 #include <algorithm>
 #include <limits>
@@ -42,6 +43,7 @@
 #include <type_traits>
 #include <vector>
 #include <iomanip>
+#include <numeric> // std::accumulate in MeanHelper
 
 /// \cond HIDDEN_SYMBOLS
 
@@ -51,6 +53,7 @@ namespace RDF {
 template <typename Helper>
 class RActionImpl {
 public:
+   virtual ~RActionImpl() = default;
    // call Helper::FinalizeTask if present, do nothing otherwise
    template <typename T = Helper>
    auto CallFinalizeTask(unsigned int slot) -> decltype(&T::FinalizeTask, void())
@@ -61,6 +64,11 @@ public:
    template <typename... Args>
    void CallFinalizeTask(unsigned int, Args...) {}
 
+   // Helper functions for RMergeableValue
+   virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const
+   {
+      throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
+   }
 };
 
 } // namespace RDF
@@ -122,6 +130,13 @@ public:
    void Exec(unsigned int slot);
    void Initialize() { /* noop */}
    void Finalize();
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableCount>(*fResultCount);
+   }
+
    ULong64_t &PartialUpdate(unsigned int slot);
 
    std::string GetActionName() { return "Count"; }
@@ -237,6 +252,12 @@ public:
    void Initialize() { /* noop */}
 
    void Finalize();
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableFill<Hist_t>>(*fResultHist);
+   }
 
    std::string GetActionName() { return "Fill"; }
 };
@@ -430,6 +451,12 @@ public:
 
    HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
 
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
+   }
+
    std::string GetActionName() { return "FillPar"; }
 };
 
@@ -491,6 +518,12 @@ public:
          l.Add(fGraphs[slot]);
       }
       resGraph->Merge(&l);
+   }
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableFill<Result_t>>(*fGraphs[0]);
    }
 
    std::string GetActionName() { return "Graph"; }
@@ -742,6 +775,12 @@ public:
          *fResultMin = std::min(m, *fResultMin);
    }
 
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableMin<ResultType>>(*fResultMin);
+   }
+
    ResultType &PartialUpdate(unsigned int slot) { return fMins[slot]; }
 
    std::string GetActionName() { return "Min"; }
@@ -785,6 +824,12 @@ public:
       for (auto &m : fMaxs) {
          *fResultMax = std::max(m, *fResultMax);
       }
+   }
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableMax<ResultType>>(*fResultMax);
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
@@ -845,6 +890,12 @@ public:
          *fResultSum += m;
    }
 
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableSum<ResultType>>(*fResultSum);
+   }
+
    ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
 
    std::string GetActionName() { return "Sum"; }
@@ -875,6 +926,13 @@ public:
    void Initialize() { /* noop */}
 
    void Finalize();
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      const ULong64_t counts = std::accumulate(fCounts.begin(), fCounts.end(), 0ull);
+      return std::make_unique<RMergeableMean>(*fResultMean, counts);
+   }
 
    double &PartialUpdate(unsigned int slot);
 
@@ -916,6 +974,15 @@ public:
    void Initialize() { /* noop */}
 
    void Finalize();
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      const ULong64_t counts = std::accumulate(fCounts.begin(), fCounts.end(), 0ull);
+      const Double_t mean =
+         std::inner_product(fMeans.begin(), fMeans.end(), fCounts.begin(), 0.) / static_cast<Double_t>(counts);
+      return std::make_unique<RMergeableStdDev>(*fResultStdDev, counts, mean);
+   }
 
    std::string GetActionName() { return "StdDev"; }
 };
