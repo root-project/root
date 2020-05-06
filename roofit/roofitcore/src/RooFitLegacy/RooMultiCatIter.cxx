@@ -15,9 +15,8 @@
  *****************************************************************************/
 
 /**
-\file RooMultiCatIter.cxx
 \class RooMultiCatIter
-\ingroup Roofitcore
+\ingroup Roofitlegacy
 
 \deprecated RooMultiCatIter is unnecessary, since all multi category classes know how to generate
 their own states. Use begin() / end() and range-based for loops on instances of these classes.
