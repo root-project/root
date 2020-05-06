@@ -103,8 +103,7 @@ def getKernelName(inNBName):
         return 'root'
 
 
-def canReproduceNotebook(inNBName, needsCompare):
-    kernelName = getKernelName(inNBName)
+def canReproduceNotebook(inNBName, kernelName, needsCompare):
     tmpDir = addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     interpName = getInterpreterName()
@@ -134,5 +133,20 @@ if __name__ == "__main__":
     nbFileName = sys.argv[1]
     if not isInputNotebookFileName(nbFileName):
         sys.exit(1)
-    retCode = canReproduceNotebook(nbFileName, needsCompare)
+
+    try:
+        # If jupyter is there, ipython is too
+        import jupyter
+    except:
+        raise ImportError("Cannot import jupyter")
+
+    kernelName = getKernelName(nbFileName)
+    if kernelName == 'root':
+        try:
+            # We need metakernel for ROOT C++ notebooks
+            import metakernel
+        except:
+            raise ImportError("Cannot import metakernel")
+
+    retCode = canReproduceNotebook(nbFileName, kernelName, needsCompare)
     sys.exit(retCode)
