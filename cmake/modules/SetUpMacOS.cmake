@@ -98,7 +98,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
        #This should be the right way to do it, but clang 10 seems to have a bug
        #execute_process(COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libclang_rt.asan_osx_dynamic.dylib OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
        execute_process(COMMAND mdfind -name libclang_rt.asan_osx_dynamic.dylib OUTPUT_VARIABLE ASAN_RUNTIME_LIBRARY OUTPUT_STRIP_TRAILING_WHITESPACE)
-       set(ASAN_EXTRA_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/ASan_blacklist.txt)
+       set(ASAN_EXTRA_CXX_FLAGS -fsanitize=address -fno-omit-frame-pointer -fsanitize-address-use-after-scope -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/build/ASan_blacklist.txt)
        set(ASAN_EXTRA_SHARED_LINKER_FLAGS "-fsanitize=address -static-libsan")
        set(ASAN_EXTRA_EXE_LINKER_FLAGS "-fsanitize=address -static-libsan -Wl,-u,___asan_default_options -Wl,-u,___lsan_default_options -Wl,-u,___lsan_default_suppressions")
      endif()
