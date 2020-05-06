@@ -380,7 +380,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
          fSelEntry = 0;
       }
       if (!fTextEntry) {
-         fTextEntry = new TGTextEntry(this, text, 0);
+         fTextEntry = new TGTextEntry(this, strdup(text), 0);
          fTextEntry->SetFrameDrawn(kFALSE);
          fTextEntry->Connect("ReturnPressed()", "TGComboBox", this, "ReturnPressed()");
          AddFrame(fTextEntry, fLhs);
