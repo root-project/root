@@ -226,6 +226,12 @@ else()
   endif()
 endif()
 
+if (NOT tmva-pymva)
+  list(APPEND tmva_veto
+      tmva/TMVA_CNN_Classification.C
+      tmva/TMVA_RNN_Classification.C)
+endif()
+
 if (NOT ROOT_pythia6_FOUND)
   set(pythia_veto pythia/pythiaExample.C)
 endif()
