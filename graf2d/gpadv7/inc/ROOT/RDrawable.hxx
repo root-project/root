@@ -260,8 +260,6 @@ public:
 
    const std::string &GetId() const { return fId; }
    void SetId(const std::string &id) { fId = id; }
-
-   virtual void GetVisibleRanges(RUserRanges &) const {}
 };
 
 /// Central method to insert drawable in list of pad primitives

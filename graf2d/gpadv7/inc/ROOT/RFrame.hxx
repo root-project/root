@@ -11,6 +11,7 @@
 
 #include "ROOT/RDrawable.hxx"
 
+#include "ROOT/RDrawableRequest.hxx"
 #include "ROOT/RAttrLine.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrMargins.hxx"
@@ -19,11 +20,25 @@
 #include "ROOT/RPadUserAxis.hxx"
 
 #include <memory>
+#include <map>
 
 class TRootIOCtor;
 
 namespace ROOT {
 namespace Experimental {
+
+
+class RFrameZoomRequest : public RDrawableRequest {
+
+   RDrawable::RUserRanges ranges; // specified ranges
+
+public:
+
+   RFrameZoomRequest() = default;
+
+   std::unique_ptr<RDrawableReply> Process() override;
+};
+
 
 /** \class RFrame
 \ingroup GpadROOT7
@@ -37,6 +52,7 @@ namespace Experimental {
 class RFrame : public RDrawable  {
 
    friend class RPadBase;
+   friend class RFrameZoomRequest; // to apply new zoom range
 
    class RFrameAttrs : public RAttrBase {
       friend class RFrame;
@@ -51,7 +67,7 @@ private:
    RAttrAxis fAttrY{this, "y_"};               ///<!
    RAttrAxis fAttrZ{this, "z_"};               ///<!
    RFrameAttrs fAttr{this,""};                 ///<! own frame attributes
-
+   std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
 
    /// Mapping of user coordinates to normal coordinates, one entry per dimension.
    std::vector<std::unique_ptr<RPadUserAxisBase>> fUserCoord;
@@ -67,6 +83,8 @@ private:
 
    /// Constructor taking user coordinate system, position and extent.
    explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
+
+   void SetClientRanges(unsigned connid, const RUserRanges &ranges);
 
 protected:
 
@@ -108,7 +126,7 @@ public:
    RFrame &SetGridY(bool on = true) { fAttr.SetValue("gridy", on); return *this; }
    bool GetGridY() const { return fAttr.GetValue<bool>("gridy"); }
 
-   void GetVisibleRanges(RUserRanges &) const override;
+   void GetClientRanges(unsigned connid, RUserRanges &ranges);
 
    /// Create `nDimensions` default axes for the user coordinate system.
    void GrowToDimensions(size_t nDimensions);
@@ -128,6 +146,9 @@ public:
       return {{fUserCoord[0]->ToNormal(pos[0]), fUserCoord[1]->ToNormal(pos[1])}};
    }
 };
+
+
+
 
 } // namespace Experimental
 } // namespace ROOT
