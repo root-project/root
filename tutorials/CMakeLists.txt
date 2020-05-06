@@ -127,7 +127,7 @@ if(NOT ROOT_mpi_FOUND)
   set(mpi_veto io/testTMPIFile.C)
 endif()
 
-if(NOT XROOTD_FOUND)
+if(NOT xrootd)
   set(xrootd_veto dataframe/df101_h1Analysis.C
                   dataframe/df102_NanoAODDimuonAnalysis.C
                   dataframe/df103_NanoAODHiggsAnalysis.C
