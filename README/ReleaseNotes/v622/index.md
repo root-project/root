@@ -75,6 +75,22 @@ Now,
     workspace.Import(...)
 has been defined for the new PyROOT, which makes calling the function easier.
 
+### Modernised category classes
+RooFit's categories were modernised. Previously, the class RooCatType was used to store category states. It stores
+two members, an integer for the category index, and up to 256 characters for a category name. Now, such states are
+stored only using an integer, and category names can have arbitrary length. This will use 4 instead of 288 bytes
+per category entry in a dataset, and make computations that rely on category states faster.
+
+The interface to define or manipulate category states was also updated. Since categories are mappings from state names
+to state index, this is now reflected in the interface. Among others, this is now possible:
+| ROOT 6.22                                      | Before (still supported)                                       |
+|------------------------------------------------|----------------------------------------------------------------|
+| `RooCategory cat("cat", "Lepton flavour");`    | `RooCategory cat("cat", "Lepton flavour");`                    |
+| `cat["electron"] = 1;`                         | `cat.defineType("electron", 1);`                               |
+| `cat["muon"] = 2;`                             | `cat.defineType("muon", 2);`                                   |
+
+See also [Category reference guide](https://root.cern.ch/doc/master/classRooCategory.html).
+
 ### Type-safe proxies for RooFit objects
 RooFit's proxy classes have been modernised. The class `RooTemplateProxy` allows for access to other RooFit objects
 similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
