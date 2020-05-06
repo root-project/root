@@ -97,7 +97,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    dataloader->AddVariable( "var4", "Variable 4", "units", 'F' );
 
    TFile *input(0);
-   TString fname = "./tmva_example_multiple_background.root";
+   TString fname = "./tmva_example_multiclass.root";
    if (!gSystem->AccessPathName( fname )) {
       // first we try to find the file in the local directory
       std::cout << "--- TMVAMulticlass   : Accessing " << fname << std::endl;
@@ -108,7 +108,9 @@ void TMVAMulticlass( TString myMethodList = "" )
       TString createDataMacro = gROOT->GetTutorialDir() + "/tmva/createData.C";
       gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
       gROOT->ProcessLine("create_MultipleBackground(2000)");
-      std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
+      // rename file to avoid clash con other tutorials that need onlmy 200 events
+      gSystem->Exec("mv tmva_example_multiple_background.root tmva_example_multiclass.root"); 
+      std::cout << " created tmva_example_multiclass.root for tests of the multiclass features"<<std::endl;
       input = TFile::Open( fname );
    }
    if (!input) {
