@@ -99,16 +99,3 @@ void RFrame::GetClientRanges(unsigned connid, RUserRanges &ranges)
    }
 }
 
-
-////////////////////////////////////////////////////////////////////////////
-/// Apply zoom range from the client
-
-std::unique_ptr<RDrawableReply> RFrameZoomRequest::Process()
-{
-   auto frame = dynamic_cast<RFrame *>(GetContext().GetDrawable());
-
-   if (frame) frame->SetClientRanges(0, ranges);
-
-   return nullptr;
-}
-

@@ -8,38 +8,10 @@
 
 #include "ROOT/RHistStatBox.hxx"
 
-#include "ROOT/RPadBase.hxx"
-#include "ROOT/RFrame.hxx"
-
 #include <string>
 
 using namespace ROOT::Experimental;
 using namespace std::string_literals;
-
-std::unique_ptr<RDrawableReply> RHistStatRequest::Process()
-{
-   auto stat = dynamic_cast<RHistStatBoxBase *>(GetContext().GetDrawable());
-
-   auto frame = GetContext().GetPad()->GetFrame();
-   RDrawable::RUserRanges ranges;
-   if (frame) frame->GetClientRanges(0, ranges);
-
-   auto reply = std::make_unique<RHistStatReply>();
-
-   if (stat) {
-      stat->fShowMask = GetMask();
-
-      reply->SetMask(GetMask());
-
-      if (GetMask() & RHistStatBoxBase::kShowTitle)
-         reply->GetLines().emplace_back(stat->GetTitle());
-
-      stat->FillStatistic(GetMask(), ranges, reply->GetLines());
-   }
-
-   return reply;
-}
-
 
 const std::vector<std::string> &RHistStatBoxBase::GetEntriesNames() const
 {
@@ -49,7 +21,7 @@ const std::vector<std::string> &RHistStatBoxBase::GetEntriesNames() const
 
 std::unique_ptr<RDisplayItem> RHistStatBoxBase::Display(const RDisplayContext &ctxt)
 {
-   RDrawable::RUserRanges ranges;
+   RFrame::RUserRanges ranges;
 
    auto frame = ctxt.GetPad()->GetFrame();
    if (frame) frame->GetClientRanges(0, ranges);
@@ -65,8 +37,7 @@ std::unique_ptr<RDisplayItem> RHistStatBoxBase::Display(const RDisplayContext &c
    return std::make_unique<RDisplayHistStat>(*this, fShowMask, GetEntriesNames(), lines);
 }
 
-
-void RHist1StatBox::FillStatistic(unsigned mask, const RDrawable::RUserRanges &ranges, std::vector<std::string> &lines) const
+void RHist1StatBox::FillStatistic(unsigned mask, const RFrame::RUserRanges &ranges, std::vector<std::string> &lines) const
 {
    // TODO: need to implement statistic fill for RHist1
 
@@ -86,7 +57,7 @@ void RHist1StatBox::FillStatistic(unsigned mask, const RDrawable::RUserRanges &r
 }
 
 
-void RHist2StatBox::FillStatistic(unsigned mask, const RDrawable::RUserRanges &ranges, std::vector<std::string> &lines) const
+void RHist2StatBox::FillStatistic(unsigned mask, const RFrame::RUserRanges &ranges, std::vector<std::string> &lines) const
 {
    // TODO: need to implement statistic fill for RHist2
 
@@ -111,7 +82,7 @@ void RHist2StatBox::FillStatistic(unsigned mask, const RDrawable::RUserRanges &r
    }
 }
 
-void RHist3StatBox::FillStatistic(unsigned mask, const RDrawable::RUserRanges &ranges, std::vector<std::string> &lines) const
+void RHist3StatBox::FillStatistic(unsigned mask, const RFrame::RUserRanges &ranges, std::vector<std::string> &lines) const
 {
    // TODO: need to implement statistic fill for RHist3
 

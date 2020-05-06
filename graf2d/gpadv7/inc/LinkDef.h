@@ -27,7 +27,6 @@
 #pragma link C++ class ROOT::Experimental::RStyle::Block_t+;
 
 #pragma link C++ class ROOT::Experimental::RDrawable+;
-#pragma link C++ class ROOT::Experimental::RDrawable::RUserRanges+;
 #pragma link C++ class ROOT::Experimental::RDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RDrawableDisplayItem+;
 #pragma link C++ class ROOT::Experimental::RIndirectDisplayItem+;
@@ -58,7 +57,8 @@
 #pragma link C++ class ROOT::Experimental::RPad+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;
 #pragma link C++ class ROOT::Experimental::RFrame+;
-#pragma link C++ class ROOT::Experimental::RFrameZoomRequest+;
+#pragma link C++ class ROOT::Experimental::RFrame::RUserRanges+;
+#pragma link C++ class ROOT::Experimental::RFrame::RZoomRequest+;
 #pragma link C++ class ROOT::Experimental::RPadLength+;
 #pragma link C++ class ROOT::Experimental::RPadLength::Pixel+;
 #pragma link C++ class ROOT::Experimental::RPadLength::Normal+;

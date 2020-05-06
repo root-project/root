@@ -28,18 +28,6 @@ namespace ROOT {
 namespace Experimental {
 
 
-class RFrameZoomRequest : public RDrawableRequest {
-
-   RDrawable::RUserRanges ranges; // specified ranges
-
-public:
-
-   RFrameZoomRequest() = default;
-
-   std::unique_ptr<RDrawableReply> Process() override;
-};
-
-
 /** \class RFrame
 \ingroup GpadROOT7
 \brief Holds an area where drawing on user coordinate-system can be performed.
@@ -52,14 +40,95 @@ public:
 class RFrame : public RDrawable  {
 
    friend class RPadBase;
-   friend class RFrameZoomRequest; // to apply new zoom range
+
+public:
+
+   class RUserRanges {
+      std::vector<double> values;  ///< min/max values for all dimensions
+      std::vector<bool> flags;     ///< flag if values available
+   public:
+      // Default constructor - for I/O
+      RUserRanges() = default;
+
+      // Constructor for 1-d ranges
+      RUserRanges(double xmin, double xmax)
+      {
+         AssignMin(0, xmin);
+         AssignMax(0, xmax);
+      }
+
+      // Constructor for 2-d ranges
+      RUserRanges(double xmin, double xmax, double ymin, double ymax)
+      {
+         AssignMin(0, xmin);
+         AssignMax(0, xmax);
+         AssignMin(1, ymin);
+         AssignMax(1, ymax);
+      }
+
+      // Extend number of dimensions which can be stored in the object
+      void Extend(unsigned ndim = 3)
+      {
+         if (ndim*2 > values.size()) {
+            values.resize(ndim*2, 0.);
+            flags.resize(ndim*2, false);
+         }
+      }
+
+      bool HasMin(unsigned ndim) const { return (ndim*2 < flags.size()) && flags[ndim*2]; }
+      double GetMin(unsigned ndim) const { return (ndim*2 < values.size()) ? values[ndim*2] : 0.; }
+
+      // Assign minimum for specified dimension
+      void AssignMin(unsigned ndim, double value, bool force = false)
+      {
+         if (!HasMin(ndim) || force) {
+            Extend(ndim+1);
+            values[ndim*2] = value;
+            flags[ndim*2] = true;
+         }
+      }
+
+      bool HasMax(unsigned ndim) const { return (ndim*2+1 < flags.size()) && flags[ndim*2+1]; }
+      double GetMax(unsigned ndim) const { return (ndim*2+1 < values.size()) ? values[ndim*2+1] : 0.; }
+
+      // Assign maximum for specified dimension
+      void AssignMax(unsigned ndim, double value, bool force = false)
+      {
+         if (!HasMax(ndim) || force) {
+            Extend(ndim+1);
+            values[ndim*2+1] = value;
+            flags[ndim*2+1] = true;
+         }
+      }
+
+      // Returns true if any value is specified
+      bool IsAny() const
+      {
+         for (auto fl : flags)
+            if (fl) return true;
+         return false;
+      }
+   };
+
+   class RZoomRequest : public RDrawableRequest {
+      RUserRanges ranges; // specified ranges
+   public:
+      RZoomRequest() = default;
+      std::unique_ptr<RDrawableReply> Process() override
+      {
+         auto frame = dynamic_cast<RFrame *>(GetContext().GetDrawable());
+         if (frame) frame->SetClientRanges(0, ranges);
+         return nullptr;
+      }
+   };
+
+private:
 
    class RFrameAttrs : public RAttrBase {
       friend class RFrame;
       R__ATTR_CLASS(RFrameAttrs, "", AddBool("gridx", false).AddBool("gridy",false));
    };
 
-private:
    RAttrMargins fMargins{this, "margin_"};     ///<!
    RAttrLine fAttrBorder{this, "border_"};     ///<!
    RAttrFill fAttrFill{this, "fill_"};         ///<!
@@ -146,8 +215,6 @@ public:
       return {{fUserCoord[0]->ToNormal(pos[0]), fUserCoord[1]->ToNormal(pos[1])}};
    }
 };
-
-
 
 
 } // namespace Experimental
