@@ -89,12 +89,6 @@ public:
    const RAttrLine &GetAttrLine() const { return fAttrLine; }
    RHistDrawable &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
    RAttrLine &AttrLine() { return fAttrLine; }
-
-   void GetVisibleRanges(RUserRanges &) const override
-   {
-      // TODO: provide implementation to get ranges from 1D histogram
-   }
-
 };
 
 
@@ -104,11 +98,6 @@ public:
 
    template <class HIST>
    RHist2Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<2>(hist) {}
-
-   void GetVisibleRanges(RUserRanges &) const override
-   {
-      // TODO: provide implementation to get ranges from 2D histogram
-   }
 };
 
 

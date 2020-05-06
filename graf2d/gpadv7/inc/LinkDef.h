@@ -58,6 +58,7 @@
 #pragma link C++ class ROOT::Experimental::RPad+;
 #pragma link C++ class ROOT::Experimental::RCanvas+;
 #pragma link C++ class ROOT::Experimental::RFrame+;
+#pragma link C++ class ROOT::Experimental::RFrameZoomRequest+;
 #pragma link C++ class ROOT::Experimental::RPadLength+;
 #pragma link C++ class ROOT::Experimental::RPadLength::Pixel+;
 #pragma link C++ class ROOT::Experimental::RPadLength::Normal+;

@@ -370,14 +370,3 @@ void ROOT::Experimental::RPadBase::SetDrawableVersion(Version_t vers)
    for (auto &drawable : fPrimitives)
       drawable->SetDrawableVersion(vers);
 }
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/// Collect visible user ranges in the pad
-
-void ROOT::Experimental::RPadBase::GetVisibleRanges(RUserRanges &ranges) const
-{
-   for (auto &drawable : fPrimitives)
-      if (!dynamic_cast<const RPadBase *>(drawable.get()))
-         drawable->GetVisibleRanges(ranges);
-}
