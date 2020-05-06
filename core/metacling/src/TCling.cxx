@@ -5966,6 +5966,14 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
          return success;
    }
 
+   // During the 'Deep' part of the search we will call GetClassSharedLibsForModule
+   // (when module are enabled) which might end up calling AutoParsing but
+   // that should only be for the cases where the library has no generated pcm
+   // and in that case a rootmap should be available.
+   // This avoids a very costly operation (for generally no gain) but reduce the
+   // quality of the search (i.e. bad in case of library with no pcm and no rootmap
+   // file).
+   TInterpreter::SuspendAutoParsing autoParseRaii(this);
    return DeepAutoLoadImpl(cls);
 }
 
