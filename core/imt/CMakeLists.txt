@@ -25,8 +25,8 @@ target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 if(imt)
   ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
     ROOT/TFuture.hxx
-    ROOT/TPoolManager.hxx
     ROOT/TTaskGroup.hxx
+    ROOT/RTaskArena.hxx
     ROOT/TThreadExecutor.hxx
     LINKDEF
       LinkDef.h
@@ -41,8 +41,8 @@ if(imt)
 
   # G__Imt.cxx is automatically added by ROOT_GENERATE_DICTIONARY()
   target_sources(Imt PRIVATE
+    src/RTaskArena.cxx
     src/TImplicitMT.cxx
-    src/TPoolManager.cxx
     src/TThreadExecutor.cxx
   )
 
