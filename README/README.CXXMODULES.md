@@ -10,10 +10,9 @@ or user actions at the prompt. Often, the headers are immutable and reparsing is
 redundant. C++ Modules are designed to minimize the reparsing of the same
 header content by providing an efficient on-disk representation of C++ Code.
 
-The ROOT v6.16 release comes with a preview of the module technology;
+The ROOT v6.16 release came with a preview of the module technology;
 dedicated binaries have been built and can be reproduced by passing
-`-Druntime_cxxmodules=On` as configure flag. The goals of this technology
-preview are:
+`-Druntime_cxxmodules=On` as configure flag. The goals of this technology are:
   * Gain feedback from early adoption -- the technology is being long anticipated
   by some of the users of ROOT. It improves correctness of ROOT and improves
   performance when carefully adopted.
@@ -31,6 +30,8 @@ feature works, what are its pros and cons, what's the current state of the
 implementation and how third-party code can use it.
 
 Read more [[1]].
+
+C++ Modules in ROOT are default since v6.20 (Unix) and v6.22 (OSX).
 
 ## Design Goals
 
@@ -305,11 +306,9 @@ different. There are several differences which can be noticed:
   specific location. This way we 'mount' `/usr/include/module.modulemap`
   non-invasively. The reasons why we need to extend the C++ modules support
   beyond ROOT is described bellow.
-  * rootcling creates a new binary artifact *Name.pcm* after the library name --
-  this is a temporary solution for the current technology preview. Once we
-  advance further the implementation we will only create Name.pcm without the
-  other 2 artifacts. At a final stage, ROOT might be able to integrate the
-  Name.pcm with the shared library itself.
+  * rootcling -cxxmodule creates a single artifact *Name.pcm* after the library
+  name. At a final stage, ROOT might be able to integrate the Name.pcm with the
+  shared library itself.
   * Preloads all \*pcm files at start up time -- this currently is the only
   remaining bottleneck which introduces a relatively small performance overhead
   at startup time and is described bellow. It will be negligible for third-
@@ -397,10 +396,9 @@ In turn, this would flatten the C++ modules structure and give us performance
 comparable to the ROOT PCH. The trade-off is that we will decrease the
 encapsulation and leak information about implementation-specific header files.
 
-The main focus for this technology preview was not in performance due to
-time considerations. We have invested some resources in optimizations and
-we would like to show you (probably outdated) preliminary performance
-results:
+The main focus for the technology preview was not in performance until recently.
+We have invested some resources in optimizations and we would like to show you
+(probably outdated) performance results:
 
   * Memory footprint -- mostly due to importing all C++ Modules at startup
   we see overhead which depends on the number of preloaded modules. For
@@ -411,16 +409,18 @@ results:
   workflows which take ms the slowdown can be 2x. Increasing of the work
   to seconds shows 50-60% slowdowns.
 
-The performance of the technology preview is dependent on many factors such
-as configuration of ROOT and workflow. You can read more at our Intel
-IPCC-ROOT Showcase presentation here (pp 25-33)[[8]].
+The performance is dependent on many factors such as configuration of ROOT and
+workflow. You can read more at our Intel IPCC-ROOT Showcase presentation
+here (pp 25-33)[[8]].
 
 You can visit our continuous performance monitoring tool where we compare
-the performance of the technology preview with respect to 'standard' ROOT[[9]].
+the performance of ROOT against ROOT with a PCH [[9]].
 *Note: if you get error 400, clean your cache or open a private browser session.*
 
 ## How to use
-  Compile ROOT with `-Druntime_cxxmodules=On`. Enjoy.
+  C++ Modules in ROOT are default since v6.20 (Unix) and v6.22 (OSX). Enjoy.
+
+  To disable C++ Modules in ROOT use `-Druntime_cxxmodules=Off`.
 
 ## Citing ROOT's C++ Modules
 ```latex
