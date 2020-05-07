@@ -428,7 +428,7 @@ void TPaletteAxis::Paint(Option_t *)
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
    // import Attributes already here since we might need them for CJUST
-   fAxis.ImportAxisAttributes(fH->GetZaxis());
+   if (fH->GetDimension() == 2) fAxis.ImportAxisAttributes(fH->GetZaxis());
    // case option "CJUST": put labels directly at color boundaries
    TLatex *label = NULL;
    TLine *line = NULL;
