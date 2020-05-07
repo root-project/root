@@ -127,7 +127,7 @@ private:
 
    void ProcessData(unsigned connid, const std::string &arg);
 
-   std::string CreateSnapshot(RDrawable::Version_t vers);
+   std::string CreateSnapshot(RDrawable::RDisplayContext &ctxt);
 
    std::shared_ptr<RDrawable> FindPrimitive(const RCanvas &can, const std::string &id, const RPadBase **subpad = nullptr);
 
@@ -309,7 +309,11 @@ void RCanvasPainter::CheckDataToSend()
             buf = "SNAP:";
             buf += TString::ULLtoa(fCanvas.GetModified(), 10);
             buf += ":";
-            buf += CreateSnapshot(conn.fSend);
+
+            RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, conn.fSend);
+            ctxt.SetConnection(conn.fConnId, (conn.fConnId == fWebConn.begin()->fConnId));
+
+            buf += CreateSnapshot(ctxt);
 
             conn.fSend = fCanvas.GetModified();
          }
@@ -444,7 +448,10 @@ void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
 
 bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int height)
 {
-   auto snapshot = CreateSnapshot(0);
+   RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, 0);
+   ctxt.SetConnection(1, true);
+
+   auto snapshot = CreateSnapshot(ctxt);
 
    return RWebDisplayHandle::ProduceImage(fname, snapshot, width, height);
 }
@@ -515,6 +522,8 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
             req->GetContext().SetPad(const_cast<RPadBase *>(subpad));
             req->GetContext().SetDrawable(drawable.get(), 0);
          }
+
+         req->GetContext().SetConnection(connid, conn == fWebConn.begin());
 
          auto reply = req->Process();
 
@@ -657,11 +666,9 @@ bool RCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> win)
 /// Here server-side painting is performed - each drawable adds own elements in
 /// so-called display list, which transferred to the clients
 
-std::string RCanvasPainter::CreateSnapshot(RDrawable::Version_t vers)
+std::string RCanvasPainter::CreateSnapshot(RDrawable::RDisplayContext &ctxt)
 {
    auto canvitem = std::make_unique<RCanvasDisplayItem>();
-
-   RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, vers);
 
    fCanvas.DisplayPrimitives(*canvitem, ctxt);
 
