@@ -65,5 +65,10 @@ void draw_rh2_colz()
    auto stat = canvas->Draw<RHist2StatBox>(pHist, "hist2");
    stat->AttrFill().SetColor(RColor::kRed);
 
-   canvas->Show("1000x700");
+   canvas->SetSize(1000, 700);
+   canvas->Show();
+
+   //canvas->Show("1000x700");
+
+   // canvas->SaveAs("rh2_colz.png");
 }
