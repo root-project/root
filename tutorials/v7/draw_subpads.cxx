@@ -62,5 +62,6 @@ void draw_subpads()
   subsubpads[1][0]->Draw(pHist2)->AttrLine().SetColor(RColor::kGreen);
   subsubpads[0][1]->Draw(pHist3)->AttrLine().SetColor(RColor::kRed);
 
+  canvas->SetSize(1200, 600);
   canvas->Show();
 }

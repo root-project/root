@@ -48,5 +48,6 @@ void draw_rh1()
    auto draw2 = canvas->Draw(pHist2);
    draw2->AttrLine().SetColor(RColor::kBlue).SetWidth(4);
 
+   canvas->SetSize(1000, 700);
    canvas->Show();
 }
