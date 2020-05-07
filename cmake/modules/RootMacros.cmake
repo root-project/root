@@ -286,8 +286,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(libprefix "")
   endif()
 
+   # list of include directories for dictionary generation 
+   set(incdirs)
+
   if((CMAKE_PROJECT_NAME STREQUAL ROOT) AND (TARGET ${ARG_MODULE}))
-    set(incdirs)
     set(headerdirs)
 
     get_target_property(target_incdirs ${ARG_MODULE} INCLUDE_DIRECTORIES)
@@ -325,17 +327,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
     # this instruct rootcling do not store such paths in dictionary
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
-
-    if(incdirs)
-       list(REMOVE_DUPLICATES incdirs)
-    endif()
-
-    set(includedirs)
-    foreach(dir ${incdirs})
-       list(APPEND includedirs -I${dir})
-    endforeach()
-
-    set(pureincdirs ${incdirs})
 
     set(headerfiles)
     set(_list_of_header_dependencies)
@@ -427,11 +418,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                OR ${incdir} MATCHES "^${_source_dir}"
                OR ${incdir} MATCHES "^${_binary_dir}"
                OR ${incdir} MATCHES "^${_curr_binary_dir}")
-              list(APPEND incdirs_in_build
-                   ${incdir})
+              list(APPEND incdirs_in_build ${incdir})
             else()
-              list(APPEND incdirs_in_prefix
-                   ${incdir})
+              list(APPEND incdirs_in_prefix ${incdir})
             endif()
           endforeach()
           if(incdirs_in_build)
@@ -468,34 +457,21 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
 
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      list(APPEND includedirs -I${CMAKE_BINARY_DIR}/include)
-      list(APPEND includedirs -I${CMAKE_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
-      # list(APPEND includedirs -I${CMAKE_SOURCE_DIR})
+      list(APPEND incdirs ${CMAKE_BINARY_DIR}/include)
+      list(APPEND incdirs ${CMAKE_BINARY_DIR}/etc/cling) # This is for the RuntimeUniverse
+      # list(APPEND incdirs ${CMAKE_SOURCE_DIR})
       set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-      set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc)
+      set(incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     endif()
-    foreach( d ${incdirs})
-      list(APPEND includedirs -I${d})
-    endforeach()
 
     foreach(dep ${ARG_DEPENDENCIES})
       if(TARGET ${dep})
         get_property(dep_include_dirs TARGET ${dep} PROPERTY INCLUDE_DIRECTORIES)
         foreach(d ${dep_include_dirs})
-          list(APPEND includedirs -I${d})
+          list(APPEND incdirs ${d})
         endforeach()
       endif()
-    endforeach()
-
-    if(includedirs)
-      list(REMOVE_DUPLICATES includedirs)
-    endif()
-
-    set(pureincdirs)
-    foreach(dir ${includedirs})
-      string(SUBSTRING ${dir} 2 -1 dir0)
-      set(pureincdirs ${pureincdirs} ${dir0})
     endforeach()
 
     ####################### old-style includes/headers generation - end  ##################
@@ -635,6 +611,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(module_defs $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
     endif()
   endif()
+  
+  # provide list of includes for dictionary 
+  set(includedirs)
+  if(incdirs)
+     list(REMOVE_DUPLICATES incdirs)
+     foreach(dir ${incdirs})
+        list(APPEND includedirs -I${dir})
+     endforeach()
+  endif()
 
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
@@ -664,15 +649,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_compile_definitions(${dictionary} PRIVATE
       ${definitions} $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_DEFINITIONS>)
 
-    # remove all -I prefixes from list of include dirs
-    set(pureincdirs)
-    foreach(dir ${includedirs})
-      string(SUBSTRING ${dir} 2 -1 dir0)
-      set(pureincdirs ${pureincdirs} ${dir0})
-    endforeach()
-
     target_include_directories(${dictionary} PRIVATE
-      ${pureincdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+      ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
   else()
     add_custom_target(${dictionary} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   endif()
