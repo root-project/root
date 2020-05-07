@@ -48,6 +48,7 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+- ROOT comes with C++ Modules enabled. More details about the techonology found [here](../../README.CXXMODULES.md).
 - The `ACLiC` can be configured to pass options to the `rootcling` invocation by enabling in the `.rootrc` the `ACLiC.ExtraRootclingFlags [-opts]` line.
 - A call to `ROOT::EnableThreadSafety` is not required before using `TThreadExecutor` or `TTreeProcessorMT` anymore
 - `TTreeProcessorMT` does not silently activate implicit multi-threading features anymore. An explicit call to
