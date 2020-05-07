@@ -13,9 +13,7 @@
 set(Libraries TMVA)
 
 if (CUDA_FOUND AND  tmva-gpu)
-include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
-else()
-include_directories(${ROOT_INCLUDE_DIRS})
+include_directories(${CUDA_INCLUDE_DIRS})
 endif()
 
 #---Reference test

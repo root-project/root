@@ -11,12 +11,10 @@
 
 set(Libraries TMVA)
 
-include_directories(${ROOT_INCLUDE_DIRS})
-
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND AND tmva-gpu)
 
-  include_directories(${ROOT_INCLUDE_DIRS}  ${CUDA_INCLUDE_DIRS})
+  include_directories(${CUDA_INCLUDE_DIRS})
 
 
   #if using CUDA_ADD_EXECUTABLE CUDA_LIBRARIES are added automatically

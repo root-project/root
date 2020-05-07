@@ -5,7 +5,6 @@
 
 
 set(Libraries TMVA)
-include_directories(${ROOT_INCLUDE_DIRS})
 
 
 #--- CUDA tests. ---------------------------

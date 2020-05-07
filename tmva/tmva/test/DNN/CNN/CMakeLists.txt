@@ -70,10 +70,8 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-MixedArchitectures COMMAND testMixedArchitectures)
 
 endif()
 
-include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
+include_directories(${CUDA_INCLUDE_DIRS})
 
-else()
-include_directories(${ROOT_INCLUDE_DIRS})
 endif()
 
 #-- -test of reference architecture
