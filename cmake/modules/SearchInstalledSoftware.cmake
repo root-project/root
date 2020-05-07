@@ -523,6 +523,11 @@ if(opengl AND NOT builtin_glew)
     if(GLEW_FOUND AND APPLE AND CMAKE_VERSION VERSION_GREATER 3.15)
       message(FATAL_ERROR "Please enable builtin Glew due bug in latest CMake (use cmake option -Dbuiltin_glew=ON).")
       unset(GLEW_FOUND)
+    elseif(GLEW_FOUND AND NOT TARGET GLEW::GLEW)
+      add_library(GLEW::GLEW UNKNOWN IMPORTED)
+      set_target_properties(GLEW::GLEW PROPERTIES
+      IMPORTED_LOCATION "${GLEW_LIBRARIES}"
+      INTERFACE_INCLUDE_DIRECTORIES "${GLEW_INCLUDE_DIRS}")
     endif()
     if(NOT GLEW_FOUND)
       message(STATUS "GLEW not found. Switching on builtin_glew option")
