@@ -1078,6 +1078,14 @@ TH1F *TMultiGraph::GetHistogram()
       }
       if (g->GetN() > npt) npt = g->GetN();
    }
+   if (rwxmin == rwxmax) rwxmax += 1.;
+   if (rwymin == rwymax) rwymax += 1.;
+   double dx = 0.05*(rwxmax-rwxmin);
+   double dy = 0.05*(rwymax-rwymin);
+   rwxmin = rwxmin - dx;
+   rwxmax = rwxmax + dx;
+   rwymin = rwymin - dy;
+   rwymax = rwymax + dy;
    fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(rwymin);
