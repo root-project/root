@@ -163,7 +163,8 @@ if(builtin_llvm)
 
   if(NOT DEFINED LLVM_ENABLE_ASSERTIONS)
     if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)"
-     OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
+     OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)"
+     OR CMAKE_CXX_FLAGS MATCHES "-UNDEBUG")
       set(LLVM_ENABLE_ASSERTIONS TRUE)
     else()
       set(LLVM_ENABLE_ASSERTIONS FALSE)
