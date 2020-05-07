@@ -32,7 +32,7 @@ ROOT_OBJECT_LIBRARY(TextInput
   src/textinput/TextInput.cpp
 )
 
-target_include_directories(TextInput PRIVATE 
+target_include_directories(TextInput PRIVATE
    ${CMAKE_SOURCE_DIR}/core/textinput/src
    ${CMAKE_SOURCE_DIR}/core/base/inc
    ${CMAKE_SOURCE_DIR}/core/clib/inc
@@ -45,4 +45,3 @@ target_include_directories(TextInput PRIVATE
 )
 
 ROOT_INSTALL_HEADERS()
-set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
