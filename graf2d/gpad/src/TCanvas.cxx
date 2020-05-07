@@ -41,6 +41,7 @@
 #include "TAxis.h"
 #include "TH1.h"
 #include "TGraph.h"
+#include "TMath.h"
 #include "TView.h"
 
 #include "TVirtualMutex.h"
@@ -2035,6 +2036,95 @@ void TCanvas::SetName(const char *name)
    }
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Function to resize a canvas so that the plot inside is shown in real aspect
+/// ratio
+///
+/// \param[in] axis 1 for resizing horizontally (x-axis) in order to get real
+///            aspect ratio, 2 for the resizing vertically (y-axis)
+/// \return false if error is encountered, true otherwise
+///
+/// ~~~ {.cpp}
+/// hpxpy->Draw();
+/// c1->SetRealAspectRatio();
+/// ~~~
+///
+///  - For defining the concept of real aspect ratio, it is assumed that x and y
+///    axes are in same units, e.g. both in MeV or both in ns.
+///  - You can resize either the width of the canvas or the height, but not both
+///    at the same time
+///  - Call this function AFTER drawing AND zooming (SetUserRange) your TGraph or
+///    Histogram, otherwise it cannot infer your actual axes lengths
+///  - This function ensures that the TFrame has a real aspect ratio, this does not
+///    mean that the full pad (i.e. the canvas or png output) including margins has
+///    exactly the same ratio
+///  - This function does not work if the canvas is divided in several subpads
+
+bool TCanvas::SetRealAspectRatio(const Int_t axis)
+{
+   Update();
+
+   //Get how many pixels are occupied by the canvas
+   Int_t npx = GetWw();
+   Int_t npy = GetWh();
+
+   //Get x-y coordinates at the edges of the canvas (extrapolating outside the axes, NOT at the edges of the histogram)
+   Double_t x1 = GetX1();
+   Double_t y1 = GetY1();
+   Double_t x2 = GetX2();
+   Double_t y2 = GetY2();
+
+   //Get the length of extrapolated x and y axes
+   Double_t xlength2 = x2 - x1;
+   Double_t ylength2 = y2 - y1;
+   Double_t ratio2   = xlength2/ylength2;
+
+   //Now get the number of pixels including the canvas borders
+   Int_t bnpx = GetWindowWidth();
+   Int_t bnpy = GetWindowHeight();
+
+   if (axis==1) {
+      SetCanvasSize(TMath::Nint(npy*ratio2), npy);
+      SetWindowSize((bnpx-npx)+TMath::Nint(npy*ratio2), bnpy);
+   } else if (axis==2) {
+      SetCanvasSize(npx, TMath::Nint(npx/ratio2));
+      SetWindowSize(bnpx, (bnpy-npy)+TMath::Nint(npx/ratio2));
+   } else {
+      Error("SetRealAspectRatio", "axis value %d is neither 1 (resize along x-axis) nor 2 (resize along y-axis).",axis);
+      return false;
+   }
+
+   //Check now that resizing has worked
+
+   Update();
+
+   //Get how many pixels are occupied by the canvas
+   npx = GetWw();
+   npy = GetWh();
+
+   //Get x-y coordinates at the edges of the canvas (extrapolating outside the axes,
+   //NOT at the edges of the histogram)
+   x1 = GetX1();
+   y1 = GetY1();
+   x2 = GetX2();
+   y2 = GetY2();
+
+   //Get the length of extrapolated x and y axes
+   xlength2 = x2 - x1;
+   ylength2 = y2 - y1;
+   ratio2 = xlength2/ylength2;
+
+   //Check accuracy +/-1 pixel due to rounding
+   if (abs(TMath::Nint(npy*ratio2) - npx)<2) {
+      return true;
+   } else {
+      Error("SetRealAspectRatio", "Resizing failed.");
+      return false;
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set selected canvas.

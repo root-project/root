@@ -220,6 +220,7 @@ public:
    void              SetBatch(Bool_t batch=kTRUE);
    static  void      SetFolder(Bool_t isfolder=kTRUE);
    void              SetPadSave(TPad *pad) {fPadSave = pad;}
+   bool              SetRealAspectRatio(const Int_t axis = 1); // *MENU*
    void              SetRetained(Bool_t retained=kTRUE) { fRetained=retained;}
    void              SetTitle(const char *title="");
    virtual void      ToggleEventStatus();

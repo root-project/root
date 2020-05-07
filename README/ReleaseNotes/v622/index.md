@@ -142,6 +142,8 @@ into RooFit's message stream number 2. The verbosity can therefore be adjusted u
   - Take into account the Z errors when defining the frame to paint a TGraph2DErrors.
   - Implement the of "F" in `TPad::RedrawAxis` to allow the plot's frame redrawing when
     erased.
+  - Implement `TCanvas::SetRealAspectRatio` to resize a canvas so that the plot inside is
+    shown in real aspect.
 
 ## 3D Graphics Libraries
 
