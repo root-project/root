@@ -5,7 +5,6 @@
 
 
 set(Libraries TMVA)
-include_directories(${ROOT_INCLUDE_DIRS})
 
 # LSTM - Forward Reference
 #ROOT_EXECUTABLE(testLSTMForwardPass TestLSTMForwardPass.cxx LIBRARIES ${Libraries})
