@@ -105,7 +105,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
 
 
    TFile *input(0);
-   TString fname = "./tmva_example_multiple_background.root";
+   TString fname = "./tmva_example_multiclass.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
    }
