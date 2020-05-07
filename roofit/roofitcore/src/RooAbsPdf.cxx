@@ -2768,7 +2768,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Pre-processing if p.d.f. contains a fit range and there is no command specifying one,
   // add a fit range as default range
   RooCmdArg* plotRange(0) ;
-  RooCmdArg* normRange2(0) ;  
+  RooCmdArg* normRange2(0);
   if (getStringAttribute("fitrange") && !cmdList.FindObject("Range") && 
       !cmdList.FindObject("RangeWithName")) {
     plotRange = (RooCmdArg*) RooFit::Range(getStringAttribute("fitrange")).Clone() ;    
@@ -2781,9 +2781,13 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   }
 
   if (plotRange || normRange2) {
-    coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f was fitted in range and no explicit " 
-		    << (plotRange?"plot":"") << ((plotRange&&normRange2)?",":"")
-		    << (normRange2?"norm":"") << " range was specified, using fit range as default" << endl ;
+    coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f was fitted in a subrange and no explicit "
+		    << (plotRange?"Range()":"") << ((plotRange&&normRange2)?" and ":"")
+		    << (normRange2?"NormRange()":"") << " was specified. Plotting / normalising in fit range. To override, do one of the following"
+		    << "\n\t- Clear the automatic fit range attribute: <pdf>.setStringAttribute(\"fitrange\", nullptr);"
+		    << "\n\t- Explicitly specify the plotting range: Range(\"<rangeName>\")."
+		    << "\n\t- Explicitly specify where to compute the normalisation: NormRange(\"<rangeName>\")."
+		    << "\n\tThe default (full) range can be denoted with Range(\"\") / NormRange(\"\")."<< endl ;
   }
 
   // Sanity checks
@@ -2880,21 +2884,21 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
         nameSuffix.Append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
 
-      } else if (pc.hasProcessed("RangeWithName")) {    
-        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName","",false), ",")) {
-          if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
+      } else if (pc.hasProcessed("RangeWithName")) {
+
+        for (const std::string& rangeNameToken : RooHelpers::tokenise(pc.getString("rangeName", "", false), ",", /*returnEmptyToken=*/true)) {
+          const char* thisRangeName = rangeNameToken.empty() ? nullptr : rangeNameToken.c_str();
+          if (thisRangeName && !frame->getPlotVar()->hasRange(thisRangeName)) {
             coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
                 << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
             continue;
           }
-          const double rangeLo = frame->getPlotVar()->getMin(rangeNameToken.c_str());
-          const double rangeHi = frame->getPlotVar()->getMax(rangeNameToken.c_str());
-          rangeLim.push_back(make_pair(rangeLo,rangeHi));
+          rangeLim.push_back(frame->getPlotVar()->getRange(thisRangeName));
         }
         adjustNorm = pc.getInt("rangeWNAdjustNorm") ;
         hasCustomRange = kTRUE ;
 
-        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName",0,kTRUE) << "'" ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName", "", false) << "'" ;
         if (!pc.hasProcessed("NormRange")) {
           ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
         } else {
@@ -2904,21 +2908,20 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         nameSuffix.Append(Form("_Range[%s]",pc.getString("rangeName"))) ;
       } 
       // Specification of a normalization range override those in a regular range
-      if (pc.hasProcessed("NormRange")) {    
+      if (pc.hasProcessed("NormRange")) {
         rangeLim.clear();
-        for (const auto& rangeNameToken : RooHelpers::tokenise(pc.getString("normRangeName",0,true), ",")) {
-          if (!frame->getPlotVar()->hasRange(rangeNameToken.c_str())) {
+        for (const auto& rangeNameToken : RooHelpers::tokenise(pc.getString("normRangeName", "", false), ",", /*returnEmptyToken=*/true)) {
+          const char* thisRangeName = rangeNameToken.empty() ? nullptr : rangeNameToken.c_str();
+          if (thisRangeName && !frame->getPlotVar()->hasRange(thisRangeName)) {
             coutE(Plotting) << "Range '" << rangeNameToken << "' not defined for variable '"
                 << frame->getPlotVar()->GetName() << "'. Ignoring ..." << std::endl;
             continue;
           }
-          const double rangeLo = frame->getPlotVar()->getMin(rangeNameToken.c_str());
-          const double rangeHi = frame->getPlotVar()->getMax(rangeNameToken.c_str());
-          rangeLim.push_back(make_pair(rangeLo,rangeHi));
+          rangeLim.push_back(frame->getPlotVar()->getRange(thisRangeName));
         }
         adjustNorm = kTRUE ;
         hasCustomRange = kTRUE ;
-        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName",0,kTRUE) << "'" << endl ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName", "", false) << "'" << endl ;
 
         nameSuffix.Append(Form("_NormRange[%s]",pc.getString("rangeName"))) ;
 
