@@ -12,7 +12,7 @@
 
 add_library(RGlew INTERFACE)
 target_include_directories(RGlew INTERFACE inc/)
-target_link_libraries(RGlew INTERFACE GLEW)
+target_link_libraries(RGlew INTERFACE GLEW::GLEW)
 #target_include_directories(RGlew INTERFACE $<BUILD_INTERFACE:${GLEW_INCLUDE_DIR}>)
 
 # We still need to install TGLIncludes.h into include/
