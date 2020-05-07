@@ -1589,7 +1589,7 @@
       JSROOT.TooltipHandler.prototype.Cleanup.call(this);
    }
 
-   TFramePainter.prototype.Redraw = function() {
+   TFramePainter.prototype.Redraw = function(reason) {
 
       var pp = this.pad_painter();
       if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
@@ -1908,6 +1908,7 @@
    }
 
    TFramePainter.prototype.ProcessKeyPress = function(evnt) {
+      if (!JSROOT.key_handling) return;
 
       var main = this.select_main();
       if (main.empty()) return;
@@ -2598,9 +2599,6 @@
          }
       }
 
-      // one need to copy event, while after call back event may be changed
-      menu_painter.ctx_menu_evnt = evnt;
-
       if (!exec_painter) exec_painter = menu_painter;
 
       JSROOT.Painter.createMenu(menu_painter, function(menu) {
@@ -2614,10 +2612,9 @@
             exec_painter.FillObjectExecMenu(menu, kind, function() {
                 // suppress any running zooming
                 menu.painter.SwitchTooltip(false);
-                menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true));
+                menu.show(null, menu.painter.SwitchTooltip.bind(menu.painter, true));
             });
-
-      });  // end menu creation
+      }, evnt);  // end menu creation
    }
 
    /** @summary Show axis status message
@@ -3359,14 +3356,12 @@
       }
 
       JSROOT.Painter.createMenu(this, function(menu) {
-
          menu.painter.FillContextMenu(menu);
-
-         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(evnt); });
-      }); // end menu creation
+         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(); });
+      }, evnt); // end menu creation
    }
 
-   TPadPainter.prototype.Redraw = function(resize) {
+   TPadPainter.prototype.Redraw = function(reason) {
 
       // prevent redrawing
       if (this._doing_pad_draw)
@@ -3383,7 +3378,7 @@
       // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
       for (var i = 0; i < this.painters.length; ++i) {
          var sub = this.painters[i];
-         if (showsubitems || sub.this_pad_name) sub.Redraw(resize);
+         if (showsubitems || sub.this_pad_name) sub.Redraw(reason);
       }
    }
 
@@ -3426,7 +3421,7 @@
       // If redrawing was forced for canvas, same applied for sub-elements
       if (changed)
          for (var i = 0; i < this.painters.length; ++i)
-            this.painters[i].Redraw(force ? false : true);
+            this.painters[i].Redraw(force ? "redraw" : "resize");
 
       return changed;
    }
@@ -3982,8 +3977,8 @@
 
        JSROOT.Painter.createMenu(selp, function(menu) {
           if (selp.FillContextMenu(menu, selkind))
-             setTimeout(menu.show.bind(menu, evnt), 50);
-       });
+             setTimeout(menu.show.bind(menu), 50);
+       }, evnt);
    }
 
    TPadPainter.prototype.SaveAs = function(kind, full_canvas, filename) {
@@ -4153,9 +4148,9 @@
 
          if (JSROOT.Painter.closeMenu()) return;
 
-         var pthis = this, evnt = d3.event;
+         var pthis = this;
 
-         JSROOT.Painter.createMenu(pthis, function(menu) {
+         JSROOT.Painter.createMenu(this, function(menu) {
             menu.add("header:Menus");
 
             if (pthis.iscan)
@@ -4190,8 +4185,8 @@
                }
             }
 
-            menu.show(evnt);
-         });
+            menu.show();
+         }, d3.event);
 
          return;
       }

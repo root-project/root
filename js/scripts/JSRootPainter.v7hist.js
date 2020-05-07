@@ -23,7 +23,7 @@
 
    // =============================================================
 
-   function THistPainter(histo) {
+   function RHistPainter(histo) {
       JSROOT.TObjectPainter.call(this, histo);
       this.csstype = "hist";
       this.draw_content = true;
@@ -34,10 +34,10 @@
       this.zoom_changed_interactive = 0;
    }
 
-   THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+   RHistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
 
    // function ensure that frame is drawn on the canvas
-   THistPainter.prototype.PrepareFrame = function(divid) {
+   RHistPainter.prototype.PrepareFrame = function(divid) {
       this.SetDivId(divid, -1);
 
       if (!this.frame_painter())
@@ -46,19 +46,19 @@
       return this.SetDivId(divid, 1);
    }
 
-   THistPainter.prototype.GetHImpl = function(obj) {
+   RHistPainter.prototype.GetHImpl = function(obj) {
       if (obj && obj.fHistImpl)
          return obj.fHistImpl.fIO;
       return null;
    }
 
-   THistPainter.prototype.GetHisto = function() {
+   RHistPainter.prototype.GetHisto = function() {
       var obj = this.GetObject(), histo = this.GetHImpl(obj);
 
       if (histo && !histo.getBinContent) {
-         console.log('histo type', histo._typename);
          if (histo.fAxes._1) {
-            histo.getBin = function(x, y) { return (x + (this.fAxes._0.GetNumBins() + 2) * y); }
+            histo.getBin = function(x, y) { return (x-1)  + this.fAxes._0.GetNumBins() * (y-1); }
+            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
             histo.getBinContent = function(x, y) { return this.fStatistics.fBinContent[this.getBin(x, y)]; }
             histo.getBinError = function(x,y) {
                var bin = this.getBin(x,y);
@@ -66,14 +66,14 @@
                   return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[bin]));
             }
-         } else {
 
-            histo.getBinContent = function(bin) {
-               return this.fStatistics.fBinContent[bin];
-            }
+         } else {
+            histo.getBin = function(bin) { return bin; }
+            // FIXME: all normal ROOT methods uses indx+1 logic, but RHist has no undeflow/overflow bins now
+            histo.getBinContent = function(bin) { return this.fStatistics.fBinContent[bin-1]; }
             histo.getBinError = function(bin) {
                if (this.fStatistics.fSumWeightsSquared)
-                  return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin]);
+                  return Math.sqrt(this.fStatistics.fSumWeightsSquared[bin-1]);
                return Math.sqrt(Math.abs(this.getBinContent(bin)));
             }
          }
@@ -82,30 +82,30 @@
       return histo;
    }
 
-   THistPainter.prototype.IsTProfile = function() {
+   RHistPainter.prototype.IsTProfile = function() {
       return false;
    }
 
-   THistPainter.prototype.IsTH1K = function() {
+   RHistPainter.prototype.IsTH1K = function() {
       return false;
    }
 
-   THistPainter.prototype.IsTH2Poly = function() {
+   RHistPainter.prototype.IsTH2Poly = function() {
       return false;
    }
 
-   THistPainter.prototype.DecodeOptions = function(opt) {
+   RHistPainter.prototype.DecodeOptions = function(opt) {
       if (!this.options) this.options = { Hist : 1 };
    }
 
-   THistPainter.prototype.Clear3DScene = function() {
+   RHistPainter.prototype.Clear3DScene = function() {
       var fp = this.frame_painter();
       if (fp && typeof fp.Create3DScene === 'function')
          fp.Create3DScene(-1);
       this.mode3d = false;
    }
 
-   THistPainter.prototype.Cleanup = function() {
+   RHistPainter.prototype.Cleanup = function() {
 
       // clear all 3D buffers
       this.Clear3DScene();
@@ -115,11 +115,11 @@
       JSROOT.TObjectPainter.prototype.Cleanup.call(this);
    }
 
-   THistPainter.prototype.Dimension = function() {
+   RHistPainter.prototype.Dimension = function() {
       return 1;
    }
 
-   THistPainter.prototype.ScanContent = function(when_axis_changed) {
+   RHistPainter.prototype.ScanContent = function(when_axis_changed) {
       // function will be called once new histogram or
       // new histogram content is assigned
       // one should find min,max,nbins, maxcontent values
@@ -128,7 +128,7 @@
       alert("HistPainter.prototype.ScanContent not implemented");
    }
 
-   THistPainter.prototype.DrawAxes = function() {
+   RHistPainter.prototype.DrawAxes = function() {
       // return true when axes was drawn
       var main = this.frame_painter();
       if (!main) return false;
@@ -144,7 +144,7 @@
       return main.DrawAxes(true);
    }
 
-   THistPainter.prototype.CheckHistDrawAttributes = function() {
+   RHistPainter.prototype.CheckHistDrawAttributes = function() {
 
       this.createAttFill( { pattern: 0, color: 0 });
 
@@ -154,7 +154,7 @@
       this.createAttLine({ color: lcol || 'black', width : parseInt(lwidth) || 1 });
    }
 
-   THistPainter.prototype.UpdateObject = function(obj, opt) {
+   RHistPainter.prototype.UpdateObject = function(obj, opt) {
 
       var origin = this.GetObject();
 
@@ -184,7 +184,7 @@
       return true;
    }
 
-   THistPainter.prototype.GetAxis = function(name) {
+   RHistPainter.prototype.GetAxis = function(name) {
       var histo = this.GetHisto();
       if (!histo || !histo.fAxes) return null;
 
@@ -200,7 +200,6 @@
       if (axis._typename == "ROOT::Experimental::RAxisEquidistant") {
          axis.min = axis.fLow;
          axis.max = axis.fLow + axis.fNBinsNoOver/axis.fInvBinWidth;
-
          axis.GetNumBins = function() { return this.fNBinsNoOver; }
          axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; };
          axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); };
@@ -208,7 +207,7 @@
       } else {
          axis.min = axis.fBinBorders[0];
          axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
-         axis.GetNumBins = function() { return this.fBinBorders.length-1; }
+         axis.GetNumBins = function() { return this.fBinBorders.length; }
          axis.GetBinCoord = function(bin) {
             var indx = Math.round(bin);
             if (indx <= 0) return this.fBinBorders[0];
@@ -227,7 +226,7 @@
       return axis;
    }
 
-   THistPainter.prototype.CreateAxisFuncs = function(with_y_axis, with_z_axis) {
+   RHistPainter.prototype.CreateAxisFuncs = function(with_y_axis, with_z_axis) {
       // here functions are defined to convert index to axis value and back
       // introduced to support non-equidistant bins
 
@@ -249,7 +248,7 @@
       this.zmax = axis.max;
    }
 
-   THistPainter.prototype.AddInteractive = function() {
+   RHistPainter.prototype.AddInteractive = function() {
       // only first painter in list allowed to add interactive functionality to the frame
 
       if (this.is_main_painter()) {
@@ -259,24 +258,24 @@
    }
 
 
-   THistPainter.prototype.DrawBins = function() {
+   RHistPainter.prototype.DrawBins = function() {
       alert("HistPainter.DrawBins not implemented");
    }
 
-   THistPainter.prototype.ToggleTitle = function(arg) {
+   RHistPainter.prototype.ToggleTitle = function(arg) {
       return false;
    }
 
-   THistPainter.prototype.DrawTitle = function() {
+   RHistPainter.prototype.DrawTitle = function() {
    }
 
-   THistPainter.prototype.UpdateStatWebCanvas = function() {
+   RHistPainter.prototype.UpdateStatWebCanvas = function() {
    }
 
-   THistPainter.prototype.ToggleStat = function(arg) {
+   RHistPainter.prototype.ToggleStat = function(arg) {
    }
 
-   THistPainter.prototype.GetSelectIndex = function(axis, size, add) {
+   RHistPainter.prototype.GetSelectIndex = function(axis, size, add) {
       // be aware - here indexes starts from 0
       var indx = 0,
           main = this.frame_painter(),
@@ -298,19 +297,19 @@
       return indx;
    }
 
-   THistPainter.prototype.FindStat = function() {
+   RHistPainter.prototype.FindStat = function() {
       return null;
    }
 
-   THistPainter.prototype.IgnoreStatsFill = function() {
+   RHistPainter.prototype.IgnoreStatsFill = function() {
       return true;
    }
 
-   THistPainter.prototype.CreateStat = function(force) {
+   RHistPainter.prototype.CreateStat = function(force) {
       return null;
    }
 
-   THistPainter.prototype.ButtonClick = function(funcname) {
+   RHistPainter.prototype.ButtonClick = function(funcname) {
       // TODO: move to frame painter
       switch(funcname) {
          case "ToggleZoom":
@@ -332,7 +331,7 @@
       return false;
    }
 
-   THistPainter.prototype.FillToolbar = function(not_shown) {
+   RHistPainter.prototype.FillToolbar = function(not_shown) {
       var pp = this.pad_painter();
       if (!pp) return;
 
@@ -346,7 +345,7 @@
       if (!not_shown) pp.ShowButtons();
    }
 
-   THistPainter.prototype.Get3DToolTip = function(indx) {
+   RHistPainter.prototype.Get3DToolTip = function(indx) {
       var histo = this.GetHisto(),
           tip = { bin: indx, name: histo.fName || "histo", title: histo.fTitle };
       switch (this.Dimension()) {
@@ -377,7 +376,7 @@
    }
 
    /** Create contour levels for currently selected Z range @private */
-   THistPainter.prototype.CreateContour = function(main, palette, scatter_plot) {
+   RHistPainter.prototype.CreateContour = function(main, palette, scatter_plot) {
       if (!main || !palette) return;
 
       var nlevels = JSROOT.gStyle.fNumberContours,
@@ -403,7 +402,7 @@
       }
    }
 
-   THistPainter.prototype.FillContextMenu = function(menu) {
+   RHistPainter.prototype.FillContextMenu = function(menu) {
 
      var histo = this.GetHisto();
 
@@ -476,12 +475,12 @@
       return true;
    }
 
-   THistPainter.prototype.UpdatePaletteDraw = function() {
+   RHistPainter.prototype.UpdatePaletteDraw = function() {
       var pp = this.FindPainterFor(undefined, undefined, "ROOT::Experimental::RPaletteDrawable");
       if (pp) pp.DrawPalette();
    }
 
-   THistPainter.prototype.FillPaletteMenu = function(menu) {
+   RHistPainter.prototype.FillPaletteMenu = function(menu) {
 
       var curr = this.options.Palette, hpainter = this;
       if ((curr===null) || (curr===0)) curr = JSROOT.gStyle.Palette;
@@ -518,13 +517,13 @@
       menu.add("endsub:");
    }
 
-   THistPainter.prototype.DrawColorPalette = function(enabled, postpone_draw, can_move) {
+   RHistPainter.prototype.DrawColorPalette = function(enabled, postpone_draw, can_move) {
       // only when create new palette, one could change frame size
 
       return null;
    }
 
-   THistPainter.prototype.ToggleColz = function() {
+   RHistPainter.prototype.ToggleColz = function() {
       var can_toggle = this.options.Mode3D ? (this.options.Lego === 12 || this.options.Lego === 14 || this.options.Surf === 11 || this.options.Surf === 12) :
          this.options.Color || this.options.Contour;
 
@@ -534,7 +533,7 @@
       }
    }
 
-   THistPainter.prototype.ToggleMode3D = function() {
+   RHistPainter.prototype.ToggleMode3D = function() {
       this.options.Mode3D = !this.options.Mode3D;
 
       if (this.options.Mode3D) {
@@ -552,7 +551,7 @@
       this.InteractiveRedraw("pad", "drawopt");
    }
 
-   THistPainter.prototype.PrepareColorDraw = function(args) {
+   RHistPainter.prototype.PrepareColorDraw = function(args) {
 
       if (!args) args = { rounding: true, extra: 0, middle: 0 };
 
@@ -620,6 +619,7 @@
       for (i = res.i1; i < res.i2; ++i) {
          for (j = res.j1; j < res.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
+            if (isNaN(binz)) continue;
             res.sumz += binz;
             if (args.pixel_density) {
                binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
@@ -647,16 +647,16 @@
       return res;
    }
 
-   // ======= TH1 painter================================================
+   // ======= RH1 painter================================================
 
-   function TH1Painter(histo) {
-      THistPainter.call(this, histo);
+   function RH1Painter(histo) {
+      RHistPainter.call(this, histo);
       this.wheel_zoomy = false;
    }
 
-   TH1Painter.prototype = Object.create(THistPainter.prototype);
+   RH1Painter.prototype = Object.create(RHistPainter.prototype);
 
-   TH1Painter.prototype.ConvertTH1K = function() {
+   RH1Painter.prototype.ConvertTH1K = function() {
       var histo = this.GetObject();
 
       if (histo.fReady) return;
@@ -669,7 +669,7 @@
       histo.fReady = true;
    }
 
-   TH1Painter.prototype.ScanContent = function(when_axis_changed) {
+   RH1Painter.prototype.ScanContent = function(when_axis_changed) {
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
 
       var histo = this.GetHisto();
@@ -744,7 +744,7 @@
       }
    }
 
-   TH1Painter.prototype.CountStat = function(cond) {
+   RH1Painter.prototype.CountStat = function(cond) {
       var profile = this.IsTProfile(),
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           left = this.GetSelectIndex("x", "left"),
@@ -798,7 +798,7 @@
       return res;
    }
 
-   TH1Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
+   RH1Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
       if (this.IgnoreStatsFill()) return false;
@@ -867,7 +867,7 @@
       return true;
    }
 
-   TH1Painter.prototype.DrawBars = function(width, height) {
+   RH1Painter.prototype.DrawBars = function(width, height) {
 
       this.CreateG(true);
 
@@ -941,7 +941,7 @@
                .style("fill", d3.rgb(this.fillatt.color).darker(0.5).toString());
    }
 
-   TH1Painter.prototype.DrawFilledErrors = function(width, height) {
+   RH1Painter.prototype.DrawFilledErrors = function(width, height) {
       this.CreateG(true);
 
       var left = this.GetSelectIndex("x", "left", -1),
@@ -979,7 +979,7 @@
                  .call(this.fillatt.func);
    }
 
-   TH1Painter.prototype.DrawBins = function() {
+   RH1Painter.prototype.DrawBins = function() {
       // new method, create svg:path expression ourself directly from histogram
       // all points will be used, compress expression when too large
 
@@ -1251,7 +1251,7 @@
 
    }
 
-   TH1Painter.prototype.GetBinTips = function(bin) {
+   RH1Painter.prototype.GetBinTips = function(bin) {
       var tips = [],
           name = this.GetTipName(),
           pmain = this.frame_painter(),
@@ -1287,7 +1287,7 @@
       return tips;
    }
 
-   TH1Painter.prototype.ProcessTooltip = function(pnt) {
+   RH1Painter.prototype.ProcessTooltip = function(pnt) {
       if ((pnt === null) || !this.draw_content || this.options.Mode3D) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
@@ -1518,7 +1518,7 @@
    }
 
 
-   TH1Painter.prototype.FillHistContextMenu = function(menu) {
+   RH1Painter.prototype.FillHistContextMenu = function(menu) {
 
       menu.add("Auto zoom-in", this.AutoZoom);
 
@@ -1538,7 +1538,7 @@
       });
    }
 
-   TH1Painter.prototype.AutoZoom = function() {
+   RH1Painter.prototype.AutoZoom = function() {
       var left = this.GetSelectIndex("x", "left", -1),
           right = this.GetSelectIndex("x", "right", 1),
           dist = right - left, histo = this.GetHisto(), xaxis = this.GetAxis("x");
@@ -1563,7 +1563,7 @@
          this.frame_painter().Zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
    }
 
-   TH1Painter.prototype.CanZoomIn = function(axis,min,max) {
+   RH1Painter.prototype.CanZoomIn = function(axis,min,max) {
       var xaxis = this.GetAxis("x");
 
       if ((axis=="x") && (xaxis.FindBin(max,0.5) - xaxis.FindBin(min,0) > 1)) return true;
@@ -1574,7 +1574,7 @@
       return false;
    }
 
-   TH1Painter.prototype.CallDrawFunc = function(callback, resize) {
+   RH1Painter.prototype.CallDrawFunc = function(callback, reason) {
 
       var main = this.frame_painter();
 
@@ -1585,10 +1585,10 @@
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
-      this[funcname](callback, resize);
+      this[funcname](callback, reason);
    }
 
-   TH1Painter.prototype.Draw2D = function(call_back) {
+   RH1Painter.prototype.Draw2D = function(call_back, reason) {
 
       this.Clear3DScene();
       this.mode3d = false;
@@ -1609,20 +1609,20 @@
       JSROOT.CallBack(call_back);
    }
 
-   TH1Painter.prototype.Draw3D = function(call_back, resize) {
+   RH1Painter.prototype.Draw3D = function(call_back, reason) {
       this.mode3d = true;
       JSROOT.AssertPrerequisites('hist3d', function() {
-         this.Draw3D(call_back, resize);
+         this.Draw3D(call_back, reason);
       }.bind(this));
    }
 
-   TH1Painter.prototype.Redraw = function(resize) {
-      this.CallDrawFunc(null, resize);
+   RH1Painter.prototype.Redraw = function(reason) {
+      this.CallDrawFunc(null, reason);
    }
 
    function drawHist1(divid, histo, opt) {
       // create painter and add it to canvas
-      var painter = new TH1Painter(histo);
+      var painter = new RH1Painter(histo);
 
       if (!painter.PrepareFrame(divid)) return null;
 
@@ -1649,24 +1649,24 @@
 
    // ==================== painter for TH2 histograms ==============================
 
-   function TH2Painter(histo) {
-      THistPainter.call(this, histo);
+   function RH2Painter(histo) {
+      RHistPainter.call(this, histo);
       this.wheel_zoomy = true;
    }
 
-   TH2Painter.prototype = Object.create(THistPainter.prototype);
+   RH2Painter.prototype = Object.create(RHistPainter.prototype);
 
-   TH2Painter.prototype.Cleanup = function() {
+   RH2Painter.prototype.Cleanup = function() {
       delete this.tt_handle;
 
-      THistPainter.prototype.Cleanup.call(this);
+      RHistPainter.prototype.Cleanup.call(this);
    }
 
-   TH2Painter.prototype.Dimension = function() {
+   RH2Painter.prototype.Dimension = function() {
       return 2;
    }
 
-   TH2Painter.prototype.ToggleProjection = function(kind, width) {
+   RH2Painter.prototype.ToggleProjection = function(kind, width) {
 
       if (kind=="Projections") kind = "";
 
@@ -1696,7 +1696,7 @@
       if (canp) canp.ToggleProjection(this.is_projection, this.RedrawProjection.bind(this, "toggling", new_proj));
    }
 
-   TH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
+   RH2Painter.prototype.RedrawProjection = function(ii1, ii2, jj1, jj2) {
       // do nothing for the moment
 
       if (ii1 === "toggling") {
@@ -1707,8 +1707,8 @@
       if (!this.is_projection) return;
    }
 
-   TH2Painter.prototype.ExecuteMenuCommand = function(method, args) {
-      if (THistPainter.prototype.ExecuteMenuCommand.call(this,method, args)) return true;
+   RH2Painter.prototype.ExecuteMenuCommand = function(method, args) {
+      if (RHistPainter.prototype.ExecuteMenuCommand.call(this,method, args)) return true;
 
       if ((method.fName == 'SetShowProjectionX') || (method.fName == 'SetShowProjectionY')) {
          this.ToggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);
@@ -1718,7 +1718,7 @@
       return false;
    }
 
-   TH2Painter.prototype.FillHistContextMenu = function(menu) {
+   RH2Painter.prototype.FillHistContextMenu = function(menu) {
       // painter automatically bind to menu callbacks
 
       menu.add("sub:Projections", this.ToggleProjection);
@@ -1744,8 +1744,8 @@
          this.FillPaletteMenu(menu);
    }
 
-   TH2Painter.prototype.ButtonClick = function(funcname) {
-      if (THistPainter.prototype.ButtonClick.call(this, funcname)) return true;
+   RH2Painter.prototype.ButtonClick = function(funcname) {
+      if (RHistPainter.prototype.ButtonClick.call(this, funcname)) return true;
 
       switch(funcname) {
          case "ToggleColor": this.ToggleColor(); break;
@@ -1758,8 +1758,8 @@
       return true;
    }
 
-   TH2Painter.prototype.FillToolbar = function() {
-      THistPainter.prototype.FillToolbar.call(this, true);
+   RH2Painter.prototype.FillToolbar = function() {
+      RHistPainter.prototype.FillToolbar.call(this, true);
 
       var pp = this.pad_painter();
       if (!pp) return;
@@ -1771,7 +1771,7 @@
       pp.ShowButtons();
    }
 
-   TH2Painter.prototype.ToggleColor = function() {
+   RH2Painter.prototype.ToggleColor = function() {
 
       if (this.options.Mode3D) {
          this.options.Mode3D = false;
@@ -1787,7 +1787,7 @@
       // this.DrawColorPalette(this.options.Color && this.options.Zscale);
    }
 
-   TH2Painter.prototype.AutoZoom = function() {
+   RH2Painter.prototype.AutoZoom = function() {
       if (this.IsTH2Poly()) return; // not implemented
 
       var i1 = this.GetSelectIndex("x", "left", -1),
@@ -1836,7 +1836,7 @@
       if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax);
    }
 
-   TH2Painter.prototype.ScanContent = function(when_axis_changed) {
+   RH2Painter.prototype.ScanContent = function(when_axis_changed) {
 
       // no need to rescan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy) return;
@@ -1896,7 +1896,7 @@
       }
    }
 
-   TH2Painter.prototype.CountStat = function(cond) {
+   RH2Painter.prototype.CountStat = function(cond) {
       var histo = this.GetHisto(),
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0, stat_sumxy = 0,
@@ -1954,7 +1954,7 @@
       return res;
    }
 
-   TH2Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
+   RH2Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
       // if (this.IgnoreStatsFill()) return false;
@@ -2012,7 +2012,7 @@
       return true;
    }
 
-   TH2Painter.prototype.DrawBinsColor = function(w,h) {
+   RH2Painter.prototype.DrawBinsColor = function(w,h) {
       var histo = this.GetHisto(),
           handle = this.PrepareColorDraw(),
           colPaths = [], currx = [], curry = [],
@@ -2060,7 +2060,7 @@
       return handle;
    }
 
-   TH2Painter.prototype.BuildContour = function(handle, levels, palette, contour_func) {
+   RH2Painter.prototype.BuildContour = function(handle, levels, palette, contour_func) {
       var histo = this.GetHisto(), ddd = 0,
           painter = this,
           kMAXCONTOUR = 2004,
@@ -2275,7 +2275,7 @@
       }
    }
 
-   TH2Painter.prototype.DrawBinsContour = function(frame_w,frame_h) {
+   RH2Painter.prototype.DrawBinsContour = function(frame_w,frame_h) {
       var handle = this.PrepareColorDraw({ rounding: false, extra: 100, original: this.options.Proj != 0 }),
           main = this.frame_painter(),
           palette = main.GetPalette(),
@@ -2360,7 +2360,7 @@
       return handle;
    }
 
-   TH2Painter.prototype.CreatePolyBin = function(pmain, bin, text_pos) {
+   RH2Painter.prototype.CreatePolyBin = function(pmain, bin, text_pos) {
       var cmd = "", ngr, ngraphs = 1, gr = null;
 
       if (bin.fPoly._typename=='TMultiGraph')
@@ -2420,7 +2420,7 @@
       return cmd;
    }
 
-   TH2Painter.prototype.DrawPolyBinsColor = function(w,h) {
+   RH2Painter.prototype.DrawPolyBinsColor = function(w,h) {
       var histo = this.GetHisto(),
           pmain = this.frame_painter(),
           colPaths = [], textbins = [],
@@ -2504,7 +2504,7 @@
       return { poly: true };
    }
 
-   TH2Painter.prototype.DrawBinsText = function(w, h, handle) {
+   RH2Painter.prototype.DrawBinsText = function(w, h, handle) {
       var histo = this.GetHisto(),
           i,j,binz,colindx,binw,binh,lbl,posx,posy,sizex,sizey;
 
@@ -2560,7 +2560,7 @@
       return handle;
    }
 
-   TH2Painter.prototype.DrawBinsArrow = function(w, h) {
+   RH2Painter.prototype.DrawBinsArrow = function(w, h) {
       var histo = this.GetHisto(), cmd = "",
           i,j,binz,colindx,binw,binh,lbl, loop, dn = 1e-30, dx, dy, xc,yc,
           dxn,dyn,x1,x2,y1,y2, anr,si,co,
@@ -2626,7 +2626,7 @@
    }
 
 
-   TH2Painter.prototype.DrawBinsBox = function(w,h) {
+   RH2Painter.prototype.DrawBinsBox = function(w,h) {
 
       var histo = this.GetHisto(),
           handle = this.PrepareColorDraw({ rounding: false }),
@@ -2738,7 +2738,7 @@
       return handle;
    }
 
-   TH2Painter.prototype.DrawCandle = function(w,h) {
+   RH2Painter.prototype.DrawCandle = function(w,h) {
       var histo = this.GetHisto(), yaxis = this.GetAxis("y"),
           handle = this.PrepareColorDraw(),
           pmain = this.frame_painter(), // used for axis values conversions
@@ -2848,7 +2848,7 @@
       return handle;
    }
 
-   TH2Painter.prototype.DrawBinsScatter = function(w,h) {
+   RH2Painter.prototype.DrawBinsScatter = function(w,h) {
       var histo = this.GetHisto(),
           fp = this.frame_painter(),
           handle = this.PrepareColorDraw({ rounding: true, pixel_density: true, scatter_plot: true }),
@@ -2987,7 +2987,7 @@
       return handle;
    }
 
-   TH2Painter.prototype.DrawBins = function() {
+   RH2Painter.prototype.DrawBins = function() {
 
       if (!this.draw_content)
          return this.RemoveDrawG();
@@ -3028,7 +3028,7 @@
       this.tt_handle = handle;
    }
 
-   TH2Painter.prototype.GetBinTips = function (i, j) {
+   RH2Painter.prototype.GetBinTips = function (i, j) {
       var lines = [], pmain = this.frame_painter(),
            xaxis = this.GetAxis("y"), yaxis = this.GetAxis("y"),
            histo = this.GetHisto(),
@@ -3058,7 +3058,7 @@
       return lines;
    }
 
-   TH2Painter.prototype.GetCandleTips = function(p) {
+   RH2Painter.prototype.GetCandleTips = function(p) {
       var lines = [], main = this.frame_painter(), xaxis = this.GetAxis("y");
 
       lines.push(this.GetTipName() || "histo");
@@ -3072,7 +3072,7 @@
       return lines;
    }
 
-   TH2Painter.prototype.ProvidePolyBinHints = function(binindx, realx, realy) {
+   RH2Painter.prototype.ProvidePolyBinHints = function(binindx, realx, realy) {
 
       var histo = this.GetHisto(),
           bin = histo.fBins.arr[binindx],
@@ -3116,7 +3116,7 @@
       return lines;
    }
 
-   TH2Painter.prototype.ProcessTooltip = function(pnt) {
+   RH2Painter.prototype.ProcessTooltip = function(pnt) {
       if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
@@ -3343,7 +3343,7 @@
       return res;
    }
 
-   TH2Painter.prototype.CanZoomIn = function(axis,min,max) {
+   RH2Painter.prototype.CanZoomIn = function(axis,min,max) {
       // check if it makes sense to zoom inside specified axis range
 
       if (axis=="z") return true;
@@ -3353,7 +3353,7 @@
       return (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
-   TH2Painter.prototype.Draw2D = function(call_back, resize) {
+   RH2Painter.prototype.Draw2D = function(call_back, reason) {
 
       this.mode3d = false;
       this.Clear3DScene();
@@ -3376,14 +3376,14 @@
       JSROOT.CallBack(call_back);
    }
 
-   TH2Painter.prototype.Draw3D = function(call_back, resize) {
+   RH2Painter.prototype.Draw3D = function(call_back, reason) {
       this.mode3d = true;
       JSROOT.AssertPrerequisites('hist3d', function() {
-         this.Draw3D(call_back, resize);
+         this.Draw3D(call_back, reason);
       }.bind(this));
    }
 
-   TH2Painter.prototype.CallDrawFunc = function(callback, resize) {
+   RH2Painter.prototype.CallDrawFunc = function(callback, reason) {
 
       var main = this.frame_painter();
 
@@ -3393,16 +3393,16 @@
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
-      this[funcname](callback, resize);
+      this[funcname](callback, reason);
    }
 
-   TH2Painter.prototype.Redraw = function(resize) {
-      this.CallDrawFunc(null, resize);
+   RH2Painter.prototype.Redraw = function(reason) {
+      this.CallDrawFunc(null, reason);
    }
 
    function drawHist2(divid, obj, opt) {
       // create painter and add it to canvas
-      var painter = new TH2Painter(obj);
+      var painter = new RH2Painter(obj);
 
       if (!painter.PrepareFrame(divid)) return null;
 
@@ -3471,30 +3471,22 @@
       var pp = this.pad_painter();
       if (pp && pp._fast_drawing) return false;
 
-      var fp = this.frame_painter();
-      if (!fp) return false;
-
-      if (this.v7CommMode() == JSROOT.v7.CommMode.kNormal) {
-         // submit request to server
-         // last request will be always submittef
-         var req = {
-            _typename: "ROOT::Experimental::RHistStatRequest",
-            mask: this.GetObject().fShowMask,
-            xmin: [fp.scale_xmin, fp.scale_ymin],
-            xmax: [fp.scale_xmax, fp.scale_ymax]
-         };
-         this.v7SubmitRequest("stat", req, this.UpdateStatistic.bind(this));
-         return !!this.stats_lines; // if old statistic there - show it
+      var obj = this.GetObject();
+      if (obj.fLines !== undefined) {
+         this.stats_lines = obj.fLines;
+         delete obj.fLines;
+         return true;
       }
 
-      var main = this.main_painter();
+      if (this.v7CommMode() == JSROOT.v7.CommMode.kOffline) {
+         var main = this.main_painter();
+         if (!main || (typeof main.FillStatistic !== 'function')) return false;
+         // we take statistic from main painter
+         return main.FillStatistic(this, JSROOT.gStyle.fOptStat, JSROOT.gStyle.fOptFit);
+      }
 
-      // if (stats && stats.fLines) return true;
-
-      if (!main || (typeof main.FillStatistic !== 'function')) return false;
-
-      // we take statistic from main painter
-      return main.FillStatistic(this, JSROOT.gStyle.fOptStat, JSROOT.gStyle.fOptFit);
+      // show lines which are exists, maybe server request will be recieved later
+      return (this.stats_lines !== undefined);
    }
 
    RHistStatsPainter.prototype.Format = function(value, fmt) {
@@ -3585,7 +3577,6 @@
    RHistStatsPainter.prototype.ShowContextMenu = function() {
       d3.event.preventDefault();
       d3.event.stopPropagation(); // disable main context menu
-      var evnt = d3.event;
 
       JSROOT.Painter.createMenu(this, function(menu) {
          var obj = menu.painter.GetObject(),
@@ -3596,8 +3587,8 @@
          for (var n=0;n<obj.fEntries.length; ++n)
             menu.addchk((obj.fShowMask & (1<<n)), obj.fEntries[n], n, action);
 
-         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(evnt); });
-      });
+         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(); });
+      }, d3.event);
    }
 
    RHistStatsPainter.prototype.DrawStatistic = function(lines) {
@@ -3674,10 +3665,18 @@
       }
 
       if (lpath) this.draw_g.append("svg:path").attr("d",lpath) /*.call(this.lineatt.func)*/;
-
    }
 
-   RHistStatsPainter.prototype.Redraw = function() {
+   RHistStatsPainter.prototype.Redraw = function(reason) {
+      if ((reason == "zoom") && (this.v7CommMode() == JSROOT.v7.CommMode.kNormal)) {
+         var req = {
+            _typename: "ROOT::Experimental::RHistStatBoxBase::RRequest",
+            mask: this.GetObject().fShowMask // lines to show in stat box
+         };
+
+         this.v7SubmitRequest("stat", req, this.UpdateStatistic.bind(this));
+      }
+
       this.DrawStats();
    }
 
@@ -3695,9 +3694,9 @@
       return painter.DrawingReady();
    }
 
-   JSROOT.v7.THistPainter = THistPainter;
-   JSROOT.v7.TH1Painter = TH1Painter;
-   JSROOT.v7.TH2Painter = TH2Painter;
+   JSROOT.v7.RHistPainter = RHistPainter;
+   JSROOT.v7.RH1Painter = RH1Painter;
+   JSROOT.v7.RH2Painter = RH2Painter;
 
    JSROOT.v7.drawHist1 = drawHist1;
    JSROOT.v7.drawHist2 = drawHist2;

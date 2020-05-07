@@ -1788,6 +1788,12 @@
 
       var changed = false, fp = this, changes = {};
 
+      var req = {
+         _typename: "ROOT::Experimental::RFrame::RUserRanges",
+         values: [0, 0, 0, 0, 0, 0],
+         flags: [false, false, false, false, false, false]
+      };
+
       // first process zooming (if any)
       if (zoom_x || zoom_y || zoom_z)
          this.ForEachPainter(function(obj) {
@@ -1798,6 +1804,8 @@
                zoom_x = false;
                fp.v7AttrChange(changes, "x_zoommin", xmin);
                fp.v7AttrChange(changes, "x_zoommax", xmax);
+               req.values[0] = xmin; req.values[1] = xmax;
+               req.flags[0] = req.flags[1] = true;
             }
             if (zoom_y && obj.CanZoomIn("y", ymin, ymax)) {
                fp.zoom_ymin = ymin;
@@ -1806,6 +1814,8 @@
                zoom_y = false;
                fp.v7AttrChange(changes, "y_zoommin", ymin);
                fp.v7AttrChange(changes, "y_zoommax", ymax);
+               req.values[2] = ymin; req.values[3] = ymax;
+               req.flags[2] = req.flags[3] = true;
             }
             if (zoom_z && obj.CanZoomIn("z", zmin, zmax)) {
                fp.zoom_zmin = zmin;
@@ -1814,6 +1824,8 @@
                zoom_z = false;
                fp.v7AttrChange(changes, "z_zoommin", zmin);
                fp.v7AttrChange(changes, "z_zoommax", zmax);
+               req.values[4] = zmin; req.values[5] = zmax;
+               req.flags[4] = req.flags[5] = true;
             }
          });
 
@@ -1824,24 +1836,32 @@
             this.zoom_xmin = this.zoom_xmax = 0;
             fp.v7AttrChange(changes, "x_zoommin", null);
             fp.v7AttrChange(changes, "x_zoommax", null);
+            req.values[0] = req.values[1] = -1;
          }
          if (unzoom_y) {
             if (this.zoom_ymin !== this.zoom_ymax) changed = true;
             this.zoom_ymin = this.zoom_ymax = 0;
             fp.v7AttrChange(changes, "y_zoommin", null);
             fp.v7AttrChange(changes, "y_zoommax", null);
+            req.values[2] = req.values[3] = -1;
          }
          if (unzoom_z) {
             if (this.zoom_zmin !== this.zoom_zmax) changed = true;
             this.zoom_zmin = this.zoom_zmax = 0;
             fp.v7AttrChange(changes, "z_zoommin", null);
             fp.v7AttrChange(changes, "z_zoommax", null);
+            req.values[4] = req.values[5] = -1;
          }
       }
 
-      this.v7SendAttrChanges(changes);
+      if (this.v7CommMode() == JSROOT.v7.CommMode.kNormal) {
+         this.v7SubmitRequest("zoom", { _typename: "ROOT::Experimental::RFrame::RZoomRequest", ranges: req });
+      }
 
-      if (changed) this.RedrawPad();
+      // this.v7SendAttrChanges(changes);
+
+      if (changed)
+         this.InteractiveRedraw("pad", "zoom");
 
       return changed;
    }
@@ -2254,9 +2274,6 @@
          }
       }
 
-      // one need to copy event, while after call back event may be changed
-      menu_painter.ctx_menu_evnt = evnt;
-
       JSROOT.Painter.createMenu(menu_painter, function(menu) {
 
          var domenu = menu.painter.FillContextMenu(menu, kind, obj);
@@ -2272,10 +2289,10 @@
 
                // suppress any running zooming
                menu.painter.SwitchTooltip(false);
-               menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true));
+               menu.show(null, menu.painter.SwitchTooltip.bind(menu.painter, true));
             });
 
-      });  // end menu creation
+      }, evnt);  // end menu creation
    }
 
    /** Fill menu for frame when server is not there */
@@ -3318,8 +3335,6 @@
 
          d3.event.stopPropagation(); // disable main context menu
          d3.event.preventDefault();  // disable browser context menu
-
-         // one need to copy event, while after call back event may be changed
          evnt = d3.event;
 
          var fp = this.frame_painter();
@@ -3330,14 +3345,15 @@
 
          menu.painter.FillContextMenu(menu);
 
-         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(evnt); });
-      }); // end menu creation
+         menu.painter.FillObjectExecMenu(menu, "", function() { menu.show(); });
+      }, evnt); // end menu creation
    }
 
-   RPadPainter.prototype.Redraw = function(resize) {
+   RPadPainter.prototype.Redraw = function(reason) {
 
       // prevent redrawing
-      if (this._doing_pad_draw) return console.log('Prevent redrawing', this.pad.fName);
+      if (this._doing_pad_draw)
+         return console.log('Prevent pad redrawing');
 
       var showsubitems = true;
 
@@ -3350,7 +3366,7 @@
       // even sub-pad is not visible, we should redraw sub-sub-pads to hide them as well
       for (var i = 0; i < this.painters.length; ++i) {
          var sub = this.painters[i];
-         if (showsubitems || sub.this_pad_name) sub.Redraw(resize);
+         if (showsubitems || sub.this_pad_name) sub.Redraw(reason);
       }
    }
 
@@ -3393,7 +3409,7 @@
       // If redrawing was forced for canvas, same applied for sub-elements
       if (changed)
          for (var i = 0; i < this.painters.length; ++i)
-            this.painters[i].Redraw(force ? false : true);
+            this.painters[i].Redraw(force ? "redraw" : "resize");
 
       return changed;
    }
@@ -3701,8 +3717,8 @@
 
        JSROOT.Painter.createMenu(selp, function(menu) {
           if (selp.FillContextMenu(menu,selkind))
-             setTimeout(menu.show.bind(menu, evnt), 50);
-       });
+             setTimeout(menu.show.bind(menu), 50);
+       }, evnt);
    }
 
    RPadPainter.prototype.SaveAs = function(kind, full_canvas, filename) {
@@ -3884,9 +3900,9 @@
 
          if (JSROOT.Painter.closeMenu()) return;
 
-         var pthis = this, evnt = d3.event;
+         var pthis = this;
 
-         JSROOT.Painter.createMenu(pthis, function(menu) {
+         JSROOT.Painter.createMenu(this, function(menu) {
             menu.add("header:Menus");
 
             if (pthis.iscan)
@@ -3921,8 +3937,8 @@
                }
             }
 
-            menu.show(evnt);
-         });
+            menu.show();
+         }, d3.event);
 
          return;
       }
@@ -4508,7 +4524,7 @@
 
       if (!this._websocket || !req || !req._typename || !painter.snapid || (typeof painter.snapid != "string")) return false;
 
-      if (kind) {
+      if (kind && method) {
          // if kind specified - check if such request already was submitted
          if (!painter._requests) painter._requests = {};
 
@@ -4546,6 +4562,8 @@
          if (!this._submreq) this._submreq = {};
          this._submreq[req.reqid] = req; // fast access to submitted requests
       }
+
+      // console.log('Sending request ', msg.substr(0,60));
 
       this.SendWebsocket("REQ:" + msg);
       return true;
@@ -4864,9 +4882,10 @@
           contour = palette.GetContour(),
           can_move = false,
           nbr1 = 8,
-          framep = this.frame_painter(),
-          zmin = contour[0],
-          zmax = contour[contour.length-1];
+          framep = this.frame_painter();
+
+      if (!contour)
+         return console.log('no contour - no palette');
 
       // frame painter must  be there
       if (!framep)
@@ -4875,7 +4894,9 @@
       // zmin = Math.min(contour[0], framep.zmin);
       // zmax = Math.max(contour[contour.length-1], framep.zmax);
 
-      var fx = this.frame_x(),
+      var  zmin = contour[0],
+           zmax = contour[contour.length-1],
+          fx = this.frame_x(),
           fy = this.frame_y(),
           fw = this.frame_width(),
           fh = this.frame_height(),
@@ -4893,7 +4914,6 @@
       if (!visible) return;
 
       this.draw_g.attr("transform","translate(" + Math.round(fx + fw + palette_margin) +  "," + fy + ")");
-
 
       var g_btns = this.draw_g.select(".colbtns");
       if (g_btns.empty())
