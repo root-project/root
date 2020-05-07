@@ -11,20 +11,23 @@
 extern "C" {
 
 /// Default options when address sanitizer starts up in ROOT executables.
-/// This is relevant when ROOT's build options `asan` is on.
+/// This is relevant when ROOT's build option `asan` is on.
 /// These can be overridden / augmented by the ASAN_OPTIONS environment variable.
 /// Using ASAN_OPTIONS=help=1 and starting an instrumented ROOT exectuable, available options will be printed.
-const char *__asan_default_options() { 
-   return "strict_string_checks=1"
+const char* __asan_default_options() { 
+
+#ifdef ASAN_DETECT_LEAKS
+#define DETECT_LEAKS ":detect_leaks=1"
+#else
+#define DETECT_LEAKS ":detect_leaks=0"
+#endif
+
+  return "strict_string_checks=1"
          ":detect_stack_use_after_return=1"
          ":check_initialization_order=1"
-#ifdef ASAN_DETECT_LEAKS
-         ":detect_leaks=1"
-#else
-         ":detect_leaks=0"
-#endif
          ":detect_container_overflow=1"
-         ":verbose=1";
+         ":alloc_dealloc_mismatch=0"
+         DETECT_LEAKS;
 }
 
 /// Default options when leak sanitizer starts up in ROOT exectuables.
