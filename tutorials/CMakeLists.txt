@@ -9,6 +9,9 @@
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 
 project(tutorials)
+
+# Sergey: make no sence while CMakeLists.txt file cannot be used separately from ROOT
+# but variables like ROOT_asimage_FOUND used here and produced in ROOTConfig.cmake
 find_package(ROOT REQUIRED)
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
