@@ -2051,18 +2051,16 @@ void TCanvas::SetName(const char *name)
 /// c1->SetRealAspectRatio();
 /// ~~~
 ///
-///  - For defining the concept real aspect ratio, it is assumed that x and y
+///  - For defining the concept of real aspect ratio, it is assumed that x and y
 ///    axes are in same units, e.g. both in MeV or both in ns.
 ///  - You can resize either the width of the canvas or the height, but not both
 ///    at the same time
-///  - Resize the canvas before calling this function, if you want a larger height
-///    or width of reference if you call with parameter axis= 1 or 2, respectively
 ///  - Call this function AFTER drawing AND zooming (SetUserRange) your TGraph or
 ///    Histogram, otherwise it cannot infer your actual axes lengths
 ///  - This function ensures that the TFrame has a real aspect ratio, this does not
 ///    mean that the full pad (i.e. the canvas or png output) including margins has
 ///    exactly the same ratio
-///  - This function does not work if canvas is divided in several subpads
+///  - This function does not work if the canvas is divided in several subpads
 
 bool TCanvas::SetRealAspectRatio(const Int_t axis)
 {
@@ -2083,7 +2081,7 @@ bool TCanvas::SetRealAspectRatio(const Int_t axis)
    Double_t ylength2 = y2 - y1;
    Double_t ratio2   = xlength2/ylength2;
 
-   //Get now number of pixels including window borders
+   //Now get the number of pixels including the canvas borders
    Int_t bnpx = GetWindowWidth();
    Int_t bnpy = GetWindowHeight();
 
