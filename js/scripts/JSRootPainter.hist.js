@@ -1131,20 +1131,16 @@
       if (!evnt) {
          d3.event.stopPropagation(); // disable main context menu
          d3.event.preventDefault();  // disable browser context menu
-
-         // one need to copy event, while after call back event may be changed
          evnt = d3.event;
       }
-
-      this.ctx_menu_evnt = evnt;
 
       JSROOT.Painter.createMenu(this, function(menu) {
          menu.painter.FillContextMenu(menu);
 
          menu.painter.FillObjectExecMenu(menu, "title", function() {
-            menu.show(menu.painter.ctx_menu_evnt);
+            menu.show();
         });
-      }); // end menu creation
+      }, evnt); // end menu creation
    }
 
    TPavePainter.prototype.IsStats = function() {
@@ -1774,6 +1770,7 @@
       return this.GetObject();
    }
 
+   /** Returns histogram axis @prviate */
    THistPainter.prototype.GetAxis = function(name) {
       var histo = this.GetObject();
       if (histo)
@@ -2572,9 +2569,6 @@
          }
       }
 
-      // one need to copy event, while after call back event may be changed
-      menu_painter.ctx_menu_evnt = evnt;
-
       JSROOT.Painter.createMenu(menu_painter, function(menu) {
          var domenu = menu.painter.FillContextMenu(menu, kind, obj);
 
@@ -2586,10 +2580,10 @@
             menu.painter.FillObjectExecMenu(menu, kind, function() {
                 // suppress any running zooming
                 menu.painter.SwitchTooltip(false);
-                menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true));
+                menu.show(null, menu.painter.SwitchTooltip.bind(menu.painter, true));
             });
 
-      });  // end menu creation
+      }, evnt);  // end menu creation
    }
 
    /** @summary Invoke dialog to enter and modify user range @private */
@@ -3214,12 +3208,13 @@
 
       if (histo.fReady) return;
 
-      var arr = histo.fArray; // array of values
+      var arr = histo.fArray, entries = histo.fEntries; // array of values
       histo.fNcells = histo.fXaxis.fNbins + 2;
       histo.fArray = new Float64Array(histo.fNcells);
       for (var n=0;n<histo.fNcells;++n) histo.fArray[n] = 0;
       for (var n=0;n<histo.fNIn;++n) histo.Fill(arr[n]);
       histo.fReady = true;
+      histo.fEntries = entries;
    }
 
    /** @summary Scan content of 1-D histogram
@@ -4242,20 +4237,20 @@
       return false;
    }
 
-   TH1Painter.prototype.CallDrawFunc = function(callback, resize) {
+   TH1Painter.prototype.CallDrawFunc = function(callback, reason) {
 
       var main = this.main_painter(),
           fp = this.frame_painter();
 
-     if ((main!==this) && fp && (fp.mode3d !== this.options.Mode3D))
+     if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
         this.CopyOptionsFrom(main);
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
-      this[funcname](callback, resize);
+      this[funcname](callback, reason);
    }
 
-   TH1Painter.prototype.Draw2D = function(call_back) {
+   TH1Painter.prototype.Draw2D = function(call_back, reason) {
       this.Clear3DScene();
       this.mode3d = false;
 
@@ -4274,15 +4269,15 @@
       JSROOT.CallBack(call_back);
    }
 
-   TH1Painter.prototype.Draw3D = function(call_back, resize) {
+   TH1Painter.prototype.Draw3D = function(call_back, reason) {
       this.mode3d = true;
       JSROOT.AssertPrerequisites('hist3d', function() {
-         this.Draw3D(call_back, resize);
+         this.Draw3D(call_back, reason);
       }.bind(this));
    }
 
-   TH1Painter.prototype.Redraw = function(resize) {
-      this.CallDrawFunc(null, resize);
+   TH1Painter.prototype.Redraw = function(reason) {
+      this.CallDrawFunc(null, reason);
    }
 
    function drawHistogram1D(divid, histo, opt) {
@@ -6223,20 +6218,20 @@
       }.bind(this));
    }
 
-   TH2Painter.prototype.CallDrawFunc = function(callback, resize) {
+   TH2Painter.prototype.CallDrawFunc = function(callback, reason) {
 
       var main = this.main_painter(),
           fp = this.frame_painter();
 
-     if ((main!==this) && fp && (fp.mode3d !== this.options.Mode3D))
+     if ((main !== this) && fp && (fp.mode3d !== this.options.Mode3D))
         this.CopyOptionsFrom(main);
 
       var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
-      this[funcname](callback, resize);
+      this[funcname](callback, reason);
    }
 
-   TH2Painter.prototype.Redraw = function(resize) {
-      this.CallDrawFunc(null, resize);
+   TH2Painter.prototype.Redraw = function(reason) {
+      this.CallDrawFunc(null, reason);
    }
 
    function drawHistogram2D(divid, histo, opt) {

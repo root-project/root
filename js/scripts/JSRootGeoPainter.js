@@ -223,13 +223,11 @@
             d3.event.preventDefault();
             d3.event.stopPropagation();
 
-            var evnt = d3.event;
-
             if (!JSROOT.Painter.closeMenu())
                JSROOT.Painter.createMenu(painter, function(menu) {
                   menu.painter.FillContextMenu(menu);
-                  menu.show(evnt);
-               });
+                  menu.show();
+               }, d3.event);
          }
       });
 
@@ -1102,8 +1100,8 @@
                if (many) menu.add("endsub:");
             }
          }
-         menu.show(evnt);
-      });
+         menu.show();
+      }, evnt);
    }
 
    TGeoPainter.prototype.FilterIntersects = function(intersects) {

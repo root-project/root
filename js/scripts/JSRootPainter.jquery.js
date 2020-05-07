@@ -32,12 +32,17 @@
    if ( typeof define === "function" && define.amd )
       JSROOT.loadScript('$$$style/jquery-ui.css');
 
-   JSROOT.Painter.createMenu = function(painter, maincallback) {
+   JSROOT.Painter.createMenu = function(painter, maincallback, show_event) {
       var menuname = 'root_ctx_menu';
 
-      if (!maincallback && typeof painter==='function') { maincallback = painter; painter = null; }
+      if (!maincallback && (typeof painter==='function')) { maincallback = painter; painter = null; }
 
       var menu = { painter: painter,  element: null, code: "", cnt: 1, funcs: {}, separ: false };
+
+      // copy event values, otherwise they may gone when menu will be shown
+      if (show_event && (typeof show_event == "object"))
+         if ((show_event.clientX !== undefined) && (show_event.clientY !== undefined))
+            menu.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY };
 
       menu.add = function(name, arg, func, title) {
          if (name == "separator") { this.code += "<li>-</li>"; this.separ = true; return; }
@@ -135,6 +140,8 @@
          this.remove();
 
          if (typeof close_callback == 'function') this.close_callback = close_callback;
+
+         if (!event && this.show_evnt) event = this.show_evnt;
 
          document.body.addEventListener('click', this.remove_bind);
 
@@ -1028,14 +1035,12 @@
       if (typeof this.fill_context !== 'function') return;
 
       JSROOT.Painter.createMenu(this, function(menu) {
-
          menu.painter.fill_context(menu, hitem);
-
          if (menu.size() > 0) {
             menu.tree_node = elem.parentNode;
-            menu.show(d3.event);
+            menu.show();
          }
-      });
+      }, d3.event);
    }
 
    HierarchyPainter.prototype.tree_contextmenu = function(elem) {
@@ -1145,10 +1150,10 @@
             menu.tree_node = elem.parentNode;
             if (menu.separ) menu.add("separator"); // add separator at the end
             menu.add("Close");
-            menu.show(d3.event);
+            menu.show();
          }
 
-      }); // end menu creation
+      }, d3.event); // end menu creation
 
       return false;
    }

@@ -229,7 +229,7 @@
 
    JSROOT.TFramePainter.prototype.SetActive = function(on) {
       if (this.control)
-         this.control.enableKeys = on;
+         this.control.enableKeys = on && JSROOT.key_handling;
    }
 
    /** @brief call 3D rendering of the histogram drawing
@@ -1495,7 +1495,7 @@
    // ==========================================================================================
 
    /** @summary Draw 1-D histogram in 3D @private */
-   JSROOT.TH1Painter.prototype.Draw3D = function(call_back, resize) {
+   JSROOT.TH1Painter.prototype.Draw3D = function(call_back, reason) {
 
       this.mode3d = true;
 
@@ -1503,7 +1503,7 @@
           is_main = this.is_main_painter(), // is main histogram
           histo = this.GetHisto();
 
-      if (resize)  {
+      if (reason == "resize")  {
 
          if (is_main && main.Resize3D()) main.Render3D();
 
@@ -1540,7 +1540,7 @@
 
    // ==========================================================================================
 
-   JSROOT.TH2Painter.prototype.Draw3D = function(call_back, resize) {
+   JSROOT.TH2Painter.prototype.Draw3D = function(call_back, reason) {
 
       this.mode3d = true;
 
@@ -1548,7 +1548,7 @@
           is_main = this.is_main_painter(), // is main histogram
           histo = this.GetHisto();
 
-      if (resize) {
+      if (reason == "resize") {
 
          if (is_main && main.Resize3D()) main.Render3D();
 
@@ -2927,12 +2927,12 @@
       }
    }
 
-   TH3Painter.prototype.Redraw = function(resize) {
+   TH3Painter.prototype.Redraw = function(reason) {
 
       var main = this.frame_painter(), // who makes axis and 3D drawing
           histo = this.GetHisto();
 
-      if (resize) {
+      if (reason == "resize") {
 
          if (main.Resize3D()) main.Render3D();
 
