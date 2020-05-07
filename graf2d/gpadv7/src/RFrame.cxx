@@ -46,6 +46,21 @@ void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ra
 }
 
 ////////////////////////////////////////////////////////////////////////////
+/// Internal - assign client zoomed range to specified axis
+
+void RFrame::AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &ranges)
+{
+   if (ranges.IsUnzoom(ndim)) {
+      axis.ClearZoomMinMax();
+   } else {
+      if (ranges.HasMin(ndim))
+         axis.SetZoomMin(ranges.GetMin(ndim));
+      if (ranges.HasMax(ndim))
+         axis.SetZoomMax(ranges.GetMax(ndim));
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////
 /// Deprecated, to be removed soon
 
 void RFrame::GrowToDimensions(size_t nDimensions)
@@ -77,11 +92,16 @@ void RFrame::PopulateMenu(RMenuItems &items)
 ////////////////////////////////////////////////////////////////////////////
 /// Remember client range, can be used for drawing or stats box calculations
 
-void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges)
+void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges, bool ismainconn)
 {
    fClientRanges[connid] = ranges;
-}
 
+   if (ismainconn) {
+      AssignZoomRange(0, AttrX(), ranges);
+      AssignZoomRange(1, AttrY(), ranges);
+      AssignZoomRange(2, AttrZ(), ranges);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////
 /// Return ranges configured for the client
