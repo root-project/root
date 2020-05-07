@@ -65,7 +65,7 @@ namespace ROOT {
 
       UInt_t TPoolManager::fgPoolSize = 0;
 
-      TPoolManager::TPoolManager(UInt_t nThreads): fArena(new RArena())
+      TPoolManager::TPoolManager(UInt_t nThreads): fArena(new RArenaPtr())
       {
          //Is it there another instance of the tbb scheduler running?
          if ((*fArena)->is_active()) {
