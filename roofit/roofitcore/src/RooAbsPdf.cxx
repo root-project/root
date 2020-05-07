@@ -2687,47 +2687,41 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Plot (project) PDF on specified frame. If a PDF is plotted in an empty frame, it
-/// will show a unit normalized curve in the frame variable, taken at the present value 
-/// of other observables defined for this PDF.
-///
-/// If a PDF is plotted in a frame in which a dataset has already been plotted, it will
-/// show a projected curve integrated over all variables that were present in the shown
-/// dataset except for the one on the x-axis. The normalization of the curve will also
+/// Plot (project) PDF on specified frame.
+/// - If a PDF is plotted in an empty frame, it
+/// will show a unit-normalized curve in the frame variable. When projecting, other
+/// parameters are taken at their current value.
+/// - If a PDF is plotted in a frame in which a dataset has already been plotted, it will
+/// show a projection integrated over all variables that were present in the shown
+/// dataset (except for the one on the x-axis). The normalization of the curve will
 /// be adjusted to the event count of the plotted dataset. An informational message
 /// will be printed for each projection step that is performed.
+/// - If a PDF is plotted in a frame with showing a dataset *after* a fit, the above happens,
+/// but if the fit was carried out in a sub range of what is shown, the PDF will be drawn and
+/// normalised only in the fit range. If this is not desired, plotting and normalisation range
+/// can be overridden using Range() and NormRange() as documented in the table.
 ///
 /// This function takes the following named arguments (for more arguments, see also
 /// RooAbsReal::plotOn(RooPlot*,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
 /// const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,
 /// const RooCmdArg&) const )
 ///
-/// 
+///
 /// <table>
-/// <tr><th> Type of CmdArg                   <th> Projection control
-/// <tr><td> `Slice(const RooArgSet& set)`      <td>  Override default projection behaviour by omitting
-///               observables listed in set from the projection, resulting a 'slice' plot. Slicing is usually
-///               only sensible in discrete observables
-/// <tr><td> `Project(const RooArgSet& set)`    <td>  Override default projection behaviour by projecting
-///               over observables given in set and complete ignoring the default projection behavior. Advanced use only.
-/// <tr><td> `ProjWData(const RooAbsData& d)`   <td>  Override default projection _technique_ (integration). For observables
-///               present in given dataset projection of PDF is achieved by constructing an average over all observable
-///               values in given set. Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
-/// <tr><td> `ProjWData(const RooArgSet& s, const RooAbsData& d)`   <td>  As above but only consider subset 's' of
-///               observables in dataset 'd' for projection through data averaging
-/// <tr><td> `ProjectionRange(const char* rn)`  <td>  Override default range of projection integrals to a different
-///               range specified by given range name. This technique allows you to project a finite width slice in a real-valued observable
+/// <tr><th> Type of argument <th> Controlling normalisation
 /// <tr><td> `NormRange(const char* name)`      <td>  Calculate curve normalization w.r.t. specified range[s].
 ///               See the tutorial rf212_plottingInRanges_blinding.C
-///               \note A Range() by default sets a NormRange() on the same range, but this option allows
-///               to override the default, or specify normalization ranges when the full curve is to be drawn.
+///               \note Setting a Range() by default also sets a NormRange() on the same range, meaning that the
+///               PDF is plotted and normalised in the same range. Overriding this can be useful if the PDF was fit
+///               in limited range[s] such as side bands, `NormRange("sidebandLeft,sidebandRight")`, but the PDF
+///               should be drawn in the full range, `Range("")`.
 ///
-///
-/// <tr><th><th> Misc content control
 /// <tr><td> `Normalization(Double_t scale, ScaleType code)`   <td>  Adjust normalization by given scale factor.
 ///               Interpretation of number depends on code:
 ///                 `RooAbsReal::Relative`: relative adjustment factor
 ///                 `RooAbsReal::NumEvent`: scale to match given number of events.
+///
+/// <tr><th> Type of argument <th> Misc control
 /// <tr><td> `Name(const chat* name)`           <td>  Give curve specified name in frame. Useful if curve is to be referenced later
 /// <tr><td> `Asymmetry(const RooCategory& c)`  <td>  Show the asymmetry of the PDF in given two-state category
 ///               \f$ \frac{F(+)-F(-)}{F(+)+F(-)} \f$ rather than the PDF projection. Category must have two
@@ -2740,7 +2734,21 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 ///                                                 the signal of a signal+background model).
 /// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
-/// <tr><th><th> Plotting control 
+/// <tr><th> Type of argument                 <th> Projection control
+/// <tr><td> `Slice(const RooArgSet& set)`      <td>  Override default projection behaviour by omitting
+///               observables listed in set from the projection, resulting a 'slice' plot. Slicing is usually
+///               only sensible in discrete observables
+/// <tr><td> `Project(const RooArgSet& set)`    <td>  Override default projection behaviour by projecting
+///               over observables given in set and complete ignoring the default projection behavior. Advanced use only.
+/// <tr><td> `ProjWData(const RooAbsData& d)`   <td>  Override default projection _technique_ (integration). For observables
+///               present in given dataset projection of PDF is achieved by constructing an average over all observable
+///               values in given set. Consult RooFit plotting tutorial for further explanation of meaning & use of this technique
+/// <tr><td> `ProjWData(const RooArgSet& s, const RooAbsData& d)`   <td>  As above but only consider subset 's' of
+///               observables in dataset 'd' for projection through data averaging
+/// <tr><td> `ProjectionRange(const char* rn)`  <td>  Override default range of projection integrals to a different
+///               range specified by given range name. This technique allows you to project a finite width slice in a real-valued observable
+///
+/// <tr><th> Type of argument <th> Plotting control 
 /// <tr><td> `LineStyle(Int_t style)`           <td>  Select line style by ROOT line style code, default is solid
 /// <tr><td> `LineColor(Int_t color)`           <td>  Select line color by ROOT color code, default is blue
 /// <tr><td> `LineWidth(Int_t width)`           <td>  Select line with in pixels, default is 3
@@ -2748,6 +2756,7 @@ void removeRangeOverlap(std::vector<std::pair<double, double>>& ranges) {
 ///                                                 also use VLines() to add vertical downward lines at end of curve to ensure proper closure
 /// <tr><td> `FillColor(Int_t color)`           <td>  Select fill color by ROOT color code
 /// <tr><td> `Range(const char* name)`          <td>  Only draw curve in range defined by given name. Multiple comma-separated ranges can be given.
+///                                                   An empty string "" or `nullptr` means to use the default range of the variable.
 /// <tr><td> `Range(double lo, double hi)`      <td>  Only draw curve in specified range
 /// <tr><td> `VLines()`                         <td>  Add vertical lines to y=0 at end points of curve
 /// <tr><td> `Precision(Double_t eps)`          <td>  Control precision of drawn curve w.r.t to scale of plot, default is 1e-3. A higher precision will
