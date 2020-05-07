@@ -23,12 +23,13 @@ if(CMAKE_SYSTEM_NAME MATCHES Darwin)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,@loader_path/.")
 endif()
 
-include_directories(${ROOT_INCLUDE_DIRS})
-if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
+if(DEFINED ROOT_SOURCE_DIR)
+  # Testing using the binary tree
   include_directories(${ROOT_SOURCE_DIR}/tutorials)
-  include_directories(${ROOT_SOURCE_DIR}/tmva/inc)
   set(ROOT_root_CMD ${ROOT_BINDIR}/root.exe)
-else()                       # Testing using an installation (assuming access to ROOT CMake modules)
+else()
+  # Testing using an installation (assuming access to ROOT CMake modules)
+  include_directories(${ROOT_INCLUDE_DIRS})
   include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
   add_definitions(${ROOT_DEFINITIONS})
   include(RootMacros)
