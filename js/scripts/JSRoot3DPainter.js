@@ -336,6 +336,8 @@
       control.enableDamping = false;
       control.dampingFactor = 1.0;
       control.enableZoom = true;
+      control.enableKeys = JSROOT.key_handling;
+
       if (lookat) {
          control.target.copy(lookat);
          control.target0.copy(lookat);

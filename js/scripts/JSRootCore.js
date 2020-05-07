@@ -95,7 +95,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 17/04/2020";
+   JSROOT.version = "dev 7/05/2020";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -114,6 +114,8 @@
    // JSROOT.use_full_libs = true;
 
    JSROOT.touches = false;
+   JSROOT.key_handling = true;  // enable/disable key press handling in JSROOT
+
    JSROOT.browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isIE: false, isWin: false };
 
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
@@ -1444,10 +1446,10 @@
 
       switch (typename) {
          case 'TObject':
-             JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008 });
+             JSROOT.extend(obj, { fUniqueID: 0, fBits: 0 });
              break;
          case 'TNamed':
-            JSROOT.extend(obj, { fUniqueID: 0, fBits: 0x3000008, fName: "", fTitle: "" });
+            JSROOT.extend(obj, { fUniqueID: 0, fBits: 0, fName: "", fTitle: "" });
             break;
          case 'TList':
          case 'THashList':
@@ -1461,7 +1463,7 @@
          case 'TAxis':
             JSROOT.Create("TNamed", obj);
             JSROOT.Create("TAttAxis", obj);
-            JSROOT.extend(obj, { fNbins: 0, fXmin: 0, fXmax: 0, fXbins : [], fFirst: 0, fLast: 0,
+            JSROOT.extend(obj, { fNbins: 1, fXmin: 0, fXmax: 1, fXbins : [], fFirst: 0, fLast: 0,
                                  fBits2: 0, fTimeDisplay: false, fTimeFormat: "", fLabels: null, fModLabs: null });
             break;
          case 'TAttLine':
@@ -1536,7 +1538,8 @@
             JSROOT.Create("TAttMarker", obj);
 
             JSROOT.extend(obj, {
-               fNcells : 0,
+               fBits: 8,
+               fNcells: 0,
                fXaxis: JSROOT.Create("TAxis"),
                fYaxis: JSROOT.Create("TAxis"),
                fZaxis: JSROOT.Create("TAxis"),
@@ -1794,7 +1797,7 @@
     * @param {array} [xpts] - array with X coordinates
     * @param {array} [ypts] - array with Y coordinates */
    JSROOT.CreateTGraph = function(npoints, xpts, ypts) {
-      var graph = JSROOT.extend(JSROOT.Create("TGraph"), { fBits: 0x3000408, fName: "graph", fTitle: "title" });
+      var graph = JSROOT.extend(JSROOT.Create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
 
       if (npoints>0) {
          graph.fMaxSize = graph.fNpoints = npoints;
@@ -2043,6 +2046,7 @@
             if (bin < 0) bin = 0; else
             if (bin > axis.fNbins + 1) bin = axis.fNbins + 1;
             this.fArray[bin] += ((weight===undefined) ? 1 : weight);
+            this.fEntries++;
          }
       }
 
@@ -2058,6 +2062,7 @@
             if (bin2 < 0) bin2 = 0; else
             if (bin2 > axis2.fNbins + 1) bin2 = axis2.fNbins + 1;
             this.fArray[bin1 + (axis1.fNbins+2)*bin2] += ((weight===undefined) ? 1 : weight);
+            this.fEntries++;
          }
       }
 
@@ -2076,6 +2081,7 @@
             if (bin3 < 0) bin3 = 0; else
             if (bin3 > axis3.fNbins + 1) bin3 = axis3.fNbins + 1;
             this.fArray[bin1 + (axis1.fNbins+2)* (bin2+(axis2.fNbins+2)*bin3)] += ((weight===undefined) ? 1 : weight);
+            this.fEntries++;
          }
       }
 
