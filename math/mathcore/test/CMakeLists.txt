@@ -5,9 +5,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 project(mathcore-tests)
-find_package(ROOT REQUIRED)
-
-include_directories(${ROOT_INCLUDE_DIRS})
 
 set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree
               Rint Postscript Matrix Physics MathCore Thread)
@@ -42,12 +39,12 @@ set(TestSource
     fit/testBinnedFitExecPolicy.cxx
     fit/testLogLExecPolicy.cxx )
 
-if(ROOT_mathmore_FOUND)
+if(mathmore)
   list(APPEND TestSource stressGoFTest.cxx)
   list(APPEND Libraries MathMore)
 endif()
 
-if(ROOT_minuit2_FOUND)
+if(minuit2)
   list(APPEND TestSource fit/testMinim.cxx)
   list(APPEND Libraries Minuit2)
 endif()
@@ -89,12 +86,11 @@ if(veccore AND vc)
         LIBRARIES Core MathCore)
 endif()
 
-ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries} )
+ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries})
 
 ROOT_ADD_GTEST(testKahan testKahan.cxx
       LIBRARIES Core MathCore)
 
-
-if(ROOT_clad_FOUND)
-  ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES MathCore)
+if(clad)
+  ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES Core MathCore)
 endif()
