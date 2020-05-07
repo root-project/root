@@ -10,10 +10,8 @@
 ############################################################################
 
 project(pymva-tests)
-find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore TMVA PyMVA)
-include_directories(${ROOT_INCLUDE_DIRS})
 include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
 
 # Look for needed python modules
