@@ -101,24 +101,20 @@ public:
          }
       }
 
+      /** Returns true if axis configured as unzoomed, can be specified from client */
+      bool IsUnzoom(unsigned ndim) const
+      {
+         return (ndim*2+1 < flags.size()) && (ndim*2+1 < values.size()) &&
+               !flags[ndim*2] && !flags[ndim*2+1] &&
+               (values[ndim*2] < -0.5) && (values[ndim*2+1] < -0.5);
+      }
+
       // Returns true if any value is specified
       bool IsAny() const
       {
          for (auto fl : flags)
             if (fl) return true;
          return false;
-      }
-   };
-
-   class RZoomRequest : public RDrawableRequest {
-      RUserRanges ranges; // specified ranges
-   public:
-      RZoomRequest() = default;
-      std::unique_ptr<RDrawableReply> Process() override
-      {
-         auto frame = dynamic_cast<RFrame *>(GetContext().GetDrawable());
-         if (frame) frame->SetClientRanges(0, ranges);
-         return nullptr;
       }
    };
 
@@ -153,15 +149,29 @@ private:
    /// Constructor taking user coordinate system, position and extent.
    explicit RFrame(std::vector<std::unique_ptr<RPadUserAxisBase>> &&coords);
 
-   void SetClientRanges(unsigned connid, const RUserRanges &ranges);
+   void SetClientRanges(unsigned connid, const RUserRanges &ranges, bool ismainconn);
 
 protected:
 
    void PopulateMenu(RMenuItems &) override;
 
    void GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const;
+   void AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &ranges);
 
 public:
+
+   class RZoomRequest : public RDrawableRequest {
+      RUserRanges ranges; // specified ranges
+   public:
+      RZoomRequest() = default;
+      std::unique_ptr<RDrawableReply> Process() override
+      {
+         auto frame = dynamic_cast<RFrame *>(GetContext().GetDrawable());
+         if (frame) frame->SetClientRanges(GetContext().GetConnId(), ranges, GetContext().IsMainConn());
+         return nullptr;
+      }
+   };
+
 
    RFrame(TRootIOCtor*) : RFrame() {}
 

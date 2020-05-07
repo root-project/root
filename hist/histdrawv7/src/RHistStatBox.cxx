@@ -24,7 +24,7 @@ std::unique_ptr<RDisplayItem> RHistStatBoxBase::Display(const RDisplayContext &c
    RFrame::RUserRanges ranges;
 
    auto frame = ctxt.GetPad()->GetFrame();
-   if (frame) frame->GetClientRanges(0, ranges);
+   if (frame) frame->GetClientRanges(ctxt.GetConnId(), ranges);
 
    std::vector<std::string> lines;
 

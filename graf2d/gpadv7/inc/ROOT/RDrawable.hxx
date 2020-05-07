@@ -118,8 +118,10 @@ public:
       RCanvas *fCanvas{nullptr};     ///<! canvas where drawable is displayed
       RPadBase *fPad{nullptr};       ///<! subpad where drawable is displayed
       RDrawable *fDrawable{nullptr}; ///<! reference on the drawable
-      Version_t fLastVersion{0};     ///<! last version used to di
+      Version_t fLastVersion{0};     ///<! last displayed version
       unsigned fIndex{0};            ///<! index in list of primitives
+      unsigned fConnId{0};           ///<! connection id
+      bool fMainConn{false};         ///<! is main connection
 
    public:
 
@@ -130,19 +132,32 @@ public:
       {
       }
 
+      /** Set canvas */
       void SetCanvas(RCanvas *canv) { fCanvas = canv; }
+      /** Set pad */
       void SetPad(RPadBase *pad) { fPad = pad; }
+      /** Set drawable and its index in list of primitives */
       void SetDrawable(RDrawable *dr, unsigned indx)
       {
          fDrawable = dr;
          fIndex = indx;
+      }
+      /** Set connection id and ismain flag for connection */
+      void SetConnection(unsigned connid, bool ismain)
+      {
+         fConnId = connid;
+         fMainConn = ismain;
       }
 
       RCanvas *GetCanvas() const { return fCanvas; }
       RPadBase *GetPad() const { return fPad; }
       RDrawable *GetDrawable() const { return fDrawable; }
       unsigned GetIndex() const { return fIndex; }
+
       Version_t GetLastVersion() const { return fLastVersion; }
+
+      unsigned GetConnId() const { return fConnId; }
+      bool IsMainConn() const { return fMainConn; }
    };
 
 private:

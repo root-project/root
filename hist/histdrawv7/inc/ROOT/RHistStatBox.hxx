@@ -118,7 +118,7 @@ public:
 
          auto frame = GetContext().GetPad()->GetFrame();
          RFrame::RUserRanges ranges;
-         if (frame) frame->GetClientRanges(0, ranges);
+         if (frame) frame->GetClientRanges(GetContext().GetConnId(), ranges);
 
          auto reply = std::make_unique<RReply>();
 
