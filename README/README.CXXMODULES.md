@@ -376,16 +376,6 @@ the C++ standard) behavior. Currently, this comes with a constant performance
 overhead which we go in details bellow.
 
 
-### Current limitations
-  * Building pcms with rootcling -- in rare cases there might be issues when
-  building pcm files with rootcling. The easiest will be to open a bug report
-  to clang, however, reproducing a failure outside of rootcling is very difficult
-  at the moment.
-  * Generation of RooFit dictionary hangs -- on some platforms (depending on the
-  version of libstdc++) the generation of the RooFit dictionary goes in an
-  infinite loop. We have fixed a number of such situations. Please contact us if
-  you see such behavior or disable roofit (`-Droofit=Off`).
-
 ### Performance
 This section compares ROOT PCH technology with C++ Modules which is important but
 unfair comparison. As we noted earlier, PCH is very efficient, it cannot be
