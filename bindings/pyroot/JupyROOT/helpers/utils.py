@@ -92,6 +92,7 @@ function display_{jsDivId}() {{
     require(['scripts/JSRootCore'],
         function(Core) {{
             var obj = Core.JSONR_unref({jsonContent});
+            Core.key_handling = false;
             Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
         }}
     );
