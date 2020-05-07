@@ -62,7 +62,7 @@ class HijackMessageStream : public std::ostringstream {
 };
 
 
-std::vector<std::string> tokenise(const std::string &str, const std::string &delims);
+std::vector<std::string> tokenise(const std::string &str, const std::string &delims, bool returnEmptyToken = true);
 
 
 

@@ -56,10 +56,14 @@ LocalChangeMsgLevel::~LocalChangeMsgLevel() {
 /// Tokenise the string by splitting at the characters in delims.
 /// Consecutive delimiters are collapsed, so that no delimiters will appear in the
 /// tokenised strings, and no emtpy strings are returned.
-std::vector<std::string> tokenise(const std::string &str, const std::string &delims) {
-  std::vector<std::string> tokens;
+/// \param[in] str String to tokenise.
+/// \param[in] delims One or more delimiters used to split the string.
+/// \param[in] returnEmptyToken If the string is empty, return one empty token. Default is to return an empty vector.
+std::vector<std::string> tokenise(const std::string &str, const std::string &delims, bool returnEmptyToken /*= true*/) {
   if (str.empty())
-    return tokens;
+    return std::vector<std::string>(returnEmptyToken ? 1 : 0);
+
+  std::vector<std::string> tokens;
 
   auto beg = str.find_first_not_of(delims, 0);
   auto end = str.find_first_of(delims, beg);
