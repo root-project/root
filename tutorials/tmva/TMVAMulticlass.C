@@ -52,13 +52,13 @@ void TMVAMulticlass( TString myMethodList = "" )
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
 #ifdef R__HAS_TMVAGPU
-   Use["DL_CPU"]          = 0;
+   Use["DL_CPU"]          = 1;
    Use["DL_GPU"]          = 1;
 #else
    Use["DL_CPU"]          = 1;
    Use["DL_GPU"]          = 0;
 #endif
-   Use["FDA_GA"]          = 1;
+   Use["FDA_GA"]          = 0;
    Use["PDEFoam"]         = 1;
 
    //---------------------------------------------------------------
@@ -99,24 +99,17 @@ void TMVAMulticlass( TString myMethodList = "" )
    TFile *input(0);
    TString fname = "./tmva_example_multiclass.root";
    if (!gSystem->AccessPathName( fname )) {
-      // first we try to find the file in the local directory
-      std::cout << "--- TMVAMulticlass   : Accessing " << fname << std::endl;
-      input = TFile::Open( fname );
+      input = TFile::Open( fname ); // check if file in local directory exists
    }
    else {
-      std::cout << "Creating testdata...." << std::endl;
-      TString createDataMacro = gROOT->GetTutorialDir() + "/tmva/createData.C";
-      gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
-      gROOT->ProcessLine("create_MultipleBackground(2000)");
-      // rename file to avoid clash con other tutorials that need onlmy 200 events
-      gSystem->Exec("mv tmva_example_multiple_background.root tmva_example_multiclass.root"); 
-      std::cout << " created tmva_example_multiclass.root for tests of the multiclass features"<<std::endl;
-      input = TFile::Open( fname );
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_multiclass_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
       exit(1);
    }
+   std::cout << "--- TMVAMulticlass: Using input file: " << input->GetName() << std::endl;
 
    TTree *signalTree  = (TTree*)input->Get("TreeS");
    TTree *background0 = (TTree*)input->Get("TreeB0");
@@ -143,10 +136,8 @@ void TMVAMulticlass( TString myMethodList = "" )
 
    if (Use["DL_CPU"]) {
       TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
-      TString training0("LearningRate=1e-3,Momentum=0.5,Repetitions=1,ConvergenceSteps=10,"
-                        "BatchSize=256,TestRepetitions=1");
-      TString trainingStrategyString("TrainingStrategy=");
-      trainingStrategyString += training0; // + "|" + training1;
+      TString trainingStrategyString("TrainingStrategy=Optimizer=ADAM,LearningRate=1e-3,"
+                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100");
       TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
                         "WeightInitialization=XAVIERUNIFORM:Architecture=GPU");
       nnOptions.Append(":");
@@ -157,10 +148,8 @@ void TMVAMulticlass( TString myMethodList = "" )
    }
    if (Use["DL_GPU"]) {
       TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
-      TString training0("LearningRate=1e-3,Momentum=0.5,Repetitions=1,ConvergenceSteps=10,"
-                        "BatchSize=256,TestRepetitions=1");
-      TString trainingStrategyString("TrainingStrategy=");
-      trainingStrategyString += training0;// + "|" + training1;
+      TString trainingStrategyString("TrainingStrategy=Optimizer=ADAM,LearningRate=1e-3,"
+                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100");
       TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
                         "WeightInitialization=XAVIERUNIFORM:Architecture=GPU");
       nnOptions.Append(":");
