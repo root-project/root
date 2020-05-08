@@ -316,7 +316,7 @@ endif()
 
 # Pyroot requires python-dev package; force to OFF if it was not found
 # PYTHONLIBS_FOUND is used for cmake < 3.12
-if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7") AND NOT Python_Development_FOUND)
+if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
   set(pyroot_defvalue OFF)
   set(pyroot_experimental_defvalue OFF)
   set(tmva-pymva_defvalue OFF)
@@ -447,7 +447,7 @@ if(macos_native)
 endif()
 
 # Print message saying with which versions of Python are used to build
-if(Python_Development_FOUND OR NOT Python3_Development_FOUND OR NOT Python2_Development_FOUND)
+if(NOT Python3_Development_FOUND OR NOT Python2_Development_FOUND)
   message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_MAJOR}")
 elseif(Python3_Development_FOUND AND Python2_Development_FOUND)
   if(pyroot_experimental)
