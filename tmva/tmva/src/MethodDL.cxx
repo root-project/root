@@ -615,8 +615,15 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          width = fml.Eval(inputSize);
       }
    }
-   // avoid zero width. assume is 1
-   if (width == 0) width = 1;
+   // avoid zero width. assume is last layer and give width = output width
+   // Determine the number of outputs
+   size_t outputSize = 1;
+   if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
+      outputSize = GetNTargets();
+   } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
+      outputSize = DataInfo().GetNClasses();
+   }
+   if (width == 0) width = outputSize;
 
    // Add the dense layer, initialize the weights and biases and copy
    TDenseLayer<Architecture_t> *denseLayer = deepNet.AddDenseLayer(width, activationFunction);
@@ -1144,14 +1151,6 @@ void MethodDL::TrainDeepNet()
 
    bool debug = Log().GetMinType() == kDEBUG;
 
-
-   // Determine the number of outputs
-   // //    size_t outputSize = 1;
-   // //    if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
-   // //       outputSize = GetNTargets();
-   // //    } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
-   // //       outputSize = DataInfo().GetNClasses();
-   // //    }
 
    // set the random seed for weight initialization
    Architecture_t::SetRandomSeed(fRandomSeed);
