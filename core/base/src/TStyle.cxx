@@ -388,6 +388,85 @@ TStyle::TStyle(const char *name, const char *title)
       SetPadTickX(1);
       SetPadTickY(1);
    }
+   if (strcmp(style_name,"BELLE2") == 0) {
+      // use plain black on white colors
+      Int_t icol=0; // WHITE
+      SetFrameBorderMode(icol);
+      SetFrameFillColor(icol);
+      SetCanvasBorderMode(icol);
+      SetCanvasColor(icol);
+      SetPadBorderMode(icol);
+      SetPadColor(icol);
+      SetStatColor(icol);
+      //SetFillColor(icol); // don't use: white fill color for *all* objects
+
+      // set the paper & margin sizes
+      SetPaperSize(20,26);
+
+      // set margin sizes
+      SetPadTopMargin(0.05);
+      SetPadRightMargin(0.05);
+      SetPadBottomMargin(0.16);
+      SetPadLeftMargin(0.16);
+
+      // set title offsets (for axis label)
+      SetTitleXOffset(1.0);
+      SetTitleYOffset(1.0);
+
+      // use large fonts
+      //Int_t font=72; // Helvetica italics
+      Int_t font=42; // Helvetica
+      Double_t tsize=0.05;
+      SetTextFont(font);
+      SetTextSize(tsize);
+
+      SetLabelFont(font,"x");
+      SetTitleFont(font,"x");
+      SetLabelFont(font,"y");
+      SetTitleFont(font,"y");
+      SetLabelFont(font,"z");
+      SetTitleFont(font,"z");
+
+      SetLabelSize(tsize,"x");
+      SetTitleSize(.065,"x");
+      SetLabelSize(tsize,"y");
+      SetTitleSize(.065,"y");
+      SetLabelSize(tsize,"z");
+      SetTitleSize(.065,"z");
+
+      SetTitleOffset(1.1,"x");
+      SetTitleOffset(1.1,"y");
+      SetTitleOffset(1.1,"z");
+
+      SetLabelOffset(0.015,"x");
+      SetLabelOffset(0.015,"y");
+      SetLabelOffset(0.015,"z");
+
+      SetTickLength(0.03,"x");
+      SetTickLength(0.02,"y");  // This way we slighty achive equal length ticks for x and y
+
+      // use bold lines and markers
+      SetMarkerStyle(20);
+      SetMarkerSize(0.9);
+      SetHistLineWidth(2);
+      SetLineStyleString(2,"[12 12]"); // postscript dashes
+
+      // get rid of X error bars
+      SetErrorX(0.001);
+      // get rid of error bar caps
+      SetEndErrorSize(0.);
+
+      // do not display any of the standard histogram decorations
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetOptFit(0);
+
+      // put tick marks on top and RHS of plots
+      SetPadTickX(0);
+      SetPadTickY(0);
+
+      SetFrameLineWidth(2);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -436,6 +515,7 @@ void TStyle::BuildStyles()
    new TStyle("Default","Equivalent to Classic");
    new TStyle("Modern", "Modern Style");
    new TStyle("ATLAS",  "ATLAS Style");
+   new TStyle("BELLE2", "Belle II Style");
    delete col;
 }
 
