@@ -9,7 +9,7 @@
 # using the ROOT libraries on all supported platforms.
 #
 # Author: Pere Mato, 25/10/2010
-cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 
 project(test)
 
