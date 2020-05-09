@@ -168,15 +168,15 @@ if(runtime_cxxmodules)
     set(libc libc)
   endif()
 
-  ROOT_GENERATE_CXXMODULE(${libc} "/usr/include")
+  get_property(c_headers_location GLOBAL PROPERTY CLING_C_HEADERS_LOCATION)
+  ROOT_GENERATE_CXXMODULE(${libc} ${c_headers_location})
 
-  get_property(cxx_headers_location GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
-
+  get_property(cxx_headers_location GLOBAL PROPERTY CLING_CXX_HEADERS_LOCATION)
   # Assume the first component is where the public headers are.
   string(FIND ${cxx_headers_location} ":" idx)
   string(SUBSTRING ${cxx_headers_location} 0 ${idx} cxx_headers_location)
-
   ROOT_GENERATE_CXXMODULE(std ${cxx_headers_location} DEPENDENCIES ${libc})
+
   ROOT_GENERATE_CXXMODULE(Cling_Runtime ${CMAKE_BINARY_DIR}/etc/cling DEPENDENCIES std)
   ROOT_GENERATE_CXXMODULE(Cling_Runtime_Extra ${CMAKE_BINARY_DIR}/etc/cling DEPENDENCIES Cling_Runtime)
 

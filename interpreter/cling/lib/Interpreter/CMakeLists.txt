@@ -243,6 +243,22 @@ if (UNIX)
   string(REPLACE ";" " " __flags "${CMAKE_CXX_FLAGS}")
   string(REGEX REPLACE "-I[^ ]+" "" CLING_COMPILER_FLAGS_NO_I "${__flags}")
 
+  option(CLING_C_PATH "Compiler cling will invoke for c headers." "")
+  option(CLING_C_HEADERS "Path cling will use for c headers." "")
+  # FIXME: Merge with detect_header_location
+  if (NOT CLING_C_HEADERS)
+    if (APPLE)
+      execute_process(COMMAND xcrun --show-sdk-path
+                      OUTPUT_VARIABLE OSX_SDK_PATH
+                      OUTPUT_STRIP_TRAILING_WHITESPACE)
+      set(CLING_C_HEADERS ${OSX_SDK_PATH}/usr/include)
+    else()
+      set(CLING_C_HEADERS /usr/include)
+    endif(APPLE)
+  endif (NOT CLING_C_HEADERS)
+
+  MESSAGE(STATUS "Cling will look for C headers in '${CLING_C_HEADERS}' at runtime.")
+
   option(CLING_CXX_PATH "Compiler cling will invoke for c++ headers." "")
   option(CLING_CXX_HEADERS "Path cling will use for c++ headers." "")
 
@@ -294,11 +310,13 @@ if (UNIX)
 
   # In modules builds we 'mount' our own stl modulemap for libstdc++. In order to do this,
   # we need to know where is ROOT/cling STL.
-  set_property(GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION "${CLING_CXX_HEADERS}")
+  set_property(GLOBAL PROPERTY CLING_C_HEADERS_LOCATION "${CLING_C_HEADERS}")
+  set_property(GLOBAL PROPERTY CLING_CXX_HEADERS_LOCATION "${CLING_CXX_HEADERS}")
 
   # FIXME: We should use file(GENERATE) cmake command.
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
     "
+    #define CLING_C_INCL \"${CLING_C_HEADERS}\"
     #define CLING_CXX_INCL \"${CLING_CXX_HEADERS}\"
     #define CLING_INCLUDE_PATHS \"${CLING_INCLUDE_PATHS}\"
   ")
