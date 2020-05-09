@@ -11,7 +11,7 @@
 #pragma link C++ class RooLagrangianMorphing::RooLagrangianMorphBase<RooAbsPdf>+;
 #pragma link C++ class RooLagrangianMorphFunc+;
 #pragma link C++ class RooLagrangianMorphPdf+;
-#pragma link C++ class RooLagrangianMorphOptimizer+;
+//#pragma link C++ class RooLagrangianMorphOptimizer+;
 #pragma link C++ class RooHCggfWWMorphFunc+;
 #pragma link C++ class RooHCvbfWWMorphFunc+;
 #pragma link C++ class RooHCggfZZMorphFunc+;
