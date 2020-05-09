@@ -196,10 +196,6 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
   IF(TARGET ${dictionary})
     target_sources(${dictionary} PRIVATE ${gensrcdict})
   ENDIF()
-  # FIXME: Do not set gensrcdict variable to the outer scope but use an argument to
-  # REFLEX_GENERATE_DICTIONARY passed from the outside. Note this would be a
-  # breaking change for roottest and other external users.
-  set(gensrcdict ${dictionary}.cxx PARENT_SCOPE)
 
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
@@ -214,6 +210,11 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     # well before the dependent libraries of the dictionary are build
     add_custom_target(${targetname} ALL DEPENDS ${gensrcdict})
   endif()
+
+  # FIXME: Do not set gensrcdict variable to the outer scope but use an argument to
+  # REFLEX_GENERATE_DICTIONARY passed from the outside. Note this would be a
+  # breaking change for roottest and other external users.
+  set(gensrcdict ${dictionary}.cxx PARENT_SCOPE)
 
 endfunction()
 
