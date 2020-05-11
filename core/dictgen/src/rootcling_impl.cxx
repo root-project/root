@@ -4238,6 +4238,10 @@ int RootClingMain(int argc,
          remove((moduleCachePath + llvm::sys::path::get_separator() + "_Builtin_stddef_max_align_t.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime.pcm").str().c_str());
          remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime_Extra.pcm").str().c_str());
+#ifdef R__WIN32
+         remove((moduleCachePath + llvm::sys::path::get_separator() + "vcruntime.pcm").str().c_str());
+#endif
+         
 #ifdef R__MACOSX
          remove((moduleCachePath + llvm::sys::path::get_separator() + "Darwin.pcm").str().c_str());
 #else
