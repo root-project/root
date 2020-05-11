@@ -555,6 +555,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #                            [OUTREF stdout_reference]
 #                            [ERRREF stderr_reference]
 #                            [WORKING_DIR dir]
+#                            [TIMEOUT tmout]
 #                            [COPY_TO_BUILDDIR file1 file2 ...])
 #
 # This function defines a roottest test. It adds a number of additional
@@ -563,8 +564,8 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
-                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;TIMEOUT;LABELS;ENVIRONMENT" ${ARGN})
+                            "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT"
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT" ${ARGN})
 
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
