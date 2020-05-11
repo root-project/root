@@ -4016,7 +4016,7 @@ int RootClingMain(int argc,
       llvm::sys::path::append(builtinModuleMap, "module.modulemap");
       clingArgsC.push_back(resourcePathInc.c_str());
 
-      clingArgsC.push_back("-nobuiltininc");
+      //clingArgsC.push_back("-nobuiltininc");
       clingArgsC.push_back("-noruntime");
 
       for (const std::string& Opt : gOptBareClingSink)

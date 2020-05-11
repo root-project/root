@@ -291,13 +291,13 @@ function(ROOT_GENERATE_CXXMODULE module_name headers_location)
   endif()
 
   set(module_file_location ${root_libdir}/${module_name}.pcm)
-  set(dependencies ${real_modulemap_file})
+  set(file_dependencies ${real_modulemap_file})
   foreach(dep ${ARG_DEPENDENCIES})
     # Turn the target to a file.pcm. This allows us to add it as a file dependency
     # in the DEPENDS clause of add_custom_command. This is the only way I found
     # to trigger rebuild of the full chain of dependencies.
     # Eg: a.pcm <- b.pcm <- c.pcm; rm a.pcm; ninja c.pcm; rebuilds a.pcm and b.pcm
-    list(APPEND dependencies ${root_libdir}/${dep}.pcm)
+    list(APPEND file_dependencies ${root_libdir}/${dep}.pcm)
   endforeach()
 
   add_custom_command(OUTPUT ${module_file_location}
@@ -306,9 +306,9 @@ function(ROOT_GENERATE_CXXMODULE module_name headers_location)
                      -fmodules -Xclang -emit-module -fmodule-name=${module_name}
                      -fmodules-cache-path=${root_libdir} -o ${module_file_location}
                      ${headers_location}/module.modulemap
-                     DEPENDS ${dependencies})
+                     DEPENDS ${file_dependencies})
 
-  add_custom_target(${module_name} ALL DEPENDS ${module_file_location} ${dependencies})
+  add_custom_target(${module_name} ALL DEPENDS ${module_file_location} ${file_dependencies} ${ARG_DEPENDENCIES})
 
 endfunction(ROOT_GENERATE_CXXMODULE)
 

@@ -42,6 +42,7 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Option/ArgList.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -1144,8 +1145,13 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       StringRef CurInput = FrontendOpts.Inputs[0].getFile();
       Out << "Information for module file '" << CurInput << "':\n";
       auto &FileMgr = CI.getFileManager();
-      auto Buffer = FileMgr.getBufferForFile(CurInput);
-      StringRef Magic = (*Buffer)->getMemBufferRef().getBuffer();
+      auto BufferOrErr = FileMgr.getBufferForFile(CurInput);
+
+      if (!BufferOrErr)
+        cling::errs() << "Error creating a buffer for file '"
+                      << BufferOrErr.getError().message() << "'\n";
+
+      StringRef Magic = (*BufferOrErr)->getMemBufferRef().getBuffer();
       bool IsRaw = (Magic.size() >= 4 && Magic[0] == 'C' && Magic[1] == 'P' &&
                     Magic[2] == 'C' && Magic[3] == 'H');
       Out << "  Module format: " << (IsRaw ? "raw" : "obj") << "\n";
