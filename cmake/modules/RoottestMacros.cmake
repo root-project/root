@@ -350,7 +350,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                              SELECTION ${ARG_SELECTION}
                              ${reflex_pass_options})
 
-  add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${gensrcdict})
+  add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictionary}.cxx)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
 
   if(ARG_LIBNAME)
