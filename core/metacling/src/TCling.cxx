@@ -1142,6 +1142,11 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
+      // Load vcruntime module for windows
+#ifdef R__WIN32
+   LoadModule("vcruntime", clingInterp);
+#endif
+
 #ifdef R__MACOSX
    LoadModule("Darwin", clingInterp);
 #else
