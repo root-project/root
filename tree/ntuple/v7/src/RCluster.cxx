@@ -33,8 +33,8 @@ ROOT::Experimental::Detail::ROnDiskPageMap &
 ROOT::Experimental::Detail::ROnDiskPageMap::operator =(ROnDiskPageMap &&other)
 {
    fMemory = other.fMemory;
-   fOnDiskPages = std::move(other.fOnDiskPages);
    other.fMemory = nullptr;
+   fOnDiskPages = std::move(other.fOnDiskPages);
    other.fOnDiskPages.clear();
    return *this;
 }
