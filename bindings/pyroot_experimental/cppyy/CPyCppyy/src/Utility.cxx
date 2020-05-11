@@ -521,7 +521,7 @@ void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
     int nArgs = (int)argtypes.size();
 
 // return value and argument type converters
-    bool isVoid = (retType == "void");
+    bool isVoid = retType == "void";
     if (!isVoid)
         code << "    CPYCPPYY_STATIC std::unique_ptr<CPyCppyy::Converter, std::function<void(CPyCppyy::Converter*)>> "
                      "retconv{CPyCppyy::CreateConverter(\""
@@ -558,15 +558,26 @@ void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
     }
 }
 
-void CPyCppyy::Utility::ConstructCallbackReturn(bool isVoid, int nArgs, std::ostringstream& code)
+void CPyCppyy::Utility::ConstructCallbackReturn(const std::string& retType, int nArgs, std::ostringstream& code)
 {
 // Generate code for return value conversion and error handling.
+    bool isVoid = retType == "void";
+    bool isPtr  = Cppyy::ResolveName(retType).back() == '*';
     if (nArgs)
         code << "    for (auto pyarg : pyargs) Py_DECREF(pyarg);\n";
     code << "    bool cOk = (bool)pyresult;\n"
-            "    if (pyresult) { " << (isVoid ? "" : "cOk = retconv->ToMemory(pyresult, &ret); ")
-                                   << "Py_DECREF(pyresult); }\n"
-            "    if (!cOk) {"     // assume error set when converter failed
+            "    if (pyresult) {\n";
+    if (isPtr) {
+    // If the return type is a CPPInstance, owned by Python, and the ref-count down
+    // to 1, the return will hold a dangling pointer, so set it to nullptr instead.
+        code << "      if (!CPyCppyy::Instance_IsLively(pyresult))\n"
+                "        ret = nullptr;\n"
+                "      else {\n";
+    }
+    code << (isVoid ? "" : "        cOk = retconv->ToMemory(pyresult, &ret);\n")
+         <<                "        Py_DECREF(pyresult);\n    }\n";
+    if (isPtr) code << "  }\n";
+    code << "    if (!cOk) {"     // assume error set when converter failed
 // TODO: On Windows, throwing a C++ exception here makes the code hang; leave
 // the error be which allows at least one layer of propagation
 #ifdef _WIN32
