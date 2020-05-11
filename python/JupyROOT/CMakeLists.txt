@@ -1,4 +1,5 @@
-if (ROOT_pyroot_FOUND AND NOT ROOT_CLASSIC_BUILD) # Do not run with classic build
+# Do not run with classic build or if tests are vetoed
+if (ROOT_pyroot_FOUND AND NOT ROOT_CLASSIC_BUILD AND NOT (DEFINED ENV{ROOTTEST_IGNORE_JUPYTER_PY2} AND PYTHON_VERSION_MAJOR EQUAL 2))
 
 set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/helpers)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
