@@ -486,7 +486,6 @@ public:
          auto snapshotRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(nEntries));
          return MakeResultPtr(snapshotRDF, *fLoopManager, nullptr);
       }
-      auto tree = fLoopManager->GetTree();
       std::stringstream snapCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
@@ -502,15 +501,12 @@ public:
 
 
       const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
+      const auto colTypes = GetValidatedArgTypes(validColumnNames, fCustomColumns, fLoopManager->GetTree(), fDataSource,
+                                                 "Snapshot", /*vector2rvec=*/false);
 
-      const auto dontConvertVector = false;
-      for (auto &c : validColumnNames) {
-         RDFDetail::RCustomColumnBase *customCol =
-            fCustomColumns.HasName(c) ? fCustomColumns.GetColumns().at(c).get() : nullptr;
-         snapCall << RDFInternal::ColumnName2ColumnTypeName(c, tree, fDataSource, customCol, dontConvertVector)
-                  << ", ";
-      };
-      if (!columnList.empty())
+      for (auto &colType : colTypes)
+         snapCall << colType << ", ";
+      if (!colTypes.empty())
          snapCall.seekp(-2, snapCall.cur); // remove the last ",
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
@@ -621,7 +617,6 @@ public:
          return emptyRDF;
       }
 
-      auto tree = fLoopManager->GetTree();
       std::stringstream cacheCall;
       auto upcastNode = RDFInternal::UpcastNode(fProxiedPtr);
       RInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, *fLoopManager,
@@ -635,12 +630,10 @@ public:
                 << RDFInternal::PrettyPrintAddr(&upcastInterface) << ")->Cache<";
 
       const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
-      for (auto &c : validColumnNames) {
-         RDFDetail::RCustomColumnBase *customCol =
-            fCustomColumns.HasName(c) ? fCustomColumns.GetColumns().at(c).get() : nullptr;
-         cacheCall << RDFInternal::ColumnName2ColumnTypeName(c, tree, fDataSource, customCol, /*vector2rvec=*/true)
-                   << ", ";
-      };
+      const auto colTypes = GetValidatedArgTypes(validColumnNames, fCustomColumns, fLoopManager->GetTree(), fDataSource,
+                                                 "Cache", /*vector2rvec=*/false);
+      for (const auto &colType : colTypes)
+         cacheCall << colType << ", ";
       if (!columnList.empty())
          cacheCall.seekp(-2, cacheCall.cur);                         // remove the last ",
       cacheCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
@@ -2345,11 +2338,9 @@ private:
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
       if (retTypeName.empty()) {
          // The type is not known to the interpreter.
-         // Forward-declare it as void + helpful comment, so that if this Define'd quantity is
-         // ever used by jitted code users will have some way to know what went wrong
+         // We must not error out here, but if/when this column is used in jitted code
          const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
-         retTypeName = "void /* The type of column \"" + std::string(name) + "\" (" + demangledType +
-                       ") is not known to the interpreter. */";
+         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
       }
 
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
