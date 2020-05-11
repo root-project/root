@@ -165,6 +165,21 @@ bool CPyCppyy::Instance_CheckExact(PyObject* pyobject)
 }
 
 //-----------------------------------------------------------------------------
+bool CPyCppyy::Instance_IsLively(PyObject* pyobject)
+{
+// Test whether the given instance can safely return to C++, or whether
+    if (!CPPInstance_Check(pyobject))
+        return true;    // simply don't know
+
+// the instance fails the lively test if it owns the C++ object while having a
+// reference count of 1 (meaning: it could delete the C++ instance any moment)
+    if (pyobject->ob_refcnt <= 1 && (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsOwner))
+        return false;
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 bool CPyCppyy::Overload_Check(PyObject* pyobject)
 {
 // Test if the given pyobject is of CPPOverload derived type.

@@ -40,7 +40,7 @@ std::string ConstructTemplateArgs(
 // helper for generating callbacks
 void ConstructCallbackPreamble(const std::string& retType,
     const std::vector<std::string>& argtypes, std::ostringstream& code);
-void ConstructCallbackReturn(bool isVoid, int nArgs, std::ostringstream& code);
+void ConstructCallbackReturn(const std::string& retType, int nArgs, std::ostringstream& code);
 
 // initialize proxy type objects
 bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);

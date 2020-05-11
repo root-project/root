@@ -92,7 +92,7 @@ static void meta_dealloc(CPPScope* scope)
             for (auto pyobj : *scope->fImp.fUsing) Py_DECREF(pyobj);
             delete scope->fImp.fUsing; scope->fImp.fUsing = nullptr;
         }
-    } else {
+    } else if (!(scope->fFlags & CPPScope::kIsPython)) {
         delete scope->fImp.fCppObjects; scope->fImp.fCppObjects = nullptr;
     }
     delete scope->fOperators;
@@ -276,7 +276,17 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
         static Cppyy::TCppType_t exc_type = (Cppyy::TCppType_t)Cppyy::GetScope("std::exception");
         if (Cppyy::IsSubtype(result->fCppType, exc_type))
             result->fFlags |= CPPScope::kIsException;
-        result->fImp.fCppObjects = new CppToPyMap_t;
+        if (!(result->fFlags & CPPScope::kIsPython))
+            result->fImp.fCppObjects = new CppToPyMap_t;
+        else {
+        // special case: the C++ objects should be stored with the associated C++, not Python, type
+            CPPClass* kls = (CPPClass*)GetScopeProxy(result->fCppType);
+            if (kls) {
+                result->fImp.fCppObjects = kls->fImp.fCppObjects;
+                Py_DECREF(kls);
+            } else
+                result->fImp.fCppObjects = nullptr;
+        }
     } else {
         result->fImp.fUsing = nullptr;
         result->fFlags |= CPPScope::kIsNamespace;
