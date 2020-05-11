@@ -297,8 +297,7 @@ std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, con
 using ROOT::Detail::RDF::ColumnNames_t;
 
 template <typename T>
-void AddDSColumnsHelper(std::string_view name, RDFInternal::RBookedCustomColumns &currentCols, RDataSource &ds,
-                        unsigned int nSlots)
+void AddDSColumnsHelper(std::string_view name, RBookedCustomColumns &currentCols, RDataSource &ds, unsigned int nSlots)
 {
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
