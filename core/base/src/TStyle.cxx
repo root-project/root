@@ -155,6 +155,7 @@ TStyle::TStyle() :TNamed()
 ///   - `Pub`
 ///   - `Modern`
 ///   - `ATLAS`: style used by the ATLAS experiment
+///   - `BELLE2`: style used by the BELLE II experiment
 ///     (see the definition of these styles below).
 ///
 /// Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
@@ -969,6 +970,59 @@ void TStyle::Reset(Option_t *opt)
       SetPadTickX(1);
       SetPadTickY(1);
       return;
+   }
+   if (strcmp(style_name,"BELLE2") == 0) {
+      Int_t icol=0;
+      SetFrameBorderMode(icol);
+      SetFrameFillColor(icol);
+      SetCanvasBorderMode(icol);
+      SetCanvasColor(icol);
+      SetPadBorderMode(icol);
+      SetPadColor(icol);
+      SetStatColor(icol);
+      SetPaperSize(20,26);
+      SetPadTopMargin(0.05);
+      SetPadRightMargin(0.05);
+      SetPadBottomMargin(0.16);
+      SetPadLeftMargin(0.16);
+      SetTitleXOffset(1.0);
+      SetTitleYOffset(1.0);
+      Int_t font=42;
+      Double_t tsize=0.05;
+      SetTextFont(font);
+      SetTextSize(tsize);
+      SetLabelFont(font,"x");
+      SetTitleFont(font,"x");
+      SetLabelFont(font,"y");
+      SetTitleFont(font,"y");
+      SetLabelFont(font,"z");
+      SetTitleFont(font,"z");
+      SetLabelSize(tsize,"x");
+      SetTitleSize(.065,"x");
+      SetLabelSize(tsize,"y");
+      SetTitleSize(.065,"y");
+      SetLabelSize(tsize,"z");
+      SetTitleSize(.065,"z");
+      SetTitleOffset(1.1,"x");
+      SetTitleOffset(1.1,"y");
+      SetTitleOffset(1.1,"z");
+      SetLabelOffset(0.015,"x");
+      SetLabelOffset(0.015,"y");
+      SetLabelOffset(0.015,"z");
+      SetTickLength(0.03,"x");
+      SetTickLength(0.02,"y");
+      SetMarkerStyle(20);
+      SetMarkerSize(0.9);
+      SetHistLineWidth(2);
+      SetLineStyleString(2,"[12 12]");
+      SetErrorX(0.001);
+      SetEndErrorSize(0.);
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetOptFit(0);
+      SetPadTickX(0);
+      SetPadTickY(0);
+      SetFrameLineWidth(2);
    }
 }
 

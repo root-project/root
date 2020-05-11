@@ -151,6 +151,7 @@ into RooFit's message stream number 2. The verbosity can therefore be adjusted u
     erased.
   - Implement `TCanvas::SetRealAspectRatio` to resize a canvas so that the plot inside is
     shown in real aspect.
+  - New graphics style "BELLE2" from Martin Ritter.
 
 ## 3D Graphics Libraries
 
