@@ -182,9 +182,9 @@ target_include_directories(Core PUBLIC
 
 target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
 
-if(root7)
+if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
   target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
-endif(root7)
+endif()
 
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
