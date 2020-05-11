@@ -441,7 +441,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   for(Int_t i = 0; i < constParameters->getSize(); i++)
   {
-    RooAbsRealLValue* varTemp = dynamic_cast<RooAbsRealLValue*>( constParameters->at(i) );
+    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( constParameters->at(i) );
     if(varTemp &&  varTemp->isConstant() == 0 )
     {
       varTemp->setConstant();
