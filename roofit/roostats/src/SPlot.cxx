@@ -209,7 +209,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   else
     fSData = (RooDataSet*) &data;
 
-  // Add check that yieldsList contains all RooRealVars
+  // Add check that yieldsList contains all RooRealVar / RooAbsRealLValue
   for (const auto arg : yieldsList) {
     if (!dynamic_cast<const RooAbsRealLValue*>(arg)) {
       coutE(InputArguments) << "SPlot::SPlot(" << GetName() << ") input argument "
