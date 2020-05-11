@@ -292,6 +292,10 @@ std::shared_ptr<RNodeBase> UpcastNode(std::shared_ptr<RNodeBase> ptr);
 ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
                                       const ColumnNames_t &validCustomColumns, RDataSource *ds);
 
+std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns,
+                                              TTree *tree, RDataSource *ds, const std::string &context,
+                                              bool vector2rvec);
+
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
 using ROOT::Detail::RDF::ColumnNames_t;

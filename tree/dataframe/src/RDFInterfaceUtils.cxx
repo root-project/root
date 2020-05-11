@@ -178,20 +178,6 @@ static ParsedExpression ParseRDFExpression(const std::string &expr, const Column
    return ParsedExpression{std::string(std::move(exprWithVars)), std::move(usedCols), std::move(varNames)};
 }
 
-static std::vector<std::string> GetColumnTypes(const ParsedExpression &pExpr, TTree *tree,
-                                               ROOT::Detail::RDF::RDataSource *ds,
-                                               const ROOT::Internal::RDF::RBookedCustomColumns &customCols)
-{
-   std::vector<std::string> colTypes;
-   for (const auto &col : pExpr.fUsedCols) {
-      ROOT::Detail::RDF::RCustomColumnBase *customCol =
-         customCols.HasName(col) ? customCols.GetColumns().at(col).get() : nullptr;
-      auto colType = ROOT::Internal::RDF::ColumnName2ColumnTypeName(col, tree, ds, customCol, /*vector2rvec=*/true);
-      colTypes.emplace_back(std::move(colType));
-   }
-   return colTypes;
-}
-
 /// Return the static global map of Filter/Define lambda expressions that have been jitted.
 /// It's used to check whether a given expression has already been jitted, and
 /// to look up its associated variable name if it is.
@@ -557,7 +543,8 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 
    const auto parsedExpr =
       ParseRDFExpression(std::string(expression), branches, customCols.GetNames(), dsColumns, aliasMap);
-   const auto exprVarTypes = GetColumnTypes(parsedExpr, tree, ds, customCols);
+   const auto exprVarTypes =
+      GetValidatedArgTypes(parsedExpr.fUsedCols, customCols, tree, ds, "Filter", /*vector2rvec=*/true);
    const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfLambda(lambdaName);
    if (type != "bool")
@@ -603,7 +590,8 @@ std::shared_ptr<RJittedCustomColumn> BookDefineJit(std::string_view name, std::s
 
    const auto parsedExpr =
       ParseRDFExpression(std::string(expression), branches, customCols.GetNames(), dsColumns, aliasMap);
-   const auto exprVarTypes = GetColumnTypes(parsedExpr, tree, ds, customCols);
+   const auto exprVarTypes =
+      GetValidatedArgTypes(parsedExpr.fUsedCols, customCols, tree, ds, "Define", /*vector2rvec=*/true);
    const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfLambda(lambdaName);
 
@@ -641,22 +629,6 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
                            const unsigned int nSlots, const RDFInternal::RBookedCustomColumns &customCols,
                            RDataSource *ds, std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
-   auto nBranches = bl.size();
-
-   // retrieve branch type names as strings
-   std::vector<std::string> columnTypeNames(nBranches);
-   for (auto i = 0u; i < nBranches; ++i) {
-      RCustomColumnBase *customCol = customCols.HasName(bl[i]) ? customCols.GetColumns().at(bl[i]).get() : nullptr;
-      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], tree, ds, customCol, /*vector2rvec=*/true);
-      if (columnTypeName.empty()) {
-         std::string exceptionText = "The type of column ";
-         exceptionText += bl[i];
-         exceptionText += " could not be guessed. Please specify one.";
-         throw std::runtime_error(exceptionText.c_str());
-      }
-      columnTypeNames[i] = columnTypeName;
-   }
-
    // retrieve type of result of the action as a string
    auto actionResultTypeClass = TClass::GetClass(art);
    if (!actionResultTypeClass) {
@@ -680,6 +652,7 @@ std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::R
    // just-in-time create an RAction object and it will assign it to its corresponding RJittedAction.
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
+   const auto columnTypeNames = GetValidatedArgTypes(bl, customCols, tree, ds, actionTypeName, /*vector2rvec=*/true);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
@@ -751,6 +724,29 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
    }
 
    return selectedColumns;
+}
+
+std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RBookedCustomColumns &customColumns,
+                                              TTree *tree, RDataSource *ds, const std::string &context,
+                                              bool vector2rvec)
+{
+   auto toCheckedArgType = [&](const std::string &c) {
+      RDFDetail::RCustomColumnBase *customCol =
+         customColumns.HasName(c) ? customColumns.GetColumns().at(c).get() : nullptr;
+      const auto colType = ColumnName2ColumnTypeName(c, tree, ds, customCol, vector2rvec);
+      if (colType.rfind("CLING_UNKNOWN_TYPE", 0) == 0) { // the interpreter does not know this type
+         const auto msg =
+            "The type of custom column \"" + c + "\" (" + colType.substr(19) +
+            ") is not known to the interpreter, but a just-in-time-compiled " + context +
+            " call requires this column. Make sure to create and load ROOT dictionaries for this column's class.";
+         throw std::runtime_error(msg);
+      }
+      return colType;
+   };
+   std::vector<std::string> colTypes;
+   colTypes.reserve(colNames.size());
+   std::transform(colNames.begin(), colNames.end(), std::back_inserter(colTypes), toCheckedArgType);
+   return colTypes;
 }
 
 /// Return a bitset each element of which indicates whether the corresponding element in `selectedColumns` is the
