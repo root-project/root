@@ -346,7 +346,7 @@ CPPYY_DECLARE_BASIC_CONVERTER(PyObject);
 
 
 #define CPPYY_DECLARE_STRING_CONVERTER(name, strtype)                        \
-class name##Converter : public InstancePtrConverter {                        \
+class name##Converter : public InstanceConverter {                           \
 public:                                                                      \
     name##Converter(bool keepControl = true);                                \
 public:                                                                      \
