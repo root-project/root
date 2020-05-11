@@ -170,7 +170,10 @@ TEST(TThreadedObject, GetNSlots)
    std::vector<std::thread> threads;
    for (int i = 0; i < 4; ++i)
       threads.emplace_back(task);
-   ready = true;
+   {
+      std::lock_guard<std::mutex> lk(m);
+      ready = true;
+   }
    cv.notify_all();
    for (auto &t : threads)
       t.join();
