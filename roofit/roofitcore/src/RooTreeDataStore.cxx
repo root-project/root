@@ -526,6 +526,12 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
       if (!destArg->isValid()) {
         numInvalid++ ;
         allOK=kFALSE ;
+        if (numInvalid < 5) {
+          coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
+              << " cannot accommodate the value " << static_cast<RooAbsReal*>(sourceArg)->getVal() << std::endl;
+        } else if (numInvalid == 5) {
+          coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping ..." << std::endl;
+        }
         break ;
       }
     }
@@ -539,7 +545,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   if (numInvalid>0) {
-    coutI(Eval) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out of range events" << endl ;
+    coutW(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out-of-range events" << endl ;
   }
 
   SetTitle(t->GetTitle());

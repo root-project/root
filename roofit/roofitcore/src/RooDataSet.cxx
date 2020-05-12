@@ -354,13 +354,9 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     // Make import mapping if index category is specified
     map<string,RooDataSet*> hmap ;  
     if (indexCat) {
-      char tmp[100000] ;
-      strlcpy(tmp,impSliceNames,100000) ;
-      char* token = strtok(tmp,",") ;
       TIterator* hiter = impSliceData.MakeIterator() ;
-      while(token) {
+      for (const auto& token : RooHelpers::tokenise(impSliceNames, ",")) {
         hmap[token] = (RooDataSet*) hiter->Next() ;
-        token = strtok(0,",") ;
       }
       delete hiter ;
     }
@@ -811,17 +807,13 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 		       std::size_t nStart, std::size_t nStop, Bool_t copyCache, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
-   _dstore =
-      (defaultStorageType == Tree)
-         ? ((RooAbsDataStore *)new RooTreeDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart, nStop,
-                                                    copyCache, wgtVarName))
-         : (
-              //     ( dset->_dstore->IsA()==RooCompositeDataStore::Class() )?
-              //      ((RooAbsDataStore*) new
-              //      RooCompositeDataStore(name,title,(RooCompositeDataStore&)(*dset->_dstore),_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName))
-              //      :
-              ((RooAbsDataStore *)new RooVectorDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart,
-                                                         nStop, copyCache, wgtVarName)));
+  if (defaultStorageType == Tree) {
+    _dstore = new RooTreeDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart, nStop,
+        copyCache, wgtVarName);
+  } else {
+    _dstore = new RooVectorDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart,
+        nStop, copyCache, wgtVarName);
+  }
 
    _cachedVars.add(_dstore->cachedVars());
 
