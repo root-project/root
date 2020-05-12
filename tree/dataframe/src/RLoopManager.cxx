@@ -97,7 +97,7 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
 
       ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
 
-      if (t.GetBranch(fullName.c_str())) {
+      if (t.GetBranch(fullName.c_str()) || t.FindBranch(fullName.c_str())) {
          UpdateList(bNamesReg, bNames, fullName, friendName);
 
       } else if (t.GetBranch(subBranchName.c_str())) {
