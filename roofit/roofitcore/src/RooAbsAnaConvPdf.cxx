@@ -83,8 +83,7 @@ ClassImp(RooAbsAnaConvPdf);
 /// Default constructor, required for persistence
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
-  _isCopy(kFALSE),
-  _convNormSet(nullptr)
+  _isCopy(kFALSE)
 {
 }
 
@@ -100,11 +99,9 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const char *name, const char *title,
   _model("!model","Original resolution model",this,(RooResolutionModel&)model,kFALSE,kFALSE),
   _convVar("!convVar","Convolution variable",this,cVar,kFALSE,kFALSE),
   _convSet("!convSet","Set of resModel X basisFunc convolutions",this),
-  _convNormSet(nullptr),
   _coefNormMgr(this,10),
   _codeReg(10)
 {
-  _convNormSet = new RooArgSet(cVar,"convNormSet") ;
   _model.absArg()->setAttribute("NOCacheAndTrack") ;
 }
 
@@ -117,8 +114,6 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
   _model("!model",this,other._model),
   _convVar("!convVar",this,other._convVar),
   _convSet("!convSet",this,other._convSet),
-  // _basisList(other._basisList),
-  _convNormSet(other._convNormSet? new RooArgSet(*other._convNormSet) : new RooArgSet() ),
   _coefNormMgr(other._coefNormMgr,this),
   _codeReg(other._codeReg)
 {
@@ -136,10 +131,6 @@ RooAbsAnaConvPdf::RooAbsAnaConvPdf(const RooAbsAnaConvPdf& other, const char* na
 
 RooAbsAnaConvPdf::~RooAbsAnaConvPdf()
 {
-  if (_convNormSet) {
-    delete _convNormSet ;
-  }
-
   if (!_isCopy) {
     std::vector<RooAbsArg*> tmp(_convSet.begin(), _convSet.end());
 
