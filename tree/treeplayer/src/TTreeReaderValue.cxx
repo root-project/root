@@ -453,6 +453,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
    }
 
    auto branchFromFullName = fTreeReader->GetTree()->GetBranch(fBranchName);
+   if (branchFromFullName == nullptr) // use the slower but more thorough FindBranch as fallback
+      branchFromFullName = fTreeReader->GetTree()->FindBranch(fBranchName);
 
    if (!fDict) {
       const char* brDataType = "{UNDETERMINED}";
