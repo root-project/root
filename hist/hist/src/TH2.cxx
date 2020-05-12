@@ -2577,6 +2577,9 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 /// Smooth bin contents of this 2-d histogram using kernel algorithms
 /// similar to the ones used in the raster graphics community.
 /// Bin contents in the active range are replaced by their smooth values.
+/// The algorithm retains the input dimension by using Kernel Crop at the input boundaries.
+/// Kernel Crop sets any pixel in the kernel that extends past the input to zero and adjusts the
+/// normalization accordingly.
 /// If Errors are defined via Sumw2, they are also scaled and computed.
 /// However, note the resulting errors will be correlated between different-bins, so
 /// the errors should not be used blindly to perform any calculation involving several bins,
