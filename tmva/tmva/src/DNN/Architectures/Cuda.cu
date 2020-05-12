@@ -14,6 +14,13 @@
 // for Double_t and Float_t floating point types.               //
 /////////////////////////////////////////////////////////////////
 
+// in case we compile C++ code with std-17 and cuda with lower standard
+#include "RConfigure.h"
+#ifdef R__HAS_STD_STRING_VIEW
+#undef R__HAS_STD_STRING_VIEW
+#define R__HAS_STD_EXPERIMENTAL_STRING_VIEW
+#endif
+
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "Cuda/Propagation.cu"
 #include "Cuda/Arithmetic.cu"
@@ -33,8 +40,8 @@ template class TCuda<Double_t>;
 
 
 #ifndef R__HAS_TMVAGPU
-   // if R__HAS_TMVAGPU is not defined this file should not be compiled 
-   static_assert(false,"GPU/CUDA architecture is not enabled"); 
+   // if R__HAS_TMVAGPU is not defined this file should not be compiled
+   static_assert(false,"GPU/CUDA architecture is not enabled");
 #endif
 
 

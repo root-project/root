@@ -14,7 +14,12 @@
 // for Double_t and Real_t floating point types.                 //
 ///////////////////////////////////////////////////////////////////
 
-
+// in case we compile C++ code with std-17 and cuda with lower standard
+#include "RConfigure.h"
+#ifdef R__HAS_STD_STRING_VIEW
+#undef R__HAS_STD_STRING_VIEW
+#define R__HAS_STD_EXPERIMENTAL_STRING_VIEW
+#endif
 
 #include "TMVA/DNN/Architectures/TCudnn.h"
 #include "Cudnn/Propagate.cu"
