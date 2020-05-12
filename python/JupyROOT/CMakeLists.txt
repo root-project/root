@@ -11,11 +11,11 @@ set(DOCTEST_LAUNCHER ${CMAKE_CURRENT_SOURCE_DIR}/doctest_launcher.py)
 # List of notebook files
 # TODO: To be extended with the list of downloaded notebooks used in the
 # documentation and as tutorials.
-set(NOTEBOOKS ${CMAKE_CURRENT_SOURCE_DIR}/importROOT.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/simpleCppMagic.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/thread_local.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/ROOT_kernel.ipynb
-              ${CMAKE_CURRENT_SOURCE_DIR}/tpython.ipynb)
+set(NOTEBOOKS importROOT.ipynb
+              simpleCppMagic.ipynb
+              thread_local.ipynb
+              ROOT_kernel.ipynb
+              tpython.ipynb)
 
 # Test all modules with doctest. All new tests will be automatically picked up
 file(GLOB pyfiles ${MODULES_LOCATION}/*.py)
@@ -31,13 +31,17 @@ endforeach()
 foreach(NOTEBOOK ${NOTEBOOKS})
   get_filename_component(NOTEBOOKBASE ${NOTEBOOK} NAME_WE)
   ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
+                    COPY_TO_BUILDDIR ${NOTEBOOK}
                     COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK})
 endforeach()
 
 if(ROOT_imt_FOUND)
   # No need to compare output here, just check it runs with no error
-  ROOTTEST_ADD_TEST(Cpp_IMT_Canvas_notebook
-                    COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${CMAKE_CURRENT_SOURCE_DIR}/Cpp_IMT_Canvas.ipynb "OFF")
+  set(IMT_NB Cpp_IMT_Canvas.ipynb)
+  get_filename_component(NOTEBOOKBASE ${IMT_NB} NAME_WE)
+  ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
+                    COPY_TO_BUILDDIR ${IMT_NB}
+                    COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${IMT_NB} "OFF")
 endif()
 
 endif()
