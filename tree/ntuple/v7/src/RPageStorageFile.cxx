@@ -213,7 +213,10 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    fCtrSzReadOverhead = fMetrics.MakeCounter<decltype(fCtrSzReadOverhead)>("szReadOverhead", "B",
       "volume read from file (overhead)");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
-   fCtrNPage = fMetrics.MakeCounter<decltype(fCtrNPage)>("nPage", "", "number of populated pages");
+   fCtrNPageLoaded = fMetrics.MakeCounter<decltype(fCtrNPageLoaded)>(
+      "fCtrNPageLoaded", "", "number of pages loaded from storage");
+   fCtrNPagePopulated = fMetrics.MakeCounter<decltype(fCtrNPagePopulated)>(
+      "nPagePopulated", "", "number of populated pages");
    fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
       "timeWallRead", "ns", "wall clock time spent reading");
    fCtrTimeCpuRead = fMetrics.MakeCounter<decltype(fCtrTimeCpuRead)>("timeCpuRead", "ns", "CPU time spent reading");
@@ -271,7 +274,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    const auto clusterId = clusterDescriptor.GetId();
    const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
 
-   fCtrNPage->Inc();
+   fCtrNPagePopulated->Inc();
 
    // TODO(jblomer): binary search
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -298,6 +301,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
    auto pageBuffer = new unsigned char[bytesPacked];
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       fReader.ReadBuffer(pageBuffer, bytesOnStorage, pageInfo.fLocator.fPosition);
+      fCtrNPageLoaded->Inc();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns.top());
@@ -484,6 +488,7 @@ ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterI
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
       pageMap.Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
    }
+   fCtrNPageLoaded->Add(onDiskPages.size());
    for (auto &r : readRequests) {
       r.fBuffer = buffer + reinterpret_cast<intptr_t>(r.fBuffer);
    }

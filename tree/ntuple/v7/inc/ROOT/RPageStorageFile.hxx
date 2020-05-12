@@ -123,7 +123,8 @@ private:
    RNTupleAtomicCounter *fCtrSzReadPayload = nullptr;
    RNTupleAtomicCounter *fCtrSzReadOverhead = nullptr;
    RNTuplePlainCounter *fCtrSzUnzip = nullptr;
-   RNTuplePlainCounter *fCtrNPage = nullptr;
+   RNTuplePlainCounter *fCtrNPageLoaded = nullptr;
+   RNTuplePlainCounter *fCtrNPagePopulated = nullptr;
    RNTupleAtomicCounter *fCtrTimeWallRead = nullptr;
    RNTuplePlainCounter *fCtrTimeWallUnzip = nullptr;
    RNTupleTickCounter<RNTupleAtomicCounter> *fCtrTimeCpuRead = nullptr;
