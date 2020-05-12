@@ -126,8 +126,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 /// Constructor of a data hist from an existing data collection (binned or unbinned)
 /// The RooArgSet 'vars' defines the dimensions of the histogram. 
 /// The range and number of bins in each dimensions are taken
-/// from getMin()getMax(),getBins() of each RooAbsArg representing that
-/// dimension.
+/// from getMin(), getMax(), getBins() of each argument passed.
 ///
 /// For real dimensions, the fit range and number of bins can be set independently
 /// of the plot range and number of bins, but it is advisable to keep the
@@ -903,19 +902,16 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
 
   Double_t lo,hi ;
   const std::size_t nevt = nStop < static_cast<std::size_t>(numEntries()) ? nStop : static_cast<std::size_t>(numEntries());
-  TIterator* vIter = get()->createIterator() ;
   for (auto i=nStart; i<nevt ; i++) {
     const RooArgSet* row = get(i) ;
 
     Bool_t doSelect(kTRUE) ;
     if (cutRange) {
-      RooAbsArg* arg ;
-      vIter->Reset() ;
-      while((arg=(RooAbsArg*)vIter->Next())) {	
-	if (!arg->inRange(cutRange)) {
-	  doSelect = kFALSE ;
-	  break ;
-	}
+      for (auto arg : *get()) {
+        if (!arg->inRange(cutRange)) {
+          doSelect = kFALSE ;
+          break ;
+        }
       }
     }
     if (!doSelect) continue ;
@@ -925,14 +921,13 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
       rdh->add(*row,weight(),lo*lo) ;
     }
   }
-  delete vIter ;
 
   if (cloneVar) {
     delete tmp ;
   } 
-  
-    return rdh ;
-  }
+
+  return rdh ;
+}
 
 
 
