@@ -1527,6 +1527,9 @@ void TStyle::SetOptDate(Int_t optdate)
 ///  -  When "v"=2 all parameters are shown.
 ///
 ///  #### Notes:
+///
+///  - never call `SetOptFit(000111);` but `SetOptFit(1111)`, 0001111 will
+///    be taken as an octal number !!
 ///  - `gStyle->SetOptFit(1)` is a shortcut allowing to set the most common
 ///    case and is equivalent to `gStyle->SetOptFit(111)`
 ///  - At ROOT startup the option fit is set to `0`. So, to see the fit parameters
