@@ -25,10 +25,10 @@
 #include <cassert>
 #include <iostream>
 
-#include "RConfigure.h"
+#include "CudaMatrix.h"
 #include "TMatrixT.h"
 #include "CudaBuffers.h"
-#include "CudaMatrix.h"
+
 //#include "TMVA/RTensor.hxx"
 
 #ifdef R__HAS_CUDNN

@@ -2262,7 +2262,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
          fNet->AddBatchNormLayer(0., 0.0);
       }
-      // read eventually weights and biases
+      // read weights and biases
       fNet->GetLayers().back()->ReadWeightsFromXML(layerXML);
 
       // read next layer
