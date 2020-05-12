@@ -447,9 +447,9 @@ if(macos_native)
 endif()
 
 # Print message saying with which versions of Python are used to build
-if(NOT Python3_Development_FOUND OR NOT Python2_Development_FOUND)
+if(NOT (Python3_Interpreter_FOUND AND Python3_Development_FOUND) OR NOT (Python2_Interpreter_FOUND AND Python2_Development_FOUND))
   message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_MAJOR}")
-elseif(Python3_Development_FOUND AND Python2_Development_FOUND)
+elseif((Python3_Interpreter_FOUND AND Python3_Development_FOUND) AND (Python2_Interpreter_FOUND AND Python2_Development_FOUND))
   if(pyroot_experimental)
     # In PyROOT experimental, if we found two Python versions we build for both
     message(STATUS "PyROOT will be built for versions ${PYTHON_VERSION_MAJOR} (Main) and ${OTHER_PYTHON_VERSION_MAJOR}")
