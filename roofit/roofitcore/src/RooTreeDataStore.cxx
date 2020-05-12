@@ -448,42 +448,18 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load values from tree 't' into this data collection, optionally
-/// selecting events using 'select' RooFormulaVar.
+/// selecting events using the RooFormulaVar 'select'.
 ///
-/// The source tree 't' is first clone as not disturb its branch
+/// The source tree 't' is cloned to not disturb its branch
 /// structure when retrieving information from it.
-
 void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/) 
 {
-  // Clone source tree
-  // WVE Clone() crashes on trees, CloneTree() crashes on tchains :-(
+  // Make our local copy of the tree, so we can safely loop through it.
+  std::unique_ptr<TTree> tClone( static_cast<TTree*>(t->Clone()) );
+  tClone->SetDirectory(t->GetDirectory());
 
-  // Change directory to memory dir before cloning tree to avoid ROOT errors
-  TString pwd(gDirectory->GetPath()) ;
-  TString memDir(gROOT->GetName()) ;
-  memDir.Append(":/") ;
-  Bool_t notInMemNow= (pwd!=memDir) ;
-
-  if (notInMemNow) {
-    gDirectory->cd(memDir) ;
-  }
-
-  TTree* tClone ;
-  if (dynamic_cast<const TChain*>(t)) {
-    tClone = (TTree*) t->Clone() ; 
-  } else {
-    tClone = ((TTree*)t)->CloneTree() ;
-  }
-
-  // Change directory back to original directory
-  tClone->SetDirectory(0) ;
-
-  if (notInMemNow) {
-    gDirectory->cd(pwd) ;
-  }
-    
   // Clone list of variables  
-  RooArgSet *sourceArgSet = (RooArgSet*) _varsww.snapshot(kFALSE) ;
+  std::unique_ptr<RooArgSet> sourceArgSet( _varsww.snapshot(kFALSE) );
   
   // Check that we have the branches:
   for (const auto var : *sourceArgSet) {
@@ -500,18 +476,18 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   // Redirect formula servers to sourceArgSet
-  RooFormulaVar* selectClone(0) ;
+  std::unique_ptr<RooFormulaVar> selectClone;
   if (select) {
-    selectClone = (RooFormulaVar*) select->cloneTree() ;
+    selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
     selectClone->recursiveRedirectServers(*sourceArgSet) ;
     selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
   }
 
   // Loop over events in source tree   
   Int_t numInvalid(0) ;
-  Int_t nevent= (Int_t)tClone->GetEntries();
-  for(Int_t i=0; i < nevent; ++i) {
-    Int_t entryNumber=tClone->GetEntryNumber(i);
+  const Long64_t nevent = tClone->GetEntries();
+  for(Long64_t i=0; i < nevent; ++i) {
+    const auto entryNumber = tClone->GetEntryNumber(i);
     if (entryNumber<0) break;
     tClone->GetEntry(entryNumber,1);
 
@@ -549,10 +525,6 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   SetTitle(t->GetTitle());
-
-  delete sourceArgSet ;
-  delete selectClone ;
-  delete tClone ;
 }
 
 

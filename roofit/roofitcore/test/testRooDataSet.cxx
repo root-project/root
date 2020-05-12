@@ -5,7 +5,15 @@
 #include "RooDataHist.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
-#include "TTree.h"
+
+#include <TFile.h>
+#include <TTree.h>
+#include <TChain.h>
+#include <RooDataHist.h>
+#include <TRandom3.h>
+#include <TH1F.h>
+#include <TCut.h>
+#include <TSystem.h>
 
 #include <TRandom3.h>
 #include <TH1F.h>
@@ -70,6 +78,48 @@ TEST(RooDataSet, ImportLongBranchNames) {
   EXPECT_EQ(static_cast<RooRealVar*>(ds.get(1)->find(*v))->getVal(), 4.);
   EXPECT_EQ(ds.numEntries(), 2);
   EXPECT_DOUBLE_EQ(ds.sumEntries("HLT_mu6_mu4_bBmumux_BsmumuPhi_delayed_L1BPH_2M8_MU6MU4_BPH_0DR15_MU6MU4 > 3."), 1.);
+}
+
+
+/// ROOT-3579 Binned clone seemed to create problems with chains.
+/// Code adapted from example in JIRA.
+TEST(RooDataSet, BinnedClone) {
+  const char* filename[2] = {"RooDataSet_BinnedClone1.root", "RooDataSet_BinnedClone2.root"};
+  double sumW = 0;
+
+  for (unsigned int i=0; i < 2; ++i) {
+    TFile file(filename[i], "RECREATE");
+    TTree tree("cand", "cand");
+    double Mes,weight;
+    tree.Branch("Mes", &Mes);
+    tree.Branch("weight", &weight);
+
+    for (unsigned int j=0; j<20; ++j) {
+      Mes = 5.24 + j*0.05/20. + i*0.0003;
+      weight = 1.3 + j + i;
+      sumW += weight;
+      tree.Fill();
+    }
+    file.WriteObject(&tree, "cand");
+    file.Close();
+  }
+
+  TChain chain("cand");
+  chain.Add(filename[0]);
+  chain.Add(filename[1]);
+  RooRealVar mes("Mes","Mes",5.28,5.24,5.29);
+  mes.setBin(40);
+  RooRealVar weight("weight","weight",1,0,100);
+  RooDataSet* data = new RooDataSet("dataset", "dataset", &chain, RooArgSet(mes,weight), 0, weight.GetName());
+  RooDataHist* hist = data->binnedClone();
+
+  EXPECT_DOUBLE_EQ(hist->sumEntries(), sumW);
+
+  delete hist;//invalid read here
+  delete data;//and here too
+
+  gSystem->Unlink(filename[0]);
+  gSystem->Unlink(filename[1]);
 }
 
 
