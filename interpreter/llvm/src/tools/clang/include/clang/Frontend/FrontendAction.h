@@ -29,6 +29,10 @@
 #include <vector>
 
 namespace clang {
+
+bool SetupModuleBuiltFromModuleMap(CompilerInstance &CI,
+                                   FrontendInputFile& Input);
+
 class ASTMergeAction;
 class CompilerInstance;
 

@@ -3938,7 +3938,9 @@ static llvm::StringRef GetModuleNameFromRdictName(llvm::StringRef rdictName)
 {
    // Try to get the module name in the modulemap based on the filepath.
    llvm::StringRef moduleName = llvm::sys::path::filename(rdictName);
-   moduleName.consume_front("lib");
+   // FIXME: Rename the libc module and delete this special case.
+   if (!rdictName.startswith("libc"))
+      moduleName.consume_front("lib");
    moduleName.consume_back(".pcm");
    moduleName.consume_back("_rdict");
    return moduleName;
@@ -3992,23 +3994,37 @@ int RootClingMain(int argc,
 
    llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
 
-   std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
+   llvm::SmallString<512> llvmDir(gDriverConfig->fTROOT__GetEtcDir());
+   llvm::sys::path::append(llvmDir, "cling");
+   llvm::SmallString<512> resourcePathInc(llvmDir);
+   llvm::sys::path::append(resourcePathInc, "lib", "clang", "5.0.0");
+   assert(llvm::sys::fs::exists(resourcePathInc));
+   std::string llvmResourceDir = resourcePathInc.str().str();
    if (gBareClingSubcommand) {
       std::vector<const char *> clingArgsC;
       clingArgsC.push_back(executableFileName);
       // Help cling finds its runtime (RuntimeUniverse.h and such).
-      clingArgsC.push_back("-I");
-      clingArgsC.push_back(gDriverConfig->fTROOT__GetEtcDir());
+      //clingArgsC.push_back("-I");
+      //clingArgsC.push_back(gDriverConfig->fTROOT__GetEtcDir());
 
-      //clingArgsC.push_back("-resource-dir");
-      //clingArgsC.push_back(llvmResourceDir.c_str());
+      llvm::sys::path::append(resourcePathInc, "include");
+      clingArgsC.push_back("-I");
+      clingArgsC.push_back(resourcePathInc.c_str());
+      // Add the builtin modulemap for clang. See -fbuiltin-module-map
+      llvm::SmallString<512> builtinModuleMap("-fmodule-map-file=");
+      builtinModuleMap.append(resourcePathInc);
+      llvm::sys::path::append(builtinModuleMap, "module.modulemap");
+      clingArgsC.push_back(resourcePathInc.c_str());
+
+      //clingArgsC.push_back("-nobuiltininc");
+      clingArgsC.push_back("-noruntime");
 
       for (const std::string& Opt : gOptBareClingSink)
          clingArgsC.push_back(Opt.c_str());
 
       auto interp = llvm::make_unique<cling::Interpreter>(clingArgsC.size(),
                                                           &clingArgsC[0],
-                                                          llvmResourceDir.c_str());
+                                                          llvmDir.c_str());
       // FIXME: Diagnose when we have misspelled a flag. Currently we show no
       // diagnostic and report exit as success.
       return interp->getDiagnostics().hasFatalErrorOccurred();
@@ -4218,40 +4234,11 @@ int RootClingMain(int argc,
 
       // Specify the module name that we can lookup the module in the modulemap.
       outputFile = llvm::sys::path::stem(gOptSharedLibFileName).str();
-      // Try to get the module name in the modulemap based on the filepath.
       moduleName = GetModuleNameFromRdictName(outputFile);
-
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
 
       std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
-      // FIXME: This is a horrible workaround to fix the incremental builds.
-      // The enumerated modules are built by clang impicitly based on #include of
-      // a header which is contained within that module. The build system has
-      // no way to track dependencies on them and trigger a rebuild.
-      // A possible solution can be to disable completely the implicit build of
-      // modules and each module to be built by rootcling. We need to teach
-      // rootcling how to build modules with no IO support.
-      if (moduleName == "Core") {
-         assert(gDriverConfig->fBuildingROOTStage1);
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "_Builtin_intrinsics.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "_Builtin_stddef_max_align_t.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "Cling_Runtime_Extra.pcm").str().c_str());
-#ifdef R__MACOSX
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "Darwin.pcm").str().c_str());
-#else
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "libc.pcm").str().c_str());
-#endif
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "std.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "cuda.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "boost.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "tinyxml2.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Config.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Rtypes.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_C.pcm").str().c_str());
-         remove((moduleCachePath + llvm::sys::path::get_separator() + "ROOT_Foundation_Stage1_NoRTTI.pcm").str().c_str());
-      }
 
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
@@ -4296,7 +4283,7 @@ int RootClingMain(int argc,
 #endif
 
       owningInterpPtr.reset(new cling::Interpreter(clingArgsC.size(), &clingArgsC[0],
-                                                   llvmResourceDir.c_str()));
+                                                   llvmDir.c_str()));
       interpPtr = owningInterpPtr.get();
       // Force generation of _Builtin_intrinsics by rootcling_stage1.
       // The rest of the modules are implicitly generated by cling when including
@@ -4358,7 +4345,7 @@ int RootClingMain(int argc,
    if (gOptCxxModule) {
       for (llvm::StringRef DepMod : gOptModuleDependencies) {
          if (DepMod.endswith("_rdict.pcm")) {
-            ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpat>]%s.pcm\n",
+            ROOT::TMetaUtils::Warning(0, "'%s' value is deprecated. Please use [<fullpath>]%s.pcm\n",
                                       DepMod.data(),
                                       GetModuleNameFromRdictName(DepMod).str().data());
          }
@@ -4693,7 +4680,7 @@ int RootClingMain(int argc,
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       llvmResourceDir.c_str())) {
+                       llvmDir.c_str())) {
          ROOT::TMetaUtils::Error(0, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
          rootclingRetCode += 1;
       } else {

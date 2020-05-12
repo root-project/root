@@ -125,6 +125,8 @@ if (runtime_cxxmodules)
   endif()
 endif(runtime_cxxmodules)
 
+set(root_etc_cling_modulemaps)
+
 foreach(file ${custom_modulemaps}
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
@@ -137,7 +139,10 @@ foreach(file ${custom_modulemaps}
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
     set(dest_file "module.modulemap")
-  elseif(NOT ${file} MATCHES ".*modulemap")
+  endif()
+  if(${file} MATCHES ".*modulemap")
+    list(APPEND root_etc_cling_modulemaps ${CMAKE_BINARY_DIR}/etc/cling/${dest_file})
+  else()
     # We do not want our modulemap to be considered part of the PCH.
     set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${dest_file})
   endif()
@@ -165,6 +170,7 @@ foreach(file wchar.h bits/stat.h bits/time.h)
 endforeach()
 
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
+get_property(root_modulemaps GLOBAL PROPERTY ROOT_MODULEMAPS)
 if(MSVC)
   add_custom_command(OUTPUT ${stamp_file}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include
@@ -174,6 +180,7 @@ if(MSVC)
         ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include		
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}
+        BYPRODUCTS ${root_etc_cling_modulemaps}
         COMMENT "Copying LLVM resource and header files")
 else()
   add_custom_command(OUTPUT ${stamp_file}
@@ -193,8 +200,14 @@ else()
         ${copy_commands}
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}
+        BYPRODUCTS ${root_etc_cling_modulemaps}
         COMMENT "Copying LLVM resource and header files")
 endif()
+
+# Register the main modulemap file.
+list(APPEND root_etc_cling_modulemaps ${CMAKE_BINARY_DIR}/include/module.modulemap)
+set_property(GLOBAL APPEND PROPERTY ROOT_MODULEMAPS ${root_etc_cling_modulemaps})
+
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
 # CLING is a shorthand for CLING_LIBRARIES and some other clang-specific
 # dependencies which ensure the correct order of building. Then the cling header
