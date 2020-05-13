@@ -75,6 +75,7 @@ namespace std
    template <>
    struct hash<ROOT::Experimental::Detail::ROnDiskPage::Key>
    {
+      // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
       size_t operator()(const ROOT::Experimental::Detail::ROnDiskPage::Key &key) const
       {
          return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fColumnId) ^
