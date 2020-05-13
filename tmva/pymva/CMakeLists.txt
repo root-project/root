@@ -10,7 +10,7 @@
 #Autor: Omar  Zapata, Lorenzo Moneta, Sergei Glayzer 22/08/2015
 #website:http://oproject.org
 
-include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
+include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS_Development_Main} ${NUMPY_INCLUDE_DIRS})
 
 ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
   HEADERS
@@ -26,7 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     src/MethodPyRandomForest.cxx
     src/PyMethodBase.cxx
   LIBRARIES
-    ${PYTHON_LIBRARIES}
+  ${PYTHON_LIBRARIES_Development_Main}
   DEPENDENCIES
     Core
     Matrix

@@ -23,7 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   DEPENDENCIES
     Core
   LIBRARIES
-    cppyy${PYTHON_UNDER_VERSION_STRING}
+  cppyy${PYTHON_UNDER_VERSION_STRING_Development_Main}
 )
 
 # Disables warnings originating from deprecated register keyword in Python

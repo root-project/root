@@ -4,7 +4,64 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-#---Check for Python installation-------------------------------------------------------
+#[[
+The purpose of this machinery is to search Python and set both the ROOT and PyROOT related
+Python variables.
+
+ROOT:
+    - PYTHON_EXECUTABLE (set when Interpreter is found)
+    - PYTHON_VERSION_STRING        ""
+    - PYTHON_VERSION_MAJOR        ""
+    - PYTHON_VERSION_MINOR        ""
+
+PyROOT: a set of specific variables is needed for all the Python versions used to build PyROOT.
+At the time of writing we only have two, called simply Main and Other.
+
+    - PYTHON_EXECUTABLE_Development_Main (set when Interpreter is found)
+    - PYTHON_VERSION_STRING_Development_Main        ""
+    - PYTHON_VERSION_MAJOR_Development_Main        ""
+    - PYTHON_VERSION_MINOR_Development_Main        ""
+    - PYTHON_INCLUDE_DIRS_Development_Main (set when Development is found)
+    - PYTHON_LIBRARIES_Development_Main        ""
+    - PYTHON_UNDER_VERSION_STRING_Development_Main (used to give a version-dependent name to the libraries, to allow
+    multiple builds)
+    - Development_Python${version}_FOUND (set if both Interpreter and Development are found for the specified ${version})
+
+    - PYTHON_EXECUTABLE_Development_Other (set when Interpreter is found)
+    - PYTHON_VERSION_STRING_Development_Other        ""
+    - PYTHON_VERSION_MAJOR_Development_Other        ""
+    - PYTHON_VERSION_MINOR_Development_Other        ""
+    - PYTHON_INCLUDE_DIRS_Development_Other (set when Development is found)
+    - PYTHON_LIBRARIES_Development_Other        ""
+    - PYTHON_UNDER_VERSION_STRING_Development_Other (used to give a version-dependent name to the libraries, to allow
+    multiple builds)
+    - Development_Python${version}_FOUND (set if both Interpreter and Development are found for the specified ${version})
+
+^^^^^^^^
+
+Explanation of the machinery:
+
+The first distinction is based on the CMake version used to build. If it is >= 3.14, than PyROOT can be built
+for multiple Python versions. In case CMake >= 3.14, then we check if PYTHON_EXECUTABLE was specified by the user;
+if so, PyROOT is built with only that version, otherwise an attempt to build it both with Python2 and 3 is done.
+
+If PYTHON_EXECUTABLE is specified:
+    - we check which version it is (from here call X) and call the relative
+    find_package(PythonX COMPONENTS Interpreter Development Numpy)
+    - if Interpreter is found, we set the ROOT related Python variables
+    - if Development is found, we set the PyROOT_Main variables (+ Numpy ones)
+
+If PYTHON_EXECUTABLE is NOT specified:
+    - we look for Python3, since we want the highest version to be the preferred one
+    - if Python3 Interpreter is found, we set the ROOT related Python variables
+    - if Python3 Development is found, we set the PyROOT_Main variables (+ Numpy ones)
+    - we then look for Python2, requiring it to be >= 2.7:
+        - if Python3 Interpreter wasn't previously found, then it means that Python2 becomes the one used to
+        build ROOT and the Main one for PyROOT; we set the ROOT related Python variables and, if Python2 Development
+        was found, the PyROOT_Main variables (+ Numpy ones)
+        - if Python3 Interpreter was previously found, we then check if both Python2 Interpreter and Development were
+        found; if yes, we set the PyROOT_Other variables, otherwise PyROOT will be built with only Python 3
+]]
 
 message(STATUS "Looking for Python")
 
@@ -30,7 +87,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
       if(Python${PYTHON_PREFER_VERSION}_Development_FOUND)
         set(PYTHON_INCLUDE_DIRS "${Python${PYTHON_PREFER_VERSION}_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
         set(PYTHON_LIBRARIES "${Python${PYTHON_PREFER_VERSION}_LIBRARIES}" CACHE INTERNAL "" FORCE)
-        set(PYTHON_UNDER_VERSION_STRING "${Python${PYTHON_PREFER_VERSION}_VERSION_MAJOR}_${Python${PYTHON_PREFER_VERSION}_VERSION_MINOR}")
+        # Set PyROOT variables
+        set(Python${PYTHON_PREFER_VERSION}_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python3
+        set(PYTHON_EXECUTABLE_Development_Main "${Python${PYTHON_PREFER_VERSION}_EXECUTABLE}")
+        set(PYTHON_VERSION_STRING_Development_Main "${Python${PYTHON_PREFER_VERSION}_VERSION}")
+        set(PYTHON_UNDER_VERSION_STRING_Development_Main "${Python${PYTHON_PREFER_VERSION}_VERSION_MAJOR}_${Python${PYTHON_PREFER_VERSION}_VERSION_MINOR}")
+        set(PYTHON_INCLUDE_DIRS_Development_Main "${Python${PYTHON_PREFER_VERSION}_INCLUDE_DIRS}")
+        set(PYTHON_LIBRARIES_Development_Main "${Python${PYTHON_PREFER_VERSION}_LIBRARIES}")
       endif()
       if(Python${PYTHON_PREFER_VERSION}_NumPy_FOUND)
         set(NUMPY_FOUND ${Python${PYTHON_PREFER_VERSION}_NumPy_FOUND} CACHE INTERNAL "" FORCE)
@@ -58,7 +121,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
       if(Python3_Development_FOUND)
         set(PYTHON_INCLUDE_DIRS "${Python3_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
         set(PYTHON_LIBRARIES "${Python3_LIBRARIES}" CACHE INTERNAL "" FORCE)
-        set(PYTHON_UNDER_VERSION_STRING "${Python3_VERSION_MAJOR}_${Python3_VERSION_MINOR}")
+        # Set PyROOT variables
+        set(Python3_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python3
+        set(PYTHON_EXECUTABLE_Development_Main "${Python3_EXECUTABLE}")
+        set(PYTHON_VERSION_STRING_Development_Main "${Python3_VERSION}")
+        set(PYTHON_UNDER_VERSION_STRING_Development_Main "${Python3_VERSION_MAJOR}_${Python3_VERSION_MINOR}")
+        set(PYTHON_INCLUDE_DIRS_Development_Main "${Python3_INCLUDE_DIRS}")
+        set(PYTHON_LIBRARIES_Development_Main "${Python3_LIBRARIES}")
       endif()
       if(Python3_NumPy_FOUND)
         set(NUMPY_FOUND ${Python3_NumPy_FOUND} CACHE INTERNAL "" FORCE)
@@ -81,7 +150,13 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
           if(Python2_Development_FOUND)
             set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
             set(PYTHON_LIBRARIES "${Python2_LIBRARIES}" CACHE INTERNAL "" FORCE)
-            set(PYTHON_UNDER_VERSION_STRING "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}")
+            # Set PyROOT variables
+            set(Python2_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python2
+            set(PYTHON_EXECUTABLE_Development_Main "${Python2_EXECUTABLE}")
+            set(PYTHON_VERSION_STRING_Development_Main "${Python2_VERSION}")
+            set(PYTHON_UNDER_VERSION_STRING_Development_Main "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}")
+            set(PYTHON_INCLUDE_DIRS_Development_Main "${Python2_INCLUDE_DIRS}")
+            set(PYTHON_LIBRARIES_Development_Main "${Python2_LIBRARIES}")
           endif()
           if(Python2_NumPy_FOUND)
             set(NUMPY_FOUND ${Python2_NumPy_FOUND} CACHE INTERNAL "" FORCE)
@@ -92,21 +167,37 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
         # Both Python3 and 2 found, set 2 as 'other'
         # In this case, since the 'other' variables are used only for PyROOT (which requires development package),
         # we can simply use the if(Python2_Development_FOUND) condition
-        if(Python2_Development_FOUND)
-          set(OTHER_PYTHON_EXECUTABLE "${Python2_EXECUTABLE}")
-          set(OTHER_PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}")
-          set(OTHER_PYTHON_LIBRARIES "${Python2_LIBRARIES}")
-          set(OTHER_PYTHON_VERSION_STRING "${Python2_VERSION}")
-          set(OTHER_PYTHON_VERSION_MAJOR "${Python2_VERSION_MAJOR}")
-          set(OTHER_PYTHON_VERSION_MINOR "${Python2_VERSION_MINOR}")
-          set(OTHER_PYTHON_UNDER_VERSION_STRING "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}")
-          set(OTHER_NUMPY_FOUND ${Python2_NumPy_FOUND})
-          set(OTHER_NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}")
+        if(Python2_Interpreter_FOUND AND Python2_Development_FOUND)
+          set(Python2_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python2
+          if(Python3_Interpreter_Development_FOUND)
+            set(PYTHON_EXECUTABLE_Development_Other "${Python2_EXECUTABLE}")
+            set(PYTHON_VERSION_STRING_Development_Other "${Python2_VERSION}")
+            set(PYTHON_UNDER_VERSION_STRING_Development_Other "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}")
+            set(PYTHON_INCLUDE_DIRS_Development_Other "${Python2_INCLUDE_DIRS}")
+            set(PYTHON_LIBRARIES_Development_Other "${Python2_LIBRARIES}")
+            if(Python2_NumPy_FOUND)
+              set(OTHER_NUMPY_FOUND ${Python2_NumPy_FOUND})
+              set(OTHER_NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}")
+            endif()
+          else()
+            set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
+            set(PYTHON_LIBRARIES "${Python2_LIBRARIES}" CACHE INTERNAL "" FORCE)
+            # Set PyROOT variables
+            set(PYTHON_EXECUTABLE_Development_Main "${Python2_EXECUTABLE}")
+            set(PYTHON_VERSION_STRING_Development_Main "${Python2_VERSION}")
+            set(PYTHON_UNDER_VERSION_STRING_Development_Main "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}")
+            set(PYTHON_INCLUDE_DIRS_Development_Main "${Python2_INCLUDE_DIRS}")
+            set(PYTHON_LIBRARIES_Development_Main "${Python2_LIBRARIES}")
+            if(Python2_NumPy_FOUND)
+              set(NUMPY_FOUND ${Python2_NumPy_FOUND} CACHE INTERNAL "" FORCE)
+              set(NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
+            endif()
+          endif()
         endif()
       endif()
     endif()
 
-    if(NOT (Python3_Interpreter_FOUND AND Python3_Development_FOUND) AND (NOT (Python2_Interpreter_FOUND AND Python2_Development_FOUND) OR "${Python2_VERSION}" VERSION_LESS "2.7"))
+    if(NOT Python3_Interpreter_Development_FOUND AND (NOT Python2_Interpreter_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
       message(WARNING "No supported Python 2 or 3 development packages were found; PyROOT will not be built.")
     endif()
 
@@ -130,7 +221,11 @@ else()
 
   find_package(NumPy)
 
-  set(PYTHON_UNDER_VERSION_STRING "${PYTHON_VERSION_MAJOR}_${PYTHON_VERSION_MINOR}")
+  set(PYTHON_EXECUTABLE_Development_Main "${PYTHON_EXECUTABLE}")
+  set(PYTHON_VERSION_STRING_Development_Main "${PYTHON_VERSION}")
+  set(PYTHON_UNDER_VERSION_STRING_Development_Main "${PYTHON_VERSION_MAJOR}_${PYTHON_VERSION_MINOR}")
+  set(PYTHON_INCLUDE_DIRS_Development_Main "${PYTHON_INCLUDE_DIRS}")
+  set(PYTHON_LIBRARIES_Development_Main "${PYTHON_LIBRARIES}")
 
 endif()
 
@@ -138,8 +233,8 @@ endif()
 # PYTHON_UNDER_VERSION_STRING and OTHER_PYTHON_UNDER_VERSION_STRING in particular are
 # introduced because it's not possible to create a library containing '.' in the name
 # before the suffix
-set(python_executables ${PYTHON_EXECUTABLE} ${OTHER_PYTHON_EXECUTABLE})
-set(python_include_dirs ${PYTHON_INCLUDE_DIRS} ${OTHER_PYTHON_INCLUDE_DIRS})
-set(python_version_strings ${PYTHON_VERSION_STRING} ${OTHER_PYTHON_VERSION_STRING})
-set(python_under_version_strings ${PYTHON_UNDER_VERSION_STRING} ${OTHER_PYTHON_UNDER_VERSION_STRING})
-set(python_libraries ${PYTHON_LIBRARIES} ${OTHER_PYTHON_LIBRARIES})
+set(python_executables ${PYTHON_EXECUTABLE_Development_Main} ${PYTHON_EXECUTABLE_Development_Other})
+set(python_include_dirs ${PYTHON_INCLUDE_DIRS_Development_Main} ${PYTHON_INCLUDE_DIRS_Development_Other})
+set(python_version_strings ${PYTHON_VERSION_STRING_Development_Main} ${PYTHON_VERSION_STRING_Development_Other})
+set(python_under_version_strings ${PYTHON_UNDER_VERSION_STRING_Development_Main} ${PYTHON_UNDER_VERSION_STRING_Development_Other})
+set(python_libraries ${PYTHON_LIBRARIES_Development_Main} ${PYTHON_LIBRARIES_Development_Other})
