@@ -213,8 +213,9 @@ See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanit
 Many (but intentionally not all) unused includes were removed from ROOT header files. For instance, `#include "TObjString.h"` and
 `#include "ThreadLocalStorage.h"` were removed from `TClass.h`. Or `#include "TDatime.h"` was removed from
 `TDirectory.h` header file . Or `#include "TDatime.h"` was removed from `TFile.h`.
-This change may cause errors during compilation of ROOT-based code - one have to provide missing includes
-where they really required.
+This change may cause errors during compilation of ROOT-based code. To fix it, provide missing the includes
+where they are really required.
+This improves compile times and reduces code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
 
 Even more includes will be "hidden" when ROOT configured with `-Ddev=ON` build option.
 In that case ROOT uses `#ifdef R__LESS_INCLUDES` to replace unused includes by class forward declarations.
