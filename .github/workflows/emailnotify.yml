@@ -23,7 +23,7 @@ jobs:
         githubToken: ${{ secrets.GHTOKEN }}
         to: axel@cern.ch
         from: root-git.cern.ch
-        smtp: smtp.web.de
+        smtp: smtp.gmail.com
         port: 587
         login: root.dev.team@gmail.com
         password: ${{ secrets.SMTPPW }}
