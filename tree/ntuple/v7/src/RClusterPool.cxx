@@ -257,6 +257,9 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       }
 
       // Update the work queue and the in-flight cluster list with new requests
+      // The work queue lock is taken while we hold the in flight clusters lock.  There is no other
+      // spot where both locks are held concurrently.  In particular, the locks are never taken in reversed order
+      // and there is no risk of a deadlock.
       // TODO(jblomer): we should ensure that clusterId is given first to the I/O thread.  That is usually the
       // case but it's not ensured by the code
       std::unique_lock<std::mutex> lockWorkQueue(fLockWorkQueue);
