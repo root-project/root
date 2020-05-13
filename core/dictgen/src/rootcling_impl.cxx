@@ -3540,6 +3540,12 @@ public:
    }
 };
 
+static llvm::cl::list<std::string>
+gOptModuleByproducts("mByproduct", llvm::cl::ZeroOrMore,
+                     llvm::cl::Hidden,
+                     llvm::cl::desc("The list of the expected implicit modules build as part of building the current module."),
+                     llvm::cl::cat(gRootclingOptions));
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom diag client for clang that verifies that each implicitly build module
 /// is a system module. If not, it will let the current rootcling invocation
@@ -3594,20 +3600,25 @@ public:
          }
       }
 
-      // Skip the diag only if we build a ROOT system module or a system module. We still print the diag
-      // when building a non-system module as we will print an error below and the
-      // user should see the detailed default clang diagnostic.
-      bool isROOTSystemModuleDiag = module && llvm::StringRef(moduleName).startswith("ROOT_");
-      bool isSystemModuleDiag = module && module->IsSystem;
-      if (!isROOTSystemModuleDiag && !isSystemModuleDiag)
+      // A dictionary module could build implicitly a set of implicit modules.
+      // For example, the Core module builds libc.pcm and std.pcm implicitly.
+      // Those modules do not require I/O information and it is okay to build
+      // them as part of another module.
+      // However, we can build a module which requires I/O implictly which is
+      // an error because rootcling is not able to generate the corresponding
+      // dictionary.
+      // If we build a I/O requiring module implicitly we should display
+      // an error unless the -mByproduct was specified.
+      bool isByproductModule
+         = module && std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), moduleName) != gOptModuleByproducts.end();
+      if (!isByproductModule)
          fChild->HandleDiagnostic(DiagLevel, Info);
 
-      if (ID == remark_module_build && !isROOTSystemModuleDiag && !isSystemModuleDiag) {
+      if (ID == remark_module_build && !isByproductModule) {
          ROOT::TMetaUtils::Error(0,
-                                 "Had to build non-system module %s implicitly. You first need to\n"
-                                 "generate the dictionary for %s or mark the C++ module as a system\n"
-                                 "module if you provided your own system modulemap file:\n"
-                                 "%s [system] { ... }\n",
+                                 "Building module '%s' implicitly. If '%s' requires a \n"
+                                 "dictionary please fix the build dependencies.\n"
+                                 "Otherwise, specify -mByproduct %s to disable this diagnostic.\n",
                                  moduleName.c_str(), moduleName.c_str(), moduleName.c_str());
       }
    }
