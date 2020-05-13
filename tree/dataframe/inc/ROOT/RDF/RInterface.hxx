@@ -2219,10 +2219,10 @@ private:
       using NewColEntry_t =
          RDFDetail::RCustomColumn<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
-      std::shared_ptr<RDFDetail::RCustomColumnBase> entryColumn{new NewColEntry_t(
-         entryColName, entryColType, std::move(entryColGen), ColumnNames_t{}, fLoopManager->GetNSlots(), newCols)};
+      auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
+                                                         ColumnNames_t{}, fLoopManager->GetNSlots(), newCols);
       newCols.AddName(entryColName);
-      newCols.AddColumn(std::move(entryColumn), entryColName);
+      newCols.AddColumn(entryColumn, entryColName);
 
       // Slot number column
       const std::string slotColName = "rdfslot_";
@@ -2230,11 +2230,10 @@ private:
       auto slotColGen = [](unsigned int slot) { return slot; };
       using NewColSlot_t = RDFDetail::RCustomColumn<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
-      std::shared_ptr<RDFDetail::RCustomColumnBase> slotColumn{new NewColSlot_t(
-         slotColName, slotColType, std::move(slotColGen), ColumnNames_t{}, fLoopManager->GetNSlots(), newCols)};
-
+      auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
+                                                       fLoopManager->GetNSlots(), newCols);
       newCols.AddName(slotColName);
-      newCols.AddColumn(std::move(slotColumn), slotColName);
+      newCols.AddColumn(slotColumn, slotColName);
 
       fCustomColumns = std::move(newCols);
 
@@ -2345,11 +2344,11 @@ private:
 
       using NewCol_t = RDFDetail::RCustomColumn<F, CustomColumnType>;
       RDFInternal::RBookedCustomColumns newCols(newColumns);
-      std::shared_ptr<RDFDetail::RCustomColumnBase> newColumn{new NewCol_t(
-         name, retTypeName, std::forward<F>(expression), validColumnNames, fLoopManager->GetNSlots(), newCols)};
+      auto newColumn = std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
+                                                  fLoopManager->GetNSlots(), newCols);
 
       newCols.AddName(name);
-      newCols.AddColumn(std::move(newColumn), name);
+      newCols.AddColumn(newColumn, name);
 
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
 
