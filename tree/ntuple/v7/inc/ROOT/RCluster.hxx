@@ -168,7 +168,7 @@ public:
    /// memory regions
    void MergePageMap(ROnDiskPageMap &&pageMap);
    /// Marks the column as complete; must be done for all columns, even empty ones without associated pages
-   void CommitColumn(DescriptorId_t columnId);
+   void SetColumnAvailable(DescriptorId_t columnId);
    /// Move the contents of other into this cluster; on-disk pages that are present in both the cluster at hand and
    /// the "other" cluster are gracefully handled such that a following lookup will return the page from
    /// either of the clusters
