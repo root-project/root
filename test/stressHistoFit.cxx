@@ -573,19 +573,21 @@ int testFit(const char* str1, const char* str2, const char* str3,
 
    if ( opts & testOptErr )
    {
-      assert(TVirtualFitter::GetFitter() != 0 );
-      TBackCompFitter* fitter = dynamic_cast<TBackCompFitter*>( TVirtualFitter::GetFitter() );
-      assert(fitter != 0);
-      const ROOT::Fit::FitResult& fitResult = fitter->GetFitResult();
-      if ( debug )
-         printf("err: ");
-      int n = func->GetNpar();
-      for ( int i = 0; i < n; ++i ) {
+      // TVirtualFItter is not available in all case (e.g. when running with ROOT IMT)
+      if (TVirtualFitter::GetFitter() != 0 ) {
+         TBackCompFitter* fitter = dynamic_cast<TBackCompFitter*>( TVirtualFitter::GetFitter() );
+         assert(fitter != 0);
+         const ROOT::Fit::FitResult& fitResult = fitter->GetFitResult();
          if ( debug )
-            printf("%c ", (fitResult.LowerError(i) == fitResult.UpperError(i))?'E':'D');
+            printf("err: ");
+         int n = func->GetNpar();
+         for ( int i = 0; i < n; ++i ) {
+            if ( debug )
+               printf("%c ", (fitResult.LowerError(i) == fitResult.UpperError(i))?'E':'D');
+         }
+         if ( debug )
+            printf("| ");
       }
-      if ( debug )
-         printf("| ");
    }
 
    if ( opts != 0 )
@@ -1243,7 +1245,7 @@ int main(int argc, char** argv)
 
    TApplication* theApp = 0;
 
-
+   ROOT::EnableImplicitMT();
 
    Int_t  verbose     =      0;
    Int_t testNumber   =      0;
