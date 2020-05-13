@@ -883,20 +883,25 @@ enum BinningCmpFlags {
    ///     Example target bins: < | | | | | >
    ///
    /// This binning difference does not affect the merging of regular histogram
-   /// data. However, care must be taken with overflow data. If the source
-   /// histogram has overflow data in the direction where the target axis bins
-   /// span extra range, then it is not possible to correctly merge this
-   /// overflow data into the target histogram's bins.
+   /// data. However, source histogram overflow data must be handled with care.
    ///
-   // FIXME: Can I distinguish between overflow and underflow? And does it make
-   //        enough sense that I'm willing to give up on using a unified
-   //        reporting mechanism for histogram binning & axis binning for that?
+   /// If the source histogram has overflow data in the direction where the
+   /// target axis bins span extra range, then it is not possible to merge this
+   /// overflow data into the target histogram's bins, because it is not known
+   /// how source overflow data should be distributed across target bins.
+   ///
+   // FIXME: What happens when the source axis is growable and does not have
+   //        overflow bins? Should this even be considered an issue then? If so,
+   //        it probably should not be a user-visible one, but only one that's
+   //        reported via an internal API, like bin ordering issues.
+   //
+   // FIXME: Isn't this a special case of kSourceAliasing in a way?
    //
    kExtraTargetRange = (1 << 1),
 
    /// The source axis spans some range that is not covered by the target axis
    ///
-   ///     Example source bins: < | | | | | >
+   ///     Example source bins: < | | | | | | >
    ///     Example target bins: < | | | >
    ///
    /// This binning difference affects the merging of histogram data in a
@@ -904,7 +909,7 @@ enum BinningCmpFlags {
    ///
    /// - If the target axis is not growable, source data lying in the extra
    ///   range can be merged into the corresponding overflow bin of the target
-   ///   histogram, but location information loss will ensue.
+   ///   histogram, but information loss will be lost in the process.
    /// - If the target axis is growable, then...
    ///   * If the source axis contains overflow data in the affected direction,
    ///     this data cannot be correctly merged into the destination histogram.
@@ -928,7 +933,7 @@ enum BinningCmpFlags {
    ///     Example target bins: < |   |     | >
    ///
    /// Affected source histogram data can be merged into the target histogram,
-   /// but location information loss will ensue.
+   /// but some information will be lost in the process.
    ///
    kTargetAliasing = (1 << 3),
 
@@ -938,7 +943,8 @@ enum BinningCmpFlags {
    ///     Example target bins: < | | | | | | >
    ///
    /// It is not possible to correctly merge the affected source histogram data
-   /// into the target histogram.
+   /// into the target histogram, because it is not known how source data should
+   /// be distributed across target bins.
    ///
    kSourceAliasing = (1 << 4),
 
