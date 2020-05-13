@@ -73,9 +73,9 @@ All page source classes need to support the common options.
 class RNTupleReadOptions {
 public:
   enum EClusterCache {
-      kDefault,
       kOff,
       kOn,
+      kDefault = kOn,
    };
 
 private:
