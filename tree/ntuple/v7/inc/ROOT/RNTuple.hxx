@@ -108,8 +108,11 @@ public:
 
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model,
                                               std::string_view ntupleName,
-                                              std::string_view storage);
-   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage);
+                                              std::string_view storage,
+                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+   static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName,
+                                              std::string_view storage,
+                                              const RNTupleReadOptions &options = RNTupleReadOptions());
 
    /// The user imposes an ntuple model, which must be compatible with the model found in the data on storage
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Detail::RPageSource> source);
