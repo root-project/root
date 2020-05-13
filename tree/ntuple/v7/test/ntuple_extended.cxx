@@ -65,6 +65,42 @@ TEST(RNTuple, RealWorld1)
    EXPECT_EQ(chksumRead, chksumWrite);
 }
 
+
+// Stress test the asynchronous cluster pool by a deliberately unfavourable read pattern
+TEST(RNTuple, RandomAccess)
+{
+   FileRaii fileGuard("test_ntuple_random_access.root");
+
+   auto modelWrite = RNTupleModel::Create();
+   auto wrValue   = modelWrite->MakeField<std::int32_t>("value", 42);
+
+   constexpr unsigned int nEvents = 1000000;
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
+      for (unsigned int i = 0; i < nEvents; ++i)
+         ntuple->Fill();
+   }
+
+   RNTupleReadOptions options;
+   options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
+   EXPECT_GT(ntuple->GetDescriptor().GetNClusters(), 10);
+
+   auto viewValue = ntuple->GetView<std::int32_t>("value");
+
+   std::int32_t sum = 0;
+   constexpr unsigned int nSamples = 1000;
+   TRandom3 rnd(42);
+   for (unsigned int i = 0; i < 1000; ++i) {
+      auto entryId = floor(rnd.Rndm() * (nEvents - 1));
+      sum += viewValue(entryId);
+   }
+   EXPECT_EQ(42 * nSamples, sum);
+}
+
+
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST(RNTuple, LargeFile)
 {
