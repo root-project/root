@@ -26,6 +26,7 @@ namespace ROOT {
           decltype(clang::Sema::MaybeODRUseExprs) fMaybeODRUseExprs;
           decltype(clang::Sema::FunctionScopes) fFunctionScopes;
           decltype(clang::Sema::UndefinedButUsed) fUndefinedButUsed;
+          clang::Sema::SFINAETrap fSFINAETrap;
           clang::Sema& fSema;
           void Swapem() {
              std::swap(fCleanup, fSema.Cleanup);
@@ -34,7 +35,7 @@ namespace ROOT {
              std::swap(fFunctionScopes, fSema.FunctionScopes);
              std::swap(fUndefinedButUsed, fSema.UndefinedButUsed);
           }
-          SemaExprCleanupsRAII(clang::Sema& S): fSema(S) {
+          SemaExprCleanupsRAII(clang::Sema& S): fSFINAETrap(S), fSema(S) {
              fFunctionScopes.push_back(new clang::sema::FunctionScopeInfo(S.Diags));
              Swapem();
           };
