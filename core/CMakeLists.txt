@@ -198,6 +198,12 @@ else()
   target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
 endif()
 
+if (runtime_cxxmodules)
+  list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_Stage1_NoRTTI")
+  list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_C")
+  list(APPEND core_implicit_modules "-mByproduct" "ROOT_Rtypes")
+endif(runtime_cxxmodules)
+
 ROOT_GENERATE_DICTIONARY(G__Core
   ${Core_dict_headers}
   ${Clib_dict_headers}
@@ -215,6 +221,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
     Core
   OPTIONS
     -writeEmptyRootPCM
+    ${core_implicit_modules}
   LINKDEF
     base/inc/LinkDef.h
 )
