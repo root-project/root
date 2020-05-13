@@ -210,7 +210,7 @@ See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanit
 
 ### Optimization of ROOT header files
 
-Many (but not all) unused includes were removed from ROOT header files. Like `#include "TObjString.h"` and
+Many (but intentionally not all) unused includes were removed from ROOT header files. For instance, `#include "TObjString.h"` and
 `#include "ThreadLocalStorage.h"` were removed from `TClass.h`. Or `#include "TDatime.h"` was removed from
 `TDirectory.h` header file . Or `#include "TDatime.h"` was removed from `TFile.h`.
 This change may cause errors during compilation of ROOT-based code - one have to provide missing includes
