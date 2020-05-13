@@ -76,7 +76,7 @@ void ROOT::Experimental::Detail::RCluster::MergePageMap(ROnDiskPageMap &&pageMap
 }
 
 
-void ROOT::Experimental::Detail::RCluster::CommitColumn(DescriptorId_t columnId)
+void ROOT::Experimental::Detail::RCluster::SetColumnAvailable(DescriptorId_t columnId)
 {
    fAvailColumns.insert(columnId);
 }
