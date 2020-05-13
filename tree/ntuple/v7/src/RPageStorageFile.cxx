@@ -206,9 +206,6 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    , fPagePool(std::make_shared<RPagePool>())
    , fClusterPool(std::make_unique<RClusterPool>(this))
 {
-   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kDefault)
-      fOptions.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
-
    fCtrNReadV = fMetrics.MakeCounter<decltype(fCtrNReadV)>("nReadV", "", "number of vector read requests");
    fCtrNRead = fMetrics.MakeCounter<decltype(fCtrNRead)>("nRead", "", "number of byte ranges read");
    fCtrSzReadPayload = fMetrics.MakeCounter<decltype(fCtrSzReadPayload)>("szReadPayload", "B",
