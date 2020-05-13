@@ -46,14 +46,16 @@ The following people have contributed to this new version:
 - Manually setting `TThreadedObject::fgMaxSlots` is deprecated: TThreadedObject now increases the number of slots
   on-demand rather than running out and throwing an exception
 
+
 ## Core Libraries
 
-- ROOT comes with C++ Modules enabled. More details about the techonology found [here](../../README.CXXMODULES.md).
+- ROOT comes with C++ Modules enabled. More details about the technology found [here](../../README.CXXMODULES.md).
 - The `ACLiC` can be configured to pass options to the `rootcling` invocation by enabling in the `.rootrc` the `ACLiC.ExtraRootclingFlags [-opts]` line.
 - A call to `ROOT::EnableThreadSafety` is not required before using `TThreadExecutor` or `TTreeProcessorMT` anymore
 - `TTreeProcessorMT` does not silently activate implicit multi-threading features anymore. An explicit call to
   `ROOT::EnableImplicitMT` is required instead
 - `TTreeProcessorMT` now has a constructor argument to set the number of threads for its thread-pool
+
 
 ## I/O Libraries
 
@@ -204,6 +206,20 @@ manipulations in global variables in llvm will abort the build. Such checks can 
 sanitizer documentation or the link below for details. In clang, which allows to blacklist functions, the build will continue.
 
 See [core/sanitizer](https://github.com/root-project/root/tree/master/core/sanitizer) for information.
+
+
+### Optimization of ROOT header files
+
+Many (but not all) unused includes were removed from ROOT header files. Like `#include "TObjString.h"` and
+`#include "ThreadLocalStorage.h"` were removed from `TClass.h`. Or `#include "TDatime.h"` was removed from
+`TDirectory.h` header file . Or `#include "TDatime.h"` was removed from `TFile.h`.
+This change may cause errors during compilation of ROOT-based code - one have to provide missing includes
+where they really required.
+
+Even more includes will be "hidden" when ROOT configured with `-Ddev=ON` build option.
+In that case ROOT uses `#ifdef R__LESS_INCLUDES` to replace unused includes by class forward declarations.
+Such `dev` builds can be used to verify that ROOT-based code really includes all necessary ROOT headers.
+
 
 ## RDataFrame
 
