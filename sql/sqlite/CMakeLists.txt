@@ -8,6 +8,10 @@
 # CMakeLists.txt file for building ROOT sql/pgsql package
 ############################################################################
 
+if(runtime_cxxmodules AND APPLE)
+  list(APPEND extra_dictionary_opts "-mByproduct" "SQLite3")
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
   HEADERS
     TSQLiteResult.h
@@ -23,6 +27,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
     Core
     Net
     RIO
+  DICTIONARY_OPTIONS
+    ${extra_dictionary_opts}
 )
 
 target_include_directories(RSQLite PUBLIC ${SQLITE_INCLUDE_DIR})
