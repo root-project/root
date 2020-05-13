@@ -852,71 +852,140 @@ struct AxisConfigToType<RAxisConfig::kLabels> {
 
 /// Result of an axis/histogram binning comparison
 ///
-/// A bitmap is returned, encoded as an integer, whose individual bits'
-/// semantics are documented as variants of this enum. These bits represent
-/// various possible differences in the binning of two axes or histograms. The
-/// differences are not mutually exclusive.
+/// Axis bin borders are compared with a small tolerance, so that two bin
+/// borders which only differ by small computation rounding errors are
+/// considered identical. Significant differences are classified into various
+/// categories, which reflect the differing impacts of merging data from two
+/// histograms that exhibit these axis binning differences.
 ///
-/// Although all variant descriptions are spelled out in terms of axis binning,
+/// In the end, a bitmap is returned, encoded as bits of an integer. This bitmap
+/// indicates which sorts of binning differences exist between the two input
+/// axes or histograms.
+///
+/// Although all flag descriptions are spelled out in terms of axis binning,
 /// the same notions can be used when comparing the binnings of
 /// multi-dimensional histograms, in which case it should be understood that at
 /// least one of the histograms' axes exhibits the described binning difference.
 ///
+/// In the ASCII art schematics below, "< |" represents the underflow bin of a
+/// non-growable axis, "| |" represents a regular bin, and "| >" represents the
+/// overflow bin of a non-growable axis. When discussing labeled axes, the "|X|"
+/// notation may also be used to represented a labeled bin with label "X".
+///
 enum BinningCmpFlags {
-   /// The source and target axes have rigorously identical binning
+   /// The source and target axes have identical binning, up to bin border
+   /// rounding error tolerance. Histogram data is trivially mergeable.
    kIdentical = 0,
 
-   // TODO: Decide what to do with the parenthesized design notes
-
-   /// Some bin borders are not identical, but match up to specified tolerance
-   kSimilar = (1 << 0);  // (can rebin or ignore, at the cost of inexact
-                         //  accounting of past Fills close to bin borders)
-                         // (it's not clear if this should be reported as soon
-                         //  as _some_ bin borders match, or whether _all_ bin
-                         //  borders need to match before this is useful)
-
    /// The target axis spans some range that is not covered by the source axis
-   kSubset = (1 << 1);  // (can rebin or merge as-is as long as source histogram
-                        //  does not have overflow in the relevant direction(s),
-                        //  otherwise it's not clear where that data should go
-                        //  so we should probably forbid the merge)
+   ///
+   ///     Example source bins:     < | | | >
+   ///     Example target bins: < | | | | | >
+   ///
+   /// This binning difference does not affect the merging of regular histogram
+   /// data. However, care must be taken with overflow data. If the source
+   /// histogram has overflow data in the direction where the target axis bins
+   /// span extra range, then it is not possible to correctly merge this
+   /// overflow data into the target histogram's bins.
+   ///
+   // FIXME: Can I distinguish between overflow and underflow? And does it make
+   //        enough sense that I'm willing to give up on using a unified
+   //        reporting mechanism for histogram binning & axis binning for that?
+   //
+   kExtraTargetRange = (1 << 1);
 
    /// The source axis spans some range that is not covered by the target axis
-   kSuperset = (1 << 2);  // (may not even be a user-visible issue if the
-                          //  target axis is growable, otherwise the two options
-                          //  are to merge the source data as overflow or to
-                          //  extend the target axis' range)
+   ///
+   ///     Example source bins: < | | | | | >
+   ///     Example target bins: < | | | >
+   ///
+   /// This binning difference affects the merging of histogram data in a
+   /// complex manner that depends on the detailed axis characteristics:
+   ///
+   /// - If the target axis is not growable, source data lying in the extra
+   ///   range can be merged into the corresponding overflow bin of the target
+   ///   histogram, but location information loss will ensue.
+   /// - If the target axis is growable, then...
+   ///   * If the source axis contains overflow data in the affected direction,
+   ///     this data cannot be correctly merged into the destination histogram.
+   ///     Further bullet points in this list assume that this is not the case.
+   ///   * If the target axis' bin width evenly divides the missing source
+   ///     axis range, then it is possible to transparently get the two axes to
+   ///     match by growing the target axis.
+   ///   * If the target axis' bin width does not evenly divide the missing
+   ///     source axis range, then growing the target axis will lead us to the
+   ///     kExtraTargetRange scenario.
+   ///
+   // FIXME: Will want to add some extra flags to allow the user to distinguish
+   //        between these various scenarios, as well as we can without knowing
+   //        the histogram data anyway.
+   //
+   kExtraSourceRange = (1 << 2);
 
    /// Multiple source axis bins map into a single target axis bin
-   kSampling = (1 << 3);  // (it is trivial to merge or rebin the source data
-                          //  into the target, but we may not want to do it
-                          //  silently as that results in precision loss)
+   ///
+   ///     Example source bins: < | | | | | | >
+   ///     Example target bins: < |   |     | >
+   ///
+   /// Affected source histogram data can be merged into the target histogram,
+   /// but location information loss will ensue.
+   ///
+   kTargetAliasing = (1 << 3);
 
-   /// A single source bin maps into multiple target bins
-   kAliasing = (1 << 4);  // (for now, we consider this to be a fatal error, as
-                          //  it's not clear how source data should be spread
-                          //  across the matching target bins)
+   /// A source axis bin maps into multiple target axis bins
+   ///
+   ///     Example source bins: < |     |   | >
+   ///     Example target bins: < | | | | | | >
+   ///
+   /// It is not possible to correctly merge the affected source histogram data
+   /// into the target histogram.
+   ///
+   kSourceAliasing = (1 << 4);
 
-   /// Some bins are present in both source and target, but in a different order
-   kOrder = (1 << 5);  // (can only happen for labeled axes at this point in
-                       //  time, not clear if this should even be a user-visible
-                       //  issue or a problem that is silently taken care of by
-                       //  histogram operations)
+   /// Bins from the source and target axis are ordered differently
+   ///
+   /// This situation only affects axes with set semantics, like labeled axes.
+   ///
+   ///     Example source bins: |A|B|C|D|E|
+   ///     Example target bins: |A|C|E|D|B|
+   ///
+   /// The problem can be resolved automatically by re-ordering the target axis
+   /// bins. You can safely ignore this flag as a user of histogram merging
+   /// operations, it is only used by the histogram merging implementation.
+   ///
+   // FIXME: If users don't need to know about it, then don't expose it in
+   //        public methods. Instead, replace BinningCmpFlags bitmap design
+   //        with a more elaborate class wrapper that exposes "external" and
+   //        "internal" flags via separate APIs.
+   //
+   kDifferentOrder = (1 << 5);
 
-   /// The source and target bin types are fundamentally incompatible
-   kIncompatible = (1 << 6);  // (most obvious example : labeled axis vs
-                              //  axis with floating-point binning)
-                              // (more contentious : should float binning vs
-                              //  integer binning be considered to match ?)
+   /// The source and target bins cannot be meaningfully compared
+   ///
+   ///     Example source bins:              ???  < | | | | >
+   ///     Example target bins: |A|C|E|D|B|  ???
+   ///
+   /// This flag will be reported upon trying to compare the binning of
+   /// histogram axis types which are so fundamentally different that there is
+   /// no meaningful way to compare axis bin borders/labels.
+   ///
+   /// It is obviously impossible to automatically merge the data of two
+   /// histograms whose axis types are so fundamentally different.
+   ///
+   // FIXME: Since this flag is mutually exclusive with the other ones, a bitmap
+   //        API may not be the right way to go about this. Instead, in a
+   //        class-based design, I could return an optional type that is empty
+   //        when no meaningful comparison can be carried out.
+   //
+   kIncomparable = (1 << 6);
 };
 
 // NOTE: Should probably be an RAxisBase method, to benefit from vtable
 //       infrastructure and e.g. get specialized equidistant-equidistant code
 BinningCmpFlags CompareBinning(const RAxisBase& target,
-                               const RAxisBase& source,
-                               double tolerance = 0.0);
+                               const RAxisBase& source);
 
-// TODO: Rework CanMap into a CompareBinning + add tolerance as parameter w/ default value
+// TODO: Rework CanMap into a CompareBinning
 
 ///\name Axis Compatibility
 ///\{
