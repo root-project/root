@@ -892,7 +892,7 @@ enum BinningCmpFlags {
    //        enough sense that I'm willing to give up on using a unified
    //        reporting mechanism for histogram binning & axis binning for that?
    //
-   kExtraTargetRange = (1 << 1);
+   kExtraTargetRange = (1 << 1),
 
    /// The source axis spans some range that is not covered by the target axis
    ///
@@ -920,7 +920,7 @@ enum BinningCmpFlags {
    //        between these various scenarios, as well as we can without knowing
    //        the histogram data anyway.
    //
-   kExtraSourceRange = (1 << 2);
+   kExtraSourceRange = (1 << 2),
 
    /// Multiple source axis bins map into a single target axis bin
    ///
@@ -930,7 +930,7 @@ enum BinningCmpFlags {
    /// Affected source histogram data can be merged into the target histogram,
    /// but location information loss will ensue.
    ///
-   kTargetAliasing = (1 << 3);
+   kTargetAliasing = (1 << 3),
 
    /// A source axis bin maps into multiple target axis bins
    ///
@@ -940,7 +940,7 @@ enum BinningCmpFlags {
    /// It is not possible to correctly merge the affected source histogram data
    /// into the target histogram.
    ///
-   kSourceAliasing = (1 << 4);
+   kSourceAliasing = (1 << 4),
 
    /// Bins from the source and target axis are ordered differently
    ///
@@ -958,7 +958,7 @@ enum BinningCmpFlags {
    //        with a more elaborate class wrapper that exposes "external" and
    //        "internal" flags via separate APIs.
    //
-   kDifferentOrder = (1 << 5);
+   kDifferentOrder = (1 << 5),
 
    /// The source and target bins cannot be meaningfully compared
    ///
@@ -977,7 +977,7 @@ enum BinningCmpFlags {
    //        class-based design, I could return an optional type that is empty
    //        when no meaningful comparison can be carried out.
    //
-   kIncomparable = (1 << 6);
+   kIncomparable = (1 << 6),
 };
 
 // NOTE: Should probably be an RAxisBase method, to benefit from vtable
