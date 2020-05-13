@@ -96,7 +96,7 @@ private:
    std::shared_ptr<RCluster> FindInPool(DescriptorId_t clusterId);
    /// Returns an index of an unused element in fPool; caller has to ensure that a free slot exists
    size_t FindFreeSlot();
-   /// The I/O thread routine
+   /// The I/O thread routine, there is exactly one I/O thread in flight for every cluster pool
    void ExecLoadClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
