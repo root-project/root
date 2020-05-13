@@ -316,7 +316,7 @@ endif()
 
 # Pyroot requires python-dev package; force to OFF if it was not found
 # PYTHONLIBS_FOUND is used for cmake < 3.12
-if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND AND (NOT Python2_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
+if(NOT PYTHONLIBS_FOUND AND NOT Python3_Interpreter_Development_FOUND AND (NOT Python2_Interpreter_Development_FOUND OR "${Python2_VERSION}" VERSION_LESS "2.7"))
   set(pyroot_defvalue OFF)
   set(pyroot_experimental_defvalue OFF)
   set(tmva-pymva_defvalue OFF)
@@ -447,13 +447,13 @@ if(macos_native)
 endif()
 
 # Print message saying with which versions of Python are used to build
-if(NOT (Python3_Interpreter_FOUND AND Python3_Development_FOUND) OR NOT (Python2_Interpreter_FOUND AND Python2_Development_FOUND))
-  message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_MAJOR}")
-elseif((Python3_Interpreter_FOUND AND Python3_Development_FOUND) AND (Python2_Interpreter_FOUND AND Python2_Development_FOUND))
+if(NOT Python3_Interpreter_Development_FOUND OR NOT Python2_Interpreter_Development_FOUND)
+  message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_PyROOT_Main}")
+elseif(Python3_Interpreter_Development_FOUND AND Python2_Interpreter_Development_FOUND)
   if(pyroot_experimental)
     # In PyROOT experimental, if we found two Python versions we build for both
-    message(STATUS "PyROOT will be built for versions ${PYTHON_VERSION_MAJOR} (Main) and ${OTHER_PYTHON_VERSION_MAJOR}")
+    message(STATUS "PyROOT will be built for versions ${PYTHON_VERSION_STRING_Development_Main} (Main) and ${PYTHON_VERSION_STRING_Development_Other}")
   elseif(pyroot)
-    message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_MAJOR}")
+    message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_Development_Main}")
   endif()
 endif()
