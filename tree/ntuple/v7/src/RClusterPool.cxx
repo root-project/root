@@ -249,7 +249,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
          itr = fInFlightClusters.erase(itr);
       }
 
-      // Deterime clusters which get triggered for background loading
+      // Determine clusters which get triggered for background loading
       for (auto &cptr : fPool) {
          if (!cptr)
             continue;
