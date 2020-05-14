@@ -166,8 +166,8 @@ private: // Data Members
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
-   Int_t DeepAutoLoadImpl(const char *cls);
-   Int_t ShallowAutoLoadImpl(const char *cls);
+   static Int_t DeepAutoLoadImpl(const char *cls);
+   static Int_t ShallowAutoLoadImpl(const char *cls);
 
    Bool_t fHeaderParsingOnDemand;
    Bool_t fIsAutoParsingSuspended;
