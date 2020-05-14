@@ -200,9 +200,9 @@ namespace ROOT {
       /// dummy virtual destructor
       FitData::~FitData()
       {
+         assert(fWrapped == fCoords.empty());
          for (unsigned int i = 0; i < fDim; i++) {
-            assert(fWrapped == fCoords.empty());
-            assert(fCoords.empty() || &fCoords[i].front() == fCoordsPtr[i]);
+            assert(fWrapped || fCoords[i].empty() || &fCoords[i].front() == fCoordsPtr[i]);
          }
          if (fpTmpCoordVector)  delete[] fpTmpCoordVector;
 
