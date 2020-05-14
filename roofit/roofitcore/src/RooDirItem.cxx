@@ -44,8 +44,7 @@ ClassImp(RooDirItem);
 void RooDirItem::removeFromDir(TObject* obj) 
 {
   if (_dir) {
-    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
-      _dir->GetList()->Remove(obj) ;
+    _dir->GetList()->Remove(obj) ;
   }
 } 
 
