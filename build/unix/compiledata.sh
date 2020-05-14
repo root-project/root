@@ -78,7 +78,7 @@ g++* | c++*)
    COMPILERVERSSTR=`$CXX --version 2>&1 | grep -i gcc`
    COMPILERVERS="gcc"
    if [ `uname` == "Darwin" ]; then
-      if [ "x$cxxVersStr" == "x" ]; then
+      if [ "x$COMPILERVERSSTR" == "x" ]; then
          COMPILERVERSSTR=`$CXX --version 2>&1 | grep -i clang`
          COMPILERVERS="clang"
       fi
