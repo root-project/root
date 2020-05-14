@@ -1,3 +1,5 @@
+#include "ROOTUnitTestSupport.h"
+
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RSlotStack.hxx>
 #include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
@@ -73,10 +75,7 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
    // even though TTreeReader::SetEntry() was called, which switched the tree again. Did you mean to call
    // TTreeReader::SetLocalEntry()?
 
-   testing::internal::CaptureStdout();
-   *tdf.Count();
-   auto output = testing::internal::GetCapturedStdout();
-   EXPECT_STREQ("", output.c_str()) << "An error was printed: " << output << std::endl;
+   ROOT_EXPECT_NODIAG(*tdf.Count());
 
    for (auto &f : files)
       gSystem->Unlink(f.c_str());
