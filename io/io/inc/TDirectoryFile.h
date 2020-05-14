@@ -57,7 +57,7 @@ private:
 
 public:
    // TDirectory status bits
-   enum EStatusBits { kCloseDirectory = BIT(7) };
+   enum EStatusBits { kCloseDirectory = BIT(7) }; // Unused in ROOT, never set. Maybe only in external code.
 
    TDirectoryFile();
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
