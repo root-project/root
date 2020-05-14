@@ -5846,7 +5846,7 @@ Int_t TCling::ShallowAutoLoadImpl(const char *cls)
    Int_t status = 0;
 
    // lookup class to find list of dependent libraries
-   TString deplibs = GetClassSharedLibs(cls);
+   TString deplibs = gCling->GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray* tokens = deplibs.Tokenize(delim);
@@ -5854,28 +5854,28 @@ Int_t TCling::ShallowAutoLoadImpl(const char *cls)
          const char* deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gROOT->LoadClass(cls, deplib) == 0) {
             if (gDebug > 0) {
-               Info("TCling::AutoLoad",
-                  "loaded dependent library %s for %s", deplib, cls);
+               gCling->Info("TCling::AutoLoad",
+                            "loaded dependent library %s for %s", deplib, cls);
             }
          }
          else {
-            Error("TCling::AutoLoad",
-                  "failure loading dependent library %s for %s",
-                  deplib, cls);
+            gCling->Error("TCling::AutoLoad",
+                          "failure loading dependent library %s for %s",
+                          deplib, cls);
          }
       }
       const char* lib = ((TObjString*)tokens->At(0))->GetName();
       if (lib && lib[0]) {
          if (gROOT->LoadClass(cls, lib) == 0) {
             if (gDebug > 0) {
-               Info("TCling::AutoLoad",
-                  "loaded library %s for %s", lib, cls);
+               gCling->Info("TCling::AutoLoad",
+                            "loaded library %s for %s", lib, cls);
             }
             status = 1;
          }
          else {
-            Error("TCling::AutoLoad",
-                  "failure loading library %s for %s", lib, cls);
+            gCling->Error("TCling::AutoLoad",
+                          "failure loading library %s for %s", lib, cls);
          }
       }
       delete tokens;
