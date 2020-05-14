@@ -683,10 +683,11 @@ ROOT::TMetaUtils::TNormalizedCtxtImpl::TNormalizedCtxtImpl(const cling::LookupHe
    keepTypedef(lh, "ULong64_t", true);
 
    clang::QualType toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
-   if (const clang::TypedefType* TT
-       = llvm::dyn_cast_or_null<clang::TypedefType>(toSkip.getTypePtr()))
-      fConfig.m_toSkip.insert(TT->getDecl());
-
+   if (!toSkip.isNull()) {
+      if (const clang::TypedefType* TT
+          = llvm::dyn_cast_or_null<clang::TypedefType>(toSkip.getTypePtr()))
+         fConfig.m_toSkip.insert(TT->getDecl());
+   }
    toSkip = lh.findType("std::string", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) {
       if (const clang::TypedefType* TT
