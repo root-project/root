@@ -1,3 +1,4 @@
+#include "ROOTUnitTestSupport.h"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TFile.h"
@@ -746,30 +747,24 @@ TEST_F(RDFSnapshotMT, Reshuffled_friends)
 
    {
       // add reshuffled tree as friend
-      testing::internal::CaptureStderr();
       TFile f(fname);
       TTree *t = f.Get<TTree>("t");
       TTree t2("t2", "t2");
-      t2.AddFriend(t);
-      const std::string err = testing::internal::GetCapturedStderr();
-      const auto expected = "Error in <AddFriend>: Tree 't' has the kEntriesReshuffled bit set, and cannot be used as "
+      const auto expected = "Tree 't' has the kEntriesReshuffled bit set, and cannot be used as "
                             "friend nor can be added as a friend unless the main tree has a TTreeIndex on the friend "
-                            "tree 't'. You can also unset the bit manually if you know what you are doing.\n";
-      EXPECT_EQ(err, expected);
+                            "tree 't'. You can also unset the bit manually if you know what you are doing.";
+      ROOT_EXPECT_ERROR(t2.AddFriend(t), "AddFriend", expected);
    }
 
    {
       // add friend to reshuffled tree
-      testing::internal::CaptureStderr();
       TFile f(fname);
       TTree *t = f.Get<TTree>("t");
       TTree t2("t2", "t2");
-      t->AddFriend(&t2); // should throw
-      const std::string err = testing::internal::GetCapturedStderr();
-      const auto expected = "Error in <AddFriend>: Tree 't' has the kEntriesReshuffled bit set, and cannot be used as "
+      const auto expected = "Tree 't' has the kEntriesReshuffled bit set, and cannot be used as "
                             "friend nor can be added as a friend unless the main tree has a TTreeIndex on the friend "
-                            "tree 't2'. You can also unset the bit manually if you know what you are doing.\n";
-      EXPECT_EQ(err, expected);
+                            "tree 't2'. You can also unset the bit manually if you know what you are doing.";
+      ROOT_EXPECT_ERROR(t->AddFriend(&t2);, "AddFriend", expected);
    }
 }
 
