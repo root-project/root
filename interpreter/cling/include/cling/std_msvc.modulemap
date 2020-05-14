@@ -489,6 +489,7 @@ module "std" [system] {
     header "xthreads.h"
   }
   module "xtimec.h" {
+    requires !header_existence
     export *
     header "xtimec.h"
   }
