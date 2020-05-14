@@ -13,6 +13,7 @@
 
 #include "gtest/gtest.h"
 
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 /// ROOT-10676
 /// The RooDataSet warns that it's not using all variables if the selection string doesn't
 /// make use of all variables. Although true, the user has no way to suppress this.
@@ -49,7 +50,7 @@ TEST(RooDataSet, ImportFromTreeWithCut)
   ASSERT_NE(theX, nullptr);
   EXPECT_FLOAT_EQ(theX->getVal(), 1.337);
 }
-
+#endif
 
 /// ROOT-9528 Branch names are capped after a certain number of characters
 TEST(RooDataSet, ImportLongBranchNames) {
