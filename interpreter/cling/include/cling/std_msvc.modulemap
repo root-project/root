@@ -484,6 +484,7 @@ module "std" [system] {
     header "xstring"
   }
   module "xthreads.h" {
+    requires !header_existence
     export *
     header "xthreads.h"
   }
