@@ -84,6 +84,32 @@ std::string Trim(const std::string &raw) {
   return raw.substr(start_pos, end_pos - start_pos + 1);
 }
 
+std::string GetNormalizedType(const std::string &typeName) {
+   std::string normalizedType(Trim(typeName));
+   // TODO(jblomer): use a type translation map
+   if (normalizedType == "Bool_t") normalizedType = "bool";
+   if (normalizedType == "Float_t") normalizedType = "float";
+   if (normalizedType == "Double_t") normalizedType = "double";
+   if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
+   if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
+   if (normalizedType == "uint8_t") normalizedType = "std::uint8_t";
+   if (normalizedType == "Int_t") normalizedType = "std::int32_t";
+   if (normalizedType == "int") normalizedType = "std::int32_t";
+   if (normalizedType == "int32_t") normalizedType = "std::int32_t";
+   if (normalizedType == "unsigned") normalizedType = "std::uint32_t";
+   if (normalizedType == "unsigned int") normalizedType = "std::uint32_t";
+   if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
+   if (normalizedType == "uint32_t") normalizedType = "std::uint32_t";
+   if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
+   if (normalizedType == "uint64_t") normalizedType = "std::uint64_t";
+   if (normalizedType == "string") normalizedType = "std::string";
+   if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
+
+   return normalizedType;
+}
+
 } // anonymous namespace
 
 void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field)
@@ -112,27 +138,7 @@ ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 ROOT::Experimental::Detail::RFieldBase*
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   std::string normalizedType(Trim(typeName));
-   // TODO(jblomer): use a type translation map
-   if (normalizedType == "Bool_t") normalizedType = "bool";
-   if (normalizedType == "Float_t") normalizedType = "float";
-   if (normalizedType == "Double_t") normalizedType = "double";
-   if (normalizedType == "UChar_t") normalizedType = "std::uint8_t";
-   if (normalizedType == "unsigned char") normalizedType = "std::uint8_t";
-   if (normalizedType == "uint8_t") normalizedType = "std::uint8_t";
-   if (normalizedType == "Int_t") normalizedType = "std::int32_t";
-   if (normalizedType == "int") normalizedType = "std::int32_t";
-   if (normalizedType == "int32_t") normalizedType = "std::int32_t";
-   if (normalizedType == "unsigned") normalizedType = "std::uint32_t";
-   if (normalizedType == "unsigned int") normalizedType = "std::uint32_t";
-   if (normalizedType == "UInt_t") normalizedType = "std::uint32_t";
-   if (normalizedType == "uint32_t") normalizedType = "std::uint32_t";
-   if (normalizedType == "ULong64_t") normalizedType = "std::uint64_t";
-   if (normalizedType == "uint64_t") normalizedType = "std::uint64_t";
-   if (normalizedType == "string") normalizedType = "std::string";
-   if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
+   std::string normalizedType(GetNormalizedType(typeName));
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") return new RField<ClusterSize_t>(fieldName);
    if (normalizedType == "bool") return new RField<bool>(fieldName);
@@ -146,21 +152,21 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType == "std::vector<bool>") return new RField<std::vector<bool>>(fieldName);
    if (normalizedType.substr(0, 12) == "std::vector<") {
       std::string itemTypeName = normalizedType.substr(12, normalizedType.length() - 13);
-      auto itemField = Create(itemTypeName, itemTypeName);
+      auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    // For the time being, we silently read RVec fields as std::vector
    if (normalizedType == "ROOT::VecOps::RVec<bool>") return new RField<ROOT::VecOps::RVec<bool>>(fieldName);
    if (normalizedType.substr(0, 19) == "ROOT::VecOps::RVec<") {
       std::string itemTypeName = normalizedType.substr(19, normalizedType.length() - 20);
-      auto itemField = Create(itemTypeName, itemTypeName);
+      auto itemField = Create(GetNormalizedType(itemTypeName), itemTypeName);
       return new RFieldVector(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField));
    }
    if (normalizedType.substr(0, 11) == "std::array<") {
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
-      auto itemField = Create(arrayDef[0], arrayDef[0]);
+      auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
       return new RFieldArray(fieldName, std::unique_ptr<Detail::RFieldBase>(itemField), arrayLength);
    }
 #if __cplusplus >= 201703L

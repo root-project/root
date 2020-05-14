@@ -154,7 +154,7 @@ public:
    /// Factory method to resurrect a field from the stored on-disk type information
    static RFieldBase *Create(const std::string &fieldName, const std::string &typeName);
 
-   /// Generates a tree value of the field type and allocates new initialized memory according to the type.
+   /// Generates an object of the field type and allocates new initialized memory according to the type.
    RFieldValue GenerateValue();
    /// Generates a tree value in a given location of size at least GetValueSize(). Assumes that where has been
    /// allocated by malloc().
