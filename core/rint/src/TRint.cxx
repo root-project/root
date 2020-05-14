@@ -500,6 +500,8 @@ void TRint::PrintLogo(Bool_t lite)
                                             gROOT->GetGitBranch(),
                                             gROOT->GetGitCommit()));
       }
+      lines.emplace_back(TString::Format("With %s %%s",
+                                         gSystem->GetBuildCompilerVersionStr()));
       lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
       // Find the longest line and its length:
