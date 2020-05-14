@@ -385,6 +385,12 @@ TEST(RDataFrameInterface, UnusedJittedNodes)
    hasThrown = false;
 
 // ROOT-10458
+#ifdef _WIN32
+const std::string symbol = "struct `private: virtual void __thiscall RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody(void)'::`2'::SimpleType";
+#else
+const std::string symbol = "RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody()::SimpleType";
+#endif
+
 TEST(RDataFrameInterface, TypeUnknownToInterpreter)
 {
    struct SimpleType {
@@ -395,19 +401,25 @@ TEST(RDataFrameInterface, TypeUnknownToInterpreter)
    auto make_s = [] { return SimpleType{0, 0}; };
    auto df = ROOT::RDataFrame(1).Define("res", make_s);
    bool hasThrown = false;
+   std::stringstream ss;
+   ss << "The type of custom column \"res\" (" << symbol << ") is not known to the interpreter, " <<
+         "but a just-in-time-compiled Snapshot call requires this column. Make sure to create " <<
+         "and load ROOT dictionaries for this column's class.";
    EXPECT_RUNTIME_ERROR_WITH_MSG(
       df.Snapshot("result", "RESULT2.root"),
-      "The type of custom column \"res\" (RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody()::SimpleType) "
-      "is not known to the interpreter, but a just-in-time-compiled Snapshot call requires this column. Make sure to "
-      "create and load ROOT dictionaries for this column's class.");
+      ss.str().c_str());
+   ss.str("");
+   ss << "The type of custom column \"res\" (" << symbol << ") is not known to the interpreter, " <<
+      "but a just-in-time-compiled Define call requires this column. Make sure to create and " <<
+      "load ROOT dictionaries for this column's class.";
    EXPECT_RUNTIME_ERROR_WITH_MSG(
       df.Define("res2", "res"),
-      "The type of custom column \"res\" (RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody()::SimpleType) "
-      "is not known to the interpreter, but a just-in-time-compiled Define call requires this column. Make sure to "
-      "create and load ROOT dictionaries for this column's class.");
+      ss.str().c_str());
+   ss.str("");
+   ss << "The type of custom column \"res\" (" << symbol << ") is not known to the interpreter, " <<
+      "but a just-in-time-compiled Filter call requires this column. Make sure to create and " <<
+      "load ROOT dictionaries for this column's class.";
    EXPECT_RUNTIME_ERROR_WITH_MSG(
       df.Filter("res; return true;"),
-      "The type of custom column \"res\" (RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody()::SimpleType) "
-      "is not known to the interpreter, but a just-in-time-compiled Filter call requires this column. Make sure to "
-      "create and load ROOT dictionaries for this column's class.");
+      ss.str().c_str());
 }
