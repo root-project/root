@@ -193,6 +193,7 @@ Bool_t TSystem::Init()
    fBuildArch     = BUILD_ARCH;
    fBuildCompiler = COMPILER;
    fBuildCompilerVersion = COMPILERVERS;
+   fBuildCompilerVersionStr = COMPILERVERSSTR;
    fBuildNode     = BUILD_NODE;
    fFlagsDebug    = CXXDEBUG;
    fFlagsOpt      = CXXOPT;
@@ -3901,6 +3902,14 @@ const char *TSystem::GetBuildCompiler() const
 const char *TSystem::GetBuildCompilerVersion() const
 {
    return fBuildCompilerVersion;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the build compiler version identifier string
+
+const char *TSystem::GetBuildCompilerVersionStr() const
+{
+   return fBuildCompilerVersionStr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
