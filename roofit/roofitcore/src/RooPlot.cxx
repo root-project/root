@@ -21,7 +21,7 @@
 
 A RooPlot is a plot frame and a container for graphics objects
 within that frame. As a frame, it provides the TH1-style public interface
-for settting plot ranges, configuring axes, etc. As a container, it
+for setting plot ranges, configuring axes, etc. As a container, it
 holds an arbitrary set of objects that might be histograms of data,
 curves representing a fit model, or text labels. Use the Draw()
 method to draw a frame and the objects it contains. Use the various
@@ -74,7 +74,7 @@ ClassImp(RooPlot);
 
 Bool_t RooPlot::_addDirStatus = kTRUE ;
 
-Bool_t RooPlot::addDirectoryStatus() { return _addDirStatus ; }
+Bool_t RooPlot::addDirectoryStatus() { return _addDirStatus; }
 Bool_t RooPlot::setAddDirectoryStatus(Bool_t flag) { Bool_t ret = flag ; _addDirStatus = flag ; return ret ; }
 
 
@@ -84,11 +84,8 @@ Bool_t RooPlot::setAddDirectoryStatus(Bool_t flag) { Bool_t ret = flag ; _addDir
 
 RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _normObj(0), _dir(0)
 {
-  _iterator= _items.MakeIterator() ;
-
   if (gDirectory && addDirectoryStatus()) {
-    _dir = gDirectory ;
-    gDirectory->Append(this) ;
+    SetDirectory(gDirectory);
   }
 }
 
@@ -100,16 +97,10 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   _hist(0), _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
   _defYmin(1e-5), _defYmax(1), _dir(0)
 {
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
-
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
-
-
-  TH1::AddDirectory(histAddDirStatus) ;
-
+  _hist->SetDirectory(nullptr);
 
   // Create an empty frame with the specified x-axis limits.
   initialize();
@@ -119,20 +110,16 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct of a two-dimensioanl RooPlot with ranges [xmin,xmax] x [ymin,ymax]
+/// Construct of a two-dimensional RooPlot with ranges [xmin,xmax] x [ymin,ymax]
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   _hist(0), _items(), _plotVarClone(0),
   _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
-
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
-
-  TH1::AddDirectory(histAddDirStatus) ;
+  _hist->SetDirectory(nullptr);
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -148,14 +135,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   _hist(0), _items(),
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
-
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
-
-  TH1::AddDirectory(histAddDirStatus) ;
+  _hist->SetDirectory(nullptr);
 
   if(!var1.hasMin() || !var1.hasMax()) {
     coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
@@ -185,14 +168,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
   _hist(0), _items(), _plotVarClone(0),
   _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
-
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
-
-  TH1::AddDirectory(histAddDirStatus) ;
+  _hist->SetDirectory(nullptr);
 
   SetMinimum(ymin);
   SetMaximum(ymax);
@@ -210,14 +189,10 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
   _hist(0), _items(),
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
 {
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
-
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
-
-  TH1::AddDirectory(histAddDirStatus) ;
+  _hist->SetDirectory(nullptr);
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -240,14 +215,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
   _hist(0), _items(),
   _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
 {
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
-
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
   _hist->GetSumw2()->Set(0) ;
-
-  TH1::AddDirectory(histAddDirStatus) ;
+  _hist->SetDirectory(nullptr);
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
@@ -290,12 +261,10 @@ RooPlot* RooPlot::frameWithLabels(const RooAbsRealLValue &var){
   RooPlot* pl = new RooPlot();
   int nbins = var.getBinning().numBins();
 
-  Bool_t histAddDirStatus = TH1::AddDirectoryStatus();
-  TH1::AddDirectory(kFALSE) ;
   pl->_hist = new TH1D(pl->histName(),"RooPlot",nbins,var.getMin(),var.getMax()) ;
   pl->_hist->Sumw2(kFALSE) ;
   pl->_hist->GetSumw2()->Set(0) ;
-  TH1::AddDirectory(histAddDirStatus) ;
+  pl->_hist->SetDirectory(nullptr);
 
   pl->_hist->SetNdivisions(-nbins);
   for(int i=0; i<nbins; ++i){
@@ -339,21 +308,18 @@ void RooPlot::initialize()
   SetName(histName()) ;
 
   if (gDirectory && addDirectoryStatus()) {
-    _dir = gDirectory ;
-    gDirectory->Append(this) ;
+    SetDirectory(gDirectory);
   }
 
   // We do not have useful stats of our own
   _hist->SetStats(kFALSE);
+  _hist->SetDirectory(nullptr);
   // Default vertical padding of our enclosed objects
   setPadFactor(0.05);
   // We don't know our normalization yet
   _normNumEvts= 0;
   _normBinWidth = 0;
   _normVars= 0;
-  // Create an iterator over our enclosed objects
-  _iterator= _items.MakeIterator();
-  assert(0 != _iterator);
 }
 
 
@@ -377,17 +343,29 @@ RooPlot::~RooPlot()
 {
   // Delete the items in our container and our iterator.
   if (_dir) {
-    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory)) {
-      _dir->GetList()->RecursiveRemove(this) ;
-    }
+    _dir->GetList()->RecursiveRemove(this) ;
   }
 
   _items.Delete();
-  delete _iterator;
   if(_plotVarSet) delete _plotVarSet;
   if(_normVars) delete _normVars;
   delete _hist ;
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the directory that this plot is associated to.
+/// Setting it to `nullptr` will remove the object from all directories.
+/// Like TH1::SetDirectory.
+void RooPlot::SetDirectory(TDirectory *dir) {
+  if (_dir) {
+    _dir->GetList()->RecursiveRemove(this);
+  }
+  _dir = dir;
+  if (_dir) {
+    _dir->Append(this);
+  }
 }
 
 
@@ -722,7 +700,7 @@ void RooPlot::Draw(Option_t *option)
     _hist->Draw("FUNC");
   }
 
-  _iterator->Reset();
+  std::unique_ptr<TIterator> _iterator(_items.MakeIterator());
   TObject *obj = 0;
   while((obj= _iterator->Next())) {
     DrawOpt opt(_iterator->GetOption()) ;
@@ -786,7 +764,7 @@ void RooPlot::printArgs(ostream& os) const
 void RooPlot::printValue(ostream& os) const
 {
   os << "(" ;
-  _iterator->Reset();
+  std::unique_ptr<TIterator> _iterator(_items.MakeIterator());
   TObject *obj = 0;
   Bool_t first(kTRUE) ;
   while((obj= _iterator->Next())) {
@@ -826,7 +804,7 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
   os << indent << "  Plot frame contains " << _items.GetSize() << " object(s):" << endl;
 
   if(verbose) {
-    _iterator->Reset();
+    std::unique_ptr<TIterator> _iterator(_items.MakeIterator());
     TObject *obj = 0;
     Int_t i=0 ;
     while((obj= _iterator->Next())) {
@@ -1336,8 +1314,8 @@ void RooPlot::Streamer(TBuffer &R__b)
   // Custom streamer, needed for backward compatibility
 
   if (R__b.IsReading()) {
-
-    TH1::AddDirectory(kFALSE) ;
+    const bool oldAddDir = TH1::AddDirectoryStatus();
+    TH1::AddDirectory(false);
 
     // The default c'tor might have registered this with a TDirectory.
     // Streaming the TNamed will make this not retrievable anymore, so
@@ -1370,7 +1348,7 @@ void RooPlot::Streamer(TBuffer &R__b)
       R__b.CheckByteCount(R__s, R__c, RooPlot::IsA());
     }
 
-    TH1::AddDirectory(kTRUE) ;
+    TH1::AddDirectory(oldAddDir);
     if (_dir)
       _dir->Append(this);
 
