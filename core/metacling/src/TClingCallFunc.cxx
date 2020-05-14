@@ -605,6 +605,7 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    //
    bool needInstantiation = false;
    const FunctionDecl *Definition = 0;
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    if (!FD->isDefined(Definition)) {
       FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
       switch (TK) {
