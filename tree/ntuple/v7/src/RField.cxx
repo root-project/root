@@ -71,6 +71,19 @@ std::vector<std::string> TokenizeTypeList(std::string templateType) {
    return result;
 }
 
+/// Remove leading and trailing white spaces
+std::string Trim(const std::string &raw) {
+  if (raw.empty()) return "";
+
+  unsigned start_pos = 0;
+  for (; (start_pos < raw.length()) && (raw[start_pos] == ' ' || raw[start_pos] == '\t'); ++start_pos) { }
+
+  unsigned end_pos = raw.length() - 1;  // at least one character in raw
+  for (; (end_pos >= start_pos) && (raw[end_pos] == ' ' || raw[end_pos] == '\t'); --end_pos) { }
+
+  return raw.substr(start_pos, end_pos - start_pos + 1);
+}
+
 } // anonymous namespace
 
 void ROOT::Experimental::Detail::RFieldFuse::Connect(DescriptorId_t fieldId, RPageStorage &pageStorage, RFieldBase &field)
@@ -99,8 +112,7 @@ ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 ROOT::Experimental::Detail::RFieldBase*
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   std::string normalizedType(typeName);
-   normalizedType.erase(remove_if(normalizedType.begin(), normalizedType.end(), isspace), normalizedType.end());
+   std::string normalizedType(Trim(typeName));
    // TODO(jblomer): use a type translation map
    if (normalizedType == "Bool_t") normalizedType = "bool";
    if (normalizedType == "Float_t") normalizedType = "float";
