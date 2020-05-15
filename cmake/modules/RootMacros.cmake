@@ -1655,6 +1655,12 @@ endfunction()
 function(ROOT_ADD_GTEST test_suite)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;LIBRARIES;LABELS" ${ARGN})
 
+  # ROOTUnitTestSupport
+  if(NOT TARGET ROOTUnitTestSupport)
+    add_library(ROOTUnitTestSupport INTERFACE)
+    target_include_directories(ROOTUnitTestSupport INTERFACE ${CMAKE_SOURCE_DIR}/test/unit_testing_support)
+  endif()
+
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
   # The test suites should choose this in their specific CMakeLists.txt file.
@@ -1662,7 +1668,7 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main ROOTUnitTestSupport)
   target_include_directories(${test_suite} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   if(MSVC)
     set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
