@@ -1,8 +1,8 @@
 # Do not run with classic build or if tests are vetoed
 if (ROOT_pyroot_FOUND AND
     NOT ROOT_CLASSIC_BUILD AND
-    NOT (DEFINED ENV{ROOTTEST_IGNORE_JUPYTER_PY2} AND PYTHON_VERSION_MAJOR EQUAL 2) AND
-    NOT (DEFINED ENV{ROOTTEST_IGNORE_JUPYTER_PY3} AND PYTHON_VERSION_MAJOR EQUAL 3))
+    NOT (DEFINED ENV{ROOTTEST_IGNORE_JUPYTER_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND
+    NOT (DEFINED ENV{ROOTTEST_IGNORE_JUPYTER_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
 
 set(MODULES_LOCATION ${ROOTSYS}/lib/JupyROOT/helpers)
 set(NBDIFFUTIL ${CMAKE_CURRENT_SOURCE_DIR}/nbdiff.py )
@@ -23,7 +23,7 @@ foreach(pyfile ${pyfiles})
   get_filename_component(SHORTPYFILE ${pyfile} NAME_WE)
   if (NOT ${SHORTPYFILE} STREQUAL "__init__")
     ROOTTEST_ADD_TEST(${SHORTPYFILE}_doctest
-                      COMMAND ${PYTHON_EXECUTABLE} ${DOCTEST_LAUNCHER} ${pyfile})
+                      COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${DOCTEST_LAUNCHER} ${pyfile})
   endif()
 endforeach()
 
@@ -32,7 +32,7 @@ foreach(NOTEBOOK ${NOTEBOOKS})
   get_filename_component(NOTEBOOKBASE ${NOTEBOOK} NAME_WE)
   ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
                     COPY_TO_BUILDDIR ${NOTEBOOK}
-                    COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK})
+                    COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${NBDIFFUTIL} ${NOTEBOOK})
 endforeach()
 
 if(ROOT_imt_FOUND)
@@ -41,7 +41,7 @@ if(ROOT_imt_FOUND)
   get_filename_component(NOTEBOOKBASE ${IMT_NB} NAME_WE)
   ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
                     COPY_TO_BUILDDIR ${IMT_NB}
-                    COMMAND ${PYTHON_EXECUTABLE} ${NBDIFFUTIL} ${IMT_NB} "OFF")
+                    COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${NBDIFFUTIL} ${IMT_NB} "OFF")
 endif()
 
 endif()
