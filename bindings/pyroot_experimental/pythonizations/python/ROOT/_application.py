@@ -52,6 +52,9 @@ class PyROOTApplication(object):
         # PyOS_InputHook-based mechanism
         # Point to a function which will be called when Python's interpreter prompt
         # is about to become idle and wait for user input from the terminal
+        # We have to import the readline module, which starts calling the PyOS_InputHook
+        # also if Python is in script mode and not in interactive mode.
+        import readline
         InstallGUIEventInputHook()
 
     @staticmethod
