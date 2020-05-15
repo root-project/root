@@ -4293,7 +4293,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
             }
             if (!ntlibs.IsNull()) ntlibs.Append(" ");
             if ((s.Index("python") == kNPOS) && (s.Index("cppyy") == kNPOS) &&
-                (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS))
+                (s.Index("vcruntime") == kNPOS) && (s.Index(".pyd") == kNPOS) &&
+                (s.Index("msvcp") == kNPOS))
               ntlibs.Append(s);
          }
          start += end+1;
