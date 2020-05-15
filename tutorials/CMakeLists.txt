@@ -493,9 +493,6 @@ endforeach()
 
 #---Python tutorials-----------------------------------------------------
 if(ROOT_pyroot_FOUND)
-  if(NOT PYTHON_EXECUTABLE)
-    find_package(PythonInterp REQUIRED)
-  endif()
 
   file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
   set(pyveto pyroot/demo.py         # requires GUI
@@ -549,9 +546,9 @@ if(ROOT_pyroot_FOUND)
   endif()
 
   if(NOT dataframe
-     OR ${PYTHON_VERSION_STRING} VERSION_LESS_EQUAL 2.7.5
-     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR EQUAL 2)
-     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR EQUAL 3))
+     OR ${PYTHON_VERSION_STRING_Development_Main} VERSION_LESS_EQUAL 2.7.5
+     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2)
+     OR (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
     list(REMOVE_ITEM pytutorials
         pyroot/pyroot004_NumbaDeclare.py)
   endif()
@@ -595,7 +592,7 @@ if(ROOT_pyroot_FOUND)
     endif()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS ${${tname}-depends}
