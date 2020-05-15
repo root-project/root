@@ -263,6 +263,12 @@ void TTreeReader::Initialize()
    fLoadTreeStatus = kLoadTreeNone;
    if (fTree->InheritsFrom(TChain::Class())) {
       SetBit(kBitIsChain);
+   } else if (fEntryList && fEntryList->GetLists()) {
+      Error("Initialize", "We are not processing a TChain but the TEntryList contains sublists. Please "
+                          "provide a simple TEntryList with no sublists instead.");
+      fEntryStatus = kEntryNoTree;
+      fLoadTreeStatus = kNoTree;
+      return;
    }
 
    fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
