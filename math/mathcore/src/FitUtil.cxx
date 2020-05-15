@@ -708,13 +708,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       unsigned int ndim = data.NDim();
       double binVolume = 1;
       if (useBinVolume) {
-         const double *x2 = data.BinUpEdge(i);
-
          xc.resize(ndim);
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto x1_j = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j] - x1_j);
-            xc[j] = 0.5 * (x2[j] + x1_j);
+            double x1_j = *data.GetCoordComponent(i, j);
+            double x2_j = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2_j - x1_j);
+            xc[j] = 0.5 * (x2_j + x1_j);
          }
 
          x = xc.data();
@@ -735,11 +734,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
          fval = func(x, p);
          func.ParameterGradient(x, p, &gradFunc[0]);
       } else {
-         auto x2 = data.BinUpEdge(i);
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
          // calculate normalized integral and gradient (divided by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval(x, x2);
-         CalculateGradientIntegral(func, x, x2, p, &gradFunc[0]);
+         fval = igEval(x, x2.data());
+         CalculateGradientIntegral(func, x, x2.data(), p, &gradFunc[0]);
       }
       if (useBinVolume)
          fval *= binVolume;
@@ -1287,10 +1287,10 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    if (useBinVolume) {
       unsigned int ndim = data.NDim();
       xc.resize(ndim);
-      x2 = data.BinUpEdge(i);
       for (unsigned int j = 0; j < ndim; ++j) {
-         binVolume *= std::abs( x2[j]-x1[j] );
-         xc[j] = 0.5*(x2[j]+ x1[j]);
+         double x2j = data.GetBinUpEdgeComponent(i, j);
+         binVolume *= std::abs( x2j-x1[j] );
+         xc[j] = 0.5*(x2j+ x1[j]);
       }
       // normalize the bin volume using a reference value
       binVolume /= data.RefVolume();
@@ -1303,8 +1303,9 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    }
    else {
       // calculate integral normalized (divided by bin volume)
-      x2 =  data.BinUpEdge(i);
-      fval = igEval( x1, x2 ) ;
+      std::vector<double> vx2(data.NDim());
+      data.GetBinUpEdgeCoordinates(i, vx2.data());
+      fval = igEval( x1, vx2.data() ) ;
    }
    if (useBinVolume) fval *= binVolume;
 
@@ -1492,7 +1493,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          std::cout << "]  ";
          if (fitOpt.fIntegral) {
             std::cout << "x2 = [ ";
-            for (unsigned int j = 0; j < func.NDim(); ++j) std::cout << data.BinUpEdge(i)[j] << " , ";
+            for (unsigned int j = 0; j < func.NDim(); ++j) std::cout << data.GetBinUpEdgeComponent(i, j) << " , ";
             std::cout << "] ";
          }
          std::cout << "  y = " << y << " fval = " << fval << std::endl;
@@ -1640,13 +1641,14 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       unsigned ndim = data.NDim();
       double binVolume = 1.0;
       if (useBinVolume) {
-         const double *x2 = data.BinUpEdge(i);
 
          xc.resize(ndim);
+
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto x1_j = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j] - x1_j);
-            xc[j] = 0.5 * (x2[j] + x1_j);
+            double x1_j = *data.GetCoordComponent(i, j);
+            double x2_j = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2_j - x1_j);
+            xc[j] = 0.5 * (x2_j + x1_j);
          }
 
          x = xc.data();
@@ -1669,9 +1671,10 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         auto x2 = data.BinUpEdge(i);
-         fval = igEval(x, x2);
-         CalculateGradientIntegral(func, x, x2, p, &gradFunc[0]);
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
+         fval = igEval(x, x2.data());
+         CalculateGradientIntegral(func, x, x2.data(), p, &gradFunc[0]);
       }
       if (useBinVolume)
          fval *= binVolume;
