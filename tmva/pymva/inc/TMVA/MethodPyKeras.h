@@ -91,6 +91,7 @@ namespace TMVA {
       TString fTensorBoard;          // Store log files during training
       TString fNumValidationString;  // option string defining the number of validation events
       TString fGpuOptions;    // GPU options (for Tensorflow to set in session_config.gpu_options)
+      TString fUserCodeName; // filename of an optional user sctipt that will be executed before loading the Keras model
 
       bool fModelIsSetup = false; // flag whether model is loaded, needed for getMvaValue during evaluation
       float* fVals = nullptr; // variables array used for GetMvaValue
