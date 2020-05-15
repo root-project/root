@@ -22,8 +22,8 @@ jobs:
       with:
         githubToken: ${{ secrets.GHTOKEN }}
         to: axel@cern.ch
-        from: root-git.cern.ch
-        smtp: smtp.gmail.com
+        from: root-project-git-notifier@outlook.com
+        smtp: smtp.office365.com
         port: 587
-        login: root.dev.team@gmail.com
+        login: root-project-git-notifier@outlook.com
         password: ${{ secrets.SMTPPW }}
