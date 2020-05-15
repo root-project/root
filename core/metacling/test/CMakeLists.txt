@@ -30,6 +30,4 @@ if(NOT builtin_clang)
   link_directories("${LLVM_LIBRARY_DIR}")
 endif()
 
-ROOT_ADD_UNITTEST_DIR(Core RIO ${LLVM_DEPS})
-
-target_link_libraries(coremetaclingtestUnit ROOTUnitTestSupport)
+ROOT_ADD_GTEST(TClingTest TClingTests.cxx LIBRARIES Core ${LLVM_DEPS})

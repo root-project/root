@@ -123,5 +123,3 @@ if(root7)
 endif(root7)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
-
-target_include_directories(ROOTDataFrame PRIVATE ../../test)
