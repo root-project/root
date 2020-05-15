@@ -20,5 +20,5 @@ if(fftw3)
 endif()
 
 if(clad)
-  ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist ROOTUnitTestSupport)
+  ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
 endif()

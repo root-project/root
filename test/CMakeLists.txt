@@ -343,10 +343,6 @@ endif()
 ROOT_EXECUTABLE(delaunayTriangulation delaunayTriangulation.cxx LIBRARIES Hist)
 ROOT_ADD_TEST(test-delaunay COMMAND delaunayTriangulation)
 
-#--ROOTUnitTestSupport----------------------------------------------------------------------------
-add_library(ROOTUnitTestSupport INTERFACE)
-target_include_directories(ROOTUnitTestSupport INTERFACE ${CMAKE_SOURCE_DIR}/test/unit_testing_support)
-
 #--TestTformula------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(TFormulaTests TFormulaTests.cxx LIBRARIES Hist RIO)
 if(MSVC)
