@@ -448,7 +448,7 @@ endif()
 
 # Print message saying with which versions of Python are used to build
 if(NOT Python3_Interpreter_Development_FOUND OR NOT Python2_Interpreter_Development_FOUND)
-  message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_PyROOT_Main}")
+  message(STATUS "PyROOT will be built for version ${PYTHON_VERSION_STRING_Development_Main}")
 elseif(Python3_Interpreter_Development_FOUND AND Python2_Interpreter_Development_FOUND)
   if(pyroot_experimental)
     # In PyROOT experimental, if we found two Python versions we build for both
