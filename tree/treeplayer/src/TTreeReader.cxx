@@ -503,10 +503,19 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
          fEntryStatus = kEntryNotFound;
          return fEntryStatus;
       }
-      if (entry >= 0) entryAfterList = fEntryList->GetEntry(entry);
-      if (local && IsChain()) {
-         // Must translate the entry list's entry to the current TTree's entry number.
-         local = kFALSE;
+      if (entry >= 0) {
+         if (fEntryList->GetLists()) {
+            R__ASSERT(IsChain());
+            int treenum = -1;
+            entryAfterList = fEntryList->GetEntryAndTree(entry, treenum);
+            entryAfterList += static_cast<TChain *>(fTree)->GetTreeOffset()[treenum];
+            // We always translate local entry numbers to global entry numbers for TChain+TEntryList with sublists
+            local = false;
+         } else {
+            // Could be a TTree or a TChain (TTreeReader also supports single TEntryLists for TChains).
+            // In both cases, we are using the global entry numbers coming from the single TEntryList.
+            entryAfterList = fEntryList->GetEntry(entry);
+         }
       }
    }
 
