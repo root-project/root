@@ -91,9 +91,9 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fNumValidationString = "20%", "ValidationSize", "Part of the training data to use for validation. "
                     "Specify as 0.2 or 20% to use a fifth of the data set as validation set. "
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
-
+   DeclareOptionRef(fUserCodeName = "", "UserCode",
+                    "Optional pythin code provided by the user to be executed before loading the Keras model");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Validation of the ValidationSize option. Allowed formats are 20%, 0.2 and
@@ -229,6 +229,21 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
     * Load Keras model from file
     */
 
+   Log() << kINFO << " Setup Keras Model " << Endl;
+
+   PyRunString("load_model_custom_objects=None");
+
+
+   // run some python code provided by user for model initialization if needed
+   if (!fUserCodeName.IsNull()) {
+      Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
+
+      PyRunString("exec(open('" + fUserCodeName + "').read())");
+   }
+
+   ///PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
+   //PyRunString("print(K)");
+
    // Load initial model or already trained model
    TString filenameLoadModel;
    if (loadTrainedModel) {
@@ -237,9 +252,12 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    else {
       filenameLoadModel = fFilenameModel;
    }
-   PyRunString("model = keras.models.load_model('"+filenameLoadModel+"')",
+
+   Log() << kINFO << " Loading Keras Model " << Endl;
+
+   PyRunString("model = keras.models.load_model('"+filenameLoadModel+"', custom_objects=load_model_custom_objects)",
                "Failed to load Keras model from file: "+filenameLoadModel);
-   Log() << kINFO << "Load model from file: " << filenameLoadModel << Endl;
+   Log() << kINFO << "Loaded model from file: " << filenameLoadModel << Endl;
 
 
    /*
