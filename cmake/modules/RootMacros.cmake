@@ -917,8 +917,8 @@ function(ROOT_LINKER_LIBRARY library)
        target_include_directories(${library} PRIVATE ${incl})
     endforeach()
   endif()
-  
-  
+
+
 
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
@@ -1520,7 +1520,7 @@ function(ROOT_ADD_TEST test)
   if(ARG_DIFFCMD)
     string(REPLACE ";" "^" _diff_cmd "${ARG_DIFFCMD}")
     set(_command ${_command} -DDIFFCMD=${_diff_cmd})
-    
+
     if(TARGET ROOT::ROOTStaticSanitizerConfig)
       # We have to set up leak sanitizer such that it doesn't report on suppressed
       # leaks. Otherwise, all diffs will fail.
@@ -1735,7 +1735,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1779,7 +1779,7 @@ function(ROOT_ADD_PYUNITTEST name file)
 
   if(dependencies)
     ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
                 ${copy_to_builddir}
                 ${will_fail})
@@ -1836,7 +1836,7 @@ function(find_python_module module)
       endif()
       # A module's location is usually a directory, but for binary modules
       # it's a .so file.
-      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+      execute_process(COMMAND "${PYTHON_EXECUTABLE_Development_Main}" "-c"
          "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
          RESULT_VARIABLE _${module}_status
          OUTPUT_VARIABLE _${module}_location
