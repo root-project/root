@@ -291,17 +291,18 @@ namespace ROOT {
       double binVolume = 1.0;
       if (useBinVolume) {
          unsigned int ndim = data.NDim();
-         const double * x2 = data.BinUpEdge(i);
          xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto xx = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j]- xx);
-            xc[j] = 0.5*(x2[j]+ xx);
+            double xx = *data.GetCoordComponent(i, j);
+            double x2 = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2 - xx);
+            xc[j] = 0.5*(x2 + xx);
          }
          x = xc.data();
          // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
       } else if(data.NDim() > 1) {
+         // multi-dim case (no bin volume)
          xc.resize(data.NDim());
          xc[0] = *x1;
          for (unsigned int j = 1; j < data.NDim(); ++j)
@@ -322,7 +323,9 @@ namespace ROOT {
       else {
          // calculate integral normalized by bin volume
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval( x, data.BinUpEdge(i)) ;
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
+         fval = igEval(x, x2.data());
       }
       // normalize result if requested according to bin volume
       if (useBinVolume) fval *= binVolume;
@@ -1443,12 +1446,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 
       if (useBinVolume) {
          unsigned int ndim = data.NDim();
-         const double *x2 = data.BinUpEdge(i);
          xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            auto xx = *data.GetCoordComponent(i, j);
-            binVolume *= std::abs(x2[j] - xx);
-            xc[j] = 0.5 * (x2[j] + xx);
+            double xx = *data.GetCoordComponent(i, j);
+            double x2 = data.GetBinUpEdgeComponent(i, j);
+            binVolume *= std::abs(x2 - xx);
+            xc[j] = 0.5 * (x2 + xx);
          }
          x = xc.data();
          // normalize the bin volume using a reference value
@@ -1473,7 +1476,9 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval(x, data.BinUpEdge(i));
+         std::vector<double> x2(data.NDim());
+         data.GetBinUpEdgeCoordinates(i, x2.data());
+         fval = igEval(x, x2.data());
       }
       if (useBinVolume) fval *= binVolume;
 
