@@ -94,6 +94,12 @@ if _is_ipython:
 # Register cleanup
 import atexit
 def cleanup():
+    # If spawned, stop thread which processes ROOT events
+    facade = sys.modules[__name__]
+    if 'app' in facade.__dict__ and hasattr(facade.__dict__['app'], 'process_root_events'):
+        facade.__dict__['app'].keep_polling = False
+        facade.__dict__['app'].process_root_events.join()
+
     if 'libROOTPythonizations' in sys.modules:
         backend = sys.modules['libROOTPythonizations']
 

@@ -22,6 +22,7 @@ class PyROOTConfiguration(object):
         self.IgnoreCommandLineOptions = True
         self.ShutDown = True
         self.DisableRootLogon = False
+        self.StartGUIThread = True
 
 
 class _gROOTWrapper(object):
@@ -167,7 +168,7 @@ class ROOTFacade(types.ModuleType):
 
         # Setup interactive usage from Python
         self.__dict__['app'] = PyROOTApplication(self.PyConfig, self._is_ipython)
-        if not self.gROOT.IsBatch():
+        if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
             self.app.init_graphics()
 
         # Set memory policy to kUseHeuristics.
