@@ -486,6 +486,16 @@ if (tmva-cudnn)
 else()
    set(hastmvacudnn undef)
 endif()
+if (tmva-pymva)
+  set(haspymva define)
+else()
+  set(haspymva undef)
+endif()
+if (tmva-rmva)
+  set(hasrmva define)
+else()
+  set(hasrmva undef)
+endif()
 
 # clear cache to allow reconfiguring
 # with a different CMAKE_CXX_STANDARD
