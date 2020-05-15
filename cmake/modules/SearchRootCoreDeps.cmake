@@ -222,7 +222,7 @@ else()
   find_package(NumPy)
 
   set(PYTHON_EXECUTABLE_Development_Main "${PYTHON_EXECUTABLE}")
-  set(PYTHON_VERSION_STRING_Development_Main "${PYTHON_VERSION}")
+  set(PYTHON_VERSION_STRING_Development_Main "${PYTHON_VERSION_STRING}")
   set(PYTHON_UNDER_VERSION_STRING_Development_Main "${PYTHON_VERSION_MAJOR}_${PYTHON_VERSION_MINOR}")
   set(PYTHON_INCLUDE_DIRS_Development_Main "${PYTHON_INCLUDE_DIRS}")
   set(PYTHON_LIBRARIES_Development_Main "${PYTHON_LIBRARIES}")
