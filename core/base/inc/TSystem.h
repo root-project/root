@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 #endif
