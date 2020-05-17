@@ -41,6 +41,7 @@
 #include "TError.h"
 #include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"
+#include "TVirtualPaveStats.h"
 #include "TSystem.h"
 
 #include "HFitInterface.h"
@@ -2675,7 +2676,23 @@ TObject* TH1::Clone(const char* newname) const
       // when dictionary information is initialized, so we need to
       // keep obj->fFunction valid during its execution and
       // protect the update with the write lock.
+
+      // Reset stats parent - else cloning the stats will clone this histogram, too. 
+      auto oldstats = dynamic_cast<TVirtualPaveStats*>(fFunctions->FindObject("stats"));
+      TObject *oldparent = nullptr;
+      if (oldstats) {
+         oldparent = oldstats->GetParent();
+         oldstats->SetParent(nullptr);
+      }
+
       auto newlist = (TList*)fFunctions->Clone();
+
+      if (oldstats)
+         oldstats->SetParent(oldparent);
+      auto newstats = dynamic_cast<TVirtualPaveStats*>(obj->fFunctions->FindObject("stats"));
+      if (newstats)
+         newstats->SetParent(obj);
+
       auto oldlist = obj->fFunctions;
       {
          R__WRITE_LOCKGUARD(ROOT::gCoreMutex);

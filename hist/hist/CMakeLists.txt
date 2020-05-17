@@ -84,6 +84,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TVirtualFitter.h
     TVirtualGraphPainter.h
     TVirtualHistPainter.h
+    TVirtualPaveStats.h
     Math/WrappedMultiTF1.h
     Math/WrappedTF1.h
     v5/TF1Data.h
