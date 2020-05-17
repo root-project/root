@@ -165,6 +165,7 @@
 #pragma link C++ class TVirtualHistPainter+;
 #pragma link C++ class TVirtualGraphPainter+;
 #pragma link C++ class TVirtualFitter+;
+#pragma link C++ class TVirtualPaveStats+;
 #pragma link C++ class TBackCompFitter+;
 #pragma link C++ class TSVDUnfold+;
 #pragma link C++ class TEfficiency+;
