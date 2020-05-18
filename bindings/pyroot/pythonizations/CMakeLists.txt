@@ -92,7 +92,14 @@ foreach(val RANGE ${how_many_pythons})
 
   set(libname ROOTPythonizations${python_under_version_string})
 
-  ROOT_LINKER_LIBRARY(${libname} ${cpp_sources} DEPENDENCIES Core Tree cppyy${python_under_version_string} CMAKENOEXPORT)
+  add_library(${libname} SHARED ${cpp_sources})
+  # Set the suffix to '.so' and the prefix to 'lib'
+  set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+  if(APPLE)
+    target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy${python_under_version_string})
+  elseif(NOT MSVC)
+    target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy${python_under_version_string})
+  endif()
 
   target_include_directories(${libname} PRIVATE ${python_include_dir})
 
@@ -116,6 +123,11 @@ foreach(val RANGE ${how_many_pythons})
     install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
   endforeach()
 
+  # Install library
+  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
+                             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
+                             LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
+                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endforeach()
 
 # Install Python sources and bytecode
