@@ -858,132 +858,185 @@ struct AxisConfigToType<RAxisConfig::kLabels> {
 /// categories, which reflect the differing impacts of merging data from two
 /// histograms that exhibit these axis binning differences.
 ///
-/// In the end, a bitmap is returned, encoded as bits of an integer. This bitmap
-/// indicates which sorts of binning differences exist between the two input
-/// axes or histograms.
-///
-/// Although all flag descriptions are spelled out in terms of axis binning,
-/// the same notions can be used when comparing the binnings of
-/// multi-dimensional histograms, in which case it should be understood that at
-/// least one of the histograms' axes exhibits the described binning difference.
-///
-/// In the ASCII art schematics below, "< |" represents the underflow bin of a
-/// non-growable axis, "| |" represents a regular bin, and "| >" represents the
-/// overflow bin of a non-growable axis. When discussing labeled axes, the "|X|"
-/// notation may also be used to represented a labeled bin with label "X".
-///
-enum BinningCmpFlags {
-   /// The source and target axes have identical binning, up to bin border
-   /// rounding error tolerance. Histogram data is trivially mergeable.
-   kIdentical = 0,
-
-   /// The target axis spans some range that is not covered by the source axis
-   ///
-   ///     Example source bins:     < | | | >
-   ///     Example target bins: < | | | | | >
-   ///
-   /// This binning difference does not affect the merging of regular histogram
-   /// data. However, source histogram overflow data must be handled with care.
-   ///
-   /// If the source histogram has overflow data in the direction where the
-   /// target axis bins span extra range, then it is not possible to merge this
-   /// overflow data into the target histogram's bins, because it is not known
-   /// how source overflow data should be distributed across target bins.
-   ///
-   // FIXME: What happens when the source axis is growable and does not have
-   //        overflow bins? Should this even be considered an issue then? If so,
-   //        it probably should not be a user-visible one, but only one that's
-   //        reported via an internal API, like bin ordering issues.
+class BinningCmpResult {
+private:
+   // Internally, the data is bit-packed as follows...
    //
-   // FIXME: Isn't this a special case of kSourceAliasing in a way?
+   // FIXME: Remove implementation notes after implementation
    //
-   kExtraTargetRange = (1 << 1),
+   enum Bits {
+      // === DISCRIMINANT ===
 
-   /// The source axis spans some range that is not covered by the target axis
-   ///
-   ///     Example source bins: < | | | | | | >
-   ///     Example target bins: < | | | >
-   ///
-   /// This binning difference affects the merging of histogram data in a
-   /// complex manner that depends on the detailed axis characteristics:
-   ///
-   /// - If the target axis is not growable, source data lying in the extra
-   ///   range can be merged into the corresponding overflow bin of the target
-   ///   histogram, but information loss will be lost in the process.
-   /// - If the target axis is growable, then...
-   ///   * If the source axis contains overflow data in the affected direction,
-   ///     this data cannot be correctly merged into the destination histogram.
-   ///     Further bullet points in this list assume that this is not the case.
-   ///   * If the target axis' bin width evenly divides the missing source
-   ///     axis range, then it is possible to transparently get the two axes to
-   ///     match by growing the target axis.
-   ///   * If the target axis' bin width does not evenly divide the missing
-   ///     source axis range, then growing the target axis will lead us to the
-   ///     kExtraTargetRange scenario.
-   ///
-   // FIXME: Will want to add some extra flags to allow the user to distinguish
-   //        between these various scenarios, as well as we can without knowing
-   //        the histogram data anyway.
-   //
-   kExtraSourceRange = (1 << 2),
+      // First, a discriminant indicates what types of axes were compared
+      kDiscriminantBits = 2,
+      kDiscriminantMask = (1 << kDiscriminantBits) - 1,
 
-   /// Multiple source axis bins map into a single target axis bin
-   ///
-   ///     Example source bins: < | | | | | | >
-   ///     Example target bins: < |   |     | >
-   ///
-   /// Affected source histogram data can be merged into the target histogram,
-   /// but some information will be lost in the process.
-   ///
-   kTargetAliasing = (1 << 3),
+      // This will be the discriminant if two axes using an incompatible binning
+      // scheme (e.g. RAxisIrregular vs RAxisLabels) were compared.
+      //
+      // It is impossible to automatically merge two histograms with such
+      // wildly incompatible axis types.
+      //
+      kDiscriminantIncompatible = 0b00,
 
-   /// A source axis bin maps into multiple target axis bins
-   ///
-   ///     Example source bins: < |     |   | >
-   ///     Example target bins: < | | | | | | >
-   ///
-   /// It is not possible to correctly merge the affected source histogram data
-   /// into the target histogram, because it is not known how source data should
-   /// be distributed across target bins.
-   ///
-   kSourceAliasing = (1 << 4),
+      // This will be the discriminant if two axes with numerical bin borders
+      // (like RAxisEquidistant, RAxisGrow and RAxisIrregular) were compared
+      //
+      // Bin borders are compared up to a certain tolerance, and differences are
+      // only reported if they don't match even with this tolerance.
+      //
+      // Whether an automatic histogram merge is possible depends on multiple
+      // factors, and may not even be decidable without knowing bin contents.
+      // See the numeric-specific flags for details.
+      //
+      kDiscriminantNumeric = 0b01,
 
-   /// Bins from the source and target axis are ordered differently
-   ///
-   /// This situation only affects axes with set semantics, like labeled axes.
-   ///
-   ///     Example source bins: |A|B|C|D|E|
-   ///     Example target bins: |A|C|E|D|B|
-   ///
-   /// The problem can be resolved automatically by re-ordering the target axis
-   /// bins. You can safely ignore this flag as a user of histogram merging
-   /// operations, it is only used by the histogram merging implementation.
-   ///
-   // FIXME: If users don't need to know about it, then don't expose it in
-   //        public methods. Instead, replace BinningCmpFlags bitmap design
-   //        with a more elaborate class wrapper that exposes "external" and
-   //        "internal" flags via separate APIs.
-   //
-   kDifferentOrder = (1 << 5),
+      // This will be the discriminant if two labeled axes were compared
+      //
+      // It is always possible to automatically merge two histograms with this
+      // axis type, but labels-specific flags will provide the implementation
+      // with guidance on which preliminary operations need to be carried out.
+      //
+      kDiscriminantLabels = 0b10,
 
-   /// The source and target bins cannot be meaningfully compared
-   ///
-   ///     Example source bins:              ???  < | | | | >
-   ///     Example target bins: |A|C|E|D|B|  ???
-   ///
-   /// This flag will be reported upon trying to compare the binning of
-   /// histogram axis types which are so fundamentally different that there is
-   /// no meaningful way to compare axis bin borders/labels.
-   ///
-   /// It is obviously impossible to automatically merge the data of two
-   /// histograms whose axis types are so fundamentally different.
-   ///
-   // FIXME: Since this flag is mutually exclusive with the other ones, a bitmap
-   //        API may not be the right way to go about this. Instead, in a
-   //        class-based design, I could return an optional type that is empty
-   //        when no meaningful comparison can be carried out.
-   //
-   kIncomparable = (1 << 6),
+      // === NUMERIC-SPECIFIC FLAGS ===
+
+      // The following flags are present when the discriminant value is
+      // kDiscriminantNumeric, and should not be queried otherwise.
+
+      // The mapping from source to target regular bin indices is trivial
+      //
+      // This flag will be set if each regular source axis bin maps into a
+      // target axis bin that has the same bin index.
+      //
+      // For source axis bins that map into multiple target axis bins (see
+      // the `kRegularBinAliasing` flag), the bin with the same index must be
+      // the first bin that the source bin maps into, in target axis order.
+      //
+      kTrivialRegularBinIndex = 1 << kDiscriminantBits,
+
+      // The mapping between source and target regular bin indices is bijective
+      //
+      // This flag will be true if `kTrivialRegularBinIndex` is true and the
+      // target axis also does not have any extra bin beyond those that source
+      // bins map into.
+      //
+      // If this flag is true for every axis in an histogram, then every regular
+      // bin of the source histogram maps into a regular bin in the target
+      // histogram that has the same _global_ bin index.
+      //
+      kRegularBinBijection = 1 << (kDiscriminantBits + 1),
+
+      // The mapping between source and target overflow bin indices is bijective
+      //
+      // This flag will be true if the source and destination axis have the
+      // same number of redular bins and either both or neither of the source
+      // and target axis have under/overflow bins.
+      //
+      // If this flag is true for every axis in an histogram, then every
+      // overflow bin of the source histogram maps into an overflow bin in the
+      // target histogram that has the same _global_ bin index.
+      //
+      // NOTE: There is no `kTrivialOverflowBinIndex` because there is always a
+      //       trivial mapping of the source under/overflow bins to the target
+      //       ones, which is to map the source under/overflow bin to the target
+      //       under/overflow bin. Note that this mapping differs from the one
+      //       used for regular bins, as the target overflow bin is the _last_
+      //       bin which the source overflow bin maps into.
+      //
+      //       Equality of number of regular bins is needed because since
+      //       overflow bins surround regular bins, the number of overflow bins
+      //       in 2D+ histograms (and therefore the layout of global overflow
+      //       bin indices) depends on the layout of regular bins.
+      //
+      kOverflowBinBijection = 1 << (kDiscriminantBits + 2),
+
+      // Some bins from the source axis map to target bins that span extra range
+      //
+      // This means that some information about the position of past histogram
+      // fills can be lost. We knew more precisely where source histogram fills
+      // occured before merging than we know after merging. Which can, in turn,
+      // cause aliasing issues if the merged histogram is merged again later on
+      // (see `kRegularBinAliasing` to learn more about those).
+      //
+      // NOTE: This information should be reported to the user as a warning, but
+      //       does not affect the histogram merging implementation.
+      //
+      kFillPositionInfoLoss = 1 << (kDiscriminantBits + 3),
+
+      // Some regular bins from the source axis map to multiple target bins
+      //
+      // These bins must be empty for histogram merging to be possible, because
+      // if they had some content, no automated histogram merging routine would
+      // be able to correctly split this content across matching target
+      // histogram bins. The required information about how fills were
+      // distributed inside of the source bins simply isn't there.
+      //
+      // NOTE: If this flag is true, then for each source axis bin, the
+      //       histogram merging implementation must locate a matching target
+      //       axis bin (possibly using the optimizations permitted by the
+      //       `kTrivialRegularBinIndex` and `kRegularBinBijection` flags), and
+      //       check if its borders match those of the source. If not, the
+      //       source in question must be empty.
+      //
+      kRegularBinAliasing = 1 << (kDiscriminantBits + 4),
+
+      // The source underflow bin must be empty for histogram merging to be okay
+      //
+      // Obviously, this flag will only be set if the source axis has
+      // under/overflow bins. It may be set either because the target axis is
+      // growable (in which case underflow content spilling would require
+      // infinite growth and alias), or because the source underflow bin maps
+      // into multiple target bins.
+      //
+      kNeedEmptyUnderflow = 1 << (kDiscriminantBits + 5),
+
+      // The source overflow bin must be empty for histogram merging to be okay
+      //
+      // Same as `kNeedEmptyUnderflow`, but for the source overflow bin.
+      //
+      kNeedEmptyOverflow = 1 << (kDiscriminantBits + 6),
+
+      // The target axis must grow in order to span the full source range
+      //
+      // This flag will obviously only be set if the target axis is growable.
+      // All previous bits are set under the assumption that such growth has
+      // already occurred.
+      //
+      // NOTE: Such growth may not actually be necessary if the source axis
+      //       bins which are not covered by the target axis are empty. However,
+      //       figuring this out requires a scan of the source histogram bins,
+      //       so it's dubious whether it's a good idea to check for it from a
+      //       performance point of view.
+      //
+      kTargetMustGrow = 1 << (kDiscriminantBits + 7),
+
+      // === LABELS-SPECIFIC FLAGS ===
+
+      // The following flags are present when the discriminant value is
+      // kDiscriminantLabels, and should not be queried otherwise.
+
+      // The source axis has labels that the target axis doesn't have
+      //
+      // These labels will need to be added to the target axis before histogram
+      // data merging becomes possible.
+      //
+      // NOTE: Not reporting existence of target-specific labels because this
+      //       does not affect merging, is irrelevant to the user, and takes
+      //       some CPU cycles to figure out.
+      //
+      kSourceOnlyLabels = 1 << kDiscriminantBits,
+
+      // The common subset of labels in the source and target axes is not
+      // ordered in the same way
+      //
+      // Target axis labels (and associated bin data) will need to be reordered
+      // in source-matching order before histogram merging becomes possible.
+      // This should be done after adding missing source axis labels to the
+      // target axis.
+      //
+      kDisorderedLabels = 1 << (kDiscriminantBits + 1),
+   } fBits;
 };
 
 // NOTE: Should probably be an RAxisBase method, to benefit from vtable
