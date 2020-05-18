@@ -262,6 +262,7 @@ AutoDict_*.cxx
 /root/io/directory/runcd1.root
 /root/io/directory/fdb.root
 /root/io/directory/test.root
+/root/io/directory/dirkeydelete.root
 
 # /root/io/double32/
 /root/io/double32/double32.root
