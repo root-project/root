@@ -25,11 +25,11 @@
 
 class TObject;
 
-class TVirtualPaveStats { 
+class TVirtualPaveStats {
 
 public:
    virtual ~TVirtualPaveStats() = default;
-   
+
    virtual TObject *GetParent() const = 0;;
    virtual void SetParent(TObject *) = 0;
 
