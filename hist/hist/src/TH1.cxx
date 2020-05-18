@@ -2677,7 +2677,7 @@ TObject* TH1::Clone(const char* newname) const
       // keep obj->fFunction valid during its execution and
       // protect the update with the write lock.
 
-      // Reset stats parent - else cloning the stats will clone this histogram, too. 
+      // Reset stats parent - else cloning the stats will clone this histogram, too.
       auto oldstats = dynamic_cast<TVirtualPaveStats*>(fFunctions->FindObject("stats"));
       TObject *oldparent = nullptr;
       if (oldstats) {
