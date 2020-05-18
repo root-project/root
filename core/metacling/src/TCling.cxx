@@ -2838,6 +2838,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    // inspect bases
    // TNamed::ShowMembers(R__insp);
    unsigned iNBase = 0;
+   cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
    for (clang::CXXRecordDecl::base_class_const_iterator iBase
         = recordDecl->bases_begin(), eBase = recordDecl->bases_end();
         iBase != eBase; ++iBase, ++iNBase) {
