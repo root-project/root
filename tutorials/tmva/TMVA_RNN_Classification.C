@@ -184,15 +184,26 @@ void TMVA_RNN_Classification(int use_type = 1)
 
    const char *rnn_type = "RNN";
 
+#ifdef R__HAS_PYMVA
    TMVA::PyMethodBase::PyInitialize();
+#else
+   useKeras = false;
+#endif
 
-   ROOT::EnableImplicitMT();
+   int num_threads = 0;   // use by default all threads 
+   // do enable MT running
+   if (num_threads >= 0) {
+      ROOT::EnableImplicitMT(num_threads);
+      if (num_threads > 0) gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%d",num_threads));
+   }
+   else
+      gSystem->Setenv("OMP_NUM_THREADS", "1");
+
    TMVA::Config::Instance();
 
-   std::cout << "nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
+   std::cout << "Running with nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
 
    TString inputFileName = "time_data_t10_d30.root";
-   // TString inputFileName = "/home/moneta/data/sample_images_32x32.gsoc.root";
 
    bool fileExist = !gSystem->AccessPathName(inputFileName);
 

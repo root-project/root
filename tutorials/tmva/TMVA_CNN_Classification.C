@@ -125,16 +125,27 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    bool writeOutputFile = true;
 
+   int num_threads = 0;  // use default threads
+
    TMVA::Tools::Instance();
 
    // do enable MT running
-   ROOT::EnableImplicitMT();
+   if (num_threads >= 0) {
+      ROOT::EnableImplicitMT(num_threads);
+      if (num_threads > 0) gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%d",num_threads));
+   }
+   else
+      gSystem->Setenv("OMP_NUM_THREADS", "1");
 
-   // for using Keras
+   std::cout << "Running with nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
+
+#ifdef R__HAS_PYMVA
    gSystem->Setenv("KERAS_BACKEND", "tensorflow");
-   // for setting openblas in single thread on SWAN
-   gSystem->Setenv("OMP_NUM_THREADS", "1");
+   // for using Keras
    TMVA::PyMethodBase::PyInitialize();
+#else
+   useKerasCNN = false;
+#endif
 
    TFile *outputFile = nullptr;
    if (writeOutputFile)
