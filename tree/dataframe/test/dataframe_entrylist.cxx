@@ -44,14 +44,16 @@ void TestTreeWithEntryList(bool isMT = false)
 
    RMTRAII gomt(isMT);
 
-   TEntryList elist("e", "e", treename, filename);
-   elist.Enter(0);
-   elist.Enter(nEntries - 1);
-
+   // do NOT pass treename and filename to the TEntryList here, see ROOT-10775
+   TEntryList elist("e", "e");
    TFile f(filename);
    auto t = f.Get<TTree>(treename);
    t->SetEntryList(&elist);
    ASSERT_TRUE(elist.GetLists() == nullptr) << "Failure in setting up the TEntryList";
+
+   // entries must be added to the TEntryList AFTER it is associated to the TTree, otherwise subentrylists are created
+   elist.Enter(0);
+   elist.Enter(nEntries - 1);
 
    auto entries = ROOT::RDataFrame(*t).Take<int>("e").GetValue();
    std::sort(entries.begin(), entries.end()); // could be out of order in MT runs
