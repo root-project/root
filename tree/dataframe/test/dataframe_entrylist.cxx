@@ -51,6 +51,7 @@ void TestTreeWithEntryList(bool isMT = false)
    TFile f(filename);
    auto t = f.Get<TTree>(treename);
    t->SetEntryList(&elist);
+   ASSERT_TRUE(elist.GetLists() == nullptr) << "Failure in setting up the TEntryList";
 
    auto entries = ROOT::RDataFrame(*t).Take<int>("e").GetValue();
    std::sort(entries.begin(), entries.end()); // could be out of order in MT runs
