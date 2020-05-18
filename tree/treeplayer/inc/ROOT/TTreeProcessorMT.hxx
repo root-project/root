@@ -16,6 +16,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TChain.h"
+#include "TEntryList.h"
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
@@ -25,6 +26,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 
 #include <functional>
+#include <utility> // std::pair
 #include <vector>
 
 /** \class TTreeView
@@ -57,28 +59,25 @@ struct FriendInfo {
 };
 
 class TTreeView {
-public:
-   using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
-
 private:
-   // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
-   std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
+   std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain, if present
+   std::unique_ptr<TEntryList> fEntryList;        ///< TEntryList for fChain, if present
+   // NOTE: fFriends and fEntryList MUST come before fChain to be deleted after it, because neither friend trees nor
+   // entrylists are deregistered from the main tree at destruction (ROOT-9283 tracks the issue for friends).
    std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
 
    void MakeChain(const std::vector<std::string> &treeName, const std::vector<std::string> &fileNames,
                   const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
                   const std::vector<std::vector<Long64_t>> &friendEntries);
-   TreeReaderEntryListPair MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long64_t end);
-   std::unique_ptr<TTreeReader> MakeReader(Long64_t start, Long64_t end);
 
 public:
    TTreeView() = default;
    // no-op, we don't want to copy the local TChains
    TTreeView(const TTreeView &) {}
-   TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
-                                         const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
-                                         TEntryList entryList, const std::vector<Long64_t> &nEntries,
-                                         const std::vector<std::vector<Long64_t>> &friendEntries);
+   std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
+                                              const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
+                                              const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
+                                              const std::vector<std::vector<Long64_t>> &friendEntries);
 };
 } // End of namespace Internal
 
@@ -87,7 +86,7 @@ private:
    const std::vector<std::string> fFileNames; ///< Names of the files
    const std::vector<std::string> fTreeNames; ///< TTree names (always same size and ordering as fFileNames)
    /// User-defined selection of entry numbers to be processed, empty if none was provided
-   const TEntryList fEntryList; // const to be sure to avoid race conditions among TTreeViews
+   TEntryList fEntryList;
    const Internal::FriendInfo fFriendInfo;
    ROOT::TThreadExecutor fPool; ///<! Thread pool for processing.
 
