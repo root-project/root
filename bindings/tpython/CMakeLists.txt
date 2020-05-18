@@ -23,7 +23,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   DEPENDENCIES
     Core
   LIBRARIES
-  cppyy${PYTHON_UNDER_VERSION_STRING_Development_Main}
+    cppyy${PYTHON_UNDER_VERSION_STRING_Development_Main}
+    # We link libTPython against Python libraries to compensate for the fact that libcppyy
+    # is built with unresolved symbols. If we didn't do this, invoking TPython from C++
+    # would not work.
+    ${PYTHON_LIBRARIES_Development_Main}
 )
 
 # Disables warnings originating from deprecated register keyword in Python

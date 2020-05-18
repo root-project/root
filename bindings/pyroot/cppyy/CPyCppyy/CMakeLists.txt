@@ -50,7 +50,6 @@ foreach(val RANGE ${how_many_pythons})
   list(GET python_include_dirs ${val} python_include_dir)
   list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_version_strings ${val} python_version_string)
-  list(GET python_libraries ${val} python_library)
 
   set(libname cppyy${python_under_version_string})
 
@@ -93,7 +92,11 @@ foreach(val RANGE ${how_many_pythons})
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   )
 
-  target_link_libraries(${libname} cppyy_backend${python_under_version_string} ${python_library})
+  if(APPLE)
+    target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup cppyy_backend${python_under_version_string})
+  elseif(NOT MSVC)
+    target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend${python_under_version_string})
+  endif()
 
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
