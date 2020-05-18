@@ -92,7 +92,7 @@ void MethodPyKeras::DeclareOptions() {
                     "Specify as 0.2 or 20% to use a fifth of the data set as validation set. "
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
    DeclareOptionRef(fUserCodeName = "", "UserCode",
-                    "Optional pythin code provided by the user to be executed before loading the Keras model");
+                    "Optional python code provided by the user to be executed before loading the Keras model");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
