@@ -37,6 +37,92 @@ struct EntryCluster {
    Long64_t end;
 };
 
+// note that this routine assumes global entry numbers
+static bool ClustersAreSortedAndContiguous(const std::vector<std::vector<EntryCluster>> &cls)
+{
+   Long64_t last_end = 0ll;
+   for (const auto &fcl : cls) {
+      for (const auto &c : fcl) {
+         if (last_end != c.start)
+            return false;
+         last_end = c.end;
+      }
+   }
+   return true;
+}
+
+/// Take a vector of vectors of EntryClusters (a vector per file), filter the entries according to entryList, and
+/// and return a new vector of vectors of EntryClusters where cluster start/end entry numbers have been converted to
+/// TEntryList-local entry numbers.
+///
+/// This routine assumes that entry numbers in the TEntryList (and, if present, in the sub-entrylists) are in
+/// ascending order, i.e., for n > m:
+///   elist.GetEntry(n) + tree_offset_for_entry_from_elist(n) > elist.GetEntry(m) + tree_offset_for_entry_from_elist(m)
+static std::vector<std::vector<EntryCluster>>
+ConvertToElistClusters(std::vector<std::vector<EntryCluster>> &&clusters, TEntryList &entryList,
+                       const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
+                       const std::vector<Long64_t> &entriesPerFile)
+{
+   R__ASSERT(entryList.GetN() > 0); // wasteful to call this function if it has nothing to do
+   R__ASSERT(ClustersAreSortedAndContiguous(clusters));
+
+   const bool listHasGlobalEntryNumbers = entryList.GetLists() == nullptr;
+   const auto nFiles = clusters.size();
+
+   std::unique_ptr<TChain> chain;
+   using NextFn_t = Long64_t (*)(Long64_t &, TEntryList &, TChain *);
+   // A function that advances TEntryList and returns global entry numbers or -1 if we reached the end
+   // (might or might not need a TChain depending on whether listHasGlobalEntryNumbers)
+   NextFn_t Next;
+   if (listHasGlobalEntryNumbers) {
+      Next = [](Long64_t &elEntry, TEntryList &elist, TChain *) {
+         ++elEntry;
+         return elist.Next();
+      };
+   } else {
+      // we need `chain` to be able to convert local entry numbers to global entry numbers in `Next`
+      chain.reset(new TChain());
+      for (auto i = 0u; i < nFiles; ++i)
+         chain->Add((fileNames[i] + "/" + treeNames[i]).c_str(), entriesPerFile[i]);
+      Next = [](Long64_t &elEntry, TEntryList &elist, TChain *ch) {
+         ++elEntry;
+         int treenum = -1;
+         Long64_t localEntry = elist.GetEntryAndTree(elEntry, treenum);
+         if (localEntry == -1ll)
+            return localEntry;
+         return localEntry + ch->GetTreeOffset()[treenum];
+      };
+   }
+
+   // the call to GetEntry also serves the purpose to reset TEntryList::fLastIndexQueried,
+   // so we can be sure TEntryList::Next will return the correct thing
+   Long64_t elistEntry = 0ll;
+   Long64_t entry = entryList.GetEntry(elistEntry);
+
+   std::vector<std::vector<EntryCluster>> elistClusters;
+
+   for (auto fileN = 0u; fileN < nFiles; ++fileN) {
+      std::vector<EntryCluster> elistClustersForFile;
+      for (const auto &c : clusters[fileN]) {
+         if (entry >= c.end || entry == -1ll) // no entrylist entries in this cluster
+            continue;
+         R__ASSERT(entry >= c.start); // current entry should never come before the cluster we are looking at
+         const Long64_t elistRangeStart = elistEntry;
+         // advance entry list until the entrylist entry goes beyond the end of the cluster
+         while (entry < c.end && entry != -1ll)
+            entry = Next(elistEntry, entryList, chain.get());
+         elistClustersForFile.emplace_back(EntryCluster{elistRangeStart, elistEntry});
+      }
+      elistClusters.emplace_back(std::move(elistClustersForFile));
+   }
+
+   R__ASSERT(elistClusters.size() == clusters.size()); // same number of files
+   R__ASSERT(ClustersAreSortedAndContiguous(elistClusters));
+
+   entryList.GetEntry(0ll); // reset TEntryList internal state, lest we incur in ROOT-10807
+   return elistClusters;
+}
+
 // EntryClusters and number of entries per file
 using ClustersAndEntries = std::pair<std::vector<std::vector<EntryCluster>>, std::vector<Long64_t>>;
 
@@ -243,84 +329,32 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
    }
 }
 
-TTreeView::TreeReaderEntryListPair
-TTreeView::MakeReaderWithEntryList(TEntryList &globalList, Long64_t start, Long64_t end)
+//////////////////////////////////////////////////////////////////////////
+/// Get a TTreeReader for the current tree of this view.
+std::unique_ptr<TTreeReader>
+TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeNames,
+                         const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
+                         const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
+                         const std::vector<std::vector<Long64_t>> &friendEntries)
 {
-   // TEntryList and SetEntriesRange do not work together (the former has precedence).
-   // We need to construct a TEntryList that contains only those entry numbers in our desired range.
-
-   std::vector<TEntryList*> globalEntryLists;
-   auto innerLists = globalList.GetLists();
-   if (!innerLists) {
-      if (globalList.GetN()) {
-         globalEntryLists.emplace_back(&globalList);
-      }
-   } else {
-      for (auto lp : *innerLists) {
-         auto lpAsTEntryList = static_cast<TEntryList *>(lp);
-         if (lpAsTEntryList->GetN()) {
-            globalEntryLists.emplace_back(lpAsTEntryList);
+   const bool hasEntryList = entryList.GetN() > 0;
+   const bool usingLocalEntries = friendInfo.fFriendNames.empty() && !hasEntryList;
+   if (fChain == nullptr || (usingLocalEntries && fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle())) {
+      MakeChain(treeNames, fileNames, friendInfo, nEntries, friendEntries);
+      if (hasEntryList) {
+         fEntryList.reset(new TEntryList(entryList));
+         if (fEntryList->GetLists() != nullptr) {
+            // need to associate the TEntryList to the TChain for the latter to set entry the fTreeNumbers of the
+            // sub-lists of the former...
+            fChain->SetEntryList(fEntryList.get());
+            fEntryList->ResetBit(TObject::kCanDelete); // ...but we want to retain ownership
          }
       }
    }
-
-   auto localList = std::make_unique<TEntryList>();
-
-   for (auto gl : globalEntryLists) {
-      Long64_t entry = gl->GetEntry(0);
-
-      // this may be owned by the local list
-      auto tmp_list = new TEntryList(gl->GetName(), gl->GetTitle(), gl->GetFileName(), gl->GetTreeName());
-
-      do {
-         if (entry >= end) {
-            break;
-         } else if (entry >= start) {
-            tmp_list->Enter(entry);
-         }
-      } while ((entry = gl->Next()) >= 0);
-
-      if (tmp_list->GetN() > 0) {
-         localList->Add(tmp_list);
-      } else {
-         delete tmp_list;
-      }
-   }
-
-   auto reader = std::make_unique<TTreeReader>(fChain.get(), localList.get());
-   return std::make_pair(std::move(reader), std::move(localList));
-}
-
-std::unique_ptr<TTreeReader> TTreeView::MakeReader(Long64_t start, Long64_t end)
-{
-   auto reader = std::make_unique<TTreeReader>(fChain.get());
+   auto reader = std::make_unique<TTreeReader>(fChain.get(), fEntryList.get());
    reader->SetEntriesRange(start, end);
    return reader;
 }
-
-//////////////////////////////////////////////////////////////////////////
-/// Get a TTreeReader for the current tree of this view.
-TTreeView::TreeReaderEntryListPair
-TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeNames,
-                         const std::vector<std::string> &fileNames, const FriendInfo &friendInfo, TEntryList entryList,
-                         const std::vector<Long64_t> &nEntries, const std::vector<std::vector<Long64_t>> &friendEntries)
-{
-   const bool usingLocalEntries = friendInfo.fFriendNames.empty() && entryList.GetN() == 0;
-   if (fChain == nullptr || (usingLocalEntries && fileNames[0] != fChain->GetListOfFiles()->At(0)->GetTitle()))
-      MakeChain(treeNames, fileNames, friendInfo, nEntries, friendEntries);
-
-   std::unique_ptr<TTreeReader> reader;
-   std::unique_ptr<TEntryList> localList;
-   if (entryList.GetN() > 0) {
-      std::tie(reader, localList) = MakeReaderWithEntryList(entryList, start, end);
-   } else {
-      reader = MakeReader(start, end);
-   }
-
-   // we need to return the entry list too, as it needs to be in scope as long as the reader is
-   return std::make_pair(std::move(reader), std::move(localList));
-}
-
 
 } // namespace Internal
 } // namespace ROOT
@@ -531,19 +565,29 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
 
    // If an entry list or friend trees are present, we need to generate clusters with global entry numbers,
    // so we do it here for all files.
+   // Otherwise we can do it later, concurrently for each file, and clusters will contain local entry numbers.
+   // TODO: in practice we could also find clusters per-file in the case of no friends and a TEntryList with
+   // sub-entrylists.
    const bool hasFriends = !friendNames.empty();
    const bool hasEntryList = fEntryList.GetN() > 0;
    const bool shouldRetrieveAllClusters = hasFriends || hasEntryList;
-   const auto clustersAndEntries =
-      shouldRetrieveAllClusters ? MakeClusters(fTreeNames, fFileNames) : ClustersAndEntries{};
-   const auto &clusters = clustersAndEntries.first;
-   const auto &entries = clustersAndEntries.second;
+   ClustersAndEntries clusterAndEntries{};
+   if (shouldRetrieveAllClusters) {
+      clusterAndEntries = MakeClusters(fTreeNames, fFileNames);
+      if (hasEntryList)
+         clusterAndEntries.first = ConvertToElistClusters(std::move(clusterAndEntries.first), fEntryList, fTreeNames,
+                                                          fFileNames, clusterAndEntries.second);
+   }
+
+   const auto &clusters = clusterAndEntries.first;
+   const auto &entries = clusterAndEntries.second;
 
    // Retrieve number of entries for each file for each friend tree
    const auto friendEntries =
       hasFriends ? GetFriendEntries(friendNames, friendFileNames) : std::vector<std::vector<Long64_t>>{};
 
    // Parent task, spawns tasks that process each of the entry clusters for each input file
+   // TODO: for readability we should have two versions of this lambda, for shouldRetrieveAllClusters == true/false
    auto processFile = [&](std::size_t fileIdx) {
       // theseFiles contains either all files or just the single file to process
       const auto &theseFiles = shouldRetrieveAllClusters ? fFileNames : std::vector<std::string>({fFileNames[fileIdx]});
@@ -561,11 +605,9 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
          shouldRetrieveAllClusters ? entries : std::vector<Long64_t>({theseClustersAndEntries.second[0]});
 
       auto processCluster = [&](const EntryCluster &c) {
-         std::unique_ptr<TTreeReader> reader;
-         std::unique_ptr<TEntryList> elist;
-         std::tie(reader, elist) = fTreeView->GetTreeReader(c.start, c.end, theseTrees, theseFiles, fFriendInfo,
-                                                            fEntryList, theseEntries, friendEntries);
-         func(*reader);
+         auto r = fTreeView->GetTreeReader(c.start, c.end, theseTrees, theseFiles, fFriendInfo, fEntryList,
+                                           theseEntries, friendEntries);
+         func(*r);
       };
 
       fPool.Foreach(processCluster, thisFileClusters);
