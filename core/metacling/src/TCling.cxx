@@ -1272,11 +1272,6 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
    if (!hasCxxModules)
       PreIncludes += "#include <string>\n";
 
-   // We must include it even when we have modules because it is marked as
-   // textual in the modulemap due to the nature of the assert header.
-#ifndef R__WIN32
-   PreIncludes += "#include <cassert>\n";
-#endif
    PreIncludes += "using namespace std;\n";
    clingInterp.declare(PreIncludes);
 }
