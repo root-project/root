@@ -458,7 +458,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
       cxcoutEHF << "Error: Unable to open input file: " << InputFile << std::endl;
       throw hf_exc();
     }
-    cxcoutIHF << "Opened input file: " << InputFile << ": " << inFile << std::endl;
+    cxcoutIHF << "Opened input file: " << InputFile << ": " << std::endl;
   }
 
   TDirectory* dir = inFile->GetDirectory(HistoPath.c_str());
