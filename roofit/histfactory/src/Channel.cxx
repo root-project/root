@@ -497,7 +497,7 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
     throw hf_exc();
   }
 
-  ptr->SetDirectory(0);
+  ptr->SetDirectory(nullptr);
 
   
 #ifdef DEBUG
