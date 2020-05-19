@@ -19,12 +19,11 @@
 
 namespace ROOT {
 
+namespace Internal {
+
 namespace RDF {
 
-class R__DEPRECATED(6, 24,
-                    "RRootDS will be removed from the public namespace. Please use standard RDataFrame constructors "
-                    "and interfaces instead")
-RRootDS final : public ROOT::RDF::RDataSource {
+class RRootDS final : public ROOT::RDF::RDataSource {
 private:
    unsigned int fNSlots = 0U;
    std::string fTreeName;
@@ -59,6 +58,8 @@ public:
 RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);
 
 } // ns RDF
+
+} // ns Internal
 
 } // ns ROOT
 

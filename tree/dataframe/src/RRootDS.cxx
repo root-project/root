@@ -12,6 +12,8 @@
 
 namespace ROOT {
 
+namespace Internal {
+
 namespace RDF {
 
 std::vector<void *> RRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &id)
@@ -165,5 +167,7 @@ RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNam
 }
 
 } // ns RDF
+
+} // ns Internal
 
 } // ns ROOT
