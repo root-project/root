@@ -110,18 +110,6 @@ namespace ROOT {
             static TDirectory *Create() { return nullptr; }
          };
 
-         struct MaxSlots_t {
-            unsigned fVal;
-            operator unsigned() const { return fVal; }
-            MaxSlots_t &operator=(unsigned val)
-               R__DEPRECATED(6, 24,
-                             "TThreadedObject now adds new slots as needed, on demand, possibly beyond fgMaxSlots")
-            {
-               fVal = val;
-               return *this;
-            }
-         };
-
       } // End of namespace TThreadedObjectUtils
    } // End of namespace Internal
 
@@ -164,7 +152,7 @@ namespace ROOT {
    public:
       /// The initial number of empty processing slots that a TThreadedObject is constructed with by default.
       /// Deprecated: TThreadedObject grows as more slots are required.
-      static Internal::TThreadedObjectUtils::MaxSlots_t fgMaxSlots;
+      static constexpr const TNumSlots fgMaxSlots{64};
 
       TThreadedObject(const TThreadedObject&) = delete;
 
@@ -192,7 +180,7 @@ namespace ROOT {
       /// Construct the TThreadedObject and the "model" of the thread private objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS&&... args) : TThreadedObject(TNumSlots{fgMaxSlots}, args...) { }
+      TThreadedObject(ARGS&&... args) : TThreadedObject(fgMaxSlots, args...) { }
 
       /// Return the number of currently available slot.
       ///
@@ -363,8 +351,6 @@ namespace ROOT {
          return newIndex;
       }
    };
-
-   template<class T> Internal::TThreadedObjectUtils::MaxSlots_t TThreadedObject<T>::fgMaxSlots{64};
 
 } // End ROOT namespace
 
