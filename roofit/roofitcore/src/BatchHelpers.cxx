@@ -19,18 +19,30 @@
 namespace BatchHelpers {
 
 /**
- * This function returns the minimum size of the non-zero-sized batches.
+ * This function returns the minimum size of the batches that have a size > 1.
+ * - If the size is zero, there is no data, so ignore this batch.
+ * - If the size is one, the first element is broadcast.
+ * - If the size is > 1, this is a data batch for which values should be computed.
  * \param[in] parameters Vector of spans to read sizes from.
  * \return Smallest non-zero size found.
  */
 size_t findSize(std::vector< RooSpan<const double> > parameters) 
 {
+  if (parameters.empty() || std::all_of(parameters.begin(), parameters.end(), [](const RooSpan<const double> span){ return span.size() == 0;})) {
+    return 0;
+  }
+  if (std::all_of(parameters.begin(), parameters.end(), [](const RooSpan<const double> span){ return span.size() == 1;})) {
+    return 1;
+  }
+
   size_t ret = std::numeric_limits<std::size_t>::max();
-  for (auto &param : parameters) 
-    if (param.size()> 0 && param.size()<ret) ret=param.size();
+  for (const auto& param : parameters)
+    if (param.size() > 1 && param.size()<ret)
+      ret = param.size();
     
   return ret;
 }
+
 
 /* This function returns the minimum size of the non-zero-sized batches
  * as well as the number of parameters that are batches, wrapped in a
