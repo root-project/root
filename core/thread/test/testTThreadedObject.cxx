@@ -152,7 +152,7 @@ TEST(TThreadedObject, GrowSlots)
 TEST(TThreadedObject, GetNSlots)
 {
    // default ctor produces fgMaxSlots slots
-   EXPECT_EQ(ROOT::TThreadedObject<int>(42).GetNSlots(), ROOT::TThreadedObject<int>::fgMaxSlots);
+   EXPECT_EQ(ROOT::TThreadedObject<int>(42).GetNSlots(), ROOT::TThreadedObject<int>::fgMaxSlots.fVal);
 
    ROOT::TThreadedObject<int> tto(ROOT::TNumSlots{0});
    EXPECT_EQ(tto.GetNSlots(), 0u);
