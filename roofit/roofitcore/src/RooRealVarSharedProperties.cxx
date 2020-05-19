@@ -26,8 +26,9 @@ For RooRealVars these are the definitions of the named ranges.
 
 #include "RooFit.h"
 #include "RooRealVarSharedProperties.h"
-#include "Riostream.h"
+#include "RooAbsBinning.h"
 
+#include <iostream>
 
 using namespace std;
 
@@ -70,7 +71,9 @@ RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedPro
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
   if (_ownBinnings) {
-    _altBinning.Delete() ;
+    for (auto& item : _altBinning) {
+      delete item.second;
+    }
   }
 } 
 

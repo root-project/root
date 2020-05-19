@@ -195,6 +195,12 @@
 #pragma read sourceClass="RooCategoryProxy" targetClass="RooTemplateProxy<RooAbsCategoryLValue>";
 #pragma link C++ class RooRealVar- ;
 #pragma link C++ class RooRealVarSharedProperties+ ;
+#pragma read sourceClass="RooRealVarSharedProperties" targetClass="RooRealVarSharedProperties" version="[1]" \
+  include="RooLinkedList.h" \
+  source="RooLinkedList _altBinning" target="_altBinning" \
+  code="{ RooFIter iter = onfile._altBinning.fwdIterator(); TObject* binning;\
+    while ( (binning = iter.next()) ) { _altBinning[binning->GetName()] = static_cast<RooAbsBinning*>(binning); } \
+  }"
 #pragma link C++ class RooRefCountList+ ;
 #pragma link C++ class RooScaledFunc+ ;
 #pragma link C++ class RooSegmentedIntegrator1D+ ;
