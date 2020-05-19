@@ -672,11 +672,11 @@ RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, Bool_t valueOnly
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RooArgSet with all components (branch nodes) of the
+/// expression tree headed by this object.
 RooArgSet* RooAbsArg::getComponents() const
 {
-  // Return a RooArgSet with all component (branch nodes) of the
-  // expression tree headed by this object
-
   TString name(GetName()) ;
   name.Append("_components") ;
 
