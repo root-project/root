@@ -126,6 +126,14 @@ Double_t RooGenericPdf::evaluate() const
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate this formula for values found in inputData.
+RooSpan<double> RooGenericPdf::evaluateBatch(BatchHelpers::RunContext& inputData, const RooArgSet* normSet) const {
+  if (normSet != nullptr && normSet != _normSet)
+    throw std::logic_error("Got conflicting normSets");
+
+  return formula().evaluateBatch(this, inputData, _normSet);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change formula expression to given expression

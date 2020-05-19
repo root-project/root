@@ -29,6 +29,8 @@ public:
 
   virtual Double_t operator()(const Double_t xvector[]) const;
 
+  RooSpan<const double> getValBatch(std::vector<RooSpan<const double>> coordinates) const;
+
 protected:
 
   mutable Bool_t _first   ;  // Bit indicating if operator() has been called yet

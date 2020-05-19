@@ -83,6 +83,8 @@
 #include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
 #include "RooHelpers.h"
+#include "BatchHelpers.h"
+#include "RunContext.h"
 
 #include "Compression.h"
 #include "Math/IFunction.h"
@@ -102,6 +104,9 @@
 #include "TVector.h"
 #include "ROOT/RMakeUnique.hxx"
 #include "strlcpy.h"
+#ifndef NDEBUG
+#include <TSystem.h> // To print stack traces when caching errors are detected
+#endif
 
 #include <sstream>
 #include <iostream>
@@ -317,6 +322,35 @@ RooSpan<const double> RooAbsReal::getValBatch(std::size_t begin, std::size_t max
   return _batchData.getBatch(begin, maxSize);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute batch of values for given input data, store result in `evalData`,
+/// and return a span pointing to it.
+///
+/// \param[in] evalData  Object holding spans of input data. Store our output here.
+/// \param[in] normSet   Pass this normSet on to objects that are serving values to
+/// the one where this function is called.
+RooSpan<const double> RooAbsReal::getValBatch(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  auto item = evalData.spans.find(this);
+  if (item != evalData.spans.end()) {
+    return item->second;
+  }
+
+  if (normSet && normSet != _lastNSet) {
+    // TODO Implement better:
+    // The proxies, i.e. child nodes in the computation graph, sometimes need to know
+    // what to normalise over. I hope that passing the normalisation set through all
+    // interfaces will do the trick, but cross-checks that the correct normalisation set
+    // is used should nevertheless be implemented.
+    const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
+    // This member only seems to be in use in RooFormulaVar. Consider removing it:
+    _lastNSet = (RooArgSet*) normSet;
+  }
+
+  auto results = evaluateBatch(evalData, normSet ? normSet : _lastNSet);
+
+  return results;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4892,7 +4926,6 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
         << " If it is part of ROOT, consider requesting this on https://root.cern." << std::endl;
   }
 
-
   std::vector<std::tuple<RooRealVar*, RooSpan<const double>, double>> batchLeafs;
   for (auto leaf : allLeafs) {
     auto leafRRV = dynamic_cast<RooRealVar*>(leaf);
@@ -4940,9 +4973,78 @@ RooSpan<double> RooAbsReal::evaluateBatch(std::size_t begin, std::size_t maxSize
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate function for a batch of data points. If not overridden by
+/// derived classes, this will call the slow, single-valued evaluate() in a loop.
+/// \param[in/out]  evalData Object holding data that should be used in computations.
+/// Each array of data is identified by the pointer to the RooFit object that this data belongs to.
+/// The object that this function is called on will store its results here as well.
+/// \param[in]  normSet  Optional normalisation set for computations in terms this one depends on.
+/// \return     Span pointing to the results. The memory is owned by `evalData`.
+RooSpan<double> RooAbsReal::evaluateBatch(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  if (RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
+    coutI(FastEvaluations) << "The class " << IsA()->GetName() << " does not implement the faster batch evaluation interface."
+        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+  }
+
+  // Find leaves of the computation graph. Assign known data values to these.
+  RooArgSet allLeafs;
+  leafNodeServerList(&allLeafs);
+
+  std::vector<RooAbsRealLValue*> settableLeaves;
+  std::vector<RooSpan<const double>> leafValues;
+  std::vector<double> oldLeafValues;
+
+  for (auto item : allLeafs) {
+    if (!item->IsA()->InheritsFrom(RooAbsRealLValue::Class()))
+      continue;
+
+    auto leaf = static_cast<RooAbsRealLValue*>(item);
+
+    settableLeaves.push_back(leaf);
+    oldLeafValues.push_back(leaf->getVal());
+
+    auto knownLeaf = evalData.spans.find(leaf);
+    if (knownLeaf != evalData.spans.end()) {
+      // Data are already known
+      leafValues.push_back(knownLeaf->second);
+    } else {
+      auto result = leaf->getValBatch(evalData, normSet);
+      leafValues.push_back(result);
+    }
+  }
+
+  const auto dataSize = std::max<std::size_t>(1, BatchHelpers::findSize(leafValues));
+  auto outputData = evalData.makeBatch(this, dataSize);
+
+  {
+    // Side track all caching that RooFit might think is necessary.
+    // When used with batch computations, we depend on computation
+    // graphs actually evaluating correctly, instead of having
+    // pre-calculated values side-loaded into nodes event-per-event.
+    DisableCachingRAII disableCaching(inhibitDirty());
+
+    // For each event, assign values to the leaves, and run the single-value computation.
+    for (std::size_t i=0; i < outputData.size(); ++i) {
+      for (unsigned int j=0; j < settableLeaves.size(); ++j) {
+        if (leafValues[j].size() > i)
+          settableLeaves[j]->setVal(leafValues[j][i], evalData.rangeName);
+      }
+
+      outputData[i] = evaluate();
+    }
+  }
+
+  // Reset values
+  for (unsigned int j=0; j < settableLeaves.size(); ++j) {
+    settableLeaves[j]->setVal(oldLeafValues[j]);
+  }
+
+  return outputData;
+}
 
 
-#include "TSystem.h"
+
 
 using RooHelpers::CachingError;
 using RooHelpers::FormatPdfTree;
@@ -4965,7 +5067,9 @@ Double_t RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
   const double ret = (_fast && !_inhibitDirty) ? _value : fullEval;
 
   if (std::isfinite(ret) && ( ret != 0. ? (ret - fullEval)/ret : ret - fullEval) > 1.E-9) {
+#ifndef NDEBUG
     gSystem->StackTrace();
+#endif
     FormatPdfTree formatter;
     formatter << "--> (Scalar computation wrong here:)\n"
             << GetName() << " " << this << " _fast=" << tmpFast
