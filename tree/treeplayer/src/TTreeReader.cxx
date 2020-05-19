@@ -191,6 +191,13 @@ TTreeReader::TTreeReader() : fNotify(this) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Access data from tree.
+///
+/// \param tree The TTree or TChain to read from
+/// \param entryList It can be a single TEntryList with global entry numbers (supported, as
+///                  an extension, also in the case of a TChain) or, if the first parameter
+///                  is a TChain, a TEntryList with sub-TEntryLists with local entry numbers.
+///                  In the latter case, the TEntryList must be associated to the TChain, as
+///                  per chain.SetEntryList(&entryList).
 
 TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    fTree(tree),
@@ -208,6 +215,14 @@ TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
 /// Access data from the tree called keyname in the directory (e.g. TFile)
 /// dir, or the current directory if dir is NULL. If keyname cannot be
 /// found, or if it is not a TTree, IsInvalid() will return true.
+///
+/// \param keyname The name of the TTree to read from file
+/// \param dir The TDirectory to read keyname from
+/// \param entryList It can be a single TEntryList with global entry numbers (supported, as
+///                  an extension, also in the case of a TChain) or, if the first parameter
+///                  is a TChain, a TEntryList with sub-TEntryLists with local entry numbers.
+///                  In the latter case, the TEntryList must be associated to the TChain, as
+///                  per chain.SetEntryList(&entryList).
 
 TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
    fEntryList(entryList),
@@ -374,7 +389,8 @@ Bool_t TTreeReader::SetProxies() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the range of entries to be loaded by `Next()`; end will not be loaded.
 ///
-/// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
+/// If end <= begin, `end` is ignored (set to `-1`, i.e. will run on all entries from `begin` onwards).
+///
 /// Example:
 ///
 /// ~~~ {.cpp}
@@ -383,6 +399,11 @@ Bool_t TTreeReader::SetProxies() {
 ///   // Will load entries 3 and 4.
 /// }
 /// ~~~
+///
+/// Note that if a TEntryList is present, beginEntry and endEntry refer to the beginEntry-th/endEntry-th entries of the
+/// TEntryList (or the main TEntryList in case it has sub-entrylists). In other words, SetEntriesRange can
+/// be used to only loop over part of the TEntryList, but not to further restrict the actual TTree/TChain entry numbers
+/// considered.
 ///
 /// \param beginEntry The first entry to be loaded by `Next()`.
 /// \param endEntry   The entry where `Next()` will return kFALSE, not loading it.
