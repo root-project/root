@@ -20,6 +20,7 @@
 #include "RooLinkedList.h"
 
 #include <memory>
+#include <stdexcept>
 #include <assert.h>
 
 /// Interface for RooFIter-compatible iterators
