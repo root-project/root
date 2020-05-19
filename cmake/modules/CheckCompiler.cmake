@@ -88,6 +88,14 @@ if (CMAKE_COMPILER_IS_GNUCXX)
   endif()
   message(STATUS "Found GCC. Major version ${GCC_MAJOR}, minor version ${GCC_MINOR}")
   set(COMPILER_VERSION gcc${GCC_MAJOR}${GCC_MINOR}${GCC_PATCH})
+  if("${GCC_MAJOR}.${GCC_MINOR}" VERSION_GREATER_EQUAL 4.9
+      AND CMAKE_GENERATOR STREQUAL "Ninja")
+    # GCC checks automatically if we are in interactive terminal mode.
+    # We use color output only for Ninja, because Ninja by default is buffering the output,
+    # so Clang disables colors as it is sure whether the output goes to a file or to a terminal.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fdiagnostics-color=always")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdiagnostics-color=always")
+  endif()
 else()
   set(GCC_MAJOR 0)
   set(GCC_MINOR 0)
