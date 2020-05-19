@@ -367,7 +367,7 @@ class Cpp02TemplateLookup( MyTestCase ):
 
       # Test the non-templated overload (must have been added to
       # the template proxy too)
-      self.assertEqual(m.GetSizeNEI(), 1) 
+      self.assertEqual(m.GetSizeNEI(), 1)
 
    def test08TemplateGlobalFunctions( self ):
       """Test template global function lookup and calls"""
@@ -424,6 +424,17 @@ class Cpp02TemplateLookup( MyTestCase ):
       # Complete type is std::vector<float, std::allocator<float>>
       self.assertEqual(inst_std_vec_float(v)[0], val)
       self.assertEqual(type(inst_std_vec_float(v)), type(v))
+
+   def test11VariadicTemplates(self):
+      """Test variadic templates resolution"""
+
+      ROOT.gInterpreter.ProcessLine("""
+      template<typename... MyTypes>
+      int f() {return sizeof...(MyTypes);}
+      """)
+
+      res = ROOT.f['int', 'double', 'void*']()
+      self.assertEqual(res, 3)
 
 
 ### C++ by-non-const-ref arguments tests =====================================
@@ -483,7 +494,7 @@ class Cpp03PassByNonConstRef( MyTestCase ):
 
    def test3PassBuiltinsByNonConstRef( self ):
       """Test parameter passing of builtins through const reference"""
-      
+
       self.assertEqual( ROOT.PassLongThroughConstRef( 42 ), 42 )
       self.assertEqual( ROOT.PassDoubleThroughConstRef( 3.1415 ), 3.1415 )
       self.assertEqual( ROOT.PassIntThroughConstRef( 42 ), 42 )
@@ -510,7 +521,7 @@ class Cpp04HandlingAbstractClasses( MyTestCase ):
 class Cpp05AssignToRefArbitraryClass( MyTestCase ):
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
-      
+
       RefTester = ROOT.RefTester
 
       a = std.vector( RefTester )()
@@ -525,7 +536,7 @@ class Cpp05AssignToRefArbitraryClass( MyTestCase ):
 
    def test2NiceErrorMessageReturnByRef( self ):
       """Want nice error message of failing assign by reference"""
-      
+
       RefTesterNoAssign = ROOT.RefTesterNoAssign
 
       a = RefTesterNoAssign()
@@ -597,7 +608,7 @@ class Cpp07GloballyOverloadedComparator( MyTestCase ):
       """Check that a namespaced global operator!=/== can be used directly"""
 
       ComparableSpace = ROOT.ComparableSpace
-      
+
       eq = getattr(ComparableSpace, 'operator==')
       ComparableSpace.NSComparable.__eq__ = eq
 
@@ -649,7 +660,7 @@ class Cpp08GlobalVariables( MyTestCase ):
 class Cpp09LongExpressions( MyTestCase ):
    def test1LongExpressionWithTemporary( self ):
       """Test life time of temporary in long expression"""
-      
+
       SomeClassWithData = ROOT.SomeClassWithData
 
       self.assertEqual( SomeClassWithData.SomeData.s_numData, 0 )
