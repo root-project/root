@@ -599,7 +599,7 @@ TROOT::TROOT() : TDirectory(),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
      fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
      fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
+     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
      fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
@@ -633,7 +633,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
      fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
      fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
-     fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
+     fFromPopUp(kTRUE),fMustClean(kTRUE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
      fClosedObjects(0),fFiles(0),fMappedFiles(0),fSockets(0),fCanvases(0),fStyles(0),fFunctions(0),
@@ -786,7 +786,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
    fFromPopUp     = kFALSE;
-   fReadingObject = kFALSE;
    fInterrupt     = kFALSE;
    fEscape        = kFALSE;
    fMustClean     = kTRUE;

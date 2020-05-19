@@ -129,7 +129,6 @@ protected:
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
    Bool_t          fMustClean;            //True if object destructor scans canvases
-   Bool_t          fReadingObject;        //True while reading an object [Deprecated (will be removed in next release)
    Bool_t          fForceStyle;           //Force setting of current style when reading objects
    Bool_t          fInterrupt;            //True if macro should be interrupted
    Bool_t          fEscape;               //True if ESC has been pressed
