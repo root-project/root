@@ -18,6 +18,9 @@
 
 #include "RooAbsIntegrator.h"
 #include "RooNumIntConfig.h"
+#include <array>
+#include <tuple>
+#include <vector>
 
 class RooIntegrator1D : public RooAbsIntegrator {
 public:
@@ -49,7 +52,12 @@ public:
   bool canIntegrateND() const override { return false ; }
   bool canIntegrateOpenEnded() const override { return false ; }
 
-protected:
+  /// Set whether series acceleration should be applied. Defaults to true.
+  void applySeriesAcceleration(bool arg) {
+    _doExtrap = arg;
+  }
+
+private:
 
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
@@ -60,34 +68,24 @@ protected:
 
   // Integrator configuration
   SummationRule _rule;
-  Int_t _maxSteps ;      ///< Maximum number of steps
-  Int_t _minStepsZero ;  ///< Minimum number of steps to declare convergence to zero
-  Int_t _fixSteps ;      ///< Fixed number of steps
-  double _epsAbs ;     ///< Absolute convergence tolerance
-  double _epsRel ;     ///< Relative convergence tolerance
-  bool _doExtrap ;     ///< Apply conversion step?
-  enum { _nPoints = 5 };
+  Int_t _maxSteps ;      // Maximum number of steps
+  Int_t _minStepsZero ;  // Minimum number of steps to declare convergence to zero
+  Int_t _fixSteps ;      // Fixed number of steps 
+  Double_t _epsAbs ;     // Absolute convergence tolerance
+  Double_t _epsRel ;     // Relative convergence tolerance
+  Bool_t _doExtrap ;     // Apply series acceleration
 
   // Numerical integrator support functions
-  double addTrapezoids(Int_t n) ;
-  double addMidpoints(Int_t n) ;
-  void extrapolate(Int_t n) ;
+  std::vector<double> computeTrapezoids(unsigned int start, unsigned int end, double previousSum, const double* parameters, std::size_t nPar) const;
+  std::vector<double> computeMidpoints(unsigned int start, unsigned int end, double previousSum, const double* parameters, std::size_t nPar) const;
+  RooSpan<const double> evalIntegrand(const std::vector<double>& xValues, const double* parameters, std::size_t nPar) const;
 
+  Double_t addMidpoints(Int_t n, const double* parameters) ;
+  
   // Numerical integrator workspace
-  double _xmin;              ///<! Lower integration bound
-  double _xmax;              ///<! Upper integration bound
-  double _range;             ///<! Size of integration range
-  double _extrapValue;       ///<! Extrapolated value
-  double _extrapError;       ///<! Error on extrapolated value
-  std::vector<double> _h ;   ///<! Integrator workspace
-  std::vector<double> _s ;   ///<! Integrator workspace
-  std::vector<double> _c ;   ///<! Integrator workspace
-  std::vector<double> _d ;   ///<! Integrator workspace
-  double _savedResult;       ///<! Integrator workspace
-
-  double* xvec(double& xx) { _x[0] = xx ; return _x.data(); }
-
-  std::vector<double> _x ; //! do not persist
+  Double_t _xmin;              //! Lower integration bound
+  Double_t _xmax;              //! Upper integration bound
+  std::vector<double> _s;      //! Integrator workspace
 
   ClassDefOverride(RooIntegrator1D,0) // 1-dimensional numerical integration engine
 };
