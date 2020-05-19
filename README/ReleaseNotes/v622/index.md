@@ -18,8 +18,11 @@ The following people have contributed to this new version:
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
+ Massimiliano Galli, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Hadrien Grasland, IJCLab/LAL,\
  Enrico Guiraud, CERN/SFT,\
+ Claire Guyot, CERN/SFT,\
  Stephan Hageboeck, CERN/SFT,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
@@ -32,7 +35,7 @@ The following people have contributed to this new version:
  Timur Pocheptsoff, Qt Company,\
  Renato Quagliani, LPNHE, CNRS/IN2P3, Sorbonne Université,\
  Fons Rademakers, CERN/SFT,\
- Oksana Shadura, Nebraska,\
+ Oksana Shadura, UNL/CMS,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
