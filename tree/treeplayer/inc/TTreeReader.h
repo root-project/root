@@ -155,8 +155,7 @@ public:
 
    TTreeReader(TTree* tree, TEntryList* entryList = nullptr);
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
-   TTreeReader(const char* keyname, TEntryList* entryList = nullptr):
-   TTreeReader(keyname, nullptr, entryList) {}
+   TTreeReader(const char *keyname, TEntryList *entryList = nullptr) : TTreeReader(keyname, nullptr, entryList) {}
 
    ~TTreeReader();
 
