@@ -31,37 +31,47 @@ ClassImp(TProfile);
  Profile Histogram.
  Profile histograms are used to display the mean
  value of Y and its error for each bin in X. The displayed error is by default the
- standard error on the mean (i.e. the standard deviation divided by the sqrt(n) )
+ standard error on the mean (i.e. the standard deviation divided by the sqrt(n) ).
  Profile histograms are in many cases an
- elegant replacement of two-dimensional histograms : the inter-relation of two
+ elegant replacement of two-dimensional histograms. The inter-relation of two
  measured quantities X and Y can always be visualized by a two-dimensional
- histogram or scatter-plot; its representation on the line-printer is not particularly
- satisfactory, except for sparse data. If Y is an unknown (but single-valued)
+ histogram or scatter plot, but if Y is an unknown (but single-valued)
  approximate function of X, this function is displayed by a profile histogram with
- much better precision than by a scatter-plot.
+ much better precision than by a scatter plot.
 
  The following formulae show the cumulated contents (capital letters) and the values
- displayed by the printing or plotting routines (small letters) of the elements for bin J.
-
-                                                   2
-       H(J)  =  sum Y                  E(J)  =  sum Y
-       l(J)  =  sum l                  L(J)  =  sum l
-       h(J)  =  H(J)/L(J)                     mean of Y,
-       s(J)  =  sqrt(E(J)/L(J)- h(J)**2)      standard deviation of Y  (e.g. RMS)
-       e(J)  =  s(J)/sqrt(L(J))               standard error on the mean
-
- The displayed bin content for bin J of a TProfile is always h(J). The corresponding bin error is by default
- e(J). In case the option "s" is used (in the constructor or by calling TProfile::BuildOptions)
- the displayed error is  s(J)
-
- In the special case where s(J) is zero (eg, case of 1 entry only in one bin)
- the bin error e(J) is computed from the average of the s(J) for all bins if
- the static function TProfile::Approximate has been called.
+ displayed by the printing or plotting routines (small letters) of the elements for bin j.
+ \f[
+  \begin{align}
+       H(j)  &=  \sum w \cdot Y \\
+       E(j)  &=  \sum w \cdot Y^2 \\
+       W(j)  &=  \sum w \\
+       h(j)  &=  H(j) / W(j)              & &\text{mean of Y,} \\
+       s(j)  &=  \sqrt{E(j)/W(j)- h(j)^2} & &\text{standard deviation of Y} \\
+       e(j)  &=  s(j)/\sqrt{W(j)}         & &\text{standard error on the mean} \\
+  \end{align}
+ \f]
+ The bin content is always the mean of the Y values, but errors change depending on options:
+ \f[
+    \begin{align}
+      \text{GetBinContent}(j) &= h(j) \\
+      \text{GetBinError}(j) &=
+        \begin{cases}
+          e(j)                 &\text{if option="" (default). Error of the mean of all y values.} \\
+          s(j)                 &\text{if option="s". Standard deviation of all y values.} \\
+          \begin{cases} e(j) &\text{if } h(j) \ne 0 \\ 1/\sqrt{12 N} &\text{if } h(j)=0 \end{cases}       &\text{if option="i". This is useful for storing integers such as ADC counts.} \\
+          1/\sqrt{W(j)}           &\text{if option="g". Error of a weighted mean for combining measurements with variances of } w. \\
+        \end{cases}
+    \end{align}
+ \f]
+ In the special case where s(j) is zero (eg, case of 1 entry only in one bin)
+ the bin error e(j) is computed from the average of the s(j) for all bins if
+ the static function TProfile::Approximate() has been called.
  This simple/crude approximation was suggested in order to keep the bin
  during a fit operation. But note that this approximation is not the default behaviour.
-  See also TProfile::BuildOptions for other error options and more detailed explanations
+ See also TProfile::BuildOptions for more on error options.
 
-  Example of a profile histogram with its graphics output
+  ### Creating and drawing a profile histogram
 ~~~{.cpp}
 {
   auto c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);
@@ -107,10 +117,10 @@ TProfile::~TProfile()
 /// has the same effect as calling the special TProfile constructor below
 /// where ymin and ymax are specified.
 ///
-/// H(J) is printed as the channel contents. The errors displayed are s(J) if CHOPT='S'
-/// (spread option), or e(J) if CHOPT=' ' (error on mean).
+/// H(j) is printed as the channel contents. The errors displayed are s(j) if `option`='S'
+/// (spread option), or e(j) if `CHOPT`='' (error on mean).
 ///
-/// See TProfile::BuildOptions for explanation of parameters
+/// See TProfile::BuildOptions() for explanation of parameters
 ///
 /// see also comments in the TH1 base class constructors
 
@@ -123,7 +133,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for Profile histograms with variable bin size.
 ///
-/// See TProfile::BuildOptions for more explanations on errors
+/// See TProfile::BuildOptions() for more explanations on errors
 /// see also comments in the TH1 base class constructors
 
 TProfile::TProfile(const char *name,const char *title,Int_t nbins,const Float_t *xbins,Option_t *option)
@@ -195,7 +205,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t xlow,
 ///           This approximation assumes that the Y values are integer (e.g. ADC counts)
 ///           and have an implicit uncertainty of y +/- 0.5. With the assumption that the probability that y
 ///           takes any value between y-0.5 and y+0.5 is uniform, its standard error is 1/SQRT(12)
-///         - 'g' Errors are 1./SQRT(W) where W is the sum of the weights for the bin J
+///         - 'g' Errors are 1./SQRT(W) where W is the sum of the weights for the bin j
 ///           W is obtained as from TProfile::GetBinEntries(ibin)
 ///           This errors corresponds to the standard deviation of weighted mean where each
 ///           measurement Y is uncorrelated and has an error sigma, which is expressed in the
