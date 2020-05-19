@@ -27,7 +27,7 @@ ClassImp(TProfile2D);
 /** \class TProfile2D
     \ingroup Hist
  Profile2D histograms are used to display the mean
- value of Z and its RMS for each cell in X,Y.
+ value of Z and its error for each cell in X,Y.
  Profile2D histograms are in many cases an
  elegant replacement of three-dimensional histograms : the inter-relation of three
  measured quantities X, Y and Z can always be visualized by a three-dimensional
@@ -37,12 +37,30 @@ ClassImp(TProfile2D);
  much better precision than by a scatter-plot.
 
  The following formulae show the cumulated contents (capital letters) and the values
- displayed by the printing or plotting routines (small letters) of the elements for cell I, J.
-
-       H(I,J)  =  sum Z                  E(I,J)  =  sum Z
-       l(I,J)  =  sum l                  L(I,J)  =  sum l
-       h(I,J)  =  H(I,J)/L(I,J)          s(I,J)  =  sqrt(E(I,J)/L(I,J)- h(I,J)**2)
-       e(I,J)  =  s(I,J)/sqrt(L(I,J))
+ displayed by the printing or plotting routines (small letters) of the elements for cell i, j.
+ \f[
+  \begin{align}
+       H(i,j)  &=  \sum w \cdot Z  \\
+       E(i,j)  &=  \sum w \cdot Z^2 \\
+       W(i,j)  &=  \sum w \\
+       h(i,j)  &=  \frac{H(i,j)}{W(i,j)} \\
+       s(i,j)  &=  \sqrt{E(i,j)/W(i,j)- h(i,j)^2} \\
+       e(i,j)  &=  \frac{s(i,j)}{\sqrt{W(i,j)}}
+  \end{align}
+ \f]
+  The bin content is always the mean of the Z values, but errors change depending on options:
+ \f[
+    \begin{align}
+      \text{GetBinContent}(i,j) &= h(i,j) \\
+      \text{GetBinError}(i,j) &=
+        \begin{cases}
+          e(i,j)                 &\text{if option="" (default). Error of the mean of all z values.} \\
+          s(i,j)                 &\text{if option="s". Standard deviation of z values.} \\
+          \begin{cases} e(j) &\text{if } h(i,j) \ne 0 \\ 1/\sqrt{12 N} &\text{if } h(i,j)=0 \end{cases}       &\text{if option="i". This is useful for storing integers such as ADC counts.} \\
+          1/\sqrt{W(i,j)}           &\text{if option="g". Error of a weighted mean when combining measurements with variances of } w. \\
+        \end{cases}
+    \end{align}
+ \f]
 
  In the special case where s(I,J) is zero (eg, case of 1 entry only in one cell)
  the bin error e(I,J) is computed from the average of the s(I,J) for all cells
@@ -50,7 +68,7 @@ ClassImp(TProfile2D);
  This simple/crude approximation was suggested in order to keep the cell
  during a fit operation. But note that this approximation is not the default behaviour.
 
- Example of a profile2D histogram
+ ### Creating and drawing a 2D profile
  ~~~~{.cpp}
  {
     auto c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);
