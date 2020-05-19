@@ -25,6 +25,8 @@
 #include <string>
 
 class RooArgSet;
+class RooAbsReal;
+class RooArgProxy;
 
 namespace BatchHelpers {
 

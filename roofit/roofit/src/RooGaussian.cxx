@@ -139,6 +139,33 @@ RooSpan<double> RooGaussian::evaluateBatch(std::size_t begin, std::size_t batchS
   return output;
 }
 
+
+
+RooSpan<double> RooGaussian::evaluateSpan(BatchHelpers::RunContext& evalData, const RooArgSet* normSet) const {
+  auto xData = x->getValues(evalData, normSet);
+  auto meanData = mean->getValues(evalData, normSet);
+  auto sigmaData = sigma->getValues(evalData, normSet);
+
+  std::size_t batchLength = BatchHelpers::findSize({xData, meanData, sigmaData});
+  auto output = evalData.makeBatch(this, batchLength);
+
+  if (xData.size() >= 1 && meanData.size() == 1 && sigmaData.size() == 1) {
+    compute(output, xData,
+        BracketAdapter<double>(meanData[0]),
+        BracketAdapter<double>(sigmaData[0]));
+  }
+  else {
+    compute(output,
+        BracketAdapterWithMask(xData[0], xData),
+        BracketAdapterWithMask(meanData[0], meanData),
+        BracketAdapterWithMask(sigmaData[0], sigmaData));
+  }
+
+  return output;
+}
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const

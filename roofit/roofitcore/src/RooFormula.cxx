@@ -60,6 +60,9 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
+#include "BatchHelpers.h"
+#include "RunContext.h"
+
 #include "ROOT/RMakeUnique.hxx"
 #include "TObjString.h"
 #include "TClass.h"
@@ -363,6 +366,48 @@ Double_t RooFormula::eval(const RooArgSet* nset) const
   return _tFormula->EvalPar(pars.data());
 }
 
+
+RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, BatchHelpers::RunContext& inputData, const RooArgSet* nset) const {
+  if (!_tFormula) {
+    coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << endl;
+    std::string what = "Formula ";
+    what += GetTitle();
+    what += " didn't compile.";
+    throw std::runtime_error(what);
+  }
+
+  std::vector<BatchHelpers::BracketAdapterWithMask> valueAdapters;
+  std::vector<RooSpan<const double>> inputSpans;
+  for (const auto arg : _origList) {
+    auto realArg = static_cast<const RooAbsReal*>(arg);
+    auto batch = realArg->getValues(inputData, nset);
+    assert(!batch.empty());
+    valueAdapters.emplace_back(batch[0], batch);
+    inputSpans.push_back(std::move(batch));
+  }
+
+  const auto nData = BatchHelpers::findSize(inputSpans);
+  auto output = inputData.makeBatch(dataOwner, nData);
+  std::vector<double> pars(_origList.size());
+
+
+  for (std::size_t i=0; i < nData; ++i) {
+    for (unsigned int j=0; j < _origList.size(); ++j) {
+      if (_isCategory[j]) {
+        // TODO: As long as category states cannot be passed in the RunContext,
+        // the current state has to be used.
+        const auto& cat = static_cast<RooAbsCategory&>(_origList[j]);
+        pars[j] = cat.getCurrentIndex();
+      } else {
+        pars[j] = valueAdapters[j][i];
+      }
+    }
+
+    output[i] = _tFormula->EvalPar(pars.data());
+  }
+
+  return output;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Printing interface

@@ -16,8 +16,12 @@
 
 #include "BatchData.h"
 
+#include "RooArgProxy.h"
+#include "RooAbsReal.h"
+
 #include <ostream>
 #include <iomanip>
+#include <vector>
 
 namespace BatchHelpers {
 
@@ -161,7 +165,6 @@ void BatchData::attachForeignStorage(const std::vector<double>& vec) {
   clear();
 
   _foreignData = &vec;
-  _ownedBatches.clear();
 }
 
 

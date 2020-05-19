@@ -28,6 +28,7 @@ RooAbsReal object (specified by a code) to a set of dependent variables.
 
 #include "RooRealAnalytic.h"
 #include "RooAbsReal.h"
+#include "RooAbsRealLValue.h"
 
 #include <assert.h>
 
@@ -46,4 +47,29 @@ Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const
   loadValues(xvector);  
   _ncall++ ;
   return _code ? _func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0):_func->getVal(_nset) ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the analytic integral of the function at the specified values of the dependents.
+RooSpan<const double> RooRealAnalytic::getValues(std::vector<RooSpan<const double>> coordinates) const {
+  assert(isValid());
+  _ncall += coordinates.front().size();
+
+  std::vector<double> results;
+  results.reserve(coordinates.front().size());
+
+  for (std::size_t i=0; i < coordinates.front().size(); ++i) {
+    for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
+      _vars[dim]->setVal(coordinates[dim][i]);
+    }
+
+    if (_code == 0) {
+      results.push_back(_func->getVal(_nset));
+    } else {
+      results.push_back(_func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0));
+    }
+  }
+
+  return std::move(results);
 }

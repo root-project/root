@@ -24,12 +24,13 @@ public:
     RooRealBinding(func,vars,normSet,rangeName), _code(code) { }
   inline virtual ~RooRealAnalytic() { }
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
+  virtual Double_t operator()(const Double_t xvector[]) const override;
+  RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const override;
 
 protected:
   Int_t _code;
 
-  ClassDef(RooRealAnalytic,0) // Function binding to an analytical integral of a RooAbsReal
+  ClassDefOverride(RooRealAnalytic,0) // Function binding to an analytical integral of a RooAbsReal
 };
 
 #endif

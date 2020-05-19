@@ -50,14 +50,20 @@ public:
   _span{other._span}
   { }
 
+  // Declare the const version as friend here, so one can
+  // construct RooSpan<const T> from RooSpan<const T> AND share the memory.
+  friend class RooSpan<const T>;
 
   /// Conversion constructor from <T> to <const T>
+  /// If the input span owns some memory, the const-version of the
+  /// span will copy the shared_ptr.
   template<typename NON_CONST_T,
       typename = typename std::enable_if<std::is_same<const NON_CONST_T, T>::value>::type >
   constexpr RooSpan(const RooSpan<NON_CONST_T>& other) :
-  _auxStorage{},
+  _auxStorage{other._auxStorage},
   _span{other.data(), other.size()}
   { }
+
 
   /// Construct from a range. Data held by foreign object.
   template < class InputIterator>
