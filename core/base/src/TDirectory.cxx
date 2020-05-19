@@ -1302,7 +1302,7 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See TDirectoryFile::WriteTObject for details
+/// \copydoc TDirectory::WriteTObject().
 
 Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/)
 {
