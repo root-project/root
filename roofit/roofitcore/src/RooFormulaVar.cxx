@@ -153,6 +153,24 @@ Double_t RooFormulaVar::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the formula for all entries of our servers found in `inputData`.
+RooSpan<double> RooFormulaVar::evaluateSpan(BatchHelpers::RunContext& inputData, const RooArgSet* normSet) const {
+  if (normSet != _lastNSet) {
+    // TODO: Remove dependence on _lastNSet
+    // See also comment in RooAbsReal::getValBatch().
+    std::cerr << "Formula " << GetName() << " " << GetTitle() << "\n\tBeing evaluated with normSet " << normSet << "\n";
+    normSet->Print("V");
+    std::cerr << "\tHowever, _lastNSet = " << _lastNSet << "\n";
+    if (_lastNSet) _lastNSet->Print("V");
+
+    throw std::logic_error("Got conflicting norm sets. This shouldn't happen.");
+  }
+
+  return formula().evaluateSpan(this, inputData, normSet);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Propagate server change information to embedded RooFormula object
 
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)

@@ -158,3 +158,25 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
   if (wgtSum==0) return 0 ;
   return result / wgtSum ;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate the function at the specified values of the dependents.
+RooSpan<const double> RooDataProjBinding::getValues(std::vector<RooSpan<const double>> coordinates) const {
+  assert(isValid());
+
+  std::vector<double> results;
+  results.reserve(coordinates.front().size());
+
+  std::unique_ptr<double[]> xVec( new double[coordinates.size()] );
+
+  for (std::size_t i=0; i < coordinates.front().size(); ++i) {
+    for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
+      xVec.get()[dim] = coordinates[dim][i];
+    }
+
+    this->operator()(xVec.get());
+  }
+
+  return std::move(results);
+}

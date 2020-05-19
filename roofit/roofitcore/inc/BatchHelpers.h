@@ -18,9 +18,9 @@
 #define ROOFIT_ROOFITCORE_INC_BATCHHELPERS_H_
 
 #include "RooRealProxy.h"
+#include "RooSpan.h"
 
 #include <vector>
-#include <RooSpan.h>
 
 class RooArgSet;
 
@@ -90,7 +90,7 @@ class BracketAdapterWithMask {
     _isBatch(!batch.empty()),
     _payload(payload),
     _pointer(batch.empty() ? &_payload : batch.data()),
-    _mask(batch.empty() ? 0 : ~static_cast<size_t>(0))
+    _mask(batch.size() > 1 ? ~static_cast<size_t>(0): 0)
     {
     }
     

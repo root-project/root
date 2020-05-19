@@ -17,6 +17,7 @@
 #define ROO_REAL_VAR
 
 #include "RooAbsRealLValue.h"
+#include "RunContext.h"
 
 #include "TString.h"
 
@@ -57,6 +58,20 @@ public:
   /// \return Span with event data. If not attached to a data store, empty batch. The batch will be shorter if data store ends.
   RooSpan<const double> getValBatch(std::size_t begin, std::size_t batchSize, const RooArgSet* = nullptr) const final {
     return _batchData.getBatch(begin, batchSize);
+  }
+  /// Get values of this variable.
+  /// Check if `inputData` has data registered for this instance. If not, return a batch of size one
+  /// with the current value of the variable.
+  RooSpan<const double> getValues(BatchHelpers::RunContext& inputData, const RooArgSet*) const final {
+    auto item = inputData.spans.find(this);
+    if (item != inputData.spans.end()) {
+      return item->second;
+    }
+
+    auto output = inputData.makeBatch(this, 1);
+    output[0] = _value;
+
+    return output;
   }
 
   virtual void setVal(Double_t value);
