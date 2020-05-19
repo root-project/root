@@ -17,7 +17,12 @@
 #define ROO_REAL_VAR_SHARED_PROPERTY
 
 #include "RooSharedProperties.h"
-#include "RooLinkedList.h"
+
+#include <memory>
+#include <unordered_map>
+#include <string>
+
+class RooAbsBinning;
 
 class RooRealVarSharedProperties : public RooSharedProperties {
 public:
@@ -40,9 +45,9 @@ protected:
 
   friend class RooRealVar ;
 
-  RooLinkedList _altBinning ;  // Optional alternative ranges and binnings
+  std::unordered_map<std::string,RooAbsBinning*> _altBinning ;  // Optional alternative ranges and binnings
   bool _ownBinnings{true}; //!
-  ClassDef(RooRealVarSharedProperties,1) // Shared properties of a RooRealVar clone set
+  ClassDef(RooRealVarSharedProperties,2) // Shared properties of a RooRealVar clone set
 };
 
 
