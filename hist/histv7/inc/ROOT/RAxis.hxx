@@ -850,193 +850,323 @@ struct AxisConfigToType<RAxisConfig::kLabels> {
 
 } // namespace Internal
 
-/// Result of an axis/histogram binning comparison
-///
-/// Axis bin borders are compared with a small tolerance, so that two bin
-/// borders which only differ by small computation rounding errors are
-/// considered identical. Significant differences are classified into various
-/// categories, which reflect the differing impacts of merging data from two
-/// histograms that exhibit these axis binning differences.
-///
+/// Result of an axis binning comparison
 class BinningCmpResult {
-private:
-   // Internally, the data is bit-packed as follows...
+public:
+   // === AXIS COMPARISON CLASSIFICATION ===
+
+   /// Broad classification of possible axis comparisons
+   enum class CmpKind {
+      /// Two axes using a fundamentally incompatible binning scheme (e.g.
+      /// `RAxisIrregular` vs `RAxisLabels`) were compared
+      ///
+      /// It is impossible to automatically merge two histograms when the axis
+      /// types for some dimension differ so much.
+      ///
+      kIncompatible,
+
+      /// Two axes using numerical bin borders (e.g. `RAxisIrregular` vs
+      /// `RAxisEquidistant`) were compared
+      ///
+      /// In this case, bin borders are compared up to a certain tolerance, and
+      /// differences are only reported when the source axis bin borders are not
+      /// within that tolerance of the closest target axis bin border.
+      ///
+      /// The ability to automatically merge two histograms with numerical bin
+      /// borders depends on many factors, and may not decidable without looking
+      /// at the details of the source histogram's bin contents.
+      ///
+      kNumeric,
+
+      /// Two `RAxisLabels` were compared
+      ///
+      /// It is always possible to automatically merge two histograms if all
+      /// histogram axes use labeled bins.
+      ///
+      kLabels,
+   };
+
+   /// Kind of axis comparison that was carried out
+   CmpKind Kind() const noexcept { return fKind; }
+
+   // === NUMERICAL AXIS COMPARISON ===
    //
+   // The following properties may only be queried when two axes with numerical
+   // bin borders are compared (i.e. `Kind()` is `CmpKind::kNumeric`),
+   // attempting to read them otherwise will lead to a run-time error.
+
+   /// Truth that there is a trivial mapping from the indices of the source
+   /// axis's regular bins to those of the target axis
+   ///
+   /// If this property is true, then every regular source axis bin maps into
+   /// a target axis bin which has the same bin index.
+   ///
+   /// For source axis bins which map into multiple target axis bins (see
+   /// `HasRegularBinAliasing()`), the target bin which has the same index as
+   /// the source bin must be the _first_ matching bin in target axis order.
+   ///
+   // NOTE: This property can be leveraged to avoid local bin index conversions
+   //       in an histogram merging implementation.
+   //
+   bool HasTrivialRegularBinMapping() const {
+      CheckKind(CmpKind::kNumeric);
+      return fFlags & kTrivialRegularBinMapping;
+   }
+
+   /// Truth that there is a bijective mapping between the regular bin indices
+   /// of the source and target axis
+   ///
+   /// This property, which implies `HasTrivialRegularBinMapping()`, indicates
+   /// that every regular source axis bin maps into a regular target axis bin
+   /// with the same index and vice versa.
+   ///
+   /// If this property is true for every dimension of a source and target
+   /// histogram, then every regular source histogram bin maps into a target
+   /// histogram bin with the same global bin index.
+   ///
+   // NOTE: This property can be leveraged to avoid local<->global bin index
+   //       conversions in the histogram merging implementation.
+   //
+   bool HasRegularBinBijection() const {
+      CheckKind(CmpKind::kNumeric);
+      assert(HasTrivialRegularBinMapping());
+      return fFlags & kRegularBinBijection;
+   }
+
+   /// Truth that there is a bijective mapping between all bins of the source
+   /// and target axis, both regular and under/overflow
+   ///
+   /// This property, which implies `HasBijectiveRegularBinMapping()`, indicates
+   /// that every bin of the source axis, regular or under/overflow, maps into a
+   /// target axis bin with the same index and vice versa.
+   ///
+   /// The mapping of the source overflow bin to the target overflow bin differs
+   /// from the definition of `HasTrivialRegularBinMapping()` in that the target
+   /// overflow bin is guaranteed to be the _last_ target axis bin which the
+   /// source overflow bin maps into, not the first.
+   ///
+   /// If this property is true for every dimension of a source and target
+   /// histogram, then every source histogram bin, whether regular or
+   /// under/overflow, maps into a target histogram bin with the same global bin
+   /// index.
+   ///
+   // NOTE: This property can be leveraged to avoid local<->global bin index
+   //       conversions in the histogram merging implementation.
+   //
+   bool HasFullBinBijection() const {
+      CheckKind(CmpKind::kNumeric);
+      assert(HasRegularBinBijection());
+      return fFlags & kFullBinBijection;
+   }
+
+   /// Truth that some bins from the source axis map into target axis bins that
+   /// span some extra axis range
+   ///
+   /// From the perspective of histogram merging, this property means that some
+   /// information about the location of previous histogram fills can be lost.
+   ///
+   /// If so, the histogram merge is irreversible: trying to merge data back
+   /// from the target histogram to another histogram which has the same binning
+   /// as the source histogram will lead to bin aliasing issues (see below).
+   ///
+   // NOTE: This property does not affect the histogram merging implementation,
+   //       but should be reported as a warning to its user.
+   //
+   bool MergingIsLossy() const {
+      CheckKind(CmpKind::kNumeric);
+      return fFlags & kMergingIsLossy;
+   }
+
+   /// Truth that some regular bins from the source axis map into multiple bins
+   /// (regular or under/overflow) on the target axis
+   ///
+   /// These bins must be empty for histogram merging to be possible, because if
+   /// they had some content, no automated histogram merging routine would be
+   /// able to correctly split this content across matching target histogram
+   /// bins. The required information about how fills were distributed inside of
+   /// the source bins simply isn't there.
+   ///
+   // NOTE: If this property is true, then for each source axis bin, the
+   //       histogram merging implementation must locate a matching target axis
+   //       bin (possibly using the optimizations permitted by
+   //       `HasTrivialRegularBinMapping()` and `HasRegularBinBijection()`), and
+   //       check if its borders match those of the source. If not, the source
+   //       bin in question must be empty or else the histogram merging
+   //       implementation will error out.
+   //
+   bool HasRegularBinAliasing() const {
+      CheckKind(CmpKind::kNumeric);
+      return fFlags & kRegularBinAliasing;
+   }
+
+   /// Truth that the source axis' underflow bin(s) must be empty for histogram
+   /// merging to be possible
+   ///
+   /// This property may only be true if the source axis has underflow bin(s).
+   ///
+   bool MergingNeedsEmptyUnderflow() const {
+      CheckKind(CmpKind::kNumeric);
+      return fFlags & kNeedEmptyUnderflow;
+   }
+
+   /// Truth that the source axis' overflow bin(s) must be empty for histogram
+   /// merging to be possible
+   ///
+   /// This property may only be true if the source axis has overflow bin(s).
+   ///
+   bool MergingNeedsEmptyOverflow() const {
+      CheckKind(CmpKind::kNumeric);
+      return fFlags & kNeedEmptyOverflow;
+   }
+
+   /// Truth that the target axis must grow to span the full source axis range
+   ///
+   /// This property may only be true if the target axis is growable.
+   ///
+   /// All other properties are computed under the assumption that such growth
+   /// has indeed occurred.
+   ///
+   // NOTE: Such growth may not actually be necessary if the source axis bins
+   //       which are not covered by the target axis are empty. However,
+   //       figuring this out requires a scan of the source histogram bins, so
+   //       it's dubious whether it's a good idea to check for it from a
+   //       performance point of view.
+   //
+   bool MergingNeedsTargetGrowth() const {
+      CheckKind(CmpKind::kNumeric);
+      return fFlags & kTargetMustGrow;
+   }
+
+   // === LABELED AXIS COMPARISON ===
+   //
+   // The following properties may only be queried when two axes with labeled
+   // bins are compared (i.e. `Kind()` is `CmpKind::kLabels`), attempting to
+   // read them otherwise will lead to a run-time error.
+
+   /// The source axis has labels that the target axis doesn't have
+   ///
+   /// These labels will need to be added to the target axis before histogram
+   /// data merging becomes possible.
+   ///
+   // NOTE: We aren't reporting existence of target-specific labels because this
+   //       does not affect merging, is largely irrelevant to the user, and
+   //       takes some CPU cycles to figure out.
+   //
+   bool SourceHasExtraLabels() const {
+      CheckKind(CmpKind::kLabels);
+      return fFlags & kSourceOnlyLabels;
+   }
+
+   /// The common subset of labels in the source and target axes is not ordered
+   /// in the same way
+   ///
+   /// The histogram implementation will need to either perform an
+   /// order-insensitive bin merge or reorder target axis labels (and associated
+   /// bin data) so that it matches the order of source histogram bins.
+   ///
+   /// This reordering should be performed after adding missing source axis
+   /// labels (see `SourceHasExtraLabels()`) to the target axis.
+   ///
+   bool LabelOrderDiffers() const {
+      CheckKind(CmpKind::kLabels);
+      return fFlags & kDisorderedLabels;
+   }
+
+
+private:
+   /// Kind of axis comparison that was carried out
+   CmpKind fKind;
+
+   /// Check that the axis comparison kind is correct in preparation to querying
+   /// a binning property which is specific to that axis kind
+   void CheckKind(CmpKind expectedKind) const;
+
+   /// Axis comparison details
+   ///
+   /// These flags must be interpreted according to the value of fKind, as
+   /// specified in their documentation. They are what's queried by the boolean
+   /// boolean property accessors of this class.
+   ///
    // FIXME: Remove implementation notes after implementation
    //
-   enum Bits {
-      // === DISCRIMINANT ===
-
-      // First, a discriminant indicates what types of axes were compared
-      kDiscriminantBits = 2,
-      kDiscriminantMask = (1 << kDiscriminantBits) - 1,
-
-      // This will be the discriminant if two axes using an incompatible binning
-      // scheme (e.g. RAxisIrregular vs RAxisLabels) were compared.
-      //
-      // It is impossible to automatically merge two histograms with such
-      // wildly incompatible axis types.
-      //
-      kDiscriminantIncompatible = 0b00,
-
-      // This will be the discriminant if two axes with numerical bin borders
-      // (like RAxisEquidistant, RAxisGrow and RAxisIrregular) were compared
-      //
-      // Bin borders are compared up to a certain tolerance, and differences are
-      // only reported if they don't match even with this tolerance.
-      //
-      // Whether an automatic histogram merge is possible depends on multiple
-      // factors, and may not even be decidable without knowing bin contents.
-      // See the numeric-specific flags for details.
-      //
-      kDiscriminantNumeric = 0b01,
-
-      // This will be the discriminant if two labeled axes were compared
-      //
-      // It is always possible to automatically merge two histograms with this
-      // axis type, but labels-specific flags will provide the implementation
-      // with guidance on which preliminary operations need to be carried out.
-      //
-      kDiscriminantLabels = 0b10,
-
+   enum Flags {
       // === NUMERIC-SPECIFIC FLAGS ===
 
-      // The following flags are present when the discriminant value is
-      // kDiscriminantNumeric, and should not be queried otherwise.
+      // The following flags are only present when fKind is CmpKind::kNumeric
 
       // The mapping from source to target regular bin indices is trivial
-      //
-      // This flag will be set if each regular source axis bin maps into a
-      // target axis bin that has the same bin index.
-      //
-      // For source axis bins that map into multiple target axis bins (see
-      // the `kRegularBinAliasing` flag), the bin with the same index must be
-      // the first bin that the source bin maps into, in target axis order.
-      //
-      kTrivialRegularBinIndex = 1 << kDiscriminantBits,
+      kTrivialRegularBinMapping = 1 << 0,
 
       // The mapping between source and target regular bin indices is bijective
       //
-      // This flag will be true if `kTrivialRegularBinIndex` is true and the
-      // target axis also does not have any extra bin beyond those that source
-      // bins map into.
+      // NOTE: To implement this, check TrivialRegularBinMapping and then check
+      //       that the source axis has as many bins as the target axis.
       //
-      // If this flag is true for every axis in an histogram, then every regular
-      // bin of the source histogram maps into a regular bin in the target
-      // histogram that has the same _global_ bin index.
-      //
-      kRegularBinBijection = 1 << (kDiscriminantBits + 1),
+      kRegularBinBijection = 1 << 1,
 
-      // The mapping between source and target overflow bin indices is bijective
+      // The mapping between all source and target bin indices is bijective
       //
-      // This flag will be true if the source and destination axis have the
-      // same number of redular bins and either both or neither of the source
-      // and target axis have under/overflow bins.
+      // NOTE: To implement this, check RegularBinBijection and then check that
+      //       either both or neither of the source and target axis have
+      //       under/overflow bins (i.e. they have the same CanGrow() value).
       //
-      // If this flag is true for every axis in an histogram, then every
-      // overflow bin of the source histogram maps into an overflow bin in the
-      // target histogram that has the same _global_ bin index.
-      //
-      // NOTE: There is no `kTrivialOverflowBinIndex` because there is always a
-      //       trivial mapping of the source under/overflow bins to the target
+      //       There is no `kTrivialOverflowBinMapping` because there is always
+      //       a trivial mapping of the source under/overflow bins to the target
       //       ones, which is to map the source under/overflow bin to the target
-      //       under/overflow bin. Note that this mapping differs from the one
-      //       used for regular bins, as the target overflow bin is the _last_
-      //       bin which the source overflow bin maps into.
+      //       under/overflow bin.
       //
-      //       Equality of number of regular bins is needed because since
-      //       overflow bins surround regular bins, the number of overflow bins
-      //       in 2D+ histograms (and therefore the layout of global overflow
-      //       bin indices) depends on the layout of regular bins.
+      //       Regular bin bijection is needed because on a multi-dimensional
+      //       histogram, regular bins of one axis will be part of the
+      //       under/overflow hyperplane of other axes.
       //
-      kOverflowBinBijection = 1 << (kDiscriminantBits + 2),
+      kFullBinBijection = 1 << 2,
 
       // Some bins from the source axis map to target bins that span extra range
       //
-      // This means that some information about the position of past histogram
-      // fills can be lost. We knew more precisely where source histogram fills
-      // occured before merging than we know after merging. Which can, in turn,
-      // cause aliasing issues if the merged histogram is merged again later on
-      // (see `kRegularBinAliasing` to learn more about those).
+      // NOTE: This does _not_ imply that the target bin is bigger, for example
+      //       this flag should also be set in the following kind of scenario:
       //
-      // NOTE: This information should be reported to the user as a warning, but
-      //       does not affect the histogram merging implementation.
+      //           Source axis bins:   |---|
+      //           Target axis bins: |---|---|
       //
-      kFillPositionInfoLoss = 1 << (kDiscriminantBits + 3),
+      kMergingIsLossy = 1 << 3,
 
       // Some regular bins from the source axis map to multiple target bins
       //
-      // These bins must be empty for histogram merging to be possible, because
-      // if they had some content, no automated histogram merging routine would
-      // be able to correctly split this content across matching target
-      // histogram bins. The required information about how fills were
-      // distributed inside of the source bins simply isn't there.
+      // NOTE: Keep under/overflow bins in mind while computing this flag.
       //
-      // NOTE: If this flag is true, then for each source axis bin, the
-      //       histogram merging implementation must locate a matching target
-      //       axis bin (possibly using the optimizations permitted by the
-      //       `kTrivialRegularBinIndex` and `kRegularBinBijection` flags), and
-      //       check if its borders match those of the source. If not, the
-      //       source in question must be empty.
-      //
-      kRegularBinAliasing = 1 << (kDiscriminantBits + 4),
+      kRegularBinAliasing = 1 << 4,
 
       // The source underflow bin must be empty for histogram merging to be okay
       //
-      // Obviously, this flag will only be set if the source axis has
-      // under/overflow bins. It may be set either because the target axis is
-      // growable (in which case underflow content spilling would require
-      // infinite growth and alias), or because the source underflow bin maps
-      // into multiple target bins.
+      // NOTE: Can be set either because the target axis is growable (in which
+      //       case underflow content spilling would require infinite growth) or
+      //       because the source underflow bin maps into multiple target bins.
       //
-      kNeedEmptyUnderflow = 1 << (kDiscriminantBits + 5),
+      kNeedEmptyUnderflow = 1 << 5,
 
       // The source overflow bin must be empty for histogram merging to be okay
       //
-      // Same as `kNeedEmptyUnderflow`, but for the source overflow bin.
+      // NOTE: Same as `kNeedEmptyUnderflow`, but for the source overflow bin.
       //
-      kNeedEmptyOverflow = 1 << (kDiscriminantBits + 6),
+      kNeedEmptyOverflow = 1 << 6,
 
       // The target axis must grow in order to span the full source range
       //
-      // This flag will obviously only be set if the target axis is growable.
-      // All previous bits are set under the assumption that such growth has
-      // already occurred.
+      // NOTE: Should compute the other properties on the grown version
       //
-      // NOTE: Such growth may not actually be necessary if the source axis
-      //       bins which are not covered by the target axis are empty. However,
-      //       figuring this out requires a scan of the source histogram bins,
-      //       so it's dubious whether it's a good idea to check for it from a
-      //       performance point of view.
-      //
-      kTargetMustGrow = 1 << (kDiscriminantBits + 7),
+      kTargetMustGrow = 1 << 7,
 
       // === LABELS-SPECIFIC FLAGS ===
 
-      // The following flags are present when the discriminant value is
-      // kDiscriminantLabels, and should not be queried otherwise.
+      // The following flags are only present when fKind is CmpKind::kLabels
 
       // The source axis has labels that the target axis doesn't have
-      //
-      // These labels will need to be added to the target axis before histogram
-      // data merging becomes possible.
-      //
-      // NOTE: Not reporting existence of target-specific labels because this
-      //       does not affect merging, is irrelevant to the user, and takes
-      //       some CPU cycles to figure out.
-      //
-      kSourceOnlyLabels = 1 << kDiscriminantBits,
+      kSourceOnlyLabels = 1 << 0,
 
-      // The common subset of labels in the source and target axes is not
-      // ordered in the same way
-      //
-      // Target axis labels (and associated bin data) will need to be reordered
-      // in source-matching order before histogram merging becomes possible.
-      // This should be done after adding missing source axis labels to the
-      // target axis.
-      //
-      kDisorderedLabels = 1 << (kDiscriminantBits + 1),
-   } fBits;
+      // Common source/target bin labels are not ordered in the same way
+      kDisorderedLabels = 1 << 1,
+   } fFlags;
 };
 
 // NOTE: Should probably be an RAxisBase method, to benefit from vtable

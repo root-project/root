@@ -17,6 +17,7 @@
 
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
@@ -111,6 +112,13 @@ bool ROOT::Experimental::RAxisIrregular::HasSameBinBordersAs(const RAxisBase& ot
 
    // Only need to compare bin borders in this specialized case
    return fBinBorders == other_irr.fBinBorders;
+}
+
+void ROOT::Experimental::BinningCmpResult::CheckKind(CmpKind expectedKind) const {
+   if (fKind != expectedKind) {
+      throw std::runtime_error("The queried property is invalid for this "
+         "kind of axis binning comparison");
+   }
 }
 
 ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(const RAxisEquidistant &target,
