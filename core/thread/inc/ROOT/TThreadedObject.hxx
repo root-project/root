@@ -352,6 +352,9 @@ namespace ROOT {
       }
    };
 
+   template<class T>
+   constexpr const TNumSlots TThreadedObject<T>::fgMaxSlots;
+
 } // End ROOT namespace
 
 ////////////////////////////////////////////////////////////////////////////////
