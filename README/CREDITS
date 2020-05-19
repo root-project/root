@@ -213,6 +213,10 @@ N: David Dagenhart
 E: wdd@fnal.gov
 D: Support for LZMA compression in ROOT files
 
+N: Pratyush Das
+E: reikdas@gmail.com
+D: ROOTUnitTestSupport, various rootcling improvements
+
 N: Bastien Dallapiazza
 E: bastien.dallapiazza@epfl.ch
 D: TSpider, TParallelCoord classes
