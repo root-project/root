@@ -864,10 +864,10 @@ TObject *TDirectoryFile::FindObjectAny(const char *aname) const
 ///   - cycle = "" or cycle = 9999 ==> apply to a memory object
 ///
 /// Examples:
-/// | Pattern | Explanation |
-/// |---------|-------------|
-/// |  foo    | get object named foo in memory if object is not in memory, try with highest cycle from file |
-/// |  foo;1  | get cycle 1 of foo on file |
+/// | %Pattern | Explanation |
+/// |----------|-------------|
+/// |   foo    | get object named foo in memory if object is not in memory, try with highest cycle from file |
+/// |   foo;1  | get cycle 1 of foo on file |
 ///
 /// The retrieved object should in principle derive from TObject.
 /// If not, the function TDirectoryFile::Get<T> should be called.
