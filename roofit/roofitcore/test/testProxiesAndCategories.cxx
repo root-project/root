@@ -64,6 +64,19 @@ public:
    * The ranges "evens" and "odds" for even and odd state names are defined.
    * Now, we check that set ranges are read and written properly, and that
    * sharing of those ranges works even after reading back.
+   * A mock file can be created as follows:
+      RooCategory cat("cat", "a category")
+      cat.defineType("one")
+      cat.defineType("two")
+      cat.defineType("three")
+      cat.defineType("four")
+      cat.addToRange("evens", "two,four")
+      cat.addToRange("odds", "one,three")
+      RooDataSet data("data", "a dataset with a category", RooArgSet(cat))
+      data.fill()
+      TFile outfile("/tmp/testCategories.root", "RECREATE")
+      outfile.WriteObject(&cat, "catOrig")
+      outfile.WriteObject(&data, "data")
    */
   void SetUp() override {
     TFile file(GetParam(), "READ");
