@@ -152,10 +152,12 @@ public:
       return static_cast<T*>(GetObjectChecked(namecycle, TClass::GetClass<T>()));
    }
    virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory");
-   template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
-      {
-         ptr = (T *)GetObjectChecked(namecycle, TClass::GetClass<T>());
-      }
+   /// Get an object with proper type checking. If the object doesn't exist in the file or if the type doesn't match,
+   /// a `nullptr` is returned. Also see TDirectory::Get().
+   template <class T> inline void GetObject(const char* namecycle, T*& ptr)
+   {
+      ptr = (T *)GetObjectChecked(namecycle, TClass::GetClass<T>());
+   }
    virtual void       *GetObjectChecked(const char *namecycle, const char* classname);
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
    virtual void       *GetObjectUnchecked(const char *namecycle);
@@ -209,7 +211,12 @@ public:
 private:
            Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Int_t bufsize=0); // Intentionally not implemented.
 public:
-   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="", Int_t bufsize=0) // see TDirectory::WriteTObject or TDirectoryWriteObjectAny for explanation
+   /// Write an object with proper type checking.
+   /// \param[in] obj Pointer to an object to be written.
+   /// \param[in] name Name of the object in the file.
+   /// \param[in] option Options. See TDirectory::WriteTObject() or TDirectoryWriteObjectAny().
+   /// \param[in] bufsize Buffer size. See TDirectory::WriteTObject().
+   template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="", Int_t bufsize=0)
       {
          return WriteObjectAny(obj, TClass::GetClass<T>(), name, option, bufsize);
       }
