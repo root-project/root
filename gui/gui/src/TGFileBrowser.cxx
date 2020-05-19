@@ -1010,9 +1010,14 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
          if (clname && strcmp(clname, "TGeoManager")) {
             TClass *cl = TClass::GetClass(clname);
             TString name = ((TKey *)obj)->GetName();
-            name += ";";
-            name += ((TKey *)obj)->GetCycle();
-            void *add = gDirectory->FindObjectAny((char *) name.Data());
+            // check in memory first
+            void *add = gDirectory->FindObject((char *) name.Data());
+            // if the object was not found read it (with its cycle number) from the file
+            if (!add) {
+               name += ";";
+               name += ((TKey *)obj)->GetCycle();
+               add = gDirectory->FindObjectAny((char *) name.Data());
+            }
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
                // don't change the user data, to avoid deletion of the
@@ -1238,9 +1243,14 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
          if (clname) {
             TClass *cl = TClass::GetClass(clname);
             TString name = ((TKey *)obj)->GetName();
-            name += ";";
-            name += ((TKey *)obj)->GetCycle();
-            void *add = gDirectory->FindObjectAny((char *) name.Data());
+            // check in memory first
+            void *add = gDirectory->FindObject((char *) name.Data());
+            // if the object was not found read it (with its cycle number) from the file
+            if (!add) {
+               name += ";";
+               name += ((TKey *)obj)->GetCycle();
+               add = gDirectory->FindObjectAny((char *) name.Data());
+            }
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
                // don't change the user data, to avoid deletion of the
