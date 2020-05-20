@@ -43,6 +43,7 @@ struct ClusterInfo {
 };
 
 struct ColumnInfo {
+   ROOT::Experimental::DescriptorId_t fColumnId = 0;
    ROOT::Experimental::DescriptorId_t fFieldId = 0;
    std::uint64_t fLocalOrder = 0;
    std::uint64_t fNElements = 0;
@@ -116,6 +117,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       auto elementSize = element.GetSize();
 
       ColumnInfo info;
+      info.fColumnId = column.second.GetId();
       info.fFieldId = column.second.GetFieldId();
       info.fLocalOrder = column.second.GetIndex();
       info.fElementSize = elementSize;
@@ -187,8 +189,10 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
-      output << "  " << col.fFieldName << " [#" << col.fLocalOrder << "]" << "  --  "
-             << GetColumnTypeName(col.fType) << std::endl;
+      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]"
+         + "  --  " + GetColumnTypeName(col.fType);
+      std::string id = std::string("{id:") + std::to_string(col.fColumnId) + "}";
+      output << nameAndType << std::setw(60 - nameAndType.length()) << id << std::endl;
       output << "    # Elements:          " << col.fNElements << std::endl;
       output << "    # Pages:             " << col.fNPages << std::endl;
       output << "    Avg elements / page: " << avgElementsPerPage << std::endl;
