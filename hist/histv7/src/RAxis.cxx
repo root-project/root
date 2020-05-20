@@ -58,7 +58,6 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       return BinningCmpResult(lbl_cmp & RAxisLabels::kLabelsCmpSuperset,
                               lbl_cmp & RAxisLabels::kLabelsCmpDisordered);
    }
-
    // If control reached this point, then we know that both the source and the
    // target axis use numerical bin borders
 
@@ -72,10 +71,8 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //
    RAxisGrow targetAfterGrowth;
    const RAxisBase* targetPtr = *this;
-   const bool growLeft =
-      (CompareBinBorders(source.GetMinimum(), GetMinimum()) < 0);
-   const bool growRight =
-      (CompareBinBorders(source.GetMaximum(), GetMaximum()) > 0);
+   const bool growLeft = (CompareBinBorders(source.GetMinimum(), GetMinimum()) < 0);
+   const bool growRight = (CompareBinBorders(source.GetMaximum(), GetMaximum()) > 0);
    const bool targetMustGrow = CanGrow() && (growLeft || growRight);
    if (targetMustGrow) {
       const double binWidth = GetBinTo(1) - GetMinimum();
@@ -105,7 +102,6 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       targetPtr = &targetAfterGrowth;
    }
    const RAxisBase& target = *targetPtr;
-
    // From this point on, must use "target" reference instead of the "this"
    // pointer or any implicit calls to this axis' methods.
 
@@ -113,27 +109,58 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    const bool sourceHasUnderOver = !source.CanGrow();
    const bool needEmptyUnderOver = (target.CanGrow() && sourceHasUnderOver);
    const double firstBinWidth = target.GetBinTo(1) - target.GetMinimum();
-   const bool sourceUnderflowAliasing =
-      sourceHasUnderOver
-      && (CompareBinBorders(source.GetMinimum(),
-                            target.GetMinimum(),
-                            -1.,
-                            firstBinWidth) > 0);
+   const int minComparison = CompareBinBorders(source.GetMinimum(),
+                                               target.GetMinimum(),
+                                               -1.,
+                                               firstBinWidth);
+   const bool sourceUnderflowAliasing = sourceHasUnderOver && (minComparison > 0);
    const double lastBinWidth =
       target.GetMaximum() - target.GetBinFrom(target.GetNBinsNoOver());
-   const bool sourceOverflowAliasing =
-      sourceHasUnderOver
-      && (CompareBinBorders(source.GetMaximum(),
-                            target.GetMaximum(),
-                            lastBinWidth,
-                            -1.) < 0);
+   const int maxComparison = CompareBinBorders(source.GetMaximum(),
+                                               target.GetMaximum(),
+                                               lastBinWidth,
+                                               -1.);
+   const bool sourceOverflowAliasing = sourceHasUnderOver && (maxComparison < 0);
    const bool needEmptyUnderflow = needEmptyUnderOver || sourceUnderflowAliasing;
    const bool needEmptyOverflow = needEmptyUnderOver || sourceOverflowAliasing;
 
-   // TODO: Flip parameter order of CompareBinBorders and change every use :(
+   // Check for lossy merge of source under/overflow bins (if any)
+   bool mergingIsLossy =
+      sourceHasUnderOver && ((minComparison < 0) || (maxComparison > 0));
 
-   // TODO: Finish the implementation
+   // Now, time to look at regular bins.
+   //
+   // TODO: Finish the implementation. Must compute regularBinAliasing and
+   //       trivialRegularBinMapping and keep updating mergingIsLossy
+   //
+   //       The general algorithm should look like this:
+   //       - Iterate over source bins until target axis minimum is covered
+   //          * If >1 source bins, including the source underflow bin, map into
+   //            the target underflow bin, then the merge is lossy
+   //          * If we need to iterate, then the bin mapping isn't trivial
+   //       - Iterate over target bins until source axis minimum is covered
+   //          * If the source underflow bin maps into >1 target bin(s), then
+   //            ... haven't we checked it already?
+   //          * If we need to iterate, then the bin mapping isn't trivial
+   //       - Jointly iterate over source/target until reaching the end of one
+   //       - Final update to booleans depending on remaining bins on each side
+   //
    throw std::runtime_error("Not implemented yet!");
+
+   // Compute the remaining properties and return the result
+   const bool regularBinBijection =
+      trivialRegularBinMapping
+      && (target.GetNBinsNoOver() == source.GetNBinsNoOver());
+   const bool fullBinBijection =
+      regularBinBijection && (source.CanGrow() == target.CanGrow());
+   return BinningCmpResult(trivialRegularBinMapping,
+                           regularBinBijection,
+                           fullBinBijection,
+                           mergingIsLossy,
+                           regularBinAliasing,
+                           needEmptyUnderflow,
+                           needEmptyOverflow,
+                           targetMustGrow);
 }
 
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
