@@ -213,6 +213,8 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
    fCtrSzReadOverhead = fMetrics.MakeCounter<decltype(fCtrSzReadOverhead)>("szReadOverhead", "B",
       "volume read from file (overhead)");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
+   fCtrNClusterLoaded = fMetrics.MakeCounter<decltype(fCtrNClusterLoaded)>(
+      "nClusterLoaded", "", "number of partial clusters preloaded from storage");
    fCtrNPageLoaded = fMetrics.MakeCounter<decltype(fCtrNPageLoaded)>(
       "nPageLoaded", "", "number of pages loaded from storage");
    fCtrNPagePopulated = fMetrics.MakeCounter<decltype(fCtrNPagePopulated)>(
@@ -386,6 +388,8 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Det
 std::unique_ptr<ROOT::Experimental::Detail::RCluster>
 ROOT::Experimental::Detail::RPageSourceFile::LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns)
 {
+   fCtrNClusterLoaded->Inc();
+
    const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
    auto clusterLocator = clusterDesc.GetLocator();
    auto clusterSize = clusterLocator.fBytesOnStorage;
