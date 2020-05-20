@@ -331,6 +331,39 @@ public:
    //
    class BinningCmpResult {
    public:
+      // === CONSTRUCTORS ===
+
+      /// Case where two axes of incompatible types were compared
+      BinningCmpResult() : fKind(Kind::kIncompatible) {}
+
+      /// Case where two axes using numerical bin borders were compared
+      BinningCmpResult(bool trivialRegularBinMapping,
+                       bool regularBinBijection,
+                       bool fullBinBijection,
+                       bool mergingIsLossy,
+                       bool regularBinAliasing,
+                       bool needEmptyUnderflow,
+                       bool needEmptyOverflow,
+                       bool targetMustGrow)
+         : fKind(Kind::kNumeric)
+         , fFlags(trivialRegularBinMapping * kTrivialRegularBinMapping
+                  + regularBinBijection * kRegularBinBijection
+                  + fullBinBijection * kFullBinBijection
+                  + mergingIsLossy * kMergingIsLossy
+                  + regularBinAliasing * kRegularBinAliasing
+                  + needEmptyUnderflow * kNeedEmptyUnderflow
+                  + needEmptyOverflow * kNeedEmptyOverflow
+                  + targetMustGrow * kTargetMustGrow)
+      {}
+
+      /// Case where two RAxisLabels were compared
+      BinningCmpResult(bool sourceOnlyLabels,
+                       bool disorderedLabels)
+         : fKind(Kind::kLabels)
+         , fFlags(sourceOnlyLabels * kSourceOnlyLabels
+                  + disorderedLabels * kDisorderedLabels)
+      {}
+
       // === AXIS COMPARISON CLASSIFICATION ===
 
       /// Broad classification of possible axis comparisons
