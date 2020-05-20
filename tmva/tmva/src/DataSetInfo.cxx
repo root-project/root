@@ -79,7 +79,6 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
      fTargetsForMulticlass(0),
      fLogger( new MsgLogger("DataSetInfo", kINFO) )
 {
-   std::cout << "create data set info " << name << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
