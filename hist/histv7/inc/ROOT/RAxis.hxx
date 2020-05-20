@@ -117,6 +117,36 @@ protected:
       return true;
    }
 
+   /// Compare two axis bin borders
+   ///
+   /// Given a target axis bin border position, a source axis bin border
+   /// position, and the target axis' bin width on both sides of the bin border
+   /// under consideration, tell if the source bin border should be considered
+   /// to be located before (-1), at the same position (0), or after (+1) the
+   /// target bin border of interest.
+   ///
+   /// If there is no regular bin on one side of the target axis bin border, if
+   /// it is an under/overflow bin, or if you do not care about the result on
+   /// that side, please leave the corresponding bin width to a negative value.
+   ///
+   static int CompareBinBorders(double targetBorder,
+                                double sourceBorder,
+                                double leftTargetBinWidth = -1.,
+                                double rightTargetBinWidth = -1.) {
+      // Current tolerance policy when there is no bin on one side
+      if (leftTargetBinWidth < 0.) leftTargetBinWidth = 1.;
+      if (rightTargetBinWidth < 0.) rightTargetBinWidth = 1.;
+
+      // Perform an approximate bin border comparison
+      const double borderDelta = sourceBorder - targetBorder;
+      const double tolerance = 1e-6;
+      if borderDelta < 0. {
+         return -static_cast<int>(borderDelta < -leftTargetBinWidth*tolerance);
+      } else {
+         return static_cast<int>(borderDelta > rightTargetBinWidth*tolerance);
+      }
+   }
+
 public:
    /**
     \class const_iterator
