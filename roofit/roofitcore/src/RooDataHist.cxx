@@ -1317,10 +1317,8 @@ void RooDataHist::add(const RooArgSet& row, Double_t wgt, Double_t sumw2)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment the weight of the bin enclosing the coordinates
-/// given by 'row' by the specified amount. Associate errors
-/// [wgtErrLo,wgtErrHi] with the event weight on this bin.
-
+/// Set the weight and errors of the bin enclosing the coordinates
+/// given by `row`. Associate errors [wgtErrLo,wgtErrHi] with the event weight on this bin.
 void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Double_t wgtErrHi) 
 {
   checkInit() ;
@@ -1337,10 +1335,8 @@ void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErrLo, Dou
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment the weight of the bin enclosing the coordinates
-/// given by 'row' by the specified amount. Associate errors
-/// [wgtErrLo,wgtErrHi] with the event weight on this bin.
-
+/// Set the weight and weight error of the bin enclosing the current (i.e. last-used)
+/// coordinates.
 void RooDataHist::set(Double_t wgt, Double_t wgtErr) 
 {
   checkInit() ;
@@ -1360,10 +1356,8 @@ void RooDataHist::set(Double_t wgt, Double_t wgtErr)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment the weight of the bin enclosing the coordinates
-/// given by 'row' by the specified amount. Associate errors
-/// [wgtErrLo,wgtErrHi] with the event weight on this bin.
-
+/// Set the weight and weight error of the bin enclosing the coordinates
+/// given by `row`.
 void RooDataHist::set(const RooArgSet& row, Double_t wgt, Double_t wgtErr) 
 {
   checkInit() ;
