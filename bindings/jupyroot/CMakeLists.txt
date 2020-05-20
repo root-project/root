@@ -30,9 +30,6 @@ set(py_sources
 set(JupyROOTPySrcDir python/JupyROOT)
 file(COPY ${JupyROOTPySrcDir} DESTINATION ${localruntimedir})
 
-# Install .py source files
-install(DIRECTORY ${JupyROOTPySrcDir} DESTINATION ${install_dir_lib})
-
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_include_dirs ${val} python_include_dir)
@@ -54,13 +51,18 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
-  # Install compiled .py files
+  # Compile .py files
   foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${install_dir_lib}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${install_dir_lib}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
   endforeach()
 
   # Install library
   install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION ${runtimedir})
 
 endforeach()
+
+# Install Python sources and bytecode
+install(DIRECTORY ${localruntimedir}/JupyROOT
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT libraries)

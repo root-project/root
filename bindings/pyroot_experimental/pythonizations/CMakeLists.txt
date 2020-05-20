@@ -85,9 +85,6 @@ file(COPY ${ROOTPySrcDir} DESTINATION ${localruntimedir})
 # Copy headers inside build_dir/include/ROOT
 file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
-# Install .py source files
-install(DIRECTORY ${ROOTPySrcDir} DESTINATION ${install_dir_lib})
-
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_include_dirs ${val} python_include_dir)
@@ -113,12 +110,17 @@ foreach(val RANGE ${how_many_pythons})
     target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
-  # Install compiled .py files
+  # Compile .py files
   foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${install_dir_lib}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${install_dir_lib}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
   endforeach()
 
 endforeach()
+
+# Install Python sources and bytecode
+install(DIRECTORY ${localruntimedir}/ROOT
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT libraries)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
