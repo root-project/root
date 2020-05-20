@@ -35,7 +35,7 @@
 #pragma link C++ class ROOT::Internal::RDF::RIgnoreErrorLevelRAII-;
 #pragma link C++ class ROOT::Internal::RDF::FillHelper-;
 #pragma link C++ class ROOT::RDF::RTrivialDS-;
-#pragma link C++ class ROOT::RDF::RRootDS-;
+#pragma link C++ class ROOT::Internal::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
 #pragma link C++ class ROOT::Internal::RDF::MeanHelper-;
 #pragma link C++ class ROOT::Internal::RDF::RColumnValue<int>-;
