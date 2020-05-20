@@ -20,7 +20,7 @@ file(COPY ${cppyy_backendPySrcDir} DESTINATION ${localruntimedir})
 
 # Install .py source files
 foreach(py_source ${py_sources})
-  install(FILES cling/python/${py_source} DESTINATION ${runtimedir}/cppyy_backend)
+  install(FILES cling/python/${py_source} DESTINATION ${install_dir_lib}/cppyy_backend)
 endforeach()
 
 foreach(val RANGE ${how_many_pythons})

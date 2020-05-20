@@ -31,7 +31,7 @@ set(JupyROOTPySrcDir python/JupyROOT)
 file(COPY ${JupyROOTPySrcDir} DESTINATION ${localruntimedir})
 
 # Install .py source files
-install(DIRECTORY ${JupyROOTPySrcDir} DESTINATION ${runtimedir})
+install(DIRECTORY ${JupyROOTPySrcDir} DESTINATION ${install_dir_lib})
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)

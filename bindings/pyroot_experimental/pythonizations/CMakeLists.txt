@@ -86,7 +86,7 @@ file(COPY ${ROOTPySrcDir} DESTINATION ${localruntimedir})
 file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
 # Install .py source files
-install(DIRECTORY ${ROOTPySrcDir} DESTINATION ${runtimedir})
+install(DIRECTORY ${ROOTPySrcDir} DESTINATION ${install_dir_lib})
 
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
