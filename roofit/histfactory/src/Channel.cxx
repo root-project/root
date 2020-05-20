@@ -25,6 +25,7 @@
 #include <stdlib.h>
 
 #include "TFile.h"
+#include "TKey.h"
 #include "TTimeStamp.h"
 
 #include "RooStats/HistFactory/HistFactoryException.h"
@@ -316,8 +317,7 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
   } // End Loop over Samples
 
-  return;
-  
+  fFileHandles.clear();
 }
 
 
@@ -449,45 +449,40 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 
 TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::string HistoPath, std::string HistoName) {
 
-  cxcoutPHF << "Getting histogram. "
-	    << " InputFile " << InputFile
-	    << " HistoPath " << HistoPath
-	    << " HistoName " << HistoName
-	    << std::endl;
+  cxcoutPHF << "Getting histogram " << InputFile << ":" << HistoPath << "/" << HistoName << std::endl;
 
-  //  TFile* file = TFile::Open( InputFile.c_str() );
+  auto& inFile = fFileHandles[InputFile];
+  if (!inFile || !inFile->IsOpen()) {
+    inFile.reset( TFile::Open(InputFile.c_str()) );
+    if ( !inFile || !inFile->IsOpen() ) {
+      cxcoutEHF << "Error: Unable to open input file: " << InputFile << std::endl;
+      throw hf_exc();
+    }
+    cxcoutIHF << "Opened input file: " << InputFile << ": " << std::endl;
+  }
 
-  TFile* inFile = TFile::Open( InputFile.c_str() );
-  if( !inFile ) {
-    cxcoutEHF << "Error: Unable to open input file: " << InputFile << std::endl;
+  TDirectory* dir = inFile->GetDirectory(HistoPath.c_str());
+  if (dir == nullptr) {
+    cxcoutEHF << "Histogram path '" << HistoPath
+        << "' wasn't found in file '" << InputFile << "'." << std::endl;
     throw hf_exc();
   }
 
-  cxcoutIHF << "Opened input file: " << InputFile << ": " << inFile << std::endl;
-
-  std::string HistNameFull = HistoPath + HistoName;
-
-  if( HistoPath != std::string("") ) {
-    if( HistoPath[ HistoPath.length()-1 ] != std::string("/") ) {
-      cxcoutWHF << "WARNING: Histogram path is set to: " << HistoPath
-		<< " but it should end with a '/' " << std::endl;
-      cxcoutWHF << "Total histogram path is now: " << HistNameFull << std::endl;
-    }
+  // Have to read histograms via keys, to ensure that the latest-greatest
+  // name cycle is read from file. Otherwise, they might come from memory.
+  auto key = dir->GetKey(HistoName.c_str());
+  if (key == nullptr) {
+    cxcoutEHF << "Histogram '" << HistoName
+        << "' wasn't found in file '" << InputFile
+        << "' in directory '" << HistoPath << "'." << std::endl;
+    throw hf_exc();
   }
 
-  TH1* hist = NULL;
-  try{
-    hist = dynamic_cast<TH1*>( inFile->Get( HistNameFull.c_str() ) );
-  }
-  catch(std::exception& e)
-    {
-      cxcoutEHF << "Failed to cast object to TH1*" << std::endl;
-      std::cout << e.what() << std::endl;
-      throw hf_exc();
-    }
+  auto hist = dynamic_cast<TH1*>(key->ReadObj());
   if( !hist ) {
-    cxcoutEHF << "Failed to get histogram: " << HistNameFull
-	      << " in file: " << InputFile << std::endl;
+    cxcoutEHF << "Histogram '" << HistoName
+        << "' wasn't found in file '" << InputFile
+        << "' in directory '" << HistoPath << "'." << std::endl;
     throw hf_exc();
   }
 
@@ -501,9 +496,8 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
 	      << "obj: " << HistoName << std::endl;
     throw hf_exc();
   }
-  else {
-    ptr->SetDirectory(0); //         for the current histogram h
-  }
+
+  ptr->SetDirectory(nullptr);
 
   
 #ifdef DEBUG
@@ -511,9 +505,6 @@ TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::st
 	    << " with integral "   << ptr->Integral() << " and mean " << ptr->GetMean() 
 	    << std::endl;
 #endif
-
-
-  inFile->Close();
 
   // Done
   return ptr;
