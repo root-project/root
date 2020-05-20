@@ -119,7 +119,7 @@ protected:
 
    /// Compare two axis bin borders
    ///
-   /// Given a target axis bin border position, a source axis bin border
+   /// Given a  source axis bin border position, a target axis bin border
    /// position, and the target axis' bin width on both sides of the bin border
    /// under consideration, tell if the source bin border should be considered
    /// to be located before (-1), at the same position (0), or after (+1) the
@@ -129,8 +129,8 @@ protected:
    /// it is an under/overflow bin, or if you do not care about the result on
    /// that side, please leave the corresponding bin width to a negative value.
    ///
-   static int CompareBinBorders(double targetBorder,
-                                double sourceBorder,
+   static int CompareBinBorders(double sourceBorder,
+                                double targetBorder,
                                 double leftTargetBinWidth = -1.,
                                 double rightTargetBinWidth = -1.) {
       // Current tolerance policy when there is no bin on one side
@@ -138,12 +138,12 @@ protected:
       if (rightTargetBinWidth < 0.) rightTargetBinWidth = 1.;
 
       // Perform an approximate bin border comparison
-      const double borderDelta = sourceBorder - targetBorder;
+      const double sourceOffset = sourceBorder - targetBorder;
       const double tolerance = 1e-6;
-      if borderDelta < 0. {
-         return -static_cast<int>(borderDelta < -leftTargetBinWidth*tolerance);
+      if sourceOffset < 0. {
+         return -static_cast<int>(sourceOffset < -leftTargetBinWidth*tolerance);
       } else {
-         return static_cast<int>(borderDelta > rightTargetBinWidth*tolerance);
+         return static_cast<int>(sourceOffset > rightTargetBinWidth*tolerance);
       }
    }
 

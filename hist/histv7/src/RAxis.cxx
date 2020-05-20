@@ -71,9 +71,11 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //       kind of growable axis.
    //
    RAxisGrow targetAfterGrowth;
-   const RAxisBase* target = *this;
-   const bool growLeft = (CompareBinBorders(GetMinimum(), source.GetMinimum()) < 0);
-   const bool growRight = (CompareBinBorders(GetMaximum(), source.GetMaximum()) > 0);
+   const RAxisBase* targetPtr = *this;
+   const bool growLeft =
+      (CompareBinBorders(source.GetMinimum(), GetMinimum()) < 0);
+   const bool growRight =
+      (CompareBinBorders(source.GetMaximum(), GetMaximum()) > 0);
    const bool targetMustGrow = CanGrow() && (growLeft || growRight);
    if (targetMustGrow) {
       const double binWidth = GetBinTo(1) - GetMinimum();
@@ -82,7 +84,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          static_cast<double>(growLeft) * (GetMinimum() - source.GetMinimum());
       int leftBins = std::floor(leftGrowth / binWidth);
       double leftBorder = GetMinimum() - leftBins*binWidth;
-      if (CompareBinBorders(leftBorder, source.GetMinimum()) < 0) {
+      if (CompareBinBorders(source.GetMinimum(), leftBorder) < 0) {
          ++leftBins;
          leftBorder -= binWidth;
       }
@@ -91,7 +93,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          static_cast<double>(growRight) * (source.GetMaximum() - GetMaximum());
       int rightBins = std::floor(rightGrowth / binWidth);
       double rightBorder = GetMaximum() + rightBins*binWidth;
-      if (CompareBinBorders(rightBorder, source.GetMaximum()) > 0) {
+      if (CompareBinBorders(source.GetMaximum(), rightBorder) > 0) {
          ++rightBins;
          rightBorder += binWidth;
       }
@@ -100,11 +102,35 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          RAxisGrow(GetNBinsNoOver() + leftBins + rightBins,
                    leftBorder,
                    rightBorder);
-      target = &targetAfterGrowth;
+      targetPtr = &targetAfterGrowth;
    }
+   const RAxisBase& target = *targetPtr;
 
-   // From this point on, must use "target" pointer instead of the "this"
+   // From this point on, must use "target" reference instead of the "this"
    // pointer or any implicit calls to this axis' methods.
+
+   // Check if the source underflow and overflow bins must be empty
+   const bool sourceHasUnderOver = !source.CanGrow();
+   const bool needEmptyUnderOver = (target.CanGrow() && sourceHasUnderOver);
+   const double firstBinWidth = target.GetBinTo(1) - target.GetMinimum();
+   const bool sourceUnderflowAliasing =
+      sourceHasUnderOver
+      && (CompareBinBorders(source.GetMinimum(),
+                            target.GetMinimum(),
+                            -1.,
+                            firstBinWidth) > 0);
+   const double lastBinWidth =
+      target.GetMaximum() - target.GetBinFrom(target.GetNBinsNoOver());
+   const bool sourceOverflowAliasing =
+      sourceHasUnderOver
+      && (CompareBinBorders(source.GetMaximum(),
+                            target.GetMaximum(),
+                            lastBinWidth,
+                            -1.) < 0);
+   const bool needEmptyUnderflow = needEmptyUnderOver || sourceUnderflowAliasing;
+   const bool needEmptyOverflow = needEmptyUnderOver || sourceOverflowAliasing;
+
+   // TODO: Flip parameter order of CompareBinBorders and change every use :(
 
    // TODO: Finish the implementation
    throw std::runtime_error("Not implemented yet!");
