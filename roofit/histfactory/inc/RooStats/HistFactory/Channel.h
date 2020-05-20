@@ -11,14 +11,17 @@
 #ifndef HISTFACTORY_CHANNEL_H
 #define HISTFACTORY_CHANNEL_H
 
-#include <string>
-#include <fstream>
-#include <iostream>
-
-
 #include "RooStats/HistFactory/Data.h"
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/Systematics.h"
+
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <memory>
+
+class TFile;
 
 namespace RooStats{
 namespace HistFactory {
@@ -95,7 +98,8 @@ protected:
   /// Open a file and copy a histogram
   TH1* GetHistogram( std::string InputFile, std::string HistoPath, std::string HistoName );
 
-
+private:
+  std::map<std::string,std::unique_ptr<TFile>> fFileHandles; //! Handles to open files for collecting histograms.
 };
 
   extern Channel BadChannel;
