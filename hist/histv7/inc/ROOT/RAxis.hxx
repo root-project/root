@@ -690,16 +690,13 @@ public:
    /// Since histogram merging has asymmetric properties, this axis is the
    /// target axis, and the other axis is the source axis.
    ///
-   /// This method can be overriden either for performance optimization purposes
-   /// or to compare metadata which only exists in subclasses of RAxisBase, such
-   /// as bin labels
-   ///
    // TODO: Write the implementation
    //
-   // TODO: Once I have implementation experience, figure out how to deduplicate
-   //       code between overrides, as I did for HasSameBinning.
+   // TODO: Figure out proper way to allow performance-motivated overrides, as
+   //       I did for HasSameBinning. Most likely some kind of CompareBinBorders
+   //       virtual method?
    //
-   virtual BinningCmpFlags CompareBinningWith(const RAxisBase& source);
+   BinningCmpFlags CompareBinningWith(const RAxisBase& source) const;
 
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
