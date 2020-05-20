@@ -214,7 +214,7 @@ ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view nt
       "volume read from file (overhead)");
    fCtrSzUnzip = fMetrics.MakeCounter<decltype(fCtrSzUnzip)>("szUnzip", "B", "volume after unzipping");
    fCtrNPageLoaded = fMetrics.MakeCounter<decltype(fCtrNPageLoaded)>(
-      "fCtrNPageLoaded", "", "number of pages loaded from storage");
+      "nPageLoaded", "", "number of pages loaded from storage");
    fCtrNPagePopulated = fMetrics.MakeCounter<decltype(fCtrNPagePopulated)>(
       "nPagePopulated", "", "number of populated pages");
    fCtrTimeWallRead = fMetrics.MakeCounter<decltype(fCtrTimeWallRead)>(
