@@ -19,17 +19,17 @@ set(py_sources
 set(cppyyPySrcDir python/cppyy)
 file(COPY ${cppyyPySrcDir} DESTINATION ${localruntimedir})
 
-# Install .py source files
-foreach(py_source ${py_sources})
-  install(FILES python/${py_source} DESTINATION ${install_dir_lib}/cppyy)
-endforeach()
-
 foreach(val RANGE ${how_many_pythons})
   list(GET python_executables ${val} python_executable)
 
-  # Install compiled .py files
+  # Compile .py files
   foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${install_dir_lib}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${install_dir_lib}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
   endforeach()
 endforeach()
+
+# Install Python sources and bytecode
+install(DIRECTORY ${localruntimedir}/cppyy
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT libraries)

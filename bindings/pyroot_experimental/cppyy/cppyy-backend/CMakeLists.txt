@@ -21,11 +21,6 @@ file(COPY ${cppyy_backendPySrcDir}
      PATTERN "cmake" EXCLUDE
      PATTERN "pkg_templates" EXCLUDE)
 
-# Install .py source files
-foreach(py_source ${py_sources})
-  install(FILES cling/python/${py_source} DESTINATION ${install_dir_lib}/cppyy_backend)
-endforeach()
-
 foreach(val RANGE ${how_many_pythons})
   list(GET python_under_version_strings ${val} python_under_version_string)
   list(GET python_executables ${val} python_executable)
@@ -47,9 +42,14 @@ foreach(val RANGE ${how_many_pythons})
                              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 
-  # Install compiled .py files
+  # Compile .py files
   foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${install_dir_lib}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${install_dir_lib}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
+    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
   endforeach()
 endforeach()
+
+# Install Python sources and bytecode
+install(DIRECTORY ${localruntimedir}/cppyy_backend
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT libraries)
