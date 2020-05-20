@@ -11,4 +11,4 @@
 set(JsMVADirName python/JsMVA)
 
 file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
-install(DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
+install(DIRECTORY ${JsMVADirName} DESTINATION ${install_dir_lib})
