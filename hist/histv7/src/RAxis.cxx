@@ -61,7 +61,51 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
 
    // If control reached this point, then we know that both the source and the
    // target axis use numerical bin borders
+
+   // If the target is growable and must grow, simulate that growth first
    //
+   // TODO: Move this code to a growable axis specific customization point which
+   //       is implemented by RAxisGrow, this way we get 1/direct access to the
+   //       bin width and its inverse and 2/growth (heh) headroom for a possible
+   //       future where the current equidistant RAxisGrow would not be the only
+   //       kind of growable axis.
+   //
+   RAxisGrow targetAfterGrowth;
+   const RAxisBase* target = *this;
+   const bool growLeft = (CompareBinBorders(GetMinimum(), source.GetMinimum()) < 0);
+   const bool growRight = (CompareBinBorders(GetMaximum(), source.GetMaximum()) > 0);
+   const bool targetMustGrow = CanGrow() && (growLeft || growRight);
+   if (targetMustGrow) {
+      const double binWidth = GetBinTo(1) - GetMinimum();
+
+      const double leftGrowth =
+         static_cast<double>(growLeft) * (GetMinimum() - source.GetMinimum());
+      int leftBins = std::floor(leftGrowth / binWidth);
+      double leftBorder = GetMinimum() - leftBins*binWidth;
+      if (CompareBinBorders(leftBorder, source.GetMinimum()) < 0) {
+         ++leftBins;
+         leftBorder -= binWidth;
+      }
+
+      const double rightGrowth =
+         static_cast<double>(growRight) * (source.GetMaximum() - GetMaximum());
+      int rightBins = std::floor(rightGrowth / binWidth);
+      double rightBorder = GetMaximum() + rightBins*binWidth;
+      if (CompareBinBorders(rightBorder, source.GetMaximum()) > 0) {
+         ++rightBins;
+         rightBorder += binWidth;
+      }
+
+      targetAfterGrowth =
+         RAxisGrow(GetNBinsNoOver() + leftBins + rightBins,
+                   leftBorder,
+                   rightBorder);
+      target = &targetAfterGrowth;
+   }
+
+   // From this point on, must use "target" pointer instead of the "this"
+   // pointer or any implicit calls to this axis' methods.
+
    // TODO: Finish the implementation
    throw std::runtime_error("Not implemented yet!");
 }
