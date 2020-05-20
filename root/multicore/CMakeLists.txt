@@ -181,7 +181,7 @@ endif()
 ROOTTEST_ADD_TEST(fork
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/fork
                   FAILREGEX "Error in" "cannot load any more object with static TLS"
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST} tsenums tclass_methods)
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST} roottest-root-multicore-tsenums roottest-root-multicore-tclass_methods)
 
 if(ROOT_imt_FOUND)
    ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt ttree_read_imt.cpp LIBRARIES Core Imt Thread Tree RIO)
