@@ -326,6 +326,9 @@ public:
    virtual int GetBinIndexForLowEdge(double x) const noexcept = 0;
 
    /// Result of an axis binning comparison
+   //
+   // TODO: Replace with std::variant of two bitfields once RHist goes C++17
+   //
    class BinningCmpResult {
    public:
       // === AXIS COMPARISON CLASSIFICATION ===
