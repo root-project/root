@@ -49,12 +49,12 @@ void ROOT::Experimental::RAxisBase::BinningCmpResult::CheckKind(CmpKind expected
 ROOT::Experimental::RAxisBase::BinningCmpFlags
 ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const {
    // Handle labeled axis edge case
-   auto target_lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
-   auto source_lbl_ptr = dynamic_cast<const RAxisLabels*>(&source);
+   const auto target_lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
+   const auto source_lbl_ptr = dynamic_cast<const RAxisLabels*>(&source);
    if (bool(target_lbl_ptr) != bool(source_lbl_ptr)) {
       return BinningCmpResult();
    } else if (target_lbl_ptr) {
-      auto lbl_cmp = target_lbl_ptr->CompareBinLabels(*source_lbl_ptr);
+      const auto lbl_cmp = target_lbl_ptr->CompareBinLabels(*source_lbl_ptr);
       return BinningCmpResult(lbl_cmp & RAxisLabels::kLabelsCmpSuperset,
                               lbl_cmp & RAxisLabels::kLabelsCmpDisordered);
    }
