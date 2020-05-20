@@ -107,7 +107,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
 
    // Check if the source underflow and overflow bins must be empty
    const bool sourceHasUnderOver = !source.CanGrow();
-   const bool needEmptyUnderOver = (target.CanGrow() && sourceHasUnderOver);
+   const bool needEmptyUnderOver = sourceHasUnderOver && target.CanGrow();
    const double firstBinWidth = target.GetBinTo(1) - target.GetMinimum();
    const int minComparison = CompareBinBorders(source.GetMinimum(),
                                                target.GetMinimum(),
@@ -138,12 +138,15 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //          * If >1 source bins, including the source underflow bin, map into
    //            the target underflow bin, then the merge is lossy
    //          * If we need to iterate, then the bin mapping isn't trivial
-   //       - Iterate over target bins until source axis minimum is covered
+   //       - Iterate over target bins until source bin is covered
    //          * If the source underflow bin maps into >1 target bin(s), then
    //            ... haven't we checked it already?
    //          * If we need to iterate, then the bin mapping isn't trivial
    //       - Jointly iterate over source/target until reaching the end of one
    //       - Final update to booleans depending on remaining bins on each side
+   //
+   //       This should be extracted into a lambda to permit early exit when
+   //       either the end of the source of the target axis is reached.
    //
    throw std::runtime_error("Not implemented yet!");
 
