@@ -163,8 +163,8 @@ public:
       if (itr == fMap.end())
          return;
       ColumnSet_t d;
-      std::set_difference(itr->second.begin(), itr->second.end(), columns.begin(), columns.end(),
-                          std::inserter(d, d.end()));
+      std::copy_if(columns.begin(), columns.end(), std::inserter(d, d.end()),
+         [&itr] (DescriptorId_t needle) { return itr->second.count(needle) == 0; });
       if (d.empty()) {
          fMap.erase(itr);
       } else {
