@@ -16,7 +16,10 @@ set(py_sources
 )
 
 set(cppyy_backendPySrcDir cling/python/cppyy_backend)
-file(COPY ${cppyy_backendPySrcDir} DESTINATION ${localruntimedir})
+file(COPY ${cppyy_backendPySrcDir}
+     DESTINATION ${localruntimedir}
+     PATTERN "cmake" EXCLUDE
+     PATTERN "pkg_templates" EXCLUDE)
 
 # Install .py source files
 foreach(py_source ${py_sources})
