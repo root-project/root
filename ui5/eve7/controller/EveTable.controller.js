@@ -54,6 +54,10 @@ sap.ui.define([
 	   var col = e.mParameters.column;
 	   var colId = col.getId();
 
+            // Do one-level sort on Filtered entry
+           if ( col.mProperties.sortProperty === "Filtered")
+               return;
+
 	   var col = e.mParameters.column;
 	   var bDescending = (e.mParameters.sortOrder ==  sap.ui.core.SortOrder.Descending);
 	   var sv = bDescending;
@@ -68,6 +72,20 @@ sap.ui.define([
 	       descending: sv
 	   });
 
+          if ( col.mProperties.sortProperty === "Name")
+          {
+             let off = this.collection.fName.length;
+             oSorter1.fnCompare = function(value1In, value2In) {
+               let value1 = value1In.substring(off);
+               let value2 = value2In.substring(off);
+	       value2 = parseInt(value2);
+	       value1 = parseInt(value1);
+	       if (value1 < value2) return -1;
+	       if (value1 == value2) return 0;
+	       if (value1 > value2) return 1;
+	     };
+          }
+          else {
 	   oSorter1.fnCompare = function(value1, value2) {
 	       value2 = parseFloat(value2);
 	       value1 = parseFloat(value1);
@@ -75,7 +93,7 @@ sap.ui.define([
 	       if (value1 == value2) return 0;
 	       if (value1 > value2) return 1;
 	   };
-
+          }
            var oTable = this.getView().byId("table");
 	   var oItemsBinding = oTable.getBinding("rows");
 	   oItemsBinding.sort([oSorter0, oSorter1]);
