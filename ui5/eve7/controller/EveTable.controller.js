@@ -64,7 +64,7 @@ sap.ui.define([
 
 	   var oSorter0 = new sap.ui.model.Sorter({
 	       path: "Filtered",
-	       descending: false
+	       descending: true
 	   });
 
 	   var oSorter1 = new sap.ui.model.Sorter({
@@ -133,7 +133,7 @@ sap.ui.define([
 
       },
       getCellText : function(value, filtered) {
-	 return "<span class='" + (filtered ? "eveTableCellUnfiltered" : "eveTableCellFiltered") + "'>" + value + "</span>"
+	 return "<span class='" + (filtered ? "eveTableCellFiltered" : "eveTableCellUnfiltered") + "'>" + value + "</span>"
       },
       buildTableBody: function()
       {
@@ -156,7 +156,7 @@ sap.ui.define([
          for (var i = 0; i < this.collection.childs.length; i++)
          {
             rowData[i].Name =  this.collection.childs[i].fName;
-            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? 1 : 0;
+            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? 0 : 1;
          }
 
          if (this.bindTableColumns) {
@@ -206,7 +206,7 @@ sap.ui.define([
 		 sorter: [
 		     new sap.ui.model.Sorter({
 			 path: 'Filtered',
-			 descending: false
+			 descending: true
 		     })
 		 ]
 
