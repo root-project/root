@@ -34,13 +34,10 @@ sap.ui.define([
          this.eveViewerId = data.eveViewerId;
          this.kind = data.kind;
 
-<<<<<<< HEAD
          var rh = this.mgr.handle.GetUserArgs("TableRowHeight");
          if (rh && (rh>0))
             this.getView().byId("table").setRowHeight(rh);
 
-=======
->>>>>>> 6360691bd8... Use two level sort and shade entries in cell table that do not pass filter.
          this.bindTableColumns = true;
          var element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency
@@ -54,17 +51,13 @@ sap.ui.define([
 	   var col = e.mParameters.column;
 	   var colId = col.getId();
 
-            // Do one-level sort on Filtered entry
-           if ( col.mProperties.sortProperty === "Filtered")
-               return;
-
 	   var col = e.mParameters.column;
 	   var bDescending = (e.mParameters.sortOrder ==  sap.ui.core.SortOrder.Descending);
 	   var sv = bDescending;
 
 	   var oSorter0 = new sap.ui.model.Sorter({
 	       path: "Filtered",
-	       descending: true
+	       descending: false
 	   });
 
 	   var oSorter1 = new sap.ui.model.Sorter({
@@ -72,20 +65,6 @@ sap.ui.define([
 	       descending: sv
 	   });
 
-          if ( col.mProperties.sortProperty === "Name")
-          {
-             let off = this.collection.fName.length;
-             oSorter1.fnCompare = function(value1In, value2In) {
-               let value1 = value1In.substring(off);
-               let value2 = value2In.substring(off);
-	       value2 = parseInt(value2);
-	       value1 = parseInt(value1);
-	       if (value1 < value2) return -1;
-	       if (value1 == value2) return 0;
-	       if (value1 > value2) return 1;
-	     };
-          }
-          else {
 	   oSorter1.fnCompare = function(value1, value2) {
 	       value2 = parseFloat(value2);
 	       value1 = parseFloat(value1);
@@ -93,7 +72,7 @@ sap.ui.define([
 	       if (value1 == value2) return 0;
 	       if (value1 > value2) return 1;
 	   };
-          }
+
            var oTable = this.getView().byId("table");
 	   var oItemsBinding = oTable.getBinding("rows");
 	   oItemsBinding.sort([oSorter0, oSorter1]);
@@ -133,7 +112,7 @@ sap.ui.define([
 
       },
       getCellText : function(value, filtered) {
-	 return "<span class='" + (filtered ? "eveTableCellFiltered" : "eveTableCellUnfiltered") + "'>" + value + "</span>"
+	 return "<span class='" + (filtered ? "eveTableCellUnfiltered" : "eveTableCellFiltered") + "'>" + value + "</span>"
       },
       buildTableBody: function()
       {
@@ -156,7 +135,7 @@ sap.ui.define([
          for (var i = 0; i < this.collection.childs.length; i++)
          {
             rowData[i].Name =  this.collection.childs[i].fName;
-            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? 0 : 1;
+            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? 1 : 0;
          }
 
          if (this.bindTableColumns) {
@@ -206,7 +185,7 @@ sap.ui.define([
 		 sorter: [
 		     new sap.ui.model.Sorter({
 			 path: 'Filtered',
-			 descending: true
+			 descending: false
 		     })
 		 ]
 
@@ -444,13 +423,7 @@ sap.ui.define([
          var coll = entry.collectionEveId;
          var mng =  this.viewInfo;
 
-<<<<<<< HEAD
          this.mgr.SendMIR("SetDisplayedCollection(" + coll + ")", mng.fElementId, mng._typename);
-=======
-         var mir = "SetDisplayedCollection(" + coll + ")";
-         var obj = {"mir" : mir, "fElementId" : mng.fElementId, "class":mng._typename };
-         this.mgr.SendMIR(obj);
->>>>>>> 6360691bd8... Use two level sort and shade entries in cell table that do not pass filter.
       },
 
       sceneElementChange : function(el)
