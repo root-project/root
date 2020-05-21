@@ -33,7 +33,7 @@ void df003_profiles()
    ROOT::RDataFrame d(treeName, fileName, {"px", "py", "pz"});
 
    // Create the profiles
-   auto hprof1d = d.Profile1D({"hprof1d", "Profile of pz versus px", 64, -4, 4});
+   auto hprof1d = d.Profile1D({"hprof1d", "Profile of py versus px", 64, -4, 4});
    auto hprof2d = d.Profile2D({"hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20});
 
    // And Draw
