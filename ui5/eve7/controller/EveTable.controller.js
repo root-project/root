@@ -14,7 +14,7 @@ sap.ui.define([
    "sap/ui/layout/HorizontalLayout",
    "sap/m/MessageBox"
 ], function (Controller, JSONModel, CheckBox, Menu, MenuItem, coreItem, Column,
-             mInput, mButton, FormattedText, ResizeHandler, VerticalLayout, HorizontalLayout) {
+             mInput, mButton, FormattedText, ResizeHandler, VerticalLayout, HorizontalLayout, MessageBox) {
 
    "use strict";
 
