@@ -57,7 +57,7 @@ sap.ui.define([
 
 	   var oSorter0 = new sap.ui.model.Sorter({
 	       path: "Filtered",
-	       descending: false
+	       descending: true
 	   });
 
 	   var oSorter1 = new sap.ui.model.Sorter({
@@ -65,6 +65,20 @@ sap.ui.define([
 	       descending: sv
 	   });
 
+          if ( col.mProperties.sortProperty === "Name")
+          {
+             let off = this.collection.fName.length;
+             oSorter1.fnCompare = function(value1In, value2In) {
+               let value1 = value1In.substring(off);
+               let value2 = value2In.substring(off);
+	       value2 = parseInt(value2);
+	       value1 = parseInt(value1);
+	       if (value1 < value2) return -1;
+	       if (value1 == value2) return 0;
+	       if (value1 > value2) return 1;
+	     };
+          }
+          else {
 	   oSorter1.fnCompare = function(value1, value2) {
 	       value2 = parseFloat(value2);
 	       value1 = parseFloat(value1);
@@ -72,12 +86,17 @@ sap.ui.define([
 	       if (value1 == value2) return 0;
 	       if (value1 > value2) return 1;
 	   };
-
-           var oTable = this.getView().byId("table");
-	   var oItemsBinding = oTable.getBinding("rows");
+          }
+          var oTable = this.getView().byId("table");
+	  var oItemsBinding = oTable.getBinding("rows");
+          // Do one-level sort on Filtered entry
+          if ( col.mProperties.sortProperty === "Filtered")
+               oItemsBinding.sort([oSorter1]);
+          else
 	   oItemsBinding.sort([oSorter0, oSorter1]);
-           col.setSorted(true);
 
+          // show indicators in column header
+           col.setSorted(true);
            if (sv)
                col.setSortOrder(sap.ui.table.SortOrder.Descending);
            else
@@ -112,7 +131,7 @@ sap.ui.define([
 
       },
       getCellText : function(value, filtered) {
-	 return "<span class='" + (filtered ? "eveTableCellUnfiltered" : "eveTableCellFiltered") + "'>" + value + "</span>"
+	 return "<span class='" + (filtered ? "eveTableCellFiltered" : "eveTableCellUnfiltered") + "'>" + value + "</span>"
       },
       buildTableBody: function()
       {
@@ -135,7 +154,7 @@ sap.ui.define([
          for (var i = 0; i < this.collection.childs.length; i++)
          {
             rowData[i].Name =  this.collection.childs[i].fName;
-            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? 1 : 0;
+            rowData[i].Filtered =  this.collection.childs[i].fFiltered === true ? 0 : 1;
          }
 
          if (this.bindTableColumns) {
@@ -185,7 +204,7 @@ sap.ui.define([
 		 sorter: [
 		     new sap.ui.model.Sorter({
 			 path: 'Filtered',
-			 descending: false
+			 descending: true
 		     })
 		 ]
 
