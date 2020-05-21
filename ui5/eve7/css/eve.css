@@ -55,6 +55,13 @@
         font-family: "72",Arial,Helvetica,sans-serif;
         font-size: 0.775rem;
 }
+.eveTableCellFiltered {
+   color: black;
+}
+
+.eveTableCellUnfiltered {
+   color: lightgray;
+}
 
 .eve_tooltip {
   position:      absolute;
