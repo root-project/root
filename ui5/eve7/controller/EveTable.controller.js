@@ -34,10 +34,13 @@ sap.ui.define([
          this.eveViewerId = data.eveViewerId;
          this.kind = data.kind;
 
+<<<<<<< HEAD
          var rh = this.mgr.handle.GetUserArgs("TableRowHeight");
          if (rh && (rh>0))
             this.getView().byId("table").setRowHeight(rh);
 
+=======
+>>>>>>> 6360691bd8... Use two level sort and shade entries in cell table that do not pass filter.
          this.bindTableColumns = true;
          var element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency
@@ -423,7 +426,13 @@ sap.ui.define([
          var coll = entry.collectionEveId;
          var mng =  this.viewInfo;
 
+<<<<<<< HEAD
          this.mgr.SendMIR("SetDisplayedCollection(" + coll + ")", mng.fElementId, mng._typename);
+=======
+         var mir = "SetDisplayedCollection(" + coll + ")";
+         var obj = {"mir" : mir, "fElementId" : mng.fElementId, "class":mng._typename };
+         this.mgr.SendMIR(obj);
+>>>>>>> 6360691bd8... Use two level sort and shade entries in cell table that do not pass filter.
       },
 
       sceneElementChange : function(el)

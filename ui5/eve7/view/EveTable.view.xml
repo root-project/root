@@ -25,6 +25,10 @@
     <table:Table
         id="table"
 	sort="sortTable"
+<<<<<<< HEAD
+=======
+        height="100%"
+>>>>>>> 6360691bd8... Use two level sort and shade entries in cell table that do not pass filter.
         class="sapUiNoMarginTop"
         selectionMode="None"
         editable="false"
