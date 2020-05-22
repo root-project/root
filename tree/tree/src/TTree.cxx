@@ -69,7 +69,7 @@ In the following, the details about the creation of different types of branches 
 
 ## <a name="addcolumnoffundamentaltypes"></a>Add a column (`branch`) of fundamental types and arrays thereof
 This strategy works also for lists of variables, e.g. to describe simple structures.
-It is strongly reccomended to persistify those as objects rather than lists of leaves.
+It is strongly recommended to persistify those as objects rather than lists of leaves.
 
 ~~~ {.cpp}
     auto branch = tree.Branch(branchname, address, leaflist, bufsize)
@@ -3318,7 +3318,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             // We should attempts to set the address of the branch.
             // something like:
             //(TBranchElement*)branch->GetMother()->SetAddress(0)
-            //plus a few more subtilities (see TBranchElement::GetEntry).
+            //plus a few more subtleties (see TBranchElement::GetEntry).
             //but for now we go the simplest route:
             //
             // Note: This may result in the allocation of an object.
@@ -3941,24 +3941,53 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~
 /// ### Retrieving the result of Draw
 ///
-/// By default the temporary histogram created is called "htemp", but only in
-/// the one dimensional Draw("e1") it contains the TTree's data points. For
-/// a two dimensional Draw, the data is filled into a TGraph which is named
-/// "Graph". They can be retrieved by calling
-/// ~~~ {.cpp}
-///     TH1F *htemp = (TH1F*)gPad->GetPrimitive("htemp"); // 1D
-///     TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph"); // 2D
-/// ~~~
-/// For a three and four dimensional Draw the TPolyMarker3D is unnamed, and
-/// cannot be retrieved.
+/// By default a temporary histogram called `htemp` is created. It will be:
 ///
-/// gPad always contains a TH1 derived object called "htemp" which allows to
-/// access the axes:
+///  - A TH1F* in case of a mono-dimensional distribution: `Draw("e1")`,
+///  - A TH2F* in case of a bi-dimensional distribution: `Draw("e1:e2")`,
+///  - A TH3F* in case of a three-dimensional distribution: `Draw("e1:e2:e3")`.
+///
+/// In the one dimensional case the `htemp` is filled and drawn whatever the drawing
+/// option is.
+///
+/// In the two and three dimensional cases, with the default drawing option (`""`),
+/// a cloud of points is drawn and the histogram `htemp` is not filled. For all the other
+/// drawing options `htemp` will be filled.
+///
+/// In all cases `htemp` can be retrieved by calling:
+///
 /// ~~~ {.cpp}
-///     TGraph *graph = (TGraph*)gPad->GetPrimitive("Graph"); // 2D
-///     TH2F   *htemp = (TH2F*)gPad->GetPrimitive("htemp"); // empty, but has axes
-///     TAxis  *xaxis = htemp->GetXaxis();
+///     auto htemp = (TH1F*)gPad->GetPrimitive("htemp"); // 1D
+///     auto htemp = (TH2F*)gPad->GetPrimitive("htemp"); // 2D
+///     auto htemp = (TH3F*)gPad->GetPrimitive("htemp"); // 3D
 /// ~~~
+///
+/// In the two dimensional case (`Draw("e1;e2")`), with the default drawing option, the
+/// data is filled into a TGraph named `Graph`. This TGraph can be retrieved by
+/// calling
+///
+/// ~~~ {.cpp}
+///     auto graph = (TGraph*)gPad->GetPrimitive("Graph");
+/// ~~~
+///
+/// For the three and four dimensional cases, with the default drawing option, an unnamed
+/// TPolyMarker3D is produced, and therefore cannot be retrieved.
+///
+/// In all cases `htemp` can be used to access the axes. For instance in the 2D case:
+///
+/// ~~~ {.cpp}
+///     auto htemp = (TH2F*)gPad->GetPrimitive("htemp");
+///     auto xaxis = htemp->GetXaxis();
+/// ~~~
+///
+/// When the option `"A"` is used (with TGraph painting option) to draw a 2D
+/// distribution:
+/// ~~~ {.cpp}
+///     tree.Draw("e1:e2","","A*");
+/// ~~~
+/// a scatter plot is produced (with stars in that case) but the axis creation is
+/// delegated to TGraph and `htemp` is not created.
+///
 /// ### Saving the result of Draw to an histogram
 ///
 /// If varexp0 contains >>hnew (following the variable(s) name(s),
@@ -5814,7 +5843,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer to the TTree friend whose name or alias is 'friendname.
+/// Return a pointer to the TTree friend whose name or alias is `friendname`.
 
 TTree* TTree::GetFriend(const char *friendname) const
 {
@@ -6302,7 +6331,7 @@ Int_t TTree::LoadBaskets(Long64_t maxmemory)
 /// Set current entry.
 ///
 /// Returns -2 if entry does not exist (just as TChain::LoadTree()).
-/// Returns -6 if an error occours in the notification callback (just as TChain::LoadTree()).
+/// Returns -6 if an error occurs in the notification callback (just as TChain::LoadTree()).
 ///
 /// Note: This function is overloaded in TChain.
 ///
@@ -8252,7 +8281,7 @@ Int_t TTree::SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr)
 ///     T.setBranchStatus("e",1);
 ///     T.GetEntry(i);
 /// ~~~
-/// bname is interpreted as a wildcarded TRegexp (see TRegexp::MakeWildcard).
+/// bname is interpreted as a wild-carded TRegexp (see TRegexp::MakeWildcard).
 /// Thus, "a*b" or "a.*b" matches branches starting with "a" and ending with
 /// "b", but not any other branch with an "a" followed at some point by a
 /// "b". For this second behavior, use "*a*b*". Note that TRegExp does not
