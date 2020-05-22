@@ -2822,7 +2822,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    TClass* expectedClass = 0;
    EDataType expectedType = kOther_t;
    if (0 != branch->GetExpectedType(expectedClass,expectedType) ) {
-      // Something went wrong, the warning message has already be issued.
+      // Something went wrong, the warning message has already been issued.
       return kInternalError;
    }
    if (expectedClass && datatype == kOther_t && ptrClass == 0) {

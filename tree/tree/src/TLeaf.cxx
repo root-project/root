@@ -194,6 +194,19 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
    return retval;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the full name (including the parent's branch names) of the leaf.
+
+TString TLeaf::GetFullName() const
+{
+   TString branchname = GetBranch()->GetFullName();
+   if (branchname.Length() && (branchname[branchname.Length()-1] == '.'))
+      return branchname + GetName();
+   else
+      return branchname + "." + GetName();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the counter of this leaf (if any) or store the number of elements that the leaf contains in
 /// countval.
