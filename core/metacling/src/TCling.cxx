@@ -2118,7 +2118,7 @@ void TCling::RegisterModule(const char* modulename,
          }
       }
 
-      if (fwdDeclsCodeLessEnums.size() != 0){ // Avoid the overhead if nothing is to be declared
+      if (!fwdDeclsCodeLessEnums.empty()){ // Avoid the overhead if nothing is to be declared
          auto compRes = fInterpreter->declare(fwdDeclsCodeLessEnums, &T);
          assert(cling::Interpreter::kSuccess == compRes &&
                "The forward declarations could not be compiled");
