@@ -26,7 +26,7 @@ void FITS_tutorial3()
       TFITSHDU hdu(dir + "/fitsio/sample3.fits", i);
 
       std::unique_ptr<TImage> im(hdu.ReadAsImage(0));
-      c->cd(i);
+      gROOT->SetSelectedPad(c->cd(i));
       im->DrawClone();
    }
 }
