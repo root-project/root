@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Basic functionality: fitting, plotting, toy data generation on one-dimensional p.d.f
+/// Basic functionality: fitting, plotting, toy data generation on one-dimensional PDFs.
 ///
 ///  pdf = gauss(x,m,s)
 ///
