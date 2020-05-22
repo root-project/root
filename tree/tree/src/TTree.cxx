@@ -5150,6 +5150,9 @@ TBranch* TTree::GetBranch(const char* name)
          if (!strcmp(b1->GetName(), name)) {
             return b1;
          }
+         if (!strcmp(b1->GetFullName(), name)) {
+            return b1;
+         }
          TObjArray* lb1 = b1->GetListOfBranches();
          Int_t nb2 = lb1->GetEntriesFast();
          for (Int_t k = 0; k < nb2; k++) {
@@ -5168,6 +5171,9 @@ TBranch* TTree::GetBranch(const char* name)
       TLeaf* leaf = (TLeaf*) leaves->UncheckedAt(i);
       TBranch* branch = leaf->GetBranch();
       if (!strcmp(branch->GetName(), name)) {
+         return branch;
+      }
+      if (!strcmp(branch->GetFullName(), name)) {
          return branch;
       }
    }
