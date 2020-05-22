@@ -1881,6 +1881,22 @@ TBasket *TBranch::GetFreshCluster()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the 'full' name of the branch.  In particular prefix  the mother's name
+/// when it does not end in a trailing dot and thus is not part of the branch name
+TString TBranch::GetFullName() const
+{
+   TBranch* mother = GetMother();
+   if (!mother || mother==this) {
+      return fName;
+   }
+   TString motherName(mother->GetName());
+   if (motherName.Length() && (motherName[motherName.Length()-1] == '.')) {
+      return fName;
+   }
+   return motherName + "." + fName;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in thisBranch
 
 TLeaf* TBranch::GetLeaf(const char* name) const
