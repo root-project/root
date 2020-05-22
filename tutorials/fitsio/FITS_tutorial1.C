@@ -47,8 +47,8 @@ void FITS_tutorial1()
 
    auto c = new TCanvas("c1", "FITS tutorial #1", 1400, 800);
    c->Divide(2, 1);
-   c->cd(1);
+   gROOT->SetSelectedPad(c->cd(1));
    im->DrawClone();
-   c->cd(2);
+   gROOT->SetSelectedPad(c->cd(2));
    hist->DrawClone("COL");
 }
