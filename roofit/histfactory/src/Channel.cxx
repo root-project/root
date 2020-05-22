@@ -221,19 +221,23 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
   // Loop through all Samples and Systematics
   // and collect all necessary histograms
 
+  // Handles to open files for collecting histograms
+  std::map<std::string,std::unique_ptr<TFile>> fileHandles;
+
   // Get the Data Histogram:
 
   if( fData.GetInputFile() != "" ) {
     fData.SetHisto( GetHistogram(fData.GetInputFile(), 
 				 fData.GetHistoPath(),
-				 fData.GetHistoName()) );
+				 fData.GetHistoName(),
+				 fileHandles) );
   }
 
   // Collect any histograms for additional Datasets
   for( unsigned int i=0; i < fAdditionalData.size(); ++i) {
     RooStats::HistFactory::Data& data = fAdditionalData.at(i);
     if( data.GetInputFile() != "" ) {
-      data.SetHisto( GetHistogram(data.GetInputFile(), data.GetHistoPath(),data.GetHistoName()) );
+      data.SetHisto( GetHistogram(data.GetInputFile(), data.GetHistoPath(), data.GetHistoName(), fileHandles) );
     }
   }
 
@@ -247,7 +251,8 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
     cxcoutDHF << "Collecting Nominal Histogram" << std::endl;
     TH1* Nominal =  GetHistogram(sample.GetInputFile(),
 				 sample.GetHistoPath(),
-				 sample.GetHistoName());
+				 sample.GetHistoName(),
+				 fileHandles);
 
     sample.SetHisto( Nominal );
 
@@ -256,7 +261,8 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
     if( sample.GetStatError().GetUseHisto() ) {
       sample.GetStatError().SetErrorHist( GetHistogram(sample.GetStatError().GetInputFile(),
 						       sample.GetStatError().GetHistoPath(),
-						       sample.GetStatError().GetHistoName()) );
+						       sample.GetStatError().GetHistoName(),
+						       fileHandles) );
     }
 
       
@@ -267,11 +273,13 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 	
       histoSys.SetHistoLow( GetHistogram(histoSys.GetInputFileLow(), 
 					 histoSys.GetHistoPathLow(),
-					 histoSys.GetHistoNameLow()) );
+					 histoSys.GetHistoNameLow(),
+					 fileHandles) );
 	
       histoSys.SetHistoHigh( GetHistogram(histoSys.GetInputFileHigh(),
 					  histoSys.GetHistoPathHigh(),
-					  histoSys.GetHistoNameHigh()) );
+					  histoSys.GetHistoNameHigh(),
+					  fileHandles) );
     } // End Loop over HistoSys
 
 
@@ -282,11 +290,13 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
       histoFactor.SetHistoLow( GetHistogram(histoFactor.GetInputFileLow(), 
 					    histoFactor.GetHistoPathLow(),
-					    histoFactor.GetHistoNameLow()) );
+					    histoFactor.GetHistoNameLow(),
+					    fileHandles) );
 	
       histoFactor.SetHistoHigh( GetHistogram(histoFactor.GetInputFileHigh(),
 					     histoFactor.GetHistoPathHigh(),
-					     histoFactor.GetHistoNameHigh()) );
+					     histoFactor.GetHistoNameHigh(),
+					     fileHandles) );
     } // End Loop over HistoFactor
 
 
@@ -297,7 +307,8 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
 
       shapeSys.SetErrorHist( GetHistogram(shapeSys.GetInputFile(), 
 					  shapeSys.GetHistoPath(),
-					  shapeSys.GetHistoName()) );
+					  shapeSys.GetHistoName(),
+					  fileHandles) );
     } // End Loop over ShapeSys
 
     
@@ -309,15 +320,13 @@ void RooStats::HistFactory::Channel::CollectHistograms() {
       // Check if we need an InitialShape
       if( shapeFactor.HasInitialShape() ) {
 	TH1* hist = GetHistogram( shapeFactor.GetInputFile(), shapeFactor.GetHistoPath(), 
-				  shapeFactor.GetHistoName() );
+				  shapeFactor.GetHistoName(), fileHandles );
 	shapeFactor.SetInitialShape( hist );
       }
 
     } // End Loop over ShapeFactor
 
   } // End Loop over Samples
-
-  fFileHandles.clear();
 }
 
 
@@ -446,12 +455,16 @@ bool RooStats::HistFactory::Channel::CheckHistograms() {
 
 
 
-
-TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::string HistoPath, std::string HistoName) {
+/// Open a file and copy a histogram
+/// \param InputFile File where the histogram resides.
+/// \param HistoPath Path of the histogram in the file.
+/// \param HistoName Name of the histogram to retrieve.
+/// \param lsof List of open files. Helps to prevent opening and closing a file hundreds of times.
+TH1* RooStats::HistFactory::Channel::GetHistogram(std::string InputFile, std::string HistoPath, std::string HistoName, std::map<std::string,std::unique_ptr<TFile>>& lsof) {
 
   cxcoutPHF << "Getting histogram " << InputFile << ":" << HistoPath << "/" << HistoName << std::endl;
 
-  auto& inFile = fFileHandles[InputFile];
+  auto& inFile = lsof[InputFile];
   if (!inFile || !inFile->IsOpen()) {
     inFile.reset( TFile::Open(InputFile.c_str()) );
     if ( !inFile || !inFile->IsOpen() ) {

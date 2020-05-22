@@ -95,11 +95,7 @@ protected:
 
   std::vector< RooStats::HistFactory::Sample > fSamples;
 
-  /// Open a file and copy a histogram
-  TH1* GetHistogram( std::string InputFile, std::string HistoPath, std::string HistoName );
-
-private:
-  std::map<std::string,std::unique_ptr<TFile>> fFileHandles; //! Handles to open files for collecting histograms.
+  TH1* GetHistogram( std::string InputFile, std::string HistoPath, std::string HistoName, std::map<std::string, std::unique_ptr<TFile>>& lsof);
 };
 
   extern Channel BadChannel;
