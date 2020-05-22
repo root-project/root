@@ -604,6 +604,8 @@ Long64_t TTree::TClusterIterator::GetEstimatedClusterSize()
    Long64_t zipBytes = fTree->GetZipBytes();
    if (zipBytes == 0) {
       fEstimatedSize = fTree->GetEntries() - 1;
+      if (fEstimatedSize <= 0)
+         fEstimatedSize = 1;
    } else {
       Long64_t clusterEstimate = 1;
       Long64_t cacheSize = fTree->GetCacheSize();
