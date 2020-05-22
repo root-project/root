@@ -455,10 +455,11 @@ Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the integral of this PDF over all observables listed in 'nset'.
-
+/// Get normalisation term needed to normalise the raw values returned by
+/// getVal(). Note that `getVal(normalisationVariables)` will automatically
+/// apply the normalisation term returned here.
+/// \param nset Set of variables to normalise over.
 Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 {
   if (!nset) return 1 ;

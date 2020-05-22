@@ -204,8 +204,8 @@ public:
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
 
+  /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 
-    // Get p.d.f normalization term needed for observables 'nset'
     return getNorm(&nset) ; 
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
