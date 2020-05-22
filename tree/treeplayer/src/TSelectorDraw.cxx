@@ -1659,6 +1659,7 @@ void TSelectorDraw::TakeEstimate()
                      // h2 will be deleted, the axis setting is delegated to only
                      // the TGraph.
                      h2 = 0;
+                     fObject = pm->GetHistogram();
                   }
                }
             }
