@@ -55,7 +55,13 @@ import importlib
 major, minor = sys.version_info[0:2]
 py_version_str = '{}_{}'.format(major, minor)
 libcppyy_mod_name = 'libcppyy' + py_version_str
-importlib.import_module(libcppyy_mod_name)
+
+try:
+    importlib.import_module(libcppyy_mod_name)
+except ImportError:
+    raise ImportError(
+            'Failed to import {}. Please check that ROOT has been built for Python {}.{}'.format(
+                libcppyy_mod_name, major, minor))
 
 # ensure 'import libcppyy' will find the versioned module
 sys.modules['libcppyy'] = sys.modules[libcppyy_mod_name]
