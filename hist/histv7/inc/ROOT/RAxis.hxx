@@ -119,7 +119,7 @@ protected:
 
    /// Compare two axis bin borders
    ///
-   /// Given a  source axis bin border position, a target axis bin border
+   /// Given a source axis bin border position, a target axis bin border
    /// position, and the target axis' bin width on both sides of the bin border
    /// under consideration, tell if the source bin border should be considered
    /// to be located before (-1), at the same position (0), or after (+1) the
@@ -367,6 +367,10 @@ public:
       BinningCmpResult() : fKind(Kind::kIncompatible) {}
 
       /// Case where two axes using numerical bin borders were compared
+      ///
+      /// See the methods of this class for a more detailed description of what
+      /// each of these flags mean.
+      ///
       BinningCmpResult(bool trivialRegularBinMapping,
                        bool regularBinBijection,
                        bool fullBinBijection,
@@ -387,6 +391,10 @@ public:
       {}
 
       /// Case where two RAxisLabels were compared
+      ///
+      /// See the methods of this class for a more detailed description of what
+      /// each of these flags mean.
+      ///
       BinningCmpResult(bool sourceOnlyLabels,
                        bool disorderedLabels)
          : fKind(Kind::kLabels)
@@ -465,8 +473,8 @@ public:
       /// histogram, then every regular source histogram bin maps into a target
       /// histogram bin with the same global bin index.
       ///
-      // NOTE: This property can be leveraged to avoid local<->global bin index
-      //       conversions in the histogram merging implementation.
+      // NOTE: This property can be leveraged to avoid local<->global regular
+      //       bin index conversions in the histogram merging implementation.
       //
       bool HasRegularBinBijection() const {
          CheckKind(CmpKind::kNumeric);
@@ -492,8 +500,16 @@ public:
       /// under/overflow, maps into a target histogram bin with the same global
       /// bin index.
       ///
-      // NOTE: This property can be leveraged to avoid local<->global bin index
-      //       conversions in the histogram merging implementation.
+      // NOTE: This property allows applying the same sort of histogram merging
+      //       optimizations as RegularBinBijection(), but for overflow bins
+      //       too in addition to regular bins.
+      //
+      //       Regular bin bijection is treated as a prerequisite of overflow
+      //       bin bijection because in a multi-dimensional histogram, regular
+      //       bins of one axis will be part of the under/overflow hyperplane of
+      //       other axes. That condition is slightly more pessimistic than what
+      //       we actually need, but easier to check and good enough for the
+      //       common case of merging two histograms with identical axis config.
       //
       bool HasFullBinBijection() const {
          CheckKind(CmpKind::kNumeric);
@@ -642,27 +658,9 @@ public:
          kTrivialRegularBinMapping = 1 << 0,
 
          // The mapping between source and target regular bins is bijective
-         //
-         // NOTE: To implement this, check TrivialRegularBinMapping and then
-         //       check that the source axis has as many bins as the target.
-         //
          kRegularBinBijection = 1 << 1,
 
-         // The mapping between all source and target bin indices is bijective
-         //
-         // NOTE: To implement this, check RegularBinBijection and then check
-         //       that either both or neither of the source and target axis have
-         //       under/overflow bins (i.e. they have the same CanGrow() value).
-         //
-         //       There is no `kTrivialOverflowBinMapping` because there is
-         //       always a trivial mapping of the source under/overflow bins to
-         //       the target ones, which is to map the source under/overflow bin
-         //       to the target under/overflow bin.
-         //
-         //       Regular bin bijection is needed because on a multi-dimensional
-         //       histogram, regular bins of one axis will be part of the
-         //       under/overflow hyperplane of other axes.
-         //
+         // The mapping between all source and target bins is bijective
          kFullBinBijection = 1 << 2,
 
          // Some bins from the source map to target bins that span extra range
@@ -677,29 +675,18 @@ public:
 
          // Some regular bins from the source axis map to multiple target bins
          //
-         // NOTE: Keep under/overflow bins in mind while computing this flag.
+         // NOTE: Keep target under/overflow bins in mind while computing this
+         //       flag.
          //
          kRegularBinAliasing = 1 << 4,
 
          // The source underflow bin must be empty to allow histogram merging
-         //
-         // NOTE: Can be set either because the target axis is growable (in
-         //       which case underflow content spilling would require infinite
-         //       growth) or because the source underflow bin maps into multiple
-         //       target bins.
-         //
          kNeedEmptyUnderflow = 1 << 5,
 
          // The source overflow bin must be empty to allow histogram merging
-         //
-         // NOTE: Same as `kNeedEmptyUnderflow`, but for the overflow bin.
-         //
          kNeedEmptyOverflow = 1 << 6,
 
          // The target axis must grow in order to span the full source range
-         //
-         // NOTE: Should compute the other properties on the grown version
-         //
          kTargetMustGrow = 1 << 7,
 
          // === LABELS-SPECIFIC FLAGS ===

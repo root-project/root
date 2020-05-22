@@ -75,6 +75,8 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    const bool growRight = (CompareBinBorders(source.GetMaximum(), GetMaximum()) > 0);
    const bool targetMustGrow = CanGrow() && (growLeft || growRight);
    if (targetMustGrow) {
+      // NOTE: This is leveraging the fact that the only kind of growable axis
+      //       currently in existence, RAxisGrow, has equidistant bin borders
       const double binWidth = GetBinTo(1) - GetMinimum();
 
       const double leftGrowth =
@@ -105,21 +107,34 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    // From this point on, must use "target" reference instead of the "this"
    // pointer or any implicit calls to this axis' methods.
 
-   // Check if the source underflow and overflow bins must be empty
-   const bool sourceHasUnderOver = !source.CanGrow();
-   const bool needEmptyUnderOver = sourceHasUnderOver && target.CanGrow();
+   // Compare the positions of the minima/maxima of the source and target axes
    const double firstBinWidth = target.GetBinTo(1) - target.GetMinimum();
    const int minComparison = CompareBinBorders(source.GetMinimum(),
                                                target.GetMinimum(),
                                                -1.,
                                                firstBinWidth);
-   const bool sourceUnderflowAliasing = sourceHasUnderOver && (minComparison > 0);
    const double lastBinWidth =
       target.GetMaximum() - target.GetBinFrom(target.GetNBinsNoOver());
    const int maxComparison = CompareBinBorders(source.GetMaximum(),
                                                target.GetMaximum(),
                                                lastBinWidth,
                                                -1.);
+
+   // Check if the source underflow and overflow bins must be empty
+   //
+   // Presuming that the source does indeed have under/overflow bins, this can
+   // happen in two different situations:
+   //
+   // - Target axis is growable, and therefore doesn't support spilling of
+   //   under/overflow bins (it would require infinite growth, and also alias).
+   //   In this case, both the source underflow and overflow bins must be empty.
+   // - Either of these source bins map into multiple target bins, which in the
+   //   presence of target under/overflow bins happens if they cover at least
+   //   one target regular bin modulo bin comparison tolerance.
+   //
+   const bool sourceHasUnderOver = !source.CanGrow();
+   const bool needEmptyUnderOver = sourceHasUnderOver && target.CanGrow();
+   const bool sourceUnderflowAliasing = sourceHasUnderOver && (minComparison > 0);
    const bool sourceOverflowAliasing = sourceHasUnderOver && (maxComparison < 0);
    const bool needEmptyUnderflow = needEmptyUnderOver || sourceUnderflowAliasing;
    const bool needEmptyOverflow = needEmptyUnderOver || sourceOverflowAliasing;
@@ -150,12 +165,14 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //
    throw std::runtime_error("Not implemented yet!");
 
-   // Compute the remaining properties and return the result
+   // Compute the remaining properties that we need
    const bool regularBinBijection =
       trivialRegularBinMapping
       && (target.GetNBinsNoOver() == source.GetNBinsNoOver());
    const bool fullBinBijection =
       regularBinBijection && (source.CanGrow() == target.CanGrow());
+
+   // Produce the final result of the numerical axis binning comparison
    return BinningCmpResult(trivialRegularBinMapping,
                            regularBinBijection,
                            fullBinBijection,
