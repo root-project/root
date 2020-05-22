@@ -218,6 +218,7 @@ public:
    virtual Int_t     GetEntryExport(Long64_t entry, Int_t getall, TClonesArray *list, Int_t n);
            Int_t     GetEntryOffsetLen() const { return fEntryOffsetLen; }
            Int_t     GetEvent(Long64_t entry=0) {return GetEntry(entry);}
+   TString           GetFullName() const;
    const char       *GetIconName() const;
    virtual Int_t     GetExpectedType(TClass *&clptr,EDataType &type);
    virtual TLeaf    *GetLeaf(const char *name) const;
