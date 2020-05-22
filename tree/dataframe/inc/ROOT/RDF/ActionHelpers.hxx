@@ -1221,18 +1221,18 @@ public:
          TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
                      ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
 
+      TDirectory *outputDir = fOutputFile.get();
       if (!fDirName.empty()) {
          TString checkupdate = fOptions.fMode;
          checkupdate.ToLower();
          if (checkupdate == "update")
-            fOutputFile->mkdir(fDirName.c_str(), "", true);  // do not overwrite existing directory
+            outputDir = fOutputFile->mkdir(fDirName.c_str(), "", true);  // do not overwrite existing directory
          else
-            fOutputFile->mkdir(fDirName.c_str());
-         fOutputFile->cd(fDirName.c_str());
+            outputDir = fOutputFile->mkdir(fDirName.c_str());
       }
 
       fOutputTree =
-         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/fOutputFile.get());
+         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/outputDir);
 
       if (fOptions.fAutoFlush)
          fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
