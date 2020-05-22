@@ -1241,8 +1241,8 @@ public:
    void Finalize()
    {
       if (fOutputFile && fOutputTree) {
-         ::TDirectory::TContext ctxt(fOutputFile->GetDirectory(fDirName.c_str()));
-         fOutputTree->Write();
+         // because TTree::Write writes in gDirectory, not in fDirectory
+         fOutputTree->AutoSave("flushbaskets");
          // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
          fOutputTree.reset();
          fOutputFile->Close();
