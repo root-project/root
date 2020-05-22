@@ -157,6 +157,13 @@ TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the full name (including the parent's branch names) of the leaf.
+
+TString TLeafElement::GetFullName() const
+{
+   return GetBranch()->GetFullName();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
