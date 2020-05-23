@@ -38,8 +38,8 @@ private:
 
 public:
    explicit TAtomicCount(Long_t v) : fCnt(v) { }
-   void operator++() { InterlockedIncrement(&fCnt); }
-   Long_t operator--() { return InterlockedDecrement(&fCnt); }
+   void operator++() { _InterlockedIncrement(&fCnt); }
+   Long_t operator--() { return _InterlockedDecrement(&fCnt); }
    operator long() const { return static_cast<long const volatile &>(fCnt); }
    void Set(Long_t v) { fCnt = v; }
    Long_t Get() const { return static_cast<long const volatile &>(fCnt); }
