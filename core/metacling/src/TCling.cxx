@@ -1140,6 +1140,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       // Load vcruntime module for windows
 #ifdef R__WIN32
    LoadModule("vcruntime", clingInterp);
+   LoadModule("services", clingInterp);
 #endif
 
 #ifdef R__MACOSX
