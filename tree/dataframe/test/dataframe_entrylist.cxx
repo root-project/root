@@ -7,6 +7,7 @@
 #include "TTree.h"
 #include "gtest/gtest.h"
 
+#include <algorithm> // std::sort
 #include <vector>
 
 // Write to disk file filename with TTree "t" with nEntries of branch "e" assuming integer values [0..nEntries).
@@ -51,8 +52,9 @@ void TestTreeWithEntryList(bool isMT = false)
    auto t = f.Get<TTree>(treename);
    t->SetEntryList(&elist);
 
-   auto entries = ROOT::RDataFrame(*t).Take<int>("e");
-   EXPECT_EQ(*entries, std::vector<int>({0, nEntries - 1}));
+   auto entries = ROOT::RDataFrame(*t).Take<int>("e").GetValue();
+   std::sort(entries.begin(), entries.end()); // could be out of order in MT runs
+   EXPECT_EQ(entries, std::vector<int>({0, nEntries - 1}));
 
    gSystem->Unlink(filename);
 }
@@ -86,8 +88,9 @@ void TestChainWithEntryList(bool isMT = false)
    c.Add(file2, nEntries);
    c.SetEntryList(&elists);
 
-   auto entries = ROOT::RDataFrame(c).Take<int>("e");
-   EXPECT_EQ(*entries, std::vector<int>({0, nEntries - 1, 0, nEntries - 1}));
+   auto entries = ROOT::RDataFrame(c).Take<int>("e").GetValue();
+   std::sort(entries.begin(), entries.end()); // could be out of order in MT runs
+   EXPECT_EQ(entries, std::vector<int>({0, 0, nEntries - 1, nEntries - 1}));
 
    gSystem->Unlink(file1);
    gSystem->Unlink(file2);
