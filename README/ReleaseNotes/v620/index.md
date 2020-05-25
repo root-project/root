@@ -24,6 +24,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/SFT,\
  Alexandra Dobrescu, CERN/SFT,\
  Giulio Eulisse, CERN/ALICE,\
+ Johannes Hentrich, \
  Massimiliano Galli, CERN/SFT and Unibo,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
@@ -122,7 +123,7 @@ or in `TBrowser` by opening `Browser Help → About ROOT`.
 
 ### Compression algorithms
 
-* Added a new compression algorithm ZSTD [https://github.com/facebook/zstd.git], a dictionary-type algorithm (LZ77) with large search window and fast implementations of entropy coding stage, using either very fast Finite State Entropy (tANS) or Huffman coding. ZSTD offers a *better compression ratio* and *faster decompression speed* comparing to ZLIB. Its decompression speed is 2x faster then ZLIB and at least 6x faster comparing to LZMA. ZSTD provides a wide range of compression levels, and after evaluation we recommend to use for your purposes compression level 5 (or 6). 
+* Added a new compression algorithm ZSTD [https://github.com/facebook/zstd.git], a dictionary-type algorithm (LZ77) with large search window and fast implementations of entropy coding stage, using either very fast Finite State Entropy (tANS) or Huffman coding. ZSTD offers a *better compression ratio* and *faster decompression speed* comparing to ZLIB. Its decompression speed is 2x faster then ZLIB and at least 6x faster comparing to LZMA. ZSTD provides a wide range of compression levels, and after evaluation we recommend to use for your purposes compression level 5 (or 6).
   To use ZSTD please use next settings:
   ```
    root [1] _file0->SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm::kZSTD)
@@ -271,7 +272,7 @@ prevent infinite loops or crashes.
 ### Technology preview release of EVE-7: a server-client implementation of TEve for ROOT-7.
   * Visualization of simple physics objects
      * points, tracks, jets, line-sets, vertex ellipsoid, and generic geometrical shapes
-   * Support for handling of physics object collections -- a container of objects of a given class 
+   * Support for handling of physics object collections -- a container of objects of a given class
      * physics items can be represented in all views:
          * graphical views of any type (3D, RhoZ and RhoPhi)
          * table views with possibility to edit content dynamically
@@ -448,7 +449,7 @@ shuts down the interpreter.
  - Introduce a fast tree inference engine able to generate optimized inference code using just-in-time compilation of model parameters
  - New experimental TMVA reader interface `RReader` following a sklearn-like API in C++ and Python
  - New experimental interface for preprocessing methods (`RStandardScaler`)
- - New GPU implmentation of convolutional layer using the cuDNN library. It is used as default when the cuDNN library is installed in the system 
+ - New GPU implmentation of convolutional layer using the cuDNN library. It is used as default when the cuDNN library is installed in the system
 
 ### Bugs and Issues fixed in this release
 
@@ -490,7 +491,7 @@ shuts down the interpreter.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9842'>ROOT-9842</a>] Build Error: fatal error: cyclic dependency in module `ROOTGraphicsPrimitives`
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-9965'>ROOT-9965</a>] Segfault with TEve on ROOT 6.16.00 from LCG 95
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10031'>ROOT-10031</a>] [Exp PyROOT] Cppyy error when accessing typedef in a struct
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10050'>ROOT-10050</a>] [Exp PyROOT] `TPython::LoadMacro` is broken in Cppyy 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10050'>ROOT-10050</a>] [Exp PyROOT] `TPython::LoadMacro` is broken in Cppyy
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10094'>ROOT-10094</a>] ROOT Cross-hatch for `TGraph` does not fill completely
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10096'>ROOT-10096</a>] [Exp PyROOT] Lack of memory management for `TFile`-owned objects
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10144'>ROOT-10144</a>] `TFormula` v5 reads/writes after array
@@ -502,7 +503,7 @@ shuts down the interpreter.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10216'>ROOT-10216</a>] `TFile::MakeProject` severely broken
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10221'>ROOT-10221</a>] `cling::Value` broken if placement-new constructor fails
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10222'>ROOT-10222</a>] PyROOT converts Python 3 str → `const char*` and not bytes → `const char*`
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10224'>ROOT-10224</a>] Crash in opening TFile 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10224'>ROOT-10224</a>] Crash in opening TFile
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10227'>ROOT-10227</a>] [TreeProcMT] Last cluster in processed `TTree` is dropped under specific circumstances
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10228'>ROOT-10228</a>] `TCanvas.SaveAs` saves png files only in batch mode
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10241'>ROOT-10241</a>] Header `TBulkBranchRead.hxx` recursively includes `TBranch.h`
@@ -540,7 +541,7 @@ shuts down the interpreter.
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10375'>ROOT-10375</a>] V523 The `then` statement is equivalent to the `else` statement. MethodMLP.cxx 423
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10391'>ROOT-10391</a>] Marker 29 looks different in png and pdf output
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10411'>ROOT-10411</a>] `RooFormula` doesn't compile when arguments are renamed
-* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10413'>ROOT-10413</a>] `RooDataSet` Import Tree Branch with long name 
+* [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10413'>ROOT-10413</a>] `RooDataSet` Import Tree Branch with long name
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10426'>ROOT-10426</a>] Crash in recursive compilation / new autoloading
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10449'>ROOT-10449</a>] `Measurement::PrintXML()` crashes on 6.18+
 * [<a href='https://sft.its.cern.ch/jira/browse/ROOT-10452'>ROOT-10452</a>] ROOT configured with `-Dgnuinstall=ON` doesn't work when installed with make install
