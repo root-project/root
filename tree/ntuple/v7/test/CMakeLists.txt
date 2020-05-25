@@ -33,4 +33,7 @@ ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTDataFrame ROOTNTuple Ma
 ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 
+if(CMAKE_CXX_STANDARD MATCHES "17")
+  ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
