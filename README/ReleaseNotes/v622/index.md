@@ -27,7 +27,7 @@ The following people have contributed to this new version:
  Alja Mrak-Tadel, UCSD/CMS,\
  Jan Musinsky, SAS Kosice,\
  Axel Naumann, CERN/SFT,\
- Vincenzo Eduardo Padulano, Bicocca/SFT,\
+ Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
  Danilo Piparo, CERN/SFT,\
  Timur Pocheptsoff, Qt Company,\
  Renato Quagliani, LPNHE, CNRS/IN2P3, Sorbonne Université,\
