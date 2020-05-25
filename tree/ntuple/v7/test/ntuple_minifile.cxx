@@ -1,38 +1,4 @@
-#include "gtest/gtest.h"
-
-#include <ROOT/RMiniFile.hxx>
-#include <ROOT/RRawFile.hxx>
-
-#include <TFile.h>
-
-#include <iostream>
-#include <memory>
-
-using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
-using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
-using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
-using RNTuple = ROOT::Experimental::RNTuple;
-using RRawFile = ROOT::Internal::RRawFile;
-
-namespace {
-
-/**
- * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
- * goes out of scope.
- */
-class FileRaii {
-private:
-   std::string fPath;
-public:
-   explicit FileRaii(const std::string &path) : fPath(path) { }
-   FileRaii(const FileRaii&) = delete;
-   FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
-   std::string GetPath() const { return fPath; }
-};
-
-} // anonymous namespace
-
+#include "ntuple_test.hxx"
 
 TEST(MiniFile, Raw)
 {
