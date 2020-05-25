@@ -410,10 +410,10 @@ namespace HistFactory{
   }
 
   void HistoToWorkspaceFactoryFast::LinInterpWithConstraint(RooWorkspace* proto, const TH1* nominal,
-							    std::vector<HistoSys> histoSysList,
-							    string prefix, string productPrefix, 
-							    string systTerm, 
-							    vector<string>& constraintTermNames){
+      std::vector<HistoSys> histoSysList,
+      string prefix, string productPrefix,
+      string systTerm,
+      vector<string>& constraintTermNames){
 
     // these are the nominal predictions: eg. the mean of some space of variations
     // later fill these in a loop over histogram bins
@@ -429,29 +429,28 @@ namespace HistFactory{
     else if (classname.find("TH2")==0) { histndim=2; }
     else if (classname.find("TH3")==0) { histndim=3; }
     R__ASSERT( histndim==fObsNameVec.size() );
-    //    cout <<"In LinInterpWithConstriants and histndim = " << histndim <<endl;
 
     // create roorealvar observables
     RooArgList observables;
     std::vector<std::string>::iterator itr = fObsNameVec.begin();
     for (int idx=0; itr!=fObsNameVec.end(); ++itr, ++idx ) {
       if ( !proto->var(itr->c_str()) ) {
-	const TAxis* axis(nullptr);
-	if (idx==0) { axis = nominal->GetXaxis(); }
-	else if (idx==1) { axis = nominal->GetYaxis(); }
-	else if (idx==2) { axis = nominal->GetZaxis(); }
-	else {
-	  std::cout << "Error: Too many observables.  "
-		    << "HistFactory only accepts up to 3 observables (3d) "
-		    << std::endl;
-	  throw hf_exc();
-	}
-	Int_t nbins = axis->GetNbins();	
-	Double_t xmin = axis->GetXmin();
-	Double_t xmax = axis->GetXmax(); 	
-	// create observable
-	proto->factory(Form("%s[%f,%f]",itr->c_str(),xmin,xmax));
-	proto->var(itr->c_str())->setBins(nbins);
+        const TAxis* axis(nullptr);
+        if (idx==0) { axis = nominal->GetXaxis(); }
+        else if (idx==1) { axis = nominal->GetYaxis(); }
+        else if (idx==2) { axis = nominal->GetZaxis(); }
+        else {
+          std::cout << "Error: Too many observables.  "
+              << "HistFactory only accepts up to 3 observables (3d) "
+              << std::endl;
+          throw hf_exc();
+        }
+        Int_t nbins = axis->GetNbins();
+        Double_t xmin = axis->GetXmin();
+        Double_t xmax = axis->GetXmax();
+        // create observable
+        proto->factory(Form("%s[%f,%f]",itr->c_str(),xmin,xmax));
+        proto->var(itr->c_str())->setBins(nbins);
       }
       observables.add( *proto->var(itr->c_str()) );
     }
@@ -475,7 +474,7 @@ namespace HistFactory{
       RooRealVar* temp = (RooRealVar*) proto->var(("alpha_" + histoSysName).c_str());
       if(!temp){
 
-	temp = (RooRealVar*) proto->factory(("alpha_" + histoSysName + range).c_str());
+        temp = (RooRealVar*) proto->factory(("alpha_" + histoSysName + range).c_str());
 
         // now add a constraint term for these parameters
         string command=("Gaussian::alpha_"+histoSysName+"Constraint(alpha_"+histoSysName+",nom_alpha_"+histoSysName+"[0.,-10,10],1.)");
@@ -504,7 +503,7 @@ namespace HistFactory{
       lowSet.add(*lowFunc);
       highSet.add(*highFunc);
     }
-    
+
     // this is sigma(params), a piece-wise linear interpolation
     PiecewiseInterpolation interp(prefix.c_str(),"",*nominalFunc,lowSet,highSet,params);
     interp.setPositiveDefinite();
@@ -515,7 +514,7 @@ namespace HistFactory{
     interp.forceNumInt();
 
     proto->import(interp); // individual params have already been imported in first loop of this function
-    
+
     // now create the product of the overall efficiency times the sigma(params) for this estimate
     proto->factory(("prod:"+productPrefix+"("+prefix+","+systTerm+")").c_str() );    
 
