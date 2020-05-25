@@ -1,15 +1,4 @@
-#include "gtest/gtest.h"
-
-#include <ROOT/RNTupleZip.hxx>
-#include <RZip.h>
-
-#include <memory>
-#include <string>
-#include <utility>
-
-using RNTupleCompressor = ROOT::Experimental::Detail::RNTupleCompressor;
-using RNTupleDecompressor = ROOT::Experimental::Detail::RNTupleDecompressor;
-
+#include "ntuple_test.hxx"
 
 TEST(RNTupleZip, Basics)
 {

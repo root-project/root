@@ -1,15 +1,4 @@
-#include "gtest/gtest.h"
-
-#include <ROOT/RNTupleMetrics.hxx>
-
-#include <chrono>
-#include <thread>
-
-using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
-using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
-using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
-using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
-using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
+#include "ntuple_test.hxx"
 
 TEST(Metrics, Counters)
 {

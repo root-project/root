@@ -1,46 +1,4 @@
-#include <ROOT/RFieldVisitor.hxx>
-#include <ROOT/RNTuple.hxx>
-#include <ROOT/RNTupleModel.hxx>
-
-#include <TFile.h>
-
-#include "gtest/gtest.h"
-
-#include <exception>
-#include <iostream>
-#include <sstream>
-#include <vector>
-
-#include "CustomStruct.hxx"
-
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
-using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
-using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
-
-template <class T>
-using RField = ROOT::Experimental::RField<T>;
-
-namespace {
-
-/**
- * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
- * goes out of scope.
- */
-class FileRaii {
-private:
-   std::string fPath;
-public:
-   explicit FileRaii(const std::string &path) : fPath(path) { }
-   FileRaii(const FileRaii&) = delete;
-   FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
-   std::string GetPath() const { return fPath; }
-};
-
-} // anonymous namespace
+#include "ntuple_test.hxx"
 
 TEST(RNtuplePrint, FullString)
 {

@@ -1,44 +1,4 @@
-#include "gtest/gtest.h"
-
-#include <ROOT/RNTuple.hxx>
-#include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
-#include <ROOT/RPageStorageFile.hxx>
-
-#include <TRandom3.h>
-
-#include <cstdio>
-#include <memory>
-#include <string>
-#include <vector>
-#include <utility>
-
-using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
-using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
-using RPageSource = ROOT::Experimental::Detail::RPageSource;
-
-namespace {
-
-/**
- * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
- * goes out of scope.
- */
-class FileRaii {
-private:
-   std::string fPath;
-public:
-   explicit FileRaii(const std::string &path) : fPath(path) { }
-   FileRaii(const FileRaii&) = delete;
-   FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
-   std::string GetPath() const { return fPath; }
-};
-
-} // anonymous namespace
+#include "ntuple_test.hxx"
 
 TEST(RNTuple, Basics)
 {
@@ -70,7 +30,6 @@ TEST(RNTuple, Basics)
    ntuple->LoadEntry(2);
    EXPECT_EQ(12.0, *rdPt);
 }
-
 
 TEST(RNTuple, Extended)
 {
