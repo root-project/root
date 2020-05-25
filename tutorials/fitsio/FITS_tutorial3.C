@@ -25,8 +25,8 @@ void FITS_tutorial3()
    for (auto i : ROOT::TSeqI(1, 6)) {
       TFITSHDU hdu(dir + "/fitsio/sample3.fits", i);
 
-      std::unique_ptr<TImage> im(hdu.ReadAsImage(0));
+      TImage* im = (TImage *)hdu.ReadAsImage(0);
       c->cd(i);
-      im->DrawClone();
+      im->Draw();
    }
 }
