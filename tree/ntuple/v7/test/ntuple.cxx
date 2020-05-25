@@ -34,7 +34,7 @@ TEST(RNTuple, ReconstructModel)
 }
 #endif // __cplusplus >= 201703L
 
-TEST(RNTuple, Multi)
+TEST(RNTuple, MultipleInFile)
 {
    FileRaii fileGuard("test_ntuple_multi.root");
    auto file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
