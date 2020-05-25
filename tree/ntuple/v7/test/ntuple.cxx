@@ -290,12 +290,6 @@ TEST(RNTuple, View)
    EXPECT_EQ(3, n);
 }
 
-TEST(RNTuple, Capture) {
-   auto model = RNTupleModel::Create();
-   float pt;
-   model->AddField("pt", &pt);
-}
-
 TEST(RNTuple, Composable)
 {
    FileRaii fileGuard("test_ntuple_composable.root");
