@@ -31,15 +31,14 @@ protected:
 };
 
 #ifdef R__USE_IMT
+struct TIMTEnabler {
+   TIMTEnabler(unsigned int nSlots) { ROOT::EnableImplicitMT(nSlots); }
+   ~TIMTEnabler() { ROOT::DisableImplicitMT(); }
+};
+
 // fixture that enables implicit MT and provides a RDF with no data-source and a single column "x" containing
 // normal-distributed doubles
 class RDFSnapshotMT : public ::testing::Test {
-   class TIMTEnabler {
-   public:
-      TIMTEnabler(unsigned int nSlots) { ROOT::EnableImplicitMT(nSlots); }
-      ~TIMTEnabler() { ROOT::DisableImplicitMT(); }
-   };
-
 protected:
    const ULong64_t kNEvents = 100ull; // must be initialized before fLoopManager
    const unsigned int kNSlots = 4u;
@@ -641,6 +640,70 @@ TEST(RDFSnapshotMore, LazyNotTriggered)
    }
 }
 
+void CheckTClonesArrayOutput(const RVec<TH1D> &hvec)
+{
+   ASSERT_EQ(hvec.size(), 3);
+   for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(hvec[i].GetEntries(), 1);
+      EXPECT_DOUBLE_EQ(hvec[i].GetMean(), i);
+   }
+}
+
+void ReadWriteTClonesArray()
+{
+   {
+      TClonesArray arr("TH1D", 3);
+      for (int i = 0; i < 3; ++i) {
+         auto *h = static_cast<TH1D *>(arr.ConstructedAt(i));
+         h->SetBins(25, 0, 10);
+         h->Fill(i);
+      }
+      TFile f("df_readwritetclonesarray.root", "recreate");
+      TTree t("t", "t");
+      t.Branch("arr", &arr);
+      t.Fill();
+      t.Write();
+      f.Close();
+   }
+
+   {
+      // write as TClonesArray
+      auto out_df = ROOT::RDataFrame("t", "df_readwritetclonesarray.root")
+                       .Snapshot<TClonesArray>("t", "df_readwriteclonesarray1.root", {"arr"});
+      const auto hvec = out_df->Take<RVec<TH1D>>("arr")->at(0);
+      CheckTClonesArrayOutput(hvec);
+   }
+
+   // FIXME uncomment when ROOT-10801 is solved
+   //{
+   //   gInterpreter->GenerateDictionary("vector<TH1D,ROOT::Detail::VecOps::RAdoptAllocator<TH1D>>",
+   //                                    "vector;TH1D.h;ROOT/RVec.hxx");
+   //   // write as RVecs
+   //   auto out_df = ROOT::RDataFrame("t", "df_readwritetclonesarray.root")
+   //                    .Snapshot<RVec<TH1D>>("t", "df_readwriteclonesarray2.root", {"arr"});
+   //   const auto hvec = out_df->Take<RVec<TH1D>>("arr")->at(0);
+   //   CheckTClonesArrayOutput(hvec);
+   //}
+
+   {
+      // write as Snapshot wants
+      auto out_df =
+         ROOT::RDataFrame("t", "df_readwritetclonesarray.root").Snapshot("t", "df_readwriteclonesarray3.root", {"arr"});
+      const auto hvec = out_df->Take<RVec<TH1D>>("arr")->at(0);
+      CheckTClonesArrayOutput(hvec);
+   }
+
+   gSystem->Unlink("df_readwritetclonesarray.root");
+   gSystem->Unlink("df_readwriteclonesarray1.root");
+   gSystem->Unlink("df_readwriteclonesarray2.root");
+   gSystem->Unlink("df_readwriteclonesarray3.root");
+}
+
+TEST(RDFSnapshotMore, TClonesArray)
+{
+   ReadWriteTClonesArray();
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(RDFSnapshotMT, Snapshot_update_diff_treename)
@@ -897,6 +960,12 @@ TEST(RDFSnapshotMore, ReadWriteCarrayMT)
    ROOT::EnableImplicitMT(4);
    ReadWriteCarray("ReadWriteCarrayMT");
    ROOT::DisableImplicitMT();
+}
+
+TEST(RDFSnapshotMore, TClonesArrayMT)
+{
+   TIMTEnabler _(4);
+   ReadWriteTClonesArray();
 }
 
 #endif // R__USE_IMT
