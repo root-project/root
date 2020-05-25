@@ -17,7 +17,7 @@ ROOT_ADD_GTEST(dataframe_helpers dataframe_helpers.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame TwoFloatsDict)
   # Dictionary for above test:
   ROOT_GENERATE_DICTIONARY(TwoFloatsDict_cxx TwoFloats.h LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
-  add_library(TwoFloatsDict OBJECT TwoFloatsDict_cxx.cxx)
+  add_library(TwoFloatsDict STATIC TwoFloatsDict_cxx.cxx)
   target_include_directories(TwoFloatsDict PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
   set_target_properties(TwoFloatsDict PROPERTIES POSITION_INDEPENDENT_CODE ON)
 ROOT_ADD_GTEST(dataframe_ranges dataframe_ranges.cxx LIBRARIES ROOTDataFrame)
