@@ -1068,20 +1068,31 @@ void SetBranchesHelper(BoolArrayMap &, TTree * /*inputTree*/, TTree &outputTree,
 /// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch title
 /// 2. RVecs coming from a custom column or a source
 /// 3. vectors coming from ROOT files
-/// In case of 1., we save the pointer to the branch and the pointer to the input value. In case of 2. and 3. we save
-/// nullptrs.
+/// 4. TClonesArray
+///
+/// In case of 1., we keep aside the pointer to the branch and the pointer to the input value (in `branch` and
+/// `branchAddress`) so we can intercept changes in the address of the input branch and tell the output branch.
 template <typename T>
 void SetBranchesHelper(BoolArrayMap &boolArrays, TTree *inputTree, TTree &outputTree, const std::string &inName,
                        const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab)
 {
    auto *const inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
-   const auto mustWriteStdVec =
-      !inputBranch || ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+   const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
+   const auto mustWriteStdVec = !inputBranch || isTClonesArray ||
+                                ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
 
    if (mustWriteStdVec) {
-      // Treat 2. and 3.:
+      // Treat:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
+      // 4. TClonesArray.
+      // In all cases, we write out a std::vector<T> when the column is RVec<T>
+      if (isTClonesArray) {
+         Warning("Snapshot",
+                 "Branch \"%s\" contains TClonesArrays but the type specified to Snapshot was RVec<T>. The branch will "
+                 "be written out as a std::vector instead of a TClonesArray. Specify that the type of the branch is "
+                 "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
+      }
       outputTree.Branch(outName.c_str(), &ab->AsVector());
       return;
    }
