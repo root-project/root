@@ -79,6 +79,7 @@
 
 #include "Fit/SparseData.h"
 #include "HFitInterface.h"
+#include "TFitResult.h"
 
 #include "Math/IntegratorOptions.h"
 
@@ -6296,9 +6297,9 @@ bool testH1Integral()
 
    h1->FillRandom("gaus1d",n);
 
-   TString fitOpt = "LQ0";
-   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0";
-   h1->Fit(gaus, fitOpt);
+   TString fitOpt = "LQ0S";
+   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0S";
+   auto res = h1->Fit(gaus, fitOpt);
 
 
    // test first nentries
@@ -6315,8 +6316,12 @@ bool testH1Integral()
    double x2 = h1->GetXaxis()->GetBinUpEdge(i2);
 
    double igf = gaus->Integral(x1,x2);
-   double err2 = gaus->IntegralError(x1,x2);
-
+   double err2 = 0;
+   if (ROOT::IsImplicitMTEnabled())
+     err2 = gaus->IntegralError(x1, x2, res->GetParams(), res->GetCovarianceMatrix().GetMatrixArray());
+   else
+     // without implicit MT can use covariance matrix from global TVirtualFitter
+     err2 = gaus->IntegralError(x1, x2);
 
    double delta = fabs( igh - igf)/ err2;
 
@@ -6351,9 +6356,9 @@ bool testH2Integral()
    TF2 * gaus = new TF2("gaus2d",gaus2d,-5,5,-5,5,5);
    gaus->SetParameters(100,0,1.2,1.,1);
    h2->FillRandom("gaus2d",n);
-   TString fitOpt = "LQ0";
-   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0";
-   h2->Fit(gaus,fitOpt);
+   TString fitOpt = "LQ0S";
+   if ( defaultEqualOptions & cmpOptDebug ) fitOpt = "L0S";
+   auto res = h2->Fit(gaus,fitOpt);
 
 
    // test first nentries
@@ -6379,7 +6384,7 @@ bool testH2Integral()
    //double igf = gaus->Integral(x1,x2,y1,y2,1.E-4);
    double relerr = 0;
    double igf = gaus->IntegralMultiple(2, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4)
-   double err2 = gaus->IntegralError(2,a,b);
+   double err2 = gaus->IntegralError(2,a,b, res->GetParams(), res->GetCovarianceMatrix().GetMatrixArray());
 
    double delta = fabs( igh - igf)/ err1;
 
@@ -6421,14 +6426,14 @@ bool testH3Integral()
 
    //gaus->SetParameter(0, h3->GetMaximum() );
 
-   TString fitOpt = "LQ0";
+   TString fitOpt = "LQ0S";
    w.Stop();
    if ( defaultEqualOptions & cmpOptDebug ) {
       std::cout << "Time to fill random " << w.RealTime() << std::endl;
-      fitOpt = "L0";
+      fitOpt = "L0S";
    }
    w.Start();
-   h3->Fit(gaus,fitOpt);
+   auto res = h3->Fit(gaus,fitOpt);
    if ( defaultEqualOptions & cmpOptDebug )
       std::cout << "Time to fit         " << w.RealTime() << std::endl;
 
@@ -6470,7 +6475,7 @@ bool testH3Integral()
    double igf = gaus->IntegralMultiple(3, a, b, 1.E-4, relerr);  // don't need high tolerance (use 10-4)
    //double igf = gaus->Integral(x1,x2,y1,y2,z1,z2,1.E-4);  // don't need high tolerance
 
-   double err2 = gaus->IntegralError(3,a,b);
+   double err2 = gaus->IntegralError(3,a,b, res->GetParams(), res->GetCovarianceMatrix().GetMatrixArray());
    w.Stop();
 
    double delta = fabs( igh - igf)/ err1;
