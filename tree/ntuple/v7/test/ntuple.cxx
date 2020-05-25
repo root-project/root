@@ -34,30 +34,6 @@ TEST(RNTuple, ReconstructModel)
 }
 #endif // __cplusplus >= 201703L
 
-TEST(RNTuple, Storage)
-{
-   FileRaii fileGuard("test_ntuple_storage.root");
-   {
-      RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
-
-      auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
-      auto fieldX = model->MakeField<float>("energy");
-      auto fieldStr = model->MakeField<std::string>("string", "abc");
-
-      //auto fieldFail = model->AddField<int>("jets");
-      auto fieldJet = model->MakeField<std::vector<float>>("jets" /* TODO(jblomer), {1.0, 2.0}*/);
-      auto nnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
-
-      sink.Create(*model.get());
-      sink.CommitDataset();
-   }
-
-   RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
-   source.Attach();
-}
-
-
 TEST(RNTuple, Multi)
 {
    FileRaii fileGuard("test_ntuple_multi.root");
