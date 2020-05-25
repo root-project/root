@@ -2656,54 +2656,44 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
    return result;
 }
 
-
-//______________________________________________________________________________
-// Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
-// {
-//    // Return Integral of a 2d function in range [ax,bx],[ay,by]
-
-//    Error("Integral","Must be called with a TF2 only");
-//    return 0;
-// }
-
-
-// //______________________________________________________________________________
-// Double_t TF1::Integral(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)
-// {
-//    // Return Integral of a 3d function in range [ax,bx],[ay,by],[az,bz]
-
-//    Error("Integral","Must be called with a TF3 only");
-//    return 0;
-// }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Error on Integral of a parametric function between a and b
-/// due to the parameter uncertainties.
-/// A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat)
-/// can be optionally passed.  By default (i.e. when a zero pointer is passed) the current stored
-/// parameter values are used to estimate the integral error together with the covariance matrix
-/// from the last fit (retrieved from the global fitter instance)
+/// due to the parameter uncertainties and their covariance matrix from the fit.
+/// In addition to the integral limits, this method takes as input a pointer to the fitted parameter values
+/// and a pointer the covariance matrix from the fit. These pointers should be retrieved from the
+/// previously performed fit using the TFitResult class.
+/// Note that to get the TFitResult, te fit should be done using the fit option `S`.
+/// Example:
+/// ~~~~{.cpp}
+/// TFitResultPtr r = histo->Fit(func, "S");
+/// func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
+/// ~~~~
 ///
 /// IMPORTANT NOTE1:
+///
+/// A null pointer to the parameter values vector and to the covariance matrix can be passed.
+/// In this case, when the parameter values pointer is null, the parameter values stored in this
+/// TF1 function object are used in the integral error computation.
+/// When the poassed pointer to the covariance matrix is null, a covariance matrix from the last fit is retrieved
+/// from a global fitter instance when it exists. Note that the global fitter instance
+/// esists only when ROOT is not running with multi-threading enabled (ROOT::IsImplicitMTEnabled() == True).
+/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a a zero value is
+/// returned.
+///
+///
+/// IMPORTANT NOTE2:
 ///
 /// When no covariance matrix is passed and in the meantime a fit is done
 /// using another function, the routine will signal an error and it will return zero only
 /// when the number of fit parameter is different than the values stored in TF1 (TF1::GetNpar() ).
 /// In the case that npar is the same, an incorrect result is returned.
 ///
-/// IMPORTANT NOTE2:
+/// IMPORTANT NOTE3:
 ///
 /// The user must pass a pointer to the elements of the full covariance matrix
 /// dimensioned with the right size (npar*npar), where npar is the total number of parameters (TF1::GetNpar()),
-/// including also the fixed parameters. When there are fixed parameters, the pointer returned from
-/// TVirtualFitter::GetCovarianceMatrix() cannot be used.
-/// One should use the TFitResult class, as shown in the example below.
-///
-/// To get the matrix and values from an old fit do for example:
-/// TFitResultPtr r = histo->Fit(func, "S");
-/// ..... after performing other fits on the same function do
-///
-///     func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
+/// including also the fixed parameters. The covariance matrix must be retrieved from the TFitResult class as
+/// shown above and not from TVirtualFitter::GetCovarianceMatrix() function.
 
 Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t *params, const Double_t *covmat, Double_t epsilon)
 {
@@ -2714,35 +2704,46 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t *params, cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return Error on Integral of a parametric function with dimension larger tan one
+/// Return Error on Integral of a parametric function with dimension larger than one
 /// between a[] and b[]  due to the parameters uncertainties.
 /// For a TF1 with dimension larger than 1 (for example a TF2 or TF3)
 /// TF1::IntegralMultiple is used for the integral calculation
 ///
-/// A pointer to a vector of parameter values and to the elements of the covariance matrix (covmat) can be optionally passed.
-/// By default (i.e. when a zero pointer is passed) the current stored parameter values are used to estimate the integral error
-/// together with the covariance matrix from the last fit (retrieved from the global fitter instance).
+/// In addition to the integral limits, this method takes as input a pointer to the fitted parameter values
+/// and a pointer the covariance matrix from the fit. These pointers should be retrieved from the
+/// previously performed fit using the TFitResult class.
+/// Note that to get the TFitResult, te fit should be done using the fit option `S`.
+/// Example:
+/// ~~~~{.cpp}
+/// TFitResultPtr r = histo2d->Fit(func2, "S");
+/// func2->IntegralError(a,b,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
+/// ~~~~
 ///
 /// IMPORTANT NOTE1:
+///
+/// A null pointer to the parameter values vector and to the covariance matrix can be passed.
+/// In this case, when the parameter values pointer is null, the parameter values stored in this
+/// TF1 function object are used in the integral error computation.
+/// When the poassed pointer to the covariance matrix is null, a covariance matrix from the last fit is retrieved
+/// from a global fitter instance when it exists. Note that the global fitter instance
+/// esists only when ROOT is not running with multi-threading enabled (ROOT::IsImplicitMTEnabled() == True).
+/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a a zero value is
+/// returned.
+///
+///
+/// IMPORTANT NOTE2:
 ///
 /// When no covariance matrix is passed and in the meantime a fit is done
 /// using another function, the routine will signal an error and it will return zero only
 /// when the number of fit parameter is different than the values stored in TF1 (TF1::GetNpar() ).
 /// In the case that npar is the same, an incorrect result is returned.
 ///
-/// IMPORTANT NOTE2:
+/// IMPORTANT NOTE3:
 ///
 /// The user must pass a pointer to the elements of the full covariance matrix
 /// dimensioned with the right size (npar*npar), where npar is the total number of parameters (TF1::GetNpar()),
-/// including also the fixed parameters. When there are fixed parameters, the pointer returned from
-/// TVirtualFitter::GetCovarianceMatrix() cannot be used.
-/// One should use the TFitResult class, as shown in the example below.
-///
-/// To get the matrix and values from an old fit do for example:
-/// TFitResultPtr r = histo->Fit(func, "S");
-/// ..... after performing other fits on the same function do
-///
-///     func->IntegralError(x1,x2,r->GetParams(), r->GetCovarianceMatrix()->GetMatrixArray() );
+/// including also the fixed parameters. The covariance matrix must be retrieved from the TFitResult class as
+/// shown above and not from TVirtualFitter::GetCovarianceMatrix() function.
 
 Double_t TF1::IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params, const  Double_t *covmat, Double_t epsilon)
 {
