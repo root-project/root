@@ -174,7 +174,7 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
             // Here we have a special case for getting right the type of data members
             // of classes sorted in TClonesArrays: ROOT-9674
             auto mother = be->GetMother();
-            if (mother && mother->InheritsFrom(tbranchelement)) {
+            if (mother && mother->InheritsFrom(tbranchelement) && mother != be) {
                auto beMom = static_cast<TBranchElement *>(mother);
                auto beMomClass = beMom->GetClass();
                if (beMomClass && 0 == std::strcmp("TClonesArray", beMomClass->GetName()))
