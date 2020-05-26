@@ -386,7 +386,7 @@ TEST(RDataFrameInterface, UnusedJittedNodes)
 
 // ROOT-10458
 #ifdef _WIN32
-const std::string symbol = "struct `private: virtual void __thiscall RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody(void)'::`2'::SimpleType";
+const std::string symbol = "`private: virtual void __thiscall RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody(void)'::`2'::SimpleType";
 #else
 const std::string symbol = "RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody()::SimpleType";
 #endif

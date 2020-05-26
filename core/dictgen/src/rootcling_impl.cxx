@@ -2546,10 +2546,6 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                      if (strstr(demangledTIName, typeinfoNameFor)) {
                         std::string demangledName = demangledTIName;
                         demangledName.erase(demangledName.end() - strlen(typeinfoNameFor), demangledName.end());
-                        if (demangledName.compare(0, 6, "class ") == 0)
-                           demangledName.erase(0, 6);
-                        else if (demangledName.compare(0, 7, "struct ") == 0)
-                           demangledName.erase(0, 7);
 #else
                   char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
                   if (!errDemangle && demangledTIName) {

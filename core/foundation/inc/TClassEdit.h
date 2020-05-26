@@ -214,6 +214,12 @@ namespace TClassEdit {
       errorCode = -1;
       return nullptr;
    }
+   std::string demangledName = demangled_name;
+   if (demangledName.compare(0, 6, "class ") == 0)
+      demangledName.erase(0, 6);
+   else if (demangledName.compare(0, 7, "struct ") == 0)
+      demangledName.erase(0, 7);
+   strcpy(demangled_name, demangledName.c_str());
 #else
    char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, &errorCode);
    if (!demangled_name || errorCode) {
