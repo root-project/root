@@ -171,7 +171,7 @@ protected:
    ///
    /// This is a higher-level alternative to CompareBinBorders().
    ///
-   int ComparePosToBinBorder(double x, int bin, BinSide side) {
+   int ComparePosToBinBorder(double x, int bin, BinSide side) const noexcept {
       // Handle underflow bin edge case
       if (bin == kUnderflowBin) {
          switch (side) {
