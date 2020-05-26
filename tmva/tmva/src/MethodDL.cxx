@@ -196,17 +196,17 @@ void MethodDL::DeclareOptions()
    AddPreDefVal(TString("OPENCL"));    // not yet implemented
    AddPreDefVal(TString("CUDNN"));     // not needed (by default GPU is now CUDNN if available)
 
-   // define training stratgey separated by a separator "|"
+   // define training strategy separated by a separator "|"
    DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-3,"
                                               "Momentum=0.0,"
                                               "ConvergenceSteps=100,"
                                               "MaxEpochs=2000,"
                                               "Optimizer=ADAM,"
                                               "BatchSize=30,"
-                                              "TestRepetitions=7,"
+                                              "TestRepetitions=1,"
                                               "WeightDecay=0.0,"
                                               "Regularization=None,"
-                                              "DropConfig=0.0"
+                                              "DropConfig=0.0",
                     "TrainingStrategy", "Defines the training strategies.");
 }
 
@@ -366,6 +366,7 @@ void MethodDL::ProcessOptions()
       fTrainingSettings.push_back(settings);
    }
 
+   // this set fInputShape[0] = batchSize
    this->SetBatchSize(fTrainingSettings.front().batchSize);
 
    // case inputlayout and batch layout was not given. Use default then
@@ -383,10 +384,10 @@ void MethodDL::ProcessOptions()
    // batch layout can be determined by the input layout + batch size
    // case DNN : { 1, B, W }
    // case CNN :  { B, C, H*W}
-   // case RNN :  { B, T, H*W } 
-   
+   // case RNN :  { B, T, H*W }
+
    if (fBatchWidth == 0 && fBatchHeight == 0 && fBatchDepth == 0) {
-      // case first layer is DENSE 
+      // case first layer is DENSE
       if (fInputShape[2] == 1 && fInputShape[1] == 1) {
          // case of (1, batchsize, input features)
          fBatchDepth  = 1;
@@ -429,7 +430,7 @@ void MethodDL::ParseInputLayout()
    int subDim = 1;
    std::vector<size_t> inputShape;
    inputShape.reserve(inputLayoutString.Length()/2 + 2);
-   inputShape.push_back(30);    // Will be set later by Trainingsettings, use 0 value now
+   inputShape.push_back(0);    // Will be set later by Trainingsettings, use 0 value now
    for (; inputDimString != nullptr; inputDimString = (TObjString *)nextInputDim()) {
       // size_t is unsigned
       subDim = (size_t) abs(inputDimString->GetString().Atoi());
@@ -441,7 +442,7 @@ void MethodDL::ParseInputLayout()
    // for example in case of dense layer input layouts
    // when we will support 3D convolutions we would need to add extra 1's
    if (inputShape.size() == 2) {
-      // case of dense layer where only width is specified 
+      // case of dense layer where only width is specified
       inputShape.insert(inputShape.begin() + 1, {1,1});
    }
    else if (inputShape.size() == 3) {
