@@ -54,6 +54,13 @@ foreach(val RANGE ${how_many_pythons})
   set(libname cppyy${python_under_version_string})
 
   add_library(${libname} SHARED ${headers} ${sources})
+  # Set the suffix to '.so' and the prefix to 'lib'
+  set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+  if(APPLE)
+    target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup cppyy_backend${python_under_version_string})
+  elseif(NOT MSVC)
+    target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend${python_under_version_string})
+  endif()
 
   if(NOT MSVC)
     target_compile_options(${libname} PRIVATE
@@ -91,12 +98,6 @@ foreach(val RANGE ${how_many_pythons})
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   )
-
-  if(APPLE)
-    target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup cppyy_backend${python_under_version_string})
-  elseif(NOT MSVC)
-    target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend${python_under_version_string})
-  endif()
 
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
