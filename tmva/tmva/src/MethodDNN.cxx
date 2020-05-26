@@ -120,7 +120,13 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initializations
 
-void TMVA::MethodDNN::Init() {}
+void TMVA::MethodDNN::Init() {
+      Log() << kWARNING
+            << "MethodDNN is deprecated and it will be removed in future ROOT version. "
+               "Please use MethodDL ( TMVA::kDL)"
+            << Endl;
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Options to be set in the option string:
