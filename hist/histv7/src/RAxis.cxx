@@ -378,10 +378,6 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          // ...and these source bins do not map into target bins with the same
          // indices, so the bin index mapping is nontrivial
          trivialRegularBinMapping = false;
-
-         // Any aliasing, including with the target overflow bin, was already
-         // detected by the source bin iteration code above
-         return;
       }
    }();
 
