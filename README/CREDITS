@@ -944,6 +944,13 @@ N: Marcelo Sousa
 E: marcelo.sousa@cern.ch
 D: Amazon S3 and Google Storage I/O plugins
 
+N: Thibault Souquet
+E: contact@thibaultsouquet.fr
+D: Image viewer for the ROOT Browser (v7)
+D: Breadcrumbs display for the ROOT Browser (v7)
+D: ROOT Browser (v7) drawing options
+D: Improvements in JavaScript ROOT GUI
+
 N: Peter Speckmayer
 E: Peter.Speckmayer@cern.ch
 D: author of the TMVA package
