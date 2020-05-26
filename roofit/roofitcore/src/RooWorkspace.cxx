@@ -441,14 +441,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
   if (suffixV != 0 && strlen(suffixV)>0) {
     RooArgSet* vars = inArg.getVariables() ;
-    TIterator* iter = vars->createIterator() ;
-    RooAbsArg* v ;
-    while((v=(RooAbsArg*)iter->Next())) {
+    for (const auto v : *vars) {
       if (exceptVarNames.find(v->GetName())==exceptVarNames.end()) {
         varMap[v->GetName()] = Form("%s_%s",v->GetName(),suffixV) ;
       }
     }
-    delete iter ;
     delete vars ;
   }
 
@@ -488,15 +485,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   } else {
     inArg.branchNodeServerList(&branchSet) ;
   }
-  TIterator* iter = branchSet.createIterator() ;
-  RooAbsArg* branch ;
-  while ((branch=(RooAbsArg*)iter->Next())) {
+
+  for (const auto branch : branchSet) {
     RooAbsArg* wsbranch = _allOwnedNodes.find(branch->GetName()) ;
     if (wsbranch && wsbranch!=branch && !branch->getAttribute("RooWorkspace::Recycle") && !useExistingNodes) {
       conflictNodes.add(*branch) ;
     }
   }
-  delete iter ;
 
   // Terminate here if there are conflicts and no resolution protocol
   if (conflictNodes.getSize()>0 && !suffix && !useExistingNodes) {
@@ -506,7 +501,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Now create a working copy of the incoming object tree
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(inArg).snapshot(noRecursion==kFALSE) ;
+  RooArgSet* cloneSet = RooArgSet(inArg).snapshot(noRecursion==kFALSE) ;
   RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
@@ -519,9 +514,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   string topName2 = cloneTop->GetName() ;
   if (!renameConflictOrig) {
     // Mark all nodes to be imported for renaming following conflict resolution protocol
-    TIterator* citer = conflictNodes.createIterator() ;
-    RooAbsArg* cnode ;
-    while ((cnode=(RooAbsArg*)citer->Next())) {
+    for (const auto cnode : conflictNodes) {
       RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
@@ -544,13 +537,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 			          << origName << " to " << cnode2->GetName() << endl ;
       }
     }
-    delete citer ;
   } else {
 
     // Rename all nodes already in the workspace to 'clear the way' for the imported nodes
-    TIterator* citer = conflictNodes.createIterator() ;
-    RooAbsArg* cnode ;
-    while ((cnode=(RooAbsArg*)citer->Next())) {
+    for (const auto cnode : conflictNodes) {
 
       string origName = cnode->GetName() ;
       RooAbsArg* wsnode = _allOwnedNodes.find(origName.c_str()) ;
@@ -565,15 +555,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
           wsnode->SetTitle(Form("%s (%s)",cnode->GetTitle(),suffix)) ;
         } else {
           // Name with suffix already taken, add additional suffix
-          Int_t n=1 ;
-          while (true) {
+          for (unsigned int n=1; true; ++n) {
             string newname = Form("%s_%s_%d",cnode->GetName(),suffix,n) ;
             if (!_allOwnedNodes.find(newname.c_str())) {
               wsnode->SetName(newname.c_str()) ;
               wsnode->SetTitle(Form("%s (%s %d)",cnode->GetTitle(),suffix,n)) ;
               break ;
             }
-            n++ ;
           }
         }
         if (!silence) {
@@ -587,17 +575,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
       }
 
     }
-    delete citer ;
-
   }
 
   // Process any change in variable names
   if (strlen(varChangeIn)>0 || (suffixV && strlen(suffixV)>0)) {
 
     // Process all changes in variable names
-    TIterator* cliter = cloneSet->createIterator() ;
-    RooAbsArg* cnode ;
-    while ((cnode=(RooAbsArg*)cliter->Next())) {
+    for (const auto cnode : *cloneSet) {
 
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
@@ -620,7 +604,6 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
       }
     }
-    delete cliter ;
   }
 
   // Now clone again with renaming effective
@@ -630,15 +613,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   // Make final check list of conflicting nodes
   RooArgSet conflictNodes2 ;
   RooArgSet branchSet2 ;
-  //inArg.branchNodeServerList(&branchSet) ; // WVE not needed
-  TIterator* iter2 = branchSet2.createIterator() ;
-  RooAbsArg* branch2 ;
-  while ((branch2=(RooAbsArg*)iter2->Next())) {
+  for (const auto branch2 : branchSet2) {
     if (_allOwnedNodes.find(branch2->GetName())) {
       conflictNodes2.add(*branch2) ;
     }
   }
-  delete iter2 ;
 
   // Terminate here if there are conflicts and no resolution protocol
   if (conflictNodes2.getSize()) {
@@ -647,26 +626,20 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
     return kTRUE ;
   }
 
-  // Print a message for each imported node
-  iter = cloneSet2->createIterator() ;
-
   // Perform any auxiliary imports at this point
-  RooAbsArg* node ;
-  while((node=(RooAbsArg*)iter->Next())) {
+  for (const auto node : *cloneSet2) {
     if (node->importWorkspaceHook(*this)) {
       coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << node->GetName()
 			        << " has an error in importing in one or more of its auxiliary objects, aborting" << endl ;
       return kTRUE ;
     }
   }
-  iter->Reset() ;
 
   if (cloneSet2->getSize()+_allOwnedNodes.getSize() > 999) _allOwnedNodes.setHashTableSize(1000);
 
   RooArgSet recycledNodes ;
   RooArgSet nodesToBeDeleted ;
-  while((node=(RooAbsArg*)iter->Next())) {
-
+  for (const auto node : *cloneSet2) {
     if (_autoClass) {
       if (!_classes.autoImportClass(node->IsA())) {
         coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
@@ -717,24 +690,20 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Release working copy
-  // no need to do a safe list since it was generated from a snapshot
+  // no need to do a safe list erase since it was generated from a snapshot
   // just take ownership and delte elements by hand
-  cloneSet->releaseOwnership() ;
-  RooFIter cloneSet_iter = cloneSet->fwdIterator() ;
-  RooAbsArg* cloneNode ;
-  while ((cloneNode=(RooAbsArg*)cloneSet_iter.next())) {
+  cloneSet->releaseOwnership();
+  for (auto cloneNode : *cloneSet){
     delete cloneNode;
   }
   delete cloneSet ;
 
   // Reconnect any nodes that need to be
   if (recycledNodes.getSize()>0) {
-    iter->Reset() ;
-    while((node=(RooAbsArg*)iter->Next())) {
+    for (const auto node : *cloneSet2) {
       node->redirectServers(recycledNodes) ;
     }
   }
-  delete iter ;
 
   cloneSet2->releaseOwnership() ;
   delete cloneSet2 ;
