@@ -180,8 +180,6 @@ protected:
                return 1;
             case BinSide::kTo:
                return ComparePosToBinBorder(x, GetFirstBin(), BinSide::kFrom);
-            default:
-               throw std::runtime_error("No such bin side");
          }
       }
 
@@ -193,8 +191,6 @@ protected:
             case BinSide::kTo:
                // Everything is before the overflow bin's "right edge", +inf
                return -1;
-            default:
-               throw std::runtime_error("No such bin side");
          }
       }
 
@@ -214,9 +210,6 @@ protected:
             rightBinWidth =
                (bin < GetLastBin()) ? (GetBinTo(bin+1) - borderPos)
                                     : kNoBinWidth;
-            break;
-         default:
-            throw std::runtime_error("No such bin side");
       }
 
       // Perform an approximate bin border comparison
