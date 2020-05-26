@@ -1278,48 +1278,20 @@ public:
       return vec;
    }
 
-   /// Result of an RAxisLabels label set comparison
-   enum LabelsCmpFlags {
-      /// Both axes have the same labels, mapping to the same bins
-      kLabelsCmpSame = 0,
-
-      /// The other axis doesn't have some labels from this axis
-      kLabelsCmpSubset = (1 << 0),
-
-      /// The other axis has some labels which this axis doesn't have
-      kLabelsCmpSuperset = (1 << 1),
-
-      /// The labels shared by both axes do not map into the same bins
-      kLabelsCmpDisordered = (1 << 2),
-   };
-
-   /// Compare the labels of this axis with those of another axis
-   LabelsCmpFlags CompareBinLabels(const RAxisLabels& other) const noexcept {
-      // This will eventually contain the results of the labels comparison
-      LabelsCmpFlags result = kLabelsCmpSame;
-      size_t missing_in_other = 0;
-
-      // First, check how this axis' labels map into the other axis
-      for (const auto &kv: fLabelsIndex) {
-         auto iter = other.fLabelsIndex.find(kv.first);
-         if (iter == other.fLabelsIndex.cend()) {
-            ++missing_in_other;
+   /// Compare the labels of this axis with those of another axis for the
+   /// purpose of investigating a histogram merging scenario
+   LabeledBinningCmpResult CompareBinLabels(const RAxisLabels& source) const noexcept {
+      bool sourceOnlyLabels = false;
+      bool disorderedLabels = false;
+      for (const auto &kv: source.fLabelsIndex) {
+         auto iter = fLabelsIndex.find(kv.first);
+         if (iter == fLabelsIndex.cend()) {
+            sourceOnlyLabels = true;
          } else if (iter->second != kv.second) {
-            result = LabelsCmpFlags(result | kLabelsCmpDisordered);
+            disorderedLabels = true;
          }
       }
-      if (missing_in_other > 0)
-         result = LabelsCmpFlags(result | kLabelsCmpSubset);
-
-      // If this covered all labels in the other axis, we're done
-      if (fLabelsIndex.size() == other.fLabelsIndex.size() + missing_in_other)
-         return result;
-
-      // Otherwise, we must check the labels of the other axis too
-      for (const auto &kv: other.fLabelsIndex)
-         if (fLabelsIndex.find(kv.first) == fLabelsIndex.cend())
-            return LabelsCmpFlags(result | kLabelsCmpSuperset);
-      return result;
+      return LabeledBinningCmpResult(sourceOnlyLabels, disorderedLabels);
    }
 };
 

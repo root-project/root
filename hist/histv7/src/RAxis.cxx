@@ -33,7 +33,10 @@ bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) con
       return false;
    } else if (lbl_ptr) {
       auto lbl_cmp = lbl_ptr->CompareBinLabels(*other_lbl_ptr);
-      return (lbl_cmp == RAxisLabels::kLabelsCmpSame);
+      return (!lbl_cmp.SourceHasExtraLabels())
+         && (!lbl_cmp.LabelOrderDiffers())
+         // FIXME: RHistData merging limitation that should go away
+         && (lbl_ptr->GetNBinsNoOver() == other_lbl_ptr->GetNBinsNoOver());
    } else {
       return true;
    }
@@ -59,10 +62,8 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    if (bool(target_lbl_ptr) != bool(source_lbl_ptr)) {
       return BinningCmpResult();
    } else if (target_lbl_ptr) {
-      const auto lbl_cmp = target_lbl_ptr->CompareBinLabels(*source_lbl_ptr);
       return BinningCmpResult(
-         LabeledBinningCmpResult(lbl_cmp & RAxisLabels::kLabelsCmpSuperset,
-                                 lbl_cmp & RAxisLabels::kLabelsCmpDisordered)
+         target_lbl_ptr->CompareBinLabels(*source_lbl_ptr)
       );
    }
    // If control reached this point, then we know that both the source and the
