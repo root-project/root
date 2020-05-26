@@ -532,6 +532,12 @@ public:
       // NOTE: This property does not affect the histogram merging
       //       implementation, but should be reported as a warning to its user.
       //
+      // NOTE: This does _not_ imply that the target bins are bigger, for a
+      //       counter-example this flag would be set in the example below:
+      //
+      //           Source axis bins:   |---|
+      //           Target axis bins: |---|---|
+      //
       bool MergingIsLossy() const {
          CheckKind(CmpKind::kNumeric);
          return fFlags & kMergingIsLossy;
@@ -647,8 +653,6 @@ public:
       /// specified in their documentation. They are what's queried by the
       /// boolean property accessors of this class.
       ///
-      // FIXME: Remove implementation notes after implementation
-      //
       enum Flags {
          // === NUMERIC-SPECIFIC FLAGS ===
          //
@@ -664,20 +668,9 @@ public:
          kFullBinBijection = 1 << 2,
 
          // Some bins from the source map to target bins that span extra range
-         //
-         // NOTE: This does _not_ imply that the target bin is bigger, for
-         //       example this flag should also be set in the scenario below:
-         //
-         //           Source axis bins:   |---|
-         //           Target axis bins: |---|---|
-         //
          kMergingIsLossy = 1 << 3,
 
          // Some regular bins from the source axis map to multiple target bins
-         //
-         // NOTE: Keep target under/overflow bins in mind while computing this
-         //       flag.
-         //
          kRegularBinAliasing = 1 << 4,
 
          // The source underflow bin must be empty to allow histogram merging
