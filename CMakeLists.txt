@@ -141,6 +141,26 @@ if(ccache)
   endif()
 endif()
 
+#---Enable distcc ------------------------------------------------------------------------------
+if(distcc)
+  find_program(DISTCC_COMMAND NAMES distcc)
+  mark_as_advanced(DISTCC_COMMAND ${DISTCC_COMMAND})
+  if(EXISTS ${DISTCC_COMMAND})
+    message(STATUS "Found distcc: ${DISTCC_COMMAND}")
+    if (ccache)
+        # If ccache is enabled, use distcc as CCACHE_PREFIX
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "CCACHE_PREFIX=${DISTCC_COMMAND} ${CCACHE_COMMAND}")
+    else()
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${DISTCC_COMMAND})
+    endif()
+    execute_process(COMMAND ${DISTCC_COMMAND} "--version" OUTPUT_VARIABLE DISTCC_VERSION)
+    string(REGEX REPLACE "distcc ([0-9\\.]+).*" "\\1" DISTCC_VERSION ${DISTCC_VERSION})
+  else()
+    message(STATUS "Could NOT find distcc")
+    set(distcc OFF CACHE BOOL "Use distcc (disabled since distcc was not found)" FORCE)
+  endif()
+endif()
+
 #---Enable test coverage -----------------------------------------------------------------------
 if(coverage)
   set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
