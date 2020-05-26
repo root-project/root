@@ -52,32 +52,13 @@ void RooDirItem::removeFromDir(TObject* obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to directory. If forceMemoryResident is
-/// true, force addition to ROOT memory directory if that
-/// is not the current directory
-
+/// true, nothing happens.
 void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident) 
 {
   if (forceMemoryResident) {
-    // Append self forcibly to memory directory
-
-    TString pwd(gDirectory->GetPath()) ;
-    TString memDir(gROOT->GetName()) ;
-    memDir.Append(":/") ;
-    Bool_t notInMemNow= (pwd!=memDir) ;
-
-    //cout << "RooDirItem::appendToDir pwd=" << pwd << " memDir=" << memDir << endl ;
-
-    if (notInMemNow) { 
-      gDirectory->cd(memDir) ;
-    }
-
-    _dir = gDirectory ;
-    gDirectory->Append(obj) ;
-    
-    if (notInMemNow) {
-      gDirectory->cd(pwd) ;    
-    }
-
+    // If we are not going into a file, appending to a directory
+    // doesn't make sense. It only creates global state and congestion.
+    return;
   } else {
     // Append self to present gDirectory
     _dir = gDirectory ;
