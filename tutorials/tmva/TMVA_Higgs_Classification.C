@@ -254,11 +254,11 @@ We can then book the DL method using the built option string
       TString layoutString ("Layout=DENSE|64|TANH,DENSE|64|TANH,DENSE|64|TANH,DENSE|64|TANH,DENSE|1|LINEAR");
       // Define Training strategies
       // one can catenate several training strategies
-      TString training1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
+      TString training1("LearningRate=1e-3,Momentum=0.9,"
                         "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
                         "MaxEpochs=30,WeightDecay=1e-4,Regularization=None,"
                         "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.");
-      //     TString training2("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
+      //     TString training2("LearningRate=1e-3,Momentum=0.9"
       //                       "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
       //                       "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
       //                       "Optimizer=SGD,DropConfig=0.0+0.0+0.0+0.");
