@@ -401,7 +401,14 @@ void MethodDL::ProcessOptions()
       fInputShape[2] = 1;
       fInputShape[3] = GetNVariables();
    }
+   // case when batch layout is not provided (all zero)
+   // batch layout can be determined by the input layout + batch size
+   // case DNN : { 1, B, W }
+   // case CNN :  { B, C, H*W}
+   // case RNN :  { B, T, H*W } 
+   
    if (fBatchWidth == 0 && fBatchHeight == 0 && fBatchDepth == 0) {
+      // case first layer is DENSE 
       if (fInputShape[2] == 1 && fInputShape[1] == 1) {
          // case of (1, batchsize, input features)
          fBatchDepth  = 1;
@@ -409,6 +416,7 @@ void MethodDL::ProcessOptions()
          fBatchWidth  = fInputShape[3];
       }
       else { // more general cases (e.g. for CNN)
+         // case CONV or RNN
          fBatchDepth  = fTrainingSettings.front().batchSize;
          fBatchHeight = fInputShape[1];
          fBatchWidth  = fInputShape[3]*fInputShape[2];
@@ -443,13 +451,24 @@ void MethodDL::ParseInputLayout()
    int subDim = 1;
    std::vector<size_t> inputShape;
    inputShape.reserve(inputLayoutString.Length()/2 + 2);
-   inputShape.push_back(30);    // Will be set by Trainingsettings, use default now
+   inputShape.push_back(30);    // Will be set later by Trainingsettings, use 0 value now
    for (; inputDimString != nullptr; inputDimString = (TObjString *)nextInputDim()) {
       // size_t is unsigned
       subDim = (size_t) abs(inputDimString->GetString().Atoi());
       // Size among unused dimensions should be set to 1 for cudnn
       //if (subDim == 0) subDim = 1;
       inputShape.push_back(subDim);
+   }
+   // it is expected that empty Shape has at least 4 dimensions. We pad the missing one's with 1
+   // for example in case of dense layer input layouts
+   // when we will support 3D convolutions we would need to add extra 1's
+   if (inputShape.size() == 2) {
+      // case of dense layer where only width is specified 
+      inputShape.insert(inputShape.begin() + 1, {1,1});
+   }
+   else if (inputShape.size() == 3) {
+      //e.g. case of RNN T,W -> T,1,W
+      inputShape.insert(inputShape.begin() + 2, 1);
    }
 
    this->SetInputShape(inputShape);

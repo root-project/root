@@ -303,8 +303,6 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    if (useTMVADNN) {
 
-      TString inputLayoutString = "InputLayout=1|1|256";
-      TString batchLayoutString = "BatchLayout=1|100|256";
       TString layoutString(
          "Layout=DENSE|100|RELU,BNORM,DENSE|100|RELU,BNORM,DENSE|100|RELU,BNORM,DENSE|100|RELU,DENSE|1|LINEAR");
 
@@ -323,10 +321,6 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
       TString dnnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=None:"
                          "WeightInitialization=XAVIER");
-      dnnOptions.Append(":");
-      dnnOptions.Append(inputLayoutString);
-      dnnOptions.Append(":");
-      dnnOptions.Append(batchLayoutString);
       dnnOptions.Append(":");
       dnnOptions.Append(layoutString);
       dnnOptions.Append(":");
@@ -379,7 +373,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       TString inputLayoutString("InputLayout=1|16|16");
 
       // Batch Layout
-      TString batchLayoutString("BatchLayout=100|1|256");
+      //TString batchLayoutString("BatchLayout=100|1|256");
 
       TString layoutString("Layout=CONV|10|3|3|1|1|1|1|RELU,BNORM,CONV|10|3|3|1|1|1|1|RELU,MAXPOOL|2|2|1|1,"
                            "RESHAPE|FLAT,DENSE|100|RELU,DENSE|1|LINEAR");
@@ -400,8 +394,8 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
       cnnOptions.Append(":");
       cnnOptions.Append(inputLayoutString);
-      cnnOptions.Append(":");
-      cnnOptions.Append(batchLayoutString);
+      // cnnOptions.Append(":");
+      // cnnOptions.Append(batchLayoutString);
       cnnOptions.Append(":");
       cnnOptions.Append(layoutString);
       cnnOptions.Append(":");
