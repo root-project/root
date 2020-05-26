@@ -82,16 +82,21 @@ The following people have contributed to this new version:
 ### RooWorkspace::Import() for Python
 `RooWorkspace.import()` cannot be used in Python, since it is a reserved keyword. Users therefore had to resort
 to
-    getattr(workspace, 'import')(...)
+```
+getattr(workspace, 'import')(...)
+```
 Now,
-    workspace.Import(...)
+```
+workspace.Import(...)
+```
 has been defined for the new PyROOT, which makes calling the function easier.
+
 
 ### Modernised category classes
 RooFit's categories were modernised. Previously, the class RooCatType was used to store category states. It stores
 two members, an integer for the category index, and up to 256 characters for a category name. Now, such states are
 stored only using an integer, and category names can have arbitrary length. This will use 4 instead of 288 bytes
-per category entry in a dataset, and make computations that rely on category states faster.
+per category entry in a dataset, and paves the way for faster computations that rely on category states.
 
 The interface to define or manipulate category states was also updated. Since categories are mappings from state names
 to state index, this is now reflected in the interface. Among others, this is now possible:
@@ -101,49 +106,107 @@ to state index, this is now reflected in the interface. Among others, this is no
 | `cat["electron"] = 1;`                         | `cat.defineType("electron", 1);`                               |
 | `cat["muon"] = 2;`                             | `cat.defineType("muon", 2);`                                   |
 
-See also [Category reference guide](https://root.cern.ch/doc/master/classRooCategory.html).
+See also the [Category reference guide](https://root.cern.ch/doc/master/classRooCategory.html) or different
+[RooFit tutorials](https://root.cern.ch/doc/master/group__tutorial__roofit.html),
+specifically [rf404_categories](https://root.cern.ch/doc/master/rf404__categories_8C.html).
+
 
 ### Type-safe proxies for RooFit objects
-RooFit's proxy classes have been modernised. The class `RooTemplateProxy` allows for access to other RooFit objects
+RooFit's proxy classes have been modernised. The class [RooTemplateProxy](https://root.cern.ch/doc/master/classRooTemplateProxy.html)
+allows for access to other RooFit objects
 similarly to a smart pointer. In older versions of RooFit, the objects held by *e.g.* `RooRealProxy` had to be
 accessed like this:
-    RooAbsArg* absArg = realProxy.absArg();
-    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg);
-    assert(pdf); // This *should* work, but the proxy doesn't have a way to check
-    pdf->fitTo(...);
-That is, a `RooRealProxy` stores a pointer to a RooAbsArg, and this pointer has to be cast. There was no type
+```
+  RooAbsArg* absArg = realProxy.absArg();
+  RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg);
+  assert(pdf); // This *should* work, but the proxy doesn't have a way to check
+  pdf->fitTo(...);
+```
+That is, because the old `RooRealProxy` stored a pointer to a `RooAbsArg`, and this pointer had to be cast. There was no type
 safety, *i.e.*, any object deriving from RooAbsArg could be stored in that proxy, and the user had to take care
 of ensuring that types are correct.
 Now, if one uses
-    RooTemplateProxy<RooAbsPdf> pdfProxy;
-instead of
-    RooRealProxy realProxy;
-in RooFit classes, the above code can be simplified to
-    pdfProxy->fitTo(...);
+```
+  RooTemplateProxy<RooAbsPdf> pdfProxy; // instead of "RooRealProxy realProxy;"
+```
+the above code can be simplified to
+```
+  pdfProxy->fitTo(...);
+```
 
 Check the [doxygen reference guide](https://root.cern.ch/doc/master/classRooTemplateProxy.html) for `RooTemplateProxy` for
 more information on how to modernise old code.
+
+### Documentation updates
+- The documentation is now structured better. The functional parts like roofitcore, roofit, roostats, histfactory
+can now be found in [doxygen](https://root.cern.ch/doc/master/group__Roofitmain.html) with a similar structure as
+the [directory structure in git](https://github.com/root-project/root/tree/master/roofit).
+- Especially the hard-to-find command arguments that can be passed to various functions in RooFit now have
+[their own doxygen page](https://root.cern.ch/doc/master/group__CmdArgs.html).
+- Clarified and extended documentation for plotting PDFs:
+  - Since plotting PDFs can be tricky when special normalisation is required (e.g. because of blinding or fitting in side bands),
+    the documentation of [RooAbsPdf::plotOn()](https://root.cern.ch/doc/master/classRooAbsPdf.html#a7f01ccfb4f3bc3ad3b2bc1e3f30af535)
+    and the arguments it accepts was updated and clarified.
+  - The new tutorial [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/master/rf212__plottingInRanges__blinding_8C.html)
+    shows how to normalise a PDF if it has been fit only in a part of the plotting range.
+- Started grouping of interfaces that are public but not necessarily useful for "normal" in doxygen.
+Examples are [RooCategory](https://root.cern.ch/doc/master/classRooCategory.html) or the very broad public interface of
+[RooAbsArg](https://root.cern.ch/doc/master/classRooAbsArg.html),
+where the client-server interface that's only relevant for RooFit or the legacy interfaces are now split off.
+- Completely overhaul the documentation of [RooWorkspace's factory syntax](https://root.cern.ch/doc/master/classRooWorkspace.html#a0ddded1d65f5c6c4732a7a3daa8d16b0).
+- Make [SPlot](https://root.cern.ch/doc/master/classRooStats_1_1SPlot.html) documentation understandable.
+- Clarify different constructors of [RooRealVars](https://root.cern.ch/doc/master/classRooRealVar.html#aa1483bd1c3e7b5792765043f6ac0a50f),
+  and how to make them constant or initialise them.
+- Add a tutorial about plotting with limited ranges [rf212_plottingInRanges_blinding](https://root.cern.ch/doc/master/rf212__plottingInRanges__blinding_8C.html)
+- Improve the tutorial for weighted fits, [rf611_weightedfits](https://root.cern.ch/doc/master/rf611__weightedfits_8C.html).
+
+### Etc.
+- Warn and fail better. Convert things that silently give the wrong results into things that fail noisily.
+  - When RooDataSet is read from a file, and there's a read error, the function now returns `nullptr` instead of an incomplete dataset.
+  - Better checking of invalid formulae in RooGenericPdf / RooFormulaVar. Using e.g. `RooFormulaVar(... "x+y", x);` silently
+    assumed that `y` is zero and constant.
+  - Ensure that the right number of coefficients is given for [RooAddPdf](https://root.cern.ch/doc/master/classRooAddPdf.html) (depends on
+    recursive/non-recursive fractions), and complain if that's not the case.
+- Add automatic conversions when reading values for variables from Trees. New are e.g. `ULong64_t, Long64_t, Short_t, UShort_t`.
+- [RooResolutionModel](https://root.cern.ch/doc/master/classRooResolutionModel.html) now also takes [RooLinearVar](https://root.cern.ch/doc/master/classRooLinearVar.html) as observables. With this, it is possible to easily scale and shift the observable used in the convolutions.
+- Add a [helper](https://root.cern.ch/doc/master/classRooHelpers_1_1LocalChangeMsgLevel.html) to locally/temporarily change RooFit's message
+level. This also includes an [object that can hijack](https://root.cern.ch/doc/master/classRooHelpers_1_1HijackMessageStream.html)
+all messages sent by a specific object or with specific topics.
 
 ### HistFactory
 
 #### Switch default statistical MC errors to Poisson
 When defining HistFactory samples with statistical errors from C++, e.g.
-    Sample background1( "background1", "background1", InputFile );
-    background1.ActivateStatError();
-statistical MC errors now have Poisson instead of Gaussian constraints. This better reflects the uncertainty of the MC simulations.
+```
+  Sample background1( "background1", "background1", InputFile );
+  background1.ActivateStatError();
+```
+statistical MC errors now default to Poisson instead of Gaussian constraints. This better reflects the uncertainty of the MC simulations,
+and now actually implements what is promised in the [HistFactory paper](https://cds.cern.ch/record/1456844). For large number of entries
+in a bin, this doesn't make a difference, but for bins with low statistics, it better reflects the "counting" nature of bins.
 This can be reverted as follows:
-    // C++:
-    Channel chan("channel1");
-    chan.SetStatErrorConfig( 0.05, "Gauss" );
-    // Within <Channel ... > XML:
-    <StatErrorConfig RelErrorThreshold="0.05" ConstraintType="Gauss" />
+```
+  // C++:
+  Channel chan("channel1");
+  chan.SetStatErrorConfig( 0.05, "Gauss" );
+```
+```
+  // Within a <Channel ... > XML:
+  <StatErrorConfig RelErrorThreshold="0.05" ConstraintType="Gauss" />
+```
 
 #### Less verbose HistFactory
 HistFactory was very verbose, writing to the terminal with lots of `cout`. Now, many HistFactory messages are going
-into RooFit's message stream number 2. The verbosity can therefore be adjusted using
-    RooMsgService::instance().getStream(2).minLevel = RooFit::PROGRESS;
+into [RooFit's message stream](https://root.cern.ch/doc/master/classRooMsgService.html) number 2.
+The verbosity can therefore be adjusted using
+```
+  RooMsgService::instance().getStream(2).minLevel = RooFit::PROGRESS;
+```
 
-`hist2workspace` is also much less verbose. The verbosity can be restored with `hist2workspace -v` or `-vv`.
+`hist2workspace` is also much less verbose. The verbosity can be restored with `hist2workspace -v` for intermediate verbosity
+or `-vv` for what it printed previously.
+
+
 
 ## 2D Graphics Libraries
 
