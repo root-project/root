@@ -928,6 +928,14 @@ N: Tomasz Sosnicki
 E: tom.sosnicki@gmail.com
 D: contribution to gviz3d/TStructViewer
 
+N: Thibault Souquet
+E: contact@thibaultsouquet.fr
+D: Image viewer for the ROOT Browser (v7)
+D: Breadcrumbs display for the ROOT Browser (v7)
+D: ROOT Browser (v7) drawing options
+D: Improvements in JavaScript ROOT GUI
+D: Improvements in the ROOT website Jekyll theme
+
 N: Marcelo Sousa
 E: marcelo.sousa@cern.ch
 D: Amazon S3 and Google Storage I/O plugins
