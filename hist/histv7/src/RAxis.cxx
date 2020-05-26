@@ -215,9 +215,9 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          ++sourceBin;
       }
 
-      // If any source bin does that, then the source->target bin mapping isn't
-      // trivial and the merge is lossy as some source regular bins will map
-      // into the infinite target underflow bin.
+      // If any source bin maps into the target underflow bin, then the
+      // source->target bin mapping isn't trivial and the merge is lossy as some
+      // source regular bins will map into the infinite target underflow bin.
       if (sourceBin > 1) {
          trivialRegularBinMapping = false;
          mergingIsLossy = true;
@@ -256,12 +256,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          return;
       }
 
-      // Find the first target bin which a source bin maps into
-      //
-      // We know that there will be one such bin, as we have checked that there
-      // is at least one target bin and that the source bins are not all located
-      // in the target overflow range.
-      //
+      // Prepare to iterate over target axis bins
       int targetBin = 1;
       double targetFrom = target.GetBinFrom(1);
       double targetTo = target.GetBinTo(1);
@@ -274,11 +269,19 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          targetTo = target.GetBinTo(targetBin);
          targetWidth = targetTo - targetFrom;
       };
+
+      // Find the first target bin which a source bin maps into
+      //
+      // We know that there will be one such bin, as we have checked that there
+      // is at least one target bin and that the source bins are not all located
+      // in the target overflow range.
+      //
       // NOTE: We can afford not to use the true next target bin width here,
       //       which simplifies the code quite a bit, because we do not care
       //       whether the comparison returns 0 or >= 0 on the right hand side
       //       of the targetTo bin border. We only care about it returning <0,
       //       which is fully determined by the left side tolerance.
+      //
       while (CompareBinBorders(sourceMin, targetTo, targetWidth, -1.) >= 0) {
          nextTargetBin();
       }
@@ -288,10 +291,10 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // Iterate over source bins, advancing the target bin index as needed,
       // until either axis has been fully covered
       //
-      // One loop invariant here is that anytime a loop iteration begins,
-      // sourceBin designates a source bin for which we haven't studied that
-      // target bin mappings, and targetBin designates the first bin which
-      // sourceBin maps into.
+      // The key loop invariant here is that anytime a loop iteration begins,
+      // sourceBin designates a source bin which we haven't studied (underflow
+      // bin mapping aside), and targetBin designates the first target axis bin
+      // which sourceBin maps into.
       //
       for (; sourceBin <= numSourceBins; ++sourceBin) {
          // Get the source bin's limits

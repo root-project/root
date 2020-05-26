@@ -707,8 +707,6 @@ public:
    /// Since histogram merging has asymmetric properties, this axis is the
    /// target axis, and the other axis is the source axis.
    ///
-   // TODO: Write the implementation
-   //
    // TODO: Figure out proper way to allow performance-motivated overrides, as
    //       I did for HasSameBinning. Most likely some kind of CompareBinBorders
    //       virtual method?
