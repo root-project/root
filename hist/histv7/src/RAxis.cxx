@@ -60,8 +60,10 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       return BinningCmpResult();
    } else if (target_lbl_ptr) {
       const auto lbl_cmp = target_lbl_ptr->CompareBinLabels(*source_lbl_ptr);
-      return BinningCmpResult(lbl_cmp & RAxisLabels::kLabelsCmpSuperset,
-                              lbl_cmp & RAxisLabels::kLabelsCmpDisordered);
+      return BinningCmpResult(
+         LabeledBinningCmpResult(lbl_cmp & RAxisLabels::kLabelsCmpSuperset,
+                                 lbl_cmp & RAxisLabels::kLabelsCmpDisordered)
+      );
    }
    // If control reached this point, then we know that both the source and the
    // target axis use numerical bin borders
@@ -389,14 +391,16 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       regularBinBijection && (source.CanGrow() == target.CanGrow());
 
    // Produce the final result of the numerical axis binning comparison
-   return BinningCmpResult(trivialRegularBinMapping,
-                           regularBinBijection,
-                           fullBinBijection,
-                           mergingIsLossy,
-                           regularBinAliasing,
-                           needEmptyUnderflow,
-                           needEmptyOverflow,
-                           targetMustGrow);
+   return BinningCmpResult(
+      NumericBinningCmpResult(trivialRegularBinMapping,
+                              regularBinBijection,
+                              fullBinBijection,
+                              mergingIsLossy,
+                              regularBinAliasing,
+                              needEmptyUnderflow,
+                              needEmptyOverflow,
+                              targetMustGrow)
+   );
 }
 
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept

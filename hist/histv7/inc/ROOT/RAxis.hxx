@@ -431,32 +431,23 @@ public:
    /// return `kInvalidBin`.
    virtual int GetBinIndexForLowEdge(double x) const noexcept = 0;
 
-   /// Result of an axis binning comparison
-   //
-   // TODO: Replace with std::variant of two bitfields once RHist goes C++17
-   //
-   class BinningCmpResult {
+   /// Result of comparing two axes with numerical bin borders
+   class NumericBinningCmpResult {
    public:
-      // === CONSTRUCTORS ===
-
-      /// Case where two axes of incompatible types were compared
-      BinningCmpResult() : fKind(Kind::kIncompatible) {}
-
-      /// Case where two axes using numerical bin borders were compared
+      /// Build a numerical binning comparison result
       ///
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      BinningCmpResult(bool trivialRegularBinMapping,
-                       bool regularBinBijection,
-                       bool fullBinBijection,
-                       bool mergingIsLossy,
-                       bool regularBinAliasing,
-                       bool needEmptyUnderflow,
-                       bool needEmptyOverflow,
-                       bool targetMustGrow)
-         : fKind(Kind::kNumeric)
-         , fFlags(trivialRegularBinMapping * kTrivialRegularBinMapping
+      NumericBinningCmpResult(bool trivialRegularBinMapping,
+                              bool regularBinBijection,
+                              bool fullBinBijection,
+                              bool mergingIsLossy,
+                              bool regularBinAliasing,
+                              bool needEmptyUnderflow,
+                              bool needEmptyOverflow,
+                              bool targetMustGrow)
+         : fFlags(trivialRegularBinMapping * kTrivialRegularBinMapping
                   + regularBinBijection * kRegularBinBijection
                   + fullBinBijection * kFullBinBijection
                   + mergingIsLossy * kMergingIsLossy
@@ -466,59 +457,7 @@ public:
                   + targetMustGrow * kTargetMustGrow)
       {}
 
-      /// Case where two RAxisLabels were compared
-      ///
-      /// See the methods of this class for a more detailed description of what
-      /// each of these flags mean.
-      ///
-      BinningCmpResult(bool sourceOnlyLabels,
-                       bool disorderedLabels)
-         : fKind(Kind::kLabels)
-         , fFlags(sourceOnlyLabels * kSourceOnlyLabels
-                  + disorderedLabels * kDisorderedLabels)
-      {}
-
-      // === AXIS COMPARISON CLASSIFICATION ===
-
-      /// Broad classification of possible axis comparisons
-      enum class CmpKind {
-         /// Two axes using a fundamentally incompatible binning scheme (e.g.
-         /// `RAxisIrregular` vs `RAxisLabels`) were compared
-         ///
-         /// It is impossible to automatically merge two histograms when the
-         /// axis types for some dimension differ so much.
-         ///
-         kIncompatible,
-
-         /// Two axes using numerical bin borders (e.g. `RAxisIrregular` vs
-         /// `RAxisEquidistant`) were compared
-         ///
-         /// In this case, bin borders are compared up to a certain tolerance,
-         /// and differences are only reported when the source axis bin borders
-         /// are not within that tolerance of the closest target bin border.
-         ///
-         /// The ability to automatically merge two histograms with numerical
-         /// bin borders depends on many factors, and may not decidable without
-         /// looking at the details of the source histogram's bin contents.
-         ///
-         kNumeric,
-
-         /// Two `RAxisLabels` were compared
-         ///
-         /// It is always possible to automatically merge two histograms if all
-         /// of their axes use labeled bins.
-         ///
-         kLabels,
-      };
-
-      /// Kind of axis comparison that was carried out
-      CmpKind Kind() const noexcept { return fKind; }
-
-      // === NUMERICAL AXIS COMPARISON ===
-      //
-      // The following properties may only be queried when comparing two axes
-      // with numerical bin borders (i.e. `Kind()` is `CmpKind::kNumeric`),
-      // attempting to read them otherwise will lead to a run-time error.
+      NumericBinningCmpResult(const NumericBinningCmpResult&) = default;
 
       /// Truth that there is a trivial mapping from the indices of the source
       /// axis's regular bins to those of the target axis
@@ -534,7 +473,6 @@ public:
       //       conversions in an histogram merging implementation.
       //
       bool HasTrivialRegularBinMapping() const {
-         CheckKind(CmpKind::kNumeric);
          return fFlags & kTrivialRegularBinMapping;
       }
 
@@ -553,7 +491,6 @@ public:
       //       bin index conversions in the histogram merging implementation.
       //
       bool HasRegularBinBijection() const {
-         CheckKind(CmpKind::kNumeric);
          assert(HasTrivialRegularBinMapping());
          return fFlags & kRegularBinBijection;
       }
@@ -588,7 +525,6 @@ public:
       //       common case of merging two histograms with identical axis config.
       //
       bool HasFullBinBijection() const {
-         CheckKind(CmpKind::kNumeric);
          assert(HasRegularBinBijection());
          return fFlags & kFullBinBijection;
       }
@@ -615,7 +551,6 @@ public:
       //           Target axis bins: |---|---|
       //
       bool MergingIsLossy() const {
-         CheckKind(CmpKind::kNumeric);
          return fFlags & kMergingIsLossy;
       }
 
@@ -637,7 +572,6 @@ public:
       //       merging implementation will have to error out.
       //
       bool HasRegularBinAliasing() const {
-         CheckKind(CmpKind::kNumeric);
          return fFlags & kRegularBinAliasing;
       }
 
@@ -647,7 +581,6 @@ public:
       /// This property may only be true if the source axis has underflow bins.
       ///
       bool MergingNeedsEmptyUnderflow() const {
-         CheckKind(CmpKind::kNumeric);
          return fFlags & kNeedEmptyUnderflow;
       }
 
@@ -657,7 +590,6 @@ public:
       /// This property may only be true if the source axis has overflow bins.
       ///
       bool MergingNeedsEmptyOverflow() const {
-         CheckKind(CmpKind::kNumeric);
          return fFlags & kNeedEmptyOverflow;
       }
 
@@ -675,65 +607,11 @@ public:
       //       performance point of view.
       //
       bool MergingNeedsTargetGrowth() const {
-         CheckKind(CmpKind::kNumeric);
          return fFlags & kTargetMustGrow;
       }
 
-      // === LABELED AXIS COMPARISON ===
-      //
-      // The following properties may only be queried when two axes with labeled
-      // bins are compared (i.e. `Kind()` is `CmpKind::kLabels`), attempting to
-      // read them otherwise will lead to a run-time error.
-
-      /// The source axis has labels that the target axis doesn't have
-      ///
-      /// These labels will need to be added to the target axis before histogram
-      /// data merging becomes possible.
-      ///
-      // NOTE: We aren't reporting existence of target-specific labels because
-      //       this does not affect merging, is largely irrelevant to the user,
-      //       and takes some CPU cycles to figure out.
-      //
-      bool SourceHasExtraLabels() const {
-         CheckKind(CmpKind::kLabels);
-         return fFlags & kSourceOnlyLabels;
-      }
-
-      /// The common subset of labels in the source and target axes is not
-      /// ordered in the same way
-      ///
-      /// The histogram implementation will need to either perform an
-      /// order-insensitive bin merge or reorder target axis labels (and
-      /// associated bin data) so that it matches the order of source bins.
-      ///
-      /// Any reordering should be performed after adding missing source axis
-      /// labels (see `SourceHasExtraLabels()`) to the target axis.
-      ///
-      bool LabelOrderDiffers() const {
-         CheckKind(CmpKind::kLabels);
-         return fFlags & kDisorderedLabels;
-      }
-
-
    private:
-      /// Kind of axis comparison that was carried out
-      CmpKind fKind;
-
-      /// Check that the axis comparison kind is correct in preparation to
-      /// querying a binning property which is specific to that axis kind
-      void CheckKind(CmpKind expectedKind) const;
-
-      /// Axis comparison details
-      ///
-      /// These flags must be interpreted according to the value of fKind, as
-      /// specified in their documentation. They are what's queried by the
-      /// boolean property accessors of this class.
-      ///
       enum Flags {
-         // === NUMERIC-SPECIFIC FLAGS ===
-         //
-         // The following flags are only present when fKind is CmpKind::kNumeric
-
          // The mapping from source to target regular bin indices is trivial
          kTrivialRegularBinMapping = 1 << 0,
 
@@ -768,6 +646,155 @@ public:
          // Common source/target bin labels are not ordered in the same way
          kDisorderedLabels = 1 << 1,
       } fFlags;
+   };
+
+
+   /// Result of comparing two labeled axis
+   class LabeledBinningCmpResult {
+   public:
+      /// Build a labeled axis comparison result
+      ///
+      /// See the methods of this class for a more detailed description of what
+      /// each of these flags mean.
+      ///
+      LabeledBinningCmpResult(bool sourceOnlyLabels,
+                              bool disorderedLabels)
+         : fFlags(sourceOnlyLabels * kSourceOnlyLabels
+                  + disorderedLabels * kDisorderedLabels)
+      {}
+
+      LabeledBinningCmpResult(const LabeledBinningCmpResult&) = default;
+
+      /// The source axis has labels that the target axis doesn't have
+      ///
+      /// These labels will need to be added to the target axis before histogram
+      /// data merging becomes possible.
+      ///
+      // NOTE: We aren't reporting existence of target-specific labels because
+      //       this does not affect merging, is largely irrelevant to the user,
+      //       and takes some CPU cycles to figure out.
+      //
+      bool SourceHasExtraLabels() const {
+         CheckKind(CmpKind::kLabels);
+         return fFlags & kSourceOnlyLabels;
+      }
+
+      /// The common subset of labels in the source and target axes is not
+      /// ordered in the same way
+      ///
+      /// The histogram implementation will need to either perform an
+      /// order-insensitive bin merge or reorder target axis labels (and
+      /// associated bin data) so that it matches the order of source bins.
+      ///
+      /// Any reordering should be performed after adding missing source axis
+      /// labels (see `SourceHasExtraLabels()`) to the target axis.
+      ///
+      bool LabelOrderDiffers() const {
+         CheckKind(CmpKind::kLabels);
+         return fFlags & kDisorderedLabels;
+      }
+
+   private:
+      enum Flags {
+         // The source axis has labels that the target axis doesn't have
+         kSourceOnlyLabels = 1 << 0,
+
+         // Common source/target bin labels are not ordered in the same way
+         kDisorderedLabels = 1 << 1,
+      } fFlags;
+   };
+
+   /// Result of an axis binning comparison
+   //
+   // TODO: Replace with std::variant once RHist goes C++17
+   //
+   class BinningCmpResult {
+   public:
+      /// Case where two axes of incompatible types were compared
+      BinningCmpResult() : fKind(Kind::kIncompatible) {}
+
+      /// Case where two axes using numerical bin borders were compared
+      ///
+      /// See the methods of this class for a more detailed description of what
+      /// each of these flags mean.
+      ///
+      BinningCmpResult(NumericBinningCmpResult numeric)
+         : fKind(Kind::kNumeric)
+         , fInner.numeric(numeric)
+      {}
+
+      /// Case where two RAxisLabels were compared
+      ///
+      /// See the methods of this class for a more detailed description of what
+      /// each of these flags mean.
+      ///
+      BinningCmpResult(LabeledBinningCmpResult labeled)
+         : fKind(Kind::kLabeled)
+         , fInner.labeled(labeled)
+      {}
+
+      /// Broad classification of possible axis comparisons
+      enum class CmpKind {
+         /// Two axes using a fundamentally incompatible binning scheme (e.g.
+         /// `RAxisIrregular` vs `RAxisLabels`) were compared
+         ///
+         /// It is impossible to automatically merge two histograms when the
+         /// axis types for some dimension differ so much.
+         ///
+         kIncompatible,
+
+         /// Two axes using numerical bin borders (e.g. `RAxisIrregular` vs
+         /// `RAxisEquidistant`) were compared
+         ///
+         /// In this case, bin borders are compared up to a certain tolerance,
+         /// and differences are only reported when the source axis bin borders
+         /// are not within that tolerance of the closest target bin border.
+         ///
+         /// The ability to automatically merge two histograms with numerical
+         /// bin borders depends on many factors, and may not decidable without
+         /// looking at the details of the source histogram's bin contents.
+         ///
+         kNumeric,
+
+         /// Two `RAxisLabels` were compared
+         ///
+         /// It is always possible to automatically merge two histograms if all
+         /// of their axes use labeled bins.
+         ///
+         kLabeled,
+      };
+
+      /// Kind of axis comparison that was carried out
+      CmpKind Kind() const noexcept { return fKind; }
+
+      /// Get the detailed result of a numerical axis comparison
+      NumericBinningCmpResult GetNumeric() {
+         CheckKind(CmpKind::kNumeric);
+         return fInner.numeric;
+      }
+
+      /// Get the detailed result of a labeled axis comparison
+      LabeledBinningCmpResult GetLabeled() {
+         CheckKind(CmpKind::kLabeled);
+         return fInner.labeled;
+      }
+
+   private:
+      /// Kind of axis comparison that was carried out
+      CmpKind fKind;
+
+      /// Check that the axis comparison kind is correct in preparation to
+      /// querying a binning property which is specific to that axis kind
+      void CheckKind(CmpKind expectedKind) const;
+
+      /// Details of the axis comparison results
+      union {
+         // Valid if fKind is CmpKind::kNumeric
+         NumericBinningCmpResult numeric;
+
+         // Valid if fKind is CmpKind::kLabeled
+         LabeledBinningCmpResult labeled;
+      } fInner;
    };
 
    /// Compare the binning of this axis with that of another axis for the
