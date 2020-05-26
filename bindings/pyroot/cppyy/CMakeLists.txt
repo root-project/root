@@ -4,8 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
-
 add_subdirectory(cppyy-backend)
 add_subdirectory(CPyCppyy)
 add_subdirectory(cppyy)
