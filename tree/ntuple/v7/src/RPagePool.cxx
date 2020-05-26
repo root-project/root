@@ -27,6 +27,13 @@ void ROOT::Experimental::Detail::RPagePool::RegisterPage(const RPage &page, cons
    fDeleters.emplace_back(deleter);
 }
 
+void ROOT::Experimental::Detail::RPagePool::PreloadPage(const RPage &page, const RPageDeleter &deleter)
+{
+   fPages.emplace_back(page);
+   fReferences.emplace_back(0);
+   fDeleters.emplace_back(deleter);
+}
+
 void ROOT::Experimental::Detail::RPagePool::ReturnPage(const RPage& page)
 {
    if (page.IsNull()) return;
@@ -54,7 +61,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage
 {
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fReferences[i] == 0) continue;
+      if (fReferences[i] < 0) continue;
       if (fPages[i].GetColumnId() != columnId) continue;
       if (!fPages[i].Contains(globalIndex)) continue;
       fReferences[i]++;
@@ -68,7 +75,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage
 {
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
-      if (fReferences[i] == 0) continue;
+      if (fReferences[i] < 0) continue;
       if (fPages[i].GetColumnId() != columnId) continue;
       if (!fPages[i].Contains(clusterIndex)) continue;
       fReferences[i]++;
