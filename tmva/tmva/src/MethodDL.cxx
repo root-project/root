@@ -197,29 +197,16 @@ void MethodDL::DeclareOptions()
    AddPreDefVal(TString("CUDNN"));     // not needed (by default GPU is now CUDNN if available)
 
    // define training stratgey separated by a separator "|"
-   DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-1,"
-                                              "Momentum=0.3,"
-                                              "Repetitions=3,"
-                                              "ConvergenceSteps=50,"
+   DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-3,"
+                                              "Momentum=0.0,"
+                                              "ConvergenceSteps=100,"
+                                              "MaxEpochs=2000,"
+                                              "Optimizer=ADAM,"
                                               "BatchSize=30,"
                                               "TestRepetitions=7,"
                                               "WeightDecay=0.0,"
                                               "Regularization=None,"
-                                              "DropConfig=0.0,"
-                                              "DropRepetitions=5"
-                                              "|"
-                                              "LearningRate=1e-4,"
-                                              "Momentum=0.3,"
-                                              "Repetitions=3,"
-                                              "ConvergenceSteps=50,"
-                                              "MaxEpochs=2000,"
-                                              "BatchSize=20,"
-                                              "TestRepetitions=7,"
-                                              "WeightDecay=0.001,"
-                                              "Regularization=L2,"
-                                              "DropConfig=0.0+0.5+0.5,"
-                                              "DropRepetitions=5,"
-                                              "Multithreading=True",
+                                              "DropConfig=0.0"
                     "TrainingStrategy", "Defines the training strategies.");
 }
 
@@ -374,15 +361,6 @@ void MethodDL::ProcessOptions()
          // incorrect.
          settings.optimizer = DNN::EOptimizer::kAdam;
          settings.optimizerName = "ADAM";
-      }
-
-
-      TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
-
-      if (strMultithreading.BeginsWith("T")) {
-         settings.multithreading = true;
-      } else {
-         settings.multithreading = false;
       }
 
       fTrainingSettings.push_back(settings);
