@@ -510,19 +510,13 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 /// In case of error, return true.
 Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws) 
 {  
-  std::list<RooAbsData*> allData = ws.allEmbeddedData() ;
-  std::list<RooAbsData*>::const_iterator iter ;
-  for (iter = allData.begin() ; iter != allData.end() ; ++iter) {
-    // If your dataset is already in this workspace nothing needs to be done
-    if (*iter == _dataHist) {
-      return kFALSE ;
-    }
-  }
-
   // Check if dataset with given name already exists
   RooAbsData* wsdata = ws.embeddedData(_dataHist->GetName()) ;
 
   if (wsdata) {
+    // If our data is exactly the same, we are done:
+    if (static_cast<RooDataHist*>(wsdata) == _dataHist)
+      return false;
 
     // Yes it exists - now check if it is identical to our internal histogram 
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
