@@ -93,8 +93,6 @@ foreach(val RANGE ${how_many_pythons})
   set(libname ROOTPythonizations${python_under_version_string})
 
   add_library(${libname} SHARED ${cpp_sources})
-  # Set the suffix to '.so' and the prefix to 'lib'
-  set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
   if(APPLE)
     target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy${python_under_version_string})
   elseif(NOT MSVC)

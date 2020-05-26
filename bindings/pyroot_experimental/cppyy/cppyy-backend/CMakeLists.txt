@@ -28,7 +28,6 @@ foreach(val RANGE ${how_many_pythons})
   set(libname cppyy_backend${python_under_version_string})
 
   add_library(${libname} SHARED clingwrapper/src/clingwrapper.cxx)
-
   target_link_libraries(${libname} Core ${CMAKE_DL_LIBS})
 
   # cppyy uses ROOT headers from binary directory
