@@ -79,8 +79,20 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    const double sourceMin = source.GetMinimum();
    const double sourceMax = source.GetMaximum();
    const int numSourceBins = source.GetNBinsNoOver();
-   const bool growLeft = (CompareBinBorders(sourceMin, GetMinimum()) < 0);
-   const bool growRight = (CompareBinBorders(sourceMax, GetMaximum()) > 0);
+   // NOTE: We do not need to correctly specify the bin width of the first/last
+   //       bin in those comparisons because we only care about whether the
+   //       source min/max is beyond the target min/max, and for this purpose
+   //       the bin width on the other side of the target min/max is irrelevant.
+   const bool growLeft =
+      (CompareBinBorders(sourceMin,
+                         GetMinimum(),
+                         kNoBinWidth,
+                         kNoBinWidth) < 0);
+   const bool growRight =
+      (CompareBinBorders(sourceMax,
+                         GetMaximum(),
+                         kNoBinWidth,
+                         kNoBinWidth) > 0);
    const bool targetMustGrow = CanGrow() && (growLeft || growRight);
    if (targetMustGrow) {
       // FIXME: This is leveraging the fact that the only kind of growable axis
@@ -90,13 +102,16 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          throw std::runtime_error("No access to RAxisGrow bin width from "
             "RAxisBase if target axis has zero bins!");
       }
-      const double targetBinWidth = GetBinTo(1) - GetMinimum();
+      const double targetBinWidth = GetBinTo(GetFirstBin()) - GetMinimum();
 
       const double leftGrowth =
          static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
       int leftBins = std::floor(leftGrowth / targetBinWidth);
       double leftBorder = GetMinimum() - leftBins*targetBinWidth;
-      if (CompareBinBorders(sourceMin, leftBorder) < 0) {
+      if (CompareBinBorders(sourceMin,
+                            leftBorder,
+                            kNoBinWidth,
+                            kNoBinWidth) < 0) {
          ++leftBins;
          leftBorder -= targetBinWidth;
       }
@@ -105,7 +120,10 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          static_cast<double>(growRight) * (sourceMax - GetMaximum());
       int rightBins = std::floor(rightGrowth / targetBinWidth);
       double rightBorder = GetMaximum() + rightBins*targetBinWidth;
-      if (CompareBinBorders(sourceMax, rightBorder) > 0) {
+      if (CompareBinBorders(sourceMax,
+                            rightBorder,
+                            kNoBinWidth,
+                            kNoBinWidth) > 0) {
          ++rightBins;
          rightBorder += targetBinWidth;
       }
@@ -127,19 +145,19 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    const double firstTargetBinWidth =
       (numTargetBins > 0)
          ? (target.GetBinTo(target.GetFirstBin()) - targetMin)
-         : -1.;
+         : kNoBinWidth;
    const int minComparison = CompareBinBorders(sourceMin,
                                                targetMin,
-                                               -1.,
+                                               kNoBinWidth,
                                                firstTargetBinWidth);
    const double lastTargetBinWidth =
       (numTargetBins > 0)
          ? (targetMax - target.GetBinFrom(target.GetLastBin()))
-         : -1.;
+         : kNoBinWidth;
    const int maxComparison = CompareBinBorders(sourceMax,
                                                targetMax,
                                                lastTargetBinWidth,
-                                               -1.);
+                                               kNoBinWidth);
 
    // Check if the source underflow and overflow bins must be empty
    //
@@ -180,9 +198,15 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // Handle the edge case where all regular source axis bins are located
       // either before or after the end of the target axis.
       const bool sourceBeforeTarget =
-         (CompareBinBorders(sourceMax, targetMin, -1., firstTargetBinWidth) <= 0);
+         (CompareBinBorders(sourceMax,
+                            targetMin,
+                            kNoBinWidth,
+                            firstTargetBinWidth) <= 0);
       const bool sourceAfterTarget =
-         (CompareBinBorders(sourceMin, targetMax, lastTargetBinWidth, -1.) >= 0);
+         (CompareBinBorders(sourceMin,
+                            targetMax,
+                            lastTargetBinWidth,
+                            kNoBinWidth) >= 0);
       if (sourceBeforeTarget || sourceAfterTarget) {
          // The source axis has at least one regular bin, and it will be merged
          // into a conceptually infinite target under/overflow bin, so an
@@ -207,18 +231,18 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // at least one source bin and that not all source bins are fully in the
       // underflow range of the target axis.
       //
-      int sourceBin = 1;
+      int sourceBin = source.GetFirstBin();
       while (CompareBinBorders(source.GetBinTo(sourceBin),
                                targetMin,
-                               -1.,
+                               kNoBinWidth,
                                firstTargetBinWidth) <= 0) {
          ++sourceBin;
       }
 
-      // If any source bin maps into the target underflow bin, then the
+      // If any source bin mapped into the target underflow bin, then the
       // source->target bin mapping isn't trivial and the merge is lossy as some
       // source regular bins will map into the infinite target underflow bin.
-      if (sourceBin > 1) {
+      if (sourceBin > source.GetFirstBin()) {
          trivialRegularBinMapping = false;
          mergingIsLossy = true;
       }
@@ -228,7 +252,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // and this source bin must be empty for a merge to be possible.
       if (CompareBinBorders(source.GetBinFrom(sourceBin),
                             targetMin,
-                            -1.,
+                            kNoBinWidth,
                             firstTargetBinWidth) < 0) {
          regularBinAliasing = true;
       }
@@ -257,11 +281,11 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       }
 
       // Prepare to iterate over target axis bins
-      int targetBin = 1;
-      double targetFrom = target.GetBinFrom(1);
-      double targetTo = target.GetBinTo(1);
+      int targetBin = target.GetFirstBin();
+      double targetFrom = target.GetBinFrom(targetBin);
+      double targetTo = target.GetBinTo(targetBin);
       double targetBinWidth = firstTargetBinWidth;
-      double prevTargetBinWidth = -1.;
+      double prevTargetBinWidth = kNoBinWidth;
       auto nextTargetBin = [&] {
          ++targetBin;
          prevTargetWidth = targetWidth;
@@ -282,7 +306,10 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       //       of the targetTo bin border. We only care about it returning <0,
       //       which is fully determined by the left side tolerance.
       //
-      while (CompareBinBorders(sourceMin, targetTo, targetWidth, -1.) >= 0) {
+      while (CompareBinBorders(sourceMin,
+                               targetTo,
+                               targetWidth,
+                               kNoBinWidth) >= 0) {
          nextTargetBin();
       }
       // At this point, we know that sourceBin maps into targetBin, and that
@@ -325,7 +352,10 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          // NOTE: As before, we can use the wrong bin width on the right here
          //       because we only want to discriminate <0 vs >=0, not >0 vs ==0,
          //       and thus we only need the left bin width to be correct.
-         while (CompareBinBorders(sourceTo, targetTo, targetWidth, -1.) >= 0) {
+         while (CompareBinBorders(sourceTo,
+                                  targetTo,
+                                  targetWidth,
+                                  kNoBinWidth) >= 0) {
             if (targetBin < numTargetBins) {
                nextTargetBin();
             } else {
@@ -353,7 +383,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
             lastBinCmpResult = CompareBinBorders(sourceTo,
                                                  targetMax,
                                                  lastTargetBinWidth,
-                                                 -1.);
+                                                 kNoBinWidth);
          } else {
             // If we managed to find a targetBin which extends beyond the end of
             // the current sourceBin, then we must check if this bin still

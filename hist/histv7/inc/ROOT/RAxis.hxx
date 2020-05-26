@@ -117,6 +117,10 @@ protected:
       return true;
    }
 
+   /// Placeholder bin width to be used in CompareBinBorders when there is no
+   /// bin or the width of that bin is irrelevant.
+   constexpr static const double kNoBinWidth = -1.;
+
    /// Compare two axis bin borders
    ///
    /// Given a source axis bin border position, a target axis bin border
@@ -127,15 +131,17 @@ protected:
    ///
    /// If there is no regular bin on one side of the target axis bin border, if
    /// it is an under/overflow bin, or if you do not care about the result on
-   /// that side, please leave the corresponding bin width to a negative value.
+   /// that side of the target bin border, please set the corresponding bin
+   /// width to kNoBinWidth.
    ///
    static int CompareBinBorders(double sourceBorder,
                                 double targetBorder,
-                                double leftTargetBinWidth = -1.,
-                                double rightTargetBinWidth = -1.) {
-      // Current tolerance policy when there is no bin on one side
-      if (leftTargetBinWidth < 0.) leftTargetBinWidth = 1.;
-      if (rightTargetBinWidth < 0.) rightTargetBinWidth = 1.;
+                                double leftTargetBinWidth,
+                                double rightTargetBinWidth) {
+      // Current tolerance policy when there is no bin width on one side is to
+      // treat the unknown bin width as a bin width of 1.
+      if (leftTargetBinWidth == kNoBinWidth) leftTargetBinWidth = 1.;
+      if (rightTargetBinWidth == kNoBinWidth) rightTargetBinWidth = 1.;
 
       // Perform an approximate bin border comparison
       const double sourceOffset = sourceBorder - targetBorder;
