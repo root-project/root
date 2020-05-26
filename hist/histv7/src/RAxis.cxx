@@ -49,6 +49,11 @@ void ROOT::Experimental::RAxisBase::BinningCmpResult::CheckKind(CmpKind expected
 ROOT::Experimental::RAxisBase::BinningCmpFlags
 ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const {
    // Handle labeled axis edge case
+   //
+   // NOTE: This must be handled at the axis base class level, because C++ does
+   //       not provide a way to dispatch at runtime based on _both_ types of
+   //       the `this` and `source` axes.
+   //
    const auto target_lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
    const auto source_lbl_ptr = dynamic_cast<const RAxisLabels*>(&source);
    if (bool(target_lbl_ptr) != bool(source_lbl_ptr)) {
@@ -71,30 +76,38 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //
    RAxisGrow targetAfterGrowth;
    const RAxisBase* targetPtr = *this;
-   const bool growLeft = (CompareBinBorders(source.GetMinimum(), GetMinimum()) < 0);
-   const bool growRight = (CompareBinBorders(source.GetMaximum(), GetMaximum()) > 0);
+   const double sourceMin = source.GetMinimum();
+   const double sourceMax = source.GetMaximum();
+   const int numSourceBins = source.GetNBinsNoOver();
+   const bool growLeft = (CompareBinBorders(sourceMin, GetMinimum()) < 0);
+   const bool growRight = (CompareBinBorders(sourceMax, GetMaximum()) > 0);
    const bool targetMustGrow = CanGrow() && (growLeft || growRight);
    if (targetMustGrow) {
-      // NOTE: This is leveraging the fact that the only kind of growable axis
-      //       currently in existence, RAxisGrow, has equidistant bin borders
-      const double binWidth = GetBinTo(1) - GetMinimum();
+      // FIXME: This is leveraging the fact that the only kind of growable axis
+      //        currently in existence, RAxisGrow, has equidistant bin borders.
+      //        And it also doesn't work when the target axis has zero bins.
+      if (GetNBinsNoOver() == 0) {
+         throw std::runtime_error("No access to RAxisGrow bin width from "
+            "RAxisBase if target axis has zero bins!");
+      }
+      const double targetBinWidth = GetBinTo(1) - GetMinimum();
 
       const double leftGrowth =
-         static_cast<double>(growLeft) * (GetMinimum() - source.GetMinimum());
-      int leftBins = std::floor(leftGrowth / binWidth);
-      double leftBorder = GetMinimum() - leftBins*binWidth;
-      if (CompareBinBorders(source.GetMinimum(), leftBorder) < 0) {
+         static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
+      int leftBins = std::floor(leftGrowth / targetBinWidth);
+      double leftBorder = GetMinimum() - leftBins*targetBinWidth;
+      if (CompareBinBorders(sourceMin, leftBorder) < 0) {
          ++leftBins;
-         leftBorder -= binWidth;
+         leftBorder -= targetBinWidth;
       }
 
       const double rightGrowth =
-         static_cast<double>(growRight) * (source.GetMaximum() - GetMaximum());
-      int rightBins = std::floor(rightGrowth / binWidth);
-      double rightBorder = GetMaximum() + rightBins*binWidth;
-      if (CompareBinBorders(source.GetMaximum(), rightBorder) > 0) {
+         static_cast<double>(growRight) * (sourceMax - GetMaximum());
+      int rightBins = std::floor(rightGrowth / targetBinWidth);
+      double rightBorder = GetMaximum() + rightBins*targetBinWidth;
+      if (CompareBinBorders(sourceMax, rightBorder) > 0) {
          ++rightBins;
-         rightBorder += binWidth;
+         rightBorder += targetBinWidth;
       }
 
       targetAfterGrowth =
@@ -104,20 +117,28 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       targetPtr = &targetAfterGrowth;
    }
    const RAxisBase& target = *targetPtr;
+   const double targetMin = target.GetMinimum();
+   const double targetMax = target.GetMaximum();
+   const int numTargetBins = target.GetNBinsNoOver();
    // From this point on, must use "target" reference instead of the "this"
    // pointer or any implicit calls to this axis' methods.
 
    // Compare the positions of the minima/maxima of the source and target axes
-   const double firstBinWidth = target.GetBinTo(1) - target.GetMinimum();
-   const int minComparison = CompareBinBorders(source.GetMinimum(),
-                                               target.GetMinimum(),
+   const double firstTargetBinWidth =
+      (numTargetBins > 0)
+         ? (target.GetBinTo(target.GetFirstBin()) - targetMin)
+         : -1.;
+   const int minComparison = CompareBinBorders(sourceMin,
+                                               targetMin,
                                                -1.,
-                                               firstBinWidth);
-   const double lastBinWidth =
-      target.GetMaximum() - target.GetBinFrom(target.GetNBinsNoOver());
-   const int maxComparison = CompareBinBorders(source.GetMaximum(),
-                                               target.GetMaximum(),
-                                               lastBinWidth,
+                                               firstTargetBinWidth);
+   const double lastTargetBinWidth =
+      (numTargetBins > 0)
+         ? (targetMax - target.GetBinFrom(target.GetLastBin()))
+         : -1.;
+   const int maxComparison = CompareBinBorders(sourceMax,
+                                               targetMax,
+                                               lastTargetBinWidth,
                                                -1.);
 
    // Check if the source underflow and overflow bins must be empty
@@ -130,7 +151,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //   In this case, both the source underflow and overflow bins must be empty.
    // - Either of these source bins map into multiple target bins, which in the
    //   presence of target under/overflow bins happens if they cover at least
-   //   one target regular bin modulo bin comparison tolerance.
+   //   one target regular/under/overflow bin modulo bin comparison tolerance.
    //
    const bool sourceHasUnderOver = !source.CanGrow();
    const bool needEmptyUnderOver = sourceHasUnderOver && target.CanGrow();
@@ -139,36 +160,250 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    const bool needEmptyUnderflow = needEmptyUnderOver || sourceUnderflowAliasing;
    const bool needEmptyOverflow = needEmptyUnderOver || sourceOverflowAliasing;
 
-   // Check for lossy merge of source under/overflow bins (if any)
+   // Check for any lossy merge of source under/overflow bins
+   //
+   // We'll then need to update this variable to account for the lossiness of
+   // merging source regular bins into target bins.
+   //
    bool mergingIsLossy =
       sourceHasUnderOver && ((minComparison < 0) || (maxComparison > 0));
 
    // Now, time to look at regular bins.
-   //
-   // TODO: Finish the implementation. Must compute regularBinAliasing and
-   //       trivialRegularBinMapping and keep updating mergingIsLossy
-   //
-   //       The general algorithm should look like this:
-   //       - Iterate over source bins until target axis minimum is covered
-   //          * If >1 source bins, including the source underflow bin, map into
-   //            the target underflow bin, then the merge is lossy
-   //          * If we need to iterate, then the bin mapping isn't trivial
-   //       - Iterate over target bins until source bin is covered
-   //          * If the source underflow bin maps into >1 target bin(s), then
-   //            ... haven't we checked it already?
-   //          * If we need to iterate, then the bin mapping isn't trivial
-   //       - Jointly iterate over source/target until reaching the end of one
-   //       - Final update to booleans depending on remaining bins on each side
-   //
-   //       This should be extracted into a lambda to permit early exit when
-   //       either the end of the source of the target axis is reached.
-   //
-   throw std::runtime_error("Not implemented yet!");
+   bool trivialRegularBinMapping = true;
+   bool regularBinAliasing = false;
+   [&] {
+      // Handle the edge case where the source axis has no regular bin
+      if (numSourceBins == 0) {
+         return;
+      }
+
+      // Handle the edge case where all regular source axis bins are located
+      // either before or after the end of the target axis.
+      const bool sourceBeforeTarget =
+         (CompareBinBorders(sourceMax, targetMin, -1., firstTargetBinWidth) <= 0);
+      const bool sourceAfterTarget =
+         (CompareBinBorders(sourceMin, targetMax, lastTargetBinWidth, -1.) >= 0);
+      if (sourceBeforeTarget || sourceAfterTarget) {
+         // The source axis has at least one regular bin, and it will be merged
+         // into a conceptually infinite target under/overflow bin, so an
+         // histogram merge from the source to the target loses information.
+         mergingIsLossy = true;
+
+         // Unless the source axis has no bin, it is pretty clear that its first
+         // regular bin will not map into the first regular target bin, so the
+         // mapping from source to target regular bin indices cannot be trivial.
+         trivialRegularBinMapping = false;
+
+         // On the other hand, since all source regular bins map into the target
+         // overflow bin, it is clear that no source regular bin maps into
+         // multiple target bins, so we can leave regularBinAliasing at `false`.
+         return;
+      }
+
+      // Find the first source bin which doesn't completely map into the target
+      // underflow bin.
+      //
+      // We know that there is one such bin, as we have checked that there is
+      // at least one source bin and that not all source bins are fully in the
+      // underflow range of the target axis.
+      //
+      int sourceBin = 1;
+      while (CompareBinBorders(source.GetBinTo(sourceBin),
+                               targetMin,
+                               -1.,
+                               firstTargetBinWidth) <= 0) {
+         ++sourceBin;
+      }
+
+      // If any source bin does that, then the source->target bin mapping isn't
+      // trivial and the merge is lossy as some source regular bins will map
+      // into the infinite target underflow bin.
+      if (sourceBin > 1) {
+         trivialRegularBinMapping = false;
+         mergingIsLossy = true;
+      }
+
+      // If the selected source bin partially maps into the target underflow
+      // bin, then it covers both target underflow and regular/overflow range,
+      // and this source bin must be empty for a merge to be possible.
+      if (CompareBinBorders(source.GetBinFrom(sourceBin),
+                            targetMin,
+                            -1.,
+                            firstTargetBinWidth) < 0) {
+         regularBinAliasing = true;
+      }
+      // At this point, we have taken care of mappings from the first source
+      // regular bins to the target underflow bin. What we have left to do is to
+      // handle the mapping of remaining source bins, starting from the current
+      // one, into target regular and overflow bins.
+
+      // Handle the edge case where the target axis has no regular bin
+      if (numTargetBins == 0) {
+         // There is at least one regular source bin, and the only target bins
+         // that it can map into are the infinite underflow and overflow bins.
+         // Therefore, this histogram merge is lossy.
+         mergingIsLossy = true;
+
+         // The mapping from source to target bins is obviously nontrivial,
+         // since the first source bin (which is known to exist) cannot map into
+         // the nonexistent first target bin.
+         trivialRegularBinMapping = false;
+
+         // Whether there is regular bin aliasing is fully determined by the
+         // computation that was carried out above, since the boundary between
+         // target underflow and overflow is the only place on the target axis
+         // where a source bin can map into multiple target bins.
+         return;
+      }
+
+      // Find the first target bin which a source bin maps into
+      //
+      // We know that there will be one such bin, as we have checked that there
+      // is at least one target bin and that the source bins are not all located
+      // in the target overflow range.
+      //
+      int targetBin = 1;
+      double targetFrom = target.GetBinFrom(1);
+      double targetTo = target.GetBinTo(1);
+      double targetBinWidth = firstTargetBinWidth;
+      double prevTargetBinWidth = -1.;
+      auto nextTargetBin = [&] {
+         ++targetBin;
+         prevTargetWidth = targetWidth;
+         targetFrom = targetTo;
+         targetTo = target.GetBinTo(targetBin);
+         targetWidth = targetTo - targetFrom;
+      };
+      // NOTE: We can afford not to use the true next target bin width here,
+      //       which simplifies the code quite a bit, because we do not care
+      //       whether the comparison returns 0 or >= 0 on the right hand side
+      //       of the targetTo bin border. We only care about it returning <0,
+      //       which is fully determined by the left side tolerance.
+      while (CompareBinBorders(sourceMin, targetTo, targetWidth, -1.) >= 0) {
+         nextTargetBin();
+      }
+      // At this point, we know that sourceBin maps into targetBin, and that
+      // targetBin is the first bin on the target axis which sourceBin maps to.
+
+      // Iterate over source bins, advancing the target bin index as needed,
+      // until either axis has been fully covered
+      //
+      // One loop invariant here is that anytime a loop iteration begins,
+      // sourceBin designates a source bin for which we haven't studied that
+      // target bin mappings, and targetBin designates the first bin which
+      // sourceBin maps into.
+      //
+      for (; sourceBin <= numSourceBins; ++sourceBin) {
+         // Get the source bin's limits
+         const double sourceFrom = source.GetBinFrom(sourceBin);
+         const double sourceTo = source.GetBinTo(sourceBin);
+
+         // Does the source->target bin mapping remain trivial so far?
+         if (targetBin == sourceBin) {
+            trivialRegularBinMapping = true;
+         }
+
+         // Does the first target bin cover nontrivial extra range on the left
+         // of the source bin?
+         if (CompareBinBorders(sourceFrom,
+                               targetFrom,
+                               prevTargetWidth,
+                               targetWidth) > 0) {
+            // If so, some information about the position of past source
+            // histogram fills will be lost upon merging
+            mergingIsLossy = true;
+         }
+
+         // Next, iterate over target bins until the end of the target axis is
+         // reached or we find a target bin which extends beyond the end of the
+         // current source bin
+         bool endOfTargetAxis = false;
+         const int firstTargetBin = targetBin;
+         // NOTE: As before, we can use the wrong bin width on the right here
+         //       because we only want to discriminate <0 vs >=0, not >0 vs ==0,
+         //       and thus we only need the left bin width to be correct.
+         while (CompareBinBorders(sourceTo, targetTo, targetWidth, -1.) >= 0) {
+            if (targetBin < numTargetBins) {
+               nextTargetBin();
+            } else {
+               endOfTargetAxis = true;
+               break;
+            }
+         }
+
+         // Whether iteration succeeded or failed, we know that every targetBin
+         // that was covered by iteration, with the possible exception of the
+         // current target, is a bin that the source bin maps into.
+         int numCoveredBins = targetBin - firstTargetBin;
+
+         // Next, we need to tell which other bins the source bin maps into
+         int lastBinCmpResult;
+         if (endOfTarget) {
+            // If the end of the target axis was reached, then we know that
+            // sourceBin maps into the current targetBin, because we didn't
+            // manage to find a targetBin which even extends beyond the end of
+            // the current sourceBin.
+            ++numCoveredBins;
+
+            // In that case, however, we need to check if the current source bin
+            // maps into the target overflow bin.
+            lastBinCmpResult = CompareBinBorders(sourceTo,
+                                                 targetMax,
+                                                 lastTargetBinWidth,
+                                                 -1.);
+         } else {
+            // If we managed to find a targetBin which extends beyond the end of
+            // the current sourceBin, then we must check if this bin still
+            // covers some of the current sourceBin range on the left.
+            lastBinCmpResult = CompareBinBorders(sourceTo,
+                                                 targetFrom,
+                                                 prevTargetWidth,
+                                                 targetWidth);
+         }
+
+         // Does the current source bin map into the current targetBin or into
+         // the target overflow bin?
+         if (lastBinCmpResult > 0) {
+            // If so, then that's one more covered bin...
+            ++numCoveredBins;
+
+            // ...and we map into another bin that, by definition, spans some
+            // extra range, so the merge loses fill location information.
+            mergingIsLossy = true;
+         }
+
+         // If the current source bin maps into multiple target bins, then it
+         // must be empty for histogram merging to succeed.
+         if (numCoveredBins > 1) {
+            regularBinAliasing = true;
+         }
+
+         // If the end of the target axis was reached, then we must abort the
+         // loop, as we cannot maintain the loop invariant that at the beginning
+         // of a loop iteration, `targetBin` must be the first bin which the
+         // active `sourceBin` maps into.
+         if (endOfTarget) break;
+      }
+
+      // Was the end of the target axis reached w/o covering all source bins?
+      if (sourceBin < numSourceBins) {
+         // In that case, the extra source bins map into the infinite target
+         // overflow bin, so the merge loses information...
+         mergingIsLossy = true;
+
+         // ...and these source bins do not map into target bins with the same
+         // indices, so the bin index mapping is nontrivial
+         trivialRegularBinMapping = false;
+
+         // Any aliasing, including with the target overflow bin, was already
+         // detected by the source bin iteration code above
+         return;
+      }
+   }();
 
    // Compute the remaining properties that we need
    const bool regularBinBijection =
-      trivialRegularBinMapping
-      && (target.GetNBinsNoOver() == source.GetNBinsNoOver());
+      trivialRegularBinMapping && (numTargetBins == numSourceBins);
    const bool fullBinBijection =
       regularBinBijection && (source.CanGrow() == target.CanGrow());
 
