@@ -922,20 +922,15 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
       if (string("REMOVAL_DUMMY")==arg->GetName()) {
 
-	if (arg->getAttribute("REMOVE_ALL")) {
-// 	  cout << "RooAbsArg::redir including remove_all node " << arg->GetName() << endl ;
-	  newSet->add(*arg) ;
-	} else if (arg->getAttribute(Form("REMOVE_FROM_%s",getStringAttribute("ORIGNAME")))) {
-// 	  cout << "RooAbsArg::redir including remove_from_" << GetName() << " node " << arg->GetName() << endl ;
-	  newSet->add(*arg) ;
-	}
+        if (arg->getAttribute("REMOVE_ALL")) {
+          newSet->add(*arg) ;
+        } else if (arg->getAttribute(Form("REMOVE_FROM_%s",getStringAttribute("ORIGNAME")))) {
+          newSet->add(*arg) ;
+        }
       } else {
-	newSet->add(*arg) ;
+        newSet->add(*arg) ;
       }
     }
-
-//     cout << "RooAbsArg::redirect with name change(" << GetName() << ") newSet = " << newSet << " origSet = " << newSetOrig << endl ;
-
   } else {
     newSet = (RooAbsCollection*) &newSetOrig ;
   }
@@ -968,13 +963,13 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
     if (newServer && _verboseDirty) {
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
-			     << " redirected from " << oldServer << " to " << newServer << endl ;
+			         << " redirected from " << oldServer << " to " << newServer << endl ;
     }
 
     if (!newServer) {
       if (mustReplaceAll) {
         coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
-			       << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
+			           << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
         ret = kTRUE ;
       }
       continue ;
@@ -985,7 +980,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
     };
     bool propValue = std::any_of(origServerValue.begin(), origServerValue.end(), findByNamePtr);
     bool propShape = std::any_of(origServerShape.begin(), origServerShape.end(), findByNamePtr);
-    // cout << "replaceServer with name " << oldServer->GetName() << " old=" << oldServer << " new=" << newServer << endl ;
+
     if (newServer != this) {
       replaceServer(*oldServer,*newServer,propValue,propShape) ;
     }
@@ -1004,8 +999,8 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
     if (mustReplaceAll && !ret2) {
       auto ap = dynamic_cast<const RooArgProxy*>(p);
       coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
-          << "): ERROR, proxy '" << p->name()
-          << "' with arg '" << (ap ? ap->absArg()->GetName() : "<could not cast>") << "' could not be adjusted" << endl;
+              << "): ERROR, proxy '" << p->name()
+              << "' with arg '" << (ap ? ap->absArg()->GetName() : "<could not cast>") << "' could not be adjusted" << endl;
       ret = kTRUE ;
     }
   }
@@ -1047,16 +1042,16 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 
       // Check if any match was found
       if (tmp->getSize()==0) {
-	delete tmp ;
-	return 0 ;
+        delete tmp ;
+        return 0 ;
       }
 
       // Check if match is unique
       if(tmp->getSize()>1) {
-	coutF(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->getSize() << " servers with "
-			     << nameAttrib << " attribute" << endl ;
-	tmp->Print("v") ;
-	assert(0) ;
+        coutF(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->getSize() << " servers with "
+            << nameAttrib << " attribute" << endl ;
+        tmp->Print("v") ;
+        assert(0) ;
       }
 
       // use the unique element in the set
