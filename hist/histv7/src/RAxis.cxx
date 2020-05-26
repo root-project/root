@@ -79,20 +79,10 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    const double sourceMin = source.GetMinimum();
    const double sourceMax = source.GetMaximum();
    const int numSourceBins = source.GetNBinsNoOver();
-   // NOTE: We do not need to correctly specify the bin width of the first/last
-   //       bin in those comparisons because we only care about whether the
-   //       source min/max is beyond the target min/max, and for this purpose
-   //       the bin width on the other side of the target min/max is irrelevant.
    const bool growLeft =
-      (CompareBinBorders(sourceMin,
-                         GetMinimum(),
-                         kNoBinWidth,
-                         kNoBinWidth) < 0);
+      (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
    const bool growRight =
-      (CompareBinBorders(sourceMax,
-                         GetMaximum(),
-                         kNoBinWidth,
-                         kNoBinWidth) > 0);
+      (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) < 0);
    const bool targetMustGrow = CanGrow() && (growLeft || growRight);
    if (targetMustGrow) {
       // FIXME: This is leveraging the fact that the only kind of growable axis
@@ -111,7 +101,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       if (CompareBinBorders(sourceMin,
                             leftBorder,
                             kNoBinWidth,
-                            kNoBinWidth) < 0) {
+                            targetBinWidth) < 0) {
          ++leftBins;
          leftBorder -= targetBinWidth;
       }
@@ -122,7 +112,7 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       double rightBorder = GetMaximum() + rightBins*targetBinWidth;
       if (CompareBinBorders(sourceMax,
                             rightBorder,
-                            kNoBinWidth,
+                            targetBinWidth,
                             kNoBinWidth) > 0) {
          ++rightBins;
          rightBorder += targetBinWidth;
@@ -135,29 +125,17 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       targetPtr = &targetAfterGrowth;
    }
    const RAxisBase& target = *targetPtr;
-   const double targetMin = target.GetMinimum();
-   const double targetMax = target.GetMaximum();
    const int numTargetBins = target.GetNBinsNoOver();
    // From this point on, must use "target" reference instead of the "this"
    // pointer or any implicit calls to this axis' methods.
 
    // Compare the positions of the minima/maxima of the source and target axes
-   const double firstTargetBinWidth =
-      (numTargetBins > 0)
-         ? (target.GetBinTo(target.GetFirstBin()) - targetMin)
-         : kNoBinWidth;
-   const int minComparison = CompareBinBorders(sourceMin,
-                                               targetMin,
-                                               kNoBinWidth,
-                                               firstTargetBinWidth);
-   const double lastTargetBinWidth =
-      (numTargetBins > 0)
-         ? (targetMax - target.GetBinFrom(target.GetLastBin()))
-         : kNoBinWidth;
-   const int maxComparison = CompareBinBorders(sourceMax,
-                                               targetMax,
-                                               lastTargetBinWidth,
-                                               kNoBinWidth);
+   const int minComparison = target.ComparePosToBinBorder(sourceMin,
+                                                          target.GetFirstBin(),
+                                                          BinSide::kFrom);
+   const int maxComparison = target.ComparePosToBinBorder(sourceMax,
+                                                          target.GetLastBin(),
+                                                          BinSide::kTo);
 
    // Check if the source underflow and overflow bins must be empty
    //
@@ -198,15 +176,13 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // Handle the edge case where all regular source axis bins are located
       // either before or after the end of the target axis.
       const bool sourceBeforeTarget =
-         (CompareBinBorders(sourceMax,
-                            targetMin,
-                            kNoBinWidth,
-                            firstTargetBinWidth) <= 0);
+         (target.ComparePosToBinBorder(sourceMax,
+                                       target.GetFirstBin(),
+                                       BinSide::kFrom) <= 0);
       const bool sourceAfterTarget =
-         (CompareBinBorders(sourceMin,
-                            targetMax,
-                            lastTargetBinWidth,
-                            kNoBinWidth) >= 0);
+         (target.ComparePosToBinBorder(sourceMin,
+                                       target.GetLastBin(),
+                                       BinSide::kTo) >= 0);
       if (sourceBeforeTarget || sourceAfterTarget) {
          // The source axis has at least one regular bin, and it will be merged
          // into a conceptually infinite target under/overflow bin, so an
@@ -232,17 +208,16 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // underflow range of the target axis.
       //
       int sourceBin = source.GetFirstBin();
-      while (CompareBinBorders(source.GetBinTo(sourceBin),
-                               targetMin,
-                               kNoBinWidth,
-                               firstTargetBinWidth) <= 0) {
+      while (target.ComparePosToBinBorder(source.GetBinTo(sourceBin),
+                                          target.GetFirstBin(),
+                                          BinSide::kFrom) <= 0) {
          ++sourceBin;
       }
 
-      // If any source bin mapped into the target underflow bin, then the
+      // If any source bin mapped into the target underflow bin like this, the
       // source->target bin mapping isn't trivial and the merge is lossy as some
       // source regular bins will map into the infinite target underflow bin.
-      if (sourceBin > source.GetFirstBin()) {
+      if (sourceBin != source.GetFirstBin()) {
          trivialRegularBinMapping = false;
          mergingIsLossy = true;
       }
@@ -250,10 +225,9 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       // If the selected source bin partially maps into the target underflow
       // bin, then it covers both target underflow and regular/overflow range,
       // and this source bin must be empty for a merge to be possible.
-      if (CompareBinBorders(source.GetBinFrom(sourceBin),
-                            targetMin,
-                            kNoBinWidth,
-                            firstTargetBinWidth) < 0) {
+      if (target.ComparePosToBinBorder(source.GetBinFrom(sourceBin),
+                                       target.GetFirstBin(),
+                                       BinSide::kFrom) < 0) {
          regularBinAliasing = true;
       }
       // At this point, we have taken care of mappings from the first source
@@ -280,37 +254,17 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
          return;
       }
 
-      // Prepare to iterate over target axis bins
-      int targetBin = target.GetFirstBin();
-      double targetFrom = target.GetBinFrom(targetBin);
-      double targetTo = target.GetBinTo(targetBin);
-      double targetBinWidth = firstTargetBinWidth;
-      double prevTargetBinWidth = kNoBinWidth;
-      auto nextTargetBin = [&] {
-         ++targetBin;
-         prevTargetWidth = targetWidth;
-         targetFrom = targetTo;
-         targetTo = target.GetBinTo(targetBin);
-         targetWidth = targetTo - targetFrom;
-      };
-
       // Find the first target bin which a source bin maps into
       //
       // We know that there will be one such bin, as we have checked that there
       // is at least one target bin and that the source bins are not all located
       // in the target overflow range.
       //
-      // NOTE: We can afford not to use the true next target bin width here,
-      //       which simplifies the code quite a bit, because we do not care
-      //       whether the comparison returns 0 or >= 0 on the right hand side
-      //       of the targetTo bin border. We only care about it returning <0,
-      //       which is fully determined by the left side tolerance.
-      //
-      while (CompareBinBorders(sourceMin,
-                               targetTo,
-                               targetWidth,
-                               kNoBinWidth) >= 0) {
-         nextTargetBin();
+      int targetBin = target.GetFirstBin();
+      while (target.ComparePosToBinBorder(sourceMin,
+                                          targetBin,
+                                          BinSide::kTo) >= 0) {
+         ++targetBin;
       }
       // At this point, we know that sourceBin maps into targetBin, and that
       // targetBin is the first bin on the target axis which sourceBin maps to.
@@ -335,29 +289,25 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
 
          // Does the first target bin cover nontrivial extra range on the left
          // of the source bin?
-         if (CompareBinBorders(sourceFrom,
-                               targetFrom,
-                               prevTargetWidth,
-                               targetWidth) > 0) {
+         if (target.ComparePosToBinBorder(sourceFrom,
+                                          targetBin,
+                                          BinSide::kFrom) > 0) {
             // If so, some information about the position of past source
             // histogram fills will be lost upon merging
             mergingIsLossy = true;
          }
 
-         // Next, iterate over target bins until the end of the target axis is
-         // reached or we find a target bin which extends beyond the end of the
-         // current source bin
+         // Next, iterate over target bins until we find a target bin which
+         // extends beyond the end of the current source bin (and therefore
+         // into the next source bin, if any) or we reach the end of the target
+         // axis in attempting to do so.
          bool endOfTargetAxis = false;
          const int firstTargetBin = targetBin;
-         // NOTE: As before, we can use the wrong bin width on the right here
-         //       because we only want to discriminate <0 vs >=0, not >0 vs ==0,
-         //       and thus we only need the left bin width to be correct.
-         while (CompareBinBorders(sourceTo,
-                                  targetTo,
-                                  targetWidth,
-                                  kNoBinWidth) >= 0) {
+         while (target.ComparePosToBinBorders(sourceTo,
+                                              targetBin,
+                                              BinSide::kTo) >= 0) {
             if (targetBin < numTargetBins) {
-               nextTargetBin();
+               ++targetBin;
             } else {
                endOfTargetAxis = true;
                break;
@@ -380,18 +330,16 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
 
             // In that case, however, we need to check if the current source bin
             // maps into the target overflow bin.
-            lastBinCmpResult = CompareBinBorders(sourceTo,
-                                                 targetMax,
-                                                 lastTargetBinWidth,
-                                                 kNoBinWidth);
+            lastBinCmpResult = target.ComparePosToBinBorder(sourceTo,
+                                                            target.GetLastBin(),
+                                                            BinSide::kTo);
          } else {
             // If we managed to find a targetBin which extends beyond the end of
             // the current sourceBin, then we must check if this bin still
             // covers some of the current sourceBin range on the left.
-            lastBinCmpResult = CompareBinBorders(sourceTo,
-                                                 targetFrom,
-                                                 prevTargetWidth,
-                                                 targetWidth);
+            lastBinCmpResult = target.ComparePosToBinBorder(sourceTo,
+                                                            targetBin,
+                                                            BinSide::kFrom);
          }
 
          // Does the current source bin map into the current targetBin or into

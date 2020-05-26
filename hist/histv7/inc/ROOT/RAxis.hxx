@@ -153,6 +153,76 @@ protected:
       }
    }
 
+   /// Enum for specifying a side of a bin
+   enum class BinSide {
+      /// Left side of a bin
+      kFrom,
+
+      /// Right side of a bin
+      kTo,
+   }
+
+   /// Compare an axis position with a bin border of this axis
+   ///
+   /// Given a position of interest, a bin number, and a BinSide indicating
+   /// which side of the bin we're talking about, tell if the point of interest
+   /// is located strictly before (-1), at about the same position (0) or
+   /// strictly after (+1) the bin border of interest.
+   ///
+   /// This is a higher-level alternative to CompareBinBorders().
+   ///
+   int ComparePosToBinBorder(double x, int bin, BinSide side) {
+      // Handle underflow bin edge case
+      if (bin == kUnderflowBin) {
+         switch (side) {
+            case BinSide::kFrom:
+               // Everything is after the underflow bin's "left edge", -inf
+               return 1;
+            case BinSide::kTo:
+               return ComparePosToBinBorder(x, GetFirstBin(), BinSide::kFrom);
+            default:
+               throw std::runtime_error("No such bin side");
+         }
+      }
+
+      // Handle overflow bin edge case
+      if (bin == kOverflowBin) {
+         switch (side) {
+            case BinSide::kFrom:
+               return ComparePosToBinBorder(x, GetLastBin(), BinSide::kTo);
+            case BinSide::kTo:
+               // Everything is before the overflow bin's "right edge", +inf
+               return -1;
+            default:
+               throw std::runtime_error("No such bin side");
+         }
+      }
+
+      // Get regular bin border comparison parameters
+      double borderPos, leftBinWidth, rightBinWidth;
+      switch (side) {
+         case BinSide::kFrom:
+            borderPos = GetBinFrom(bin);
+            leftBinWidth =
+               (bin > GetFirstBin()) ? (borderPos - GetBinFrom(bin-1))
+                                     : kNoBinWidth;
+            rightBinWidth = GetBinTo(bin) - borderPos;
+            break;
+         case BinSide::kTo:
+            borderPos = GetBinTo(bin);
+            leftBinWidth = borderPos - GetBinFrom(bin);
+            rightBinWidth =
+               (bin < GetLastBin()) ? (GetBinTo(bin+1) - borderPos)
+                                    : kNoBinWidth;
+            break;
+         default:
+            throw std::runtime_error("No such bin side");
+      }
+
+      // Perform an approximate bin border comparison
+      return CompareBinBorders(x, borderPos, leftBinWidth, rightBinWidth);
+   }
+
 public:
    /**
     \class const_iterator
