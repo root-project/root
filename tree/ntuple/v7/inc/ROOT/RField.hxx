@@ -940,7 +940,12 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
-   void CommitCluster() final { fNWritten = 0; }
+   void CommitCluster() final {
+        Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+        fColumns[0]->Append(elemIndex);
+        printf("commitCluster: just appended: %d\n", fNWritten);
+   }
+
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
@@ -971,8 +976,9 @@ protected:
          fSubFields[0]->Append(itemValue);
       }
       Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
-      fNWritten += count;
       fColumns[0]->Append(elemIndex);
+      printf("just appended: %d\n", fNWritten);
+      fNWritten += count;
    }
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();
@@ -1023,7 +1029,11 @@ public:
       if (!dtorOnly)
          free(vec);
    }
-   void CommitCluster() final { fNWritten = 0; }
+   void CommitCluster() final {
+        Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+        fColumns[0]->Append(elemIndex);
+        printf("just appended: %d\n", fNWritten);
+   }
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
 
@@ -1062,8 +1072,9 @@ protected:
          fSubFields[0]->Append(itemValue);
       }
       Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
-      fNWritten += count;
       fColumns[0]->Append(elemIndex);
+      printf("just appended: %d\n", fNWritten);
+      fNWritten += count;
    }
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();
@@ -1104,7 +1115,11 @@ public:
       if (!dtorOnly)
          free(vec);
    }
-   void CommitCluster() final { fNWritten = 0; }
+   void CommitCluster() final {
+        Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+        fColumns[0]->Append(elemIndex);
+        printf("just appended: %d\n", fNWritten);
+   }
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<bool>"; }
 

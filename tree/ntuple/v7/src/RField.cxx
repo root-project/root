@@ -448,8 +448,9 @@ void ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Experimenta
    auto length = typedValue->length();
    Detail::RColumnElement<char, EColumnType::kByte> elemChars(const_cast<char*>(typedValue->data()));
    fColumns[1]->AppendV(elemChars, length);
-   fIndex += length;
    fColumns[0]->Append(fElemIndex);
+   printf("just appended: %d\n", fIndex);
+   fIndex += length;
 }
 
 void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
@@ -470,7 +471,8 @@ void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
 
 void ROOT::Experimental::RField<std::string>::CommitCluster()
 {
-   fIndex = 0;
+   fColumns[0]->Append(fElemIndex);
+   printf("just appended: %d\n", fIndex);
 }
 
 void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -608,8 +610,9 @@ void ROOT::Experimental::RFieldVector::AppendImpl(const Detail::RFieldValue& val
       fSubFields[0]->Append(itemValue);
    }
    Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
-   fNWritten += count;
    fColumns[0]->Append(elemIndex);
+   printf("just appended: %d\n", fNWritten);
+   fNWritten += count;
 }
 
 void ROOT::Experimental::RFieldVector::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -674,7 +677,9 @@ ROOT::Experimental::RFieldVector::SplitValue(const Detail::RFieldValue &value) c
 
 void ROOT::Experimental::RFieldVector::CommitCluster()
 {
-   fNWritten = 0;
+   Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
+   fColumns[0]->Append(elemIndex);
+   printf("just appended: %d\n", fNWritten);
 }
 
 void ROOT::Experimental::RFieldVector::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -702,8 +707,9 @@ void ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Detail::RFi
       fSubFields[0]->Append(itemValue);
    }
    Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&fNWritten);
-   fNWritten += count;
    fColumns[0]->Append(elemIndex);
+   printf("just appended: %d\n", fNWritten);
+   fNWritten += count;
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue* value)

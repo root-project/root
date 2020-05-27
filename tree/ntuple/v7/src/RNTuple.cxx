@@ -205,8 +205,8 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster()
 {
    if (fNEntries == fLastCommitted) return;
    for (auto& field : *fModel->GetRootField()) {
-      field.Flush();
       field.CommitCluster();
+      field.Flush();
    }
    fSink->CommitCluster(fNEntries);
    fLastCommitted = fNEntries;

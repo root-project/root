@@ -195,25 +195,27 @@ public:
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
    void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
    {
-      auto idxStart = (globalIndex == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex - 1);
-      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
+      auto idxStart = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex);
+      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(globalIndex + 1);
       auto selfOffset = fCurrentPage.GetClusterInfo().GetIndexOffset();
       if (globalIndex == selfOffset) {
          // Passed cluster boundary
-         idxStart = 0;
+         // idxStart = 0;
+         printf("passed cluster boundary\n");
       }
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RClusterIndex(fCurrentPage.GetClusterInfo().GetId(), idxStart);
+      printf("global_info  | start: %d; end: %d size: %d collection_start: %u\n", idxStart, idxEnd, *collectionSize, collectionStart->GetIndex());
    }
 
    void GetCollectionInfo(const RClusterIndex &clusterIndex,
                           RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
    {
-      auto index = clusterIndex.GetIndex();
-      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex - 1);
-      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex);
+      auto idxStart = *Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex);
+      auto idxEnd = *Map<ClusterSize_t, EColumnType::kIndex>(clusterIndex + 1);
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RClusterIndex(clusterIndex.GetClusterId(), idxStart);
+      printf("cluster_info | start: %d; end: %d size: %d collection_start: %u\n", idxStart, idxEnd, *collectionSize, collectionStart->GetIndex());
    }
 
    /// Get the currently active cluster id
