@@ -219,10 +219,9 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Take a snap shot of current collection contents:
-/// An owning collection is returned containing clones of
-///
+/// A collection that owns its elements is returned containing clones of
 ///     - Elements in this collection
-///     - External dependents of all elements
+///     - External dependents of those elements
 ///       and recursively any dependents of those dependents
 ///       (if deepCopy flag is set)
 ///
