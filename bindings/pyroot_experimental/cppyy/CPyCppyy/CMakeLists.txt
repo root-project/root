@@ -59,8 +59,12 @@ foreach(val RANGE ${how_many_pythons})
   if(NOT MSVC)
     target_compile_options(${libname} PRIVATE
       -Wno-shadow -Wno-strict-aliasing)
+  else()
+    set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set_target_properties(${libname} PROPERTIES PREFIX "lib")
+    set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
   endif()
-  if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND NOT MSVC)
     target_compile_options(${libname} PRIVATE
       -Wno-unused-but-set-parameter)
   endif()

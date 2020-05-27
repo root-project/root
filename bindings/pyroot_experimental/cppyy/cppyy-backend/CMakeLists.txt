@@ -28,6 +28,11 @@ foreach(val RANGE ${how_many_pythons})
   set(libname cppyy_backend${python_under_version_string})
 
   add_library(${libname} SHARED clingwrapper/src/clingwrapper.cxx)
+  if(MSVC)
+    set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set_target_properties(${libname} PROPERTIES PREFIX "lib")
+    set_target_properties(${libname} PROPERTIES SUFFIX ".dll")
+  endif()
 
   target_link_libraries(${libname} Core ${CMAKE_DL_LIBS})
 

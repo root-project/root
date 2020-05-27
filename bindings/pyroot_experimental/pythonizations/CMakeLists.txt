@@ -93,6 +93,10 @@ foreach(val RANGE ${how_many_pythons})
   set(libname ROOTPythonizations${python_under_version_string})
 
   ROOT_LINKER_LIBRARY(${libname} ${cpp_sources} DEPENDENCIES Core Tree cppyy${python_under_version_string} CMAKENOEXPORT)
+  if(MSVC)
+    set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+    set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
+  endif()
 
   target_include_directories(${libname} PRIVATE ${python_include_dir})
 
