@@ -675,7 +675,7 @@ void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verb
 void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet) 
 {
   _cloneBranchList = &cloneBranchSet ;
-  _cloneBranchList->setHashTableSize(1000) ;
+  _cloneBranchList->useHashMapForFind(true);
 }
 
 

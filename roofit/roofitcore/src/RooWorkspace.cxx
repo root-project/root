@@ -501,7 +501,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Now create a working copy of the incoming object tree
-  RooArgSet* cloneSet = RooArgSet(inArg).snapshot(noRecursion==kFALSE) ;
+  RooArgSet* cloneSet = new RooArgSet();
+  cloneSet->useHashMapForFind(true); // Accelerate finding
+  RooArgSet(inArg).snapshot(*cloneSet, !noRecursion);
   RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
@@ -607,7 +609,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Now clone again with renaming effective
-  RooArgSet* cloneSet2 = (RooArgSet*) RooArgSet(*cloneTop).snapshot(noRecursion==kFALSE) ;
+  RooArgSet* cloneSet2 = new RooArgSet();
+  cloneSet2->useHashMapForFind(true); // Faster finding
+  RooArgSet(*cloneTop).snapshot(*cloneSet2, !noRecursion);
   RooAbsArg* cloneTop2 = cloneSet2->find(topName2.c_str()) ;
 
   // Make final check list of conflicting nodes
@@ -634,8 +638,6 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
       return kTRUE ;
     }
   }
-
-  if (cloneSet2->getSize()+_allOwnedNodes.getSize() > 999) _allOwnedNodes.setHashTableSize(1000);
 
   RooArgSet recycledNodes ;
   RooArgSet nodesToBeDeleted ;
