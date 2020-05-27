@@ -123,7 +123,9 @@ endif()
 
 # Test wrapping Python callables for use in C++ using numba
 if (dataframe)
+  if(NOT MSVC OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py)
+  endif()
 endif()
 
 # TComplex pythonizations
