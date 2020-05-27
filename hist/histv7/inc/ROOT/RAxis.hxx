@@ -17,6 +17,7 @@
 #define ROOT7_RAxis
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <limits>
 #include <string>
