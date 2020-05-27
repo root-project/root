@@ -90,34 +90,6 @@ protected:
       return (int)rawbin;
    }
 
-   /// Check if two axis have the same bin borders
-   ///
-   /// Default implementation should work for any RAxis type, but is quite
-   /// inefficient as it does virtual GetBinFrom calls in a loop. RAxis
-   /// implementations are encouraged to provide optimized overrides for common
-   /// axis binning comparison scenarios.
-   virtual bool HasSameBinBordersAs(const RAxisBase& other) const {
-      // Axis growability (and thus under/overflow bin existence) must match
-      if (CanGrow() != other.CanGrow())
-         return false;
-
-      // Number of normal bins must match
-      if (GetNBinsNoOver() != other.GetNBinsNoOver())
-         return false;
-
-      // Left borders of normal bins must match
-      for (int bin: *this)
-         if (GetBinFrom(bin) != other.GetBinFrom(bin))
-            return false;
-
-      // Right border of the last normal bin (aka maximum) must also match
-      if (GetMaximum() != other.GetMaximum())
-         return false;
-
-      // If all of these checks passed, the two axes have the same bin borders
-      return true;
-   }
-
    /// Placeholder bin width to be used in CompareBinBorders when there is no
    /// bin or the width of that bin is irrelevant.
    constexpr static const double kNoBinWidth = -1.;
@@ -661,13 +633,6 @@ public:
    /// Get the high end of the axis range.
    double GetMaximum() const { return GetBinTo(GetLastBin()); }
 
-   /// Check if two axes use the same binning convention, i.e.
-   ///
-   /// - Either they are both growable or neither of them is growable.
-   /// - Minimum, maximum, and all bin borders in the middle are the same.
-   /// - Bin labels must match (exactly including order, for now).
-   bool HasSameBinningAs(const RAxisBase& other) const;
-
    /// If the coordinate `x` is within 10 ULPs of a bin low edge coordinate,
    /// return the bin for which this is a low edge. If it's not a bin edge,
    /// return `kInvalidBin`.
@@ -937,9 +902,6 @@ protected:
       return nbinsNoOver / std::fabs(highOrLow - lowOrHigh);
    }
 
-   /// See RAxisBase::HasSameBinBordersAs
-   bool HasSameBinBordersAs(const RAxisBase& other) const override;
-
    /// Find the raw bin index (not adjusted) for the given coordinate.
    /// The resulting raw bin is 0-based.
    /// \note Passing a bin border coordinate can either return the bin above or
@@ -1141,9 +1103,6 @@ private:
    std::vector<double> fBinBorders;
 
 protected:
-   /// See RAxisBase::HasSameBinBordersAs
-   bool HasSameBinBordersAs(const RAxisBase& other) const override;
-
    /// Find the raw bin index (not adjusted) for the given coordinate `x`.
    /// The resulting raw bin is 1-based.
    /// \note Passing a bin border coordinate can either return the bin above or
@@ -1396,31 +1355,6 @@ struct AxisConfigToType<RAxisConfig::kLabels> {
 };
 
 } // namespace Internal
-
-// TODO: Rework CanMap to take RAxisBase as input and call CompareBinning inside
-
-///\name Axis Compatibility
-///\{
-enum class EAxisCompatibility {
-   kIdentical, ///< Source and target axes are identical
-
-   kContains, ///< The source is a subset of bins of the target axis
-
-   /// The bins of the source axis have finer granularity, but the bin borders
-   /// are compatible. Example:
-   /// source: 0., 1., 2., 3., 4., 5., 6.; target: 0., 2., 5., 6.
-   /// Note that this is *not* a symmetrical property: only one of
-   /// CanMerge(source, target), CanMap(target, source) can return kContains.
-   kSampling,
-
-   /// The source axis and target axis have different binning. Example:
-   /// source: 0., 1., 2., 3., 4., target: 0., 0.1, 0.2, 0.3, 0.4
-   kIncompatible
-};
-
-/// Whether (and how) the source axis can be merged into the target axis.
-EAxisCompatibility CanMap(const RAxisEquidistant &target, const RAxisEquidistant &source) noexcept;
-///\}
 
 } // namespace Experimental
 } // namespace ROOT
