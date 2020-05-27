@@ -375,53 +375,47 @@ bool ROOT::Experimental::RAxisEquidistant::HasSameBinBordersAs(const RAxisBase& 
 
 ROOT::Experimental::RAxisBase::NumericBinningCmpResult
 ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) const {
-   // If the target is growable and must grow, simulate that growth first
-   //
-   // FIXME: Leverage the fact that we're now in RAxisGrow to remove hacks
-   //
-   RAxisGrow targetAfterGrowth;
-   const RAxisBase* targetPtr = *this;
+   // Convenience shorthands
    const double sourceMin = source.GetMinimum();
    const double sourceMax = source.GetMaximum();
+
+   // Prepare to simulate axis growth if need be
+   RAxisGrow targetAfterGrowth;
+   const RAxisGrow* targetPtr = *this;
+
+   // Check if axis growth is needed
    const bool growLeft =
       (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
    const bool growRight =
       (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) < 0);
-   const bool targetMustGrow = CanGrow() && (growLeft || growRight);
-   if (targetMustGrow) {
-      // FIXME: This is leveraging the fact that the only kind of growable axis
-      //        currently in existence, RAxisGrow, has equidistant bin borders.
-      //        And it also doesn't work when the target axis has zero bins.
-      if (GetNBinsNoOver() == 0) {
-         throw std::runtime_error("No access to RAxisGrow bin width from "
-            "RAxisBase if target axis has zero bins!");
-      }
-      const double targetBinWidth = GetBinTo(GetFirstBin()) - GetMinimum();
-
+   if (growLeft || growRight) {
+      // Simulate axis growth on the left-hand side
       const double leftGrowth =
          static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
-      int leftBins = std::floor(leftGrowth / targetBinWidth);
-      double leftBorder = GetMinimum() - leftBins*targetBinWidth;
+      int leftBins = std::floor(leftGrowth / GetBinWidth());
+      double leftBorder = GetMinimum() - leftBins*GetBinWidth()
       if (CompareBinBorders(sourceMin,
                             leftBorder,
                             kNoBinWidth,
-                            targetBinWidth) < 0) {
+                            GetBinWidth()) < 0) {
          ++leftBins;
-         leftBorder -= targetBinWidth;
+         leftBorder -= GetBinWidth();
       }
 
+      // Simulate axis growth on the right-hand side
       const double rightGrowth =
          static_cast<double>(growRight) * (sourceMax - GetMaximum());
-      int rightBins = std::floor(rightGrowth / targetBinWidth);
-      double rightBorder = GetMaximum() + rightBins*targetBinWidth;
+      int rightBins = std::floor(rightGrowth / GetBinWidth());
+      double rightBorder = GetMaximum() + rightBins*GetBinWidth();
       if (CompareBinBorders(sourceMax,
                             rightBorder,
-                            targetBinWidth,
+                            GetBinWidth(),
                             kNoBinWidth) > 0) {
          ++rightBins;
-         rightBorder += targetBinWidth;
+         rightBorder += GetBinWidth();
       }
 
+      // Build simulated grown axis and inject it into targetPtr
       targetAfterGrowth =
          RAxisGrow(GetNBinsNoOver() + leftBins + rightBins,
                    leftBorder,
@@ -429,7 +423,7 @@ ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) 
       targetPtr = &targetAfterGrowth;
    }
 
-   // Call back binning comparison hook on the grown axis
+   // Call back binning comparison hook on the possibly grown axis
    return targetPtr->CompareNumericalBinningAfterGrowth(source, targetMustGrow);
 }
 
