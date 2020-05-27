@@ -21,73 +21,6 @@
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
-ROOT::Experimental::RAxisBase::NumericBinningCmpResult
-ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) const {
-   // If the target is growable and must grow, simulate that growth first
-   //
-   // TODO: Move this code to a growable axis specific customization point which
-   //       is implemented by RAxisGrow, this way we get 1/direct access to the
-   //       bin width and its inverse and 2/growth (heh) headroom for a possible
-   //       future where the current equidistant RAxisGrow would not be the only
-   //       kind of growable axis.
-   //
-   // FIXME: Implement this at the RAxisGrow layer instead
-   //
-   RAxisGrow targetAfterGrowth;
-   const RAxisBase* targetPtr = *this;
-   const double sourceMin = source.GetMinimum();
-   const double sourceMax = source.GetMaximum();
-   const bool growLeft =
-      (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
-   const bool growRight =
-      (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) < 0);
-   const bool targetMustGrow = CanGrow() && (growLeft || growRight);
-   if (targetMustGrow) {
-      // FIXME: This is leveraging the fact that the only kind of growable axis
-      //        currently in existence, RAxisGrow, has equidistant bin borders.
-      //        And it also doesn't work when the target axis has zero bins.
-      if (GetNBinsNoOver() == 0) {
-         throw std::runtime_error("No access to RAxisGrow bin width from "
-            "RAxisBase if target axis has zero bins!");
-      }
-      const double targetBinWidth = GetBinTo(GetFirstBin()) - GetMinimum();
-
-      const double leftGrowth =
-         static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
-      int leftBins = std::floor(leftGrowth / targetBinWidth);
-      double leftBorder = GetMinimum() - leftBins*targetBinWidth;
-      if (CompareBinBorders(sourceMin,
-                            leftBorder,
-                            kNoBinWidth,
-                            targetBinWidth) < 0) {
-         ++leftBins;
-         leftBorder -= targetBinWidth;
-      }
-
-      const double rightGrowth =
-         static_cast<double>(growRight) * (sourceMax - GetMaximum());
-      int rightBins = std::floor(rightGrowth / targetBinWidth);
-      double rightBorder = GetMaximum() + rightBins*targetBinWidth;
-      if (CompareBinBorders(sourceMax,
-                            rightBorder,
-                            targetBinWidth,
-                            kNoBinWidth) > 0) {
-         ++rightBins;
-         rightBorder += targetBinWidth;
-      }
-
-      targetAfterGrowth =
-         RAxisGrow(GetNBinsNoOver() + leftBins + rightBins,
-                   leftBorder,
-                   rightBorder);
-      targetPtr = &targetAfterGrowth;
-   }
-   const RAxisBase& target = *targetPtr;
-   // From this point on, must use "target" reference instead of the "this"
-   // pointer or any implicit calls to this axis' methods.
-   return target.CompareNumericalBinningAfterGrowth(source, targetMustGrow);
-}
-
 virtual ROOT::Experimental::RAxisBase::NumericBinningCmpResult
 ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
    const RAxisBase& source,
@@ -438,6 +371,66 @@ bool ROOT::Experimental::RAxisEquidistant::HasSameBinBordersAs(const RAxisBase& 
           fLow == other_eq.fLow &&
           fNBinsNoOver == other_eq.fNBinsNoOver &&
           CanGrow() == other_eq.CanGrow();
+}
+
+ROOT::Experimental::RAxisBase::NumericBinningCmpResult
+ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) const {
+   // If the target is growable and must grow, simulate that growth first
+   //
+   // FIXME: Leverage the fact that we're now in RAxisGrow to remove hacks
+   //
+   RAxisGrow targetAfterGrowth;
+   const RAxisBase* targetPtr = *this;
+   const double sourceMin = source.GetMinimum();
+   const double sourceMax = source.GetMaximum();
+   const bool growLeft =
+      (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
+   const bool growRight =
+      (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) < 0);
+   const bool targetMustGrow = CanGrow() && (growLeft || growRight);
+   if (targetMustGrow) {
+      // FIXME: This is leveraging the fact that the only kind of growable axis
+      //        currently in existence, RAxisGrow, has equidistant bin borders.
+      //        And it also doesn't work when the target axis has zero bins.
+      if (GetNBinsNoOver() == 0) {
+         throw std::runtime_error("No access to RAxisGrow bin width from "
+            "RAxisBase if target axis has zero bins!");
+      }
+      const double targetBinWidth = GetBinTo(GetFirstBin()) - GetMinimum();
+
+      const double leftGrowth =
+         static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
+      int leftBins = std::floor(leftGrowth / targetBinWidth);
+      double leftBorder = GetMinimum() - leftBins*targetBinWidth;
+      if (CompareBinBorders(sourceMin,
+                            leftBorder,
+                            kNoBinWidth,
+                            targetBinWidth) < 0) {
+         ++leftBins;
+         leftBorder -= targetBinWidth;
+      }
+
+      const double rightGrowth =
+         static_cast<double>(growRight) * (sourceMax - GetMaximum());
+      int rightBins = std::floor(rightGrowth / targetBinWidth);
+      double rightBorder = GetMaximum() + rightBins*targetBinWidth;
+      if (CompareBinBorders(sourceMax,
+                            rightBorder,
+                            targetBinWidth,
+                            kNoBinWidth) > 0) {
+         ++rightBins;
+         rightBorder += targetBinWidth;
+      }
+
+      targetAfterGrowth =
+         RAxisGrow(GetNBinsNoOver() + leftBins + rightBins,
+                   leftBorder,
+                   rightBorder);
+      targetPtr = &targetAfterGrowth;
+   }
+
+   // Call back binning comparison hook on the grown axis
+   return targetPtr->CompareNumericalBinningAfterGrowth(source, targetMustGrow);
 }
 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept

@@ -234,7 +234,9 @@ protected:
    //        out the groundwork for supporting boolean/integer bin borders.
    //
    virtual NumericBinningCmpResult
-   CompareNumericalBinning(const RAxisBase& source) const;
+   CompareNumericalBinning(const RAxisBase& source) const {
+      return CompareNumericalBinningAfterGrowth(source, false);
+   }
 
    /// Callback of `CompareNumericalBinning()` containing the actual bin border
    /// comparison logic, to be invoked after simulating any required axis growth
@@ -1067,6 +1069,10 @@ public:
 
    /// This axis kind can increase its range.
    bool CanGrow() const noexcept final override { return true; }
+
+   /// CompareNumericalBinning must be overriden to handle axis growth
+   NumericBinningCmpResult
+   CompareNumericalBinning(const RAxisBase& source) const final override;
 };
 
 namespace Internal {
