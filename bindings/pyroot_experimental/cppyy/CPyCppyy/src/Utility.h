@@ -11,7 +11,7 @@ namespace CPyCppyy {
 class PyCallable;
 
 extern dict_lookup_func gDictLookupOrg;
-extern bool gDictLookupActive;
+CPYCPPYY_IMPORT bool gDictLookupActive;
 
 // additional converter functions
 unsigned long PyLongOrInt_AsULong(PyObject* pyobject);
