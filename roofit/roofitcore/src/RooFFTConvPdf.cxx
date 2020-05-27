@@ -439,7 +439,6 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
   RooAbsArg* histArg = otherObs.find(_x.arg().GetName()) ;
   if (histArg) {
     otherObs.remove(*histArg,kTRUE,kTRUE) ;
-    delete histArg ;
   } 
 
   //cout << "RooFFTConvPdf::fillCacheObject() otherObs = " << otherObs << endl ;
