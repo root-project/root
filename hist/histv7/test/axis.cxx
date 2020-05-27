@@ -474,31 +474,33 @@ TEST(AxisTest, Labels) {
         EXPECT_EQ(caxis.GetBinLabels()[i], expected_labels[i]);
       }
 
+      using LabelsCmpResult = RAxisBase::LabeledBinningCmpResult;
+
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(expected_labels)),
-                RAxisLabels::kLabelsCmpSame);
+                LabelsCmpResult(false, false));
       const std::vector<std::string_view> missing_last_label(
         expected_labels.cbegin(), expected_labels.cend() - 1);
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(missing_last_label)),
-                RAxisLabels::kLabelsCmpSubset);
+                LabelsCmpResult(false, false));
       auto one_extra_label = expected_labels;
       one_extra_label.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(one_extra_label)),
-                RAxisLabels::kLabelsCmpSuperset);
+                LabelsCmpResult(true, false));
       auto swapped_labels = expected_labels;
       std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
-                RAxisLabels::kLabelsCmpDisordered);
+                LabelsCmpResult(false, true));
       auto changed_one_label = expected_labels;
       changed_one_label[0] = "I AM ROOT";
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(changed_one_label)),
-                RAxisLabels::kLabelsCmpSubset | RAxisLabels::kLabelsCmpSuperset);
+                LabelsCmpResult(true, false));
       auto removed_first = expected_labels;
       removed_first.erase(removed_first.cbegin());
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(removed_first)),
-                RAxisLabels::kLabelsCmpSubset | RAxisLabels::kLabelsCmpDisordered);
+                LabelsCmpResult(false, true));
       swapped_labels.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
-                RAxisLabels::kLabelsCmpSuperset | RAxisLabels::kLabelsCmpDisordered);
+                LabelsCmpResult(true, true));
 
       RAxisConfig cfg(caxis);
       EXPECT_EQ(cfg.GetTitle(), title);

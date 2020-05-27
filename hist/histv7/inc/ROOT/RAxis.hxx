@@ -714,7 +714,11 @@ public:
       /// associated bin data) so that it matches the order of source bins.
       ///
       /// Any reordering should be performed after adding missing source axis
-      /// labels (see `SourceHasExtraLabels()`) to the target axis.
+      /// labels (see `SourceHasExtraLabels()`) to the target axis. Note that
+      /// newly added labels may have the wrong index, so adding labels from the
+      /// source axis may create target axis order issues that weren't there
+      /// before, so target axis reordering should take place whether this flag
+      /// or the previous one was true.
       ///
       bool LabelOrderDiffers() const {
          CheckKind(CmpKind::kLabels);
