@@ -21,54 +21,8 @@
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
-bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) const {
-   // Bin borders must match
-   if (!HasSameBinBordersAs(other))
-      return false;
-
-   // Bin labels must match
-   auto lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
-   auto other_lbl_ptr = dynamic_cast<const RAxisLabels*>(&other);
-   if (bool(lbl_ptr) != bool(other_lbl_ptr)) {
-      return false;
-   } else if (lbl_ptr) {
-      auto lbl_cmp = lbl_ptr->CompareBinLabels(*other_lbl_ptr);
-      return (!lbl_cmp.SourceHasExtraLabels())
-         && (!lbl_cmp.LabelOrderDiffers())
-         // FIXME: RHistData merging limitation that should go away
-         && (lbl_ptr->GetNBinsNoOver() == other_lbl_ptr->GetNBinsNoOver());
-   } else {
-      return true;
-   }
-}
-
-void ROOT::Experimental::RAxisBase::BinningCmpResult::CheckKind(CmpKind expectedKind) const {
-   if (fKind != expectedKind) {
-      throw std::runtime_error("The queried property is invalid for this "
-         "kind of axis binning comparison");
-   }
-}
-
-ROOT::Experimental::RAxisBase::BinningCmpFlags
-ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const {
-   // Handle labeled axis edge case
-   //
-   // NOTE: This must be handled at the axis base class level, because C++ does
-   //       not provide a way to dispatch at runtime based on _both_ types of
-   //       the `this` and `source` axes.
-   //
-   const auto target_lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
-   const auto source_lbl_ptr = dynamic_cast<const RAxisLabels*>(&source);
-   if (bool(target_lbl_ptr) != bool(source_lbl_ptr)) {
-      return BinningCmpResult();
-   } else if (target_lbl_ptr) {
-      return BinningCmpResult(
-         target_lbl_ptr->CompareBinLabels(*source_lbl_ptr)
-      );
-   }
-   // If control reached this point, then we know that both the source and the
-   // target axis use numerical bin borders
-
+ROOT::Experimental::RAxisBase::NumericBinningCmpResult
+ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) const {
    // If the target is growable and must grow, simulate that growth first
    //
    // TODO: Move this code to a growable axis specific customization point which
@@ -76,6 +30,8 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
    //       bin width and its inverse and 2/growth (heh) headroom for a possible
    //       future where the current equidistant RAxisGrow would not be the only
    //       kind of growable axis.
+   //
+   // FIXME: Implement this at the RAxisGrow layer instead
    //
    RAxisGrow targetAfterGrowth;
    const RAxisBase* targetPtr = *this;
@@ -388,16 +344,65 @@ ROOT::Experimental::RAxisBase::CompareBinningWith(const RAxisBase& source) const
       regularBinBijection && (source.CanGrow() == target.CanGrow());
 
    // Produce the final result of the numerical axis binning comparison
-   return BinningCmpResult(
-      NumericBinningCmpResult(trivialRegularBinMapping,
-                              regularBinBijection,
-                              fullBinBijection,
-                              mergingIsLossy,
-                              regularBinAliasing,
-                              needEmptyUnderflow,
-                              needEmptyOverflow,
-                              targetMustGrow)
-   );
+   return NumericBinningCmpResult(trivialRegularBinMapping,
+                                  regularBinBijection,
+                                  fullBinBijection,
+                                  mergingIsLossy,
+                                  regularBinAliasing,
+                                  needEmptyUnderflow,
+                                  needEmptyOverflow,
+                                  targetMustGrow);
+}
+
+bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) const {
+   // Bin borders must match
+   if (!HasSameBinBordersAs(other))
+      return false;
+
+   // Bin labels must match
+   auto lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
+   auto other_lbl_ptr = dynamic_cast<const RAxisLabels*>(&other);
+   if (bool(lbl_ptr) != bool(other_lbl_ptr)) {
+      return false;
+   } else if (lbl_ptr) {
+      auto lbl_cmp = lbl_ptr->CompareBinLabels(*other_lbl_ptr);
+      return (!lbl_cmp.SourceHasExtraLabels())
+         && (!lbl_cmp.LabelOrderDiffers())
+         // FIXME: RHistData merging limitation that should go away
+         && (lbl_ptr->GetNBinsNoOver() == other_lbl_ptr->GetNBinsNoOver());
+   } else {
+      return true;
+   }
+}
+
+void ROOT::Experimental::RAxisBase::BinningCmpResult::CheckKind(CmpKind expectedKind) const {
+   if (fKind != expectedKind) {
+      throw std::runtime_error("The queried property is invalid for this "
+         "kind of axis binning comparison");
+   }
+}
+
+ROOT::Experimental::RAxisBase::BinningCmpResult
+ROOT::Experimental::RAxisBase::CompareBinning(const RAxisBase& source) const {
+   // Handle labeled axis edge case
+   //
+   // NOTE: This must be handled at the axis base class level, because C++ does
+   //       not provide a way to dispatch at runtime based on _both_ types of
+   //       the `this` and `source` axes.
+   //
+   const auto target_lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
+   const auto source_lbl_ptr = dynamic_cast<const RAxisLabels*>(&source);
+   if (bool(target_lbl_ptr) != bool(source_lbl_ptr)) {
+      return BinningCmpResult();
+   } else if (target_lbl_ptr) {
+      return BinningCmpResult(
+         target_lbl_ptr->CompareBinLabels(*source_lbl_ptr)
+      );
+   }
+
+   // If control reached this point, then we know that both the source and the
+   // target axis use numerical bin borders
+   return BinningCmpResult(CompareNumericalBinning(source));
 }
 
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept

@@ -216,6 +216,26 @@ protected:
       return CompareBinBorders(x, borderPos, leftBinWidth, rightBinWidth);
    }
 
+   /// Compare the numerical bin borders of one axis with that of another for
+   /// the purpose of evaluating an histogram merging scenario
+   ///
+   /// Since histogram merging has asymmetric properties, this axis is the
+   /// target axis, and the other axis is the source axis.
+   ///
+   /// Growable RAxis subclasses **must** override this method in a manner which
+   /// evaluates possible axis growth scenarios, before calling back
+   /// `CompareNumericalBinningAfterGrowth()`, which implements the actual
+   /// binning comparison, on a simulated grown axis.
+   ///
+   // FIXME: As of 2020-05-27, every RAxis type is considered to have numerical
+   //        bin borders, but that doesn't make sense for RAxisLabels. This will
+   //        be fixed by adding a lower-level base class which doesn't assume
+   //        the existence of floating-point bin borders, which will also lay
+   //        out the groundwork for supporting boolean/integer bin borders.
+   //
+   virtual NumericBinningCmpResult
+   CompareNumericalBinning(const RAxisBase& source) const;
+
 public:
    /**
     \class const_iterator
@@ -800,7 +820,7 @@ public:
    //       I did for HasSameBinning. Most likely some kind of CompareBinBorders
    //       virtual method?
    //
-   BinningCmpFlags CompareBinningWith(const RAxisBase& source) const;
+   BinningCmpFlags CompareBinning(const RAxisBase& source) const;
 
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
