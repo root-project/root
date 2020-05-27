@@ -24,7 +24,7 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
                        PYTHONPATH=${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/lib/${python_dir}:$ENV{PYTHONPATH})
     else()
       set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
-                       PYTHONPATH=${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/${python_dir};$ENV{PYTHONPATH})
+                       PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
     endif()
   else()
     if(NOT MSVC)  # Ignore environment on Windows
