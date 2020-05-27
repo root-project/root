@@ -244,3 +244,17 @@ PyObject* CPyCppyy::MemoryRegulator::RetrievePyObject(Cppyy::TCppObject_t cppobj
 
     return nullptr;
 }
+
+//-----------------------------------------------------------------------------
+void CPyCppyy::MemoryRegulator::SetRegisterHook(MemHook_t h)
+{
+// set registerHook for custom memory regulation
+   registerHook = h;
+}
+
+//-----------------------------------------------------------------------------
+void CPyCppyy::MemoryRegulator::SetUnregisterHook(MemHook_t h)
+{
+// set unregisterHook for custom memory regulation
+   unregisterHook = h;
+}
