@@ -37,7 +37,6 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
    const RAxisBase* targetPtr = *this;
    const double sourceMin = source.GetMinimum();
    const double sourceMax = source.GetMaximum();
-   const int numSourceBins = source.GetNBinsNoOver();
    const bool growLeft =
       (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
    const bool growRight =
@@ -84,17 +83,25 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       targetPtr = &targetAfterGrowth;
    }
    const RAxisBase& target = *targetPtr;
-   const int numTargetBins = target.GetNBinsNoOver();
    // From this point on, must use "target" reference instead of the "this"
    // pointer or any implicit calls to this axis' methods.
+   return target.CompareNumericalBinningAfterGrowth(source, targetMustGrow);
+}
+
+virtual ROOT::Experimental::RAxisBase::NumericBinningCmpResult
+ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
+   const RAxisBase& source,
+   bool growthOccured
+) const {
+   // Set some shorthands for frequently used quantities
+   const double sourceMin = source.GetMinimum();
+   const double sourceMax = source.GetMaximum();
 
    // Compare the positions of the minima/maxima of the source and target axes
-   const int minComparison = target.ComparePosToBinBorder(sourceMin,
-                                                          target.GetFirstBin(),
-                                                          BinSide::kFrom);
-   const int maxComparison = target.ComparePosToBinBorder(sourceMax,
-                                                          target.GetLastBin(),
-                                                          BinSide::kTo);
+   const int minComparison =
+      ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom);
+   const int maxComparison =
+      ComparePosToBinBorder(sourceMax, GetLastBin(), BinSide::kTo);
 
    // Check if the source underflow and overflow bins must be empty
    //
@@ -109,7 +116,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
    //   one target regular/under/overflow bin modulo bin comparison tolerance.
    //
    const bool sourceHasUnderOver = !source.CanGrow();
-   const bool needEmptyUnderOver = sourceHasUnderOver && target.CanGrow();
+   const bool needEmptyUnderOver = sourceHasUnderOver && CanGrow();
    const bool sourceUnderflowAliasing = sourceHasUnderOver && (minComparison > 0);
    const bool sourceOverflowAliasing = sourceHasUnderOver && (maxComparison < 0);
    const bool needEmptyUnderflow = needEmptyUnderOver || sourceUnderflowAliasing;
@@ -128,20 +135,16 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
    bool regularBinAliasing = false;
    [&] {
       // Handle the edge case where the source axis has no regular bin
-      if (numSourceBins == 0) {
+      if (source.GetNBinsNoOver() == 0) {
          return;
       }
 
       // Handle the edge case where all regular source axis bins are located
       // either before or after the end of the target axis.
       const bool sourceBeforeTarget =
-         (target.ComparePosToBinBorder(sourceMax,
-                                       target.GetFirstBin(),
-                                       BinSide::kFrom) <= 0);
+         (ComparePosToBinBorder(sourceMax, GetFirstBin(), BinSide::kFrom) <= 0);
       const bool sourceAfterTarget =
-         (target.ComparePosToBinBorder(sourceMin,
-                                       target.GetLastBin(),
-                                       BinSide::kTo) >= 0);
+         (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) >= 0);
       if (sourceBeforeTarget || sourceAfterTarget) {
          // The source axis has at least one regular bin, and it will be merged
          // into a conceptually infinite target under/overflow bin, so an
@@ -167,9 +170,9 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       // underflow range of the target axis.
       //
       int sourceBin = source.GetFirstBin();
-      while (target.ComparePosToBinBorder(source.GetBinTo(sourceBin),
-                                          target.GetFirstBin(),
-                                          BinSide::kFrom) <= 0) {
+      while (ComparePosToBinBorder(source.GetBinTo(sourceBin),
+                                   GetFirstBin(),
+                                   BinSide::kFrom) <= 0) {
          ++sourceBin;
       }
 
@@ -184,9 +187,9 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       // If the selected source bin partially maps into the target underflow
       // bin, then it covers both target underflow and regular/overflow range,
       // and this source bin must be empty for a merge to be possible.
-      if (target.ComparePosToBinBorder(source.GetBinFrom(sourceBin),
-                                       target.GetFirstBin(),
-                                       BinSide::kFrom) < 0) {
+      if (ComparePosToBinBorder(source.GetBinFrom(sourceBin),
+                                GetFirstBin(),
+                                BinSide::kFrom) < 0) {
          regularBinAliasing = true;
       }
       // At this point, we have taken care of mappings from the first source
@@ -195,7 +198,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       // one, into target regular and overflow bins.
 
       // Handle the edge case where the target axis has no regular bin
-      if (numTargetBins == 0) {
+      if (GetNBinsNoOver() == 0) {
          // There is at least one regular source bin, and the only target bins
          // that it can map into are the infinite underflow and overflow bins.
          // Therefore, this histogram merge is lossy.
@@ -219,10 +222,8 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       // is at least one target bin and that the source bins are not all located
       // in the target overflow range.
       //
-      int targetBin = target.GetFirstBin();
-      while (target.ComparePosToBinBorder(sourceMin,
-                                          targetBin,
-                                          BinSide::kTo) >= 0) {
+      int targetBin = GetFirstBin();
+      while (ComparePosToBinBorder(sourceMin, targetBin, BinSide::kTo) >= 0) {
          ++targetBin;
       }
       // At this point, we know that sourceBin maps into targetBin, and that
@@ -236,7 +237,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       // bin mapping aside), and targetBin designates the first target axis bin
       // which sourceBin maps into.
       //
-      for (; sourceBin <= numSourceBins; ++sourceBin) {
+      for (; sourceBin <= source.GetNBinsNoOver(); ++sourceBin) {
          // Get the source bin's limits
          const double sourceFrom = source.GetBinFrom(sourceBin);
          const double sourceTo = source.GetBinTo(sourceBin);
@@ -248,9 +249,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
 
          // Does the first target bin cover nontrivial extra range on the left
          // of the source bin?
-         if (target.ComparePosToBinBorder(sourceFrom,
-                                          targetBin,
-                                          BinSide::kFrom) > 0) {
+         if (ComparePosToBinBorder(sourceFrom, targetBin, BinSide::kFrom) > 0) {
             // If so, some information about the position of past source
             // histogram fills will be lost upon merging
             mergingIsLossy = true;
@@ -262,10 +261,8 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
          // axis in attempting to do so.
          bool endOfTargetAxis = false;
          const int firstTargetBin = targetBin;
-         while (target.ComparePosToBinBorders(sourceTo,
-                                              targetBin,
-                                              BinSide::kTo) >= 0) {
-            if (targetBin < numTargetBins) {
+         while (ComparePosToBinBorders(sourceTo, targetBin, BinSide::kTo) >= 0) {
+            if (targetBin < GetNBinsNoOver()) {
                ++targetBin;
             } else {
                endOfTargetAxis = true;
@@ -289,16 +286,14 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
 
             // In that case, however, we need to check if the current source bin
             // maps into the target overflow bin.
-            lastBinCmpResult = target.ComparePosToBinBorder(sourceTo,
-                                                            target.GetLastBin(),
-                                                            BinSide::kTo);
+            lastBinCmpResult =
+               ComparePosToBinBorder(sourceTo, GetLastBin(), BinSide::kTo);
          } else {
             // If we managed to find a targetBin which extends beyond the end of
             // the current sourceBin, then we must check if this bin still
             // covers some of the current sourceBin range on the left.
-            lastBinCmpResult = target.ComparePosToBinBorder(sourceTo,
-                                                            targetBin,
-                                                            BinSide::kFrom);
+            lastBinCmpResult =
+               ComparePosToBinBorder(sourceTo, targetBin, BinSide::kFrom);
          }
 
          // Does the current source bin map into the current targetBin or into
@@ -326,7 +321,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
       }
 
       // Was the end of the target axis reached w/o covering all source bins?
-      if (sourceBin < numSourceBins) {
+      if (sourceBin < source.GetNBinsNoOver()) {
          // In that case, the extra source bins map into the infinite target
          // overflow bin, so the merge loses information...
          mergingIsLossy = true;
@@ -339,9 +334,9 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
 
    // Compute the remaining properties that we need
    const bool regularBinBijection =
-      trivialRegularBinMapping && (numTargetBins == numSourceBins);
+      trivialRegularBinMapping && (GetNBinsNoOver() == source.GetNBinsNoOver());
    const bool fullBinBijection =
-      regularBinBijection && (source.CanGrow() == target.CanGrow());
+      regularBinBijection && (source.CanGrow() == CanGrow());
 
    // Produce the final result of the numerical axis binning comparison
    return NumericBinningCmpResult(trivialRegularBinMapping,
@@ -351,7 +346,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinning(const RAxisBase& source) 
                                   regularBinAliasing,
                                   needEmptyUnderflow,
                                   needEmptyOverflow,
-                                  targetMustGrow);
+                                  growthOccured);
 }
 
 bool ROOT::Experimental::RAxisBase::HasSameBinningAs(const RAxisBase& other) const {

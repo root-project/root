@@ -236,6 +236,16 @@ protected:
    virtual NumericBinningCmpResult
    CompareNumericalBinning(const RAxisBase& source) const;
 
+   /// Callback of `CompareNumericalBinning()` containing the actual bin border
+   /// comparison logic, to be invoked after simulating any required axis growth
+   /// scenarios, on the grown target axis.
+   ///
+   /// This method can be overriden for performance optimization purposes.
+   ///
+   virtual NumericBinningCmpResult
+   CompareNumericalBinningAfterGrowth(const RAxisBase& source,
+                                      bool growthOccured) const;
+
 public:
    /**
     \class const_iterator
