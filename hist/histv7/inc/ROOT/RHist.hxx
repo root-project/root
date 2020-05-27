@@ -323,11 +323,87 @@ template <int DIMENSIONS, class PRECISION,
 void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, PRECISION, STAT_FROM...> &from)
 {
    // Enforce "same axis configuration" policy.
+   //
+   // FIXME: To avoid code bloat, extract the per-axis comparison logic to a
+   //        separate cpp file, we can do this because axes are type-erased.
+   //
    auto& toImpl = *to.GetImpl();
    const auto& fromImpl = *from.GetImpl();
    for (int dim = 0; dim < DIMENSIONS; ++dim) {
-      if (!toImpl.GetAxis(dim).HasSameBinningAs(fromImpl.GetAxis(dim))) {
-         throw std::runtime_error("Attempted to add RHists with incompatible axis binning");
+      using CmpKind = RAxisBase::BinningCmpResult::CmpKind;
+      auto axisCmp = toImpl.GetAxis(dim).CompareBinning(fromImpl.GetAxis(dim));
+      switch (axisCmp.Kind()) {
+         case CmpKind::kIncompatible:
+            // Merging histograms with fully incompatible axis types will never
+            // be supported
+            throw std::runtime_error(
+               "Attempted to add RHists with incompatible axis types"
+            );
+         case CmpKind::kNumeric: {
+            auto numericAxisCmp = axisCmp.GetNumeric();
+            // FIXME: Support complicated merge scenarios where a source
+            //        histogram bin doesn't map into a target histogram bin with
+            //        the same global bin index
+            if (!numericAxisCmp.HasFullBinBijection()) {
+               throw std::runtime_error(
+                  "RHist::Add currently requires identical global "
+                  "binning of source and target histograms"
+               );
+            }
+            // TODO: Figure out how to report MergingIsLossy() info to the user
+            // FIXME: Handle bin aliasing more gracefully in histogram merging
+            //        by only bombing during bin data copy, if the aliasing bin
+            //        turns out to be non-empty? But this does lead the target
+            //        histogram data to be in a corrupted half-filled state if
+            //        the exception is caught... Or maybe we can do two passes
+            //        through the histogram, one to check for non-empty aliasing
+            //        bins and one to do the actual addition, but that's costly.
+            if (numericAxisCmp.HasRegularBinAliasing()) {
+               throw std::runtime_error(
+                  "RHist::Add currently does not support \"bin aliasing\" "
+                  "scenarios where a single source histogram bin maps into "
+                  "multiple target histogram bins"
+               );
+            }
+            // FIXME: Handle under/overflow emptiness constraint more gracefully
+            //        by only bombing if those bins are non-empty. See the
+            //        discussion of regular bin aliasing above for caveats.
+            if (numericAxisCmp.MergingNeedsEmptyUnderflow()
+                || numericAxisCmp.MergingNeedsEmptyOverflow()) {
+               throw std::runtime_error(
+                  "RHist::Add currently does not support checking for "
+                  "emptiness of source under/overflow bins"
+               );
+            }
+            // FIXME: Grow target axis (requires growth support)
+            if (numericAxisCmp.MergingNeedsTargetGrowth()) {
+               throw std::runtime_error(
+                  "RHist::Add currently does not support growing the target "
+                  "histogram's axes"
+               );
+            }
+            break;
+         }
+         case CmpKind::kLabeled: {
+            auto labeledAxisCmp = axisCmp.GetLabeled();
+            // FIXME: Support complicated merge scenarios where a source
+            //        histogram bin doesn't map into a target histogram bin with
+            //        the same global bin index
+            if (!labeledAxisCmp.HasSameBins()) {
+               throw std::runtime_error(
+                  "RHist::Add currently requires identical global "
+                  "binning of source and target histograms"
+               );
+            }
+            break;
+         }
+         default:
+            // If you encounter this error, the RHist::Add code needs updating
+            // to support new binning comparison types
+            throw std::runtime_error(
+               "BUG: The RHist::Add implementation got out of sync with the "
+               "RAxis codebase and must be updated to support new binning types"
+            );
       }
    }
 
