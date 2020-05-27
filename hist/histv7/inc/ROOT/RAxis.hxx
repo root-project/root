@@ -275,9 +275,10 @@ public:
       /// indicates that every regular source axis bin maps into a regular
       /// target axis bin with the same index and vice versa.
       ///
-      /// If this property is true for every dimension of a source and target
-      /// histogram, then every regular source histogram bin maps into a target
-      /// histogram bin with the same global bin index.
+      /// If this property (or its `HasSameBins()` cousin for labeled axes) is
+      /// true for every dimension of a source and target histogram, then every
+      /// regular source histogram bin maps into a target histogram bin with the
+      /// same global bin index.
       ///
       // NOTE: This property can be leveraged to avoid local<->global regular
       //       bin index conversions in the histogram merging implementation.
@@ -681,10 +682,12 @@ public:
       /// each of these flags mean.
       ///
       LabeledBinningCmpResult(bool sourceOnlyLabels,
-                              bool disorderedLabels)
+                              bool disorderedLabels,
+                              bool hasSameBins)
          : fFlags(
             Flags(sourceOnlyLabels * kSourceOnlyLabels
-                  + disorderedLabels * kDisorderedLabels)
+                  + disorderedLabels * kDisorderedLabels
+                  + hasSameBins * kHasSameBins)
          )
       {}
 
@@ -724,6 +727,29 @@ public:
          return fFlags & kDisorderedLabels;
       }
 
+      /// The source and target axis have the same labels in the same order
+      ///
+      /// This property implies both `!SourceHasExtraLabels()` and
+      /// `!LabelOrderDiffers()`, and adds the extra informations that the
+      /// target axis doesn't have any labels which the source axis doesn't, and
+      /// that every axis label was committed into an actual bin via Fill().
+      ///
+      /// This property is the equivalent of `RegularBinBijection()` for labeled
+      /// axes: if either it or `RegularBinBijection()` is true for every
+      /// dimension of a source and target histogram, then every source
+      /// histogram bin maps into a target histogram bin with the same global
+      /// bin index.
+      ///
+      // NOTE: There is no equivalent of `FullBinBijection()` for labeled axis
+      //       because labeled axes can only successfully compare with other
+      //       labeled axes and never have overflow bins, so that property would
+      //       always be true for labeled axes when `HasSameBins()` is true.
+      //
+      bool HasSameBins() const {
+         assert(!SourceHasExtraLabels() && !LabelOrderDiffers());
+         return fFlags & kHasSameBins;
+      }
+
    private:
       enum Flags {
          // The source axis has labels that the target axis doesn't have
@@ -731,6 +757,9 @@ public:
 
          // Common source/target bin labels are not ordered in the same way
          kDisorderedLabels = 1 << 1,
+
+         // Source and target bins are identically named and ordered
+         kHasSameBins = 1 << 2,
       } fFlags;
    };
 
@@ -1315,6 +1344,7 @@ public:
    /// Compare the labels of this axis with those of another axis for the
    /// purpose of investigating a histogram merging scenario
    LabeledBinningCmpResult CompareBinLabels(const RAxisLabels& source) const noexcept {
+      // Check how source labels map into destination labels
       bool sourceOnlyLabels = false;
       bool disorderedLabels = false;
       for (const auto &kv: source.fLabelsIndex) {
@@ -1325,7 +1355,34 @@ public:
             disorderedLabels = true;
          }
       }
-      return LabeledBinningCmpResult(sourceOnlyLabels, disorderedLabels);
+
+      // If every source label maps into a destination label with the same
+      // index, and the source axis doesn't have any extra labels, then the set
+      // of source and destination bin labels...
+      const bool sameBinLabels =
+         !sourceOnlyLabels
+         && !disorderedLabels
+         && (fLabelsIndex.size() == source.fLabelsIndex.size());
+
+      // ...but before we deduce from that that the source and target axis have
+      // the same bins, we must make sure that every label was committed into an
+      // actual histogram bin via a call to Fill().
+      //
+      // FIXME: It would, in principle, be possible to only compare the set of
+      //        labels which were committed into actual bins. But it seems much
+      //        better to get rid of the RAxisLabels design oddity which allows
+      //        the set of bin labels to go out of sync with the underlying set
+      //        of RAxisGrow bins.
+      //
+      const bool sameBins =
+         sameBinLabels
+         && (static_cast<int>(fLabelsIndex.size()) == GetNBinsNoOver())
+         && (static_cast<int>(source.fLabelsIndex.size()) == source.GetNBinsNoOver());
+
+      // Produce the results of the comparison
+      return LabeledBinningCmpResult(sourceOnlyLabels,
+                                     disorderedLabels,
+                                     sameBins);
    }
 };
 
