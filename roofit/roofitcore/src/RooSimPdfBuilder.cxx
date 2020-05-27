@@ -463,9 +463,9 @@ ClassImp(RooSimPdfBuilder);
 RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :
   _protoPdfSet(protoPdfSet)
 {
-  _compSplitCatSet.setHashTableSize(1000) ;
-  _splitNodeList.setHashTableSize(10000) ;
-  _splitNodeListOwned.setHashTableSize(10000) ;
+  _compSplitCatSet.useHashMapForFind(true);
+  _splitNodeList.useHashMapForFind(true);
+  _splitNodeListOwned.useHashMapForFind(true);
 }
 
 
