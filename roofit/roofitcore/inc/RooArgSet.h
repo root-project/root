@@ -135,6 +135,7 @@ public:
     return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
   }
 
+  /// \copydoc RooAbsCollection::snapshot()
   Bool_t snapshot(RooAbsCollection& output, Bool_t deepCopy=kTRUE) const {
     return RooAbsCollection::snapshot(output, deepCopy);
   }
