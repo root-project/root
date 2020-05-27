@@ -21,7 +21,7 @@
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
-virtual ROOT::Experimental::RAxisBase::NumericBinningCmpResult
+ROOT::Experimental::RAxisBase::NumericBinningCmpResult
 ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
    const RAxisBase& source,
    bool growthOccured
@@ -194,7 +194,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
          // axis in attempting to do so.
          bool endOfTargetAxis = false;
          const int firstTargetBin = targetBin;
-         while (ComparePosToBinBorders(sourceTo, targetBin, BinSide::kTo) >= 0) {
+         while (ComparePosToBinBorder(sourceTo, targetBin, BinSide::kTo) >= 0) {
             if (targetBin < GetNBinsNoOver()) {
                ++targetBin;
             } else {
@@ -210,7 +210,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
 
          // Next, we need to tell which other bins the source bin maps into
          int lastBinCmpResult;
-         if (endOfTarget) {
+         if (endOfTargetAxis) {
             // If the end of the target axis was reached, then we know that
             // sourceBin maps into the current targetBin, because we didn't
             // manage to find a targetBin which even extends beyond the end of
@@ -250,7 +250,7 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
          // loop, as we cannot maintain the loop invariant that at the beginning
          // of a loop iteration, `targetBin` must be the first bin which the
          // active `sourceBin` maps into.
-         if (endOfTarget) break;
+         if (endOfTargetAxis) break;
       }
 
       // Was the end of the target axis reached w/o covering all source bins?
@@ -381,19 +381,20 @@ ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) 
 
    // Prepare to simulate axis growth if need be
    RAxisGrow targetAfterGrowth;
-   const RAxisGrow* targetPtr = *this;
+   const RAxisGrow* targetPtr = this;
 
    // Check if axis growth is needed
    const bool growLeft =
       (ComparePosToBinBorder(sourceMin, GetFirstBin(), BinSide::kFrom) < 0);
    const bool growRight =
       (ComparePosToBinBorder(sourceMin, GetLastBin(), BinSide::kTo) < 0);
-   if (growLeft || growRight) {
+   const bool mustGrow = growLeft || growRight;
+   if (mustGrow) {
       // Simulate axis growth on the left-hand side
       const double leftGrowth =
          static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
       int leftBins = std::floor(leftGrowth / GetBinWidth());
-      double leftBorder = GetMinimum() - leftBins*GetBinWidth()
+      double leftBorder = GetMinimum() - leftBins*GetBinWidth();
       if (CompareBinBorders(sourceMin,
                             leftBorder,
                             kNoBinWidth,
@@ -424,7 +425,7 @@ ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) 
    }
 
    // Call back binning comparison hook on the possibly grown axis
-   return targetPtr->CompareNumericalBinningAfterGrowth(source, targetMustGrow);
+   return targetPtr->CompareNumericalBinningAfterGrowth(source, mustGrow);
 }
 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept
