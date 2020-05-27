@@ -235,6 +235,7 @@ protected:
    //
    virtual NumericBinningCmpResult
    CompareNumericalBinning(const RAxisBase& source) const {
+      assert(!CanGrow());
       return CompareNumericalBinningAfterGrowth(source, false);
    }
 
