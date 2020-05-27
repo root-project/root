@@ -17,7 +17,7 @@ ROOT_ADD_GTEST(dataframe_nodes dataframe_nodes.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
-ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame TwoFloatsDict)
+ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame)
   # Dictionary for above test:
   target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   ROOT_GENERATE_DICTIONARY(TwoFloatsDict TwoFloats.h LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader MODULE dataframe_splitcoll_arrayview)
