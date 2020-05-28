@@ -2,7 +2,7 @@
 
 TEST(RNTuple, Basics)
 {
-   FileRaii fileGuard("test_ntuple_rawfile.ntuple");
+   FileRaii fileGuard("test_ntuple_barefile.ntuple");
 
    auto model = RNTupleModel::Create();
    auto wrPt = model->MakeField<float>("pt", 42.0);
@@ -33,7 +33,7 @@ TEST(RNTuple, Basics)
 
 TEST(RNTuple, Extended)
 {
-   FileRaii fileGuard("test_ntuple_rawfile_ext.ntuple");
+   FileRaii fileGuard("test_ntuple_barefile_ext.ntuple");
 
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
