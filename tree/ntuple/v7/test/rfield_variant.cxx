@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 
+#if __cplusplus >= 201703L
 TEST(RNTuple, Variant)
 {
    FileRaii fileGuard("test_ntuple_variant.root");
@@ -33,3 +34,9 @@ TEST(RNTuple, Variant)
    ntuple.LoadEntry(2);
    EXPECT_EQ(8.0, *std::get_if<double>(rdVariant));
 }
+
+#else
+TEST(RNTuple, VariantNotSupported)
+{
+}
+#endif // __cplusplus >= 201703L
