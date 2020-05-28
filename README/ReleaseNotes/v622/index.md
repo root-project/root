@@ -287,6 +287,31 @@ Even more includes will be "hidden" when ROOT configured with `-Ddev=ON` build o
 In that case ROOT uses `#ifdef R__LESS_INCLUDES` to replace unused includes by class forward declarations.
 Such `dev` builds can be used to verify that ROOT-based code really includes all necessary ROOT headers.
 
+### Multi-Python PyROOT
+
+In 6.22, the new (experimental) PyROOT is built by default. In order to build with the old PyROOT instead, the option
+`-Dpyroot_legacy=ON` can be used.
+
+This new PyROOT also introduces the possibility of building its libraries for both Python2 and Python3 in a single
+ROOT build (CMake >= 3.14 is required). If no option is specified, PyROOT will be built for the most recent
+Python3 and Python2 versions that CMake can find. If only one version can be found, PyROOT will be built for only
+that version. Moreover, for a given Python installation to be considered, it must provide both the Python interpreter
+(binary) and the development package.
+
+The user can also choose to build ROOT only for a given Python version, even if multiple installations exist in
+the system. For that purpose, the option `-DPYTHON_EXECUTABLE=/path/to/python_exec` can be used to point to the
+desired Python installation.
+
+If the user wants to build PyROOT for both Python2 and Python3, but not necessarily with the highest versions that
+are available on the system, they can provide hints to CMake by using `-DPython2_ROOT_DIR=python2_dir` and/or
+`-DPython3_ROOT_DIR=python3_dir` to point to the root directory of some desired Python installation.
+
+When executing a Python script, the Python version used will determine which version of the PyROOT libraries will
+be loaded. Therefore, once the ROOT environment has been set (e.g. via `source $ROOTSYS/bin/thisroot.sh`), the user
+will be able to use PyROOT from any of the Python versions it has been built for.
+
+Regarding `TPython`, its library is built only for the highest Python version that PyROOT is built with.
+Therefore, in a Python3-Python2 ROOT build, the Python code executed with `TPython` must be Python3-compliant.
 
 ## RDataFrame
 
