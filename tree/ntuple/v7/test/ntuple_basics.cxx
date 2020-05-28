@@ -211,11 +211,3 @@ TEST(RNTuple, Clusters)
    EXPECT_EQ(42.0, (*rdNnlo)[0][0]);
    EXPECT_EQ(24.0, (*rdFourVec)[1]);
 }
-
-TEST(RNTuple, TypeName) {
-   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
-   EXPECT_STREQ("std::vector<std::string>",
-                ROOT::Experimental::RField<std::vector<std::string>>::TypeName().c_str());
-   EXPECT_STREQ("CustomStruct",
-                ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
-}
