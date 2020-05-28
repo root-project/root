@@ -252,6 +252,10 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
 
 std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeAttrRequest::Process()
 {
+   // suppress all changes coming from non-main connection
+   if (!GetContext().IsMainConn())
+      return nullptr;
+
    auto canv = const_cast<ROOT::Experimental::RCanvas *>(GetContext().GetCanvas());
    if (!canv) return nullptr;
 
@@ -277,7 +281,7 @@ std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeA
       }
    }
 
-   fNeedUpdate = (vers > 0);
+   fNeedUpdate = (vers > 0) && update;
 
    return nullptr; // no need for any reply
 }

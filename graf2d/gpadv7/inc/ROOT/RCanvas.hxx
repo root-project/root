@@ -22,9 +22,10 @@ namespace ROOT {
 namespace Experimental {
 
 class RChangeAttrRequest : public RDrawableRequest {
-   std::vector<std::string> ids;    ///< array of ids
-   std::vector<std::string> names;  ///< array of attribute names
+   std::vector<std::string> ids;                           ///< array of ids
+   std::vector<std::string> names;                         ///< array of attribute names
    std::vector<std::unique_ptr<RAttrMap::Value_t>> values; ///< array of values
+   bool update{true};                                      ///< update canvas at the end
    bool fNeedUpdate{false};       ///<! is canvas update required
    RChangeAttrRequest(const RChangeAttrRequest &) = delete;
    RChangeAttrRequest& operator=(const RChangeAttrRequest &) = delete;
