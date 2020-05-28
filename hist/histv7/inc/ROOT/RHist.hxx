@@ -400,12 +400,12 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
                throw std::runtime_error(
                   "RHist::Add currently requires the source and target "
                   "histogram axes to have their bin labels in the same order"
-               )
+               );
             }
             // FIXME: Support complicated merge scenarios where a source
             //        histogram bin doesn't map into a target histogram bin with
             //        the same global bin index
-            if (numericAxisCmp.TargetWillHaveExtraBins()) {
+            if (labeledAxisCmp.TargetWillHaveExtraBins()) {
                throw std::runtime_error(
                   "RHist::Add currently requires identical global "
                   "binning of source and target histograms"

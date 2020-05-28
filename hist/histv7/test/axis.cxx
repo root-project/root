@@ -474,35 +474,56 @@ TEST(AxisTest, Labels) {
         EXPECT_EQ(caxis.GetBinLabels()[i], expected_labels[i]);
       }
 
+      // Compare the RAxisLabels with various variations of itself
       using LabelsCmpResult = RAxisBase::LabeledBinningCmpResult;
-
-      const bool sameLabelsMeansSameBins =
-        (caxis.GetNBinsNoOver() == static_cast<int>(expected_labels.size()));
+      const int uncommittedTargetLabels =
+        (expected_labels.size() - caxis.GetNBinsNoOver());
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(expected_labels)),
-                LabelsCmpResult(false, false, sameLabelsMeansSameBins));
+                LabelsCmpResult(false,
+                                uncommittedTargetLabels > 0,
+                                false,
+                                false));
       const std::vector<std::string_view> missing_last_label(
         expected_labels.cbegin(), expected_labels.cend() - 1);
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(missing_last_label)),
-                LabelsCmpResult(false, false, false));
+                LabelsCmpResult(false,
+                                uncommittedTargetLabels > 1,
+                                false,
+                                uncommittedTargetLabels == 0));
       auto one_extra_label = expected_labels;
       one_extra_label.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(one_extra_label)),
-                LabelsCmpResult(true, false, false));
+                LabelsCmpResult(true,
+                                true,
+                                false,
+                                false));
       auto swapped_labels = expected_labels;
       std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
-                LabelsCmpResult(false, true, false));
+                LabelsCmpResult(false,
+                                uncommittedTargetLabels > 0,
+                                true,
+                                false));
       auto changed_one_label = expected_labels;
       changed_one_label[0] = "I AM ROOT";
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(changed_one_label)),
-                LabelsCmpResult(true, false, false));
+                LabelsCmpResult(true,
+                                true,
+                                true,
+                                true));
       auto removed_first = expected_labels;
       removed_first.erase(removed_first.cbegin());
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(removed_first)),
-                LabelsCmpResult(false, true, false));
+                LabelsCmpResult(false,
+                                uncommittedTargetLabels > 0,
+                                true,
+                                true));
       swapped_labels.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
-                LabelsCmpResult(true, true, false));
+                LabelsCmpResult(true,
+                                true,
+                                true,
+                                false));
 
       RAxisConfig cfg(caxis);
       EXPECT_EQ(cfg.GetTitle(), title);
@@ -514,7 +535,10 @@ TEST(AxisTest, Labels) {
         EXPECT_EQ(cfg.GetBinLabels()[i], expected_labels[i]);
       }
     };
-    const_tests(axis, labels);
+    {
+      SCOPED_TRACE("Original labels configuration");
+      const_tests(axis, labels);
+    }
 
     // Bin queries aren't const in general, but should effectively be when
     // querying bins which already exist.
@@ -528,7 +552,10 @@ TEST(AxisTest, Labels) {
     EXPECT_EQ(axis.GetBinCenterByName("fghi"), 2.5);
     EXPECT_EQ(axis.GetBinCenterByName("j"), 3.5);
     EXPECT_EQ(axis.GetBinCenterByName("klmno"), 4.5);
-    const_tests(axis, labels);
+    {
+      SCOPED_TRACE("After querying existing labels");
+      const_tests(axis, labels);
+    }
 
     // FIXME: Can't test RAxisGrow::Grow() as this method is not implemented.
     //        Once it's implemented, please factor out commonalities with
@@ -538,14 +565,26 @@ TEST(AxisTest, Labels) {
     auto new_labels = labels;
     EXPECT_EQ(axis.FindBinByName("pq"), 5);
     new_labels.push_back("pq");
-    const_tests(axis, new_labels);
+    {
+      SCOPED_TRACE("After querying a first new label");
+      const_tests(axis, new_labels);
+    }
     EXPECT_EQ(axis.GetBinCenterByName("pq"), 5.5);
-    const_tests(axis, new_labels);
+    {
+      SCOPED_TRACE("After querying the first new label's center");
+      const_tests(axis, new_labels);
+    }
     EXPECT_EQ(axis.GetBinCenterByName("rst"), 6.5);
     new_labels.push_back("rst");
-    const_tests(axis, new_labels);
+    {
+      SCOPED_TRACE("After querying a second new label's center");
+      const_tests(axis, new_labels);
+    }
     EXPECT_EQ(axis.FindBinByName("rst"), 6);
-    const_tests(axis, new_labels);
+    {
+      SCOPED_TRACE("After querying the second new label again");
+      const_tests(axis, new_labels);
+    }
   };
 
   {

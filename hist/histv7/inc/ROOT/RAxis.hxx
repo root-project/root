@@ -1323,7 +1323,6 @@ public:
       // the number of labels. An RAxisLabels may have more bin labels than it
       // has bins if a label has been queried (which automatically allocates a
       // bin index) but the corresponding bin never registered any fill.
-      const int numSourceLabels = source.fLabelsIndex.size();
       const int numSourceBins = source.GetNBinsNoOver();
       const int numTargetLabels = fLabelsIndex.size();
       const int numTargetBins = GetNBinsNoOver();
@@ -1334,22 +1333,22 @@ public:
       bool disorderedLabels = false;
       for (const auto &kv: source.fLabelsIndex) {
          // Ignore uncommitted source labels: no bin = no data to be merged
-         const int sourceBinIdx = kv.second;
-         if (sourceBinIdx <= numSourceBins) {
+         const int sourceLabelIdx = kv.second;
+         if (sourceLabelIdx <= numSourceBins) {
             // Look for the the source bin's label in the target axis' label set
             auto iter = fLabelsIndex.find(kv.first);
 
             // Use any existing target label, or simulate creating one
-            const int targetBinIdx =
+            const int targetLabelIdx =
                (iter != fLabelsIndex.cend()) ? (iter->second)
-                                             : ++numLabelsAfterGrowth;
+                                             : (numLabelsAfterGrowth++);
 
             // If the target label has no associated bin yet, simulate growing
             // the target axis to materialize that bin
-            numBinsAfterGrowth = std::max(numTargetBins, targetBinIdx);
+            numBinsAfterGrowth = std::max(numBinsAfterGrowth, targetLabelIdx+1);
 
             // Check if label order is consistent in the source and target axes
-            disorderedLabels |= (targetBinIdx != sourceBinIdx);
+            disorderedLabels |= (targetLabelIdx != sourceLabelIdx);
          }
       }
 
@@ -1361,9 +1360,11 @@ public:
       // FIXME: Since we don't know in which order missing source labels will be
       //        added to the target axis by the histogram merging implementation
       //        as there is no standardized way to iterate over source bins yet,
-      //        we must work under the pessimistic assumption that if extra
-      //        labels must be added to the target, then bad order may occur.
-      disorderedLabels |= sourceOnlyLabels;
+      //        we must work under the pessimistic assumption that if more than
+      //        one extra label must be added to the target axis, the two labels
+      //        may be added in the wrong order.
+      const int newLabels = numLabelsAfterGrowth - numTargetLabels;
+      disorderedLabels |= (sourceOnlyLabels && (newLabels > 1));
 
       // Figure out if after growing the target axis as needed, it will feature
       // some labels which the source axis doesn't have.
@@ -1373,7 +1374,8 @@ public:
       //        pessimistic assumption that source labels were added to the
       //        target in the dumbest possible way, materializing all previously
       //        existing target labels even if there was no need for it.
-      extraTargetBins |= (numLabelsAfterGrowth > numSourceBins);
+      extraTargetBins |=
+         ((newLabels > 0) && (numLabelsAfterGrowth > numSourceBins));
 
       // Produce the results of the comparison
       return LabeledBinningCmpResult(sourceOnlyLabels,
