@@ -360,7 +360,7 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
             //        bins and one to do the actual addition, but that's costly.
             if (numericAxisCmp.HasRegularBinAliasing()) {
                throw std::runtime_error(
-                  "RHist::Add currently does not support \"bin aliasing\" "
+                  "RHist::Add does not currently support \"bin aliasing\" "
                   "scenarios where a single source histogram bin maps into "
                   "multiple target histogram bins"
                );
@@ -371,14 +371,14 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
             if (numericAxisCmp.MergingNeedsEmptyUnderflow()
                 || numericAxisCmp.MergingNeedsEmptyOverflow()) {
                throw std::runtime_error(
-                  "RHist::Add currently does not support checking for "
+                  "RHist::Add does not currently support checking for "
                   "emptiness of source under/overflow bins"
                );
             }
             // FIXME: Grow target axis (requires growth support)
             if (numericAxisCmp.MergingNeedsTargetGrowth()) {
                throw std::runtime_error(
-                  "RHist::Add currently does not support growing the target "
+                  "RHist::Add does not currently support growing the target "
                   "histogram's axes"
                );
             }
@@ -386,10 +386,26 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
          }
          case CmpKind::kLabeled: {
             auto labeledAxisCmp = axisCmp.GetLabeled();
+            // FIXME: Grow target axis (requires growth support)
+            //        (we could already add support for adding source bin labels
+            //        to the target axis, but that's useless without growth)
+            if (labeledAxisCmp.TargetMustGrow()) {
+               throw std::runtime_error(
+                  "RHist::Add does not currently support growing the target "
+                  "histogram's axes"
+               );
+            }
+            // FIXME: Support out-of-order bin labels
+            if (labeledAxisCmp.LabelOrderDiffers()) {
+               throw std::runtime_error(
+                  "RHist::Add currently requires the source and target "
+                  "histogram axes to have their bin labels in the same order"
+               )
+            }
             // FIXME: Support complicated merge scenarios where a source
             //        histogram bin doesn't map into a target histogram bin with
             //        the same global bin index
-            if (!labeledAxisCmp.HasSameBins()) {
+            if (numericAxisCmp.TargetWillHaveExtraBins()) {
                throw std::runtime_error(
                   "RHist::Add currently requires identical global "
                   "binning of source and target histograms"
