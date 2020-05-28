@@ -162,6 +162,7 @@
          req.ids = [];
          req.names = [];
          req.values = [];
+         req.update = true;
       }
 
       req.ids.push(this.snapid);
@@ -188,10 +189,12 @@
    }
 
    /** Sends accumulated attribute changes to server */
-   JSROOT.TObjectPainter.prototype.v7SendAttrChanges = function(req) {
+   JSROOT.TObjectPainter.prototype.v7SendAttrChanges = function(req, do_update) {
       var canp = this.canv_painter();
-      if (canp && req && req._typename)
+      if (canp && req && req._typename) {
+         if (do_update !== undefined) req.update = do_update ? true : false;
          canp.v7SubmitRequest("", req);
+      }
    }
 
    /** @brief Submit request to server-side drawable
@@ -1344,7 +1347,7 @@
 
    }
 
-   RFramePainter.prototype.DrawAxes = function(shrink_forbidden) {
+   RFramePainter.prototype.DrawAxes = function() {
       // axes can be drawn only for main histogram
 
       if (this.axes_drawn) return true;
@@ -1399,28 +1402,9 @@
          draw_vertical.DrawAxis(true, layer, w, h,
                                 draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
                                 false, show_second_ticks ? w : 0, disable_axis_draw,
-                             draw_vertical.invert_side ? 0 : this.frame_x());
+                                draw_vertical.invert_side ? 0 : this.frame_x());
 
          this.DrawGrids();
-      }
-
-      if (!shrink_forbidden && JSROOT.gStyle.CanAdjustFrame && !disable_axis_draw) {
-
-         var shrink = 0., ypos = draw_vertical.position;
-
-         if ((-0.2*w < ypos) && (ypos < 0)) {
-            shrink = -ypos/w + 0.001;
-            this.shrink_frame_left += shrink;
-         } else if ((ypos>0) && (ypos<0.3*w) && (this.shrink_frame_left > 0) && (ypos/w > this.shrink_frame_left)) {
-            shrink = -this.shrink_frame_left;
-            this.shrink_frame_left = 0.;
-         }
-
-         if (shrink != 0) {
-            this.Shrink(shrink, 0);
-            this.Redraw();
-            this.DrawAxes(true);
-         }
       }
 
       this.axes_drawn = true;
@@ -1442,6 +1426,13 @@
          this.SetRootPadRange(pad);
       }
       */
+
+      var changes = {};
+      this.v7AttrChange(changes, "margin_left", this.fX1NDC);
+      this.v7AttrChange(changes, "margin_bottom", this.fY1NDC);
+      this.v7AttrChange(changes, "margin_right", 1 - this.fX2NDC);
+      this.v7AttrChange(changes, "margin_top", 1 - this.fY2NDC);
+      this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
       this.RedrawPad();
    }
@@ -2550,9 +2541,8 @@
    }
 
    RFramePainter.prototype.ProcessKeyPress = function(evnt) {
-
       var main = this.select_main();
-      if (main.empty()) return;
+      if (!JSROOT.key_handling || main.empty()) return;
 
       var key = "";
       switch (evnt.keyCode) {
@@ -4697,36 +4687,52 @@
 
    // =================================================================================
 
-   function drawFrameTitle() {
+   function drawFrameTitle(reason) {
       var fp = this.frame_painter();
       if (!fp)
          return console.log('no frame painter - no title');
 
-      var fx = this.frame_x(),
-          fy = this.frame_y(),
-          fw = this.frame_width(),
-          fh = this.frame_height(),
-          ph = this.pad_height(),
+      var fx           = this.frame_x(),
+          fy           = this.frame_y(),
+          fw           = this.frame_width(),
+          fh           = this.frame_height(),
+          ph           = this.pad_height(),
           title        = this.GetObject(),
           pp           = this.pad_painter(),
-          use_frame    = false,
-          title_margin = this.v7EvalLength( "margin", ph, 0.02),
-          title_height = this.v7EvalLength( "height", ph, 0.05),
-          text_size    = this.v7EvalAttr( "text_size", 16),
-          text_angle   = -1 * this.v7EvalAttr( "text_angle", 0),
-          text_align   = this.v7EvalAttr( "text_align", 22),
-          text_color   = this.v7EvalColor( "text_color", "black"),
-          text_font    = this.v7EvalAttr( "text_font", 41);
+          title_margin = this.v7EvalLength("margin", ph, 0.02),
+          title_width  = fw,
+          title_height = this.v7EvalLength("height", ph, 0.05),
+          text_size    = this.v7EvalAttr("text_size", 16),
+          text_angle   = -1 * this.v7EvalAttr("text_angle", 0),
+          text_align   = this.v7EvalAttr("text_align", 22),
+          text_color   = this.v7EvalColor("text_color", "black"),
+          text_font    = this.v7EvalAttr("text_font", 41);
 
-      this.CreateG(false).attr("transform","translate(" + fx + "," + Math.round(fy-title_margin-title_height) + ")");
+      this.CreateG(false);
 
-      var arg = { align: 22, x: fw/2, y: title_height/2, text: title.fText, rotate: text_angle, color: text_color, latex: 1 };
+      if (reason == 'drag') {
+         title_width = parseInt(this.draw_g.attr("width"));
+         title_height = parseInt(this.draw_g.attr("height"));
+
+         var changes = {};
+         this.v7AttrChange(changes, "margin", (fy - parseInt(this.draw_g.attr("y")) - title_height) / ph );
+         this.v7AttrChange(changes, "height", title_height / ph);
+         this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
+      } else {
+         this.draw_g.attr("transform","translate(" + fx + "," + Math.round(fy-title_margin-title_height) + ")")
+                    .attr("x", fx).attr("y", Math.round(fy-title_margin-title_height))
+                    .attr("width",title_width).attr("height",title_height);
+      }
+
+      var arg = { align: 22, x: title_width/2, y: title_height/2, text: title.fText, rotate: text_angle, color: text_color, latex: 1 };
 
       this.StartTextDrawing(text_font, text_size);
 
       this.DrawText(arg);
 
       this.FinishTextDrawing();
+
+      this.AddDrag({ minwidth: 20, minheight: 20, no_change_x: true, redraw: this.Redraw.bind(this,'drag') });
    }
 
    ////////////////////////////////////////////////////////////////////////////////////////////
@@ -4864,8 +4870,7 @@
 
    RPalettePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
 
-   RPalettePainter.prototype.GetPalette = function()
-   {
+   RPalettePainter.prototype.GetPalette = function() {
       var drawable = this.GetObject();
       var pal = drawable ? drawable.fPalette : null;
 
@@ -4875,13 +4880,10 @@
       return pal;
    }
 
-   RPalettePainter.prototype.DrawPalette = function() {
+   RPalettePainter.prototype.DrawPalette = function(after_resize) {
 
-      var pthis = this,
-          palette = this.GetPalette(),
+      var palette = this.GetPalette(),
           contour = palette.GetContour(),
-          can_move = false,
-          nbr1 = 8,
           framep = this.frame_painter();
 
       if (!contour)
@@ -4891,29 +4893,43 @@
       if (!framep)
          return console.log('no frame painter - no palette');
 
-      // zmin = Math.min(contour[0], framep.zmin);
-      // zmax = Math.max(contour[contour.length-1], framep.zmax);
-
-      var  zmin = contour[0],
-           zmax = contour[contour.length-1],
-          fx = this.frame_x(),
-          fy = this.frame_y(),
-          fw = this.frame_width(),
-          fh = this.frame_height(),
-          pw = this.pad_width(),
+      var zmin         = contour[0],
+          zmax         = contour[contour.length-1],
           obj          = this.GetObject(),
           pp           = this.pad_painter(),
-          use_frame    = false,
-          visible        = this.v7EvalAttr("visible", true),
-          palette_margin = this.v7EvalLength("margin", pw, 0.02),
-          palette_width = this.v7EvalLength("size", pw, 0.05),
+          fx           = this.frame_x(),
+          fy           = this.frame_y(),
+          fw           = this.frame_width(),
+          fh           = this.frame_height(),
+          pw           = this.pad_width(),
+          visible      = this.v7EvalAttr("visible", true),
+          palette_width, palette_height;
+
+      if (after_resize) {
+         palette_width = parseInt(this.draw_g.attr("width"));
+         palette_height = parseInt(this.draw_g.attr("height"));
+
+         var changes = {};
+         this.v7AttrChange(changes, "margin", (parseInt(this.draw_g.attr("x")) - fx - fw) / pw);
+         this.v7AttrChange(changes, "size", palette_width / pw);
+         this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
+      } else {
+          var palette_margin = this.v7EvalLength("margin", pw, 0.02),
+              palette_x = Math.round(fx + fw + palette_margin),
+              palette_y = fy;
+
+          palette_width = this.v7EvalLength("size", pw, 0.05);
           palette_height = fh;
+
+          // x,y,width,height attributes used for drag functionality
+          this.draw_g.attr("transform","translate(" + palette_x +  "," + palette_y + ")")
+                     .attr("x", palette_x).attr("y", palette_y)
+                     .attr("width", palette_width).attr("height", palette_height);
+      }
 
       this.draw_g.selectAll("rect").remove();
 
       if (!visible) return;
-
-      this.draw_g.attr("transform","translate(" + Math.round(fx + fw + palette_margin) +  "," + fy + ")");
 
       var g_btns = this.draw_g.select(".colbtns");
       if (g_btns.empty())
@@ -4970,6 +4986,11 @@
       this.z_handle.max_tick_size = Math.round(palette_width*0.3);
 
       this.z_handle.DrawAxis(true, this.draw_g, palette_width, palette_height, "translate(" + palette_width + ", 0)");
+
+      if (JSROOT.BatchMode) return;
+
+      if (!after_resize)
+         this.AddDrag({ minwidth: 20, minheight: 20, no_change_y: true, redraw: this.DrawPalette.bind(this, true) });
 
       if (!JSROOT.gStyle.Zooming) return;
 

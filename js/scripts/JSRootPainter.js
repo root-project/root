@@ -3875,10 +3875,14 @@
          make("sw-resize", "M2," + (height-2) + "h15v5h-20v-20h5Z");
          make("se-resize", "M" + (width-2) + "," + (height-2) + "h-15v5h20v-20h-5Z");
 
-         make("w-resize", "M-3,18h5v" + Math.max(0, height - 2*18) + "h-5Z");
-         make("e-resize", "M" + (width+3) + ",18h-5v" + Math.max(0, height - 2*18) + "h5Z");
-         make("n-resize", "M18,-3v5h" + Math.max(0, width - 2*18) + "v-5Z");
-         make("s-resize", "M18," + (height+3) + "v-5h" + Math.max(0, width - 2*18) + "v5Z");
+         if (!callback.no_change_x) {
+            make("w-resize", "M-3,18h5v" + Math.max(0, height - 2*18) + "h-5Z");
+            make("e-resize", "M" + (width+3) + ",18h-5v" + Math.max(0, height - 2*18) + "h5Z");
+         }
+         if (!callback.no_change_y) {
+            make("n-resize", "M18,-3v5h" + Math.max(0, width - 2*18) + "v-5Z");
+            make("s-resize", "M18," + (height+3) + "v-5h" + Math.max(0, width - 2*18) + "v5Z");
+         }
       }
 
       function complete_drag() {
@@ -3981,8 +3985,10 @@
 
                var handle = drag_rect.property('drag_handle');
 
-               handle.acc_x1 += d3.event.dx;
-               handle.acc_y1 += d3.event.dy;
+               if (!callback.no_change_x)
+                  handle.acc_x1 += d3.event.dx;
+               if (!callback.no_change_y)
+                  handle.acc_y1 += d3.event.dy;
 
                drag_rect.attr("x", Math.min( Math.max(handle.acc_x1, 0), handle.pad_w))
                         .attr("y", Math.min( Math.max(handle.acc_y1, 0), handle.pad_h));
@@ -4042,6 +4048,9 @@
 
             var handle = drag_rect.property('drag_handle'),
                 dx = d3.event.dx, dy = d3.event.dy, elem = d3.select(this);
+
+            if (callback.no_change_x) dx = 0;
+            if (callback.no_change_y) dy = 0;
 
             if (elem.classed('js_nw_resize')) { handle.acc_x1 += dx; handle.acc_y1 += dy; }
             else if (elem.classed('js_ne_resize')) { handle.acc_x2 += dx; handle.acc_y1 += dy; }
@@ -5133,7 +5142,7 @@
                    w = Math.min(rect.width/curr.fsize, 0.5); // at maximum, 0.5 should be used
 
                node.append('svg:tspan').attr('dx', makeem(curr.dx-w)).attr('dy', makeem(curr.dy-0.2)).text(curr.accent);
-               curr.dy = 0.2;; // compensate hat
+               curr.dy = 0.2; // compensate hat
                curr.dx = Math.max(0.2, w-0.2); // extra horizontal gap
                curr.accent = false;
             } else {
