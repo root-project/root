@@ -3338,7 +3338,7 @@
                err[ierr+2] = fp.grz(graph.fZ[i] - graph.fEZ[i]);
                err[ierr+3] = x;
                err[ierr+4] = y;
-               err[ierr+5] = fp.grz(graph.fZ[i] + graph.fEZ[i]);;
+               err[ierr+5] = fp.grz(graph.fZ[i] + graph.fEZ[i]);
                ierr+=6;
             }
 
