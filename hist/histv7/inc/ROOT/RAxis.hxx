@@ -247,10 +247,10 @@ public:
       /// indicates that every regular source axis bin maps into a regular
       /// target axis bin with the same index and vice versa.
       ///
-      /// If this property (or its `HasSameBins()` cousin for labeled axes) is
-      /// true for every dimension of a source and target histogram, then every
-      /// regular source histogram bin maps into a target histogram bin with the
-      /// same global bin index.
+      /// If this property (or its `!TargetWillHaveExtraBins()` cousin for
+      /// labeled axes) is true for every dimension of a source and target
+      /// histogram, then every regular source histogram bin maps into a target
+      /// histogram bin with the same global bin index.
       ///
       // NOTE: This property can be leveraged to avoid local<->global regular
       //       bin index conversions in the histogram merging implementation.
@@ -273,7 +273,8 @@ public:
       /// the target overflow bin is guaranteed to be the _last_ target axis bin
       /// which the source overflow bin maps into, not the first.
       ///
-      /// If this property is true for every dimension of a source and target
+      /// If this property (or its `!TargetWillHaveExtraBins()` cousin for
+      /// labeled axes) is true for every dimension of a source and target
       /// histogram, then every source histogram bin, whether regular or
       /// under/overflow, maps into a target histogram bin with the same global
       /// bin index.
@@ -647,12 +648,14 @@ public:
       /// each of these flags mean.
       ///
       LabeledBinningCmpResult(bool sourceOnlyLabels,
-                              bool disorderedLabels,
-                              bool hasSameBins)
+                              bool targetMustGrow,
+                              bool labelOrderDiffers,
+                              bool extraTargetBins)
          : fFlags(
             Flags(sourceOnlyLabels * kSourceOnlyLabels
-                  + disorderedLabels * kDisorderedLabels
-                  + hasSameBins * kHasSameBins)
+                  + targetMustGrow * kTargetMustGrow
+                  + labelOrderDiffers * kLabelOrderDiffers
+                  + extraTargetBins * kExtraTargetBins)
          )
       {}
 
@@ -661,58 +664,65 @@ public:
          return fFlags == other.fFlags;
       }
 
-      /// The source axis has labels that the target axis doesn't have
+      /// The source axis has labeled bins that the target axis doesn't have
       ///
-      /// These labels will need to be added to the target axis before histogram
-      /// data merging becomes possible.
+      /// Similar labels will need to be added to the target axis before
+      /// histogram data merging becomes possible.
       ///
-      // NOTE: We aren't reporting existence of target-specific labels because
-      //       this does not affect merging, is largely irrelevant to the user,
-      //       and takes some CPU cycles to figure out.
-      //
+      /// Labels with have no associated bins are not accounted for, since they
+      /// contain no useful data to be transferred to the target axis.
+      ///
+      /// This property implies `TargetMustGrow()`.
+      ///
       bool SourceHasExtraLabels() const {
+         assert(TargetMustGrow());
          return fFlags & kSourceOnlyLabels;
       }
 
-      /// The common subset of labels in the source and target axes is not
-      /// ordered in the same way
+      /// The target axis must grow to encompass all source bins
       ///
-      /// The histogram implementation will need to either perform an
-      /// order-insensitive bin merge or reorder target axis labels (and
-      /// associated bin data) so that it matches the order of source bins.
+      /// This can happen either because more source labels need to be added
+      /// to the target axis (see above) or because the target axis already has
+      /// the proper labels, but they don't have associated bins yet.
       ///
-      /// Any reordering should be performed after adding missing source axis
-      /// labels (see `SourceHasExtraLabels()`) to the target axis. Note that
-      /// newly added labels may have the wrong index, so adding labels from the
-      /// source axis may create target axis order issues that weren't there
-      /// before, so target axis reordering should take place whether this flag
-      /// or the previous one was true.
+      /// Target axis growth should be carried out after adding missing labels.
       ///
-      bool LabelOrderDiffers() const {
-         return fFlags & kDisorderedLabels;
+      bool TargetMustGrow() const {
+         return fFlags & kTargetMustGrow;
       }
 
-      /// The source and target axis have the same labels in the same order
+      /// Source and target labels are not (or won't be) in the same order
       ///
-      /// This property implies both `!SourceHasExtraLabels()` and
-      /// `!LabelOrderDiffers()`, and adds the extra informations that the
-      /// target axis doesn't have any labels which the source axis doesn't, and
-      /// that every axis label was committed into an actual bin via Fill().
+      /// After adding any missing bins and labels to the target axis, the
+      /// histogram merging algorithm will need to either reorder the target
+      /// axis' labels (and associated histogram bins) or support merge
+      /// scenarios in which source->target bin correspondence is nontrivial.
       ///
-      /// This property is the equivalent of `RegularBinBijection()` for labeled
-      /// axes: if either it or `RegularBinBijection()` is true for every
-      /// dimension of a source and target histogram, then every source
-      /// histogram bin maps into a target histogram bin with the same global
-      /// bin index.
+      /// If needed, bin reordering must be carried out after adding any missing
+      /// labels and growing the target axis.
       ///
-      // NOTE: There is no equivalent of `FullBinBijection()` for labeled axis
-      //       because labeled axes can only successfully compare with other
-      //       labeled axes and never have overflow bins, so that property would
-      //       always be true for labeled axes when `HasSameBins()` is true.
+      bool LabelOrderDiffers() const {
+         return fFlags & kLabelOrderDiffers;
+      }
+
+      /// After growing, the target axis will have more bins than the source
+      ///
+      /// This means that even if `LabelOrderDiffers()` is false or bin
+      /// reordering is applied, global bin indices will not match between the
+      /// source and target histogram, and local<->global bin index conversions
+      /// will be necessary during histogram merging.
+      ///
+      /// This is the moral equivalent of
+      /// `NumericalBinCmpResult::FullBinBijection()` for labeled axes.
+      ///
+      // NOTE: Although this technically applies to regular bins only, there is
+      //       no need for a regular/full bin bijection distinction here because
+      //       labeled axes may only be successfully compared with other labeled
+      //       axes, and therefore the number of under/overflow bins is
+      //       guaranteed to be the same on both sides.
       //
-      bool HasSameBins() const {
-         assert(!SourceHasExtraLabels() && !LabelOrderDiffers());
-         return fFlags & kHasSameBins;
+      bool TargetWillHaveExtraBins() const {
+         return fFlags & kExtraTargetBins;
       }
 
    private:
@@ -720,11 +730,14 @@ public:
          // The source axis has labels that the target axis doesn't have
          kSourceOnlyLabels = 1 << 0,
 
-         // Common source/target bin labels are not ordered in the same way
-         kDisorderedLabels = 1 << 1,
+         // The target axis must grow to cover all source axis labels w/ bins
+         kTargetMustGrow = 1 << 1,
 
-         // Source and target bins are identically named and ordered
-         kHasSameBins = 1 << 2,
+         // Need target bin reordering or an order-insensitive merge algorithm
+         kLabelOrderDiffers = 1 << 2,
+
+         // After growing, the target axis will have more bins than the source
+         kExtraTargetBins = 1 << 3,
       } fFlags;
    };
 
@@ -1292,6 +1305,9 @@ public:
    }
 
    /// Build a vector of labels. The position in the vector defines the label's bin.
+   // FIXME: Add an interface to iterate over (label, bin) pairs without
+   //        materializing an ordered vector of labels. Restrict iteration to
+   //        labels which do have associated bins.
    std::vector<std::string_view> GetBinLabels() const
    {
       std::vector<std::string_view> vec(fLabelsIndex.size());
@@ -1303,45 +1319,67 @@ public:
    /// Compare the labels of this axis with those of another axis for the
    /// purpose of investigating a histogram merging scenario
    LabeledBinningCmpResult CompareBinLabels(const RAxisLabels& source) const noexcept {
-      // Check how source labels map into destination labels
-      bool sourceOnlyLabels = false;
+      // For each axis, we must carefully distinguish the number of bins from
+      // the number of labels. An RAxisLabels may have more bin labels than it
+      // has bins if a label has been queried (which automatically allocates a
+      // bin index) but the corresponding bin never registered any fill.
+      const int numSourceLabels = source.fLabelsIndex.size();
+      const int numSourceBins = source.GetNBinsNoOver();
+      const int numTargetLabels = fLabelsIndex.size();
+      const int numTargetBins = GetNBinsNoOver();
+
+      // Check how source _bins_ map into target bins and labels
+      int numLabelsAfterGrowth = numTargetLabels;
+      int numBinsAfterGrowth = numTargetBins;
       bool disorderedLabels = false;
       for (const auto &kv: source.fLabelsIndex) {
-         auto iter = fLabelsIndex.find(kv.first);
-         if (iter == fLabelsIndex.cend()) {
-            sourceOnlyLabels = true;
-         } else if (iter->second != kv.second) {
-            disorderedLabels = true;
+         // Ignore uncommitted source labels: no bin = no data to be merged
+         const int sourceBinIdx = kv.second;
+         if (sourceBinIdx <= numSourceBins) {
+            // Look for the the source bin's label in the target axis' label set
+            auto iter = fLabelsIndex.find(kv.first);
+
+            // Use any existing target label, or simulate creating one
+            const int targetBinIdx =
+               (iter != fLabelsIndex.cend()) ? (iter->second)
+                                             : ++numLabelsAfterGrowth;
+
+            // If the target label has no associated bin yet, simulate growing
+            // the target axis to materialize that bin
+            numBinsAfterGrowth = std::max(numTargetBins, targetBinIdx);
+
+            // Check if label order is consistent in the source and target axes
+            disorderedLabels |= (targetBinIdx != sourceBinIdx);
          }
       }
 
-      // If every source label maps into a destination label with the same
-      // index, and the source axis doesn't have any extra labels, then the set
-      // of source and destination bin labels...
-      const bool sameBinLabels =
-         !sourceOnlyLabels
-         && !disorderedLabels
-         && (fLabelsIndex.size() == source.fLabelsIndex.size());
+      // Figure out what the histogram merging implementation must do before
+      // reordering any disordered labels.
+      const bool sourceOnlyLabels = (numLabelsAfterGrowth > numTargetLabels);
+      const bool mustGrowTarget = (numBinsAfterGrowth > numTargetBins);
 
-      // ...but before we deduce from that that the source and target axis have
-      // the same bins, we must make sure that every label was committed into an
-      // actual histogram bin via a call to Fill().
-      //
-      // FIXME: It would, in principle, be possible to only compare the set of
-      //        labels which were committed into actual bins. But it seems much
-      //        better to get rid of the RAxisLabels design oddity which allows
-      //        the set of bin labels to go out of sync with the underlying set
-      //        of RAxisGrow bins.
-      //
-      const bool sameBins =
-         sameBinLabels
-         && (static_cast<int>(fLabelsIndex.size()) == GetNBinsNoOver())
-         && (static_cast<int>(source.fLabelsIndex.size()) == source.GetNBinsNoOver());
+      // FIXME: Since we don't know in which order missing source labels will be
+      //        added to the target axis by the histogram merging implementation
+      //        as there is no standardized way to iterate over source bins yet,
+      //        we must work under the pessimistic assumption that if extra
+      //        labels must be added to the target, then bad order may occur.
+      disorderedLabels |= sourceOnlyLabels;
+
+      // Figure out if after growing the target axis as needed, it will feature
+      // some labels which the source axis doesn't have.
+      bool extraTargetBins = (numBinsAfterGrowth > numSourceBins);
+
+      // FIXME: As for disordered labels above, we must for now work under the
+      //        pessimistic assumption that source labels were added to the
+      //        target in the dumbest possible way, materializing all previously
+      //        existing target labels even if there was no need for it.
+      extraTargetBins |= (numLabelsAfterGrowth > numSourceBins);
 
       // Produce the results of the comparison
       return LabeledBinningCmpResult(sourceOnlyLabels,
+                                     mustGrowTarget,
                                      disorderedLabels,
-                                     sameBins);
+                                     extraTargetBins);
    }
 };
 
