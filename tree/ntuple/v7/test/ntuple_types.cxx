@@ -1,14 +1,4 @@
-#include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
-
-#include "gtest/gtest.h"
-
-#include <memory>
-
-#include "CustomStruct.hxx"
-
-using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
-using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
+#include "ntuple_test.hxx"
 
 TEST(RNTuple, TypeName)
 {

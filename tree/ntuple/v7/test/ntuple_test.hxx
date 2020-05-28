@@ -3,6 +3,8 @@
 
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RDataFrame.hxx>
+#include <ROOT/RField.hxx>
+#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTuple.hxx>
@@ -51,6 +53,7 @@ using RColumnModel = ROOT::Experimental::RColumnModel;
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
 using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
+using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTuple = ROOT::Experimental::RNTuple; 
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
