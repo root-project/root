@@ -2275,11 +2275,11 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
             PyObject** ref = new PyObject*{pyobject};
 
         // function call itself and cleanup
-            code << "    PyObject** ref = (PyObject**)" << std::hex << std::showbase << (intptr_t)ref << ";\n"
+            code << "    PyObject** ref = (PyObject**)" << std::showbase << (intptr_t)ref << ";\n"
                     "    PyObject* pyresult = nullptr;\n"
                     "    if (*ref) pyresult = PyObject_CallFunctionObjArgs(*ref";
             for (int i = 0; i < nArgs; ++i)
-                code << ", pyargs[" << std::dec << std::noshowbase << i << "]";
+                code << ", pyargs[" << i << "]";
             code << ", NULL);\n"
                     "    else PyErr_SetString(PyExc_TypeError, \"callable was deleted\");\n";
 
@@ -2357,7 +2357,7 @@ PyObject* CPyCppyy::FunctionPointerConverter::FromMemory(void* address)
         std::ostringstream code;
         code << "namespace __cppyy_internal {\n  std::function<"
              << fRetType << fSignature << "> " << fname.str()
-             << " = (" << fRetType << "(*)" << fSignature << ")" << std::hex << std::showbase << (intptr_t)faddr
+             << " = (" << fRetType << "(*)" << fSignature << ")" << std::showbase << (intptr_t)faddr
              << ";\n}";
 
         if (!Cppyy::Compile(code.str())) {
