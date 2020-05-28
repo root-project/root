@@ -9,6 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_HelpSMText
+#define ROOT_HelpSMText
+
 #include "Rtypes.h"
 
 R__EXTERN const char gHelpSMTopLevel[];
@@ -20,3 +23,5 @@ R__EXTERN const char gHelpSMAxis[];
 R__EXTERN const char gHelpSMTitle[];
 R__EXTERN const char gHelpSMStats[];
 R__EXTERN const char gHelpSMPSPDF[];
+
+#endif

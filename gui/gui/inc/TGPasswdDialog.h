@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPasswdDialog
-#define ROOT_TPasswdDialog
+#ifndef ROOT_TGPasswdDialog
+#define ROOT_TGPasswdDialog
 
 
 //////////////////////////////////////////////////////////////////////////
