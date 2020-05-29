@@ -26,10 +26,8 @@
 #include "TG3DLine.h"
 #include "TGSlider.h"
 #include "TGDoubleSlider.h"
-#include "TTree.h"
 #include "TGListBox.h"
 #include "TGedPatternSelect.h"
-#include "TVirtualPad.h"
 #include "TCanvas.h"
 
 #include "Riostream.h"
