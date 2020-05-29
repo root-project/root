@@ -35,20 +35,17 @@
 #include <TLeaf.h>
 #include <TBranch.h>
 #include <TEventList.h>
-#include <TH2.h>
-#include <TText.h>
-#include <TLegend.h>
 #include <TGraph.h>
-#include <TStyle.h>
 #include <TMatrixF.h>
 #include <TMatrixDSym.h>
 #include <TMultiGraph.h>
 #include <TPrincipal.h>
 #include <TMath.h>
 #include <TSystem.h>
-#include <TCanvas.h>
+
 #include <iostream>
 #include <memory>
+
 #define MinNoTrainingEvents 10
 
 //_______________________________________________________________________

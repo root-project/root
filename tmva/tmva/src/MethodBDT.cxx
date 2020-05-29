@@ -136,16 +136,14 @@ the selection.
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "Riostream.h"
-#include "TDirectory.h"
 #include "TRandom3.h"
 #include "TMath.h"
 #include "TMatrixTSym.h"
 #include "TGraph.h"
 
+#include <iostream>
 #include <algorithm>
 #include <cmath>
-#include <fstream>
 #include <numeric>
 #include <unordered_map>
 

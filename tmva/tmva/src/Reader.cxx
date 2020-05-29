@@ -104,12 +104,9 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "TTree.h"
 #include "TLeaf.h"
 #include "TString.h"
-#include "TClass.h"
 #include "TH1D.h"
-#include "TKey.h"
 #include "TVector.h"
 #include "TXMLEngine.h"
 #include "TMath.h"
@@ -119,8 +116,6 @@
 #include <string>
 #include <vector>
 #include <fstream>
-
-#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

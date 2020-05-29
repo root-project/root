@@ -22,13 +22,8 @@
 #include <TMVA/VariableTransform.h>
 
 #include <TAxis.h>
-#include <TCanvas.h>
 #include <TFile.h>
-#include <TGraph.h>
-#include <TSystem.h>
 #include <TH2.h>
-
-#include <iostream>
 
 using namespace TMVA;
 

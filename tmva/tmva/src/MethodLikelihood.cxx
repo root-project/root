@@ -122,15 +122,12 @@ non-linear methods must be applied.
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
-#include "TMatrixD.h"
 #include "TVector.h"
 #include "TMath.h"
 #include "TFile.h"
-#include "TKey.h"
 #include "TH1.h"
-#include "TClass.h"
-#include "Riostream.h"
 
+#include <iostream>
 #include <iomanip>
 #include <vector>
 #include <cstdlib>

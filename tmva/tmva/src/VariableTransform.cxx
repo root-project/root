@@ -42,19 +42,13 @@
 #include "TMVA/Version.h"
 #include "TMVA/TransformationHandler.h"
 
-#include "TH1.h"
-#include "TH2.h"
 #include "THashTable.h"
 #include "TList.h"
-#include "TMath.h"
-#include "TProfile.h"
-#include "TVectorD.h"
 #include "TObjString.h"
 
 #include <algorithm>
 #include <cassert>
 #include <exception>
-#include <iomanip>
 #include <stdexcept>
 #include <set>
 

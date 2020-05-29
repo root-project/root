@@ -42,7 +42,6 @@ A class doing the actual fitting of a linear model using rules as base functions
 #include "TTree.h"
 #include "TMath.h"
 
-#include <iostream>
 #include <iomanip>
 #include <numeric>
 #include <algorithm>

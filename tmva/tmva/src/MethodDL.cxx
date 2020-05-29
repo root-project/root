@@ -46,8 +46,6 @@
 #include "TMVA/DNN/Adadelta.h"
 #include "TMVA/Timer.h"
 
-#include "TStopwatch.h"
-
 #include <chrono>
 
 REGISTER_METHOD(DL)

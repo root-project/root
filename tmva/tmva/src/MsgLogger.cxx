@@ -39,14 +39,13 @@ ostringstream derivative to redirect and format output
 #include "TMVA/Types.h"
 
 // ROOT include(s):
-#include "Riostream.h"
 #include "Rtypes.h"
 #include "TObject.h"
 
 // STL include(s):
-#include <assert.h>
+#include <cassert>
 #include <cstdlib>
-#include <iomanip>
+#include <iostream>
 #include <memory>
 
 
