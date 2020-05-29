@@ -324,7 +324,6 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
-    void operModeHook(RooAbsArg::OperMode) ;
     virtual ~CacheElem() ; 
     virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
     RooAbsReal* _norm ;
