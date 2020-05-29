@@ -17,14 +17,13 @@
 
 #include "RooFit.h"
 
-#include "Riostream.h"
-#include <math.h>
+#include <iostream>
+#include <cmath>
 
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "TMath.h"
 
 #include "RooStats/HistFactory/LinInterpVar.h"
 
