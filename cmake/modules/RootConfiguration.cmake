@@ -276,8 +276,8 @@ set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
 set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-set(pythonlib ${PYTHON_LIBRARY})
-set(pythonincdir ${PYTHON_INCLUDE_DIR})
+set(pythonlib ${PYTHON_LIBRARIES})
+set(pythonincdir ${PYTHON_INCLUDE_DIRS})
 set(pythonlibflags)
 
 set(buildxml ${value${xml}})
