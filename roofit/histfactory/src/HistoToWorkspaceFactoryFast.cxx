@@ -57,17 +57,9 @@
 #include "RooStats/AsymptoticCalculator.h"
 #include "HFMsgService.h"
 
-#include "TH2F.h"
-#include "TH3F.h"
-#include "TFile.h"
-#include "TCanvas.h"
 #include "TH1.h"
-#include "TLine.h"
 #include "TTree.h"
-#include "TMarker.h"
 #include "TStopwatch.h"
-#include "TROOT.h"
-#include "TStyle.h"
 #include "TVectorD.h"
 #include "TMatrixDSym.h"
 

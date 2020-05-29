@@ -1,6 +1,6 @@
 
 /** \class RooStats::HistFactory::HistFactoryNavigation
- *  \ingroup HistFactory 
+ *  \ingroup HistFactory
  */
 
 #include <iomanip>
@@ -8,8 +8,6 @@
 
 #include "TFile.h"
 #include "TRegexp.h"
-#include "TCanvas.h"
-#include "TLegend.h"
 #include "TMath.h"
 
 #include "RooRealSumPdf.h"

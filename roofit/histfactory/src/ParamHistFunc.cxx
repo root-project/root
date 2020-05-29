@@ -16,7 +16,7 @@
  *  (or a set of RooRealVars) to one of a number of RooRealVars:
  *
  *  `ParamHistFunc: {val1, val2, ...} -> {gamma (RooRealVar)}`
- *  
+ *
  *  The intended interpretation is that each parameter in the
  *  range represent the height of a bin over the domain
  *  space.
@@ -29,7 +29,7 @@
  *
  *  All indices include '0':<br>
  *  \f$ \gamma_{i,j} \f$ = `paramSet[ size(i)*j + i ]`
- * 
+ *
  *  ie assuming the dimensions are 5*5:<br>
  *  \f$ \gamma_{2,1} \f$ = `paramSet[ 5*1 + 2 ] = paramSet[7]`
  */
@@ -38,11 +38,9 @@
 #include <sstream>
 #include <math.h>
 #include <stdexcept>
+#include <iostream>
 
-#include "TMath.h"
 #include "TH1.h"
-
-#include "Riostream.h"
 
 #include "RooFit.h"
 #include "RooStats/HistFactory/ParamHistFunc.h"
