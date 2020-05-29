@@ -7,16 +7,12 @@
 
 #define __XSGUI_CXX
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
-#include <TROOT.h>
-#include <TGraph.h>
 #include <TFrame.h>
-#include <TCanvas.h>
-#include <TSystem.h>
 #include <TApplication.h>
-#include <Riostream.h>
 
 #include "XSGui.h"
 #include "XSVarious.h"
