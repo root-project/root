@@ -33,6 +33,9 @@ public:
   RooProduct(const char *name, const char *title, const RooArgList& _prodSet) ;
 
   RooProduct(const RooProduct& other, const char* name = 0);
+
+  void addTerm(RooAbsArg* term);
+
   virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
