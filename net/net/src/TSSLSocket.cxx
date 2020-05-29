@@ -18,8 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <openssl/ssl.h>
-#include <stdio.h>
-#include "TROOT.h"
+#include <cstdio>
 #include "TSSLSocket.h"
 #include "TSystem.h"
 
