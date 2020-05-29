@@ -48,7 +48,8 @@ the TEventList object created in the above commands:
 #include "TBuffer.h"
 #include "TCut.h"
 #include "TClass.h"
-#include "TFile.h"
+#include "TDirectory.h"
+#include "TList.h"
 #include "TMath.h"
 
 ClassImp(TEventList);
