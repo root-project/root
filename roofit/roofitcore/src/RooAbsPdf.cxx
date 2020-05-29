@@ -959,9 +959,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t numcpu_strategy = pc.getInt("interleave");
   // strategy 3 works only for RooSimultaneus.
   if (numcpu_strategy==3 && !this->InheritsFrom("RooSimultaneous") ) {
-      coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneus, "
-                           "use then the default strategy = 0" << endl;
-      numcpu_strategy = 0;
+     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneus, "
+                            "falling back to default strategy = 0"  << endl;
+     numcpu_strategy = 0;
   }
   RooFit::MPSplit interl = (RooFit::MPSplit) numcpu_strategy;
 
