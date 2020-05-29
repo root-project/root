@@ -15,7 +15,6 @@
 #include "TKDTreeBinning.h"
 #include "TH2D.h"
 #include "TH2Poly.h"
-#include "TStyle.h"
 #include "TRandom3.h"
 #include "TCanvas.h"
 #include "TApplication.h"
