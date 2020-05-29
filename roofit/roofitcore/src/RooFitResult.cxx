@@ -28,9 +28,10 @@
 ///
 
 #include "RooFit.h"
-#include "Riostream.h"
 
+#include <iostream>
 #include <iomanip>
+
 #include "TBuffer.h"
 #include "TMinuit.h"
 #include "TMath.h"
@@ -56,11 +57,9 @@
 #include "RooMultiVarGaussian.h"
 
 
-
 using namespace std;
 
-ClassImp(RooFitResult); 
-;
+ClassImp(RooFitResult);
 
 
 

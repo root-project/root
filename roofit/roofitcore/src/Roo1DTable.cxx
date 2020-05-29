@@ -30,13 +30,12 @@ equivalent of a plot. To create a table use the RooDataSet::table method.
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
 #include "TString.h"
-#include "TMath.h"
 #include "TClass.h"
 
 #include <iostream>
 #include <iomanip>
 
-using namespace std ;
+using namespace std;
 
 ClassImp(Roo1DTable);
 

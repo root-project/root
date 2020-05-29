@@ -40,14 +40,13 @@ instantiate objects.
 #include "RooAbsPdf.h"
 #include <fstream>
 
-using namespace std ;
+using namespace std;
 
 ClassImp(RooClassFactory);
-;
 
 static Int_t init();
 
-static Int_t dummy = init() ;
+static Int_t dummy = init();
 
 static Int_t init()
 {
