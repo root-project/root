@@ -348,7 +348,6 @@ static llvm::StringRef s_ExecutableFormat;
 
 static bool shouldPermanentlyIgnore(const std::string& FileName,
                             const cling::DynamicLibraryManager& dyLibManager) {
-  assert(FileName == getRealPath(FileName));
   assert(!s_ExecutableFormat.empty() && "Failed to find the object format!");
 
   if (llvm::sys::fs::is_directory(FileName))
