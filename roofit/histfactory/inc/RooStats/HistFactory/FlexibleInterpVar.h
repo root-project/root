@@ -74,9 +74,7 @@ namespace HistFactory{
     std::vector<int> _interpCode;
     Double_t _interpBoundary;
 
-    TIterator* _paramIter ;  //! do not persist
-
-    mutable Bool_t         _logInit ;            //! flag used for chaching polynomial coefficients
+    mutable Bool_t         _logInit ;            //! flag used for caching polynomial coefficients
     mutable std::vector< double>  _polCoeff;     //! cached polynomial coefficients
 
     Double_t evaluate() const;
