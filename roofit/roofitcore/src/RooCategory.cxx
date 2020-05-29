@@ -28,7 +28,7 @@ A category object can be used to *e.g.* conduct a simultaneous fit of
 the same observable in multiple categories.
 
 ### Setting up a category
-A category can be set up like this:
+1. A category can be set up like this:
 ~~~{.cpp}
 RooCategory myCat("myCat", "Lepton multiplicity category", {
                   {"0Lep", 0},
@@ -37,13 +37,13 @@ RooCategory myCat("myCat", "Lepton multiplicity category", {
                   {"3Lep", 3}
 });
 ~~~
-Like this:
+2. Like this:
 ~~~{.cpp}
 RooCategory myCat("myCat", "Asymmetry");
 myCat["left"]  = -1;
 myCat["right"] =  1;
 ~~~
-Or like this:
+3. Or like this:
 ~~~{.cpp}
 RooCategory myCat("myCat", "Asymmetry");
 myCat.defineType("left", -1);
