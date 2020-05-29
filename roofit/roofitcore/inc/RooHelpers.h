@@ -27,7 +27,13 @@
 
 namespace RooHelpers {
 
-/// Switches the message service to verbose while the instance is alive.
+/// Switches the message service to a different level while the instance is alive.
+/// Can also temporarily activate / deactivate message topics.
+/// Use as
+/// ~~~{.cpp}
+/// RooHelpers::LocalChangeMessageLevel changeMsgLvl(RooFit::WARNING);
+/// [ statements that normally generate a lot of output ]
+/// ~~~
 class LocalChangeMsgLevel {
   public:
     /// Change message level (and topics) while this object is alive, reset when it goes out of scope.
@@ -50,7 +56,8 @@ class LocalChangeMsgLevel {
 
 
 /// Hijacks all messages with given level and topic (and optionally object name) while alive.
-/// Use this like an ostringstream afterwards. Useful for unit tests and debugging.
+/// Use this like an ostringstream afterwards. The messages can e.g. be retrieved using `str()`.
+/// Useful for unit tests / debugging.
 class HijackMessageStream : public std::ostringstream {
   public:
     HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopic topics, const char* objectName = nullptr);

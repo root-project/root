@@ -27,61 +27,89 @@
 \class RooTemplateProxy
 \ingroup Roofitcore
 
+## Introduction
 A RooTemplateProxy is used to hold references to other RooFit objects in an expression tree.
-A `RooGaussian(..., x, mean, sigma)` can e.g. store `x, mean, sigma` as `RooTemplateProxy<RooAbsReal>`.
-Any object deriving from RooAbsArg can be stored, *e.g.*, variables, PDFs and categories.
+A `RooGaussian(..., x, mean, sigma)` can e.g. store references to `x, mean, sigma` as
+```
+RooTemplateProxy<RooAbsReal> _x;
+RooTemplateProxy<RooAbsReal> _mean;
+RooTemplateProxy<RooAbsReal> _sigma;
+```
+Now, the values of these three can be accessed, and the template argument ensures that only objects that evaluate
+to real numbers (RooAbsReal) can be stored in such a proxy. These can e.g. be variables, PDFs and functions.
+To store an object that's a `RooCategory`, one would, for example, use
+```
+RooTemplateProxy<RooCategory> _category;
+```
+
+Since %ROOT 6.22, the proxy can be used like a pointer to an instance of the template argument.
+For this, it provides `operator*` and `operator->`, e.g.
+```
+double oldValue = _x->getVal(normalisationSet);
+*_x = 17.;
+```
 
 RooTemplateProxy's base class RooArgProxy registers the proxied objects as "servers" of the object
 that holds the proxy. When the value of the proxied object is changed, the owner is
 notified, and can recalculate its own value. Renaming or exchanging objects that
 serve values to the owner of the proxy is handled automatically.
 
-## Modernisation of proxies in ROOT 6.22
+## Modernisation of proxies in %ROOT 6.22
 In ROOT 6.22, the classes RooRealProxy and RooCategoryProxy were replaced by RooTemplateProxy<class T>.
 
 Two typedefs have been defined for backward compatibility:
 - `RooRealProxy = RooTemplateProxy<RooAbsReal>`. Any generic object that converts to a real value.
 - `RooCategoryProxy = RooTemplateProxy<RooAbsCategory>`. Any category object.
 
-When choosing the template argument according to which type of object should be stored in the proxy,
-RooTemplateProxy allows for type-safely accessing all properties of the stored object. For this, it
-provides `operator*` and `operator->`, so that the RooTemplateProxy can be used similarly to a smart pointer.
+To modernise a class, one can change the template argument of the proxy to the most appropriate type,
+and increment the class version of the owner.
 
 <table>
 <tr><th> %RooFit before %ROOT 6.22 <th> %RooFit starting with %ROOT 6.22
 <tr><td>
 ~~~{.cpp}
-// In class definition
-RooRealProxy realProxy;
+// In .h: Declare member
+RooRealProxy pdfProxy;
+
+ClassDef(MyPdf, 1)
+};
+
+// In .cxx: Initialise proxy in constructor
+// The proxy will accept any RooAbsArg, so the type of
+// "thePdf" has to be checked manually.
+MyPdf::MyPdf(name, title, ...) :
+  pdfProxy("pdfProxy", "Proxy holding a PDF", this, thePdf) {
+  [ Extra checking here ... ]
+}
 
 
-// Initialise proxy in constructor
-realProxy("pdfProxy", "Proxy holding a PDF", this, thePdf),
-// The proxy will accept any RooAbsArg, so some extra checking has to be implemented
-// for "thePdf".
-[ ...]
-
-
-// Later in a function needing to access a PDF held by the proxy
-RooAbsArg* absArg = realProxy.absArg();
+// In .cxx: Accessing the proxy
+RooAbsArg* absArg = pdfProxy.absArg();
 RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(absArg);
-assert(pdf); // This should work, but the proxy doesn't have a way to check
+assert(pdf); // Manual type checking ...
 pdf->fitTo(...);
 ~~~
 <td>
 ~~~{.cpp}
-// In class definition
+// In .h: Declare member
 RooTemplateProxy<RooAbsPdf> pdfProxy;
 
+ClassDef(MyPdf, 2)
+};
 
-// Initialise proxy in constructor
-pdfProxy("pdfProxy", "Proxy holding a PDF", this, thePdf),
-// The program will not compile if "thePdf" is not a type deriving from RooAbsPdf
+// In .cxx: Initialise proxy in constructor
+// The program will not compile if "thePdf" is not a
+// type deriving from RooAbsPdf
+MyPdf::MyPdf(name, title, ...) :
+  pdfProxy("pdfProxy", "Proxy holding a PDF", this, thePdf) {
+
+}
+
+
+// In .cxx: Accessing the proxy
 
 
 
-
-// Later in a function needing to access a PDF held by the proxy
 pdfProxy->fitTo(...);
 ~~~
 </table>
@@ -93,11 +121,12 @@ pdfProxy->fitTo(...);
  - If a PDF is stored: `RooTemplateProxy<RooAbsPdf>`.
  - If a real-valued object is stored: `RooTemplateProxy<RooAbsReal>`.
  - If a category is stored: `RooTemplateProxy<RooCategory>`.
- - If a variable is stored (i.e. one want to be able to assign values to it): `RooTemplateProxy<RooRealVar>`
+ - If a variable is stored (i.e. one wants to be able to assign values to it): `RooTemplateProxy<RooRealVar>`
  Other template arguments are possible, as long as they derive from RooAbsArg.
-2. Make sure that the right type is passed in the constructor of the proxy.
-3. Always use `proxy->` and `*proxy` to work with the stored object. No need to cast.
-4. **Only if necessary** If errors about missing symbols connected to RooTemplateProxy appear at link time,
+2. Increment the class version of the owning class.
+3. Make sure that the right type is passed in the constructor of the proxy.
+4. Always use `proxy->` and `*proxy` to work with the stored object. No need to cast.
+5. **Only if necessary** If errors about missing symbols connected to RooTemplateProxy appear at link time,
    a specific template instantiation for RooTemplateProxy is not yet in ROOT's dictionaries.
    These two lines should be added to the LinkDef.h of the project:
    ~~~{.cpp}
@@ -218,7 +247,8 @@ public:
   /// \name Legacy interface
   /// In ROOT versions before 6.22, RooFit didn't have this typed proxy. Therefore, a number of functions
   /// for forwarding calls to the proxied objects were necessary. The functions in this group can all be
-  /// replaced by directly accessing the proxied objects using `proxy->function()` or `*proxy = value`.
+  /// replaced by directly accessing the proxied objects using e.g. the member access operator like
+  /// `proxy->function()` or by dereferencing like `*proxy = value`.
   /// For this to work, choose the template argument appropriately. That is, if the
   /// proxy stores a PDF, use `RooTemplateProxy<RooAbsPdf>`, *etc.*.
   /// @{
