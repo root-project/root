@@ -149,6 +149,7 @@ if(distcc)
     message(STATUS "Found distcc: ${DISTCC_COMMAND}")
     if (ccache)
         # If ccache is enabled, use distcc as CCACHE_PREFIX
+        message(STATUS "Because ccache is enabled, CCACHE_PREFIX is set to ${DISTCC_COMMAND}")
         set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "CCACHE_PREFIX=${DISTCC_COMMAND} ${CCACHE_COMMAND}")
     else()
         set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${DISTCC_COMMAND})
