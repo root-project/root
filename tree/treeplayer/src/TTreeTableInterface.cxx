@@ -10,7 +10,6 @@
 
 #include "TClass.h"
 #include "Riostream.h"
-#include "TSystem.h"
 #include "TTreeTableInterface.h"
 #include "TTreeFormula.h"
 #include "TError.h"
