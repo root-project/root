@@ -6,6 +6,7 @@
 #include "ROOT/RVec.hxx"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TInterpreter.h"
 #include "gtest/gtest.h"
 
 #include "TwoFloats.h"
@@ -57,6 +58,7 @@ void test_splitcoll_arrayview(const std::string &fileName, const std::string &tr
 
 TEST(RDFSimpleTests, SplitCollectionArrayView)
 {
+   gInterpreter->GenerateDictionary("vector<TwoFloats>", "TwoFloats.h");
    auto fileName = "myfile_test_splitcoll_arrayview.root";
    auto treeName = "myTree";
    fill_tree(fileName, treeName);
