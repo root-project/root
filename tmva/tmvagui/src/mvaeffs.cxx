@@ -1,6 +1,4 @@
-#include "TApplication.h"
 #include "TCanvas.h"
-#include "TClass.h"
 #include "TFile.h"
 #include "TFormula.h"
 #include "TGButton.h"
@@ -9,7 +7,6 @@
 #include "TGWindow.h"
 #include "TGaxis.h"
 #include "TH1.h"
-#include "TH2.h"
 #include "TIterator.h"
 #include "TKey.h"
 #include "TLatex.h"
@@ -18,9 +15,7 @@
 #include "TList.h"
 #include "TMVA/mvaeffs.h"
 #include "TMVA/tmvaglob.h"
-#include "TPad.h"
 #include "TROOT.h"
-#include "TStyle.h"
 
 #include <iomanip>
 #include <iostream>
