@@ -306,7 +306,7 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceFile::P
       fCtrNPageLoaded->Inc();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
-         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns.top());
+         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
       ROnDiskPage::Key key(columnId, pageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);

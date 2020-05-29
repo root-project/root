@@ -175,26 +175,12 @@ public:
 protected:
    RNTupleReadOptions fOptions;
    RNTupleDescriptor fDescriptor;
-   /// During the life time of the pages storage, different active column sets can overlap
-   std::stack<ColumnSet_t> fActiveColumns;
+   /// The active columns are implicitly defined by the model fields or views
+   ColumnSet_t fActiveColumns;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
 
 public:
-   /// An RAII wrapper around the set of active columns of a page source. Used, e.g., by RNTupleReader::Show()
-   /// in order to temporarily activate all columns
-   class RColumnGuard {
-   private:
-      RPageSource *fPageSource;
-   public:
-      explicit RColumnGuard(RPageSource *pageSource) : fPageSource(pageSource) { fPageSource->StashColumns(); }
-      RColumnGuard(const RColumnGuard&) = delete;
-      RColumnGuard(RColumnGuard&&) = default;
-      RColumnGuard& operator=(const RColumnGuard&) = delete;
-      RColumnGuard& operator=(RColumnGuard&&) = default;
-      ~RColumnGuard() { fPageSource->PopColumns(); }
-   };
-
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
    virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
@@ -207,13 +193,6 @@ public:
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
    void DropColumn(ColumnHandle_t columnHandle) final;
-
-   /// During the life time of a column reader, we may have different periods with different
-   /// sets of active columns.  For instance, RNTupleReader::Show() will temporarily connect all columns.
-   void StashColumns();
-   /// Swap in a previously stashed set of columns and replace the current set of active columns
-   void PopColumns();
-   RColumnGuard GetColumnGuard() { return RColumnGuard(this); }
 
    /// Open the physical storage container for the tree
    void Attach() { fDescriptor = AttachImpl(); }
