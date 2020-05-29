@@ -8,7 +8,6 @@
 #include "TROOT.h"
 #include "TKey.h"
 #include "TH2F.h"
-#include "TPad.h"
 #include "TObjArray.h"
 #include "TText.h"
 #include "TObjString.h"
