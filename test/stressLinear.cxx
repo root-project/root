@@ -88,13 +88,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-#include <Riostream.h>
+#include <cstdlib>
+#include <iostream>
 #include <TSystem.h>
 #include <TFile.h>
 #include <TBenchmark.h>
 #include <TArrayD.h>
-#include <TF1.h>
 #include <TGraph.h>
 #include <TROOT.h>
 #include "TMath.h"
