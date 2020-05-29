@@ -32,16 +32,13 @@ convergence of a Monte Carlo integration.
 
 #include "RooQuasiRandomGenerator.h"
 #include "RooMsgService.h"
-#include "TMath.h"
 
-#include "Riostream.h"
-#include <assert.h>
+#include <iostream>
+#include <cassert>
 
 using namespace std;
 
 ClassImp(RooQuasiRandomGenerator);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

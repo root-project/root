@@ -109,11 +109,11 @@
 ///
 
 
-#include "Riostream.h" 
+#include <iostream>
 
 #include "RooFit.h"
-#include "RooFFTConvPdf.h" 
-#include "RooAbsReal.h" 
+#include "RooFFTConvPdf.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
@@ -128,13 +128,11 @@
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
 #include "TClass.h"
-#include "TSystem.h"
 #include "RooUniformBinning.h"
 
-using namespace std ;
+using namespace std;
 
-ClassImp(RooFFTConvPdf); 
-
+ClassImp(RooFFTConvPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////

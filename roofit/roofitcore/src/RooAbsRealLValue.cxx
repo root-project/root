@@ -48,13 +48,11 @@ interpreted as a parameter.
 #include "RooMsgService.h"
 #include "RooHelpers.h"
 
-#include "TObjString.h"
-#include "TTree.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
 
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 
