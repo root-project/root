@@ -104,7 +104,6 @@
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
-#include "TTree.h"
 #include "RooStats/RooStatsUtils.h"
 
 

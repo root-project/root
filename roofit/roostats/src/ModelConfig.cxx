@@ -37,8 +37,6 @@ specific value. Examples:
 
 #include "RooStats/ModelConfig.h"
 
-#include "TROOT.h"
-
 #include "RooMsgService.h"
 
 #include "RooStats/RooStatsUtils.h"
