@@ -88,6 +88,9 @@ void ntpl005_introspection() {
    // Display information about the storage layout of the data
    ntuple->PrintInfo(ENTupleInfo::kStorageDetails);
 
+   // Display the first entry
+   ntuple->Show(0);
+
    // Collect I/O runtime counters when processing the data set.
    // Maintaining the counters comes with a small performance overhead, so it has to be explicitly enabled
    ntuple->EnableMetrics();
