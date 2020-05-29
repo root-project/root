@@ -200,7 +200,7 @@ or :
 #include "TFile.h"
 #include "TGMenu.h"
 #include "TGFrame.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 #include "TH1.h"
 #include "TFriendElement.h"
 #include "TObjArray.h"
@@ -1437,7 +1437,7 @@ void TTreeViewer::ExecuteDraw()
       varexp += fBarHist->GetText();
    }
    // find canvas/pad where to draw
-   TPad *pad = (TPad*)gROOT->GetSelectedPad();
+   auto pad = gROOT->GetSelectedPad();
    if (pad) pad->cd();
    // find graphics option
    const char* gopt = fBarOption->GetText();
@@ -1604,7 +1604,7 @@ void TTreeViewer::ExecuteSpider()
    // find ListOut
    if (strlen(fBarListOut->GetText())) varexp = TString::Format(">>%s", fBarListOut->GetText());
    // find canvas/pad where to draw
-   TPad *pad = (TPad*)gROOT->GetSelectedPad();
+   auto pad = gROOT->GetSelectedPad();
    if (pad) pad->cd();
    // find graphics option
    const char* gopt = fBarOption->GetText();
