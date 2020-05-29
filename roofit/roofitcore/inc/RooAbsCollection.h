@@ -124,6 +124,7 @@ public:
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
+  bool hasSameLayout(const RooAbsCollection& other) const;
   Bool_t overlaps(const RooAbsCollection& otherColl) const ;
 
   /// TIterator-style iteration over contained elements.
@@ -282,7 +283,7 @@ protected:
 
   void makeStructureTag() ;
   void makeTypedStructureTag() ;
-  
+
 private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
   mutable std::unique_ptr<std::unordered_map<const TNamed*, Storage_t::value_type>> _nameToItemMap; //!

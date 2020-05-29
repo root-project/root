@@ -1544,3 +1544,15 @@ RooAbsArg* RooAbsCollection::tryFastFind(const TNamed* namePtr) const {
 
   return nullptr;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check that all entries where the collections overlap have the same name.
+bool RooAbsCollection::hasSameLayout(const RooAbsCollection& other) const {
+  for (unsigned int i=0; i < std::min(_list.size(), other.size()); ++i) {
+    if (_list[i]->namePtr() != other._list[i]->namePtr())
+      return false;
+  }
+
+  return true;
+}
