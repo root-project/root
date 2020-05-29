@@ -8,9 +8,10 @@
 //                                                                            //
 //_____________________________________________________________________________
 
-#include "Riostream.h"
-#include "TSystem.h"
 #include "TFoamVect.h"
+
+#include <iostream>
+#include <iomanip>
 
 /** \class TFoamVect
 
