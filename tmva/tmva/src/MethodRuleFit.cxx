@@ -49,12 +49,10 @@ J Friedman's RuleFit method
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "Riostream.h"
 #include "TRandom3.h"
-#include "TMath.h"
 #include "TMatrix.h"
-#include "TDirectory.h"
 
+#include <iostream>
 #include <algorithm>
 #include <list>
 #include <random>

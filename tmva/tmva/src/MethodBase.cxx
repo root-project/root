@@ -109,9 +109,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TFile.h"
-#include "TKey.h"
 #include "TGraph.h"
-#include "Riostream.h"
 #include "TXMLEngine.h"
 
 #include <iomanip>

@@ -33,8 +33,6 @@ Deep Neural Network Implementation.
 #include "TMVA/MethodDNN.h"
 
 #include "TString.h"
-#include "TTree.h"
-#include "TFile.h"
 #include "TFormula.h"
 #include "TObjString.h"
 

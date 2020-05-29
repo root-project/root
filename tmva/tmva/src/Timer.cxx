@@ -66,7 +66,6 @@ to enable it by calling TMVA::gConfig().SetDrawProgressBar(true)
 
 #include "TStopwatch.h"
 
-#include <iomanip>
 #ifdef _MSC_VER
 #include <io.h>
 #define isatty _isatty
