@@ -23,7 +23,6 @@ Class implementing or helping  the various TTree cloning method
 #include "TBranchRef.h"
 #include "TError.h"
 #include "TProcessID.h"
-#include "TMath.h"
 #include "TTree.h"
 #include "TTreeCloner.h"
 #include "TFile.h"
