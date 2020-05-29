@@ -111,7 +111,7 @@ RooSpan<double> RooChiSquarePdf::evaluateBatch(std::size_t begin, std::size_t ba
   if (!batch_x && !batch_ndof) {
     return {};
   }
-  batchSize = findSize({ _xData, _ndofData });
+  batchSize = findSmallestBatch({ _xData, _ndofData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batch_x && !batch_ndof ) {

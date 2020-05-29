@@ -94,7 +94,7 @@ RooSpan<double> RooBreitWigner::evaluateBatch(std::size_t begin, std::size_t bat
   if (!batchX && !batchMean && !batchWidth) {
     return {};
   }
-  batchSize = findSize({ xData, meanData, widthData });
+  batchSize = findSmallestBatch({ xData, meanData, widthData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchMean && !batchWidth ) {

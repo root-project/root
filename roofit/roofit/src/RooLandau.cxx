@@ -185,7 +185,7 @@ RooSpan<double> RooLandau::evaluateBatch(std::size_t begin, std::size_t batchSiz
   if (!batchX && !batchMean && !batchSigma) {
     return {};
   }
-  batchSize = findSize({ xData, meanData, sigmaData });
+  batchSize = BatchHelpers::findSmallestBatch({ xData, meanData, sigmaData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchMean && !batchSigma ) {

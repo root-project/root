@@ -116,7 +116,7 @@ RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t bat
   if (!batchX && !batchC) {
     return {};
   }
-  batchSize = findSize({ xData, cData });
+  batchSize = BatchHelpers::findSmallestBatch({ xData, cData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchC ) {

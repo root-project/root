@@ -386,7 +386,7 @@ RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, BatchHelpe
     inputSpans.push_back(std::move(batch));
   }
 
-  const auto nData = BatchHelpers::findSize(inputSpans);
+  const auto nData = BatchHelpers::findSmallestBatch(inputSpans);
   auto output = inputData.makeBatch(dataOwner, nData);
   std::vector<double> pars(_origList.size());
 

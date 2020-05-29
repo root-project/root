@@ -502,7 +502,7 @@ RooSpan<double> RooHypatia2::evaluateBatch(std::size_t begin, std::size_t batchS
   auto a2 = _a2.getValBatch(begin, batchSize);
   auto n2 = _n2.getValBatch(begin, batchSize);
 
-  batchSize = BatchHelpers::findSize({x, lambda, zeta, beta, sig, mu, a, n, a2, n2});
+  batchSize = BatchHelpers::findSmallestBatch({x, lambda, zeta, beta, sig, mu, a, n, a2, n2});
 
   auto output = _batchData.makeWritableBatchInit(begin, batchSize, 0.);
 
