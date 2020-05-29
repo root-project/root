@@ -146,7 +146,7 @@ RooSpan<double> RooGaussian::evaluateBatch(BatchHelpers::RunContext& evalData, c
   auto meanData = mean->getValBatch(evalData, normSet);
   auto sigmaData = sigma->getValBatch(evalData, normSet);
 
-  std::size_t batchLength = BatchHelpers::findSize({xData, meanData, sigmaData});
+  std::size_t batchLength = BatchHelpers::findSmallestBatch({xData, meanData, sigmaData});
   auto output = evalData.makeBatch(this, batchLength);
 
   if (xData.size() >= 1 && meanData.size() == 1 && sigmaData.size() == 1) {
