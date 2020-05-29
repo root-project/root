@@ -34,14 +34,10 @@ Class that contains all the data information.
 #include <vector>
 
 #include "TEventList.h"
-#include "TFile.h"
-#include "TH1.h"
 #include "TH2.h"
-#include "TProfile.h"
 #include "TRandom3.h"
 #include "TMatrixF.h"
 #include "TVectorF.h"
-#include "TMath.h"
 #include "TROOT.h"
 
 #include "TMVA/MsgLogger.h"

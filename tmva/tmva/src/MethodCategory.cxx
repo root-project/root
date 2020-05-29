@@ -45,15 +45,10 @@ is due to different locations/angles.
 #include "TMVA/MethodCategory.h"
 
 #include <algorithm>
-#include <iomanip>
 #include <vector>
-#include <iostream>
 
-#include "Riostream.h"
 #include "TRandom3.h"
-#include "TMath.h"
 #include "TH1F.h"
-#include "TGraph.h"
 #include "TSpline.h"
 #include "TDirectory.h"
 #include "TTreeFormula.h"

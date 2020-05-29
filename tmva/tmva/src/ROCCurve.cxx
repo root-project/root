@@ -32,7 +32,6 @@
 #include "TMVA/Version.h"
 #include "TMVA/MsgLogger.h"
 #include "TGraph.h"
-#include "TMath.h"
 
 #include <algorithm>
 #include <vector>

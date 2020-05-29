@@ -79,12 +79,9 @@ evaluation phases.
 
 #include "TROOT.h"
 #include "TFile.h"
-#include "TTree.h"
 #include "TLeaf.h"
 #include "TEventList.h"
 #include "TH2.h"
-#include "TText.h"
-#include "TLegend.h"
 #include "TGraph.h"
 #include "TStyle.h"
 #include "TMatrixF.h"

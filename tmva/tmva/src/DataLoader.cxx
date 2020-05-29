@@ -32,10 +32,8 @@
 
 */
 
-#include "TFile.h"
 #include "TTree.h"
 #include "TH2.h"
-#include "TMath.h"
 #include "TMatrixD.h"
 
 #include "TMVA/DataLoader.h"
