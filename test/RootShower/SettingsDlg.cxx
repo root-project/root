@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <TGLabel.h>
+#include <TVirtualX.h>
 #include <TRootHelpDialog.h>
 #include <TGMsgBox.h>
 

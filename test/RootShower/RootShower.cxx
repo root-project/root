@@ -20,6 +20,7 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TBranch.h>
 #include <TFrame.h>
 #include <TH1.h>
 #include <TF1.h>
