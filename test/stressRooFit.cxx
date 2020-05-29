@@ -9,8 +9,6 @@
 #include "TLine.h"
 #include "TFile.h"
 #include "TClass.h"
-#include "TCanvas.h"
-#include "TH1.h"
 #include "TBenchmark.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
