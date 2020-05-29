@@ -265,8 +265,9 @@ Not all features of TGeoPainter are supported - only plain drawing of selected T
 - By default, ROOT now falls back to the built-in version of xrootd if it can't find it in the system.
 This means that passing `-Dbuiltin_xrootd=ON` is not necessary anymore to build ROOT with xrootd support.
 Note that built-in xrootd requires a working network connection.
-- Glew library was moved from ROOT graf3d sources to the proper ROOT builtins mechanism (GLEW library and headers are still installed together with ROOT for backward compatibility) 
-- Updated version of Glew used as buitin mechanism in ROOT: 2.1.0 (http://glew.sourceforge.net/) 
+- Glew library was moved from ROOT graf3d sources to the proper ROOT builtins mechanism (GLEW library and headers are still installed together with ROOT for backward compatibility)
+- ROOT uses header files from source directories to build own ROOT libraries; header files from $ROOTSYS/include directory only required to compile users code.
+- Updated version of Glew used as buitin mechanism in ROOT: 2.1.0 (http://glew.sourceforge.net/)
 - Updated version of googletest library: 1.10.0
 
 ### Experimental address sanitizer build configuration
