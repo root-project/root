@@ -12,6 +12,5 @@ public:
       a = d;
       b = 2 * d;
    }
-   ClassDef(TwoFloats, 2)
 };
 
