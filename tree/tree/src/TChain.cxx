@@ -27,6 +27,7 @@ the trees in the chain.
 #include "TChain.h"
 
 #include <iostream>
+#include <cfloat>
 
 #include "TBranch.h"
 #include "TBrowser.h"
@@ -36,7 +37,6 @@ the trees in the chain.
 #include "TColor.h"
 #include "TCut.h"
 #include "TError.h"
-#include "TMath.h"
 #include "TFile.h"
 #include "TFileInfo.h"
 #include "TFriendElement.h"
