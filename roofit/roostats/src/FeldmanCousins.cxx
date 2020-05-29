@@ -27,8 +27,6 @@
 #include "RooDataHist.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include "TFile.h"
-#include "TTree.h"
 
 /** \class RooStats::FeldmanCousins
     \ingroup Roostats

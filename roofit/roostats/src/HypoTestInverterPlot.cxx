@@ -35,7 +35,6 @@ hypotheses.
 #include "TLine.h"
 #include "TAxis.h"
 #include "TLegend.h"
-#include "TH1.h"
 #include "TVirtualPad.h"
 #include "Math/DistFuncMathCore.h"
 

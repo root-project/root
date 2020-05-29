@@ -29,7 +29,6 @@
 #include <cmath>
 
 #include "TROOT.h"
-#include "TMath.h"
 #include "TLine.h"
 #include "TObjArray.h"
 #include "TList.h"
