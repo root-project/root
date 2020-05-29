@@ -81,15 +81,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   _cacheMgr(this,10)
 {
   for (auto comp : prodSet) {
-    if (dynamic_cast<RooAbsReal*>(comp)) {
-      _compRSet.add(*comp) ;
-    } else if (dynamic_cast<RooAbsCategory*>(comp)) {
-      _compCSet.add(*comp) ;
-    } else {
-      coutE(InputArguments) << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsReal or RooAbsCategory" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
+    addTerm(comp);
   }
   TRACE_CREATE
 }
@@ -109,6 +101,19 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a term to this product.
+void RooProduct::addTerm(RooAbsArg* term) {
+  if (dynamic_cast<RooAbsReal*>(term)) {
+    _compRSet.add(*term) ;
+  } else if (dynamic_cast<RooAbsCategory*>(term)) {
+    _compCSet.add(*term) ;
+  } else {
+    coutE(InputArguments) << "RooProduct::addTerm(" << GetName() << ") ERROR: component " << term->GetName()
+        << " is not of type RooAbsReal or RooAbsCategory" << endl ;
+    throw std::invalid_argument("RooProduct can only handle terms deriving from RooAbsReal or RooAbsCategory.");
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Force internal handling of integration of given observable if any
