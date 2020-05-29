@@ -13,8 +13,8 @@
 #include "TParallelCoord.h"
 #include "TParallelCoordRange.h"
 
-#include "Riostream.h"
-#include "TROOT.h"
+#include <iostream>
+
 #include "TLatex.h"
 #include "TLine.h"
 #include "TVirtualPad.h"

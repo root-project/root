@@ -13,17 +13,15 @@
 #include "TParallelCoordVar.h"
 #include "TParallelCoordRange.h"
 
-#include "Riostream.h"
+#include <cfloat>
+#include <iostream>
+
 #include "TROOT.h"
-#include "TVirtualX.h"
 #include "TVirtualPad.h"
 #include "TPolyLine.h"
 #include "TGraph.h"
 #include "TPaveText.h"
-#include "float.h"
-#include "TMath.h"
 #include "TBox.h"
-#include "TH1.h"
 #include "TStyle.h"
 #include "TEntryList.h"
 #include "TFrame.h"
