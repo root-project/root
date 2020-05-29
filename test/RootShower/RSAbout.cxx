@@ -9,6 +9,7 @@
 
 #include <TSystem.h>
 #include <TROOT.h>
+#include <TVirtualX.h>
 #include <TRootHelpDialog.h>
 
 #include "RSAbout.h"
