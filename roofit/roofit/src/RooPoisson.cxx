@@ -122,7 +122,7 @@ RooSpan<double> RooPoisson::evaluateBatch(std::size_t begin, std::size_t batchSi
   if (!batchX && !batchMean) {
     return {};
   }
-  batchSize = findSize({ xData, meanData });
+  batchSize = findSmallestBatch({ xData, meanData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchMean ) {

@@ -123,7 +123,7 @@ RooSpan<double> RooLognormal::evaluateBatch(std::size_t begin, std::size_t batch
   if (!batchX && !batchM0 && !batchK) {
     return {};
   }
-  batchSize = findSize({ xData, m0Data, kData });
+  batchSize = findSmallestBatch({ xData, m0Data, kData });
   auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
 
   if (batchX && !batchM0 && !batchK ) {
