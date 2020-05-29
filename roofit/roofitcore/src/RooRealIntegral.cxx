@@ -1029,22 +1029,6 @@ const RooArgSet& RooRealIntegral::parameters() const
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Dummy
-
-void RooRealIntegral::operModeHook()
-{
-  if (_operMode==ADirty) {    
-//     cout << "RooRealIntegral::operModeHook(" << GetName() << " warning: mode set to ADirty" << endl ;
-//     if (TString(GetName()).Contains("FULL")) {
-//       cout << "blah" << endl ;
-//     }
-  }
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if current value is valid
 

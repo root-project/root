@@ -75,7 +75,6 @@ protected:
       {
          _frac.add(flist);
       };
-      void operModeHook(RooAbsArg::OperMode){};
       virtual ~CacheElem();
       virtual RooArgList containedArgs(Action);
       RooAbsPdf *_sumPdf;
