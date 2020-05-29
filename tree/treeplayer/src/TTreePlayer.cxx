@@ -17,11 +17,12 @@ extra libraries (Histogram, display, etc).
 
 #include "TTreePlayer.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TFile.h"
@@ -40,8 +41,6 @@ extra libraries (Histogram, display, etc).
 #include "TLeafS.h"
 #include "TMath.h"
 #include "TH1.h"
-#include "TH2.h"
-#include "TH3.h"
 #include "TPolyMarker.h"
 #include "TPolyMarker3D.h"
 #include "TText.h"
