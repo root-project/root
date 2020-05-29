@@ -26,12 +26,12 @@ namespace BatchHelpers {
  * \param[in] parameters Vector of spans to read sizes from.
  * \return Smallest non-zero size found.
  */
-size_t findSize(std::vector< RooSpan<const double> > parameters) 
+size_t findSmallestBatch(std::vector< RooSpan<const double> > parameters) 
 {
   if (parameters.empty() || std::all_of(parameters.begin(), parameters.end(), [](const RooSpan<const double> span){ return span.size() == 0;})) {
     return 0;
   }
-  if (std::all_of(parameters.begin(), parameters.end(), [](const RooSpan<const double> span){ return span.size() == 1;})) {
+  if (std::all_of(parameters.begin(), parameters.end(), [](const RooSpan<const double> span){ return span.size() <= 1;})) {
     return 1;
   }
 
