@@ -33,13 +33,13 @@ few other, which can not be converted to SQL (yet).
 #include "TMap.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "Riostream.h"
+#include "TStreamerInfoActions.h"
+
+#include <iostream>
 #include <stdlib.h>
 #include <string>
-#include "TStreamerInfoActions.h"
 
 #include "TSQLServer.h"
 #include "TSQLResult.h"
