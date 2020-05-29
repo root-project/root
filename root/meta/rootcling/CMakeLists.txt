@@ -16,3 +16,7 @@ ROOTTEST_ADD_TEST(selectUnion
                   COMMAND ${ROOT_rootcling_CMD} -f NestedClassOff.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/NestedClassOff.h ${CMAKE_CURRENT_SOURCE_DIR}/NestedClassOff.LinkDef.h
                   OUTREF selectUnion.ref
                   PASSRC 1)
+
+# ROOT-10798
+ROOTTEST_ADD_TEST(ROOT10798
+                  COMMAND ${ROOT_rootcling_CMD} -f ROOT10798Dict.cxx ${CMAKE_CURRENT_SOURCE_DIR}/ROOT10798LinkDef.h)
