@@ -123,10 +123,8 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       // Traverses through all fields to do the actual printing.
       RPrintSchemaVisitor printVisitor(output);
 
-      // Preserve current set of open columns
-      auto columnGuard = fSource->GetColumnGuard();
+      // Note that we do not need to connect the model, we are only looking at its tree of fields
       auto fullModel = fSource->GetDescriptor().GenerateModel();
-      ConnectModel(fullModel.get());
       fullModel->GetFieldZero()->AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
@@ -156,13 +154,19 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
 }
 
 
+ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplayReader()
+{
+   if (!fDisplayReader)
+      fDisplayReader = Clone();
+   return fDisplayReader.get();
+}
+
+
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
 {
-   auto columnGuard = fSource->GetColumnGuard();
-   auto fullModel = fSource->GetDescriptor().GenerateModel();
-   ConnectModel(fullModel.get());
-   auto entry = fullModel->CreateEntry();
-   LoadEntry(index, entry.get());
+   auto reader = GetDisplayReader();
+   auto entry = reader->GetModel()->GetDefaultEntry();
+   reader->LoadEntry(index);
 
    switch(format) {
       case ENTupleFormat::kJSON: {

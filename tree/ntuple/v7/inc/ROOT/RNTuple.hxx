@@ -76,9 +76,14 @@ private:
    std::unique_ptr<Detail::RPageSource> fSource;
    /// Needs to be destructed before fSource
    std::unique_ptr<RNTupleModel> fModel;
+   /// We use a separate on-demand reader for Show() and Scan(). Printing data uses all the fields
+   /// from the full model even if the analysis code uses only a subset of fields. The display reader
+   /// is a clone of the original reader.
+   std::unique_ptr<RNTupleReader> fDisplayReader;
    Detail::RNTupleMetrics fMetrics;
 
    void ConnectModel(RNTupleModel *model);
+   RNTupleReader *GetDisplayReader();
 
 public:
    // Browse through the entries
