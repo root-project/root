@@ -26,8 +26,7 @@ methods that can be used to safely attach and detach one self from a TDirectory
 
 #include "RooFit.h"
 
-#include "Riostream.h"
-#include "TROOT.h"
+#include <iostream>
 #include "TList.h"
 #include "TDirectoryFile.h"
 #include "TString.h"

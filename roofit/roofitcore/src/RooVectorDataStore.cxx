@@ -38,20 +38,14 @@ use a TTree as internal storage mechanism
 
 #include "TTree.h"
 #include "TChain.h"
-#include "TDirectory.h"
 #include "TBuffer.h"
-#include "TROOT.h"
 #include "TList.h"
 
 #include <iomanip>
-using namespace std ;
+using namespace std;
 
 ClassImp(RooVectorDataStore);
 ClassImp(RooVectorDataStore::RealVector);
-;
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

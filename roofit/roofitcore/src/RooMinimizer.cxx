@@ -39,19 +39,17 @@ automatic PDF optimization.
 #ifndef __ROOFIT_NOROOMINIMIZER
 
 #include "RooFit.h"
-#include "Riostream.h"
 
 #include "TClass.h"
 
+#include <iostream>
 #include <fstream>
 
-#include "TH1.h"
 #include "TH2.h"
 #include "TMarker.h"
 #include "TGraph.h"
 #include "Fit/FitConfig.h"
 #include "TStopwatch.h"
-#include "TDirectory.h"
 #include "TMatrixDSym.h"
 
 #include "RooArgSet.h"

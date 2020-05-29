@@ -36,22 +36,20 @@ Object          | function
 
 #include "RooFit.h"
 #include "RooUnitTest.h"
-#include "TROOT.h"
+#include "TDirectory.h"
 #include "TClass.h"
-#include "TSystem.h"
 #include "RooHist.h"
 #include "RooMsgService.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
 #include "RooRandom.h"
-#include <math.h>
+#include <cmath>
 
 ClassImp(RooUnitTest);
-;
 
 using namespace std;
 
-TDirectory* RooUnitTest::gMemDir = 0 ;
+TDirectory* RooUnitTest::gMemDir = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////

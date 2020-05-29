@@ -32,7 +32,6 @@ When iterated from start to finish, datasets will be traversed in the order of t
 
 #include "RooFit.h"
 #include "RooMsgService.h"
-#include "Riostream.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooTrace.h"
@@ -40,8 +39,6 @@ When iterated from start to finish, datasets will be traversed in the order of t
 
 #include "TTree.h"
 #include "TChain.h"
-#include "TDirectory.h"
-#include "TROOT.h"
 
 #include <iomanip>
 #include <iostream>
@@ -49,7 +46,6 @@ When iterated from start to finish, datasets will be traversed in the order of t
 using namespace std;
 
 ClassImp(RooCompositeDataStore);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////

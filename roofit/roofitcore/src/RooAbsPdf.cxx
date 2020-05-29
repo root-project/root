@@ -175,17 +175,15 @@ called for each data event.
 #include "RooVDTHeaders.h"
 
 #include "TClass.h"
-#include "Riostream.h"
 #include "TMath.h"
 #include "TPaveText.h"
 #include "TList.h"
-#include "TH1.h"
-#include "TH2.h"
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
 #include "Math/CholeskyDecomp.h"
 #include "RooDerivative.h"
 
+#include <iostream>
 #include <string>
 
 using namespace std;
@@ -196,7 +194,7 @@ ClassImp(RooAbsPdf::GenSpec);
 
 
 Int_t RooAbsPdf::_verboseEval = 0;
-TString RooAbsPdf::_normRangeOverride ;
+TString RooAbsPdf::_normRangeOverride;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

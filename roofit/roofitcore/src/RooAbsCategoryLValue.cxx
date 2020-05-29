@@ -35,13 +35,11 @@ to other RooAbsArgs must be invertible.
 #include "RooRandom.h"
 #include "RooMsgService.h"
 
-#include "TTree.h"
 #include "TString.h"
-#include "TH1.h"
 
 using namespace std;
 
-ClassImp(RooAbsCategoryLValue); 
+ClassImp(RooAbsCategoryLValue);
 
 
 

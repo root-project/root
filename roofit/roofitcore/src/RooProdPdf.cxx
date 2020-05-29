@@ -67,14 +67,9 @@ have to appear in any specific place in the list.
 #include <strings.h>
 #endif
 
-
-#include "TSystem.h"
-
 using namespace std;
 
 ClassImp(RooProdPdf);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

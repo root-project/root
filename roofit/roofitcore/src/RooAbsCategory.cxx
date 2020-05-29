@@ -55,7 +55,6 @@ the following replacements should be used:
 
 #include "Compression.h"
 #include "TString.h"
-#include "TH1.h"
 #include "TTree.h"
 #include "TLeaf.h"
 #include "ROOT/RMakeUnique.hxx"

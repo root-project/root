@@ -35,7 +35,6 @@ repeated applications of generate-and-fit operations on a workspace
 #include "RooDataSet.h"
 #include "RooMsgService.h"
 #include "RooStudyPackage.h"
-#include "TTree.h"
 #include "TFile.h"
 #include "TObjString.h"
 #include "TRegexp.h"

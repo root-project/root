@@ -44,7 +44,6 @@ The singleton instance is accessible through RooMsgService::instance() ;
 #include "RooFit.h"
 #include "RooAbsArg.h"
 #include "TClass.h"
-#include "TROOT.h"
 
 #include "RooMsgService.h"
 #include "RooCmdArg.h"
@@ -53,14 +52,16 @@ The singleton instance is accessible through RooMsgService::instance() ;
 #include "RooWorkspace.h"
 
 #include "TSystem.h"
-#include "Riostream.h"
+
+#include <fstream>
 #include <iomanip>
-using namespace std ;
-using namespace RooFit ;
+
+using namespace std;
+using namespace RooFit;
 
 ClassImp(RooMsgService);
 
-Int_t RooMsgService::_debugCount = 0 ;
+Int_t RooMsgService::_debugCount = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
