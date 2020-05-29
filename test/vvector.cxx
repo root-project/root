@@ -22,7 +22,6 @@
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-#include "TROOT.h"
 #include "TFile.h"
 #include "Riostream.h"
 #include "TVectorD.h"

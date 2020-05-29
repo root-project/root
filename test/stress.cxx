@@ -70,7 +70,7 @@
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -82,7 +82,6 @@
 #include <TProfile.h>
 #include <TKey.h>
 #include <TCanvas.h>
-#include <TGraph.h>
 #include <TRandom.h>
 #include <TPostScript.h>
 #include <TNtuple.h>
