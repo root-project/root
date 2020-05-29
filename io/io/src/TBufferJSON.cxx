@@ -99,6 +99,8 @@ class Container {
 #include <cmath>
 #include <memory>
 #include <cstdlib>
+#include <iostream>
+#include <fstream>
 
 #include <ROOT/RMakeUnique.hxx>
 
@@ -108,6 +110,7 @@ class Container {
 #include "TError.h"
 #include "TBase64.h"
 #include "TROOT.h"
+#include "TList.h"
 #include "TClass.h"
 #include "TClassTable.h"
 #include "TClassEdit.h"
@@ -118,10 +121,8 @@ class Container {
 #include "TRef.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "Riostream.h"
 #include "RZip.h"
 #include "TClonesArray.h"
 #include "TVirtualMutex.h"

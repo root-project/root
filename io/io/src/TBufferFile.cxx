@@ -34,7 +34,6 @@ The concrete implementation of TBuffer for writing/reading to/from a ROOT file o
 #include "TStreamerInfoActions.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
-#include "TROOT.h"
 
 #if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
      defined(__GNUC__)
