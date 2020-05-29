@@ -23,8 +23,6 @@
 #include "Math/DistFunc.h"
 
 #include "TBenchmark.h"
-#include "TSystem.h"
-#include "TF1.h"
 
 #include "gtest/gtest.h"
 

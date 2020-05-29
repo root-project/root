@@ -37,14 +37,12 @@
 
 
 // for graphical comparison of performance
-#include "TGraph.h"
 #include "TAxis.h"
 #include "TCanvas.h"
 #include "TApplication.h"
 #include "TPaveLabel.h"
 #include "TLegend.h"
 #include "TH1.h"
-//#include "TLegend.h"
 
 bool showGraphics = false;
 bool verbose = false;
