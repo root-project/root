@@ -774,6 +774,10 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   }
 
   RooLinkedList& dataList = embedded ? _embeddedDataList : _dataList ;
+  if (dataList.GetSize() > 50 && dataList.getHashTableSize() == 0) {
+    // When the workspaces get larger, traversing the linked list becomes a bottleneck:
+    dataList.setHashTableSize(200);
+  }
 
   // Check that no dataset with target name already exists
   if (dsetName && dataList.FindObject(dsetName)) {
