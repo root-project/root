@@ -1,5 +1,4 @@
 #include "ROOT/RMakeUnique.hxx"
-#include "TFile.h"
 #include "TInterpreter.h"
 #include "TTree.h"
 #include "TTreeReader.h"
