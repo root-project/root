@@ -1483,10 +1483,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
                                                         &(interpArgs[0]),
                                                         llvmResourceDir, extensions);
 
-   if (!fromRootCling) {
-      fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
-   }
-
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
 
@@ -1544,6 +1540,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       };
       // Initialize the dyld for the llvmLazyFunctionCreator.
       DLM.initializeDyld(ShouldPermanentlyIgnore);
+      fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
    }
 }
 
