@@ -8,12 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-const char *shortHelp =
-   "Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
-   "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n";
-
-
-
 #include "rootcling_impl.h"
 #include "rootclingCommandLineOptionsHelp.h"
 
@@ -4079,7 +4073,7 @@ int RootClingMain(int argc,
 
    if (gOptForce && dictname.empty()) {
       ROOT::TMetaUtils::Error(0, "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
-      fprintf(stderr, "%s\n", shortHelp);
+      llvm::cl::PrintHelpMessage();
       return 1;
    }
 
