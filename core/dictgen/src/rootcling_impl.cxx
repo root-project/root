@@ -4283,19 +4283,7 @@ int RootClingMain(int argc,
    cling::Interpreter* interpPtr = nullptr;
 
    std::list<std::string> filesIncludedByLinkdef;
-   if (!gDriverConfig->fBuildingROOTStage1) {
-      // Pass the interpreter arguments to TCling's interpreter:
-      clingArgsC.push_back("-resource-dir");
-      clingArgsC.push_back(llvmResourceDir.c_str());
-      clingArgsC.push_back(0); // signal end of array
-      const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
-      extraArgs = &clingArgsC[1]; // skip binary name
-      interpPtr = gDriverConfig->fTCling__GetInterpreter();
-      if (!isGenreflex && !gOptGeneratePCH) {
-         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(interpPtr, filesIncludedByLinkdef));
-         interpPtr->setCallbacks(std::move(callBacks));
-      }
-   } else {
+   if (gDriverConfig->fBuildingROOTStage1) {
 #ifdef R__FAST_MATH
       // Same setting as in TCling.cxx.
       clingArgsC.push_back("-ffast-math");
@@ -4311,6 +4299,18 @@ int RootClingMain(int argc,
       // implicitly created modules.
       if (gOptCxxModule)
          interpPtr->loadModule("_Builtin_intrinsics", /*Complain*/ true);
+   } else {
+      // Pass the interpreter arguments to TCling's interpreter:
+      clingArgsC.push_back("-resource-dir");
+      clingArgsC.push_back(llvmResourceDir.c_str());
+      clingArgsC.push_back(0); // signal end of array
+      const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
+      extraArgs = &clingArgsC[1]; // skip binary name
+      interpPtr = gDriverConfig->fTCling__GetInterpreter();
+      if (!isGenreflex && !gOptGeneratePCH) {
+         std::unique_ptr<TRootClingCallbacks> callBacks (new TRootClingCallbacks(interpPtr, filesIncludedByLinkdef));
+         interpPtr->setCallbacks(std::move(callBacks));
+      }
    }
    cling::Interpreter &interp = *interpPtr;
    clang::CompilerInstance *CI = interp.getCI();
