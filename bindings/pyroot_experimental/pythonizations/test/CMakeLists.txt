@@ -89,12 +89,16 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops
 
 # RVec and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec rvec.py)
-ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+if(NOT MSVC OR win_broken_tests)
+  ROOT_ADD_PYUNITTEST(pyroot_pyz_rvec_asrvec rvec_asrvec.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+endif()
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)
+  if(NOT MSVC OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py DEPENDENCIES_FOUND ${NUMPY_FOUND})
+  endif()
 endif()
 
 # RTensor pythonizations
@@ -118,7 +122,9 @@ endif()
 
 # std::string_view backport in CPyCppyy
 if (dataframe)
+  if(NOT MSVC OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
+  endif()
 endif()
 
 # Test wrapping Python callables for use in C++ using numba
