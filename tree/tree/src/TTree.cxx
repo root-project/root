@@ -2827,8 +2827,9 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       // Something went wrong, the warning message has already been issued.
       return kInternalError;
    }
+   bool isBranchElement = branch->InheritsFrom( TBranchElement::Class() );
    if (expectedClass && datatype == kOther_t && ptrClass == 0) {
-      if (branch->InheritsFrom( TBranchElement::Class() )) {
+      if (isBranchElement) {
          TBranchElement* bEl = (TBranchElement*)branch;
          bEl->SetTargetClass( expectedClass->GetName() );
       }
@@ -2877,7 +2878,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
 
    if( expectedClass && ptrClass &&
        expectedClass != ptrClass &&
-       branch->InheritsFrom( TBranchElement::Class() ) &&
+       isBranchElement &&
        ptrClass->GetSchemaRules() &&
        ptrClass->GetSchemaRules()->HasRuleWithSourceClass( expectedClass->GetName() ) ) {
       TBranchElement* bEl = (TBranchElement*)branch;
@@ -2906,7 +2907,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    } else if (expectedClass && ptrClass && !expectedClass->InheritsFrom(ptrClass)) {
 
       if (expectedClass->GetCollectionProxy() && ptrClass->GetCollectionProxy() &&
-          branch->InheritsFrom( TBranchElement::Class() ) &&
+          isBranchElement &&
           expectedClass->GetCollectionProxy()->GetValueClass() &&
           ptrClass->GetCollectionProxy()->GetValueClass() )
       {
@@ -2926,7 +2927,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       }
 
       Error("SetBranchAddress", "The pointer type given (%s) does not correspond to the class needed (%s) by the branch: %s", ptrClass->GetName(), expectedClass->GetName(), branch->GetName());
-      if (branch->InheritsFrom( TBranchElement::Class() )) {
+      if (isBranchElement) {
          TBranchElement* bEl = (TBranchElement*)branch;
          bEl->SetTargetClass( expectedClass->GetName() );
       }
@@ -2945,7 +2946,7 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       if (expectedClass) {
          Error("SetBranchAddress", "The pointer type given \"%s\" (%d) does not correspond to the type needed \"%s\" by the branch: %s",
                TDataType::GetTypeName(datatype), datatype, expectedClass->GetName(), branch->GetName());
-         if (branch->InheritsFrom( TBranchElement::Class() )) {
+         if (isBranchElement) {
             TBranchElement* bEl = (TBranchElement*)branch;
             bEl->SetTargetClass( expectedClass->GetName() );
          }
@@ -3000,13 +3001,13 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
    if (expectedClass && expectedClass->GetCollectionProxy() && dynamic_cast<TEmulatedCollectionProxy*>(expectedClass->GetCollectionProxy())) {
       Error("SetBranchAddress", writeStlWithoutProxyMsg,
             expectedClass->GetName(), branch->GetName(), expectedClass->GetName());
-      if (branch->InheritsFrom( TBranchElement::Class() )) {
+      if (isBranchElement) {
          TBranchElement* bEl = (TBranchElement*)branch;
          bEl->SetTargetClass( expectedClass->GetName() );
       }
       return kMissingCompiledCollectionProxy;
    }
-   if (expectedClass && branch->InheritsFrom( TBranchElement::Class() )) {
+   if (expectedClass && isBranchElement) {
       TBranchElement* bEl = (TBranchElement*)branch;
       bEl->SetTargetClass( expectedClass->GetName() );
    }
