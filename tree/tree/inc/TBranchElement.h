@@ -145,6 +145,7 @@ protected:
    void SetReadLeavesPtr();
    void SetReadActionSequence();
    void SetupAddressesImpl();
+   void SetAddressImpl(void *addr, Bool_t implied);
 
    void FillLeavesImpl(TBuffer& b);
    void FillLeavesMakeClass(TBuffer& b);

@@ -33,6 +33,7 @@
 
 class TTree;
 class TBasket;
+class TBranchElement;
 class TLeaf;
 class TBrowser;
 class TDirectory;
@@ -92,6 +93,7 @@ protected:
    friend class TTreeCache;
    friend class TTreeCloner;
    friend class TTree;
+   friend class TBranchElement;
    friend class ROOT::Experimental::Internal::TBulkBranchRead;
 
    // TBranch status bits
@@ -169,6 +171,8 @@ protected:
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
+
+   virtual void SetAddressImpl(void *addr, Bool_t /* implied */) { SetAddress(addr); }
 
 private:
    Int_t    GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
