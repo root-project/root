@@ -4853,6 +4853,14 @@ void TBranchElement::ResetInitInfo(Bool_t recurse)
 
 void TBranchElement::SetAddress(void* addr)
 {
+   SetAddressImpl(addr, (addr == nullptr));
+}
+
+/// See TBranchElement::SetAddress.
+/// If implied is true, we do not over-ride existing address for
+/// sub-branches.
+void TBranchElement::SetAddressImpl(void* addr, bool implied)
+{
    //
    //  Don't bother if we are disabled.
    //
@@ -5369,10 +5377,10 @@ void TBranchElement::SetAddress(void* addr)
    // FIXME: This is a tail recursion, we burn stack.
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
-      TBranch* abranch = (TBranch*) fBranches.UncheckedAt(i);
+      TBranch *abranch = (TBranch*) fBranches.UncheckedAt(i);
       // FIXME: This is a tail recursion!
       if (fBranchOffset[i] != TStreamerInfo::kMissing) {
-         abranch->SetAddress(fObject + fBranchOffset[i]);
+         abranch->SetAddressImpl(fObject + fBranchOffset[i], implied);
          abranch->SetBit(kAddressSet);
       } else {
          // When the member is missing, just leave the address alone
