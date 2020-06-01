@@ -3269,9 +3269,7 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             branch->SetAddress(0);
             addr = branch->GetAddress();
          }
-         // FIXME: The GetBranch() function is braindead and may
-         //        not find the branch!
-         TBranch* br = tree->GetBranch(branch->GetName());
+         TBranch* br = tree->GetBranch(branch->GetFullName());
          if (br) {
             br->SetAddress(addr);
             // The copy does not own any object allocated by SetAddress().
