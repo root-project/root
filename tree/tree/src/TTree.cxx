@@ -3271,6 +3271,8 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
          }
          TBranch* br = tree->GetBranch(branch->GetFullName());
          if (br) {
+            if (br->GetMakeClass() != branch->GetMakeClass())
+               br->SetMakeClass(branch->GetMakeClass());
             br->SetAddress(addr);
             // The copy does not own any object allocated by SetAddress().
             if (br->InheritsFrom(TBranchElement::Class())) {
