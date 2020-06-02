@@ -16,26 +16,14 @@ find_package(ROOT REQUIRED)
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
-  if(pyroot_experimental)
-    if(NOT MSVC)  # Ignore environment on Windows
-      set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                       ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/lib/${python_dir}:$ENV{${ld_library_path}}
-                       ROOTSYS=${CMAKE_BINARY_DIR}
-                       PYTHONPATH=${CMAKE_BINARY_DIR}/lib:${CMAKE_BINARY_DIR}/lib/${python_dir}:$ENV{PYTHONPATH})
-    else()
-      set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
-                       PYTHONPATH=${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/lib/${python_dir};$ENV{PYTHONPATH})
-    endif()
+  if(NOT MSVC)  # Ignore environment on Windows
+    set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                     ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                     ROOTSYS=${CMAKE_BINARY_DIR}
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
   else()
-    if(NOT MSVC)  # Ignore environment on Windows
-      set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                       ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
-                       ROOTSYS=${CMAKE_BINARY_DIR}
-                       PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
-    else()
-      set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
-                       PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
-    endif()
+    set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
   endif()
 else()                       # testing using an installation
   include(${ROOT_USE_FILE})
