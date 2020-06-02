@@ -19,11 +19,10 @@
 */
 
 #include "TClass.h"
+#include "TList.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TMethodCall.h"
-#include "TROOT.h"
-#include "TApplication.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
 #include "TDataMember.h"

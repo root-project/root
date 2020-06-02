@@ -1,6 +1,6 @@
 #include "ROOT/TPoolManager.hxx"
 #include "TError.h"
-#include "TROOT.h"
+#include <cmath>
 #include <algorithm>
 #include <fstream>
 #ifdef R__LINUX

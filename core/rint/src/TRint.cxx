@@ -22,7 +22,6 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TVirtualX.h"
-#include "TStyle.h"
 #include "TObjectTable.h"
 #include "TClassTable.h"
 #include "TStopwatch.h"
@@ -40,7 +39,7 @@
 #include "TStorage.h" // ROOT::Internal::gMmallocDesc
 #include "ThreadLocalStorage.h"
 #include "TTabCom.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 
 #include "Getline.h"

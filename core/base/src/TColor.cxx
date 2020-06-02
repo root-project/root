@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TObjArray.h"
 #include "TArrayI.h"
 #include "TArrayD.h"
-#include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TMathBase.h"
 #include "TApplication.h"
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 
 ClassImp(TColor);
 

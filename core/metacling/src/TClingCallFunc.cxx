@@ -28,7 +28,6 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include "TClingMethodInfo.h"
 #include "TInterpreterValue.h"
 #include "TClingUtils.h"
-#include "TSystem.h"
 
 #include "TError.h"
 #include "TCling.h"
@@ -66,7 +65,6 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 
 #include "clang/Sema/SemaInternal.h"
 
-#include <iomanip>
 #include <map>
 #include <string>
 #include <sstream>

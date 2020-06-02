@@ -29,10 +29,12 @@ collection of TFile names.
 #include "TUUID.h"
 #include "TMD5.h"
 #include "TSystem.h"
-#include "Riostream.h"
 #include "TRegexp.h"
 #include "TPRegexp.h"
 #include "TError.h"
+
+#include <iostream>
+#include <fstream>
 
 
 ClassImp(TFileCollection);

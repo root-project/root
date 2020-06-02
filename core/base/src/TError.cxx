@@ -23,11 +23,10 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include <windows.h>
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include "snprintf.h"
 #include "Varargs.h"
-#include "Riostream.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TString.h"

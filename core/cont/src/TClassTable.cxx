@@ -35,9 +35,8 @@ initialized when the program starts (see the ClassImp macro).
 
 #include <map>
 #include <memory>
-#include "Riostream.h"
 #include <typeinfo>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 
 using namespace ROOT;
