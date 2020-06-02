@@ -47,7 +47,7 @@
 
 #include "TList.h"
 #include "Varargs.h"
-#include <stdio.h>
+#include <cstdio>
 
 class TTree;
 class TBranch;
@@ -62,7 +62,6 @@ class TStreamerElement;
 
 #include "TTreeFormula.h"
 #include "TFormLeafInfo.h"
-
 
 #include "TBranchElement.h"
 #include "TChain.h"
