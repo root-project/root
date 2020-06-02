@@ -29,7 +29,7 @@ TQConnection:
 #include "TMethodArg.h"
 #include "TDataType.h"
 #include "TInterpreter.h"
-#include "Riostream.h"
+#include <iostream>
 #include "TVirtualMutex.h"
 #include "THashTable.h"
 

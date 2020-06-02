@@ -35,7 +35,6 @@
 #include "TObjArray.h"
 #include "TVirtualMutex.h"
 #include "TVirtualCollectionProxy.h"
-#include <iostream>
 
 #include <string>
 

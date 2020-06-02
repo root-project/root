@@ -41,7 +41,6 @@ In order to access the name of a class within the ROOT type system, the method T
 
 #include "TClass.h"
 
-#include "Riostream.h"
 #include "TBaseClass.h"
 #include "TBrowser.h"
 #include "TBuffer.h"
@@ -88,6 +87,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include <cstdio>
 #include <cctype>
 #include <set>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <map>

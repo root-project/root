@@ -13,10 +13,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
 #include "TClassEdit.h"
 #include <cctype>
 #include "Rstrstream.h"
@@ -30,7 +30,7 @@
 using namespace std;
 
 namespace {
-   static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
+   static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = nullptr;
 
    template <typename T>
    struct ShuttingDownSignaler : public T {
@@ -225,7 +225,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
    if(kind>2) kind = - kind;
    return kind;
 }
-#include <iostream>
+
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 /// Return the absolute type of typeDesc into the string answ.

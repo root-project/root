@@ -249,11 +249,10 @@ The 3 arrays mytracks,pions and muons may be written separately.
 #include "TRefTable.h"
 #include "TObjArray.h"
 #include "TExec.h"
-#include "TSystem.h"
 #include "TObjString.h"
 
-TObjArray  *TRef::fgExecs  = 0;
-TObject    *TRef::fgObject = 0;
+TObjArray  *TRef::fgExecs  = nullptr;
+TObject    *TRef::fgObject = nullptr;
 
 ClassImp(TRef);
 

@@ -20,10 +20,10 @@ occupied by the upper bits that are 0.
 
 #include "TBits.h"
 
-#include "Riostream.h"
 #include "TObject.h"
 
-#include <string.h>
+#include <iostream>
+#include <cstring>
 
 ClassImp(TBits);
 

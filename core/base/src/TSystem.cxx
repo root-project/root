@@ -22,7 +22,6 @@ allows a simple partial implementation for new OS'es.
 */
 
 #include <ROOT/FoundationUtils.hxx>
-#include "Riostream.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"
@@ -47,6 +46,8 @@ allows a simple partial implementation for new OS'es.
 #include "ThreadLocalStorage.h"
 
 #include <functional>
+#include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>

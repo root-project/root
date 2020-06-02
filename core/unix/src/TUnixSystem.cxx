@@ -33,10 +33,11 @@
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TObjString.h"
-#include "Riostream.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 #include "TObjArray.h"
+#include <iostream>
+#include <fstream>
 #include <map>
 #include <algorithm>
 #include <atomic>

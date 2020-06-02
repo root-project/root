@@ -15,7 +15,6 @@
 Class describing a generic file including meta information.
 */
 
-#include "Riostream.h"
 #include "TFileInfo.h"
 #include "TRegexp.h"
 #include "TSystem.h"
