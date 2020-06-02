@@ -34,7 +34,6 @@
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
 #include "TString.h"
-#include "TTimeStamp.h"
 #include "TMath.h"
 
 #include "TVirtualRefProxy.h"
@@ -45,10 +44,10 @@
 
 #include "TEntryList.h"
 
-#include <ctype.h>
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cctype>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
 #include <typeinfo>
 #include <algorithm>
 

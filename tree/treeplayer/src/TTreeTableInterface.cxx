@@ -8,8 +8,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TClass.h"
-#include "Riostream.h"
 #include "TTreeTableInterface.h"
 #include "TTreeFormula.h"
 #include "TError.h"

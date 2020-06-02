@@ -7,8 +7,6 @@
 
 #include "gtest/gtest.h"
 
-#include <fstream>
-
 TEST(TTreeReaderArray, Vector)
 {
    TTree *tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
