@@ -24,7 +24,7 @@ This class is a subset of the original system. It has been converted to a C++
 class by Rene Brun.
 */
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TROOT.h"
 #include "TPainter3dAlgorithms.h"
@@ -33,7 +33,6 @@ class by Rene Brun.
 #include "TH1.h"
 #include "TF3.h"
 #include "TView.h"
-#include "TVirtualX.h"
 #include "Hoption.h"
 #include "Hparam.h"
 #include "TMath.h"

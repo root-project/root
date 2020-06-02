@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TGraph2DPainter.h"
 #include "TMath.h"
 #include "TList.h"
