@@ -82,7 +82,6 @@ The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
 #include "TTreePerfStats.h"
 #include "TROOT.h"
 #include "TSystem.h"
-#include "Riostream.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TTreeCache.h"
@@ -97,6 +96,8 @@ The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
 #include "TTimeStamp.h"
 #include "TDatime.h"
 #include "TMath.h"
+
+#include <iostream>
 
 ClassImp(TTreePerfStats);
 
