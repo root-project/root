@@ -6,7 +6,6 @@
 #include "TString.h"
 #include "TROOT.h"
 #include "TList.h"
-#include "TColor.h"
 #include "TStyle.h"
 #include "TH3.h"
 #include "TF1.h"

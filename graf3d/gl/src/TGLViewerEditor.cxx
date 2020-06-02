@@ -22,7 +22,6 @@
 #include "TColor.h"
 #include "TString.h"
 #include "TGLabel.h"
-#include "TGTab.h"
 #include "TGComboBox.h"
 #include "TError.h"
 
