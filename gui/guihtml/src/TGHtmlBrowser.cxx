@@ -10,11 +10,9 @@
  *************************************************************************/
 
 #include "TROOT.h"
-#include "TApplication.h"
 #include "TSystem.h"
 #include "TGMenu.h"
 #include "TGComboBox.h"
-#include "TGFrame.h"
 #include "TGButton.h"
 #include "TGTextBuffer.h"
 #include "TGTextEntry.h"
@@ -26,7 +24,6 @@
 #include "TString.h"
 #include "TUrl.h"
 #include "TSocket.h"
-#include "Riostream.h"
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
 #include "TError.h"
