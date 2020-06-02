@@ -352,6 +352,9 @@ public:
    NTupleSize_t GetNEntries() const;
    NTupleSize_t GetNElements(DescriptorId_t columnId) const;
 
+   /// Returns the root field of this NTuple. The root field is the parent of all top-level
+   /// data fields.
+   DescriptorId_t GetRootFieldId() const;
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
