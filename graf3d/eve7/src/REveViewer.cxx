@@ -17,9 +17,6 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
 
-#include "TApplication.h"
-#include "TSystem.h"
-
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
