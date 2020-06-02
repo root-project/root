@@ -4887,6 +4887,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
       fAddress = (char*) -1;
       fObject = (char*) -1;
       ResetBit(kDeleteObject);
+      ResetBit(kAddressSet);
       return;
    }
 
@@ -4929,6 +4930,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
       fObject = 0;
    }
    ResetBit(kDeleteObject);
+   SetBit(kAddressSet);
 
    //
    //  Do special stuff if we got called from a MakeClass class.
@@ -5003,6 +5005,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
          } else {
             // FIXME: Must maintain fObject here as well.
             fAddress = 0;
+            ResetBit(kAddressSet);
          }
       }
    } else if (fType == 4) {
@@ -5082,6 +5085,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
                      GetName(),oldProxy->GetCollectionClass()->GetName(),newType->GetName());
                fAddress = 0;
                fObject = 0;
+               ResetBit(kAddressSet);
                return;
             }
          }
@@ -5133,6 +5137,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
             // FIXME: We must maintain fObject here as well.
             Error("SetAddress","For %s can not convert %s into %s\n",GetName(),GetCurrentClass()->GetName(),newType->GetName());
             fAddress = 0;
+            ResetBit(kAddressSet);
             return;
          }
       } else {
@@ -5265,6 +5270,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
                      //        fAddress to be zero if no fObject, but is
                      //        that a good thing?
                      fAddress = 0;
+                     ResetBit(kAddressSet);
                   }
                }
                fObject = (char*) *pp;
@@ -5282,6 +5288,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
                      //        fAddress to be zero if no fObject, but is
                      //        that a good thing?
                      fAddress = 0;
+                     ResetBit(kAddressSet);
                   }
                }
                fObject = (char*) *pp;
@@ -5316,6 +5323,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
                   //        fAddress to be zero if no fObject, but is
                   //        that a good thing?
                   fAddress = 0;
+                  ResetBit(kAddressSet);
                }
             } else {
                // -- We are a sub-branch which is a pointer to an STL container.
