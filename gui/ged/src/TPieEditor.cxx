@@ -31,8 +31,6 @@
 #include "TPieEditor.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
-#include "TGToolTip.h"
-#include "TGLabel.h"
 #include "TPie.h"
 #include "TVirtualPad.h"
 #include "TGColorSelect.h"
