@@ -79,7 +79,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/image/`
 #include "TFrame.h"
 #include "TTF.h"
 #include "TRandom.h"
-#include "Riostream.h"
+#include <iostream>
 #include "THashTable.h"
 #include "TPluginManager.h"
 #include "TEnv.h"

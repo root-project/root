@@ -28,7 +28,6 @@ It is called by a pull down menu item of TASImage.
 #include "TGFileDialog.h"
 #include "TLine.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TMath.h"
 #include "RConfigure.h"
 #include "TVirtualX.h"
