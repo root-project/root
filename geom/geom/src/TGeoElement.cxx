@@ -36,7 +36,8 @@ Table of elements
 
 #include "RConfigure.h"
 
-#include "Riostream.h"
+#include <fstream>
+#include <iomanip>
 
 #include "TSystem.h"
 #include "TROOT.h"

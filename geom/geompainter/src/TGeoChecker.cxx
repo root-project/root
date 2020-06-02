@@ -83,7 +83,7 @@ volume by material sampling. Accepts as input the desired precision.
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 // statics and globals
 

@@ -27,7 +27,6 @@ on different axis. Implemented patterns are:
 
 #include "TGeoPatternFinder.h"
 
-#include "Riostream.h"
 #include "TBuffer.h"
 #include "TObject.h"
 #include "TGeoMatrix.h"
