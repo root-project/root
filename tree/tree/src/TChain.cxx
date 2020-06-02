@@ -1374,6 +1374,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
                      if (!frelement->GetCheckedType()) {
                         Int_t res = CheckBranchAddressType(br, TClass::GetClass(frelement->GetBaddressClassName()),
                                                          (EDataType) frelement->GetBaddressType(), frelement->GetBaddressIsPtr());
+                        if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
+                           br->SetMakeClass(kTRUE);
+                        }
+                        frelement->SetDecomposedObj(br->GetMakeClass());
                         frelement->SetCheckedType(kTRUE);
                      }
                      // FIXME: We may have to tell the branch it should
@@ -1650,6 +1654,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
             if (!element->GetCheckedType()) {
                Int_t res = CheckBranchAddressType(br, TClass::GetClass(element->GetBaddressClassName()),
                                                   (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
+               if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
+                  br->SetMakeClass(kTRUE);
+               }
+               element->SetDecomposedObj(br->GetMakeClass());
                element->SetCheckedType(kTRUE);
             }
             // FIXME: We may have to tell the branch it should
@@ -2494,6 +2502,10 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
       }
       if (branch) {
          res = CheckBranchAddressType(branch, TClass::GetClass(element->GetBaddressClassName()), (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
+         if ((res & kNeedEnableDecomposedObj) && !branch->GetMakeClass()) {
+            branch->SetMakeClass(kTRUE);
+         }
+         element->SetDecomposedObj(branch->GetMakeClass());
          element->SetCheckedType(kTRUE);
          if (fClones) {
             void* oldAdd = branch->GetAddress();
@@ -2503,9 +2515,13 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
                if (cloneBr && (cloneBr->GetAddress() == oldAdd)) {
                   // the clone's branch is still pointing to us
                   cloneBr->SetAddress(add);
+                  if ((res & kNeedEnableDecomposedObj) && !cloneBr->GetMakeClass()) {
+                     cloneBr->SetMakeClass(kTRUE);
+                  }
                }
             }
          }
+
          branch->SetAddress(add);
       } else {
          Error("SetBranchAddress", "unknown branch -> %s", bname);
