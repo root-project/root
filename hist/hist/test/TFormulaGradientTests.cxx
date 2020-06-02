@@ -19,7 +19,6 @@
 #include <TFormula.h>
 #include <TF1.h>
 #include <TFitResult.h>
-#include <TH1.h>
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
