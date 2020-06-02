@@ -54,11 +54,10 @@ within x3d produces incorrect end-faces
 
 #include "TGeoXtru.h"
 
-#include "Riostream.h"
-#include "TVirtualPad.h"
+#include <iostream>
+
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TClass.h"
 #include "TMath.h"
 
 #include "TVirtualGeoPainter.h"

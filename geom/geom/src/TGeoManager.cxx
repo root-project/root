@@ -234,13 +234,12 @@ in order to enhance rays.
 \image html geom_random2.jpg
 */
 
-#include <stdlib.h>
-
-#include "Riostream.h"
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
 
 #include "TROOT.h"
 #include "TGeoManager.h"
-#include "TSystem.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
@@ -287,7 +286,7 @@ in order to enhance rays.
 
 // statics and globals
 
-TGeoManager *gGeoManager = 0;
+TGeoManager *gGeoManager = nullptr;
 
 ClassImp(TGeoManager);
 

@@ -18,7 +18,7 @@ quadrilateral shape. The class does not provide navigation functionality, it jus
 for the composing faces.
 */
 
-#include "Riostream.h"
+#include <iostream>
 #include <sstream>
 
 #include "TGeoManager.h"
@@ -26,11 +26,9 @@ for the composing faces.
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoTessellated.h"
-#include "TVirtualPad.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
-#include "TRandom.h"
 
 #include <array>
 #include <vector>

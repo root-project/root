@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TBrowser.h"
-#include "TPolyLine3D.h"
 #include "TPoint.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"

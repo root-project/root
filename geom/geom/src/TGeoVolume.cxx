@@ -377,14 +377,15 @@ To define an assembly one should just input a name, then start adding other
 volumes (or volume assemblies) as content.
 */
 
-#include "Riostream.h"
+#include <fstream>
+#include <iomanip>
+
 #include "TString.h"
 #include "TBuffer.h"
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "TH2F.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TEnv.h"
 #include "TMap.h"
 #include "TFile.h"
