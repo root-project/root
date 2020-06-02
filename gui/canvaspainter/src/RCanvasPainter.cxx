@@ -40,7 +40,6 @@
 #include "TClass.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
-#include "TSystem.h"
 
 using namespace std::string_literals;
 using namespace ROOT::Experimental;
