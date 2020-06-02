@@ -27,8 +27,6 @@ Editor for a TGeoEltu.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualPad.h"
 #include "TView.h"
-#include "TGTab.h"
-#include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
