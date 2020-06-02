@@ -12,8 +12,6 @@
 #include "TGButtonGroup.h"
 #include "TString.h"
 #include "TGLabel.h"
-#include "TGCanvas.h"
-#include "TGTab.h"
 #include "TGSlider.h"
 #include "TGNumberEntry.h"
 #include "TROOT.h"

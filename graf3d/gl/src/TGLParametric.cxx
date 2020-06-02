@@ -26,7 +26,6 @@
 #include "TGLIncludes.h"
 #include "KeySymbols.h"
 #include "Buttons.h"
-#include "TColor.h"
 #include "TMath.h"
 
 namespace
