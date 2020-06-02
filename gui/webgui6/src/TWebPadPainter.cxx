@@ -9,11 +9,9 @@
  *************************************************************************/
 
 #include "TWebPadPainter.h"
-#include "TCanvas.h"
 #include "TError.h"
 #include "TImage.h"
-#include "TROOT.h"
-#include "TMath.h"
+#include "TVirtualPad.h"
 #include "TWebCanvas.h"
 #include "TBufferJSON.h"
 
