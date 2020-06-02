@@ -23,24 +23,24 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include <windows.h>
 #endif
 
-#include <cstdio>
-#include <cstdlib>
 #include "snprintf.h"
 #include "Varargs.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TEnv.h"
-#include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 
 #include <cctype> // for tolower
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <string>
 
-// Mutex for error and error format protection
-// (exported to be used for similar cases in other classes)
-
-TVirtualMutex *gErrorMutex = 0;
+namespace {
+/// Mutex for error and error format protection
+std::mutex gErrorMutex;
+} // anonymous namespace
 
 Int_t  gErrorIgnoreLevel     = kUnset;
 Int_t  gErrorAbortLevel      = kSysError+1;
@@ -92,7 +92,7 @@ again:
    va_end(ap);
 
    // Serialize the actual printing.
-   R__LOCKGUARD2(gErrorMutex);
+   std::lock_guard<std::mutex> guard(gErrorMutex);
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
    fprintf(stderr, "%s", toprint);
@@ -127,7 +127,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
-      R__LOCKGUARD2(gErrorMutex);
+      std::lock_guard<std::mutex> guard(gErrorMutex);
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {

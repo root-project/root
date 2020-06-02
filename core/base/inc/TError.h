@@ -27,7 +27,7 @@
 
 
 #include "RtypesCore.h"
-#include <stdarg.h>
+#include <cstdarg>
 
 
 class TVirtualMutex;
@@ -40,8 +40,6 @@ const Int_t kError    =   3000;
 const Int_t kBreak    =   4000;
 const Int_t kSysError =   5000;
 const Int_t kFatal    =   6000;
-
-R__EXTERN TVirtualMutex *gErrorMutex;
 
 typedef void (*ErrorHandlerFunc_t)(int level, Bool_t abort, const char *location,
               const char *msg);
