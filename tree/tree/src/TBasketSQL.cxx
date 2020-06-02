@@ -18,7 +18,6 @@
 #include "TTreeSQL.h"
 #include "TBufferSQL.h"
 
-#include <iostream>
 #include <vector>
 
 ClassImp(TBasketSQL);
