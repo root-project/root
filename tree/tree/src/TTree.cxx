@@ -423,8 +423,8 @@ End_Macro
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <stdio.h>
-#include <limits.h>
+#include <cstdio>
+#include <climits>
 #include <algorithm>
 
 #ifdef R__USE_IMT

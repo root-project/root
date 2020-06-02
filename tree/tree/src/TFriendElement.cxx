@@ -25,7 +25,6 @@ See TTree::AddFriend for more information.
 */
 
 #include "TFriendElement.h"
-#include "TBuffer.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TROOT.h"

@@ -16,10 +16,9 @@ A TChainElement describes a component of a TChain.
 */
 
 #include "TChainElement.h"
-#include "TBuffer.h"
 #include "TTree.h"
-#include "Riostream.h"
 #include "TROOT.h"
+#include <iostream>
 
 ClassImp(TChainElement);
 
