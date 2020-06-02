@@ -63,10 +63,15 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
    bool mergingIsLossy =
       sourceHasUnderOver && ((minComparison < 0) || (maxComparison > 0));
 
-   // Now, time to look at regular bins.
+   // Now, time to look at regular bins
+   //
+   // The lambda is run immediately, and only once. Its purpose is to enable
+   // exiting the regular bin comparison logic early as soon as all source
+   // regular bins have been processed. You could call it the ultimate goto.
+   //
    bool trivialRegularBinMapping = true;
    bool regularBinAliasing = false;
-   [&] {
+   [&]{
       // Handle the edge case where the source axis has no regular bin
       if (source.GetNBinsNoOver() == 0) {
          return;
