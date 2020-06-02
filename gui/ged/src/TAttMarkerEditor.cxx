@@ -25,6 +25,7 @@
 
 
 #include "TAttMarkerEditor.h"
+#include "TAttMarker.h"
 #include "TGedMarkerSelect.h"
 #include "TGColorSelect.h"
 #include "TGNumberEntry.h"
@@ -32,7 +33,6 @@
 #include "TGLabel.h"
 #include "TCanvas.h"
 #include "TROOT.h"
-#include "TVirtualX.h"
 
 
 ClassImp(TAttMarkerEditor);

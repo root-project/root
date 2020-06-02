@@ -30,7 +30,6 @@
 #include "TGComboBox.h"
 #include "TColor.h"
 #include "TPaveLabel.h"
-#include "TVirtualPad.h"
 #include "TGLabel.h"
 #include "TGNumberEntry.h"
 #include "TCanvas.h"

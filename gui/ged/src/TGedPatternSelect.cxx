@@ -43,9 +43,10 @@
 #include "RConfigure.h"
 #include "TGToolTip.h"
 #include "TGButton.h"
-#include "Riostream.h"
 #include "RStipples.h"
 #include "TVirtualX.h"
+
+#include <iostream>
 
 ClassImp(TGedPopup);
 ClassImp(TGedSelect);
