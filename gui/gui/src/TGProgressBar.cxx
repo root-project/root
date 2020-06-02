@@ -23,11 +23,10 @@
 
 #include "TGProgressBar.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 #include "TColor.h"
-#include "TGMsgBox.h"
 #include "TVirtualX.h"
 
+#include <iostream>
 
 const TGFont *TGProgressBar::fgDefaultFont = nullptr;
 TGGC         *TGProgressBar::fgDefaultGC = nullptr;

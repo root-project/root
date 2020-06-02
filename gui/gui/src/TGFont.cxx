@@ -39,14 +39,14 @@
 #include "TVirtualX.h"
 #include "TObjString.h"
 #include "TGWidget.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <limits.h>
-
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TMath.h"
+
+#include <cerrno>
+#include <cstdlib>
+#include <climits>
+#include <iostream>
 
 
 ClassImp(TGFont);

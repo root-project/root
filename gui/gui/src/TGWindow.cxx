@@ -29,8 +29,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGWindow.h"
-#include "Riostream.h"
-#include "TApplication.h"
+#include <iostream>
 #include "TVirtualX.h"
 
 ClassImp(TGWindow);

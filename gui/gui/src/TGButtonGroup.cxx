@@ -86,7 +86,8 @@
 #include "TList.h"
 #include "TGResourcePool.h"
 #include "TVirtualX.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 
 ClassImp(TGButtonGroup);

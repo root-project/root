@@ -31,9 +31,9 @@
 #include "TGStatusBar.h"
 #include "TGResourcePool.h"
 #include "TList.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
 
+#include <iostream>
 
 const TGFont  *TGStatusBar::fgDefaultFont = nullptr;
 TGGC          *TGStatusBar::fgDefaultGC = nullptr;

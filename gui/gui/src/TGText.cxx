@@ -32,7 +32,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGText.h"
-#include <ctype.h>
+#include <cctype>
 
 const Int_t kMaxLen = 8000;
 

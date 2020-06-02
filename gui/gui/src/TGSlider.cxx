@@ -50,9 +50,9 @@
 #include "TGPicture.h"
 #include "TImage.h"
 #include "TEnv.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
 
+#include <iostream>
 
 ClassImp(TGSlider);
 ClassImp(TGVSlider);

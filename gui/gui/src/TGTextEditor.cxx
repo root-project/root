@@ -169,7 +169,6 @@
 #include "TGFontDialog.h"
 #include "TGTextEdit.h"
 #include "TGMenu.h"
-#include "TGButton.h"
 #include "TGStatusBar.h"
 #include "KeySymbols.h"
 #include "TGToolBar.h"

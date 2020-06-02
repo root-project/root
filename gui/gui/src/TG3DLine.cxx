@@ -21,8 +21,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TG3DLine.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
+
+#include <iostream>
 
 
 ClassImp(TGHorizontal3DLine);

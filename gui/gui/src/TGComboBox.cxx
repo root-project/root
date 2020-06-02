@@ -42,13 +42,13 @@
 
 #include "TGComboBox.h"
 #include "TGScrollBar.h"
-#include "TGPicture.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 #include "TGTextEntry.h"
 #include "KeySymbols.h"
 #include "TVirtualX.h"
 #include "RConfigure.h"
+
+#include <iostream>
 
 
 ClassImp(TGComboBoxPopup);

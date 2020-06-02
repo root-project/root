@@ -61,13 +61,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGDoubleSlider.h"
 #include "TGTripleSlider.h"
 #include "TGPicture.h"
-#include "Riostream.h"
 #include "TSystem.h"
 #include "TVirtualX.h"
-#include <stdlib.h>
+
+#include <iostream>
+#include <cstdlib>
 
 ClassImp(TGTripleVSlider);
 ClassImp(TGTripleHSlider);
