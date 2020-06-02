@@ -32,16 +32,16 @@
 #include "TError.h"
 #include "TGraph.h"
 #include "TBufferJSON.h"
-#include "Riostream.h"
 #include "TBase64.h"
 #include "TAtt3D.h"
 #include "TView.h"
 
 #include <ROOT/RMakeUnique.hxx>
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <sstream>
+#include <fstream>
 #include <iostream>
 
 using namespace std::string_literals;
