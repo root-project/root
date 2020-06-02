@@ -15,7 +15,6 @@
 Implement TTree for a SQL backend
 */
 
-#include <iostream>
 #include <vector>
 #include <map>
 #include <cstdlib>

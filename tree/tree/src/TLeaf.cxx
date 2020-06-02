@@ -22,9 +22,8 @@ See TBranch structure in TTree.
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
-#include "TClass.h"
 
-#include <ctype.h>
+#include <cctype>
 
 ClassImp(TLeaf);
 

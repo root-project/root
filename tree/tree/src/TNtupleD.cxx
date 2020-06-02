@@ -15,8 +15,6 @@
 #include "TLeaf.h"
 #include "TBrowser.h"
 #include "TBuffer.h"
-#include "Riostream.h"
-#include "TClass.h"
 #include "TreeUtils.h"
 
 ClassImp(TNtupleD);

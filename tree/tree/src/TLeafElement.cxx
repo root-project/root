@@ -17,7 +17,6 @@ a TStreamerInfo (i.e. using TBranchElement).
 */
 
 #include "TLeafElement.h"
-//#include "TMethodCall.h"
 
 #include "TVirtualStreamerInfo.h"
 #include "Bytes.h"
