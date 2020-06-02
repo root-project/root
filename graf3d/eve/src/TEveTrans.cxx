@@ -16,8 +16,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-#include "Riostream.h"
-
+#include <iostream>
 #include <cctype>
 
 #define F00  0
