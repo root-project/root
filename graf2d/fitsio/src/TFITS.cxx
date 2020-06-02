@@ -69,7 +69,6 @@ several methods to manage them.
 */
 
 #include "TFITS.h"
-#include "TROOT.h"
 #include "TImage.h"
 #include "TArrayI.h"
 #include "TArrayD.h"
@@ -84,7 +83,7 @@ several methods to manage them.
 #include "TMath.h"
 
 #include "fitsio.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 ClassImp(TFITSHDU);
 
