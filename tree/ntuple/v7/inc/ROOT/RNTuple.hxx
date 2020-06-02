@@ -55,7 +55,8 @@ enum class ENTupleInfo {
  * Listing of the different entry output formats of RNTupleReader::Show()
  */
 enum class ENTupleFormat {
-   kJSON, // prints a single entry/row in JSON format.
+   kJSON, // prints a single entry/row with the current active model in JSON format.
+   kJSONFull,  // prints a single entry/row with all the fields in JSON format.
 };
 
 
