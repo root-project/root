@@ -67,7 +67,7 @@ TEST(RNTupleShow, BasicTypes)
    auto ntuple2 = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSON, os);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleFormat::kJSONFull, os);
    std::string fString{ std::string("")
       + "{\n"
       + "  \"pt\": 5,\n"
@@ -82,7 +82,7 @@ TEST(RNTupleShow, BasicTypes)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSON, os1);
+   ntuple2->Show(1, ROOT::Experimental::ENTupleFormat::kJSONFull, os1);
    std::string fString1{ std::string("")
       + "{\n"
       + "  \"pt\": 8.5,\n"
@@ -97,7 +97,7 @@ TEST(RNTupleShow, BasicTypes)
    EXPECT_EQ(fString1, os1.str());
 
    // TODO(jblomer): this should fail to an exception instead
-   EXPECT_DEATH(ntuple2->Show(2), ".*");
+   EXPECT_DEATH(ntuple2->Show(2, ROOT::Experimental::ENTupleFormat::kJSONFull), ".*");
 }
 
 TEST(RNTupleShow, Vectors)
