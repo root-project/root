@@ -59,7 +59,6 @@
 #include "TGCanvas.h"
 #include "TGTab.h"
 #include "TGedFrame.h"
-#include "TGLabel.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBaseClass.h"
