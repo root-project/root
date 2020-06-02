@@ -9,7 +9,6 @@
  **********************************************************************/
 
 #include "TF1Convolution.h"
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TObject.h"
 #include "TObjString.h"

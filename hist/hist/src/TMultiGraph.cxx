@@ -17,19 +17,18 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TVirtualPad.h"
-#include "Riostream.h"
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
 #include "TMath.h"
-#include "TSystem.h"
 #include "TF1.h"
-#include <stdlib.h>
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"
 #include "Math/MinimizerOptions.h"
 
-#include <ctype.h>
+#include <iostream>
+#include <cstdlib>
+#include <cctype>
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 

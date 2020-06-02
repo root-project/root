@@ -9,15 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TBuffer.h"
 #include "TGraph2DErrors.h"
-#include "TMath.h"
 #include "TH2.h"
 #include "TVirtualPad.h"
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
-#include "TStyle.h"
 
 ClassImp(TGraph2DErrors);
 

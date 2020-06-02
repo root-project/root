@@ -11,7 +11,6 @@
 
 #include <cmath>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBuffer.h"
