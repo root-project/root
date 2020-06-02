@@ -41,6 +41,7 @@ protected:
    TString       fBaddressClassName; ///<! Name of the class pointed to by fBaddress
    UInt_t        fBaddressType;      ///<! Type of the value pointed to by fBaddress
    Bool_t        fBaddressIsPtr : 1; ///<! True if the address is a pointer to an address
+   Bool_t        fDecomposedObj : 1; ///<! True if the address needs the branch in MakeClass/DecomposedObj mode.
    Bool_t        fCheckedType : 1;   ///<! True if the branch type and the address type have been checked.
    char         *fPackets;           ///<! Packet descriptor string
    TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
@@ -59,6 +60,7 @@ public:
    virtual Long64_t    GetEntries() const {return fEntries;}
            Int_t       GetLoadResult() const { return fLoadResult; }
            Bool_t      GetCheckedType() const { return fCheckedType; }
+           Bool_t      GetDecomposedObj() const { return fDecomposedObj; }
    virtual char       *GetPackets() const {return fPackets;}
    virtual Int_t       GetPacketSize() const {return fPacketSize;}
    virtual Int_t       GetStatus() const {return fStatus;}
@@ -70,6 +72,7 @@ public:
    virtual void        SetBaddressType(UInt_t type) { fBaddressType = type; }
    virtual void        SetBranchPtr(TBranch **ptr) { fBranchPtr = ptr; }
            void        SetCheckedType(Bool_t m) { fCheckedType = m; }
+           void        SetDecomposedObj(Bool_t m) { fDecomposedObj = m; }
            void        SetLoadResult(Int_t result) { fLoadResult = result; }
    virtual void        SetLookedUp(Bool_t y = kTRUE);
    virtual void        SetNumberEntries(Long64_t n) {fEntries=n;}

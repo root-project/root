@@ -26,7 +26,7 @@ ClassImp(TChainElement);
 /// Default constructor for a chain element.
 
 TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
-   fBaddressIsPtr(kFALSE), fCheckedType(kFALSE), fBranchPtr(0), fLoadResult(0)
+   fBaddressIsPtr(kFALSE), fDecomposedObj(kFALSE), fCheckedType(kFALSE), fBranchPtr(0), fLoadResult(0)
 {
    fNPackets   = 0;
    fPackets    = 0;
@@ -41,7 +41,7 @@ TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
 
 TChainElement::TChainElement(const char *name, const char *title)
    :TNamed(name,title),fBaddress(0),fBaddressType(0),
-    fBaddressIsPtr(kFALSE), fCheckedType(kFALSE), fBranchPtr(0), fLoadResult(0)
+    fBaddressIsPtr(kFALSE), fDecomposedObj(kFALSE), fCheckedType(kFALSE), fBranchPtr(0), fLoadResult(0)
 {
    fNPackets   = 0;
    fPackets    = 0;
