@@ -144,7 +144,6 @@ a new TFractionFitter object).
 Any serious inconsistency results in an error.
 */
 
-#include "Riostream.h"
 #include "TH1.h"
 #include "TMath.h"
 #include "TClass.h"

@@ -13,12 +13,10 @@
 #include "TBuffer.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
-#include "Riostream.h"
-#include "TVirtualPad.h"
 #include "TError.h"
 #include "TClass.h"
-
 #include "TProfileHelper.h"
+#include <iostream>
 
 Bool_t TProfile2D::fgApproximate = kFALSE;
 

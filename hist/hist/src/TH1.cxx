@@ -9,14 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
+#include <cctype>
 #include <sstream>
 #include <cmath>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TEnv.h"
@@ -42,7 +42,6 @@
 #include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"
 #include "TVirtualPaveStats.h"
-#include "TSystem.h"
 
 #include "HFitInterface.h"
 #include "Fit/DataRange.h"

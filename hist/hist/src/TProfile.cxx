@@ -14,8 +14,7 @@
 #include "TMath.h"
 #include "TF1.h"
 #include "THLimitsFinder.h"
-#include "Riostream.h"
-#include "TVirtualPad.h"
+#include <iostream>
 #include "TError.h"
 #include "TClass.h"
 #include "TObjString.h"
