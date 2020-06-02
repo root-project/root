@@ -103,7 +103,6 @@
 
 #include "TXMLPlayer.h"
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TList.h"
 #include "TClass.h"
@@ -116,6 +115,8 @@
 #include "TMethodCall.h"
 #include "TVirtualCollectionProxy.h"
 #include "TClassEdit.h"
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 

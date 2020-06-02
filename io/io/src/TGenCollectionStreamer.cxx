@@ -28,7 +28,6 @@ size(), clear(), resize(). resize() may be a void operation.
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "Riostream.h"
 #include "TVirtualCollectionIterators.h"
 
 TGenCollectionStreamer::TGenCollectionStreamer(const TGenCollectionStreamer& copy)

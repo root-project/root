@@ -23,7 +23,6 @@ to database server.
 
 #include "TSQLStructure.h"
 
-#include "Riostream.h"
 #include "TMap.h"
 #include "TClass.h"
 #include "TStreamerInfo.h"
@@ -38,6 +37,8 @@ to database server.
 #include "TSQLStatement.h"
 #include "TSQLServer.h"
 #include "TDataType.h"
+
+#include <iostream>
 
 namespace sqlio {
 const Int_t Ids_NullPtr = 0;       // used to identify NULL pointer in tables

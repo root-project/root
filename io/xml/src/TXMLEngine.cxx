@@ -21,12 +21,13 @@
 
 #include "TXMLEngine.h"
 
-#include "Riostream.h"
 #include "TString.h"
 #include "TNamed.h"
 #include "TObjArray.h"
-#include <stdlib.h>
-#include <string.h>
+
+#include <fstream>
+#include <cstdlib>
+#include <cstring>
 
 ClassImp(TXMLEngine);
 

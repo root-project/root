@@ -29,7 +29,7 @@ the class TEmulatedMapProxy.
 #include "TClassEdit.h"
 #include "TError.h"
 #include "TROOT.h"
-#include "Riostream.h"
+#include <iostream>
 
 #include "TVirtualMutex.h" // For R__LOCKGUARD
 #include "TInterpreter.h"  // For gInterpreterMutex
