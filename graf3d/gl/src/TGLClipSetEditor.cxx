@@ -11,8 +11,6 @@
 
 #include "TGLClipSetEditor.h"
 #include "TGLClip.h"
-#include "TColor.h"
-#include "TGLabel.h"
 #include "TGButton.h"
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"

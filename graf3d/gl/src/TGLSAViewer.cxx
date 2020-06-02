@@ -21,11 +21,9 @@
 #include "TG3DLine.h"
 #include "TSystem.h"
 #include "TGFrame.h"
-#include "TGLabel.h"
 #include "TGMenu.h"
-#include "TGButton.h"
 #include "TGSplitter.h"
-#include "TColor.h"
+#include "TGButton.h"
 
 #include "TVirtualPad.h"
 #include "TGedEditor.h"
