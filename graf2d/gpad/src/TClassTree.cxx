@@ -24,10 +24,10 @@
 #include "TVirtualPad.h"
 #include "TPaveClass.h"
 #include "TArrow.h"
-#include "TText.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "Riostream.h"
+
+#include <fstream>
 #include <algorithm>
 
 const Int_t kIsClassTree = BIT(7);

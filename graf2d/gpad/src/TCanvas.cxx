@@ -9,10 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TCanvas.h"
@@ -20,7 +21,6 @@
 #include "TDatime.h"
 #include "TClass.h"
 #include "TStyle.h"
-#include "TText.h"
 #include "TBox.h"
 #include "TCanvasImp.h"
 #include "TDialogCanvas.h"

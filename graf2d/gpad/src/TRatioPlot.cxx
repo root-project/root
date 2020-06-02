@@ -25,8 +25,6 @@
 #include "TFitResult.h"
 #include "THStack.h"
 
-#include <iostream>
-
 /** \class TRatioPlot
     \ingroup gpad
 Class for displaying ratios, differences and fit residuals.
