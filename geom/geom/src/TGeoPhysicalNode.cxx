@@ -56,7 +56,6 @@ matrix.
 For more details please read the misalignment section in the Users Guide.
 */
 
-#include "TClass.h"
 #include "TGeoManager.h"
 #include "TGeoVoxelFinder.h"
 #include "TGeoCache.h"

@@ -12,7 +12,7 @@
  *************************************************************************/
 #include "TGeoBoolNode.h"
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
