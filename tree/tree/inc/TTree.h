@@ -236,7 +236,10 @@ public:
       kMatchConversionCollection = 2,
       kMakeClass = 3,
       kVoidPtr = 4,
-      kNoCheck = 5
+      kNoCheck = 5,
+      kNeedEnableDecomposedObj = BIT(29),   // DecomposedObj is the newer name of MakeClass mode
+      kNeedDisableDecomposedObj = BIT(30),
+      kDecomposedObjMask = kNeedEnableDecomposedObj | kNeedDisableDecomposedObj
    };
 
    // TTree status bits

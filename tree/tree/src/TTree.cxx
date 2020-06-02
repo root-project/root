@@ -2812,6 +2812,10 @@ TFile* TTree::ChangeFile(TFile* file)
 /// - kMakeClass (3) : MakeClass mode so we can not check.
 /// - kVoidPtr (4) : void* passed so no check was made.
 /// - kNoCheck (5) : Underlying TBranch not yet available so no check was made.
+/// In addition this can be multiplexed with the two bits:
+/// - kNeedEnableDecomposedObj : in order for the address (type) to be 'usable' the branch needs to be in Decomposed Object (aka MakeClass) mode.
+/// - kNeedDisableDecomposedObj : in order for the address (type) to be 'usable' the branch needs to not be in Decomposed Object (aka MakeClass) mode.
+/// This bits can be masked out by using kDecomposedObjMask
 
 Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType datatype, Bool_t isptr)
 {
@@ -3007,9 +3011,13 @@ Int_t TTree::CheckBranchAddressType(TBranch* branch, TClass* ptrClass, EDataType
       }
       return kMissingCompiledCollectionProxy;
    }
-   if (expectedClass && isBranchElement) {
-      TBranchElement* bEl = (TBranchElement*)branch;
-      bEl->SetTargetClass( expectedClass->GetName() );
+   if (isBranchElement) {
+      if (expectedClass) {
+         TBranchElement* bEl = (TBranchElement*)branch;
+         bEl->SetTargetClass( expectedClass->GetName() );
+      } else if (expectedType != kNoType_t && expectedType != kOther_t) {
+         return kMatch | kNeedEnableDecomposedObj;
+      }
    }
    return kMatch;
 }
@@ -8227,9 +8235,12 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TBranch** ptr, TCla
    }
 
    Int_t res = CheckBranchAddressType(branch, ptrClass, datatype, isptr);
+
    // This will set the value of *ptr to branch.
    if (res >= 0) {
       // The check succeeded.
+      if ((res & kNeedEnableDecomposedObj) && !branch->GetMakeClass())
+         branch->SetMakeClass(kTRUE);
       SetBranchAddressImp(branch,addr,ptr);
    } else {
       if (ptr) *ptr = 0;
