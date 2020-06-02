@@ -67,12 +67,10 @@ End_Macro
 This initializes a helix with its axis in Z direction (rtype=kHelixZ).
 */
 
-#include "Riostream.h"
+#include <iostream>
 #include "TBuffer.h"
 #include "TROOT.h"
-#include "TVirtualPad.h"
 #include "THelix.h"
-#include "TClass.h"
 #include "TMath.h"
 
 Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D

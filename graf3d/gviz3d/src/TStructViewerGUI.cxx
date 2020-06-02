@@ -10,7 +10,6 @@
 *************************************************************************/
 
 #include "TStructViewerGUI.h"
-#include <TRandom.h>
 #include "TStructViewer.h"
 #include "TStructNodeEditor.h"
 #include "TStructNodeProperty.h"

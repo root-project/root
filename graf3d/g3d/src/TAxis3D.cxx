@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ctype.h>
-#include <assert.h>
+#include <cctype>
+#include <cassert>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TMath.h"
 #include "TList.h"
-#include "TClass.h"
 #include "TAxis3D.h"
-#include "TCanvas.h"
-#include "TVirtualPad.h"
+#include "TClass.h"
+#include "TPad.h"
 #include "TGaxis.h"
 #include "TView.h"
 #include "TVirtualX.h"

@@ -17,9 +17,8 @@
 #include "TNode.h"
 #include "TMaterial.h"
 #include "TBrowser.h"
-#include "TClass.h"
 
-TGeometry *gGeometry = 0;
+TGeometry *gGeometry = nullptr;
 
 ClassImp(TGeometry);
 

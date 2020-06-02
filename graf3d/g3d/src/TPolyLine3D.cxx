@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TPolyLine3D.h"
@@ -21,7 +20,8 @@
 #include "TGeometry.h"
 #include "TMath.h"
 
-#include <assert.h>
+#include <cassert>
+#include <iostream>
 
 ClassImp(TPolyLine3D);
 
