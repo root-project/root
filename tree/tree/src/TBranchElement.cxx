@@ -5387,7 +5387,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch *abranch = (TBranch*) fBranches.UncheckedAt(i);
       // FIXME: This is a tail recursion!
-      if (fBranchOffset[i] != TStreamerInfo::kMissing) {
+      if (fBranchOffset[i] != TStreamerInfo::kMissing && !(implied && abranch->TestBit(kAddressSet))) {
          abranch->SetAddressImpl(fObject + fBranchOffset[i], implied);
          abranch->SetBit(kAddressSet);
       } else {
