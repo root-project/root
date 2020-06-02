@@ -17,7 +17,6 @@
 #include <ROOT/RFitPanelModel.hxx>
 
 #include "TH1.h"
-#include "TDirectory.h"
 #include "TPluginManager.h"
 #include "TFitResult.h"
 #include "TF1.h"
