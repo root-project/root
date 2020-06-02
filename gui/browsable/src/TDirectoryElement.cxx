@@ -15,12 +15,10 @@
 
 #include <ROOT/RLogger.hxx>
 
-#include "TSystem.h"
 #include "TKey.h"
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TFile.h"
-#include "TH1.h"
 
 using namespace std::string_literals;
 

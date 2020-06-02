@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 #include <ROOT/RLogger.hxx>
 
-#include "TClass.h"
 #include "TBufferJSON.h"
 
 #include <algorithm>
