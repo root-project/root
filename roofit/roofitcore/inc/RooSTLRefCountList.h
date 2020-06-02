@@ -85,6 +85,11 @@ class RooSTLRefCountList {
       return _storage.end();
     }
 
+    /// Retrieve an element from the list.
+    typename Container_t::value_type operator[](std::size_t index) const {
+      return _storage[index];
+    }
+
 
     ///Direct reference to container of objects held by this list.
     const Container_t& containedObjects() const {
