@@ -16,10 +16,10 @@
 TVirtualPS is an abstract interface to Postscript, PDF, SVG. TeX etc... drivers
 */
 
-#include "Riostream.h"
+#include <fstream>
 #include "TVirtualPS.h"
 
-TVirtualPS *gVirtualPS = 0;
+TVirtualPS *gVirtualPS = nullptr;
 
 const Int_t  kMaxBuffer = 250;
 

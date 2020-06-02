@@ -16,10 +16,8 @@
 
 #include "zlib.h"
 
-#include <stdio.h>
-#include <assert.h>
-
-#include <iostream>
+#include <cstdio>
+#include <cassert>
 
 // The size of the ROOT block framing headers for compression:
 // - 3 bytes to identify the compression algorithm and version.

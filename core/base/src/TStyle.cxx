@@ -9,12 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdio>
+#include <cctype>
 #include <cmath>
+#include <iostream>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TApplication.h"
 #include "TColor.h"
 #include "TDatime.h"

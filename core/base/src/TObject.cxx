@@ -25,16 +25,17 @@ reserved as  global bits while bits 14 - 23 can be used in different
 class hierarchies (watch out for overlaps).
 */
 
-#include <string.h>
+#include <cstring>
 #if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
 #include <strings.h>
 #endif
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <sstream>
+#include <fstream>
+#include <iostream>
 
 #include "Varargs.h"
-#include "Riostream.h"
 #include "TObject.h"
 #include "TBuffer.h"
 #include "TClass.h"

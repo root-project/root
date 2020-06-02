@@ -73,7 +73,7 @@ of a main program creating an interactive version is shown below:
 #include "RGitCommit.h"
 #include <string>
 #include <map>
-#include <stdlib.h>
+#include <cstdlib>
 #ifdef WIN32
 #include <io.h>
 #include "Windows4Root.h"
@@ -112,14 +112,13 @@ FARPROC dlsym(void *library, const char *function_name)
 #include <dlfcn.h>
 #endif
 
-#include "Riostream.h"
+#include <iostream>
 #include "ROOT/FoundationUtils.hxx"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassGenerator.h"
 #include "TDataType.h"
-#include "TDatime.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
 #include "TClassTable.h"
@@ -142,7 +141,6 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TQObject.h"
 #include "TProcessUUID.h"
 #include "TPluginManager.h"
-#include "TMap.h"
 #include "TVirtualMutex.h"
 #include "TListOfTypes.h"
 #include "TListOfDataMembers.h"
@@ -167,11 +165,11 @@ FARPROC dlsym(void *library, const char *function_name)
 
 extern "C" void R__SetZipMode(int);
 
-static DestroyInterpreter_t *gDestroyInterpreter = 0;
-static void *gInterpreterLib = 0;
+static DestroyInterpreter_t *gDestroyInterpreter = nullptr;
+static void *gInterpreterLib = nullptr;
 
 // Mutex for protection of concurrent gROOT access
-TVirtualMutex* gROOTMutex = 0;
+TVirtualMutex* gROOTMutex = nullptr;
 ROOT::TVirtualRWMutex *ROOT::gCoreMutex = nullptr;
 
 // For accessing TThread::Tsd indirectly.

@@ -8,7 +8,7 @@
 #include "TClass.h"
 #include "TROOT.h"
 #include "TBuffer.h"
-#include "Riostream.h"
+#include <iostream>
 
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
