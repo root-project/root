@@ -28,8 +28,6 @@ Editor for a TGeoCone.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualPad.h"
 #include "TView.h"
-#include "TGTab.h"
-#include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"

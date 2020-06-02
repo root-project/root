@@ -32,7 +32,6 @@ with a tree hierarchy. Specific implementations are:
 #include "TGTab.h"
 #include "TGLabel.h"
 #include "TGComboBox.h"
-#include "TGListBox.h"
 #include "TGListTree.h"
 #include "TGTextEntry.h"
 #include "TGCanvas.h"

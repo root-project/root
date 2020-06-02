@@ -22,7 +22,6 @@ Editor class for TGeoNode objects.
 #include "TGeoMatrix.h"
 #include "TGeoNode.h"
 #include "TGTab.h"
-#include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
