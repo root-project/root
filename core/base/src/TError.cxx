@@ -37,10 +37,7 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include <mutex>
 #include <string>
 
-namespace {
-/// Mutex for error and error format protection
-std::mutex gErrorMutex;
-} // anonymous namespace
+TVirtualMutex *gErrorMutex = nullptr;
 
 Int_t  gErrorIgnoreLevel     = kUnset;
 Int_t  gErrorAbortLevel      = kSysError+1;
@@ -59,6 +56,13 @@ asm(".desc ___crashreporter_info__, 0x10");
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 
+
+/// Mutex for error and error format protection
+static std::mutex &GetErrorMutex()
+{
+   static std::mutex m;
+   return m;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print debugging message to stderr and, on Windows, to the system debugger.
@@ -92,7 +96,7 @@ again:
    va_end(ap);
 
    // Serialize the actual printing.
-   std::lock_guard<std::mutex> guard(gErrorMutex);
+   std::lock_guard<std::mutex> guard(GetErrorMutex());
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
    fprintf(stderr, "%s", toprint);
@@ -127,7 +131,7 @@ ErrorHandlerFunc_t GetErrorHandler()
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
-      std::lock_guard<std::mutex> guard(gErrorMutex);
+      std::lock_guard<std::mutex> guard(GetErrorMutex());
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {

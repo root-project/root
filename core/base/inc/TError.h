@@ -26,11 +26,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+#include <ROOT/RConfig.hxx>
 #include "RtypesCore.h"
 #include <cstdarg>
 
 
 class TVirtualMutex;
+extern TVirtualMutex *gErrorMutex R__DEPRECATED(6,26, "ROOT stopped exporting gErrorMutex.");
 
 const Int_t kUnset    =  -1;
 const Int_t kPrint    =   0;
