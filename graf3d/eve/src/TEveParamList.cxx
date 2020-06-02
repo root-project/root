@@ -11,12 +11,9 @@
 
 #include "TEveParamList.h"
 
-// Cleanup these includes:
 #include "TGLabel.h"
 #include "TGButton.h"
 #include "TGNumberEntry.h"
-#include "TGColorSelect.h"
-#include "TGDoubleSlider.h"
 
 #include "TEveGValuators.h"
 #include "TGedEditor.h"

@@ -25,7 +25,6 @@
 
 #include "TApplication.h"
 #include "TEnv.h"
-#include "TSystem.h"
 #include "TVirtualX.h"
 
 /** \class TEveViewer

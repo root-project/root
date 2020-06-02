@@ -13,8 +13,6 @@
 #include "TEveElement.h"
 #include "TEveManager.h"
 
-#include "TGButton.h"
-#include "TGLabel.h"
 #include "TGToolTip.h"
 #include "TGDNDManager.h"
 #include "TGMsgBox.h"

@@ -33,19 +33,18 @@
 #include "TExMap.h"
 #include "TMacro.h"
 #include "TFolder.h"
-#include "TBrowser.h"
 #include "TCanvas.h"
 #include "TSystem.h"
-#include "TRint.h"
-#include "TVirtualX.h"
+#include "TApplication.h"
 #include "TColor.h"
 #include "TPluginManager.h"
 #include "TPRegexp.h"
 #include "TClass.h"
 
-#include "Riostream.h"
+#include <iostream>
+#include <fstream>
 
-TEveManager* gEve = 0;
+TEveManager *gEve = nullptr;
 
 /** \class TEveManager
 \ingroup TEve
