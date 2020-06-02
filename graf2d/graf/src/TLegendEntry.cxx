@@ -14,7 +14,7 @@
 #include "TLegendEntry.h"
 #include "TVirtualPad.h"
 #include "TROOT.h"
-#include "Riostream.h"
+#include <iostream>
 
 ClassImp(TLegendEntry);
 
