@@ -36,9 +36,9 @@
 #include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
+#include <ctime>
+#include <cstring>
+#include <cstdlib>
 
 #include "TGFileBrowser.h"
 #include "TRootBrowser.h"

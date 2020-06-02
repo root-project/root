@@ -33,7 +33,6 @@
 #include "RConfigure.h"
 
 #include "TGResourcePool.h"
-#include "TGClient.h"
 #include "TGWindow.h"
 #include "TROOT.h"
 #include "TSystem.h"

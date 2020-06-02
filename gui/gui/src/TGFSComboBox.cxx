@@ -35,9 +35,10 @@
 #include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TSystem.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
-#include <stdlib.h>
+
+#include <cstdlib>
+#include <iostream>
 
 const TGFont *TGTreeLBEntry::fgDefaultFont = nullptr;
 TGGC         *TGTreeLBEntry::fgDefaultGC = nullptr;

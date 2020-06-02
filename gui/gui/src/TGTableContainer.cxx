@@ -10,9 +10,7 @@
 
 #include "TGTableContainer.h"
 #include "TGTableCell.h"
-#include "TGLayout.h"
 #include "TGWindow.h"
-#include "TGScrollBar.h"
 #include "TGTable.h"
 #include "TVirtualX.h"
 
