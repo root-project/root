@@ -68,6 +68,13 @@ class TFileOpenReadWrite(unittest.TestCase):
         # inside the directory
         self.assertEqual(f.__dict__['h'], f.h)
 
+    def test_oserror(self):
+        # check that an OSError is raised when an inexistent file is opened
+        # both with a string and an instance of TFileOpenHandle as arguments
+        self.assertRaises(OSError, ROOT.TFile.Open, 'inexistent_file.root')
+        handle = ROOT.TFile.AsyncOpen("inexistent_file.root")
+        self.assertRaises(OSError, ROOT.TFile.Open, handle)
+
 
 if __name__ == '__main__':
     unittest.main()
