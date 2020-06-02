@@ -48,8 +48,8 @@
 */
 
 #include <atomic>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TDirectoryFile.h"
