@@ -164,31 +164,42 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
 
 void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleFormat format, std::ostream &output)
 {
-   auto reader = GetDisplayReader();
-   auto entry = reader->GetModel()->GetDefaultEntry();
-   reader->LoadEntry(index);
+   RNTupleReader *reader = this;
+   REntry *entry = nullptr;
+   // Don't accidentally trigger loading of the entire model
+   if (fModel)
+      entry = fModel->GetDefaultEntry();
 
    switch(format) {
-      case ENTupleFormat::kJSON: {
-         output << "{";
-         for (auto iValue = entry->begin(); iValue != entry->end(); ) {
-            output << std::endl;
-            RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
-            iValue->GetField()->AcceptVisitor(visitor);
-
-            if (++iValue == entry->end()) {
-               output << std::endl;
-               break;
-            } else {
-               output << ",";
-            }
-         }
-         output << "}" << std::endl;
+   case ENTupleFormat::kJSONFull:
+      reader = GetDisplayReader();
+      entry = reader->GetModel()->GetDefaultEntry();
+      // Fall through
+   case ENTupleFormat::kJSON:
+      if (!entry) {
+         output << "{}" << std::endl;
          break;
       }
-      default:
-         // Unhandled case, internal error
-         R__ASSERT(false);
+
+      reader->LoadEntry(index);
+      output << "{";
+      for (auto iValue = entry->begin(); iValue != entry->end(); ) {
+         output << std::endl;
+         RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
+         iValue->GetField()->AcceptVisitor(visitor);
+
+         if (++iValue == entry->end()) {
+            output << std::endl;
+            break;
+         } else {
+            output << ",";
+         }
+      }
+      output << "}" << std::endl;
+      break;
+   default:
+      // Unhandled case, internal error
+      R__ASSERT(false);
    }
 }
 
