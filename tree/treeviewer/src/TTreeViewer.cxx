@@ -176,7 +176,8 @@ or :
 
 #include "RConfigure.h"
 
-#include "Riostream.h"
+#include <iostream>
+#include <fstream>
 #include "TTreeViewer.h"
 #include "HelpText.h"
 #include "HelpTextTV.h"
@@ -199,7 +200,6 @@ or :
 #include "TKey.h"
 #include "TFile.h"
 #include "TGMenu.h"
-#include "TGFrame.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TFriendElement.h"
