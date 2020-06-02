@@ -99,7 +99,6 @@ When most solids or volumes are added to the geometry they
 #include "TGeoXtru.h"
 #include "TGeoScaledShape.h"
 #include "TGeoTessellated.h"
-#include "TROOT.h"
 #include "TMath.h"
 #include "TMap.h"
 #include "TObjString.h"
@@ -114,7 +113,7 @@ When most solids or volumes are added to the geometry they
 #include "TGeoOpticalSurface.h"
 #include "TGeoSystemOfUnits.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <sstream>
 #include <locale>
