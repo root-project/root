@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include <stdexcept>
 #include <cassert>
 
-#include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "RStipples.h"
 #include "TColor.h"

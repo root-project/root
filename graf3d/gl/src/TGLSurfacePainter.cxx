@@ -10,11 +10,9 @@
  *************************************************************************/
 
 #include <algorithm>
-#include "Riostream.h"
 #include <cstdlib>
 #include <cctype>
 
-#include "TVirtualPad.h"
 #include "KeySymbols.h"
 #include "TVirtualX.h"
 #include "Buttons.h"

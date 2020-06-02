@@ -12,7 +12,6 @@
 #include "TGLLightSetEditor.h"
 #include <TGLLightSet.h>
 
-#include <TVirtualPad.h>
 #include <TColor.h>
 
 #include <TGLabel.h>

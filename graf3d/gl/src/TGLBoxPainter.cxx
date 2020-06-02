@@ -16,9 +16,7 @@
 #include "TString.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "TClass.h"
 #include "TColor.h"
-#include "TStyle.h"
 #include "TH3.h"
 #include "TVirtualMutex.h"
 

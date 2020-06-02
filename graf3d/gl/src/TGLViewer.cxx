@@ -37,7 +37,6 @@
 #include "TMath.h"
 #include "TColor.h"
 #include "TError.h"
-#include "TClass.h"
 #include "TEnv.h"
 
 // For event type translation ExecuteEvent
