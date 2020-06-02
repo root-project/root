@@ -21,7 +21,6 @@
 #include <TFormula.h>
 #include <TF1.h>
 #include <TFitResult.h>
-#include <TH1.h>
 
 TEST(TFormulaGradientPar, Sanity)
 {
