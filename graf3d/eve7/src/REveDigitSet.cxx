@@ -13,7 +13,6 @@
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveTrans.hxx"
 
-#include "TColor.h"
 #include "TRefArray.h"
 
 #include "json.hpp"

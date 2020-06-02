@@ -13,7 +13,6 @@
 #include <ROOT/REveRenderData.hxx>
 #include <ROOT/REveProjectionManager.hxx>
 
-#include "TRandom.h"
 #include "TClass.h"
 #include "json.hpp"
 
