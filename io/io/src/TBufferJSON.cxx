@@ -99,7 +99,6 @@ class Container {
 #include <cmath>
 #include <memory>
 #include <cstdlib>
-#include <iostream>
 #include <fstream>
 
 #include <ROOT/RMakeUnique.hxx>

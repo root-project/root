@@ -92,7 +92,6 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 
 #include "Bytes.h"
 #include "Compression.h"
-#include "Riostream.h"
 #include "RConfigure.h"
 #include "Strlen.h"
 #include "TArrayC.h"
@@ -129,6 +128,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TStopwatch.h"
 #include "compiledata.h"
 #include <cmath>
+#include <iostream>
 #include <set>
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"

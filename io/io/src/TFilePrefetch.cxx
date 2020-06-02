@@ -18,7 +18,6 @@
 #include "TSemaphore.h"
 #include "TFPBlock.h"
 
-#include <iostream>
 #include <string>
 #include <sstream>
 #include <cstdio>

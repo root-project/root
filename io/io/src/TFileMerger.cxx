@@ -33,7 +33,6 @@ to be merged, like the standalone hadd program.
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "TClass.h"
-#include "Riostream.h"
 #include "TFileMergeInfo.h"
 #include "TClassRef.h"
 #include "TROOT.h"
@@ -42,7 +41,7 @@ to be merged, like the standalone hadd program.
 
 #ifdef WIN32
 // For _getmaxstdio
-#include <stdio.h>
+#include <cstdio>
 #else
 // For getrlimit
 #include <sys/time.h>
