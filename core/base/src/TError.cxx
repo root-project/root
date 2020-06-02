@@ -29,10 +29,12 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include "Varargs.h"
 #include "TError.h"
 #include "TSystem.h"
-#include "TString.h"
 #include "TEnv.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
+
+#include <cctype> // for tolower
+#include <string>
 
 // Mutex for error and error format protection
 // (exported to be used for similar cases in other classes)
@@ -128,20 +130,26 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 
       gErrorIgnoreLevel = 0;
       if (gEnv) {
-         TString slevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
-         if (!slevel.CompareTo("Print", TString::kIgnoreCase))
+         std::string slevel;
+         auto cstrlevel = gEnv->GetValue("Root.ErrorIgnoreLevel", "Print");
+         while (cstrlevel && *cstrlevel) {
+            slevel.push_back(tolower(*cstrlevel));
+            cstrlevel++;
+         }
+
+         if (slevel == "print")
             gErrorIgnoreLevel = kPrint;
-         else if (!slevel.CompareTo("Info", TString::kIgnoreCase))
+         else if (slevel == "info")
             gErrorIgnoreLevel = kInfo;
-         else if (!slevel.CompareTo("Warning", TString::kIgnoreCase))
+         else if (slevel == "warning")
             gErrorIgnoreLevel = kWarning;
-         else if (!slevel.CompareTo("Error", TString::kIgnoreCase))
+         else if (slevel == "error")
             gErrorIgnoreLevel = kError;
-         else if (!slevel.CompareTo("Break", TString::kIgnoreCase))
+         else if (slevel == "break")
             gErrorIgnoreLevel = kBreak;
-         else if (!slevel.CompareTo("SysError", TString::kIgnoreCase))
+         else if (slevel == "syserror")
             gErrorIgnoreLevel = kSysError;
-         else if (!slevel.CompareTo("Fatal", TString::kIgnoreCase))
+         else if (slevel == "fatal")
             gErrorIgnoreLevel = kFatal;
       }
    }
@@ -164,17 +172,14 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level >= kFatal)
       type = "Fatal";
 
-   TString smsg;
    if (level >= kPrint && level < kInfo)
-      smsg.Form("%s", msg);
+      DebugPrint("%s\n", msg);
    else if (level >= kBreak && level < kSysError)
-      smsg.Form("%s %s", type, msg);
+      DebugPrint("%s %s\n", type, msg);
    else if (!location || !location[0])
-      smsg.Form("%s: %s", type, msg);
+      DebugPrint("%s: %s\n", type, msg);
    else
-      smsg.Form("%s in <%s>: %s", type, location, msg);
-
-   DebugPrint("%s\n", smsg.Data());
+      DebugPrint("%s in <%s>: %s\n", type, location, msg);
 
    fflush(stderr);
    if (abort_bool) {
@@ -276,9 +281,7 @@ void MayNotUse(const char *method)
 
 void Obsolete(const char *function, const char *asOfVers, const char *removedFromVers)
 {
-   TString mess;
-   mess.Form("obsolete as of %s and will be removed from %s", asOfVers, removedFromVers);
-   Warning(function, "%s", mess.Data());
+   Warning(function, "obsolete as of %s and will be removed from %s", asOfVers, removedFromVers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
