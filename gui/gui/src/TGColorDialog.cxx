@@ -43,7 +43,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TGLabel.h"
 #include "TGMsgBox.h"         // for ID_OK, ID_CANCEL

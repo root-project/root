@@ -66,10 +66,11 @@
 #include "TKey.h"
 #include "TKeyMapFile.h"
 #include "TGDNDManager.h"
-#include "Riostream.h"
 #include "RConfigure.h"
 #include "TVirtualX.h"
-#include <stdlib.h>
+
+#include <iostream>
+#include <cstdlib>
 
 
 TGGC *TGContainer::fgLineGC = nullptr;

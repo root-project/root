@@ -12,7 +12,6 @@
 #include "TGComboBox.h"
 #include "TGTextView.h"
 #include "TGTextEntry.h"
-#include "TGTextEdit.h"
 #include "TInterpreter.h"
 #include "Getline.h"
 

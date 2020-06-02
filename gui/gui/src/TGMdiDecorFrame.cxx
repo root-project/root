@@ -40,10 +40,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
-#include "TROOT.h"
 #include "KeySymbols.h"
 #include "TGResourcePool.h"
 #include "TGDimension.h"

@@ -21,8 +21,9 @@
 
 #include "TGSplitter.h"
 #include "TGPicture.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
+
+#include <iostream>
 
 
 ClassImp(TGSplitter);

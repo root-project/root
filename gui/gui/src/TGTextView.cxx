@@ -43,9 +43,9 @@
 #include "TMacro.h"
 #include "TGMsgBox.h"
 #include "TUrl.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
 
+#include <iostream>
 
 const TGFont *TGTextView::fgDefaultFont = nullptr;
 TGGC         *TGTextView::fgDefaultGC = nullptr;

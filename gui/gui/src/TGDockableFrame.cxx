@@ -39,7 +39,8 @@
 #include "TGWindow.h"
 #include "TList.h"
 #include "TVirtualX.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 
 ClassImp(TGDockButton);

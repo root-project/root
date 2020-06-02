@@ -47,9 +47,9 @@
 #include "TSystem.h"
 #include "TGMimeTypes.h"
 #include "TObjString.h"
-#include "Riostream.h"
 #include "TVirtualX.h"
 
+#include <iostream>
 
 const TGFont *TGLVEntry::fgDefaultFont = nullptr;
 TGGC         *TGLVEntry::fgDefaultGC = nullptr;
