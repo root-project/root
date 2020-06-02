@@ -1371,6 +1371,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
                      *pp = br;
                   }
                   if (br) {
+                     if (!frelement->GetCheckedType()) {
+                        Int_t res = CheckBranchAddressType(br, TClass::GetClass(frelement->GetBaddressClassName()),
+                                                         (EDataType) frelement->GetBaddressType(), frelement->GetBaddressIsPtr());
+                        frelement->SetCheckedType(kTRUE);
+                     }
                      // FIXME: We may have to tell the branch it should
                      //        not be an owner of the object pointed at.
                      br->SetAddress(addr);
@@ -1642,6 +1647,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
             *pp = br;
          }
          if (br) {
+            if (!element->GetCheckedType()) {
+               Int_t res = CheckBranchAddressType(br, TClass::GetClass(element->GetBaddressClassName()),
+                                                  (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
+               element->SetCheckedType(kTRUE);
+            }
             // FIXME: We may have to tell the branch it should
             //        not be an owner of the object pointed at.
             br->SetAddress(addr);
@@ -2484,6 +2494,7 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
       }
       if (branch) {
          res = CheckBranchAddressType(branch, TClass::GetClass(element->GetBaddressClassName()), (EDataType) element->GetBaddressType(), element->GetBaddressIsPtr());
+         element->SetCheckedType(kTRUE);
          if (fClones) {
             void* oldAdd = branch->GetAddress();
             for (TObjLink* lnk = fClones->FirstLink(); lnk; lnk = lnk->Next()) {
