@@ -20,7 +20,6 @@
 
 #include <ROOT/RLogger.hxx>
 
-#include "TSystem.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
