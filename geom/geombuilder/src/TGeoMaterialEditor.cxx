@@ -23,14 +23,12 @@ Editors for materials.
 #include "TGeoElement.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
-#include "TView.h"
 #include "TGTab.h"
 #include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
-#include "TGListView.h"
 
 ClassImp(TGeoMaterialEditor);
 
