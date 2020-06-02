@@ -34,6 +34,7 @@ errorhandler function. By default DefaultErrorHandler() is used.
 #include "ThreadLocalStorage.h"
 
 #include <cctype> // for tolower
+#include <cstring>
 #include <string>
 
 // Mutex for error and error format protection
@@ -172,14 +173,17 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level >= kFatal)
       type = "Fatal";
 
+   std::string smsg;
    if (level >= kPrint && level < kInfo)
-      DebugPrint("%s\n", msg);
+      smsg = msg;
    else if (level >= kBreak && level < kSysError)
-      DebugPrint("%s %s\n", type, msg);
+      smsg = std::string(type) + " " + msg;
    else if (!location || !location[0])
-      DebugPrint("%s: %s\n", type, msg);
+      smsg = std::string(type) + ": " + msg;
    else
-      DebugPrint("%s in <%s>: %s\n", type, location, msg);
+      smsg = std::string(type) + " in <" + location + ">: " + msg;
+
+   DebugPrint("%s\n", smsg.c_str());
 
    fflush(stderr);
    if (abort_bool) {
@@ -187,7 +191,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 #ifdef __APPLE__
       if (__crashreporter_info__)
          delete [] __crashreporter_info__;
-      __crashreporter_info__ = StrDup(smsg);
+      __crashreporter_info__ = strdup(smsg.c_str());
 #endif
 
       DebugPrint("aborting\n");
