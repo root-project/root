@@ -11,7 +11,6 @@
 
 #include <ROOT/REveVSD.hxx>
 
-#include "TFile.h"
 #include "TTree.h"
 
 using namespace ROOT::Experimental;
