@@ -304,7 +304,8 @@ desired Python installation.
 
 If the user wants to build PyROOT for both Python2 and Python3, but not necessarily with the highest versions that
 are available on the system, they can provide hints to CMake by using `-DPython2_ROOT_DIR=python2_dir` and/or
-`-DPython3_ROOT_DIR=python3_dir` to point to the root directory of some desired Python installation.
+`-DPython3_ROOT_DIR=python3_dir` to point to the root directory of some desired Python installation. Similarly,
+`Python2_EXECUTABLE` and/or `Python3_EXECUTABLE` can be used to point to particular Python executables.
 
 When executing a Python script, the Python version used will determine which version of the PyROOT libraries will
 be loaded. Therefore, once the ROOT environment has been set (e.g. via `source $ROOTSYS/bin/thisroot.sh`), the user
