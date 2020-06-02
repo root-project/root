@@ -21,7 +21,6 @@
 #include "TPolyLine.h"
 #include "TGraph.h"
 #include "TPaveText.h"
-#include "TBox.h"
 #include "TStyle.h"
 #include "TEntryList.h"
 #include "TFrame.h"
