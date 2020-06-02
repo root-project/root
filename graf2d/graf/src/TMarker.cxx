@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
@@ -20,7 +20,6 @@
 #include "TMath.h"
 #include "TPoint.h"
 #include "TText.h"
-#include "TClass.h"
 
 ClassImp(TMarker);
 

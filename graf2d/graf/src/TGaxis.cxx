@@ -9,12 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <math.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <cmath>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TGaxis.h"
@@ -31,9 +31,7 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "TColor.h"
-#include "TClass.h"
 #include "TTimeStamp.h"
-#include "TSystem.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis

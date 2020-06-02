@@ -80,17 +80,15 @@ See in particular "Graphs in logarithmic scale".
 A Graphical cut may be saved to a file via TCutG::Write.
 */
 
-#include <string.h>
+#include <cstring>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCutG.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TH2.h"
-#include "TClass.h"
-#include "TMath.h"
 
 ClassImp(TCutG);
 
