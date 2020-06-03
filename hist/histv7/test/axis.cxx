@@ -476,54 +476,72 @@ TEST(AxisTest, Labels) {
 
       // Compare the RAxisLabels with various variations of itself
       using LabelsCompatibility = RAxisBase::LabeledBinningCompatibility;
+      using CompatFlags = LabelsCompatibility::Flags;
       const int uncommittedTargetLabels =
         (expected_labels.size() - caxis.GetNBinsNoOver());
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(expected_labels)),
-                LabelsCompatibility(false,
-                                    uncommittedTargetLabels > 0,
-                                    false,
-                                    false));
+                LabelsCompatibility(
+                  CompatFlags(
+                    (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
+                  )
+                ));
       const std::vector<std::string_view> missing_last_label(
         expected_labels.cbegin(), expected_labels.cend() - 1);
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(missing_last_label)),
-                LabelsCompatibility(false,
-                                    uncommittedTargetLabels > 1,
-                                    false,
-                                    uncommittedTargetLabels == 0));
+                LabelsCompatibility(
+                  CompatFlags(
+                    (uncommittedTargetLabels > 1) * CompatFlags::kTargetMustGrow
+                    + (uncommittedTargetLabels == 0) * CompatFlags::kExtraTargetBins
+                  )
+                ));
       auto one_extra_label = expected_labels;
       one_extra_label.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(one_extra_label)),
-                LabelsCompatibility(true,
-                                    true,
-                                    false,
-                                    false));
+                LabelsCompatibility(
+                  CompatFlags(
+                    CompatFlags::kSourceOnlyLabels
+                    + CompatFlags::kTargetMustGrow
+                  )
+                ));
       auto swapped_labels = expected_labels;
       std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(swapped_labels)),
-                LabelsCompatibility(false,
-                                    uncommittedTargetLabels > 0,
-                                    true,
-                                    false));
+                LabelsCompatibility(
+                  CompatFlags(
+                    (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
+                    + CompatFlags::kLabelOrderDiffers
+                  )
+                ));
       auto changed_one_label = expected_labels;
       changed_one_label[0] = "I AM ROOT";
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(changed_one_label)),
-                LabelsCompatibility(true,
-                                    true,
-                                    true,
-                                    true));
+                LabelsCompatibility(
+                  CompatFlags(
+                    CompatFlags::kSourceOnlyLabels
+                    + CompatFlags::kTargetMustGrow
+                    + CompatFlags::kLabelOrderDiffers
+                    + CompatFlags::kExtraTargetBins
+                  )
+                ));
       auto removed_first = expected_labels;
       removed_first.erase(removed_first.cbegin());
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(removed_first)),
-                LabelsCompatibility(false,
-                                    uncommittedTargetLabels > 0,
-                                    true,
-                                    true));
+                LabelsCompatibility(
+                  CompatFlags(
+                    (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
+                    + CompatFlags::kLabelOrderDiffers
+                    + CompatFlags::kExtraTargetBins
+                  )
+                ));
       swapped_labels.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(swapped_labels)),
-                LabelsCompatibility(true,
-                                    true,
-                                    true,
-                                    false));
+                LabelsCompatibility(
+                  CompatFlags(
+                    CompatFlags::kSourceOnlyLabels
+                    + CompatFlags::kTargetMustGrow
+                    + CompatFlags::kLabelOrderDiffers
+                  )
+                ));
 
       RAxisConfig cfg(caxis);
       EXPECT_EQ(cfg.GetTitle(), title);

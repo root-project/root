@@ -22,7 +22,7 @@
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
 ROOT::Experimental::RAxisBase::NumericBinningCompatibility
-ROOT::Experimental::RAxisBase::CheckFixedNumericalBinningCompat(
+ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
    const RAxisBase& source,
    bool growthOccured
 ) const {
@@ -277,14 +277,16 @@ ROOT::Experimental::RAxisBase::CheckFixedNumericalBinningCompat(
       regularBinBijection && (source.CanGrow() == CanGrow());
 
    // Produce the final result of the numerical axis binning comparison
-   return NumericBinningCompatibility(trivialRegularBinMapping,
-                                      regularBinBijection,
-                                      fullBinBijection,
-                                      mergingIsLossy,
-                                      regularBinAliasing,
-                                      needEmptyUnderflow,
-                                      needEmptyOverflow,
-                                      growthOccured);
+   return NumericBinningCompatibility(
+      Flags(trivialRegularBinMapping * Flags::kTrivialRegularBinMapping
+            + regularBinBijection * Flags::kRegularBinBijection
+            + fullBinBijection * Flags::kFullBinBijection
+            + mergingIsLossy * Flags::kMergingIsLossy
+            + regularBinAliasing * Flags::kRegularBinAliasing
+            + needEmptyUnderflow * Flags::kNeedEmptyUnderflow
+            + needEmptyOverflow * Flags::kNeedEmptyOverflow
+            + targetMustGrow * Flags::kTargetMustGrow)
+   );
 }
 
 void ROOT::Experimental::RAxisBase::BinningCompatibility::CheckKind(CompatKind expectedKind) const {
@@ -314,7 +316,7 @@ ROOT::Experimental::RAxisBase::CheckBinningCompat(const RAxisBase& source) const
 
    // If control reached this point, then we know that both the source and the
    // target axis use numerical bin borders
-   return BinningCompatibility(CheckNumericalBinningCompat(source));
+   return BinningCompatibility(CheckNumericBinningCompat(source));
 }
 
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
@@ -343,7 +345,7 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 }
 
 ROOT::Experimental::RAxisBase::NumericBinningCompatibility
-ROOT::Experimental::RAxisGrow::CheckNumericalBinningCompat(
+ROOT::Experimental::RAxisGrow::CheckNumericBinningCompat(
    const RAxisBase& source
 ) const {
    // Convenience shorthands
@@ -396,7 +398,7 @@ ROOT::Experimental::RAxisGrow::CheckNumericalBinningCompat(
    }
 
    // Call back binning comparison hook on the possibly grown axis
-   return targetPtr->CheckFixedNumericalBinningCompat(source, mustGrow);
+   return targetPtr->CheckFixedNumericBinningCompat(source, mustGrow);
 }
 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept

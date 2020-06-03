@@ -195,29 +195,41 @@ public:
    /// merging
    class NumericBinningCompatibility {
    public:
+      /// Flags representing various properties that can emerge from the
+      /// comparison of two numerical axes (see methods for a full description)
+      enum Flags {
+         // The mapping from source to target regular bin indices is trivial
+         kTrivialRegularBinMapping = 1 << 0,
+
+         // The mapping between source and target regular bins is bijective
+         kRegularBinBijection = 1 << 1,
+
+         // The mapping between all source and target bins is bijective
+         kFullBinBijection = 1 << 2,
+
+         // Some bins from the source map to target bins that span extra range
+         kMergingIsLossy = 1 << 3,
+
+         // Some regular bins from the source axis map to multiple target bins
+         kRegularBinAliasing = 1 << 4,
+
+         // The source underflow bin must be empty to allow histogram merging
+         kNeedEmptyUnderflow = 1 << 5,
+
+         // The source overflow bin must be empty to allow histogram merging
+         kNeedEmptyOverflow = 1 << 6,
+
+         // The target axis must grow in order to span the full source range
+         kTargetMustGrow = 1 << 7,
+      };
+
       /// Build a numerical binning comparison result
       ///
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      NumericBinningCompatibility(bool trivialRegularBinMapping,
-                                  bool regularBinBijection,
-                                  bool fullBinBijection,
-                                  bool mergingIsLossy,
-                                  bool regularBinAliasing,
-                                  bool needEmptyUnderflow,
-                                  bool needEmptyOverflow,
-                                  bool targetMustGrow)
-         : fFlags(
-            Flags(trivialRegularBinMapping * kTrivialRegularBinMapping
-                  + regularBinBijection * kRegularBinBijection
-                  + fullBinBijection * kFullBinBijection
-                  + mergingIsLossy * kMergingIsLossy
-                  + regularBinAliasing * kRegularBinAliasing
-                  + needEmptyUnderflow * kNeedEmptyUnderflow
-                  + needEmptyOverflow * kNeedEmptyOverflow
-                  + targetMustGrow * kTargetMustGrow)
-         )
+      NumericBinningCompatibility(Flags flags)
+         : fFlags(flags)
       {}
 
       // Check against another comparison result
@@ -379,31 +391,7 @@ public:
       }
 
    private:
-      enum Flags {
-         // The mapping from source to target regular bin indices is trivial
-         kTrivialRegularBinMapping = 1 << 0,
-
-         // The mapping between source and target regular bins is bijective
-         kRegularBinBijection = 1 << 1,
-
-         // The mapping between all source and target bins is bijective
-         kFullBinBijection = 1 << 2,
-
-         // Some bins from the source map to target bins that span extra range
-         kMergingIsLossy = 1 << 3,
-
-         // Some regular bins from the source axis map to multiple target bins
-         kRegularBinAliasing = 1 << 4,
-
-         // The source underflow bin must be empty to allow histogram merging
-         kNeedEmptyUnderflow = 1 << 5,
-
-         // The source overflow bin must be empty to allow histogram merging
-         kNeedEmptyOverflow = 1 << 6,
-
-         // The target axis must grow in order to span the full source range
-         kTargetMustGrow = 1 << 7,
-      } fFlags;
+      Flags fFlags;
    };
 
 protected:
@@ -425,9 +413,9 @@ protected:
    //        out the groundwork for supporting boolean/integer bin borders.
    //
    virtual NumericBinningCompatibility
-   CheckNumericalBinningCompat(const RAxisBase& source) const {
+   CheckNumericBinningCompat(const RAxisBase& source) const {
       assert(!CanGrow());
-      return CheckFixedNumericalBinningCompat(source, false);
+      return CheckFixedNumericBinningCompat(source, false);
    }
 
    /// Callback of `CheckNumericalBinningCompat()` containing the actual bin
@@ -437,8 +425,8 @@ protected:
    /// This method can be overriden for performance optimization purposes.
    ///
    virtual NumericBinningCompatibility
-   CheckFixedNumericalBinningCompat(const RAxisBase& source,
-                                    bool growthOccured) const;
+   CheckFixedNumericBinningCompat(const RAxisBase& source,
+                                  bool growthOccured) const;
 
 public:
    /**
@@ -644,21 +632,29 @@ public:
    /// Result of comparing two labeled axis for histogram merging
    class LabeledBinningCompatibility {
    public:
+      /// Flags representing various properties that can emerge from the
+      /// comparison of two labeled axes (see methods for a full description)
+      enum Flags {
+         // The source axis has labels that the target axis doesn't have
+         kSourceOnlyLabels = 1 << 0,
+
+         // The target axis must grow to cover all source axis labels w/ bins
+         kTargetMustGrow = 1 << 1,
+
+         // Need target bin reordering or an order-insensitive merge algorithm
+         kLabelOrderDiffers = 1 << 2,
+
+         // After growing, the target axis will have more bins than the source
+         kExtraTargetBins = 1 << 3,
+      };
+
       /// Build a labeled axis comparison result
       ///
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      LabeledBinningCompatibility(bool sourceOnlyLabels,
-                                  bool targetMustGrow,
-                                  bool labelOrderDiffers,
-                                  bool extraTargetBins)
-         : fFlags(
-            Flags(sourceOnlyLabels * kSourceOnlyLabels
-                  + targetMustGrow * kTargetMustGrow
-                  + labelOrderDiffers * kLabelOrderDiffers
-                  + extraTargetBins * kExtraTargetBins)
-         )
+      LabeledBinningCompatibility(Flags flags)
+         : fFlags(flags)
       {}
 
       // Check against another comparison result
@@ -728,19 +724,7 @@ public:
       }
 
    private:
-      enum Flags {
-         // The source axis has labels that the target axis doesn't have
-         kSourceOnlyLabels = 1 << 0,
-
-         // The target axis must grow to cover all source axis labels w/ bins
-         kTargetMustGrow = 1 << 1,
-
-         // Need target bin reordering or an order-insensitive merge algorithm
-         kLabelOrderDiffers = 1 << 2,
-
-         // After growing, the target axis will have more bins than the source
-         kExtraTargetBins = 1 << 3,
-      } fFlags;
+      Flags fFlags;
    };
 
    /// Result of comparing two axes for histogram merging
@@ -1083,7 +1067,7 @@ public:
 
    /// CheckNumericalBinningCompat must be overriden to handle axis growth
    NumericBinningCompatibility
-   CheckNumericalBinningCompat(const RAxisBase& source) const final override;
+   CheckNumericBinningCompat(const RAxisBase& source) const final override;
 };
 
 namespace Internal {
@@ -1333,7 +1317,7 @@ public:
       // Check how source _bins_ map into target bins and labels
       int numLabelsAfterGrowth = numTargetLabels;
       int numBinsAfterGrowth = numTargetBins;
-      bool disorderedLabels = false;
+      bool labelOrderDiffers = false;
       for (const auto &kv: source.fLabelsIndex) {
          // Ignore uncommitted source labels: no bin = no data to be merged
          const int sourceLabelIdx = kv.second;
@@ -1351,14 +1335,14 @@ public:
             numBinsAfterGrowth = std::max(numBinsAfterGrowth, targetLabelIdx+1);
 
             // Check if label order is consistent in the source and target axes
-            disorderedLabels |= (targetLabelIdx != sourceLabelIdx);
+            labelOrderDiffers |= (targetLabelIdx != sourceLabelIdx);
          }
       }
 
       // Figure out what the histogram merging implementation must do before
       // reordering any disordered labels.
       const bool sourceOnlyLabels = (numLabelsAfterGrowth > numTargetLabels);
-      const bool mustGrowTarget = (numBinsAfterGrowth > numTargetBins);
+      const bool targetMustGrow = (numBinsAfterGrowth > numTargetBins);
 
       // FIXME: Since we don't know in which order missing source labels will be
       //        added to the target axis by the histogram merging implementation
@@ -1367,7 +1351,7 @@ public:
       //        one extra label must be added to the target axis, the two labels
       //        may be added in the wrong order.
       const int newLabels = numLabelsAfterGrowth - numTargetLabels;
-      disorderedLabels |= (sourceOnlyLabels && (newLabels > 1));
+      labelOrderDiffers |= (sourceOnlyLabels && (newLabels > 1));
 
       // Figure out if after growing the target axis as needed, it will feature
       // some labels which the source axis doesn't have.
@@ -1381,10 +1365,12 @@ public:
          ((newLabels > 0) && (numLabelsAfterGrowth > numSourceBins));
 
       // Produce the results of the comparison
-      return LabeledBinningCompatibility(sourceOnlyLabels,
-                                         mustGrowTarget,
-                                         disorderedLabels,
-                                         extraTargetBins);
+      return LabeledBinningCompatibility(
+         Flags(sourceOnlyLabels * kSourceOnlyLabels
+               + targetMustGrow * kTargetMustGrow
+               + labelOrderDiffers * kLabelOrderDiffers
+               + extraTargetBins * kExtraTargetBins)
+      );
    }
 };
 
