@@ -1,7 +1,7 @@
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 index 8dbd9e5fa1..bc6c42efeb 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 @@ -2725,7 +2725,7 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, dims
      }
  

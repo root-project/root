@@ -1,7 +1,7 @@
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/CPyCppyyModule.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
 index 2f39146505..3653596167 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
 @@ -756,12 +756,6 @@ static PyMethodDef gCPyCppyyMethods[] = {
      {nullptr, nullptr, 0, nullptr}
  };
@@ -49,10 +49,10 @@ index 2f39146505..3653596167 100644
  #endif
      if (!gThisModule)
          CPYCPPYY_INIT_ERROR;
-diff --git a/bindings/pyroot_experimental/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyroot_experimental/cppyy/cppyy/python/cppyy/__init__.py
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
 index 1558c3269c..b3b1b84251 100644
---- a/bindings/pyroot_experimental/cppyy/cppyy/python/cppyy/__init__.py
-+++ b/bindings/pyroot_experimental/cppyy/cppyy/python/cppyy/__init__.py
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/__init__.py
 @@ -49,72 +49,23 @@ __all__ = [
  from ._version import __version__
  

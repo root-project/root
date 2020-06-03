@@ -499,7 +499,7 @@ if(ROOT_pyroot_FOUND)
              sql/sqlselect.py       # same as the C++ case
              )
 
-  if(NOT pyroot_experimental)
+  if(pyroot_legacy)
     # Disable in old PyROOT, which lacks Import pythonization
     list(APPEND pyveto
         roofit/rf502_wspacewrite.py
