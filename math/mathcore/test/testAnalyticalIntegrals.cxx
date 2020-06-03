@@ -11,7 +11,6 @@
 #include <TROOT.h>
 #include "TMath.h"
 #include <TF1.h>
-#include <TStopwatch.h>
 #include <TApplication.h>
 #include <Math/PdfFuncMathCore.h>//for pdf
 #include <Math/ProbFuncMathCore.h>//for cdf
