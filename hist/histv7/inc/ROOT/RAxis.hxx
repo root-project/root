@@ -220,7 +220,7 @@ public:
          )
       {}
 
-      NumericBinningCompatibility(const NumericBinningCompatibility&) = default;
+      // Check against another comparison result
       bool operator==(const NumericBinningCompatibility& other) const {
          return fFlags == other.fFlags;
       }
@@ -661,7 +661,7 @@ public:
          )
       {}
 
-      LabeledBinningCompatibility(const LabeledBinningCompatibility&) = default;
+      // Check against another comparison result
       bool operator==(const LabeledBinningCompatibility& other) const {
          return fFlags == other.fFlags;
       }
@@ -809,13 +809,13 @@ public:
       CompatKind Kind() const noexcept { return fKind; }
 
       /// Get the detailed result of a numerical axis comparison
-      NumericBinningCompatibility GetNumeric() const {
+      const NumericBinningCompatibility& GetNumeric() const {
          CheckKind(CompatKind::kNumeric);
          return fNumeric;
       }
 
       /// Get the detailed result of a labeled axis comparison
-      LabeledBinningCompatibility GetLabeled() const {
+      const LabeledBinningCompatibility& GetLabeled() const {
          CheckKind(CompatKind::kLabeled);
          return fLabeled;
       }
