@@ -20,6 +20,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -270,7 +271,8 @@ public:
       //       bin index conversions in the histogram merging implementation.
       //
       bool HasRegularBinBijection() const {
-         assert(HasTrivialRegularBinMapping());
+         if (fFlags & kRegularBinBijection)
+            assert(HasTrivialRegularBinMapping());
          return fFlags & kRegularBinBijection;
       }
 
@@ -305,7 +307,8 @@ public:
       //       common case of merging two histograms with identical axis config.
       //
       bool HasFullBinBijection() const {
-         assert(HasRegularBinBijection());
+         if (fFlags & kFullBinBijection)
+            assert(HasRegularBinBijection());
          return fFlags & kFullBinBijection;
       }
 
@@ -678,7 +681,9 @@ public:
       /// This property implies `TargetMustGrow()`.
       ///
       const std::vector<std::string_view>& SourceOnlyLabels() const {
-         assert(TargetMustGrow());
+         if (!fSourceOnlyLabels.empty()) {
+            assert(TargetMustGrow());
+         }
          return fSourceOnlyLabels;
       }
 
@@ -749,7 +754,7 @@ public:
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      BinningCompatibility(NumericBinningCompatibility numeric)
+      explicit BinningCompatibility(NumericBinningCompatibility numeric)
          : fKind(CompatKind::kNumeric)
          , fNumeric(numeric)
       {}
@@ -759,7 +764,7 @@ public:
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      BinningCompatibility(LabeledBinningCompatibility labeled)
+      explicit BinningCompatibility(LabeledBinningCompatibility labeled)
          : fKind(CompatKind::kLabeled)
          , fLabeled(labeled)
       {}
@@ -1420,5 +1425,19 @@ struct AxisConfigToType<RAxisConfig::kLabels> {
 
 } // namespace Experimental
 } // namespace ROOT
+
+// Display operator for nicer test assertion errors
+std::ostream& operator<<(
+   std::ostream&,
+   const ROOT::Experimental::RAxisBase::NumericBinningCompatibility&
+);
+std::ostream& operator<<(
+   std::ostream&,
+   const ROOT::Experimental::RAxisBase::LabeledBinningCompatibility&
+);
+std::ostream& operator<<(
+   std::ostream&,
+   const ROOT::Experimental::RAxisBase::BinningCompatibility&
+);
 
 #endif // ROOT7_RAxis header guard

@@ -21,6 +21,22 @@
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
+std::ostream& operator<<(
+   std::ostream& s,
+   const ROOT::Experimental::RAxisBase::NumericBinningCompatibility& x
+) {
+   return s << "NumericBinningCompatibility { Flags("
+            << ' ' << (x.HasTrivialRegularBinMapping() ? "TRIVIAL_REG" : "trivial_reg")
+            << ' ' << (x.HasRegularBinBijection() ? "REG_BIJECTION" : "reg_bijection")
+            << ' ' << (x.HasFullBinBijection() ? "FULL_BIJECTION" : "full_bijection")
+            << ' ' << (x.MergingIsLossy() ? "LOSSY_MERGE" : "lossy_merge")
+            << ' ' << (x.HasRegularBinAliasing() ? "REG_ALIASING" : "reg_aliasing")
+            << ' ' << (x.MergingNeedsEmptyUnderflow() ? "NEED_EMPTY_UF" : "need_empty_uf")
+            << ' ' << (x.MergingNeedsEmptyOverflow() ? "NEED_EMPTY_OF" : "need_empty_of")
+            << ' ' << (x.MergingNeedsTargetGrowth() ? "NEED_GROWTH" : "need_growth")
+            << " ) }";
+}
+
 ROOT::Experimental::RAxisBase::NumericBinningCompatibility
 ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
    const RAxisBase& source,
@@ -288,6 +304,43 @@ ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
             + needEmptyOverflow * Flags::kNeedEmptyOverflow
             + growthOccured * Flags::kTargetMustGrow)
    );
+}
+
+std::ostream& operator<<(
+   std::ostream& s,
+   const ROOT::Experimental::RAxisBase::LabeledBinningCompatibility& x
+) {
+   s << "LabeledBinningCompatibility { Flags("
+     << ' ' << (x.TargetMustGrow() ? "MUST_GROW" : "must_grow")
+     << ' ' << (x.LabelOrderDiffers() ? "BAD_ORDER" : "bad_order")
+     << ' ' << (x.TargetWillHaveExtraBins() ? "EXTRA_BINS" : "extra_bins")
+     << " ), SourceOnlyLabels { ";
+   for (const auto& label: x.SourceOnlyLabels()) {
+      s << '"' << label << "\" ";
+   }
+   return s << "} }";
+}
+
+std::ostream& operator<<(
+   std::ostream& s,
+   const ROOT::Experimental::RAxisBase::BinningCompatibility& x
+) {
+   s << "BinningCompatibility { ";
+   using CompatKind = ROOT::Experimental::RAxisBase::BinningCompatibility::CompatKind;
+   switch (x.Kind()) {
+      case CompatKind::kIncompatible:
+         s << "Incompatible";
+         break;
+
+      case CompatKind::kNumeric:
+         s << x.GetNumeric();
+         break;
+
+      case CompatKind::kLabeled:
+         s << x.GetLabeled();
+         break;
+   };
+   return s << " }";
 }
 
 void ROOT::Experimental::RAxisBase::BinningCompatibility::CheckKind(CompatKind expectedKind) const {
