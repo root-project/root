@@ -277,6 +277,7 @@ ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
       regularBinBijection && (source.CanGrow() == CanGrow());
 
    // Produce the final result of the numerical axis binning comparison
+   using Flags = NumericBinningCompatibility::Flags;
    return NumericBinningCompatibility(
       Flags(trivialRegularBinMapping * Flags::kTrivialRegularBinMapping
             + regularBinBijection * Flags::kRegularBinBijection
@@ -285,7 +286,7 @@ ROOT::Experimental::RAxisBase::CheckFixedNumericBinningCompat(
             + regularBinAliasing * Flags::kRegularBinAliasing
             + needEmptyUnderflow * Flags::kNeedEmptyUnderflow
             + needEmptyOverflow * Flags::kNeedEmptyOverflow
-            + targetMustGrow * Flags::kTargetMustGrow)
+            + growthOccured * Flags::kTargetMustGrow)
    );
 }
 

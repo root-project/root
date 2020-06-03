@@ -635,17 +635,14 @@ public:
       /// Flags representing various properties that can emerge from the
       /// comparison of two labeled axes (see methods for a full description)
       enum Flags {
-         // The source axis has labels that the target axis doesn't have
-         kSourceOnlyLabels = 1 << 0,
-
          // The target axis must grow to cover all source axis labels w/ bins
-         kTargetMustGrow = 1 << 1,
+         kTargetMustGrow = 1 << 0,
 
          // Need target bin reordering or an order-insensitive merge algorithm
-         kLabelOrderDiffers = 1 << 2,
+         kLabelOrderDiffers = 1 << 1,
 
          // After growing, the target axis will have more bins than the source
-         kExtraTargetBins = 1 << 3,
+         kExtraTargetBins = 1 << 2,
       };
 
       /// Build a labeled axis comparison result
@@ -653,28 +650,36 @@ public:
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      LabeledBinningCompatibility(Flags flags)
+      LabeledBinningCompatibility(Flags flags,
+                                  std::vector<std::string_view>&& sourceOnlyLabels)
          : fFlags(flags)
+         , fSourceOnlyLabels(std::move(sourceOnlyLabels))
       {}
 
       // Check against another comparison result
       bool operator==(const LabeledBinningCompatibility& other) const {
-         return fFlags == other.fFlags;
+         return (fFlags == other.fFlags)
+                && (fSourceOnlyLabels == other.fSourceOnlyLabels);
       }
 
-      /// The source axis has labeled bins that the target axis doesn't have
+      /// List of source axis labels which the target axis does not have
       ///
-      /// Similar labels will need to be added to the target axis before
-      /// histogram data merging becomes possible.
+      /// These labels will need to be added to the target axis before histogram
+      /// data merging becomes possible.
+      ///
+      /// Labels are listed in the order in which they appear in the source
+      /// axis, and should be added to the target axis in this order, both for
+      /// good user experience and for other `LabeledBinningCompatibility`
+      /// properties to be usable.
       ///
       /// Labels with have no associated bins are not accounted for, since they
       /// contain no useful data to be transferred to the target axis.
       ///
       /// This property implies `TargetMustGrow()`.
       ///
-      bool SourceHasExtraLabels() const {
+      const std::vector<std::string_view>& SourceOnlyLabels() const {
          assert(TargetMustGrow());
-         return fFlags & kSourceOnlyLabels;
+         return fSourceOnlyLabels;
       }
 
       /// The target axis must grow to encompass all source bins
@@ -725,6 +730,7 @@ public:
 
    private:
       Flags fFlags;
+      std::vector<std::string_view> fSourceOnlyLabels;
    };
 
    /// Result of comparing two axes for histogram merging
@@ -757,6 +763,23 @@ public:
          : fKind(CompatKind::kLabeled)
          , fLabeled(labeled)
       {}
+
+      /// Destroy any inner data on destruction
+      ~BinningCompatibility() {
+         switch (fKind) {
+            case CompatKind::kIncompatible:
+               // No inner data to be destroyed
+               break;
+
+            case CompatKind::kNumeric:
+               fNumeric.~NumericBinningCompatibility();
+               break;
+
+            case CompatKind::kLabeled:
+               fLabeled.~LabeledBinningCompatibility();
+               break;
+         };
+      }
 
       /// Broad classification of possible axis comparisons
       enum class CompatKind {
@@ -1291,9 +1314,6 @@ public:
    }
 
    /// Build a vector of labels. The position in the vector defines the label's bin.
-   // FIXME: Add an interface to iterate over (label, bin) pairs without
-   //        materializing an ordered vector of labels. Restrict iteration to
-   //        labels which do have associated bins.
    std::vector<std::string_view> GetBinLabels() const
    {
       std::vector<std::string_view> vec(fLabelsIndex.size());
@@ -1314,62 +1334,75 @@ public:
       const int numTargetLabels = fLabelsIndex.size();
       const int numTargetBins = GetNBinsNoOver();
 
-      // Check how source _bins_ map into target bins and labels
-      int numLabelsAfterGrowth = numTargetLabels;
+      // Collect the set of source bin labels in the order where the user sees
+      // them. Ignore uncommitted source labels: no bin = no data to be merged.
+      std::vector<std::string_view> sourceLabels = GetBinLabels();
+      sourceLabels.resize(numSourceBins);
+
+      // Check how source _bins_ map into target bins and labels, simulating
+      // label and bin creation as necessary.
+      int newTargetLabelIdx = numTargetLabels;
       int numBinsAfterGrowth = numTargetBins;
       bool labelOrderDiffers = false;
-      for (const auto &kv: source.fLabelsIndex) {
-         // Ignore uncommitted source labels: no bin = no data to be merged
-         const int sourceLabelIdx = kv.second;
-         if (sourceLabelIdx <= numSourceBins) {
-            // Look for the the source bin's label in the target axis' label set
-            auto iter = fLabelsIndex.find(kv.first);
+      for (int sourceLabelIdx = 0; sourceLabelIdx < numSourceBins; ++sourceLabelIdx) {
+         // Look for the the source bin's label in the target axis' label set
+         //
+         // FIXME: Remove string allocation once ROOT goes C++20 and
+         //        unordered_map supports searching a hashmap without
+         //        materializing an owned key...
+         //
+         auto iter = fLabelsIndex.find(std::string(sourceLabels[sourceLabelIdx]));
 
-            // Use any existing target label, or simulate creating one
-            const int targetLabelIdx =
-               (iter != fLabelsIndex.cend()) ? (iter->second)
-                                             : (numLabelsAfterGrowth++);
-
-            // If the target label has no associated bin yet, simulate growing
-            // the target axis to materialize that bin
-            numBinsAfterGrowth = std::max(numBinsAfterGrowth, targetLabelIdx+1);
-
-            // Check if label order is consistent in the source and target axes
-            labelOrderDiffers |= (targetLabelIdx != sourceLabelIdx);
+         // Use the bin index of any existing target label, or simulate creating
+         // a new label in the target axis.
+         //
+         // Along the way, keep track of which labels only exist in the source
+         // axis, and thus need to be added to the target axis, by clearing out
+         // the labels which _do_ exist in the target axis within the list of
+         // source labels. Obviously, the source label must not be used after
+         // this operation has been performed.
+         //
+         int targetLabelIdx;
+         if (iter != fLabelsIndex.cend()) {
+            targetLabelIdx = iter->second;
+            sourceLabels[sourceLabelIdx] = std::string_view();
+         } else {
+            targetLabelIdx = newTargetLabelIdx++;
          }
+
+         // If the target label has no associated bin yet, simulate growing
+         // the target axis to materialize that bin
+         numBinsAfterGrowth = std::max(numBinsAfterGrowth, targetLabelIdx+1);
+
+         // Check if label order is consistent in the source and target axes
+         labelOrderDiffers |= (targetLabelIdx != sourceLabelIdx);
       }
 
-      // Figure out what the histogram merging implementation must do before
-      // reordering any disordered labels.
-      const bool sourceOnlyLabels = (numLabelsAfterGrowth > numTargetLabels);
-      const bool targetMustGrow = (numBinsAfterGrowth > numTargetBins);
+      // At this point, sourceLabels contains non-empty string views for labels
+      // which are unique to the source axis, and empty string views for labels
+      // which exist in both the source and target axis. From this, we can
+      // easily get a list of labels which only exist in the source axis.
+      const auto sourceOnlyEnd =
+         std::remove(sourceLabels.begin(), sourceLabels.end(), std::string_view());
+      sourceLabels.resize(std::distance(sourceLabels.begin(), sourceOnlyEnd));
+      // From this point on, the sourceLabels vectors contains the set of labels
+      // which only exists in the source axis, and not on the target axis.
 
-      // FIXME: Since we don't know in which order missing source labels will be
-      //        added to the target axis by the histogram merging implementation
-      //        as there is no standardized way to iterate over source bins yet,
-      //        we must work under the pessimistic assumption that if more than
-      //        one extra label must be added to the target axis, the two labels
-      //        may be added in the wrong order.
-      const int newLabels = numLabelsAfterGrowth - numTargetLabels;
-      labelOrderDiffers |= (sourceOnlyLabels && (newLabels > 1));
+      // Figure if after performing any missing source label addition, the
+      // histogram merging implementation will need to grow the target axis.
+      const bool targetMustGrow = (numBinsAfterGrowth > numTargetBins);
 
       // Figure out if after growing the target axis as needed, it will feature
       // some labels which the source axis doesn't have.
       bool extraTargetBins = (numBinsAfterGrowth > numSourceBins);
 
-      // FIXME: As for disordered labels above, we must for now work under the
-      //        pessimistic assumption that source labels were added to the
-      //        target in the dumbest possible way, materializing all previously
-      //        existing target labels even if there was no need for it.
-      extraTargetBins |=
-         ((newLabels > 0) && (numLabelsAfterGrowth > numSourceBins));
-
       // Produce the results of the comparison
+      using Flags = LabeledBinningCompatibility::Flags;
       return LabeledBinningCompatibility(
-         Flags(sourceOnlyLabels * kSourceOnlyLabels
-               + targetMustGrow * kTargetMustGrow
-               + labelOrderDiffers * kLabelOrderDiffers
-               + extraTargetBins * kExtraTargetBins)
+         Flags(targetMustGrow * Flags::kTargetMustGrow
+               + labelOrderDiffers * Flags::kLabelOrderDiffers
+               + extraTargetBins * Flags::kExtraTargetBins),
+         std::move(sourceLabels)
       );
    }
 };

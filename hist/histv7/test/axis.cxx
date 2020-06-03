@@ -483,7 +483,8 @@ TEST(AxisTest, Labels) {
                 LabelsCompatibility(
                   CompatFlags(
                     (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
-                  )
+                  ),
+                  std::vector<std::string_view>{}
                 ));
       const std::vector<std::string_view> missing_last_label(
         expected_labels.cbegin(), expected_labels.cend() - 1);
@@ -492,16 +493,15 @@ TEST(AxisTest, Labels) {
                   CompatFlags(
                     (uncommittedTargetLabels > 1) * CompatFlags::kTargetMustGrow
                     + (uncommittedTargetLabels == 0) * CompatFlags::kExtraTargetBins
-                  )
+                  ),
+                  std::vector<std::string_view>{}
                 ));
       auto one_extra_label = expected_labels;
       one_extra_label.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(one_extra_label)),
                 LabelsCompatibility(
-                  CompatFlags(
-                    CompatFlags::kSourceOnlyLabels
-                    + CompatFlags::kTargetMustGrow
-                  )
+                  CompatFlags(CompatFlags::kTargetMustGrow),
+                  std::vector<std::string_view>{"I AM ROOT"}
                 ));
       auto swapped_labels = expected_labels;
       std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
@@ -510,18 +510,19 @@ TEST(AxisTest, Labels) {
                   CompatFlags(
                     (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
                     + CompatFlags::kLabelOrderDiffers
-                  )
+                  ),
+                  std::vector<std::string_view>{}
                 ));
       auto changed_one_label = expected_labels;
       changed_one_label[0] = "I AM ROOT";
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(changed_one_label)),
                 LabelsCompatibility(
                   CompatFlags(
-                    CompatFlags::kSourceOnlyLabels
-                    + CompatFlags::kTargetMustGrow
+                    CompatFlags::kTargetMustGrow
                     + CompatFlags::kLabelOrderDiffers
                     + CompatFlags::kExtraTargetBins
-                  )
+                  ),
+                  std::vector<std::string_view>{"I AM ROOT"}
                 ));
       auto removed_first = expected_labels;
       removed_first.erase(removed_first.cbegin());
@@ -531,16 +532,17 @@ TEST(AxisTest, Labels) {
                     (uncommittedTargetLabels > 0) * CompatFlags::kTargetMustGrow
                     + CompatFlags::kLabelOrderDiffers
                     + CompatFlags::kExtraTargetBins
-                  )
+                  ),
+                  std::vector<std::string_view>{}
                 ));
       swapped_labels.push_back("I AM ROOT");
       EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(swapped_labels)),
                 LabelsCompatibility(
                   CompatFlags(
-                    CompatFlags::kSourceOnlyLabels
-                    + CompatFlags::kTargetMustGrow
+                    CompatFlags::kTargetMustGrow
                     + CompatFlags::kLabelOrderDiffers
-                  )
+                  ),
+                  std::vector<std::string_view>{"I AM ROOT"}
                 ));
 
       RAxisConfig cfg(caxis);
