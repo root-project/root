@@ -1,8 +1,8 @@
 if(ROOT_pyroot_FOUND)
-  if (ROOT_pyroot_experimental_FOUND)
-    set(scott_file ScottCppyy.C) # Uses Cppyy header
-  else()
+  if (ROOT_pyroot_legacy_FOUND)
     set(scott_file Scott.C)
+  else()
+    set(scott_file ScottCppyy.C) # Uses Cppyy header
   endif()
 
   ROOTTEST_ADD_TEST(regression
@@ -19,7 +19,7 @@ if(ROOT_pyroot_FOUND)
                                          -e .L\ ULongLong.C+
                                          -e .L\ Till.C+
                                          -e .L\ CoralAttributeList.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py

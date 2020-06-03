@@ -28,22 +28,22 @@ class TestClassPYTHONIZATIONS:
         import cppyy
         cls.test_dct = "Pythonizables_C"
         cls.pythonizables = cppyy.load_reflection_info(cls.test_dct)
-        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_size_mapping(self):
         """Use composites to map GetSize() onto buffer returns"""
 
         import cppyy
 
-        exp_pyroot = self.exp_pyroot
+        legacy_pyroot = self.legacy_pyroot
         def set_size(self, buf):
-            if exp_pyroot:
+            if not legacy_pyroot:
                 buf.reshape((self.GetN(),))
             else:
                 buf.SetSize(self.GetN())
             return buf
 
-        if exp_pyroot:
+        if not legacy_pyroot:
             cppyy.py.add_pythonization(
                 cppyy.py.compose_method("pythonizables::MyBufferReturner$", "Get[XY]$", set_size)
                 )
@@ -67,9 +67,9 @@ class TestClassPYTHONIZATIONS:
         """Verify pinnability of returns"""
 
         import cppyy
-        exp_pyroot = self.exp_pyroot
+        legacy_pyroot = self.legacy_pyroot
 
-        if exp_pyroot:
+        if not legacy_pyroot:
             cppyy.gbl.pythonizables.GimeDerived.__creates__ = True
         else:
             cppyy.gbl.pythonizables.GimeDerived._creates = True
@@ -77,7 +77,7 @@ class TestClassPYTHONIZATIONS:
         result = cppyy.gbl.pythonizables.GimeDerived()
         assert type(result) == cppyy.gbl.pythonizables.MyDerived
 
-        if exp_pyroot:
+        if not legacy_pyroot:
             cppyy.py.pin_type(cppyy.gbl.pythonizables.MyBase)
         else:
             cppyy.make_interface(cppyy.gbl.pythonizables.MyBase)
@@ -94,7 +94,7 @@ class TestClassPYTHONIZATIONS_FRAGILITY:
 
 class TestClassROOT_PYTHONIZATIONS:
     def setup_class(cls):
-        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_tgraph(self):
         """TGraph has GetN() mapped as size to its various buffer returns"""
@@ -162,7 +162,7 @@ class TestClassROOT_PYTHONIZATIONS:
     def test05_rooargset_iter(self):
         """STL sequence iterator injected in RooAbsCollection, inherited by RooArgSet"""
 
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
             # ROOT-10606
             import ROOT
 

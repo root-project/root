@@ -3,7 +3,7 @@ if(ROOT_pyroot_FOUND)
                     MACRO PyROOT_basictests.py
                     COPY_TO_BUILDDIR ArgumentPassingCompiled.C ReturnValues.C SimpleClass.C ArgumentPassingInterpreted.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ ArgumentPassingCompiled.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 
   ROOTTEST_ADD_TEST(datatype
                     MACRO PyROOT_datatypetest.py
@@ -11,7 +11,7 @@ if(ROOT_pyroot_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
                     ENVIRONMENT CLING_STANDARD_PCH=none
                                 CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so
-                                ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                                ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 
 
   ROOTTEST_ADD_TEST(operator
@@ -25,5 +25,5 @@ if(ROOT_pyroot_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+
                     ENVIRONMENT CLING_STANDARD_PCH=none
                                 CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend${PYTHON_UNDER_VERSION_STRING}.so
-                                ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                                ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()

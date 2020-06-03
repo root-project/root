@@ -3,10 +3,10 @@ if(ROOT_pyroot_FOUND)
                     MACRO PyROOT_writetests.py
                     COPY_TO_BUILDDIR PickleTypes.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ PickleTypes.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 
   ROOTTEST_ADD_TEST(read
                     MACRO PyROOT_readtests.py
                     DEPENDS write
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()

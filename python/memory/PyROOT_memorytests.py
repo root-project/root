@@ -39,7 +39,7 @@ else:
 class Memory1TestCase( MyTestCase ):
    @classmethod
    def setUpClass(cls):
-      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+      cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
    def test1ObjectCreationDestruction( self ):
       """Test object creation and destruction"""
@@ -85,7 +85,7 @@ class Memory1TestCase( MyTestCase ):
 
    def set_mem_policy(self, callable_obj, pol):
       # Set the memory policy of the callable object received
-      if self.exp_pyroot:
+      if not self.legacy_pyroot:
          callable_obj.__mempolicy__ = pol
       else:
          callable_obj._mempolicy = pol

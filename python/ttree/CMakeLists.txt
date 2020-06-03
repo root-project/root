@@ -3,5 +3,5 @@ if(ROOT_pyroot_FOUND)
                     MACRO PyROOT_ttreetests.py
                     COPY_TO_BUILDDIR TTreeTypes.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ TTreeTypes.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()

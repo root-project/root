@@ -5,5 +5,5 @@ if(ROOT_pyroot_FOUND)
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ InstallableFunction.C+
                                              -e .L\ GlobalFunction2.C+
                                              -e .L\ GlobalFunction3.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()

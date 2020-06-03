@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import ROOT
 from ROOT import gROOT, gDirectory, TArrayI, TFile, TTree, TObject, std, AddressOf, addressof, MakeNullPointer, TObjArray, TNamed
 
-exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
 from common import *
 
@@ -142,7 +142,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       fl = d.Floats
       t.Branch( 'floats', fl )
 
-      if exp_pyroot:
+      if not legacy_pyroot:
           # The Branch pythonization expects an integer with the
           # address of the field of the struct
           addressof_nlabel = addressof( d, 'NLabel' )
@@ -185,7 +185,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
             self.assertEqual( i, int(entry) )
             i += 1
 
-         if exp_pyroot:
+         if not legacy_pyroot:
             # In new cppyy, character arrays are read as Python strings,
             # ignoring the size of the branch buffer.
             # Here, no character '\0' is part of the returned string.
@@ -215,7 +215,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       myarray = f.Get( 'myarray' )
       self.assert_( isinstance( myarray, TArrayI ) )
 
-      if exp_pyroot:
+      if not legacy_pyroot:
          # New PyROOT does not implement a pythonisation for GetObject.
          # Just use the getattr syntax, which is much nicer
          arr = f.myarray
@@ -297,7 +297,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       s = SomeDataStruct()
 
       # Same reason for this difference as in test05WriteSomeDataObjectBranched
-      if exp_pyroot:
+      if not legacy_pyroot:
          addressof_nlabel = addressof(s, 'NLabel')
       else:
          addressof_nlabel = AddressOf(s, 'NLabel')

@@ -28,7 +28,7 @@ class TestClasSTLVECTOR:
         cls.test_dct = "StlTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = 13
-        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_builtin_vector_type(self):
         """Test access to a vector<int> (part of cintdlls)"""
@@ -92,7 +92,7 @@ class TestClasSTLVECTOR:
         for arg in a:
             pass
 
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
             # ROOT-10118
             # In current Cppyy, STL containers evaluate to True
             # if they contain at least one element
@@ -140,7 +140,7 @@ class TestClasSTLVECTOR:
     def test07_vector_bool_iter(self):
         """Iteration over a vector<bool>"""
         # ROOT-9397
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
             from cppyy.gbl import std
             v = std.vector[bool]()
             l = [True, False]
@@ -317,7 +317,7 @@ class TestClasSTLSTRINGHANDLING:
         import cppyy
         cls.test_dct = "StlTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
-        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
     def test01_string_argument_passing(self):
         """Test mapping of python strings and std::string"""
@@ -372,7 +372,7 @@ class TestClasSTLSTRINGHANDLING:
         t0 = "aap\0noot"
         assert t0 == "aap\0noot"
 
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
            c, s = StringyClass(), std.string(t0, 0, len(t0))
         else:
            c, s = StringyClass(), std.string(t0, len(t0))

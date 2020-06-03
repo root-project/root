@@ -260,7 +260,7 @@ class Basic4ArgumentPassingTestCase( MyTestCase ):
 class Basic5PythonizationTestCase( MyTestCase ):
    @classmethod
    def setUpClass(cls):
-      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+      cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
    def test1Strings( self ):
       """Test string/TString/TObjString compatibility"""
@@ -338,7 +338,7 @@ class Basic5PythonizationTestCase( MyTestCase ):
       l.insert(  3, TObjString('6') )
       l.insert( 20, TObjString('7') )
       l.insert( -1, TObjString('8') )
-      if self.exp_pyroot:
+      if not self.legacy_pyroot:
          # The pythonisation of TSeqCollection in experimental PyROOT mimics the
          # behaviour of the Python list, in this case for insert.
          # The Python list insert always inserts before the specified index, so if

@@ -26,7 +26,7 @@ __all__ = [
 class Cpp1LanguageFeatureTestCase( MyTestCase ):
    @classmethod
    def setUpClass(cls):
-      cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+      cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
    def test01ClassEnum( self ):
       """Test class enum access and values"""
@@ -57,7 +57,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual(ROOT.aa, 0)
       self.assertEqual(ROOT.bb, 1)
 
-      if self.exp_pyroot:
+      if not self.legacy_pyroot:
          cppname = ROOT.foo.__cpp_name__
       else:
          cppname = ROOT.foo.__cppname__
@@ -73,7 +73,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       self.assertEqual(ROOT.myns.aa, 0)
       self.assertEqual(ROOT.myns.bb, 1)
 
-      if self.exp_pyroot:
+      if not self.legacy_pyroot:
          cppname = ROOT.myns.foo.__cpp_name__
       else:
          cppname = ROOT.myns.foo.__cppname__
@@ -117,7 +117,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       for i in range(4):
          self.assertEqual( t1[i], t3[i] )
 
-      if self.exp_pyroot:
+      if not self.legacy_pyroot:
          # Test copy constructor with null pointer
          t4 = MakeNullPointer(TLorentzVector)
          t4.__init__(TLorentzVector(0, 1, 2, 3))
@@ -244,7 +244,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       import array
       if hasattr( array.array, 'buffer_info' ):   # not supported in p2.2
-         if self.exp_pyroot:
+         if not self.legacy_pyroot:
             # New cppyy uses unsigned long to represent void* returns, as in DynamicCast.
             # To prevent an overflow error when converting the Python integer returned by
             # DynamicCast into a 4-byte signed long in 32 bits, we use unsigned long ('L')
@@ -258,13 +258,13 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
       self.assertEqual( 0, Z.GimeAddressPtr( 0 ) );
       self.assertEqual( 0, Z.GimeAddressObject( 0 ) );
-      if not self.exp_pyroot:
+      if self.legacy_pyroot:
          # The conversion None -> ptr is not supported in new Cppyy
          self.assertEqual( 0, Z.GimeAddressPtr( None ) );
          self.assertEqual( 0, Z.GimeAddressObject( None ) );
 
       ptr = MakeNullPointer( TObject )
-      if self.exp_pyroot:
+      if not self.legacy_pyroot:
          # New Cppyy does not raise ValueError,
          # it just returns zero
          self.assertEqual(addressof(ptr), 0)
@@ -278,7 +278,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
    def test13Macro( self ):
       """Test access to cpp macro's"""
-      if not self.exp_pyroot:
+      if self.legacy_pyroot:
          # In new PyROOT, we will just provide ROOT.nullptr
          self.assertEqual( ROOT.NULL, 0 );
 
@@ -290,7 +290,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       # see above, is a special case)
       ROOT.PyConfig.ExposeCppMacros = True
 
-      if not self.exp_pyroot:
+      if self.legacy_pyroot:
          # New Cppyy does not do lookup of macros
          self.assertEqual( ROOT.aap, "aap" )
          self.assertEqual( ROOT.noot, 1 )

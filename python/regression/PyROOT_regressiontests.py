@@ -51,7 +51,7 @@ __all__ = [
 ### "from ROOT import *" done in import-*-ed module ==========================
 from Amir import *
 
-exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
 
 class Regression01TwiceImportStar( MyTestCase ):
@@ -314,7 +314,7 @@ class Regression08CheckEnumExactMatch( MyTestCase ):
       self.assertEqual( ROOT.cow,  a.testEnum2( ROOT.cow ) )
       self.assertEqual( ROOT.bird, a.testEnum3( ROOT.bird ) )
       self.assertEqual( ROOT.marsupilami, a.testEnum4( ROOT.marsupilami ) )
-      if exp_pyroot:
+      if not legacy_pyroot:
          # Cppyy's Long is deprecated in favour of ctypes.c_long
          # https://bitbucket.org/wlav/cppyy/issues/101
          import ctypes
@@ -339,7 +339,7 @@ class Regression09TVector3Pythonize( MyTestCase ):
    def test2TVector3(self):
       """Verify that using one operator* overload does not mask the others"""
       # ROOT-10278
-      if exp_pyroot:
+      if not legacy_pyroot:
          v = TVector3(1., 2., 3.)
          v*2
          self.assertEqual(v*v, 14.0)
@@ -375,7 +375,7 @@ class Regression11GlobalsLookup( MyTestCase ):
       """Test that ROOT.cout does not cause error messages"""
 
       import ROOT
-      if exp_pyroot:
+      if not legacy_pyroot:
          # Look for cout in std
          c = ROOT.std.cout
       else:
@@ -396,7 +396,7 @@ class Regression12WriteTGraph( MyTestCase ):
       gr = TGraph()
       ff = TFile( "test.root", "RECREATE" )
       ff.WriteObject( gr, "grname", "" )
-      if exp_pyroot:
+      if not legacy_pyroot:
          # In new PyROOT, use a nicer way to get objects in files:
          # (1) getattr syntax
          ff.grname
@@ -425,7 +425,7 @@ class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
-      if exp_pyroot:
+      if not legacy_pyroot:
          # In exp PyROOT, TPyException is called PyException and it belongs
          # to the CPyCppyy namespace.
          # Also, it is not included in the PCH, so we need to include the
@@ -504,7 +504,7 @@ class Regression19TGL(MyTestCase):
    def test1TGLVertex3OperatorPlus(self):
       """Try invoking TGLVertex3::operator+ twice"""
       # ROOT-10166
-      if exp_pyroot:
+      if not legacy_pyroot:
          from ROOT import TGLVertex3, TGLVector3
 
          scatteringPoint = TGLVertex3(2., 3., 0.2)
@@ -516,7 +516,7 @@ class Regression19TGL(MyTestCase):
    def test2TGLLine3Constructor(self):
       """Check that the right constructor of TGLLine3 is called"""
       # ROOT-10102
-      if exp_pyroot:
+      if not legacy_pyroot:
          from ROOT import TGLLine3, TGLVertex3, TGLVector3
 
          trackAfterScattering = TGLLine3(TGLVertex3(2., 3., 0.2), TGLVector3(0., 0., -20.))
@@ -531,7 +531,7 @@ class Regression20gEnv(MyTestCase):
    def test1GetSetValue(self):
       """Set a value with gEnv and retrieve it afterwards"""
       # ROOT-10155
-      if exp_pyroot:
+      if not legacy_pyroot:
          from ROOT import gEnv
 
          optname = "SomeOption"
@@ -546,7 +546,7 @@ class Regression21ReuseProxies(MyTestCase):
    def test1ReuseProxies(self):
       """Test that Python proxies are reused in attribute lookups"""
       # ROOT-8843
-      if exp_pyroot:
+      if not legacy_pyroot:
          import ROOT
          ROOT.gInterpreter.LoadText("struct A { A* otherA=nullptr;};")
          a1 = ROOT.A()
@@ -564,7 +564,7 @@ class Regression22ObjectCleanup(MyTestCase):
    def test1GetListOfGraphs(self):
       """List returned by GetListOfGraphs should not have kMustCleanup set to true"""
       # ROOT-9040
-      if exp_pyroot:
+      if not legacy_pyroot:
          mg = ROOT.TMultiGraph()
          mg.Add(ROOT.TGraph())
 
