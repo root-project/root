@@ -1341,7 +1341,7 @@ public:
 
       // Collect the set of source bin labels in the order where the user sees
       // them. Ignore uncommitted source labels: no bin = no data to be merged.
-      std::vector<std::string_view> sourceLabels = GetBinLabels();
+      std::vector<std::string_view> sourceLabels = source.GetBinLabels();
       sourceLabels.resize(numSourceBins);
 
       // Check how source _bins_ map into target bins and labels, simulating
