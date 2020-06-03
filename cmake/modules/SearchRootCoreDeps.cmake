@@ -87,6 +87,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
       if(Python${PYTHON_PREFER_VERSION}_Development_FOUND)
         set(PYTHON_INCLUDE_DIRS "${Python${PYTHON_PREFER_VERSION}_INCLUDE_DIRS}")
         set(PYTHON_LIBRARIES "${Python${PYTHON_PREFER_VERSION}_LIBRARIES}")
+        set(PYTHON_LIBRARY_DIR "${Python${PYTHON_PREFER_VERSION}_LIBRARY_DIRS}")
         # Set PyROOT variables
         set(Python${PYTHON_PREFER_VERSION}_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python3
         set(PYTHON_EXECUTABLE_Development_Main "${Python${PYTHON_PREFER_VERSION}_EXECUTABLE}")
@@ -123,6 +124,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
       if(Python3_Development_FOUND)
         set(PYTHON_INCLUDE_DIRS "${Python3_INCLUDE_DIRS}")
         set(PYTHON_LIBRARIES "${Python3_LIBRARIES}")
+        set(PYTHON_LIBRARY_DIR "${Python3_LIBRARY_DIRS}")
         # Set PyROOT variables
         set(Python3_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python3
         set(PYTHON_EXECUTABLE_Development_Main "${Python3_EXECUTABLE}")
@@ -154,6 +156,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
           if(Python2_Development_FOUND)
             set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}")
             set(PYTHON_LIBRARIES "${Python2_LIBRARIES}")
+            set(PYTHON_LIBRARY_DIR "${Python2_LIBRARY_DIRS}")
             # Set PyROOT variables
             set(Python2_Interpreter_Development_FOUND ON) # This means we have both Interpreter and Development, hence we can build PyROOT with Python2
             set(PYTHON_EXECUTABLE_Development_Main "${Python2_EXECUTABLE}")
@@ -190,6 +193,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
           else()
             set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}")
             set(PYTHON_LIBRARIES "${Python2_LIBRARIES}")
+            set(PYTHON_LIBRARY_DIR "${Python2_LIBRARY_DIRS}")
             # Set PyROOT variables
             set(PYTHON_EXECUTABLE_Development_Main "${Python2_EXECUTABLE}")
             set(PYTHON_VERSION_STRING_Development_Main "${Python2_VERSION}")
