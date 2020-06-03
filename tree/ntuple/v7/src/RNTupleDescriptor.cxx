@@ -712,7 +712,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    return model;
 }
 
-bool ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor &other) const {
+ROOT::Experimental::RNTupleDescriptor::ENTupleMergeable
+ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor &other) const {
    struct MergeCriteria {
       std::vector<std::string> names = std::vector<std::string>();
       std::vector<ENTupleStructure> structures = std::vector<ENTupleStructure>();
@@ -731,8 +732,14 @@ bool ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor 
    auto ntuple_info = getMergeCriteria(*this);
    auto other_ntuple_info = getMergeCriteria(other);
 
-   return (ntuple_info.names == other_ntuple_info.names
-      && ntuple_info.structures == other_ntuple_info.structures);
+   using ENTupleMergeable = RNTupleDescriptor::ENTupleMergeable;
+   if (ntuple_info.structures != other_ntuple_info.structures) {
+      return ENTupleMergeable::StructureMismatch;
+   }
+   if (ntuple_info.names != other_ntuple_info.names) {
+      return ENTupleMergeable::NamesMismatch;
+   }
+   return ENTupleMergeable::Mergeable;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

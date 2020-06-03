@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 using RFieldDescriptorRange = ROOT::Experimental::RFieldDescriptorRange;
+using ENTupleMergeable = ROOT::Experimental::RNTupleDescriptor::ENTupleMergeable;
 
 TEST(RNTupleDescriptor, FieldIterator)
 {
@@ -83,7 +84,9 @@ TEST(RNTupleDescriptor, IsMergeable)
       std::make_unique<RPageSourceFile>("ntuple3", fileGuard3.GetPath(), RNTupleReadOptions()));
 
     // mergeable with itself
-    EXPECT_TRUE(ntuple.GetDescriptor().IsMergeable(ntuple_copy.GetDescriptor()));
+    EXPECT_TRUE(ENTupleMergeable::Mergeable
+       == ntuple.GetDescriptor().IsMergeable(ntuple_copy.GetDescriptor()));
     // not mergeable with a ntuple with different top-level fields
-    EXPECT_FALSE(ntuple.GetDescriptor().IsMergeable(different_ntuple.GetDescriptor()));
+    EXPECT_TRUE(ENTupleMergeable::StructureMismatch
+       == ntuple.GetDescriptor().IsMergeable(different_ntuple.GetDescriptor()));
 }

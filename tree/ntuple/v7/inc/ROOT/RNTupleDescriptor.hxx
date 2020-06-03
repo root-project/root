@@ -414,8 +414,9 @@ public:
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
 
+   enum class ENTupleMergeable { StructureMismatch, NamesMismatch, Mergeable };
    /// Check whether this NTuple can be merged with another NTuple.
-   bool IsMergeable(const RNTupleDescriptor &other) const;
+   ENTupleMergeable IsMergeable(const RNTupleDescriptor &other) const;
 };
 
 
