@@ -31,7 +31,7 @@ if(dataframe)
     ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
 endif()
 
-if(dataframe AND pyroot_experimental)
+if(dataframe AND NOT pyroot_legacy)
   find_python_module(xgboost QUIET)
   if (PY_XGBOOST_FOUND)
     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
