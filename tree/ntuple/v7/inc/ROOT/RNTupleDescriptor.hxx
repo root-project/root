@@ -30,6 +30,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RFieldDescriptorRange;
 class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
@@ -300,6 +301,44 @@ private:
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
 public:
+   class RFieldDescriptorRange {
+   private:
+      const RFieldDescriptor& fField;
+   public:
+      class RIterator {
+      private:
+         const std::vector<DescriptorId_t>& fFieldChildren;
+         std::size_t fIndex = kInvalidNTupleIndex;
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = DescriptorId_t;
+         using difference_type = std::ptrdiff_t;
+         using pointer = DescriptorId_t*;
+         using reference = const DescriptorId_t&;
+
+         RIterator() = default;
+         RIterator(const RFieldDescriptor& fieldDesc, DescriptorId_t index)
+            : fFieldChildren(fieldDesc.GetLinkIds()), fIndex(index) {}
+         ~RIterator() = default;
+
+         iterator operator++() { ++fIndex; return *this; }
+         reference operator*() { return fFieldChildren.at(fIndex); }
+         bool operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+      };
+
+      RFieldDescriptorRange() = delete;
+      /// An iterator over a field's child fields.
+      RFieldDescriptorRange(const RFieldDescriptor& field) : fField(field) {}
+      ~RFieldDescriptorRange() = default;
+      RIterator begin() {
+         return RIterator(fField, 0);
+      }
+      RIterator end() {
+         return RIterator(fField, fField.GetLinkIds().size());
+      }
+   };
+
    /// In order to handle changes to the serialization routine in future ntuple versions
    static constexpr std::uint16_t kFrameVersionCurrent = 0;
    static constexpr std::uint16_t kFrameVersionMin = 0;
@@ -334,6 +373,16 @@ public:
    const RClusterDescriptor& GetClusterDescriptor(DescriptorId_t clusterId) const {
       return fClusterDescriptors.at(clusterId);
    }
+   RFieldDescriptorRange GetFieldRange(const RFieldDescriptor& fieldDesc) const {
+       return RFieldDescriptorRange(fieldDesc);
+   }
+   RFieldDescriptorRange GetFieldRange(DescriptorId_t fieldId) const {
+       return GetFieldRange(GetFieldDescriptor(fieldId));
+   }
+   RFieldDescriptorRange GetTopLevelFields() const {
+       return GetFieldRange(GetFieldDescriptor(GetRootFieldId()));
+   }
+
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
    std::string GetAuthor() const { return fAuthor; }
