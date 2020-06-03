@@ -5,8 +5,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(pyroot)
-  if(NOT pyroot_experimental)
-    add_subdirectory(pyroot)
+  if(pyroot_legacy)
+    add_subdirectory(pyroot_legacy)
   else()
     # Machinery necessary to loop in parallel over multiple lists
     # This will be used in the CMakeLists of pythonizations,
@@ -24,7 +24,7 @@ if(pyroot)
       set(install_dir_lib $ENV{DESTDIR}/${CMAKE_INSTALL_PREFIX}/${runtimedir})
     endif()
 
-    add_subdirectory(pyroot_experimental)
+    add_subdirectory(pyroot)
     add_subdirectory(tpython)
     add_subdirectory(jupyroot)
     add_subdirectory(jsmva)
