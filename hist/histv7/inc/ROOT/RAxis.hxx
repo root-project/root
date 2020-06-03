@@ -191,22 +191,23 @@ protected:
    }
 
 public:
-   /// Result of comparing two axes with numerical bin borders
-   class NumericBinningCmpResult {
+   /// Result of comparing two axes with numerical bin borders for the purpose
+   /// of evaluating histogram merging possibilities.
+   class NumericBinningCompatibility {
    public:
       /// Build a numerical binning comparison result
       ///
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      NumericBinningCmpResult(bool trivialRegularBinMapping,
-                              bool regularBinBijection,
-                              bool fullBinBijection,
-                              bool mergingIsLossy,
-                              bool regularBinAliasing,
-                              bool needEmptyUnderflow,
-                              bool needEmptyOverflow,
-                              bool targetMustGrow)
+      NumericBinningCompatibility(bool trivialRegularBinMapping,
+                                  bool regularBinBijection,
+                                  bool fullBinBijection,
+                                  bool mergingIsLossy,
+                                  bool regularBinAliasing,
+                                  bool needEmptyUnderflow,
+                                  bool needEmptyOverflow,
+                                  bool targetMustGrow)
          : fFlags(
             Flags(trivialRegularBinMapping * kTrivialRegularBinMapping
                   + regularBinBijection * kRegularBinBijection
@@ -219,8 +220,8 @@ public:
          )
       {}
 
-      NumericBinningCmpResult(const NumericBinningCmpResult&) = default;
-      bool operator==(const NumericBinningCmpResult& other) const {
+      NumericBinningCompatibility(const NumericBinningCompatibility&) = default;
+      bool operator==(const NumericBinningCompatibility& other) const {
          return fFlags == other.fFlags;
       }
 
@@ -423,7 +424,7 @@ protected:
    //        the existence of floating-point bin borders, which will also lay
    //        out the groundwork for supporting boolean/integer bin borders.
    //
-   virtual NumericBinningCmpResult
+   virtual NumericBinningCompatibility
    CompareNumericalBinning(const RAxisBase& source) const {
       assert(!CanGrow());
       return CompareNumericalBinningAfterGrowth(source, false);
@@ -435,7 +436,7 @@ protected:
    ///
    /// This method can be overriden for performance optimization purposes.
    ///
-   virtual NumericBinningCmpResult
+   virtual NumericBinningCompatibility
    CompareNumericalBinningAfterGrowth(const RAxisBase& source,
                                       bool growthOccured) const;
 
@@ -641,17 +642,17 @@ public:
    virtual int GetBinIndexForLowEdge(double x) const noexcept = 0;
 
    /// Result of comparing two labeled axis
-   class LabeledBinningCmpResult {
+   class LabeledBinningCompatibility {
    public:
       /// Build a labeled axis comparison result
       ///
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      LabeledBinningCmpResult(bool sourceOnlyLabels,
-                              bool targetMustGrow,
-                              bool labelOrderDiffers,
-                              bool extraTargetBins)
+      LabeledBinningCompatibility(bool sourceOnlyLabels,
+                                  bool targetMustGrow,
+                                  bool labelOrderDiffers,
+                                  bool extraTargetBins)
          : fFlags(
             Flags(sourceOnlyLabels * kSourceOnlyLabels
                   + targetMustGrow * kTargetMustGrow
@@ -660,8 +661,8 @@ public:
          )
       {}
 
-      LabeledBinningCmpResult(const LabeledBinningCmpResult&) = default;
-      bool operator==(const LabeledBinningCmpResult& other) const {
+      LabeledBinningCompatibility(const LabeledBinningCompatibility&) = default;
+      bool operator==(const LabeledBinningCompatibility& other) const {
          return fFlags == other.fFlags;
       }
 
@@ -714,7 +715,7 @@ public:
       /// will be necessary during histogram merging.
       ///
       /// This is the moral equivalent of
-      /// `NumericalBinCmpResult::FullBinBijection()` for labeled axes.
+      /// `NumericalBinCompatibility::FullBinBijection()` for labeled axes.
       ///
       // NOTE: Although this technically applies to regular bins only, there is
       //       no need for a regular/full bin bijection distinction here because
@@ -746,11 +747,11 @@ public:
    //
    // TODO: Replace with std::variant once RHist goes C++17
    //
-   class BinningCmpResult {
+   class BinningCompatibility {
    public:
       /// Case where two axes of incompatible types were compared
-      BinningCmpResult()
-         : fKind(CmpKind::kIncompatible)
+      BinningCompatibility()
+         : fKind(CompatKind::kIncompatible)
       {}
 
       /// Case where two axes using numerical bin borders were compared
@@ -758,8 +759,8 @@ public:
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      BinningCmpResult(NumericBinningCmpResult numeric)
-         : fKind(CmpKind::kNumeric)
+      BinningCompatibility(NumericBinningCompatibility numeric)
+         : fKind(CompatKind::kNumeric)
          , fNumeric(numeric)
       {}
 
@@ -768,13 +769,13 @@ public:
       /// See the methods of this class for a more detailed description of what
       /// each of these flags mean.
       ///
-      BinningCmpResult(LabeledBinningCmpResult labeled)
-         : fKind(CmpKind::kLabeled)
+      BinningCompatibility(LabeledBinningCompatibility labeled)
+         : fKind(CompatKind::kLabeled)
          , fLabeled(labeled)
       {}
 
       /// Broad classification of possible axis comparisons
-      enum class CmpKind {
+      enum class CompatKind {
          /// Two axes using a fundamentally incompatible binning scheme (e.g.
          /// `RAxisIrregular` vs `RAxisLabels`) were compared
          ///
@@ -805,35 +806,35 @@ public:
       };
 
       /// Kind of axis comparison that was carried out
-      CmpKind Kind() const noexcept { return fKind; }
+      CompatKind Kind() const noexcept { return fKind; }
 
       /// Get the detailed result of a numerical axis comparison
-      NumericBinningCmpResult GetNumeric() {
-         CheckKind(CmpKind::kNumeric);
+      NumericBinningCompatibility GetNumeric() {
+         CheckKind(CompatKind::kNumeric);
          return fNumeric;
       }
 
       /// Get the detailed result of a labeled axis comparison
-      LabeledBinningCmpResult GetLabeled() {
-         CheckKind(CmpKind::kLabeled);
+      LabeledBinningCompatibility GetLabeled() {
+         CheckKind(CompatKind::kLabeled);
          return fLabeled;
       }
 
    private:
       /// Kind of axis comparison that was carried out
-      CmpKind fKind;
+      CompatKind fKind;
 
       /// Check that the axis comparison kind is correct in preparation to
       /// querying a binning property which is specific to that axis kind
-      void CheckKind(CmpKind expectedKind) const;
+      void CheckKind(CompatKind expectedKind) const;
 
       /// Details of the axis comparison results
       union {
-         // Valid if fKind is CmpKind::kNumeric
-         NumericBinningCmpResult fNumeric;
+         // Valid if fKind is CompatKind::kNumeric
+         NumericBinningCompatibility fNumeric;
 
-         // Valid if fKind is CmpKind::kLabeled
-         LabeledBinningCmpResult fLabeled;
+         // Valid if fKind is CompatKind::kLabeled
+         LabeledBinningCompatibility fLabeled;
       };
    };
 
@@ -843,7 +844,7 @@ public:
    /// Since histogram merging has asymmetric properties, this axis is the
    /// target axis, and the other axis is the source axis.
    ///
-   BinningCmpResult CompareBinning(const RAxisBase& source) const;
+   BinningCompatibility CompareBinning(const RAxisBase& source) const;
 
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
@@ -1081,7 +1082,7 @@ public:
    bool CanGrow() const noexcept final override { return true; }
 
    /// CompareNumericalBinning must be overriden to handle axis growth
-   NumericBinningCmpResult
+   NumericBinningCompatibility
    CompareNumericalBinning(const RAxisBase& source) const final override;
 };
 
@@ -1319,7 +1320,7 @@ public:
 
    /// Compare the labels of this axis with those of another axis for the
    /// purpose of investigating a histogram merging scenario
-   LabeledBinningCmpResult CompareBinLabels(const RAxisLabels& source) const noexcept {
+   LabeledBinningCompatibility CompareBinLabels(const RAxisLabels& source) const noexcept {
       // For each axis, we must carefully distinguish the number of bins from
       // the number of labels. An RAxisLabels may have more bin labels than it
       // has bins if a label has been queried (which automatically allocates a
@@ -1379,10 +1380,10 @@ public:
          ((newLabels > 0) && (numLabelsAfterGrowth > numSourceBins));
 
       // Produce the results of the comparison
-      return LabeledBinningCmpResult(sourceOnlyLabels,
-                                     mustGrowTarget,
-                                     disorderedLabels,
-                                     extraTargetBins);
+      return LabeledBinningCompatibility(sourceOnlyLabels,
+                                         mustGrowTarget,
+                                         disorderedLabels,
+                                         extraTargetBins);
    }
 };
 

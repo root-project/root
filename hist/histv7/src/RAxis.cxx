@@ -21,7 +21,7 @@
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
-ROOT::Experimental::RAxisBase::NumericBinningCmpResult
+ROOT::Experimental::RAxisBase::NumericBinningCompatibility
 ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
    const RAxisBase& source,
    bool growthOccured
@@ -277,24 +277,24 @@ ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
       regularBinBijection && (source.CanGrow() == CanGrow());
 
    // Produce the final result of the numerical axis binning comparison
-   return NumericBinningCmpResult(trivialRegularBinMapping,
-                                  regularBinBijection,
-                                  fullBinBijection,
-                                  mergingIsLossy,
-                                  regularBinAliasing,
-                                  needEmptyUnderflow,
-                                  needEmptyOverflow,
-                                  growthOccured);
+   return NumericBinningCompatibility(trivialRegularBinMapping,
+                                      regularBinBijection,
+                                      fullBinBijection,
+                                      mergingIsLossy,
+                                      regularBinAliasing,
+                                      needEmptyUnderflow,
+                                      needEmptyOverflow,
+                                      growthOccured);
 }
 
-void ROOT::Experimental::RAxisBase::BinningCmpResult::CheckKind(CmpKind expectedKind) const {
+void ROOT::Experimental::RAxisBase::BinningCompatibility::CheckKind(CompatKind expectedKind) const {
    if (fKind != expectedKind) {
       throw std::runtime_error("The queried property is invalid for this "
          "kind of axis binning comparison");
    }
 }
 
-ROOT::Experimental::RAxisBase::BinningCmpResult
+ROOT::Experimental::RAxisBase::BinningCompatibility
 ROOT::Experimental::RAxisBase::CompareBinning(const RAxisBase& source) const {
    // Handle labeled axis edge case
    //
@@ -305,16 +305,16 @@ ROOT::Experimental::RAxisBase::CompareBinning(const RAxisBase& source) const {
    const auto target_lbl_ptr = dynamic_cast<const RAxisLabels*>(this);
    const auto source_lbl_ptr = dynamic_cast<const RAxisLabels*>(&source);
    if (bool(target_lbl_ptr) != bool(source_lbl_ptr)) {
-      return BinningCmpResult();
+      return BinningCompatibility();
    } else if (target_lbl_ptr) {
-      return BinningCmpResult(
+      return BinningCompatibility(
          target_lbl_ptr->CompareBinLabels(*source_lbl_ptr)
       );
    }
 
    // If control reached this point, then we know that both the source and the
    // target axis use numerical bin borders
-   return BinningCmpResult(CompareNumericalBinning(source));
+   return BinningCompatibility(CompareNumericalBinning(source));
 }
 
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
@@ -342,7 +342,7 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
    return binIdx;
 }
 
-ROOT::Experimental::RAxisBase::NumericBinningCmpResult
+ROOT::Experimental::RAxisBase::NumericBinningCompatibility
 ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) const {
    // Convenience shorthands
    const double sourceMin = source.GetMinimum();

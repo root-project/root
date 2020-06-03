@@ -330,16 +330,16 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
    auto& toImpl = *to.GetImpl();
    const auto& fromImpl = *from.GetImpl();
    for (int dim = 0; dim < DIMENSIONS; ++dim) {
-      using CmpKind = RAxisBase::BinningCmpResult::CmpKind;
+      using CompatKind = RAxisBase::BinningCompatibility::CompatKind;
       auto axisCmp = toImpl.GetAxis(dim).CompareBinning(fromImpl.GetAxis(dim));
       switch (axisCmp.Kind()) {
-         case CmpKind::kIncompatible:
+         case CompatKind::kIncompatible:
             // Merging histograms with fully incompatible axis types will never
             // be supported
             throw std::runtime_error(
                "Attempted to add RHists with incompatible axis types"
             );
-         case CmpKind::kNumeric: {
+         case CompatKind::kNumeric: {
             auto numericAxisCmp = axisCmp.GetNumeric();
             // FIXME: Support complicated merge scenarios where a source
             //        histogram bin doesn't map into a target histogram bin with
@@ -384,7 +384,7 @@ void Add(RHist<DIMENSIONS, PRECISION, STAT_TO...> &to, const RHist<DIMENSIONS, P
             }
             break;
          }
-         case CmpKind::kLabeled: {
+         case CompatKind::kLabeled: {
             auto labeledAxisCmp = axisCmp.GetLabeled();
             // FIXME: Grow target axis (requires growth support)
             //        (we could already add support for adding source bin labels
