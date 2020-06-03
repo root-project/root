@@ -22,7 +22,7 @@
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
 ROOT::Experimental::RAxisBase::NumericBinningCompatibility
-ROOT::Experimental::RAxisBase::CompareNumericalBinningAfterGrowth(
+ROOT::Experimental::RAxisBase::CheckFixedNumericalBinningCompat(
    const RAxisBase& source,
    bool growthOccured
 ) const {
@@ -295,7 +295,7 @@ void ROOT::Experimental::RAxisBase::BinningCompatibility::CheckKind(CompatKind e
 }
 
 ROOT::Experimental::RAxisBase::BinningCompatibility
-ROOT::Experimental::RAxisBase::CompareBinning(const RAxisBase& source) const {
+ROOT::Experimental::RAxisBase::CheckBinningCompat(const RAxisBase& source) const {
    // Handle labeled axis edge case
    //
    // NOTE: This must be handled at the axis base class level, because C++ does
@@ -308,13 +308,13 @@ ROOT::Experimental::RAxisBase::CompareBinning(const RAxisBase& source) const {
       return BinningCompatibility();
    } else if (target_lbl_ptr) {
       return BinningCompatibility(
-         target_lbl_ptr->CompareBinLabels(*source_lbl_ptr)
+         target_lbl_ptr->CheckLabeledBinningCompat(*source_lbl_ptr)
       );
    }
 
    // If control reached this point, then we know that both the source and the
    // target axis use numerical bin borders
-   return BinningCompatibility(CompareNumericalBinning(source));
+   return BinningCompatibility(CheckNumericalBinningCompat(source));
 }
 
 int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const noexcept
@@ -343,7 +343,9 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 }
 
 ROOT::Experimental::RAxisBase::NumericBinningCompatibility
-ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) const {
+ROOT::Experimental::RAxisGrow::CheckNumericalBinningCompat(
+   const RAxisBase& source
+) const {
    // Convenience shorthands
    const double sourceMin = source.GetMinimum();
    const double sourceMax = source.GetMaximum();
@@ -394,7 +396,7 @@ ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) 
    }
 
    // Call back binning comparison hook on the possibly grown axis
-   return targetPtr->CompareNumericalBinningAfterGrowth(source, mustGrow);
+   return targetPtr->CheckFixedNumericalBinningCompat(source, mustGrow);
 }
 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept

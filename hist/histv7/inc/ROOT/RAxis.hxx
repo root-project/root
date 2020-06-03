@@ -191,8 +191,8 @@ protected:
    }
 
 public:
-   /// Result of comparing two axes with numerical bin borders for the purpose
-   /// of evaluating histogram merging possibilities.
+   /// Result of comparing two axes with numerical bin borders for histogram
+   /// merging
    class NumericBinningCompatibility {
    public:
       /// Build a numerical binning comparison result
@@ -415,7 +415,7 @@ protected:
    ///
    /// Growable RAxis subclasses **must** override this method in a manner which
    /// evaluates possible axis growth scenarios, before calling back
-   /// `CompareNumericalBinningAfterGrowth()`, which implements the actual
+   /// `CheckFixedNumericalBinningCompat()`, which implements the actual
    /// binning comparison, on a simulated grown axis.
    ///
    // FIXME: As of 2020-05-27, every RAxis type is considered to have numerical
@@ -425,20 +425,20 @@ protected:
    //        out the groundwork for supporting boolean/integer bin borders.
    //
    virtual NumericBinningCompatibility
-   CompareNumericalBinning(const RAxisBase& source) const {
+   CheckNumericalBinningCompat(const RAxisBase& source) const {
       assert(!CanGrow());
-      return CompareNumericalBinningAfterGrowth(source, false);
+      return CheckFixedNumericalBinningCompat(source, false);
    }
 
-   /// Callback of `CompareNumericalBinning()` containing the actual bin border
-   /// comparison logic, to be invoked after simulating any required axis growth
-   /// scenarios, on the grown target axis.
+   /// Callback of `CheckNumericalBinningCompat()` containing the actual bin
+   /// border comparison logic, to be invoked after simulating any required axis
+   /// growth scenarios, on the grown target axis.
    ///
    /// This method can be overriden for performance optimization purposes.
    ///
    virtual NumericBinningCompatibility
-   CompareNumericalBinningAfterGrowth(const RAxisBase& source,
-                                      bool growthOccured) const;
+   CheckFixedNumericalBinningCompat(const RAxisBase& source,
+                                    bool growthOccured) const;
 
 public:
    /**
@@ -641,7 +641,7 @@ public:
    /// return `kInvalidBin`.
    virtual int GetBinIndexForLowEdge(double x) const noexcept = 0;
 
-   /// Result of comparing two labeled axis
+   /// Result of comparing two labeled axis for histogram merging
    class LabeledBinningCompatibility {
    public:
       /// Build a labeled axis comparison result
@@ -743,7 +743,7 @@ public:
       } fFlags;
    };
 
-   /// Result of an axis binning comparison
+   /// Result of comparing two axes for histogram merging
    //
    // TODO: Replace with std::variant once RHist goes C++17
    //
@@ -844,7 +844,7 @@ public:
    /// Since histogram merging has asymmetric properties, this axis is the
    /// target axis, and the other axis is the source axis.
    ///
-   BinningCompatibility CompareBinning(const RAxisBase& source) const;
+   BinningCompatibility CheckBinningCompat(const RAxisBase& source) const;
 
 private:
    std::string fTitle;    ///< Title of this axis, used for graphics / text.
@@ -1081,9 +1081,9 @@ public:
    /// This axis kind can increase its range.
    bool CanGrow() const noexcept final override { return true; }
 
-   /// CompareNumericalBinning must be overriden to handle axis growth
+   /// CheckNumericalBinningCompat must be overriden to handle axis growth
    NumericBinningCompatibility
-   CompareNumericalBinning(const RAxisBase& source) const final override;
+   CheckNumericalBinningCompat(const RAxisBase& source) const final override;
 };
 
 namespace Internal {
@@ -1320,7 +1320,8 @@ public:
 
    /// Compare the labels of this axis with those of another axis for the
    /// purpose of investigating a histogram merging scenario
-   LabeledBinningCompatibility CompareBinLabels(const RAxisLabels& source) const noexcept {
+   LabeledBinningCompatibility
+   CheckLabeledBinningCompat(const RAxisLabels& source) const noexcept {
       // For each axis, we must carefully distinguish the number of bins from
       // the number of labels. An RAxisLabels may have more bin labels than it
       // has bins if a label has been queried (which automatically allocates a

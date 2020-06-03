@@ -478,48 +478,48 @@ TEST(AxisTest, Labels) {
       using LabelsCompatibility = RAxisBase::LabeledBinningCompatibility;
       const int uncommittedTargetLabels =
         (expected_labels.size() - caxis.GetNBinsNoOver());
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(expected_labels)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(expected_labels)),
                 LabelsCompatibility(false,
                                     uncommittedTargetLabels > 0,
                                     false,
                                     false));
       const std::vector<std::string_view> missing_last_label(
         expected_labels.cbegin(), expected_labels.cend() - 1);
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(missing_last_label)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(missing_last_label)),
                 LabelsCompatibility(false,
                                     uncommittedTargetLabels > 1,
                                     false,
                                     uncommittedTargetLabels == 0));
       auto one_extra_label = expected_labels;
       one_extra_label.push_back("I AM ROOT");
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(one_extra_label)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(one_extra_label)),
                 LabelsCompatibility(true,
                                     true,
                                     false,
                                     false));
       auto swapped_labels = expected_labels;
       std::swap(swapped_labels[0], swapped_labels[expected_labels.size()-1]);
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(swapped_labels)),
                 LabelsCompatibility(false,
                                     uncommittedTargetLabels > 0,
                                     true,
                                     false));
       auto changed_one_label = expected_labels;
       changed_one_label[0] = "I AM ROOT";
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(changed_one_label)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(changed_one_label)),
                 LabelsCompatibility(true,
                                     true,
                                     true,
                                     true));
       auto removed_first = expected_labels;
       removed_first.erase(removed_first.cbegin());
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(removed_first)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(removed_first)),
                 LabelsCompatibility(false,
                                     uncommittedTargetLabels > 0,
                                     true,
                                     true));
       swapped_labels.push_back("I AM ROOT");
-      EXPECT_EQ(caxis.CompareBinLabels(RAxisLabels(swapped_labels)),
+      EXPECT_EQ(caxis.CheckLabeledBinningCompat(RAxisLabels(swapped_labels)),
                 LabelsCompatibility(true,
                                     true,
                                     true,
