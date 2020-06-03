@@ -16,10 +16,10 @@
 
 #include "TMath.h"
 #include "TError.h"
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <algorithm>
-#include "Riostream.h"
+#include <iostream>
 #include "TString.h"
 
 #include <Math/SpecFuncMathCore.h>

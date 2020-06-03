@@ -20,7 +20,6 @@
 
 */
 
-#include <iostream>
 #include <typeinfo>
 
 #include "TMatrixT.h"
@@ -30,7 +29,6 @@
 #include "TMatrixTCramerInv.h"
 #include "TDecompLU.h"
 #include "TMatrixDEigen.h"
-#include "TClass.h"
 #include "TMath.h"
 
 templateClassImp(TMatrixT);
