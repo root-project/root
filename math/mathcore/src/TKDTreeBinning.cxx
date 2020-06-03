@@ -18,7 +18,6 @@
 #include "TKDTreeBinning.h"
 
 #include "Fit/BinData.h"
-#include "TRandom.h"
 #include "TBuffer.h"
 
 ClassImp(TKDTreeBinning);
