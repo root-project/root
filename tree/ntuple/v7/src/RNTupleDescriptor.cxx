@@ -712,6 +712,28 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    return model;
 }
 
+bool ROOT::Experimental::RNTupleDescriptor::IsMergeable(const RNTupleDescriptor &other) const {
+   struct MergeCriteria {
+      std::vector<std::string> names = std::vector<std::string>();
+      std::vector<ENTupleStructure> structures = std::vector<ENTupleStructure>();
+   };
+
+   auto getMergeCriteria = [=](const RNTupleDescriptor& ntuple) -> MergeCriteria {
+      MergeCriteria info;
+      for (auto f: ntuple.GetTopLevelFields()) {
+         const auto& fd = ntuple.GetFieldDescriptor(f);
+         info.names.push_back(fd.GetFieldName());
+         info.structures.push_back(fd.GetStructure());
+      }
+      return info;
+   };
+
+   auto ntuple_info = getMergeCriteria(*this);
+   auto other_ntuple_info = getMergeCriteria(other);
+
+   return (ntuple_info.names == other_ntuple_info.names
+      && ntuple_info.structures == other_ntuple_info.structures);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

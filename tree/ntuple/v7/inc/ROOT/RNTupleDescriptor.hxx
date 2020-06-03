@@ -413,6 +413,9 @@ public:
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
+
+   /// Check whether this NTuple can be merged with another NTuple.
+   bool IsMergeable(const RNTupleDescriptor &other) const;
 };
 
 
