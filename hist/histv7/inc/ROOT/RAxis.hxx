@@ -90,43 +90,42 @@ protected:
       return (int)rawbin;
    }
 
-   /// Placeholder bin width to be used in CompareBinBorders when there is no
-   /// bin or the width of that bin is irrelevant.
+   /// Placeholder bin width to be used in ComparePosToBinBorder when there is
+   /// no bin or the width of that bin is irrelevant.
    constexpr static const double kNoBinWidth = -1.;
 
-   /// Compare two axis bin borders
+   /// Compare an axis position with an axis bin border
    ///
-   /// Given a source axis bin border position, a target axis bin border
-   /// position, and the target axis' bin width on both sides of the bin border
-   /// under consideration, tell if the source bin border should be considered
-   /// to be located before (-1), at the same position (0), or after (+1) the
-   /// target bin border of interest.
+   /// Given a position of interest on the axis, a bin border position, and the
+   /// bin width on both sides of said bin border, tell if the position of
+   /// interest should be considered to be located before (-1), at the same
+   /// position (0), or after (+1) the bin border of interest.
    ///
-   /// If there is no regular bin on one side of the target axis bin border, if
-   /// it is an under/overflow bin, or if you do not care about the result on
-   /// that side of the target bin border, please set the corresponding bin
-   /// width to kNoBinWidth.
+   /// If there is no bin on one side of the target axis bin border, if it is an
+   /// under/overflow bin, or if you do not care if the result is zero or
+   /// nonzero on that side of the target bin border, please set the
+   /// corresponding bin width to kNoBinWidth.
    ///
-   static int CompareBinBorders(double sourceBorder,
-                                double targetBorder,
-                                double leftTargetBinWidth,
-                                double rightTargetBinWidth) {
+   static int ComparePosToBinBorder(double x,
+                                    double binBorder,
+                                    double leftBinWidth,
+                                    double rightBinWidth) {
       // Current tolerance policy when there is no bin width on one side is to
       // treat the unknown bin width as a bin width of 1.
-      if (leftTargetBinWidth == kNoBinWidth) leftTargetBinWidth = 1.;
-      if (rightTargetBinWidth == kNoBinWidth) rightTargetBinWidth = 1.;
+      if (leftBinWidth == kNoBinWidth) leftBinWidth = 1.;
+      if (rightBinWidth == kNoBinWidth) rightBinWidth = 1.;
 
       // Perform an approximate bin border comparison
-      const double sourceOffset = sourceBorder - targetBorder;
+      const double offset = x - binBorder;
       const double tolerance = 1e-6;
-      if (sourceOffset < 0.) {
-         return -static_cast<int>(sourceOffset < -leftTargetBinWidth*tolerance);
+      if (offset < 0.) {
+         return -static_cast<int>(offset < -leftBinWidth*tolerance);
       } else {
-         return static_cast<int>(sourceOffset > rightTargetBinWidth*tolerance);
+         return static_cast<int>(offset > rightBinWidth*tolerance);
       }
    }
 
-   /// Enum for specifying a side of a bin
+   /// Enum for specifying a side of an axis bin
    enum class BinSide {
       /// Left side of a bin
       kFrom,
@@ -138,18 +137,19 @@ protected:
    /// Compare an axis position with a bin border of this axis
    ///
    /// Given a position of interest, a bin number, and a BinSide indicating
-   /// which side of the bin we're talking about, tell if the point of interest
-   /// is located strictly before (-1), at about the same position (0) or
-   /// strictly after (+1) the bin border of interest.
+   /// which side of the bin we're talking about, tell if the position of
+   /// interest is located strictly before (-1), at about the same position (0)
+   /// or strictly after (+1) the bin border of interest.
    ///
-   /// This is a higher-level alternative to CompareBinBorders().
+   /// This is a higher-level alternative to the static method above.
    ///
    int ComparePosToBinBorder(double x, int bin, BinSide side) const noexcept {
       // Handle underflow bin edge case
       if (bin == kUnderflowBin) {
+         assert(!CanGrow());
          switch (side) {
             case BinSide::kFrom:
-               // Everything is after the underflow bin's "left edge", -inf
+               // Everything is after the underflow bin's "left edge"
                return 1;
             case BinSide::kTo:
                return ComparePosToBinBorder(x, GetFirstBin(), BinSide::kFrom);
@@ -158,11 +158,12 @@ protected:
 
       // Handle overflow bin edge case
       if (bin == kOverflowBin) {
+         assert(!CanGrow());
          switch (side) {
             case BinSide::kFrom:
                return ComparePosToBinBorder(x, GetLastBin(), BinSide::kTo);
             case BinSide::kTo:
-               // Everything is before the overflow bin's "right edge", +inf
+               // Everything is before the overflow bin's "right edge"
                return -1;
          }
       }
@@ -186,7 +187,7 @@ protected:
       }
 
       // Perform an approximate bin border comparison
-      return CompareBinBorders(x, borderPos, leftBinWidth, rightBinWidth);
+      return ComparePosToBinBorder(x, borderPos, leftBinWidth, rightBinWidth);
    }
 
 public:

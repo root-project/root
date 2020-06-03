@@ -364,10 +364,10 @@ ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) 
          static_cast<double>(growLeft) * (GetMinimum() - sourceMin);
       int leftBins = std::floor(leftGrowth / GetBinWidth());
       double leftBorder = GetMinimum() - leftBins*GetBinWidth();
-      if (CompareBinBorders(sourceMin,
-                            leftBorder,
-                            kNoBinWidth,
-                            GetBinWidth()) < 0) {
+      if (ComparePosToBinBorder(sourceMin,
+                                leftBorder,
+                                kNoBinWidth,
+                                GetBinWidth()) < 0) {
          ++leftBins;
          leftBorder -= GetBinWidth();
       }
@@ -377,10 +377,10 @@ ROOT::Experimental::RAxisGrow::CompareNumericalBinning(const RAxisBase& source) 
          static_cast<double>(growRight) * (sourceMax - GetMaximum());
       int rightBins = std::floor(rightGrowth / GetBinWidth());
       double rightBorder = GetMaximum() + rightBins*GetBinWidth();
-      if (CompareBinBorders(sourceMax,
-                            rightBorder,
-                            GetBinWidth(),
-                            kNoBinWidth) > 0) {
+      if (ComparePosToBinBorder(sourceMax,
+                                rightBorder,
+                                GetBinWidth(),
+                                kNoBinWidth) > 0) {
          ++rightBins;
          rightBorder += GetBinWidth();
       }
