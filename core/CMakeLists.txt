@@ -202,6 +202,8 @@ if (runtime_cxxmodules)
   if(MSVC)
     list(APPEND core_implicit_modules "-mByproduct" "services")
   endif()
+  # Force generation of _Builtin_intrinsics from Core.
+  list(APPEND core_implicit_modules "-m" "_Builtin_intrinsics" "-mByproduct" "_Builtin_intrinsics")
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_Stage1_NoRTTI")
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_C")
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Rtypes")
