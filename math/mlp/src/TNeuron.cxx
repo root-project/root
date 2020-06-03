@@ -38,7 +38,6 @@ there to inform buffered values are outdated.
 #include "TH1D.h"
 #include "TRegexp.h"
 #include "TMath.h"
-#include <iostream>
 
 ClassImp(TNeuron);
 

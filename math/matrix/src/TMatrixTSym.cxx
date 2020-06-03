@@ -30,7 +30,6 @@
 #include "TMatrixTSymCramerInv.h"
 #include "TDecompLU.h"
 #include "TMatrixDSymEigen.h"
-#include "TClass.h"
 #include "TMath.h"
 
 templateClassImp(TMatrixTSym);
