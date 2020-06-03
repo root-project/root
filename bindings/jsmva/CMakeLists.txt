@@ -4,9 +4,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-####################################################################################
-# CMakeLists.txt file for building JsMVA bindings/pyroot_experimental/PyROOT package
-####################################################################################
+###########################################################
+# CMakeLists.txt file for building JsMVA package
+###########################################################
 
 set(JsMVADirName python/JsMVA)
 
