@@ -30,7 +30,7 @@ static std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> &R__GetTaskArena4IMT()
 
 extern "C" UInt_t ROOT_MT_GetThreadPoolSize()
 {
-   return ROOT::Internal::GetGlobalTaskArena()->TaskArenaSize();
+   return ROOT::Internal::RTaskArenaWrapper::TaskArenaSize();
 };
 
 static bool &GetImplicitMTFlag()
@@ -48,7 +48,7 @@ static std::atomic_int &GetParBranchProcessingCount()
 extern "C" void ROOT_TImplicitMT_EnableImplicitMT(UInt_t numthreads)
 {
    if (!GetImplicitMTFlag()) {
-      R__GetTaskArena4IMT() = ROOT::Internal::InitGlobalTaskArena(numthreads);
+      R__GetTaskArena4IMT() = ROOT::Internal::GetGlobalTaskArena(numthreads);
       GetImplicitMTFlag() = true;
    } else {
       ::Warning("ROOT_TImplicitMT_EnableImplicitMT", "Implicit multi-threading is already enabled");
