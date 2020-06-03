@@ -809,13 +809,13 @@ public:
       CompatKind Kind() const noexcept { return fKind; }
 
       /// Get the detailed result of a numerical axis comparison
-      NumericBinningCompatibility GetNumeric() {
+      NumericBinningCompatibility GetNumeric() const {
          CheckKind(CompatKind::kNumeric);
          return fNumeric;
       }
 
       /// Get the detailed result of a labeled axis comparison
-      LabeledBinningCompatibility GetLabeled() {
+      LabeledBinningCompatibility GetLabeled() const {
          CheckKind(CompatKind::kLabeled);
          return fLabeled;
       }
