@@ -1,7 +1,7 @@
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 index a8d8bf6..a7db91e 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 @@ -1638,6 +1638,7 @@ bool CPyCppyy::name##Converter::ToMemory(PyObject* value, void* address)     \
      return InstancePtrConverter::ToMemory(value, address);                   \
  }
@@ -20,10 +20,10 @@ index a8d8bf6..a7db91e 100644
          gf["nullptr_t"] =                   (cf_t)+[](dims_t) { static NullptrConverter c{};        return &c;};
          gf["const char*"] =                 (cf_t)+[](dims_t) { return new CStringConverter{}; };
          gf["const signed char*"] =          gf["const char*"];
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 index 47d2a83..e98f5e7 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -7,7 +7,10 @@
  // Standard
  #include <complex>

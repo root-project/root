@@ -1534,7 +1534,7 @@ else()
   set(tmva-rmva  OFF CACHE BOOL "Disabled because 'tmva' is disabled (${tmva-rmva_description})"  FORCE)
 endif()
 
-#---Check for Pyroot---------------------------------------------------------------------
+#---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
   if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND))
     message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
@@ -1554,14 +1554,14 @@ if(pyroot)
   endif()
 endif()
 
-#---Check for Pyroot Exp---------------------------------------------------------------------
-if(pyroot_experimental)
+#---Check for PyROOT legacy---------------------------------------------------------------
+if(pyroot_legacy)
   if(fail-on-missing AND (NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND))
-    message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
+    message(FATAL_ERROR "PyROOT: Python development package not found and pyroot legacy component required"
                         " (python executable: ${PYTHON_EXECUTABLE})")
   elseif(NOT PYTHONLIBS_FOUND AND NOT Python2_Interpreter_Development_FOUND AND NOT Python3_Interpreter_Development_FOUND)
-    message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_experimental option")
-    set(pyroot_experimental OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
+    message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot_legacy option")
+    set(pyroot_legacy OFF CACHE BOOL "Disabled because Python development package was not found" FORCE)
   endif()
 endif()
 

@@ -1,7 +1,7 @@
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 index 0a25948..a8d8bf6 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/Converters.cxx
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
 @@ -24,8 +24,8 @@
  #include <sstream>
  #if __cplusplus > 201402L
@@ -44,10 +44,10 @@ index 0a25948..a8d8bf6 100644
          gf["std::wstring"] =                (cf_t)+[](dims_t) { return new STLWStringConverter{}; };
          gf[WSTRING] =                       gf["std::wstring"];
          gf["std::" WSTRING] =               gf["std::wstring"];
-diff --git a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 index d6e6853..47d2a83 100644
---- a/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
-+++ b/bindings/pyroot_experimental/cppyy/CPyCppyy/src/DeclareConverters.h
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/DeclareConverters.h
 @@ -7,6 +7,7 @@
  // Standard
  #include <complex>

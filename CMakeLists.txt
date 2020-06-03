@@ -436,7 +436,7 @@ else()
       etc/dictpch/allLinkDefs.h
     COMMAND
       ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
-      ${CMAKE_SOURCE_DIR} . ${pyroot_experimental} ${__cling_pch}
+      ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
       ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
@@ -540,8 +540,8 @@ if(clad)
       DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/plugins)
 endif()
 
-#---Set flag for PyROOT tests that are expected to fail in experimental
-if(pyroot_experimental)
+#---Set flag for PyROOT tests that are expected to fail
+if(pyroot)
   set(PYTESTS_WILLFAIL WILLFAIL)
 endif()
 
