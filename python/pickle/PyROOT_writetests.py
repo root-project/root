@@ -90,6 +90,25 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
       pickle.dump(  o, self.out1, protocol = 2 )
       cPickle.dump( o, self.out2, protocol = 2 )
 
+   def test6WriteCustomTypes( self ):
+      """[ROOT-10810] Test writing a RooDataSet with weights"""
+      # Silence the RooFit banner
+      ROOT.gEnv.SetValue("RooFit.Banner", 0)
+
+      var = ROOT.RooRealVar('var' ,'variable',0,10)
+      w = ROOT.RooRealVar('w' ,'weight',0,10)
+      vs = ROOT.RooArgSet ( var , w )
+      ds = ROOT.RooDataSet('data', '', vs, ROOT.RooFit.WeightVar(w))
+
+      # Only fails with tree storage
+      ds.convertToTreeStore()
+      for i in range ( 10 ) :
+           var.setVal(i)
+           ds.add(vs, i+0.1)
+
+      pickle.dump(ds, self.out1, protocol = 2) ## <--- segmentation fault
+      cPickle.dump(ds,self.out2, protocol = 2)
+
    def tearDown( self ):
       self.out1.flush()
       self.out2.flush()

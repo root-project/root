@@ -132,6 +132,16 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
          self.assertEqual(p, [123, 123.123])
          self.assertEqual(cp, [123, 123.123])
 
+   def test6ReadCustomTypes( self ):
+      """[ROOT-10810] Test reading a RooDataSet with weights"""
+      ROOT.gEnv.SetValue("RooFit.Banner", 0)
+      ds = pickle.load( self.in1 )
+      dsc= cPickle.load( self.in2 )
+      self.assertEqual(ds.get(1)['var'].getVal(), 1)
+      self.assertEqual(ds.weight(), 1.1)
+      self.assertEqual(dsc.get(2)['var'].getVal(), 2)
+      self.assertEqual(dsc.weight(), 2.1)
+
 ### Pretend-write and read back objects that gave complications ==============
 class PickleReadingComplicationsTestCase( MyTestCase ):
 
