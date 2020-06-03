@@ -146,8 +146,8 @@ if(ROOT_pyroot_FOUND)
   endif()
 endif()
 
-#---Set flag for PyROOT tests that are expected to fail in experimental
-if(ROOT_pyroot_experimental_FOUND)
+#---Set flag for PyROOT tests that are expected to fail
+if(ROOT_pyroot_FOUND)
   set(PYTESTS_WILLFAIL WILLFAIL)
 endif()
 

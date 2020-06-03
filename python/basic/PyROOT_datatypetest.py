@@ -34,8 +34,8 @@ class TestClassDATATYPES:
         cls.test_dct = "DataTypes_C"
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
-        cls.exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
-        if cls.exp_pyroot:
+        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
+        if not cls.legacy_pyroot:
             # In new Cppyy, nullptr can't be found in gbl.
             # Take it from libcppyy (we could also use ROOT.nullptr)
             import libcppyy
@@ -198,7 +198,7 @@ class TestClassDATATYPES:
         c.set_uchar(45);  assert c.m_uchar     == chr(45)
 
         # limits and checks
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
            # This throws ValueError in new Cppyy
            raises(ValueError,  'c.set_char("string")')
            raises(ValueError,  'c.set_uchar("string")')
@@ -798,7 +798,7 @@ class TestClassDATATYPES:
 
         import cppyy
 
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
             # New Cppyy does not allow conversion from None to null pointer anymore
             t = (0, )
         else:
@@ -895,7 +895,7 @@ class TestClassDATATYPES:
             if not PYTEST_MIGRATION:
                 arr = arr.shape.fromaddress(arr.itemaddress(0), self.N)
             if PYTEST_MIGRATION:
-                if self.exp_pyroot:
+                if not self.legacy_pyroot:
                     # In new Cppyy, buffers have a reshape method
                     arr.reshape((self.N,))
 
@@ -964,7 +964,7 @@ class TestClassDATATYPES:
         def null_test(null):
             c.m_voidp = null
             assert c.m_voidp is self.nullptr
-        if self.exp_pyroot:
+        if not self.legacy_pyroot:
             # New Cppyy does not allow assignment of pointer type to None
             null_list = [0, self.nullptr]
         else:

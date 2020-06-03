@@ -1,8 +1,8 @@
 if(ROOT_pyroot_FOUND)
-  if (ROOT_pyroot_experimental_FOUND)
-    set(api_macro_file runPyAPITestCppyy.C) # Uses new Cppyy API
-  else()
+  if (ROOT_pyroot_legacy_FOUND)
     set(api_macro_file runPyAPITest.C)
+  else()
+    set(api_macro_file runPyAPITestCppyy.C) # Uses new Cppyy API
   endif()
   ROOTTEST_ADD_TEST(api
                     MACRO ${api_macro_file}

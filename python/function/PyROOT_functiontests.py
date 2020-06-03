@@ -28,7 +28,7 @@ if not os.path.exists('InstallableFunction.C'):
 # needs to be early to prevent "ifunc_table overflow!"
 gROOT.LoadMacro( "InstallableFunction.C+" )
 
-exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
 ### helpers for general test cases -------------------------------------------
 def identity( x, par = None ):
@@ -65,7 +65,7 @@ def fcn( npar, gin, f, par, iflag ):
       delta  = (z[i]-func(x[i],y[i],par))/errorz[i]
       chisq += delta*delta
 
-   if os.environ.get('EXP_PYROOT') == 'True':
+   if not legacy_pyroot:
       # In the new Cppyy, f is a ctypes.c_double (see ROOT-10029).
       # Thus, the assignment needs to be done to its value attribute
       f.value = chisq
@@ -221,7 +221,7 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.SetFCN( fcn )
 
       arglist = array( 'd', 10*[0.] )
-      if not exp_pyroot and sys.hexversion < 0x3000000:
+      if legacy_pyroot and sys.hexversion < 0x3000000:
          ierflg = ROOT.Long()
       else:
          ierflg = ctypes.c_int()
@@ -243,12 +243,12 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.mnexcm( "MIGRAD", arglist, 2, ierflg )
 
     # verify results
-      if exp_pyroot:
+      if not legacy_pyroot:
          Double = ctypes.c_double
       else:
          Double = ROOT.Double
       amin, edm, errdef = Double(), Double(), Double()
-      if not exp_pyroot and sys.hexversion < 0x3000000:
+      if legacy_pyroot and sys.hexversion < 0x3000000:
          Long = ROOT.Long
          nvpar, nparx, icstat = Long(), Long(), Long()
       else:
@@ -256,7 +256,7 @@ class Func5MinuitTestCase( MyTestCase ):
       gMinuit.mnstat( amin, edm, errdef, nvpar, nparx, icstat )
     # gMinuit.mnprin( 3, amin )
 
-      if exp_pyroot or sys.hexversion >= 0x3000000:
+      if not legacy_pyroot or sys.hexversion >= 0x3000000:
          nvpar, nparx, icstat = map(lambda x: x.value, [nvpar, nparx, icstat])
       self.assertEqual( nvpar, 4 )
       self.assertEqual( nparx, 4 )
@@ -267,7 +267,7 @@ class Func5MinuitTestCase( MyTestCase ):
     # check results (somewhat debatable ... )
       par, err = Double(), Double()
 
-      if exp_pyroot:
+      if not legacy_pyroot:
          # ctypes.c_double requires the explicit retrieval of the inner value
          gMinuit.GetParameter( 0, par, err )
          self.assertEqual( round( par.value - 2.15, 2 ), 0. )

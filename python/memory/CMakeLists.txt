@@ -3,5 +3,5 @@ if(ROOT_pyroot_FOUND)
                     MACRO PyROOT_memorytests.py
                     COPY_TO_BUILDDIR MemTester.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ MemTester.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()

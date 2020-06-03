@@ -75,9 +75,9 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
    def test5WriteCustomTypes( self ):
       """Test writing PyROOT custom types"""
 
-      exp_pyroot = os.environ.get('EXP_PYROOT') == 'True'
+      legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'True'
 
-      if exp_pyroot:
+      if not legacy_pyroot:
          # Cppyy's Long and Double will be deprecated in favour of
          # ctypes.c_long and ctypes.c_double, respectively
          # https://bitbucket.org/wlav/cppyy/issues/101

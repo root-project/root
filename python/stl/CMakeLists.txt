@@ -3,6 +3,6 @@ if(ROOT_pyroot_FOUND)
                     MACRO PyROOT_stltests.py
                     COPY_TO_BUILDDIR StlTypes.C
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ StlTypes.C+
-                    ENVIRONMENT EXP_PYROOT=${exp_pyroot})
+                    ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
 endif()
 

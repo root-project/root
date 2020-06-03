@@ -60,7 +60,7 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
       nullptr = ROOT.nullptr
 
       self.assertNotEqual( nullptr, 0 )
-      if os.environ.get('EXP_PYROOT') == 'False':
+      if os.environ.get('LEGACY_PYROOT') == 'True':
          # In new Cppyy, TGraphErrors(0,0,0) is accepted.
          # I.e. it is allowed to pass 0 when the argument is of pointer type.
          self.assertRaises( TypeError, TGraphErrors, 0, 0, 0 )
