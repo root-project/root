@@ -1564,6 +1564,11 @@ if(pyroot_legacy)
   endif()
 endif()
 
+#---Check for deprecated PyROOT experimental ---------------------------------------------
+if(pyroot_experimental)
+  message(FATAL_ERROR "pyroot_experimental is now called pyroot! Please reconfigure with -Dpyroot=ON")
+endif()
+
 #---Check for MPI---------------------------------------------------------------------
 if (mpi)
   message(STATUS "Looking for MPI")
