@@ -47,38 +47,30 @@ namespace Internal {
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper for tbb::task_arena.
 ///
-/// Necessary in order to keep tbb away from ROOT headers
+/// Necessary in order to keep tbb away from ROOT headers.
+/// This class is thought out to be used as a singleton.
 ////////////////////////////////////////////////////////////////////////////////
 class RTaskArenaWrapper {
 public:
-   RTaskArenaWrapper();
-   unsigned TaskArenaSize();
+   RTaskArenaWrapper(unsigned maxConcurrency = 0);
+   ~RTaskArenaWrapper(); // necessary to set size back to zero
+   static unsigned TaskArenaSize();
    std::unique_ptr<tbb::task_arena> &Access();
 private:
    std::unique_ptr<tbb::task_arena> fTBBArena;
+   static unsigned fNWorkers;
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Factory function returning a shared pointer to the instance of the global
-// RTaskArenaWrapper.
+// RTaskArenaWrapper. The task arena still needs to be initialized with a
+// call to RTaskArena::Initialize(maxConcurrency)
 //
 // Allows for reinstantiation of the global RTaskArenaWrapper once all the
 // references to the previous one are gone and the object destroyed.
 ////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena();
-
-////////////////////////////////////////////////////////////////////////////////
-/// Initializes the global instance of tbb::task_arena and returns a shared_ptr to
-/// its singleton wrapper
-///
-/// * Always initializes with the available number of threads
-/// * Can't be reinitialized
-/// * Checks for CPU bandwidth control
-/// * If no BC in place and maxConcurrency<1, defaults to the default tbb number of threads,
-/// which is CPU affinity aware
-////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> InitGlobalTaskArena(unsigned maxConcurrency);
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency = 0);
 
 } // namespace Internal
 } // namespace ROOT

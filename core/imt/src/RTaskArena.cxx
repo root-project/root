@@ -78,52 +78,69 @@ static Int_t LogicalCPUBandwithControl()
 namespace ROOT{
 namespace Internal {
 
-RTaskArenaWrapper::RTaskArenaWrapper(): fTBBArena(new tbb::task_arena{}){}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes the tbb::task_arena within RTaskArenaWrapper
+///
+/// * Can't be reinitialized
+/// * Checks for CPU bandwidth control and avoids oversubscribing
+/// * If no BC in place and maxConcurrency<1, defaults to the default tbb number of threads,
+/// which is CPU affinity aware
+////////////////////////////////////////////////////////////////////////////////
+RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency): fTBBArena(new tbb::task_arena{})
+{
+   if (!fTBBArena->is_active()) {
+      unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
+      maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
+      unsigned bcCpus = LogicalCPUBandwithControl();
+      if (maxConcurrency>bcCpus) {
+         Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly",
+            bcCpus);
+         maxConcurrency = bcCpus;
+      }
+      fTBBArena->initialize(maxConcurrency);
+      fNWorkers = maxConcurrency;
+      ROOT::EnableThreadSafety();
+   } else {
+      unsigned current = fTBBArena->max_concurrency();
+      if (maxConcurrency && (current != maxConcurrency)) {
+         Warning("RTaskArenaWrapper", "There's already an active task arena. Proceeding with the current %d threads",
+            current);
+      }
+   }
+}
+
+RTaskArenaWrapper::~RTaskArenaWrapper()
+{
+   fNWorkers = 0u;
+}
+
+unsigned RTaskArenaWrapper::fNWorkers = 0u;
 
 unsigned RTaskArenaWrapper::TaskArenaSize()
 {
-   return fTBBArena->is_active()? static_cast<unsigned>(fTBBArena->max_concurrency()) : 0u;
+   return fNWorkers;
 }
-
+////////////////////////////////////////////////////////////////////////////////
+/// Provides access to the wrapped tbb::task_arena
+////////////////////////////////////////////////////////////////////////////////
 std::unique_ptr<tbb::task_arena> &RTaskArenaWrapper::Access()
 {
    return fTBBArena;
 }
 
 
-std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena()
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency)
 {
    static std::weak_ptr<ROOT::Internal::RTaskArenaWrapper> weak_GTAWrapper;
    if (weak_GTAWrapper.expired()) {
-      std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> shared_GTAWrapper(new ROOT::Internal::RTaskArenaWrapper());
+      std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> shared_GTAWrapper(new ROOT::Internal::RTaskArenaWrapper(maxConcurrency));
       weak_GTAWrapper = shared_GTAWrapper;
       return weak_GTAWrapper.lock();
    }
 
    return weak_GTAWrapper.lock();
 }
-
-std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> InitGlobalTaskArena(unsigned maxConcurrency)
-{
-   auto globalTBBTaskArena = GetGlobalTaskArena();
-   if (!globalTBBTaskArena->Access()->is_active()) {
-      unsigned tbbDefaultNumberThreads = globalTBBTaskArena->Access()->max_concurrency(); // not initialized, automatic state
-      maxConcurrency = maxConcurrency > 1 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
-      unsigned bcCpus = LogicalCPUBandwithControl();
-      auto taskArenaSize = std::min({maxConcurrency, bcCpus});
-      globalTBBTaskArena->Access()->initialize(taskArenaSize);
-      ROOT::EnableThreadSafety();
-   } else {
-      unsigned current = globalTBBTaskArena->Access()->max_concurrency();
-      if (maxConcurrency && (current != maxConcurrency)) {
-         Warning("InitGlobalTaskArena", "There's already an active task arena. Proceeding with the current %d threads",
-            current);
-      }
-   }
-
-   return globalTBBTaskArena;
-}
-
 
 } // namespace Internal
 } // namespace ROOT
