@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <map>
 
 class RooAbsReal ;
 class RooAbsRealLValue ;

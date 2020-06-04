@@ -24,6 +24,7 @@
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
 #include "BatchData.h"
+#include <map>
 
 class RooArgList ;
 class RooDataSet ;

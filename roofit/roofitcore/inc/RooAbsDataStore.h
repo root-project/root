@@ -17,11 +17,11 @@
 #define ROO_ABS_DATA_STORE
 
 #include "Rtypes.h"
-#include "RooArgSet.h" 
+#include "RooArgSet.h"
 #include "RooAbsData.h"
 #include "TNamed.h"
 #include <list>
-
+#include <vector>
 
 class RooAbsArg ;
 class RooArgList ;

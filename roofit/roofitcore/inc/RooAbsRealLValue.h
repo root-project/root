@@ -17,7 +17,8 @@
 #define ROO_ABS_REAL_LVALUE
 
 #include <cmath>
-#include <float.h>
+#include <cfloat>
+#include <utility>
 #include "TString.h"
 
 #include "RooAbsReal.h"

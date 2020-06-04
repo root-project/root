@@ -18,9 +18,10 @@
 #include "RooRealVar.h"
 #include "RooListProxy.h"
 #include "RooAbsRealLValue.h"
+#include <string>
 
 class RooRealVar;
-class RooArgList ;
+class RooArgList;
 
 class RooBernstein : public RooAbsPdf {
 public:

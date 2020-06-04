@@ -21,6 +21,8 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooSpan.h"
+#include <map>
+#include <string>
 
 class RooAbsArg;
 class RooAbsReal ;

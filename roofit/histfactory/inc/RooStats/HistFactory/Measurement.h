@@ -15,10 +15,10 @@
 #include <map>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
-#include "TObject.h"
+#include "TNamed.h"
 #include "TFile.h"
-
 
 #include "PreprocessFunction.h"
 #include "RooStats/HistFactory/Channel.h"
@@ -156,13 +156,13 @@ private:
   std::map< std::string, double > fUniformSyst;
   std::map< std::string, double > fLogNormSyst;
   std::map< std::string, double > fNoSyst;
-  
+
   std::string GetDirPath( TDirectory* dir );
 
   ClassDef(RooStats::HistFactory::Measurement, 3);
 
 };
- 
+
 } // namespace HistFactory
 } // namespace RooStats
 

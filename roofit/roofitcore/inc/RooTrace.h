@@ -18,9 +18,10 @@
 
 #include "RooLinkedList.h"
 #include <map>
+#include <string>
 
 #define TRACE_CREATE
-#define TRACE_DESTROY 
+#define TRACE_DESTROY
 
 class RooTrace {
 public:

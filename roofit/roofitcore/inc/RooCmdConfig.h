@@ -22,7 +22,7 @@
 #include "TList.h"
 #include "RooCmdArg.h"
 #include "RooArgSet.h"
-
+#include <string>
 
 class RooCmdConfig : public TObject {
 public:

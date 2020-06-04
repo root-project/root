@@ -16,7 +16,6 @@
 #ifndef ROO_LIST_PROXY
 #define ROO_LIST_PROXY
 
-#include "TObject.h"
 #include "RooAbsProxy.h"
 #include "RooLinkedListIter.h"
 #include "RooAbsArg.h"

@@ -20,6 +20,7 @@
 #include "RooCmdArg.h"
 #include "RooAbsPdf.h"
 #include <vector>
+#include <utility>
 
 class RooRealSumPdf ;
 

@@ -23,6 +23,7 @@
 #include "RooTrace.h"
 
 #include <memory>
+#include <list>
 
 class RooArgSet ;
 

@@ -21,6 +21,7 @@
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
 #include "RooTrace.h"
+#include <list>
 
 class RooRealVar;
 class RooAbsReal;
@@ -28,7 +29,7 @@ class RooDataHist ;
 
 class RooHistFunc : public RooAbsReal {
 public:
-  RooHistFunc() ; 
+  RooHistFunc() ;
   RooHistFunc(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistFunc(const RooHistFunc& other, const char* name=0);

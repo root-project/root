@@ -25,6 +25,9 @@
 #include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
+#include <vector>
+#include <list>
+#include <utility>
 
 class RooAddPdf : public RooAbsPdf {
 public:

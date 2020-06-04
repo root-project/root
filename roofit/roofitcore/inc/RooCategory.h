@@ -18,6 +18,10 @@
 
 #include "RooAbsCategoryLValue.h"
 
+#include <vector>
+#include <map>
+#include <string>
+
 class RooCategorySharedProperties;
 
 class RooCategory final : public RooAbsCategoryLValue {

@@ -18,6 +18,7 @@
 
 #include "RooAbsGenContext.h"
 #include "RooArgSet.h"
+#include <list>
 
 class RooProdPdf;
 class RooDataSet;

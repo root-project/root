@@ -16,13 +16,14 @@
 #ifndef ROO_MULTI_CATEGORY
 #define ROO_MULTI_CATEGORY
 
-class TObject ;
+class TObject;
 #include "RooAbsCategoryLValue.h"
 #include "RooArgSet.h"
 #include "RooSetProxy.h"
+#include <string>
 
 class RooSuperCategory;
- 
+
 
 class RooMultiCategory : public RooAbsCategory {
 public:

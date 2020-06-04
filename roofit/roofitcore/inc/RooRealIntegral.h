@@ -22,6 +22,7 @@
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include "RooListProxy.h"
+#include <list>
 
 class RooArgSet ;
 class TH1F ;

@@ -13,7 +13,7 @@
 
 #include <string>
 #include <vector>
-
+#include <map>
 #include "TFile.h"
 
 #include "RooStats/HistFactory/EstimateSummary.h"
