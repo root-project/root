@@ -40,6 +40,7 @@
 #include "TMVA/DNN/TensorDataLoader.h"
 #include <utility>
 #include <vector>
+#include <string>
 
 #include "TMVA/DNN/Architectures/Cuda.h"
 

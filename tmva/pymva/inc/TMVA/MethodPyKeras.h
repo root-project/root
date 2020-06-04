@@ -27,6 +27,7 @@
 #define ROOT_TMVA_MethodPyKeras
 
 #include "TMVA/PyMethodBase.h"
+#include <vector>
 
 namespace TMVA {
 

@@ -42,7 +42,7 @@
 #include <atomic>
 #endif
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 #include "TString.h"
 

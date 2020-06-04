@@ -1,8 +1,7 @@
 #ifndef ROOT_TMVA_ROCCalc
 #define ROOT_TMVA_ROCCalc
 
-#include "Rtypes.h"
-
+#include "RtypesCore.h"
 
 #include <sstream>
 #include <iostream>

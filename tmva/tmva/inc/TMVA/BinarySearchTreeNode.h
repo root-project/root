@@ -39,6 +39,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <string>
 #include "Rtypes.h"
 
 #include "TMVA/Node.h"

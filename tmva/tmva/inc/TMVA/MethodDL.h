@@ -58,6 +58,7 @@
 #include "TMVA/DNN/DeepNet.h"
 
 #include <vector>
+#include <map>
 
 #ifdef R__HAS_TMVAGPU
 //#define USE_GPU_INFERENCE

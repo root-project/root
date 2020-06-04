@@ -35,6 +35,7 @@
 
 #include <vector>
 #include <iostream>
+#include <string>
 
 namespace TMVA {
 namespace DNN {

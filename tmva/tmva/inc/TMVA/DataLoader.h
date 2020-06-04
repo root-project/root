@@ -28,7 +28,6 @@
 #ifndef ROOT_TMVA_DataLoader
 #define ROOT_TMVA_DataLoader
 
-#include <string>
 #include <vector>
 #include "TCut.h"
 

@@ -12,8 +12,9 @@
 #define ROOT_TMVA_Envelope
 
 #include <sstream>
-#include<iostream>
+#include <iostream>
 #include <memory>
+#include <vector>
 
 #include <TROOT.h>
 #include <TStopwatch.h>

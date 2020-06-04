@@ -32,6 +32,7 @@
 #include "TMVA/DNN/DataLoader.h"
 #include <utility>
 #include <vector>
+#include <string>
 
 class TRandom;
 
