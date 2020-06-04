@@ -65,6 +65,8 @@ If PYTHON_EXECUTABLE is NOT specified:
 
 message(STATUS "Looking for Python")
 
+# CMake 3.14 is the minimum because in 3.12 and 3.13, despite find_package(PythonX) being present,
+# the Numpy-related variables are not set
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
 
   if(PYTHON_EXECUTABLE)
