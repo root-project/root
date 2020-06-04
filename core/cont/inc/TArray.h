@@ -24,6 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
+#include <cstring>   // used in all TArray derived classes for memset()
 
 class TBuffer;
 
