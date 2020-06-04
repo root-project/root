@@ -90,9 +90,9 @@ namespace Internal {
 RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency): fTBBArena(new tbb::task_arena{})
 {
    if (!fTBBArena->is_active()) {
-      unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
+      const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
       maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
-      unsigned bcCpus = LogicalCPUBandwithControl();
+      const unsigned bcCpus = LogicalCPUBandwithControl();
       if (maxConcurrency>bcCpus) {
          Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly",
             bcCpus);
@@ -102,7 +102,7 @@ RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency): fTBBArena(new tbb
       fNWorkers = maxConcurrency;
       ROOT::EnableThreadSafety();
    } else {
-      unsigned current = fTBBArena->max_concurrency();
+      const unsigned current = fTBBArena->max_concurrency();
       if (maxConcurrency && (current != maxConcurrency)) {
          Warning("RTaskArenaWrapper", "There's already an active task arena. Proceeding with the current %d threads",
             current);
