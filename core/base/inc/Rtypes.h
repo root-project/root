@@ -193,6 +193,7 @@ namespace ROOT {
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 
 #include "TIsAProxy.h"
+#include <string>
 
 namespace ROOT { namespace Internal {
 

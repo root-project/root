@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDictionary.h"
+#include <string>
 
 #ifdef R__LESS_INCLUDES
 class TDataMember;

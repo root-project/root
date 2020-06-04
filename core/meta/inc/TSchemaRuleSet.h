@@ -7,6 +7,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TClassRef.h"
+#include <vector>
 
 #ifdef R__LESS_INCLUDES
 class TObjArray;

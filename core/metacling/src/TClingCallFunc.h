@@ -32,6 +32,7 @@
 #include "TClingClassInfo.h"
 #include "TClingUtils.h"
 #include "TInterpreter.h"
+#include <string>
 
 #include "cling/Interpreter/Value.h"
 

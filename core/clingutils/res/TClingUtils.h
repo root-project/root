@@ -18,9 +18,12 @@
 #include <set>
 #include <string>
 #include <unordered_set>
+#include <vector>
+#include <list>
+#include <map>
+#include <utility>
 
-//#include <atomic>
-#include <stdlib.h>
+#include <cstdlib>
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
